@@ -1,0 +1,16 @@
+.category { margin-bottom: 20px; }
+.table_view .cell_name { width: 506px; margin-left: -1px; }
+.table_view .cell_name span { line-height: 25px; }
+.table { width: 99% !important; margin-left: 3px; }
+.edit .table { margin-bottom: 0; }
+
+.school_year .table .table_body .table_cell { text-align: center; }
+.school_year .table .icon_cross { margin-left: 22px; }
+
+.banks .cell_code { width: 100px; }
+.banks .cell_name { width: 466px; }
+.banks .table_view .cell_code { width: 100px; margin-left: -1px; }
+.banks .table_view .cell_name { width: 389px; margin-left: -1px; }
+
+.finance_categories .table_view .cell_name { width: 492px; margin-left: -1px; }
+.finance_categories .section_break .row { margin-left: 0; }

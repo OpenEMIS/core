@@ -1,0 +1,76 @@
+<?php
+App::uses('AppModel', 'Model');
+
+class CensusStaff extends AppModel {
+	public $useTable = 'census_staff';
+	
+	public $belongsTo = array(
+		'SchoolYear'
+	);
+	
+	public function getCensusData($siteId, $yearId) {
+		/* Actual SQL
+		SELECT
+			`staff_categories`.`id` AS `staff_category_id`,
+			`staff_categories`.`name` AS `staff_category_name`,
+			`staff_categories`.`visible` AS `staff_category_visible`,
+			`census_staff`.`id` AS `id`,
+			`census_staff`.`male` AS `male`,
+			`census_staff`.`female` AS `female`
+		FROM `staff_categories`
+		LEFT JOIN `census_staff`
+			ON `census_staff`.`staff_category_id` = `staff_categories`.`id`
+			AND `census_staff`.`institution_site_id` = %d
+			AND `census_staff`.`school_year_id` = %d
+		ORDER BY `staff_categories`.`order`
+		*/
+		
+		$StaffCategory = ClassRegistry::init('Staff.StaffCategory');
+		$StaffCategory->formatResult = true;
+		$list = $StaffCategory->find('all' , array(
+			'recursive' => 0,
+			'fields' => array(
+				'StaffCategory.id AS staff_category_id',
+				'StaffCategory.name AS staff_category_name',
+				'StaffCategory.visible AS staff_category_visible',
+				'CensusStaff.id',
+				'CensusStaff.male',
+				'CensusStaff.female'
+			),
+			'joins' => array(
+				array(
+					'table' => 'census_staff',
+					'alias' => 'CensusStaff',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'CensusStaff.staff_category_id = StaffCategory.id',
+						'CensusStaff.institution_site_id = ' . $siteId,
+						'CensusStaff.school_year_id = ' . $yearId
+					)
+				)
+			),
+			'order' => array('StaffCategory.order')
+		));
+		
+		return $list;
+	}
+	
+	public function saveCensusData($data, $institutionSiteId) {
+		$yearId = $data['school_year_id'];
+		unset($data['school_year_id']);
+		
+		foreach($data as $obj) {
+			$obj['school_year_id'] = $yearId;
+			$obj['institution_site_id'] = $institutionSiteId;
+			
+			if($obj['male'] > 0 || $obj['female'] > 0) {
+				if($obj['id'] == 0) {
+					$this->create();
+				}
+				$save = $this->save(array('CensusStaff' => $obj));
+			} else if($obj['id'] > 0 && $obj['male'] == 0 && $obj['female'] == 0) {
+				$this->delete($obj['id']);
+			}
+		}
+	}
+}

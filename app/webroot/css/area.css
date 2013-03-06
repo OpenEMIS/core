@@ -1,0 +1,106 @@
+.select_row {
+	margin-bottom: 10px;
+}
+
+.input_row .label {
+	line-height: 25px;
+}
+
+#education .input_row .label {
+	width: 110px;
+}
+
+#education .input_row select { width: auto; }
+
+.radio_wrapper {
+	float: left;
+	margin-right: 8px;
+	overflow: hidden;
+}
+
+.radio_wrapper input {
+	position: absolute;
+}
+
+.radio_wrapper label {
+	margin-left: 23px;
+}
+
+.section_break .label, .section_break .value { font-size: 11px; }
+#area_section_group { padding-bottom: 10px; }
+
+/*.value .input label{ display: none; }*/
+.edit .table{
+	margin-bottom: 0px;
+	table-layout: auto;
+	margin-left: 3px;
+	width: 99% !important;
+}
+
+.table .cell_order {
+	width: 60px;
+}
+
+
+/*.table_view {
+	width: 664px !important;
+}*/
+.cell_visible span{
+	margin: 0 25px;
+}
+
+.cell_level { 
+	margin-left: -1px;
+	width: 99px !important;
+
+}
+
+.cell_code { 
+	margin-left: -1px;
+	/*width: 150px !important;*/
+	width: 90px !important;
+}
+
+.cell_name { 
+	margin-left: -1px;
+	width: 280px !important;
+}
+
+.table_view .cell_order {
+    width: 63px;
+}
+
+.cell_name_area_level { 
+	width: 627px !important;
+}
+
+.cell_order_area_level {
+	margin-left: -1px; 
+	/*width: 63px !important;*/
+	min-width: 22px;
+}
+
+.cell_order_area_level span{
+	margin-top: 5px;
+	margin-left: 4px;
+}
+
+.year select { width: 65px; }
+
+.year .label {
+	width: 30px;
+	line-height: 25px;
+}
+
+.disabled {
+	color: #DDDDDD;
+}
+
+.init_empty_section_label {
+	border: 1px solid #CCCCCC;
+	margin-bottom: 5px;
+	padding: 5px; 
+	width:100%; 
+	text-align: center;
+	color: #666666;
+}

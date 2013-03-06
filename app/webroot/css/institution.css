@@ -1,0 +1,16 @@
+#institution-list .cell_name { width: 280px; }
+
+.cell_code { width: 100px; }
+.cell_title { width: 150px; }
+.cell_filetype { width: 60px; }
+.cell_date { width: 110px; }
+
+/* programmes */
+.cell_prog { width: 250px; }
+.cell_status { width: 60px; text-align: center; }
+/* end programmes */
+
+.cell_active { min-width: 10px !important; width: 30px; text-align: center; }
+
+#bank_accounts .icon_delete { margin-top: 5px; }
+#attachments.edit .table_cell { vertical-align: top !important; }

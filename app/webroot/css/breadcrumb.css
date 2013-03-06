@@ -1,0 +1,29 @@
+#breadcrumb {
+    font: 11px Arial, Helvetica, sans-serif;
+	font-weight: bold;
+    height: 25px;
+    line-height: 16px;
+    color: #666666;
+    width: 100%;
+    overflow: hidden;
+    margin: 8px 0 10px 0;
+    padding: 0px;
+}
+
+#breadcrumb li {
+	float: left;
+	display: inline-block;
+    list-style-type: none;
+    padding-left: 10px;
+}
+
+#breadcrumb a {
+	font-weight: normal;
+	display: inline-block;
+    background-image: url('../img/bc_separator.gif'); 
+    background-repeat: no-repeat; 
+    background-position: right;
+    padding-right: 15px;
+    color: #007CBE;
+	outline: none;
+}

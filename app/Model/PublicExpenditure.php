@@ -1,0 +1,136 @@
+<?php
+App::uses('AppModel', 'Model');
+
+class PublicExpenditure extends AppModel {
+
+	public $useTable = 'public_expenditure';
+	// public $belongsTo = array('Area');
+
+	public function getAreas($areaId = 0, $parentAreaId = 0) {
+
+		$areaModel = ClassRegistry::init('Area');
+
+//		if (!$this->isWard($areaId)) {
+
+            $options = array(
+            	'fields' => array("Area.id", "Area.name", "Area.parent_id", "Area.area_level_id"),
+				'conditions' => array(
+			        "Area.visible" => 1,
+
+                    "OR" => array(
+                        "Area.id" => $areaId,
+                        "Area.parent_id" => $parentAreaId,
+                    )
+                )
+			);
+			$areas = $areaModel->find('all', $options);
+
+//		}
+
+
+		// pr($areas);
+		return $areas;
+	}
+
+	private function isWard($areaId)
+	{
+		$digits = strlen($areaId);
+
+		if ($digits >= 7) { return true; }
+		return false;
+	}
+	
+	public function getPublicExpenditureByYearAndArea($year, $listAreaId)
+	{
+
+        $options = array(
+        	'fields' => array(
+        		"PublicExpenditure.id",
+				"PublicExpenditure.area_id",
+				"PublicExpenditure.year",
+				"PublicExpenditure.gross_national_product",
+				"PublicExpenditure.total_public_expenditure",
+				"PublicExpenditure.total_public_expenditure_education"
+        	),
+			'conditions' => array(
+				"AND" => array("PublicExpenditure.year" => $year, "PublicExpenditure.area_id" => $listAreaId)
+			)
+		);
+		$result = $this->find('all', $options);
+		return $result;
+	}
+
+	public function getData($year = 0, $areaId = 0, $parentAreaId = 0) {
+		
+		if($year <= 0 || ($areaId <= 0 && $parentAreaId <= 0 )) {
+			return false;
+		}
+
+		if ($areaId != $parentAreaId) {
+			$areaId = $parentAreaId;
+		}
+
+		if ($parentAreaId >= 1) {
+			$areas = $this->getAreas($areaId, $parentAreaId);
+
+			foreach ($areas as $area) {
+
+				$listAreaId = $area['Area']['id'];
+				$listAreaName = $area['Area']['name'];
+				$listParentId = $area['Area']['parent_id'];
+				$listAreaLevel = $area['Area']['area_level_id'];
+
+				$result = $this->getPublicExpenditureByYearAndArea($year, $listAreaId);
+
+				if (!empty($result)) {
+					$expenditureResult = $result[0]['PublicExpenditure'];
+
+					$list['children'][] = 
+        			array(
+	        			'name' => $listAreaName,
+	        			'area_id' => $listAreaId,
+	        			'parent_id' => $listParentId,
+	        			'area_level_id' => $listAreaLevel,
+	        			'gross_national_product' => $expenditureResult['gross_national_product'],
+	        			'year' => $expenditureResult['year'],
+	        			'id' => $expenditureResult['id'],
+	        			'total_public_expenditure' => $expenditureResult['total_public_expenditure'],
+	        			'total_public_expenditure_education' => $expenditureResult['total_public_expenditure_education'],
+        			);	
+				} else {
+					$list['children'][] =         			
+					array(
+	        			'name' => $listAreaName,
+	        			'area_id' => $listAreaId,
+	        			'parent_id' => $listParentId,
+	        			'area_level_id' => $listAreaLevel,
+	        			'gross_national_product' => null,
+	        			'year' => null,
+	        			'id' => 0,
+	        			'total_public_expenditure' => "",
+	        			'total_public_expenditure_education' => ""
+        			);
+				}
+				
+			}
+
+			$list['parent'][] = array_shift($list['children']);
+				
+
+		}
+		return $list;
+	}
+
+	public function getPublicExpenditureData($year, $areaId, $parentAreaId) {
+		$data = $this->getData($year, $areaId, $parentAreaId);
+		return $data;
+	}
+
+	public function saveGNP($year, $gnp) {
+		$this->updateAll(
+		    array('gross_national_product' => $gnp),
+		    array('year' => $year)
+		);
+	}
+
+}

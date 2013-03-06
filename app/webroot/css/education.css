@@ -1,0 +1,98 @@
+.category { margin-bottom: 20px; }
+
+.edit .table { margin-bottom: 0; }
+.table .cell_admission_age { width: 100px; }
+.table .cell_cycle_short { width: 100px; }
+.table .cell_duration { width: 60px; }
+.table .cell_subject_link { width: 70px; }
+.table .cell_grade_link { min-width: 50px !important; width: 50px; }
+.table .cell_subject_code { width: 150px; }
+.table .cell_hours { width: 110px; }
+.table .cell_hours input { text-align: right; }
+.table_view .cell_name { width: 532px; margin-left: -1px; }
+.setup_level .table_view .cell_name { width: 245px; margin-left: -1px; }
+.setup_cycle .table_view .cell_name { width: 374px; margin-left: -1px; }
+.setup_field .table_view .cell_name { width: 258px; margin-left: -1px; }
+.setup_subject .table_view .cell_name { width: 365px; margin-left: -1px; }
+.setup_grade .table_view .cell_name { width: 419px; margin-left: -1px; }
+
+.table_view .cell > span { line-height: 25px; }
+.table_view .cell_isced { width: 244px; margin-left: -1px; }
+.table_view .cell_admission_age { width: 100px; margin-left: -1px; }
+.table_view .cell_cycle_short { width: 100px; margin-left: -1px; line-height: 25px; }
+.chrome .table_view .cell_cycle_short{
+	width:101px;
+}
+.table_view .cell_duration { width: 60px; margin-left: -1px; }
+.table_view .cell_programme { width: 230px; margin-left: -1px; line-height: 25px; }
+.chrome .table_view .cell_programme, .safari .table_view .cell_programme{
+	width:226px;
+}
+.opera .table_view .cell_programme{
+	width:229px;
+}
+.table_view .cell_subject_link { width: 70px; margin-left: -1px; text-align: center; line-height: 25px; }
+.table_view .cell_grade_link { width: 50px; margin-left: -1px; text-align: center; line-height: 25px; }
+
+.table_view .cell_orientation { width: 257px; margin-left: -1px; }
+.table_view .cell_subject_code { width: 150px; margin-left: -1px; line-height: 25px; }
+.table_view .cell_grade_subject { width: 212px; margin-left: -1px; line-height: 25px; }
+.table_view .cell_hours { width: 110px; margin-left: -1px; line-height: 25px; text-align: right; }
+.table_view a { color: #007CBE; }
+
+.section_break .row { margin-left: 0 !important; }
+.section_break .label, .section_break .value { font-size: 11px; }
+
+.select_row { margin-bottom: 10px; }
+.select_row .label { line-height: 25px; width: 110px; }
+.select_row select { width: auto; }
+
+.radio_wrapper { float: left; margin: 3px 8px 0 0; overflow: hidden; }
+
+.programme_group { display: none; }
+.programme_group.current { display: block; }
+
+.programme_details {
+	float: left;
+	width: 320px;
+	margin-right: 10px;
+}
+
+.programme_details .label { width: 140px; color: #333333; font-weight: bold; text-align: left; padding-left: 10px; }
+
+.programme_grades {
+	float: left;
+	width: 150px;
+}
+
+.programme_grades .box_body,
+.programme_subjects .box_body { height: 115px; overflow: auto; padding-left: 0 !important; padding-right: 0 !important; }
+
+.programme_grades .wrapper { cursor: pointer; }
+
+.programme_grades .wrapper.selected,
+.programme_grades .wrapper:hover { background-color: #CCCCCC; }
+	
+.programme_grades .wrapper.selected { cursor: auto; }
+
+.programme_subjects {
+	float: left;
+	border-left: 0;
+	width: 177px;
+}
+
+.subject_list {
+	position: absolute;
+	overflow: auto;
+	padding: 10px 0;
+	height: 115px;
+	width: 177px;
+	background-color: #FFFFFF;
+}
+
+.programme_subjects .box_body {
+	position: relative;
+	overflow: hidden;
+	padding: 0;
+	height: 135px;
+}

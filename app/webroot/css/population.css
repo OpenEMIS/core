@@ -1,0 +1,20 @@
+#area_section_group { padding-bottom: 10px; }
+.year { margin-bottom: 15px }
+.year select { width: 65px; }
+.year .label { width: 30px;	line-height: 25px; }
+.cell_source { width: 200px; }
+.edit .cell_source { width: 184px; }
+.cell_area { width: 110px; }
+
+.disabled {	color: #DDDDDD; }
+
+.init_empty_section_label {
+	border: 1px solid #CCCCCC;
+	margin-bottom: 5px;
+	padding: 5px; 
+	width:100%; 
+	text-align: center;
+	color: #666666;
+}
+
+/*.value .input label{ display: none; }*/
