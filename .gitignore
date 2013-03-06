@@ -39,11 +39,11 @@ Thumbs.db
 # Folders
 ######################
 app/Backups/*
-app/webroot/reports/*
-app/tmp/logs/*
-app/tmp/cache/*
-app/tmp/sessions/*
+# app/webroot/reports/*
+# app/tmp/logs/*
+# app/tmp/cache/*
+# app/tmp/sessions/*
 lib/Cake/Console/Templates/skel/tmp/*
 app/webroot/img/.DS_Store
-app/webroot/logs/*
+# app/webroot/logs/*
 .DS_Store
