@@ -1,0 +1,108 @@
+<?php
+App::uses('AppModel', 'Model');
+
+class CensusTeacherTraining extends AppModel {
+	public $useTable = "census_teacher_training";
+	public $belongsTo = array(
+		'InstitutionSite',
+		'SchoolYear',
+		'EducationLevel'
+	);
+	
+	public function getCensusData($institutionSiteId, $yearId) {
+		/* Actual SQL
+		SELECT
+			`education_levels`.`id` AS `education_level_id`,
+			`education_levels`.`name` AS `education_level_name`,
+			`census_teacher_training`.`id`,
+			`census_teacher_training`.`male` AS `male`,
+			`census_teacher_training`.`female` AS `female`
+		FROM `institution_site_programmes`
+		LEFT JOIN `education_programmes`
+			ON `education_programmes`.`id` = `institution_site_programmes`.`education_programme_id`
+			AND `education_programmes`.`visible` = 1
+		LEFT JOIN `education_cycles`
+			ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
+			AND `education_cycles`.`visible` = 1
+		LEFT JOIN `education_levels`
+			ON `education_levels`.`id` = `education_cycles`.`education_level_id`
+			AND `education_levels`.`visible` = 1
+		LEFT JOIN `census_teacher_training`
+			ON `census_teacher_training`.`education_level_id` = `education_levels`.`id`
+			AND `census_teacher_training`.`institution_site_id` = `institution_site_programmes`.`institution_site_id`
+			AND `census_teacher_training`.`school_year_id` = %d
+		WHERE `institution_site_programmes`.`institution_site_id` = %d
+		GROUP BY `education_levels`.`id`
+		ORDER BY `education_levels`.`order`
+		*/
+		
+		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
+		$InstitutionSiteProgramme->formatResult = true;
+		$list = $InstitutionSiteProgramme->find('all' , array(
+			'recursive' => -1,
+			'fields' => array(
+				'EducationLevel.id AS education_level_id',
+				'EducationLevel.name AS education_level_name',
+				'CensusTeacherTraining.id',
+				'CensusTeacherTraining.male',
+				'CensusTeacherTraining.female'
+			),
+			'joins' => array(
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
+						'EducationProgramme.visible = 1'
+					)
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array(
+						'EducationCycle.id = EducationProgramme.education_cycle_id',
+						'EducationCycle.visible = 1'
+					)
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array(
+						'EducationLevel.id = EducationCycle.education_level_id',
+						'EducationLevel.visible = 1'
+					)
+				),
+				array(
+					'table' => 'census_teacher_training',
+					'alias' => 'CensusTeacherTraining',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'CensusTeacherTraining.institution_site_id = InstitutionSiteProgramme.institution_site_id',
+						'CensusTeacherTraining.education_level_id = EducationLevel.id',
+						'CensusTeacherTraining.school_year_id = ' . $yearId
+					)
+				)
+			),
+			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
+			'group' => array('EducationLevel.id'),
+			'order' => array('EducationLevel.order')
+		));
+		
+		return $list;
+	}
+	
+	public function saveCensusData($data, $yearId, $institutionSiteId) {
+		foreach($data as $key => $obj) {
+			$obj['school_year_id'] = $yearId;
+			$obj['institution_site_id'] = $institutionSiteId;
+			if(empty($obj['id'])) {
+				if($obj['male'] > 0 || $obj['female'] > 0) {
+					$this->create();
+					$this->save($obj);
+				}
+			} else {
+				$this->save($obj);
+			}
+		}
+	}
+}

@@ -1,0 +1,46 @@
+#student-list .cell_id_no { width: 110px; }
+#student-list .cell_name { width: 130px; }
+#student-list .cell_gender { width: 60px; }
+#student-list .cell_birthday { width: 90px; }
+
+.cell_code { width: 100px; }
+.cell_title { width: 150px; }
+.cell_filetype { width: 60px; }
+.cell_date { width: 110px; }
+
+/* institutions */
+.cell_year_month { width: 151px; }
+.table .icon_delete { margin-top: 4px; }
+
+/* programmes */
+.cell_prog { width: 250px; }
+.cell_status { width: 60px; text-align: center; }
+/* end programmes */
+
+span .icon_delete { margin-top: 4px; margin-left: 3px; }
+
+.cell_active { min-width: 10px !important; width: 30px; text-align: center; }
+
+#attachments.edit .table_cell { vertical-align: top !important; }
+
+fieldset.section_break#general > .row{
+    width:80%;
+    margin-left:15px;
+    float:left;
+}
+
+fieldset.section_break#general > .profile_image {
+    float: right;
+    width: 90px;
+    height: 115px;
+    border: 1px solid #CCCCCC;
+    margin-left: 20px;
+}
+
+#image_upload_info {
+    font-size:9px;
+    margin-left:5px;
+    margin-top:5px;
+    padding-top:0px;
+    line-height:10px;
+}

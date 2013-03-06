@@ -1,0 +1,30 @@
+#attachments.edit .table_cell { vertical-align: top !important; }
+.cell_file { width: 120px; }
+.cell_description { width: 290px; }
+.cell_upload { width: 207px; }
+.cell_date { width: 110px; }
+
+.file_input { 
+	position: relative;
+	height: 60px;
+	overflow: hidden;
+}
+
+.file_input input[type="file"] {
+	position: relative;
+	-moz-opacity: 0 ;
+	filter: alpha(opacity: 0);
+	opacity: 0;
+	z-index: 2;
+}
+
+.file_input .file {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	z-index: 1;
+}
+
+.file_input .btn { margin-top: 5px; }
+.file_input .clear_btn { margin-left: 5px; }

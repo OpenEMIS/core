@@ -1,0 +1,118 @@
+/* Dialog Box */
+.dialog-mask { position: absolute; display: none; z-index: 1998; background-color: #FFFFFF; }
+
+.dialog-container {	position: absolute; display: block; z-index: 1998; }
+
+.dialog-box {
+	position: absolute;
+	display: none;
+	z-index: 1998;
+	behavior: url(res/css/PIE.htc);
+	box-shadow:0 0 20px #b1bbc1;
+	border:1px solid #c8cfd5;
+	border-radius:4px;
+}
+
+.dialog-box h2 { 
+	padding: 12px 20px 8px 20px;
+	margin: 0;
+	color: #ffffff; 
+	font-size: 12px;
+	line-height:14px;
+	font-weight: bold;
+	border-bottom: 1px solid #CCCCCC;
+	background-image: url("../img/header_bg.png");
+    background-position: center top;
+    background-repeat: repeat;
+	text-shadow: -1px -1px 1px #000000;
+}
+.dialog-box .dialog-body {
+	background-color: #FFFFFF;
+}
+.dialog-box .dialog-content { 
+	min-height: 50px; 
+	padding: 20px;
+	font-size:12px;
+}
+.dialog-box .dialog-controls { 
+	padding: 8px 4px;
+	margin:0 14px;
+	border-top: 1px solid #CCCCCC;
+	text-align:right;
+}
+
+.dialog-box .dialog-btn {
+	background-color: #5B8BAF;
+	border: 2px outset #3e729a;
+	border-radius:4px;
+	box-shadow: 0 1px 1px #CCCCCC;
+	padding: 2px 10px;
+	color: #FFFFFF;
+	font-size:12px;
+	font-weight:bold;
+	line-height:14px;
+	cursor:pointer;
+	text-shadow: -1px -1px rgba(0, 0, 0, 0.5);
+	margin-left: 8px;
+}
+
+.dialog-box .dialog-btn:hover { 
+	background-color: #294a63;
+	border: 2px outset #294a63;
+    color: #FFFFFF;
+    text-shadow: -1px -1px rgba(0,0,0,0.5);
+}
+
+.dialog-box #dialog-btn-close {
+	background-color:#f1f1f1;
+	border:1px solid #cccccc;
+	border-radius:4px;
+	padding:3px 10px;
+	font-size:12px;
+	color:#007CBE;
+	font-weight:bold;
+	text-shadow:rgba(255,255,255,0.5) -1px -1px;
+	box-shadow:inset 0 0 1px #ffffff;
+	cursor:pointer;
+	margin-left: 8px;
+}
+.dialog-box #dialog-btn-close:hover{
+	background-color:#ffffff;
+}
+
+.dialog-box .field_row { overflow: hidden; margin-bottom: 10px; }
+.dialog-box .field_last { margin-bottom: 0 !important; }
+.dialog-box .field_name {
+	float: left; 
+	width: 100px; 
+	margin-top: 2px; 
+	font-size: 11px;
+	font-weight: bold; 
+	color: #666666;
+}
+.dialog-box .field_value { float: left; margin-top: 2px; font-size: 11px; color: #000; }
+.dialog-box .field_input .field_name { line-height: 24px; }
+
+.dialog-box input[type="text"], 
+.dialog-box input[type="password"], 
+.dialog-box input[type="number"], 
+.dialog-box textarea {
+	width: 180px;
+	border: 1px solid #CCCCCC;
+	font-size: 11px;
+	padding: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+
+.dialog-box select { 
+	width: 190px;
+	border: 1px solid #CCCCCC;
+	font-size: 11px;
+	padding: 3px 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+}
+/* End Dialog Box */

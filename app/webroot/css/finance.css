@@ -1,0 +1,44 @@
+.per_education_level .label, .per_education_level_year .label {
+	line-height: 25px;
+	width: 30px;
+}
+
+.total_public_expenditure .label {
+	line-height: 25px;
+	width: 50px;
+}
+
+#gnp {
+    margin-top: 3px;
+}
+
+.year select {
+	width: 75px;
+}
+
+.cell_arealevel {
+	width: 60px;
+}
+
+.cell_area {
+	width: 130px;
+}
+
+.cell_amount {
+	text-align: right;
+}
+
+.cell_hide_bottom_border {
+	border-bottom: 1px solid #fff;
+}
+
+.cell_hide_background {
+	background: #fff;
+}
+.education_level_id {
+	visibility: hidden;
+}
+
+.disabled {
+    color: #DDDDDD;
+}

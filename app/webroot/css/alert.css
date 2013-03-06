@@ -1,0 +1,40 @@
+.alert {
+	float: left;
+	position: absolute;
+	padding: 6px 15px 6px 10px;
+	font-size: 12px;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	overflow: hidden;
+	display: none;
+	z-index: 3000;
+}
+
+.alert[title] { cursor: pointer; }
+
+.alert_view {
+	float: none;
+	display: block;
+	position: relative;
+	margin-bottom: 15px;
+}
+
+.alert.alert_ok { border: 1px solid #7ABF2D; background-color: #E8FAC2; color: #333333; }
+.alert.alert_info { border: 1px solid #79B7E7; background-color: #F0F7F9; color: #333333; }
+.alert.alert_error { border: 1px solid #E40000; background-color: #FCE1E2; color: #FF0000; }
+.alert.alert_warn { border: 1px solid #FF8801; background-color: #FFFCC1; color: #333333 }
+
+.alert .alert_icon { float: left; width: 22px; height: 22px; }
+.alert.alert_ok .alert_icon { background: url('../img/alert/tick.png') top left no-repeat; }
+.alert.alert_info .alert_icon { background: url('../img/alert/info.png') top left no-repeat; }
+.alert.alert_error .alert_icon { background: url('../img/alert/cross.png') top left no-repeat; }
+.alert.alert_warn .alert_icon { background: url('../img/alert/warn.png') top left no-repeat; }
+
+.alert .alert_content {
+	float: left;
+	margin-top: 1px;
+	padding-left: 10px;
+	line-height: 22px;
+	overflow: hidden;
+}

@@ -1,0 +1,45 @@
+.year { margin-bottom: 10px; }
+.year .label { width: 30px; line-height: 25px; }
+.year select { width: 65px; }
+
+/* Enrolment */
+#enrolment .label.grade { width: 35px; line-height: 25px; font-size: 11px; }
+#enrolment .value.grade select { width: 90px; }
+#enrolment .label.category { width: 50px; line-height: 25px; margin-left: 25px; font-size: 11px; }
+#enrolment .value.category select { width: 180px; }
+/* End Enrolment */
+
+/* Teachers */
+#teachers .label.grade { width: 35px; line-height: 25px; font-size: 11px; }
+#teachers .value.grade select { width: 90px; }
+/* End Teachers */
+
+.custom_grid .table_wrapper {
+	overflow: auto;
+	max-height: 250px;
+	margin-left: 10px;
+	margin-top: 10px;
+}
+
+.custom_grid .desc { margin-left: 8px; font-size: 11px; margin-top: 0 !important; }
+.custom_grid .y_col { min-width: 150px !important; }
+.custom_grid .x_title { margin-top: 10px; text-align: center; font-size: 11px; }
+
+/* Table styles */
+.cell_classes, .cell_gender { width: 110px; }
+.edit .multi .cell_classes, .edit .multi .cell_gender { width: 93px; }
+.multi .icon_plus { margin-left: 0; }
+.multi .icon_delete { margin-top: 8px; }
+.multi .input_wrapper { margin-top: 5px; }
+.multi .table select { width: 100%; }
+.cell_grade { width: 110px; }
+.cell_category { width: 270px; }
+.cell_programme { width: 200px; }
+.cell_certificate { width: 140px; }
+#infrastructure .cell_category { width: 150px; }
+#infrastructure .cell_total { min-width: 50px !important; width: 50px; }
+.cell_delete { min-width: 0 !important; width: 16px; }
+.table .icon_delete { float: left; }
+
+.row.last { margin-top: 10px; }
+/* End Table styles */

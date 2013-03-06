@@ -1,0 +1,46 @@
+#teacher-list .cell_id_no { width: 110px; }
+#teacher-list .cell_name { width: 130px; }
+#teacher-list .cell_gender { width: 60px; }
+#teacher-list .cell_birthday { width: 90px; }
+
+.cell_code { width: 100px; }
+.cell_title { width: 250px; }
+.cell_filetype { width: 60px; }
+/*.cell_date { width: 110px; }*/
+.cell_date { width: 220px; }
+
+/* programmes */
+.cell_prog { width: 250px; }
+.cell_status { width: 60px; text-align: center; }
+/* end programmes */
+
+.cell_active { min-width: 10px !important; width: 30px; text-align: center; }
+
+span .icon_delete { margin-top: 4px; margin-left: 3px; }
+#attachments.edit .table_cell { vertical-align: top !important; }
+
+.training_category { width: 350px; }
+
+.cell_qualifications { width:140px; }
+
+fieldset.section_break#general > .row{
+    width:80%;
+    margin-left:15px;
+    float:left;
+}
+
+fieldset.section_break#general > .profile_image {
+    float: right;
+    width: 90px;
+    height: 115px;
+    border: 1px solid #CCCCCC;
+    margin-left: 20px;
+}
+
+#image_upload_info {
+    font-size:9px;
+    margin-left:5px;
+    margin-top:5px;
+    padding-top:0px;
+    line-height:10px;
+}
