@@ -38,6 +38,7 @@ Thumbs.db
 
 # Folders
 ######################
+app/Config/database.php
 app/Backups/*
 app/webroot/reports/*
 app/tmp/logs/*
