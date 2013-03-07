@@ -68,7 +68,7 @@ echo $this->Form->create('Database', array(
 			<span><?php echo __('Restore'); ?></span>
 
 		</h1>
-		<p>No backup files found.</p>
+		<p><?php echo __('No backup files found.'); ?></p>
 		
 	<?php }
 ?>
