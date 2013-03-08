@@ -191,6 +191,21 @@ class CensusController extends AppController {
 		}
 	}
 	
+	public function enrolmentAddRow() {
+		$this->layout = 'ajax';
+		
+		$programmeId = $this->params->query['programmeId'];
+		$rowNum = $this->params->query['rowNum'];
+		$age = $this->params->query['age'];
+		
+		if($age == 0) {
+			$age = 3;
+		}
+		$this->set('programmeId', $programmeId);
+		$this->set('rowNum', $rowNum);
+		$this->set('age', $age);
+	}
+	
 	public function graduates() {
 		$this->Navigation->addCrumb('Graduates');
 		$yearList = $this->SchoolYear->getYearList();
