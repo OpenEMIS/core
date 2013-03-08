@@ -31,7 +31,7 @@ var i18n = {
 		textLowerCapValue : '<?php echo T("value"); ?>'
 	},
 	Enrolment : {
-		textDuplicateAge: '<?php echo __("This age is already exists in the list."); ?>',
+		textDuplicateAge: '<?php echo T("This age is already exists in the list.", true); ?>',
 		textUnsavedData: '<?php echo T("Unsaved Data", true); ?>',
 		contentUnsavedData: '<?php echo T("Please save your data before proceed. <br><br>Do you want to save now?", true); ?>',
 		textLeaving: '<?php echo T("Are you sure you want to leave?"); ?>'
