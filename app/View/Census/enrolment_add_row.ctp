@@ -1,9 +1,3 @@
-<?php
-
-
-
-?>
-	
 <div class="table_row <?php echo $rowNum%2==1 ? 'even' : '' ?>" record-id="0">
 	<div class="table_cell">
 		<div class="input_wrapper">
