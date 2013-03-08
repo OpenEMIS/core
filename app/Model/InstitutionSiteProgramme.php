@@ -155,6 +155,14 @@ class InstitutionSiteProgramme extends AppModel {
 		return $data;
 	}
 	
+	public function getProgrammeCountByInstitutionSite($institutionSiteId) {
+		$count = $this->find('count', array(
+			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId)
+		));
+		
+		return $count;
+	}
+	
 	public function getAllProgBySystemId($educSystemId,$arrExclude = Array()){
 		$exclude = (count($arrExclude) > 0 )?" AND education_programmes.id NOT IN (".implode(",",$arrExclude).")":"";
 		  $arr = $this->query("
