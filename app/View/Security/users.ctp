@@ -9,7 +9,11 @@ echo $this->Html->script('education', false);
 <div id="users" class="content_wrapper">
 	<h1>
 		<span><?php echo __('Users'); ?></span>
-		<?php echo $this->Html->link(__('Add'), array('action' => 'usersAdd'), array('class' => 'divider')); ?>
+		<?php
+		if($_add) {
+			echo $this->Html->link(__('Add'), array('action' => 'usersAdd'), array('class' => 'divider'));
+		}
+		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
