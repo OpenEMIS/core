@@ -274,12 +274,13 @@ class CensusController extends AppController {
 		
 		$yearList = $this->SchoolYear->getYearList();
 		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-		$displayContent = true;
-		if(empty($programmeGrades)) {
+		$displayContent = true;		
+		
+		if($this->InstitutionSiteProgramme->getProgrammeCountByInstitutionSite($this->institutionSiteId)==0) {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 			$displayContent = false;
 		} else {
+			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
 			$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $yearId);
 			$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $yearId);
 			$singleGradeData = $programmeGrades;
@@ -401,13 +402,14 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Teachers');
 		
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
+		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);	
 		$displayContent = true;
-		if(empty($programmeGrades)) {
+		
+		if($this->InstitutionSiteProgramme->getProgrammeCountByInstitutionSite($this->institutionSiteId)==0) {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 			$displayContent = false;
 		} else {
+			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
 			$fte = $this->CensusTeacherFte->getCensusData($this->institutionSiteId, $yearId);
 			$training = $this->CensusTeacherTraining->getCensusData($this->institutionSiteId, $yearId);
 			$singleGradeTeachers = $this->CensusTeacher->getSingleGradeData($this->institutionSiteId, $yearId);
