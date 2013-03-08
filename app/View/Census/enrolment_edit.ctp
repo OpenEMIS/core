@@ -91,7 +91,8 @@ echo $this->Html->script('census_enrolment', false);
 								'defaultValue' => $record['age'],
 								'maxlength' => 2,
 								'autocomplete' => 'off',
-								'onkeypress' => 'return utility.integerCheck(event)'
+								'onkeypress' => 'return utility.integerCheck(event);',
+								'onblur' => 'CensusEnrolment.checkExistingAge(this);'
 							));
 						?>
 						</div>
@@ -143,7 +144,7 @@ echo $this->Html->script('census_enrolment', false);
 			</div>
 		</div>
 		<?php if($_add) { ?>
-		<div class="row" style="margin-bottom: 10px;"><a class="void link_add icon_plus"><?php echo __('Add').' '.__('Age'); ?></a></div>
+		<div class="row" style="margin-bottom: 10px;"><a class="void icon_plus" url="Census/enrolmentAddRow"><?php echo __('Add').' '.__('Age'); ?></a></div>
 		<?php } ?>
 	</fieldset>
 	<?php } // end foreach (enrolment) ?>
