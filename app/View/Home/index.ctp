@@ -1,9 +1,7 @@
 <?php echo $this->Html->css('home', null, array('inline' => false)); ?>
 
-<!--
-<div class="ad_image">
-	<?php //echo $this->Html->image('eg_ad.jpg') ?>
-</div><!-- end ad_image -->
+<?php echo $this->element('alert'); ?>
+
 <?php if(!empty($adaptation)){ ?>
 <div id="software_title">
     <?php echo $adaptation; ?>
