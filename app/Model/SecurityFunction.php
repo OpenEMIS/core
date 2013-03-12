@@ -59,7 +59,7 @@ class SecurityFunction extends AppModel {
 			foreach($operations as $op) {
 				if(!is_null($function[$op])) {
 					$row[$op] = is_null($roleFunction[$op]) ? 0 : $roleFunction[$op];
-					if($row[$op]==1) { // for enabling the module in view
+					if($row[$op]==1 && $function['visible'] == 1 && $permissions[$module]['enabled'] == false) { // for enabling the module in view
 						$permissions[$module]['enabled'] = true;
 					}
 				} else {
