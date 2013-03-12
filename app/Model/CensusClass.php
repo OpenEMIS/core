@@ -47,7 +47,6 @@ class CensusClass extends AppModel {
 		FROM `census_classes`
 		JOIN `institution_site_programmes`
 			ON `institution_site_programmes`.`institution_site_id` = `census_classes`.`institution_site_id`
-			AND `institution_site_programmes`.`status` = 1
 		JOIN `education_programmes` 
 			ON `education_programmes`.`id` = `institution_site_programmes`.`education_programme_id`
 			AND `education_programmes`.`visible` = 1
@@ -92,10 +91,7 @@ class CensusClass extends AppModel {
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id',
-						'InstitutionSiteProgramme.status = 1',
-					)
+					'conditions' => array('InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id')
 				),
 				array(
 					'table' => 'education_programmes',
