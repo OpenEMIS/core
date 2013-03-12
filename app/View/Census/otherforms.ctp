@@ -21,7 +21,11 @@ echo $this->Html->script('census', false);
 	?>
 	<h1>
 		<span><?php echo __('Other Forms'); ?></span>
-		<?php echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<?php
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+		}
+		?>
 	</h1>
 	
 	<div class="row year">

@@ -13,7 +13,11 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 <div id="population" class="content_wrapper">
 	<h1>
 		<span><?php echo __('Population'); ?></span>
-		<?php echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('id' => 'edit', 'class' => 'divider')); ?>
+		<?php
+		if($_edit) { 
+			echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('id' => 'edit', 'class' => 'divider'));
+		}
+		?>
 	</h1>
 
 	<?php
