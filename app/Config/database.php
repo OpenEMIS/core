@@ -76,7 +76,7 @@ class DATABASE_CONFIG {
 		'host' => 'localhost',
 		'login' => 'kordit',
 		'password' => 'k0rd1tmysql2012',
-		'database' => 'www_openemis_demo', 
+		'database' => 'tst_openemis_demo', 
 		'prefix' => '',
 	);
 	
@@ -86,7 +86,7 @@ class DATABASE_CONFIG {
 		'host' => 'localhost',
 		'login' => 'kordit',
 		'password' => 'k0rd1tmysql2012',
-		'database' => 'www_devinfo6_demo',
+		'database' => 'tst_devinfo6_demo',
 		'prefix' => '',
 	);
 
