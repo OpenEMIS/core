@@ -4,6 +4,7 @@ class NavigationComponent extends Component {
 	public $navigations;
 	public $breadcrumbs;
 	public $params;
+	public $ignoredLinks = array();
 	public $skip = false;
 	
 	public $components = array('Auth', 'AccessControl');
@@ -24,7 +25,6 @@ class NavigationComponent extends Component {
 		$this->controller->set('_navigations', $this->navigations);
 		$this->controller->set('_params', $this->params);
 		$this->controller->set('_breadcrumbs', $this->breadcrumbs);
-		//pr($this->navigations);
 	}
 	
 	//called after Controller::render()
@@ -116,7 +116,8 @@ class NavigationComponent extends Component {
 			$componentObj = $module.'NavigationComponent';
 			App::uses($componentObj, $module.'.Controller/Component');
 			$component = new $componentObj(new ComponentCollection);
-			$nav = array_merge($nav, $component->getLinks());
+			$componentLinks = $component->getLinks($this);
+			$nav = array_merge($nav, $componentLinks);
 		}
 		// End initialise
 		
@@ -223,7 +224,25 @@ class NavigationComponent extends Component {
 				)
 			)
 		);
+		$this->ignoreLinks($links, 'Settings');
 		return $links;
+	}
+	
+	public function ignoreLinks($links, $module) {
+		if(!isset($this->ignoredLinks[$module])) {
+			$this->ignoredLinks[$module] = array();
+		}
+		foreach($links as $i => $category) {
+			foreach($category as $j => $items) {
+				foreach($items as $k => $obj) {
+					if($k === '_controller') continue;
+					$controller = isset($obj['controller']) ? $obj['controller'] : $items['_controller'];
+					$action = $obj['action'];
+					$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
+					$this->AccessControl->ignore($controller, $action);
+				}
+			}
+		}
 	}
 }
 ?>
