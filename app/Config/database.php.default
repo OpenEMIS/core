@@ -65,18 +65,18 @@ class DATABASE_CONFIG {
 		'host' => 'localhost',
 		'login' => 'user',
 		'password' => 'password',
-		'database' => 'database_name',
+		'database' => '_openemis_',
 		'prefix' => '',
 		//'encoding' => 'utf8',
 	);
 
-	public $test = array(
+	public $di6 = array(
 		'datasource' => 'Database/Mysql',
 		'persistent' => false,
 		'host' => 'localhost',
 		'login' => 'user',
 		'password' => 'password',
-		'database' => 'test_database_name',
+		'database' => '_devinfo6_',
 		'prefix' => '',
 		//'encoding' => 'utf8',
 	);
