@@ -1,96 +1,96 @@
 var i18n = {
 	Config : {
-		InvalidUser : '<?php echo __("You have entered an invalid username or password."); ?>'
+		InvalidUser : '<?php echo T("You have entered an invalid username or password.", true); ?>'
 	},
 	Education : {
-		textAddProgramme : '<?php echo __("Add Programme"); ?>',
-		noMoreSubjects: '<?php echo __("All subjects have been added."); ?>',
-		emptyProgrammeName: '<?php echo __("Please enter a programme name."); ?>',
-		emptyDuration : '<?php echo __("Please enter a duration."); ?>'
+		textAddProgramme : '<?php echo T("Add Programme", true); ?>',
+		noMoreSubjects: '<?php echo T("All subjects have been added.", true); ?>',
+		emptyProgrammeName: '<?php echo T("Please enter a programme name.", true); ?>',
+		emptyDuration : '<?php echo T("Please enter a duration."); ?>'
 	},
 	App : {
-		confirmDeleteContent : '<?php echo __("You are able to delete this record in the database. <br><br>All related information of this record will also be deleted.<br><br>Are you sure you want to do this?"); ?>',
-		dlgOptErrorDialog : '<?php echo __("Unexpected Error"); ?>'
+		confirmDeleteContent : '<?php echo T("You are able to delete this record in the database. <br><br>All related information of this record will also be deleted.<br><br>Are you sure you want to do this?", true); ?>',
+		dlgOptErrorDialog : '<?php echo T("Unexpected Error"); ?>'
 	},
 	Areas : {
-		initAlertOptText : '<?php echo __("Unable to add Areas.<br/>Please create Area Level before adding Areas."); ?>'
+		initAlertOptText : '<?php echo T("Unable to add Areas.<br/>Please create Area Level before adding Areas.", true); ?>'
 	},
 	Attachments : {
-		maskDeleteAttachments : '<?php echo __("Deleting attachment..."); ?>',
-		titleDeleteAttachment : '<?php echo __("Delete Attachment"); ?>',
-		contentDeleteAttachment : '<?php echo __("Do you wish to delete this record?"); ?>',
-		textUpdatingAttachment : '<?php echo __("Updating attachment..."); ?>',
-		textDeletingAttachment : '<?php echo __("Deleting attachment..."); ?>'
+		maskDeleteAttachments : '<?php echo T("Deleting attachment...", true); ?>',
+		titleDeleteAttachment : '<?php echo T("Delete Attachment", true); ?>',
+		contentDeleteAttachment : '<?php echo T("Do you wish to delete this record?", true); ?>',
+		textUpdatingAttachment : '<?php echo T("Updating attachment...", true); ?>',
+		textDeletingAttachment : '<?php echo T("Deleting attachment...", true); ?>'
 	},
 	BankAccounts : {
-		validateAddBranch : '<?php echo __("Bank Branch is required!"); ?>',
-		textDelete : '<?php echo __("Delete"); ?>',
+		validateAddBranch : '<?php echo T("Bank Branch is required!", true); ?>',
+		textDelete : '<?php echo T("Delete", true); ?>',
 	},
 	CustomTables : {
-		textValue : '<?php echo __("Value"); ?>',
-		textLowerCapValue : '<?php echo __("value"); ?>'
+		textValue : '<?php echo T("Value", true); ?>',
+		textLowerCapValue : '<?php echo T("value"); ?>'
 	},
 	Enrolment : {
-		textDuplicateAge: '<?php echo __("This age is already exists in the list."); ?>',
-		textUnsavedData: '<?php echo __("Unsaved Data"); ?>',
-		contentUnsavedData: '<?php echo __("Please save your data before proceed. <br><br>Do you want to save now?"); ?>',
-		textLeaving: '<?php echo __("Are you sure you want to leave?"); ?>'
+		textDuplicateAge: '<?php echo T("This age is already exists in the list.", true); ?>',
+		textUnsavedData: '<?php echo T("Unsaved Data", true); ?>',
+		contentUnsavedData: '<?php echo T("Please save your data before proceed. <br><br>Do you want to save now?", true); ?>',
+		textLeaving: '<?php echo T("Are you sure you want to leave?"); ?>'
 	},
 	Finance : {
-		textNoData: '<?php echo __("No Data"); ?>',
-		textNoGNP: '<?php echo __("GNP value is required."); ?>'
+		textNoData: '<?php echo T("No Data", true); ?>',
+		textNoGNP: '<?php echo T("GNP value is required."); ?>'
 	},
 	InstitutionSites : {
-		textArea: '<?php echo __("Area"); ?>'
+		textArea: '<?php echo T("Area"); ?>'
 	},
 	Training : {
-		textArea: '<?php echo __("Category is required!"); ?>'
+		textArea: '<?php echo T("Category is required!"); ?>'
 	},
 	Qualifications : {
-		textCertificateRequired: '<?php echo __("Certificate is required!"); ?>',
-		textCertificateNoRequired: '<?php echo __("Certificate No. is required!"); ?>',
-		textInstituteRequired: '<?php echo __("Institute is required!"); ?>'
+		textCertificateRequired: '<?php echo T("Certificate is required!", true); ?>',
+		textCertificateNoRequired: '<?php echo T("Certificate No. is required!", true); ?>',
+		textInstituteRequired: '<?php echo T("Institute is required!"); ?>'
 	},
 	Population : {
-		textSelectCountry: '<?php echo __("Please select a country before adding new records."); ?>',
-		textErrorOccurred: '<?php echo __("Error have occurred."); ?>',
-		textEmptyAge: '<?php echo __("Age cannot be empty."); ?>',
-		textAgeMoreThanZero: '<?php echo __("Age must be more then 0."); ?>'
+		textSelectCountry: '<?php echo T("Please select a country before adding new records.", true); ?>',
+		textErrorOccurred: '<?php echo T("Error have occurred.", true); ?>',
+		textEmptyAge: '<?php echo T("Age cannot be empty.", true); ?>',
+		textAgeMoreThanZero: '<?php echo T("Age must be more then 0.", true); ?>'
 	},
 	Batch : {
-		textExecuteSuccess: '<?php echo __("Batch executed successfully."); ?>',
-		textRunning: '<?php echo __("Running batch..."); ?>'
+		textExecuteSuccess: '<?php echo T("Batch executed successfully.", true); ?>',
+		textRunning: '<?php echo T("Running batch..."); ?>'
 	},
 	Report : {
-		textGenerateOlapReport: '<?php echo __("Generating OLAP Report..."); ?>'
+		textGenerateOlapReport: '<?php echo T("Generating OLAP Report...", true); ?>'
 	},
 	General : {
-		textDismiss : '<?php echo __("Click to dismiss"); ?>',
-		textNo : '<?php echo __("No"); ?>',
-		textYes : '<?php echo __("Yes"); ?>',
-		textCancel : '<?php echo __("Cancel"); ?>',
-		textDialog : '<?php echo __("Dialog"); ?>',
-		textAdd : '<?php echo __("Add"); ?>',
-		textError : '<?php echo __("error"); ?>',
-		textReconnecting: '<?php echo __("Reconnecting..."); ?>',
-		textRequiredField : '<?php echo __("Required Field"); ?>',
-		textSave : '<?php echo __("Save"); ?>',
-		textSaving : '<?php echo __("Saving please wait..."); ?>',
-		textRetrieving : '<?php echo __("Retrieving..."); ?>',
-		textAddingRow : '<?php echo __("Adding row..."); ?>',
-		textAddingOption : '<?php echo __("Adding option..."); ?>',
-		textLoading : '<?php echo __("Loading..."); ?>',
-		textLoadingList : '<?php echo __("Loading list..."); ?>',
-		textDelete : '<?php echo __("Delete"); ?>',
-		textLoadAreas : '<?php echo ("Loading Areas"); ?>',
-		textSelect : '<?php echo __("--Select--"); ?>',
-		textDeleteConfirmation : '<?php echo __("Delete Confirmation"); ?>',
-		textDeleteConfirmationMessage : '<?php echo __("Do you wish to delete this record?"); ?>',
-		textRecordUpdateSuccess : '<?php echo __("Records have been added/updated successfully."); ?>',
-		textFileRequired : '<?php echo __("File is required!"); ?>',
-		textStatusRequired : '<?php echo __("Status is required!"); ?>',
-		iconMoveUp : '<?php echo __("Move Up"); ?>',
-		iconMoveDown : '<?php echo __("Move Down"); ?>',
-		iconToggleField : '<?php echo __("Toggle this field active/inactive"); ?>'
+		textDismiss : '<?php echo T("Click to dismiss", true); ?>',
+		textNo : '<?php echo T("No", true); ?>',
+		textYes : '<?php echo T("Yes", true); ?>',
+		textCancel : '<?php echo T("Cancel", true); ?>',
+		textDialog : '<?php echo T("Dialog", true); ?>',
+		textAdd : '<?php echo T("Add", true); ?>',
+		textError : '<?php echo T("error", true); ?>',
+		textReconnecting: '<?php echo T("Reconnecting...", true); ?>',
+		textRequiredField : '<?php echo T("Required Field", true); ?>',
+		textSave : '<?php echo T("Save", true); ?>',
+		textSaving : '<?php echo T("Saving please wait...", true); ?>',
+		textRetrieving : '<?php echo T("Retrieving...", true); ?>',
+		textAddingRow : '<?php echo T("Adding row...", true); ?>',
+		textAddingOption : '<?php echo T("Adding option...", true); ?>',
+		textLoading : '<?php echo T("Loading...", true); ?>',
+		textLoadingList : '<?php echo T("Loading list...", true); ?>',
+		textDelete : '<?php echo T("Delete", true); ?>',
+		textLoadAreas : '<?php echo T("Loading Areas", true); ?>',
+		textSelect : '<?php echo T("--Select--", true); ?>',
+		textDeleteConfirmation : '<?php echo T("Delete Confirmation", true); ?>',
+		textDeleteConfirmationMessage : '<?php echo T("Do you wish to delete this record?", true); ?>',
+		textRecordUpdateSuccess : '<?php echo T("Records have been added/updated successfully.", true); ?>',
+		textFileRequired : '<?php echo T("File is required!", true); ?>',
+		textStatusRequired : '<?php echo T("Status is required!", true); ?>',
+		iconMoveUp : '<?php echo T("Move Up", true); ?>',
+		iconMoveDown : '<?php echo T("Move Down", true); ?>',
+		iconToggleField : '<?php echo T("Toggle this field active/inactive", true); ?>'
 	}
 }
