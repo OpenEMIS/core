@@ -419,7 +419,7 @@ class ReportsController extends ReportsAppController {
 	}
 
     private function downloadOlapReport(){
-        $filename = $this->Auth->user('id').'_'.$this->Auth->user('username');
+        $filename = 'OpenEMIS_Report_OLAP_'.$this->Auth->user('username');
         $ext = 'csv';
 
         if(!$filename)
@@ -640,7 +640,7 @@ class ReportsController extends ReportsAppController {
 
     public function prepareCSV($settings){
         $tpl = $this->humanizeCsvTitle($settings['tpl']);
-        $name = $this->Auth->user('id').'_'.$this->Auth->user('username');//$settings['name'];
+        $name = 'OpenEMIS_Report_OLAP_'.$this->Auth->user('username');//$settings['name'];
         $module = 'Olap_Reports';//$settings['module'];
         $category = 'reports';//$settings['category'];
 
