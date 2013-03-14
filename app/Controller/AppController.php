@@ -51,6 +51,9 @@ class AppController extends Controller {
 	
 	public function beforeFilter() {
 		Configure::write('Config.language', $this->Session->read('configItem.language'));
+		if(!$this->request->is('ajax')) {
+			$this->AccessControl->checkAccess();
+		}
 	}
 	 
 	public function beforeRender() {

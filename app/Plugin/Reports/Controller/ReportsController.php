@@ -29,23 +29,20 @@ class ReportsController extends ReportsAppController {
 	
     public $helpers = array('Paginator');
     public $components = array('Paginator');
-
-    /*public function beforeFilter() {
-		parent::beforeFilter();
-		$this->Navigation->extendSideLinks($this->ReportsNavigation->getReportLinks());
-		$this->Navigation->show(array('reports'));  
-		$this->breadcrumbAdd(__('Reports'), array('controller' => 'Reports', 'action' => 'index'));
-    }*/
+	
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Reports', array('controller' => 'Reports', 'action' => 'index'));
 		
 		if(array_key_exists(ucfirst($this->action), $this->standardReports)) {
-			
-			$this->index(ucfirst($this->action));
+			$this->renderReport(ucfirst($this->action));
 			$this->render('index');
 		}
     }
+	
+	public function index() {
+		$this->redirect(array('controller' => $this->params['controller'], 'action' => 'Institution'));
+	}
 	
 	public function Institution(){}
 	public function Student(){}
@@ -56,11 +53,8 @@ class ReportsController extends ReportsAppController {
 	public function Custom(){}
 	public function DataQuality(){}
 	
-	
-    public function index($reportType = 'Institution') {
-		//$this->breadcrumbSelected($reportType.' Reports');
+	public function renderReport($reportType = 'Institution') {
 		$this->Navigation->addCrumb($reportType.' Reports');
-		//$this->Navigation->selected('reports', strtolower($reportType));
 
 		if(array_key_exists($reportType, $this->standardReports)){
 			if(!$this->standardReports[$reportType]['enable'] === false){
@@ -73,10 +67,8 @@ class ReportsController extends ReportsAppController {
 		//pr($this->InstitutionSiteProgramme->find('all',array('limit'=>2)));
 		$reportType = Inflector::underscore($reportType);
 		$reportType = str_replace('_',' ',$reportType);
-		$data = $this->Report->find('all',array('conditions'=>array('category'=>$reportType.' Reports'))); 
-                
-             
-                
+		$data = $this->Report->find('all',array('conditions'=>array('category'=>$reportType.' Reports')));
+		
         $checkFileExist = array();
 		$tmp = array();
 		foreach($data as $k => $val){
@@ -102,8 +94,8 @@ class ReportsController extends ReportsAppController {
         $this->set('msg',$msg);
 		$this->set('data',$tmp);
         $this->set('checkFileExist',$checkFileExist);
-    }
-
+	}
+	
     public function olap(){
 //        $this->autoRender = false;
 
