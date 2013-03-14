@@ -49,8 +49,8 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 		
 		<div class="table full_width">
 			<div class="table_head">
-				<div class="table_cell" style="width: 120px;">Role</div>
-				<div class="table_cell">Modules</div>
+				<div class="table_cell" style="width: 120px;"><?php echo __('Role'); ?></div>
+				<div class="table_cell"><?php echo __('Modules'); ?></div>
 			</div>
 			
 			<div class="table_body">
