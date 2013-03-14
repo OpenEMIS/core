@@ -52,11 +52,12 @@ JOIN (
 		FROM `education_grades`
 		ORDER BY `education_programme_id`, `order`
 	) `edu_grades`
-	LEFT JOIN `education_programmes` ON `education_programmes`.`id` = `edu_grades`.`education_programme_id`
-	LEFT JOIN `education_cycles` ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
+	JOIN `education_programmes` ON `education_programmes`.`id` = `edu_grades`.`education_programme_id`
+	JOIN `education_cycles` ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
 ) AS `grades`
 	ON `grades`.`education_programme_id` = `education_programmes`.`id`
-LEFT JOIN `student_categories`
+	AND `grades`.`grade_id` = %d
+JOIN `student_categories`
 	ON `student_categories`.`id` = %d
 LEFT JOIN `census_students`
 	ON `census_students`.`institution_site_programme_id` = `institution_site_programmes`.`id`
@@ -64,7 +65,6 @@ LEFT JOIN `census_students`
 	AND `census_students`.`student_category_id` = `student_categories`.`id`
 	AND `census_students`.`school_year_id` = %d
 WHERE `institution_site_programmes`.`institution_site_id` = %d
-AND `grades`.`grade_id` = %d
 ORDER BY `education_levels`.`order`, `education_cycles`.`order`, `education_programmes`.`order`
 ";
 		
