@@ -2349,3 +2349,6 @@ msgstr ""
 
 msgid "Logo"
 msgstr ""
+
+msgid "Page Orientation"
+msgstr ""

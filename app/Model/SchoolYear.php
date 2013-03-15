@@ -42,4 +42,14 @@ class SchoolYear extends AppModel {
 		$lookup = array('School Year' => array('model' => $modelName, 'options' => $options));
 		return $lookup;
 	}
+
+
+	/**
+	 * get school year id based on the given year
+	 * @return int 	school year id
+	 */
+	public function getSchoolYearId($year) {
+		$data = $this->findByName($year);	
+		return $data['SchoolYear']['id'];
+	}
 }
