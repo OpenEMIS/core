@@ -185,4 +185,65 @@ class InstitutionSite extends AppModel {
 		));
 		return $list;
 	}
+
+	public function calculateTotalSitesByAreaId($areaId, $year) {
+
+		$startDate = mktime(0,0,0,1,1,$year);
+		$endDate = mktime(0,0,0,12,31,$year);
+
+		$this->unbindModel(array('belongsTo' => array('Institution', 'InstitutionSiteStatus', 'InstitutionSiteLocality', 'InstitutionSiteType', 'InstitutionSiteOwnership')));
+
+		$options['fields'] = array(
+            'COUNT(InstitutionSite.id) as TotalInstitutionSites'
+        );
+
+		// $options['conditions'] = array('AND' => array('InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened >=' => date('Y-m-d', $startDate), 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('InstitutionSite.area_id'=>null));
+// $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('InstitutionSite.area_id'=>null, 'InstitutionSite.date_closed' => null, 'InstitutionSite.date_closed' => ""));
+		$options['conditions'] = array('AND' => array('InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('InstitutionSite.area_id'=>null, 'InstitutionSite.date_closed' => null, 'InstitutionSite.date_closed' => ""));
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		$data = ($values[0]['TotalInstitutionSites'] > 0) ? $values[0]['TotalInstitutionSites'] : 0;
+		return $data;
+	}
+
+	public function calculateTotalSitesByLevelAndAreaId($year, $areaId, $eduCycleId) {
+
+		$startDate = mktime(0,0,0,1,1,$year);
+		$endDate = mktime(0,0,0,12,31,$year);
+
+		$this->unbindModel(array('belongsTo' => array('Institution', 'InstitutionSiteStatus', 'InstitutionSiteLocality', 'InstitutionSiteType', 'InstitutionSiteOwnership')));
+		$this->bindModel(array('hasOne' => array(
+			'InstitutionSiteProgramme' =>
+            array(
+                'className' => 'InstitutionSiteProgramme',
+                'joinTable' => 'institution_site_programmes',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' InstitutionSite.id = InstitutionSiteProgramme.institution_site_id '),
+            ),
+            'EducationProgramme' =>
+            array(
+                'className' => 'EducationProgramme',
+                'joinTable' => 'education_programmes',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
+            ),
+		)));
+		$options['fields'] = array(
+			// 'Area.id AS AreaId',
+			// 'Area.name AS AreaName',
+            'COUNT(InstitutionSite.id) as TotalInstitutionSites'
+        );
+
+		// $options['group'] = array('InstitutionSite.area_id');
+		// $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.area_id' => $areaId), 'NOT' => array('InstitutionSite.area_id'=>null));
+		// $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.area_id' => $areaId), 'NOT' => array('InstitutionSite.area_id'=>null));
+		$options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('InstitutionSite.area_id'=>null, 'InstitutionSite.date_closed' => null, 'InstitutionSite.date_closed' => "0000-00-00"));
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		return $values;
+	}
 }
