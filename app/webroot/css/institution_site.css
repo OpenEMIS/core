@@ -1,0 +1,53 @@
+.year { margin-bottom: 10px; }
+.year .label { width: 30px; line-height: 25px; }
+.year select { width: 65px; }
+
+/* Students search */
+.cell_id_no { width: 110px; }
+.search .cell_id_no { width: 130px; }
+.cell_name { width: 150px; }
+/* End Students search */
+
+#students .label { width: 90px; }
+#students .row { margin-bottom: 10px; }
+#student_list { margin-top: 20px; }
+.cell_date { width: 110px; }
+.cell_start_date { width: 140px; }
+.cell_datepicker { width: 195px; }
+.cell_class { width: 100px; }
+.cell_gender { width: 60px; }
+
+.section_group #pagination {
+	margin-top: 0;
+	margin-bottom: 10px;
+}
+
+.table_scrollable .table_header {
+	margin-bottom: -1px;
+}
+
+.table_scrollable.scroll_active .table_header {
+	width: 648px !important;
+}
+
+.ie8 .table_scrollable.scroll_active .table_header {
+	width: 646px;
+}
+
+.list_wrapper {
+	height: 109px;
+	margin-bottom: 10px;
+}
+
+.ie8 .list_wrapper { height: 111px; }
+
+.table_scrollable.scroll_active .list_wrapper {
+	
+}
+
+.table_scrollable.scroll_active .list_wrapper {
+	overflow-y: scroll;
+	padding-right: 1px;
+}
+
+.list_wrapper > .table { margin-bottom: 0; }

@@ -11,23 +11,6 @@ class Student extends StudentsAppModel {
 		)
 	);
 	
-	// Used by SetupController
-	public function getLookupVariables() {
-		$lookup = array();
-		
-		$StudentCategory = ClassRegistry::init('Students.StudentCategory');
-		
-		$StudentCategory->formatResult = true;
-		$categoryList = $StudentCategory->find('all', array(
-			'recursive' => 0,
-			'conditions' => array('StudentCategory.id >' => 4), // Not fetching system default categories for editing
-			'order' => array('StudentCategory.order')
-		));
-		$lookup['Category'] = array('model' => 'Students.StudentCategory', 'options' => $categoryList);
-		
-		return $lookup;
-	}
-	
 	public $sqlPaginateCount;
 	public $validate = array(
 		'first_name' => array(
@@ -97,6 +80,63 @@ class Student extends StudentsAppModel {
 			)
 		)
 	);
+	
+	// Used by SetupController
+	public function getLookupVariables() {
+		$lookup = array();
+		
+		$StudentCategory = ClassRegistry::init('Students.StudentCategory');
+		
+		$StudentCategory->formatResult = true;
+		$categoryList = $StudentCategory->find('all', array(
+			'recursive' => 0,
+			'conditions' => array('StudentCategory.id >' => 4), // Not fetching system default categories for editing
+			'order' => array('StudentCategory.order')
+		));
+		$lookup['Category'] = array('model' => 'Students.StudentCategory', 'options' => $categoryList);
+		
+		return $lookup;
+	}
+	
+	// Used by InstitutionSiteController for searching
+	public function search($searchStr, $yearId, $programmeId) {
+		$limit = 200;
+		$this->formatResult = true;
+		
+		$ProgrammeStudent = ClassRegistry::init('InstitutionSiteProgrammeStudent');
+		$studentIds = $ProgrammeStudent->find('list', array(
+			'fields' => array('InstitutionSiteProgrammeStudent.student_id'),
+			'conditions' => array(
+				'InstitutionSiteProgrammeStudent.institution_site_programme_id' => $programmeId,
+				'InstitutionSiteProgrammeStudent.school_year_id' => $yearId
+			)
+		));
+		
+		$searchStr = '%' . $searchStr . '%';
+		$conditions = array(
+			'OR' => array(
+				'Student.identification_no LIKE' => $searchStr,
+				'Student.first_name LIKE' => $searchStr,
+				'Student.last_name LIKE' => $searchStr
+			),
+			'AND' => array('Student.id NOT' => $studentIds)
+		);
+		
+		$options = array(
+			'recursive' => -1,
+			'conditions' => $conditions,
+			'order' => array('Student.first_name')
+		);
+		
+		$count = $this->find('count', $options);
+		
+		$data = false;
+		if($count < $limit) {
+			$options['fields'] = array('Student.id, Student.identification_no, Student.first_name, Student.last_name');
+			$data = $this->find('all', $options);
+		}		
+		return $data;
+	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		//public $hasMany = array('InstitutionSiteStudents');
