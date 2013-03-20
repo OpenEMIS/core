@@ -36,6 +36,38 @@ class InstitutionSiteProgramme extends AppModel {
 		'name' => "SELECT name from `education_programmes` WHERE id = InstitutionSiteProgramme.education_programme_id"
 	);
 	
+	public function getProgrammeOptions($institutionSiteId) {
+		$recursive = $this->recursive;
+		$this->recursive = -1;
+		$data = $this->find('all', array(
+			'fields' => array('InstitutionSiteProgramme.id', 'EducationCycle.name', 'EducationProgramme.name'),
+			'joins' => array(
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				)
+			),
+			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
+			'order' => array('EducationCycle.order', 'EducationProgramme.order')
+		));
+		$this->recursive = $recursive;
+		
+		$list = array();
+		foreach($data as $obj) {
+			$id = $obj['InstitutionSiteProgramme']['id'];
+			$cycle = $obj['EducationCycle']['name'];
+			$programme = $obj['EducationProgramme']['name'];
+			$list[$id] = $cycle . ' - ' . $programme;
+		}
+		return $list;
+	}
+	
 	public function getProgrammeList($institutionSiteId, $withGrades = true) {
 		$list = $this->getActiveProgrammes($institutionSiteId);
 		
