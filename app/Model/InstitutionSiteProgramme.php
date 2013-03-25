@@ -36,10 +36,42 @@ class InstitutionSiteProgramme extends AppModel {
 		'name' => "SELECT name from `education_programmes` WHERE id = InstitutionSiteProgramme.education_programme_id"
 	);
 	
+	public function getGradeOptions($programmeId, $exclude=array(), $onlyVisible=false) {
+		$conditions = array('InstitutionSiteProgramme.id' => $programmeId);
+		
+		if(!empty($exclude)) {
+			$conditions['EducationGrade.id NOT'] = $exclude;
+		}
+		
+		if($onlyVisible) {
+			$conditions['EducationGrade.visible'] = 1;
+		}
+		
+		$options = array(
+			'recursive' => -1,
+			'fields' => array('EducationGrade.id', 'EducationGrade.name'),
+			'joins' => array(
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
+				)
+			),
+			'conditions' => $conditions,
+			'order' => array('EducationGrade.order')
+		);
+		$data = $this->find('list', $options);
+		return $data;
+	}
+	
 	public function getProgrammeOptions($institutionSiteId) {
-		$recursive = $this->recursive;
-		$this->recursive = -1;
 		$data = $this->find('all', array(
+			'recursive' => -1,
 			'fields' => array('InstitutionSiteProgramme.id', 'EducationCycle.name', 'EducationProgramme.name'),
 			'joins' => array(
 				array(
@@ -56,7 +88,6 @@ class InstitutionSiteProgramme extends AppModel {
 			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
 			'order' => array('EducationCycle.order', 'EducationProgramme.order')
 		));
-		$this->recursive = $recursive;
 		
 		$list = array();
 		foreach($data as $obj) {
