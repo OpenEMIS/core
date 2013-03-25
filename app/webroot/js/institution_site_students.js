@@ -90,7 +90,7 @@ var InstitutionSiteStudents = {
 				} else {
 					InstitutionSiteStudents.toggleTableScrollable('#search_group');
 					jsTable.fixTable('#search_group .list_wrapper .table');
-					$('.icon_add[student-id]').click(InstitutionSiteStudents.addStudentToList);
+					$('.icon_plus[student-id]').click(InstitutionSiteStudents.addStudentToList);
 				}
 			};
 			$.unmask({id: maskId, callback: callback});
