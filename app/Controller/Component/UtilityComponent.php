@@ -44,6 +44,13 @@ class UtilityComponent extends Component {
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";
 		
+		// Institution Site Classes
+		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
+		$msgList['SITE_CLASS_DUPLICATE_NAME'] = "The name is already existed.";
+		
+		// Students
+		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student Found.";
+		
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 		return __($msg);
 	}

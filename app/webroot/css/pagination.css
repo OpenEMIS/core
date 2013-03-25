@@ -1,4 +1,4 @@
-#pagination { border: 0; margin: 10px 0 0; padding: 0; }
+#pagination { border: 0; margin: 10px 0 0; padding: 0; overflow: hidden; }
 
 #pagination li {
 	border: 0;
@@ -40,6 +40,8 @@
 	float:left;
 	padding:4px 6px;
 	background-color:#5b8baf;
+	min-height: 13px;
+	min-width: 7px;
 }
 
 #pagination .ellipsis{
@@ -54,8 +56,10 @@
 	color:#007CBE;
 	display:block;
 	float:left;
-	padding:3px 6px;
+	padding:3px 5px;
 	text-decoration:none;
+	min-height: 13px;
+	min-width: 7px;
 }
 
 #pagination a:hover{

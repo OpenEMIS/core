@@ -5,11 +5,10 @@ $(document).ready(function() {
 var InstitutionSiteStudents = {
 	yearId: '#SchoolYearId',
 	programmeId: '#InstitutionSiteProgrammeId',
-	listLimit: 4,
 	
 	init: function() {
-		this.attachPaginateByFirstLetterEvent();
 		$('.btn_save').click(InstitutionSiteStudents.saveStudentList);
+		this.attachSortOrder();
 	},
 	
 	navigate: function() {
@@ -17,42 +16,15 @@ var InstitutionSiteStudents = {
 		window.location.href = href + '/' + $(this.yearId).val() + '/' + $(this.programmeId).val();
 	},
 	
-	attachPaginateByFirstLetterEvent: function() {
-		$('#pagination li a').each(function() {
-			$(this).unbind('click');
-			$(this).click(function() {
-				InstitutionSiteStudents.getStudentListByFirstLetter(this, '');
-			});
-		});
-	},
-	
-	getStudentListByFirstLetter: function(obj, first) {
-		first = obj!=null ? $(obj).html() : first;
-		var yearId = $(InstitutionSiteStudents.yearId).val();
-		var programmeId = $(InstitutionSiteStudents.programmeId).val();
-		var page = $('#pagination');
-		var edit = $('.content_wrapper').hasClass('edit');
-		
-		var maskId;
-		var url = getRootURL() + page.attr('url');
-		var ajaxParams = {first: first, yearId: yearId, programmeId: programmeId, edit: edit};
-		var ajaxSuccess = function(data, textStatus) {
-			var callback = function() {
-				$('#student_group .table_body').html(data);
-				var pagination = $('#student_group .table_body #pagination');
-				page.html(pagination.html());
-				pagination.remove();
-				InstitutionSiteStudents.attachPaginateByFirstLetterEvent();
-			};
-			$.unmask({id: maskId, callback: callback});
-		};
-		$.ajax({
-			type: 'GET',
-			dataType: 'text',
-			url: url,
-			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#student_group'}); },
-			success: ajaxSuccess
+	attachSortOrder:function() {
+		$('#students_search [orderby]').click(function(){
+			var order = $(this).attr('orderby');
+			var sort = $(this).hasClass('icon_sort_up') ? 'desc' : 'asc';
+			$('#StudentOrderBy').val(order);
+			$('#StudentOrder').val(sort);
+			var action = $('#students_search form').attr('action')+'/page:'+$('#StudentPage').val();
+			$('#students_search form').attr('action', action);
+			$('#students_search form').submit();
 		});
 	},
 	
@@ -61,7 +33,7 @@ var InstitutionSiteStudents = {
 	},
 	
 	doSearch: function(e) {
-		if(utility.getKeyPressed(e)==13) { // enter
+		if(utility.getKeyPressed(e)==13 ) { // enter
 			$('.icon_search').click();
 			e.preventDefault(); // prevent enter key to submit form
 		}
@@ -98,13 +70,12 @@ var InstitutionSiteStudents = {
 		var hide = 'hidden';
 		var active = 'scroll_active';
 		var maskId;
-		var url = $(obj).attr('url');
 		var ajaxParams = {searchStr: searchStr, yearId: yearId, programmeId: programmeId};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				var scrollable = '.table_scrollable';
+				var scrollable = '#search_group .table_scrollable';
 				var list = scrollable + ' .list_wrapper';
-				var selector = scrollable + list + ' .table_body';
+				var selector = list + ' .table_body';
 				var alertSelector = selector + ' > .alert.none';
 				$(selector).html(data);
 				if($(alertSelector).length==1) {
@@ -117,9 +88,9 @@ var InstitutionSiteStudents = {
 					}
 					$.alert(alertOpt);
 				} else {
-					InstitutionSiteStudents.toggleTableScrollable();
-					jsTable.fixTable('.list_wrapper .table');
-					$('.icon_plus[student-id]').click(InstitutionSiteStudents.addStudentToList);
+					InstitutionSiteStudents.toggleTableScrollable('#search_group');
+					jsTable.fixTable('#search_group .list_wrapper .table');
+					$('.icon_add[student-id]').click(InstitutionSiteStudents.addStudentToList);
 				}
 			};
 			$.unmask({id: maskId, callback: callback});
@@ -127,21 +98,22 @@ var InstitutionSiteStudents = {
 		$.ajax({
 			type: 'GET',
 			dataType: 'text',
-			url: getRootURL() + url,
+			url: getRootURL() + $(obj).attr('url'),
 			data: ajaxParams,
 			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#search_group'}); },
 			success: ajaxSuccess
 		});
 	},
 	
-	toggleTableScrollable: function() {
+	toggleTableScrollable: function(parent) {
 		var hide = 'hidden';
 		var active = 'scroll_active';
-		var scrollable = '.table_scrollable';
+		var scrollable = parent + ' .table_scrollable';
 		var list = scrollable + ' .list_wrapper';
-		var selector = scrollable + list + ' .table_body';
+		var selector = list + ' .table_body';
 		var rows = $(selector).find('.table_row').length;
-		if(rows > InstitutionSiteStudents.listLimit) {
+		
+		if(rows > $(list).attr('limit')) {
 			if(!$(scrollable).hasClass(active)) {							
 				$(scrollable).addClass(active);
 			}
@@ -160,18 +132,21 @@ var InstitutionSiteStudents = {
 		var studentId = obj.attr('student-id');
 		var yearId = $(InstitutionSiteStudents.yearId).val();
 		var programmeId = $(InstitutionSiteStudents.programmeId).val();
+		var name = $(obj).closest('.table_row').find('.table_cell[name]').attr('name');
+		var idNo = $(obj).closest('.table_row').find('.cell_id_no').html();
+		var i = $('#student_group .table_row').length;
 		
 		var maskId;
 		var url = $('#search_group .table_scrollable').attr('url');
-		var ajaxParams = {studentId: studentId, yearId: yearId, programmeId: programmeId};
+		var ajaxParams = {studentId: studentId, yearId: yearId, programmeId: programmeId, name: name, idNo: idNo, i: i};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
 				obj.closest('.table_row').fadeOut(300, function() {
 					$(this).remove();
-					InstitutionSiteStudents.toggleTableScrollable();
+					$('#student_group .list_wrapper .table_body').prepend(data);
+					InstitutionSiteStudents.toggleTableScrollable('#search_group');
+					InstitutionSiteStudents.toggleTableScrollable('#student_group');
 					jsTable.fixTable('.list_wrapper .table');
-					var name = obj.parent().siblings('[name]').attr('name');
-					InstitutionSiteStudents.getStudentListByFirstLetter(null, name);
 				});
 			};
 			$.unmask({id: maskId, callback: callback});
@@ -187,18 +162,26 @@ var InstitutionSiteStudents = {
 	},
 	
 	removeStudentFromList: function(obj) {
+		var yearId = $(InstitutionSiteStudents.yearId).val();
+		var programmeId = $(InstitutionSiteStudents.programmeId).val();
 		var row = $(obj).closest('.table_row');
-		var id = row.attr('student-id');
+		var id = row.length>0 ? row.attr('student-id') : -1;
 		
 		var maskId;
-		var url = $('#student_group .table_body').attr('url');
-		var ajaxParams = {studentId: id};
+		var url = $('#student_group .table_scrollable').attr('url');
+		var ajaxParams = {studentId: id, yearId: yearId, programmeId: programmeId};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				row.fadeOut(300, function() {
-					row.remove();
-					jsTable.fixTable('#student_group .table');
-				});
+				if(id != -1) {
+					row.fadeOut(300, function() {
+						row.remove();
+						jsTable.fixTable('#student_group .list_wrapper .table');
+					});
+				} else {
+					$('#student_group .table_row').remove();
+					
+				}
+				InstitutionSiteStudents.toggleTableScrollable('#student_group');
 			};
 			$.unmask({id: maskId, callback: callback});
 		};
@@ -216,19 +199,17 @@ var InstitutionSiteStudents = {
 		var form = $('#student_group form');
 		
 		var maskId;
-		var url = form.attr('action');
-		var ajaxParams = form.serialize();
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				console.log(data);
+				console.log(data); // notify on success
 			};
 			$.unmask({id: maskId, callback: callback});
 		};
 		$.ajax({
 			type: 'POST',
 			dataType: 'text',
-			url: url,
-			data: ajaxParams,
+			url: form.attr('action'),
+			data: form.serialize(),
 			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#student_group', text: 'Saving...'}); },
 			success: ajaxSuccess
 		});

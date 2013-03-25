@@ -5,49 +5,63 @@
 /* Students search */
 .cell_id_no { width: 110px; }
 .search .cell_id_no { width: 130px; }
-.cell_name { width: 150px; }
+.cell_name { width: 140px; }
 /* End Students search */
 
 #students .label { width: 90px; }
-#students .row { margin-bottom: 10px; }
+#students .row, #classes .row { margin-bottom: 10px; }
 #student_list { margin-top: 20px; }
+#classes .label { width: 60px; }
+#classes #grade_list .icon_delete { margin-top: 4px; }
+#classes .table_cell_row { margin-top: 0; margin-bottom: 5px; }
+#classes .table_cell_row.last { margin-bottom: 0; }
+#classes .icon_plus { margin-left: 0; }
+.student_select { width: 100%; }
+
 .cell_date { width: 110px; }
 .cell_start_date { width: 140px; }
 .cell_datepicker { width: 195px; }
+.chrome .cell_datepicker { width: 202px; }
+.safari .cell_datepicker { width: 203px; }
 .cell_class { width: 100px; }
 .cell_gender { width: 60px; }
+.cell_grade { width: 200px; }
+.cell_phone { width: 110px; }
+.cell_year { width: 70px; vertical-align: top !important; text-align: center; }
+#classes.add .table_cell select { width: 100%; }
 
 .section_group #pagination {
 	margin-top: 0;
 	margin-bottom: 10px;
 }
 
-.table_scrollable .table_header {
-	margin-bottom: -1px;
-}
+.ie8 .search_wrapper, .ie8 .icon_search { margin-top: 10px; }
 
-.table_scrollable.scroll_active .table_header {
-	width: 648px !important;
-}
+.table_scrollable .table_header { margin-bottom: -1px; }
+.table_scrollable.scroll_active .table_header {	width: 648px !important; }
+.ie8 .table_scrollable.scroll_active .table_header { width: 646px !important; }
+.chrome .table_scrollable.scroll_active .table_header { width: 656px !important; }
+.safari .table_scrollable.scroll_active .table_header { width: 655px !important; }
+.ie8 .table_scrollable .table_header { margin-top: 10px; }
 
-.ie8 .table_scrollable.scroll_active .table_header {
-	width: 646px;
-}
-
-.list_wrapper {
-	height: 109px;
-	margin-bottom: 10px;
-}
-
-.ie8 .list_wrapper { height: 111px; }
-
-.table_scrollable.scroll_active .list_wrapper {
-	
-}
-
-.table_scrollable.scroll_active .list_wrapper {
-	overflow-y: scroll;
-	padding-right: 1px;
-}
-
+.list_wrapper { margin-bottom: 10px; }
 .list_wrapper > .table { margin-bottom: 0; }
+
+#student_group_view .scroll_active .list_wrapper { height: 488px; }
+#search_group .list_wrapper { height: 109px; }
+#student_group .list_wrapper { height: 242px; }
+.ie8 #search_group .list_wrapper { height: 111px; }
+.ie8 #student_group .list_wrapper { height: 243px; }
+
+.scroll_active .list_wrapper { overflow-y: scroll; padding-right: 1px; }
+
+/* Fix scrollbar in chrome / safari */
+::-webkit-scrollbar {
+	-webkit-appearance: none;
+	width: 7px;
+}
+::-webkit-scrollbar-thumb {
+	border-radius: 4px;
+	background-color: rgba(0,0,0,.5);
+	-webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}

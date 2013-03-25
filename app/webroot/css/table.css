@@ -61,7 +61,8 @@
 .table .table_row.highlight .table_cell,
 .table.allow_hover .table_row:hover .table_cell { color: #FFFFFF; }
 
-.table .cell_delete { min-width: 0 !important; width: 16px; }
+.table .cell_delete,
+.table .cell_icon_action { min-width: 0 !important; width: 16px; }
 .table .icon_delete { float: left; }
 
 .table .cell_radio,

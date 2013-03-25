@@ -173,6 +173,11 @@ class NavigationComponent extends Component {
 					$this->createLink('Programmes', 'programmes'),
 					$this->createLink('Bank Accounts', 'bankAccounts')
 				),
+				'SITE DETAILS' => array(
+					'_controller' => 'InstitutionSites',
+					$this->createLink('Students', 'studentsList', array('pattern' => '^students')),
+					$this->createLink('Classes', 'classesList', array('pattern' => '^classes'))
+				),
 				'CENSUS' => array(
 					'_controller' => 'Census',
 					$this->createLink('Enrolment', 'enrolment'),

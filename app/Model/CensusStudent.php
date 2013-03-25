@@ -68,7 +68,7 @@ WHERE `institution_site_programmes`.`institution_site_id` = %d
 ORDER BY `education_levels`.`order`, `education_cycles`.`order`, `education_programmes`.`order`
 ";
 		
-		$query = sprintf($sql, $categoryId, $yearId, $siteId, $gradeId);
+		$query = sprintf($sql, $gradeId, $categoryId, $yearId, $siteId);
 		$list = $this->query($query);
 		
 		return $list;
