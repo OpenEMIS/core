@@ -29,6 +29,8 @@ $arrOptions = array('date_format' => array(
 		<?php 
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), '/Config/edit', array('class' => 'divider'));
+		}
+		if($_view_dashboard) {
 			echo $this->Html->link(__('Dashboard Image'), array('action' => 'dashboard'), array('class' => 'divider'));
 		}
 		?>
