@@ -32,9 +32,7 @@ echo $this->Html->script('dashboard', false);
 			<!-- <div class="table_cell cell_description"><?php echo __('Description'); ?></div> -->
 			<div class="table_cell"><?php echo __('File Type'); ?></div>
 			<div class="table_cell cell_date"><?php echo __('Uploaded On'); ?></div>
-			<?php if($_delete) { ?>
-				<div class="table_cell cell_delete">&nbsp;</div>
-			<?php } ?>
+			<div class="table_cell cell_delete">&nbsp;</div>
 		</div>
 					
 		<div class="table_body">
@@ -60,13 +58,13 @@ echo $this->Html->script('dashboard', false);
 				</div>
 				<div class="table_cell center"><?php echo ($fileext == 'jpg')? 'JPEG': strtoupper($fileext);//array_key_exists($fileext, $arrFileExtensions) ? $arrFileExtensions[$fileext] : $fileext; ?></div>
 				<div class="table_cell center"><?php echo $obj['created']; ?></div>
-				<?php if($_delete) { ?>
 				<div class="table_cell cell_delete">
+					<?php if($_delete) { ?>
 					<?php if($imageConfig['dashboard_img_default'] != $obj['id']) { ?>
 					<span class="icon_delete" title="<?php echo __("Delete"); ?>" onClick="dashboard.deleteFile(<?php echo $obj['id']; ?>)"></span>
 					<?php } ?>
+					<?php } ?>
 				</div>
-				<?php } ?>
 			</div>
 			<?php }	?>
 		</div>
