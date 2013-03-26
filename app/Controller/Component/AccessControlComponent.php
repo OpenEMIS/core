@@ -8,7 +8,11 @@ class AccessControlComponent extends Component {
 	private $RoleFunction;
 	private $RoleArea;
 	private $RoleInstitutionSite;
-	public $ignoreList = array('HOME' => array('index'), 'SECURITY' => array('login', 'logout'), 'CONFIG' => array('getI18n', 'getJSConfig'));
+	public $ignoreList = array(
+		'HOME' => array('index'), 
+		'SECURITY' => array('login', 'logout'), 
+		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage')
+	);
 	public $operations = array('_view', '_edit', '_add', '_delete');
 	
 	private $modelMap = array(
