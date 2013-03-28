@@ -113,15 +113,15 @@ class ReportsController extends ReportsAppController {
         $selectedFields = array(
             'Area' => array('name'),
             'Institution' => array(
-                'name', 'code', 'address', 'postal_code', 'contact_person', 'telephone',
-                'fax', 'email', 'website', 'date_opened', 'date_closed'
+                'name', 'code'/*, 'address', 'postal_code', 'contact_person', 'telephone',
+                'fax', 'email', 'website', 'date_opened', 'date_closed'*/
             ),
             'InstitutionSector' => array('name'),
             'InstitutionProvider' => array('name'),
             'InstitutionStatus' => array('name'),
             'InstitutionSite' => array(
-                'name', 'code', 'address', 'postal_code', 'contact_person', 'telephone',
-                'fax', 'email', 'website', 'date_opened', 'date_closed', 'longitude', 'latitude'
+                'name', 'code'/*, 'address', 'postal_code', 'contact_person', 'telephone',
+                'fax', 'email', 'website', 'date_opened', 'date_closed', 'longitude', 'latitude'*/
             ),
             'InstitutionSiteLocality' => array('name'),
             'InstitutionSiteType' => array('name'),
@@ -138,6 +138,18 @@ class ReportsController extends ReportsAppController {
             array_push($school_years, $value);
 
         }
+
+        $this->set('hideTableColumnsLabel', array(
+                                                'Area',
+                                                'InstitutionSector',
+                                                'InstitutionProvider',
+                                                'InstitutionStatus',
+                                                'InstitutionSiteLocality',
+                                                'InstitutionSiteType',
+                                                'InstitutionSiteOwnership',
+                                                'InstitutionSiteStatus'
+                                            )
+        );
 
         $this->set('data', $data);
         $this->set('school_years', $school_years);
@@ -166,7 +178,7 @@ class ReportsController extends ReportsAppController {
                 ),
                 'group' => array('Institution.id'),
                 'conditions' => array('Institution.id IS NOT NULL'),
-//                'limit' => 10 // for debugging
+                'limit' => 10 // for debugging
             ));
             foreach($rawData as $key => $value){
                 array_push($data['observations'], $key);
@@ -356,14 +368,14 @@ class ReportsController extends ReportsAppController {
                 'StudentCategory' => array('name'),
             );
             $fields = array();
+            foreach($this->data['variables'] as $value){
+                array_push($fields,$value);
+            }
             foreach($selectedFields as $key => $value) {
                 foreach($value as $field){
                     array_push($fields, $key.".".$field);
 
                 }
-            }
-            foreach($this->data['variables'] as $value){
-                array_push($fields,$value);
             }
 
 			$csvSettings = array(
@@ -625,7 +637,7 @@ class ReportsController extends ReportsAppController {
 //                $this->Common->updateStatus($procId,'-1');
 //                $this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
             }
-            $this->formatData($rawData);
+            $this->formatOlapData($rawData, $tpl);
             $this->writeCSV($rawData, $settings);
             $returnData['processed_records'] = $offset+$this->limit;
             $returnData['batch'] = $i+1;
@@ -708,6 +720,44 @@ class ReportsController extends ReportsAppController {
 			}
 		}
 	}
+
+    private function formatOlapData(&$data, $order=''){
+
+		foreach($data as $k => &$arrv){
+			foreach ($arrv as $key => $value) {
+				if(is_array($value)){
+                    foreach($value as $innerKey => $innerValue){
+                        $arrv[$key."_".$innerKey] = $innerValue;
+                    }
+					unset($data[$k][$key]);
+				}
+			}
+		}
+
+        if(!empty($order)){
+            $tmpCopy = $data;
+//            $data = array();
+            $order = str_ireplace('.', '_', $order);
+            $arrOrder = explode(',', $order);
+            $newOrderedData = array();
+            foreach($tmpCopy as $key=>$record){
+                foreach($arrOrder as $value){
+                    if($this->array_ikey_exists($value, $record)){
+                        $newOrderedData[$key][$value] = $record[$value];
+                    }
+                }
+            }
+            $data = $newOrderedData;
+        }
+
+	}
+
+    public function array_ikey_exists($key, $arr) {
+        if(stristr(implode(',', array_keys($arr)),$key)){
+            return true;
+        }
+        return false;
+    }
 	
 	public function adhoc() {
 		$this->addCrumb('Ad Hoc Reports');
