@@ -30,6 +30,18 @@ class ReportsController extends ReportsAppController {
     public $helpers = array('Paginator');
     public $components = array('Paginator');
 
+    private  $hideOlapTableColumnsLabel = array(
+                'Area',
+                'InstitutionSector',
+                'InstitutionProvider',
+                'InstitutionStatus',
+                'InstitutionSiteLocality',
+                'InstitutionSiteType',
+                'InstitutionSiteOwnership',
+                'InstitutionSiteStatus',
+                'CensusStudent'
+            );
+
     /*public function beforeFilter() {
 		parent::beforeFilter();
 		$this->Navigation->extendSideLinks($this->ReportsNavigation->getReportLinks());
@@ -132,24 +144,14 @@ class ReportsController extends ReportsAppController {
         $data = $selectedFields;
 //        $data[get_class($this->Institution)] = $this->getTableCloumn($this->Institution, array_key_exists(get_class($this->Institution),$selectedFields)? $selectedFields[get_class($this->Institution)]: array());
 //        $data[get_class($this->InstitutionSite)] = $this->getTableCloumn($this->InstitutionSite, array_key_exists(get_class($this->InstitutionSite),$selectedFields)? $selectedFields[get_class($this->InstitutionSite)]: array());
-        $raw_school_years = $this->SchoolYear->find('list');
+        $raw_school_years = $this->SchoolYear->find('list', array('order'=>'SchoolYear.name asc'));
         $school_years = array();
         foreach($raw_school_years as $value){
             array_push($school_years, $value);
 
         }
 
-        $this->set('hideTableColumnsLabel', array(
-                                                'Area',
-                                                'InstitutionSector',
-                                                'InstitutionProvider',
-                                                'InstitutionStatus',
-                                                'InstitutionSiteLocality',
-                                                'InstitutionSiteType',
-                                                'InstitutionSiteOwnership',
-                                                'InstitutionSiteStatus'
-                                            )
-        );
+        $this->set('hideTableColumnsLabel', $this->hideOlapTableColumnsLabel);
 
         $this->set('data', $data);
         $this->set('school_years', $school_years);
@@ -804,14 +806,19 @@ class ReportsController extends ReportsAppController {
 
         foreach($tmpArray as $key => $value){
             $translatedArray = explode('.', $value);
-            foreach( $translatedArray as $innerKey => $innerValue){
-                $strValue = trim((preg_replace('/\bname|CensusStudent\b/i', '',Inflector::humanize($innerValue))));
-                $strValue = __(Inflector::humanize(Inflector::underscore($strValue)));
-                $translatedArray[$innerKey] = trim($strValue);
-            }
-                if(sizeof($translatedArray) > 0){//!empty($strValue)){
-                    array_push($formattedArray, implode(' ', $translatedArray));
+            $tbName = array_shift(explode('.', $value));
+            if(preg_match('/\b'.$tbName.'\b/i',implode(' ',$this->hideOlapTableColumnsLabel)) == 1){
+                foreach( $translatedArray as $innerKey => $innerValue){
+                    $strValue = trim((preg_replace('/\bname|CensusStudent\b/i', '',$innerValue)));
+                    $strValue = Inflector::humanize(Inflector::underscore($strValue));
+//                    $strValue = __(Inflector::humanize($strValue));
+                    $translatedArray[$innerKey] = trim($strValue);
                 }
+            }
+
+            if(sizeof($translatedArray) > 0){//!empty($strValue)){
+                array_push($formattedArray,  __(Inflector::humanize(Inflector::underscore(implode(' ',$translatedArray)))));
+            }
         }
 
         return implode(',',$formattedArray);
