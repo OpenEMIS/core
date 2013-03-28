@@ -97,7 +97,7 @@ class ReportsController extends ReportsAppController {
             $category = $val['Report']['category'];
             $name = $val['Report']['name'];
 			$val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
-			$pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.$module.DS.str_replace(' ','_',$name).'.'.$val['Report']['file_type'];
+			$pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS.str_replace(' ','_',$name).'.'.$val['Report']['file_type'];
 			$idFileExists = file_exists($pathFile);
 			$checkFileExist[$val['Report']['id']] = array('isExists' => $idFileExists);
                         
