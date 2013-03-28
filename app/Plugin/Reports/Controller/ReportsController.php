@@ -361,11 +361,11 @@ class ReportsController extends ReportsAppController {
         $data= array();
         if($this->request->is('post')){
             $selectedFields = array(
-                'SchoolYear' => array('name'),
-                'CensusStudent' => array('age', 'male', 'female'/*, 'institution_site_programme_id'*/),
                 'EducationProgramme' => array('name'),
+                'SchoolYear' => array('name'),
                 'EducationGrade' => array('name'),
                 'StudentCategory' => array('name'),
+                'CensusStudent' => array('age', 'male', 'female'/*, 'institution_site_programme_id'*/),
             );
             $fields = array();
             foreach($this->data['variables'] as $value){
