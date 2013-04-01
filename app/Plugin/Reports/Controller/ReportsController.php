@@ -40,14 +40,8 @@ class ReportsController extends ReportsAppController {
                 'InstitutionSiteOwnership',
                 'InstitutionSiteStatus',
                 'CensusStudent'
-            );
-
-    /*public function beforeFilter() {
-		parent::beforeFilter();
-		$this->Navigation->extendSideLinks($this->ReportsNavigation->getReportLinks());
-		$this->Navigation->show(array('reports'));  
-		$this->breadcrumbAdd(__('Reports'), array('controller' => 'Reports', 'action' => 'index'));
-    }*/
+    );
+	
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Reports', array('controller' => 'Reports', 'action' => 'index'));
@@ -70,10 +64,7 @@ class ReportsController extends ReportsAppController {
 	
 	
     public function index($reportType = 'Institution') {
-		//$this->breadcrumbSelected($reportType.' Reports');
 		$this->Navigation->addCrumb($reportType.' Reports');
-		//$this->Navigation->selected('reports', strtolower($reportType));
-
 		if(array_key_exists($reportType, $this->standardReports)){
 			if(!$this->standardReports[$reportType]['enable'] === false){
 				$this->set('enabled',true);
@@ -81,13 +72,9 @@ class ReportsController extends ReportsAppController {
 				$this->set('enabled',false);
 			}
 		}
-		
-		//pr($this->InstitutionSiteProgramme->find('all',array('limit'=>2)));
 		$reportType = Inflector::underscore($reportType);
 		$reportType = str_replace('_',' ',$reportType);
 		$data = $this->Report->find('all',array('conditions'=>array('category'=>$reportType.' Reports'))); 
-                
-             
                 
         $checkFileExist = array();
 		$tmp = array();
@@ -97,15 +84,18 @@ class ReportsController extends ReportsAppController {
             $category = $val['Report']['category'];
             $name = $val['Report']['name'];
 			$val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
-			$pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS.str_replace(' ','_',$name).'.'.$val['Report']['file_type'];
+			
+			
+			$pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.$category.DS.$module.DS.$name.'.'.$val['Report']['file_type'];
+			$pathFile = str_replace(' ',"_", $pathFile);
 			$idFileExists = file_exists($pathFile);
 			$checkFileExist[$val['Report']['id']] = array('isExists' => $idFileExists);
                         
 			if(isset($tmp[$reportType.' Reports'][$module][$name])){
-				 $tmp[$reportType.' Reports'][$module][$name]['file_kinds'][$val['Report']['id']] = $val['Report']['file_type'];
+				$tmp[$reportType.' Reports'][$module][$name]['file_kinds'][$val['Report']['id']] = $val['Report']['file_type'];
 			}else{
 				$val['Report']['file_kinds'][$val['Report']['id']] = $val['Report']['file_type'];
-                                $val['Report']['lastgen'] = (($idFileExists)?date ("M-d-Y h:i:s", filemtime($pathFile)):'');
+                $val['Report']['lastgen'] = (($idFileExists)?date ("M-d-Y h:i:s", filemtime($pathFile)):'');
 				$tmp[$reportType.' Reports'][$module][$name] =  $val['Report'];
 			}
         }
@@ -117,11 +107,7 @@ class ReportsController extends ReportsAppController {
     }
 
     public function olap(){
-//        $this->autoRender = false;
-
         $this->Navigation->addCrumb('OLAP Report');
-        //$this->Navigation->selected('reports', strtolower($reportType));
-
         $selectedFields = array(
             'Area' => array('name'),
             'Institution' => array(
@@ -142,8 +128,8 @@ class ReportsController extends ReportsAppController {
         );
         $this->humanizeFields($selectedFields);
         $data = $selectedFields;
-//        $data[get_class($this->Institution)] = $this->getTableCloumn($this->Institution, array_key_exists(get_class($this->Institution),$selectedFields)? $selectedFields[get_class($this->Institution)]: array());
-//        $data[get_class($this->InstitutionSite)] = $this->getTableCloumn($this->InstitutionSite, array_key_exists(get_class($this->InstitutionSite),$selectedFields)? $selectedFields[get_class($this->InstitutionSite)]: array());
+//      $data[get_class($this->Institution)] = $this->getTableCloumn($this->Institution, array_key_exists(get_class($this->Institution),$selectedFields)? $selectedFields[get_class($this->Institution)]: array());
+//      $data[get_class($this->InstitutionSite)] = $this->getTableCloumn($this->InstitutionSite, array_key_exists(get_class($this->InstitutionSite),$selectedFields)? $selectedFields[get_class($this->InstitutionSite)]: array());
         $raw_school_years = $this->SchoolYear->find('list', array('order'=>'SchoolYear.name asc'));
         $school_years = array();
         foreach($raw_school_years as $value){
@@ -425,7 +411,7 @@ class ReportsController extends ReportsAppController {
                 'download'  => true,
                 'extension' => $res['Report']['file_type'],
                 //'path'      => APP . 'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS
-                'path'		=> APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.$module.DS
+                'path'		=> APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS
             );
             $this->set($params);
         }
