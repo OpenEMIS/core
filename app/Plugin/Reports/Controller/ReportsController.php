@@ -30,6 +30,18 @@ class ReportsController extends ReportsAppController {
     public $helpers = array('Paginator');
     public $components = array('Paginator');
 
+    private  $hideOlapTableColumnsLabel = array(
+                'Area',
+                'InstitutionSector',
+                'InstitutionProvider',
+                'InstitutionStatus',
+                'InstitutionSiteLocality',
+                'InstitutionSiteType',
+                'InstitutionSiteOwnership',
+                'InstitutionSiteStatus',
+                'CensusStudent'
+            );
+
     /*public function beforeFilter() {
 		parent::beforeFilter();
 		$this->Navigation->extendSideLinks($this->ReportsNavigation->getReportLinks());
@@ -85,7 +97,7 @@ class ReportsController extends ReportsAppController {
             $category = $val['Report']['category'];
             $name = $val['Report']['name'];
 			$val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
-			$pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.$module.DS.str_replace(' ','_',$name).'.'.$val['Report']['file_type'];
+			$pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS.str_replace(' ','_',$name).'.'.$val['Report']['file_type'];
 			$idFileExists = file_exists($pathFile);
 			$checkFileExist[$val['Report']['id']] = array('isExists' => $idFileExists);
                         
@@ -113,15 +125,15 @@ class ReportsController extends ReportsAppController {
         $selectedFields = array(
             'Area' => array('name'),
             'Institution' => array(
-                'name', 'code', 'address', 'postal_code', 'contact_person', 'telephone',
-                'fax', 'email', 'website', 'date_opened', 'date_closed'
+                'name', 'code'/*, 'address', 'postal_code', 'contact_person', 'telephone',
+                'fax', 'email', 'website', 'date_opened', 'date_closed'*/
             ),
             'InstitutionSector' => array('name'),
             'InstitutionProvider' => array('name'),
             'InstitutionStatus' => array('name'),
             'InstitutionSite' => array(
-                'name', 'code', 'address', 'postal_code', 'contact_person', 'telephone',
-                'fax', 'email', 'website', 'date_opened', 'date_closed', 'longitude', 'latitude'
+                'name', 'code'/*, 'address', 'postal_code', 'contact_person', 'telephone',
+                'fax', 'email', 'website', 'date_opened', 'date_closed', 'longitude', 'latitude'*/
             ),
             'InstitutionSiteLocality' => array('name'),
             'InstitutionSiteType' => array('name'),
@@ -132,12 +144,14 @@ class ReportsController extends ReportsAppController {
         $data = $selectedFields;
 //        $data[get_class($this->Institution)] = $this->getTableCloumn($this->Institution, array_key_exists(get_class($this->Institution),$selectedFields)? $selectedFields[get_class($this->Institution)]: array());
 //        $data[get_class($this->InstitutionSite)] = $this->getTableCloumn($this->InstitutionSite, array_key_exists(get_class($this->InstitutionSite),$selectedFields)? $selectedFields[get_class($this->InstitutionSite)]: array());
-        $raw_school_years = $this->SchoolYear->find('list');
+        $raw_school_years = $this->SchoolYear->find('list', array('order'=>'SchoolYear.name asc'));
         $school_years = array();
         foreach($raw_school_years as $value){
             array_push($school_years, $value);
 
         }
+
+        $this->set('hideTableColumnsLabel', $this->hideOlapTableColumnsLabel);
 
         $this->set('data', $data);
         $this->set('school_years', $school_years);
@@ -166,7 +180,7 @@ class ReportsController extends ReportsAppController {
                 ),
                 'group' => array('Institution.id'),
                 'conditions' => array('Institution.id IS NOT NULL'),
-//                'limit' => 10 // for debugging
+                'limit' => 50 // for debugging
             ));
             foreach($rawData as $key => $value){
                 array_push($data['observations'], $key);
@@ -349,21 +363,21 @@ class ReportsController extends ReportsAppController {
         $data= array();
         if($this->request->is('post')){
             $selectedFields = array(
-                'SchoolYear' => array('name'),
-                'CensusStudent' => array('age', 'male', 'female'/*, 'institution_site_programme_id'*/),
                 'EducationProgramme' => array('name'),
+                'SchoolYear' => array('name'),
                 'EducationGrade' => array('name'),
                 'StudentCategory' => array('name'),
+                'CensusStudent' => array('age', 'male', 'female'/*, 'institution_site_programme_id'*/),
             );
             $fields = array();
+            foreach($this->data['variables'] as $value){
+                array_push($fields,$value);
+            }
             foreach($selectedFields as $key => $value) {
                 foreach($value as $field){
                     array_push($fields, $key.".".$field);
 
                 }
-            }
-            foreach($this->data['variables'] as $value){
-                array_push($fields,$value);
             }
 
 			$csvSettings = array(
@@ -625,7 +639,7 @@ class ReportsController extends ReportsAppController {
 //                $this->Common->updateStatus($procId,'-1');
 //                $this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
             }
-            $this->formatData($rawData);
+            $this->formatOlapData($rawData, $tpl);
             $this->writeCSV($rawData, $settings);
             $returnData['processed_records'] = $offset+$this->limit;
             $returnData['batch'] = $i+1;
@@ -708,6 +722,44 @@ class ReportsController extends ReportsAppController {
 			}
 		}
 	}
+
+    private function formatOlapData(&$data, $order=''){
+
+		foreach($data as $k => &$arrv){
+			foreach ($arrv as $key => $value) {
+				if(is_array($value)){
+                    foreach($value as $innerKey => $innerValue){
+                        $arrv[$key."_".$innerKey] = $innerValue;
+                    }
+					unset($data[$k][$key]);
+				}
+			}
+		}
+
+        if(!empty($order)){
+            $tmpCopy = $data;
+//            $data = array();
+            $order = str_ireplace('.', '_', $order);
+            $arrOrder = explode(',', $order);
+            $newOrderedData = array();
+            foreach($tmpCopy as $key=>$record){
+                foreach($arrOrder as $value){
+                    if($this->array_ikey_exists($value, $record)){
+                        $newOrderedData[$key][$value] = $record[$value];
+                    }
+                }
+            }
+            $data = $newOrderedData;
+        }
+
+	}
+
+    public function array_ikey_exists($key, $arr) {
+        if(stristr(implode(',', array_keys($arr)),$key)){
+            return true;
+        }
+        return false;
+    }
 	
 	public function adhoc() {
 		$this->addCrumb('Ad Hoc Reports');
@@ -754,14 +806,19 @@ class ReportsController extends ReportsAppController {
 
         foreach($tmpArray as $key => $value){
             $translatedArray = explode('.', $value);
-            foreach( $translatedArray as $innerKey => $innerValue){
-                $strValue = trim((preg_replace('/\bname|CensusStudent\b/i', '',Inflector::humanize($innerValue))));
-                $strValue = __(Inflector::humanize(Inflector::underscore($strValue)));
-                $translatedArray[$innerKey] = trim($strValue);
-            }
-                if(sizeof($translatedArray) > 0){//!empty($strValue)){
-                    array_push($formattedArray, implode(' ', $translatedArray));
+            $tbName = array_shift(explode('.', $value));
+            if(preg_match('/\b'.$tbName.'\b/i',implode(' ',$this->hideOlapTableColumnsLabel)) == 1){
+                foreach( $translatedArray as $innerKey => $innerValue){
+                    $strValue = trim((preg_replace('/\bname|CensusStudent\b/i', '',$innerValue)));
+                    $strValue = Inflector::humanize(Inflector::underscore($strValue));
+//                    $strValue = __(Inflector::humanize($strValue));
+                    $translatedArray[$innerKey] = trim($strValue);
                 }
+            }
+
+            if(sizeof($translatedArray) > 0){//!empty($strValue)){
+                array_push($formattedArray,  __(Inflector::humanize(Inflector::underscore(implode(' ',$translatedArray)))));
+            }
         }
 
         return implode(',',$formattedArray);
