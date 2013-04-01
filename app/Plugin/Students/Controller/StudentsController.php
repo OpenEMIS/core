@@ -7,16 +7,16 @@ App::uses('ImageValidate', 'Image');
 class StudentsController extends StudentsAppController {
 	public $studentId;
     public $studentObj;
-
+    private  $debug = false;
     public $uses = array(
         'Institution',
+		'InstitutionSiteProgramme',
         'Students.Student',
         'Students.StudentHistory',
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
         'Students.StudentAttachment',
-        'Students.InstitutionSiteStudent'
     );
         
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -57,12 +57,30 @@ class StudentsController extends StudentsAppController {
             }
 		}
     }
-
+    private function logtimer($str=''){
+            if($this->debug == true)
+            echo $str." ==> ".date("H:i:s")."<br>\n";
+    }
     public function index() {
+        $this->debug = false;
 		$this->Navigation->addCrumb('List of Students');
+                $this->logtimer('Start Get AccessibleSites');
 		$tmp = $this->AccessControl->getAccessibleSites();
+                $this->logtimer('End Get AccessibleSites');
+               
+		$programmeIds = $this->InstitutionSiteProgramme->find('list', array(
+			'fields' => array('InstitutionSiteProgramme.id'),
+			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $tmp)
+		));
 		
-		$security = array('OR'=>array('InstitutionSiteStudent.id'=>null,'AND'=>array('InstitutionSiteStudent.institution_site_id'=>$tmp,'InstitutionSiteStudent.end_date >='=>date('Y-m-d'))));
+		$security = array(
+			'OR' => array(
+				'InstitutionSiteProgrammeStudent.id' => null,
+				'AND' => array(
+					'InstitutionSiteProgrammeStudent.institution_site_programme_id' => $programmeIds,
+					'InstitutionSiteProgrammeStudent.end_date >=' => date('Y-m-d')
+				)
+		));
 				
         if ($this->request->is('post')){
             if(isset($this->request->data['Student']['SearchField'])){
@@ -98,7 +116,9 @@ class StudentsController extends StudentsAppController {
         $limit = ($this->Session->read('Search.perpageStudent'))?$this->Session->read('Search.perpageStudent'):30;
 
         $this->Paginator->settings = array_merge(array('limit' => $limit,'maxLimit' => 100), $order);
+        $this->logtimer('Start OutSide Get paginate');
         $data = $this->paginate('Student', $cond);
+        $this->logtimer('End OutSide Get paginate');
 
         $this->set('students', $data);
         $this->set('totalcount', $this->Student->sqlPaginateCount);
@@ -420,6 +440,7 @@ class StudentsController extends StudentsAppController {
      * Institutions that the student has attended till date
      * @return [type] [description]
      */
+	 /* need to redo the logic
     public function institutions() {
         $this->Navigation->addCrumb('Institutions');
         $data = $this->InstitutionSiteStudent->getData($this->studentId);
@@ -481,6 +502,7 @@ class StudentsController extends StudentsAppController {
             return json_encode($result);
         }
     }
+	*/
 
     /**
      * Programmes that the student has attended till date
