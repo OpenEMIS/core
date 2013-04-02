@@ -20,6 +20,7 @@ echo $this->Html->script('census_teachers', false);
 		<span><?php echo __('Teachers'); ?></span>
 		<?php echo $this->Html->link(__('View'), array('action' => 'teachers'), array('id' => 'edit-link', 'class' => 'divider')); ?>
 	</h1>
+	<?php echo $this->element('alert'); ?>	
 	
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
@@ -35,6 +36,7 @@ echo $this->Html->script('census_teachers', false);
 		</div>
 	</div>
 	
+	<?php if($displayContent) { ?>
 	<fieldset class="section_group">
 		<legend><?php echo __('Full Time Equivalent Teachers'); ?></legend>
 		
@@ -338,7 +340,7 @@ echo $this->Html->script('census_teachers', false);
 		
 		<?php if($_add) { ?>
 		<div class="row">
-			<a class="void icon_plus" id="add_multi_teacher" url="Census/teachersAddMultiTeacher"><?php echo __('Add').' '.__('Multi Grade Teacher'); ?></a>
+			<a class="void icon_plus" id="add_multi_teacher" url="Census/teachersAddMultiTeacher/<?php echo $selectedYear; ?>"><?php echo __('Add').' '.__('Multi Grade Teacher'); ?></a>
 		</div>
 		<?php } ?>
 	</fieldset>
@@ -348,5 +350,6 @@ echo $this->Html->script('census_teachers', false);
 		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
 	</div>
 	
+	<?php } // end display content ?>
 	<?php echo $this->Form->end(); ?>
 </div>

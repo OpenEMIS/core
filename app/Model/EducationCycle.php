@@ -25,4 +25,27 @@ class EducationCycle extends AppModel {
 	
 	public $belongsTo = array('EducationLevel');
 	public $hasMany = array('EducationProgramme');
+	
+	public function getOfficialAgeByGrade($gradeId) {
+		$age = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array('EducationCycle.admission_age', 'EducationGrade.order'),
+			'joins' => array(
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.education_cycle_id = EducationCycle.id')
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						'EducationGrade.education_programme_id = EducationProgramme.id',
+						'EducationGrade.id = ' . $gradeId
+					)
+				)
+			)
+		));
+		return $age['EducationCycle']['admission_age'] + $age['EducationGrade']['order'] - 1;
+	}
 }

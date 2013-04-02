@@ -36,43 +36,16 @@ class InstitutionSiteProgramme extends AppModel {
 		'name' => "SELECT name from `education_programmes` WHERE id = InstitutionSiteProgramme.education_programme_id"
 	);
 	
-	public function getGradeOptions($programmeId, $exclude=array(), $onlyVisible=false) {
-		$conditions = array('InstitutionSiteProgramme.id' => $programmeId);
+	public function getProgrammeOptions($institutionSiteId, $yearId=null) {
+		$conditions = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
 		
-		if(!empty($exclude)) {
-			$conditions['EducationGrade.id NOT'] = $exclude;
+		if(!is_null($yearId)) {
+			$conditions['InstitutionSiteProgramme.school_year_id'] = $yearId;
 		}
 		
-		if($onlyVisible) {
-			$conditions['EducationGrade.visible'] = 1;
-		}
-		
-		$options = array(
-			'recursive' => -1,
-			'fields' => array('EducationGrade.id', 'EducationGrade.name'),
-			'joins' => array(
-				array(
-					'table' => 'education_programmes',
-					'alias' => 'EducationProgramme',
-					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
-				)
-			),
-			'conditions' => $conditions,
-			'order' => array('EducationGrade.order')
-		);
-		$data = $this->find('list', $options);
-		return $data;
-	}
-	
-	public function getProgrammeOptions($institutionSiteId) {
 		$data = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('InstitutionSiteProgramme.id', 'EducationCycle.name', 'EducationProgramme.name'),
+			'fields' => array('EducationProgramme.id', 'EducationCycle.name', 'EducationProgramme.name'),
 			'joins' => array(
 				array(
 					'table' => 'education_programmes',
@@ -85,13 +58,13 @@ class InstitutionSiteProgramme extends AppModel {
 					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 				)
 			),
-			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
+			'conditions' => $conditions,
 			'order' => array('EducationCycle.order', 'EducationProgramme.order')
 		));
 		
 		$list = array();
 		foreach($data as $obj) {
-			$id = $obj['InstitutionSiteProgramme']['id'];
+			$id = $obj['EducationProgramme']['id'];
 			$cycle = $obj['EducationCycle']['name'];
 			$programme = $obj['EducationProgramme']['name'];
 			$list[$id] = $cycle . ' - ' . $programme;
@@ -99,8 +72,52 @@ class InstitutionSiteProgramme extends AppModel {
 		return $list;
 	}
 	
-	public function getProgrammeList($institutionSiteId, $withGrades = true) {
-		$list = $this->getActiveProgrammes($institutionSiteId);
+	// used by InstitutionSiteController
+	public function getSiteProgrammes($institutionSiteId, $yearId) {
+		$this->formatResult = true;
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'InstitutionSiteProgramme.id',
+				'EducationSystem.name AS education_system_name',
+				'EducationCycle.name AS education_cycle_name',
+				'EducationProgramme.id AS education_programme_id',
+				'EducationProgramme.name AS education_programme_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+				),
+				array(
+					'table' => 'education_systems',
+					'alias' => 'EducationSystem',
+					'conditions' => array('EducationSystem.id = EducationLevel.education_system_id')
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteProgramme.school_year_id' => $yearId
+			),
+			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
+		));
+		return $data;
+	}
+	
+	// used by CensusController, classes/teachers
+	public function getProgrammeList($institutionSiteId, $yearId, $withGrades = true) {
+		$list = $this->getActiveProgrammes($institutionSiteId, $yearId);
 		
 		$data = array();
 		foreach($list as $obj) {
@@ -126,35 +143,7 @@ class InstitutionSiteProgramme extends AppModel {
 		return $data;
 	}
 	
-	public function getActiveProgrammes($institutionSiteId, $formatResult = false) {
-		/* SQL
-		SELECT
-			`institution_site_programmes`.`id` AS `institution_site_programme_id`,
-			`education_programmes`.`id` AS `education_programme_id`,
-			CONCAT(`education_cycles`.`name`, ' - ', `education_programmes`.`name`) AS `education_programme_name`,
-			`education_grades`.`id` AS `education_grade_id`,
-			`education_grades`.`name` AS `education_grade_name`
-		FROM `institution_site_programmes`
-		JOIN `education_programmes` 
-			ON `education_programmes`.`id` = `institution_site_programmes`.`education_programme_id`
-			AND `education_programmes`.`visible` = 1
-		JOIN `education_cycles`
-			ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
-			AND `education_cycles`.`visible` = 1
-		JOIN `education_levels`
-			ON `education_levels`.`id` = `education_cycles`.`education_level_id`
-			AND `education_levels`.`visible` = 1
-		JOIN `education_grades`
-			ON `education_grades`.`education_programme_id` = `education_programmes`.`id`
-			AND `education_grades`.`visible` = 1
-		WHERE `institution_site_programmes`.`institution_site_id` = 1
-		AND `institution_site_programmes`.`status` = 1
-		ORDER BY 
-			`education_levels`.`order`,
-			`education_cycles`.`order`,
-			`education_programmes`.`order`,
-			`education_grades`.`order`
-		*/
+	public function getActiveProgrammes($institutionSiteId, $yearId, $formatResult = false) {
 		$fields = $formatResult
 				? array(
 					'InstitutionSiteProgramme.id AS institution_site_programme_id',
@@ -178,39 +167,27 @@ class InstitutionSiteProgramme extends AppModel {
 				array(
 					'table' => 'education_programmes',
 					'alias' => 'EducationProgramme',
-					'conditions' => array(
-						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
-						'EducationProgramme.visible = 1',
-					)
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
 				),
 				array(
 					'table' => 'education_cycles',
 					'alias' => 'EducationCycle',
-					'conditions' => array(
-						'EducationCycle.id = EducationProgramme.education_cycle_id',
-						'EducationCycle.visible = 1'
-					)
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 				),
 				array(
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
-					'conditions' => array(
-						'EducationLevel.id = EducationCycle.education_level_id',
-						'EducationLevel.visible = 1'
-					)
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'EducationGrade.education_programme_id = EducationProgramme.id',
-						'EducationGrade.visible = 1'
-					)
+					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
 				)
 			),
 			'conditions' => array(
 				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteProgramme.status' => 1
+				'InstitutionSiteProgramme.school_year_id' => $yearId
 			),
 			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));

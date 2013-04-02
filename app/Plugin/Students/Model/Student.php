@@ -99,21 +99,26 @@ class Student extends StudentsAppModel {
 	}
 	
 	// Used by InstitutionSiteController for searching
-	public function search($searchStr, $yearId, $programmeId) {
-		$limit = 200;
+	public function search($searchStr, $programmeId, $institutionSiteId, $yearId, $limit=false) {
+		$studentTable = 'institution_site_programme_students';
+		$programmeTable = 'institution_site_programmes';
+		$notExists = '
+			NOT EXISTS (
+				SELECT institution_site_programme_students.student_id 
+				FROM institution_site_programme_students
+				JOIN institution_site_programmes
+					ON institution_site_programmes.id = institution_site_programme_students.institution_site_programme_id
+					AND institution_site_programmes.institution_site_id = %d
+					AND institution_site_programmes.education_programme_id = %d
+					AND institution_site_programmes.school_year_id = %d
+				WHERE institution_site_programme_students.student_id = Student.id
+			)';
+			
 		$this->formatResult = true;
-		
 		$ProgrammeStudent = ClassRegistry::init('InstitutionSiteProgrammeStudent');
-		$studentIds = $ProgrammeStudent->find('list', array(
-			'fields' => array('InstitutionSiteProgrammeStudent.student_id'),
-			'conditions' => array(
-				'InstitutionSiteProgrammeStudent.institution_site_programme_id' => $programmeId,
-				'InstitutionSiteProgrammeStudent.school_year_id' => $yearId
-			)
-		));
-		
 		$searchStr = '%' . $searchStr . '%';
 		$conditions = array(
+			sprintf($notExists, $institutionSiteId, $programmeId, $yearId),
 			'OR' => array(
 				'Student.identification_no LIKE' => $searchStr,
 				'Student.first_name LIKE' => $searchStr,
@@ -121,20 +126,15 @@ class Student extends StudentsAppModel {
 			)
 		);
 		
-		if(!empty($studentIds)) {
-			$conditions['AND'] = array('Student.id NOT' => $studentIds);
-		}
-		
 		$options = array(
 			'recursive' => -1,
 			'conditions' => $conditions,
 			'order' => array('Student.first_name')
 		);
-		
 		$count = $this->find('count', $options);
 		
 		$data = false;
-		if($count < $limit) {
+		if($limit === false || $count < $limit) {
 			$options['fields'] = array('Student.id, Student.identification_no, Student.first_name, Student.last_name');
 			$data = $this->find('all', $options);
 		}		

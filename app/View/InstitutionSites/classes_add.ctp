@@ -24,7 +24,13 @@ echo $this->Html->script('institution_site_classes', false);
 	<div class="row edit">
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
-			<?php echo $this->Form->input('school_year_id', array('id' => 'SchoolYearId', 'options' => $yearOptions)); ?>
+		<?php 
+		echo $this->Form->input('school_year_id', array(
+			'id' => 'SchoolYearId', 
+			'options' => $yearOptions,
+			'onchange' => 'InstitutionSiteClasses.switchYear()'
+		));
+		?>
 		</div>
 	</div>
 	
@@ -76,7 +82,7 @@ echo $this->Html->script('institution_site_classes', false);
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return InstitutionSiteClasses.checkName()" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classesList'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classes'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

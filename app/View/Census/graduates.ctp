@@ -17,14 +17,13 @@ echo $this->Html->script('census', false);
 	<h1>
 		<span><?php echo __('Graduates'); ?></span>
 		<?php
-		if($_edit && $displayContent) {
+		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'graduatesEdit'), array('id' => 'edit-link', 'class' => 'divider'));
 		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
-	<?php if($displayContent) { ?>
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
@@ -37,7 +36,6 @@ echo $this->Html->script('census', false);
 			?>
 		</div>
 	</div>
-	<?php } ?>
 	
 	<?php foreach($data as $key => $val) { ?>
 	<fieldset class="section_group">

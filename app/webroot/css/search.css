@@ -26,10 +26,4 @@
 .search .table { margin-top: 10px; margin-bottom: 0; width: 99%; }
 .search > h1 > .total { font-size: 10px; font-weight: normal; }
 span.highlight{ background-color: #fcefa1; color: #666666 !important; }
-
-.search_select {
-	width: 270px;
-	border: 1px solid #CCCCCC !important;
-	padding: 3px !important;
-	box-shadow: none !important;
-}
+.search_select { width: 270px; }

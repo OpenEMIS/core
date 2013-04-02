@@ -1,62 +1,63 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('search', 'stylesheet', array('inline' => false));
-echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 
-echo $this->Html->script('institution_site_students', false);
+echo $this->Html->script('institution_site_programmes', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="students" class="content_wrapper">
+<div id="programmes" class="content_wrapper">
 	<?php
 	echo $this->Form->create('InstitutionSiteProgrammeStudent', array(
 		'id' => 'submitForm',
 		'onsubmit' => 'return false',
-		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'studentsView')
+		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => false),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'programmesView')
 	));
 	?>
 	<h1>
-		<span><?php echo __('Programmes'); ?></span>
+		<span><?php echo __('Programme Details'); ?></span>
 		<?php
-		echo $this->Html->link(__('Search'), array('action' => 'studentsList'), array('class' => 'divider'));
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'studentsEdit', $selectedYear, $selectedProgramme), array('class' => 'divider'));
+		echo $this->Html->link(__('List'), array('action' => 'programmes'), array('class' => 'divider'));
+		if($_edit && !empty($programmeOptions)) {
+			echo $this->Html->link(__('Edit'), array('action' => 'programmesEdit', $selectedYear, $selectedProgramme), array('class' => 'divider'));
 		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
-	<div class="row edit">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
-			<?php
-			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
-				'options' => $yearOptions,
-				'default' => $selectedYear,
-				'onchange' => 'InstitutionSiteStudents.navigate()'
-			));
-			?>
+	<fieldset class="section_group">
+		<legend><?php echo __('Details'); ?></legend>
+		<div class="row edit">
+			<div class="label"><?php echo __('Year'); ?></div>
+			<div class="value">
+				<?php
+				echo $this->Form->input('school_year_id', array(
+					'id' => 'SchoolYearId',
+					'options' => $yearOptions,
+					'default' => $selectedYear,
+					'onchange' => 'InstitutionSiteProgrammes.navigate()'
+				));
+				?>
+			</div>
 		</div>
-	</div>
-	
-	<div class="row edit">
-		<div class="label"><?php echo __('Programme'); ?></div>
-		<div class="value">
-			<?php
-			echo $this->Form->input('institution_site_programme_id', array(
-				'id' => 'InstitutionSiteProgrammeId',
-				'class' => 'select',
-				'options' => $programmeOptions,
-				'default' => $selectedProgramme,
-				'onchange' => 'InstitutionSiteStudents.navigate()'
-			));
-			?>
+		
+		<div class="row edit">
+			<div class="label"><?php echo __('Programme'); ?></div>
+			<div class="value">
+				<?php
+				echo $this->Form->input('education_programme_id', array(
+					'id' => 'EducationProgrammeId',
+					'class' => 'select',
+					'options' => $programmeOptions,
+					'default' => $selectedProgramme,
+					'onchange' => 'InstitutionSiteProgrammes.navigate()'
+				));
+				?>
+			</div>
 		</div>
-	</div>
+	</fieldset>
 	
 	<fieldset class="section_group" id="student_group_view">
 		<legend><?php echo __('Students'); ?></legend>

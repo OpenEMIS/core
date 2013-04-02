@@ -15,6 +15,10 @@ var InstitutionSiteClasses = {
 		window.location.href = href + '/' + $(this.yearId).val();
 	},
 	
+	switchYear: function() {
+		$('.table_body .table_row').remove();
+	},
+	
 	checkName: function() {
 		var name = $('#ClassName').val();
 		var year = $(InstitutionSiteClasses.yearId).val();
@@ -52,12 +56,13 @@ var InstitutionSiteClasses = {
 	
 	addGrade: function() {
 		var exclude = [];
+		var yearId = $(InstitutionSiteClasses.yearId).val();
 		var index = $('.grades').length;
 		$('.grades').each(function() {
 			exclude.push($(this).val());
 		});
 		var maskId;
-		var ajaxParams = {exclude: exclude, index: index};
+		var ajaxParams = {exclude: exclude, index: index, yearId: yearId};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
 				if(!$(data).hasClass('alert')) {
@@ -97,7 +102,7 @@ var InstitutionSiteClasses = {
 		}
 		
 		if($('.student_select').length>0) {
-			alertOpt['text'] = 'Please select a student first.';
+			alertOpt['text'] = i18n.InstitutionSites.textClassSelectStudent;
 			$.alert(alertOpt);
 		} else {
 			var maskId;
@@ -193,7 +198,7 @@ var InstitutionSiteClasses = {
 				dataType: 'json',
 				url: getRootURL() + $(row).closest('.table_body').attr('url'),
 				data: ajaxParams,
-				beforeSend: function (jqXHR) { maskId = $.mask({parent: $(obj).closest('fieldset'), text: 'Removing...'}); },
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: $(obj).closest('fieldset'), text: i18n.General.textRemoving}); },
 				success: ajaxSuccess
 			});
 		} else {

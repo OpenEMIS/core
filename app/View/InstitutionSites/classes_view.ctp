@@ -10,12 +10,12 @@ echo $this->Html->script('search', false);
     <h1>
         <span><?php echo $className; ?></span>
 		<?php
-		echo $this->Html->link(__('List'), array('action' => 'classesList'), array('class' => 'divider'));
+		echo $this->Html->link(__('List'), array('action' => 'classes'), array('class' => 'divider'));
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'classesEdit', $classId), array('class' => 'divider'));
 		}
 		if($_delete) {
-			echo $this->Html->link(__('Delete'), array('action' => 'classesDelete'), array('class' => 'divider'));
+			//echo $this->Html->link(__('Delete'), array('action' => 'classesDelete'), array('class' => 'divider'));
 		}
 		?>
     </h1>
