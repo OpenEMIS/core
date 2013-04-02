@@ -411,7 +411,7 @@ class ReportsController extends ReportsAppController {
                 'download'  => true,
                 'extension' => $res['Report']['file_type'],
                 //'path'      => APP . 'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS
-                'path'		=> APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.$module.DS
+                'path'		=> APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS
             );
             $this->set($params);
         }
