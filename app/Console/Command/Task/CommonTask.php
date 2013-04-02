@@ -126,12 +126,11 @@ class CommonTask extends AppTask {
         return array('total'=>((isset($data))?$data:0), 'limit'=>$this->limit);
     }
 
-    
     public function checkandFormatCustomCount(&$sql){
-        if (preg_match('/join/i', $sql)) {
-            $sql = preg_replace('/find\(\s*[\'|"]*all[\'|"]*/','find(\'count\'',$sql);//swap 'all' to 'count'
-            $sql = preg_replace('/[\'|"]*fields[\'|"]*\s*\=\>\s*array\([^\)]*\)[,]*/','',$sql);//remove fields , fields specified in find will screw up count
-            $sql = preg_replace('/[,]*\{cond\}\)\)\;/','));/*',$sql);//remove {cond}, comment rest of codeblock
+        if (preg_match('/[\'|"]*joins[\'|"]*\s*\=\>array\(/i', $sql)) { 
+            $sql = preg_replace('/find\(\s*[\'|"]*all[\'|"]*/i','find(\'count\'',$sql);//swap 'all' to 'count'
+            $sql = preg_replace('/[\'|"]*fields[\'|"]*\s*\=\>\s*array\([^\)]*\)[,]*/i','',$sql);//remove fields , fields specified in find will screw up count
+            $sql = preg_replace('/[,]*\{cond\}\)\)\;/i','));/*',$sql);//remove {cond}, comment rest of codeblock
             $sql = $sql . '*/';
             return true;
         } 
