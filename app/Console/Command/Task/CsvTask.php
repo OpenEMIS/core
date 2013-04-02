@@ -36,23 +36,22 @@ class CsvTask extends AppTask {
 		
 	}
 	
+        
 	public function writeCSV($data,$settings){
-		//$batch = $settings['batch'];
-        $tpl = $settings['tpl'];
-        $arrTpl = explode(',',$tpl);
+            $tpl = $settings['tpl'];
+            $arrTpl = explode(',',$tpl);
 
-		//if ($batch == 0){ fputs ($this->fileFP, $tpl."\n"); }
-        foreach($data as $k => $arrv){
-			$line = '';
-			pr ($arrTpl);
-			foreach($arrTpl as $column){
-					$line .= $this->Common->cleanContent($arrv[$column]).',';
-			}
-			$line .= "\n";
-			fputs ($this->fileFP, $line);
-        }
+            foreach($data as $k => $arrv){
+                pr ($arrTpl);
+                $lineItems=array();
+                foreach($arrTpl as $column){
+                    $lineItems[]=$arrv[$column];
+                } 
+                fputcsv($this->fileFP, $lineItems);//covers all csv escapes,php5.1 and up
+            }
 	}
 	
+        
 	public function closeCSV(){
         $line = "\n";
         $line .= "Report Generated: " . date("Y-m-d H:i:s");
