@@ -170,13 +170,15 @@ class NavigationComponent extends Component {
 					$this->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
 					$this->createLink('Attachments', 'attachments'),
 					$this->createLink('Additional Info', 'additional'),
-					$this->createLink('Programmes', 'programmes'),
 					$this->createLink('Bank Accounts', 'bankAccounts')
 				),
 				'SITE DETAILS' => array(
 					'_controller' => 'InstitutionSites',
-					$this->createLink('Students', 'studentsList', array('pattern' => '^students')),
-					$this->createLink('Classes', 'classesList', array('pattern' => '^classes'))
+					$this->createLink('Programmes', 'programmes'),
+					$this->createLink('Classes', 'classes'),
+					$this->createLink('Students', 'students'),
+					$this->createLink('Teachers', 'teachers'),
+					$this->createLink('Staff', 'staff')
 				),
 				'CENSUS' => array(
 					'_controller' => 'Census',

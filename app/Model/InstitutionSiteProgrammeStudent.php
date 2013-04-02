@@ -2,6 +2,28 @@
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteProgrammeStudent extends AppModel {
+
+	public function getGenderTotal($siteProgrammeId, $yearId) {
+		$joins = array(
+			array('table' => 'students', 'alias' => 'Student')
+		);
+		
+		$gender = array('M' => 0, 'F' => 0);
+		$studentConditions = array('Student.id = InstitutionSiteProgrammeStudent.student_id');
+		
+		foreach($gender as $i => $val) {
+			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
+			$joins[0]['conditions'] = $studentConditions;
+			$gender[$i] = $this->find('count', array(
+				'joins' => $joins,
+				'conditions' => array(
+					'InstitutionSiteProgrammeStudent.institution_site_programme_id' => $siteProgrammeId,
+					'InstitutionSiteProgrammeStudent.school_year_id' => $yearId
+				)
+			));
+		}
+		return $gender;
+	}
 	
 	public function getStudentSelectList($year, $institutionSiteId, $gradeId) {
 		// if datasource is mysql
@@ -57,26 +79,39 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 		return $data;
 	}
 	
-	public function addStudentToProgramme($studentId, $yearId, $programmeId) {
-		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$EducationProgramme = ClassRegistry::init('EducationProgramme');
+	public function addStudentToProgramme($studentId, $programmeId, $institutionSiteId, $yearId) {
+		$InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
 		
-		$year = $SchoolYear->field('name', array('SchoolYear.id' => $yearId));
-		$educationProgramme = $EducationProgramme->find('all', array(
+		$siteProgramme = $InstitutionSiteProgramme->find('all', array(
 			'recursive' => -1,
-			'fields' => array('EducationProgramme.duration'),
+			'fields' => array(
+				'InstitutionSiteProgramme.id',
+				'EducationProgramme.duration',
+				'SchoolYear.name AS year'
+			),
 			'joins' => array(
 				array(
-					'table' => 'institution_site_programmes',
-					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array(
-						'InstitutionSiteProgramme.id = ' . $programmeId,
-						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id'
-					)
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array('SchoolYear.id = InstitutionSiteProgramme.school_year_id')
 				)
+			),
+			'conditions' => array(
+				'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteProgramme.education_programme_id' => $programmeId,
+				'InstitutionSiteProgramme.school_year_id' => $yearId
 			)
 		));
-		$duration = $educationProgramme[0]['EducationProgramme']['duration'];
+		
+		$siteProgrammeId = $siteProgramme[0]['InstitutionSiteProgramme']['id'];
+		$duration = $siteProgramme[0]['EducationProgramme']['duration'];
+		$year = $siteProgramme[0]['SchoolYear']['year'];
+		
 		$startDate = $year . '-' . date('m-d');
 		$endDate = $year+$duration . '-' . date('m-d');
 		
@@ -84,13 +119,13 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 			'start_date' => $startDate,
 			'end_date' => $endDate,
 			'student_id' => $studentId,
-			'institution_site_programme_id' => $programmeId,
+			'institution_site_programme_id' => $siteProgrammeId,
 			'school_year_id' => $yearId
 		);
 		return $this->save($obj);
 	}
 	
-	public function getStudentList($yearId, $programmeId) {
+	public function getStudentList($programmeId, $institutionSiteId, $yearId) {
 		$this->formatResult = true;
 		$data = $this->find('all', array(
 			'recursive' => -1,
@@ -107,14 +142,20 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 					'conditions' => array('Student.id = InstitutionSiteProgrammeStudent.student_id')
 				),
 				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.id = InstitutionSiteProgrammeStudent.institution_site_programme_id',
+						'InstitutionSiteProgramme.education_programme_id = ' . $programmeId,
+						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteProgramme.school_year_id = ' . $yearId
+					)
+				),
+				array(
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
 					'conditions' => array('SchoolYear.id = InstitutionSiteProgrammeStudent.school_year_id')
 				)
-			),
-			'conditions' => array(
-				'InstitutionSiteProgrammeStudent.school_year_id' => $yearId,
-				'InstitutionSiteProgrammeStudent.institution_site_programme_id' => $programmeId
 			),
 			'order' => array('Student.first_name', 'Student.last_name')
 		));
@@ -125,6 +166,21 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 		$institutionSiteId = $conditions['institution_site_id'];
 		unset($conditions['institution_site_id']);
 		
+		$programmeConditions = array(
+			'InstitutionSiteProgramme.id = InstitutionSiteProgrammeStudent.institution_site_programme_id',
+			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
+		);
+		
+		if(isset($conditions['school_year_id'])) {
+			$programmeConditions[] = 'InstitutionSiteProgramme.school_year_id = ' . $conditions['school_year_id'];
+			unset($conditions['school_year_id']);
+		}
+		
+		if(isset($conditions['education_programme_id'])) {
+			$programmeConditions[] = 'InstitutionSiteProgramme.education_programme_id = ' . $conditions['education_programme_id'];
+			unset($conditions['education_programme_id']);
+		}
+		
 		$joins = array(
 			array(
 				'table' => 'students',
@@ -134,10 +190,7 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 			array(
 				'table' => 'institution_site_programmes',
 				'alias' => 'InstitutionSiteProgramme',
-				'conditions' => array(
-					'InstitutionSiteProgramme.id = InstitutionSiteProgrammeStudent.institution_site_programme_id',
-					'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-				)
+				'conditions' => $programmeConditions
 			),
 			array(
 				'table' => 'education_programmes',

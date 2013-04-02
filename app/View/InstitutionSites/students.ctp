@@ -10,10 +10,7 @@ echo $this->Html->script('institution_site_students', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="students_search" class="content_wrapper search">
-    <h1>
-        <span><?php echo __('List of Students'); ?></span>
-        <?php echo $this->Html->link(__('Programmes'), array('action' => 'studentsView'), array('class' => 'divider')); ?>
-    </h1>
+    <h1><?php echo __('List of Students'); ?></h1>
     <?php echo $this->element('alert'); ?>
 	
 	<?php 
@@ -51,8 +48,8 @@ echo $this->Html->script('institution_site_students', false);
 	
 	<div class="row">
 		<?php
-		echo $this->Form->input('institution_site_programme_id', array(
-			'id' => 'InstitutionSiteProgrammeId',
+		echo $this->Form->input('education_programme_id', array(
+			'id' => 'EducationProgrammeId',
 			'class' => 'search_select',
 			'empty' => __('All Programmes'),
 			'options' => $programmeOptions,

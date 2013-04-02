@@ -328,6 +328,28 @@ var jsTable = {
 		});
 	},
 	
+	toggleTableScrollable: function(parent) {
+		var hide = 'hidden';
+		var active = 'scroll_active';
+		var scrollable = parent + ' .table_scrollable';
+		var list = scrollable + ' .list_wrapper';
+		var selector = list + ' .table_body';
+		var rows = $(selector).find('.table_row').length;
+		
+		if(rows > $(list).attr('limit')) {
+			if(!$(scrollable).hasClass(active)) {							
+				$(scrollable).addClass(active);
+			}
+		} else {
+			if($(scrollable).hasClass(active)) {							
+				$(scrollable).removeClass(active);
+			}
+		}
+		if($(list).hasClass(hide)) {
+			$(list).removeClass(hide);
+		}
+	},
+	
 	doRemove: function(obj) {
 		$(obj).closest('.table_row').remove();
 		jsTable.fixTable();

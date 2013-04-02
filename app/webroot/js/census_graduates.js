@@ -7,6 +7,7 @@ $(document).ready(function() {
 var CensusGraduates = {
 	computeTotal: function(obj) {
 		var row = $(obj).closest('.table_row');
+		var table = row.closest('.table');
 		var male = row.find('#CensusGraduateMale');
 		var female = row.find('#CensusGraduateFemale');
 		if(male.val().isEmpty()) {
@@ -17,13 +18,12 @@ var CensusGraduates = {
 			female.val(0);
 			obj.select();
 		}
-		
 		row.find('.cell_total').html(male.val().toInt() + female.val().toInt());
 		
 		var total = 0;
-		$('#graduates .table_row').each(function() {
+		$(table).find('.table_row').each(function() {
 			total += $(this).find('.cell_total').html().toInt();
 		});
-		$('#graduates .table_foot .cell_value').html(total);
+		$(table).find('.table_foot .cell_value').html(total);
 	}
 };

@@ -60,6 +60,9 @@
 
 .table .table_row.highlight .table_cell,
 .table.allow_hover .table_row:hover .table_cell { color: #FFFFFF; }
+.table.allow_hover .table_row.not_highlight:hover { background-color: #FFFFFF; cursor: auto; }
+.table.allow_hover .table_row.not_highlight.even:hover { background-color: #F7F7F7; }
+.table.allow_hover .table_row.not_highlight:hover .table_cell { color: #666666; }
 
 .table .cell_delete,
 .table .cell_icon_action { min-width: 0 !important; width: 16px; }
@@ -78,3 +81,15 @@
 
 .cell_datetime { width: 104px; }
 .cell_datepicker { width: 212px; }
+
+/* Scrollable table body */
+.table_scrollable .table_header { margin-bottom: -1px; }
+.table_scrollable.scroll_active .table_header {	width: 648px !important; }
+.ie8 .table_scrollable.scroll_active .table_header { width: 646px !important; }
+.chrome .table_scrollable.scroll_active .table_header { width: 656px !important; }
+.safari .table_scrollable.scroll_active .table_header { width: 655px !important; }
+.ie8 .table_scrollable .table_header { margin-top: 10px; }
+
+.list_wrapper { margin-bottom: 10px; }
+.list_wrapper > .table { margin-bottom: 0; }
+.scroll_active .list_wrapper { overflow-y: scroll; padding-right: 1px; }

@@ -1,6 +1,6 @@
 <?php if($obj) { ?>
 
-<div class="table_row" student-id="<?php echo $obj['student_id']; ?>">
+<div class="table_row" row-id="<?php echo $obj['id']; ?>">
 	<?php
 	$year = date('Y', strtotime($obj['start_date']));
 	$model = 'InstitutionSiteProgrammeStudent.' . $i;
@@ -37,7 +37,7 @@
 		?>
 	</div>
 	<div class="table_cell cell_icon_action">
-		<span class="icon_delete" onclick="InstitutionSiteStudents.removeStudentFromList(this)"></span>
+		<span class="icon_delete" onclick="InstitutionSiteProgrammes.removeStudentFromList(this)"></span>
 	</div>
 </div>
 

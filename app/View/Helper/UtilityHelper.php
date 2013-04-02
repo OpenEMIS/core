@@ -206,7 +206,7 @@ class UtilityHelper extends AppHelper {
 			if($_options['onDelete'] !== false) {
 				if($_options['onDelete']==='after') {
 					$_options['onclick'] = $options['onclick'] . ';' . $_options['onclick'];
-				} else if($options['onDelete']==='before') {
+				} else if($_options['onDelete']==='before') {
 					$_options['onclick'] = $_options['onclick'] . $options['onclick'];
 				}
 			} else {

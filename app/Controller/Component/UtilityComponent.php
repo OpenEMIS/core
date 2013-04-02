@@ -32,7 +32,7 @@ class UtilityComponent extends Component {
 		$msgList['LOGIN_USER_INACTIVE'] = "You are not an authorized user.";
 		
 		// Census Messages
-		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site.";
+		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site for the selected year.";
 		$msgList['CENSUS_UPDATED'] = "The census data has been updated successfully.";
 		$msgList['CENSUS_GRADUATE_NOT_REQUIRED'] = "Graduates not required.";
 		

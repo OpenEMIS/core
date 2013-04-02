@@ -19,7 +19,7 @@ echo $this->Html->script('institution_site_classes', false);
 	
 	<?php 
 	echo $this->Form->create('InstitutionSite', array(
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'classesList'),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'classes'),
 		'inputDefaults' => array('label' => false, 'div' => false)
 	)); 
 	?>
