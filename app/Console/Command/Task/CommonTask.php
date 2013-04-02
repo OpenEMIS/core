@@ -41,11 +41,23 @@ class CommonTask extends AppTask {
         return $newWord;
     }
 
-    public function cleanContent($str){
-        $str = str_replace("&", "&amp;", $str);
-		$str = str_replace("'", "&#39", $str);
-        return $str = str_replace(",", "&#44", $str);
-        // return $str = str_replace(",", "','", $str);
+    public function cleanContent($str,$options=array()){
+        if (isset($options['preclean']) && is_callable($options['preclean'])){
+            if ($options['preclean']($str) === false) { 
+                return $str;
+            }
+        }
+        $replaceList = array("&"=> "&amp;",
+                             "'"=> "&#39",
+                             ","=> "&#44"
+                            );
+        if (isset($options['customReplaceList']) && is_array($options['customReplaceList'])){
+           $replaceList=$options['customReplaceList']+$replaceList;//customlist has priority
+        }
+        foreach($replaceList as $find=>$replace){
+            $str = str_replace($find, $replace, $str);
+        }
+        return $str;
     }
 	
     public function formatData(&$data){
