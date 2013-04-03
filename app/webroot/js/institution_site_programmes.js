@@ -171,6 +171,7 @@ var InstitutionSiteProgrammes = {
 		var idNo = $(obj).closest('.table_row').find('.cell_id_no').html();
 		var i = $('#student_group .table_row').length;
 		
+		$(obj).unbind('click');
 		var maskId;
 		var url = $('#search_group .table_scrollable').attr('url');
 		var ajaxParams = {studentId: studentId, name: name, idNo: idNo, i: i};
