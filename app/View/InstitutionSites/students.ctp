@@ -15,7 +15,7 @@ echo $this->Html->script('institution_site_students', false);
 	
 	<?php 
 	echo $this->Form->create('Student', array(
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'studentsList'),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'students'),
 		'inputDefaults' => array('label' => false, 'div' => false)
 	)); 
 	?>
