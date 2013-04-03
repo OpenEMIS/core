@@ -49,7 +49,7 @@ var dashboard = {
 	deleteFile: function(id) {
 		var dlgId = 'deleteDlg';
 		var btn = {
-			value: 'Delete',
+			value: i18n.General.textDelete,
 			callback: function() {
 				var maskId;
 				var controller = $('#controller').text();
@@ -87,7 +87,7 @@ var dashboard = {
 		var dlgOpt = {
 			id: dlgId,
 			title: i18n.Attachments.titleDeleteAttachment,
-			content: i18n.Attachments.textDeleteConfirmationMessage,
+			content: i18n.Attachments.contentDeleteAttachment,
 			buttons: [btn]
 		};
 		

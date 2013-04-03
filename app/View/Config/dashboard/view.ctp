@@ -12,8 +12,8 @@ echo $this->Html->script('dashboard', false);
 		<?php
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'dashboardEdit'), array('class' => 'divider'));
-			echo $this->Html->link(__('Back to Config'), array('controller' => 'Config', 'action' => 'index'), array('class' => 'divider', 'id' => 'back_to_config'));
 		}
+		echo $this->Html->link(__('Back to Config'), array('controller' => 'Config', 'action' => 'index'), array('class' => 'divider', 'id' => 'back_to_config'));
 		?>
 	</h1>
 	
