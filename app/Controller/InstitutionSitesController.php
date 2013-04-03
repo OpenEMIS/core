@@ -1081,19 +1081,19 @@ class InstitutionSitesController extends AppController {
 		if($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->data['Student']['SearchField']));
 			$selectedYear = $this->data['Student']['school_year_id'];
-			$selectedProgramme = $this->data['Student']['institution_site_programme_id'];
+			$selectedProgramme = $this->data['Student']['education_programme_id'];
 			$orderBy = $this->data['Student']['orderBy'];
 			$order = $this->data['Student']['order'];
 			
 			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
 			$this->Session->write(sprintf($prefix, 'SchoolYearId'), $selectedYear);
-			$this->Session->write(sprintf($prefix, 'InstitutionSiteProgrammeId'), $selectedProgramme);
+			$this->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
 			$this->Session->write(sprintf($prefix, 'order'), $order);
 			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
 		} else {
 			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
-			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYearId'), $selectedYear);
-			$selectedProgramme = $this->Session->read(sprintf($prefix, 'InstitutionSiteProgrammeId'), $selectedProgramme);
+			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYearId'));
+			$selectedProgramme = $this->Session->read(sprintf($prefix, 'EducationProgrammeId'));
 			
 			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
 				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
@@ -1107,8 +1107,9 @@ class InstitutionSitesController extends AppController {
 		if(!empty($selectedYear)) {
 			$conditions['InstitutionSiteProgrammeStudent.school_year_id'] = $selectedYear;
 		}
+		
 		if(!empty($selectedProgramme)) {
-			$conditions['InstitutionSiteProgrammeStudent.institution_site_programme_id'] = $selectedProgramme;
+			$conditions['education_programme_id'] = $selectedProgramme;
 		}
 		
 		$this->paginate = array('limit' => 15, 'maxLimit' => 100);

@@ -171,9 +171,8 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
 		);
 		
-		if(isset($conditions['school_year_id'])) {
-			$programmeConditions[] = 'InstitutionSiteProgramme.school_year_id = ' . $conditions['school_year_id'];
-			unset($conditions['school_year_id']);
+		if(isset($conditions['InstitutionSiteProgrammeStudent.school_year_id'])) {
+			$programmeConditions[] = 'InstitutionSiteProgramme.school_year_id = ' . $conditions['InstitutionSiteProgrammeStudent.school_year_id'];
 		}
 		
 		if(isset($conditions['education_programme_id'])) {
