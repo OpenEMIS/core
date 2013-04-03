@@ -29,4 +29,41 @@ class EducationProgramme extends AppModel {
 	
 	public $belongsTo = array('EducationCycle', 'EducationFieldOfStudy', 'EducationCertification');
 	public $hasMany = array('EducationGrade', 'InstitutionSiteProgramme');
+	
+	// Used by InstitutionSiteController->programmeAdd
+	public function getAvailableProgrammeOptions($institutionSiteId, $yearId) {
+		$table = 'institution_site_programmes';
+		$notExists = 'NOT EXISTS (SELECT %s.id FROM %s WHERE %s.institution_site_id = %d AND %s.school_year_id = %d AND %s.education_programme_id = EducationProgramme.id)';
+		
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'EducationSystem.name', 'EducationLevel.name', 
+				'EducationCycle.name', 'EducationProgramme.id', 'EducationProgramme.name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id', 'EducationCycle.visible = 1')
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id', 'EducationLevel.visible = 1')
+				),
+				array(
+					'table' => 'education_systems',
+					'alias' => 'EducationSystem',
+					'conditions' => array('EducationSystem.id = EducationLevel.education_system_id', 'EducationSystem.visible = 1')
+				)
+			),
+			'conditions' => array(
+				sprintf($notExists, $table, $table, $table, $institutionSiteId, $table, $yearId, $table),
+				'EducationProgramme.visible' => 1
+			),
+			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
+		));
+		return $data;
+	}
 }
