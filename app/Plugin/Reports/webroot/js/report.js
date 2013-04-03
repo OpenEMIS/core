@@ -27,7 +27,7 @@ var olapReport = {
 
                 if(selectedFields.find('option[value="'+value+'"][data-model="'+model+'"]').length < 1){
                     var text = $(o).html();
-                    text += " [" + $(o).parent().attr('label') + "]";
+//                    text += " [" + $(o).parent().attr('label') + "]";
                     var html = '<option value="'+value+'" data-model="'+model+'">'+text+'</option>';
                     selectedFields.append(html);
                 }
@@ -49,7 +49,7 @@ var olapReport = {
 
                 if(selectedFields.find('option[value="'+value+'"][data-model="'+model+'"]').length < 1){
                     var text = $(o).html();
-                    text += " [" + $(o).parent().attr('label') + "]";
+//                    text += " [" + $(o).parent().attr('label') + "]";
                     var html = '<option value="'+value+'" data-model="'+model+'">'+text+'</option>';
                     $('.selected-fields select').append(html);
                 }
