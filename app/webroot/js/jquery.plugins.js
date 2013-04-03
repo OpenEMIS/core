@@ -441,7 +441,7 @@ jQuery.alert = function(opt) {
 		} else if (pos=='center') {
 			$(Alert).centerElement({wnd: false});
 		}
-	} else {
+	} else if(pos != false) {
 		$(Alert).centerElement({top: '25%'});
 	}
 	

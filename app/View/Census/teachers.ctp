@@ -25,9 +25,8 @@ echo $this->Html->script('census_teachers', false);
 		}
 		?>
 	</h1>
-	<?php echo $this->element('alert'); ?>
-	
-	<?php if($displayContent) { ?>
+	<?php echo $this->element('alert'); ?>	
+
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
@@ -40,7 +39,8 @@ echo $this->Html->script('census_teachers', false);
 			?>
 		</div>
 	</div>
-	
+
+	<?php if($displayContent) { ?>
 	<fieldset class="section_group">
 		<legend><?php echo __('Full Time Equivalent Teachers'); ?></legend>
 		
@@ -206,6 +206,6 @@ echo $this->Html->script('census_teachers', false);
 		</div>
 	</fieldset>
 	
-	<?php } ?>
+	<?php } // end display content ?>
 	<?php echo $this->Form->end(); ?>
 </div>

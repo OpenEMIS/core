@@ -4,7 +4,8 @@ App::uses('DateTimeComponent', 'Controller/Component');
 App::uses('String', 'Utility');
 
 class UtilityHelper extends AppHelper {
-	
+	public $alertType = array('error' => 0, 'ok' => 1, 'info' => 2, 'warn' => 3);
+		
 	public function ellipsis($string, $length = '30') {
 		return String::truncate($string, $length, array('ellipsis' => '...', 'exact' => false));
 	}
@@ -189,17 +190,32 @@ class UtilityHelper extends AppHelper {
 		$_options = array(
 			'class' => 'icon_delete',
 			'title' => __('Delete'),
-			'onclick' => 'jsTable.doRemove(this);'
+			'onclick' => 'jsTable.doRemove(this);',
+			'onDelete' => 'before'
 		);
+		
+		if(isset($options['onDelete'])) {
+			$_options['onDelete'] = $options['onDelete'];
+		}
 		
 		if(isset($options['class'])) {
 			$_options['class'] = $_options['class'] . ' ' . $options['class'];
 			unset($options['class']);
 		}
 		if(isset($options['onclick'])) {
-			$_options['onclick'] = $_options['onclick'] . $options['onclick'];
+			if($_options['onDelete'] !== false) {
+				if($_options['onDelete']==='after') {
+					$_options['onclick'] = $options['onclick'] . ';' . $_options['onclick'];
+				} else if($_options['onDelete']==='before') {
+					$_options['onclick'] = $_options['onclick'] . $options['onclick'];
+				}
+			} else {
+				$_options['onclick'] = $options['onclick'];
+			}
 			unset($options['onclick']);
 		}
+		unset($_options['onDelete']);
+		
 		$_options = array_merge($_options, $options);
 		$html = '<span %s></span>';
 		$attr = array();

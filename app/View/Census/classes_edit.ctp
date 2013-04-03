@@ -20,6 +20,7 @@ echo $this->Html->script('census_classes', false);
 		<span><?php echo __('Classes'); ?></span>
 		<?php echo $this->Html->link(__('View'), array('action' => 'classes'), array('id' => 'edit-link', 'class' => 'divider')); ?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
@@ -35,6 +36,7 @@ echo $this->Html->script('census_classes', false);
 		</div>
 	</div>
 	
+	<?php if($displayContent) { ?>
 	<fieldset class="section_group">
 		<legend><?php echo __('Single Grade Classes Only'); ?></legend>
 		<div class="table">
@@ -51,7 +53,7 @@ echo $this->Html->script('census_classes', false);
 			$totalSeats = 0;
 			$i = 0;
 			
-			foreach($singleGradeData as $name => $programme) { 
+			foreach($singleGradeData as $name => $programme) {
 				foreach($programme['education_grades'] as $gradeId => $grade) {
 					$totalClasses += $grade['classes'];
 					$totalSeats += $grade['seats'];
@@ -201,7 +203,9 @@ echo $this->Html->script('census_classes', false);
 		
 		<?php if($_add) { ?>
 		<div class="row">
-			<a class="void icon_plus" id="add_multi_class" url="Census/classesAddMultiClass"><?php echo __('Add').' '.__('Multi Grade Class'); ?></a>
+			<a class="void icon_plus" id="add_multi_class" url="Census/classesAddMultiClass/<?php echo $selectedYear; ?>">
+			<?php echo __('Add').' '.__('Multi Grade Class'); ?>
+			</a>
 		</div>
 		<?php } ?>
 	</fieldset>
@@ -210,7 +214,7 @@ echo $this->Html->script('census_classes', false);
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
 	</div>
-	
+	<?php } // end display content ?>
 	<?php echo $this->Form->end(); ?>
 </div>
 

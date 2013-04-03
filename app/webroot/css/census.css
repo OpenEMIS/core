@@ -34,7 +34,7 @@
 .multi .table select { width: 100%; }
 .cell_grade { width: 110px; }
 .cell_category { width: 270px; }
-.cell_programme { width: 200px; }
+.cell_programme { width: 230px; }
 .cell_certificate { width: 140px; }
 #infrastructure .cell_category { width: 150px; }
 #infrastructure .cell_total { min-width: 50px !important; width: 50px; }

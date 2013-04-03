@@ -1,7 +1,11 @@
+<?php
+$total = 0;
+$count = 0;
+
+if(!empty($enrolment)) { ?>
+
 <div class="table_body">
 	<?php
-	$total = 0;
-	$count = 0;
 	foreach($enrolment as $record) {
 		$count++;
 		$total += $record['male'] + $record['female'];
@@ -61,6 +65,7 @@
 	</div>
 	<?php } ?>
 </div>
+<?php } ?>
 
 <div class="table_foot">
 	<div class="table_cell"></div>

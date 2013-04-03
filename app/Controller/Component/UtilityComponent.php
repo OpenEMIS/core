@@ -32,7 +32,7 @@ class UtilityComponent extends Component {
 		$msgList['LOGIN_USER_INACTIVE'] = "You are not an authorized user.";
 		
 		// Census Messages
-		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site.";
+		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site for the selected year.";
 		$msgList['CENSUS_UPDATED'] = "The census data has been updated successfully.";
 		$msgList['CENSUS_GRADUATE_NOT_REQUIRED'] = "Graduates not required.";
 		
@@ -43,6 +43,13 @@ class UtilityComponent extends Component {
 		
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";
+		
+		// Institution Site Classes
+		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
+		$msgList['SITE_CLASS_DUPLICATE_NAME'] = "The name is already existed.";
+		
+		// Students
+		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student Found.";
 		
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 		return __($msg);
