@@ -71,12 +71,13 @@ class CommonTask extends AppTask {
         return $result;
     }
 	
-	//Paths
-	public function getReportWebRootPath(){
-		//return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS;
-		return APP.WEBROOT_DIR.DS;
-	}
-	public function getLogPath(){
+    //Paths
+    public function getReportWebRootPath(){
+        //return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS;
+        return APP.WEBROOT_DIR.DS;
+    }
+    
+    public function getLogPath(){
         $path = $this->getReportWebRootPath().'logs/reports/';
         if(!is_dir($path)){
             mkdir($this->getReportWebRootPath().'logs/reports/');
@@ -84,7 +85,7 @@ class CommonTask extends AppTask {
         return $path;
     }
 	
-	public function getResultPath(){
+    public function getResultPath(){
 		return $this->getReportWebRootPath().'reports'.DS;
 	}
 	
@@ -95,7 +96,7 @@ class CommonTask extends AppTask {
 		fclose ($fp);
     }
 	
-	public function updateStatus($id,$status = 1){
+    public function updateStatus($id,$status = 1){
         $this->BatchProcess->id = $id; 
 		$cond = array('status'=>$status,'id'=>$id);
 		if($status == 2){
@@ -106,7 +107,7 @@ class CommonTask extends AppTask {
         $this->BatchProcess->save(array('BatchProcess' => $cond));// set status to processing
 	}
 	
-	public function getCount($id){
+    public function getCount($id){
         $this->autoRender = false;
         $res = $this->Report->find('first',array('conditions'=>array('id'=>$id)));
 		pr($res);
@@ -116,11 +117,27 @@ class CommonTask extends AppTask {
         //$countRes = $this->Report->query($countSql);
         //echo json_encode(array('total'=>((isset($countRes[0][0]['count']))?$countRes[0][0]['count']:0), 'limit'=>$this->limit));
         $sql = $res['BatchReport'][0]['query'];
-        $sql = str_replace(',{cond}','',$sql);
-        $countSql = str_replace("'all'","'count');//",$sql);
+        if (!$this->checkandFormatCustomCount($sql)) {
+            $sql = str_replace(',{cond}','',$sql);
+            $sql = str_replace("'all'","'count');//",$sql);
+        }
+        $countSql = $sql;
         eval($countSql);
         return array('total'=>((isset($data))?$data:0), 'limit'=>$this->limit);
     }
+
+    public function checkandFormatCustomCount(&$sql){
+        if (preg_match('/[\'|"]*joins[\'|"]*\s*\=\>array\(/i', $sql)) { 
+            $sql = preg_replace('/find\(\s*[\'|"]*all[\'|"]*/i','find(\'count\'',$sql);//swap 'all' to 'count'
+            $sql = preg_replace('/[\'|"]*fields[\'|"]*\s*\=\>\s*array\([^\)]*\)[,]*/i','',$sql);//remove fields , fields specified in find will screw up count
+            $sql = preg_replace('/[,]*\{cond\}\)\)\;/i','));/*',$sql);//remove {cond}, comment rest of codeblock
+            $sql = $sql . '*/';
+            return true;
+        } 
+        return false;
+    }
+
+    
 }
-	
+
 ?>
