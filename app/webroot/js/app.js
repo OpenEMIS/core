@@ -1,3 +1,5 @@
+jQuery.fn.reverse = [].reverse;
+
 $(document).ajaxSend(function() {
 	jsAjax.calls = jsAjax.calls + 1;
 });
@@ -137,6 +139,9 @@ var jsForm = {
 		this.linkVoid();
 		this.initInputFocus('.input_wrapper input, .input_wrapper textarea');
 		$('.datepicker select').change(jsForm.datepickerUpdate);
+
+		$('select.areapicker').change(jsForm.areapickerUpdate);
+		jsForm.areapickerStart();
 		
 		// alert
 		$('.alert_view[title]').click(function() {
@@ -183,6 +188,67 @@ var jsForm = {
 			}
 		});
 	},
+	
+	areapickerStart: function(){
+		$('.areapicker_areaid').each(function(){
+			var areaLevel = $(this).parent().parent().parent().find('select.areapicker');
+			areaLevel.each(function(index) {
+				if ($(this).val() ==0) {
+					var fetchIndex = (index == 0 ? 0 : (index-1) );
+					jsForm.getAreaChildren(areaLevel[fetchIndex]);
+					return false;
+				}
+			});
+		});
+	},
+	
+	areapickerUpdate: function() {
+		var areaItemSelected=$(this);
+
+		var hiddenValue= $(this).parents().find('.areapicker_areaid').first();
+		
+		var areaItems = $(this).parent().parent().parent().find('select[name*="[area_level_"]');
+		
+		areaItems.reverse().each(function(index) {
+			if (areaItemSelected.is($(this))){
+				var tmpVal=$(this).val();
+				if (tmpVal != 0 && !!tmpVal) {
+					hiddenValue.val(tmpVal);
+				}
+				jsForm.getAreaChildren(this);
+				return false;
+			} else {
+				//for some reason , some options drop down have "--selected" and some not . flush all options and re-add
+				$(this).find('option').remove(); 
+				$(this).append($('<option>', {value: 0,text: '--Select--'}));
+			}
+		});
+	},
+	
+	getAreaChildren :function (currentobj){      
+        var selected = $(currentobj).val();
+        var maskId;
+        $.ajax({
+            type: 'GET',
+            dataType: 'json',
+            url: getRootURL()+'/Areas/viewAreaChildren/'+selected,
+            beforeSend: function (jqXHR) {
+                    maskId = $.mask({text:i18n.General.textLoadAreas});
+            },
+            success: function (data, textStatus) {
+                    var callback = function(data) {
+                            tpl = '';
+                            $.each(data,function(i,o){
+                                tpl += '<option value="'+i+'">'+data[i]+'</option>';
+                            })
+                            var nextselect = $(currentobj).parent().parent().next().find('select');
+                            nextselect.find('option').remove();
+                            nextselect.append(tpl);  
+                    };
+                    $.unmask({ id: maskId,callback: callback(data)});
+            }
+        })
+    },
 	
 	updateDatepickerValue: function(parent, date) {
 		var day = date.getDate();
