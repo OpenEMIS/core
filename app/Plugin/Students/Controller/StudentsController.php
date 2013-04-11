@@ -130,13 +130,12 @@ class StudentsController extends StudentsAppController {
 	
 	public function edit() {
 		$this->Navigation->addCrumb('Edit Details');
-                $this->Student->id = $this->Session->read('StudentId');
+        $this->Student->id = $this->Session->read('StudentId');
 
         $imgValidate = new ImageValidate();
+		$data = $this->data;
 		
 		if($this->request->is('post')) {
-
-            $data = $this->data;
             $reset_image = $data['Student']['reset_image'];
 
             $img = new ImageMeta($this->data['Student']['photo_content']);
@@ -148,14 +147,12 @@ class StudentsController extends StudentsAppController {
                 if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
                     $data['Student']['photo_content'] = $img->getContent();
                     $img->setContent('');
-//                $data['Student']['photo_name'] = serialize($img);
                     $data['Student']['photo_name'] = $img->getFilename();
                 }
             }else{
                 $data['Student']['photo_content'] = '';
                 $data['Student']['photo_name'] = '';
             }
-
             $this->Student->set($data);
 			if($this->Student->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
                 unset($data['Student']['reset_image']);
@@ -165,16 +162,13 @@ class StudentsController extends StudentsAppController {
                 // display message of validation error
                 $this->set('imageUploadError', __(array_shift($validated['message'])));
             }
-
-		}else{
+		} else {
 			$data = $this->Student->find('first',array('conditions'=>array('id'=>$this->Session->read('StudentId'))));
-			$this->set('data', $data);
 		}
-		
 		
 		$gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
 		$this->set('gender', $gender);
-		
+		$this->set('data', $data);
     }
 
     public function fetchImage($id){
@@ -207,9 +201,9 @@ class StudentsController extends StudentsAppController {
 				$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
 			}
 		}
-
 		$gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
 		$this->set('gender', $gender);
+		$this->set('data', $this->data);
 	}
 
     public function delete() {
