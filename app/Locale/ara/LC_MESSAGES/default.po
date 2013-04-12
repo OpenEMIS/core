@@ -5,26 +5,26 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2013-03-05 17:21+0800\n"
+"PO-Revision-Date: 2013-04-12 10:36+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ara\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.4\n"
+"X-Generator: Poedit 1.5.5\n"
 
 msgid "Home"
-msgstr "الوطن"
+msgstr "الصفحة الرئيسية"
 
 msgid "Welcome"
-msgstr "مرحبا"
+msgstr "مرحبًا"
 
 msgid "Account"
 msgstr "الحساب"
 
 msgid "Help"
-msgstr "تعليمات"
+msgstr "مساعدة"
 
 msgid "Logout"
 msgstr "الخروج"
@@ -36,10 +36,10 @@ msgid "Students"
 msgstr "الطلاب"
 
 msgid "Teachers"
-msgstr "المعلمين"
+msgstr "المعلمون"
 
 msgid "Staff"
-msgstr "الموظفين"
+msgstr "الموظفون"
 
 msgid "Reports"
 msgstr "تقارير"
@@ -48,19 +48,19 @@ msgid "Settings"
 msgstr "إعدادات"
 
 msgid "Demo"
-msgstr "تجريبي"
+msgstr "نموذج تجريبي"
 
 msgid "--Select--"
 msgstr "- اختر -"
 
 msgid "Day"
-msgstr "يوم واحد"
+msgstr "اليوم "
 
 msgid "Month"
-msgstr "شهر"
+msgstr "الشهر"
 
 msgid "Year"
-msgstr "عام"
+msgstr "العام"
 
 msgid "Male"
 msgstr "ذكر"
@@ -72,7 +72,7 @@ msgid "Unisex"
 msgstr "للجنسين"
 
 msgid "Select File"
-msgstr "تحديد ملف"
+msgstr " تحديد الملفّ "
 
 msgid "Edit"
 msgstr "تحرير"
@@ -105,31 +105,31 @@ msgid "Statistics"
 msgstr "الإحصاء"
 
 msgid "Institutions Sites"
-msgstr "مؤسسات مواقع"
+msgstr "المؤسسات مواقع"
 
 msgid "Activities"
-msgstr "أنشطة"
+msgstr "الأنشطة"
 
 msgid "Student"
 msgstr "طالب"
 
 msgid "has been edited"
-msgstr "كان التعديل"
+msgstr "تمّ العدي"
 
 msgid "has been deleted"
-msgstr "حذفت"
+msgstr "تمّ الحذف"
 
 msgid "has been added to the List of"
-msgstr "تمت إضافة إلى قائمة"
+msgstr "تمّت الإضافة إلى قائمة"
 
 msgid "by"
-msgstr "من قبل"
+msgstr "من قبل "
 
 msgid "Notice"
-msgstr "لاحظ"
+msgstr "ملاحظة"
 
 msgid "Note: Max upload file size is 2MB."
-msgstr "ملاحظة: ماكس حجم ملف التحميل هو 2MB."
+msgstr "ملاحظة: الحجم الأقصى لملف التحميل هو 2 ملا  ."
 
 msgid "Image"
 msgstr "صورة"
@@ -144,52 +144,52 @@ msgid "Powerpoint"
 msgstr "باوربوينت"
 
 msgid "File is deleted successfully."
-msgstr "تم حذف الملف بنجاح."
+msgstr "تمّ حذف الملف بنجاح."
 
 msgid "File was deleted successfully."
-msgstr "تم حذف الملف بنجاح."
+msgstr "تمّ حذف الملفّ بنجاح."
 
 msgid "Error occurred while deleting file."
-msgstr "خطأ أثناء حذف الملف."
+msgstr "حدث خطأ أثناء حذف الملفّ."
 
 msgid "Files have been saved successfully."
-msgstr "تم حفظ الملفات بنجاح."
+msgstr "تمّ حفظ الملفات بنجاح."
 
 msgid "Some errors have been encountered while saving files."
-msgstr "لقد واجه بعض الأخطاء أثناء حفظ الملفات"
+msgstr "حدثت بعض الأخطاء أثناء حفظ الملفات"
 
 msgid "Records have been added/updated successfully."
-msgstr "تم إضافة السجلات / تحديثها بنجاح."
+msgstr "تمّ تحديث/إضافة الملفات بنجاح."
 
 msgid "Records have been deleted successfully."
-msgstr "تم حذف السجلات بنجاح."
+msgstr "تمّ حذف الملفات بنجاح."
 
 msgid "Error occurred while deleting record."
-msgstr "خطأ أثناء حذف سجل"
+msgstr "حدث خطأ أثناء حذف السجلّ"
 
 msgid " have been deleted successfully."
-msgstr "تم حذف بنجاح."
+msgstr "تمّ حذف ........ بنجاح."
 
 msgid "Searching..."
-msgstr "البحث ..."
+msgstr "جاري البحث... "
 
 msgid "%s have been deleted successfully."
-msgstr "تم حذف%s  بنجاح."
+msgstr "تمّ حذف ....... بنجاح."
 
 msgid "Please enter a unique Identification No"
-msgstr "يرجى إدخال رقم تعريف فريد"
+msgstr "يرجى إدخال رقم تعريفي مميّز"
 
 msgid "Please enter a unique Code"
-msgstr "الرجاء إدخال رمز فريد"
+msgstr "يرجى إدخال رمز مميّز "
 
 msgid "List of Students"
-msgstr "قائمة من الطلاب"
+msgstr "قائمة الطلاب"
 
 msgid "Add new Student"
-msgstr "إضافة جديدة للطلاب"
+msgstr "إضافة طالب جديد"
 
 msgid "Details"
-msgstr "تفاصيل"
+msgstr "التفاصيل"
 
 msgid "Attachments"
 msgstr "المرفقات"
@@ -198,82 +198,82 @@ msgid "Additional Info"
 msgstr "معلومات إضافية"
 
 msgid "STUDENT INFORMATION"
-msgstr "معلومات الطالب"
+msgstr "معلومات عن الطالب"
 
 msgid "ASSESSMENT"
-msgstr "تقييم"
+msgstr "التقييم"
 
 msgid "Assessment Results"
 msgstr "نتائج التقييم"
 
 msgid "Student Details"
-msgstr "تفاصيل طالب"
+msgstr "تفاصيل الطالب "
 
 msgid "Student History"
-msgstr "تاريخ طالب"
+msgstr " تاريخ الطالب"
 
 msgid "Add"
 msgstr "إضافة"
 
 msgid "Attachment"
-msgstr "الملحق"
+msgstr "المرفق"
 
 msgid "Student Identification No, First Name or Last Name"
-msgstr "تحديد الطلاب لا، الاسم الأول أو اسم العائلة"
+msgstr "رقم الطالب التعريفي أو الاسم الأول أو اسم العائلة "
 
 msgid "Identification No."
-msgstr "تحديد رقم"
+msgstr "رقم التعريف"
 
 msgid "Identification No"
-msgstr "تحديد رقم"
+msgstr "رقم التعريف"
 
 msgid "First Name"
 msgstr "الاسم الأول"
 
 msgid "Last Name"
-msgstr "اسم العائلة"
+msgstr "اسم العائلة "
 
 msgid "Gender"
 msgstr "الجنس"
 
 msgid "Date of Birth"
-msgstr "التاريخ الميلاد"
+msgstr "تاريخ الميلاد"
 
 msgid "Date Of Birth"
-msgstr "التاريخ الميلاد"
+msgstr "تاريخ الميلاد"
 
 msgid "File"
-msgstr "ملف"
+msgstr "الملفّ"
 
 msgid "Description"
 msgstr "الوصف"
 
 msgid "File Type"
-msgstr "نوع الملف"
+msgstr "نوع الملفّ"
 
 msgid "Uploaded On"
-msgstr "تاريخ الإدراج"
+msgstr "تمّ التحميل بتاريخ ........ "
 
 msgid "Institution"
 msgstr "المؤسسة"
 
 msgid "Start Date"
-msgstr "تاريخ البدء"
+msgstr " تاريخ البدء"
 
 msgid "End Date"
-msgstr "التاريخ النهاية"
+msgstr " تاريخ الانتهاء"
 
 msgid "Address"
-msgstr "عنوان"
+msgstr "العنوان"
 
 msgid "Postal Code"
-msgstr "الرمز البريدي"
+msgstr " الرمز البريدي"
 
 msgid "Telephone"
 msgstr "الهاتف"
 
 msgid "Email"
-msgstr "إرسال"
+msgstr "البريد الإلكتروني"
 
 msgid "General"
 msgstr "عام"
@@ -282,34 +282,34 @@ msgid "Contact"
 msgstr "الاتصال"
 
 msgid "No Student found."
-msgstr "لم يتم العثور على الطالب"
+msgstr "لم يتمّ العثور على أيّ طالب"
 
 msgid "No history found."
-msgstr "لا يوجد تاريخ العثور على"
+msgstr "لم يتمّ العثور على أيّ تاريخ"
 
 msgid "List of Staff"
-msgstr "قائمة من الموظفين"
+msgstr "قائمة الموظّفين"
 
 msgid "Add new Staff"
-msgstr "إضافة جديدة للموظفين"
+msgstr "إضافة موظّف جديد"
 
 msgid "STAFF INFORMATION"
-msgstr "معلومات STAFF"
+msgstr "معلومات عن الموظفين"
 
 msgid "Staff Details"
-msgstr "تفاصيل الموظفين"
+msgstr "تفاصيل الموظّفين"
 
 msgid "No Staff found."
-msgstr "لم يتم العثور على الموظفين"
+msgstr "لم يتمّ العثور على أي موظّف"
 
 msgid "Staff History"
-msgstr "كان الموظفون التاريخ"
+msgstr "تاريخ الموظفين"
 
 msgid "List of Teachers"
-msgstr "قائمة المعلمين"
+msgstr "قائمة المعلّمين"
 
 msgid "Add new Teacher"
-msgstr "إضافة المعلم الجديد"
+msgstr "إضافة موظّف جديد "
 
 msgid "Qualifications"
 msgstr "المؤهلات"
@@ -318,82 +318,82 @@ msgid "Training"
 msgstr "التدريب"
 
 msgid "TEACHER INFORMATION"
-msgstr "معلومات المعلم"
+msgstr "معلومات عن المعلمين"
 
 msgid "OTHER INFORMATION"
 msgstr "معلومات أخرى"
 
 msgid "Teacher Details"
-msgstr "تفاصيل المعلم"
+msgstr "تفاصيل المعلمين"
 
 msgid "Teacher History"
-msgstr "التاريخ معلم"
+msgstr "تاريخ المعلمين"
 
 msgid "Date of Issue"
-msgstr "التاريخ من العدد"
+msgstr "تاريخ الإصدار"
 
 msgid "Certificate"
-msgstr "شهادة"
+msgstr "الشهادة"
 
 msgid "Certificate No."
-msgstr "شهادة رقم"
+msgstr " رقم الشهادة"
 
 msgid "Issued By"
-msgstr "الصادر عن"
+msgstr " أصدَرَه / أصدَرَتْه"
 
 msgid "Completed Date"
-msgstr "مكتمل تاريخ"
+msgstr "تاريخ الإتمام "
 
 msgid "Category"
-msgstr "تصنيف"
+msgstr "التصنيف"
 
 msgid "Certifications"
 msgstr "الشهادات"
 
 msgid "No Teacher found."
-msgstr "لم يتم العثور على المعلم"
+msgstr "لم يتمّ العثور على أيّ معلّم"
 
 msgid "Teacher"
 msgstr "المعلم"
 
 msgid "Please enter a valid First Name"
-msgstr "الرجاء إدخال اسم صالح الأولى"
+msgstr "برجاء إدخال اسم أول صحيح"
 
 msgid "Please enter a valid Last Name"
-msgstr "الرجاء إدخال اسم صالح الأخير"
+msgstr " برجاء إدخال اسم عائلة صحيح"
 
 msgid "Please enter a valid Identification No"
-msgstr "الرجاء إدخال رقم هوية صالحة"
+msgstr " برجاء إدخال رقم تعريفي صحيح"
 
 msgid "Please select a Gender"
-msgstr "الرجاء تحديد الجنس"
+msgstr " برجاء تحديد الجنس"
 
 msgid "Please enter a valid Address"
-msgstr "الرجاء إدخال عنوان صالح"
+msgstr " برجاء إدخال عنوان صحيح"
 
 msgid "Please enter a valid Postal Code"
-msgstr "الرجاء إدخال رمز صالح البريدي"
+msgstr " برجاء إدخال رمز بريدي صحيح"
 
 msgid "Please select a Date of Birth"
-msgstr "الرجاء اختيار تاريخ الميلاد"
+msgstr " برجاء تحديد تاريخ الميلاد"
 
 msgid "Please enter a valid Email"
-msgstr "الرجاء إدخال بريد إلكتروني صالح"
+msgstr " برجاء إدخال عنوان بريد إلكتروني صحيح"
 
 msgid "Please enter a valid username"
-msgstr "الرجاء إدخال اسم مستخدم صالح"
+msgstr " برجاء إدخال اسم مستخدم صحيح"
 
 msgid "This username is already in use."
-msgstr "هذا المستخدم قيد الاستخدام بالفعل."
+msgstr " عفوا، اسم المستخدم هذا قيد الاستعمال."
 
 msgid "Password must be at least 6 characters"
-msgstr "يجب أن تكون كلمة المرور 6 أحرف على الأقل"
+msgstr " يجب أن تكون كلمة السر مكونة من 6 حروف على الأقلّ"
 
 msgid "Please enter a valid password"
-msgstr "الرجاء إدخال كلمة السر الصحيحة"
+msgstr " برجاء إدخال كلمة سرّ صحيحة"
 
 msgid "You need to assign a role to the user"
-msgstr "تحتاج إلى تعيين دور للمستخدم"
+msgstr " يجب تحديد دور للمستخدم"
 
 msgid "No Institution Sites"
 msgstr "لا يوجد مواقع مؤسسة"
@@ -405,22 +405,22 @@ msgid "Permissions"
 msgstr "صلاحيات"
 
 msgid "Edit Permissions"
-msgstr "تحرير أذونات"
+msgstr " تعديل الصلاحيات"
 
 msgid "Edit Role - Area Restricted"
-msgstr "تحرير الدور - منطقة محظورة"
+msgstr " تعديل الدور - منطقة محظورة"
 
 msgid "Role - Area Restricted"
-msgstr "دور - منطقة محظورة"
+msgstr " دور - منطقة محظورة"
 
 msgid "Edit Role Assignment"
-msgstr "تحرير تعيين دور"
+msgstr " تعديل تعيين الأدوار"
 
 msgid "Role Assignment"
-msgstr "تعيين دور"
+msgstr " تعيين الأدوار"
 
 msgid "Edit Roles"
-msgstr "تحرير الأدوار"
+msgstr " تعديل الأدوار"
 
 msgid "Users"
 msgstr "المستخدمون"
@@ -432,13 +432,13 @@ msgid "Roles"
 msgstr "الأدوار"
 
 msgid "Edit Details"
-msgstr "تفاصيل تحرير"
+msgstr " تعديل التفاصيل"
 
 msgid "Edit Additional Info"
-msgstr "تحرير معلومات اضافية"
+msgstr " تعديل المعلومات الإضافية"
 
 msgid "Edit Programmes"
-msgstr "برامج تحرير"
+msgstr " تعديل البرامج"
 
 msgid "Add Institution"
 msgstr "إضافة مؤسسة"
@@ -453,37 +453,37 @@ msgid "Site Type"
 msgstr "نوع الموقع"
 
 msgid "Site Code"
-msgstr "رمز موقع"
+msgstr "رمز الموقع"
 
 msgid "Code"
 msgstr "رمز"
 
 msgid "Institution Name"
-msgstr "مؤسسة اسم"
+msgstr " اسم المؤسسة"
 
 msgid "Sector"
 msgstr "القطاع"
 
 msgid "Provider"
-msgstr "مقدم"
+msgstr " المقدّم"
 
 msgid "Site Name"
 msgstr "اسم الموقع"
 
 msgid "Type"
-msgstr "نوع"
+msgstr " النوع"
 
 msgid "Ownership"
-msgstr "الملكية"
+msgstr " الملكية"
 
 msgid "Country"
 msgstr "البلد"
 
 msgid "Province"
-msgstr "مقاطعة"
+msgstr " المقاطعة"
 
 msgid "District"
-msgstr "حي"
+msgstr " الحيّ"
 
 msgid "LLG"
 msgstr "LLG"
@@ -492,7 +492,7 @@ msgid "Ward"
 msgstr "وارد"
 
 msgid "Locality"
-msgstr "التجمع"
+msgstr " الموقع المحلي"
 
 msgid "Latitude"
 msgstr "خط العرض"
@@ -501,97 +501,97 @@ msgid "Longitude"
 msgstr "خط الطول"
 
 msgid "No Institution Sites."
-msgstr "لا يوجد مواقع المؤسسة."
+msgstr "لا يوجد مواقع للمؤسسات."
 
 msgid "Institution Site Details"
-msgstr "تفاصيل الموقع مؤسسة"
+msgstr " تفاصيل مواقع المؤسسات"
 
 msgid "Please enter a valid Name"
 msgstr "الرجاء إدخال اسم صالح"
 
 msgid "Please enter a valid Code"
-msgstr "الرجاء إدخال رمز صالح"
+msgstr " برجاء إدخال رمز صحيح"
 
 msgid "Please select a Provider"
-msgstr "الرجاء اختيار مزود"
+msgstr " برجاء اختيار مقدّم"
 
 msgid "Please select a Status"
-msgstr "الرجاء تحديد الحالة"
+msgstr " برجاء تحديد حالة"
 
 msgid "Please select the Date Opened"
-msgstr "الرجاء تحديد تاريخ مفتوح"
+msgstr " برجاء تحديد تاريخ الفتح"
 
 msgid "Please select a Site Type"
-msgstr "الرجاء تحديد نوع الموقع"
+msgstr " برجاء تحديد نوع الموقع"
 
 msgid "Please select an Ownership"
-msgstr "الرجاء تحديد الملكية"
+msgstr " برجاء تحديد الملكية"
 
 msgid "Please select an Area"
-msgstr "الرجاء اختيار المنطقة"
+msgstr " برجاء اختيار منطقة"
 
 msgid "Institution Code"
-msgstr "مؤسسة القانون"
+msgstr " رمز المؤسّسة"
 
 msgid "Institution Name or Code"
-msgstr "مؤسسة اسم أو رمز"
+msgstr " اسم المؤسسة أو رمزه"
 
 msgid "Status"
 msgstr "الحالة"
 
 msgid "Date Opened"
-msgstr "فتح تاريخ"
+msgstr " تاريخ الفتح"
 
 msgid "Date Closed"
-msgstr "مغلق التاريخ"
+msgstr " تاريخ الإغلاق"
 
 msgid "Location"
-msgstr "الموقع"
+msgstr " الموقع"
 
 msgid "Contact Person"
-msgstr "شخص الاتصال"
+msgstr " نقطة الاتصال"
 
 msgid "Fax"
-msgstr "فاكس"
+msgstr " الفاكس"
 
 msgid "Website"
 msgstr "الموقع"
 
 msgid "Add New"
-msgstr "إضافة جديدة"
+msgstr " إضافة ..... جديد"
 
 msgid "Active"
-msgstr "نشط"
+msgstr " قيد الاستعمال"
 
 msgid "Account Name"
 msgstr "اسم الحساب"
 
 msgid "Account Number"
-msgstr "عدد الحساب"
+msgstr " رقم الحساب"
 
 msgid "Bank"
 msgstr "البنك"
 
 msgid "Branch"
-msgstr "فرع"
+msgstr " الفرع"
 
 msgid "Bank Details"
 msgstr "تفاصيل البنك"
 
 msgid "National Education System"
-msgstr "نظام التربية الوطنية"
+msgstr " نظام التعليم الوطنيّ"
 
 msgid "Grade"
 msgstr "الصف"
 
 msgid "Seats"
-msgstr "مقاعد"
+msgstr " المقاعد"
 
 msgid "Age"
-msgstr "العصر"
+msgstr " العُمْر"
 
 msgid "Total"
-msgstr "توتال"
+msgstr " الإجمالي"
 
 msgid "Source"
 msgstr "المصدر"
@@ -603,67 +603,67 @@ msgid "Amount"
 msgstr "المبلغ"
 
 msgid "Edit Teachers"
-msgstr "تحرير المعلمين"
+msgstr " تعديل المعلمين"
 
 msgid "Edit Training"
-msgstr "تحرير التدريب"
+msgstr " تعديل التدريب"
 
 msgid "Edit Bank Accounts"
-msgstr "بنك تحرير حسابات"
+msgstr " تعديل حسابات البنك"
 
 msgid "Edit Classes"
-msgstr "فئات تحرير"
+msgstr " تعديل الصفوف"
 
 msgid "Edit Finances"
-msgstr "تحرير الشؤون المالية"
+msgstr "تعديل الشؤون المالية"
 
 msgid "Edit Other Forms"
-msgstr "تحرير الأشكال الأخرى"
+msgstr "تعديل النماذج الأخرى"
 
 msgid "Edit Infrastructure"
-msgstr "تحرير البنية التحتية"
+msgstr "تعديل البنية التحتية"
 
 msgid "Trained Teachers"
-msgstr "المعلمين المدربين"
+msgstr " المعلمون المدرّبون"
 
 msgid "No Available Programmes"
-msgstr "لا يوجد البرامج المتوفرة"
+msgstr " لا يوجد برامج متوفّرة "
 
 msgid "Institution History"
-msgstr "مؤسسة التاريخ"
+msgstr " تاريخ المؤسسة"
 
 msgid "Institution Site History"
-msgstr "تاريخ المؤسسة الموقع"
+msgstr " تاريخ موقع المؤسسة"
 
 msgid "My Details"
-msgstr "تفاصيلى"
+msgstr " تفاصيلي"
 
 msgid "has been updated successfully."
-msgstr "تم تحديثها بنجاح."
+msgstr " تمّ تحديث...... بنجاح."
 
 msgid "Change Password"
-msgstr "كلمة المرور التغيير"
+msgstr " تغيير كلمة المرور"
 
 msgid "successfully updated."
-msgstr "تحديثها بنجاح."
+msgstr " تمّ التحديث بنجاح."
 
 msgid "Please try again later."
-msgstr "الرجاء المحاولة مرة أخرى في وقت لاحق."
+msgstr "برجاء المحاولة مرة أخرى في وقت لاحق."
 
 msgid "Please enter your current password"
-msgstr "الرجاء إدخال كلمة المرور الحالية"
+msgstr " برجاء إدخال كلمة المرور المستخدمة حالياً"
 
 msgid "Current password does not match."
-msgstr "كلمة المرور الحالية لا يطابق"
+msgstr "كلمة المرور الحالية غير متطابقة"
 
 msgid "New password required."
-msgstr "كلمة المرور الجديدة المطلوبة."
+msgstr " برجاء إدخال كلمة مرور جديدة."
 
 msgid "Please enter a min of 6 alpha numeric characters."
-msgstr "الرجاء إدخال الأحرف ألفا دقيقة من 6 رقمية."
+msgstr " برجاء إدخال كلمة مكونة من ما لا يقلّ عن 6 حروف وأرقام."
 
 msgid "Please enter alpha numeric characters."
-msgstr "الرجاء إدخال الأحرف الرقمية ألفا."
+msgstr "برجاء إدخال حروف أو أرقام."
 
 msgid "Passwords do not match."
 msgstr "كلمات المرور غير متطابقة."
@@ -672,16 +672,16 @@ msgid "System Information"
 msgstr "معلومات النظام"
 
 msgid "Support"
-msgstr "دعم"
+msgstr "الدعم"
 
 msgid "License"
 msgstr "الترخيص"
 
 msgid "Edit My Details"
-msgstr "تحرير تفاصيل بلدي"
+msgstr " تعديل تفاصيلي"
 
 msgid "Finance"
-msgstr "المالية"
+msgstr " الشؤون المالية"
 
 msgid "Total Public Expenditure"
 msgstr "إجمالي الإنفاق العام"
@@ -690,31 +690,31 @@ msgid "National Denominators"
 msgstr "القواسم الوطنية"
 
 msgid "Select"
-msgstr "اختر"
+msgstr " اختيار"
 
 msgid "Total Public Expenditure Per Education Level"
-msgstr "إجمالي الإنفاق العام لكل مستوى التعليم"
+msgstr "إجمالي الإنفاق العام عن كل مستوى تعليميّ"
 
 msgid "System"
 msgstr "النظام"
 
 msgid "Level"
-msgstr "مستوى"
+msgstr " المستوى"
 
 msgid "Cycle"
-msgstr "دورة"
+msgstr " الدورة"
 
 msgid "Programme"
-msgstr "برنامج"
+msgstr " البرنامج"
 
 msgid "Orientation"
 msgstr "التوجيه"
 
 msgid "Field of Study"
-msgstr "تم من دراسة"
+msgstr " المجال الدراسي"
 
 msgid "Certification"
-msgstr "شهادة"
+msgstr " الشهادة"
 
 msgid "Subject"
 msgstr "الموضوع"
@@ -756,85 +756,82 @@ msgid "December"
 msgstr "ديسمبر"
 
 msgid "Your session is timed out. Please login again."
-msgstr "هو الوقت المناسب الجلسة. الرجاء تسجيل الدخول مرة أخرى."
+msgstr "لقد انتهت جلستك، برجاء تسجيل الدخول مرة أخرى."
 
 msgid "You are not an authorized user."
-msgstr "أنت لست مستخدم المعتمدين لديها."
+msgstr "عفواً، لستَ مستخدما معتمداً لدينا."
 
 msgid ""
 "You have encountered an unexpected error. Please contact the system "
 "administrator for assistance."
 msgstr ""
-"لقد واجهتم خطأ غير متوقع، يرجى الاتصال بمسؤول النظام للحصول على المساعدة."
+"لقد حدث خطأ غير متوقّع، يرجى الاتصال بالمسؤول عن النظام للحصول على مساعدة."
 
 msgid "Host Unreachable"
-msgstr "المضيف قابلة للوصول"
+msgstr " المضيف غير متواجد حالياً"
 
 msgid "Host is unreachable, please check your internet connection."
-msgstr "المضيف غير قابلة للوصول، يرجى التحقق من اتصالك بالإنترنت."
+msgstr "المضيف غير متواجد حالياً، يرجى التحقّق من اتصالك بالإنترنت."
 
 msgid "Session Timed Out"
-msgstr "الدورة مهلة"
+msgstr " انتهت الجلسة"
 
 msgid "Page not found"
-msgstr "لم يتم العثور على الصفحة"
+msgstr "لم يتمّ العثور على الصفحة"
 
 msgid "The requested page cannot be found."
-msgstr "لا يمكن أن الصفحة المطلوبة يمكن العثور عليها."
+msgstr "لا يمكن العثور على الصفحة المطلوبة."
 
 msgid "Please contact the administrator for assistance."
-msgstr "الرجاء الاتصال بمسؤول للحصول على المساعدة."
+msgstr "برجاء الاتصال بالمسؤول عن النظام للحصول على مساعدة."
 
 msgid "An unexpected error has occurred."
-msgstr "هناك خطأ غير متوقع حدث."
+msgstr " حدث خطأ غير متوقّع."
 
 msgid "JSON parse failed"
 msgstr "فشل تحليل JSON"
 
 msgid "Invalid JSON data."
-msgstr "غير صالح البيانات JSON."
+msgstr "بيانات JSON غير صحيح"
 
 msgid "Request Timeout"
-msgstr "طلب مهلة"
-
-msgid "Your request has been timed out. Please try again."
-msgstr "تم توقيت طلب الخاص بها. الرجاء المحاولة مرة أخرى."
+msgstr " انتهى الطلب"
 
 msgid "Request Aborted"
-msgstr "طلب إحباط"
+msgstr " تمّ إلغاء الطلب"
 
 msgid "Your request has been aborted."
-msgstr "تم إحباط الطلب الخاص بك."
+msgstr " تمّ إلغاء طلبك."
 
 msgid "Unexpected Error"
 msgstr "خطأ غير متوقع"
 
 msgid "Edit System Configurations"
-msgstr "تعديل النظام تكوينات"
+msgstr "تعديل إعدادات النظام"
 
 msgid "File is updated successfully."
-msgstr "يتم تحديث الملف بنجاح."
+msgstr "تمّ تحديث الملف بنجاح."
 
 msgid "Error occurred while updating file."
-msgstr "خطأ أثناء تحديث الملف."
+msgstr " حدث خطأ أثناء تحديث الملف."
 
 msgid "File have been updated successfully."
 msgstr "تم تحديث الملف بنجاح."
 
-msgid "File have not been updated successfully."
-msgstr "لم يتم تحديث الملف بنجاح."
+msgid "File has not been updated successfully."
+msgstr "لم يتمّ تحديث الملف بنجاح."
 
 msgid "File format not supported."
-msgstr "تنسيق ملف غير معتمد"
+msgstr " نمط الملفّ غير معتمَد"
 
-msgid "Image have exceeded the allow file size of"
+msgid "Image has exceeded the allow file size of"
 msgstr "لقد تجاوز حجم ملف الصورة تسمح لل"
 
 msgid "Please reduce file size."
-msgstr "الرجاء تقليل حجم الملف."
+msgstr "برجاء تصغير حجم الملف."
 
 msgid "Image resolution is too small."
-msgstr "صورة القرار صغير جدا."
+msgstr "دقّة الصورة صغيرة جدا."
 
 msgid "error"
 msgstr "خطأ"
@@ -843,22 +840,22 @@ msgid "Error"
 msgstr "خطأ"
 
 msgid "log does not exists"
-msgstr "سجل غير موجود"
+msgstr "السجلّ غير موجود"
 
 msgid "Add new Institution"
 msgstr "إضافة مؤسسة جديدة"
 
 msgid "Institution Details"
-msgstr "المؤسسة التعليمية"
+msgstr "تفاصيل المؤسسة"
 
 msgid "SITE INFORMATION"
 msgstr "معلومات الموقع"
 
 msgid "Add new Institution Site"
-msgstr "إضافة موقع جديد المؤسسة"
+msgstr "إضافة موقع جديد للمؤسسة"
 
 msgid "Add New Institution Site"
-msgstr "إضافة موقع جديد المؤسسة"
+msgstr "إضافة موقع جديد للمؤسسة"
 
 msgid "Bank Accounts"
 msgstr "الحسابات المصرفية"
@@ -873,10 +870,10 @@ msgid "Enrolment"
 msgstr "القيد"
 
 msgid "Programmes"
-msgstr "برامج"
+msgstr "البرامج"
 
 msgid "Classes"
-msgstr "فئات"
+msgstr " الصفوف"
 
 msgid "Textbooks"
 msgstr "الكتب المدرسية"
@@ -885,7 +882,7 @@ msgid "Infrastructure"
 msgstr "البنية التحتية"
 
 msgid "Finances"
-msgstr "المالية"
+msgstr " الشؤون المالية"
 
 msgid "Other Forms"
 msgstr "أشكال أخرى"
@@ -903,31 +900,31 @@ msgid "Setup Variables"
 msgstr "متغيرات الإعداد"
 
 msgid "Edit Setup Variables"
-msgstr "متغيرات الإعداد تحرير"
+msgstr "تعديل متغيّرات الإعداد "
 
 msgid "Custom Fields"
-msgstr "الحقول المخصصة"
+msgstr "الخانات المخصصة"
 
 msgid "Edit Custom Fields"
-msgstr "حقول تحرير مخصص"
+msgstr "تعديل الخانات المخصصة"
 
 msgid "Custom Table"
 msgstr "جدول مخصص"
 
 msgid "Edit Custom Table"
-msgstr "تحرير الجدول مخصص"
+msgstr " تعديل الجدول المخصص"
 
 msgid "System Configurations"
-msgstr "تكوينات النظام"
+msgstr " إعدادات النظام"
 
 msgid "ACCOUNTS &amp; SECURITY"
-msgstr "حسابات والأمن"
+msgstr "الحسابات والأمن"
 
 msgid "ACCOUNTS & SECURITY"
 msgstr "حسابات والأمن"
 
 msgid "NATIONAL DENOMINATORS"
-msgstr "NATIONAL القواسم"
+msgstr " القواسم الوطنية"
 
 msgid "Population"
 msgstr "السكان"
@@ -936,7 +933,7 @@ msgid "DATA PROCESSING"
 msgstr "معالجة البيانات"
 
 msgid "Generate Reports"
-msgstr "إنشاء تقارير"
+msgstr " إعداد تقارير"
 
 msgid "Export Indicators"
 msgstr "مؤشرات التصدير"
@@ -945,10 +942,10 @@ msgid "Processes"
 msgstr "العمليات"
 
 msgid "DATABASE"
-msgstr "DATABASE"
+msgstr "قاعدة البيانات"
 
 msgid "Backup"
-msgstr "النسخ الاحتياطي"
+msgstr "النسخة الاحتياطية"
 
 msgid "Restore"
 msgstr "استعادة"
@@ -960,19 +957,19 @@ msgid "The census data has been updated successfully."
 msgstr "تم تحديث بيانات التعداد بنجاح."
 
 msgid "Graduates not required."
-msgstr "الخريجين غير مطلوبة."
+msgstr "الخريجين غير مطلوبين."
 
 msgid "No Custom Census Table."
-msgstr "جدول رقم التعداد مخصص."
+msgstr " لم يتمّ العثور على أي جدول تعداد مخصص."
 
 msgid "Message Not Found."
-msgstr "رسالة لم يتم العثور على."
+msgstr " لم يتم العثور على الرسالة."
 
 msgid "Good"
 msgstr "جيد"
 
 msgid "Fair"
-msgstr "عادل"
+msgstr " مقبول"
 
 msgid "Poor"
 msgstr "ضعيف"
@@ -993,7 +990,7 @@ msgid "Last Login"
 msgstr "آخر تسجيل دخول"
 
 msgid "Please enter your current password."
-msgstr "الرجاء إدخال كلمة المرور الحالية"
+msgstr "برجاء إدخال كلمة المرور الحالية"
 
 msgid "Areas"
 msgstr "المناطق"
@@ -1008,10 +1005,10 @@ msgid "Area Levels"
 msgstr "مستويات المنطقة"
 
 msgid "Edit Area Levels"
-msgstr "مستويات مربع تحرير"
+msgstr " تعديل مستويات المنطقة"
 
 msgid "Structure"
-msgstr "هيكل"
+msgstr " الهيكل"
 
 msgid "Education"
 msgstr "التعليم"
@@ -1023,79 +1020,79 @@ msgid "Education System"
 msgstr "النظام التعليمي"
 
 msgid "Admission Age"
-msgstr "عصر القبول"
+msgstr " سنّ القبول"
 
 msgid "Programme Orientation"
-msgstr "التوجيه برنامج"
+msgstr "توجيه البرنامج"
 
 msgid "Order"
-msgstr "النظام"
+msgstr " الترتيب"
 
 msgid "Field Of Study"
-msgstr "تم دراسة"
+msgstr " المجال الدراسيّ"
 
 msgid "ISCED Level"
-msgstr "مستوى إسكد"
+msgstr "مستوى ISCED"
 
 msgid "Subjects"
-msgstr "الموضوعات"
+msgstr "الموادّ"
 
 msgid "Duration"
 msgstr "المدة"
 
 msgid "Grades"
-msgstr "علامات"
+msgstr " الدرجات"
 
 msgid "Grade Subject"
-msgstr "الموضوع الصف"
+msgstr " مادة الصفّ"
 
 msgid "Back to Programmes"
-msgstr "برامج تحرير"
+msgstr " العودة إلى البرامج"
 
 msgid "Back to Grades"
-msgstr "العودة الى القائمة"
+msgstr "العودة إلى الدراجات"
 
 msgid "Graduates"
-msgstr "الخريجين"
+msgstr "الخريجون"
 
 msgid "Please select a programme first."
-msgstr "يرجى تحديد البرنامج الأول."
+msgstr "يرجى تحديد البرنامج أولاً."
 
 msgid "Option"
 msgstr "الخيار"
 
 msgid "an option"
-msgstr "هناك خيار"
+msgstr " خيار"
 
 msgid "School Year"
 msgstr "السنة الدراسية"
 
 msgid "Current"
-msgstr "التيار"
+msgstr " الحالي/ الحالية"
 
 msgid "Available"
-msgstr "متاح"
+msgstr "مُتاح/ مُتاحة"
 
 msgid "Categories"
-msgstr "فئات"
+msgstr " الفئات"
 
 msgid "Buildings"
 msgstr "المباني"
 
 msgid "Materials"
-msgstr "المواد"
+msgstr "الموادّ"
 
 msgid "Resources"
 msgstr "الموارد"
 
 msgid "Furniture"
-msgstr "أثاث"
+msgstr "الأثاث"
 
 msgid "Energy"
 msgstr "الطاقة"
 
 msgid "Rooms"
-msgstr "غرف"
+msgstr " الغرف"
 
 msgid "Sanitation"
 msgstr "الصرف الصحي"
@@ -1104,7 +1101,7 @@ msgid "Water"
 msgstr "المياه"
 
 msgid "Banks"
-msgstr "البنوك"
+msgstr " المصارف"
 
 msgid "Capital Income"
 msgstr "دخل رأس المال"
@@ -1113,13 +1110,13 @@ msgid "Capital Expenditure"
 msgstr "الإنفاق الرأسمالي"
 
 msgid "Recurrent Income"
-msgstr "الدخل المتكررة"
+msgstr "الدخل المتكرّر"
 
 msgid "Recurrent Expenditure"
 msgstr "النفقات المتكررة"
 
 msgid "Other"
-msgstr "دولة اخرى"
+msgstr " آخر / أخرى"
 
 msgid "Instructional"
 msgstr "التعليمية"
@@ -1131,7 +1128,7 @@ msgid "Facilities"
 msgstr "المرافق"
 
 msgid "Qualification Certificates"
-msgstr "شهادة المؤهل"
+msgstr " شهادات التأهيل"
 
 msgid "Qualification Categories"
 msgstr "فئات التأهيل"
@@ -1143,22 +1140,22 @@ msgid "Training Categories"
 msgstr "فئات التدريب"
 
 msgid "Sources"
-msgstr "مصادر"
+msgstr " المصادر"
 
 msgid "Branches"
 msgstr "الفروع"
 
 msgid "Sanitations"
-msgstr "الإصحاح"
+msgstr " المرافق الصحية"
 
 msgid "Section Break"
 msgstr "فاصل المقطع"
 
 msgid "Single Line Text"
-msgstr "نص سطر واحد"
+msgstr " نصّ من سطر واحد "
 
 msgid "Multi Line Text"
-msgstr "نص الخط موضوع"
+msgstr " نصّ من عدّة سطور"
 
 msgid "DropDown List"
 msgstr "قائمة منسدلة"
@@ -1170,58 +1167,58 @@ msgid "Checkboxes"
 msgstr "خانات اختيار"
 
 msgid "Institution Custom Fields"
-msgstr "مخصص مؤسسة الحقول"
+msgstr " خانات مخصصة للمؤسسات"
 
 msgid "Institution Site Custom Fields"
-msgstr "الموقع مخصص الحقول مؤسسة"
+msgstr " خانات مخصصة لمواقع المؤسسات"
 
 msgid "Census Custom Fields"
-msgstr "تعداد الحقول المخصصة"
+msgstr " خانات مخصصة للتعداد"
 
 msgid "Student Custom Fields"
-msgstr "مخصص للطلاب الحقول"
+msgstr " خانات مخصصة للطلاب"
 
 msgid "Teacher Custom Fields"
-msgstr "مخصص المعلم الحقول"
+msgstr " خانات مخصصة للمعلمين"
 
 msgid "Staff Custom Fields"
-msgstr "الحقول المخصصة للموظفين"
+msgstr "خانات مخصصة للموظفين"
 
 msgid "Census Custom Tables"
-msgstr "جداول التعداد مخصص"
+msgstr "جداول مخصصة للتعداد "
 
 msgid "Field Label"
-msgstr "تسمية الميدان"
+msgstr "تسمية الخانة"
 
 msgid "List of Custom Census Table"
-msgstr "قائمة الجدول تعداد مخصص"
+msgstr "قائمة جدول التعدادالمخصّص"
 
 msgid "Filter by"
-msgstr "بحسب"
+msgstr " بحسب"
 
 msgid "X Category"
-msgstr "الفئة X"
+msgstr "فئة س"
 
 msgid "Y Category"
-msgstr "تصنيف Y"
+msgstr "فئة ص"
 
 msgid "List"
-msgstr "قائمة"
+msgstr " القائمة"
 
 msgid "Dashboard Image"
 msgstr "صورة لوحة"
 
 msgid "Back to Config"
-msgstr "العودة إلى تكوين"
+msgstr "العودة إلى الإعداد"
 
 msgid "Title"
 msgstr "العنوان"
 
 msgid "Date Format"
-msgstr "تنسيق التاريخ"
+msgstr " نمط التاريخ"
 
 msgid "Currency"
-msgstr "العملة"
+msgstr "العُمْلة"
 
 msgid "Language"
 msgstr "اللغة"
@@ -1230,22 +1227,22 @@ msgid "Back to List"
 msgstr "العودة الى القائمة"
 
 msgid "Reconnecting..."
-msgstr "إعادة الاتصال …"
+msgstr " جاري إعادة الاتصال …"
 
 msgid "Password"
 msgstr "كلمة المرور"
 
 msgid "Login"
-msgstr "دخول"
+msgstr " الدخول"
 
 msgid "Education Management Information System"
-msgstr "إدارة التعليم معلومات النظام"
+msgstr " نظام معلومات إدارة التعليم"
 
 msgid "Function"
-msgstr "وظيفة"
+msgstr " الوظيف"
 
 msgid "Institution Site"
-msgstr "مؤسسة الموقع"
+msgstr " موقع المؤسسة"
 
 msgid "Census"
 msgstr "التعداد"
@@ -1257,46 +1254,46 @@ msgid "Data Processing"
 msgstr "معالجة البيانات"
 
 msgid "Export Indicator"
-msgstr "المؤشر التصدير"
+msgstr "مؤشّر التصديرات"
 
 msgid "Custom Tables"
-msgstr "جداول مخصص"
+msgstr "جداول مخصصة"
 
 msgid "Configurations"
-msgstr "تكوينات"
+msgstr " الإعدادات"
 
 msgid "Role"
-msgstr "دور"
+msgstr " الدور"
 
 msgid "Modules"
-msgstr "وحدات"
+msgstr " الوحدات"
 
 msgid "Add New User"
 msgstr "إضافة مستخدم جديد"
 
 msgid "Inactive"
-msgstr "غير نشطة"
+msgstr "غير نشط"
 
 msgid "Retype Password"
-msgstr "كلمة المرور أعد كتابة"
+msgstr "أعد كتابة كلمة المرور "
 
 msgid "User Details"
 msgstr "تفاصيل المستخدم"
 
 msgid "Full access on all modules"
-msgstr "الوصول الكامل على جميع وحدات"
+msgstr " وصول كامل إلى جميع الوحدات"
 
 msgid "Back to Roles"
-msgstr "العودة الى القائمة"
+msgstr "العودة الى الأدوار"
 
 msgid "Database"
 msgstr "قاعدة البيانات"
 
 msgid "PHP Version"
-msgstr "إصدار PHP"
+msgstr " نسخة PHP"
 
 msgid "Web Server"
-msgstr "خادم ويب"
+msgstr "خادوم ويب"
 
 msgid "Operating System"
 msgstr "نظام التشغيل"
@@ -1305,85 +1302,85 @@ msgid "Data not available."
 msgstr "البيانات غير متوفرة."
 
 msgid "The selected report is currently being processed."
-msgstr "تتم معالجة التقرير المحدد حاليا يجري."
+msgstr "تتم معالجة التقرير المحدد حاليا."
 
 msgid "Institution Reports"
-msgstr "تقارير مؤسسة"
+msgstr "تقارير المؤسسات"
 
 msgid "Student Reports"
 msgstr "تقارير الطلاب"
 
 msgid "Teacher Reports"
-msgstr "تقارير المعلم"
+msgstr "تقارير المعلمين"
 
 msgid "Staff Reports"
-msgstr "تقارير الموظفين"
+msgstr "تقارير الموظّفين"
 
 msgid "Consolidated Reports"
 msgstr "تقارير موحدة"
 
 msgid "Indicator Reports"
-msgstr "تقارير المؤشر"
+msgstr "تقارير المؤشرات"
 
 msgid "Data Quality Reports"
-msgstr "جودة البيانات تقارير"
+msgstr " تقارير مراقبة جودة البيانات"
 
 msgid "DataQuality Reports"
-msgstr "تقارير DataQuality"
+msgstr "تقارير  مراقبة جودة البيانات"
 
 msgid "Custom Reports"
 msgstr "تقارير مخصصة"
 
 msgid "Please contact"
-msgstr "الرجاء الاتصال"
+msgstr "برجاء الاتصال بــ"
 
 msgid "support"
 msgstr "الدعم"
 
 msgid "for more information on Custom Reports."
-msgstr "لمزيد من المعلومات حول تقارير مخصص"
+msgstr "لمزيد من المعلومات عن التقارير المخصصة"
 
 msgid "Last Run"
 msgstr "تشغيل آخر"
 
 msgid "Types"
-msgstr "أنواع"
+msgstr "الأنواع"
 
 msgid "Institution Report"
-msgstr "تقارير مؤسسة"
+msgstr "تقارير المؤسسات"
 
 msgid "List of Institutions"
 msgstr "قائمة المؤسسات"
 
 msgid "Institution Additional Info Report"
-msgstr "مؤسسة قائمة معلومات اضافية"
+msgstr " تقرير عن المعلومات الإضافية للمؤسسات "
 
 msgid "List of Institutions with additional info"
 msgstr "قائمة المؤسسات مع معلومات إضافية"
 
 msgid "Institution Site Report"
-msgstr "تقارير مؤسسة"
+msgstr "تقرير مواقع المؤسسات"
 
 msgid "List of Institution Sites"
-msgstr "قائمة من مواقع المؤسسة"
+msgstr "قائمة مواقع المؤسسات"
 
 msgid "Institution Site Additional Info Report"
-msgstr "مؤسسة الموقع معلومات اضافية قائمة"
+msgstr " تقرير عن المعلومات الإضافية لمواقع المؤسسات"
 
 msgid "List of Institution Sites with additional info"
-msgstr "تقرير عن معلومات إضافية مؤسسة الموقع"
+msgstr " قائمة مواقع المؤسسات ذات معلومات إضافية"
 
 msgid "Institution Site Programme Report"
-msgstr "مؤسسة برامج الموقع"
+msgstr " تقرير برامج مواقع المؤسسات "
 
 msgid "List of Institution Sites with Programmes"
-msgstr "عرضت قائمة الموقع مع المؤسسة برامجها"
+msgstr " قائمة مواقع المؤسسات مع البرامج"
 
 msgid "Institution Site Bank Account Report"
-msgstr "الموقع حسابات مؤسسة بنك"
+msgstr " تقرير حساب مصرف مواقع المؤسسات"
 
 msgid "List of Institution Sites with Bank Accounts"
-msgstr "قائمة من الموقع مع مؤسسة حساباتهم المصرفية"
+msgstr "قائمة مواقع المؤسسات مع الحسابات المصرفية"
 
 msgid "Enrolment Report"
 msgstr "تقرير القيد"
@@ -1392,19 +1389,19 @@ msgid "Summary of enrolment from census"
 msgstr "ملخص القيد من التعداد"
 
 msgid "Class Report"
-msgstr "فئة تقرير"
+msgstr " تقرير الصفّ"
 
 msgid "Summary of classes from census"
-msgstr "ملخص لفئات من التعداد"
+msgstr "ملخص الصفوف من التعداد"
 
 msgid "Textbook Report"
-msgstr "كتاب تقرير"
+msgstr " تقرير عن الكتب المدرسيّة"
 
 msgid "Summary of textbooks from census"
 msgstr "ملخص الكتب المدرسية من التعداد"
 
 msgid "Teacher Report"
-msgstr "تقرير المعلم"
+msgstr "تقرير المعلمين"
 
 msgid "Summary of teachers from census"
 msgstr "ملخص المعلمين من التعداد"
@@ -1413,25 +1410,25 @@ msgid "Training Report"
 msgstr "تقرير التدريب"
 
 msgid "Summary of teacher training from census"
-msgstr "ملخص لتدريب المعلمين من التعداد"
+msgstr "ملخّص لتدريب المعلمين من التعداد"
 
 msgid "Staff Report"
 msgstr "تقرير الموظفين"
 
 msgid "Summary of staff from census"
-msgstr "ملخص الموظفين من التعداد"
+msgstr "ملخص الموظّفين من التعداد"
 
 msgid "Census Additional Info Report"
-msgstr "تقرير التعداد معلومات اضافية"
+msgstr "تقرير المعلومات الإضافية للتعداد"
 
 msgid "Summary of additional info from census"
-msgstr "ملخص لمعلومات إضافية من التعداد"
+msgstr "ملخص للمعلومات الإضافية من التعداد"
 
 msgid "Census Tables"
 msgstr "جداول التعداد"
 
 msgid "Summary of additional info tables from census"
-msgstr "ملخص جداول أكثر من التعداد"
+msgstr "ملخص جداول المعلومات الإضافية من التعداد"
 
 msgid "Income Report"
 msgstr "تقرير الدخل"
@@ -1440,76 +1437,76 @@ msgid "Summary of income from census"
 msgstr "ملخص الدخل من التعداد"
 
 msgid "Expenditure Report"
-msgstr "تقرير النفقات"
+msgstr "تقرير المصروفات"
 
 msgid "Summary of expenditure from census"
 msgstr "ملخص المصروفات من التعداد"
 
 msgid "Building Report"
-msgstr "بناء التقرير"
+msgstr " تقرير البناء"
 
 msgid "Summary of buildings and condition from census"
-msgstr "ملخص المباني وحالة من التعداد"
+msgstr "ملخص المباني وأحوالها من التعداد"
 
 msgid "Rooms Report"
-msgstr "الغرف عن"
+msgstr " تقرير الغُرَف"
 
 msgid "Summary of rooms and condition from census"
-msgstr "ملخص من الغرف وحالة من التعداد"
+msgstr "ملخص الغرف وأحوالها من التعداد"
 
 msgid "Sanitation Report"
 msgstr "تقرير الصرف الصحي"
 
 msgid "Summary of sanitation, gender and condition from census"
-msgstr "ملخص عن الجنس والصرف الصحي وحالة من التعداد"
+msgstr "ملخص عن الصرف الصحي  والنوع والأحوال من التعداد"
 
 msgid "Furniture Report"
 msgstr "تقرير الأثاث"
 
 msgid "Summary of furniture and condition from census"
-msgstr "ملخص للأثاث وحالة من التعداد"
+msgstr "ملخص للأثاث وحالته من التعداد"
 
 msgid "Resource Report"
 msgstr "تقرير الموارد"
 
 msgid "Summary of resources and condition from census"
-msgstr "ملخص الموارد وحالة من التعداد"
+msgstr "ملخص الموارد وأحوالها من التعداد"
 
 msgid "Energy Report"
 msgstr "تقرير الطاقة"
 
 msgid "Summary of power and condition from census"
-msgstr "ملخص السلطة وحالة من التعداد"
+msgstr "ملخص الطاقة وحالها من التعداد"
 
 msgid "Water Report"
 msgstr "تقرير المياه"
 
 msgid "Summary of water and condition from census"
-msgstr "ملخص لحالة من المياه والتعداد"
+msgstr "ملخص المياه وحالها من التعداد"
 
 msgid "Student Report"
-msgstr "طالب تقرير"
+msgstr " تقرير الطلاب"
 
 msgid "Report on student"
 msgstr "تقرير عن الطالب"
 
 msgid "Students Additional Info Report"
-msgstr "تقرير معلومات اضافية الطلاب"
+msgstr "تقرير المعلومات الإضافية للطلاب"
 
 msgid "List of Students with additional info"
-msgstr "قائمة الطلبة الحاصلين على معلومات إضافية"
+msgstr "قائمة الطلبة مع معلومات إضافية"
 
 msgid "Teacher List"
-msgstr "قائمة المعلم"
+msgstr "قائمة المعلمين"
 
 msgid "Report on Teachers"
 msgstr "تقرير عن المعلمين"
 
 msgid "Teachers Additional Info Report"
-msgstr "تقرير المعلمين معلومات اضافية"
+msgstr "تقرير معلومات إضافية للمعلمين "
 
 msgid "List of Teachers with additional info"
-msgstr "قائمة المعلمين مع أكثر"
+msgstr " قائمة المعلمين مع معلومات إضافية"
 
 msgid "Staff List"
 msgstr "قائمة الموظفين"
@@ -1518,81 +1515,82 @@ msgid "Report on Staff"
 msgstr "تقرير عن الموظفين"
 
 msgid "Staff Additional Info Report"
-msgstr "تقرير الموظفين معلومات اضافية"
+msgstr "تقرير معلومات إضافية للموظفين "
 
 msgid "List of Staff with additional info"
 msgstr "قائمة الموظفين مع معلومات إضافية"
 
 msgid "Wheres My School Report"
-msgstr "حيث أشار تقرير مدرستي"
+msgstr "تقرير أين تقع مدرستي"
 
 msgid ""
 "A Google Earth (KML) file containing all the location of all Institution "
 "Sites"
-msgstr "برنامج Google Earth (KML) ملف يحتوي على كل مكان كل موقع المؤسسة"
+msgstr " ملف Google Earth (KML) يحتوي على أماكن كل مواقع المؤسسات "
 
 msgid "Year Book Report"
-msgstr "الكتاب السنوى تقرير"
+msgstr " تقريرالكتاب السنوى "
 
 msgid "Formatted summary of census data for a given year"
-msgstr "تنسيق ملخص بيانات التعداد لسنة معينة"
+msgstr " ملخصمنسّق لبيانات التعداد لسنة معيَّنة"
 
 msgid "Return Rate"
-msgstr "عودة قيم"
+msgstr " معدل العودة"
 
 msgid "Census Discrepancy"
-msgstr "تعداد التناقض"
+msgstr " تناقض التعداد "
 
 msgid "Backup files found."
-msgstr "العثور على ملفات النسخ الاحتياطي."
+msgstr " تمّ العثور على ملفات النسخ الاحتياطية."
 
 msgid "Custom"
-msgstr "عرف"
+msgstr " مخصّص"
 
 msgid "Consolidated"
-msgstr "موحد"
+msgstr "موحَّد"
 
 msgid "Data Quality"
-msgstr "البيانات النوعية"
+msgstr " جودة البيانات"
 
 msgid "Summary of School's Census Data"
-msgstr "موجز بيانات التعداد المدرسة"
+msgstr "موجز بيانات تعداد المدرسة"
 
 msgid "Non-Responsive Schools Report"
-msgstr "غير المستجيبة المدارس تقرير"
+msgstr " تقرير المدارس غير المتعاونة"
 
 msgid ""
 "List of Institution Sites that do not contain census data for a given year"
-msgstr "قائمة مواقع المؤسسة التي لا تحتوي على بيانات التعداد لسنة معينة"
+msgstr "قائمة مواقع المؤسسات التي لا تحتوي على بيانات التعداد لسنة معينة"
 
 msgid "Data Discrepancy Report"
-msgstr "البيانات التناقض تقرير"
+msgstr " تقرير تناقض البيانات "
 
 msgid ""
 "List of Institution Sites with questionable census data compared to the "
 "previous year"
-msgstr "قائمة مواقع المؤسسة مع بيانات التعداد مشكوك مقارنة مع العام السابق"
+msgstr ""
+"قائمة مواقع المؤسسات ذات بيانات تعداد مشكوكة مقارنة ببيانات العام السابق"
 
 msgid "Number of students (enrollment) by sex, age, locality and grade"
-msgstr "عدد الطلاب (انتساب) حسب الجنس محلة والعمر والصف"
+msgstr "عدد الطلاب(المقيدين) حسب النوع والسنّ والموقع والصفّ"
 
 msgid "Number of teachers by sex, locality and grade"
-msgstr "عدد المعلمين بحسب الموقع والجنس والصف"
+msgstr "عدد المعلمين حسب الموقع والنوع والصف"
 
 msgid "Number of staff by sex and locality"
-msgstr "عدد الموظفين حسب الجنس والمكان"
+msgstr "عدد الموظفين حسب النوع والمكان"
 
 msgid "Institutions Report"
-msgstr "المؤسسات عن"
+msgstr "تقرير المؤسسات"
 
 msgid "Number of institutions by provider and sector"
-msgstr "عدد من المؤسسات والقطاع من قبل مزود"
+msgstr "عدد المؤسسات وفقاً للمزوّد والقطاع"
 
 msgid "Institution Sites Report"
-msgstr "مؤسسة مواقع تقرير"
+msgstr "تقرير مواقع المؤسسات"
 
 msgid "Number of institution sites by locality and type"
-msgstr "عدد من المواقع والمؤسسات بحسب الموقع نوع"
+msgstr "عدد مواقع المؤسسات حسب الموقع والنوع"
 
 msgid "Population Report"
 msgstr "تقرير السكان"
@@ -1609,12 +1607,28 @@ msgid ""
 "group and multiply the result by 100. This indicator has dimension values of "
 "sex, locality and grade."
 msgstr ""
-"تقسيم عدد التلاميذ (أو الطلاب) الملتحقين الذين هم من الفئة العمرية الرسمية "
-"لمستوى معين من التعليم من قبل السكان للفئة العمرية نفسها، ومضاعفة النتيجة عن "
-"طريق 100. هذا المؤشر له قيم البعد من المكان والجنس والصف."
+"قسّم عدد التلاميذ (أو الطلاب) الملتحقين الذين هم من الفئة العمرية الرسمية "
+"لمستوى معين من التعليم على السكان من نفس الفئة العمرية، اجمع واضرب النتيجة "
+"في 100  هذا المؤشر له قِيَم البعد للجنس والمكان والصفّ."
 
 msgid "Gross Enrolment Rate Report"
-msgstr "تقرير الإجمالي الالتحاق قيم"
+msgstr "تقرير إجمالي معدّل الالتحاق "
+
+msgid "Net Intake Rate Report"
+msgstr " تقريرصافي معدل القبول"
+
+msgid ""
+"Divide the number of children of official primary school-entrance age who "
+"enter the first grade of primary education for the first time by the "
+"population of the same age, and multiply the result by 100. This indicator "
+"has dimension values of sex and locality."
+msgstr ""
+"قسّم عدد الأطفال في سن المدرسة الرسمية، الذين يدخلون السنة الأولى من المرحلة "
+"الابتدائية  لأوّل مرة على السكان من نفس العمر، واضرب النتيجة في 100. هذا "
+"المؤشر له قِيَم البعد عن للجنس والمكان."
+
+msgid "Gross Intake Rate Report"
+msgstr "تقرير معدل إجمالي القبول"
 
 msgid ""
 "Divide the number of pupils (or students) enrolled in a given level of "
@@ -1624,37 +1638,20 @@ msgid ""
 "grade."
 msgstr ""
 "تقسيم عدد التلاميذ (أو الطلاب) المقيدين في مرحلة معينة من التعليم بغض النظر "
-"عن السن من السكان في الفئة العمرية الموافقة رسميا لوالتي على مستوى معين من "
-"التعليم، ومضاعفة النتيجة عن طريق 100. هذا المؤشر له قيم البعد من المكان "
-"والجنس والصف."
-
-msgid "Net Intake Rate Report"
-msgstr "صافي المتحصل تقرير قيم"
-
-msgid ""
-"Divide the number of children of official primary school-entrance age who "
-"enter the first grade of primary education for the first time by the "
-"population of the same age, and multiply the result by 100. This indicator "
-"has dimension values of sex and locality."
-msgstr ""
-"تقسيم عدد من الأطفال من سن المدرسة الرسمية، المدخل الرئيسي الذين يدخلون الصف "
-"الأول من التعليم الابتدائي لأول مرة من قبل السكان من نفس العمر، ومضاعفة "
-"النتيجة عن طريق 100. هذا المؤشر له قيم البعد عن الجنس والمكان."
-
-msgid "Gross Intake Rate Report"
-msgstr "تقرير الإجمالي المتحصل قيم"
+"عن العمر من قبل السكان من الفئة العمرية التي تتطابق رسميا إلى مستوى معين من "
+"التعليم، وضرب الناتج في 100. هذا المؤشر له قيم البعد عن الجنس والمكان والصف."
 
 msgid ""
 "Divide the number of new entrants in grade 1, irrespective of age, by the "
 "population of official school-entrance age, and multiply the result by 100. "
 "This indicator has dimension values of sex, locality and grade."
 msgstr ""
-"تقسيم عدد الداخلين الجدد في الصف 1، بغض النظر عن العمر، من قبل السكان في سن "
+"قسّم عدد الداخلين الجدد في الصف 1، بغض النظر عن العمر، من قبل السكان في سن "
 "المدرسة الرسمية مدخل، ومضاعفة النتيجة عن طريق 100. هذا المؤشر له قيم البعد "
 "من المكان والجنس والصف."
 
 msgid "Repetition Rate Report"
-msgstr "تقرير معدل التكرار"
+msgstr "تقرير معدل الإعادة"
 
 msgid ""
 "Divide the number of repeaters in a given grade in school year t+1 by the "
@@ -1667,16 +1664,16 @@ msgstr ""
 "المؤشر له قيم البعد بسبب الجنس أو القطاع، ومحلة الصف."
 
 msgid "Completion Rate Report"
-msgstr "الانتهاء قيم التقرير"
+msgstr " تقرير معدل التخرج"
 
 msgid ""
 "Divide the number of primary graduates, irrespective of age, by the "
 "population of theoretical primary graduation, and multiply the result by "
 "100. This indicator has dimension values of sex, locality and sector."
 msgstr ""
-"تقسيم عدد من خريجي الابتدائية، بغض النظر عن العمر، من سكان التخرج الأولية "
-"النظرية، ومضاعفة النتيجة عن طريق 100. هذا المؤشر له قيم البعد من المكان "
-"والجنس والقطاع."
+"قسّم عدد خريجي المرحلة الابتدائية، بغض النظر عن السنّ، من سكان التخرج الأولية "
+"النظرية، واضرب النتيجة في 100. هذا المؤشر له قيم البعد للجنس والموقع المحلي "
+"والقطاع"
 
 msgid "Survival Rate Report"
 msgstr "معدل البقاء تقرير"
@@ -1725,7 +1722,7 @@ msgstr ""
 "التعليم."
 
 msgid "Pupil Class Ratio Report"
-msgstr "تقرير التلميذ الدرجة نسبة"
+msgstr "تقرير معدّل التلميذ  - الصف "
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
@@ -1736,7 +1733,7 @@ msgstr ""
 "الطبقات في نفس المستوى. هذا المؤشر له قيم البعد من محلة والقطاع."
 
 msgid "Trained Teachers Report"
-msgstr "عن المعلمين المدربين"
+msgstr " تقرير عن المعلمين المدربين"
 
 msgid ""
 "Divide the number of teachers of the specified level of education who have "
@@ -1745,24 +1742,24 @@ msgid ""
 "This indicator has dimension values of locality, sector and level of "
 "education."
 msgstr ""
-"تقسيم عدد من المعلمين من المستوى المحدد من التعليم الذين حصلوا على الحد "
-"الأدنى المطلوب لتدريب المعلمين على العدد الكلي للمعلمين في نفس المستوى من "
-"التعليم، ومضاعفة النتيجة عن طريق 100. هذا المؤشر له قيم البعد من القطاع، "
-"محلة ومستوى التعليم."
+"قسّم عدد المعلمين من المستوى المعيّن من التعليم الذين حصلوا على الحد الأدنى "
+"المطلوب لتدريب المعلمين على العدد الكلي للمعلمين في نفس المستوى من التعليم، "
+"واضرب النتيجة في 100. هذا المؤشر له قيم البعد للموقع المحلي والقطاع،  ومستوى "
+"التعليم."
 
 msgid "Gender Parity Index (Students) Report"
-msgstr "مؤشر التكافؤ بين الجنسين (طلاب) تقري"
+msgstr " تقرير مؤشر التكافؤ بين الجنسين(طلاب) "
 
 msgid ""
 "Divide the number of female students by the number of male students. This "
 "indicator has dimension values of sex, locality, sector and level of "
 "education."
 msgstr ""
-"تقسيم عدد من الطالبات من قبل عدد من الطلاب الذكور. هذا المؤشر له قيم البعد "
-"بسبب الجنس أو القطاع، محلة ومستوى التعليم."
+"قسّم عدد الطالبات على عدد الطلاب الذكور. هذا المؤشر له قيم البعد للجنس و "
+"الموقع المحلي والقطاع ومستوى التعليم."
 
 msgid "Female Students Report"
-msgstr "الطالبات عن"
+msgstr " تقرير عن الطالبات"
 
 msgid ""
 "Divide the number of female tertiary students enrolled in a specified ISCED "
@@ -1770,13 +1767,12 @@ msgid ""
 "given academic-year, and multiply the result by 100. This indicator has "
 "dimension values of locality, sector and level of education."
 msgstr ""
-"تقسيم عدد طلبة التعليم العالي المقيدين في الإناث مستوى إسكد المحدد على العدد "
-"الكلي للطلاب (ذكور بالإضافة إلى الإناث) في هذا المستوى في عام الأكاديمية "
-"معين، ويضرب الناتج في 100. هذا المؤشر له قيم البعد من القطاع، محلة ومستوى "
-"التعليم."
+"قسّم عدد طالبات التعليم العالي المقيدات في مستوى ISCED معيّن على العدد الكلي "
+"للطلاب  (الذكور بالإضافة إلى الإناث) في هذا المستوى في عام دراسيّ معين، واضرب "
+"النتيجة في 100. هذا المؤشر له قيم البعد للموقع المحلي والقطاع ومستوى التعليم."
 
 msgid "Female Teachers Report"
-msgstr "المعلمات عن"
+msgstr " تقرير عن المعلّمات"
 
 msgid ""
 "Divide the total number of female teachers at a given level of education by "
@@ -1784,12 +1780,12 @@ msgid ""
 "school year, and multiply by 100. This indicator has dimension values of "
 "locality, sector and level of education."
 msgstr ""
-"تقسيم العدد الإجمالي للمعلمات على مستوى معين من التعليم على العدد الكلي "
-"للمعلمين (ذكور وإناث) في نفس المستوى في عام دراسي معين، ويضرب الناتج في 100. "
-"هذا المؤشر له قيم البعد من القطاع، محلة ومستوى التعليم."
+"قسّم العدد الإجمالي للمعلمات على مستوى معين من التعليم على العدد الكلي "
+"للمعلمين (ذكور وإناث) في نفس المستوى في عام دراسي معين، واضرب نتيجة في 100. "
+"هذا المؤشر له قيم البعد للموقع المحلي والقطاع ومستوى التعليم."
 
 msgid "Private Enrolment Report"
-msgstr "تقرير خاص القيد"
+msgstr "تقرير الالتحاق الخاص"
 
 msgid ""
 "Divide the number of pupils (or students) enrolled in private educational "
@@ -1797,95 +1793,95 @@ msgid ""
 "private) at the same level of education, and multiply the result by 100. "
 "This indicator has dimension values of sex, locality and level of education."
 msgstr ""
-"تقسيم عدد التلاميذ (أو الطلاب) المسجلين في المؤسسات التعليمية الخاصة في "
-"مستوى معين من التعليم من خلال الالتحاق الإجمالي (العام والخاص) على نفس "
-"المستوى من التعليم، ومضاعفة النتيجة عن طريق 100. هذا المؤشر له قيم البعد من "
-"المكان والجنس ومستوى التعليم."
+"قسّم عدد التلاميذ (أو الطلاب) المسجلين في المؤسسات التعليمية الخاصة في مستوى "
+"معين من التعليم على خلال الالتحاق الإجمالي (العام والخاص) على نفس المستوى من "
+"التعليم، واضرب النتيجة في 100 هذا المؤشر له قيم البعد للجنسوالموقع المحلي "
+"ومستوى التعليم."
 
 msgid "Pupil Textbook Ratio Report"
-msgstr "تقرير تلميذ كتاب نسبة"
+msgstr "تقرير معدل التلميذ - الكتاب "
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of textbooks at the same level. This indicator has "
 "dimension values of locality, and sector."
 msgstr ""
-"تقسيم العدد الإجمالي للتلاميذ المسجلين في مستوى تعليميا معينا من قبل عدد من "
-"الكتب المدرسية على نفس المستوى. هذا المؤشر له قيم البعد من المكان، والقطاع."
+"قسّم العدد الإجمالي للتلاميذ المسجلين في مستوى تعليمي معيَّن على عدد الكتب "
+"المدرسية في نفس المستوى. هذا المؤشر له قيم البعد للموقع المحلي والقطاع."
 
 msgid "Water Sources Report"
-msgstr "مصادر المياه عن"
+msgstr " تقرير مصادر المياه"
 
 msgid ""
 "Number of water sources by type. This indicator has dimension values of "
 "locality, sector and condition."
 msgstr ""
-"عدد من المصادر وفقا لنوع المياه. هذا المؤشر له قيم البعد من القطاع، ومحلة "
-"الشرط."
+"عدد مصادر المياه وفقا للنوع. هذا المؤشر له قيم البعد للموقع المحلي والقطاع "
+"والوضع."
 
 msgid "Sanitation Facilities Report"
-msgstr "مرافق الصرف الصحي عن"
+msgstr " تقرير مرافق الصرف الصحي "
 
 msgid ""
 "Number of sanitation facilities by type. This indicator has dimension values "
 "of locality, sector and condition."
 msgstr ""
-"عدد من المرافق الصحية حسب النوع. هذا المؤشر له قيم البعد من القطاع، ومحلة "
-"الشرط."
+"عدد المرافق الصحية حسب النوع. هذا المؤشر له قِيَم البعد للموقع المحلي و "
+"والقطاع والوضع "
 
 msgid "Public Expenditure per Education Level Report"
-msgstr "الإنفاق العام في تقرير مستوى التعليم"
+msgstr " تقرير النفقات العامة لكلّ مستوى تعليميّ"
 
 msgid ""
 "Divide total public expenditure for each level of education in a given "
 "financial year by the total public expenditure on education for the same "
 "financial year and multiply the result by 100. "
 msgstr ""
-"تقسيم مجموع الإنفاق العام لكل مستوى من مستويات التعليم في السنة المالية نظرا "
-"من إجمالي الإنفاق العام على التعليم للسنة المالية ذاتها ومضاعفة النتيجة عن "
-"طريق 100."
+"قسّم إجمالي النفقات العامة على مستوى من مستويات التعليم في سنة مالية معينة "
+"على إجمالي النفقات العامة على التعليم للسنة المالية ذاتها واضرب النتيجة في "
+"100"
 
 msgid "Public Expenditure on Education Report"
-msgstr "الإنفاق العام على التعليم بلغ"
+msgstr " تقريرالنفقات العامة على التعليم "
 
 msgid ""
 "Divide total public expenditure on education incurred by all government "
 "agencies/departments in a given financial year by the total government "
 "expenditure for the same financial year and multiply by 100."
 msgstr ""
-"تقسيم مجموع الإنفاق العام على التعليم التي تتحملها جميع الجهات الحكومية / "
-"الإدارات في سنة مالية معينة من إجمالي الإنفاق الحكومي للسنة المالية ذاتها "
-"وتتكاثر في 100."
+"قسّم إجمالي النفقات العامة على التعليم التي تتحملها جميع الجهات/ الإدارات "
+"الحكومية   في سنة مالية معينة على إجمالي الإنفاق الحكومي للسنة المالية ذاتها "
+"واضرب النتيجة في 100"
 
 msgid "Public Expenditure on Education by GNP Report"
-msgstr "الإنفاق العام على التعليم من الناتج القومي الإجمالي بلغ"
+msgstr " تقرير النفقات العامة على التعليم  حسب إجمالي الناتج القومي "
 
 msgid ""
 "Divide total public expenditure on education in a given financial year by "
 "the Gross National Product (GNP) or Gross National Income (GNI) of the "
 "country for the corresponding year and multiply by 100."
 msgstr ""
-"تقسيم مجموع الإنفاق العام على التعليم في السنة المالية نظرا من الناتج القومي "
-"الإجمالي (GNP) أو الدخل القومي الإجمالي (الناتج القومي الإجمالي) من البلاد "
-"للسنة المقابلة وتتكاثر في 100."
+"قسّم إجمالي النفقات العامة على التعليم في سنة مالية معيّنة على الناتج القومي "
+"الإجمالي (GNP) أو الدخل القومي الإجمالي  للبلد للسنة المقابلة واضرب الرقم في "
+"100 "
 
 msgid "Public Expenditure per Pupil Report"
-msgstr "الإنفاق العام في تقرير التلميذ"
+msgstr " تقرير النفقات العامة لكلّ تلميذ "
 
 msgid ""
 "Divide per pupil public current expenditure on each level of education in a "
 "given year by the GNI per capita for the same year and multiply by 100. This "
 "indicator has dimension values of level of education."
 msgstr ""
-"تقسيم النفقات في التلميذ الحكومي الجاري على كل مستوى من مستويات التعليم في "
-"سنة معينة من الدخل القومي الإجمالي للفرد لنفس العام وتتضاعف بنسبة 100. هذا "
-"المؤشر له قيم البعد عن مستوى التعليم."
+"قسّم النفقات العامة الحالية لكلّ تلميذ على كل مستوى من مستويات التعليم في سنة "
+"معينة من الدخل القومي الإجمالي للفرد لنفس العام و اضرب الرقم في 100 هذا "
+"المؤشر له قيم البعد لمستوى التعليم."
 
 msgid "Process"
 msgstr "عملية"
 
 msgid "Abort All"
-msgstr "إحباط جميع"
+msgstr "إحباط الكلّ"
 
 msgid "Clear All"
 msgstr "مسح الكل"
@@ -1894,22 +1890,22 @@ msgid "Started By"
 msgstr "كتبت بواسطة"
 
 msgid "Started Date"
-msgstr "كتبت التاريخ"
+msgstr " تاريخ البدء"
 
 msgid "Finished Date"
-msgstr "منتهية التاريخ"
+msgstr " تاريخ الانتهاء"
 
 msgid "Log"
-msgstr "دخول"
+msgstr " سجلّ"
 
 msgid "Processing"
-msgstr "تجهيز"
+msgstr " جاري التجهيز"
 
 msgid "Pending"
-msgstr "معلق"
+msgstr "معلّق"
 
 msgid "Aborted"
-msgstr "إحباط"
+msgstr " تمّ الإحباط"
 
 msgid "Completed"
 msgstr "مكتمل"
@@ -1927,10 +1923,10 @@ msgid "GNP"
 msgstr "GNP"
 
 msgid "Total Public Expenditure For Education"
-msgstr "إجمالي الإنفاق العام على التعليم"
+msgstr "إجمالي النفقات العامة على التعليم"
 
 msgid "No Available Finance Records"
-msgstr "لا يوجد سجلات المالية المتوفرة"
+msgstr "لا يوجد سجلات مالية متوفرة"
 
 msgid "Gender Parity Index"
 msgstr "مؤشر تكافؤ الجنسين"
@@ -1939,20 +1935,19 @@ msgid "Click the Generate button to create a restore point."
 msgstr "انقر على زر إنشاء لإنشاء نقطة الاستعادة."
 
 msgid "All data will be backed up except for following tables:"
-msgstr "وسوف يتم دعم كافة البيانات تصل باستثناء الجداول التالية:"
+msgstr " سيتمّ دعم كافة البيانات باستثناء الجداول التالية:"
 
 msgid "Security Users, Roles, and Functions"
-msgstr "المستخدمون الأمن، والأدوار، والوظائف"
+msgstr "مستخدمو الأمن، وأدواره، ووظائفه"
 
 msgid "System Configuration Values"
-msgstr "إعدادات نظام القيم"
+msgstr " قِيَم إعدادات النظام"
 
 msgid "Security"
 msgstr "الأمن"
 
 msgid "Please note that it may take sometime for the backup process to finish."
-msgstr ""
-"الرجاء ملاحظة أن ذلك قد يستغرق بعض الوقت لعملية النسخ الاحتياطي وحتى النهاية."
+msgstr "برجاء ملاحظة أن عملية النسخ الاحتياطي قد تستغرق بعض الوقت."
 
 msgid "Run Reports"
 msgstr "تشغيل التقارير"
@@ -1961,7 +1956,7 @@ msgid "Select All"
 msgstr "اختر الكل"
 
 msgid "De-Select All"
-msgstr "دي اختيار كل"
+msgstr " إلغاء اختيار الجميع "
 
 msgid "Generate"
 msgstr "إنشاء"
@@ -1970,103 +1965,98 @@ msgid ""
 "The system will %s the current data and restore to your previous data based "
 "on the restore point you selected."
 msgstr ""
-"سيقوم النظام٪ S البيانات الحالية واستعادة البيانات الخاصة بك السابقة استنادا "
-"إلى نقطة استعادة قمت بتحديده."
-
-msgid "OVERWRITE ALL"
-msgstr "الكتابة فوق ALL"
+"سيقوم النظام بـ % البيانات الحالية واستعادة بياناتك السابقة حسب نقطة "
+"الاستعادة التي تمّ اختيارها إلى نقطة استعادة قمت بتحديده."
 
 msgid "Please note that the system will not restore the following tables:"
-msgstr "الرجاء ملاحظة أن النظام لن استعادة الجداول التالية:"
+msgstr "برجاء ملاحظة أن النظام لن يستعيد الجداول التالية:"
 
 msgid ""
 "Below are the list of available backup dates, please choose a restore point."
 msgstr ""
-"هل فيما يلي قائمة من التمور احتياطية متوفرة، الرجاء اختيار نقطة استعادة"
+" فيما يلي قائمة من تواريخ النسخ الاحتياطية  المتوفّرة، برجاء اختيار نقطة "
+"استعادة"
 
 msgid "Files"
-msgstr "ملفات"
+msgstr "الملفات"
 
 msgid "Format not support."
-msgstr "تنسيق لا يدعم"
+msgstr " نمط غير مدعوم"
 
 msgid "Image filesize too large."
-msgstr "حجم الملف صورة كبيرة جدا."
+msgstr "حجم ملف الصورة كبير جدا."
 
 msgid "Resolution too large."
-msgstr "دقة كبيرة جدا."
+msgstr "الدقة كبيرة جدا."
 
 msgid "File uploaded with success."
-msgstr "الملف الذي تم تحميله بنجاح."
+msgstr "تمّ تحميل الملفّ بنجاح."
 
 msgid "Image exceeds system max filesize."
-msgstr "صورة يتجاوز حجم الملف الأقصى النظام"
+msgstr "الصورة تتجاوز الحجم الأقصى للملف في النظام"
 
 msgid "Image exceeds max file size in the HTML form."
-msgstr "صورة يتجاوز الحد الأقصى لحجم الملف في شكل HTML."
+msgstr "صورة تتجاوز الحد الأقصى لحجم الملف في نمط HTML"
 
 msgid "Image was only partially uploaded."
-msgstr "لم تكن سوى صورة تم الرفع جزئيا"
+msgstr " تم تحميل الصورة جزئيا فقط"
 
 msgid "No image was uploaded."
-msgstr "لم يتم رفع أي صورة."
+msgstr "لم يتم تحميل أي صورة."
 
 msgid "Missing a temporary folder."
-msgstr "مجلد الملفات المؤقتة."
+msgstr " الملفّ المؤقّت مفقود."
 
 msgid "Failed to write file to disk."
-msgstr "فشل في انشاء الملف في القرص."
+msgstr " لم ينجح نسخ الملف على القرص."
 
 msgid "A PHP extension stopped the file upload."
-msgstr "A توقفت تمديد PHP ملف التحميل."
+msgstr "A وقّف تمديد PHP  تحميل الملف."
 
 msgid "Max Resolution:"
 msgstr "الحد الأقصى للدقة:"
 
 msgid "Max File Size:"
-msgstr "ملف ماكس الحجم:"
-
-msgid "Max Resolution: %s pixels"
-msgstr "قرار الحد الأقصى: بكسل٪ S"
+msgstr " أقصى حجم الملفّ:"
 
 msgid "Format Supported:"
-msgstr "المدعومة الصيغة:"
+msgstr " النمط مدعوم:"
 
 msgid "Profile Image"
 msgstr "صورة الملف الشخصي"
 
 msgid "Please enter the code for the Area."
-msgstr "الرجاء إدخال الرمز للمنطقة."
+msgstr "برجاء إدخال رمز المنطقة."
 
 msgid "There are duplicate area code."
-msgstr "يوجد مكررة رمز المنطقة."
+msgstr "يوجد رمز منطقة متكرّر."
 
 msgid "Please enter the name for the Area."
-msgstr "الرجاء إدخال اسم للمنطقة"
+msgstr "برجاء إدخال اسم للمنطقة"
 
 msgid "Please supply a valid image."
-msgstr "الرجاء توفير صورة صالحة."
+msgstr "برجاء توفير صورة صالحة."
 
 msgid "Please enter a name for the Field of Study."
-msgstr "الرجاء إدخال اسم لمجال الدراسة."
+msgstr "برجاء إدخال اسم للمجال الدراسي."
 
-msgid "This Field of Study is already exists in the system."
-msgstr "هذا التخصص هو موجود مسبقا في النظام."
+msgid "This Field of Study already exists in the system."
+msgstr "هذا المجال الدراسيّ موجود مسبقا في النظام."
 
 msgid "Please select the programme orientation."
-msgstr "الرجاء تحديد اتجاه البرنامج."
+msgstr "برجاء تحديد اتجاه البرنامج."
 
 msgid "Please enter a name for the Subject."
-msgstr "الرجاء إدخال اسم لهذا الموضوع."
+msgstr "برجاء إدخال اسم للموضوع."
 
-msgid "This subject is already exists in the system."
-msgstr "هذا الموضوع هو بالفعل موجود في النظام."
+msgid "This subject already exists in the system."
+msgstr "هذا الموضوع موجود مسبقاً في النظام."
 
 msgid "You have entered an invalid username or password."
-msgstr "لقد قمت بإدخال اسم المستخدم أو كلمة المرور غير صالحة."
+msgstr "لقد قمت بإدخال اسم مستخدم أو كلمة مرور غير صحيحة."
 
 msgid "Please enter a duration."
-msgstr "الرجاء إدخال المدة."
+msgstr "برجاء إدخال المُدة."
 
 msgid "Add Programme"
 msgstr "إضافة برنامج"
@@ -2076,24 +2066,23 @@ msgid ""
 "information of this record will also be deleted.<br><br>Are you sure you "
 "want to do this?"
 msgstr ""
-"كنت قادرا على حذف هذا السجل في قاعدة البيانات. كما <BR> <BR> جميع المعلومات "
-"ذات الصلة من هذا السجل المراد حذفه. <BR> <BR> هل أنت متأكد أنك تريد أن تفعل "
-"هذا؟"
+"بإمكانك حذف هذا السجلّ في قاعدة البيانات. <BR> <BR> جميع المعلومات المتعلقة "
+"بهذا السجل ستحذف أيضاً.. <BR> <BR> هل أنت متأكد أنك تريد القيام بهذا؟"
 
 msgid "Deleting attachment..."
-msgstr "حذف المرفقات ..."
+msgstr " جاري حذف المرفقات ..."
 
 msgid "Delete Attachment"
 msgstr "حذف المرفقات"
 
 msgid "Do you wish to delete this record?"
-msgstr "هل ترغب في حذف هذا السجل؟"
+msgstr "هل ترغب في حذف هذا السجلّ؟"
 
 msgid "Updating attachment..."
-msgstr "تحديث المرفقات ..."
+msgstr " جاري تحديث المرفقات ..."
 
 msgid "Bank Branch is required!"
-msgstr "مطلوب بنك فرع!"
+msgstr "فرع المصرف مطلوب!!"
 
 msgid "Value"
 msgstr "القيمة"
@@ -2105,38 +2094,37 @@ msgid "Unsaved Data"
 msgstr "البيانات غير المحفوظة"
 
 msgid "Please save your data before proceed. <br><br>Do you want to save now?"
-msgstr ""
-"الرجاء حفظ البيانات الخاصة بك قبل المضي قدما. <BR> <BR> هل تريد حفظ الآن؟"
+msgstr "برجاء حفظ بياناتك قبل الاستمرار. <BR> <BR> هل تريد حفظها الآن؟"
 
 msgid "Are you sure you want to leave?"
-msgstr "هل أنت متأكد من أنك تريد أن تترك؟"
+msgstr "هل أنت متأكد من أنك تريد الخروج؟"
 
 msgid "GNP value is required."
-msgstr "مطلوب الناتج القومي الإجمالي القيمة."
+msgstr " قيمة الناتج القومي الإجمالي مطلوبة."
 
 msgid "Category is required!"
-msgstr "مطلوب الفئة!"
+msgstr " الفئة مطلوبة!"
 
 msgid "Certificate is required!"
-msgstr "مطلوب شهادة!"
+msgstr " الشهادة مطلوبة!"
 
 msgid "Institute is required!"
-msgstr "مطلوب معهد!"
+msgstr " المعهد مطلوب!"
 
 msgid "Please select a country before adding new records."
-msgstr "الرجاء اختيار بلد قبل إضافة سجلات جديدة."
+msgstr "برجاء اختيار بلد قبل إضافة سجلات جديدة."
 
-msgid "Error have occurred."
+msgid "Error has occurred."
 msgstr "لقد حدث خطأ."
 
 msgid "Age cannot be empty."
-msgstr "يمكن أن تكون فارغة العمر"
+msgstr " لا يمكن أن أن تكون خانة العمر فارغة"
 
 msgid "Age must be more then 0."
-msgstr "يجب أن يكون عمر أكثر من 0."
+msgstr "يجب أن يكون العمر أكثر من 0"
 
 msgid "No"
-msgstr "لا يوجد"
+msgstr "لا "
 
 msgid "Yes"
 msgstr "نعم"
@@ -2145,28 +2133,28 @@ msgid "Dialog"
 msgstr "حوار"
 
 msgid "Required Field"
-msgstr "تم المطلوبة"
+msgstr " مجال مطلوب"
 
 msgid "Retrieving..."
-msgstr "استرداد ..."
+msgstr "جاري استرداد ..."
 
 msgid "Adding row..."
-msgstr "إضافة صف ..."
+msgstr "جاري إضافة صفّ ..."
 
 msgid "Adding option..."
-msgstr "إضافة خيار ..."
+msgstr " جاري إضافة خيار ..."
 
 msgid "Loading..."
-msgstr "تحميل ..."
+msgstr " جاري تحميل... ..."
 
 msgid "Loading list..."
-msgstr "تحميل قائمة ..."
+msgstr " جاري تحميل قائمة ..."
 
 msgid "File is required!"
-msgstr "مطلوب ملف!"
+msgstr " الملف مطلوب!"
 
 msgid "Status is required!"
-msgstr "مطلوب الحالة!"
+msgstr " الحالة مطلوبة!"
 
 msgid "Move Up"
 msgstr "تحريك لأعلى"
@@ -2175,58 +2163,57 @@ msgid "Move Down"
 msgstr "تحريك لأسفل"
 
 msgid "Toggle this field active/inactive"
-msgstr "تبديل هذا المجال نشط / غير نشط"
+msgstr "تبديل هذا المجال وجعله نشطاً / غير نشط"
 
 msgid "Delete Confirmation"
-msgstr "حذف تأكيد"
+msgstr "تأكيد الحذف"
 
 msgid "Click to dismiss"
-msgstr "انقر لإغلاق"
+msgstr "انقر للإغلاق"
 
 msgid "Unable to add Areas.<br/>Please create Area Level before adding Areas."
 msgstr ""
-"غير قادر على إضافة مجالات. <BR/> الرجاء إنشاء مستوى المنطقة قبل ان يضيف "
-"المناطق"
+"غير قادر على إضافة مجالات. <BR/> برجاء إنشاء مستوى المنطقة قبل إضافة المناطق"
 
 msgid "Saving please wait..."
-msgstr "إنقاذ يرجى الانتظار ..."
+msgstr " جاري الحفظ.... يرجى الانتظار ..."
 
 msgid "Loading Areas"
-msgstr "مناطق التحميل"
+msgstr " جاري تحميل المناطق"
 
 msgid "Batch executed successfully."
-msgstr "دفعة تنفيذها بنجاح."
+msgstr " تمّ تنفيذ الدفعة بنجاح."
 
 msgid "Running batch..."
-msgstr "تشغيل دفعة ..."
+msgstr " جاري تشغيل الدفعة ..."
 
 msgid "Adding Field..."
-msgstr "إضافة حقل ..."
+msgstr " جاري إضافة حقل ..."
 
 msgid "Please select a valid Start Date"
-msgstr "الرجاء تحديد تاريخ البدء صالح"
+msgstr "برجاء اختيار تاريخ بدء صحيح"
 
 msgid "Please select a valid End Date"
-msgstr "الرجاء تحديد تاريخ الإنتهاء صالح"
+msgstr "برجاء اختيار تاريخ انتهاء صحيح"
 
 msgid "Please add a programme to this institution site."
-msgstr "يرجى إضافة برنامج إلى هذا الموقع المؤسسة."
+msgstr "يرجى إضافة برنامج إلى هذا موقع المؤسسة هذا."
 
 msgid "Missing Coordinates Report"
-msgstr "تقرير المفقودين الإحداثيات"
+msgstr " تقرير الإحداثيات المفقودة"
 
 msgid ""
 "List of Institution Sites with latitude and/or longitude values of 0 or null"
-msgstr "قائمة مواقع المؤسسة مع القيم خط العرض و / أو الطول أو فارغة من 0"
+msgstr "قائمة مواقع المؤسسات ذات قيم خط العرض و / أو الطول من 0 "
 
 msgid "OLAP Report"
 msgstr "OLAP تقرير"
 
 msgid "Generated"
-msgstr "ولدت"
+msgstr " تمّ إعداد..."
 
 msgid "Generating OLAP Report..."
-msgstr "…OLAP توليد تقرير"
+msgstr "…OLAP إعداد تقرير"
 
 msgid "Indicator"
 msgstr "مؤشر"
@@ -2238,7 +2225,7 @@ msgid "Time Period"
 msgstr "الفترة الزمنية"
 
 msgid "Data Value"
-msgstr "بيانات القيمة"
+msgstr " قيمة البيانات"
 
 msgid "Classification"
 msgstr "تصنيف"
@@ -2250,7 +2237,7 @@ msgid "Area Name"
 msgstr "اسم المنطقة"
 
 msgid "Education Programme Name"
-msgstr "برنامج التعليم اسم"
+msgstr " اسم برنامج التعليم"
 
 msgid "Bank Account Name"
 msgstr "اسم الحساب المصرفي"
@@ -2259,295 +2246,146 @@ msgid "Bank Account Number"
 msgstr "رقم الحساب المصرفي"
 
 msgid "Bank Account Active"
-msgstr "حساب مصرفي بالموقع"
+msgstr "حساب مصرفي جاري"
 
 msgid "Bank Branch Name"
-msgstr "البنك فرع الاسم"
+msgstr " اسم فرع المصرف"
 
 msgid "Academic Year"
 msgstr "سنة دراسية"
 
 msgid "Education Grade Name"
-msgstr "التعليم الصف اسم"
+msgstr " اسم الصفّ التعليمي"
 
 msgid "Class"
-msgstr "فئة"
+msgstr " صفّ"
 
 msgid "Education Subject Name"
-msgstr "التعليم اسم الموضوع"
+msgstr " اسم مادّة التعليم"
 
 msgid "No Of Textbooks"
-msgstr "عدد من الكتب المدرسية"
+msgstr "عدد الكتب المدرسية"
 
 msgid "Grid X Category"
-msgstr "الشبكة X الفئة"
+msgstr " فئة شبكة س"
 
 msgid "Grid Y Category"
-msgstr "شبكة Y الفئة"
+msgstr " فئة شبكة ص"
 
 msgid "Building"
-msgstr "المباني"
+msgstr "مباني"
 
 msgid "Material"
-msgstr "المواد"
+msgstr " مادّة"
 
 msgid "Room"
-msgstr "غرف"
+msgstr " غرفة"
 
 msgid "Resource"
-msgstr "الموارد"
+msgstr " مورد"
 
 msgid "Student Name"
-msgstr "طالب اسم"
+msgstr " اسم الطالب"
 
 msgid "Teacher Name"
-msgstr "المعلم اسم"
+msgstr "اسم المعلم"
 
 msgid "Staff Name"
-msgstr "اسم الموظفين"
+msgstr "اسم الموظّف"
 
 msgid "Available Variables"
-msgstr "متغيرات المتاحة"
+msgstr "المتغيرات المتاحة"
 
 msgid "Selected Variables"
 msgstr "متغيرات مختارة"
 
 msgid "Institution Provider"
-msgstr "مؤسسة موفر"
+msgstr " مزوّد المؤسسة"
 
 msgid "Institution Status"
-msgstr "مؤسسة الحالة"
+msgstr " حال المؤسسة"
 
 msgid "Institution Site Locality"
-msgstr "مؤسسة الموقع التجمع"
+msgstr " محلّ موقع المؤسسة"
 
 msgid "Institution Site Type"
-msgstr "مؤسسة الموقع نوع"
+msgstr "نوع موقع المؤسسة"
 
 msgid "Institution Site Ownership"
-msgstr "مؤسسة ملكية الموقع"
+msgstr " ملكية موقع المؤسسة"
 
 msgid "Institution Site Status"
-msgstr "مؤسسة الموقع الحالة"
+msgstr " حالة موقع المؤسسة "
 
 msgid "Education Programme"
 msgstr "برنامج التعليم"
 
 msgid "Education Grade"
-msgstr "التعليم الصف"
+msgstr "الصفّ التعليمي"
 
 msgid "Student Category"
-msgstr "طالب الفئة"
+msgstr " تصنيف الطلاب"
+
+msgid "No backup files found."
+msgstr "لم يتمّ العثور على أي ملفات النسخ الاحتياطية."
 
 msgid "Yearbook"
-msgstr "حولية"
+msgstr " السجلّ السنويّ"
 
 msgid "Organization Name"
-msgstr "اسم الهيئة"
+msgstr "اسم المنظّمة"
 
 msgid "Publication Date"
 msgstr "تاريخ النشر"
 
 msgid "Logo"
-msgstr "شعار"
+msgstr "الشعار"
 
-#~ msgid "Completion Rate / Gross Primary Graduation Ratio"
-#~ msgstr "نسبة الانجاز / إجمالي نسبة التخرج الابتدائية"
+msgid "Data Outliers"
+msgstr "ايسكنون البيانات"
 
-#~ msgid ""
-#~ "Divide the number of primary graduates, irrespective of age, by the "
-#~ "population of theoretical primary graduation, and multiply the result by "
-#~ "100."
-#~ msgstr ""
-#~ "تقسيم عدد من خريجي الابتدائية، بغض النظر عن العمر، من سكان التخرج الأولية "
-#~ "النظرية، ومضاعفة النتيجة عن طريق 100."
+msgid ""
+"Census Numbers that have age or total of male and female numbers beyond the "
+"specified range in settings."
+msgstr ""
+"أرقام التعداد التي لها عمر أو الكلي لأعداد الذكور والإناث خارج النطاق المحدد "
+"في الإعدادات."
 
-#~ msgid "Percentage of Trained Teachers"
-#~ msgstr "نسبة المعلمين المدربين"
+msgid "Page Orientation"
+msgstr "اتجاه الصفحة"
 
-#~ msgid "Divide the female value of a given indicator by that of the male."
-#~ msgstr "فرق القيمة الإناث أحد المؤشرات، من أن للذكر."
+msgid "Yearbook Logo"
+msgstr "حولية شعار"
 
-#~ msgid "Percent of Female Students"
-#~ msgstr "النسبة المئوية للطالبات"
+msgid "Maximum Student Age"
+msgstr "أقصى طالب العمر"
 
-#~ msgid "Percent of Female Teachers"
-#~ msgstr "٪ من المعلمين أنثى"
+msgid "Minimum Student Age"
+msgstr "الحد الأدنى طالب العمر"
 
-#~ msgid "Percentage of Private Enrolment"
-#~ msgstr "النسبة المئوية لعدد الطلاب الخاصة"
+msgid "Maximum Student Number"
+msgstr "الحد الأقصى لعدد الطلاب"
 
-#~ msgid "Percentage of schools with improved drinking water sources"
-#~ msgstr "النسبة المئوية للمدارس مع مصادر محسنة لمياه الشرب"
+msgid "Minimum Student Number"
+msgstr "الحد الأدنى لعدد الطلاب"
 
-#~ msgid "Percentage of schools with adequate sanitation facilities"
-#~ msgstr "النسبة المئوية للمدارس مع مرافق صحية كافية"
+msgid "Data Discrepancy"
+msgstr "التناقض البيانات"
 
-#~ msgid ""
-#~ "Public Expenditure as percentage of Total Public Expenditure on Education"
-#~ msgstr "الإنفاق العام كنسبة مئوية من مجموع الإنفاق العام على التعليم"
+msgid "Data Discrepancy Variation(%)"
+msgstr "تباين الفروق البيانات (٪)"
 
-#~ msgid ""
-#~ "Divide public current expenditure devoted to each level of education by "
-#~ "the total public current expenditure on education, and multiply the "
-#~ "result by 100. Divide public current expenditure on education in a given "
-#~ "financial year by the total public expenditure on education for the same "
-#~ "financial year and multiply the result by 100."
-#~ msgstr ""
-#~ "تقسيم الإنفاق الحكومي الجاري المكرس لكل مستوى من مستويات التعليم من مجموع "
-#~ "الإنفاق الحكومي الجاري على التعليم، ومضاعفة النتيجة عن طريق 100. تقسيم "
-#~ "الإنفاق الحكومي الجاري على التعليم في سنة مالية معينة من إجمالي الإنفاق "
-#~ "العام على التعليم من أجل المالية نفسها العام ومضاعفة النتيجة عن طريق 100. "
+msgid "Previous Year"
+msgstr "العام السابق"
 
-#~ msgid "Public Expenditure as percentage of Total Government Expenditure"
-#~ msgstr "الإنفاق العام كنسبة مئوية من إجمالي الإنفاق الحكومي"
+msgid "Previous Year Male"
+msgstr "ذكر السنة السابقة"
 
-#~ msgid "Public Expenditure as percentage of Gross National Product (GNP)"
-#~ msgstr "الإنفاق العام كنسبة مئوية من الناتج القومي الإجمالي (GNP)"
+msgid "Previous Year Female"
+msgstr "العام السابق أنثى"
 
-#~ msgid "Number of teachers"
-#~ msgstr "عدد من المعلمين"
+msgid "Data Discrepancy Reports"
+msgstr "تقارير البيانات التناقض"
 
-#~ msgid "Net Admission Rate / Net Intake Rate"
-#~ msgstr "صافي قيم القبول تناول قيم / نت"
-
-#~ msgid "Gross Admission Rate / Gross Intake Rate"
-#~ msgstr "المعدل الإجمالي للقيم المتحصل القبول / الإجمالي"
-
-#~ msgid "Summary report on Census Additional Information about enrolment"
-#~ msgstr "تقرير موجز عن معلومات إضافية حول تعداد التسجيل"
-
-#~ msgid "Summary report on Buildings"
-#~ msgstr "تقرير موجز عن المباني"
-
-#~ msgid "Report on Rooms"
-#~ msgstr "تقرير عن غرف"
-
-#~ msgid "Report on number of Sanitations and Conditions"
-#~ msgstr "تقرير عن عدد من الإصحاح والشروط"
-
-#~ msgid "Report on number of Furnitures and its conditions"
-#~ msgstr "تقرير عن عدد من اثاث وشروطها"
-
-#~ msgid "Report on number and kinds of Resources as well as Condition status"
-#~ msgstr "تقرير عن عدد وأنواع الموارد، فضلا عن الوضع حالة"
-
-#~ msgid "Report on Power sources"
-#~ msgstr "تقرير حول مصادر الطاقة"
-
-#~ msgid "Report on number of Powers types and Conditions"
-#~ msgstr "تقرير عن عدد من الدول أنواع وشروط"
-
-#~ msgid "Report on Water"
-#~ msgstr "تقرير عن المياه"
-
-#~ msgid "Report on conditions, number, kinds of water source of Institutions"
-#~ msgstr "تقارير حول أوضاع، عدد، وأنواع من مصدر المياه للمؤسسات"
-
-#~ msgid "Student List"
-#~ msgstr "قائمة الطلاب"
-
-#~ msgid "Report on student additional info"
-#~ msgstr "تقرير عن معلومات إضافية الطالب"
-
-#~ msgid "Report on Teachers Additional Info"
-#~ msgstr "تقرير عن معلومات إضافية المعلمين"
-
-#~ msgid "Report on Staff Additional Info"
-#~ msgstr "تقرير عن معلومات إضافية من الموظفين"
-
-#~ msgid "List of institution's additional info"
-#~ msgstr "تقرير عن معلومات إضافية المؤسسة"
-
-#~ msgid "Enrolment Summary"
-#~ msgstr "ملخص القيد"
-
-#~ msgid "Class List"
-#~ msgstr "قائمة فئة"
-
-#~ msgid "Report on classes"
-#~ msgstr "تقرير عن الطبقات"
-
-#~ msgid "Summary report on Textbooks"
-#~ msgstr "تقرير موجز عن الكتب المدرسية"
-
-#~ msgid "Summary report on Teachers"
-#~ msgstr "تقرير موجز عن المعلمين"
-
-#~ msgid "Trainings"
-#~ msgstr "التدريب"
-
-#~ msgid "Staffs"
-#~ msgstr "هيئة الأركان"
-
-#~ msgid "Summary report on Institution Staffs"
-#~ msgstr "تقرير موجز عن هيئة الأركان المؤسسة"
-
-#~ msgid "Summary report on Census Table Related Information"
-#~ msgstr "تقرير موجز عن معلومات ذات صلة الجدول التعداد"
-
-#~ msgid "Summary report on income"
-#~ msgstr "تقرير موجز عن الدخل"
-
-#~ msgid "Report on expenditure"
-#~ msgstr "تقرير عن مصروفات"
-
-#~ msgid "Institution List"
-#~ msgstr "قائمة مؤسسة"
-
-#~ msgid "Report on institutions"
-#~ msgstr "تقرير عن المؤسسات"
-
-#~ msgid "Institution Site List"
-#~ msgstr "قائمة الموقع مؤسسة"
-
-#~ msgid "Report on institution sites"
-#~ msgstr "تقرير عن المواقع مؤسسة"
-
-#, fuzzy
-#~ msgid "PostalCode"
-#~ msgstr "الرمز البريدي"
-
-#, fuzzy
-#~ msgid "InstitutionName"
-#~ msgstr "مؤسسة اسم"
-
-#, fuzzy
-#~ msgid "SiteName"
-#~ msgstr "اسم الموقع"
-
-#, fuzzy
-#~ msgid "DateOpened"
-#~ msgstr "فتح تاريخ"
-
-#, fuzzy
-#~ msgid "DateClosed"
-#~ msgstr "مغلق التاريخ"
-
-#, fuzzy
-#~ msgid "SiteType"
-#~ msgstr "نوع الموقع"
-
-#~ msgid "This is a report on classes"
-#~ msgstr "هذا هو تقرير عن الطبقات"
-
-#~ msgid "This is a report on student"
-#~ msgstr "هذا هو تقرير عن الطالب"
-
-#~ msgid "This is a report on Teachers"
-#~ msgstr "هذا هو تقرير على المعلمين"
-
-#~ msgid "This is a report on Staff"
-#~ msgstr "هذا هو تقرير عن الموظفين"
-
-#~ msgid "<span>&laquo;</span> Back to Programmes"
-#~ msgstr "<SPAN>« </ SPAN> عودة إلى برامج "
-
-#~ msgid "<span>&laquo;</span> Back to Grades"
-#~ msgstr "<SPAN>« </ SPAN> عودة إلى صفوف "
-
-#~ msgid "<span>&laquo;</span> Back to Roles"
-#~ msgstr "<SPAN>« </ SPAN> عودة إلى الأدوار "
-
-#~ msgid "No history found"
-#~ msgstr "لا يوجد تاريخ العثور على"
+msgid "age"
+msgstr "عمر"
