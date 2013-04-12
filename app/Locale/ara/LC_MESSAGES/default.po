@@ -2332,9 +2332,6 @@ msgstr " تصنيف الطلاب"
 msgid "No backup files found."
 msgstr "لم يتمّ العثور على أي ملفات النسخ الاحتياطية."
 
-msgid "No backup files found."
-msgstr "أية ملفات النسخ الاحتياطي لبحثك."
-
 msgid "Yearbook"
 msgstr " السجلّ السنويّ"
 
