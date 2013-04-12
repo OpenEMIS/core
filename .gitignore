@@ -47,4 +47,5 @@ app/tmp/sessions/*
 lib/Cake/Console/Templates/skel/tmp/*
 app/webroot/img/.DS_Store
 app/webroot/logs/*
+*.mo
 .DS_Store
