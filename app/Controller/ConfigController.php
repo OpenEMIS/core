@@ -67,7 +67,13 @@ class ConfigController extends AppController {
 		}
 
 		$sorted = $this->groupByType($this->ConfigItem->formatArray($items));
-
+		// Checking if user has access to _view for setup
+		$_view_dashboard = false;
+		if($this->AccessControl->check($this->params['controller'], 'dashboard')) {
+			$_view_dashboard = true;
+		}
+		$this->set('_view_dashboard', $_view_dashboard);
+		// End Access Control
 		$this->set('items', $sorted);
 	}
 
