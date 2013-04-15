@@ -39,7 +39,7 @@ var attachments = {
 	deleteFile: function(id) {
 		var dlgId = 'deleteDlg';
 		var btn = {
-			value: 'Delete',
+			value: i18n.General.textDelete,
 			callback: function() {
 				var maskId;
 				var controller = $('#controller').text();
@@ -50,7 +50,7 @@ var attachments = {
 					url: url,
 					data: {id: id},
 					beforeSend: function (jqXHR) {
-						maskId = $.mask({parent: '.content_wrapper', text: 'Deleting attachment...'});
+						maskId = $.mask({parent: '.content_wrapper', text: i18n.Attachments.textDeletingAttachment});
 					},
 					success: function (data, textStatus) {
 						var callback = function() {
@@ -73,8 +73,8 @@ var attachments = {
 		
 		var dlgOpt = {	
 			id: dlgId,
-			title: 'Delete Attachment',
-			content: 'Do you wish to delete this record?',
+			title: i18n.Attachments.titleDeleteAttachment,
+			content: i18n.Attachments.contentDeleteAttachment,
 			buttons: [btn]
 		};
 		
@@ -93,7 +93,7 @@ var attachments = {
 			url: url,
 			data: {size: size},
 			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: '.content_wrapper', text: 'Adding row...'});
+				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
