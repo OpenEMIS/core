@@ -24,7 +24,8 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 				'controller' => 'Config',
 				'action' => 'save'
 			),
-			'id' => 'ConfigurationSaveEdit'
+			'id' => 'ConfigurationSaveEdit',
+			'type' => 'file'
 		)
 	);
 	?>
@@ -57,7 +58,11 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 								'rus' => 'русский',
 								'spa' => 'español'
 							),
-							'school_year' => $school_years
+							'yearbook_orientation' => array(
+								'0' => 'Portrait',
+								'1' => 'Landscape'
+							),
+							'yearbook_school_year' => $school_years
 							);
 		foreach($element as $innerKey => $innerElement){ 
 				$item = $innerElement; 
@@ -77,8 +82,35 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 							$options['maxlength'] = 300;
 						if(stristr($item['name'], 'dashboard_notice')){
 							echo $this->Form->textarea('ConfigItem.'. $key . '.' . $innerKey . '.value', $options);
-						}elseif (stristr($item['name'], 'publication_date')) {
-							echo $this->Utility->getDatePicker($this->Form, 'publication_date', array('name' => 'ConfigItem['.$key.']['.$innerKey.'][value]', 'order' => 'dmy', 'desc' => true, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));
+						}elseif (stristr($item['name'], 'yearbook_publication_date')) {
+							$publicationDateOptions = $options = array(
+								'value' => $item['value'],
+								'type' => 'date',
+								'dateFormat' => 'DMY'
+							);
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value', $publicationDateOptions);
+
+						}elseif (stristr($item['name'], 'yearbook_logo')) {
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.file_value', array('type' => 'file', 'class' => 'form-error'));
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.value', array('value'=> (empty($item['value']))?$item['default_value']:$item['value'] ));
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.reset_yearbook_logo', array('value'=>'0'));
+							echo "<span id=\"resetDefault\" class=\"icon_delete\"></span>";
+					        echo isset($imageUploadError) ? '<div class="error-message">'.$imageUploadError.'</div>' : '';
+					        echo "<br/>";
+					        echo "<div id=\"image_upload_info\"><em>";
+				            echo sprintf(__("Max Resolution: %s pixels"), '400 x 514')."<br/>";
+				            echo __("Max File Size:"). ' 200 KB' ."<br/>";
+				            echo __("Format Supported:"). " .jpg, .jpeg, .png, .gif".
+				            "</em>
+				            </div>";
+		
+						} elseif($item['name'] == 'yearbook_school_year'){
+							$options = $arrOptions[$item['name']];
+							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
+
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
+	
 						}elseif(array_key_exists($item['name'], $arrOptions)){
 							$options = $arrOptions[$item['name']];
 							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
@@ -87,6 +119,10 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 							}*/
 
 							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
+
+						}elseif(array_key_exists($item['name'], $arrOptions)){
+							$options = $arrOptions[$item['name']];
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));
 						}else{
 							
 							if(strtolower($item['label']) == 'currency'){
@@ -120,3 +156,23 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+
+    $('#resetDefault').click(function(e){
+        e.preventDefault();
+        var photoContent = $('input[id^="ConfigItemYearbook"][id$="FileValue"]');
+        var resetImage= $('input[id^="ConfigItemYearbook"][id$="ResetYearbookLogo"]');
+        
+
+        if (photoContent.attr('disabled')){
+            photoContent.removeAttr('disabled');
+            resetImage.attr('value', '0');
+        }else {
+            photoContent.attr('disabled', 'disabled');
+            resetImage.attr('value', '1');
+        }
+    });
+});
+</script>

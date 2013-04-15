@@ -90,6 +90,10 @@ class MpdfTask extends AppTask {
 			exit;
 		}
 	}
+
+	public function getDocPageNum() {
+		return $this->pdf->docPageNumTotal(); 
+	}
 	
 	/**
 	 * Passing method calls and variable setting to mPDF library.
