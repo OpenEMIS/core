@@ -112,4 +112,188 @@ class CensusStudent extends AppModel {
 		
 		return $ageList;
 	}
+
+	public function calculateTotalStudentsPerEducationCycle($schoolYearId) {
+
+		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'StudentCategory', 'InstitutionSite', 'Institution', 'SchoolYear')));
+		$this->bindModel(
+			array('hasOne' => 
+				array('EducationProgramme' => array(
+	            	'className' => 'EducationProgramme',
+	            	'joinTable' => 'education_programmes',
+	            	'foreignKey' => false,
+					'dependent'  => false,
+	                'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
+	            )),
+			));
+
+		$options['fields'] = array(
+        	'EducationProgramme.education_cycle_id',
+            'SUM(CensusStudent.male) as TotalMale',
+            'SUM(CensusStudent.female) as TotalFemale'
+        );
+
+		$options['group'] = array('EducationProgramme.education_cycle_id');
+		$options['conditions'] = array('CensusStudent.school_year_id' => $schoolYearId);
+
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		// massage data
+		foreach ($values as $k => $v) {
+			$eduCycleId = $v['education_cycle_id'];
+			$data[$eduCycleId] = $v['TotalMale'] + $v['TotalFemale'];
+		}
+
+		return $data;
+	}
+
+	/**
+	 * calculate the total number of students in a particular area, Required by Yearbook
+	 * @return int 	sum of students
+	 */
+	public function calculateTotalStudentsByAreaId($areaId, $schoolYearId) {
+
+		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'StudentCategory', 'Institution', 'SchoolYear')));
+
+		$options['fields'] = array(
+            'SUM(CensusStudent.male) as TotalMale',
+            'SUM(CensusStudent.female) as TotalFemale',
+            'SUM(CensusStudent.male + CensusStudent.female) as TotalStudents'
+        );
+
+		// $options['conditions'] = array('AND' => array('InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened >=' => date('Y-m-d', $startDate), 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('Area.id'=>null));
+		// $options['conditions'] = array('CensusStudent.school_year_id' => $schoolYearId);
+		$options['conditions'] = array('AND' => array('CensusStudent.school_year_id' => $schoolYearId, 'InstitutionSite.area_id' => $areaId, 'NOT' => array('InstitutionSite.area_id' => null)));
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		$data = ($values[0]['TotalStudents'] > 0) ? $values[0]['TotalStudents'] : 0;
+		return $data;
+	}
+
+
+	/*
+	 * calculate the total number of students in a particular area, based on the various education cycle, 
+	 * Required by Yearbook - Summary By Element and Area
+	 * @return int 	sum of students
+	 */
+	public function calculateTotalStudentsByLevelAndAreaId($areaId, $schoolYearId) {
+
+		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'StudentCategory', 'Institution', 'SchoolYear')));
+
+		$options['fields'] = array(
+            'SUM(CensusStudent.male) as TotalMale',
+            'SUM(CensusStudent.female) as TotalFemale',
+            'SUM(CensusStudent.male + CensusStudent.female) as TotalStudents'
+        );
+
+		// $options['conditions'] = array('AND' => array('InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened >=' => date('Y-m-d', $startDate), 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('Area.id'=>null));
+		// $options['conditions'] = array('CensusStudent.school_year_id' => $schoolYearId);
+		$options['conditions'] = array('AND' => array('CensusStudent.school_year_id' => $schoolYearId, 'InstitutionSite.area_id' => $areaId, 'NOT' => array('InstitutionSite.area_id' => null)));
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		$data = ($values[0]['TotalStudents'] > 0) ? $values[0]['TotalStudents'] : 0;
+		return $data;
+	}
+
+	// Required by Yearbook, students per level and providers
+	public function calculateTotalStudentsPerLevel($schoolYearId, $eduCycleId) {
+
+		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'StudentCategory', 'SchoolYear')));
+		$this->bindModel(array('hasOne' => array(
+			'EducationProgramme' =>
+            array(
+                'className'              => 'EducationProgramme',
+                'joinTable'              => 'education_programmes',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
+            ),
+            'EducationCycle' =>
+            array(
+                'className'              => 'EducationCycle',
+                'joinTable'              => 'education_cycles',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' EducationProgramme.education_cycle_id = EducationCycle.id '),
+            ),
+            'InstitutionProvider' => array(
+                'className' => 'InstitutionProvider',
+                'joinTable' => 'institution_providers',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' Institution.institution_provider_id = InstitutionProvider.id '),
+            ),
+        )));
+
+        $options['fields'] = array(
+        	'InstitutionProvider.id as ProviderId',
+        	'InstitutionProvider.name as ProviderName',
+        	'EducationCycle.id as CycleId',
+        	'EducationCycle.name as CycleName',
+        	'SUM(CensusStudent.male) as TotalMale',
+        	'SUM(CensusStudent.female) as TotalFemale',
+        	'SUM(CensusStudent.female + CensusStudent.male) as TotalStudents'
+        );
+
+        $options['group'] = array('InstitutionProvider.id','EducationProgramme.education_cycle_id');
+        $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'CensusStudent.school_year_id' => $schoolYearId), 'NOT' => array('InstitutionProvider.id'=>null));
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		return $values;
+	}
+
+	/**
+	 * calculate the total number of students in a particular area, based on the various education cycle, 
+	 * Required by Yearbook - Enrolment By Level and Area
+	 * @return int 	sum of students
+	 */
+	public function calculateTotalEnrolmentPerLevelAndAreaId($schoolYearId, $areaId, $eduCycleId) {
+		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'StudentCategory', 'SchoolYear')));
+		$this->bindModel(array('hasOne' => array(
+			'Area' =>
+            array(
+                'className' => 'Area',
+                'joinTable' => 'areas',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' Area.id = InstitutionSite.area_id '),
+            ),
+			'EducationProgramme' =>
+            array(
+                'className' => 'EducationProgramme',
+                'joinTable' => 'education_programmes',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
+            ),
+            'EducationCycle' =>
+            array(
+                'className'              => 'EducationCycle',
+                'joinTable'              => 'education_cycles',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' EducationProgramme.education_cycle_id = EducationCycle.id '),
+            )
+        )));
+
+		$options['fields'] = array(
+            'SUM(CensusStudent.male) as TotalMale',
+            'SUM(CensusStudent.female) as TotalFemale',
+            'SUM(CensusStudent.male + CensusStudent.female) as TotalStudents'
+        );
+
+		$options['group'] = array('EducationProgramme.education_cycle_id');
+		$options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'CensusStudent.school_year_id' => $schoolYearId, 'InstitutionSite.area_id' => $areaId, 'NOT' => array('InstitutionSite.area_id' => null)));
+		// $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'CensusStudent.school_year_id' => $schoolYearId, 'NOT' => array('InstitutionSite.area_id' => null)));
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		return $values;
+
+	}
+
 }

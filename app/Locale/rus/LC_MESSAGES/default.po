@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2013-04-12 11:13+0800\n"
+"PO-Revision-Date: 2013-04-15 14:16+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: rus\n"
@@ -493,6 +493,9 @@ msgstr "Ward"
 
 msgid "Locality"
 msgstr "Регион"
+
+msgid "Latitude"
+msgstr "широта"
 
 msgid "Longitude"
 msgstr "Долгота"
@@ -2419,182 +2422,3 @@ msgstr "Отчеты Данные несоответствия"
 
 msgid "age"
 msgstr "возраст"
-
-msgid "Latitude"
-msgstr "широта"
-
-#~ msgid "Completion Rate / Gross Primary Graduation Ratio"
-#~ msgstr "Оценить Завершение / брутто первичных Соотношение Graduation"
-
-#~ msgid ""
-#~ "Divide the number of primary graduates, irrespective of age, by the "
-#~ "population of theoretical primary graduation, and multiply the result by "
-#~ "100."
-#~ msgstr ""
-#~ "Разделить число первичных выпускников, независимо от возраста, население "
-#~ "теоретических первичной окончания, и умножить результат на 100."
-
-#~ msgid "Percentage of Trained Teachers"
-#~ msgstr "Процент квалифицированных учителей"
-
-#~ msgid "Divide the female value of a given indicator by that of the male."
-#~ msgstr "Разделяй женского значение данного показателя на что и мужчины"
-
-#~ msgid "Percent of Female Students"
-#~ msgstr "Процент женщин среди студентов"
-
-#~ msgid "Percent of Female Teachers"
-#~ msgstr "Процент учителей-женщин"
-
-#~ msgid "Percentage of Private Enrolment"
-#~ msgstr "Доля частного зачисления"
-
-#~ msgid "Percentage of schools with improved drinking water sources"
-#~ msgstr "Процент школ с улучшенным источникам питьевой воды"
-
-#~ msgid "Percentage of schools with adequate sanitation facilities"
-#~ msgstr "Процент школ, имеющих надлежащих санитарно-гигиенических"
-
-#~ msgid ""
-#~ "Public Expenditure as percentage of Total Public Expenditure on Education"
-#~ msgstr ""
-#~ "Государственные расходы как процент от общих государственных расходов на "
-#~ "образование"
-
-#~ msgid ""
-#~ "Divide public current expenditure devoted to each level of education by "
-#~ "the total public current expenditure on education, and multiply the "
-#~ "result by 100. Divide public current expenditure on education in a given "
-#~ "financial year by the total public expenditure on education for the same "
-#~ "financial year and multiply the result by 100."
-#~ msgstr ""
-#~ "Разделяй общественных текущих расходов, посвященных каждому уровню "
-#~ "образования на общую общественных текущие расходы на образование, и "
-#~ "умножить результат на 100. Разделите общественных текущие расходы на "
-#~ "образование в данном финансовом году общий государственных расходов на "
-#~ "образование за тот же финансовый год и умножить результат на 100. "
-
-#~ msgid "Public Expenditure as percentage of Total Government Expenditure"
-#~ msgstr ""
-#~ "Государственные расходы как процент от общих государственных расходов"
-
-#~ msgid "Public Expenditure as percentage of Gross National Product (GNP)"
-#~ msgstr ""
-#~ "Государственные расходы как процент от валового национального продукта "
-#~ "(ВНП)"
-
-#~ msgid "Number of teachers"
-#~ msgstr "Количество учителей"
-
-#~ msgid "Net Admission Rate / Net Intake Rate"
-#~ msgstr "Чистый коэффициент Прием / Чистая скорость потребления"
-
-#~ msgid "Gross Admission Rate / Gross Intake Rate"
-#~ msgstr "Gross уровень госпитализации / брутто впускного Rate"
-
-#~ msgid "Summary report on Census Additional Information about enrolment"
-#~ msgstr "Сводный отчет о переписи Дополнительная информация о зачислении"
-
-#~ msgid "Summary report on Buildings"
-#~ msgstr "Сводный отчет о Здания"
-
-#~ msgid "Report on Rooms"
-#~ msgstr "Отчет о номерах"
-
-#~ msgid "Report on number of Sanitations and Conditions"
-#~ msgstr "Отчет по числу Sanitations и условия"
-
-#~ msgid "Report on number of Furnitures and its conditions"
-#~ msgstr "Отчет по числу мебель и ее условия"
-
-#~ msgid "Report on number and kinds of Resources as well as Condition status"
-#~ msgstr "Отчет о количестве и видах ресурсов, а также условия статус"
-
-#~ msgid "Report on Power sources"
-#~ msgstr "Отчет о источники питания"
-
-#~ msgid "Report on number of Powers types and Conditions"
-#~ msgstr "Отчет по числу держав виды и условия"
-
-#~ msgid "Report on Water"
-#~ msgstr "Доклад о воде"
-
-#~ msgid "Report on conditions, number, kinds of water source of Institutions"
-#~ msgstr "Сообщить об условиях, номера, виды водного источника учреждений"
-
-#~ msgid "Student List"
-#~ msgstr "Студенческая список"
-
-#~ msgid "Report on student additional info"
-#~ msgstr "Отчет о студенту дополнительную информацию"
-
-#~ msgid "Report on Teachers Additional Info"
-#~ msgstr "Отчет о Учителя Дополнительная информация"
-
-#~ msgid "Report on Staff Additional Info"
-#~ msgstr "Сообщить о персонале Дополнительная информация"
-
-#~ msgid "List of institution's additional info"
-#~ msgstr "Отчет о дополнительной информации учреждения"
-
-#~ msgid "Enrolment Summary"
-#~ msgstr "Прием резюме"
-
-#~ msgid "Class List"
-#~ msgstr "класса List"
-
-#~ msgid "Report on classes"
-#~ msgstr "Отчет о классах"
-
-#~ msgid "Summary report on Textbooks"
-#~ msgstr "Сводный отчет о Учебники"
-
-#~ msgid "Summary report on Teachers"
-#~ msgstr "Сводный отчет о учителей"
-
-#~ msgid "Trainings"
-#~ msgstr "Тренинги"
-
-#~ msgid "Staffs"
-#~ msgstr "штабов"
-
-#~ msgid "Summary report on Institution Staffs"
-#~ msgstr "Краткий отчет о возбуждении штабов"
-
-#~ msgid "Summary report on Census Table Related Information"
-#~ msgstr "Сводный отчет о переписи Таблица Дополнительная информация"
-
-#~ msgid "Summary report on income"
-#~ msgstr "Сводный отчет о доходах"
-
-#~ msgid "Report on expenditure"
-#~ msgstr "Отчет о расходах"
-
-#~ msgid "Institution List"
-#~ msgstr "Институт список"
-
-#~ msgid "Report on institutions"
-#~ msgstr "Сообщить об учреждениях"
-
-#~ msgid "Institution Site List"
-#~ msgstr "Институт сайта Список"
-
-#~ msgid "Report on institution sites"
-#~ msgstr "Сообщить о возбуждении сайтов"
-
-#~ msgid "Please contact support for more information on Custom Report."
-#~ msgstr ""
-#~ "Пожалуйста, свяжитесь со службой поддержки для получения дополнительной "
-#~ "информации о пользовательских отчетов."
-
-#~ msgid "This is a report on classes"
-#~ msgstr "Этот представляет собой отчет о классах"
-
-#~ msgid "This is a report on student"
-#~ msgstr "Этот доклад является на студента"
-
-#~ msgid "This is a report on Teachers"
-#~ msgstr "Этот представляет собой отчет о учителей"
-
-#~ msgid "This is a report on Staff"
-#~ msgstr "Этот представляет собой отчет о Staff"

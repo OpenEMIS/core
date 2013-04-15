@@ -73,4 +73,37 @@ class CensusStaff extends AppModel {
 			}
 		}
 	}
+
+	/**
+	 * calculate the total number of staff in a particular area, Required by Yearbook
+	 * @return int 	sum of staff
+	 */
+	public function calculateTotalStaffByAreaId($areaId, $schoolYearId) {
+
+		$this->unbindModel(array('belongsTo' => array('SchoolYear')));
+		$this->bindModel(
+			array('belongsTo' =>
+				array(
+					'InstitutionSite',
+					'InstitutionSiteProgramme' => array(
+	                'joinTable'  => 'institution_sites',
+					'foreignKey' => false,
+	                'conditions' => array(' InstitutionSite.id = InstitutionSiteProgramme.institution_site_id '),
+			    ))
+			));
+
+		$options['fields'] = array(
+            'SUM(CensusStaff.male) as TotalMale',
+            'SUM(CensusStaff.female) as TotalFemale',
+            'SUM(CensusStaff.male + CensusStaff.female) as TotalStaff'
+        );
+
+		// $options['conditions'] = array('CensusStaff.school_year_id' => $schoolYearId);
+        $options['conditions'] = array('AND' => array('CensusStaff.school_year_id' => $schoolYearId, 'InstitutionSite.area_id' => $areaId, 'NOT' => array('InstitutionSite.area_id' => null)));
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		$data = ($values[0]['TotalStaff'] > 0) ? $values[0]['TotalStaff'] : 0;
+		return $data;
+	}
 }
