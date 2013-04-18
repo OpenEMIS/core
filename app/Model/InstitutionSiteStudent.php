@@ -1,41 +1,37 @@
 <?php
 App::uses('AppModel', 'Model');
 
-class InstitutionSiteProgrammeStudent extends AppModel {
+class InstitutionSiteStudent extends AppModel {
 
-	public function getGenderTotal($siteProgrammeId, $yearId) {
+	public function getGenderTotal($siteProgrammeId) {
 		$joins = array(
 			array('table' => 'students', 'alias' => 'Student')
 		);
 		
 		$gender = array('M' => 0, 'F' => 0);
-		$studentConditions = array('Student.id = InstitutionSiteProgrammeStudent.student_id');
+		$studentConditions = array('Student.id = InstitutionSiteStudent.student_id');
 		
 		foreach($gender as $i => $val) {
 			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
 			$joins[0]['conditions'] = $studentConditions;
 			$gender[$i] = $this->find('count', array(
 				'joins' => $joins,
-				'conditions' => array(
-					'InstitutionSiteProgrammeStudent.institution_site_programme_id' => $siteProgrammeId,
-					'InstitutionSiteProgrammeStudent.school_year_id' => $yearId
-				)
+				'conditions' => array('InstitutionSiteStudent.institution_site_programme_id' => $siteProgrammeId)
 			));
 		}
 		return $gender;
 	}
 	
 	public function getStudentSelectList($year, $institutionSiteId, $gradeId) {
-		// if datasource is mysql
 		$conditions = array( // if the year falls between the start and end date
-			'YEAR(InstitutionSiteProgrammeStudent.start_date) <=' => $year,
-			'YEAR(InstitutionSiteProgrammeStudent.end_date) >=' => $year
+			'InstitutionSiteStudent.start_year <=' => $year,
+			'InstitutionSiteStudent.end_year >=' => $year
 		);
 		
 		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
 		$exclude = $InstitutionSiteClassGrade->getStudentIdsByProgramme($gradeId);
 		
-		$studentConditions = array('Student.id = InstitutionSiteProgrammeStudent.student_id');
+		$studentConditions = array('Student.id = InstitutionSiteStudent.student_id');
 		if(!empty($exclude)) {
 			$studentConditions[] = 'Student.id NOT IN (' . implode(',', array_keys($exclude)) . ')';
 		}
@@ -55,7 +51,7 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => array(
-						'InstitutionSiteProgramme.id = InstitutionSiteProgrammeStudent.institution_site_programme_id',
+						'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
 						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
 					)
 				),
@@ -113,14 +109,16 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 		$year = $siteProgramme[0]['SchoolYear']['year'];
 		
 		$startDate = $year . '-' . date('m-d');
-		$endDate = $year+$duration . '-' . date('m-d');
+		$endYear = $year+$duration;
+		$endDate = $endYear . '-' . date('m-d');
 		
 		$obj = array(
 			'start_date' => $startDate,
+			'start_year' => $year,
 			'end_date' => $endDate,
+			'end_year' => $endYear,
 			'student_id' => $studentId,
-			'institution_site_programme_id' => $siteProgrammeId,
-			'school_year_id' => $yearId
+			'institution_site_programme_id' => $siteProgrammeId
 		);
 		return $this->save($obj);
 	}
@@ -130,8 +128,8 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'InstitutionSiteProgrammeStudent.id', 'SchoolYear.name AS year',
-				'InstitutionSiteProgrammeStudent.start_date, InstitutionSiteProgrammeStudent.end_date',
+				'InstitutionSiteStudent.id', 'SchoolYear.name AS year',
+				'InstitutionSiteStudent.start_date, InstitutionSiteStudent.end_date',
 				'Student.id AS student_id',	'Student.identification_no', 
 				'Student.first_name', 'Student.last_name'
 			),
@@ -139,13 +137,13 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 				array(
 					'table' => 'students',
 					'alias' => 'Student',
-					'conditions' => array('Student.id = InstitutionSiteProgrammeStudent.student_id')
+					'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
 				),
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
 					'conditions' => array(
-						'InstitutionSiteProgramme.id = InstitutionSiteProgrammeStudent.institution_site_programme_id',
+						'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
 						'InstitutionSiteProgramme.education_programme_id = ' . $programmeId,
 						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
 						'InstitutionSiteProgramme.school_year_id = ' . $yearId
@@ -154,7 +152,7 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 				array(
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = InstitutionSiteProgrammeStudent.school_year_id')
+					'conditions' => array('SchoolYear.id = InstitutionSiteProgramme.school_year_id')
 				)
 			),
 			'order' => array('Student.first_name', 'Student.last_name')
@@ -167,12 +165,18 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 		unset($conditions['institution_site_id']);
 		
 		$programmeConditions = array(
-			'InstitutionSiteProgramme.id = InstitutionSiteProgrammeStudent.institution_site_programme_id',
+			'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
 			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
 		);
 		
-		if(isset($conditions['InstitutionSiteProgrammeStudent.school_year_id'])) {
-			$programmeConditions[] = 'InstitutionSiteProgramme.school_year_id = ' . $conditions['InstitutionSiteProgrammeStudent.school_year_id'];
+		if(isset($conditions['year'])) {
+			$year = $conditions['year'];
+			unset($conditions['year']);
+			
+			$conditions = array_merge($conditions, array( // if the year falls between the start and end date
+				'InstitutionSiteStudent.start_year <=' => $year,
+				'InstitutionSiteStudent.end_year >=' => $year
+			));
 		}
 		
 		if(isset($conditions['education_programme_id'])) {
@@ -184,7 +188,7 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 			array(
 				'table' => 'students',
 				'alias' => 'Student',
-				'conditions' => array('Student.id = InstitutionSiteProgrammeStudent.student_id')
+				'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
 			),
 			array(
 				'table' => 'institution_site_programmes',

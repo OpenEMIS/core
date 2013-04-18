@@ -68,10 +68,10 @@ class StudentsController extends StudentsAppController {
 		
 		$security = array(
 			'OR' => array(
-				'InstitutionSiteProgrammeStudent.id' => null,
+				'InstitutionSiteStudent.id' => null,
 				'AND' => array(
-					'InstitutionSiteProgrammeStudent.institution_site_programme_id' => $programmeIds,
-					'InstitutionSiteProgrammeStudent.end_date >=' => date('Y-m-d')
+					'InstitutionSiteStudent.institution_site_programme_id' => $programmeIds,
+					'InstitutionSiteStudent.end_date >=' => date('Y-m-d')
 				)
 		));
 				
