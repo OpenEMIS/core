@@ -3,7 +3,7 @@
 <div class="table_row" row-id="<?php echo $obj['id']; ?>">
 	<?php
 	$year = date('Y', strtotime($obj['start_date']));
-	$model = 'InstitutionSiteProgrammeStudent.' . $i;
+	$model = 'InstitutionSiteStudent.' . $i;
 	echo $this->Form->hidden($model.'.id', array('value' => $obj['id']));
 	echo $this->Form->hidden($model.'.start_date.year', array('value' => $year));
 	?>

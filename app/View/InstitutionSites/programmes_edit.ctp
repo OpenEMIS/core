@@ -11,7 +11,7 @@ echo $this->Html->script('institution_site_programmes', false);
 
 <div id="programmes" class="content_wrapper edit">
 	<?php
-	echo $this->Form->create('InstitutionSiteProgrammeStudent', array(
+	echo $this->Form->create('InstitutionSiteStudent', array(
 		'id' => 'submitForm',
 		'onsubmit' => 'return false',
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
@@ -104,7 +104,7 @@ echo $this->Html->script('institution_site_programmes', false);
 		</legend>
 		
 		<?php
-		echo $this->Form->create('InstitutionSiteProgrammeStudent', array(
+		echo $this->Form->create('InstitutionSiteStudent', array(
 			'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 			'url' => array('controller' => 'InstitutionSites', 'action' => 'programmesEdit')
 		));
