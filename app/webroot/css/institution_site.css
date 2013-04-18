@@ -17,6 +17,11 @@
 #classes .table_cell_row.last { margin-bottom: 0; }
 #classes .icon_plus { margin-left: 0; }
 .student_select { width: 100%; }
+#teachersAdd input.default, #staffAdd input.default { width: 204px; }
+#teachersAdd select.default, #staffAdd select.default { width: 212px; }
+#teachersAdd .icon_search, #staffAdd .icon_search { height: 22px; width: 24px; }
+#teachersAdd .section_break, #staffAdd .section_break { padding-top: 10px; }
+#teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 70px; line-height: 24px; }
 
 .cell_system { width: 200px; }
 .cell_date { width: 110px; }
@@ -30,6 +35,7 @@
 .cell_phone { width: 110px; }
 .cell_year { width: 70px; vertical-align: top !important; text-align: center; }
 #classes.add .table_cell select { width: 100%; }
+#classes .section_break .row { margin-left: 0; }
 
 .section_group #pagination {
 	margin-top: 0;

@@ -44,7 +44,8 @@ var i18n = {
 	InstitutionSites : {
 		textArea: '<?php echo T("Area"); ?>',
 		textProgrammeSelect: '<?php echo T("Please select a programme first.", true); ?>',
-		textClassSelectStudent: '<?php echo T("Please select a student first."); ?>'
+		textClassSelectStudent: '<?php echo T("Please select a student first."); ?>',
+		textClassSelectTeacher: '<?php echo T("Please select a teacher first."); ?>'
 	},
 	Training : {
 		textArea: '<?php echo T("Category is required!"); ?>'

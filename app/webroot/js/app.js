@@ -136,13 +136,13 @@ var jsForm = {
 		});
 		this.linkVoid();
 		this.initInputFocus('.input_wrapper input, .input_wrapper textarea');
-		$('.datepicker select').change(jsForm.datepickerUpdate);
+		//$('.datepicker select').change(jsForm.datepickerUpdate);
 		
 		// alert
 		$('.alert_view[title]').click(function() {
 			$(this).fadeOut(300, function() { $(this).remove(); });
 		});
-        this.datepickerUpdateSelector();
+        //this.datepickerUpdateSelector();
 	},
 	
 	initDatepicker: function(p) {
