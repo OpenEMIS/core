@@ -100,22 +100,19 @@ class Student extends StudentsAppModel {
 	
 	// Used by InstitutionSiteController for searching
 	public function search($searchStr, $programmeId, $institutionSiteId, $yearId, $limit=false) {
-		$studentTable = 'institution_site_programme_students';
-		$programmeTable = 'institution_site_programmes';
 		$notExists = '
 			NOT EXISTS (
-				SELECT institution_site_programme_students.student_id 
-				FROM institution_site_programme_students
+				SELECT institution_site_students.student_id 
+				FROM institution_site_students
 				JOIN institution_site_programmes
-					ON institution_site_programmes.id = institution_site_programme_students.institution_site_programme_id
+					ON institution_site_programmes.id = institution_site_students.institution_site_programme_id
 					AND institution_site_programmes.institution_site_id = %d
 					AND institution_site_programmes.education_programme_id = %d
 					AND institution_site_programmes.school_year_id = %d
-				WHERE institution_site_programme_students.student_id = Student.id
+				WHERE institution_site_students.student_id = Student.id
 			)';
 			
 		$this->formatResult = true;
-		$ProgrammeStudent = ClassRegistry::init('InstitutionSiteProgrammeStudent');
 		$searchStr = '%' . $searchStr . '%';
 		$conditions = array(
 			sprintf($notExists, $institutionSiteId, $programmeId, $yearId),
@@ -146,15 +143,15 @@ class Student extends StudentsAppModel {
 		//pr($conditions);
 		$securityCond = $conditions['Security'];
 		
-		$this->bindModel(array('hasMany' => array('InstitutionSiteProgrammeStudent')));
+		$this->bindModel(array('hasMany' => array('InstitutionSiteStudent')));
 	   if($conditions['SearchKey'] != ''){
 			$conditions = array( 'OR' => array(
 				'Student.identification_no LIKE' => "%".$conditions['SearchKey']."%",
-			   'Student.first_name LIKE' => "%".$conditions['SearchKey']."%",
-			   'Student.last_name LIKE' =>"%".$conditions['SearchKey']."%",
-			   'StudentHistory.identification_no LIKE' => "%".$conditions['SearchKey']."%",
-			   'StudentHistory.first_name LIKE' => "%".$conditions['SearchKey']."%",
-			   'StudentHistory.last_name LIKE' =>"%".$conditions['SearchKey']."%"
+				'Student.first_name LIKE' => "%".$conditions['SearchKey']."%",
+				'Student.last_name LIKE' =>"%".$conditions['SearchKey']."%",
+				'StudentHistory.identification_no LIKE' => "%".$conditions['SearchKey']."%",
+				'StudentHistory.first_name LIKE' => "%".$conditions['SearchKey']."%",
+				'StudentHistory.last_name LIKE' =>"%".$conditions['SearchKey']."%"
 			));
 			
 			//$conditions = array_merge($conditions,array('AND'=>$securityCond));
@@ -170,11 +167,11 @@ class Student extends StudentsAppModel {
 																)
 															),
 															array(
-																'table' => 'institution_site_programme_students',
-																'alias' => 'InstitutionSiteProgrammeStudent',
+																'table' => 'institution_site_students',
+																'alias' => 'InstitutionSiteStudent',
 																'type' => 'LEFT',
 																'conditions' => array(
-																	'InstitutionSiteProgrammeStudent.student_id = Student.id'
+																	'InstitutionSiteStudent.student_id = Student.id'
 																)
 															)
 														),
@@ -193,11 +190,11 @@ class Student extends StudentsAppModel {
 																)
 															),
 															array(
-																'table' => 'institution_site_programme_students',
-																'alias' => 'InstitutionSiteProgrammeStudent',
+																'table' => 'institution_site_students',
+																'alias' => 'InstitutionSiteStudent',
 																'type' => 'LEFT',
 																'conditions' => array(
-																	'InstitutionSiteProgrammeStudent.student_id = Student.id'
+																	'InstitutionSiteStudent.student_id = Student.id'
 																)
 															)
 														)
@@ -211,11 +208,11 @@ class Student extends StudentsAppModel {
 												'order'=>$order,
 												'joins' => array(
 																array(
-																	'table' => 'institution_site_programme_students',
-																	'alias' => 'InstitutionSiteProgrammeStudent',
+																	'table' => 'institution_site_students',
+																	'alias' => 'InstitutionSiteStudent',
 																	'type' => 'LEFT',
 																	'conditions' => array(
-																		'InstitutionSiteProgrammeStudent.student_id = Student.id'
+																		'InstitutionSiteStudent.student_id = Student.id'
 																	)
 																)
 															)
@@ -225,11 +222,11 @@ class Student extends StudentsAppModel {
 			$this->sqlPaginateCount = $this->find('count',array('joins' => 
 																array(
 																	array(
-																		'table' => 'institution_site_programme_students',
-																		'alias' => 'InstitutionSiteProgrammeStudent',
+																		'table' => 'institution_site_students',
+																		'alias' => 'InstitutionSiteStudent',
 																		'type' => 'LEFT',
 																		'conditions' => array(
-																			'InstitutionSiteProgrammeStudent.student_id = Student.id'
+																			'InstitutionSiteStudent.student_id = Student.id'
 																		)
 																	)
 																)

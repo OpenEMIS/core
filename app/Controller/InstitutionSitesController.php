@@ -33,12 +33,12 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteSector',
 		'InstitutionSiteStatus',
 		'InstitutionSiteProgramme',
-		'InstitutionSiteProgrammeStudent',
 		'InstitutionSiteAttachment',
 		'InstitutionSiteBankAccount',
 		'InstitutionSiteType',
-		'InstitutionSiteStaff',
+		'InstitutionSiteStudent',
 		'InstitutionSiteTeacher',
+		'InstitutionSiteStaff',
 		'CensusStudent',
 		'SecurityUserRole',
 		'SecurityRoleInstitutionSite',
@@ -686,7 +686,7 @@ class InstitutionSitesController extends AppController {
 		$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		
 		foreach($data as $i => $obj) {
-			$data[$i]['gender'] = $this->InstitutionSiteProgrammeStudent->getGenderTotal($obj['id'], $selectedYear);
+			$data[$i]['gender'] = $this->InstitutionSiteStudent->getGenderTotal($obj['id'], $selectedYear);
 		}
 		
 		// Checking if user has access to add
@@ -746,7 +746,7 @@ class InstitutionSitesController extends AppController {
 		if(empty($programmeOptions)) {
 			$programmeOptions[] = '-- ' . __('No Programme') . ' --';
 		} else {
-			$data = $this->InstitutionSiteProgrammeStudent->getStudentList($selectedProgramme, $this->institutionSiteId, $selectedYear);
+			$data = $this->InstitutionSiteStudent->getStudentList($selectedProgramme, $this->institutionSiteId, $selectedYear);
 		}
 		
 		$this->set('yearOptions', $yearOptions);
@@ -774,7 +774,7 @@ class InstitutionSitesController extends AppController {
 			if(empty($programmeOptions)) {
 				$this->redirect(array('action' => programmes));
 			} else {
-				$data = $this->InstitutionSiteProgrammeStudent->getStudentList($selectedProgramme, $this->institutionSiteId, $selectedYear);
+				$data = $this->InstitutionSiteStudent->getStudentList($selectedProgramme, $this->institutionSiteId, $selectedYear);
 				$this->set('yearOptions', $yearOptions);
 				$this->set('selectedYear', $selectedYear);
 				$this->set('programmeOptions', $programmeOptions);
@@ -783,13 +783,13 @@ class InstitutionSitesController extends AppController {
 			}
 		} else {
 			$this->autoRender = false;
-			$data = $this->data['InstitutionSiteProgrammeStudent'];
+			$data = $this->data['InstitutionSiteStudent'];
 			foreach($data as &$obj) {
 				$start = $obj['start_date'];
 				$end = $obj['end_date'];
 				$obj['start_date'] = sprintf('%d-%d-%d', $start['year'], $start['month'], $start['day']);
 				$obj['end_date'] = sprintf('%d-%d-%d', $end['year'], $end['month'], $end['day']);
-				$this->InstitutionSiteProgrammeStudent->save($obj);
+				$this->InstitutionSiteStudent->save($obj);
 			}
 		}
 	}
@@ -803,12 +803,12 @@ class InstitutionSitesController extends AppController {
 		$yearId = $this->params['pass'][0];
 		$programmeId = $this->params['pass'][1];
 		
-		$obj = $this->InstitutionSiteProgrammeStudent->addStudentToProgramme($studentId, $programmeId, $this->institutionSiteId, $yearId);
+		$obj = $this->InstitutionSiteStudent->addStudentToProgramme($studentId, $programmeId, $this->institutionSiteId, $yearId);
 		
 		$this->set('idNo', $idNo);
 		$this->set('name', $name);
 		$this->set('i', $i);
-		$this->set('obj', $obj['InstitutionSiteProgrammeStudent']);
+		$this->set('obj', $obj['InstitutionSiteStudent']);
 	}
 	
 	public function programmesRemoveStudent() {
@@ -818,7 +818,7 @@ class InstitutionSitesController extends AppController {
 		$programmeId = $this->params['pass'][1];
 		
 		if($id != -1) {
-			$this->InstitutionSiteProgrammeStudent->delete($id, false);
+			$this->InstitutionSiteStudent->delete($id, false);
 		} else {
 			$conditions = array(
 				'school_year_id' => $yearId,
@@ -826,8 +826,8 @@ class InstitutionSitesController extends AppController {
 				'institution_site_id' => $this->institutionSiteId
 			);
 			$institutionSiteProgrammeId = $this->InstitutionSiteProgramme->field('id', $conditions);
-			$this->InstitutionSiteProgrammeStudent->deleteAll(array(
-				'InstitutionSiteProgrammeStudent.institution_site_programme_id' => $institutionSiteProgrammeId
+			$this->InstitutionSiteStudent->deleteAll(array(
+				'InstitutionSiteStudent.institution_site_programme_id' => $institutionSiteProgrammeId
 			), false);
 		}
 	}
@@ -1033,8 +1033,7 @@ class InstitutionSitesController extends AppController {
 			$year = $this->params['pass'][0];
 			$gradeId = $this->params['pass'][1];
 			$index = $this->params->query['index'];
-			$data = $this->InstitutionSiteProgrammeStudent->getStudentSelectList($year, $this->institutionSiteId, $gradeId);
-			
+			$data = $this->InstitutionSiteStudent->getStudentSelectList($year, $this->institutionSiteId, $gradeId);
 			$this->set('index', $index);
 			$this->set('gradeId', $gradeId);
 			$this->set('data', $data);
@@ -1136,24 +1135,24 @@ class InstitutionSitesController extends AppController {
 		$searchField = "";
 		$orderBy = 'Student.first_name';
 		$order = 'asc';
-		$yearOptions = $this->SchoolYear->getYearList();
+		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId);
 		$prefix = 'InstitutionSiteStudent.Search.%s';
 		if($this->request->is('post')) {
 			$searchField = Sanitize::escape(trim($this->data['Student']['SearchField']));
-			$selectedYear = $this->data['Student']['school_year_id'];
+			$selectedYear = $this->data['Student']['school_year'];
 			$selectedProgramme = $this->data['Student']['education_programme_id'];
 			$orderBy = $this->data['Student']['orderBy'];
 			$order = $this->data['Student']['order'];
 			
 			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
-			$this->Session->write(sprintf($prefix, 'SchoolYearId'), $selectedYear);
+			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
 			$this->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
 			$this->Session->write(sprintf($prefix, 'order'), $order);
 			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
 		} else {
 			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
-			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYearId'));
+			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYear'));
 			$selectedProgramme = $this->Session->read(sprintf($prefix, 'EducationProgrammeId'));
 			
 			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
@@ -1166,7 +1165,7 @@ class InstitutionSitesController extends AppController {
 		$conditions = array('institution_site_id' => $this->institutionSiteId, 'order' => array($orderBy => $order));
 		$conditions['search'] = $searchField;
 		if(!empty($selectedYear)) {
-			$conditions['InstitutionSiteProgrammeStudent.school_year_id'] = $selectedYear;
+			$conditions['year'] = $selectedYear;
 		}
 		
 		if(!empty($selectedProgramme)) {
@@ -1174,7 +1173,7 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		$this->paginate = array('limit' => 15, 'maxLimit' => 100);
-		$data = $this->paginate('InstitutionSiteProgrammeStudent', $conditions);
+		$data = $this->paginate('InstitutionSiteStudent', $conditions);
 		
 		if(empty($data)) {
 			$this->Utility->alert($this->Utility->getMessage('STUDENT_SEARCH_NO_RESULT'), array('type' => 'info', 'dismissOnClick' => false));
