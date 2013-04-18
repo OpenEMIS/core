@@ -42,31 +42,58 @@ echo $this->Html->script('search', false);
 		</div>
 	</div>
 	
-	<?php foreach($grades as $id => $name) { ?>
-	
 	<fieldset class="section_group">
-		<legend><?php echo $name ?></legend>
-		
+		<legend><?php echo __('Teachers'); ?></legend>
 		<div class="table">
 			<div class="table_head">
 				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
 				<div class="table_cell"><?php echo __('Name'); ?></div>
-				<div class="table_cell cell_gender">Gender</div>
+				<div class="table_cell" style="width: 150px;"><?php echo __('Subject'); ?></div>
 			</div>
-			
 			<div class="table_body">
-				<?php if(isset($students[$id])) { ?>
-				<?php foreach($students[$id] as $obj) { ?>
-				<div class="table_row" student-id="<?php echo $obj['id']; ?>">
-					<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
-					<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
-					<div class="table_cell"><?php echo $this->Utility->formatGender($obj['gender']); ?></div>
+				<?php foreach($teachers as $obj) { ?>
+				<div class="table_row">
+					<div class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></div>
+					<div class="table_cell"><?php echo $obj['Teacher']['first_name'] . ' ' . $obj['Teacher']['last_name']; ?></div>
+					<div class="table_cell">
+					<?php
+					echo $obj['InstitutionSiteClassTeacher']['education_subject_id']==0 ? __('No Subject') : $obj['EducationSubject']['name'];
+					?>
+					</div>
 				</div>
-				<?php } // end for ?>
-				<?php } // end if ?>
+				<?php } ?>
 			</div>
 		</div>
 	</fieldset>
 	
-	<?php } ?>
+	<fieldset class="section_group">
+		<legend><?php echo __('Students'); ?></legend>
+		<?php foreach($grades as $id => $name) { ?>
+		
+		<fieldset class="section_break">
+			<legend><?php echo $name ?></legend>
+			
+			<div class="table">
+				<div class="table_head">
+					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell"><?php echo __('Name'); ?></div>
+					<div class="table_cell cell_gender">Gender</div>
+				</div>
+				
+				<div class="table_body">
+					<?php if(isset($students[$id])) { ?>
+					<?php foreach($students[$id] as $obj) { ?>
+					<div class="table_row">
+						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
+						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
+						<div class="table_cell"><?php echo $this->Utility->formatGender($obj['gender']); ?></div>
+					</div>
+					<?php } // end for ?>
+					<?php } // end if ?>
+				</div>
+			</div>
+		</fieldset>
+		
+		<?php } ?>
+	</fieldset>
 </div>

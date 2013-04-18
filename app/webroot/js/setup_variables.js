@@ -87,22 +87,12 @@ var setup = {
 			success: function (data, textStatus) {
 				var callback = function() {
 					list.append(data);
-					$('.new_row').each(function() {
-						var obj = $(this);
-						obj.find('.icon_cross').click(function() {
-							$(this).closest('.table_row').remove();
-						});
-						obj.removeClass('new_row');
-					});
-					$('.table_row.even').removeClass('even');
-					$('.table_row:odd').addClass('even');
-					jsForm.init();
+					jsTable.fixTable();
+					jsDate.initDatepicker('.new_row:last .datepicker');
 				};
 				$.unmask({id: maskId, callback: callback});
-				
 			}
 		});
-		
 	},
 	
 	addBank: function(obj) {
@@ -140,5 +130,16 @@ var setup = {
 				$.unmask({id: maskId, callback: callback});
 			}
 		});
+	},
+	
+	updateYear: function() {
+		$('.new_row').each(function() {
+			var obj = $(this);
+			var startYear = obj.find('.start_date').val().split('-').shift();
+			var endYear = obj.find('.end_date').val().split('-').shift();
+			obj.find('.start_year').val(startYear);
+			obj.find('.end_year').val(endYear);
+		});
+		return true;
 	}
 };
