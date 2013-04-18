@@ -36,7 +36,7 @@ echo $this->Html->script('institution_site_students', false);
 	
 	<div class="row">
 		<?php
-		echo $this->Form->input('school_year_id', array(
+		echo $this->Form->input('school_year', array(
 			'id' => 'SchoolYearId',
 			'class' => 'search_select',
 			'empty' => __('All Years'),
