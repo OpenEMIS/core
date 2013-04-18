@@ -229,7 +229,6 @@ class InstitutionSiteProgrammeStudent extends AppModel {
 	}
 	 
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-		$order = $conditions['order'];
 		unset($conditions['order']);
 		$this->paginateConditions($conditions);
 		$count = $this->find('count', array(
