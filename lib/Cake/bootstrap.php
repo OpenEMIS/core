@@ -126,6 +126,7 @@ if (!defined('JS_URL')) {
 }
 
 
+require CAKE . 'common.php';
 require CAKE . 'basics.php';
 require CAKE . 'Core' . DS . 'App.php';
 require CAKE . 'Error' . DS . 'exceptions.php';
