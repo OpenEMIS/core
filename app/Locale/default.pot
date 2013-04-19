@@ -910,7 +910,6 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
-
 ############################################################################
 # Component - Navigation
 ############################################################################
@@ -1079,7 +1078,6 @@ msgstr ""
 
 msgid "Please enter your current password."
 msgstr ""
-
 
 ############################################################################
 # Component - Settings/Administrative Boundaries
@@ -1845,8 +1843,6 @@ msgstr ""
 msgid "Divide per pupil public current expenditure on each level of education in a given year by the GNI per capita for the same year and multiply by 100. This indicator has dimension values of level of education."
 msgstr ""
 
-
-
 ############################################################################
 # View - Data Processing
 ############################################################################
@@ -2047,7 +2043,6 @@ msgstr ""
 msgid "Please select the programme orientation."
 msgstr ""
 
-
 ############################################################################
 # Model - EducationSubject
 ############################################################################
@@ -2107,7 +2102,6 @@ msgstr ""
 msgid "GNP value is required."
 msgstr ""
 
-
 msgid "Category is required!"
 msgstr ""
 
@@ -2161,7 +2155,6 @@ msgstr ""
 
 msgid "Status is required!"
 msgstr ""
-
 
 msgid "Move Up"
 msgstr ""
@@ -2220,10 +2213,10 @@ msgstr ""
 msgid "Generating OLAP Report..."
 msgstr ""
 
-
 ############################################################################
 # CSV Reports Header
 ############################################################################
+
 msgid "Indicator"
 msgstr ""
 
@@ -2351,4 +2344,49 @@ msgid "Publication Date"
 msgstr ""
 
 msgid "Logo"
+msgstr ""
+
+msgid "Data Outliers"
+msgstr ""
+
+msgid "Census Numbers that have age or total of male and female numbers beyond the specified range in settings."
+msgstr ""
+
+msgid "Page Orientation"
+msgstr ""
+
+msgid "Yearbook Logo"
+msgstr ""
+
+msgid "Maximum Student Age"
+msgstr ""
+
+msgid "Minimum Student Age"
+msgstr ""
+
+msgid "Maximum Student Number"
+msgstr ""
+
+msgid "Minimum Student Number"
+msgstr ""
+
+msgid "Data Discrepancy"
+msgstr ""
+
+msgid "Data Discrepancy Variation(%)"
+msgstr ""
+
+msgid "Previous Year"
+msgstr ""
+
+msgid "Previous Year Male"
+msgstr ""
+
+msgid "Previous Year Female"
+msgstr ""
+
+msgid "Data Discrepancy Reports"
+msgstr ""
+
+msgid "age"
 msgstr ""
