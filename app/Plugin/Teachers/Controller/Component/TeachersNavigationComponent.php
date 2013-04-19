@@ -1,36 +1,35 @@
 <?php
 class TeachersNavigationComponent extends Component {
 	private $controller;
-	public $components = array('Navigation');
 	
 	public function initialize(Controller $controller) {
 		$this->controller =& $controller;
 	}
 
-	public function getLinks() {
+	public function getLinks($navigation) {
 		$controller = 'Teachers';
 
 		$links = array(
 			array(
 				array(
 					'_controller' => $controller,
-					$this->Navigation->createLink('List of Teachers', 'index', array('pattern' => 'index$')),
-					$this->Navigation->createLink('Add new Teacher', 'add', array('pattern' => 'add$'))
+					$navigation->createLink('List of Teachers', 'index', array('pattern' => 'index$')),
+					$navigation->createLink('Add new Teacher', 'add', array('pattern' => 'add$'))
 				)
 			),
 			array(
 				'TEACHER INFORMATION' => array(
 					'_controller' => $controller,
-					$this->Navigation->createLink('Details', 'view', array('pattern' => 'view$|^edit$|history$')),
-					$this->Navigation->createLink('Attachments', 'attachments'),
-					$this->Navigation->createLink('Additional Info', 'additional'),
-					$this->Navigation->createLink('Institutions', 'institutions')
+					$navigation->createLink('Details', 'view', array('pattern' => 'view$|^edit$|history$')),
+					$navigation->createLink('Attachments', 'attachments'),
+					$navigation->createLink('Additional Info', 'additional'),
+					$navigation->createLink('Institutions', 'institutions')
 					//$this->Navigation->createLink('Programmes', 'programmes')
 				),
 				'OTHER INFORMATION' => array(
 					'_controller' => $controller,
-					$this->Navigation->createLink('Qualifications', 'qualifications'),
-					$this->Navigation->createLink('Training', 'training')
+					$navigation->createLink('Qualifications', 'qualifications'),
+					$navigation->createLink('Training', 'training')
 				)
 			)
 		);

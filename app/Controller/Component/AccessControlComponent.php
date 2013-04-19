@@ -8,6 +8,11 @@ class AccessControlComponent extends Component {
 	private $RoleFunction;
 	private $RoleArea;
 	private $RoleInstitutionSite;
+	public $ignoreList = array(
+		'HOME' => array('index'), 
+		'SECURITY' => array('login', 'logout'), 
+		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage')
+	);
 	public $operations = array('_view', '_edit', '_add', '_delete');
 	
 	private $modelMap = array(
@@ -21,7 +26,7 @@ class AccessControlComponent extends Component {
         'Area' => 'Area'
 	);
 	
-	public $components = array('Auth', 'Session', 'AreaHandler');
+	public $components = array('Auth', 'Session', 'AreaHandler', 'Navigation', 'Utility');
 	
 	//called before Controller::beforeFilter()
 	public function initialize(Controller $controller) {
@@ -182,14 +187,87 @@ class AccessControlComponent extends Component {
 	public function check($controller, $action) {
 		$access = false;
 		$controller = strtoupper($controller);
+		
 		$permissions = $this->Session->read('permissions');
 		$check = $permissions['check'];
 		if($this->Auth->user('super_admin')==0) {
 			$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
 		} else {
+			// need to verify logic
 			$access = isset($check[$controller][$action]) ? $check[$controller][$action] : true;
 		}
 		return $access;
+	}
+	
+	public function ignore($controller, $action) {
+		$controller = strtoupper($controller);
+		if(isset($this->ignoreList[$controller])) {
+			if(!in_array($action, $this->ignoreList[$controller])) {
+				$this->ignoreList[$controller][] = $action;
+			}
+		} else {
+			$this->ignoreList[$controller] = array($action);
+		}
+	}
+	
+	public function isIgnored($controller, $action) {
+		$controller = strtoupper($controller);
+		$ignore = false;
+		if(isset($this->ignoreList[$controller])) {
+			if(in_array($action, $this->ignoreList[$controller])) {
+				$ignore = true;
+			}
+		}
+		return $ignore;
+	}
+	
+	public function checkAccess() {
+		$controller = $this->controller->params['controller'];
+		$action = $this->controller->action;
+		
+		// if action is not in ignore list then check for access
+		if(!$this->isIgnored($controller, $action)) {
+			if(!$this->check($controller, $action)) {
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));
+				$this->controller->redirect(array('plugin' => false, 'controller' => 'Home', 'action' => 'index'));
+			}
+		} else { // if action is in ignore list then check against navigation ignore list
+			// To navigate to the correct view when user click on Settings
+			$hasAccess = $this->check($controller, $action);
+			if(!$hasAccess) {
+				$found = false;
+				$links = $this->Navigation->ignoredLinks;
+				$url = array();
+				$currentModule = null;
+				
+				foreach($links as $module => $items) {
+					foreach($items as $obj) {
+						if($found) {
+							if($currentModule === $module) {
+								if($this->check($obj['controller'], $obj['action'])) {
+									$url = $obj;
+									break 2;
+								}
+							} else {
+								break 2;
+							}
+						} else {
+							if(strtoupper($obj['controller']) === strtoupper($controller) && $obj['action'] === $action) {
+								$found = true;
+								$currentModule = $module;
+							}
+						}
+					}
+				}
+				if(!empty($url)) {
+					$this->controller->redirect(array('controller' => $url['controller'], 'action' => $url['action']));
+				}
+				if($found) {
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));
+					$this->controller->redirect(array('plugin' => false, 'controller' => 'Home', 'action' => 'index'));
+				}
+			}
+		}
 	}
 	
 	public function getFunctionParent($parentId) {

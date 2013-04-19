@@ -123,6 +123,7 @@ var security = {
 					$(this).removeAttr('checked');
 				}
 			}
+			security.checkModuleToggled($(this));
 		});
 	},
 	
@@ -139,10 +140,23 @@ var security = {
 		} else {
 			section.find('.module_checkbox').removeAttr('checked');
 		}
-		section.find('.table_row.none').each(function() {
+		// enable parent function to show top navigation
+		$('.table_row.none').each(function() {
 			var parentId = $(this).attr('parent-id');
+			var functionId = $(this).attr('function-id');
+			var isChecked = false;
+			var selector = parentId!=-1 
+						 ? ('.table_row[function-id="' + parentId + '"]')
+						 : ('.table_row[parent-id="' + functionId + '"]');
+			
+			$(selector).each(function() {
+				if($(this).find('#_view').is(':checked') && !isChecked) {
+					isChecked = true;
+					return false;
+				}
+			});
 			$(this).find('input[type="checkbox"]:not(:disabled)').each(function() {
-				if($('.table_row[function-id="' + parentId + '"]').find('#_view').is(':checked')) {
+				if(isChecked) {
 					$(this).attr('checked', 'checked');
 				} else {
 					$(this).removeAttr('checked');

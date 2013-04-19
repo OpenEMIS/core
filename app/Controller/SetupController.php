@@ -56,7 +56,6 @@ class SetupController extends AppController {
 	}
 	
 	public function index() {
-		// add check to redirect to the accessible controller
 		$this->redirect(array('controller' => 'Areas', 'action' => 'index'));
 	}
 	
@@ -268,7 +267,6 @@ class SetupController extends AppController {
 	}
 	
 	public function customFields($model = 'InstitutionCustomField',$sitetype = '') {
-		
 		$this->Navigation->addCrumb('Custom Fields');
 		//$ref_id = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $model);
 		$ref_id = Inflector::underscore($model);
