@@ -142,10 +142,13 @@ echo $this->Html->script('institution_site_teachers', false);
 						<div class="table_cell_row input_wrapper">
 						<?php
 						echo $this->Form->input($i . '.salary', array(
+							'type' => 'text',
 							'label' => false,
 							'div' => false,
+							'maxlength' => 10,
 							'name' => sprintf($fieldName, $i, 'salary'),
-							'value' => $pos['InstitutionSiteTeacher']['salary']
+							'value' => $pos['InstitutionSiteTeacher']['salary'],
+							'onkeypress' => 'return utility.floatCheck(event)'
 						));
 						?>
 						</div>
