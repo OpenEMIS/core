@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2013-04-12 11:09+0800\n"
+"PO-Revision-Date: 2013-04-19 15:38+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -2400,7 +2400,7 @@ msgstr ""
 "au-delà de la plage spécifiée dans les paramètres."
 
 msgid "Page Orientation"
-msgstr "Orientation de la page"
+msgstr "Orientation de la Page"
 
 msgid "Yearbook Logo"
 msgstr "Annuaire Logo"
@@ -2437,178 +2437,3 @@ msgstr "Rapports de litige de données"
 
 msgid "age"
 msgstr "âge"
-
-#~ msgid "Completion Rate / Gross Primary Graduation Ratio"
-#~ msgstr "Taux d'achèvement / Taux brut d'obtention du diplôme primaire"
-
-#~ msgid ""
-#~ "Divide the number of primary graduates, irrespective of age, by the "
-#~ "population of theoretical primary graduation, and multiply the result by "
-#~ "100."
-#~ msgstr ""
-#~ "Diviser le nombre des diplômés du primaire, indépendamment de l'âge, par "
-#~ "la population de l'obtention du diplôme primaire théorique, et multiplier "
-#~ "le résultat par 100."
-
-#~ msgid "Percentage of Trained Teachers"
-#~ msgstr "Pourcentage d'enseignants formés"
-
-#~ msgid "Divide the female value of a given indicator by that of the male."
-#~ msgstr ""
-#~ "Diviser la valeur d'un indicateur pour les femmes par celle des hommes."
-
-#~ msgid "Percent of Female Students"
-#~ msgstr "Pourcentage d'étudiantes"
-
-#~ msgid "Percent of Female Teachers"
-#~ msgstr "Pourcentage d'Enseignantes"
-
-#~ msgid "Percentage of Private Enrolment"
-#~ msgstr "Pourcentage des inscriptions privées"
-
-#~ msgid "Percentage of schools with improved drinking water sources"
-#~ msgstr "Pourcentage d'écoles avec des sources améliorées d'eau potable"
-
-#~ msgid "Percentage of schools with adequate sanitation facilities"
-#~ msgstr "Pourcentage d'écoles avec des installations sanitaires adéquates"
-
-#~ msgid ""
-#~ "Public Expenditure as percentage of Total Public Expenditure on Education"
-#~ msgstr ""
-#~ "Dépenses Publiques en pourcentage des Dépenses Publiques Totales pour "
-#~ "l'éducation"
-
-#~ msgid ""
-#~ "Divide public current expenditure devoted to each level of education by "
-#~ "the total public current expenditure on education, and multiply the "
-#~ "result by 100. Divide public current expenditure on education in a given "
-#~ "financial year by the total public expenditure on education for the same "
-#~ "financial year and multiply the result by 100."
-#~ msgstr ""
-#~ "Diviser les dépenses publiques courantes consacrées à chaque niveau "
-#~ "d'enseignement par le total des dépenses publiques sur l'éducation, et "
-#~ "multiplier le résultat par 100. Diviser les dépenses publiques pour "
-#~ "l'éducation pour une année financière par le total des dépenses publiques "
-#~ "d'éducation pour la même année et multiplier le résultat par 100. "
-
-#~ msgid "Public Expenditure as percentage of Total Government Expenditure"
-#~ msgstr ""
-#~ "Dépenses publiques en pourcentage du total des dépenses du gouvernement"
-
-#~ msgid "Public Expenditure as percentage of Gross National Product (GNP)"
-#~ msgstr "Dépenses Publiques en pourcentage du Produit National Brut (PNB)"
-
-#~ msgid "Number of teachers"
-#~ msgstr "Nombre d'Enseignants"
-
-#~ msgid "Net Admission Rate / Net Intake Rate"
-#~ msgstr "Taux net d'admission / Taux net d'admission"
-
-#~ msgid "Gross Admission Rate / Gross Intake Rate"
-#~ msgstr "Taux Brut d'Admission / Admission Taux Brut"
-
-#~ msgid "Summary report on Census Additional Information about enrolment"
-#~ msgstr ""
-#~ "Rapport de synthèse sur les Informations supplémentaires pour le "
-#~ "recensement"
-
-#~ msgid "Summary report on Buildings"
-#~ msgstr "Rapport de synthèse sur les bâtiments"
-
-#~ msgid "Report on Rooms"
-#~ msgstr "Rapport sur les chambres"
-
-#~ msgid "Report on number of Sanitations and Conditions"
-#~ msgstr "Rapport sur lles conditions sanitaires"
-
-#~ msgid "Report on number of Furnitures and its conditions"
-#~ msgstr "Rapport sur le nombre de fournitures et les conditions"
-
-#~ msgid "Report on number and kinds of Resources as well as Condition status"
-#~ msgstr "Rapport sur le nombre et les types de ressources"
-
-#~ msgid "Report on Power sources"
-#~ msgstr "Rapport sur les sources d'électricité"
-
-#~ msgid "Report on number of Powers types and Conditions"
-#~ msgstr "Rapport sur les conditions d'électricité"
-
-#~ msgid "Report on Water"
-#~ msgstr "Rapport sur l'eau"
-
-#~ msgid "Report on conditions, number, kinds of water source of Institutions"
-#~ msgstr "Rapport sur les sources d'eau ainsi que leurs conditions"
-
-#~ msgid "Student List"
-#~ msgstr "Liste des Elèves"
-
-#~ msgid "Report on student additional info"
-#~ msgstr "Rapport d'informations supplémentaires sur les élèves"
-
-#~ msgid "Report on Teachers Additional Info"
-#~ msgstr "Rapport sur Info enseignants supplémentaires"
-
-#~ msgid "Report on Staff Additional Info"
-#~ msgstr "Rapport sur les informations supplémentaires du personnel"
-
-#~ msgid "List of institution's additional info"
-#~ msgstr "Rapport sur les informations supplémentaires de l'institution"
-
-#~ msgid "Enrolment Summary"
-#~ msgstr "Résumé des inscriptions"
-
-#~ msgid "Class List"
-#~ msgstr "Liste des classes"
-
-#~ msgid "Report on classes"
-#~ msgstr "Rapport sur les classes"
-
-#~ msgid "Summary report on Textbooks"
-#~ msgstr "Rapport de synthèse sur les manuels scolaires"
-
-#~ msgid "Summary report on Teachers"
-#~ msgstr "Rapport de synthèse sur les enseignants"
-
-#~ msgid "Trainings"
-#~ msgstr "Formations"
-
-#~ msgid "Staffs"
-#~ msgstr "Employés"
-
-#~ msgid "Summary report on Institution Staffs"
-#~ msgstr "Rapport de synthèse sur Employés Institution"
-
-#~ msgid "Summary report on Census Table Related Information"
-#~ msgstr "Rapport de synthèse sur l'information des tableaux de recensement"
-
-#~ msgid "Summary report on income"
-#~ msgstr "Rapport de synthèse sur le revenu"
-
-#~ msgid "Report on expenditure"
-#~ msgstr "Rapport sur les dépenses"
-
-#~ msgid "Institution List"
-#~ msgstr "Liste Institution"
-
-#~ msgid "Report on institutions"
-#~ msgstr "Rapport sur les institutions"
-
-#~ msgid "Institution Site List"
-#~ msgstr "Liste des Locations d'Institution"
-
-#~ msgid "Report on institution sites"
-#~ msgstr "Rapport sur les locations des institutions"
-
-#~ msgid "Please contact support for more information on Custom Report."
-#~ msgstr ""
-#~ "Veuillez nous contacter pour plus d'informations sur le rapport "
-#~ "personnalisé."
-
-#~ msgid "<span>&laquo;</span> Back to Programmes"
-#~ msgstr "<span>« </ span> Retour aux Programmes "
-
-#~ msgid "<span>&laquo;</span> Back to Grades"
-#~ msgstr "<span>« </ span> Retour aux Notes "
-
-#~ msgid "<span>&laquo;</span> Back to Roles"
-#~ msgstr "<span>« </ span> Retour aux rôles "
