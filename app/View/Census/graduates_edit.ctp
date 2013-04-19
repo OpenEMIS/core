@@ -19,6 +19,7 @@ echo $this->Html->script('census_graduates', false);
 		<span><?php echo __('Graduates'); ?></span>
 		<?php echo $this->Html->link(__('View'), array('action' => 'graduates'), array('id' => 'edit-link', 'class' => 'divider')); ?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
@@ -36,7 +37,7 @@ echo $this->Html->script('census_graduates', false);
 	<?php 
 	$index = 0;
 	$total = 0;
-	foreach($data as $key => $val) { 
+	foreach($data as $key => $val) {
 	?>
 	<fieldset class="section_group">
 		<legend><?php echo $key ?></legend>
@@ -58,9 +59,8 @@ echo $this->Html->script('census_graduates', false);
 				<div class="table_row">
 					<?php
 					echo $this->Form->hidden($index . '.id', array('value' => $record['id']));
-					echo $this->Form->hidden($index . '.institution_site_programme_id', array(
-						'value' => $record['institution_site_programme_id']
-					));
+					echo $this->Form->hidden($index . '.education_programme_id', array('value' => $record['education_programme_id']));
+					echo $this->Form->hidden($index . '.institution_site_id', array('value' => $record['institution_site_id']));
 					?>
 					<div class="table_cell"><?php echo $record['education_programme_name']; ?></div>
 					<div class="table_cell"><?php echo $record['education_certification_name']; ?></div>
@@ -104,10 +104,12 @@ echo $this->Html->script('census_graduates', false);
 	</fieldset>
 	<?php } ?>
 	
+	<?php if(!empty($data)) { ?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
 	</div>
+	<?php } ?>
 	
 	<?php echo $this->Form->end(); ?>
 </div>

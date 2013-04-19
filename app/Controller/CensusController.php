@@ -8,6 +8,7 @@ class CensusController extends AppController {
 		'Institution',
 		'InstitutionSite',
 		'InstitutionSiteProgramme',
+		'EducationCycle',
 		'EducationGrade',
 		'SchoolYear',
 		'CensusStudent',
@@ -94,77 +95,70 @@ class CensusController extends AppController {
 	
 	public function enrolment() {
 		$this->Navigation->addCrumb('Enrolment');
-		
-		$programmeList = $this->InstitutionSiteProgramme->find('all', array(
-			'fields' => array('InstitutionSiteProgramme.id', 'EducationProgramme.id', 'EducationProgramme.name'),
-			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $this->institutionSiteId)
-		));
-		
-		$categoryList = $this->StudentCategory->findList();
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$categoryId = sizeof($categoryList) > 0 ? key($categoryList) : 0;
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		$categoryList = $this->StudentCategory->findList();
+		$selectedCategory = sizeof($categoryList) > 0 ? key($categoryList) : 0;
+		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		
 		$data = array();
-		foreach($programmeList as $obj) {
-			$programme = $obj['EducationProgramme'];
-			$conditions = array('EducationGrade.education_programme_id' => $programme['id']);
-			$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
-			
-			if(sizeof($gradeList) > 0) {
-				$enrolment = $this->CensusStudent->getCensusData($this->institutionSiteId, $yearId, key($gradeList), $categoryId);
-				$data[$programme['name']] = array(
-					'id' => $obj['InstitutionSiteProgramme']['id'],
+		if(empty($programmes)) {
+			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+		} else {
+			foreach($programmes as $obj) {
+				$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
+				$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
+				
+				$enrolment = array();
+				if(!empty($gradeList)) {
+					$enrolment = $this->CensusStudent->getCensusData($this->institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
+				} else {
+					$gradeList[0] = '-- ' . __('No Grade') . ' --';
+				}
+				$data[] = array(
+					'name' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
 					'grades' => $gradeList,
 					'enrolment' => $enrolment
 				);
 			}
 		}
-		
-		$displayContent = true;
-		if(empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-			$displayContent = false;
-		}
-		
-		$this->set('displayContent', $displayContent);
 		$this->set('data', $data);
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('category', $categoryList);
 	}
 	
 	public function enrolmentEdit() {
 		$this->Navigation->addCrumb('Edit Enrolment');
-		
-		$programmeList = $this->InstitutionSiteProgramme->find('all', array(
-			'fields' => array('InstitutionSiteProgramme.id', 'EducationProgramme.id', 'EducationProgramme.name'),
-			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $this->institutionSiteId)
-		));
-		
+		$yearList = $this->SchoolYear->getAvailableYears(); // check for empty year list
+		$selectedYear = $this->getAvailableYearId($yearList);
 		$categoryList = $this->StudentCategory->findList();
-		$categoryId = sizeof($categoryList) > 0 ? key($categoryList) : 0;
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$yearId = $this->getAvailableYearId($yearList);
+		$selectedCategory = !empty($categoryList) ? key($categoryList) : 0;
+		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		
 		$data = array();
-		foreach($programmeList as $obj) {
-			$programme = $obj['EducationProgramme'];
-			$conditions = array('EducationGrade.education_programme_id' => $programme['id']);
-			$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
-			
-			if(sizeof($gradeList) > 0) {
-				$enrolment = $this->CensusStudent->getCensusData($this->institutionSiteId, $yearId, key($gradeList), $categoryId);
-				$data[$programme['name']] = array(
-					'id' => $obj['InstitutionSiteProgramme']['id'],
+		if(empty($programmes)) {
+			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+		} else {
+			foreach($programmes as $obj) {
+				$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
+				$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
+				
+				$enrolment = array();
+				if(!empty($gradeList)) {
+					$enrolment = $this->CensusStudent->getCensusData($this->institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
+				} else {
+					$gradeList[0] = '-- ' . __('No Grade') . ' --';
+				}
+				$data[] = array(
+					'name' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
 					'grades' => $gradeList,
 					'enrolment' => $enrolment
 				);
 			}
 		}
-		
 		$this->set('data', $data);
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('category', $categoryList);
 	}
@@ -173,9 +167,9 @@ class CensusController extends AppController {
 		$this->autoRender = false;
 		
 		if($this->request->is('get')) {
-			$yearId = $this->params->query['year'];
-			$gradeId = $this->params->query['grade'];
-			$categoryId = $this->params->query['category'];
+			$yearId = $this->params['pass'][0];
+			$gradeId = $this->params->query['gradeId'];
+			$categoryId = $this->params->query['categoryId'];
 			$enrolment = $this->CensusStudent->getCensusData($this->institutionSiteId, $yearId, $gradeId, $categoryId);
 			
 			$this->set('enrolment', $enrolment);
@@ -186,7 +180,7 @@ class CensusController extends AppController {
 				$this->render('enrolment_ajax');
 			}
 		} else {
-			$keys = $this->CensusStudent->saveCensusData($this->data);
+			$keys = $this->CensusStudent->saveCensusData($this->data, $this->institutionSiteId);
 			return json_encode($keys);
 		}
 	}
@@ -194,14 +188,13 @@ class CensusController extends AppController {
 	public function enrolmentAddRow() {
 		$this->layout = 'ajax';
 		
-		$programmeId = $this->params->query['programmeId'];
 		$rowNum = $this->params->query['rowNum'];
 		$age = $this->params->query['age'];
+		$gradeId = $this->params->query['gradeId'];
 		
 		if($age == 0) {
-			$age = 3;
+			$age = $this->EducationCycle->getOfficialAgeByGrade($gradeId);
 		}
-		$this->set('programmeId', $programmeId);
 		$this->set('rowNum', $rowNum);
 		$this->set('age', $age);
 	}
@@ -209,31 +202,19 @@ class CensusController extends AppController {
 	public function graduates() {
 		$this->Navigation->addCrumb('Graduates');
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$list = $this->CensusGraduate->getCensusData($this->institutionSiteId, $yearId);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		
+		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		$data = array();
-		foreach($list as $obj) {
-			if($obj['education_certification_id'] != 1) {
-				$level = $obj['education_level_name'];
-				if(!isset($data[$level])) {
-					$data[$level] = array();
-				}
-				$obj['total'] = $obj['male'] + $obj['female'];
-				$data[$level][] = $obj;
+		if(empty($programmes)) {
+			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+		} else {
+			$data = $this->CensusGraduate->getCensusData($this->institutionSiteId, $selectedYear);
+			if(empty($data)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
 			}
 		}
-		
-		$displayContent = true;
-		if(empty($list)) {
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-			$displayContent = false;
-		} else if(empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
-			$displayContent = false;
-		}
-		
-		$this->set('displayContent', $displayContent);
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
 	}
@@ -249,22 +230,18 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Edit Graduates');
 		
 		$yearList = $this->SchoolYear->getAvailableYears();
-		$yearId = $this->getAvailableYearId($yearList);
-		$list = $this->CensusGraduate->getCensusData($this->institutionSiteId, $yearId);
-		
+		$selectedYear = $this->getAvailableYearId($yearList);
+		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		$data = array();
-		foreach($list as $obj) {
-			if($obj['education_certification_id'] != 1) {
-				$level = $obj['education_level_name'];
-				if(!isset($data[$level])) {
-					$data[$level] = array();
-				}
-				$obj['total'] = $obj['male'] + $obj['female'];
-				$data[$level][] = $obj;
+		if(empty($programmes)) {
+			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+		} else {
+			$data = $this->CensusGraduate->getCensusData($this->institutionSiteId, $selectedYear);
+			if(empty($data)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
 			}
 		}
-		
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
 	}
@@ -273,16 +250,16 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Classes');
 		
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$displayContent = true;		
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		$displayContent = true;
 		
-		if($this->InstitutionSiteProgramme->getProgrammeCountByInstitutionSite($this->institutionSiteId)==0) {
+		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+		if(empty($programmeGrades)) {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 			$displayContent = false;
 		} else {
-			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-			$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $yearId);
-			$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $yearId);
+			$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+			$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
 			$singleGradeData = $programmeGrades;
 			$this->CensusClass->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
 			$this->set('singleGradeData', $singleGradeData);
@@ -290,7 +267,7 @@ class CensusController extends AppController {
 		}
 		
 		$this->set('displayContent', $displayContent);
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 	}
 	
@@ -299,20 +276,27 @@ class CensusController extends AppController {
 			$this->Navigation->addCrumb('Edit Classes');
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
-			$yearId = $this->getAvailableYearId($yearList);
-			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-			$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, false);
-			$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $yearId);
-			$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $yearId);
-			$singleGradeData = $programmeGrades;
-			$this->CensusClass->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
-			
-			$this->set('selectedYear', $yearId);
+			$selectedYear = $this->getAvailableYearId($yearList);
+			$displayContent = true;
+			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+			if(empty($programmeGrades)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+				$displayContent = false;
+			} else {
+				$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear, false);
+				$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+				$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
+				$singleGradeData = $programmeGrades;
+				$this->CensusClass->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+				
+				$this->set('programmes', $programmes);
+				$this->set('programmeGrades', $programmeGrades);
+				$this->set('singleGradeData', $singleGradeData);
+				$this->set('multiGradeData', $multiGradeData);
+			}
+			$this->set('displayContent', $displayContent);
+			$this->set('selectedYear', $selectedYear);
 			$this->set('years', $yearList);
-			$this->set('programmes', $programmes);
-			$this->set('programmeGrades', $programmeGrades);
-			$this->set('singleGradeData', $singleGradeData);
-			$this->set('multiGradeData', $multiGradeData);
 		} else {
 			$yearId = $this->data['school_year_id'];
 			$data = $this->CensusClass->clean($this->data['CensusClass'], $yearId, $this->institutionSiteId);
@@ -325,13 +309,15 @@ class CensusController extends AppController {
 	public function classesAddMultiClass() {
 		$this->layout = 'ajax';
 		
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, false);
+		$yearId = $this->params['pass'][0];
+		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId);
+		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId, false);
 		
 		$this->set('i', $this->params->query['index']);
 		$this->set('body', $this->params->query['tableBody']);
 		$this->set('programmes', $programmes);
 		$this->set('programmeGrades', $programmeGrades);
+		$this->set('yearId', $yearId);
 	}
 	
 	public function classesAddMultiGrade() {
@@ -339,8 +325,9 @@ class CensusController extends AppController {
 		
 		$row = $this->params->query['row'];
 		$index = $this->params->query['index'];
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, false);
+		$yearId = $this->params['pass'][0];
+		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId);
+		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId, false);
 		$grades = $programmeGrades[current($programmes)]['education_grades'];
 		
 		$option = '<option value="%d">%s</option>';
@@ -366,13 +353,10 @@ class CensusController extends AppController {
 		$yearList = $this->SchoolYear->getYearList();
 		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
 		$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $yearId);
-		$displayContent = true;
 		if(empty($data)) {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn'));
-			$displayContent = false;
 		}
 		
-		$this->set('displayContent', $displayContent);
 		$this->set('selectedYear', $yearId);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
@@ -384,8 +368,11 @@ class CensusController extends AppController {
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$yearId = $this->getAvailableYearId($yearList);
-			$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $yearId);		
+			$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $yearId);
 			
+			if(empty($data)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn'));
+			}
 			$this->set('selectedYear', $yearId);
 			$this->set('years', $yearList);
 			$this->set('data', $data);
@@ -402,18 +389,18 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Teachers');
 		
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);	
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);	
 		$displayContent = true;
 		
-		if($this->InstitutionSiteProgramme->getProgrammeCountByInstitutionSite($this->institutionSiteId)==0) {
+		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+		if(empty($programmeGrades)) {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 			$displayContent = false;
 		} else {
-			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-			$fte = $this->CensusTeacherFte->getCensusData($this->institutionSiteId, $yearId);
-			$training = $this->CensusTeacherTraining->getCensusData($this->institutionSiteId, $yearId);
-			$singleGradeTeachers = $this->CensusTeacher->getSingleGradeData($this->institutionSiteId, $yearId);
-			$multiGradeData = $this->CensusTeacher->getMultiGradeData($this->institutionSiteId, $yearId);
+			$fte = $this->CensusTeacherFte->getCensusData($this->institutionSiteId, $selectedYear);
+			$training = $this->CensusTeacherTraining->getCensusData($this->institutionSiteId, $selectedYear);
+			$singleGradeTeachers = $this->CensusTeacher->getSingleGradeData($this->institutionSiteId, $selectedYear);
+			$multiGradeData = $this->CensusTeacher->getMultiGradeData($this->institutionSiteId, $selectedYear);
 			$singleGradeData = $programmeGrades;
 			$this->CensusTeacher->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
 			$this->set('fte', $fte);
@@ -421,9 +408,8 @@ class CensusController extends AppController {
 			$this->set('singleGradeData', $singleGradeData);
 			$this->set('multiGradeData', $multiGradeData);
 		}
-		
 		$this->set('displayContent', $displayContent);
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 	}
 	
@@ -432,26 +418,33 @@ class CensusController extends AppController {
 			$this->Navigation->addCrumb('Edit Teachers');
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
-			$yearId = $this->getAvailableYearId($yearList);
-			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-			$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, false);
-			$fte = $this->CensusTeacherFte->getCensusData($this->institutionSiteId, $yearId);
-			$training = $this->CensusTeacherTraining->getCensusData($this->institutionSiteId, $yearId);
-			$singleGradeTeachers = $this->CensusTeacher->getSingleGradeData($this->institutionSiteId, $yearId);
-			$multiGradeData = $this->CensusTeacher->getMultiGradeData($this->institutionSiteId, $yearId);
-			$singleGradeData = $programmeGrades;
-			$this->CensusTeacher->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
+			$selectedYear = $this->getAvailableYearId($yearList);
+			$displayContent = true;
 			
-			$this->set('selectedYear', $yearId);
+			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+			
+			if(empty($programmeGrades)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+				$displayContent = false;
+			} else {
+				$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear, false);
+				$fte = $this->CensusTeacherFte->getCensusData($this->institutionSiteId, $selectedYear);
+				$training = $this->CensusTeacherTraining->getCensusData($this->institutionSiteId, $selectedYear);
+				$singleGradeTeachers = $this->CensusTeacher->getSingleGradeData($this->institutionSiteId, $selectedYear);
+				$multiGradeData = $this->CensusTeacher->getMultiGradeData($this->institutionSiteId, $selectedYear);
+				$singleGradeData = $programmeGrades;
+				$this->CensusTeacher->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
+				$this->set('programmes', $programmes);
+				$this->set('programmeGrades', $programmeGrades);
+				$this->set('fte', $fte);
+				$this->set('training', $training);
+				$this->set('singleGradeData', $singleGradeData);
+				$this->set('multiGradeData', $multiGradeData);
+			}
+			$this->set('displayContent', $displayContent);
+			$this->set('selectedYear', $selectedYear);
 			$this->set('years', $yearList);
-			$this->set('programmes', $programmes);
-			$this->set('programmeGrades', $programmeGrades);
-			$this->set('fte', $fte);
-			$this->set('training', $training);
-			$this->set('singleGradeData', $singleGradeData);
-			$this->set('multiGradeData', $multiGradeData);
 		} else {
-			//pr($this->data);die;
 			$yearId = $this->data['school_year_id'];
 			$fte = $this->data['CensusTeacherFte'];
 			$training = $this->data['CensusTeacherTraining'];
@@ -468,13 +461,15 @@ class CensusController extends AppController {
 	public function teachersAddMultiTeacher() {
 		$this->layout = 'ajax';
 		
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, false);
+		$yearId = $this->params['pass'][0];
+		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId);
+		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId, false);
 		
 		$this->set('i', $this->params->query['index']);
 		$this->set('body', $this->params->query['tableBody']);
 		$this->set('programmes', $programmes);
 		$this->set('programmeGrades', $programmeGrades);
+		$this->set('yearId', $yearId);
 	}
 	
 	public function teachersAddMultiGrade() {
@@ -482,18 +477,19 @@ class CensusController extends AppController {
 		
 		$row = $this->params->query['row'];
 		$index = $this->params->query['index'];
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId);
-		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, false);
+		$yearId = $this->params['pass'][0];
+		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId);
+		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId, false);
 		$grades = $programmeGrades[current($programmes)]['education_grades'];
 		
 		$option = '<option value="%d">%s</option>';
-		$programmesHtml = sprintf('<div class="table_cell_row"><select index="%d" url="Census/loadGradeList" onchange="CensusClasses.loadGradeList(this)">', $index);
+		$programmesHtml = sprintf('<div class="table_cell_row"><select index="%d" url="Census/loadGradeList" onchange="CensusTeacher.loadGradeList(this)">', $index);
 		foreach($programmes as $id => $value) {
 			$programmesHtml .= sprintf($option, $id, $value);
 		}
 		$programmesHtml .= '</select></div>';
 		
-		$gradesHtml = sprintf('<div class="table_cell_row"><select index="%d" name="data[CensusClass][%d][CensusClassGrade][%d]">', $index, $row, $index);
+		$gradesHtml = sprintf('<div class="table_cell_row"><select index="%d" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]">', $index, $row, $index);
 		foreach($grades as $id => $value) {
 			$gradesHtml .= sprintf($option, $id, $value);
 		}

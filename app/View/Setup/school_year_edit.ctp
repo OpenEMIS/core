@@ -2,8 +2,7 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('setup_variables', 'stylesheet', array('inline' => false));
 
-echo $this->Html->script('jquery.quicksand', false);
-echo $this->Html->script('jquery.sort', false);
+echo $this->Html->script('app.date', false);
 echo $this->Html->script('setup_variables', false);
 ?>
 
@@ -43,25 +42,40 @@ echo $this->Html->script('setup_variables', false);
 			<div class="table_cell"><?php echo __('Year'); ?></div>
 			<div class="table_cell cell_datepicker"><?php echo __('Start Date'); ?></div>
 			<div class="table_cell cell_datepicker"><?php echo __('End Date'); ?></div>
-			<div class="table_cell"><?php echo __('Current'); ?></div>
-			<div class="table_cell"><?php echo __('Available'); ?></div>
+			<div class="table_cell cell_current"><?php echo __('Current'); ?></div>
+			<div class="table_cell cell_available"><?php echo __('Available'); ?></div>
 		</div>
 		
 		<div class="table_body">
 			<?php 
-			foreach($list as $i => $obj) { 
+			foreach($list as $i => $obj) {
 				$fieldName = sprintf('data[SchoolYear][%s][%%s]', $i);
 			?>
 			<div class="table_row">
 				<?php echo $this->Form->hidden('id', array('name' => sprintf($fieldName, 'id'), 'value' => $obj['id'])); ?>
-				<div class="table_cell"><?php echo $obj['name'] ?></div>
+				<div class="table_cell"><?php echo $obj['name']; ?></div>
 				<div class="table_cell">
-					<?php echo $this->Utility->getDatePicker($this->Form, 'start_date', array('name' => sprintf($fieldName, 'start_date'), 'value' => $obj['start_date'])); ?>
+					<?php 
+					echo $this->Utility->getDatePicker($this->Form, $i.'start_date', 
+						array(
+							'name' => sprintf($fieldName, 'start_date'), 
+							'value' => $obj['start_date'],
+							'endDateValidation' => $i.'end_date'
+						));
+					?>
 				</div>
 				<div class="table_cell">
-					<?php echo $this->Utility->getDatePicker($this->Form, 'end_date', array('name' => sprintf($fieldName, 'end_date'), 'value' => $obj['end_date'])); ?>
+					<?php 
+					echo $this->Utility->getDatePicker($this->Form, $i.'end_date', 
+						array(
+							'name' => sprintf($fieldName, 'end_date'),
+							'value' => $obj['end_date'],
+							'endDateValidation' => $i.'end_date',
+							'yearAdjust' => 1
+						));
+					?>
 				</div>
-				<div class="table_cell">
+				<div class="table_cell ">
 					<?php
 					$attr = array(
 						'label' => false, 
@@ -100,7 +114,7 @@ echo $this->Html->script('setup_variables', false);
 	<?php } ?>
 	
 	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return setup.updateYear();" />
 		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
 	</div>
 	

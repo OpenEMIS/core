@@ -19,7 +19,7 @@ var objSearch = {
 	
 	attachRowClick:function() {
 		var url = getRootURL() + $('#controller').val() + '/' + $('#action').val() + '/';
-		$('.search .table_row').click(function(e){ window.location = url+$(this).attr("id"); });
+		$('.search .allow_hover .table_row').click(function(e){ window.location = url+$(this).attr("id"); });
 	},
 	
 	attachSortOrder:function() {

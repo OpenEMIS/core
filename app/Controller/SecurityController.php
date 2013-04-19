@@ -84,7 +84,11 @@ class SecurityController extends AppController {
 				return $ajaxLoginResult;
 			}
 		} else {
-			if($this->RequestHandler->isAjax()) {
+			if(!$this->RequestHandler->isAjax()) { // normal login
+				if($this->Auth->user()) { // user already login
+					$this->redirect($this->Auth->redirect('home'));
+				}
+			} else { // ajax login
 				$this->set('message', $this->Utility->getMessage('LOGIN_TIMEOUT'));
 				$this->render('login_ajax');
 			}

@@ -164,9 +164,11 @@ class SetupController extends AppController {
 			foreach($category as &$type) {
 				foreach($type['items'] as &$obj) {
 					if(!isset($obj['options']) && $index==$i) {
-						$modelObj = ClassRegistry::init($obj['model']);
-						$conditions = isset($obj['conditions']) ? $obj['conditions'] : array();
-						$obj['options'] = $modelObj->findOptions(array('conditions' => $conditions));
+						if(isset($obj['model'])) {
+							$modelObj = ClassRegistry::init($obj['model']);
+							$conditions = isset($obj['conditions']) ? $obj['conditions'] : array();
+							$obj['options'] = $modelObj->findOptions(array('conditions' => $conditions));
+						}
 					}
 				}
 			}
@@ -225,7 +227,7 @@ class SetupController extends AppController {
 						unset($dataValues[$key]);
 					}
 				}
-				$modelObj->saveAll($dataValues);
+				$modelObj->saveMany($dataValues);
 			}
 			$this->redirect(array('controller' => 'Setup', 'action' => 'setupVariables', $categoryId));
 		}

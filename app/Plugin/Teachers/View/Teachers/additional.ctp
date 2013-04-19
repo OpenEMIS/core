@@ -7,7 +7,11 @@
 <div id="site" class="content_wrapper">
     <h1>
         <span><?php echo __('Additional Info'); ?></span>
-        <?php echo $this->Html->link(__('Edit'), array('action' => 'additionalEdit'), array('class' => 'divider')); ?>
+        <?php
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'additionalEdit'), array('class' => 'divider'));
+		}
+		?>
     </h1>
     <?php echo $this->element('alert'); ?>
     
