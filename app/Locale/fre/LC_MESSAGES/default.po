@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2013-03-07 16:59+0800\n"
+"PO-Revision-Date: 2013-04-12 11:09+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.4\n"
+"X-Generator: Poedit 1.5.5\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 
@@ -2388,6 +2388,55 @@ msgstr "Date de Publication"
 
 msgid "Logo"
 msgstr "Logo"
+
+msgid "Data Outliers"
+msgstr "Les valeurs aberrantes données"
+
+msgid ""
+"Census Numbers that have age or total of male and female numbers beyond the "
+"specified range in settings."
+msgstr ""
+"Numéros de recensement qui ont l'âge ou le nombre total de mâles et femelles "
+"au-delà de la plage spécifiée dans les paramètres."
+
+msgid "Page Orientation"
+msgstr "Orientation de la page"
+
+msgid "Yearbook Logo"
+msgstr "Annuaire Logo"
+
+msgid "Maximum Student Age"
+msgstr "Âge des élèves maximum"
+
+msgid "Minimum Student Age"
+msgstr "Âge minimum des étudiants"
+
+msgid "Maximum Student Number"
+msgstr "Numéro d'étudiant maximale"
+
+msgid "Minimum Student Number"
+msgstr "Nombre minimum d'étudiants"
+
+msgid "Data Discrepancy"
+msgstr "divergence de données"
+
+msgid "Data Discrepancy Variation(%)"
+msgstr "Variation Écart de données (%)"
+
+msgid "Previous Year"
+msgstr "Année précédente"
+
+msgid "Previous Year Male"
+msgstr "Homme Année précédente"
+
+msgid "Previous Year Female"
+msgstr "Femme Année précédente"
+
+msgid "Data Discrepancy Reports"
+msgstr "Rapports de litige de données"
+
+msgid "age"
+msgstr "âge"
 
 #~ msgid "Completion Rate / Gross Primary Graduation Ratio"
 #~ msgstr "Taux d'achèvement / Taux brut d'obtention du diplôme primaire"
