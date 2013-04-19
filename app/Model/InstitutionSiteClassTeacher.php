@@ -73,7 +73,7 @@ class InstitutionSiteClassTeacher extends AppModel {
 				)
 			),
 			'conditions' => array('InstitutionSiteClassTeacher.teacher_id' => $teacherId),
-			'group' => array('EducationLevel.id'),
+			'group' => array('EducationLevel.id', 'InstitutionSiteClass.id'),
 			'order' => array('EducationLevel.order')
 		));
 		return $data;
