@@ -21,14 +21,13 @@ echo $this->Html->script('census_enrolment', false);
 	<h1>
 		<span><?php echo __('Enrolment'); ?></span>
 		<?php
-		if($_edit && $displayContent) {
+		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'enrolmentEdit'), array('id' => 'edit-link', 'class' => 'divider'));
 		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
-	<?php if($displayContent) { ?>
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
@@ -41,34 +40,33 @@ echo $this->Html->script('census_enrolment', false);
 			?>
 		</div>
 	</div>
-	<?php } ?>
 	
-	<?php foreach($data as $key => $val) { ?>
-	<fieldset class="section_group" programme-id="<?php echo $val['id']; ?>">
-		<legend><?php echo $key ?></legend>
+	<?php foreach($data as $key => $obj) { ?>
+	<fieldset class="section_group" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>">
+		<legend><?php echo $obj['name']; ?></legend>
 		
 		<div class="row" style="margin-bottom: 15px;">
 			<div class="label grade"><?php echo __('Grade'); ?></div>
 			<div class="value grade">
-				<?php
-					echo $this->Form->input('education_grade_id', array(
-						'id' => 'EducationGradeId',
-						'options' => $val['grades'],
-						'onchange' => sprintf('CensusEnrolment.get(%d)', $val['id']),
-						'autocomplete' => 'off'
-					));
-				?>
+			<?php
+				echo $this->Form->input('education_grade_id', array(
+					'id' => 'EducationGradeId',
+					'options' => $obj['grades'],
+					'onchange' => 'CensusEnrolment.get(this)',
+					'autocomplete' => 'off'
+				));
+			?>
 			</div>
 			<div class="label category"><?php echo __('Category'); ?></div>
 			<div class="value category">
-				<?php
-					echo $this->Form->input('student_category_id', array(
-						'id' => 'StudentCategoryId',
-						'options' => $category,
-						'onchange' => sprintf('CensusEnrolment.get(%d)', $val['id']),
-						'autocomplete' => 'off'
-					));
-				?>
+			<?php
+				echo $this->Form->input('student_category_id', array(
+					'id' => 'StudentCategoryId',
+					'options' => $category,
+					'onchange' => 'CensusEnrolment.get(this)',
+					'autocomplete' => 'off'
+				));
+			?>
 			</div>
 		</div>
 		
@@ -82,7 +80,7 @@ echo $this->Html->script('census_enrolment', false);
 			
 			<?php 
 			$total = 0;
-			$records = $val['enrolment'];
+			$records = $obj['enrolment'];
 			if(!empty($records) && !(sizeof($records)==1 && $records[0]['male']==0 && $records[0]['female']==0)) {
 			?>
 			<div class="table_body">

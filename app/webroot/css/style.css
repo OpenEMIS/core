@@ -46,30 +46,6 @@ a.link_back span { font-size: 16px; }
 }
 /* end error messages */
 
-.search_wrapper {
-	float: left;
-	border: 1px solid #CCCCCC;
-	padding: 1px;
-	overflow: hidden;
-	border-radius: 2px;
-	-moz-border-radius: 2px;
-	-webkit-border-radius: 2px;
-}
-.chrome .search_wrapper{
-	padding-bottom:0;
-}
-
-#SearchField {
-	float: left; border: 0 !important;
-	box-shadow:none;
-}
-.chrome #SearchField{
-	margin-bottom:1px;
-}
-.safari #SearchField{
-	margin-bottom:0;
-}
-
 input.empty { color: #CCCCCC; }
 
 .wrapper { overflow: hidden; padding: 1px 0 1px 10px; margin-bottom: 1px; }
@@ -86,13 +62,12 @@ textarea:focus {
 input.default,
 .body_content_right select,
 .body_content_right textarea {
-	border: 1px solid #C7D8E0;
+	border: 1px solid #CCCCCC;
 	font-size: 11px;
-	padding: 4px;
+	padding: 3px;
 	-moz-border-radius: 3px;
 	-webkit-border-radius: 3px;
 	border-radius: 3px;
-	box-shadow: 1px 1px 1px #CCCCCC inset;
 }
 input.default:hover,
 .body_content_right select:hover,
@@ -101,7 +76,6 @@ input.default:focus,
 .body_content_right select:focus,
 .body_content_right textarea:focus{
 	border:1px solid #BCE2FF;
-	box-shadow:1px 1px 3px #BBBBBB;
 }
 
 select.default { width: 250px; }
@@ -351,7 +325,7 @@ a.btn:hover { text-decoration: none; }
 .cell select { width: 100%; }
 .table .cell_visible { min-width: 40px !important; width: 40px; text-align: center; }
 .table .cell_order { width: 60px; }
-.icon_plus { margin-left: 3px; }
+.row .icon_plus { margin-left: 3px; }
 
 /* End quicksand */
 

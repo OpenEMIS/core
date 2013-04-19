@@ -32,6 +32,11 @@ var utility = {
 		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==undefined);
 	},
 	
+	floatCheck: function(evt) {
+		var keynum = utility.getKeyPressed(evt);
+		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==46 || keynum==undefined);
+	},
+	
 	br2nl: function(str, newline) {
 		return str.replace(/(<br \/>)|(<br>)|(<br\/>)/g, newline ? '\n' : '');
 	},
@@ -136,13 +141,13 @@ var jsForm = {
 		});
 		this.linkVoid();
 		this.initInputFocus('.input_wrapper input, .input_wrapper textarea');
-		$('.datepicker select').change(jsForm.datepickerUpdate);
+		//$('.datepicker select').change(jsForm.datepickerUpdate);
 		
 		// alert
 		$('.alert_view[title]').click(function() {
 			$(this).fadeOut(300, function() { $(this).remove(); });
 		});
-        this.datepickerUpdateSelector();
+        //this.datepickerUpdateSelector();
 	},
 	
 	initDatepicker: function(p) {
@@ -326,6 +331,28 @@ var jsTable = {
 				$(this).find(col).height(height);
 			}
 		});
+	},
+	
+	toggleTableScrollable: function(parent) {
+		var hide = 'hidden';
+		var active = 'scroll_active';
+		var scrollable = parent + ' .table_scrollable';
+		var list = scrollable + ' .list_wrapper';
+		var selector = list + ' .table_body';
+		var rows = $(selector).find('.table_row').length;
+		
+		if(rows > $(list).attr('limit')) {
+			if(!$(scrollable).hasClass(active)) {							
+				$(scrollable).addClass(active);
+			}
+		} else {
+			if($(scrollable).hasClass(active)) {							
+				$(scrollable).removeClass(active);
+			}
+		}
+		if($(list).hasClass(hide)) {
+			$(list).removeClass(hide);
+		}
 	},
 	
 	doRemove: function(obj) {

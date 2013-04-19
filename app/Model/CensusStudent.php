@@ -7,13 +7,7 @@ class CensusStudent extends AppModel {
 		'SchoolYear' => array('foreignKey' => 'school_year_id'),
 		'EducationGrade' => array('foreignKey' => 'education_grade_id'),
 		'StudentCategory'=>array('foreignKey' => 'student_category_id'),
-		'InstitutionSiteProgramme' => array('foreignKey' => 'institution_site_programme_id'),
-		'InstitutionSite' =>
-            array(
-                'joinTable'  => 'institution_sites',
-				'foreignKey' => false,
-                'conditions' => array(' InstitutionSite.id = InstitutionSiteProgramme.institution_site_id '),
-            ),
+		'InstitutionSite' => array('foreignKey' => 'institution_site_id'),
 		'Institution' =>
             array(
                 'joinTable'  => 'institutions',
@@ -22,63 +16,53 @@ class CensusStudent extends AppModel {
             )
 	);
 	
-	public function getData($siteId, $yearId, $gradeId, $categoryId) {
-		$sql = "
-SELECT
-	`census_students`.`id`,
-	IFNULL(`census_students`.`age`, `grades`.`official_age`) AS `age`,
-	IFNULL(`census_students`.`male`, 0) AS `male`,
-	IFNULL(`census_students`.`female`, 0) AS `female`
-FROM `institution_site_programmes`
-JOIN `education_programmes` 
-	ON `education_programmes`.`id` = `institution_site_programmes`.`education_programme_id`
-JOIN `education_cycles`
-	ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
-JOIN `education_levels`
-	ON `education_levels`.`id` = `education_cycles`.`education_level_id`
-JOIN (
-	SELECT
-	`edu_grades`.`id` AS grade_id,
-	`education_programmes`.`id` AS `education_programme_id`,
-	`education_programmes`.`name` AS `education_programme_name`,
-	`edu_grades`.`name` AS `education_grade_name`,
-	IF(
-		`edu_grades`.`order` = 1,
-		@curRow := `education_cycles`.`admission_age`,
-		@curRow := @curRow + 1
-	) AS `official_age`
-	FROM (
-		SELECT `id`, `name`, `education_programme_id`, `order`
-		FROM `education_grades`
-		ORDER BY `education_programme_id`, `order`
-	) `edu_grades`
-	JOIN `education_programmes` ON `education_programmes`.`id` = `edu_grades`.`education_programme_id`
-	JOIN `education_cycles` ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
-) AS `grades`
-	ON `grades`.`education_programme_id` = `education_programmes`.`id`
-	AND `grades`.`grade_id` = %d
-JOIN `student_categories`
-	ON `student_categories`.`id` = %d
-LEFT JOIN `census_students`
-	ON `census_students`.`institution_site_programme_id` = `institution_site_programmes`.`id`
-	AND `census_students`.`education_grade_id` = `grades`.`grade_id`
-	AND `census_students`.`student_category_id` = `student_categories`.`id`
-	AND `census_students`.`school_year_id` = %d
-WHERE `institution_site_programmes`.`institution_site_id` = %d
-ORDER BY `education_levels`.`order`, `education_cycles`.`order`, `education_programmes`.`order`
-";
-		
-		$query = sprintf($sql, $categoryId, $yearId, $siteId, $gradeId);
-		$list = $this->query($query);
-		
-		return $list;
-	}
-	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {
-		return $this->formatArray($this->getData($siteId, $yearId, $gradeId, $categoryId));
+		$this->formatResult = true;
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('CensusStudent.id', 'CensusStudent.age', 'CensusStudent.male', 'CensusStudent.female'),
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						'EducationGrade.id = CensusStudent.education_grade_id'
+					)
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationProgramme.id = EducationGrade.education_programme_id'
+					)
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array(
+						'EducationCycle.id = EducationProgramme.education_cycle_id'
+					)
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array(
+						'EducationLevel.id = EducationCycle.education_level_id'
+					)
+				)
+			),
+			'conditions' => array(
+				'CensusStudent.education_grade_id' => $gradeId,
+				'CensusStudent.school_year_id' => $yearId,
+				'CensusStudent.student_category_id' => $categoryId,
+				'CensusStudent.institution_site_id' => $siteId
+			),
+			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order', 'CensusStudent.age')
+		));
+		return $data;
 	}
 	
-	public function saveCensusData($data) {
+	public function saveCensusData($data, $institutionSiteId) {
 		$keys = array();
 		$deleted = array();
 		
@@ -96,6 +80,7 @@ ORDER BY `education_levels`.`order`, `education_cycles`.`order`, `education_prog
 				if($row['id'] == 0) {
 					$this->create();
 				}
+				$row['institution_site_id'] = $institutionSiteId;
 				$save = $this->save(array('CensusStudent' => $row));
 				if($row['id'] == 0) {
 					$keys[strval($i+1)] = $save['CensusStudent']['id'];

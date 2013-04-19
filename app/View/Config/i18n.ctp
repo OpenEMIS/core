@@ -34,14 +34,18 @@ var i18n = {
 		textDuplicateAge: '<?php echo T("This age is already exists in the list.", true); ?>',
 		textUnsavedData: '<?php echo T("Unsaved Data", true); ?>',
 		contentUnsavedData: '<?php echo T("Please save your data before proceed. <br><br>Do you want to save now?", true); ?>',
-		textLeaving: '<?php echo T("Are you sure you want to leave?"); ?>'
+		textLeaving: '<?php echo T("Are you sure you want to leave?"); ?>',
+		textNoGrades: '<?php echo T("There are no grades in this programme."); ?>'
 	},
 	Finance : {
 		textNoData: '<?php echo T("No Data", true); ?>',
 		textNoGNP: '<?php echo T("GNP value is required."); ?>'
 	},
 	InstitutionSites : {
-		textArea: '<?php echo T("Area"); ?>'
+		textArea: '<?php echo T("Area"); ?>',
+		textProgrammeSelect: '<?php echo T("Please select a programme first.", true); ?>',
+		textClassSelectStudent: '<?php echo T("Please select a student first."); ?>',
+		textClassSelectTeacher: '<?php echo T("Please select a teacher first."); ?>'
 	},
 	Training : {
 		textArea: '<?php echo T("Category is required!"); ?>'
@@ -64,6 +68,9 @@ var i18n = {
 	Report : {
 		textGenerateOlapReport: '<?php echo T("Generating OLAP Report...", true); ?>'
 	},
+	Search: {
+		textNoCriteria: '<?php echo T("Please enter a search criteria.", true); ?>'
+	},
 	General : {
 		textDismiss : '<?php echo T("Click to dismiss", true); ?>',
 		textNo : '<?php echo T("No", true); ?>',
@@ -82,6 +89,8 @@ var i18n = {
 		textLoading : '<?php echo T("Loading...", true); ?>',
 		textLoadingList : '<?php echo T("Loading list...", true); ?>',
 		textDelete : '<?php echo T("Delete", true); ?>',
+		textAdding: '<?php echo T("Adding...", true); ?>',
+		textRemoving: '<?php echo T("Removing...", true); ?>',
 		textLoadAreas : '<?php echo T("Loading Areas", true); ?>',
 		textSelect : '<?php echo T("--Select--", true); ?>',
 		textDeleteConfirmation : '<?php echo T("Delete Confirmation", true); ?>',

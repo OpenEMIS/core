@@ -13,8 +13,14 @@ echo $this->Html->css('custom_fields', 'stylesheet', array('inline' => false));
 <div id="census_table" class="content_wrapper">
 	<h1>
 		<span><?php echo __('List of Custom Census Table'); ?></span>
-		<?php echo $this->Html->link(__('Add'), array('action' => 'CustomTablesEditDetail'), array('class' => 'divider')); ?>
-		<?php echo $this->Html->link(__('Edit'), array('action' => 'CustomTablesEdit', $siteType), array('class' => 'divider')); ?>
+		<?php
+		if($_add) {
+			echo $this->Html->link(__('Add'), array('action' => 'CustomTablesEditDetail'), array('class' => 'divider'));
+		}
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'CustomTablesEdit', $siteType), array('class' => 'divider'));
+		}
+		?>
 	</h1>
 	
 	<div class="row input">

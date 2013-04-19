@@ -25,6 +25,7 @@ class UtilityComponent extends Component {
 		// General Messages
 		$msgList['ERROR_UNEXPECTED'] = "You have encountered an unexpected error. Please contact the system administrator for assistance.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
+		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
 		
 		// Login Messages
 		$msgList['LOGIN_TIMEOUT'] = "Your session is timed out. Please login again.";
@@ -32,7 +33,7 @@ class UtilityComponent extends Component {
 		$msgList['LOGIN_USER_INACTIVE'] = "You are not an authorized user.";
 		
 		// Census Messages
-		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site.";
+		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site for the selected year.";
 		$msgList['CENSUS_UPDATED'] = "The census data has been updated successfully.";
 		$msgList['CENSUS_GRADUATE_NOT_REQUIRED'] = "Graduates not required.";
 		
@@ -43,6 +44,19 @@ class UtilityComponent extends Component {
 		
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";
+		
+		// Institution Site Classes
+		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
+		$msgList['SITE_CLASS_DUPLICATE_NAME'] = "The name is already existed.";
+		
+		// Students
+		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";
+		
+		// Teachers
+		$msgList['TEACHER_NOT_FOUND'] = "No Teacher found.";
+		
+		// Staff
+		$msgList['STAFF_NOT_FOUND'] = "No Staff found.";
 		
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 		return __($msg);
@@ -148,6 +162,10 @@ class UtilityComponent extends Component {
 			$result[] = $data;
 		}
 		return $result;
+	}
+	
+	public function formatGender($value) {
+		return ($value == 'F') ? __('Female') : __('Male');
 	}
 	
 	public function unshiftArray(&$origArray, $newArray) {
