@@ -9,11 +9,7 @@ var CensusEnrolment = {
 	ajaxUrl: 'enrolmentAjax',
 	
 	init: function() {
-		var id = CensusEnrolment.id;
-		$('[programme-id]').each(function() {
-			var id = $(this).attr('programme-id');
-			$(this).find('.icon_plus').click(CensusEnrolment.addRow);
-		});
+		$('.icon_plus').click(CensusEnrolment.addRow);
 	},
 	
 	computeSubtotal: function(obj) {
@@ -43,38 +39,40 @@ var CensusEnrolment = {
 		table.find('.table_foot .cell_value').html(total);
 	},
 	
-	get: function(id) {
-		var maskId = '#mask-' + id;
-		var parent = '[programme-id="' + id + '"]';
-		var yearId = $('#SchoolYearId').val();
-		var gradeId = $(parent + ' #EducationGradeId').val();
-		var categoryId = $(parent + ' #StudentCategoryId').val();
-		var url = this.base + this.ajaxUrl;
+	get: function(obj) {
+		var parent = $(obj).closest('fieldset');
+		var gradeId = parent.find('#EducationGradeId').val();
+		var categoryId = parent.find('#StudentCategoryId').val();
 		var edit = $(CensusEnrolment.id).hasClass('edit');
 		
-		$.ajax({
-			type: 'GET',
-			dataType: 'text',
-			url: url,
-			data: {
-				'year': yearId,
-				'grade': gradeId,
-				'category': categoryId,
-				'edit': edit
-			},
-			beforeSend: function (jqXHR) {
-				$.mask({id: maskId, parent: parent, text: i18n.General.textRetrieving});
-			},
-			success: function (data, textStatus) {
+		if(gradeId == 0) {
+			var alertOpt = {
+				parent: parent,
+				text: i18n.Enrolment.textNoGrades,
+				type: alertType.warn,
+				position: 'center'
+			};
+			$.alert(alertOpt);
+		} else {
+			var maskId;
+			var ajaxParams = {gradeId: gradeId, categoryId: categoryId, edit: edit};
+			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
-					$(parent + ' .table_body').remove();
-					$(parent + ' .table_foot').remove();
-					$(parent + ' .table').append(data);
+					parent.find('.table_body').remove();
+					parent.find('.table_foot').remove();
+					parent.find('.table').append(data);
 				};
-				
 				$.unmask({id: maskId, callback: callback});
-			}
-		});
+			};
+			$.ajax({
+				type: 'GET',
+				dataType: 'text',
+				url: getRootURL() + parent.attr('url'),
+				data: ajaxParams,
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: parent, text: i18n.General.textRetrieving}); },
+				success: ajaxSuccess
+			});
+		}
 	},
 	
 	isAgeExistInList: function(obj, age) {
@@ -111,42 +109,53 @@ var CensusEnrolment = {
 	
 	addRow: function() {
 		var parent = $(this).closest('fieldset');
-		var programmeId = parent.attr('programme-id');
-		
 		var rowNum = parent.find('.table_row').length;
 		var last = '.table_body .table_row:last';
-		var age = 0;
-		if(rowNum > 0) {
-			lastAge = parent.find(last).find('#CensusStudentAge').val();
-			if(lastAge.length>0) {
-				age = lastAge.toInt() + 1;
-				while(CensusEnrolment.isAgeExistInList(parent, age)) {
-					age++;
+		var gradeId = parent.find('#EducationGradeId').val();
+		
+		if(gradeId == 0) {
+			var alertOpt = {
+				parent: parent,
+				text: i18n.Enrolment.textNoGrades,
+				type: alertType.warn,
+				position: 'center'
+			};
+			$.alert(alertOpt);
+		} else {
+			var age = 0;
+			if(rowNum > 0) {
+				lastAge = parent.find(last).find('#CensusStudentAge').val();
+				if(lastAge.length>0) {
+					age = lastAge.toInt() + 1;
+					while(CensusEnrolment.isAgeExistInList(parent, age)) {
+						age++;
+					}
 				}
 			}
-		}
-		
-		var maskId;
-		var ajaxParams = {programmeId: programmeId, rowNum: rowNum, age: age};
-		var ajaxSuccess = function(data, textStatus) {
-			var callback = function() {
-				var tableBody = parent.find('.table_body');
-				if(tableBody.length==0) {
-					parent.find('.table .table_head').after('<div class="table_body"></div>');
-				}
-				tableBody.append(data);
+			
+			var maskId;
+			var ajaxParams = {rowNum: rowNum, age: age, gradeId: gradeId};
+			var ajaxSuccess = function(data, textStatus) {
+				var callback = function() {
+					var tableBody = parent.find('.table_body');
+					if(tableBody.length==0) {
+						parent.find('.table .table_head').after('<div class="table_body">' + data + '</div>');
+					} else {
+						tableBody.append(data);
+					}
+				};
+				$.unmask({id: maskId, callback: callback});
 			};
-			$.unmask({id: maskId, callback: callback});
-		};
-		
-		$.ajax({
-			type: 'GET',
-			dataType: 'text',
-			url: getRootURL() + $(this).attr('url'),
-			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: parent}); },
-			success: ajaxSuccess
-		});
+			
+			$.ajax({
+				type: 'GET',
+				dataType: 'text',
+				url: getRootURL() + $(this).attr('url'),
+				data: ajaxParams,
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: parent}); },
+				success: ajaxSuccess
+			});
+		}
 	},
 	
 	removeRow: function(obj) {
@@ -192,7 +201,7 @@ var CensusEnrolment = {
 		var yearId = $('#SchoolYearId').val();
 		var id, age, male, female, index=0;
 		var obj, records, gradeId, categoryId, data = [];
-		$('[programme-id]').each(function() {
+		$('fieldset').each(function() {
 			obj = $(this);
 			obj.find('.table_body .table_row').each(function() {
 				id = $(this).attr('record-id');
@@ -209,7 +218,6 @@ var CensusEnrolment = {
 						female: female,
 						education_grade_id: obj.find('#EducationGradeId').val(),
 						student_category_id: obj.find('#StudentCategoryId').val(),
-						institution_site_programme_id: obj.attr('programme-id'),
 						school_year_id: yearId
 					});
 				}

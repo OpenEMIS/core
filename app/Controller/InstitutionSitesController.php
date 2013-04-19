@@ -10,6 +10,8 @@ class InstitutionSitesController extends AppController {
 		'AreaLevel',
 		'Bank',
 		'BankBranch',
+		'EducationSubject',
+		'EducationGrade',
 		'EducationProgramme',
 		'EducationFieldOfStudy',
 		'EducationCertification',
@@ -17,6 +19,10 @@ class InstitutionSitesController extends AppController {
 		'EducationLevel',
 		'EducationSystem',
 		'Institution',
+		'InstitutionSiteClass',
+		'InstitutionSiteClassTeacher',
+		'InstitutionSiteClassGrade',
+		'InstitutionSiteClassGradeStudent',
 		'InstitutionSiteCustomField',
 		'InstitutionSiteCustomFieldOption',
 		'InstitutionSiteCustomValue',
@@ -30,12 +36,24 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteAttachment',
 		'InstitutionSiteBankAccount',
 		'InstitutionSiteType',
+		'InstitutionSiteStudent',
+		'InstitutionSiteTeacher',
+		'InstitutionSiteStaff',
 		'CensusStudent',
 		'SecurityUserRole',
-		'SecurityRoleInstitutionSite'
+		'SecurityRoleInstitutionSite',
+		'SchoolYear',
+		'Students.Student',
+		'Teachers.Teacher',
+		'Teachers.TeacherCategory',
+		'Staff.Staff',
+		'Staff.StaffCategory'
 	);
 	
+	public $helpers = array('Paginator');
+	
 	public $components = array(
+		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'InstitutionSiteAttachment',
 			'foreignKey' => 'institution_site_id'
@@ -170,8 +188,7 @@ class InstitutionSitesController extends AppController {
 					$last_area_id = $arrValSave;
 				}
 			}
-			pr($this->request->data);die;
-			die();
+			
 			if($last_area_id == 0){
 				$last_area_id = $this->institutionSiteObj['InstitutionSite']['area_id'];
 			}
@@ -649,118 +666,170 @@ class InstitutionSitesController extends AppController {
 		$this->autoRender = false;
 		$bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
 		echo json_encode($bank);
-	}   
+	}
+	
+	public function programmesGradeList() {
+		$this->layout = 'ajax';
+		$programmeId = $this->params->query['programmeId'];
+		$exclude = $this->params->query['exclude'];
+		$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, $exclude);
+		$this->set('gradeOptions', $gradeOptions);
+		$this->render('/Elements/programmes/grade_options');
+	}
 	
 	public function programmes() {
 		$this->Navigation->addCrumb('Programmes');
-                
-		if($this->request->is('post')) {
-			//pr($this->request->data);die;
-			foreach($this->request->data['InstitutionSiteProgramme'] as &$arrVals){
-				
-				$arrVals['institution_site_id'] = $this->institutionSiteId;
-				
+		
+		$yearOptions = $this->SchoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		
+		$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
+		
+		foreach($data as $i => $obj) {
+			$data[$i]['gender'] = $this->InstitutionSiteStudent->getGenderTotal($obj['id'], $selectedYear);
+		}
+		
+		// Checking if user has access to add
+		$_add_programme = $this->AccessControl->check('InstitutionSites', 'programmesAdd');
+		$this->set('_add_programme', $_add_programme);
+		// End Access Control
+		
+		$this->set('yearOptions', $yearOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('data', $data);
+	}
+	
+	public function programmesAdd() {
+		$yearId = $this->params['pass'][0];
+		if($this->request->is('get')) {
+			$this->layout = 'ajax';
+			
+			$data = $this->EducationProgramme->getAvailableProgrammeOptions($this->institutionSiteId, $yearId);
+			$this->set('data', $data);
+		} else {
+			$this->autoRender = false;
+			$programmeId = $this->params->data['programmeId'];
+			
+			$obj = array(
+				'education_programme_id' => $programmeId,
+				'institution_site_id' => $this->institutionSiteId,
+				'school_year_id' => $yearId
+			);
+			
+			$this->InstitutionSiteProgramme->create();
+			$result = $this->InstitutionSiteProgramme->save($obj);
+			$return = array();
+			if($result) {
+				$this->Utility->setAjaxResult('success', $return);
+			} else {
+				$this->Utility->setAjaxResult('error', $return);
+				$return['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
 			}
-			$this->InstitutionSiteProgramme->saveAll($this->request->data['InstitutionSiteProgramme']);
-			
-			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'programmes'));
+			return json_encode($return);
+		}
+	}
+	
+	public function programmesView() {
+		$this->Navigation->addCrumb('Programmes', array('controller' => 'InstitutionSites', 'action' => 'programmes'));
+		$this->Navigation->addCrumb('Details');
+		
+		$yearOptions = $this->SchoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $selectedYear);
+		$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
+		
+		if(!array_key_exists($selectedProgramme, $programmeOptions)) {
+			$selectedProgramme = key($programmeOptions);
 		}
 		
-		$data = $this->InstitutionSiteProgramme->find('all',array('conditions'=>array('InstitutionSiteProgramme.institution_site_id'=>$this->institutionSiteId)));
-		//pr($data);die;
-		foreach($data as &$arrVals){
-			
-			$arrSystem = $this->getEducationSystemByCycleId($arrVals['EducationProgramme']['education_cycle_id']);
-			$arrFieldofStudy = $this->getFieldofStudyById($arrVals['EducationProgramme']['education_field_of_study_id']);
-			$arrCertification = $this->getCertificationById($arrVals['EducationProgramme']['education_certification_id']);
-		   
-			$arrVals = array_merge($arrVals,$arrSystem,$arrFieldofStudy,$arrCertification);
+		$data = array();
+		if(empty($programmeOptions)) {
+			$programmeOptions[] = '-- ' . __('No Programme') . ' --';
+		} else {
+			$data = $this->InstitutionSiteStudent->getStudentList($selectedProgramme, $this->institutionSiteId, $selectedYear);
 		}
-		//pr($data);die;
-		$newSort = array();
-		foreach($data as $arrValsSort){
-			
-			$newSort[$arrValsSort['EducationSystem']['name']][$arrValsSort['EducationLevel']['name']][] = $arrValsSort;
-		}
-		$educationSystems = $this->EducationSystem->find('list',array('recursive'=>0));
 		
-		$this->set('arrEducationSystems', $educationSystems);
-		$this->set('data',$newSort);       
+		$this->set('yearOptions', $yearOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('programmeOptions', $programmeOptions);
+		$this->set('selectedProgramme', $selectedProgramme);
+		$this->set('data', $data);
 	}
 	
 	public function programmesEdit() {
-		$this->Navigation->addCrumb('Edit Programmes');
-                
-		if($this->request->is('post')) {
-			//pr($this->request->data);die;
-			foreach($this->request->data['InstitutionSiteProgramme'] as &$arrVals){
-				
-				$arrVals['institution_site_id'] = $this->institutionSiteId;
-				
+		if($this->request->is('get')) {
+			$this->Navigation->addCrumb('Programmes', array('controller' => 'InstitutionSites', 'action' => 'programmes'));
+			$this->Navigation->addCrumb('Edit Details');
+			
+			$yearOptions = $this->SchoolYear->getYearList();
+			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+			$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $selectedYear);
+			$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
+			
+			if(!array_key_exists($selectedProgramme, $programmeOptions)) {
+				$selectedProgramme = key($programmeOptions);
 			}
-			//pr($this->request->data);die;
-			$this->InstitutionSiteProgramme->saveAll($this->request->data['InstitutionSiteProgramme']);
 			
-			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'programmes'));
+			$data = array();
+			if(empty($programmeOptions)) {
+				$this->redirect(array('action' => programmes));
+			} else {
+				$data = $this->InstitutionSiteStudent->getStudentList($selectedProgramme, $this->institutionSiteId, $selectedYear);
+				$this->set('yearOptions', $yearOptions);
+				$this->set('selectedYear', $selectedYear);
+				$this->set('programmeOptions', $programmeOptions);
+				$this->set('selectedProgramme', $selectedProgramme);
+				$this->set('data', $data);
+			}
+		} else {
+			$this->autoRender = false;
+			$data = $this->data['InstitutionSiteStudent'];
+			foreach($data as &$obj) {
+				$start = $obj['start_date'];
+				$end = $obj['end_date'];
+				$obj['start_date'] = sprintf('%d-%d-%d', $start['year'], $start['month'], $start['day']);
+				$obj['end_date'] = sprintf('%d-%d-%d', $end['year'], $end['month'], $end['day']);
+				$this->InstitutionSiteStudent->save($obj);
+			}
 		}
-		
-		$data = $this->InstitutionSiteProgramme->find('all',array('conditions'=>array('InstitutionSiteProgramme.institution_site_id'=>$this->institutionSiteId)));
-		//pr($data);die;
-		foreach($data as &$arrVals){
-			$arrSystem = $this->getEducationSystemByCycleId($arrVals['EducationProgramme']['education_cycle_id']);
-			$arrFieldofStudy = $this->getFieldofStudyById($arrVals['EducationProgramme']['education_field_of_study_id']);
-			$arrCertification = $this->getCertificationById($arrVals['EducationProgramme']['education_certification_id']);
-			$arrVals = array_merge($arrVals,$arrSystem,$arrFieldofStudy,$arrCertification);
-		}
-		//pr($data);die;
-		$newSort = array();
-		foreach($data as $arrValsSort){
-			
-			$newSort[$arrValsSort['EducationSystem']['name']][$arrValsSort['EducationLevel']['name']][] = $arrValsSort;
-		}
-		$educationSystems = $this->EducationSystem->find('list',array('recursive'=>0));
-		
-		$this->set('arrEducationSystems', $educationSystems);
-		$this->set('data',$newSort);
 	}
-        
-	public function programmesAvailable($id){
+	
+	public function programmesAddStudent() {
 		$this->layout = 'ajax';
-		$this->EducationProgramme->unbindModel(
-			array('hasMany' => array('InstitutionSiteProgramme'))
-		);
+		$studentId = $this->params->query['studentId'];
+		$name = $this->params->query['name'];
+		$idNo = $this->params->query['idNo'];
+		$i = $this->params->query['i'];
+		$yearId = $this->params['pass'][0];
+		$programmeId = $this->params['pass'][1];
 		
-		$existingPrograms = $this->InstitutionSiteProgramme->find('list',array('fields'=>array('InstitutionSiteProgramme.id','InstitutionSiteProgramme.education_programme_id'),'conditions'=>array('InstitutionSiteProgramme.institution_site_id'=>$this->institutionSiteId)));
+		$obj = $this->InstitutionSiteStudent->addStudentToProgramme($studentId, $programmeId, $this->institutionSiteId, $yearId);
 		
-		//select all not present on the exisiting site's programs
-		$data = $this->EducationProgramme->find('all',array('conditions'=>array('NOT'=>array('EducationProgramme.id' => $existingPrograms))));
-	   
-		foreach($data as $k => &$arrVals){
-			$arrSystem = $this->getEducationSystemByCycleId($arrVals['EducationProgramme']['education_cycle_id']);
-			if($arrSystem['EducationSystem']['id'] != $id) { //filter only those program under the educ system selected in the front end
-				unset($data[$k]); 
-				continue;   
-			}else{
-				$arrVals = array_merge($arrVals,$arrSystem);
-			}
+		$this->set('idNo', $idNo);
+		$this->set('name', $name);
+		$this->set('i', $i);
+		$this->set('obj', $obj['InstitutionSiteStudent']);
+	}
+	
+	public function programmesRemoveStudent() {
+		$this->autoRender = false;
+		$id = $this->params->query['rowId'];
+		$yearId = $this->params['pass'][0];
+		$programmeId = $this->params['pass'][1];
+		
+		if($id != -1) {
+			$this->InstitutionSiteStudent->delete($id, false);
+		} else {
+			$conditions = array(
+				'school_year_id' => $yearId,
+				'education_programme_id' => $programmeId,
+				'institution_site_id' => $this->institutionSiteId
+			);
+			$institutionSiteProgrammeId = $this->InstitutionSiteProgramme->field('id', $conditions);
+			$this->InstitutionSiteStudent->deleteAll(array(
+				'InstitutionSiteStudent.institution_site_programme_id' => $institutionSiteProgrammeId
+			), false);
 		}
-		//pr($data);die;
-		$this->set('institution_site_id',$this->institutionSiteId);
-		$this->set('data',$data);
-	}
-        
-	private function getEducationSystemByCycleId($cycleId){ 
-		$arrResCycle = $this->EducationCycle->find('first',array('recursive'=>0,'conditions'=>array('EducationCycle.id'=>$cycleId)));
-		$arrResSystem = $this->EducationSystem->find('first',array('recursive'=>0,'conditions'=>array('EducationSystem.id'=>$arrResCycle['EducationLevel']['education_system_id'])));
-		return $arrRes = array_merge($arrResCycle,$arrResSystem);
-	}
-	
-	private function getFieldofStudyById($id){
-		return $arrRes = $this->EducationFieldOfStudy->find('first',array('recursive'=>0,'conditions'=>array('EducationFieldOfStudy.id'=>$id)));
-	}
-	
-	private function getCertificationById($id){
-		return $arrRes = $this->EducationCertification->find('first',array('recursive'=>0,'conditions'=>array('EducationCertification.id'=>$id)));
 	}
         
 	public function history() {
@@ -788,5 +857,651 @@ class InstitutionSitesController extends AppController {
 	   
 		$this->set('data2',$data2);
 		$this->set('id',$this->institutionSiteId);
-	}      
-} 
+	}
+	
+	public function classes() {
+		$this->Navigation->addCrumb('Classes');
+		$yearOptions = $this->SchoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$data = $this->InstitutionSiteClass->getListOfClasses($selectedYear, $this->institutionSiteId);
+		
+		// Checking if user has access to add
+		$_add_class = $this->AccessControl->check('InstitutionSites', 'classesAdd');
+		$this->set('_add_class', $_add_class);
+		// End Access Control
+		
+		$this->set('yearOptions', $yearOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('data', $data);
+	}
+	
+	public function classesAdd() {
+		if($this->request->is('get')) {
+			$this->Navigation->addCrumb('Add Class');
+			$yearOptions = $this->SchoolYear->getYearList();
+			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+			$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $selectedYear);
+			$displayContent = !empty($programmeOptions);
+			
+			if($displayContent) {
+				$gradeOptions = array();
+				$selectedProgramme = false;
+				// loop through the programme list until a valid list of grades is found
+				foreach($programmeOptions as $programmeId => $name) {
+					$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, array(), true);
+					if(!empty($gradeOptions)) {
+						$selectedProgramme = $programmeId;
+						break;
+					}
+				}
+				
+				$this->set('yearOptions', $yearOptions);
+				$this->set('programmeOptions', $programmeOptions);
+				$this->set('selectedProgramme', $selectedProgramme);
+				$this->set('gradeOptions', $gradeOptions);
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			}
+			$this->set('displayContent', $displayContent);
+		} else {
+			$classData = $this->data['InstitutionSiteClass'];
+			$classData['institution_site_id'] = $this->institutionSiteId;
+			$this->InstitutionSiteClass->create();
+			$classObj = $this->InstitutionSiteClass->save($classData);
+			if($classObj) {
+				$classId = $classObj['InstitutionSiteClass']['id'];
+				$gradesData = $this->data['InstitutionSiteClassGrade'];
+				$grades = array();
+				foreach($gradesData as $obj) {
+					$gradeId = $obj['education_grade_id'];
+					if($gradeId>0 && !in_array($gradeId, $grades)) {
+						$grades[] = $obj['education_grade_id'];
+						$obj['institution_site_class_id'] = $classId;
+						$this->InstitutionSiteClassGrade->create();
+						$this->InstitutionSiteClassGrade->save($obj);
+					}
+				}
+			}
+			$this->redirect(array('action' => 'classesEdit', $classId));
+		}
+	}
+	
+	public function classesView() {
+		$classId = $this->params['pass'][0];
+		$classObj = $this->InstitutionSiteClass->getClass($classId);
+		
+		if(!empty($classObj)) {
+			$className = $classObj['InstitutionSiteClass']['name'];
+			$this->Navigation->addCrumb($className);
+			
+			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
+			$students = $this->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
+			$teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
+			
+			$this->set('classId', $classId);
+			$this->set('className', $className);
+			$this->set('year', $classObj['SchoolYear']['name']);
+			$this->set('grades', $grades);
+			$this->set('students', $students);
+			$this->set('teachers', $teachers);
+		} else {
+			$this->redirect(array('action' => 'classesList'));
+		}
+	}
+	
+	public function classesEdit() {
+		$classId = $this->params['pass'][0];
+		$classObj = $this->InstitutionSiteClass->getClass($classId);
+		
+		if(!empty($classObj)) {
+			$className = $classObj['InstitutionSiteClass']['name'];
+			$this->Navigation->addCrumb(__('Edit') . ' ' . $className);
+			
+			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
+			$students = $this->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
+			$teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
+			
+			$this->set('classId', $classId);
+			$this->set('className', $className);
+			$this->set('year', $classObj['SchoolYear']['name']);
+			$this->set('grades', $grades);
+			$this->set('students', $students);
+			$this->set('teachers', $teachers);
+		} else {
+			$this->redirect(array('action' => 'classesList'));
+		}
+	}
+	
+	public function classesAddGrade() {
+		$this->layout = 'ajax';
+		$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
+		$index = $this->params->query['index'];
+		$yearId = $this->params->query['yearId'];
+		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $yearId);
+		
+		$gradeOptions = array();
+		$selectedProgramme = false;
+		foreach($programmeOptions as $programmeId => $name) {
+			$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, $exclude, true);
+			if(!empty($gradeOptions)) {
+				$selectedProgramme = $programmeId;
+				break;
+			}
+		}
+		$this->set('model', 'InstitutionSiteClassGrade');
+		$this->set('index', $index);
+		$this->set('gradeOptions', $gradeOptions);
+		$this->set('programmeOptions', $programmeOptions);
+		$this->set('selectedProgramme', $selectedProgramme);
+	}
+	
+	public function classesStudentAjax() {
+		$this->autoRender = false;
+		
+		if(sizeof($this->params['pass']) == 1) {
+			$gradeId = $this->params['pass'][0];
+			$studentId = $this->params->query['studentId'];
+			$action = $this->params->query['action'];
+			
+			$result = false;
+			if($action === 'add') {
+				$data = array('student_id' => $studentId, 'institution_site_class_grade_id' => $gradeId);
+				$this->InstitutionSiteClassGradeStudent->create();
+				$result = $this->InstitutionSiteClassGradeStudent->save($data);
+			} else {
+				$result = $this->InstitutionSiteClassGradeStudent->deleteAll(array(
+					'InstitutionSiteClassGradeStudent.student_id' => $studentId,
+					'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
+				), false);
+			}
+			
+			$return = array();
+			if($result) {
+				$this->Utility->setAjaxResult('success', $return);
+			} else {
+				$this->Utility->setAjaxResult('error', $return);
+				$return['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
+			}
+			return json_encode($return);
+		}
+	}
+	
+	public function classesAddStudentRow() {
+		$this->layout = 'ajax';
+		
+		if(sizeof($this->params['pass']) == 2) {
+			$year = $this->params['pass'][0];
+			$gradeId = $this->params['pass'][1];
+			$index = $this->params->query['index'];
+			$data = $this->InstitutionSiteStudent->getStudentSelectList($year, $this->institutionSiteId, $gradeId);
+			$this->set('index', $index);
+			$this->set('gradeId', $gradeId);
+			$this->set('data', $data);
+		}
+	}
+	
+	public function classesCheckName() {
+		$this->autoRender = false;
+		$name = trim($this->params->query['name']);
+		$yearId = $this->params->query['year'];
+		
+		if(strlen($name) == 0) {
+			return $this->Utility->getMessage('SITE_CLASS_EMPTY_NAME');
+		} else if($this->InstitutionSiteClass->isNameExists($name, $this->institutionSiteId, $yearId)) {
+			return $this->Utility->getMessage('SITE_CLASS_DUPLICATE_NAME');
+		}
+		return 'true';
+	}
+	
+	public function classesAddTeacherRow() {
+		$this->layout = 'ajax';
+		
+		if(sizeof($this->params['pass']) == 2) {
+			$year = $this->params['pass'][0];
+			$classId = $this->params['pass'][1];
+			$index = $this->params->query['index'];
+			$data = $this->InstitutionSiteTeacher->getTeacherSelectList($year, $this->institutionSiteId);
+			$subjects = $this->EducationSubject->getSubjectByClassId($classId);
+			
+			$this->set('index', $index);
+			$this->set('data', $data);
+			$this->set('subjects', $subjects);
+		}
+	}
+	
+	public function classesTeacherAjax() {
+		$this->autoRender = false;
+		
+		if(sizeof($this->params['pass']) == 1) {
+			$classId = $this->params['pass'][0];
+			$teacherId = $this->params->query['teacherId'];
+			$subjectId = $this->params->query['subjectId'];
+			$action = $this->params->query['action'];
+			
+			$result = false;
+			if($action === 'add') {
+				$data = array('teacher_id' => $teacherId, 'institution_site_class_id' => $classId, 'education_subject_id' => $subjectId);
+				$this->InstitutionSiteClassTeacher->create();
+				$result = $this->InstitutionSiteClassTeacher->save($data);
+			} else {
+				$result = $this->InstitutionSiteClassTeacher->deleteAll(array(
+					'InstitutionSiteClassTeacher.teacher_id' => $teacherId,
+					'InstitutionSiteClassTeacher.institution_site_class_id' => $classId,
+					'InstitutionSiteClassTeacher.education_subject_id' => $subjectId
+				), false);
+			}
+			
+			$return = array();
+			if($result) {
+				$this->Utility->setAjaxResult('success', $return);
+			} else {
+				$this->Utility->setAjaxResult('error', $return);
+				$return['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
+			}
+			return json_encode($return);
+		}
+	}
+	
+	public function classesDeleteTeacher() {
+		$this->autoRender = false;
+		
+		if(sizeof($this->params['pass']) == 1) {
+			$gradeId = $this->params['pass'][0];
+			$studentId = $this->params->query['studentId'];
+			
+			$data = array('student_id' => $studentId, 'institution_site_class_grade_id' => $gradeId);
+			$this->InstitutionSiteClassGradeStudent->create();
+			$obj = $this->InstitutionSiteClassGradeStudent->save($data);
+			
+			$result = array();
+			if($obj) {
+				$this->Utility->setAjaxResult('success', $result);
+			} else {
+				$this->Utility->setAjaxResult('error', $result);
+				$result['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
+			}
+			return json_encode($result);
+		}
+	}
+	
+	public function students() {
+		App::uses('Sanitize', 'Utility');
+		$this->Navigation->addCrumb('Students');
+		
+		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
+		
+		$selectedYear = "";
+		$selectedProgramme = "";
+		$searchField = "";
+		$orderBy = 'Student.first_name';
+		$order = 'asc';
+		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
+		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId);
+		$prefix = 'InstitutionSiteStudent.Search.%s';
+		if($this->request->is('post')) {
+			$searchField = Sanitize::escape(trim($this->data['Student']['SearchField']));
+			$selectedYear = $this->data['Student']['school_year'];
+			$selectedProgramme = $this->data['Student']['education_programme_id'];
+			$orderBy = $this->data['Student']['orderBy'];
+			$order = $this->data['Student']['order'];
+			
+			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+			$this->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
+			$this->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
+			$this->Session->write(sprintf($prefix, 'order'), $order);
+			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+		} else {
+			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
+			$selectedYear = $this->Session->read(sprintf($prefix, 'SchoolYear'));
+			$selectedProgramme = $this->Session->read(sprintf($prefix, 'EducationProgrammeId'));
+			
+			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
+				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			}
+			if($this->Session->check(sprintf($prefix, 'order'))) {
+				$order = $this->Session->read(sprintf($prefix, 'order'));
+			}
+		}
+		$conditions = array('institution_site_id' => $this->institutionSiteId, 'order' => array($orderBy => $order));
+		$conditions['search'] = $searchField;
+		if(!empty($selectedYear)) {
+			$conditions['year'] = $selectedYear;
+		}
+		
+		if(!empty($selectedProgramme)) {
+			$conditions['education_programme_id'] = $selectedProgramme;
+		}
+		
+		$this->paginate = array('limit' => 15, 'maxLimit' => 100);
+		$data = $this->paginate('InstitutionSiteStudent', $conditions);
+		
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('STUDENT_SEARCH_NO_RESULT'), array('type' => 'info', 'dismissOnClick' => false));
+		}
+		$this->set('searchField', $searchField);
+		$this->set('page', $page);
+		$this->set('orderBy', $orderBy);
+		$this->set('order', $order);
+		$this->set('yearOptions', $yearOptions);
+		$this->set('programmeOptions', $programmeOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('selectedProgramme', $selectedProgramme);
+		$this->set('data', $data);
+	}
+	
+	public function studentsSearch() {
+		$this->layout = 'ajax';
+		$master = isset($this->params->query['master']);
+		$searchStr = trim($this->params->query['searchStr']);
+		$yearId = $this->params->query['yearId'];
+		$programmeId = $this->params->query['programmeId'];
+		
+		if($master) { // searching students in master list
+			$limit = 200;
+			$data = $this->Student->search($searchStr, $programmeId, $this->institutionSiteId, $yearId, $limit);
+			$this->set('searchStr', $searchStr);
+			$this->set('data', $data);
+		}
+	}
+	
+	public function teachers() {
+		$this->Navigation->addCrumb('Teachers');
+		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
+		$model = 'Teacher';
+		$orderBy = $model . '.first_name';
+		$order = 'asc';
+		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
+		if($this->request->is('post')) {
+			$selectedYear = $this->data[$model]['school_year'];
+			$orderBy = $this->data[$model]['orderBy'];
+			$order = $this->data[$model]['order'];
+			
+			$this->Session->write(sprintf($prefix, 'order'), $order);
+			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+		} else {
+			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
+				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			}
+			if($this->Session->check(sprintf($prefix, 'order'))) {
+				$order = $this->Session->read(sprintf($prefix, 'order'));
+			}
+		}
+		$conditions = array('year' => $selectedYear, 'InstitutionSiteTeacher.institution_site_id' => $this->institutionSiteId);
+		
+		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
+		$data = $this->paginate('InstitutionSiteTeacher', $conditions);
+		
+		$this->set('page', $page);
+		$this->set('orderBy', $orderBy);
+		$this->set('order', $order);
+		$this->set('yearOptions', $yearOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('data', $data);
+	}
+	
+	public function teachersSearch() {
+		$this->autoRender = false;
+		$id = trim($this->params->query['id']);
+		$result = array();
+		if(strlen($id) == 0) {
+			$this->Utility->setAjaxResult('alert', $result);
+			$result['alertOpt'] = array();
+			$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
+			$result['alertOpt']['text'] = $this->Utility->getMessage('INVALID_ID_NO');
+		} else {
+			$obj = $this->Teacher->find('first', array(
+				'fields' => array('Teacher.id', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
+				'conditions' => array('Teacher.identification_no' => $id)
+			));
+			if($obj) {
+				$teacherId = $obj['Teacher']['id'];
+				$status = $this->InstitutionSiteTeacher->checkEmployment($this->institutionSiteId, $teacherId);
+				
+				$this->Utility->setAjaxResult('success', $result);
+				$result['id'] = $obj['Teacher']['id'];
+				$result['first_name'] = $obj['Teacher']['first_name'];
+				$result['last_name'] = $obj['Teacher']['last_name'];
+				$result['gender'] = $this->Utility->formatGender($obj['Teacher']['gender']);
+				$result['status'] = $status;
+			} else {
+				$this->Utility->setAjaxResult('alert', $result);
+				$result['alertOpt'] = array();
+				$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
+				$result['alertOpt']['text'] = $this->Utility->getMessage('TEACHER_NOT_FOUND');
+			}
+		}
+		return json_encode($result);
+	}
+	
+	public function teachersAdd() {
+		$this->Navigation->addCrumb('Teachers', array('controller' => 'InstitutionSites', 'action' => 'teachers'));
+		$this->Navigation->addCrumb('Add Teacher');
+		$yearOptions = $this->SchoolYear->getYearList('start_year');
+		$categoryOptions = $this->TeacherCategory->findList(true);
+		
+		if($this->request->is('post')) {
+			$data = $this->data['InstitutionSiteTeacher'];
+			if(isset($data['teacher_id'])) {
+				$data['institution_site_id'] = $this->institutionSiteId;
+				$data['start_year'] = date('Y', strtotime($data['start_date']));
+				$this->InstitutionSiteTeacher->save($data);
+				$this->redirect(array('action' => 'teachersView', $data['teacher_id']));
+			}
+		}
+		$this->set('yearOptions', $yearOptions);
+		$this->set('categoryOptions', $categoryOptions);
+	}
+	
+	public function teachersView() {
+		$this->Navigation->addCrumb('Teachers', array('controller' => 'InstitutionSites', 'action' => 'teachers'));
+		$this->Navigation->addCrumb('Teacher Details');
+		
+		if(isset($this->params['pass'][0])) {
+			$teacherId = $this->params['pass'][0];
+			$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+			$positions = $this->InstitutionSiteTeacher->getPositions($teacherId, $this->institutionSiteId);
+			if(!empty($positions)) {
+				$classes = $this->InstitutionSiteClassTeacher->getClasses($teacherId, $this->institutionSiteId);
+				$this->set('data', $data);
+				$this->set('positions', $positions);
+				$this->set('classes', $classes);
+			} else {
+				$this->redirect(array('action' => 'teachers'));
+			}
+		} else {
+			$this->redirect(array('action' => 'teachers'));
+		}
+	}
+	
+	public function teachersEdit() {
+		$this->Navigation->addCrumb('Teachers', array('controller' => 'InstitutionSites', 'action' => 'teachers'));
+		$this->Navigation->addCrumb('Edit Teacher Details');
+		
+		if(isset($this->params['pass'][0])) {
+			$teacherId = $this->params['pass'][0];
+			
+			if($this->request->is('get')) {
+				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+				$positions = $this->InstitutionSiteTeacher->getPositions($teacherId, $this->institutionSiteId);
+				if(!empty($positions)) {
+					$classes = $this->InstitutionSiteClassTeacher->getClasses($teacherId, $this->institutionSiteId);
+					$this->set('data', $data);
+					$this->set('positions', $positions);
+					$this->set('classes', $classes);
+				} else {
+					$this->redirect(array('action' => 'teachers'));
+				}
+			} else {
+				if(isset($this->data['delete'])) {
+					$delete = $this->data['delete'];
+					$this->InstitutionSiteTeacher->deleteAll(array('InstitutionSiteTeacher.id' => $delete), false);
+				}
+				$data = $this->data['InstitutionSiteTeacher'];
+				$this->InstitutionSiteTeacher->saveEmployment($data, $this->institutionSiteId, $teacherId);
+				$this->redirect(array('action' => 'teachersView', $teacherId));
+			}
+		} else {
+			$this->redirect(array('action' => 'teachers'));
+		}
+	}
+	
+	public function teachersAddPosition() {
+		$this->layout = 'ajax';
+		
+		$index = $this->params->query['index'] + 1;
+		$categoryOptions = $this->TeacherCategory->findList(true);
+		
+		$this->set('index', $index);
+		$this->set('categoryOptions', $categoryOptions);
+	}
+	
+	public function staff() {
+		$this->Navigation->addCrumb('Staff');
+		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
+		$model = 'Staff';
+		$orderBy = $model . '.first_name';
+		$order = 'asc';
+		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
+		if($this->request->is('post')) {
+			$selectedYear = $this->data[$model]['school_year'];
+			$orderBy = $this->data[$model]['orderBy'];
+			$order = $this->data[$model]['order'];
+			
+			$this->Session->write(sprintf($prefix, 'order'), $order);
+			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+		} else {
+			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
+				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			}
+			if($this->Session->check(sprintf($prefix, 'order'))) {
+				$order = $this->Session->read(sprintf($prefix, 'order'));
+			}
+		}
+		$conditions = array('year' => $selectedYear, 'InstitutionSiteStaff.institution_site_id' => $this->institutionSiteId);
+		
+		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
+		$data = $this->paginate('InstitutionSiteStaff', $conditions);
+		
+		$this->set('page', $page);
+		$this->set('orderBy', $orderBy);
+		$this->set('order', $order);
+		$this->set('yearOptions', $yearOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('data', $data);
+	}
+	
+	public function staffSearch() {
+		$this->autoRender = false;
+		$id = trim($this->params->query['id']);
+		$result = array();
+		if(strlen($id) == 0) {
+			$this->Utility->setAjaxResult('alert', $result);
+			$result['alertOpt'] = array();
+			$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
+			$result['alertOpt']['text'] = $this->Utility->getMessage('INVALID_ID_NO');
+		} else {
+			$obj = $this->Staff->find('first', array(
+				'fields' => array('Staff.id', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
+				'conditions' => array('Staff.identification_no' => $id)
+			));
+			if($obj) {
+				$staffId = $obj['Staff']['id'];
+				$status = $this->InstitutionSiteStaff->checkEmployment($this->institutionSiteId, $staffId);
+				
+				$this->Utility->setAjaxResult('success', $result);
+				$result['id'] = $obj['Staff']['id'];
+				$result['first_name'] = $obj['Staff']['first_name'];
+				$result['last_name'] = $obj['Staff']['last_name'];
+				$result['gender'] = $this->Utility->formatGender($obj['Staff']['gender']);
+				$result['status'] = $status;
+			} else {
+				$this->Utility->setAjaxResult('alert', $result);
+				$result['alertOpt'] = array();
+				$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
+				$result['alertOpt']['text'] = $this->Utility->getMessage('STAFF_NOT_FOUND');
+			}
+		}
+		return json_encode($result);
+	}
+	
+	public function staffAdd() {
+		$this->Navigation->addCrumb('Staff', array('controller' => 'InstitutionSites', 'action' => 'staff'));
+		$this->Navigation->addCrumb('Add Staff');
+		$yearOptions = $this->SchoolYear->getYearList('start_year');
+		$categoryOptions = $this->StaffCategory->findList(true);
+		if($this->request->is('post')) {
+			$data = $this->data['InstitutionSiteStaff'];
+			if(isset($data['staff_id'])) {
+				$data['institution_site_id'] = $this->institutionSiteId;
+				$data['start_year'] = date('Y', strtotime($data['start_date']));
+				$this->InstitutionSiteStaff->save($data);
+				$this->redirect(array('action' => 'staffView', $data['staff_id']));
+			}
+		}
+		$this->set('yearOptions', $yearOptions);
+		$this->set('categoryOptions', $categoryOptions);
+	}
+	
+	public function staffView() {
+		$this->Navigation->addCrumb('Staff', array('controller' => 'InstitutionSites', 'action' => 'staff'));
+		$this->Navigation->addCrumb('Staff Details');
+		
+		if(isset($this->params['pass'][0])) {
+			$staffId = $this->params['pass'][0];
+			$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+			$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
+			if(!empty($positions)) {
+				$this->set('data', $data);
+				$this->set('positions', $positions);
+			} else {
+				$this->redirect(array('action' => 'staff'));
+			}
+		} else {
+			$this->redirect(array('action' => 'staff'));
+		}
+	}
+	
+	public function staffEdit() {
+		$this->Navigation->addCrumb('Staff', array('controller' => 'InstitutionSites', 'action' => 'staff'));
+		$this->Navigation->addCrumb('Edit Staff Details');
+		
+		if(isset($this->params['pass'][0])) {
+			$staffId = $this->params['pass'][0];
+			
+			if($this->request->is('get')) {
+				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+				$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
+				if(!empty($positions)) {
+					$this->set('data', $data);
+					$this->set('positions', $positions);
+				} else {
+					$this->redirect(array('action' => 'staff'));
+				}
+			} else {
+				if(isset($this->data['delete'])) {
+					$delete = $this->data['delete'];
+					$this->InstitutionSiteStaff->deleteAll(array('InstitutionSiteStaff.id' => $delete), false);
+				}
+				$data = $this->data['InstitutionSiteStaff'];
+				$this->InstitutionSiteStaff->saveEmployment($data, $this->institutionSiteId, $staffId);
+				$this->redirect(array('action' => 'staffView', $staffId));
+			}
+		} else {
+			$this->redirect(array('action' => 'staff'));
+		}
+	}
+	
+	public function staffAddPosition() {
+		$this->layout = 'ajax';
+		
+		$index = $this->params->query['index'] + 1;
+		$categoryOptions = $this->StaffCategory->findList(true);
+		
+		$this->set('index', $index);
+		$this->set('categoryOptions', $categoryOptions);
+	}
+}
