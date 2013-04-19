@@ -35,46 +35,6 @@ class CensusClass extends AppModel {
 	}
 	
 	public function getSingleGradeData($institutionSiteId, $yearId) {
-		/* Actual SQL
-		SELECT
-			`census_classes`.`id`,
-			`census_classes`.`classes`,
-			`census_classes`.`seats`,
-			`education_programmes`.`id` AS `education_programme_id`,
-			CONCAT(`education_cycles`.`name`, ' - ', `education_programmes`.`name`) AS `education_programme_name`,
-			`education_grades`.`id` AS `education_grade_id`,
-			`education_grades`.`name` AS `education_grade_name`
-		FROM `census_classes`
-		JOIN `institution_site_programmes`
-			ON `institution_site_programmes`.`institution_site_id` = `census_classes`.`institution_site_id`
-		JOIN `education_programmes` 
-			ON `education_programmes`.`id` = `institution_site_programmes`.`education_programme_id`
-			AND `education_programmes`.`visible` = 1
-		JOIN `education_cycles`
-			ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
-			AND `education_cycles`.`visible` = 1
-		JOIN `education_levels`
-			ON `education_levels`.`id` = `education_cycles`.`education_level_id`
-			AND `education_levels`.`visible` = 1
-		JOIN `education_grades`
-			ON `education_grades`.`education_programme_id` = `education_programmes`.`id`
-			AND `education_grades`.`visible` = 1
-		JOIN `census_class_grades`
-			ON `census_class_grades`.`census_class_id` = `census_classes`.`id`
-			AND `census_class_grades`.`education_grade_id` = `education_grades`.`id`
-		WHERE `census_classes`.`school_year_id` = 1
-		AND `census_classes`.`institution_site_id` = 1
-		GROUP BY
-			`census_classes`.`id`
-		HAVING
-			COUNT(`census_class_grades`.`census_class_id`) <= 1
-		ORDER BY 
-			`education_levels`.`order`,
-			`education_cycles`.`order`,
-			`education_programmes`.`order`,
-			`education_grades`.`order`
-		*/
-		
 		$this->formatResult = true;
 		$data = $this->find('all' , array(
 			'recursive' => -1,
@@ -91,39 +51,30 @@ class CensusClass extends AppModel {
 				array(
 					'table' => 'institution_site_programmes',
 					'alias' => 'InstitutionSiteProgramme',
-					'conditions' => array('InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id')
+					'conditions' => array(
+						'InstitutionSiteProgramme.institution_site_id = CensusClass.institution_site_id',
+						'InstitutionSiteProgramme.school_year_id = CensusClass.school_year_id'
+					)
 				),
 				array(
 					'table' => 'education_programmes',
 					'alias' => 'EducationProgramme',
-					'conditions' => array(
-						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
-						'EducationProgramme.visible = 1',
-					)
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
 				),
 				array(
 					'table' => 'education_cycles',
 					'alias' => 'EducationCycle',
-					'conditions' => array(
-						'EducationCycle.id = EducationProgramme.education_cycle_id',
-						'EducationCycle.visible = 1'
-					)
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 				),
 				array(
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
-					'conditions' => array(
-						'EducationLevel.id = EducationCycle.education_level_id',
-						'EducationLevel.visible = 1'
-					)
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'EducationGrade.education_programme_id = EducationProgramme.id',
-						'EducationGrade.visible = 1'
-					)
+					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
 				),
 				array(
 					'table' => 'census_class_grades',
@@ -146,52 +97,6 @@ class CensusClass extends AppModel {
 	}
 	
 	public function getMultiGradeData($institutionSiteId, $yearId) {
-		/* Actual SQL
-		// Get those records with multi-grades
-		SELECT 
-			`census_classes`.`id`
-		FROM `census_classes`
-		JOIN `census_class_grades`
-			ON `census_class_grades`.`census_class_id` = `census_classes`.`id`
-		WHERE `census_classes`.`school_year_id` = 1
-		AND `census_classes`.`institution_site_id` = 1
-		GROUP BY 
-			`census_classes`.`id`
-		HAVING 
-			COUNT(`census_class_grades`.`census_class_id`) > 1
-		
-		// Then fetch the list of grades based on the results from the query above
-		SELECT
-			`census_classes`.`id`,
-			`census_classes`.`classes`,
-			`census_classes`.`seats`,
-			CONCAT(`education_cycles`.`name`, ' - ', `education_programmes`.`name`) AS `education_programme_name`,
-			`education_grades`.`id` AS `education_grade_id`,
-			`education_grades`.`name`
-		FROM `census_classes`
-		JOIN `census_class_grades`
-			ON `census_class_grades`.`census_class_id` = `census_classes`.`id`
-		JOIN `education_grades`
-			ON `education_grades`.`id` = `census_class_grades`.`education_grade_id`
-			AND `education_grades`.`visible` = 1
-		JOIN `education_programmes`
-			ON `education_programmes`.`id` = `education_grades`.`education_programme_id`
-			AND `education_programmes`.`visible` = 1
-		JOIN `education_cycles`
-			ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
-			AND `education_cycles`.`visible` = 1
-		JOIN `education_levels`
-			ON `education_levels`.`id` = `education_cycles`.`education_level_id`
-			AND `education_levels`.`visible` = 1
-		WHERE `census_classes`.`id` = 3
-		ORDER BY
-			`education_levels`.`order`,
-			`education_cycles`.`order`,
-			`education_programmes`.`order`,
-			`education_grades`.`order`,
-			`census_classes`.`id`
-		*/
-		
 		$classList = $this->find('list' , array(
 			'recursive' => -1,
 			'fields' => array('CensusClass.id'),
@@ -199,9 +104,7 @@ class CensusClass extends AppModel {
 				array(
 					'table' => 'census_class_grades',
 					'alias' => 'CensusClassGrade',
-					'conditions' => array(
-						'CensusClassGrade.census_class_id = CensusClass.id'
-					)
+					'conditions' => array('CensusClassGrade.census_class_id = CensusClass.id')
 				)
 			),
 			'conditions' => array(
@@ -226,41 +129,27 @@ class CensusClass extends AppModel {
 				array(
 					'table' => 'census_class_grades',
 					'alias' => 'CensusClassGrade',
-					'conditions' => array(
-						'CensusClassGrade.census_class_id = CensusClass.id'
-					)
+					'conditions' => array('CensusClassGrade.census_class_id = CensusClass.id')
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'EducationGrade.id = CensusClassGrade.education_grade_id',
-						'EducationGrade.visible = 1'
-					)
+					'conditions' => array('EducationGrade.id = CensusClassGrade.education_grade_id')
 				),
 				array(
 					'table' => 'education_programmes',
 					'alias' => 'EducationProgramme',
-					'conditions' => array(
-						'EducationProgramme.id = EducationGrade.education_programme_id',
-						'EducationProgramme.visible = 1',
-					)
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
 				),
 				array(
 					'table' => 'education_cycles',
 					'alias' => 'EducationCycle',
-					'conditions' => array(
-						'EducationCycle.id = EducationProgramme.education_cycle_id',
-						'EducationCycle.visible = 1'
-					)
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 				),
 				array(
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
-					'conditions' => array(
-						'EducationLevel.id = EducationCycle.education_level_id',
-						'EducationLevel.visible = 1'
-					)
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
 				)
 			),
 			'conditions' => array('CensusClass.id' => $classList),

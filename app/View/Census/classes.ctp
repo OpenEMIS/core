@@ -19,14 +19,13 @@ echo $this->Html->script('census', false);
 	<h1>
 		<span><?php echo __('Classes'); ?></span>
 		<?php
-		if($_edit && $displayContent) {
+		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'classesEdit'), array('id' => 'edit-link', 'class' => 'divider'));
 		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
-	<?php if($displayContent) { ?>
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
@@ -40,6 +39,7 @@ echo $this->Html->script('census', false);
 		</div>
 	</div>
 	
+	<?php if($displayContent) { ?>
 	<fieldset class="section_group">
 		<legend><?php echo __('Single Grade Classes Only'); ?></legend>
 		

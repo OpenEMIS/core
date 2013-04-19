@@ -21,6 +21,7 @@ echo $this->Html->script('census_enrolment', false);
 		<span><?php echo __('Enrolment'); ?></span>
 		<?php echo $this->Html->link(__('View'), array('action' => 'enrolment'), array('id' => 'edit-link', 'class' => 'divider')); ?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
@@ -35,10 +36,10 @@ echo $this->Html->script('census_enrolment', false);
 		</div>
 	</div>
 	
-	<?php foreach($data as $key => $val) { ?>
-	<fieldset class="section_group" programme-id="<?php echo $val['id']; ?>">
+	<?php foreach($data as $key => $obj) { ?>
+	<fieldset class="section_group" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>">
 		<legend>
-			<span><?php echo $key ?></span>
+			<span><?php echo $obj['name']; ?></span>
 		</legend>
 		
 		<div class="row" style="margin-bottom: 15px;">
@@ -47,8 +48,9 @@ echo $this->Html->script('census_enrolment', false);
 				<?php
 				echo $this->Form->input('education_grade_id', array(
 					'id' => 'EducationGradeId',
-					'options' => $val['grades'],
-					'onchange' => sprintf('CensusEnrolment.get(%d)', $val['id'])
+					'options' => $obj['grades'],
+					'onchange' => 'CensusEnrolment.get(this)',
+					'autocomplete' => 'off'
 				));
 				?>
 			</div>
@@ -58,7 +60,8 @@ echo $this->Html->script('census_enrolment', false);
 				echo $this->Form->input('student_category_id', array(
 					'id' => 'StudentCategoryId',
 					'options' => $category,
-					'onchange' => sprintf('CensusEnrolment.get(%d)', $val['id'])
+					'onchange' => 'CensusEnrolment.get(this)',
+					'autocomplete' => 'off'
 				));
 				?>
 			</div>
@@ -78,7 +81,7 @@ echo $this->Html->script('census_enrolment', false);
 			<div class="table_body">
 				<?php
 				$total = 0;
-				$records = $val['enrolment'];
+				$records = $obj['enrolment'];
 				foreach($records as $record) {
 					$total += $record['male'] + $record['female'];
 				?>
@@ -144,14 +147,17 @@ echo $this->Html->script('census_enrolment', false);
 			</div>
 		</div>
 		<?php if($_add) { ?>
-		<div class="row" style="margin-bottom: 10px;"><a class="void icon_plus" url="Census/enrolmentAddRow"><?php echo __('Add').' '.__('Age'); ?></a></div>
+		<div class="row"><a class="void icon_plus" url="Census/enrolmentAddRow"><?php echo __('Add').' '.__('Age'); ?></a></div>
 		<?php } ?>
 	</fieldset>
 	<?php } // end foreach (enrolment) ?>
+	
+	<?php if(!empty($data)) { ?>
 	<div class="controls">
 		<input type="button" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="CensusEnrolment.save()" />
 		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
 	</div>
+	<?php } ?>
 	
 	<?php echo $this->Form->end(); ?>
 </div>

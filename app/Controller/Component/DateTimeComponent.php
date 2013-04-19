@@ -50,10 +50,15 @@ class DateTimeComponent extends Component {
         return $mth;
     }
     
-    public static function generateDay() {
+    public static function generateDay($year=0, $month=0) {
 		$day = array();
-        for($i=1; $i<=31; $i++) {
-			//$iPadZero = sprintf('%02d', $i);
+		$noOfDays = 31;
+		
+		if($year!=0 && $month!=0) {
+			$noOfDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+		}
+		
+        for($i=1; $i<=$noOfDays; $i++) {
             $day[substr("0".$i,-2)] = $i;
         }
         return $day;

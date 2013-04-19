@@ -10,13 +10,13 @@ class StudentsController extends StudentsAppController {
 
     public $uses = array(
         'Institution',
+		'InstitutionSiteProgramme',
         'Students.Student',
         'Students.StudentHistory',
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-        'Students.StudentAttachment',
-        'Students.InstitutionSiteStudent'
+        'Students.StudentAttachment'
     );
         
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -61,8 +61,19 @@ class StudentsController extends StudentsAppController {
     public function index() {
 		$this->Navigation->addCrumb('List of Students');
 		$tmp = $this->AccessControl->getAccessibleSites();
+		$programmeIds = $this->InstitutionSiteProgramme->find('list', array(
+			'fields' => array('InstitutionSiteProgramme.id'),
+			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $tmp)
+		));
 		
-		$security = array('OR'=>array('InstitutionSiteStudent.id'=>null,'AND'=>array('InstitutionSiteStudent.institution_site_id'=>$tmp,'InstitutionSiteStudent.end_date >='=>date('Y-m-d'))));
+		$security = array(
+			'OR' => array(
+				'InstitutionSiteStudent.id' => null,
+				'AND' => array(
+					'InstitutionSiteStudent.institution_site_programme_id' => $programmeIds,
+					'InstitutionSiteStudent.end_date >=' => date('Y-m-d')
+				)
+		));
 				
         if ($this->request->is('post')){
             if(isset($this->request->data['Student']['SearchField'])){
@@ -420,6 +431,7 @@ class StudentsController extends StudentsAppController {
      * Institutions that the student has attended till date
      * @return [type] [description]
      */
+	 /* need to redo the logic
     public function institutions() {
         $this->Navigation->addCrumb('Institutions');
         $data = $this->InstitutionSiteStudent->getData($this->studentId);
@@ -481,6 +493,7 @@ class StudentsController extends StudentsAppController {
             return json_encode($result);
         }
     }
+	*/
 
     /**
      * Programmes that the student has attended till date

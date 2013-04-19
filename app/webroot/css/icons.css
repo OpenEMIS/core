@@ -1,6 +1,6 @@
-span.icon_plus 	{ float: left; width: 16px; height: 16px; background: url('../img/icons/plus.png') top left no-repeat; cursor: pointer; }
+span.icon_plus 	{ float: left; width: 16px; height: 16px; background: url('../img/icons/add.png') top left no-repeat; cursor: pointer; }
 a.icon_plus { 
-	background: url("../img/icons/plus.png") no-repeat scroll 0 0 transparent; 
+	background: url("../img/icons/add.png") no-repeat scroll 0 0 transparent; 
 	color: #007CBE; 
 	font-size: 11px; 
 	padding: 3px 0 5px 20px;

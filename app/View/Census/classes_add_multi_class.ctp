@@ -48,7 +48,7 @@ if($body==0) {
 		?>
 		</div>
 		<div class="row last">
-			<a class="void icon_plus" url="Census/classesAddMultiGrade" onclick="Census.addMultiGrade(this)"><?php echo __('Add').' '.__('Grade'); ?></a>
+			<a class="void icon_plus" url="Census/classesAddMultiGrade/<?php echo $yearId; ?>" onclick="Census.addMultiGrade(this)"><?php echo __('Add').' '.__('Grade'); ?></a>
 		</div>
 	</div>
 	
