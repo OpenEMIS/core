@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2013-03-07 16:58+0800\n"
+"PO-Revision-Date: 2013-04-12 11:13+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: rus\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.4\n"
+"X-Generator: Poedit 1.5.5\n"
 
 msgid "Home"
 msgstr "дома"
@@ -267,13 +267,13 @@ msgid "Address"
 msgstr "Адрес"
 
 msgid "Postal Code"
-msgstr "Postal Code"
+msgstr "почтовый код"
 
 msgid "Telephone"
 msgstr "Телефон"
 
 msgid "Email"
-msgstr "Email"
+msgstr "E-mail"
 
 msgid "General"
 msgstr "Общие"
@@ -450,7 +450,7 @@ msgid "Area"
 msgstr "Площадь"
 
 msgid "Site Type"
-msgstr "Site Type"
+msgstr "Тип сайта"
 
 msgid "Site Code"
 msgstr "Сайт кодекс"
@@ -493,9 +493,6 @@ msgstr "Ward"
 
 msgid "Locality"
 msgstr "Регион"
-
-msgid "Latitude"
-msgstr "Latitude"
 
 msgid "Longitude"
 msgstr "Долгота"
@@ -2373,6 +2370,58 @@ msgstr "Дата публикации"
 
 msgid "Logo"
 msgstr "логотип"
+
+msgid "Data Outliers"
+msgstr "Тип сайта"
+
+msgid ""
+"Census Numbers that have age or total of male and female numbers beyond the "
+"specified range in settings."
+msgstr ""
+"Перепись числа, которые имеют возраст или общее мужчины и женщины, выходящая "
+"за пределы диапазона, установленного в настройках."
+
+msgid "Page Orientation"
+msgstr "Ориентация страницы"
+
+msgid "Yearbook Logo"
+msgstr "ежегодник Logo"
+
+msgid "Maximum Student Age"
+msgstr "Максимальный возраст студентов"
+
+msgid "Minimum Student Age"
+msgstr "Минимальный возраст студентов:"
+
+msgid "Maximum Student Number"
+msgstr "Максимальное количество студенческих"
+
+msgid "Minimum Student Number"
+msgstr "Минимальное количество студенческих"
+
+msgid "Data Discrepancy"
+msgstr "Данные несоответствия"
+
+msgid "Data Discrepancy Variation(%)"
+msgstr "Данные несоответствия вариации (%)"
+
+msgid "Previous Year"
+msgstr "предыдущий год"
+
+msgid "Previous Year Male"
+msgstr "Предыдущая Мужской Год"
+
+msgid "Previous Year Female"
+msgstr "Предыдущая Женщина Года"
+
+msgid "Data Discrepancy Reports"
+msgstr "Отчеты Данные несоответствия"
+
+msgid "age"
+msgstr "возраст"
+
+msgid "Latitude"
+msgstr "широта"
 
 #~ msgid "Completion Rate / Gross Primary Graduation Ratio"
 #~ msgstr "Оценить Завершение / брутто первичных Соотношение Graduation"
