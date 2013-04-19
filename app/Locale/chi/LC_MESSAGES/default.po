@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2013-03-05 17:21+0800\n"
+"PO-Revision-Date: 2013-04-12 11:07+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.4\n"
+"X-Generator: Poedit 1.5.5\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 
@@ -2462,6 +2462,53 @@ msgstr "资历类别"
 
 msgid "Logo"
 msgstr "标志"
+
+msgid "Data Outliers"
+msgstr "数据野值"
+
+msgid ""
+"Census Numbers that have age or total of male and female numbers beyond the "
+"specified range in settings."
+msgstr "人口普查数字超出规定的范围内设置有年龄的男性和女性的数字或总。"
+
+msgid "Page Orientation"
+msgstr "页面方向"
+
+msgid "Yearbook Logo"
+msgstr "年鉴标志"
+
+msgid "Maximum Student Age"
+msgstr "学生年龄上限"
+
+msgid "Minimum Student Age"
+msgstr "最小入学年龄"
+
+msgid "Maximum Student Number"
+msgstr "最大学生数"
+
+msgid "Minimum Student Number"
+msgstr "最低学生人数"
+
+msgid "Data Discrepancy"
+msgstr "数据差异"
+
+msgid "Data Discrepancy Variation(%)"
+msgstr "数据差异的变化（％）"
+
+msgid "Previous Year"
+msgstr "上年度"
+
+msgid "Previous Year Male"
+msgstr "上年度男"
+
+msgid "Previous Year Female"
+msgstr "上一年级的女"
+
+msgid "Data Discrepancy Reports"
+msgstr "数据差异报告"
+
+msgid "age"
+msgstr "年龄"
 
 #~ msgid "Completion Rate / Gross Primary Graduation Ratio"
 #~ msgstr "完成率/总小学毕业率"
