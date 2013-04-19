@@ -137,9 +137,12 @@ class EducationController extends AppController {
 	private function processSave($data, $model, $action) {
 		if(isset($data[$model])) {
 			$dataObjects = $data[$model];
-			foreach($dataObjects as $key => $obj) {
+			foreach($dataObjects as $key => &$obj) {
 				if(isset($obj['name']) && strlen($obj['name']) == 0) {
 					unset($dataObjects[$key]);
+				}
+				if(isset($obj['admission_age']) && strlen($obj['admission_age']) == 0) {
+					$obj['admission_age'] = 0;
 				}
 			}
 			$this->{$model}->saveMany($dataObjects);
@@ -209,13 +212,13 @@ class EducationController extends AppController {
 		// For adding education grade subjects
 		if(isset($this->params->query['education_grade_id'])) {
 			$gradeId = $this->params->query['education_grade_id'];
-			$subjectIds = $this->params->query['subjectIds'];
 			
-			$list = $this->EducationSubject->find('all', array(
-				'recursive' => 0,
-				'conditions' => array('EducationSubject.id NOT' => $subjectIds),
-				'order' => 'order'
-			));
+			$findOptions = array('recursive' => 0, 'order' => 'order');
+			if(isset($this->params->query['subjectIds'])) {
+				$subjectIds = $this->params->query['subjectIds'];
+				$findOptions['conditions'] = array('EducationSubject.id NOT' => $subjectIds);
+			}
+			$list = $this->EducationSubject->find('all', $findOptions);
 			
 			$subjectList = array();
 			foreach($list as $obj) {
