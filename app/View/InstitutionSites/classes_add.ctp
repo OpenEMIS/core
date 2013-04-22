@@ -16,6 +16,7 @@ echo $this->Html->script('institution_site_classes', false);
 	<?php if($displayContent) { ?>
 	<?php 
 	echo $this->Form->create('InstitutionSiteClass', array(
+		'onsubmit' => 'return InstitutionSiteClasses.validateClassAdd()',
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'classesAdd'),
 		'inputDefaults' => array('label' => false, 'div' => false)
 	));
@@ -81,7 +82,7 @@ echo $this->Html->script('institution_site_classes', false);
 	</div>
 	
 	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return InstitutionSiteClasses.checkName()" />
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classes'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
