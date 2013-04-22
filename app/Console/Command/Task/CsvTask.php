@@ -14,16 +14,20 @@ class CsvTask extends AppTask {
 	
 	
 	public function prepareCSV($settings){
+		//echo ">>>".pr($settings);die;
+		
         $tpl = $settings['tpl'];
         $name = $settings['name'];
         $module = $settings['module'];
         $category = $settings['category'];
-
+		$batchReportId = $settings['batchProcessId'];
+		$reportId = $settings['reportId'];
+		
         $arrTpl = explode(',', $tpl);
         $this->Common->translateArrayValues($arrTpl, " ");
 
         $line = '';
-        $filename = str_replace(' ', '_', $name).'.csv';
+        $filename = $reportId."_".$batchReportId."_".str_replace(' ', '_', $name).'.csv'; 
         $module = str_replace(' ', '_', $module);
         //$path =  WWW_ROOT.DS.$module.DS;
         $path = $this->Common->getResultPath().str_replace(' ','_',$category).DS.$module.DS;
