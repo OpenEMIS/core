@@ -878,9 +878,19 @@ class InstitutionSitesController extends AppController {
 	public function classesAdd() {
 		if($this->request->is('get')) {
 			$this->Navigation->addCrumb('Add Class');
-			$yearOptions = $this->SchoolYear->getYearList();
-			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-			$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $selectedYear);
+			$years = $this->SchoolYear->getYearList();
+			$yearOptions = array();
+			
+			$programmeOptions = array();
+			foreach($years as $yearId => $year) {
+				$programmes = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $yearId);
+				if(!empty($programmes)) {
+					$yearOptions[$yearId] = $year;
+					if(empty($programmeOptions)) {
+						$programmeOptions = $programmes;
+					}
+				}
+			}
 			$displayContent = !empty($programmeOptions);
 			
 			if($displayContent) {
@@ -1044,8 +1054,11 @@ class InstitutionSitesController extends AppController {
 		$this->autoRender = false;
 		$name = trim($this->params->query['name']);
 		$yearId = $this->params->query['year'];
+		$count = $this->params->query['count'];
 		
-		if(strlen($name) == 0) {
+		if($count==0) {
+			return $this->Utility->getMessage('SITE_CLASS_NO_GRADES');
+		} else if(strlen($name) == 0) {
 			return $this->Utility->getMessage('SITE_CLASS_EMPTY_NAME');
 		} else if($this->InstitutionSiteClass->isNameExists($name, $this->institutionSiteId, $yearId)) {
 			return $this->Utility->getMessage('SITE_CLASS_DUPLICATE_NAME');

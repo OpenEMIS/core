@@ -58,15 +58,19 @@ class SecurityController extends AppController {
     public function login() {
 		$this->autoLayout = false;
 		if($this->request->is('post')) {
+			$username = $this->data['SecurityUser']['username'];
+			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
 			if(!$this->RequestHandler->isAjax()) {
 				if($this->Auth->login()) {
 					if($this->Auth->user('status') == 1) {
+						$this->log('[' . $username . '] Login successfully.', 'security');
 						$userId = AuthComponent::user('id');
 						$this->SecurityUser->updateLastLogin($userId);
 						$this->AccessControl->init($userId);
 						$this->registerSession();
 						$this->redirect($this->Auth->redirect('home'));
 					} else if ($this->Auth->user('status') == 0) {
+						$this->log('[' . $username . '] Account is not active.', 'security');
 						$this->Session->setFlash($this->Utility->getMessage("LOGIN_USER_INACTIVE"));
 					}
 				} else {
