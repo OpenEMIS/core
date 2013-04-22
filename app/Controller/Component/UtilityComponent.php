@@ -48,6 +48,7 @@ class UtilityComponent extends Component {
 		// Institution Site Classes
 		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
 		$msgList['SITE_CLASS_DUPLICATE_NAME'] = "The name is already existed.";
+		$msgList['SITE_CLASS_NO_GRADES'] = "Please add a grade to this class.";
 		
 		// Students
 		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";
