@@ -16,9 +16,11 @@ class VcfTask extends AppTask {
         $name = $settings['name'];
         $module = $settings['module'];
         $category = $settings['category'];
+		$batchReportId = $settings['batchProcessId'];
+		$reportId = $settings['reportId'];
 		
         $line = '';
-        $filename = str_replace(' ', '_', $name).'.vcf';
+        $filename = $reportId."_".$batchReportId."_".str_replace(' ', '_', $name).'.vcf'; 
         //$path =  WWW_ROOT.DS.$module.DS;
         //$path = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS;
 		$path = $this->Common->getResultPath().str_replace(' ','_',$category).DS.$module.DS;

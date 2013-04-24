@@ -6,7 +6,7 @@ class KmlTask extends AppTask {
 	public $limit = 100;
 	public $fileFP;
 	public $tasks = array('Common');
-	
+	  
 	
 	/****
 	 * KML Starts
@@ -17,9 +17,12 @@ class KmlTask extends AppTask {
         $name = $settings['name'];
         $module = $settings['module'];
         $category = $settings['category'];
-
+		$batchReportId = $settings['batchProcessId'];
+		$reportId = $settings['reportId'];
+		
+        
         $line = '';
-        $filename = str_replace(' ', '_', $name).'.kml';
+        $filename = $reportId."_".$batchReportId."_".str_replace(' ', '_', $name).'.kml';
         
 		$path = $this->Common->getResultPath().str_replace(' ','_',$category).DS.$module.DS;
 		
