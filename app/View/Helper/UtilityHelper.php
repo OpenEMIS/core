@@ -1,9 +1,8 @@
 <?php
 App::uses('AppHelper', 'View/Helper');
 App::uses('DateTimeComponent', 'Controller/Component');
+App::uses('AreaHandlerComponent', 'Controller/Component');
 App::uses('String', 'Utility');
-App::import("Model", "Area");  
-App::import("Model", "AreaLevel");  
 
 
 class UtilityHelper extends AppHelper {
@@ -57,82 +56,19 @@ class UtilityHelper extends AppHelper {
 		return $yearSelect;
 	}
 	
-	private function getAreatoParent($lowest){
-        $arrVals = Array();
-        $list = $this->Area->find('first', array(
-                                'fields' => array('Area.id', 'Area.name', 'Area.parent_id', 'Area.area_level_id','AreaLevel.name'),
-                                'conditions' => array('Area.id' => $lowest)));
-    
-        //check if not false
-        if($list){
-            $arrVals[$list['Area']['area_level_id']] = Array('level_id'=>$list['Area']['area_level_id'],'id'=>$list['Area']['id'],'name'=>$list['Area']['name'],'parent_id'=>$list['Area']['parent_id'],'AreaLevelName'=>$list['AreaLevel']['name']);
-            if($list['Area']['area_level_id'] > 1){
-                if($list['Area']['area_level_id']){
-                    do {
-                        $list = $this->Area->find('first', array(
-                                'fields' => array('Area.id', 'Area.name', 'Area.parent_id', 'Area.area_level_id','AreaLevel.name', 'Area.visible'),
-                                'conditions' => array('Area.id' => $list['Area']['parent_id'])));
-                        $arrVals[$list['Area']['area_level_id']] = Array('visible'=>$list['Area']['visible'],'level_id'=>$list['Area']['area_level_id'],'id'=>$list['Area']['id'],'name'=>$list['Area']['name'],'parent_id'=>$list['Area']['parent_id'],'AreaLevelName'=>$list['AreaLevel']['name']);
-                    } while ($list['Area']['area_level_id'] != 1);
-                }
-            }
-        }
-        return $arrVals;
-    }
-	
-	private function getAllSiteAreaToParent($siteId) {
-		$lowest = ($siteId<1) ? 1 : $siteId;
-        $areas = $this->getAreatoParent($lowest);
-        $areas = array_reverse($areas);
-
-        $arrDisabledList = array();
-        foreach($areas as $index => &$arrVals){
-            $siblings = $this->Area->find('all',array('fields'=>Array('Area.id','Area.name','Area.parent_id','Area.visible'),'conditions'=>array('Area.parent_id' => $arrVals['parent_id'])));
-            $opt = array();
-            foreach($siblings as &$sibVal){                 
-				 $arrDisabledList[$sibVal['Area']['id']] = array('parent_id'=>$sibVal['Area']['parent_id'],'id'=>$sibVal['Area']['id'],'name'=>$sibVal['Area']['name'],'visible'=>$sibVal['Area']['visible']);               
-				 if(isset($arrDisabledList[$sibVal['Area']['parent_id']])){
-					if($arrDisabledList[$sibVal['Area']['parent_id']]['visible'] == 0){
-						$sibVal['Area']['visible'] = 0;
-						$arrDisabledList[$sibVal['Area']['id']]['visible'] = 0;
-					}
-					 
-				 }
-            }
-            foreach($siblings as $sibVal2){
-                $o = array('name'=>$sibVal2['Area']['name'],'value'=>$sibVal2['Area']['id']);
-                if($sibVal2['Area']['visible'] == 0){
-                    $o['disabled'] = 'disabled';
-                }
-                $opt[] = $o;
-            }
-            $colInfo['area_level_'.$index]['options'] = $opt;
-        }
-		
-		if ($siteId<1) { //don't force selection of country 3
-			array_unshift($colInfo['area_level_0']['options'] , array('0'=>'--'.__('Select').'--'));
-		}
-        $maxAreaIndex = (sizeof($areas)==0) ? -1 : max(array_keys($areas));//starts with 0
-        $totalAreaLevel = $this->AreaLevel->find('count'); //starts with 1
-        for($i = $maxAreaIndex; $i < $totalAreaLevel;$i++ ){
-            $colInfo['area_level_'.($i+1)]['options'] = array('0'=>'--'.__('Select').'--');
-        }
-        return $colInfo;
-    }
 	
 	public function initArea($value=1){
-		if (!isset($this->Area) || !isset($this->AreaLevel)) {
-			$this->Area=new Area();
-			$this->AreaLevel=new AreaLevel();
+		if (!isset($this->AreaHandler)) {
+			$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		}
 		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
-		$this->fieldAreaLevels = $this->getAreatoParent($value);
+		$this->fieldAreaLevels = $this->AreaHandler->getAreatoParent($value);
 		$this->fieldAreaLevels = array_reverse($this->fieldAreaLevels);
-		$this->fieldLevels = $this->AreaLevel->find('list',array('recursive'=>0));
-		$this->fieldAreadropdowns = $this->getAllSiteAreaToParent($value);
+		$this->fieldLevels = $this->AreaHandler->getAreaList();
+		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,array('empty_arealevel_placeholder'=>'--'.__('Select').'--'));
 	}
 	
-	public function showArea($form,$id,$value,$setting=array()){
+	public function showArea($form,$id,$value,$settings=array()){
 		$this->initArea($value);
 		$ctr = 0;
 		foreach($this->fieldLevels as $levelid => $levelName){
@@ -151,8 +87,8 @@ class UtilityHelper extends AppHelper {
 		}
 	}
 	
-	public function getAreaPicker($form,$id,$value,$setting=array()){
-		//setting unused
+	public function getAreaPicker($form,$id,$value,$settings=array()){
+		//settings unused
 		$this->initArea($value);
 		$ctr = 0;
 
