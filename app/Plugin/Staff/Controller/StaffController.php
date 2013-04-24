@@ -125,10 +125,9 @@ class StaffController extends StaffAppController {
         $this->Staff->id = $this->Session->read('StaffId');
 
         $imgValidate = new ImageValidate();
-
+		$data = $this->data;
         if ($this->request->is('post')) {
 
-            $data = $this->data;
             $reset_image = $data['Staff']['reset_image'];
 
             $img = new ImageMeta($data['Staff']['photo_content']);
@@ -160,13 +159,11 @@ class StaffController extends StaffAppController {
             }
         }else{
 			$data = $this->Staff->find('first',array('conditions'=>array('id'=>$this->Session->read('StaffId'))));
-			$this->set('data', $data);
 		}
-		
-        //$data = $this->Staff->read();
+
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
         $this->set('gender', $gender);
-        
+        $this->set('data', $data);
     }
 
     public function fetchImage($id){
@@ -209,6 +206,7 @@ class StaffController extends StaffAppController {
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
         $this->set('gender', $gender);
+		$this->set('data', $this->data);
     }
 
     public function additional() {
