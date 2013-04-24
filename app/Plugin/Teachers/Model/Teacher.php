@@ -80,7 +80,21 @@ class Teacher extends TeachersAppModel {
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Email'
 			)
-		)
+		)/*,
+		'address_area_id' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', '>', 0),
+				'required' => true,
+				'message' => 'Please select an Address Area'
+			)
+		),
+		'birthplace_area_id' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', '>', 0),
+				'required' => true,
+				'message' => 'Please select a Birthplace Area'
+			)
+		)*/
 	);
 	
 	public function getLookupVariables() {
