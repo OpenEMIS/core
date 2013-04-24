@@ -56,20 +56,13 @@ class UtilityHelper extends AppHelper {
 		return $yearSelect;
 	}
 	
-	
-	public function initArea($value=1){
-		if (!isset($this->AreaHandler)) {
-			$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-		}
-		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
-		$this->fieldAreaLevels = $this->AreaHandler->getAreatoParent($value);
-		$this->fieldAreaLevels = array_reverse($this->fieldAreaLevels);
-		$this->fieldLevels = $this->AreaHandler->getAreaList();
-		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,array('empty_arealevel_placeholder'=>'--'.__('Select').'--'));
-	}
-	
+
 	public function showArea($form,$id,$value,$settings=array()){
-		$this->initArea($value);
+		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
+		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
+		$this->fieldLevels = $this->AreaHandler->getAreaList();
+		
 		$ctr = 0;
 		foreach($this->fieldLevels as $levelid => $levelName){
 			$areaVal = array('id'=>'0','name'=>'a');
@@ -89,7 +82,12 @@ class UtilityHelper extends AppHelper {
 	
 	public function getAreaPicker($form,$id,$value,$settings=array()){
 		//settings unused
-		$this->initArea($value);
+		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
+		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
+		$this->fieldLevels = $this->AreaHandler->getAreaList();
+		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,array('empty_arealevel_placeholder'=>'--'.__('Select').'--'));
+	
 		$ctr = 0;
 
 		foreach($this->fieldLevels as $levelid => $levelName){
