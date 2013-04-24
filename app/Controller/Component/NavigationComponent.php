@@ -1,4 +1,4 @@
-<?php
+<?php 
 class NavigationComponent extends Component {
 	private $controller;
 	public $navigations;
@@ -219,8 +219,8 @@ class NavigationComponent extends Component {
 				),
 				'DATA PROCESSING' => array(
 					'_controller' => 'DataProcessing',
-					$this->createLink('Generate Reports', 'reports'),
-					$this->createLink('Export Indicators', 'indicators'),
+					$this->createLink('Generate', 'reports'),
+					$this->createLink('Export', 'indicators'),
 					$this->createLink('Processes', 'processes'),
 					//$this->createLink('Scheduler', 'scheduler')
 				),
