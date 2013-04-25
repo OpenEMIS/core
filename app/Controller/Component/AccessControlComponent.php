@@ -11,7 +11,10 @@ class AccessControlComponent extends Component {
 	public $ignoreList = array(
 		'HOME' => array('index'), 
 		'SECURITY' => array('login', 'logout'), 
-		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage')
+		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
+		'STUDENTS' => array('viewStudent'),
+		'TEACHERS' => array('viewTeacher'),
+		'STAFF' => array('viewStaff')
 	);
 	public $operations = array('_view', '_edit', '_add', '_delete');
 	
