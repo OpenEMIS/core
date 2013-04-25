@@ -81,7 +81,7 @@ echo $this->Html->script('institution_site_classes', false);
 	</div>
 	
 	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return InstitutionSiteClasses.checkName()" />
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return InstitutionSiteClasses.validateClassAdd()" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classes'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
