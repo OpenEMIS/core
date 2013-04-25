@@ -9,7 +9,7 @@ class AccessControlComponent extends Component {
 	private $RoleArea;
 	private $RoleInstitutionSite;
 	public $ignoreList = array(
-		'HOME' => array('index'), 
+		'HOME' => array('index', 'details', 'detailsEdit', 'password'), 
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
 		'STUDENTS' => array('viewStudent'),
