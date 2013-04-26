@@ -811,7 +811,6 @@ class ReportsController extends ReportsAppController {
 	}
 	
 	private function convFileSize($bytes){
-		$bytes = 2048;
 		if ($bytes >= 1073741824){
             $bytes = number_format($bytes / 1073741824, 2) . ' GB';
         }elseif ($bytes >= 1048576){
