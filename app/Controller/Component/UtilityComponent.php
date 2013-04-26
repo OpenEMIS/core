@@ -42,7 +42,7 @@ class UtilityComponent extends Component {
 		$msgList['EDUCATION_PROGRAMME_ADDED'] = "Education Programme has been added successfully. Please add Education Grades to this Programme.";
 		
 		// Reports
-		$msgList['REPORT_NO_FILES'] = "There is available files for this report.";
+		$msgList['REPORT_NO_FILES'] = "There are no available files found for this report.";
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 		return __($msg);
 	}
