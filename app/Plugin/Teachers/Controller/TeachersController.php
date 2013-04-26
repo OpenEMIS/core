@@ -131,10 +131,9 @@ class TeachersController extends TeachersAppController {
         $this->Teacher->id = $this->Session->read('TeacherId');
 
         $imgValidate = new ImageValidate();
-
+		$data = $this->data;
         if ($this->request->is('post')) {
 
-            $data = $this->data;
             $reset_image = $data['Teacher']['reset_image'];
 
             $img = new ImageMeta($data['Teacher']['photo_content']);
@@ -166,13 +165,12 @@ class TeachersController extends TeachersAppController {
             }
         }else{
 			$data = $this->Teacher->find('first',array('conditions'=>array('id'=>$this->Session->read('TeacherId'))));
-			$this->set('data', $data);
+
 		}
 
-        
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
         $this->set('gender', $gender);
-       
+		$this->set('data', $data);
     }
 
     public function fetchImage($id){
@@ -208,6 +206,7 @@ class TeachersController extends TeachersAppController {
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
         $this->set('gender', $gender);
+		$this->set('data', $this->data);
     }
     
     public function delete() {
