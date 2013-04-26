@@ -59,6 +59,8 @@ class UtilityComponent extends Component {
 		// Staff
 		$msgList['STAFF_NOT_FOUND'] = "No Staff found.";
 		
+		// Reports
+		$msgList['REPORT_NO_FILES'] = "There are no available files found for this report.";
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 		return __($msg);
 	}

@@ -1,5 +1,6 @@
 <?php
-
+App::uses('Folder', 'Utility');
+App::uses('File', 'Utility');
 class ReportsController extends ReportsAppController {
     public $bodyTitle = 'Reports';
     public $headerSelected = 'Reports';
@@ -28,33 +29,21 @@ class ReportsController extends ReportsAppController {
 		'Custom'=>array('enable'=>true));
 	
     public $helpers = array('Paginator');
-    public $components = array('Paginator');
-
-    private  $hideOlapTableColumnsLabel = array(
-                'Area',
-                'InstitutionSector',
-                'InstitutionProvider',
-                'InstitutionStatus',
-                'InstitutionSiteLocality',
-                'InstitutionSiteType',
-                'InstitutionSiteOwnership',
-                'InstitutionSiteStatus',
-                'CensusStudent'
-            );
-
-    /*public function beforeFilter() {
-		parent::beforeFilter();
-		$this->Navigation->extendSideLinks($this->ReportsNavigation->getReportLinks());
-		$this->Navigation->show(array('reports'));  
-		$this->breadcrumbAdd(__('Reports'), array('controller' => 'Reports', 'action' => 'index'));
-    }*/
+    public $components = array('Paginator','DateTime','Utility');
+	private $pathFile = '';
+    
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Reports', array('controller' => 'Reports', 'action' => 'index'));
 		
 		if(array_key_exists(ucfirst($this->action), $this->standardReports)) {
 			$this->renderReport(ucfirst($this->action));
-			$this->render('index');
+			if(isset($this->params['pass'][0])){
+				$this->reportList($this->params['pass'][0]);
+				$this->render('report_list');
+			}else{
+				$this->render('index');
+			}
 		}
     }
 	
@@ -72,7 +61,12 @@ class ReportsController extends ReportsAppController {
 	public function DataQuality(){}
 	
 	public function renderReport($reportType = 'Institution') {
-		$this->Navigation->addCrumb($reportType.' Reports');
+		if(isset($this->params['pass'][0])){
+			$this->Navigation->addCrumb($reportType.' Reports', array('controller' => 'Reports', 'action' => $this->action));
+			$this->Navigation->addCrumb(' Generated Files');
+		}else{
+			$this->Navigation->addCrumb($reportType.' Reports');
+		}
 
 		if(array_key_exists($reportType, $this->standardReports)){
 			if(!$this->standardReports[$reportType]['enable'] === false){
@@ -89,29 +83,20 @@ class ReportsController extends ReportsAppController {
 		
         $checkFileExist = array();
 		$tmp = array();
+		
+		//arrange and sort according to grounp
 		foreach($data as $k => $val){
 			//$pathFile = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$val['Report']['category']).DS.$val['Report']['module'].DS.str_replace(' ','_',$val['Report']['name']).'.'.$val['Report']['file_type'];
 			$module = $val['Report']['module'];
             $category = $val['Report']['category'];
             $name = $val['Report']['name'];
 			$val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
-			$pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS.str_replace(' ','_',$name).'.'.$val['Report']['file_type'];
-			$idFileExists = file_exists($pathFile);
-			$checkFileExist[$val['Report']['id']] = array('isExists' => $idFileExists);
-                        
-			if(isset($tmp[$reportType.' Reports'][$module][$name])){
-				 $tmp[$reportType.' Reports'][$module][$name]['file_kinds'][$val['Report']['id']] = $val['Report']['file_type'];
-			}else{
-				$val['Report']['file_kinds'][$val['Report']['id']] = $val['Report']['file_type'];
-                                $val['Report']['lastgen'] = (($idFileExists)?date ("M-d-Y h:i:s", filemtime($pathFile)):'');
-				$tmp[$reportType.' Reports'][$module][$name] =  $val['Report'];
-			}
+			$tmp[$reportType.' Reports'][$module][$name] =  $val['Report']; 
         }
               
 		$msg = (isset($_GET['processing']))?'processing':'';
         $this->set('msg',$msg);
 		$this->set('data',$tmp);
-        $this->set('checkFileExist',$checkFileExist);
 	}
 	
     public function olap(){
@@ -392,26 +377,38 @@ class ReportsController extends ReportsAppController {
         return json_encode($csvSettings);
     }
 	
-	public function download($id=0){
-        if($id < 1 ){
-            $this->downloadOlapReport();
+	public function download($filename){
+        if($filename == '' ){
+            die();
         }else{
-            $res = $this->Report->find('first',array('conditions'=>array('id'=>$id)));
-
+			
+			$info['basename'] = $filename;
+			/* Return array
+			 * Array
+				(
+					[basename] => 1_980_Institution_Report.csv
+					[reportId] => 1
+					[batchProcessId] => 980
+					[name] => Institution_Report.csv
+				)
+			 * 
+			 */
+			$this->parseFilename($info);
+				
+			$resChck = $this->BatchProcess->find('all',array('conditions'=>array('id'=>$info['batchProcessId'],'status'=>array(1,2))));// filename that's currently being proessed
+			if($resChck){
+                $referrer = str_replace('?processing','',Controller::referer());
+                $this->redirect($referrer.'?processing');
+            }
+			
+			$res = $this->Report->find('first',array('conditions'=>array('id'=>$info['reportId'])));// get the path
+		
             $module = $res['Report']['module'];
             $category = $res['Report']['category'];
             $name = $res['Report']['name'];
             $res['Report']['file_type'] = ($res['Report']['file_type']=='ind'?'csv':$res['Report']['file_type']);
             $xt = $res['Report']['file_type'];
-
-            $filename = str_replace(' ', '_', $name).'.'.$xt;
-
-            $resChck = $this->BatchProcess->find('first',array('conditions'=>array('file_name'=>$filename,'status'=>array(1,2))));// filename that's currently being proessed
-
-            if($resChck){
-                $referrer = str_replace('?processing','',Controller::referer());
-                $this->redirect($referrer.'?processing');
-            }
+			
             //$path =  WWW_ROOT.DS.$module.DS;
             //$path = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS;
 
@@ -429,31 +426,6 @@ class ReportsController extends ReportsAppController {
         }
 
 	}
-
-    private function downloadOlapReport(){
-        $filename = 'OpenEMIS_Report_OLAP_'.$this->Auth->user('username');
-        $ext = 'csv';
-
-        if(!$filename)
-        {
-            // File doesn't exist, output error
-            die('file not found');
-        }
-        else
-        {
-            $this->viewClass = 'Media';
-            // Download app/outside_webroot_dir/example.zip
-            $params = array(
-                'id'        => "$filename.$ext",
-                'name'      => $filename,
-                'download'  => true,
-                'extension' => $ext,
-                'path'		=> APP.WEBROOT_DIR.DS.'reports'.DS."Olap_Reports".DS
-            );
-            $this->set($params);
-        }
-
-    }
 
     public function generateRawQuery($settings) {
         $query = '';
@@ -617,7 +589,7 @@ class ReportsController extends ReportsAppController {
     }
 
     public function genCSV($settings){
-        $dbo = ConnectionManager::getDataSource('default');
+        $dbo = ConnectionManager::getDataSource('default'); 
         $tpl = $settings['tpl'];
 //        $procId = $settings['batchProcessId'];
         $arrCount = $this->olapGetNumberOfRecordsPerObservation(intval($settings['observationId']), $settings['year']);
@@ -635,7 +607,7 @@ class ReportsController extends ReportsAppController {
 //                // Update the status for the Processed item to (-1) ERROR
                 $errLog = $e->getMessage();
 //                $this->Common->updateStatus($procId,'-1');
-//                $this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
+//                $this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog); 
             }
             $this->formatOlapData($rawData, $tpl);
             $this->writeCSV($rawData, $settings);
@@ -821,4 +793,78 @@ class ReportsController extends ReportsAppController {
 
         return implode(',',$formattedArray);
     }
+	
+	public function reportList($report_id){
+		$files = array();
+		$data = $this->Report->findById($report_id);
+		if(count($data) > 0){
+			$files = $this->getAllGenReports($data);
+		}
+		
+		if(count($files) == 0 ){
+			$this->Utility->alert($this->Utility->getMessage('REPORT_NO_FILES'), array('type' => 'info', 'dismissOnClick' => false));
+		}
+		$this->set('files',$files);
+	}
+	
+	private function getAllGenReports($data){
+		$files = array();
+		$this->getReportFilesPath($data);
+		$dir = new Folder($this->pathFile);
+		$name = str_replace(' ','_',$data['Report']['name']);
+		$files = $dir->find('.*'.$name.'.*');
+		$filesSet = array();
+		foreach($files as &$val){
+			$file = new File($dir->pwd().$val);
+			$info = $file->info();
+			$time = $file->lastChange();
+			$info['time'] = date($this->DateTime->getConfigDateFormat()." H:i:s",$time);
+			$info['size'] = $this->convFileSize($info['filesize']);
+			//pr($info);
+			
+			$this->parseFilename($info);
+			
+			$info['path'] = $this->pathFile;
+			$filesSet[$info['extension']][$time] = $info;	
+		}
+		//sort the files based on time gen DESC order
+		foreach($filesSet as $key => &$val){
+			krsort($filesSet[$key]);
+		}
+		
+		return $filesSet;
+	}
+	
+	private function parseFilename(&$info){
+		$arrFilename = explode("_",$info['basename'] );
+		//pr(array_shift($arrFilename));
+		$info['reportId'] = array_shift($arrFilename);
+		$info['batchProcessId'] = array_shift($arrFilename);
+		$info['name']  = implode("_",$arrFilename);
+	}
+	
+	private function getReportFilesPath($data){
+		$module = str_replace(' ','_',$data['Report']['module']);
+		$category = str_replace(' ','_',$data['Report']['category']);
+		$file_type = str_replace(' ','_',($data['Report']['file_type']=='ind'?'csv':$data['Report']['file_type']));
+		$this->pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.$category.DS.$module.DS;
+	}
+	
+	private function convFileSize($bytes){
+		if ($bytes >= 1073741824){
+            $bytes = number_format($bytes / 1073741824, 2) . ' GB';
+        }elseif ($bytes >= 1048576){
+            $bytes = number_format($bytes / 1048576, 2) . ' MB';
+        }elseif ($bytes >= 1024){
+            $bytes = number_format($bytes / 1024, 2) . ' KB';
+        }elseif ($bytes > 1){
+            $bytes = $bytes . ' bytes';
+        }elseif ($bytes == 1){
+            $bytes = $bytes . ' byte';
+        }else{
+            $bytes = '0 bytes';
+        }
+		return $bytes;
+	}
+	
 }
