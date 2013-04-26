@@ -139,7 +139,7 @@ class CommonTask extends AppTask {
     }
 
     public function checkandFormatCustomCount(&$sql){
-        if (preg_match('/[\'|"]*joins[\'|"]*\s*\=\>array\(/i', $sql)) { 
+        if ( (preg_match('/[\'|"]*joins[\'|"]*\s*\=\>array\(/i', $sql)) || (preg_match('/[\'|"]*conditions[\'|"]*\s*\=\>array\(/i', $sql)) ) { 
             $sql = preg_replace('/find\(\s*[\'|"]*all[\'|"]*/i','find(\'count\'',$sql);//swap 'all' to 'count'
             $sql = preg_replace('/[\'|"]*fields[\'|"]*\s*\=\>\s*array\([^\)]*\)[,]*/i','',$sql);//remove fields , fields specified in find will screw up count
             $sql = preg_replace('/[,]*\{cond\}\)\)\;/i','));/*',$sql);//remove {cond}, comment rest of codeblock

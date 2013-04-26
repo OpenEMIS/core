@@ -64,7 +64,7 @@ class BatchShell extends AppShell {
         }
     }
 	
-    public function genReport($reportRec,$BatchProcessId){
+    public function genReport($reportRec,$BatchProcessId){ 
 	
 		$this->autoRender = false;
 		$file_type = $reportRec['Report']['file_type'];
@@ -77,12 +77,13 @@ class BatchShell extends AppShell {
 						'header'=>@$reportRec['Report']['header'],
 						'footer'=>$reportRec['Report']['footer'],
 						'batchProcessId' =>$BatchProcessId,
-						'reportId' =>$reportRec['Report']['id']);
+						'reportId' =>$reportRec['Report']['id']); 
 		
-		
+	
         if( $file_type == 'csv'){
 			
 			$this->Csv->genCSV($settings);
+				
         }elseif($file_type == 'kml'){
 			
 			 $this->Kml->genKML($settings);

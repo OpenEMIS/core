@@ -1,7 +1,7 @@
 <?php
 echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => false));
-
 echo $this->Html->script('/Teachers/js/teachers', false);
+$obj = @$data['Teacher'];
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -22,9 +22,7 @@ echo $this->Html->script('/Teachers/js/teachers', false);
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
 	?>
-	
-	<?php $obj = @$data['Teacher']; ?>
-	
+
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
         <div class="row">
@@ -84,6 +82,16 @@ echo $this->Html->script('/Teachers/js/teachers', false);
 			<div class="label"><?php echo __('Postal Code'); ?></div>
 			<div class="value"><?php echo $this->Form->input('postal_code', array('value' => $obj['postal_code'])); ?></div>
 		</div>
+	</fieldset>
+	
+	<fieldset class="section_break">
+		<legend><?php echo __('Address Area'); ?></legend>   
+			<?php echo $this->Utility->getAreaPicker($this->Form, 'address_area_id',@$obj['address_area_id'], array()); ?>
+	</fieldset>
+	
+	<fieldset class="section_break">
+		<legend><?php echo __('Birth Place Area'); ?></legend>   
+			<?php echo $this->Utility->getAreaPicker($this->Form, 'birthplace_area_id',@$obj['birthplace_area_id'], array()); ?>
 	</fieldset>
 	
 	<fieldset class="section_break">

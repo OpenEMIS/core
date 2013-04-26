@@ -9,9 +9,12 @@ class AccessControlComponent extends Component {
 	private $RoleArea;
 	private $RoleInstitutionSite;
 	public $ignoreList = array(
-		'HOME' => array('index'), 
+		'HOME' => array('index', 'details', 'detailsEdit', 'password'), 
 		'SECURITY' => array('login', 'logout'), 
-		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage')
+		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
+		'STUDENTS' => array('viewStudent'),
+		'TEACHERS' => array('viewTeacher'),
+		'STAFF' => array('viewStaff')
 	);
 	public $operations = array('_view', '_edit', '_add', '_delete');
 	
@@ -188,13 +191,17 @@ class AccessControlComponent extends Component {
 		$access = false;
 		$controller = strtoupper($controller);
 		
-		$permissions = $this->Session->read('permissions');
-		$check = $permissions['check'];
-		if($this->Auth->user('super_admin')==0) {
-			$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
+		if($this->Session->check('permissions')) {
+			$permissions = $this->Session->read('permissions');
+			$check = $permissions['check'];
+			if($this->Auth->user('super_admin')==0) {
+				$access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
+			} else {
+				// need to verify logic
+				$access = isset($check[$controller][$action]) ? $check[$controller][$action] : true;
+			}
 		} else {
-			// need to verify logic
-			$access = isset($check[$controller][$action]) ? $check[$controller][$action] : true;
+			$access = true;
 		}
 		return $access;
 	}
@@ -225,7 +232,7 @@ class AccessControlComponent extends Component {
 		$controller = $this->controller->params['controller'];
 		$action = $this->controller->action;
 		
-		// if action is not in ignore list then check for access
+		// if action is not in ignore list then check for access	
 		if(!$this->isIgnored($controller, $action)) {
 			if(!$this->check($controller, $action)) {
 				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));

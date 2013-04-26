@@ -66,7 +66,7 @@ class SetupController extends AppController {
 		$lookup[] = array('Institution Site' => array('items' => $this->InstitutionSite->getLookupVariables()));
 		
 		// Infrastructure 
-		$lookup[] = array(__('Infrastructure') => array(
+		$lookup[] = array('Infrastructure' => array(
 			'optgroup' => true,
 			'nameEditable' => false,
 			'allowAdd' => false,
@@ -78,12 +78,12 @@ class SetupController extends AppController {
 		foreach($infraCategory as $cat) {
 			$categoryModel = 'Infrastructure' . Inflector::singularize($cat);
 			$categoryModelObj = ClassRegistry::init($categoryModel);
-			$lookup[] = array(__('Infrastructure') => array('optgroup' => true, 'name' => $cat, 'items' => $categoryModelObj->getLookupVariables()));
+			$lookup[] = array('Infrastructure' => array('optgroup' => true, 'name' => $cat, 'items' => $categoryModelObj->getLookupVariables()));
 		}
 		// End Infrastructure
 		
 		// Banks & Branches
-		$lookup[] = array(__('Bank Account') => array(
+		$lookup[] = array('Bank Account' => array(
 			'view' => 'banks',
 			'edit' => 'banks_edit',
 			'optgroup' => true,
@@ -91,7 +91,7 @@ class SetupController extends AppController {
 			'items' => $this->Bank->getLookupVariables()
 		));
 		
-		$lookup[] = array(__('Bank Account') => array(
+		$lookup[] = array('Bank Account' => array(
 			'view' => 'banks',
 			'edit' => 'banks_edit',
 			'optgroup' => true, 
@@ -101,19 +101,19 @@ class SetupController extends AppController {
 		// End Banks & Branches
 		
 		// Finances
-		$lookup[] = array(__('Finances') => array(
+		$lookup[] = array('Finances' => array(
 			'optgroup' => true,
 			'name' => 'Nature',
 			'items' => $this->FinanceNature->getLookupVariables()
 		));
 		
-		$lookup[] = array(__('Finances') => array(
+		$lookup[] = array('Finances' => array(
 			'optgroup' => true,
 			'name' => 'Types',
 			'items' => $this->FinanceType->getLookupVariables()
 		));
 		
-		$lookup[] = array(__('Finances') => array(
+		$lookup[] = array('Finances' => array(
 			'view' => 'finance_categories',
 			'edit' => 'finance_categories_edit',
 			'optgroup' => true,
@@ -121,23 +121,24 @@ class SetupController extends AppController {
 			'items' => $this->FinanceCategory->getLookupVariables()
 		));
 		
-		$lookup[] = array(__('Finances') => array(
+		$lookup[] = array('Finances' => array(
 			'optgroup' => true,
 			'name' => 'Sources',
 			'items' => $this->FinanceSource->getLookupVariables()
 		));
 		// End Finances
 		
-		$lookup[] = array(__('School Year') => array(
+		$lookup[] = array('School Year' => array(
 			'view' => 'school_year',
 			'edit' => 'school_year_edit',
 			'items' => $this->SchoolYear->getLookupVariables()
 		));
-		$lookup[] = array(__('Student') => array('nameEditable' => false, 'items' => $this->Student->getLookupVariables()));
+		
+		$lookup[] = array('Student' => array('nameEditable' => false, 'items' => $this->Student->getLookupVariables()));
 		
 		// Teacher
 		$teacherOptions = array(
-			__('Categories') => $this->TeacherCategory,
+			'Categories' => $this->TeacherCategory,
 			'Qualification Categories' => $this->TeacherQualificationCategory,
 			'Qualification Certificates' => $this->TeacherQualificationCertificate,
 			'Qualification Institutions' => $this->TeacherQualificationInstitution,
@@ -145,11 +146,11 @@ class SetupController extends AppController {
 		);
 		
 		foreach($teacherOptions as $name => $model) {
-			$lookup[] = array(__('Teacher') => array('optgroup' => true, 'name' => $name, 'items' => $model->getLookupVariables()));
+			$lookup[] = array('Teacher' => array('optgroup' => true, 'name' => $name, 'items' => $model->getLookupVariables()));
 		}
 		// End Teacher
 		
-		$lookup[] = array(__('Staff') => array('items' => $this->Staff->getLookupVariables()));
+		$lookup[] = array('Staff' => array('items' => $this->Staff->getLookupVariables()));
 		
 		$categoryList = array();
 		
@@ -157,7 +158,7 @@ class SetupController extends AppController {
 			$categoryValues = current($category);
 			if(isset($categoryValues['optgroup'])) {
 				$categoryItems = $categoryValues['items'];
-				$categoryList[key($category)][$i] = __($categoryValues['name']);
+				$categoryList[__(key($category))][$i] = __($categoryValues['name']);
 			} else {
 				$categoryList[$i] = __(key($category));
 			}
