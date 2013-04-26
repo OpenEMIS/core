@@ -11,7 +11,7 @@ class EducationSubject extends AppModel {
 			),
 			'isUnique' => array(
 				'rule' => 'isUnique',
-				'message' => 'This subject is already exists in the system.'
+				'message' => 'This subject already exists in the system.'
 			)
 		)
 	);
