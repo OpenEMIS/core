@@ -1,0 +1,221 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/*login*/
+.header_logo{
+	margin-right:16px;
+}
+
+/*app#############################################*/
+
+/*header*/
+.header_side_nav{
+	float:left;
+}
+#header_side_nav_container a{
+	float:right;
+}
+#user_name{
+	float:right;
+	margin:0 6px;
+}
+.header_side_nav_function_divi{
+	float:right;
+}
+.header_nav_function{
+	float:right;
+}
+.header_nav_function_divi{
+	float:right;
+}
+.header_nav{
+	float:right;
+	margin:29px 82px 0 0;
+}
+.header_logo{
+	margin-right:0;
+	margin-left:16px;
+}
+
+/*banner*/
+#banner_box{
+	float:right;
+}
+
+/*news*/
+#news{
+	float:right;
+}
+#activity{
+	margin:0 250px 70px 10px;
+}
+
+/*pages layout*/
+.left_nav{
+	float:right;
+}
+.body_content_right{
+	float:right;
+	margin-left:0px;
+	margin-right:5px;
+}
+.left_nav_li_icon{
+	float:right;
+}
+.left_nav_li img{
+	margin:-2px 0 0 6px;
+}
+.search_wrapper{
+	float:right;
+}
+.icon_clear{
+	float:right;
+}
+#SearchField{
+	float:right;
+}
+#pagination a:link, #pagination a:visited{
+	float:right;
+}
+#pagination .ellipsis{
+	float:right;
+}
+#pagination .current{
+	float:right;
+}
+#breadcrumb li{
+	float:right;
+}
+#breadcrumb a{
+	background-position:left center;
+	padding-right:0;
+	padding-left:15px;
+	background-image: url("../img/bc_separator_rtl.gif");
+}
+.divider{
+	border-left:none;
+	border-right:1px solid #aaaaaa;
+	margin-left:0;
+	margin-right:10px;
+	padding:0 10px 0 0;
+}
+
+/*table*/
+.left{
+	float:right;
+}
+.icon_sort_up, .icon_sort_down{
+	float:left;
+}
+.label{
+	float:right;
+	margin-right:0;
+	margin-left:10px;
+}
+.value{
+	float:right;
+}
+fieldset.section_break > legend{
+	margin-left:0;
+	margin-right:-8px;
+}
+.view_controls{
+	text-align:right;
+	padding:14px 160px 0 0;
+}
+.btn_right{
+	margin-right:0;
+	margin-left:5px;
+}
+.btn_left{
+	margin-left:0;
+	margin-right:5px;
+}
+.table .cell_number{
+	text-align:left;
+}
+.table_foot .cell_label{
+	text-align:left;
+}
+#enrolment .label.category{
+	margin-left:auto;
+	margin-right:25px;
+}
+.row .icon_plus{
+	margin-left:auto;
+	margin-right:3px;
+}
+a.icon_plus{
+	background-position:right 0;
+	padding:3px 20px 5px 0;
+}
+fieldset#general.section_break > .profile_image{
+	float:left;
+	margin-left:auto;
+	margin-right:20px;
+}
+.table_view .cell{
+	float:right;
+}
+.table_view .cell_visible{
+	border-left:none;
+}
+.radio_wrapper{
+	float:right;
+	margin:3px 0 0 8px;
+}
+.programme_grades{
+	float:right;
+}
+.wrapper{
+	padding:1px 10px 1px 0;
+}
+.programme_details{
+	float:right;
+	margin-right: auto;
+	margin-left:10px;
+}
+.programme_details .label{
+	text-align:right;
+}
+.programme_subjects{
+	border-left:1px solid #cccccc;
+}
+.options li input[type="text"]{
+	float:right;
+}
+.options li span{
+	float:right;
+}
+.field_list .action{
+	float:left;
+}
+.module_checkbox{
+	margin:0 0 0 8px;
+}
+.alert{
+	float:right;
+}
+.alert .alert_icon{
+	float:right;
+	margin-left:10px;
+}
+
+/*popup box*/
+.dialog-box .dialog-controls{
+	text-align:left;
+}
+.dialog-box .dialog-btn{
+	margin-left:auto;
+	margin-right:8px;
+}
+.dialog-box #dialog-btn-close{
+	margin-left: auto;
+	margin-right:8px;
+}
+
+/*loading*/
+#loading-box .loader{
+	float:right;
+	margin-left:8px;
+}
