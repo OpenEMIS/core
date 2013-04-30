@@ -41,6 +41,9 @@
 #banner_box{
 	float:right;
 }
+#banner_image{
+	margin:0 260px 0 0;
+}
 
 /*news*/
 #news{
