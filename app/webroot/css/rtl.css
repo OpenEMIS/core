@@ -204,6 +204,12 @@ fieldset#general.section_break > .profile_image{
 	float:right;
 	margin-left:10px;
 }
+.alert_view{
+	float:none;
+}
+.alert .alert_content{
+	float:right;
+}
 
 /*popup box*/
 .dialog-box .dialog-controls{
