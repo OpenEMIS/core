@@ -9,6 +9,13 @@ if(!empty($enrolment)) { ?>
 	foreach($enrolment as $record) {
 		$count++;
 		$total += $record['male'] + $record['female'];
+		$record_tag="";
+		switch ($record['source']) {
+			case 1:
+				$record_tag.="row_external";break;
+			case 2:
+				$record_tag.="row_estimate";break;
+		}
 	?>
 	
 	<div class="table_row <?php echo $count%2==0 ? 'even' : ''; ?>" record-id="<?php echo $record['id']; ?>">
@@ -16,6 +23,7 @@ if(!empty($enrolment)) { ?>
 			<div class="input_wrapper">
 			<?php echo $this->Form->input('age', array(
 					'id' => 'CensusStudentAge',
+					'class' => $record_tag,
 					'label' => false,
 					'div' => false,
 					'value' => $record['age'],
@@ -32,6 +40,7 @@ if(!empty($enrolment)) { ?>
 			<div class="input_wrapper">
 			<?php echo $this->Form->input('male', array(
 					'id' => 'CensusStudentMale',
+					'class' => $record_tag,
 					'label' => false,
 					'div' => false,
 					'value' => $record['male'],
@@ -48,6 +57,7 @@ if(!empty($enrolment)) { ?>
 			<div class="input_wrapper">
 			<?php echo $this->Form->input('female', array(
 					'id' => 'CensusStudentFemale',
+					'class' => $record_tag,
 					'label' => false,
 					'div' => false,
 					'value' => $record['female'],

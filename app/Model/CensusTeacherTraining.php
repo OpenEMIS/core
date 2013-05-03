@@ -45,7 +45,8 @@ class CensusTeacherTraining extends AppModel {
 				'EducationLevel.name AS education_level_name',
 				'CensusTeacherTraining.id',
 				'CensusTeacherTraining.male',
-				'CensusTeacherTraining.female'
+				'CensusTeacherTraining.female',
+				'CensusTeacherTraining.source'
 			),
 			'joins' => array(
 				array(
