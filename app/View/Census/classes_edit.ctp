@@ -34,6 +34,14 @@ echo $this->Html->script('census_classes', false);
 			));
 			?>
 		</div>
+		
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	
 	<?php if($displayContent) { ?>
@@ -57,6 +65,13 @@ echo $this->Html->script('census_classes', false);
 				foreach($programme['education_grades'] as $gradeId => $grade) {
 					$totalClasses += $grade['classes'];
 					$totalSeats += $grade['seats'];
+					$record_tag="";
+					switch ($grade['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 			?>
 			
 				<div class="table_row">
@@ -66,12 +81,13 @@ echo $this->Html->script('census_classes', false);
 						'value' => $gradeId
 					));
 					?>
-					<div class="table_cell"><?php echo $name; ?></div>
-					<div class="table_cell"><?php echo $grade['name']; ?></div>
+					<div class="table_cell" <?php echo $record_tag; ?>><?php echo $name; ?></div>
+					<div class="table_cell" <?php echo $record_tag; ?>><?php echo $grade['name']; ?></div>
 					<div class="table_cell">
 						<div class="input_wrapper">
 						<?php echo $this->Form->input($i . '.classes', array(
 								'type' => 'text',
+								'class' => $record_tag,
 								'computeType' => 'total_classes',
 								'value' => $grade['classes'],
 								'maxlength' => 5,
@@ -85,6 +101,7 @@ echo $this->Html->script('census_classes', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input($i++ . '.seats', array(
 								'type' => 'text',
+								'class' => $record_tag,
 								'computeType' => 'total_seats',
 								'allowNull' => true,
 								'value' => $grade['seats'],
@@ -137,14 +154,21 @@ echo $this->Html->script('census_classes', false);
 					$totalClasses += $obj['classes'];
 					$totalSeats += $obj['seats'];
 					$gradeIndex = 0;
+					$record_tag="";
+					switch ($obj['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}	
 					?>
-					<div class="table_cell">
+					<div class="table_cell <?php echo $record_tag; ?>">
 						<?php foreach($obj['programmes'] as $programmeId => $programmeName) { ?>
 						<div class="table_cell_row"><?php echo $programmeName; ?></div>
 						<?php } ?>
 					</div>
 					
-					<div class="table_cell">
+					<div class="table_cell <?php echo $record_tag; ?>">
 						<?php foreach($obj['grades'] as $gradeId => $gradeName) { ?>
 						<div class="table_cell_row">
 							<?php 
@@ -162,6 +186,7 @@ echo $this->Html->script('census_classes', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input($i . '.classes', array(
 								'type' => 'text',
+								'class'=>$record_tag,
 								'computeType' => 'total_classes',
 								'value' => $obj['classes'],
 								'maxlength' => 5,
@@ -175,6 +200,7 @@ echo $this->Html->script('census_classes', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input($i++ . '.seats', array(
 								'type' => 'text',
+								'class'=>$record_tag,
 								'computeType' => 'total_seats',
 								'allowNull' => true,
 								'value' => $obj['seats'],

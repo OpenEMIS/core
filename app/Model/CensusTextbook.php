@@ -24,6 +24,7 @@ class CensusTextbook extends AppModel {
 				'EducationSubject.name AS education_subject_name',
 				'EducationGradeSubject.id AS education_grade_subject_id',			
 				'CensusTextbook.id',
+				'CensusTextbook.source',
 				'CensusTextbook.value'
 			),
 			'joins' => array(
@@ -90,6 +91,7 @@ class CensusTextbook extends AppModel {
 				'education_subject_name' => $obj['education_subject_name'],
 				'institution_site_id' => $obj['institution_site_id'],
 				'education_grade_subject_id' => $obj['education_grade_subject_id'],
+				'source' => $obj['source'],
 				'total' => is_null($obj['value']) ? 0 : $obj['value']
 			);
 		}
