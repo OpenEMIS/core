@@ -35,7 +35,8 @@ class CensusStaff extends AppModel {
 				'StaffCategory.visible AS staff_category_visible',
 				'CensusStaff.id',
 				'CensusStaff.male',
-				'CensusStaff.female'
+				'CensusStaff.female',
+				'CensusStaff.source'
 			),
 			'joins' => array(
 				array(

@@ -20,7 +20,7 @@ class CensusStudent extends AppModel {
 		$this->formatResult = true;
 		$data = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('CensusStudent.id', 'CensusStudent.age', 'CensusStudent.male', 'CensusStudent.female'),
+			'fields' => array('CensusStudent.id', 'CensusStudent.age', 'CensusStudent.male', 'CensusStudent.female', 'CensusStudent.source'),
 			'joins' => array(
 				array(
 					'table' => 'education_grades',

@@ -40,6 +40,13 @@ echo $this->Html->script('jquery.scrollTo', false);
 			));
 			?>
 		</div>
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	<?php
         //pr($data);
@@ -60,11 +67,18 @@ echo $this->Html->script('jquery.scrollTo', false);
                                     foreach($arrCategories as $arrValues){
                                         //pr($arrCategories);
                                         //echo "d2";
+										$record_tag="";
+										switch ($arrValues['CensusFinance']['source']) {
+											case 1:
+												$record_tag.="row_external";break;
+											case 2:
+												$record_tag.="row_estimate";break;
+										}
                                         echo '<div class="table_row">
-												<div class="table_cell">'.$arrValues['FinanceSource']['name'].'</div>
-												<div class="table_cell">'.$arrValues['FinanceCategory']['name'].'</div>
-												<div class="table_cell">'.$arrValues['CensusFinance']['description'].'</div>
-												<div class="table_cell">'.$arrValues['CensusFinance']['amount'].'</div>
+												<div class="table_cell '. $record_tag .'">'.$arrValues['FinanceSource']['name'].'</div>
+												<div class="table_cell '. $record_tag .'">'.$arrValues['FinanceCategory']['name'].'</div>
+												<div class="table_cell '. $record_tag .'">'.$arrValues['CensusFinance']['description'].'</div>
+												<div class="table_cell '. $record_tag .'">'.$arrValues['CensusFinance']['amount'].'</div>
                                               </div>';
                                     }     
                                   echo '</div>
