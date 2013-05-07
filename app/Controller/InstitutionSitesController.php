@@ -104,8 +104,6 @@ class InstitutionSitesController extends AppController {
     }
 	
 	public function view() {
-		
-		
 		$this->Navigation->addCrumb('Details');
 		
 		$levels = $this->AreaLevel->find('list',array('recursive'=>0));
@@ -117,57 +115,6 @@ class InstitutionSitesController extends AppController {
 		$this->set('data', $data);
 		$this->set('arealevel',$areaLevel);
 		$this->set('levels',$levels);
-	}
-	
-	public function details() {
-		$this->autoRender = false;
-		
-		if($this->request->is('get')) {  
-			/*
-			 * DEALING with Area - Starts
-			 */
-
-			if($this->institutionSiteObj['InstitutionSite']['area_id'] == 0) $this->institutionSiteObj['InstitutionSite']['area_id'] = 1;
-
-			$lowest =  $this->institutionSiteObj['InstitutionSite']['area_id'];
-			$areas = $this->fetchtoParent($lowest);
-			$areas = array_reverse($areas);
-			//pr($areas);
-			
-			foreach($areas as $index => &$arrVals){
-				$siblings = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => $arrVals['parent_id'])));
-				$this->Utility->unshiftArray($siblings,array('0'=>'--'.__('Select').'--'));
-				
-				$colInfo['area_level_'.$index]['options'] = $siblings;
-			}
-			
-			$maxAreaIndex = max(array_keys($areas));//starts with 0
-			$totalAreaLevel = $this->AreaLevel->find('count'); //starts with 1
-			for($i = $maxAreaIndex; $i < $totalAreaLevel;$i++ ){
-				$colInfo['area_level_'.($i+1)]['options'] = array('0'=>'--'.__('Select').'--');
-			}
-			
-			/*
-			 * DEALING with Area - Ends
-			 */
-			
-			return json_encode($colInfo);
-		} else {
-			$last_area_id = 0;
-			//this key sort is impt so that the lowest area level will be saved correctly
-			ksort($this->request->data['InstitutionSite']);
-			foreach($this->request->data['InstitutionSite'] as $key => $arrValSave){
-				if(stristr($key,'area_level_') == true && ($arrValSave != '' || $arrValSave != 0)){
-					$last_area_id = $arrValSave;
-				}
-			}
-			$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
-			
-			$this->insertHistory($this->Session->read('InstitutionSiteId'));
-			$this->InstitutionSite->id = $this->Session->read('InstitutionSiteId');
-                        
-			$this->log($this->InstitutionSite->save($this->request->data), 'debug');           
-		}
 	}
 	
 	public function edit() {
@@ -1139,7 +1086,7 @@ class InstitutionSitesController extends AppController {
 	
 	public function students() {
 		App::uses('Sanitize', 'Utility');
-		$this->Navigation->addCrumb('Students');
+		$this->Navigation->addCrumb('List of Students');
 		
 		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
 		
@@ -1214,6 +1161,34 @@ class InstitutionSitesController extends AppController {
 			$data = $this->Student->search($searchStr, $programmeId, $this->institutionSiteId, $yearId, $limit);
 			$this->set('searchStr', $searchStr);
 			$this->set('data', $data);
+		}
+	}
+	
+	public function studentsView() {
+		if(isset($this->params['pass'][0])) {
+			$studentId = $this->params['pass'][0];
+			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $data['Student']['id']));
+			$this->Navigation->addCrumb('Details');
+			$this->set('data', $data);
+		} else {
+			$this->redirect(array('action' => 'students'));
+		}
+	}
+	
+	public function studentsAssessmentView() {
+		if(isset($this->params['pass'][0])) {
+			$studentId = $this->params['pass'][0];
+			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $data['Student']['id']));
+			$this->Navigation->addCrumb('Assessment');
+			
+			
+			
+		} else {
+			$this->redirect(array('action' => 'students'));
 		}
 	}
 	
@@ -1516,5 +1491,21 @@ class InstitutionSitesController extends AppController {
 		
 		$this->set('index', $index);
 		$this->set('categoryOptions', $categoryOptions);
+	}
+	
+	public function assessments() {
+		$this->Navigation->addCrumb('Assessments');
+	}
+	
+	public function assessmentsAdd() {
+		$this->Navigation->addCrumb('Assessments');
+	}
+	
+	public function results() {
+		
+	}
+	
+	public function resultsStudents() {
+		
 	}
 }

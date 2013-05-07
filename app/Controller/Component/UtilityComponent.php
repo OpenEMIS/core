@@ -25,6 +25,7 @@ class UtilityComponent extends Component {
 		// General Messages
 		$msgList['ERROR_UNEXPECTED'] = "You have encountered an unexpected error. Please contact the system administrator for assistance.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
+		$msgList['SAVE_SUCCESS'] = "Your data has been saved successfully.";
 		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
 		
 		// Login Messages
@@ -41,6 +42,10 @@ class UtilityComponent extends Component {
 		$msgList['EDUCATION_NO_LEVEL'] = "There is no active education level in this Education System.";
 		$msgList['EDUCATION_NO_SYSTEM'] = "There is no active Education System.";
 		$msgList['EDUCATION_PROGRAMME_ADDED'] = "Education Programme has been added successfully. Please add Education Grades to this Programme.";
+		
+		// Assessment Messages
+		$msgList['ASSESSMENT_NO_PROGRAMME'] = "There are no active programmes in the system.";
+		$msgList['ASSESSMENT_NO_ASSESSMENT'] = "There are no assessments on the selected programme.";
 		
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";

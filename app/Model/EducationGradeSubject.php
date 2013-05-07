@@ -7,9 +7,12 @@ class EducationGradeSubject extends AppModel {
 	
 	public function findSubjectsByGrades($gradeIds) {
 		$list = $this->find('all', array(
-				'fields' => array('EducationGradeSubject.id', 'EducationGradeSubject.education_grade_id', 'EducationGradeSubject.education_subject_id', 'EducationSubject.name'),
+				'fields' => array(
+					'EducationGradeSubject.id', 'EducationGradeSubject.education_grade_id', 
+					'EducationGradeSubject.education_subject_id', 'EducationSubject.code', 'EducationSubject.name'
+				),
 				'conditions' => array('EducationGradeSubject.education_grade_id' => $gradeIds),
-				'order' => array('EducationSubject.name')
+				'order' => array('EducationSubject.order')
 			)
 		);
 		

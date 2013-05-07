@@ -178,7 +178,9 @@ class NavigationComponent extends Component {
 					$this->createLink('Classes', 'classes'),
 					$this->createLink('Students', 'students'),
 					$this->createLink('Teachers', 'teachers'),
-					$this->createLink('Staff', 'staff')
+					$this->createLink('Staff', 'staff'),
+					$this->createLink('Assessments', 'assessments'),
+					$this->createLink('Results', 'results')
 				),
 				'CENSUS' => array(
 					'_controller' => 'Census',
@@ -197,12 +199,13 @@ class NavigationComponent extends Component {
 		return $links;
 	}
 	
-	public function getSettingsLinks() {		
+	public function getSettingsLinks() {
 		$links = array(
 			array(
 				'SYSTEM SETUP' => array(
 					$this->createLink('Administrative Boundaries', 'index', array('pattern' => 'index$|levels|edit$', 'controller' => 'Areas')),
 					$this->createLink('Education Structure', 'index', array('pattern' => 'index$|setup$', 'controller' => 'Education')),
+					$this->createLink('Assessment', 'index', array('pattern' => 'index|assessment', 'controller' => 'Assessment')),
 					$this->createLink('Setup Variables', 'setupVariables', array('controller' => 'Setup')),
 					$this->createLink('Custom Fields', 'customFields', array('pattern' => 'custom', 'controller' => 'Setup')),
 					$this->createLink('System Configurations', 'index', array('pattern' => 'index$|edit$|^dashboard', 'controller' => 'Config'))
