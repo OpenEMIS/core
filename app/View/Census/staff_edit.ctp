@@ -32,6 +32,13 @@ echo $this->Html->script('census_staff', false);
 			));
 			?>
 		</div>
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 		
 	<div class="table full_width">
@@ -48,18 +55,26 @@ echo $this->Html->script('census_staff', false);
 			$index = 0;
 			foreach($data as $record) {
 				$total += $record['male'] + $record['female'];
+				$record_tag="";
+					switch ($record['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 			?>
 			<div class="table_row">
 				<?php
 				echo $this->Form->hidden($index . '.id', array('value' => $record['id']));
 				echo $this->Form->hidden($index . '.staff_category_id', array('value' => $record['staff_category_id']));
 				?>
-				<div class="table_cell"><?php echo $record['staff_category_name']; ?></div>
+				<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['staff_category_name']; ?></div>
 				<div class="table_cell">
 					<div class="input_wrapper">
 					<?php 
 					echo $this->Form->input($index . '.male', array(
 						'id' => 'CensusStaffMale',
+						'class'=>$record_tag,
 						'value' => $record['male'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)'
@@ -72,6 +87,7 @@ echo $this->Html->script('census_staff', false);
 					<?php 
 					echo $this->Form->input($index . '.female', array(
 						'id' => 'CensusStaffFemale',
+						'class'=>$record_tag,
 						'value' => $record['female'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)'
