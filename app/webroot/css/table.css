@@ -81,6 +81,7 @@
 
 .cell_datetime { width: 104px; }
 .cell_datepicker { width: 212px; }
+.cell_number_input { width: 80px; }
 
 /* Scrollable table body */
 .table_scrollable .table_header { margin-bottom: -1px; }

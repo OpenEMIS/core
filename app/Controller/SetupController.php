@@ -134,6 +134,10 @@ class SetupController extends AppController {
 			'items' => $this->SchoolYear->getLookupVariables()
 		));
 		
+		$lookup[] = array('Assessment' => array(
+			'items' => array('Result Type' => array('model' => 'AssessmentResultType'))
+		));
+		
 		$lookup[] = array('Student' => array('nameEditable' => false, 'items' => $this->Student->getLookupVariables()));
 		
 		// Teacher
@@ -162,13 +166,15 @@ class SetupController extends AppController {
 			} else {
 				$categoryList[$i] = __(key($category));
 			}
-			foreach($category as &$type) {
-				foreach($type['items'] as &$obj) {
-					if(!isset($obj['options']) && $index==$i) {
-						if(isset($obj['model'])) {
-							$modelObj = ClassRegistry::init($obj['model']);
-							$conditions = isset($obj['conditions']) ? $obj['conditions'] : array();
-							$obj['options'] = $modelObj->findOptions(array('conditions' => $conditions));
+			if($index==$i) {
+				foreach($category as &$type) {
+					foreach($type['items'] as &$obj) {
+						if(!isset($obj['options'])) {
+							if(isset($obj['model'])) {
+								$modelObj = ClassRegistry::init($obj['model']);
+								$conditions = isset($obj['conditions']) ? $obj['conditions'] : array();
+								$obj['options'] = $modelObj->findOptions(array('conditions' => $conditions));
+							}
 						}
 					}
 				}

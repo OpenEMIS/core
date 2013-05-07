@@ -35,7 +35,12 @@ echo $this->Html->script('setup_variables', false);
 		?>
 	</div>
 	
-	<?php $list = $category['School Year']['items']['School Year']['options']; ?>
+	<?php 
+	$list = array();
+	if(isset($category['School Year']['items']['School Year']['options'])) {
+		$list = $category['School Year']['items']['School Year']['options'];
+	}
+	?>
 	
 	<div class="table">
 		<div class="table_head">
