@@ -8,12 +8,19 @@ if(!empty($enrolment) && !(sizeof($enrolment)==1 && $enrolment[0]['male']==0 && 
 	foreach($enrolment as $record) {
 		$count++;
 		$total += $record['male'] + $record['female'];
+		$record_tag="";
+		switch ($record['source']) {
+			case 1:
+				$record_tag.="row_external";break;
+			case 2:
+				$record_tag.="row_estimate";break;
+		}
 	?>
 	<div class="table_row <?php echo $count%2==0 ? 'even' : ''; ?>">
-		<div class="table_cell cell_number"><?php echo $record['age']; ?></div>
-		<div class="table_cell cell_number"><?php echo $record['male']; ?></div>
-		<div class="table_cell cell_number"><?php echo $record['female']; ?></div>
-		<div class="table_cell cell_total cell_number"><?php echo $record['male'] + $record['female']; ?></div>
+		<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['age']; ?></div>
+		<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male']; ?></div>
+		<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['female']; ?></div>
+		<div class="table_cell cell_total cell_number <?php echo $record_tag; ?>"><?php echo $record['male'] + $record['female']; ?></div>
 	</div>
 	<?php } ?>
 </div>

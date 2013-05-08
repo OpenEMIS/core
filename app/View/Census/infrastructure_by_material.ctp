@@ -14,20 +14,24 @@ foreach($data as $infraname => $arrval){
 		$statusTotal = 0;
 		foreach($arrval['status'] as $statids => $statVal){
 			$inputName = 'data[Census'.$modelName.']['.$ctrModel.']';
-			echo '<div class="table_cell cell_number">';
+			
+			$cell_html="";
+			$infraSource = "";
 			if($infraname == 'Buildings'){ //building = got 3 dimension
 				
 				$infraVal = isset($data[$infraname]['data'][$typeid][$statids][$material_id]['value'])
 						  ? $data[$infraname]['data'][$typeid][$statids][$material_id]['value']
 						  : '';
-				
-				
+				$infraSource = isset($data[$infraname]['data'][$typeid][$statids][$material_id]['source'])
+						  ? $data[$infraname]['data'][$typeid][$statids][$material_id]['source']
+						  : '';
 				
 				if($is_edit == "true"){
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_material_id]" value="'.$material_id.'">';
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_building_id]" value="'.$typeid.'">';
-					echo $this->Form->input('value', array(
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_material_id]" value="'.$material_id.'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_building_id]" value="'.$typeid.'">';
+					$cell_html.= $this->Form->input('value', array(
+							'class'=>$record_tag,
 							'type' => 'text',
 							'label' => false,
 							'div' => false,
@@ -39,23 +43,25 @@ foreach($data as $infraname => $arrval){
 							'value' => $infraVal
 						)
 					);
-					echo '<input type="hidden" name="' . $inputName . '[id]" value="'.(isset($data[$infraname]['data'][$typeid][$statids][$material_id]['id'])?$data[$infraname]['data'][$typeid][$statids][$material_id]['id']:'').'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[id]" value="'.(isset($data[$infraname]['data'][$typeid][$statids][$material_id]['id'])?$data[$infraname]['data'][$typeid][$statids][$material_id]['id']:'').'">';
 				} else {
-					echo $infraVal ;
+					$cell_html.= $infraVal ;
 				}
 			 }elseif($infraname == 'Sanitation'){ //building = got 3 dimension
 				
 				$infraVal = isset($data[$infraname]['data'][$typeid][$statids][$material_id][$gender])
 						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$gender]
 						  : '';
-				
-				
-				
+				$infraSource = isset($data[$infraname]['data'][$typeid][$statids][$material_id][$source])
+						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$source]
+						  : '';
+
 				if($is_edit == "true"){
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_material_id]" value="'.key($data[$infraname]['materials']).'">';
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_sanitation_id]" value="'.$typeid.'">';
-					echo $this->Form->input('value', array(
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_material_id]" value="'.key($data[$infraname]['materials']).'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_sanitation_id]" value="'.$typeid.'">';
+					$cell_html.= $this->Form->input('value', array(
+							'class'=>$record_tag,
 							'type' => 'text',
 							'label' => false,
 							'div' => false,
@@ -67,19 +73,24 @@ foreach($data as $infraname => $arrval){
 							'value' => $infraVal
 						)
 					);
-					echo '<input type="hidden" name="' . $inputName . '[id]" value="'.(isset($data[$infraname]['data'][$typeid][$statids][$material_id]['id'])?$data[$infraname]['data'][$typeid][$statids][$material_id]['id']:'').'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[id]" value="'.(isset($data[$infraname]['data'][$typeid][$statids][$material_id]['id'])?$data[$infraname]['data'][$typeid][$statids][$material_id]['id']:'').'">';
 				} else {
-					echo $infraVal;
+					$cell_html.= $infraVal;
 				}
 			 }else{
 				$infraVal = isset($data[$infraname]['data'][$typeid][$statids]['value'])
 						  ? $data[$infraname]['data'][$typeid][$statids]['value']
 						  : '';
+				$infraSource = isset($data[$infraname]['data'][$typeid][$statids]['source'])
+						  ? $data[$infraname]['data'][$typeid][$statids]['source']
+						  : '';
+
 				if($is_edit == "true"){  
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_'.  rtrim(strtolower($infraname),"s").'_id]" value="'.$typeid.'">';
-					echo '<input type="hidden" name="' . $inputName . '[infrastructure_building_id]" value="'.$typeid.'">';
-					echo $this->Form->input('value', array(
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_'.  rtrim(strtolower($infraname),"s").'_id]" value="'.$typeid.'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_building_id]" value="'.$typeid.'">';
+					$cell_html.= $this->Form->input('value', array(
+							'class'=>$record_tag,
 							'type' => 'text',
 							'label' => false,
 							'div' => false,
@@ -91,12 +102,20 @@ foreach($data as $infraname => $arrval){
 							'value' => $infraVal
 						)
 					);
-					echo '<input type="hidden" name="' . $inputName . '[id]" value="'. (isset($data[$infraname]['data'][$typeid][$statids]['id'])?$data[$infraname]['data'][$typeid][$statids]['id']:'').'">';
+					$cell_html.= '<input type="hidden" name="' . $inputName . '[id]" value="'. (isset($data[$infraname]['data'][$typeid][$statids]['id'])?$data[$infraname]['data'][$typeid][$statids]['id']:'').'">';
 				} else {
-					echo $infraVal;
+					$cell_html.= $infraVal;
 				}
 			 }
-			 echo '</div>';
+			 
+			$record_tag="";
+			switch ($infraSource) {
+				case 1:
+					$record_tag.="row_external";break;
+				case 2:
+					$record_tag.="row_estimate";break;
+			}
+			 echo '<div class="table_cell cell_number ' . $record_tag.'">'. $cell_html . '</div>';
 			 $statusTotal += $infraVal;
 			 $ctrModel++;
 		}

@@ -39,6 +39,14 @@ echo $this->Html->script('census_enrolment', false);
 			));
 			?>
 		</div>
+		
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	
 	<?php foreach($data as $key => $obj) { ?>
@@ -87,12 +95,19 @@ echo $this->Html->script('census_enrolment', false);
 				<?php
 				foreach($records as $record) {
 					$total += $record['male'] + $record['female'];
+					$record_tag="";
+					switch ($record['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 				?>
 				<div class="table_row">
-					<div class="table_cell cell_number"><?php echo $record['age']; ?></div>
-					<div class="table_cell cell_number"><?php echo $record['male']; ?></div>
-					<div class="table_cell cell_number"><?php echo $record['female']; ?></div>
-					<div class="table_cell cell_number"><?php echo $record['male'] + $record['female']; ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['age']; ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male']; ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['female']; ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male'] + $record['female']; ?></div>
 				</div>
 				<?php } // end foreach (records) ?>
 			</div>
