@@ -35,6 +35,7 @@ App::uses('L10n', 'I18n');
 
 class AppController extends Controller {
 	public $bodyTitle = '';
+	public $uses = array('ConfigItem');
 	public $helpers = array('Html', 'Form', 'Js', 'Session', 'Utility');
 	public $components = array(
 		'RequestHandler',
@@ -52,15 +53,19 @@ class AppController extends Controller {
 	
 	public function beforeFilter() {
 		$l10n = new L10n();
-		$lang = 'eng';
-		$locale = 'en';
 		if($this->Session->check('configItem.language')) {
 			$lang = $this->Session->read('configItem.language');
+		} else {
+			$lang = $this->ConfigItem->getValue('language');
+			if(empty($lang)) {
+				$lang = 'eng';
+			}
 		}
 		$locale = $l10n->map($lang);
 		$catalog = $l10n->catalog($locale);
  		$this->set('lang_locale', $locale);
 		$this->set('lang_dir', $catalog['direction']);
+
 		Configure::write('Config.language', $lang);
 		if(!$this->request->is('ajax')) {
 			$this->AccessControl->checkAccess();
