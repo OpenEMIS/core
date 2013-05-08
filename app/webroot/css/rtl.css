@@ -63,6 +63,16 @@
 	margin-left:0px;
 	margin-right:5px;
 }
+.left_nav_li{
+	background-position:12px 12px;
+	background-image:url(../img/sub_nav_icon_rtl.png);
+}
+.left_nav_li:hover{
+	background-position:12px -82px;
+}
+.left_nav_li_selected{
+	background-position:12px -175px;
+}
 .left_nav_li_icon{
 	float:right;
 }
@@ -222,6 +232,13 @@ fieldset#general.section_break > .profile_image{
 .dialog-box #dialog-btn-close{
 	margin-left: auto;
 	margin-right:8px;
+}
+.form-error{
+	float:right;
+}
+.error-message{
+	margin-left:0;
+	margin-right:10px;
 }
 
 /*loading*/
