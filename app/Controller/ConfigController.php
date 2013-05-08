@@ -405,7 +405,7 @@ class ConfigController extends AppController {
 				$this->Utility->alert(__('File have been updated successfully.'));
 				$this->redirect(array('action' => 'dashboard'));
 			}else{
-				$this->Utility->alert(__('File have not been updated successfully.'));
+				$this->Utility->alert(__('File has not been updated successfully.'));
 				$this->redirect(array('action' => 'dashboard'));
 
 			}
@@ -469,7 +469,7 @@ class ConfigController extends AppController {
 				// Check that image file is within the size limit.
 				if($isVaild && $images['files']['size'][$key] > $this->imageConfig['dashboard_img_size_limit']){
 					$isVaild = $isVaild && false;
-					$msg[$key] = __('Image have exceeded the allow file size of').' '.CakeNumber::toReadableSize($this->imageConfig['dashboard_img_size_limit']).'. '.__('Please reduce file size.');
+					$msg[$key] = __('Image has exceeded the allow file size of').' '.CakeNumber::toReadableSize($this->imageConfig['dashboard_img_size_limit']).'. '.__('Please reduce file size.');
 				}
 
 				// Check if uploaded image is within the limited width and height set in system

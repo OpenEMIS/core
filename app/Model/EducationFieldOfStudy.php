@@ -12,7 +12,7 @@ class EducationFieldOfStudy extends AppModel {
 			),
 			'isUnique' => array(
 				'rule' => 'isUnique',
-				'message' => 'This Field of Study is already exists in the system.'
+				'message' => 'This Field of Study already exists in the system.'
 			)
 		),
 		'education_programme_orientation_id' => array(
