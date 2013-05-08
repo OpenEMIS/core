@@ -32,6 +32,14 @@ echo $this->Html->script('census', false);
 			));
 			?>
 		</div>
+		
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	
 	<?php 
@@ -52,6 +60,13 @@ echo $this->Html->script('census', false);
 				<?php 
 				$total = 0;
 				foreach($val as $record) {
+					$record_tag="";
+					switch ($record['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 				?>
 				<div class="table_row">
 					<?php
@@ -59,12 +74,13 @@ echo $this->Html->script('census', false);
 					echo $this->Form->hidden($index . '.education_grade_subject_id', array('value' => $record['education_grade_subject_id']));
 					echo $this->Form->hidden($index . '.institution_site_id', array('value' => $record['institution_site_id']));
 					?>
-					<div class="table_cell"><?php echo $record['education_grade_name']; ?></div>
-					<div class="table_cell"><?php echo $record['education_subject_name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_grade_name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_subject_name']; ?></div>
 					<div class="table_cell">
 						<div class="input_wrapper">
 						<?php echo $this->Form->input($index . '.value', array(
 								'value' => $record['total'],
+								'class'=>$record_tag,
 								'maxlength' => 10,
 								'onkeypress' => 'return utility.integerCheck(event)'
 							));

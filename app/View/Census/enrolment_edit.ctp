@@ -34,6 +34,14 @@ echo $this->Html->script('census_enrolment', false);
 			));
 			?>
 		</div>
+		
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	
 	<?php foreach($data as $key => $obj) { ?>
@@ -84,12 +92,20 @@ echo $this->Html->script('census_enrolment', false);
 				$records = $obj['enrolment'];
 				foreach($records as $record) {
 					$total += $record['male'] + $record['female'];
+					$record_tag="";
+					switch ($record['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 				?>
 				<div class="table_row" record-id="<?php echo $record['id']; ?>">
 					<div class="table_cell">
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('age', array(
 								'type' => 'text',
+								'class' => $record_tag,
 								'value' => $record['age'],
 								'defaultValue' => $record['age'],
 								'maxlength' => 2,
@@ -104,6 +120,7 @@ echo $this->Html->script('census_enrolment', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('male', array(
 								'type' => 'text',
+								'class' => $record_tag,
 								'value' => $record['male'],
 								'defaultValue' => $record['male'],
 								'maxlength' => 10, 
@@ -118,6 +135,7 @@ echo $this->Html->script('census_enrolment', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('female', array(
 								'type' => 'text',
+								'class' => $record_tag,
 								'value' => $record['female'],
 								'defaultValue' => $record['female'],
 								'maxlength' => 10,

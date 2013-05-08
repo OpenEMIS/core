@@ -12,7 +12,7 @@ class IndTask extends AppTask {
 	public $BatchIndicatorResult;
 	
 	/****
-	 * CSV Starts
+	 * CSV Starts 
 	 */
 	
 	function initialize() { 
@@ -24,13 +24,13 @@ class IndTask extends AppTask {
 		$header = 'Indicator,Sub Groups,Area,Time Period,Data Value,Classification';
 		$arrHeader = explode(',', $header);
         $this->Common->translateArrayValues($arrHeader);
-        // pr ($arrHeader);
-
+		$batchReportId = $settings['batchProcessId'];
+		$reportId = $settings['reportId'];
         $name = $settings['name'];
         $module = $settings['module'];
         $category = $settings['category'];
         $line = '';
-        $filename = str_replace(' ', '_', $name).'.csv';
+        $filename = $reportId."_".$batchReportId."_".str_replace(' ', '_', $name).'.csv';
         //$path =  WWW_ROOT.DS.$module.DS;
         //$path = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS;
 		$path = $this->Common->getResultPath().str_replace(' ','_',$category).DS.$module.DS;

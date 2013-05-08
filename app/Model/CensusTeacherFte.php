@@ -46,6 +46,7 @@ class CensusTeacherFte extends AppModel {
 				'EducationLevel.id AS education_level_id',
 				'EducationLevel.name AS education_level_name',
 				'CensusTeacherFte.id',
+				'CensusTeacherFte.source',
 				'CensusTeacherFte.male',
 				'CensusTeacherFte.female'
 			),

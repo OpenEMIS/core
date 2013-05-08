@@ -21,15 +21,17 @@ class CensusTeacher extends AppModel {
 			foreach($obj['education_grades'] as $gradeId => &$grade) {
 				$male = 0;
 				$female = 0;
+				$source = 0;
 				foreach($data as $value) {
 					if($value['education_grade_id'] == $gradeId 
 					&& $value['education_programme_id'] == $obj['education_programme_id']) {
 						$male = $value['male'];
 						$female = $value['female'];
+						$source = $value['source'];
 						break;
 					}
 				}
-				$grade = array('name' => $grade, 'male' => $male, 'female' => $female);
+				$grade = array('name' => $grade, 'male' => $male, 'female' => $female,'source' => $source);
 			}
 		}
 	}
@@ -42,6 +44,7 @@ class CensusTeacher extends AppModel {
 				'CensusTeacher.id',
 				'CensusTeacher.male',
 				'CensusTeacher.female',
+				'CensusTeacher.source',
 				'EducationProgramme.id AS education_programme_id',
 				"CONCAT(EducationCycle.name, ' - ', EducationProgramme.name) AS education_programme_name",
 				'EducationGrade.id AS education_grade_id',
@@ -120,6 +123,7 @@ class CensusTeacher extends AppModel {
 				'CensusTeacher.id',
 				'CensusTeacher.male',
 				'CensusTeacher.female',
+				'CensusTeacher.source',
 				'EducationProgramme.id',
 				"CONCAT(EducationCycle.name, ' - ', EducationProgramme.name) AS education_programme_name",
 				'EducationGrade.id',
@@ -166,6 +170,7 @@ class CensusTeacher extends AppModel {
 				$data[$teacher['id']] = array(
 					'male' => $teacher['male'],
 					'female' => $teacher['female'],
+					'source' => $teacher['source'],
 					'programmes' => array(),
 					'grades' => array()
 				);
@@ -197,6 +202,10 @@ class CensusTeacher extends AppModel {
 				foreach($grades as &$grade) {
 					$grade = array('census_teacher_id' => $id, 'education_grade_id' => $grade);
 				}
+				
+				if ((int)$obj['male'] < 0){ $obj['male'] =0; }
+				if ((int)$obj['female'] < 0){ $obj['female'] =0; }
+				
 				$clean[] = array(
 					'id' => $id,
 					'male' => $obj['male'],
@@ -210,7 +219,7 @@ class CensusTeacher extends AppModel {
 		// Reset all values of male and female for the existing ids
 		$this->unbindModel(array('belongsTo' => array_keys($this->belongsTo)), true);
 		$this->updateAll(
-			array('CensusTeacher.male' => 0, 'CensusTeacher.female' => null),
+			array('CensusTeacher.male' => 0, 'CensusTeacher.female' => 0),
 			array('CensusTeacher.id' => $ids)
 		);
 		// Finally, delete all existing census grades records and re-insert them upon saving

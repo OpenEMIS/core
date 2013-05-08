@@ -36,6 +36,13 @@ echo $this->Html->script('census_finance', false);
 				?>
 			</select>
 		</div>
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	<?php
         //pr($data);
@@ -58,10 +65,18 @@ echo $this->Html->script('census_finance', false);
 									<div class="table_body">';
                                     foreach($arrCategories as $arrValues){
                                         //pr($arrCategories);die;
+										$record_tag="";
+										switch ($arrValues['CensusFinance']['source']) {
+											case 1:
+												$record_tag.="row_external";break;
+											case 2:
+												$record_tag.="row_estimate";break;
+										}
+										
                                         echo '<div class="table_row" id="bankaccount_row_'.$arrValues['CensusFinance']['id'].'" >
 													<input type="hidden" name="data[CensusFinance]['.$ctr.'][id]" value="'.$arrValues['CensusFinance']['id'].'">
                                                     <div class="table_cell">
-                                                        <select name="data[CensusFinance]['.$ctr.'][finance_source_id]" class="full_width" >';
+                                                        <select name="data[CensusFinance]['.$ctr.'][finance_source_id]" class="full_width '. $record_tag .'" >';
                                                         
                                                         
                                                         foreach($sources as $i => $v){
@@ -70,7 +85,7 @@ echo $this->Html->script('census_finance', false);
                                                         echo '<select>
                                                     </div>
                                                     <div class="table_cell">
-                                                        <select name="data[CensusFinance]['.$ctr.'][finance_category_id]" class="full_width">';
+                                                        <select name="data[CensusFinance]['.$ctr.'][finance_category_id]" class="full_width '. $record_tag .'">';
                                                         foreach($arrValues['CategoryTypes'] as $i=>$v){
                                                             echo '<option value="'.$i.'" '.($i == $arrValues['CensusFinance']['finance_category_id']?'selected="selected"':"").'>'.$v.'</option>';
                                                         }
@@ -78,10 +93,10 @@ echo $this->Html->script('census_finance', false);
                                                     </div>
                                                     <div class="table_cell">
 														<div class="input_wrapper">
-															<input type="text" name="data[CensusFinance]['.$ctr.'][description]" value="'.$arrValues['CensusFinance']['description'].'"></div></div>
+															<input class="'. $record_tag .'" type="text" name="data[CensusFinance]['.$ctr.'][description]" value="'.$arrValues['CensusFinance']['description'].'"></div></div>
 													<div class="table_cell">
 														<div class="input_wrapper">
-															<input type="text" name="data[CensusFinance]['.$ctr.'][amount]" value="'.$arrValues['CensusFinance']['amount'].'"></div></div>
+															<input class="'. $record_tag .'" type="text" name="data[CensusFinance]['.$ctr.'][amount]" value="'.$arrValues['CensusFinance']['amount'].'"></div></div>
                                                     <div class="table_cell"><span class="icon_delete" title="'.__('Delete').'"" onClick="CensusFinance.confirmDeletedlg('.$arrValues['CensusFinance']['id'].')"></span></div>
                                               </div>';
 												   $ctr++;
