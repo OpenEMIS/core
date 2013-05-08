@@ -43,3 +43,15 @@
 
 .row.last { margin-top: 10px; }
 /* End Table styles */
+
+/* legend styles */
+.legend { list-style: none; }
+.legend li { float: left; margin-right: 10px;  display:inline-block; margin-top:-7px;  }
+.legend span { border: 1px solid #ccc; float: left; width: 8px; height: 8px; margin: 2px; }
+.legend .dataentry { background-color: #666666; }
+.legend .external { background-color: #5B8BAF; }
+.legend .estimate { background-color: #FF0000; }
+.row_dataentry { color: #666666; }
+.row_external { color: #5B8BAF; }
+.row_estimate { color: #FF0000; }
+/* End legend styles */

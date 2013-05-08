@@ -20,12 +20,12 @@ var InstitutionSiteClasses = {
 		$('.table_body .table_row').remove();
 	},
 	
-	checkName: function() {
+	validateClassAdd: function() {
 		var name = $('#ClassName').val();
 		var year = $(InstitutionSiteClasses.yearId).val();
 		
 		var maskId;
-		var ajaxParams = {name: name, year: year};
+		var ajaxParams = {name: name, year: year, count: $('#grade_list .table_row').length};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
 				if(data === 'true') {

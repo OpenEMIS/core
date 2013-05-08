@@ -1,11 +1,12 @@
 <?php
 App::uses('AppHelper', 'View/Helper');
 App::uses('DateTimeComponent', 'Controller/Component');
+App::uses('AreaHandlerComponent', 'Controller/Component');
 App::uses('String', 'Utility');
 
 class UtilityHelper extends AppHelper {
 	public $alertType = array('error' => 0, 'ok' => 1, 'info' => 2, 'warn' => 3);
-		
+	
 	public function ellipsis($string, $length = '30') {
 		return String::truncate($string, $length, array('ellipsis' => '...', 'exact' => false));
 	}
@@ -52,6 +53,56 @@ class UtilityHelper extends AppHelper {
 		$yearSelect = $form->input($id, $config);
 		return $yearSelect;
 	}
+	
+
+	public function showArea($form,$id,$value,$settings=array()){
+		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
+		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
+		$this->fieldLevels = $this->AreaHandler->getAreaList();
+		
+		$ctr = 0;
+		foreach($this->fieldLevels as $levelid => $levelName){
+			$areaVal = array('id'=>'0','name'=>'a');
+			foreach($this->fieldAreaLevels as $arealevelid => $arrval){
+				if($arrval['level_id'] == $levelid) {
+					$areaVal = $arrval;
+					continue;
+				}
+			}
+			echo '<div class="row">
+						<div class="label">'.__($levelName).'</div>
+						<div class="value" value="'.$areaVal['id'].'" name="area_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
+					</div>';
+			$ctr++;
+		}
+	}
+	
+	public function getAreaPicker($form,$id,$value,$settings=array()){
+		//settings unused
+		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
+		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
+		$this->fieldLevels = $this->AreaHandler->getAreaList();
+		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,array('empty_arealevel_placeholder'=>'--'.__('Select').'--'));
+	
+		$ctr = 0;
+
+		foreach($this->fieldLevels as $levelid => $levelName){
+			echo '<div class="row">
+					<div class="label">'. __("$levelName") .'</div>
+					<div class="value">'. $form->input('area_level_'.$ctr,
+														array('class'=>'areapicker default',
+														'style'=>'float:left','default'=>@$this->fieldAreaLevels[$ctr]['id'],
+														'options'=>$this->fieldAreadropdowns['area_level_'.$ctr]['options']));
+			if ($ctr==0){
+				echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
+			}
+			echo		'</div>
+				</div>';
+			$ctr++;
+		}
+	}	
 	
 	public function getDatePicker($form, $id, $settings=array()) {
 		$_settings = array(

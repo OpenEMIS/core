@@ -118,12 +118,14 @@ class HomeController extends AppController {
 		if($this->request->is('post')) {
 			$data = $this->data;
 			$data['SecurityUser']['id'] = $this->Auth->user('id');
-			$status = array('status' => 'ok', 'msg' => __('successfully updated.'));
+			$status = array('status' => 'ok', 'msg' => __('Password has been changed.'));
 			$error = $this->validateChangePassword($data['SecurityUser']['oldPassword'], $data['SecurityUser']['newPassword'], $data['SecurityUser']['retypePassword']);
 			if(!empty($error)){
 				$status = array('status' => 'error', 'msg' => __($error));
 				//return array('statuts' => 0, 'msg' => $error);
 			}else{
+				$oldPasswordHash = $this->Auth->password($data['SecurityUser']['oldPassword'], null, true);
+				$newPasswordHash = $this->Auth->password($data['SecurityUser']['newPassword'], null, true);
 				unset($data['SecurityUser']['oldPassword']);
 				unset($data['SecurityUser']['retypePassword']);
 				$data['SecurityUser']['password'] = $data['SecurityUser']['newPassword'];
@@ -132,7 +134,9 @@ class HomeController extends AppController {
 				if(!$this->SecurityUser->save($data)){
 					$status = array('status' => 'error', 'msg' => __('Please try again later.'));
 				} else {
-					$status = array('status' => 'ok', 'msg' => __('successfully updated.'));
+					$username = $this->Auth->user('username');
+					$this->log('[' . $username . '] Changing password from ' . $oldPasswordHash . ' to ' . $newPasswordHash, 'security');
+					$status = array('status' => 'ok', 'msg' => __('Password has been changed.'));
 				}
 			}
 			//Changed by Adrian
