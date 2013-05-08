@@ -75,7 +75,7 @@ class HomeController extends AppController {
 	
 	public function details() {
 		$this->bodyTitle = 'Account';
-		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'account'));
+		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('My Details');
 		$userId = $this->Auth->user('id');
 		$this->SecurityUser->id = $userId;
@@ -89,7 +89,7 @@ class HomeController extends AppController {
 	}
 	public function detailsEdit() {
 		$this->bodyTitle = 'Account';
-		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'account'));
+		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('Edit My Details');
 		$userId = $this->Auth->user('id');
 		$this->SecurityUser->formatResult = true;
@@ -112,7 +112,7 @@ class HomeController extends AppController {
 	
 	public function password() {
 		$this->bodyTitle = 'Account';
-		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'account'));
+		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('Change Password');
 		
 		if($this->request->is('post')) {
