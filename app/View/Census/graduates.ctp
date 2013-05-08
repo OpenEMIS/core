@@ -35,6 +35,14 @@ echo $this->Html->script('census', false);
 			));
 			?>
 		</div>
+		
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	
 	<?php foreach($data as $key => $val) { ?>
@@ -51,13 +59,21 @@ echo $this->Html->script('census', false);
 			</div>
 			
 			<div class="table_body">
-				<?php foreach($val as $record) { ?>
+				<?php foreach($val as $record) { 
+					$record_tag="";
+					switch ($record['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
+				?>
 				<div class="table_row">
-					<div class="table_cell"><?php echo $record['education_programme_name']; ?></div>
-					<div class="table_cell"><?php echo $record['education_certification_name']; ?></div>
-					<div class="table_cell cell_number"><?php echo is_null($record['male']) ? 0 : $record['male']; ?></div>
-					<div class="table_cell cell_number"><?php echo is_null($record['female']) ? 0 : $record['female']; ?></div>
-					<div class="table_cell cell_number"><?php echo $record['total']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_programme_name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_certification_name']; ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['male']) ? 0 : $record['male']; ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['female']) ? 0 : $record['female']; ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['total']; ?></div>
 				</div>
 				<?php } ?>
 			</div>

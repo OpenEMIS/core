@@ -34,6 +34,13 @@ echo $this->Html->script('infrastructure', false);
 				));
 			?>
 		</div>
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	<?php //pr($data);?>
 	<?php foreach($data as $infraname => $arrval) { $total = 0; ?>
@@ -79,9 +86,12 @@ echo $this->Html->script('infrastructure', false);
 						$inputName = 'data[Census'.$modelName.']['.$ctrModel.']';
 						$infraId = 0;
 						$infraVal = 0;
+						$infraSource = 0;
 						if($infraname === 'Buildings') { //got 3 dimension
 							$infraId = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id'] : '';
 							$infraVal = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['value']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['value'] : '';
+							$infraSource = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'] : '';
+							
 							?>
 							<input type="hidden" name="<?php echo $inputName . '[infrastructure_material_id]'; ?>" value="<?php echo key($data[$infraname]['materials']); ?>">
 							<input type="hidden" name="<?php echo $inputName . '[infrastructure_'.  rtrim(strtolower($infraname),"s").'_id]'; ?>" value="<?php echo $typeid; ?>">
@@ -91,6 +101,8 @@ echo $this->Html->script('infrastructure', false);
 							
 							$infraId = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id'] : '';
 							$infraVal = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male'] : '';
+							$infraSource = isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']) ? $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'] : '';
+						
 						?>	
 							<input type="hidden" name="<?php echo $inputName . '[infrastructure_material_id]'; ?>" value="<?php echo key($data[$infraname]['materials']); ?>">
 							<input type="hidden" name="<?php echo $inputName . '[infrastructure_'.  rtrim(strtolower($infraname),"s").'_id]'; ?>" value="<?php echo $typeid; ?>">
@@ -98,15 +110,25 @@ echo $this->Html->script('infrastructure', false);
 						<?php } else {
 							$infraId = isset($data[$infraname]['data'][$typeid][$statids]['id']) ? $data[$infraname]['data'][$typeid][$statids]['id'] : '';
 							$infraVal = isset($data[$infraname]['data'][$typeid][$statids]['value']) ? $data[$infraname]['data'][$typeid][$statids]['value'] : '';
+							$infraSource = isset($data[$infraname]['data'][$typeid][$statids]['source']) ? $data[$infraname]['data'][$typeid][$statids]['source'] : '';
+							
 							?>
 							<input type="hidden" name="<?php echo $inputName . '[infrastructure_'.  rtrim(strtolower($infraname),"s").'_id]'; ?>" value="<?php echo $typeid; ?>">
 						
 						<?php } // end if buildings
+						$record_tag="";
+						switch ($infraSource) {
+							case 1:
+								$record_tag.="row_external";break;
+							case 2:
+								$record_tag.="row_estimate";break;
+						}
 						$ctrModel++;
 						$statusTotal += $infraVal;
 						
 						echo $this->Form->input('value', array(
 								'type' => 'text',
+								'class'=>$record_tag,
 								'name' => $inputName . '[value]',
 								'maxlength' => 8,
 								'before' => '<div class="input_wrapper">',

@@ -39,6 +39,13 @@ echo $this->Html->script('infrastructure', false);
 				));
 			?>
 		</div>
+		<div style="float:right;">
+		<ul class="legend">
+			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+			<li><span class="external"></span><?php echo __('External'); ?></li>
+			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+		</ul>
+		</div>
 	</div>
 	
 	<?php foreach($data as $infraname => $arrval) { $total = 0; ?>
@@ -78,21 +85,35 @@ echo $this->Html->script('infrastructure', false);
 					
 					<!-- Status -->
 					<?php $statusTotal = 0; foreach($arrval['status'] as $statids => $statVal) { ?>
-					<div class="table_cell cell_number">
-						<?php
+					
+					<?php
 						
 						if($infraname==='Buildings'){
 							//pr($data[$infraname]['data'][$typeid][$statids]);
 							$val = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['value'])?$data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['value']:'');
+							$source = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'])?$data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']:'');
+						
 						}elseif($infraname==='Sanitation'){
 							//echo $data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['id'];
 							$val = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male'])?$data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['male']:'');
+							$source = (isset($data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source'])?$data[$infraname]['data'][$typeid][$statids][key($arrval['materials'])]['source']:'');
+						
 						}else{
 							$val = (isset($data[$infraname]['data'][$typeid][$statids]['value'])?$data[$infraname]['data'][$typeid][$statids]['value']:'');
+							$source = (isset($data[$infraname]['data'][$typeid][$statids]['source'])?$data[$infraname]['data'][$typeid][$statids]['source']:'');
 						}
 						$statusTotal += $val;
-						echo $val;
-						?>
+						$record_tag="";
+						switch ($source) {
+							case 1:
+								$record_tag.="row_external";break;
+							case 2:
+								$record_tag.="row_estimate";break;
+						}
+					?>
+					
+					<div class="table_cell cell_number <?php echo $record_tag; ?>">
+						<?php echo $val; ?>
 					</div>
 					<?php } // end foreach(status) ?>
 					<!-- Status -->
