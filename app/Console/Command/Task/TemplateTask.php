@@ -128,12 +128,7 @@ class TemplateTask extends AppTask {
 
         $cols = $data['Cols'];
         $rows = $data['Rows'];
-        
-        /*if (isset($data['RowHeaders'])) {
-            $headings = $data['RowHeaders'];
-        } else if (isset($data['DRowHeaders'])) {
-            $headings = $data['DRowHeaders'];
-        }*/
+
         $headings = $data['RowHeaders'];
         $colCount = count($headings);
         $defaultColWidth = 20;
@@ -146,7 +141,6 @@ class TemplateTask extends AppTask {
             // loop the rows
             if (array_key_exists($key, $rows)) {
                 foreach ($rows[$key] as $val) {
-                    // $html .= "<td align=\"right\">{$val}</td>";
                     $html .= "<td style=\"text-align: right; width: {$colWidth}%;\">{$val}</td>";
                 }
             } else {
