@@ -1,6 +1,4 @@
 <?php
-//App::uses('Component', 'Controller');
-//App::uses('UtilityComponent', 'Controller/Component');
 
 class YearbookShell extends AppShell {
     public $tasks = array('Mpdf', 'Common', 'Template');
@@ -54,7 +52,6 @@ class YearbookShell extends AppShell {
         $this->yearbookId = $this->yearbook['Report']['id'];
         $this->yearbookTemplate = $this->yearbook['Report']['header'];
 
-        // $this->filename = $reportName . "." . $this->yearbook['Report']['file_type'];
 		//defaults to pdf
         $this->filename = $reportName . ".pdf";
         $this->folder = WWW_ROOT ."reports/{$category}/{$module}/{$reportName}/";
@@ -73,7 +70,6 @@ class YearbookShell extends AppShell {
         $template = explode(",", $this->yearbookTemplate);
 
         $this->out("########################## Start of Config Items ###########################");
-        #pr ($this->getYearbookConfigItems());
         $this->out("########################## End of Config Items ###########################");
 
         // Preparing the Report and start the report generation session
@@ -136,7 +132,6 @@ class YearbookShell extends AppShell {
                 $templateArray = $batch[0]["query"];
 
                 eval('$this->reports = '.$templateArray.';');
-//                eval("\$this->reports = {$templateArray};");
             }
         }
 
@@ -168,8 +163,7 @@ class YearbookShell extends AppShell {
 
             // get the template field
             $record = $this->BatchReport->findByName($elementName);
-            // pr ($record);
-
+			
             // if there is data in template field, ie. header
             if (!is_null($record['BatchReport']['template']) && preg_match("/^H[0-6]:/", $record['BatchReport']['template'])) {
                 $header = explode(':', $record['BatchReport']['template']);
@@ -177,14 +171,12 @@ class YearbookShell extends AppShell {
                 $headerText = $header[1];
                 $html .= $this->Template->setHeader($headerText,$headerSize,$this->language);
             }
-
             // if there is data in query field
             if (!is_null($record['BatchReport']['query'])) {
                 eval($record['BatchReport']['query']);
                 $levels = $this->arrayDepth($data);
                 $html .= $this->Template->generateList($data, $levels,$this->language);
             }
-
         }
 
         // a table
@@ -278,19 +270,15 @@ class YearbookShell extends AppShell {
 
             $html = $this->Template->setHeader($headerText,  $headerSize,$this->language);
         }
-
         elseif (preg_match("/^LOGO:/", $elementName)) {
             $attachmentId = $this->getYearbookConfigItemsByName('yearbook_logo');
             $attachment = $this->ConfigAttachment->findById($attachmentId, 'ConfigAttachment.id, ConfigAttachment.file_content, ConfigAttachment.file_name');
-            // pr ($attachment['ConfigAttachment']['file_content']);
             if (!empty($attachment['ConfigAttachment']['file_content'])) {
                 $imgFile = file_put_contents(IMAGES.$attachment['ConfigAttachment']['file_name'], $attachment['ConfigAttachment']['file_content']);
                 $imgUrl = WWW_ROOT.IMAGES_URL.$attachment['ConfigAttachment']['file_name'];
                 $html .= $this->Template->addLogo($imgUrl);
             }
         }
-
-        // elseif (preg_match("/^ConfigVar:/", $elementName)) {
         elseif (preg_match("/^\[([^)]+)\]$/", $elementName)) {
             // checking the configvar
             // allowed for the variables that is available in the config item yearbook section, e.g. yearbook_school_year, yearbook_title, etc
@@ -303,12 +291,10 @@ class YearbookShell extends AppShell {
             $html .= $this->getYearbookConfigItemsByName($name);
 
         }
-
         elseif (preg_match("/^NEWLINE$/", $elementName)) {
             // set one newline
             $html = $this->Template->setNewLine();
         }
-
         elseif (preg_match("/^NEWLINE:/", $elementName)) {
             // set multiple newline
             $newLine = explode(':', $elementName);
@@ -316,12 +302,9 @@ class YearbookShell extends AppShell {
             // setting new line
             $html = $this->Template->setNewLine($newLineNum);
         }
-
         // a template:setup
         elseif (preg_match("/^Template:Setup$/", $elementName)) {
-
         }
-
         else {
             echo __("There is either no such type, or error in the name. Please Check.\n");
         }
@@ -358,7 +341,6 @@ class YearbookShell extends AppShell {
 
         // remove any default files to be skipped
         $tocData = array_diff($tocData,$this->tocSkipPrintPages);
-
         foreach ($tocData as $key => $page) {
             $tocData[$key] = str_replace("Page:", "", $page);
         }
@@ -370,8 +352,7 @@ class YearbookShell extends AppShell {
         $this->Mpdf->WriteHTML($html);
 
         // check the total number of pages for TOC report
-        //$pageNum = $this->Mpdf->getDocPageNum();
-		$pageNum = $this->Mpdf->getPageCount();
+		$pageNum = count($this->Mpdf->pages);
 		
         $this->reports['Page:TOC']['pageCount'] = $pageNum;
 
@@ -393,16 +374,11 @@ class YearbookShell extends AppShell {
         $reportFiles = $reports['files'];
         $reportPageCount = $reports['pageCount'];
 
-		$this->out(print_r($reportFiles, true));
-		
-		$this->out(print_r($reportPageCount, true));
-		
         for ($i=0; $i < count($reportFiles); $i++) {
             $src = $reportFiles[$i];
             $totalPages = $reportPageCount[$i];
             $this->Mpdf->RestartDocTemplate();
             $pageCount = $this->Mpdf->SetDocTemplate($src);
-//            $this->Mpdf->AddPage($this->orientationOption);
 
             // set the new page to cater for the imported file
             for ($k=1; $k <= $totalPages; $k++) {
