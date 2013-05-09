@@ -18,6 +18,10 @@ $arrOptions = array('date_format' => array(
 								'fre' => 'Français',
 								'rus' => 'русский',
 								'spa' => 'español'
+							),
+							'yearbook_orientation' => array(
+								'0' => 'Portrait',
+								'1' => 'Landscape'
 							));
 ?>
 
@@ -62,6 +66,18 @@ $arrOptions = array('date_format' => array(
 				<div class="table_cell"><?php echo date($item['value']); ?></div>
 		<?php }elseif(stristr($item['name'], 'language')){ ?>
 				<div class="table_cell"><?php echo $arrOptions['language'][$item['value']]; ?></div>
+				<?php }elseif(stristr($item['name'], 'yearbook_orientation')){ ?>
+				<div class="table_cell"><?php echo $arrOptions['yearbook_orientation'][$item['value']]; ?></div>
+		<?php }elseif(stristr($item['name'], 'yearbook_publication_date')){ ?>
+				<div class="table_cell"><?php echo $this->Utility->formatDate($item['value'], "d F Y"); ?></div>
+		<?php }elseif(stristr($item['name'], 'yearbook_logo')){ ?>
+				<div class="table_cell">
+				<?php 
+				if ($item['hasYearbookLogoContent']) {
+		    		echo $this->Html->image("/Config/fetchYearbookImage/{$item['value']}", array('class' => 'profile_image', 'alt' => '90x115')); 
+				}
+		    	?>
+				</div>	
 		<?php }else{ ?>
 				<div class="table_cell"><?php echo $item['value']; ?></div>
 		<?php } ?>
