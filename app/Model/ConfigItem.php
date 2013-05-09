@@ -9,6 +9,16 @@ class ConfigItem extends AppModel {
 	    )
     );
 
+	    public function getYearbook() {
+    	$yearbook = array();
+    	$yearbook['yearbook_organization_name'] = $this->getValue('yearbook_organization_name');
+    	$yearbook['yearbook_school_year'] = $this->getValue('yearbook_school_year');
+    	$yearbook['yearbook_title'] = $this->getValue('yearbook_title');
+    	$yearbook['yearbook_publication_date'] = $this->getValue('yearbook_publication_date');
+    	$yearbook['yearbook_logo'] = $this->getValue('yearbook_logo');
+    	$yearbook['yearbook_orientation'] = $this->getValue('yearbook_orientation');
+    	return $yearbook;
+    }
 	public function getVersion() {
 		return $this->getValue('version');
 	}
@@ -286,6 +296,7 @@ class ConfigItem extends AppModel {
 		        }
 		    }
 		}
+
 
 		return $filenames;
 	}
