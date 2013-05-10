@@ -104,7 +104,7 @@ $lastName = AuthComponent::user('last_name');
 		} 
 		?>
 	
-		<div class="footer">
+		<div class="footer" lang="en" dir="ltr">
 			<div class="language">
 				<!-- &copy; 2012 openemis.org -->
 				<?php 
