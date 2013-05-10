@@ -21,15 +21,17 @@ class CensusClass extends AppModel {
 			foreach($obj['education_grades'] as $gradeId => &$grade) {
 				$classes = 0;
 				$seats = null;
+				$source = 0;
 				foreach($data as $value) {
 					if($value['education_grade_id'] == $gradeId 
 					&& $value['education_programme_id'] == $obj['education_programme_id']) {
 						$classes = $value['classes'];
 						$seats = $value['seats'];
+						$source = $value['source'];
 						break;
 					}
 				}
-				$grade = array('name' => $grade, 'classes' => $classes, 'seats' => $seats);
+				$grade = array('name' => $grade, 'classes' => $classes, 'seats' => $seats,'source' => $source);
 			}
 		}
 	}
@@ -42,6 +44,7 @@ class CensusClass extends AppModel {
 				'CensusClass.id',
 				'CensusClass.classes',
 				'CensusClass.seats',
+				'CensusClass.source',
 				'EducationProgramme.id AS education_programme_id',
 				"CONCAT(EducationCycle.name, ' - ', EducationProgramme.name) AS education_programme_name",
 				'EducationGrade.id AS education_grade_id',
@@ -120,6 +123,7 @@ class CensusClass extends AppModel {
 				'CensusClass.id',
 				'CensusClass.classes',
 				'CensusClass.seats',
+				'CensusClass.source',
 				'EducationProgramme.id',
 				"CONCAT(EducationCycle.name, ' - ', EducationProgramme.name) AS education_programme_name",
 				'EducationGrade.id',
@@ -166,6 +170,7 @@ class CensusClass extends AppModel {
 				$data[$class['id']] = array(
 					'classes' => $class['classes'],
 					'seats' => $class['seats'],
+					'source' => $class['source'],
 					'programmes' => array(),
 					'grades' => array()
 				);

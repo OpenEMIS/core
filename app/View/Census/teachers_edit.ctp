@@ -34,6 +34,13 @@ echo $this->Html->script('census_teachers', false);
 			));
 			?>
 		</div>
+		<div style="float:right;">
+			<ul class="legend">
+				<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
+				<li><span class="external"></span><?php echo __('External'); ?></li>
+				<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
+			</ul>
+		</div>
 	</div>
 	
 	<?php if($displayContent) { ?>
@@ -55,17 +62,25 @@ echo $this->Html->script('census_teachers', false);
 				$fieldName = 'data[CensusTeacherFte][%d][%s]';
 				foreach($fte as $record) {
 					$total += $record['male'] + $record['female'];
+					$record_tag="";
+					switch ($record['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 				?>
 				<div class="table_row">
 					<?php
 					echo $this->Form->hidden('id', array('name' => sprintf($fieldName, $i, 'id'), 'value' => $record['id']));
 					echo $this->Form->hidden('education_level_id', array('name' => sprintf($fieldName, $i, 'education_level_id'), 'value' => $record['education_level_id']));
 					?>
-					<div class="table_cell"><?php echo $record['education_level_name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_level_name']; ?></div>
 					<div class="table_cell">
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('male', array(
 								'type' => 'text',
+								'class' =>$record_tag,
 								'name' => sprintf($fieldName, $i, 'male'),
 								'computeType' => 'cell_value',
 								'value' => is_null($record['male']) ? 0 : $record['male'],
@@ -81,6 +96,7 @@ echo $this->Html->script('census_teachers', false);
 						<?php echo $this->Form->input('female', array(
 								'type' => 'text',
 								'name' => sprintf($fieldName, $i, 'female'),
+								'class' =>$record_tag,
 								'computeType' => 'cell_value',
 								'value' => is_null($record['female']) ? 0 : $record['female'],
 								'maxlength' => 10,
@@ -92,7 +108,8 @@ echo $this->Html->script('census_teachers', false);
 					</div>
 					<div class="table_cell cell_number cell_subtotal"><?php echo $record['male'] + $record['female']; ?></div>
 				</div>
-				<?php } ?>
+				<?php $i=$i+1;
+				} ?>
 			</div>
 			
 			<div class="table_foot">
@@ -122,6 +139,13 @@ echo $this->Html->script('census_teachers', false);
 				$fieldName = 'data[CensusTeacherTraining][%d][%s]';
 				foreach($training as $record) {
 					$total += $record['male'] + $record['female'];
+					$record_tag="";
+					switch ($record['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 				?>
 				<div class="table_row">
 					<?php
@@ -133,6 +157,7 @@ echo $this->Html->script('census_teachers', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('male', array(
 								'type' => 'text',
+								'class' =>$record_tag,
 								'name' => sprintf($fieldName, $i, 'male'),
 								'computeType' => 'cell_value',
 								'value' => is_null($record['male']) ? 0 : $record['male'],
@@ -147,6 +172,7 @@ echo $this->Html->script('census_teachers', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('female', array(
 								'type' => 'text',
+								'class' =>$record_tag,
 								'name' => sprintf($fieldName, $i, 'female'),
 								'computeType' => 'cell_value',
 								'value' => is_null($record['female']) ? 0 : $record['female'],
@@ -159,7 +185,7 @@ echo $this->Html->script('census_teachers', false);
 					</div>
 					<div class="table_cell cell_number cell_subtotal"><?php echo $record['male'] + $record['female']; ?></div>
 				</div>
-				<?php } ?>
+				<?php $i=$i+1; } ?>
 			</div>
 			
 			<div class="table_foot">
@@ -192,6 +218,13 @@ echo $this->Html->script('census_teachers', false);
 				foreach($programme['education_grades'] as $gradeId => $grade) {
 					$totalMale += $grade['male'];
 					$totalFemale += $grade['female'];
+					$record_tag="";
+					switch ($grade['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 			?>
 			
 				<div class="table_row">
@@ -201,12 +234,13 @@ echo $this->Html->script('census_teachers', false);
 						'value' => $gradeId
 					));
 					?>
-					<div class="table_cell"><?php echo $name; ?></div>
-					<div class="table_cell"><?php echo $grade['name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $name; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $grade['name']; ?></div>
 					<div class="table_cell">
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('male', array(
 								'type' => 'text',
+								'class' => $record_tag,
 								'name' => sprintf($fieldName, $i, 'male'),
 								'computeType' => 'total_male',
 								'value' => $grade['male'],
@@ -221,6 +255,7 @@ echo $this->Html->script('census_teachers', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('female', array(
 								'type' => 'text',
+								'class' => $record_tag,
 								'name' => sprintf($fieldName, $i++, 'female'),
 								'computeType' => 'total_female',
 								'value' => $grade['female'],
@@ -273,10 +308,17 @@ echo $this->Html->script('census_teachers', false);
 					$totalMale += $obj['male'];
 					$totalFemale += $obj['female'];
 					$gradeIndex = 0;
+					$record_tag="";
+					switch ($obj['source']) {
+						case 1:
+							$record_tag.="row_external";break;
+						case 2:
+							$record_tag.="row_estimate";break;
+					}
 					?>
 					<div class="table_cell">
 						<?php foreach($obj['programmes'] as $programmeId => $programmeName) { ?>
-						<div class="table_cell_row"><?php echo $programmeName; ?></div>
+						<div class="table_cell_row <?php echo $record_tag; ?>"><?php echo $programmeName; ?></div>
 						<?php } ?>
 					</div>
 					
@@ -298,6 +340,7 @@ echo $this->Html->script('census_teachers', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('male', array(
 								'type' => 'text',
+								'class'=>$record_tag,
 								'name' => sprintf($fieldName, $i, 'male'),
 								'computeType' => 'total_male',
 								'value' => $obj['male'],
@@ -312,6 +355,7 @@ echo $this->Html->script('census_teachers', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input('female', array(
 								'type' => 'text',
+								'class'=>$record_tag,
 								'name' => sprintf($fieldName, $i++, 'female'),
 								'computeType' => 'total_female',
 								'value' => $obj['female'],
