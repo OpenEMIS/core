@@ -50,7 +50,7 @@ var BankAccounts = {
             title: 'Click to dismiss',
             text: "Error have occurred.",
             type: alertType.error, // alertType.info or alertType.warn or alertType.error
-            position: 'top',
+            position: 'center',
             css: {}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
             autoFadeOut: true
         };
