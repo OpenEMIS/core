@@ -52,14 +52,7 @@ class AppController extends Controller {
 	public $uses = array('ConfigItem');
 	
 	public function beforeFilter() {
-		if ($this->Session->check('configItem.language')) {
-			$lang = $this->Session->read('configItem.language');
-		}
-		else
-		{
-			$lang = $this->ConfigItem->getValue('language');
-		}
-		Configure::write('Config.language', $lang);
+		Configure::write('Config.language', $this->Session->read('configItem.language'));
 		if(!$this->request->is('ajax')) {
 			$this->AccessControl->checkAccess();
 		}
