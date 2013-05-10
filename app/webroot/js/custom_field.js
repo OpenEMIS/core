@@ -220,10 +220,10 @@ var custom = {
         var linkText = link.text();
 
         // if link is edit, set redirection to point to /Setup/customFieldsEdit/TeacherCustomField/
-        if (linkText == "Edit") {
+        if (link.attr("id") == "edit-link") {
         	link.removeAttr("href");
         	link.attr('href', getRootURL() + 'Setup/customFieldsEdit/' + selectedValue);
-        } else if (linkText == "View") {
+        } else if (link.attr("id") == "view-link") {
         	// if view, then /Setup/customFields/TeacherCustomField/ 
         	link.removeAttr("href");
         	link.attr('href', getRootURL() + 'Setup/customFields/' + selectedValue);
@@ -231,7 +231,6 @@ var custom = {
 
         // if site type id is available, append to the field
         var siteTypeId = $('#siteTypeid').val();
-        console.info(siteTypeId);
         if (siteTypeId != "" && siteTypeId !== undefined && siteTypeId != null) {
         	var _href = link.attr("href");
         	link.attr('href', _href + '/' + siteTypeId);

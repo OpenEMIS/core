@@ -22,7 +22,8 @@ class CensusGraduate extends AppModel {
 				'InstitutionSiteProgramme.institution_site_id',
 				'CensusGraduate.id',
 				'CensusGraduate.male',
-				'CensusGraduate.female'
+				'CensusGraduate.female',
+				'CensusGraduate.source'
 			),
 			'joins' => array(
 				array(
@@ -83,7 +84,6 @@ class CensusGraduate extends AppModel {
 		//pr($data);die;
 		foreach($data as $obj) {
 			$obj['school_year_id'] = $yearId;
-			
 			if($obj['id'] == 0) {
 				if($obj['male'] > 0 || $obj['female'] > 0) {
 					$this->create();
