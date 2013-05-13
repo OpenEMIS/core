@@ -10,19 +10,19 @@ echo $this->Html->script('assessment', false);
 <div id="assessmentAdd" class="content_wrapper edit">
 	<?php
 	echo $this->Form->create('AssessmentItemType', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-		'url' => array('controller' => 'Assessment', 'action' => 'assessmentsAdd')
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'assessmentsAdd')
 	));
 	?>
 	<h1>
-		<span><?php echo __('Add National Assessment'); ?></span>
-		<?php echo $this->Html->link(__('List'), array('action' => 'index'), array('class' => 'divider')); ?>
+		<span><?php echo __('Add Assessment'); ?></span>
+		<?php echo $this->Html->link(__('List'), array('action' => 'assessmentsList'), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
+	<?php if(!empty($yearOptions)) { ?>
 	<fieldset class="section_group info">
-		<legend><?php echo __('National Assessment Details'); ?></legend>
+		<legend><?php echo __('Assessment Details'); ?></legend>
 		<div class="row">
 			<div class="label"><?php echo __('Code'); ?></div>
 			<div class="value"><?php echo $this->Form->input('code', array('class' => 'default')); ?></div>
@@ -65,10 +65,22 @@ echo $this->Html->script('assessment', false);
 				?>
 			</div>
 		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Year'); ?></div>
+			<div class="value">
+				<?php
+				echo $this->Form->input('school_year_id', array(
+					'class' => 'default',
+					'options' => $yearOptions,
+					'default' => $selectedYear
+				));
+				?>
+			</div>
+		</div>
 	</fieldset>
 	
 	<fieldset class="section_group items">
-		<legend><?php echo __('National Assessment Items'); ?></legend>
+		<legend><?php echo __('Assessment Items'); ?></legend>
 		
 		<div class="table">
 			<div class="table_head">
@@ -130,7 +142,10 @@ echo $this->Html->script('assessment', false);
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Add'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'assessmentsList'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
+	
+	<?php } // end if(yearOptions) ?>
+	
 	<?php echo $this->Form->end(); ?>
 </div>

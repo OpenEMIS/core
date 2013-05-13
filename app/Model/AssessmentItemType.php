@@ -55,12 +55,25 @@ class AssessmentItemType extends AppModel {
 		return $data;
 	}
 	
-	public function getAssessmentByTypeAndProgramme($type, $programmeId, $filter=array()) {
+	public function getAssessmentByTypeAndProgramme($type=false, $programmeId, $filter=array()) {
 		$model = get_class($this) . '.%s';
-		$conditions = array(sprintf($model, 'type') => $type);
+		$conditions = array();
+		if($type !== false) {
+			$conditions = array(sprintf($model, 'type') => $type);
+		} else {
+			$conditions['AND'] = array();
+		}
 		if(!empty($filter)) {
 			foreach($filter as $key => $val) {
-				$conditions[sprintf($model, $key)] = $val;
+				if($type == false) {
+					if($key === 'institution_site_id' || $key === 'school_year_id') {
+						$conditions['AND'][] = array('OR' => array(sprintf($model, $key) . ' = 0', sprintf($model, $key) . ' = ' . $val));
+					} else {
+						$conditions['AND'][sprintf($model, $key)] =  $val;
+					}
+				} else {
+					$conditions[sprintf($model, $key)] = $val;
+				}
 			}
 		}
 		$this->formatResult = true;
@@ -71,6 +84,7 @@ class AssessmentItemType extends AppModel {
 				sprintf($model, 'code'),
 				sprintf($model, 'name'),
 				sprintf($model, 'description'),
+				sprintf($model, 'type'),
 				sprintf($model, 'order'),
 				sprintf($model, 'visible'),
 				sprintf($model, 'education_grade_id'),
@@ -87,7 +101,7 @@ class AssessmentItemType extends AppModel {
 				)
 			),
 			'conditions' => $conditions,
-			'order' => array('EducationGrade.order', 'AssessmentItemType.order')
+			'order' => array('EducationGrade.order', 'AssessmentItemType.type DESC', 'AssessmentItemType.order')
 		));
 		return $data;
 	}
@@ -99,7 +113,10 @@ class AssessmentItemType extends AppModel {
 			if(!array_key_exists($educationGradeId, $data)) {
 				$data[$educationGradeId] = array('name' => $obj['education_grade_name'], 'assessment' => array());
 			}
-			$data[$educationGradeId]['assessment'][] = $obj;
+			if(!array_key_exists($obj['type'], $data[$educationGradeId]['assessment'])) {
+				$data[$educationGradeId]['assessment'][$obj['type']] = array();
+			}
+			$data[$educationGradeId]['assessment'][$obj['type']][] = $obj;
 		}
 		return $data;
 	}
@@ -111,7 +128,8 @@ class AssessmentItemType extends AppModel {
 				'EducationLevel.name as education_level_name', 'EducationCycle.name as education_cycle_name',
 				'EducationProgramme.name as education_programme_name', 'EducationGrade.name as education_grade_name',
 				'AssessmentItemType.id', 'AssessmentItemType.code', 'AssessmentItemType.name',
-				'AssessmentItemType.description', 'AssessmentItemType.visible', 'AssessmentItemType.education_grade_id'
+				'AssessmentItemType.description', 'AssessmentItemType.visible', 'AssessmentItemType.education_grade_id',
+				'SchoolYear.name as school_year_name'
 			),
 			'joins' => array(
 				array(
@@ -133,6 +151,12 @@ class AssessmentItemType extends AppModel {
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
 					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'type' => 'LEFT',
+					'conditions' => array('SchoolYear.id = AssessmentItemType.school_year_id')
 				)
 			),
 			'conditions' => array('AssessmentItemType.id' => $id)
@@ -150,9 +174,9 @@ class AssessmentItemType extends AppModel {
 		$this->formatResult = true;
 		$data = $this->find('all', array(
 			'fields' => array(
-				'AssessmentItem.id', 'AssessmentItem.education_grade_subject_id', 'AssessmentItem.visible',
+				'AssessmentItem.id', 'AssessmentItem.visible',
 				'AssessmentItem.min', 'AssessmentItem.max',
-				'EducationGradeSubject.education_subject_id', 'EducationSubject.code', 'EducationSubject.name',
+				'EducationGradeSubject.id as education_grade_subject_id', 'EducationGradeSubject.education_subject_id', 'EducationSubject.code', 'EducationSubject.name',
 				'EducationSubject.order'
 			),
 			'joins' => array(

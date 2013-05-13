@@ -13,6 +13,7 @@ echo $this->Html->script('assessment', false);
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 		'url' => array('controller' => 'Assessment', 'action' => 'assessmentsEdit', $data['id'])
 	));
+	echo $this->Form->hidden('id', array('value' => $data['id']));
 	?>
 	<h1>
 		<span><?php echo __('Edit Assessment Details'); ?></span>
@@ -86,6 +87,7 @@ echo $this->Html->script('assessment', false);
 					echo $this->Form->hidden('id', array('name' => sprintf($fieldName, $i, 'id'), 'value' => $item['id'] > 0 ? $item['id'] : 0));
 					echo $this->Form->hidden('code', array('name' => sprintf($fieldName, $i, 'code'), 'value' => $item['code']));
 					echo $this->Form->hidden('name', array('name' => sprintf($fieldName, $i, 'name'), 'value' => $item['name']));
+					echo $this->Form->hidden('assessment_item_type_id', array('name' => sprintf($fieldName, $i, 'assessment_item_type_id'), 'value' => $data['id']));
 					?>
 					<div class="table_cell">
 						<input type="checkbox" name="<?php echo sprintf($fieldName, $i, 'visible'); ?>" value="1" autocomplete="off" onChange="jsList.activate(this, '.table_row')" <?php echo $visible ? 'checked="checked"' : ''; ?>/>

@@ -3,6 +3,7 @@ textarea { resize: none; }
 .left { float: left; }
 .right { float: right; }
 .center { text-align: center; }
+.middle { vertical-align: middle !important; }
 .hidden { visibility: hidden; }
 .no_input { color: #333333; }
 .even { background-color: #F7F7F7; }
@@ -49,6 +50,7 @@ a.link_back span { font-size: 16px; }
 input.empty { color: #CCCCCC; }
 
 .wrapper { overflow: hidden; padding: 1px 0 1px 10px; margin-bottom: 1px; }
+.filter_wrapper { margin-bottom: 20px; }
 
 .input_wrapper:hover,
 .input_wrapper:focus,

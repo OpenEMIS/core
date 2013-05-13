@@ -2,7 +2,7 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('assessment', 'stylesheet', array('inline' => false));
 
-echo $this->Html->script('assessment', false);
+echo $this->Html->script('institution_site_assessments', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 ?>
@@ -13,20 +13,36 @@ echo $this->Html->script('jquery.sort', false);
 	<?php
 	echo $this->Form->create('Assessment', array(
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-		'url' => array('controller' => 'Assessment', 'action' => 'indexEdit', $selectedProgramme)
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'assessmentsListEdit', $selectedYear, $selectedProgramme)
 	));
 	?>
 	<h1>
 		<span><?php echo __('Assessments'); ?></span>
 		<?php
 		if($_edit && !empty($data)) {
-			echo $this->Html->link(__('List'), array('action' => 'index', $selectedProgramme), array('class' => 'divider'));
+			echo $this->Html->link(__('List'), array('action' => 'assessmentsList', $selectedYear, $selectedProgramme), array('class' => 'divider'));
 		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
 	<div class="filter_wrapper">
+		<div class="row edit">
+			<div class="label"><?php echo __('Year'); ?></div>
+			<div class="value">
+				<?php
+				echo $this->Form->input('school_year_id', array(
+					'id' => 'SchoolYearId',
+					'label' => false,
+					'div' => false,
+					'options' => $yearOptions,
+					'default' => $selectedYear,
+					'onchange' => 'InstitutionSiteAssessments.navigateProgramme(this, false)',
+					'url' => 'InstitutionSites/assessmentsListEdit'
+				));
+				?>
+			</div>
+		</div>
 		<div class="row edit">
 			<div class="label"><?php echo __('Education Programme'); ?></div>
 			<div class="value">
@@ -37,7 +53,8 @@ echo $this->Html->script('jquery.sort', false);
 					'options' => $programmeOptions,
 					'default' => $selectedProgramme,
 					'url' => 'Assessment/indexEdit/',
-					'onchange' => 'Assessment.switchProgramme(this)'
+					'onchange' => 'InstitutionSiteAssessments.navigateProgramme(this, true)',
+					'url' => 'InstitutionSites/assessmentsListEdit/'
 				));
 				?>
 			</div>
@@ -81,7 +98,7 @@ echo $this->Html->script('jquery.sort', false);
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index', $selectedProgramme), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'assessmentsList', $selectedYear, $selectedProgramme), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

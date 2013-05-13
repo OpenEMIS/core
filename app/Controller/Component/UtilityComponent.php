@@ -33,6 +33,9 @@ class UtilityComponent extends Component {
 		$msgList['LOGIN_INVALID'] = "You have entered an invalid username or password.";
 		$msgList['LOGIN_USER_INACTIVE'] = "You are not an authorized user.";
 		
+		// School Year Messages
+		$msgList['SCHOOL_YEAR_EMPTY_LIST'] = "There are no school years configured in the system.";
+		
 		// Census Messages
 		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site for the selected year.";
 		$msgList['CENSUS_UPDATED'] = "The census data has been updated successfully.";
@@ -54,6 +57,7 @@ class UtilityComponent extends Component {
 		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
 		$msgList['SITE_CLASS_DUPLICATE_NAME'] = "The name is already existed.";
 		$msgList['SITE_CLASS_NO_GRADES'] = "Please add a grade to this class.";
+		$msgList['SITE_CLASS_NO_CLASSES'] = "There are no classes for the selected year.";
 		
 		// Students
 		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";

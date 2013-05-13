@@ -18,6 +18,9 @@ class InstitutionSitesController extends AppController {
 		'EducationCycle',
 		'EducationLevel',
 		'EducationSystem',
+		'AssessmentItemType',
+		'AssessmentItem',
+		'AssessmentItemResult',
 		'Institution',
 		'InstitutionSiteClass',
 		'InstitutionSiteClassTeacher',
@@ -1186,7 +1189,6 @@ class InstitutionSitesController extends AppController {
 			$this->Navigation->addCrumb('Assessment');
 			
 			
-			
 		} else {
 			$this->redirect(array('action' => 'students'));
 		}
@@ -1493,19 +1495,353 @@ class InstitutionSitesController extends AppController {
 		$this->set('categoryOptions', $categoryOptions);
 	}
 	
-	public function assessments() {
+	public function assessmentsList() {
 		$this->Navigation->addCrumb('Assessments');
+		
+		$alertOptions = array('type' => 'warn', 'dismissOnClick' => false);
+		$yearOptions = $this->SchoolYear->getYearList();
+		$selectedYear = 0;
+		$selectedProgramme = 0;
+		$data = array();
+		$type = $this->AssessmentItemType->type['NON_OFFICIAL'];
+		if(!empty($yearOptions)) {
+			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($this->institutionSiteId, $selectedYear);
+			
+			if(!empty($programmeOptions)) {
+				$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
+				$list = $this->AssessmentItemType->getAssessmentByTypeAndProgramme($type, $selectedProgramme, array(
+					'institution_site_id' => $this->institutionSiteId,
+					'school_year_id' => $selectedYear
+				));
+				if(!empty($list)) {
+					$data = $this->AssessmentItemType->groupByGrades($list);
+				} else {
+					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
+				}
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), $alertOptions);
+			}
+			$this->set('programmeOptions', $programmeOptions);
+			$this->set('selectedProgramme', $selectedProgramme);
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SCHOOL_YEAR_EMPTY_LIST'), $alertOptions);
+		}
+		$this->set('yearOptions', $yearOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('data', $data);
+		$this->set('type', $type);
+	}
+	
+	public function assessmentsListEdit() {
+		$this->Navigation->addCrumb('Assessments');
+		$yearOptions = $this->SchoolYear->getYearList();
+		$selectedYear = 0;
+		$selectedProgramme = 0;
+		
+		if(!empty($yearOptions)) {
+			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+			$programmeOptions = $this->EducationProgramme->getProgrammeOptions();
+			$data = array();
+			$type = $this->AssessmentItemType->type['NON_OFFICIAL'];
+			if(!empty($programmeOptions)) {
+				$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
+				if($this->request->is('post')) {
+					$assessment = $this->data['AssessmentItemType'];
+					if($this->AssessmentItemType->saveMany($assessment, array('validate' => false))) {
+						$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+					} else {
+						$this->Utility->alert($this->Utility->getMessage('ERROR_UNEXPECTED'), array('type' => 'error'));
+					}
+					$this->redirect(array('action' => 'assessmentsList', $selectedYear, $selectedProgramme));
+				}
+				$list = $this->AssessmentItemType->getAssessmentByTypeAndProgramme($type, $selectedProgramme, array(
+						'institution_site_id' => $this->institutionSiteId,
+						'school_year_id' => $selectedYear
+					));
+				if(!empty($list)) {
+					$data = $this->AssessmentItemType->groupByGrades($list);
+				} else {
+					$this->redirect(array('action' => 'assessmentsList', $selectedYear, $selectedProgramme));
+				}
+			} else {
+				$this->redirect(array('action' => 'assessmentsList'));
+			}
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SCHOOL_YEAR_EMPTY_LIST'), $alertOptions);
+		}
+		$this->set('data', $data);
+		$this->set('yearOptions', $yearOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('programmeOptions', $programmeOptions);
+		$this->set('selectedProgramme', $selectedProgramme);
+		$this->set('type', $type);
 	}
 	
 	public function assessmentsAdd() {
-		$this->Navigation->addCrumb('Assessments');
+		$this->Navigation->addCrumb('Add Assessment');
+		
+		$programmeId = 0;
+		$gradeId = 0;
+		$selectedProgramme = 0;
+		$selectedGrade = '';
+		$selectedYear = 0;
+		$items = array();
+		if($this->request->is('post')) {
+			$programmeId = $this->data['AssessmentItemType']['education_programme_id'];
+			$gradeId = $this->data['AssessmentItemType']['education_grade_id'];
+			$selectedYear = $this->data['AssessmentItemType']['school_year_id'];
+			$assessment = $this->data['AssessmentItemType'];
+			$this->AssessmentItemType->set($assessment);
+			if(isset($this->data['AssessmentItem'])) {
+				$items = $this->data['AssessmentItem'];
+			}
+			if($this->AssessmentItemType->validates()) {
+				$order = 1;
+				$type = $this->AssessmentItemType->type['NON_OFFICIAL'];
+				$list = $this->AssessmentItemType->getAssessmentByTypeAndGrade($type, $gradeId);
+				if(!empty($list)) {
+					$last = array_pop($list);
+					$order = $last['AssessmentItemType']['order'] + 1;
+				}
+				$assessment['type'] = $type;
+				$assessment['order'] = $order;
+				$assessment['institution_site_id'] = $this->institutionSiteId;
+				$obj = $this->AssessmentItemType->save($assessment);
+				if($obj) {
+					$assessmentId = $obj['AssessmentItemType']['id'];
+					if(!empty($items)) {
+						foreach($items as $i => $val) {
+							if(isset($val['visible']) && $val['visible']==1) {
+								$val['assessment_item_type_id'] = $assessmentId;
+								$this->AssessmentItem->create();
+								$this->AssessmentItem->save($val);
+							}
+						}
+					}
+					$this->redirect(array('action' => 'assessmentsView', $assessmentId));
+				}
+			}
+		}
+		$yearOptions = $this->SchoolYear->getYearList();
+		if(!empty($yearOptions)) {
+			if($selectedYear==0) {
+				$selectedYear = key($yearOptions);
+			}
+			$programmeOptions = $this->EducationProgramme->getProgrammeOptions();
+			$gradeOptions = array();
+			if(!empty($programmeOptions)) {
+				if($programmeId == 0) {
+					$programmeId = key($programmeOptions);
+				}
+				$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null, true);
+			}
+			$this->set('selectedProgramme', $programmeId);
+			$this->set('selectedGrade', $gradeId);
+			$this->set('selectedYear', $selectedYear);
+			$this->set('programmeOptions', $programmeOptions);
+			$this->set('gradeOptions', $gradeOptions);
+			$this->set('items', $items);
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SCHOOL_YEAR_EMPTY_LIST'), array('type' => 'warn', 'dismissOnClick' => false));
+		}
+		$this->set('yearOptions', $yearOptions);
+	}
+	
+	public function assessmentsView() {	
+		if(isset($this->params['pass'][0])) {
+			$this->Navigation->addCrumb('Assessment Details');
+			$assessmentId = $this->params['pass'][0];
+			$data = $this->AssessmentItemType->getAssessment($assessmentId);
+			$this->set('data', $data);
+		} else {
+			$this->redirect(array('action' => 'assessmentsList'));
+		}
+	}
+	
+	public function assessmentsEdit() {	
+		if(isset($this->params['pass'][0])) {
+			$this->Navigation->addCrumb('Edit Assessment Details');
+			$assessmentId = $this->params['pass'][0];
+			$data = $this->AssessmentItemType->getAssessment($assessmentId);
+			$items = array();
+			if($this->request->is('post')) {
+				$assessment = $this->data['AssessmentItemType'];
+				$assessment['education_grade_id'] = $data['education_grade_id'];
+				$data = array_merge($data, $assessment);
+				$this->AssessmentItemType->set($assessment);
+				if(isset($this->data['AssessmentItem'])) {
+					$items = $this->data['AssessmentItem'];
+				}
+				if($this->AssessmentItemType->validates()) {
+					$obj = $this->AssessmentItemType->save($assessment);
+					if($obj) {
+						$assessmentId = $obj['AssessmentItemType']['id'];
+						if(!empty($items)) {
+							foreach($items as $i => $val) {
+								if(!isset($val['visible'])) {
+									$val['visible'] = 0;
+								}
+								if($val['id'] > 0) {
+									$this->AssessmentItem->save($val);
+								} else {
+									if($val['visible']==1) {
+										$this->AssessmentItem->create();
+										$this->AssessmentItem->save($val);
+									}
+								}
+							}
+						}
+						$this->redirect(array('action' => 'assessmentsView', $assessmentId));
+					}
+				}
+				$data['AssessmentItem'] = $items;
+			}
+			$this->set('data', $data);
+		} else {
+			$this->redirect(array('action' => 'assessmentsList'));
+		}
 	}
 	
 	public function results() {
+		$this->Navigation->addCrumb('Results');
 		
+		$alertOptions = array('type' => 'warn', 'dismissOnClick' => false);
+		$yearOptions = $this->SchoolYear->getYearList();
+		$selectedYear = 0;
+		$selectedProgramme = 0;
+		$data = array();
+		if(!empty($yearOptions)) {
+			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($this->institutionSiteId, $selectedYear);
+			
+			if(!empty($programmeOptions)) {
+				$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
+				$list = $this->AssessmentItemType->getAssessmentByTypeAndProgramme(false, $selectedProgramme, array(
+					'institution_site_id' => $this->institutionSiteId,
+					'school_year_id' => $selectedYear
+				));
+				if(!empty($list)) {
+					$data = $this->AssessmentItemType->groupByGrades($list);
+				} else {
+					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
+				}
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), $alertOptions);
+			}
+			$this->set('programmeOptions', $programmeOptions);
+			$this->set('selectedProgramme', $selectedProgramme);
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('SCHOOL_YEAR_EMPTY_LIST'), $alertOptions);
+		}
+		$this->set('yearOptions', $yearOptions);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('data', $data);
+		$this->set('type', $this->AssessmentItemType->type);
 	}
 	
-	public function resultsStudents() {
-		
+	public function resultsDetails() {
+		if(isset($this->params['pass'][0])) {
+			$this->Navigation->addCrumb('Results');
+			$assessmentId = $this->params['pass'][0];
+			$data = $this->AssessmentItemType->getAssessment($assessmentId);
+			$this->set('data', $data);
+		} else {
+			$this->redirect(array('action' => 'results'));
+		}
+	}
+	
+	public function resultsItem() {
+		if(isset($this->params['pass'][0])) {
+			$this->Navigation->addCrumb('Results');
+			$yearOptions = $this->SchoolYear->getYearList();
+			if(!empty($yearOptions)) {
+				$itemId = $this->params['pass'][0];
+				$data = $this->AssessmentItem->getItem($itemId);
+				
+				if(!empty($data)) {
+					$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($yearOptions);
+					$gradeId = $data['EducationGradeSubject']['education_grade_id'];
+					$classOptions = $this->InstitutionSiteClass->getClassOptions($selectedYear, $this->institutionSiteId, $gradeId);
+					$selectedClass = 0;
+					$students = array();
+					if(!empty($classOptions)) {
+						$selectedClass = isset($this->params['pass'][2]) ? $this->params['pass'][2] : key($classOptions);
+						$students = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($selectedYear, $this->institutionSiteId, $selectedClass, $gradeId, $itemId);
+					} else {
+						$this->Utility->alert($this->Utility->getMessage('SITE_CLASS_NO_CLASSES'), array('type' => 'warn'));
+					}
+					
+					$this->set('data', $data);
+					$this->set('yearOptions', $yearOptions);
+					$this->set('selectedYear', $selectedYear);
+					$this->set('classOptions', $classOptions);
+					$this->set('selectedClass', $selectedClass);
+					$this->set('students', $students);
+				} else {
+					$this->redirect(array('action' => 'results'));
+				}
+			} else {
+				$this->redirect(array('action' => 'results'));
+			}
+		} else {
+			$this->redirect(array('action' => 'results'));
+		}
+	}
+	
+	public function resultsItemEdit() {
+		if(isset($this->params['pass'][0])) {
+			$this->Navigation->addCrumb('Edit Results');
+			$yearOptions = $this->SchoolYear->getYearList();
+			if(!empty($yearOptions)) {
+				$itemId = $this->params['pass'][0];
+				$data = $this->AssessmentItem->getItem($itemId);
+				
+				if(!empty($data)) {
+					$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($yearOptions);
+					$gradeId = $data['EducationGradeSubject']['education_grade_id'];
+					$classOptions = $this->InstitutionSiteClass->getClassOptions($selectedYear, $this->institutionSiteId, $gradeId);
+					$selectedClass = 0;
+					$students = array();
+					if(!empty($classOptions)) {
+						$selectedClass = isset($this->params['pass'][2]) ? $this->params['pass'][2] : key($classOptions);
+						$students = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($selectedYear, $this->institutionSiteId, $selectedClass, $gradeId, $itemId);
+					} else {
+						$this->Utility->alert($this->Utility->getMessage('SITE_CLASS_NO_CLASSES'), array('type' => 'warn'));
+					}
+					
+					if($this->request->is('post')) {
+						$result = $this->data['AssessmentItemResult'];
+						foreach($result as $key => &$obj) {
+							if(empty($obj['id']) && empty($obj['marks'])) {
+								unset($result[$key]);
+							} else {
+								$obj['assessment_item_id'] = $itemId;
+								$obj['institution_site_id'] = $this->institutionSiteId;
+								$obj['school_year_id'] = $selectedYear;
+							}
+						}
+						if(!empty($result)) {
+							$this->AssessmentItemResult->saveMany($result);
+						}
+						$this->redirect(array('action' => 'resultsItem', $itemId, $selectedYear, $selectedClass));
+					}
+					
+					$this->set('data', $data);
+					$this->set('yearOptions', $yearOptions);
+					$this->set('selectedYear', $selectedYear);
+					$this->set('classOptions', $classOptions);
+					$this->set('selectedClass', $selectedClass);
+					$this->set('students', $students);
+					$this->set('institutionSiteId', $this->institutionSiteId);
+				} else {
+					$this->redirect(array('action' => 'results'));
+				}
+			} else {
+				$this->redirect(array('action' => 'results'));
+			}
+		} else {
+			$this->redirect(array('action' => 'results'));
+		}
 	}
 }
