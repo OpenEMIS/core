@@ -122,7 +122,7 @@ class CommonTask extends AppTask {
     public function getCount($id){
         $this->autoRender = false;
         $res = $this->Report->find('first',array('conditions'=>array('id'=>$id)));
-		pr($res);
+		//pr($res);
         //$s ='/SELECT(.*)FROM/s';
         //$r = 'SELECT count(*) as count FROM';
         //$countSql = preg_replace($s,$r,$res['BatchReport'][0]['query']);
@@ -133,7 +133,7 @@ class CommonTask extends AppTask {
             $sql = str_replace(',{cond}','',$sql);
             $sql = str_replace("'all'","'count');//",$sql);
         }
-        $countSql = $sql;
+        $countSql = str_replace(array("\r\n", "\r", "\n"), ' ', $sql);
         eval($countSql);
         return array('total'=>((isset($data))?$data:0), 'limit'=>$this->limit);
     }
