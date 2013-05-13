@@ -32,6 +32,44 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		return $list;
 	}
 	
+	public function getStudentAssessmentResults($yearId, $institutionSiteId, $classId, $gradeId, $itemId) {
+		$data = $this->find('all', array(
+			'fields' => array(
+				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+				'AssessmentItemResult.id', 'AssessmentItemResult.marks'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+				),
+				array(
+					'table' => 'assessment_item_results',
+					'alias' => 'AssessmentItemResult',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'AssessmentItemResult.student_id = Student.id',
+						'AssessmentItemResult.institution_site_id = ' . $institutionSiteId,
+						'AssessmentItemResult.school_year_id = ' . $yearId,
+						'AssessmentItemResult.assessment_item_id = ' . $itemId
+					)
+				),
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.institution_site_class_id = ' . $classId,
+						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId,
+						'InstitutionSiteClassGrade.id = InstitutionSiteClassGradeStudent.institution_site_class_grade_id'
+					)
+				)
+			),
+			'order' => array('Student.first_name')
+		));
+		return $data;
+	}
+	
 	public function getGenderTotalByClass($classId) {
 		$joins = array(
 			array(
@@ -55,4 +93,6 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		}
 		return $gender;
 	}
+	
+	
 }

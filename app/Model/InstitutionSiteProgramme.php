@@ -115,6 +115,49 @@ class InstitutionSiteProgramme extends AppModel {
 		return $data;
 	}
 	
+	public function getSiteProgrammeOptions($institutionSiteId, $yearId, $withCycle=true) {
+		$data = array();
+		if($withCycle) {
+			$list = $this->getSiteProgrammes($institutionSiteId, $yearId);
+			foreach($list as &$obj) {
+				$data[$obj['education_programme_id']] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
+			}
+		} else {
+			$data = $this->find('list', array(
+				'recursive' => -1,
+				'fields' => array('EducationProgramme.id AS education_programme_id', 'EducationProgramme.name AS education_programme_name'),
+				'joins' => array(
+					array(
+						'table' => 'education_programmes',
+						'alias' => 'EducationProgramme',
+						'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+					),
+					array(
+						'table' => 'education_cycles',
+						'alias' => 'EducationCycle',
+						'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+					),
+					array(
+						'table' => 'education_levels',
+						'alias' => 'EducationLevel',
+						'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+					),
+					array(
+						'table' => 'education_systems',
+						'alias' => 'EducationSystem',
+						'conditions' => array('EducationSystem.id = EducationLevel.education_system_id')
+					)
+				),
+				'conditions' => array(
+					'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+					'InstitutionSiteProgramme.school_year_id' => $yearId
+				),
+				'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
+			));
+		}
+		return $data;
+	}
+	
 	// used by CensusController, classes/teachers
 	public function getProgrammeList($institutionSiteId, $yearId, $withGrades = true) {
 		$list = $this->getActiveProgrammes($institutionSiteId, $yearId);
