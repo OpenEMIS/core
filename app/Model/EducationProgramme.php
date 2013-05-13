@@ -66,4 +66,41 @@ class EducationProgramme extends AppModel {
 		));
 		return $data;
 	}
+	
+	public function getProgrammeOptions($visible = true, $cycleName = true) {
+		$conditions = array();
+		if($visible) {
+			$conditions['EducationProgramme.visible'] = 1;
+		}
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('EducationProgramme.id', 'EducationProgramme.name', 'EducationCycle.name'),
+			'joins' => array(
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+				)
+			),
+			'conditions' => $conditions,
+			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationLevel.order')
+		));
+		
+		$options = array();
+		foreach($data as $obj) {
+			$programme = $obj['EducationProgramme'];
+			$cycle = $obj['EducationCycle'];
+			if($cycleName) {
+				$options[$programme['id']] = $cycle['name'] . ' - ' . $programme['name'];
+			} else {
+				$options[$programme['id']] = $programme['name'];
+			}
+		}
+		return $options;
+	}
 }

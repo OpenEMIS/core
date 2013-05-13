@@ -35,7 +35,8 @@ class InstitutionSiteClass extends AppModel {
 			'conditions' => array(
 				'InstitutionSiteClass.school_year_id' => $yearId,
 				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-			)
+			),
+			'order' => array('InstitutionSiteClass.name')
 		));
 		
 		$data = array();
@@ -46,6 +47,33 @@ class InstitutionSiteClass extends AppModel {
 				'gender' => $InstitutionSiteClassGradeStudent->getGenderTotalByClass($id)
 			);
 		}
+		return $data;
+	}
+	
+	public function getClassOptions($yearId, $institutionSiteId, $gradeId=false) {
+		$options = array(
+			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+			'conditions' => array(
+				'InstitutionSiteClass.school_year_id' => $yearId,
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+			),
+			'order' => array('InstitutionSiteClass.name')
+		);
+		
+		if($gradeId!==false) {
+			$options['joins'] = array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId
+					)
+				)
+			);
+			$options['group'] = array('InstitutionSiteClass.id');
+		}
+		$data = $this->find('list', $options);
 		return $data;
 	}
 }

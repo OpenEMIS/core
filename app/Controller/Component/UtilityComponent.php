@@ -25,12 +25,16 @@ class UtilityComponent extends Component {
 		// General Messages
 		$msgList['ERROR_UNEXPECTED'] = "You have encountered an unexpected error. Please contact the system administrator for assistance.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
+		$msgList['SAVE_SUCCESS'] = "Your data has been saved successfully.";
 		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
 		
 		// Login Messages
 		$msgList['LOGIN_TIMEOUT'] = "Your session is timed out. Please login again.";
 		$msgList['LOGIN_INVALID'] = "You have entered an invalid username or password.";
 		$msgList['LOGIN_USER_INACTIVE'] = "You are not an authorized user.";
+		
+		// School Year Messages
+		$msgList['SCHOOL_YEAR_EMPTY_LIST'] = "There are no school years configured in the system.";
 		
 		// Census Messages
 		$msgList['CENSUS_NO_PROG'] = "There are no programmes associated with this institution site for the selected year.";
@@ -42,6 +46,10 @@ class UtilityComponent extends Component {
 		$msgList['EDUCATION_NO_SYSTEM'] = "There is no active Education System.";
 		$msgList['EDUCATION_PROGRAMME_ADDED'] = "Education Programme has been added successfully. Please add Education Grades to this Programme.";
 		
+		// Assessment Messages
+		$msgList['ASSESSMENT_NO_PROGRAMME'] = "There are no active programmes in the system.";
+		$msgList['ASSESSMENT_NO_ASSESSMENT'] = "There are no assessments on the selected programme.";
+		
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";
 		
@@ -49,6 +57,7 @@ class UtilityComponent extends Component {
 		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
 		$msgList['SITE_CLASS_DUPLICATE_NAME'] = "The name is already existed.";
 		$msgList['SITE_CLASS_NO_GRADES'] = "Please add a grade to this class.";
+		$msgList['SITE_CLASS_NO_CLASSES'] = "There are no classes for the selected year.";
 		
 		// Students
 		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";
