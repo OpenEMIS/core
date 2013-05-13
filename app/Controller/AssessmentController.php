@@ -16,9 +16,9 @@ class AssessmentController extends AppController {
 		$this->bodyTitle = 'Settings';
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
 		if($this->action === 'index') {
-			$this->Navigation->addCrumb('Assessment');
+			$this->Navigation->addCrumb('National Assessments');
 		} else {
-			$this->Navigation->addCrumb('Assessment', array('controller' => 'Assessment', 'action' => 'index'));
+			$this->Navigation->addCrumb('National Assessments', array('controller' => 'Assessment', 'action' => 'index'));
 		}
 	}
 	
@@ -53,9 +53,9 @@ class AssessmentController extends AppController {
 	public function index() {
 		$programmeOptions = $this->EducationProgramme->getProgrammeOptions();
 		$data = array();
+		$type = $this->AssessmentItemType->type['OFFICIAL'];
 		if(!empty($programmeOptions)) {
 			$selectedProgramme = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($programmeOptions);
-			$type = $this->AssessmentItemType->type['OFFICIAL'];
 			$list = $this->AssessmentItemType->getAssessmentByTypeAndProgramme($type, $selectedProgramme);
 			if(!empty($list)) {
 				$data = $this->AssessmentItemType->groupByGrades($list);
@@ -68,13 +68,14 @@ class AssessmentController extends AppController {
 		$this->set('data', $data);
 		$this->set('programmeOptions', $programmeOptions);
 		$this->set('selectedProgramme', $selectedProgramme);
+		$this->set('type', $type);
     }
 	
 	public function indexEdit() {
 		$this->Navigation->addCrumb('Edit');
 		$programmeOptions = $this->EducationProgramme->getProgrammeOptions();
 		$data = array();
-		
+		$type = $this->AssessmentItemType->type['OFFICIAL'];
 		if(!empty($programmeOptions)) {
 			$selectedProgramme = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($programmeOptions);
 			if($this->request->is('post')) {
@@ -86,7 +87,6 @@ class AssessmentController extends AppController {
 				}
 				$this->redirect(array('action' => 'index', $selectedProgramme));
 			}
-			$type = $this->AssessmentItemType->type['OFFICIAL'];
 			$list = $this->AssessmentItemType->getAssessmentByTypeAndProgramme($type, $selectedProgramme);
 			if(!empty($list)) {
 				$data = $this->AssessmentItemType->groupByGrades($list);
@@ -99,6 +99,7 @@ class AssessmentController extends AppController {
 		$this->set('data', $data);
 		$this->set('programmeOptions', $programmeOptions);
 		$this->set('selectedProgramme', $selectedProgramme);
+		$this->set('type', $type);
 	}
 	
 	public function assessmentsAdd() {
@@ -177,7 +178,6 @@ class AssessmentController extends AppController {
 			$items = array();
 			if($this->request->is('post')) {
 				$assessment = $this->data['AssessmentItemType'];
-				$assessment['id'] = $assessmentId;
 				$assessment['education_grade_id'] = $data['education_grade_id'];
 				$data = array_merge($data, $assessment);
 				$this->AssessmentItemType->set($assessment);

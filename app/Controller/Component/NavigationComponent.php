@@ -170,7 +170,8 @@ class NavigationComponent extends Component {
 					$this->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
 					$this->createLink('Attachments', 'attachments'),
 					$this->createLink('Additional Info', 'additional'),
-					$this->createLink('Bank Accounts', 'bankAccounts')
+					$this->createLink('Bank Accounts', 'bankAccounts'),
+					$this->createLink('Assessments', 'assessmentsList', array('pattern' => 'assessments'))
 				),
 				'SITE DETAILS' => array(
 					'_controller' => 'InstitutionSites',
@@ -179,7 +180,6 @@ class NavigationComponent extends Component {
 					$this->createLink('Students', 'students'),
 					$this->createLink('Teachers', 'teachers'),
 					$this->createLink('Staff', 'staff'),
-					$this->createLink('Assessments', 'assessments'),
 					$this->createLink('Results', 'results')
 				),
 				'CENSUS' => array(
@@ -205,7 +205,7 @@ class NavigationComponent extends Component {
 				'SYSTEM SETUP' => array(
 					$this->createLink('Administrative Boundaries', 'index', array('pattern' => 'index$|levels|edit$', 'controller' => 'Areas')),
 					$this->createLink('Education Structure', 'index', array('pattern' => 'index$|setup$', 'controller' => 'Education')),
-					$this->createLink('Assessment', 'index', array('pattern' => 'index|assessment', 'controller' => 'Assessment')),
+					$this->createLink('National Assessments', 'index', array('pattern' => 'index|assessment', 'controller' => 'Assessment')),
 					$this->createLink('Setup Variables', 'setupVariables', array('controller' => 'Setup')),
 					$this->createLink('Custom Fields', 'customFields', array('pattern' => 'custom', 'controller' => 'Setup')),
 					$this->createLink('System Configurations', 'index', array('pattern' => 'index$|edit$|^dashboard', 'controller' => 'Config'))

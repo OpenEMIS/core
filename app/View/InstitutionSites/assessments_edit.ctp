@@ -10,57 +10,55 @@ echo $this->Html->script('assessment', false);
 <div id="assessmentAdd" class="content_wrapper edit">
 	<?php
 	echo $this->Form->create('AssessmentItemType', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-		'url' => array('controller' => 'Assessment', 'action' => 'assessmentsAdd')
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'assessmentsEdit', $data['id'])
 	));
+	echo $this->Form->hidden('id', array('value' => $data['id']));
 	?>
 	<h1>
-		<span><?php echo __('Add National Assessment'); ?></span>
-		<?php echo $this->Html->link(__('List'), array('action' => 'index'), array('class' => 'divider')); ?>
+		<span><?php echo __('Edit Assessment Details'); ?></span>
+		<?php echo $this->Html->link(__('View'), array('action' => 'assessmentsView', $data['id']), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
 	<fieldset class="section_group info">
-		<legend><?php echo __('National Assessment Details'); ?></legend>
+		<legend><?php echo __('Assessment Details'); ?></legend>
+		<div class="row">
+			<div class="label"><?php echo __('Year'); ?></div>
+			<div class="value"><?php echo $data['school_year_name']; ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Code'); ?></div>
-			<div class="value"><?php echo $this->Form->input('code', array('class' => 'default')); ?></div>
+			<div class="value"><?php echo $this->Form->input('code', array('class' => 'default', 'value' => $data['code'])); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('name', array('class' => 'default')); ?></div>
+			<div class="value"><?php echo $this->Form->input('name', array('class' => 'default', 'value' => $data['name'])); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Description'); ?></div>
-			<div class="value"><?php echo $this->Form->input('description', array('type' => 'textarea', 'class' => 'default')); ?></div>
+			<div class="value"><?php echo $this->Form->input('description', array('type' => 'textarea', 'class' => 'default', 'value' => $data['description'])); ?></div>
+		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Education Level'); ?></div>
+			<div class="value"><?php echo $data['education_level_name']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Education Programme'); ?></div>
-			<div class="value">
-				<?php
-				echo $this->Form->input('education_programme_id', array(
-					'class' => 'default',
-					'options' => $programmeOptions,
-					'default' => $selectedProgramme,
-					'onchange' => 'Assessment.loadGradeList(this)',
-					'url' => 'Assessment/loadGradeList'
-				));
-				?>
-			</div>
+			<div class="value"><?php echo $data['education_programme_name']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Education Grade'); ?></div>
+			<div class="value"><?php echo $data['education_grade_name']; ?></div>
+		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Status'); ?></div>
 			<div class="value">
 				<?php
-				echo $this->Form->input('education_grade_id', array(
-					'id' => 'EducationGradeId',
+				echo $this->Form->input('visible', array(
 					'class' => 'default',
-					'options' => $gradeOptions,
-					'default' => $selectedGrade,
-					'empty' => '-- ' . (empty($gradeOptions) ? __('No Grade Available') : __('Select Grade')) . ' --',
-					'onchange' => 'Assessment.loadSubjectList(this)',
-					'url' => 'Assessment/loadSubjectList'
+					'options' => array(1 => __('Active'), 0 => __('Inactive')),
+					'default' => $data['visible'] 
 				));
 				?>
 			</div>
@@ -68,7 +66,7 @@ echo $this->Html->script('assessment', false);
 	</fieldset>
 	
 	<fieldset class="section_group items">
-		<legend><?php echo __('National Assessment Items'); ?></legend>
+		<legend><?php echo __('Assessment Items'); ?></legend>
 		
 		<div class="table">
 			<div class="table_head">
@@ -81,7 +79,7 @@ echo $this->Html->script('assessment', false);
 			<div class="table_body">
 				<?php 
 				$fieldName = 'data[AssessmentItem][%d][%s]';
-				foreach($items as $i => $item) { 
+				foreach($data['AssessmentItem'] as $i => $item) {
 					$visible = isset($item['visible']) && $item['visible'] == 1;
 				?>
 				<div class="table_row <?php echo $visible ? '' : 'inactive'; ?>">
@@ -90,8 +88,10 @@ echo $this->Html->script('assessment', false);
 						'name' => sprintf($fieldName, $i, 'education_grade_subject_id'),
 						'value' => $item['education_grade_subject_id']
 					));
+					echo $this->Form->hidden('id', array('name' => sprintf($fieldName, $i, 'id'), 'value' => $item['id'] > 0 ? $item['id'] : 0));
 					echo $this->Form->hidden('code', array('name' => sprintf($fieldName, $i, 'code'), 'value' => $item['code']));
 					echo $this->Form->hidden('name', array('name' => sprintf($fieldName, $i, 'name'), 'value' => $item['name']));
+					echo $this->Form->hidden('assessment_item_type_id', array('name' => sprintf($fieldName, $i, 'assessment_item_type_id'), 'value' => $data['id']));
 					?>
 					<div class="table_cell">
 						<input type="checkbox" name="<?php echo sprintf($fieldName, $i, 'visible'); ?>" value="1" autocomplete="off" onChange="jsList.activate(this, '.table_row')" <?php echo $visible ? 'checked="checked"' : ''; ?>/>
@@ -103,7 +103,7 @@ echo $this->Html->script('assessment', false);
 						<?php 
 							echo $this->Form->input('min', array(
 								'name' => sprintf($fieldName, $i, 'min'),
-								'value' => $item['min'],
+								'value' => strlen($item['min'])==0 ? 50 : $item['min'],
 								'maxlength' => 4,
 								'onkeypress' => 'return utility.integerCheck(event)'
 							));
@@ -115,7 +115,7 @@ echo $this->Html->script('assessment', false);
 						<?php 
 							echo $this->Form->input('max', array(
 								'name' => sprintf($fieldName, $i, 'max'),
-								'value' => $item['max'],
+								'value' => strlen($item['max'])==0 ? 100 : $item['max'],
 								'maxlength' => 4,
 								'onkeypress' => 'return utility.integerCheck(event)'
 							));
@@ -129,8 +129,8 @@ echo $this->Html->script('assessment', false);
 	</fieldset>
 	
 	<div class="controls">
-		<input type="submit" value="<?php echo __('Add'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'assessmentsView', $data['id']), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>

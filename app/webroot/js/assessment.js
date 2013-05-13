@@ -42,8 +42,6 @@ var Assessment = {
 			var ajaxParams = {gradeId: $this.val()};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
-					//$('#EducationGradeId').html(data);
-					
 					if(!$(data).hasClass('alert')) {
 						$('.items .table_body').html(data);
 						jsTable.fixTable('.items .table');
