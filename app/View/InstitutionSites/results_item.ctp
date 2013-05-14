@@ -13,7 +13,7 @@ echo $this->Html->script('institution_site_results', false);
 		<span><?php echo $data['AssessmentItemType']['name']; ?></span>
 		<?php echo $this->Html->link(__('Back'), array('action' => 'resultsDetails', $data['AssessmentItemType']['id']), array('class' => 'divider')); ?>
 		<?php
-		if($_edit) {
+		if($_edit && $data['AssessmentItemType']['visible']==1) {
 			echo $this->Html->link(__('Edit'), array('action' => 'resultsItemEdit', $data['AssessmentItem']['id'], $selectedYear, $selectedClass), array('class' => 'divider'));
 		}
 		?>
