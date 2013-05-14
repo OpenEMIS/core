@@ -5,7 +5,7 @@ class AssessmentItem extends AppModel {
 	public function getItem($id) {
 		$data = $this->find('first', array(
 			'fields' => array(
-				'AssessmentItemType.id', 'AssessmentItemType.name',
+				'AssessmentItemType.id', 'AssessmentItemType.name', 'AssessmentItemType.visible',
 				'AssessmentItem.id', 'AssessmentItem.min', 'AssessmentItem.max',
 				'EducationGradeSubject.education_grade_id',
 				'EducationSubject.code', 'EducationSubject.name'
@@ -29,7 +29,6 @@ class AssessmentItem extends AppModel {
 			),
 			'conditions' => array('AssessmentItem.id' => $id)
 		));
-		//pr($data);
 		return $data;
 	}
 }
