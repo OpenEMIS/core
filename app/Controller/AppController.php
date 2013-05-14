@@ -1,5 +1,5 @@
 <?php
-/**a
+/**
  * Application level Controller
  *
  * This file is application-wide controller file. You can put all
@@ -53,13 +53,10 @@ class AppController extends Controller {
 	
 	public function beforeFilter() {
 		$l10n = new L10n();
-		if($this->Session->check('configItem.language')) {
-			$lang = $this->Session->read('configItem.language');
-		} else {
-			$lang = $this->ConfigItem->getValue('language');
-			if(empty($lang)) {
-				$lang = 'eng';
-			}
+	
+		$lang = $this->ConfigItem->getValue('language');
+		if(empty($lang)) {
+			$lang = 'eng';
 		}
 		$locale = $l10n->map($lang);
 		$catalog = $l10n->catalog($locale);
