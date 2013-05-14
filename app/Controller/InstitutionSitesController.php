@@ -647,12 +647,7 @@ class InstitutionSitesController extends AppController {
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-		
 		$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
-		
-		foreach($data as $i => $obj) {
-			$data[$i]['gender'] = $this->InstitutionSiteStudent->getGenderTotal($obj['id'], $selectedYear);
-		}
 		
 		// Checking if user has access to add
 		$_add_programme = $this->AccessControl->check('InstitutionSites', 'programmesAdd');
