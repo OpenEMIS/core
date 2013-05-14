@@ -67,10 +67,17 @@ class EducationProgramme extends AppModel {
 		return $data;
 	}
 	
+	// Used by Assessment
 	public function getProgrammeOptions($visible = true, $cycleName = true) {
 		$conditions = array();
+		$cycleConditions = array('EducationCycle.id = EducationProgramme.education_cycle_id');
+		$levelConditions = array('EducationLevel.id = EducationCycle.education_level_id');
+		$systemConditions = array('EducationSystem.id = EducationLevel.education_system_id');
 		if($visible) {
 			$conditions['EducationProgramme.visible'] = 1;
+			$cycleConditions[] = 'EducationCycle.visible = 1';
+			$levelConditions[] = 'EducationLevel.visible = 1';
+			$systemConditions[] = 'EducationSystem.visible = 1';
 		}
 		$data = $this->find('all', array(
 			'recursive' => -1,
@@ -79,16 +86,21 @@ class EducationProgramme extends AppModel {
 				array(
 					'table' => 'education_cycles',
 					'alias' => 'EducationCycle',
-					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+					'conditions' => $cycleConditions
 				),
 				array(
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
-					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+					'conditions' => $levelConditions
+				),
+				array(
+					'table' => 'education_systems',
+					'alias' => 'EducationSystem',
+					'conditions' => $systemConditions
 				)
 			),
 			'conditions' => $conditions,
-			'order' => array('EducationLevel.order', 'EducationCycle.order', 'EducationLevel.order')
+			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationLevel.order')
 		));
 		
 		$options = array();
