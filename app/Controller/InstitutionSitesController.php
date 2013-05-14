@@ -1635,6 +1635,8 @@ class InstitutionSitesController extends AppController {
 					$programmeId = key($programmeOptions);
 				}
 				$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null, true);
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('EDUCATION_INACTIVE'), array('type' => 'warn'));
 			}
 			$this->set('selectedProgramme', $programmeId);
 			$this->set('selectedGrade', $gradeId);
@@ -1648,7 +1650,7 @@ class InstitutionSitesController extends AppController {
 		$this->set('yearOptions', $yearOptions);
 	}
 	
-	public function assessmentsView() {	
+	public function assessmentsView() {
 		if(isset($this->params['pass'][0])) {
 			$this->Navigation->addCrumb('Assessment Details');
 			$assessmentId = $this->params['pass'][0];
@@ -1772,6 +1774,11 @@ class InstitutionSitesController extends AppController {
 						$this->Utility->alert($this->Utility->getMessage('SITE_CLASS_NO_CLASSES'), array('type' => 'warn'));
 					}
 					
+					// if assessment is not active, don't allow edit
+					if($data['AssessmentItemType']['visible']==0) {
+						$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_RESULT_INACTIVE'), array('type' => 'info'));
+					}
+					
 					$this->set('data', $data);
 					$this->set('yearOptions', $yearOptions);
 					$this->set('selectedYear', $selectedYear);
@@ -1797,7 +1804,7 @@ class InstitutionSitesController extends AppController {
 				$itemId = $this->params['pass'][0];
 				$data = $this->AssessmentItem->getItem($itemId);
 				
-				if(!empty($data)) {
+				if(!empty($data) && $data['AssessmentItemType']['visible']==1) {
 					$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($yearOptions);
 					$gradeId = $data['EducationGradeSubject']['education_grade_id'];
 					$classOptions = $this->InstitutionSiteClass->getClassOptions($selectedYear, $this->institutionSiteId, $gradeId);

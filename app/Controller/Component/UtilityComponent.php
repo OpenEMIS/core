@@ -45,10 +45,12 @@ class UtilityComponent extends Component {
 		$msgList['EDUCATION_NO_LEVEL'] = "There is no active education level in this Education System.";
 		$msgList['EDUCATION_NO_SYSTEM'] = "There is no active Education System.";
 		$msgList['EDUCATION_PROGRAMME_ADDED'] = "Education Programme has been added successfully. Please add Education Grades to this Programme.";
+		$msgList['EDUCATION_INACTIVE'] = "No Education Programme is available, please check your Education Structure.";
 		
 		// Assessment Messages
 		$msgList['ASSESSMENT_NO_PROGRAMME'] = "There are no active programmes in the system.";
 		$msgList['ASSESSMENT_NO_ASSESSMENT'] = "There are no assessments on the selected programme.";
+		$msgList['ASSESSMENT_RESULT_INACTIVE'] = "You cannot edit the results because this assessment is not active.";
 		
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";

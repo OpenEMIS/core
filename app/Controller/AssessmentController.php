@@ -51,7 +51,8 @@ class AssessmentController extends AppController {
 	}
 	
 	public function index() {
-		$programmeOptions = $this->EducationProgramme->getProgrammeOptions();
+		$programmeOptions = $this->EducationProgramme->getProgrammeOptions(false);
+		$selectedProgramme = 0;
 		$data = array();
 		$type = $this->AssessmentItemType->type['OFFICIAL'];
 		if(!empty($programmeOptions)) {
@@ -150,6 +151,8 @@ class AssessmentController extends AppController {
 				$programmeId = key($programmeOptions);
 			}
 			$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null, true);
+		} else {
+			$this->Utility->alert($this->Utility->getMessage('EDUCATION_INACTIVE'), array('type' => 'warn'));
 		}
 		
 		$this->set('selectedProgramme', $programmeId);
