@@ -2,7 +2,7 @@
 
 class TimePeriod extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_TimePeriod';
+	public $useTable = 'ut_timeperiod';
 	public $dataSet = array(
 		'primaryKey' => array()
 	);

@@ -2,7 +2,7 @@
 
 class DIAreaLevel extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_Area_Level_en';
+	public $useTable = 'ut_area_level_en';
 	
 	public function import() {
 		$this->truncate();

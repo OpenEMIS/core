@@ -2,7 +2,7 @@
 
 class Data extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_Data';
+	public $useTable = 'ut_data';
 	
 	public function createRecord($data) {
 		$model = array(

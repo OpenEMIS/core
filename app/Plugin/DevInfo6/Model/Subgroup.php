@@ -2,7 +2,7 @@
 
 class Subgroup extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_Subgroup_en';
+	public $useTable = 'ut_subgroup_en';
 	public $dataSet = array(
 		'primaryKey' => array()
 	);
