@@ -2,7 +2,7 @@
 
 class Unit extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_Unit_en';
+	public $useTable = 'ut_unit_en';
 	public $dataSet = array(
 		'primaryKey' => array()
 	);
