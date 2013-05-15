@@ -60,4 +60,12 @@ class BatchProcess extends DataProcessingAppModel {
 			   && $obj[$this->alias]['status'] !== $this->status['aborted'];
 		return $result;
 	}
+
+    public function numberOfOlapProcesses(){
+        $obj = $this->find('first', array('conditions' => array('BatchProcess.status' => 1, 'BatchProcess.status' => 2, 'BatchProcess.name LIKE' => '%Olap')));
+
+        $result = $obj;
+        return $result;
+
+    }
 }
