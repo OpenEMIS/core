@@ -36,7 +36,8 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
-				'AssessmentItemResult.id', 'AssessmentItemResult.marks'
+				'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
+				'AssessmentResultType.name'
 			),
 			'joins' => array(
 				array(
@@ -54,6 +55,12 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 						'AssessmentItemResult.school_year_id = ' . $yearId,
 						'AssessmentItemResult.assessment_item_id = ' . $itemId
 					)
+				),
+				array(
+					'table' => 'assessment_result_types',
+					'alias' => 'AssessmentResultType',
+					'type' => 'LEFT',
+					'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
 				),
 				array(
 					'table' => 'institution_site_class_grades',
