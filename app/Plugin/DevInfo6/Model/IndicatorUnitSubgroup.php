@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class IndicatorUnitSubgroup extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_Indicator_Unit_Subgroup';
+	public $useTable = 'ut_indicator_unit_subgroup';
 	public $dataSet = array(
 		'primaryKey' => array()
 	);
