@@ -224,6 +224,7 @@ class InstitutionSitesController extends AppController {
 			 */
 			if($last_area_id != 0){
 				$areaLevel = $this->fetchtoParent($last_area_id);
+
 				$areaLevel = array_reverse($areaLevel);
 				$areadropdowns = array();
 				foreach($areaLevel as $index => &$arrVals){
@@ -697,12 +698,7 @@ class InstitutionSitesController extends AppController {
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-		
 		$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
-		
-		foreach($data as $i => $obj) {
-			$data[$i]['gender'] = $this->InstitutionSiteStudent->getGenderTotal($obj['id'], $selectedYear);
-		}
 		
 		// Checking if user has access to add
 		$_add_programme = $this->AccessControl->check('InstitutionSites', 'programmesAdd');
