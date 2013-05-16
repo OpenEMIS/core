@@ -64,6 +64,7 @@ echo $this->Html->script('institution_site_results', false);
 				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
 				<div class="table_cell"><?php echo __('Student Name'); ?></div>
 				<div class="table_cell cell_marks"><?php echo __('Marks'); ?></div>
+				<div class="table_cell cell_grading"><?php echo __('Grading'); ?></div>
 			</div>
 			<div class="table_body">
 				<?php foreach($students as $i => $obj) { ?>
@@ -82,11 +83,20 @@ echo $this->Html->script('institution_site_results', false);
 								'value' => $obj['AssessmentItemResult']['marks'],
 								'maxlength' => 4,
 								'min' => $data['AssessmentItem']['min'],
-								'max' => $data['AssessmentItem']['max']//,
-								//'onkeypress' => 'return utility.integerCheck(event)'
+								'max' => $data['AssessmentItem']['max'],
+								'onkeypress' => 'return utility.integerCheck(event)'
 							));
 						?>
 						</div>
+					</div>
+					<div class="table_cell">
+					<?php 
+						echo $this->Form->input($i.'.assessment_result_type_id', array(
+							'class' => 'full_width',
+							'options' => $gradingOptions,
+							'default' => $result['assessment_result_type_id'],
+						));
+					?>
 					</div>
 				</div>
 				<?php } ?>
