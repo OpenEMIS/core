@@ -39,7 +39,7 @@ echo $this->Html->script('infrastructure', false);
 				));
 			?>
 		</div>
-		<div style="float:right;">
+		<div class="row_item_legend">
 		<ul class="legend">
 			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
 			<li><span class="external"></span><?php echo __('External'); ?></li>
