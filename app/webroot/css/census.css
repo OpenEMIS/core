@@ -45,9 +45,10 @@
 /* End Table styles */
 
 /* legend styles */
+.row_item_legend {float:right;}
 .legend { list-style: none; }
 .legend li { float: left; margin-right: 10px;  display:inline-block; margin-top:-7px;  }
-.legend span { border: 1px solid #ccc; float: left; width: 8px; height: 8px; margin: 2px; }
+.legend span { border: 1px solid #ccc; float: left; width: 8px; height: 8px; margin: 4px 2px; }
 .legend .dataentry { background-color: #666666; }
 .legend .external { background-color: #5B8BAF; }
 .legend .estimate { background-color: #FF0000; }
