@@ -8,6 +8,7 @@ fieldset.info { padding-bottom: 10px; }
 .cell_subject_code { width: 140px; }
 .cell_subject_name { width: 200px; }
 .cell_marks { width: 100px; }
+.cell_grading { width: 120px; }
 .items .table_body .table_cell { vertical-align: middle; }
 .description { width: 500px; }
 

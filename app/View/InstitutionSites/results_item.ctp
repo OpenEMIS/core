@@ -64,6 +64,7 @@ echo $this->Html->script('institution_site_results', false);
 				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
 				<div class="table_cell"><?php echo __('Student Name'); ?></div>
 				<div class="table_cell cell_marks"><?php echo __('Marks'); ?></div>
+				<div class="table_cell cell_grading"><?php echo __('Grading'); ?></div>
 			</div>
 			<div class="table_body">
 				<?php foreach($students as $obj) { ?>
@@ -84,6 +85,7 @@ echo $this->Html->script('institution_site_results', false);
 					}
 					?>
 					</div>
+					<div class="table_cell center"><?php echo $obj['AssessmentResultType']['name']; ?></div>
 				</div>
 				<?php } ?>
 			</div>

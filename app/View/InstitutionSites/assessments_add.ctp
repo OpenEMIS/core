@@ -3,6 +3,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('assessment', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('assessment', false);
+echo $this->Html->script('institution_site_assessments', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -23,6 +24,21 @@ echo $this->Html->script('assessment', false);
 	<?php if(!empty($yearOptions)) { ?>
 	<fieldset class="section_group info">
 		<legend><?php echo __('Assessment Details'); ?></legend>
+		<div class="row">
+			<div class="label"><?php echo __('Year'); ?></div>
+			<div class="value">
+				<?php
+				echo $this->Form->input('school_year_id', array(
+					'id' => 'SchoolYearId',
+					'class' => 'default',
+					'options' => $yearOptions,
+					'default' => $selectedYear,
+					'onchange' => 'InstitutionSiteAssessments.navigateProgramme(this, false)',
+					'url' => 'InstitutionSites/assessmentsAdd'
+				));
+				?>
+			</div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Code'); ?></div>
 			<div class="value"><?php echo $this->Form->input('code', array('class' => 'default')); ?></div>
@@ -61,18 +77,6 @@ echo $this->Html->script('assessment', false);
 					'empty' => '-- ' . (empty($gradeOptions) ? __('No Grade Available') : __('Select Grade')) . ' --',
 					'onchange' => 'Assessment.loadSubjectList(this)',
 					'url' => 'Assessment/loadSubjectList'
-				));
-				?>
-			</div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Year'); ?></div>
-			<div class="value">
-				<?php
-				echo $this->Form->input('school_year_id', array(
-					'class' => 'default',
-					'options' => $yearOptions,
-					'default' => $selectedYear
 				));
 				?>
 			</div>
