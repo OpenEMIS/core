@@ -14,8 +14,6 @@
 			} ?>
 		</select>
 	</div>
-	<div class="table_cell cell_number">0</div>
-	<div class="table_cell cell_number">0</div>
 </div>
 
 <?php } else { ?>
