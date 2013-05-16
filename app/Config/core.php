@@ -276,3 +276,5 @@ Cache::config('_cake_model_', array(
 	'serialize' => ($engine === 'File'),
 	'duration' => $duration
 ));
+
+App::import('Vendor', array('file' => 'autoload'));

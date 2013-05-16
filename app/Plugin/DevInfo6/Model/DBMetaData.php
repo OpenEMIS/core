@@ -16,5 +16,5 @@ have received a copy of the GNU General Public License along with this program. 
 
 class DBMetaData extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_DBMetadata_en';
+	public $useTable = 'ut_dbmetadata_en';
 }

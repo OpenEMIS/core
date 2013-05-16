@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class Indicator extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_Indicator_en';
+	public $useTable = 'ut_indicator_en';
 	public $dataSet = array(
 		'primaryKey' => array()
 	);
