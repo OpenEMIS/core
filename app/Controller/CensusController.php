@@ -390,10 +390,16 @@ class CensusController extends AppController {
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$yearId = $this->getAvailableYearId($yearList);
-			$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $yearId);
 			
-			if(empty($data)) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn'));
+			$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $yearId);
+			$data = array();
+			if(empty($programmes)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			} else {
+				$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $yearId);
+				if(empty($data)) {
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+				}
 			}
 			$this->set('selectedYear', $yearId);
 			$this->set('years', $yearList);
@@ -1062,4 +1068,4 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $yearId);
 		$this->set('years', $yearList);
 	}
-} 
+}
