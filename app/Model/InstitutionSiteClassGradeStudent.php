@@ -14,6 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
+<?php
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteClassGradeStudent extends AppModel {
@@ -51,7 +52,8 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
-				'AssessmentItemResult.id', 'AssessmentItemResult.marks'
+				'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
+				'AssessmentResultType.name'
 			),
 			'joins' => array(
 				array(
@@ -69,6 +71,12 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 						'AssessmentItemResult.school_year_id = ' . $yearId,
 						'AssessmentItemResult.assessment_item_id = ' . $itemId
 					)
+				),
+				array(
+					'table' => 'assessment_result_types',
+					'alias' => 'AssessmentResultType',
+					'type' => 'LEFT',
+					'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
 				),
 				array(
 					'table' => 'institution_site_class_grades',
@@ -108,6 +116,4 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		}
 		return $gender;
 	}
-	
-	
 }

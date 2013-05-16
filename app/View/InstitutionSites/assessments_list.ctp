@@ -15,7 +15,7 @@ echo $this->Html->script('institution_site_assessments', false);
 			echo $this->Html->link(__('Edit'), array('action' => 'assessmentsListEdit', $selectedYear, $selectedProgramme), array('class' => 'divider'));
 		}
 		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'assessmentsAdd'), array('class' => 'divider'));
+			echo $this->Html->link(__('Add'), array('action' => 'assessmentsAdd', $selectedYear), array('class' => 'divider'));
 		}
 		?>
 	</h1>

@@ -36,6 +36,7 @@ class InstitutionSitesController extends AppController {
 		'AssessmentItemType',
 		'AssessmentItem',
 		'AssessmentItemResult',
+		'AssessmentResultType',
 		'Institution',
 		'InstitutionSiteClass',
 		'InstitutionSiteClassTeacher',
@@ -1636,9 +1637,9 @@ class InstitutionSitesController extends AppController {
 		$yearOptions = $this->SchoolYear->getYearList();
 		if(!empty($yearOptions)) {
 			if($selectedYear==0) {
-				$selectedYear = key($yearOptions);
+				$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
 			}
-			$programmeOptions = $this->EducationProgramme->getProgrammeOptions();
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($this->institutionSiteId, $selectedYear);
 			$gradeOptions = array();
 			if(!empty($programmeOptions)) {
 				if($programmeId == 0) {
@@ -1810,6 +1811,7 @@ class InstitutionSitesController extends AppController {
 		if(isset($this->params['pass'][0])) {
 			$this->Navigation->addCrumb('Edit Results');
 			$yearOptions = $this->SchoolYear->getYearList();
+			$gradingOptions = $this->AssessmentResultType->findList(true);
 			if(!empty($yearOptions)) {
 				$itemId = $this->params['pass'][0];
 				$data = $this->AssessmentItem->getItem($itemId);
@@ -1851,6 +1853,7 @@ class InstitutionSitesController extends AppController {
 					$this->set('selectedClass', $selectedClass);
 					$this->set('students', $students);
 					$this->set('institutionSiteId', $this->institutionSiteId);
+					$this->set('gradingOptions', $gradingOptions);
 				} else {
 					$this->redirect(array('action' => 'results'));
 				}
