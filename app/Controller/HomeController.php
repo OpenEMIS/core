@@ -25,7 +25,6 @@ class HomeController extends AppController {
 	);
 
 	public function index() {
-
 		$totalInstitutions = $this->Institution->find('count');
 		$totalInstitutionSites = $this->InstitutionSite->find('count');
 
