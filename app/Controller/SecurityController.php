@@ -20,8 +20,6 @@ class SecurityController extends AppController {
 	public function beforeFilter() {
 		if(isset($this->request->query['lang'])) {
 			$this->Session->write('configItem.language', $this->request->query['lang']);
-		}else{
-			
 		}
 		parent::beforeFilter();
 		$this->renderFooter();
