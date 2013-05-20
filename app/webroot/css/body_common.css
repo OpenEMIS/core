@@ -16,6 +16,9 @@
 	padding-bottom: 8px;
 	margin: 0 0 10px 0px;
 }
+.section_group{
+	overflow:visible;
+}
 
 .body_content_right h1 a {
 	font-size: 12px;
