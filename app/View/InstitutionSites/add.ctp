@@ -58,7 +58,7 @@ echo $this->Html->script('institution', false);
 		foreach($levels as $levelid => $levelName){
 			echo '<div class="row">
 					<div class="label">'.__("$levelName").'</div>
-					<div class="value">'. $this->Form->input('area_level_'.$ctr,array('style'=>'float:left','default'=>@$arealevel[$ctr]['id'],'options'=>(isset($areadropdowns['area_level_'.$ctr]['options'])?$areadropdowns['area_level_'.$ctr]['options']:($ctr == 0?$highestLevel:array('0'=>'--'.__('Select').'--'))))).
+					<div class="value">'. $this->Form->input('area_level_'.$ctr,array('class' => 'form-error default', 'default'=>@$arealevel[$ctr]['id'],'options'=>(isset($areadropdowns['area_level_'.$ctr]['options'])?$areadropdowns['area_level_'.$ctr]['options']:($ctr == 0?$highestLevel:array('0'=>'--'.__('Select').'--'))))).
 							($ctr == 0 ? $this->Form->input('area_id',array('type'=>'text','style'=>'display:none')):''). 
 					'</div>
 				</div>';
