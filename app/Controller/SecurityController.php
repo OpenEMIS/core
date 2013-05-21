@@ -103,6 +103,8 @@ class SecurityController extends AppController {
 				$this->set('message', $this->Utility->getMessage('LOGIN_TIMEOUT'));
 				$this->render('login_ajax');
 			}
+			// added cause need to overwrite AppController pre-assigned Session value
+			Configure::write('Config.language', $this->Session->read('configItem.language')); 
 		}
     }
 
