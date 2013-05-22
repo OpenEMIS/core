@@ -132,7 +132,7 @@ class TeachersController extends TeachersAppController {
     }
 
     public function view() {
-        $this->Navigation->addCrumb('Details');
+        $this->Navigation->addCrumb('General');
         $this->Teacher->id = $this->Session->read('TeacherId');
         $data = $this->Teacher->read();
 
@@ -142,7 +142,7 @@ class TeachersController extends TeachersAppController {
     }
 
     public function edit() {
-        $this->Navigation->addCrumb('Edit Details');
+        $this->Navigation->addCrumb('Edit');
         $this->Teacher->id = $this->Session->read('TeacherId');
 
         $imgValidate = new ImageValidate();
@@ -412,7 +412,6 @@ class TeachersController extends TeachersAppController {
         $data = $this->Teacher->findById($this->teacherId);
         $data2 = array();
         foreach ($historyData as $key => $arrVal) {
-
             foreach($arrTables as $table){
             //pr($arrVal);die;
                 foreach($arrVal[$table] as $k => $v){
@@ -421,8 +420,11 @@ class TeachersController extends TeachersAppController {
                     $data2[$keyVal][$v] = $arrVal['TeacherHistory']['created'];
                 }
             }
-
         }
+		
+		if(empty($data2)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
+		}
         $this->set('data',$data); 
         $this->set('data2',$data2);
     }

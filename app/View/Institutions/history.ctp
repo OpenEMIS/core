@@ -9,11 +9,9 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		<span><?php echo __('Institution History'); ?></span>
 		<?php echo $this->Html->link(__('Details'), array('action' => 'view'), array('class' => 'divider')); ?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	
-	<?php if (!$data2):
-			echo __("No history found.");
-	?>
-	<?php else: ?>
+	<?php if(!empty($data2)) : ?>
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
 		<div class="row">

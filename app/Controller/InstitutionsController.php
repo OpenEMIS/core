@@ -147,6 +147,10 @@ class InstitutionsController extends AppController {
 			$this->bodyTitle = $data['Institution']['name'];
 			$this->Navigation->addCrumb($data['Institution']['name'], array('controller' => 'Institutions', 'action' => 'view'));
 			$this->Navigation->addCrumb('List of Institution Sites');
+			
+			if(empty($sites)) {
+				$this->Utility->alert($this->Utility->getMessage('NO_SITES'), array('type' => 'info', 'dismissOnClick' => false));
+			}
 			$this->set('sites', $sites);
 			
 			// Checking if user has access to institution sites
@@ -162,7 +166,7 @@ class InstitutionsController extends AppController {
     }
 	
     public function view() {
-		$this->Navigation->addCrumb('Details');
+		$this->Navigation->addCrumb('General');
 		$id = $this->Session->read('InstitutionId');
         $this->Institution->id = $id;
         $data = $this->Institution->read();
@@ -179,7 +183,7 @@ class InstitutionsController extends AppController {
     public function edit() {
 		$id = $this->Session->read('InstitutionId');
 		$this->Institution->id = $id;
-		$this->Navigation->addCrumb('Edit Details');
+		$this->Navigation->addCrumb('Edit');
 		if($this->request->is('post')) {
 			$this->Institution->set($this->data);
 			if($this->Institution->validates()) {
@@ -437,6 +441,10 @@ class InstitutionsController extends AppController {
             }
         }
 		*/
+		
+		if(empty($data2)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
+		}
 
         $this->set('data',$data);
         $this->set('institution', $data);

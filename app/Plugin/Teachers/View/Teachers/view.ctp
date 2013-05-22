@@ -7,7 +7,7 @@ echo $this->Html->script('/Teachers/js/teachers', false);
 
 <div id="teacher" class="content_wrapper">	
 	<h1>
-		<span><?php echo __('Teacher Details'); ?></span>
+		<span><?php echo __('Teacher Information'); ?></span>
 		<?php 
 		if ($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));

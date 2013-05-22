@@ -14,8 +14,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-	custom.attachModelRedirect();
-	custom.attachSiteTypeRedirect();
 	custom.attachAddOptionEvent();
 	custom.init();
 });
@@ -25,7 +23,10 @@ var custom = {
 		custom.attachVisibleEvent();
 		custom.attachMoveEvent();
 		custom.attachIconTitle();
-		custom.changeView();
+	},
+	
+	changeSiteType: function(obj) {
+		window.location.href = getRootURL() + $('#siteTypeId').attr('url') + $('#siteTypeId').val();
 	},
 	
 	attachVisibleEvent: function(obj) {
@@ -134,29 +135,6 @@ var custom = {
 		obj.find('.icon_down').click(function() { custom.reorderOptions(this); });
 	},
 	
-	attachModelRedirect: function() {
-		$('#customfieldchoices').change(function(){
-			var sitetypeid = ($('#siteTypeid').val() == undefined) ? '' : $('#siteTypeid').val();
-			var urlloc = ($('#edit-link').attr('href') == undefined) ? 'Edit' : '';
-			if($(this).val() == 'CensusGrid')
-				url = getRootURL()+'Setup/customTables';
-			else
-				url = getRootURL()+'Setup/customFields'+urlloc+'/'+$(this).val()+'/'+sitetypeid;
-			
-			
-			
-			window.location = url;
-		});
-	},
-	
-	attachSiteTypeRedirect: function() {
-		$('#siteTypeid').change(function(){
-			var model = ($('#customfieldchoices')) ? $('#customfieldchoices').val() :'';
-			var urlloc = ($('#edit-link').attr('href') == undefined) ? 'Edit' : '';
-			window.location = getRootURL()+'Setup/customFields'+urlloc+'/'+model+'/'+$(this).val();
-		});
-	},
-	
 	reorderFields: function(obj) {
 		jsList.doSort(obj, {
 			row: 'div[data-id]',
@@ -173,7 +151,7 @@ var custom = {
 		var model = $('#model').text();
 		var field = $('#refField').text();
 		var order = list.find('> div').length;
-		var siteType = $('#siteTypeid').val()!=undefined ? $('#siteTypeid').val() : 0;
+		var siteType = $('#siteTypeId').length>0 ? $('#siteTypeId').val() : 0;
 		
 		var url = getRootURL() + 'Setup/customFieldsAdd';
 		var maskId;
@@ -225,30 +203,5 @@ var custom = {
 				$.unmask({id: maskId, callback: callback});
 			}
 		});
-	},
-	changeView : function() {
-        var selectedText = $('#customfieldchoices option:selected').text();
-        var selectedValue = $('#customfieldchoices option:selected').val();
-
-        // getting the link
-        var link = $('a[id$="-link"]');
-        var linkText = link.text();
-
-        // if link is edit, set redirection to point to /Setup/customFieldsEdit/TeacherCustomField/
-        if (link.attr("id") == "edit-link") {
-        	link.removeAttr("href");
-        	link.attr('href', getRootURL() + 'Setup/customFieldsEdit/' + selectedValue);
-        } else if (link.attr("id") == "view-link") {
-        	// if view, then /Setup/customFields/TeacherCustomField/ 
-        	link.removeAttr("href");
-        	link.attr('href', getRootURL() + 'Setup/customFields/' + selectedValue);
-        }
-
-        // if site type id is available, append to the field
-        var siteTypeId = $('#siteTypeid').val();
-        if (siteTypeId != "" && siteTypeId !== undefined && siteTypeId != null) {
-        	var _href = link.attr("href");
-        	link.attr('href', _href + '/' + siteTypeId);
-        }
 	}
 };
