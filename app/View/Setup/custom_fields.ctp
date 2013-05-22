@@ -3,16 +3,10 @@ echo $this->Html->script('jquery.tools', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 echo $this->Html->script('custom_field', false);
+echo $this->Html->script('setup_variables', false);
 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('custom_fields', 'stylesheet', array('inline' => false));
-$actionLabel = Array(
-    '1' => 'Section Break',
-    '2' => 'Single Line Text',
-    '3' => 'DropDown List',
-    '4' => 'Checkboxes',
-    '5' => 'Multi Line Text',
-);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -22,48 +16,48 @@ $actionLabel = Array(
 	echo $this->Form->create('CustomFields', array(
 			'id' => 'submitForm',
 			'inputDefaults' => array('label' => false, 'div' => false),	
-			'url' => array('controller' => 'Setup', 'action' => 'customFields',$defaultModel,$sitetype)
+			'url' => array('controller' => 'Setup', 'action' => 'customFields', $selectedCategory, $defaultModel, $sitetype)
 		)
 	); 
 	?>
 	<h1>
-		<span><?php echo __('Custom Fields'); ?></span>
+		<span><?php echo __($header); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'customFieldsEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'setupVariablesEdit', $selectedCategory, $defaultModel, $sitetype), array('class' => 'divider'));
 		}
 		?>
 	</h1>
-	<div class="row">
-		<select id="customfieldchoices">
-		<?php foreach($CustomFieldModelLists as $k=> $arrModelval){
-			echo '<option value="'.$k.'"'.(($defaultModel == $k || $defaultModel == '')?'selected ="selected"':'').'>'.__($arrModelval['label']).'</option>';
-		} ?>
-		</select>
-		<!--
-		<select id="customfieldchoices">
-			<option value="InstitutionCustomField" <?php echo ($defaultModel == 'InstitutionCustomField' || $defaultModel == '')?'selected ="selected"':''; ?>>Institution Custom Fields</option>
-			<option value="InstitutionSiteCustomField" <?php echo ($defaultModel == 'InstitutionSiteCustomField')?'selected ="selected"':''; ?>>Institution Site Custom Fields</option>
-			<option value="CensusCustomField" <?php echo ($defaultModel == 'CensusCustomField')?'selected ="selected"':''; ?>>Census Custom Fields</option>
-			<option value="StudentCustomField" <?php echo ($defaultModel == 'StudentCustomField')?'selected ="selected"':''; ?>>Student Custom Fields</option>
-			<option value="CensusGrid" <?php echo ($defaultModel == 'CensusCustomGrid')?'selected ="selected"':''; ?>>Census Custom Table</option>
-		</select>
-		-->
+	<?php echo $this->element('alert'); ?>
+	
+	<div class="row category">
+		<?php
+		echo $this->Form->input('category', array(
+			'id' => 'category',
+			'class' => 'default',
+			'options' => $categoryList,
+			'default' => $selectedCategory,
+			'url' => 'Setup/setupVariables/',
+			'onchange' => 'setup.changeCategory()'
+		));
+		?>
 	</div>
 	
 	<!-- if institution site or census -->
-	<div class="row">
-		<?php
-		
-			if(count($siteTypes)>0) 
-			echo $this->Form->input('institution_site_type_id',
-					array('id'=>'siteTypeid',
-						  'options'=>$siteTypes,
-						  'default'=>$sitetype
-						 )
-				 ); 
-		?>
-	</div>
+	<?php
+	if(count($siteTypes)>0) {
+		echo $this->Form->input('institution_site_type_id',	array(
+			'id' => 'siteTypeId',
+			'class' => 'default',
+			'options' => $siteTypes,
+			'default' => $sitetype,
+			'before' => '<div class="row">',
+			'after' => '</div>',
+			'url' => sprintf('Setup/setupVariables/%s/%s/', $selectedCategory, $defaultModel),
+			'onchange' => 'custom.changeSiteType(this)'
+		));
+	}
+	?>
 	<!-- end if -->
 	
 	<?php 

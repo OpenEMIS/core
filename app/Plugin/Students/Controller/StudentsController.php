@@ -35,7 +35,7 @@ class StudentsController extends StudentsAppController {
     );
         
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
-    // public $components = array('Paginator');
+	
     public $components = array(
         'UserSession',
         'Paginator',
@@ -146,7 +146,7 @@ class StudentsController extends StudentsAppController {
     }
 	
 	public function view() {
-		$this->Navigation->addCrumb('Details');
+		$this->Navigation->addCrumb('General');
 		$this->Student->id = $this->Session->read('StudentId');
         $data = $this->Student->read();
 
@@ -155,7 +155,7 @@ class StudentsController extends StudentsAppController {
     }
 	
 	public function edit() {
-		$this->Navigation->addCrumb('Edit Details');
+		$this->Navigation->addCrumb('Edit');
         $this->Student->id = $this->Session->read('StudentId');
 
         $imgValidate = new ImageValidate();
@@ -421,7 +421,6 @@ class StudentsController extends StudentsAppController {
         $data = $this->Student->findById($this->studentId);
         $data2 = array();
         foreach ($historyData as $key => $arrVal) {
-
             foreach($arrTables as $table){
             //pr($arrVal);die;
                 foreach($arrVal[$table] as $k => $v){
@@ -430,8 +429,11 @@ class StudentsController extends StudentsAppController {
                     $data2[$keyVal][$v] = $arrVal['StudentHistory']['created'];
                 }
             }
-
         }
+		if(empty($data2)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
+		}
+		
         $this->set('data',$data);
         $this->set('data2',$data2);
     }

@@ -17,5 +17,5 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusWater extends AppModel {
-	var $useTable = 'census_water';
+	public $useTable = 'census_water';
 }

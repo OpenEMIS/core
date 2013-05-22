@@ -33,11 +33,11 @@ class TeachersNavigationComponent extends Component {
 				)
 			),
 			array(
-				'TEACHER INFORMATION' => array(
+				'INFORMATION' => array(
 					'_controller' => $controller,
-					$navigation->createLink('Details', 'view', array('pattern' => 'view$|^edit$|history$')),
+					$navigation->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
 					$navigation->createLink('Attachments', 'attachments'),
-					$navigation->createLink('Additional Info', 'additional'),
+					$navigation->createLink('More', 'additional'),
 					$navigation->createLink('Institutions', 'institutions')
 					//$this->Navigation->createLink('Programmes', 'programmes')
 				),

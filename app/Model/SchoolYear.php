@@ -52,14 +52,12 @@ class SchoolYear extends AppModel {
 	}
 	
 	public function getLookupVariables() {
-		$modelName = get_class($this);
-		
-		$list = $this->find('all', array('order' => array('SchoolYear.name DESC')));
-		$options = array();
-		foreach($list as $obj) {
-			$options[] = $obj['SchoolYear'];
-		}
-		$lookup = array('School Year' => array('model' => $modelName, 'options' => $options));
-		return $lookup;
+		return array('School Year' => array('model' => 'SchoolYear'));
+	}
+	
+	public function findOptions($options=array()) {
+		$options['order'] = array('SchoolYear.name DESC');
+		$list = parent::findOptions($options);
+		return $list;
 	}
 }

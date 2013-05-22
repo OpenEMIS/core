@@ -10,26 +10,28 @@ echo $this->Html->script('setup_variables', false);
 <div id="setup-variables" class="content_wrapper">
 	<?php
 	echo $this->Form->create('SetupVariables', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Setup', 'action' => 'setupVariables')
 	));
 	?>
 	<h1>
-		<span><?php echo __('Setup Variables'); ?></span>
+		<span><?php echo __($header); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'setupVariablesEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'setupVariablesEdit', $selectedCategory), array('class' => 'divider'));
 		}
 		?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	
 	<div class="row category">
 		<?php
 		echo $this->Form->input('category', array(
 			'id' => 'category',
+			'class' => 'default',
 			'options' => $categoryList,
 			'default' => $selectedCategory,
+			'url' => 'Setup/setupVariables/',
 			'onchange' => 'setup.changeCategory()'
 		));
 		?>
@@ -38,7 +40,7 @@ echo $this->Html->script('setup_variables', false);
 	<?php foreach($category as $type) { ?>
 		<?php foreach($type['items'] as $typeName => $options) { ?>
 		<fieldset class="section_group">
-			<legend><?php echo __($typeName) ?></legend>
+			<legend><?php echo __($typeName); ?></legend>
 			
 			<div class="table">
 				<div class="table_head">

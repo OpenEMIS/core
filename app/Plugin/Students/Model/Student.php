@@ -98,17 +98,7 @@ class Student extends StudentsAppModel {
 	
 	// Used by SetupController
 	public function getLookupVariables() {
-		$lookup = array();
-		
-		$StudentCategory = ClassRegistry::init('Students.StudentCategory');
-		
-		$StudentCategory->formatResult = true;
-		$categoryList = $StudentCategory->find('all', array(
-			'recursive' => 0,
-			'conditions' => array('StudentCategory.id >' => 4), // Not fetching system default categories for editing
-			'order' => array('StudentCategory.order')
-		));
-		$lookup['Category'] = array('model' => 'Students.StudentCategory', 'options' => $categoryList);
+		$lookup = array('Category' => array('model' => 'Students.StudentCategory'));
 		
 		return $lookup;
 	}
