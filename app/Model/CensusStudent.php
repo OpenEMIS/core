@@ -132,15 +132,26 @@ class CensusStudent extends AppModel {
 
 		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'StudentCategory', 'InstitutionSite', 'Institution', 'SchoolYear')));
 		$this->bindModel(
-			array('hasOne' => 
-				array('EducationProgramme' => array(
-	            	'className' => 'EducationProgramme',
-	            	'joinTable' => 'education_programmes',
-	            	'foreignKey' => false,
-					'dependent'  => false,
-	                'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
-	            )),
-			));
+			array('hasOne' => array(
+					'InstitutionSiteProgramme' => array(
+						'className' => 'InstitutionSiteProgramme',
+						'joinTable' => 'institution_site_programmes',
+						'foreignKey' => false,
+						'dependent'  => false,
+						'conditions' => array(' InstitutionSiteProgramme.institution_site_id = CensusStudent.institution_site_id ',
+												' InstitutionSiteProgramme.school_year_id = CensusStudent.school_year_id ',
+											),
+					),
+					'EducationProgramme' => array(
+						'className' => 'EducationProgramme',
+						'joinTable' => 'education_programmes',
+						'foreignKey' => false,
+						'dependent'  => false,
+						'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
+					),
+				),
+			)
+		);
 
 		$options['fields'] = array(
         	'EducationProgramme.education_cycle_id',
@@ -194,23 +205,8 @@ class CensusStudent extends AppModel {
 	 * @return int 	sum of students
 	 */
 	public function calculateTotalStudentsByLevelAndAreaId($areaId, $schoolYearId) {
-
-		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'StudentCategory', 'Institution', 'SchoolYear')));
-
-		$options['fields'] = array(
-            'SUM(CensusStudent.male) as TotalMale',
-            'SUM(CensusStudent.female) as TotalFemale',
-            'SUM(CensusStudent.male + CensusStudent.female) as TotalStudents'
-        );
-
-		// $options['conditions'] = array('AND' => array('InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened >=' => date('Y-m-d', $startDate), 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('Area.id'=>null));
-		// $options['conditions'] = array('CensusStudent.school_year_id' => $schoolYearId);
-		$options['conditions'] = array('AND' => array('CensusStudent.school_year_id' => $schoolYearId, 'InstitutionSite.area_id' => $areaId, 'NOT' => array('InstitutionSite.area_id' => null)));
-		$values = $this->find('all', $options);
-		$values = $this->formatArray($values);
-
-		$data = ($values[0]['TotalStudents'] > 0) ? $values[0]['TotalStudents'] : 0;
-		return $data;
+		//unused and totally identical to calculateTotalStudentsByAreaId , leaving it in just in case
+		return $this->calculateTotalStudentsByAreaId($areaId, $schoolYearId);
 	}
 
 	// Required by Yearbook, students per level and providers
@@ -218,14 +214,22 @@ class CensusStudent extends AppModel {
 
 		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'StudentCategory', 'SchoolYear')));
 		$this->bindModel(array('hasOne' => array(
-			'EducationProgramme' =>
-            array(
-                'className'              => 'EducationProgramme',
-                'joinTable'              => 'education_programmes',
+			'InstitutionSiteProgramme' => array(
+				'className' => 'InstitutionSiteProgramme',
+				'joinTable' => 'institution_site_programmes',
 				'foreignKey' => false,
-				'dependent'    => false,
-                'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
-            ),
+				'dependent'  => false,
+				'conditions' => array(' InstitutionSiteProgramme.institution_site_id = CensusStudent.institution_site_id ',
+										' InstitutionSiteProgramme.school_year_id = CensusStudent.school_year_id ',
+									),
+			),
+			'EducationProgramme' => array(
+				'className' => 'EducationProgramme',
+				'joinTable' => 'education_programmes',
+				'foreignKey' => false,
+				'dependent'  => false,
+				'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
+			),
             'EducationCycle' =>
             array(
                 'className'              => 'EducationCycle',
@@ -277,16 +281,23 @@ class CensusStudent extends AppModel {
 				'dependent'    => false,
                 'conditions' => array(' Area.id = InstitutionSite.area_id '),
             ),
-			'EducationProgramme' =>
-            array(
-                'className' => 'EducationProgramme',
-                'joinTable' => 'education_programmes',
+			'InstitutionSiteProgramme' => array(
+						'className' => 'InstitutionSiteProgramme',
+						'joinTable' => 'institution_site_programmes',
+						'foreignKey' => false,
+						'dependent'  => false,
+						'conditions' => array(' InstitutionSiteProgramme.institution_site_id = CensusStudent.institution_site_id ',
+												' InstitutionSiteProgramme.school_year_id = CensusStudent.school_year_id ',
+											),
+			),
+			'EducationProgramme' => array(
+				'className' => 'EducationProgramme',
+				'joinTable' => 'education_programmes',
 				'foreignKey' => false,
-				'dependent'    => false,
-                'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
-            ),
-            'EducationCycle' =>
-            array(
+				'dependent'  => false,
+				'conditions' => array(' EducationProgramme.id = InstitutionSiteProgramme.education_programme_id '),
+			),
+            'EducationCycle' => array(
                 'className'              => 'EducationCycle',
                 'joinTable'              => 'education_cycles',
 				'foreignKey' => false,

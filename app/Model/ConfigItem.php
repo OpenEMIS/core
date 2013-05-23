@@ -34,7 +34,6 @@ class ConfigItem extends AppModel {
     	$yearbook['yearbook_orientation'] = $this->getValue('yearbook_orientation');
     	return $yearbook;
     }
-
 	public function getVersion() {
 		return $this->getValue('version');
 	}
@@ -312,6 +311,7 @@ class ConfigItem extends AppModel {
 		        }
 		    }
 		}
+
 
 		return $filenames;
 	}

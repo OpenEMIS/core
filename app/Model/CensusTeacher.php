@@ -77,22 +77,30 @@ class CensusTeacher extends AppModel {
 				array(
 					'table' => 'education_programmes',
 					'alias' => 'EducationProgramme',
-					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
+											'EducationProgramme.visible = 1',
+					)
 				),
 				array(
 					'table' => 'education_cycles',
 					'alias' => 'EducationCycle',
-					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id',
+											'EducationCycle.visible = 1'
+					)
 				),
 				array(
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
-					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id',
+											'EducationLevel.visible = 1'
+					)
 				),
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
+					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id',
+											'EducationGrade.visible = 1'
+					)
 				),
 				array(
 					'table' => 'census_teacher_grades',
@@ -153,22 +161,29 @@ class CensusTeacher extends AppModel {
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.id = CensusTeacherGrade.education_grade_id')
+					'conditions' => array('EducationGrade.id = CensusTeacherGrade.education_grade_id',
+											'EducationGrade.visible = 1'
+					)
 				),
 				array(
 					'table' => 'education_programmes',
 					'alias' => 'EducationProgramme',
-					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id',
+											'EducationProgramme.visible = 1'
+					)
 				),
 				array(
 					'table' => 'education_cycles',
 					'alias' => 'EducationCycle',
-					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id',
+											'EducationCycle.visible = 1')
 				),
 				array(
 					'table' => 'education_levels',
 					'alias' => 'EducationLevel',
-					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id',
+											'EducationLevel.visible = 1'
+					)
 				)
 			),
 			'conditions' => array('CensusTeacher.id' => $list),
@@ -276,7 +291,9 @@ class CensusTeacher extends AppModel {
 		            array(
 		                'joinTable'  => 'institution_site_programmes',
 						'foreignKey' => false,
-		                'conditions' => array(' CensusTeacher.institution_site_id = InstitutionSiteProgramme.institution_site_id '),
+		                'conditions' => array(' CensusTeacher.institution_site_id = InstitutionSiteProgramme.institution_site_id ',
+												' InstitutionSiteProgramme.school_year_id = CensusTeacher.school_year_id ',
+						),
 		            ),
 					'EducationProgramme' => array(
 	            	'className' => 'EducationProgramme',
@@ -356,7 +373,9 @@ class CensusTeacher extends AppModel {
 	            'InstitutionSiteProgramme' => array(
 	                'joinTable'  => 'institution_site_programmes',
 					'foreignKey' => false,
-	                'conditions' => array(' CensusTeacher.institution_site_id = InstitutionSiteProgramme.institution_site_id '),
+	                'conditions' => array(' CensusTeacher.institution_site_id = InstitutionSiteProgramme.institution_site_id ',
+											' InstitutionSiteProgramme.school_year_id = CensusTeacher.school_year_id ',
+										),
 	            ),
 	            'Institution' => array(
 	                'joinTable'  => 'institutions',
@@ -427,7 +446,9 @@ class CensusTeacher extends AppModel {
 	            array(
 	                'joinTable'  => 'institution_site_programmes',
 					'foreignKey' => false,
-	                'conditions' => array(' CensusTeacher.institution_site_id = InstitutionSiteProgramme.institution_site_id '),
+	                'conditions' => array(' CensusTeacher.institution_site_id = InstitutionSiteProgramme.institution_site_id ',
+											' InstitutionSiteProgramme.school_year_id = CensusTeacher.school_year_id ',
+										),
 	            ),
 			),
 			'hasOne' => array(
@@ -475,4 +496,5 @@ class CensusTeacher extends AppModel {
 		return $values;
 
 	}
+	
 }
