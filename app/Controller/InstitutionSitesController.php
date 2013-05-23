@@ -491,7 +491,7 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function additional() {
-		$this->Navigation->addCrumb('Additional Info');
+		$this->Navigation->addCrumb('More');
 		
 		$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id']),'order'=>'InstitutionSiteCustomField.order'));
 		$this->InstitutionSiteCustomValue->unbindModel(
@@ -509,7 +509,7 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function additionalEdit() {
-		$this->Navigation->addCrumb('Edit Additional Info');
+		$this->Navigation->addCrumb('Edit More');
 		
 		if ($this->request->is('post')) {
 			//pr($this->data);

@@ -301,7 +301,7 @@ class InstitutionsController extends AppController {
     }
     
     public function additional() {
-		$this->Navigation->addCrumb('Additional Info');
+		$this->Navigation->addCrumb('More');
 		$id = $this->Session->read('InstitutionId');
 		
         $datafields = $this->InstitutionCustomField->find('all',array('conditions'=>array('InstitutionCustomField.visible'=>1),'order'=>'InstitutionCustomField.order'));
@@ -319,7 +319,7 @@ class InstitutionsController extends AppController {
     }
 	
     public function additionalEdit() {
-        $this->Navigation->addCrumb('Edit Additional Info');
+        $this->Navigation->addCrumb('Edit More');
 		$id = $this->Session->read('InstitutionId');
         
         if ($this->request->is('post')) {
