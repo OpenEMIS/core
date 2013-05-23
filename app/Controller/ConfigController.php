@@ -167,6 +167,8 @@ class ConfigController extends AppController {
 						                    $data['ConfigAttachment']['file_name'] = $img->getFilename();
 						                    $data['ConfigAttachment']['type'] = "yearbook";
 						                    $data['ConfigAttachment']['name'] = $formData['ConfigItem']['yearbook'][$innerKey]['file_value']['name'];
+											$data['ConfigAttachment']['description']="";
+											$data['ConfigAttachment']['order']="0";
 						                }
 						                $rec = $this->ConfigAttachment->save($data);
 
