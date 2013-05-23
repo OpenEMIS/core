@@ -251,7 +251,7 @@ class StudentsController extends StudentsAppController {
     }
 
     public function additional() {
-		$this->Navigation->addCrumb('Additional Info');
+		$this->Navigation->addCrumb('More');
 		
         // get all student custom field in order
         $datafields = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order'=>'StudentCustomField.order'));
@@ -278,7 +278,7 @@ class StudentsController extends StudentsAppController {
     }
 
     public function additionalEdit() {
-		$this->Navigation->addCrumb('Edit Additional Info');
+		$this->Navigation->addCrumb('Edit More');
 
         if ($this->request->is('post')) {
             //pr($this->data);

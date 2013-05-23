@@ -233,7 +233,7 @@ class TeachersController extends TeachersAppController {
     }
 
     public function additional() {
-        $this->Navigation->addCrumb('Additional Info');
+        $this->Navigation->addCrumb('More');
 
         // get all teacher custom field in order
         $datafields = $this->TeacherCustomField->find('all', array('conditions' => array('TeacherCustomField.visible' => 1), 'order'=>'TeacherCustomField.order'));
@@ -260,7 +260,7 @@ class TeachersController extends TeachersAppController {
     }
 
     public function additionalEdit() {
-        $this->Navigation->addCrumb('Edit Additional Info');
+        $this->Navigation->addCrumb('Edit More');
 
         if ($this->request->is('post')) {
             //pr($this->data);
