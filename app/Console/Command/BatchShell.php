@@ -105,11 +105,15 @@ class BatchShell extends AppShell {
 			
 			 $this->Vcf->genVCF($settings);
         }elseif($file_type == 'ind'){
-			
+
 			 $this->Ind->genIND($settings);
         }elseif($file_type='yearbook'){
-			
-			$this->dispatchShell('yearbook');
+			echo "yearbook";
+			if(sizeof($this->args) == 1) {
+				$this->dispatchShell('yearbook',$this->args[0]);
+			} else {
+				$this->dispatchShell('yearbook');
+			}
 		}
 		
     }

@@ -212,8 +212,6 @@ class InstitutionSite extends AppModel {
             'COUNT(InstitutionSite.id) as TotalInstitutionSites'
         );
 
-		// $options['conditions'] = array('AND' => array('InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened >=' => date('Y-m-d', $startDate), 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('InstitutionSite.area_id'=>null));
-// $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('InstitutionSite.area_id'=>null, 'InstitutionSite.date_closed' => null, 'InstitutionSite.date_closed' => ""));
 		$options['conditions'] = array('AND' => array('InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('InstitutionSite.area_id'=>null, 'InstitutionSite.date_closed' => null, 'InstitutionSite.date_closed' => "0000-00-00"));
 		$values = $this->find('all', $options);
 		$values = $this->formatArray($values);
@@ -252,9 +250,6 @@ class InstitutionSite extends AppModel {
             'COUNT(InstitutionSite.id) as TotalInstitutionSites'
         );
 
-		// $options['group'] = array('InstitutionSite.area_id');
-		// $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.area_id' => $areaId), 'NOT' => array('InstitutionSite.area_id'=>null));
-		// $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.area_id' => $areaId), 'NOT' => array('InstitutionSite.area_id'=>null));
 		$options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.area_id' => $areaId, 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('InstitutionSite.area_id'=>null, 'InstitutionSite.date_closed' => null, 'InstitutionSite.date_closed' => "0000-00-00"));
 		$values = $this->find('all', $options);
 		$values = $this->formatArray($values);

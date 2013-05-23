@@ -62,7 +62,8 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 								'0' => 'Portrait',
 								'1' => 'Landscape'
 							),
-							'yearbook_school_year' => $school_years
+							'yearbook_school_year' => $school_years,
+							'school_year' => $school_years
 							);
 		foreach($element as $innerKey => $innerElement){ 
 				$item = $innerElement; 
@@ -82,7 +83,10 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 							$options['maxlength'] = 300;
 						if(stristr($item['name'], 'dashboard_notice')){
 							echo $this->Form->textarea('ConfigItem.'. $key . '.' . $innerKey . '.value', $options);
+						}elseif (stristr($item['name'], 'publication_date')) {
+							echo $this->Utility->getDatePicker($this->Form, 'publication_date', array('name' => 'ConfigItem['.$key.']['.$innerKey.'][value]', 'order' => 'dmy', 'desc' => true, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));
 						}elseif (stristr($item['name'], 'yearbook_publication_date')) {
+
 							$publicationDateOptions = $options = array(
 								'value' => $item['value'],
 								'type' => 'date',
@@ -119,7 +123,6 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 							}*/
 
 							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
-
 						}elseif(array_key_exists($item['name'], $arrOptions)){
 							$options = $arrOptions[$item['name']];
 							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));

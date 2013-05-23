@@ -105,6 +105,7 @@ class ConfigController extends AppController {
 	}
 
 	public function edit(){
+
 		$this->Navigation->addCrumb('Edit System Configurations');
 
 		$items = $this->ConfigItem->find('all',array(
@@ -164,8 +165,8 @@ class ConfigController extends AppController {
 
 						// pr ($data['ConfigItem']['yearbook'][$innerKey]);
 						if (isset($formData['ConfigItem']['yearbook'][$innerKey]['file_value']) && $formData['ConfigItem']['yearbook'][$innerKey]['file_value']['error'] != UPLOAD_ERR_NO_FILE) {
-				            if (array_key_exists('reset_yearbook_logo', $formData['ConfigItem']['yearbook'][$innerKey])) {
-								
+				            
+							if (array_key_exists('reset_yearbook_logo', $formData['ConfigItem']['yearbook'][$innerKey])) {
 								if (!empty($formData['ConfigItem']['yearbook'][$innerKey]['file_value'])) {
 						            $img = new ImageMeta($formData['ConfigItem']['yearbook'][$innerKey]['file_value']);
 						            // unset($formData['ConfigItem']['yearbook'][$innerKey]['file_value']);
@@ -182,6 +183,8 @@ class ConfigController extends AppController {
 						                    $data['ConfigAttachment']['file_name'] = $img->getFilename();
 						                    $data['ConfigAttachment']['type'] = "yearbook";
 						                    $data['ConfigAttachment']['name'] = $formData['ConfigItem']['yearbook'][$innerKey]['file_value']['name'];
+											$data['ConfigAttachment']['description']="";
+											$data['ConfigAttachment']['order']="0";
 						                }
 						                $rec = $this->ConfigAttachment->save($data);
 
@@ -191,12 +194,13 @@ class ConfigController extends AppController {
 					            			$innerElement['value'] = $rec['ConfigAttachment']['id'];
 										}
 						            }else{
+
 						                $data['ConfigAttachment']['file_content'] = '';
 						                $data['ConfigAttachment']['file_name'] = '';
 						            }
-
 						        }				            
 				            }
+							
 				        } else {
 				        	if ($reset_image == 1) {				            	
 								if ($formData['ConfigItem']['yearbook'][$innerKey]['value'] > 0 && $formData['ConfigItem']['yearbook'][$innerKey]['value'] != "" && !is_null($formData['ConfigItem']['yearbook'][$innerKey]['value'])) {
@@ -213,13 +217,10 @@ class ConfigController extends AppController {
 					if ($this->ConfigItem->save($innerElement)) {
 						$savedItems = true;
 	                }else{
-	                    echo 'false<br/>';
+	                    #echo 'false<br/>';
 	                }
-
 				}
 				// $this->ConfigItem->saveAll($element);
-
-
 			}
 			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
 			$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
@@ -250,8 +251,7 @@ class ConfigController extends AppController {
         }
     }
 
-	################# End Yearbook #################	
-
+	################# End Yearbook #################
 	################# Start Dashboard #################
 
 	public function dashboard(){

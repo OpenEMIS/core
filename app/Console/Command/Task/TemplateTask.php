@@ -18,7 +18,8 @@ App::uses('AppTask', 'Console/Command/Task');
 
 class TemplateTask extends AppTask {
     public $tasks = array('Common');
-
+	// to specify languages/font set not supported properly under mpdf's SetAutoFont
+	public $languageFont=array('chi'=>'sun-extA;',   
 ################# Start HTML ################
     public function setNewLine($num=1) {
         $html = "";
@@ -29,37 +30,62 @@ class TemplateTask extends AppTask {
     }
 ################# End HTML ################
 
+	public function mapLanguageToFont($language){
+		if (isset($this->languageFont[$language])) {
+			return $this->languageFont[$language];
+		}
+		return "";
+	}
+	
+	public function checkValidity($string){
+		if (!mb_check_encoding($string, "UTF-8")) {
+			$string = mb_convert_encoding($string, 'UTF-8', 'HTML-ENTITIES');
+		}
+		return $string;
+	}
+	
+	public function translate($string,$language){
+		$fontFamily = $this->mapLanguageToFont($language);
+		$translatedString=__(trim($string));
+		if (!empty($fontFamily)) {
+			$translatedString='<span style="font-family:'. $this->mapLanguageToFont($language) .';">'. $translatedString .'</span>';
+		}
+		return $translatedString;
+	}
+	
 ################# Start List ################
-    public function setHeader($headerText, $headerSize="h2") {
-        return "<{$headerSize}>".$headerText."</{$headerSize}>";
+    public function setHeader($headerText, $headerSize="h2",$language="") {
+        return "<{$headerSize}>".$this->translate($headerText,$language)."</{$headerSize}>";
     }
 
-    public function generateList($values, $level=1) {
+    public function generateList($values, $level=1,$language="",$options=array()) {
         $html = "";
-
         if ($level == 1) {
             $html .= "<ul>";
             foreach ($values as $value) {
+				$value=$this->checkValidity($value);
+				if (isset($options['translate_children']) && ($options['translate_children']==true)){
+						$value = $this->translate($value,$language);
+				}
                 $html .= "<li>{$value}</li>"; 
             }
             $html .= "</ul>";
         } else {
             foreach ($values as $value) {
-                pr($value);
+                #pr($value);
                 $header = $value['Heading'];
-                $html .= $this->setHeader($header,"h3");
+                $html .= $this->setHeader($header,"h3",$language);
                 $html .= "<ul>";
                 foreach ($value['Values'] as $value) {
-                $html .= "<li>{$value}</li>"; 
+					$value=$this->checkValidity($value);
+					if (isset($options['translate_children']) && ($options['translate_children']==true)){
+						$value = $this->translate($value,$language);
+					}
+					$html .= "<li>{$value}</li>"; 
                 }
                  $html .= "</ul>";
             }
-                
-                // foreach ($value as $val) {
-                //    $html .= "<li>{$val}</li>";
-                // }
         }
-
         return $html;
     }
 
@@ -72,19 +98,17 @@ class TemplateTask extends AppTask {
         return $html;
     }
 
-    public function generateTable($values) {
+    public function generateTable($values,$language="") {
         $html = "";
         $html .= $this->setTableStart();
-        $html .= $this->createHeaderRow($values);
-//        $html .= $this->setColHeader($values);
-        $html .= $this->setContent($values);
-        // $html .= $this->setRowValues($values);
+        $html .= $this->createHeaderRow($values,$language);
+        $html .= $this->setContent($values,$language);
         $html .= $this->setTableEnd();
 
         return $html;
     }
 
-    public function createHeaderRow(Array $data) {
+    public function createHeaderRow(Array $data,$language="") {
         $header = "";
 
         /*if (isset($data['RowHeaders'])) {
@@ -97,7 +121,7 @@ class TemplateTask extends AppTask {
         if (count($headings) > 0) {
             $header .= "<tr>";
             foreach ($headings as $heading) {
-                $header .= "<td>{$heading}</td>";
+                $header .= "<td>". $this->translate($heading,$language)."</td>"; 
             }
             $header .= "</tr>";
         }
@@ -112,17 +136,11 @@ class TemplateTask extends AppTask {
         return $html .= "</table>";
     }
 
-    public function setContent(Array $data) {
+    public function setContent(Array $data,$language="") {
         $html = "";
 
         $cols = $data['Cols'];
         $rows = $data['Rows'];
-        
-        /*if (isset($data['RowHeaders'])) {
-            $headings = $data['RowHeaders'];
-        } else if (isset($data['DRowHeaders'])) {
-            $headings = $data['DRowHeaders'];
-        }*/
         $headings = $data['RowHeaders'];
         $colCount = count($headings);
         $defaultColWidth = 20;
@@ -135,7 +153,6 @@ class TemplateTask extends AppTask {
             // loop the rows
             if (array_key_exists($key, $rows)) {
                 foreach ($rows[$key] as $val) {
-                    // $html .= "<td align=\"right\">{$val}</td>";
                     $html .= "<td style=\"text-align: right; width: {$colWidth}%;\">{$val}</td>";
                 }
             } else {
