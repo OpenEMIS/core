@@ -53,8 +53,8 @@ class AppController extends Controller {
 	
 	public function beforeFilter() {
 		$l10n = new L10n();
-	
-		$lang = $this->ConfigItem->getValue('language');
+		
+		$lang = $this->Session->check('configItem.language') ? $this->Session->read('configItem.language') : $this->ConfigItem->getValue('language');
 		if(empty($lang)) {
 			$lang = 'eng';
 		}

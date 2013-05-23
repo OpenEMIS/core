@@ -33,9 +33,6 @@ class SecurityController extends AppController {
 	);
 	
 	public function beforeFilter() {
-		if(isset($this->request->query['lang'])) {
-			$this->Session->write('configItem.language', $this->request->query['lang']);
-		}
 		parent::beforeFilter();
 		$this->renderFooter();
 		$this->Auth->allow('login');
@@ -106,11 +103,27 @@ class SecurityController extends AppController {
 			if(!$this->RequestHandler->isAjax()) { // normal login
 				if($this->Auth->user()) { // user already login
 					$this->redirect($this->Auth->redirect('home'));
+				}else{
+					// Check if theres a query lang then use that
+					$lang = (isset($this->request->query['lang'])) ? $this->request->query['lang'] : $this->ConfigItem->getValue('language');
+					
+					// Assign the language to session and configuration
+					$this->Session->write('configItem.language', $lang);
 				}
 			} else { // ajax login
+				// Check if session still exist
+				if($this->Session->check('configItem.language')){
+					// Check if theres a query lang then use that
+					$lang = (isset($this->request->query['lang'])) ? $this->request->query['lang'] : $this->ConfigItem->getValue('language'); 
+					
+					// Assign the language to session and configuration
+					$this->Session->write('configItem.language', $lang);
+				}
 				$this->set('message', $this->Utility->getMessage('LOGIN_TIMEOUT'));
 				$this->render('login_ajax');
 			}
+			// added cause need to overwrite AppController pre-assigned Session value
+			Configure::write('Config.language', $this->Session->read('configItem.language')); 
 		}
     }
 
