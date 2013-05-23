@@ -74,6 +74,13 @@
 			]]>
 			</SQL>
 		</create>
+		<drop type="destination" table="areas">
+			<SQL dialect="mysql">
+			<![CDATA[
+				DROP TABLE `areas`;
+			]]>
+			</SQL>
+		</drop>
 		<truncate type="destination" table="areas">
 			<SQL dialect="mysql">
 			<![CDATA[
@@ -120,6 +127,13 @@
                 ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_certifications">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_certifications`;
+                ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_certifications">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -166,6 +180,13 @@
                 ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_cycles">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_cycles`;
+                ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_cycles">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -211,6 +232,13 @@
                 ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_field_of_studies">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_field_of_studies`
+                ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_field_of_studies">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -258,6 +286,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_grades">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_grades`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_grades">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -305,6 +340,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_grades_subjects">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_grades_subjects`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_grades_subjects">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -353,6 +395,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_level_isced">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_level_isced`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_level_isced">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -400,6 +449,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_levels">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_levels`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_levels">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -445,6 +501,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_programme_orientations">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_programme_orientations`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_programme_orientations">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -494,6 +557,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_programmes">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_programmes`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_programmes">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -540,6 +610,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_subjects">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_subjects`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_subjects">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -585,6 +662,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="education_systems">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `education_systems`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="education_systems">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -631,6 +715,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_providers">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_providers`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_providers">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -676,6 +767,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_sectors">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_sectors`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_sectors">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -720,6 +818,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_statuses">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_statuses`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_statuses">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -776,6 +881,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institutions">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institutions`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institutions">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -831,6 +943,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_bank_accounts">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_bank_accounts`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_bank_accounts">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -878,6 +997,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_class_grade_students">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_class_grade_students`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_class_grade_students">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -925,6 +1051,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_class_grades">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_class_grades`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_class_grades">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -959,15 +1092,15 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     CREATE TABLE `institution_site_class_teachers` (
-                          `id` int(11) NOT NULL AUTO_INCREMENT,
-                          `teacher_id` int(11) NOT NULL,
-                          `institution_site_class_id` int(11) NOT NULL,
-                          `modified_user_id` int(11) DEFAULT NULL,
-                          `modified` datetime DEFAULT NULL,
-                          `created_user_id` int(11) NOT NULL,
-                          `created` datetime NOT NULL,
-                          PRIMARY KEY (`id`)
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+                      `teacher_id` int(11) NOT NULL,
+                      `institution_site_class_id` int(11) NOT NULL,
+                      `education_subject_id` int(11) NOT NULL,
+                      `modified_user_id` int(11) DEFAULT NULL,
+                      `modified` datetime DEFAULT NULL,
+                      `created_user_id` int(11) NOT NULL,
+                      `created` datetime NOT NULL,
+                      PRIMARY KEY (`teacher_id`,`institution_site_class_id`,`education_subject_id`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
                         ]]>
             </SQL>
         </create>
@@ -989,10 +1122,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_class_teachers` (
-                          `id`, `teacher_id`, `institution_site_class_id`, `modified_user_id`,
+                          `teacher_id`, `institution_site_class_id`, `education_subject_id`, `modified_user_id`,
                           `modified`, `created_user_id`, `created`
                     ) VALUES (
-                          :id, :teacher_id, :institution_site_class_id, :modified_user_id,
+                          :teacher_id, :institution_site_class_id, :education_subject_id, :modified_user_id,
                           :modified, :created_user_id, :created
                     );
 
@@ -1027,6 +1160,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_classes">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_classes`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_classes">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1073,6 +1213,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_localities">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_localities`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_localities">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1118,6 +1265,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_ownership">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_ownership`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_ownership">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1150,20 +1304,26 @@
                 <![CDATA[
                     CREATE TABLE `institution_site_programmes` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `status` int(1) NOT NULL DEFAULT '1',
                       `education_programme_id` int(11) NOT NULL,
                       `institution_site_id` int(11) NOT NULL,
-                      `modified_user_id` int(11) DEFAULT NULL,
-                      `modified` datetime DEFAULT NULL,
+                      `school_year_id` int(11) NOT NULL,
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
                       PRIMARY KEY (`id`),
                       KEY `institution_site_id` (`institution_site_id`),
-                      KEY `education_programme_id` (`education_programme_id`)
+                      KEY `education_programme_id` (`education_programme_id`),
+                      KEY `school_year_id` (`school_year_id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_programmes">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_programmes`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_programmes">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1175,10 +1335,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_programmes` (
-                        `id`, `status`, `education_programme_id`, `institution_site_id`, `modified_user_id`, `modified`,
+                        `id`, `education_programme_id`, `institution_site_id`, `school_year_id`,
                         `created_user_id`, `created`
                     ) VALUES (
-                        :id, :status, :education_programme_id, :institution_site_id, :modified_user_id, :modified,
+                        :id, :education_programme_id, :institution_site_id, :school_year_id,
                         :created_user_id, :created
                     );
                         ]]>
@@ -1215,10 +1375,16 @@
                       KEY `staff_category_id` (`staff_category_id`),
                       KEY `institution_site_id` (`institution_site_id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_staff">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_staff`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_staff">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1230,10 +1396,12 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_staff` (
-                        `id`, `staff_id`, `institution_site_id`, `start_date`, `end_date`, `modified_user_id`,
+                        `id`, `staff_id`, `staff_category_id`, `institution_site_id`, `start_date`, `start_year`,
+                        `end_date`, `end_year`, `salary`, `modified_user_id`,
                         `modified`, `created_user_id`, `created`
                     )VALUES (
-                        :id, :staff_id, :institution_site_id, :start_date, :end_date, :modified_user_id,
+                        :id, :staff_id, :staff_category_id, :institution_site_id, :start_date, :start_year,
+                        :end_date, :end_year, :salary, :modified_user_id,
                         :modified, :created_user_id, :created
                     );
                         ]]>
@@ -1291,8 +1459,7 @@
             </SQL>
         </select>
     </process>
-    <!-- does not exists in source DB -->
-    <!--<process name="institution_site_students" type="lookup">
+    <process name="institution_site_students" type="lookup">
         <create type="destination" table="institution_site_students">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1315,6 +1482,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_students">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_students`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_students">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1326,11 +1500,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_students` (
-                      `id`, `start_date`, `start_year`, `end_date`, `end_year`, `student_id`, `institution_site_programme_id`,
-                      `modified_user_id`, `modified`, `created_user_id`
+                        `id`, `start_date`, `start_year`, `end_date`, `end_year`, `student_id`,
+                        `institution_site_programme_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :start_date, :start_year, :end_date, :end_year, :student_id, :institution_site_programme_id,
-                        :modified_user_id, :modified, :created_user_id
+                        :id, :start_date, :start_year, :end_date, :end_year, :student_id,
+                        :institution_site_programme_id, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -1342,7 +1516,7 @@
                         ]]>
             </SQL>
         </select>
-    </process>-->
+    </process>
     <process name="institution_site_teachers" type="lookup">
         <create type="destination" table="institution_site_teachers">
             <SQL dialect="mysql">
@@ -1370,6 +1544,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_teachers">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_teachers`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_teachers">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1381,12 +1562,13 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_teachers` (
-                        `id`, `teacher_id`, `institution_site_id`, `start_date`, `end_date`, `modified_user_id`,
-                        `modified`, `created_user_id`, `created`
-                    )VALUES (
-                        :id, :teacher_id, :institution_site_id, :start_date, :end_date, :modified_user_id,
-                        :modified, :created_user_id, :created
+                        `id`, `teacher_id`, `teacher_category_id`, `institution_site_id`, `start_date`, `start_year`,
+                        `end_date`, `end_year`, `salary`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                    ) VALUES (
+                        :id, :teacher_id, :teacher_category_id, :institution_site_id, :start_date, :start_year,
+                        :end_date, :end_year, :salary, :modified_user_id, :modified, :created_user_id, :created
                     );
+
                         ]]>
             </SQL>
         </insert>
@@ -1417,6 +1599,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_site_types">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_site_types`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_site_types">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1481,6 +1670,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="institution_sites">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `institution_sites`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="institution_sites">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1539,6 +1735,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="school_years">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `school_years`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="school_years">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1550,11 +1753,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `school_years` (
-                        `id`, `name`, `start_date`, `end_date`, `current`, `available`, `modified_user_id`, `modified`,
-                        `created_user_id`, `created`
+                        `id`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `current`, `available`,
+                        `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :start_date, :end_date, :current, :available, :modified_user_id, :modified,
-                        :created_user_id, :created
+                        :id, :name, :start_date, :start_year, :end_date, :end_year, :current, :available,
+                        :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -1573,7 +1776,6 @@
         <create type="destination" table="staff">
             <SQL dialect="mysql">
                 <![CDATA[
-
                     CREATE TABLE `staff` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `identification_no` varchar(100) DEFAULT NULL,
@@ -1582,6 +1784,8 @@
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `date_of_birth` date NOT NULL,
                       `address` text,
+                      `address_area_id` int(11) DEFAULT '0',
+                      `birthplace_area_id` int(11) DEFAULT '0',
                       `postal_code` varchar(20) DEFAULT NULL,
                       `telephone` varchar(30) DEFAULT NULL,
                       `email` varchar(100) DEFAULT NULL,
@@ -1591,12 +1795,21 @@
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
-                      PRIMARY KEY (`id`)
+                      PRIMARY KEY (`id`),
+                      KEY `birthplace_area_id` (`birthplace_area_id`),
+                      KEY `address_area_id` (`address_area_id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="staff">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `staff`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="staff">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1608,13 +1821,13 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `staff` (
-                      `id`,`identification_no`,`first_name`,`last_name`,`gender`,`date_of_birth`,`address`,`postal_code`,
-                      `telephone`,`email`,`photo_name`,`photo_content`,`modified_user_id`,`modified`,`created_user_id`,
-                      `created`
+                        `id`, `identification_no`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`,
+                        `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
+                        `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                      :id,:identification_no,:first_name,:last_name,:gender,:date_of_birth,:address,:postal_code,
-                      :telephone,:email,:photo_name,:photo_content,:modified_user_id,:modified,:created_user_id,
-                      :created
+                        :id, :identification_no, :first_name, :last_name, :gender, :date_of_birth, :address,
+                        :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
+                        :photo_content, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -1645,6 +1858,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="staff_categories">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `staff_categories`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="staff_categories">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1692,6 +1912,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="student_categories">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `student_categories`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="student_categories">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1726,6 +1953,8 @@
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `date_of_birth` date NOT NULL,
                       `address` text,
+                      `address_area_id` int(11) DEFAULT '0',
+                      `birthplace_area_id` int(11) DEFAULT '0',
                       `postal_code` varchar(20) DEFAULT NULL,
                       `telephone` varchar(30) DEFAULT NULL,
                       `email` varchar(100) DEFAULT NULL,
@@ -1735,12 +1964,21 @@
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
-                      PRIMARY KEY (`id`)
+                      PRIMARY KEY (`id`),
+                      KEY `birthplace_area_id` (`birthplace_area_id`),
+                      KEY `address_area_id` (`address_area_id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="students">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `students`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="students">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1752,17 +1990,21 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `students` (
-                        `id`, `identification_no`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`, `postal_code`, `telephone`, `email`, `photo_name`, `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
-                      ) VALUES (
-                        :id, :identification_no, :first_name, :last_name, :gender, :date_of_birth, :address, :postal_code, :telephone, :email, :photo_name, :photo_content, :modified_user_id, :modified, :created_user_id, :created
-                      );
+                        `id`, `identification_no`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`,
+                        `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
+                        `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                    ) VALUES (
+                        :id, :identification_no, :first_name, :last_name, :gender, :date_of_birth, :address,
+                        :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
+                        :photo_content, :modified_user_id, :modified, :created_user_id, :created
+                    );
                         ]]>
             </SQL>
         </insert>
         <select type="source" table="students">
             <SQL dialect="mysql">
                 <![CDATA[
-                    SELECT * FROM `students`;
+                        SELECT * FROM `students`;
                         ]]>
             </SQL>
         </select>
@@ -1788,6 +2030,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="teacher_categories">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `teacher_categories`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="teacher_categories">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1834,6 +2083,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="teacher_qualification_categories">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `teacher_qualification_categories`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="teacher_qualification_categories">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1880,6 +2136,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="teacher_qualification_certificates">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `teacher_qualification_certificates`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="teacher_qualification_certificates">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1927,6 +2190,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="teacher_qualification_institutions">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `teacher_qualification_institutions`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="teacher_qualification_institutions">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -1974,6 +2244,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="teacher_qualifications">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `teacher_qualifications`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="teacher_qualifications">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -2020,6 +2297,13 @@
                         ]]>
             </SQL>
         </create>
+        <drop type="destination" table="teacher_training">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `teacher_training`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="teacher_training">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -2066,6 +2350,13 @@
                 ]]>
             </SQL>
         </create>
+        <drop type="destination" table="teacher_training_categories">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `teacher_training_categories`;
+                ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="teacher_training_categories">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -2104,6 +2395,8 @@
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `date_of_birth` date NOT NULL,
                       `address` text,
+                      `address_area_id` int(11) DEFAULT '0',
+                      `birthplace_area_id` int(11) DEFAULT '0',
                       `postal_code` varchar(20) DEFAULT NULL,
                       `telephone` varchar(30) DEFAULT NULL,
                       `email` varchar(100) DEFAULT NULL,
@@ -2113,11 +2406,20 @@
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
                       `created` datetime NOT NULL,
-                      PRIMARY KEY (`id`)
+                      PRIMARY KEY (`id`),
+                      KEY `birthplace_area_id` (`birthplace_area_id`),
+                      KEY `address_area_id` (`address_area_id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
                 ]]>
             </SQL>
         </create>
+        <drop type="destination" table="teachers">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `teachers`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="teachers">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -2129,13 +2431,13 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `teachers` (
-                      `id`, `identification_no`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`,
-                      `postal_code`, `telephone`, `email`, `photo_name`, `photo_content`, `modified_user_id`,
-                      `modified`, `created_user_id`, `created`
-                    ) VALUES(
-                      :id, :identification_no, :first_name, :last_name, :gender, :date_of_birth, :address,
-                      :postal_code, :telephone, :email, :photo_name, :photo_content, :modified_user_id,
-                      :modified, :created_user_id, :created
+                        `id`, `identification_no`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`,
+                        `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
+                        `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                    ) VALUES (
+                        :id, :identification_no, :first_name, :last_name, :gender, :date_of_birth, :address,
+                        :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
+                        :photo_content, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -2168,6 +2470,13 @@
                 ]]>
             </SQL>
         </create>
+        <drop type="destination" table="infrastructure_buildings">
+            <SQL dialect="mysql">
+                <![CDATA[
+                    DROP TABLE `infrastructure_buildings`;
+                        ]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="infrastructure_buildings">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -2198,6 +2507,13 @@
 
     <!-- Census Subset -->
     <process name="census_students" type="census">
+        <drop type="destination" table="fact_census_students">
+            <SQL dialect="mysql">
+                <![CDATA[
+					DROP TABLE `fact_census_students`;
+				]]>
+            </SQL>
+        </drop>
         <truncate type="destination" table="fact_census_students">
             <SQL dialect="mysql">
                 <![CDATA[
@@ -2315,20 +2631,22 @@
 									LEFT JOIN education_level_isced on education_levels.education_level_isced_id = education_level_isced.id
 									LEFT JOIN education_systems on education_levels.education_system_id = education_systems.id
 							LEFT JOIN education_certifications on education_programmes.education_certification_id = education_certifications.id
-					/* joining through institution site */
-					LEFT JOIN institution_site_programmes on census_students.institution_site_programme_id = institution_site_programmes.id
-						LEFT JOIN institution_sites on institution_site_programmes.institution_site_id = institution_sites.id
-							LEFT JOIN institution_site_localities on institution_sites.institution_site_locality_id = institution_site_localities.id
-							LEFT JOIN areas on institution_sites.area_id = areas.id
-								LEFT JOIN area_levels on areas.area_level_id = area_levels.id
-							LEFT JOIN institution_site_types on institution_sites.institution_site_type_id = institution_site_types.id
-							LEFT JOIN institution_site_ownership on institution_sites.institution_site_ownership_id = institution_site_ownership.id
-							LEFT JOIN institution_site_statuses on institution_sites.institution_site_status_id = institution_site_statuses.id
-							LEFT JOIN institutions on institution_sites.institution_id = institutions.id
-								LEFT JOIN institution_sectors on institutions.institution_sector_id = institution_sectors.id
-								LEFT JOIN institution_providers on institutions.institution_provider_id = institution_providers.id
-								LEFT JOIN institution_statuses on institutions.institution_status_id = institution_statuses.id
-					LEFT JOIN school_years on census_students.school_year_id = school_years.id;
+					/* joining through institution */
+					LEFT JOIN institution_sites on census_students.institution_site_id = institution_sites.id
+					    LEFT JOIN areas ON institution_sites.area_id = areas.id
+					        LEFT JOIN area_levels ON areas.area_level_id = area_levels.id
+					    LEFT JOIN institutions ON institution_sites.institution_id = institutions.id
+					        LEFT JOIN institution_sectors ON institutions.institution_sector_id = institution_sectors.id
+					        LEFT JOIN institution_providers ON institutions.institution_provider_id = institution_providers.id
+					        LEFT JOIN institution_statuses ON institutions.institution_status_id = institution_statuses.id
+                        LEFT JOIN institution_site_localities ON institution_sites.institution_site_locality_id = institution_site_localities.id
+                        LEFT JOIN institution_site_types ON institution_sites.institution_site_type_id = institution_site_types.id
+                        LEFT JOIN institution_site_statuses ON institution_sites.institution_site_status_id = institution_site_statuses.id
+                        LEFT JOIN institution_site_ownership ON institution_sites.institution_site_ownership_id = institution_site_ownership.id
+--                         LEFT JOIN institution_site_classes ON institution_sites.id = institution_site_classes.institution_site_id
+--                             LEFT JOIN institution_site_class_grades ON institution_site_classes.id = institution_site_class_grades.institution_site_class_id
+                        LEFT JOIN institution_site_programmes ON institution_sites.id = institution_site_programmes.institution_site_id
+                    LEFT JOIN school_years on census_students.school_year_id = school_years.id;
 
 				]]>
             </SQL>
@@ -2924,7 +3242,7 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     CREATE TABLE `fact_census_graduates` (
-                      `id` int(11) NOT NULL AUTO_INCREMENT,
+--                      `id` int(11) NOT NULL AUTO_INCREMENT,
                       `male` int(11) DEFAULT '0',
                       `female` int(11) DEFAULT '0',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
@@ -2949,7 +3267,7 @@
                       `institution_provider_id` int(11) DEFAULT NULL,
                       `institution_status_id` int(11) DEFAULT NULL,
                       `school_year_id` int(11) DEFAULT NULL,
-                      PRIMARY KEY (`id`),
+--                      PRIMARY KEY (`id`),
                       KEY `source` (`source`),
                       KEY `education` (`education_programme_id`,`education_field_of_study_id`,`education_programme_orientation_id`,`education_cycle_id`,`education_system_id`,`education_level_id`,`education_level_isced_id`,`education_certification_id`),
                       KEY `institution_site` (`institution_site_programme_id`,`institution_site_id`,`institution_site_locality_id`,`institution_site_type_id`,`institution_site_ownership_id`,`institution_site_status_id`),
@@ -2964,7 +3282,7 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_graduates` (
-                        `id`, `male`, `female`, `source`, `education_programme_id`, `education_field_of_study_id`,
+                        `male`, `female`, `source`, `education_programme_id`, `education_field_of_study_id`,
                         `education_programme_orientation_id`, `education_cycle_id`, `education_level_id`,
                         `education_system_id`, `education_level_isced_id`, `education_certification_id`,
                         `institution_site_programme_id`, `institution_site_id`, `institution_site_locality_id`,
@@ -2972,7 +3290,7 @@
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :source, :education_programme_id, :education_field_of_study_id,
+                        :male, :female, :source, :education_programme_id, :education_field_of_study_id,
                         :education_programme_orientation_id, :education_cycle_id, :education_level_id,
                         :education_system_id, :education_level_isced_id, :education_certification_id,
                         :institution_site_programme_id, :institution_site_id, :institution_site_locality_id,
@@ -2987,7 +3305,6 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     SELECT
-                        census_graduates.id AS id,
                         census_graduates.male AS male,
                         census_graduates.female AS female,
                         census_graduates.source AS source,
@@ -3013,27 +3330,34 @@
                         institution_statuses.id AS institution_status_id,
                         school_years.id AS school_year_id
                     FROM census_graduates
-                    LEFT JOIN institution_site_programmes ON census_graduates.institution_site_programme_id = institution_site_programmes.id
-                        LEFT JOIN institution_sites ON institution_site_programmes.institution_site_id = institution_sites.id
-                            LEFT JOIN institution_site_localities ON institution_sites.institution_site_locality_id = institution_site_localities.id
-                            LEFT JOIN institution_site_types ON institution_sites.institution_site_type_id = institution_site_types.id
-                            LEFT JOIN institution_site_ownership ON institution_sites.institution_site_ownership_id = institution_site_ownership.id
-                            LEFT JOIN institution_site_statuses ON institution_sites.institution_site_status_id = institution_site_statuses.id
-                            LEFT JOIN areas ON area_id = areas.id
-                                LEFT JOIN area_levels ON areas.area_level_id = area_levels.id
-                            LEFT JOIN institutions ON institution_sites.institution_id = institutions.id
-                                LEFT JOIN institution_sectors ON institutions.institution_sector_id = institution_sectors.id
-                                LEFT JOIN institution_providers ON institutions.institution_provider_id = institution_providers.id
-                                LEFT JOIN institution_statuses ON institutions.institution_status_id = institution_statuses.id
-                        LEFT JOIN education_programmes ON institution_site_programmes.education_programme_id = education_programmes.id
-                            LEFT JOIN education_field_of_studies ON education_programmes.education_field_of_study_id = education_field_of_studies.id
-                                LEFT JOIN education_programme_orientations ON education_field_of_studies.education_programme_orientation_id = education_programme_orientations.id
-                            LEFT JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                                LEFT JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                                    LEFT JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                                    LEFT JOIN education_level_isced ON education_levels.education_level_isced_id = education_level_isced.id
-                            LEFT JOIN education_certifications ON education_programmes.education_certification_id = education_certifications.id
-                    LEFT JOIN school_years ON census_graduates.school_year_id = school_years.id;
+                    /* joining through institution */
+					LEFT JOIN institution_sites ON census_graduates.institution_site_id = institution_sites.id
+					    LEFT JOIN areas ON institution_sites.area_id = areas.id
+					        LEFT JOIN area_levels ON areas.area_level_id = area_levels.id
+					    LEFT JOIN institutions ON institution_sites.institution_id = institutions.id
+					        LEFT JOIN institution_sectors ON institutions.institution_sector_id = institution_sectors.id
+					        LEFT JOIN institution_providers ON institutions.institution_provider_id = institution_providers.id
+					        LEFT JOIN institution_statuses ON institutions.institution_status_id = institution_statuses.id
+                        LEFT JOIN institution_site_localities ON institution_sites.institution_site_locality_id = institution_site_localities.id
+                        LEFT JOIN institution_site_types ON institution_sites.institution_site_type_id = institution_site_types.id
+                        LEFT JOIN institution_site_statuses ON institution_sites.institution_site_status_id = institution_site_statuses.id
+                        LEFT JOIN institution_site_ownership ON institution_sites.institution_site_ownership_id = institution_site_ownership.id
+--                         LEFT JOIN institution_site_classes ON institution_sites.id = institution_site_classes.institution_site_id
+--                             LEFT JOIN institution_site_class_grades ON institution_site_classes.id = institution_site_class_grades.institution_site_class_id
+                        LEFT JOIN institution_site_programmes ON institution_sites.id = institution_site_programmes.institution_site_id
+                    /* joining through education programmes */
+					LEFT JOIN education_programmes ON census_graduates.education_programme_id = education_programmes.id
+						LEFT JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+							LEFT JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+								LEFT JOIN education_systems ON education_levels.education_system_id = education_systems.id
+								LEFT JOIN education_level_isced ON education_levels.education_level_isced_id = education_level_isced.id
+						LEFT JOIN education_field_of_studies ON education_programmes.education_field_of_study_id = education_field_of_studies.id
+							LEFT JOIN education_programme_orientations ON education_field_of_studies.education_programme_orientation_id = education_programme_orientations.id
+						LEFT JOIN education_certifications ON education_programmes.education_certification_id = education_certifications.id
+						LEFT JOIN education_grades ON education_programmes.id = education_grades.education_programme_id
+--							LEFT JOIN education_grades_subjects ON education_grades.id = education_grades_subjects.education_grade_id
+--							LEFT JOIN education_subjects ON education_grades_subjects.education_subject_id = education_subjects.id
+					LEFT JOIN school_years ON census_graduates.school_year_id = school_years.id;
 
                 ]]>
             </SQL>
@@ -3538,7 +3862,7 @@
                         :id, :male, :female, :source, :education_level_id, :education_system_id,
                         :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_statuses_id,
-                        :area_id`, `area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
                         :institution_status_id, :school_year_id
                     );
 
@@ -3552,6 +3876,7 @@
                         census_teacher_fte.id AS id,
                         census_teacher_fte.male AS male,
                         census_teacher_fte.female AS female,
+                        census_teacher_fte.source AS source,
                         education_levels.id AS education_level_id,
                         education_systems.id AS education_system_id,
                         education_level_isced.id AS education_level_isced_id,
@@ -3757,14 +4082,14 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_teachers` (
-                        `id`, `male`, `female`, `source`, `institution_site_id`, `institution_site_locality_id`,
+                        `male`, `female`, `source`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_status_id`,
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `education_grade_id`, `education_programme_id`, `education_field_of_study_id`,
                         `education_programme_orientation_id`, `education_cycle_id`, `education_level_id`, `education_system_id`,
                         `education_level_isced_id`, `education_certification_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :source, :institution_site_id, :institution_site_locality_id,
+                        :male, :female, :source, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
                         :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
                         :institution_status_id, :education_grade_id, :education_programme_id, :education_field_of_study_id,
@@ -3779,7 +4104,7 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     SELECT
-                        census_teachers.id AS id,
+--                        census_teachers.id AS id,
                         census_teachers.male AS male,
                         census_teachers.female AS female,
                         census_teachers.source AS source,
@@ -3826,7 +4151,7 @@
                                         LEFT JOIN education_systems ON education_levels.education_system_id = education_systems.id
                                         LEFT JOIN education_level_isced ON education_levels.education_level_isced_id = education_level_isced.id
                                 LEFT JOIN education_certifications ON education_programmes.education_certification_id = education_certifications.id
-                    LEFT JOIN school_years ON census_teachers.school_year_id = school_years.id
+                    LEFT JOIN school_years ON census_teachers.school_year_id = school_years.id;
                 ]]>
             </SQL>
         </select>
@@ -3835,14 +4160,14 @@
         <drop type="destination" table="fact_census_textbooks">
             <SQL dialect="mysql">
                 <![CDATA[
-                    DROP TABLE `fact_census_teachers`;
+                    DROP TABLE `fact_census_textbooks`;
                 ]]>
             </SQL>
         </drop>
         <truncate type="destination" table="fact_census_textbooks">
             <SQL dialect="mysql">
                 <![CDATA[
-                    TRUNCATE TABLE fact_census_teachers;
+                    TRUNCATE TABLE fact_census_textbooks;
                 ]]>
             </SQL>
         </truncate>
@@ -3850,7 +4175,7 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     CREATE TABLE `fact_census_textbooks` (
-                      `id` int(11) NOT NULL AUTO_INCREMENT,
+--                      `id` int(11) NOT NULL AUTO_INCREMENT,
                       `value` int(11) DEFAULT NULL,
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `education_grade_subject_id` int(11) DEFAULT NULL,
@@ -3877,7 +4202,7 @@
                       `institution_provider_id` int(11) DEFAULT NULL,
                       `institution_status_id` int(11) DEFAULT NULL,
                       `school_year_id` int(11) DEFAULT NULL,
-                      PRIMARY KEY (`id`),
+--                      PRIMARY KEY (`id`),
                       KEY `school_year_id` (`school_year_id`),
                       KEY `source` (`source`),
                       KEY `education` (`education_grade_subject_id`,`education_grade_id`,`education_programme_id`,`education_field_of_study_id`,`education_programme_orientation_id`,`education_cycle_id`,`education_level_id`,`education_system_id`,`education_level_isced_id`,`education_certification_id`,`education_subject_id`),
@@ -3892,7 +4217,7 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_textbooks` (
-                        `id`, `value`, `source`, `education_grade_subject_id`, `education_grade_id`, `education_programme_id`,
+                        `value`, `source`, `education_grade_subject_id`, `education_grade_id`, `education_programme_id`,
                         `education_field_of_study_id`, `education_programme_orientation_id`, `education_cycle_id`,
                         `education_level_id`, `education_system_id`, `education_level_isced_id`, `education_certification_id`,
                         `education_subject_id`, `institution_site_programme_id`, `institution_site_id`,
@@ -3900,7 +4225,7 @@
                         `institution_site_status_id`, `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`,
                         `institution_provider_id`, `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :value, :source, :education_grade_subject_id, :education_grade_id, :education_programme_id,
+                        :value, :source, :education_grade_subject_id, :education_grade_id, :education_programme_id,
                         :education_field_of_study_id, :education_programme_orientation_id, :education_cycle_id,
                         :education_level_id, :education_system_id, :education_level_isced_id, :education_certification_id,
                         :education_subject_id, :institution_site_programme_id, :institution_site_id,
@@ -3915,7 +4240,6 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     SELECT
-                        census_textbooks.id AS id,
                         census_textbooks.value AS 'value',
                         census_textbooks.source AS source,
                         education_grades_subjects.id AS education_grade_subject_id,
@@ -3943,30 +4267,34 @@
                         institution_statuses.id AS institution_status_id,
                         school_years.id AS school_year_id
                     FROM census_textbooks
-                    LEFT JOIN education_grades_subjects ON census_textbooks.education_grade_subject_id = education_grades_subjects.id
-                        LEFT JOIN education_grades ON education_grades_subjects.education_grade_id = education_grades.id
-                            LEFT JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                                LEFT JOIN education_field_of_studies ON education_programmes.education_field_of_study_id = education_field_of_studies.id
-                                    LEFT JOIN education_programme_orientations ON education_field_of_studies.education_programme_orientation_id = education_programme_orientations.id
-                                LEFT JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                                    LEFT JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                                        LEFT JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                                        LEFT JOIN education_level_isced ON education_levels.education_level_isced_id = education_level_isced.id
-                                LEFT JOIN education_certifications ON education_programmes.education_certification_id = education_certifications.id
-                        LEFT JOIN education_subjects ON education_grades_subjects.education_subject_id = education_subjects.id
-                    LEFT JOIN institution_site_programmes ON census_textbooks.institution_site_programme_id = institution_site_programmes.id
-                        LEFT JOIN institution_sites ON institution_site_programmes.institution_site_id = institution_sites.id
-                            LEFT JOIN institution_site_localities ON institution_sites.institution_site_locality_id = institution_site_localities.id
-                            LEFT JOIN institution_site_types ON institution_sites.institution_site_type_id = institution_site_types.id
-                            LEFT JOIN institution_site_ownership ON institution_sites.institution_site_ownership_id = institution_site_ownership.id
-                            LEFT JOIN institution_site_statuses ON institution_sites.institution_site_status_id = institution_site_statuses.id
-                            LEFT JOIN areas ON area_id = areas.id
-                                LEFT JOIN area_levels ON areas.area_level_id = area_levels.id
-                            LEFT JOIN institutions ON institution_sites.institution_id = institutions.id
-                                LEFT JOIN institution_sectors ON institutions.institution_sector_id = institution_sectors.id
-                                LEFT JOIN institution_providers ON institutions.institution_provider_id = institution_providers.id
-                                LEFT JOIN institution_statuses ON institutions.institution_status_id = institution_statuses.id
-                    LEFT JOIN school_years ON census_textbooks.school_year_id = school_years.id
+                    /* joining through institution */
+					LEFT JOIN institution_sites ON census_textbooks.institution_site_id = institution_sites.id
+					    LEFT JOIN areas ON institution_sites.area_id = areas.id
+					        LEFT JOIN area_levels ON areas.area_level_id = area_levels.id
+					    LEFT JOIN institutions ON institution_sites.institution_id = institutions.id
+					        LEFT JOIN institution_sectors ON institutions.institution_sector_id = institution_sectors.id
+					        LEFT JOIN institution_providers ON institutions.institution_provider_id = institution_providers.id
+					        LEFT JOIN institution_statuses ON institutions.institution_status_id = institution_statuses.id
+                        LEFT JOIN institution_site_localities ON institution_sites.institution_site_locality_id = institution_site_localities.id
+                        LEFT JOIN institution_site_types ON institution_sites.institution_site_type_id = institution_site_types.id
+                        LEFT JOIN institution_site_statuses ON institution_sites.institution_site_status_id = institution_site_statuses.id
+                        LEFT JOIN institution_site_ownership ON institution_sites.institution_site_ownership_id = institution_site_ownership.id
+--                         LEFT JOIN institution_site_classes ON institution_sites.id = institution_site_classes.institution_site_id
+--                             LEFT JOIN institution_site_class_grades ON institution_site_classes.id = institution_site_class_grades.institution_site_class_id
+                        LEFT JOIN institution_site_programmes ON institution_sites.id = institution_site_programmes.institution_site_id
+                    /* joining through education_grade_subjects */
+					LEFT JOIN education_grades_subjects ON census_textbooks.education_grade_subject_id = education_grades_subjects.id
+						LEFT JOIN education_subjects ON education_grades_subjects.education_subject_id = education_subjects.id
+							LEFT JOIN education_grades ON education_grades_subjects.education_grade_id = education_grades.id
+								LEFT JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
+									LEFT JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
+										LEFT JOIN education_levels ON education_cycles.education_level_id = education_levels.id
+											LEFT JOIN education_systems ON education_levels.education_system_id = education_systems.id
+											LEFT JOIN education_level_isced ON education_levels.education_level_isced_id = education_level_isced.id
+									LEFT JOIN education_field_of_studies ON education_programmes.education_field_of_study_id = education_field_of_studies.id
+										LEFT JOIN education_programme_orientations ON education_field_of_studies.education_programme_orientation_id = education_programme_orientations.id
+									LEFT JOIN education_certifications ON education_programmes.education_certification_id = education_certifications.id
+                    LEFT JOIN school_years ON census_textbooks.school_year_id = school_years.id;
                 ]]>
             </SQL>
         </select>
