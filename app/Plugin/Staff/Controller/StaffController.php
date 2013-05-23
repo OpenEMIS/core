@@ -225,7 +225,7 @@ class StaffController extends StaffAppController {
     }
 
     public function additional() {
-        $this->Navigation->addCrumb('Additional Info');
+        $this->Navigation->addCrumb('More');
 
         // get all staff custom field in order
         $datafields = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order'=>'StaffCustomField.order'));
@@ -252,7 +252,7 @@ class StaffController extends StaffAppController {
     }
 
     public function additionalEdit() {
-        $this->Navigation->addCrumb('Edit Additional Info');
+        $this->Navigation->addCrumb('Edit More');
 
         if ($this->request->is('post')) {
             //pr($this->data);
