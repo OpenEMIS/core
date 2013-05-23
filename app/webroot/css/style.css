@@ -188,6 +188,7 @@ input.default { width: 240px; }
 	border-bottom: 1px solid #CCCCCC;
 	background-color: #EFEFEF;
 	color: #666666;
+	overflow: hidden;
 }
 
 .custom_field .field_value {

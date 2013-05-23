@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -17,9 +17,9 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusFinance extends AppModel {
-        public $belongsTo = array('FinanceSource'=> array('foreignKey' => 'finance_source_id'),
-                               'FinanceCategory' => array('foreignKey' => 'finance_category_id'),
-                               'SchoolYear' => array('foreignKey' => 'school_year_id')
-        );
-	
+	public $belongsTo = array(
+		'FinanceSource'=> array('foreignKey' => 'finance_source_id'),
+		'FinanceCategory' => array('foreignKey' => 'finance_category_id'),
+		'SchoolYear' => array('foreignKey' => 'school_year_id')
+	);
 }

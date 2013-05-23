@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -33,11 +33,11 @@ class StaffNavigationComponent extends Component {
 				)
 			),
 			array(
-				'STAFF INFORMATION' => array(
+				'INFORMATION' => array(
 					'_controller' => $controller,
-					$navigation->createLink('Details', 'view', array('pattern' => 'view$|^edit$|history$')),
+					$navigation->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
 					$navigation->createLink('Attachments', 'attachments'),
-					$navigation->createLink('Additional Info', 'additional'),
+					$navigation->createLink('More', 'additional'),
 					$navigation->createLink('Institutions', 'institutions'),
 				)
 			)

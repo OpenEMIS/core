@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -98,6 +98,7 @@ class SecurityUser extends AppModel {
 		if (isset($this->data[$this->alias]['password'])) {
 			$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
 		}
+		parent::beforeSave();
 		return true;
 	}
 	

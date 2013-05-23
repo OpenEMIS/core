@@ -8,7 +8,7 @@ echo $this->Html->script('institution', false);
 
 <div id="institution" class="content_wrapper edit add">
 	<h1>
-		<span><?php echo __('Institution Details'); ?></span>
+		<span><?php echo __('Institution Information'); ?></span>
 		<?php
 		echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
 		echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 

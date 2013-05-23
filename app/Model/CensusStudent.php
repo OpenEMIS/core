@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -310,5 +310,4 @@ class CensusStudent extends AppModel {
 		return $values;
 
 	}
-
 }

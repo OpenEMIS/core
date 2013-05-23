@@ -10,16 +10,15 @@ echo $this->Html->script('setup_variables', false);
 <div id="school_year" class="content_wrapper school_year">
 	<?php
 	echo $this->Form->create('SetupVariables', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Setup', 'action' => 'setupVariables')
 	));
 	?>
 	<h1>
-		<span><?php echo __('Setup Variables'); ?></span>
+		<span><?php echo __($header); ?></span>
 		<?php 
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'setupVariablesEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'setupVariablesEdit', $selectedCategory), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -30,6 +29,7 @@ echo $this->Html->script('setup_variables', false);
 			'id' => 'category',
 			'options' => $categoryList,
 			'default' => $selectedCategory,
+			'url' => 'Setup/setupVariables/',
 			'onchange' => 'setup.changeCategory()'
 		));
 		?>

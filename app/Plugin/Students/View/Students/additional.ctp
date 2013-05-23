@@ -6,7 +6,7 @@
 
 <div id="additional" class="content_wrapper">
     <h1>
-        <span><?php echo __('Additional Info'); ?></span>
+        <span><?php echo __('More'); ?></span>
 		<?php
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'additionalEdit'),	array('class' => 'divider')); 

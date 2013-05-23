@@ -83,20 +83,15 @@ class AppModel extends Model {
 	public function findOptions($options=array()) {
 		$class = get_class($this);
 		$conditions = !isset($options['conditions']) ? array() : $options['conditions'];
+		$order = !isset($options['order']) ? array($class . '.order') : $options['order'];
 		
+		$this->formatResult = true;
 		$list = $this->find('all', array(
-			'recursive' => 0,
+			'recursive' => -1,
 			'conditions' => $conditions,
-			'order' => array($class . '.order')
+			'order' => $order
 		));
-		
-		$options = array();
-		
-		foreach($list as $record) {
-			$options[] = $record[$class];
-		}
-		
-		return $options;
+		return $list;
 	}
 	
 	public function getCurrentDateTime() {

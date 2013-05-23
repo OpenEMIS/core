@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -20,12 +20,4 @@ class InstitutionSiteCustomField extends AppModel {
 	public $hasMany = array(
 		'InstitutionSiteCustomFieldOption' => array('order'=>'order')
 	);
-	
-	/* can't work if recursive is set to 0
-	public $virtualFields = array(
-		'name' => 'EducationProgramme.name'
-	);
-	*/
-	
-
 }
