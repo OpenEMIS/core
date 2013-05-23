@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -13,7 +13,6 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-
  
 class NavigationComponent extends Component {
 	private $controller;
@@ -172,24 +171,26 @@ class NavigationComponent extends Component {
 				)
 			),
 			array(
-				array(
-					$this->createLink('Institution Details', 'view', array('pattern' => 'view$|^edit$|history$', 'controller' => 'Institutions')),
-					$this->createLink('Attachments', 'attachments', array('controller' => 'Institutions')),
-					$this->createLink('Additional Info', 'additional', array('controller' => 'Institutions')),
+				'INFORMATION' => array(
+					'_controller' => 'Institutions',
+					$this->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
+					$this->createLink('Attachments', 'attachments'),
+					$this->createLink('More', 'additional')
+				),
+				'INSTITUTION SITES' => array(
 					$this->createLink('List of Institution Sites', 'listSites', array('pattern' => 'listSites$', 'controller' => 'Institutions')),
-					$this->createLink('Add new Institution Site', 'add', array('pattern' => 'add$', 'controller' => 'InstitutionSites'))
+					$this->createLink('Add New Institution Site', 'add', array('pattern' => 'add$', 'controller' => 'InstitutionSites'))
 				)
 			),
 			array(
-				'SITE INFORMATION' => array(
+				'INFORMATION' => array(
 					'_controller' => 'InstitutionSites',
 					$this->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
 					$this->createLink('Attachments', 'attachments'),
-					$this->createLink('Additional Info', 'additional'),
 					$this->createLink('Bank Accounts', 'bankAccounts'),
-					$this->createLink('Assessments', 'assessmentsList', array('pattern' => 'assessments'))
+					$this->createLink('More', 'additional')
 				),
-				'SITE DETAILS' => array(
+				'DETAILS' => array(
 					'_controller' => 'InstitutionSites',
 					$this->createLink('Programmes', 'programmes'),
 					$this->createLink('Classes', 'classes'),
@@ -198,7 +199,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Staff', 'staff'),
 					$this->createLink('Results', 'results')
 				),
-				'CENSUS' => array(
+				'TOTALS' => array(
 					'_controller' => 'Census',
 					$this->createLink('Enrolment', 'enrolment'),
 					$this->createLink('Graduates', 'graduates'),
@@ -208,7 +209,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Staff', 'staff'),
 					$this->createLink('Infrastructure', 'infrastructure'),
 					$this->createLink('Finances', 'finances'),
-					$this->createLink('Other Forms', 'otherforms')
+					$this->createLink('More', 'otherforms')
 				)
 			)
 		);
@@ -222,8 +223,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Administrative Boundaries', 'index', array('pattern' => 'index$|levels|edit$', 'controller' => 'Areas')),
 					$this->createLink('Education Structure', 'index', array('pattern' => 'index$|setup$', 'controller' => 'Education')),
 					$this->createLink('National Assessments', 'index', array('pattern' => 'index|assessment', 'controller' => 'Assessment')),
-					$this->createLink('Setup Variables', 'setupVariables', array('controller' => 'Setup')),
-					$this->createLink('Custom Fields', 'customFields', array('pattern' => 'custom', 'controller' => 'Setup')),
+					$this->createLink('Field Options', 'setupVariables', array('pattern' => '^setupVariables|^custom', 'controller' => 'Setup')),
 					$this->createLink('System Configurations', 'index', array('pattern' => 'index$|edit$|^dashboard', 'controller' => 'Config'))
 				),
 				'ACCOUNTS &amp; SECURITY' => array(

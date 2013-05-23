@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -123,7 +123,7 @@ class InstitutionSitesController extends AppController {
     }
 	
 	public function view() {
-		$this->Navigation->addCrumb('Details');
+		$this->Navigation->addCrumb('General');
 		
 		$levels = $this->AreaLevel->find('list',array('recursive'=>0));
                 
@@ -140,7 +140,7 @@ class InstitutionSitesController extends AppController {
 		$id = $this->Session->read('InstitutionSiteId');
 		
         $this->InstitutionSite->id = $id;
-		$this->Navigation->addCrumb('Edit Details');
+		$this->Navigation->addCrumb('Edit');
 		
 		if($this->request->is('post')) {
 			/**
@@ -229,7 +229,7 @@ class InstitutionSitesController extends AppController {
 	
     public function add() {
 		
-		$this->Navigation->addCrumb('Add new Institution Site');
+		$this->Navigation->addCrumb('Add New Institution Site');
 		$institutionId = $this->Session->read('InstitutionId');
 		$areadropdowns = array('0'=>'--'.__('Select').'--');
 		$areaLevel = array();
@@ -813,9 +813,11 @@ class InstitutionSitesController extends AppController {
 			}
 
 		}
-		//pr($data2);die;
+		
+		if(empty($data2)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
+		}
 		$this->set('data',$this->institutionSiteObj);
-	   
 		$this->set('data2',$data2);
 		$this->set('id',$this->institutionSiteId);
 	}

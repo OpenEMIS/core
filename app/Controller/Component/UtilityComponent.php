@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -42,6 +42,8 @@ class UtilityComponent extends Component {
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
 		$msgList['SAVE_SUCCESS'] = "Your data has been saved successfully.";
 		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
+		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
+		$msgList['NO_HISTORY'] = "No history found.";
 		
 		// Login Messages
 		$msgList['LOGIN_TIMEOUT'] = "Your session is timed out. Please login again.";
@@ -70,6 +72,9 @@ class UtilityComponent extends Component {
 		
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";
+		
+		// Institution Sites
+		$msgList['NO_SITES'] = "No Institution Sites";
 		
 		// Institution Site Classes
 		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";

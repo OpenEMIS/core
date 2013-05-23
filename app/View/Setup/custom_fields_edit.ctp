@@ -6,6 +6,7 @@ echo $this->Html->script('jquery.tools', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 echo $this->Html->script('custom_field', false);
+echo $this->Html->script('setup_variables', false);
 
 $actionLabel = Array(
     '1' => 'Section Break',
@@ -21,36 +22,41 @@ $actionLabel = Array(
 <div id="custom" class="content_wrapper">
 	<?php
 	echo $this->Form->create('CustomFields', array(
-			'id' => 'submitForm',
-			'inputDefaults' => array('label' => false, 'div' => false),	
-			'url' => array('controller' => 'Setup', 'action' => 'customFieldsEdit',$defaultModel,$sitetype)
-		)
-	); 
+		'id' => 'submitForm',
+		'inputDefaults' => array('label' => false, 'div' => false),	
+		'url' => array('controller' => 'Setup', 'action' => 'customFieldsEdit', $selectedCategory, $defaultModel, $sitetype)
+	)); 
 	?>
 	<h1>
-		<span><?php echo __('Custom Fields'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'customFields'), array('id' => 'view-link', 'class' => 'divider')); ?>
+		<span><?php echo __($header); ?></span>
+		<?php echo $this->Html->link(__('View'), array('action' => 'setupVariables', $selectedCategory, $defaultModel, $sitetype), array('class' => 'divider')); ?>
 	</h1>
 	
-	<div class="row">
-		<select id="customfieldchoices">
-		<?php foreach($CustomFieldModelLists as $k=> $arrModelval){
-			echo '<option value="'.$k.'"'.(($defaultModel == $k || $defaultModel == '')?'selected ="selected"':'').'>'.__($arrModelval['label']).'</option>';
-		} ?>
-		</select>
+	<div class="row category">
+		<?php
+		echo $this->Form->input('category', array(
+			'id' => 'category',
+			'options' => $categoryList,
+			'default' => $selectedCategory,
+			'url' => 'Setup/setupVariablesEdit/',
+			'onchange' => 'setup.changeCategory()'
+		));
+		?>
 	</div>
 	
 	<!-- if institution site or census -->
 	<?php
-	if(count($siteTypes)>0) 
-	echo $this->Form->input('institution_site_type_id',
-		array('id'=>'siteTypeid',
-			'options'=>$siteTypes,
-			'default'=>$sitetype,
-			'before'=> '<div class="row">',
-			'after'=> '</div>'
-		)
-	); 
+	if(count($siteTypes)>0) {
+		echo $this->Form->input('institution_site_type_id',	array(
+			'id' => 'siteTypeId',
+			'options' => $siteTypes,
+			'default' => $sitetype,
+			'before' => '<div class="row">',
+			'after' => '</div>',
+			'url' => sprintf('Setup/setupVariablesEdit/%s/%s/', $selectedCategory, $defaultModel),
+			'onchange' => 'custom.changeSiteType(this)'
+		));
+	}
 	?>
 	<!-- end if -->
 	
@@ -61,11 +67,9 @@ $actionLabel = Array(
 	
 	<?php if($_add) { ?>
 	<div class="row add">
-		<input type="button" value="<?php echo __('Add') . ' ' . __('Section Break'); ?>" class="btn_left" style="padding:3px 6px;" onclick="custom.addField(1)" />
-		<input type="button" value="<?php echo __('Add') . ' ' . __('Single Line Text'); ?>" class="btn_left" style="padding:3px 6px;" onclick="custom.addField(2)" />
-		<input type="button" value="<?php echo __('Add') . ' ' . __('Multi Line Text'); ?>" class="btn_left" style="padding:3px 6px;" onclick="custom.addField(5)" />
-		<input type="button" value="<?php echo __('Add') . ' ' . __('Dropdown List'); ?>" class="btn_left" style="padding:3px 6px;" onclick="custom.addField(3)" />
-		<input type="button" value="<?php echo __('Add') . ' ' . __('Checkboxes'); ?>" class="btn_left" style="padding:3px 6px;" onclick="custom.addField(4)" />
+		<?php foreach($actionLabel as $id => $name) { ?>
+		<input type="button" value="<?php echo __('Add') . ' ' . __($name); ?>" class="btn_left btn_field" onclick="custom.addField(<?php echo $id; ?>)" />
+		<?php } ?>
 	</div>
 	<?php } ?>
 	
@@ -195,7 +199,7 @@ $actionLabel = Array(
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'customFields'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'setupVariables', $selectedCategory, $defaultModel, $sitetype), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>

@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -20,22 +20,28 @@ class FinanceCategory extends AppModel {
 	public $belongsTo = array('FinanceType');
 	
 	public function getLookupVariables() {
-		$nature = ClassRegistry::init('FinanceNature');
-		$type = ClassRegistry::init('FinanceType');
-		$natureList = $nature->findList();
+		$Nature = ClassRegistry::init('FinanceNature');
+		$list = $Nature->findList();
 		$lookup = array();
 		
-		foreach($natureList as $natureId => $natureName) {
-			$lookup[$natureName] = array('model' => 'FinanceCategory', 'options' => array());
-			$typeList = $type->findList(array('conditions' => array('finance_nature_id' => $natureId)));
-			foreach($typeList as $typeId => $typeName) {
-				$conditions = array('conditions' => array('finance_type_id' => $typeId));
-				$lookup[$natureName]['options'][$typeName] = array(
-					'conditions' => array('finance_type_id' => $typeId),
-					'options' => $this->findOptions($conditions)
-				);
-			}
+		foreach($list as $id => $name) {
+			$lookup[$name] = array('model' => 'FinanceCategory', 'conditions' => array('finance_nature_id' => $id));
 		}
 		return $lookup;
+	}
+	
+	public function findOptions($options=array()) {
+		$Type = ClassRegistry::init('FinanceType');
+		$items = array();
+		
+		$typeList = $Type->findList($options);
+		foreach($typeList as $typeId => $typeName) {
+			$conditions = array('finance_type_id' => $typeId);
+			$items[$typeName] = array(
+				'conditions' => $conditions,
+				'options' => parent::findOptions(array('conditions' => $conditions))
+			);
+		}
+		return $items;
 	}
 }

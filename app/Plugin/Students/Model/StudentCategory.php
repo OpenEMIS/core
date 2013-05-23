@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -17,4 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class StudentCategory extends AppModel {
+	public function findOptions($options=array()) {
+		$conditions = array('StudentCategory.order >' => 0); // Not fetching system default categories for editing
+		if(isset($options['conditions'])) {
+			$options['conditions'] = array_merge($options['conditions'], $conditions);
+		}
+		$list = parent::findOptions($options);
+		return $list;
+	}
 }

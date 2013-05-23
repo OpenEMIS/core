@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -20,12 +20,4 @@ class CensusCustomValue extends AppModel {
 	public $belongsTo = array(
 		'CensusCustomField','InstitutionSite'
 	);
-	
-	/* can't work if recursive is set to 0
-	public $virtualFields = array(
-		'name' => 'EducationProgramme.name'
-	);
-	*/
-	
-
 }

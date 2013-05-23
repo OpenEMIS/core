@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -78,5 +78,4 @@ class Area extends AppModel {
 		$data = $this->findById($id);	
 		return $data['Area']['name'];
 	}
-
 }

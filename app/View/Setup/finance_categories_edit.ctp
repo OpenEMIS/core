@@ -12,14 +12,13 @@ echo $this->Html->script('setup_variables', false);
 <div id="setup-variables" class="content_wrapper edit finance_categories">
 	<?php
 	echo $this->Form->create('SetupVariables', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Setup', 'action' => 'setupVariablesEdit')
 	));
 	?>
 	<h1>
-		<span>Setup Variables</span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'setupVariables'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<span><?php echo __($header); ?></span>
+		<?php echo $this->Html->link(__('View'), array('action' => 'setupVariables', $selectedCategory), array('class' => 'divider')); ?>
 	</h1>
 	
 	<div class="row category">
@@ -28,6 +27,7 @@ echo $this->Html->script('setup_variables', false);
 			'id' => 'category',
 			'options' => $categoryList,
 			'default' => $selectedCategory,
+			'url' => 'Setup/setupVariables/',
 			'onchange' => 'setup.changeCategory()'
 		));
 		?>

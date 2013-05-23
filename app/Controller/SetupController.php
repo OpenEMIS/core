@@ -1,6 +1,6 @@
 <?php
 /*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-14
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
 OpenEMIS
 Open Education Management Information System
@@ -61,7 +61,7 @@ class SetupController extends AppController {
 		'StudentCustomField' => array('hasSiteType' => false, 'label' => 'Student Custom Fields'),
 		'TeacherCustomField' => array('hasSiteType' => false, 'label' => 'Teacher Custom Fields'),
 		'StaffCustomField' => array('hasSiteType' => false, 'label' => 'Staff Custom Fields'),
-		'CensusGrid' => array('hasSiteType' => false, 'label' => 'Census Custom Tables')
+		'CensusGrid' => array('hasSiteType' => true, 'label' => 'Census Custom Tables')
 	);
 	
 	public function beforeFilter() {
@@ -77,8 +77,52 @@ class SetupController extends AppController {
 	private function getLookupVariables($index=false) {
 		$lookup = array();
 		
-		$lookup[] = array('Institution' => array('items' => $this->Institution->getLookupVariables()));
-		$lookup[] = array('Institution Site' => array('items' => $this->InstitutionSite->getLookupVariables()));
+		$lookup[] = array('Institution' => array(
+			'optgroup' => true,
+			'name' => 'Static Fields',
+			'items' => $this->Institution->getLookupVariables()
+		));
+		$lookup[] = array('Institution' => array(
+			'viewMethod' => array('action' => 'customFields', 'InstitutionCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'InstitutionCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'More'
+		));
+		
+		$lookup[] = array('Institution Site' => array(
+			'optgroup' => true,
+			'name' => 'Static Fields',
+			'items' => $this->InstitutionSite->getLookupVariables()
+		));
+		$lookup[] = array('Institution Site' => array(
+			'viewMethod' => array('action' => 'customFields', 'InstitutionSiteCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'InstitutionSiteCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'More'
+		));
+		
+		// Census
+		$lookup[] = array('Institution Site Totals' => array(
+			'viewMethod' => array('action' => 'customFields', 'CensusCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'CensusCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'More'
+		));
+		$lookup[] = array('Institution Site Totals' => array(
+			'viewMethod' => array('action' => 'customTables'),
+			'view' => 'customTables',
+			'editMethod' => array('action' => 'customTablesEdit'),
+			'edit' => 'customTablesEdit',
+			'optgroup' => true,
+			'name' => 'Tables'
+		));
+		// End Census
 		
 		// Infrastructure 
 		$lookup[] = array('Infrastructure' => array(
@@ -149,11 +193,21 @@ class SetupController extends AppController {
 			'items' => $this->SchoolYear->getLookupVariables()
 		));
 		
-		$lookup[] = array('Assessment' => array(
-			'items' => array('Result Type' => array('model' => 'AssessmentResultType'))
+		// Student
+		$lookup[] = array('Student' => array(
+			'optgroup' => true,
+			'name' => 'Category',
+			'items' => $this->Student->getLookupVariables()
 		));
-		
-		$lookup[] = array('Student' => array('nameEditable' => false, 'items' => $this->Student->getLookupVariables()));
+		$lookup[] = array('Student' => array(
+			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'StudentCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'More'
+		));
+		// End Student
 		
 		// Teacher
 		$teacherOptions = array(
@@ -167,22 +221,43 @@ class SetupController extends AppController {
 		foreach($teacherOptions as $name => $model) {
 			$lookup[] = array('Teacher' => array('optgroup' => true, 'name' => $name, 'items' => $model->getLookupVariables()));
 		}
+		$lookup[] = array('Teacher' => array(
+			'viewMethod' => array('action' => 'customFields', 'TeacherCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'TeacherCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'More'
+		));
 		// End Teacher
 		
-		$lookup[] = array('Staff' => array('items' => $this->Staff->getLookupVariables()));
+		// Staff
+		$lookup[] = array('Staff' => array(
+			'optgroup' => true,
+			'name' => 'Category',
+			'items' => $this->Staff->getLookupVariables()
+		));
+		$lookup[] = array('Staff' => array(
+			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'StudentCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'More'
+		));
+		// End Staff
 		
 		$categoryList = array();
 		
 		foreach($lookup as $i => &$category) {
 			$categoryValues = current($category);
 			if(isset($categoryValues['optgroup'])) {
-				$categoryItems = $categoryValues['items'];
 				$categoryList[__(key($category))][$i] = __($categoryValues['name']);
 			} else {
 				$categoryList[$i] = __(key($category));
 			}
-			if($index==$i) {
-				foreach($category as &$type) {
+			foreach($category as &$type) {
+				if(isset($type['items']) && $index==$i) {
 					foreach($type['items'] as &$obj) {
 						if(!isset($obj['options'])) {
 							if(isset($obj['model'])) {
@@ -196,22 +271,39 @@ class SetupController extends AppController {
 			}
 		}
 		$lookup['list'] = $categoryList;
-		
 		return $lookup;
 	}
 	
 	public function setupVariables() {
-		$this->Navigation->addCrumb('Setup Variables');
+		
+		$this->Navigation->addCrumb('Field Options');
 		
 		$categoryId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : 0;
 		$lookup = $this->getLookupVariables($categoryId);
 		$category = $lookup[$categoryId];
+		$header = __(key($category));
+		$categoryValues = current($category);
+		
+		if(isset($categoryValues['optgroup']) && $categoryValues['optgroup']) {
+			$header .= ' - ' . __($categoryValues['name']);
+		}
+		if(isset($categoryValues['viewMethod'])) {
+			$params = $categoryValues['viewMethod'];
+			$action = $params['action'];
+			unset($params['action']);
+			if(count($this->params['pass']) <= 1) {
+				array_unshift($params, $categoryId);
+			} else {
+				$params = $this->params['pass'];
+			}
+			call_user_func_array(array($this, $action), $params);
+		}
 		
 		$this->set('selectedCategory', $categoryId);
 		$this->set('categoryList', $lookup['list']);
 		$this->set('category', $category);
+		$this->set('header', $header);
 		
-		$categoryValues = current($category);
 		if(isset($categoryValues['view'])) {
 			$this->render($categoryValues['view']);
 		}
@@ -219,24 +311,42 @@ class SetupController extends AppController {
 	
 	public function setupVariablesEdit() {
 		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Setup Variables');
+			$header = 'Field Options';
+			$this->Navigation->addCrumb('Edit Field Options');
 			
 			$categoryId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : 0;
 			$lookup = $this->getLookupVariables($categoryId);
 			$category = $lookup[$categoryId];
-			
-			$this->set('selectedCategory', $categoryId);
-			$this->set('categoryList', $lookup['list']);
-			$this->set('category', $category);
-			
+			$header = __(key($category));
 			$categoryValues = current($category);
-			if(isset($categoryValues['edit'])) {
-				$this->render($categoryValues['edit']);
+			
+			if(isset($categoryValues['optgroup']) && $categoryValues['optgroup']) {
+				$header .= ' - ' . __($categoryValues['name']);
 			}
+			if(isset($categoryValues['editMethod'])) {
+				$params = $categoryValues['viewMethod'];
+				$action = $params['action'];
+				unset($params['action']);
+				if(count($this->params['pass']) <= 1) {
+					array_unshift($params, $categoryId);
+				} else {
+					$params = $this->params['pass'];
+				}
+				call_user_func_array(array($this, $action), $params);
+			}
+			
 			$isNameEditable = isset($categoryValues['nameEditable']) ? $categoryValues['nameEditable'] : true;
 			$isAddAllowed = isset($categoryValues['allowAdd']) ? $categoryValues['allowAdd'] : true;
 			$this->set('isNameEditable', $isNameEditable);
 			$this->set('isAddAllowed', $isAddAllowed);
+			$this->set('selectedCategory', $categoryId);
+			$this->set('categoryList', $lookup['list']);
+			$this->set('category', $category);
+			$this->set('header', $header);
+			
+			if(isset($categoryValues['edit'])) {
+				$this->render($categoryValues['edit']);
+			}
 		} else {
 			$data = $this->data;
 			$categoryId = $data['SetupVariables']['category'];
@@ -290,26 +400,20 @@ class SetupController extends AppController {
 		return $data = $this->{$model}->find('all',$cond);
 	}
 	
-	public function customFields($model = 'InstitutionCustomField',$sitetype = '') {
-		$this->Navigation->addCrumb('Custom Fields');
-		//$ref_id = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $model);
+	public function customFields($category, $model = 'InstitutionCustomField', $sitetype = '') {
 		$ref_id = Inflector::underscore($model);
 		$ref_id = strtolower($ref_id)."_id";
 		$siteTypes = array();
-		//if(!in_array($model,$this->noSiteTypeCustFields)){
+		
 		if($this->CustomFieldModelLists[$model]['hasSiteType'])	{
-			//
 			$siteTypes = $this->InstitutionSiteType->getSiteTypesList();
 			if($sitetype == '')$sitetype = key($siteTypes); // initialize to first key if sitetype is '' and not institution custom field
-			
 		}else{
 			$sitetype = '';
-			
 		}
 		
 		$data = $this->getCustomFieldData($model,$sitetype);
 		$this->set('data',$data);
-		//pr($data);die;
 		$this->set('siteTypes',$siteTypes);
 		$this->set('sitetype',$sitetype);
 		$this->set('defaultModel',$model);
@@ -317,22 +421,20 @@ class SetupController extends AppController {
 		$this->set('CustomFieldModelLists',$this->CustomFieldModelLists);
 	}
 	
-	public function customFieldsEdit($model = 'InstitutionCustomField',$sitetype = '') {
-		$this->Navigation->addCrumb('Edit Custom Fields');
+	public function customFieldsEdit($category, $model = 'InstitutionCustomField', $sitetype = '') {
 		if($this->request->is('post')) {
-			
-			$this->{$model}->saveAll($this->request->data[$model]);
+			$this->{$model}->saveMany($this->request->data[$model]);
 			$option = $model.'Option';
 			if(isset($this->request->data[$option])){
-				$this->{$option}->saveAll($this->request->data[$option]);
+				$this->{$option}->saveMany($this->request->data[$option]);
 			}
-			$redirect = array('controller'=>'Setup','action'=>'customFields',$model);
-			if(isset($this->request->data['CustomFields']['institution_site_type_id'])){
-				$redirect = array_merge($redirect,array($this->request->data['CustomFields']['institution_site_type_id']));
+			$redirect = array('controller'=>'Setup', 'action'=>'setupVariables', $category, $model);
+			if(isset($this->request->data['CustomFields']['institution_site_type_id'])) {
+				$redirect[] = $this->request->data['CustomFields']['institution_site_type_id'];
+				//$redirect = array_merge($redirect, array($this->request->data['CustomFields']['institution_site_type_id']));
 			}
 			$this->redirect($redirect);//customFields/InstitutionSiteCustomField/8
 		}
-		//$ref_id = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $model);
 		$ref_id = Inflector::underscore($model);
 		$ref_id = strtolower($ref_id)."_id";
 		
@@ -343,11 +445,9 @@ class SetupController extends AppController {
 			
 		}else{
 			$sitetype = '';
-			
 		}
 		$data = $this->getCustomFieldData($model,$sitetype);
 		$this->set('data',$data);
-		//pr($data);die;
 		$this->set('siteTypes',$siteTypes);
 		$this->set('sitetype',$sitetype);
 		$this->set('defaultModel',$model);
@@ -367,6 +467,9 @@ class SetupController extends AppController {
 			'order' => $order,
 			'type' => $type
 		);
+		if($this->CustomFieldModelLists[$model]['hasSiteType']) {
+			$arrFields['institution_site_type_id'] = $siteType;
+		}
 		$lastInsertedId = $this->{$model}->save($arrFields);
 		$customfieldid = $lastInsertedId[$model]['id'];
 		$this->set('params', array($type, $model, $order, $field, $siteType, $customfieldid));
@@ -400,70 +503,61 @@ class SetupController extends AppController {
 		$this->set('params', array($model, $order, $field, $fieldId));
 	}
 	
-	public function customTables($sitetype = ''){
-		$this->Navigation->addCrumb('Custom Table');
-                
+	public function customTables($category, $siteType = '') {
 		$siteTypes = $this->InstitutionSiteType->getSiteTypesList();
 
-        if(empty($sitetype) and is_null($this->Session->read("InstitutionSiteType.id"))) {
-            $this->Session->delete("InstitutionSiteType.id");
-            $sitetype = key($siteTypes);
-        }elseif(!empty($sitetype) and $sitetype != $this->Session->read("InstitutionSiteType.id")) {
-            $this->Session->write('InstitutionSiteType.id', $sitetype);
-        }else{
-            $sitetype = $this->Session->read("InstitutionSiteType.id");
+        if(empty($siteType)) {
+            $siteType = key($siteTypes);
         }
-                
-		$this->CensusGrid->unbindModel(
-			array('belongsTo' => array('CensusGridXCategory','CensusGridYCategory'))
-		);
 		
-		$data = $this->CensusGrid->find('all',array('recursive'=>0,'conditions'=>array('institution_site_type_id'=>$sitetype), 'order' => array('CensusGrid.order')));
+		$this->CensusGrid->unbindModel(array('belongsTo' => array('CensusGridXCategory','CensusGridYCategory')));
+		$data = $this->CensusGrid->find('all', array(
+			'recursive' => 0,
+			'conditions' => array('institution_site_type_id' => $siteType),
+			'order' => array('CensusGrid.order')
+		));
 
 		$this->set('siteTypes', $siteTypes);
-		$this->set('siteType', $this->Session->read("InstitutionSiteType.id"));
+		$this->set('siteType', $siteType);
 		$this->set('data', $data);
-		$this->set('CustomFieldModelLists',$this->CustomFieldModelLists);
+		$this->set('CustomFieldModelLists', $this->CustomFieldModelLists);
 	}
 	
-	public function customTablesEdit($sitetype = '') {
+	public function customTablesEdit($category, $siteType = '') {
         $this->Navigation->addCrumb('Edit Custom Table');
 
         $siteTypes = $this->InstitutionSiteType->getSiteTypesList();
-        if(empty($sitetype)  and is_null($this->Session->read("InstitutionSiteType.id"))) {
-            $this->Session->delete("InstitutionSiteType.id");
+        if(empty($sitetype)) {
             $sitetype = key($siteTypes);
-        }elseif (!empty($sitetype) and $sitetype != $this->Session->read("InstitutionSiteType.id")) {
-            $this->Session->write('InstitutionSiteType.id', $sitetype);
-        }else {
-            $sitetype = $this->Session->read("InstitutionSiteType.id");
         }
-
+		
         if($this->request->is('post')) {
             $this->autoRender = false;
             foreach($this->data as $model => $arrContent){
                 $this->{$model}->saveAll($arrContent);
             }
-            $this->redirect(array('action'=>'CustomTables',$sitetype));
+            $this->redirect(array('action'=>'setupVariables', $category, $siteType));
         }
 
-        $this->CensusGrid->unbindModel(
-            array('belongsTo' => array('CensusGridXCategory','CensusGridYCategory'))
-        );
+        $this->CensusGrid->unbindModel(array('belongsTo' => array('CensusGridXCategory','CensusGridYCategory')));
 
-        $data = $this->CensusGrid->find('all',array('recursive'=>0,'conditions'=>array('institution_site_type_id'=>$sitetype), 'order' => array('CensusGrid.order')));
+		$data = $this->CensusGrid->find('all', array(
+			'recursive' => 0,
+			'conditions' => array('institution_site_type_id' => $siteType),
+			'order' => array('CensusGrid.order')
+		));
 
         $this->set('siteTypes', $siteTypes);
-        $this->set('siteType', $sitetype);
+        $this->set('siteType', $siteType);
         $this->set('data', $data);
         $this->set('CustomFieldModelLists',$this->CustomFieldModelLists);
 	}
-	public function customTablesEditDetail($id = '') {
-        if(empty($id) && is_null($this->Session->read('InstitutionSiteType.id'))){
-            $this->redirect(array('controller' => 'Setup', 'action' => 'CustomTables'));
-        }
-
-		$this->Navigation->addCrumb('Edit Custom Table Detail');
+	
+	public function customTablesEditDetail($category, $siteType, $id = '') {
+		if(empty($category) || empty($siteType)) {
+			$this->redirect(array('action' => 'setupVariables'));
+		}
+		$this->Navigation->addCrumb('Edit Field Options');
 
 		$arr = array('X','Y');
 		if($this->request->is('post')) {
@@ -476,7 +570,6 @@ class SetupController extends AppController {
 					foreach($this->request->data['CensusGrid'.$val.'Category'] as $k => &$arrCVal){
 						$arrCVal['census_grid_id'] = $lastInsertId;
 					}
-					//pr($this->request->data['CensusGrid'.$val.'Category']);die;
 					$model = 'CensusGrid'.$val.'Category';
 					$this->{$model}->saveAll($this->request->data['CensusGrid'.$val.'Category']);
 				}
@@ -487,7 +580,9 @@ class SetupController extends AppController {
 					$this->{$model}->saveAll($arrContent);
 				}
 			}
-			$this->redirect(array('action'=>'CustomTables',$this->data['CensusGrid']['institution_site_type_id']));
+			//$this->redirect(array('action'=>'CustomTables',$this->data['CensusGrid']['institution_site_type_id']));
+			$this->Utility->alert($this->Utility->getMessage('CONFIG_SAVED'));
+			$this->redirect(array('action'=>'customTablesEditDetail', $category, $siteType, $id));
 		}
 
 		$siteTypes = $this->InstitutionSiteType->getSiteTypesList();
@@ -513,7 +608,8 @@ class SetupController extends AppController {
 		$this->set('id',$id);
 		$this->set('data',$data);
 		$this->set('siteTypes',$siteTypes);
-		$this->set('sitetype',($data['CensusGrid']['institution_site_type_id'] > 0)? $data['CensusGrid']['institution_site_type_id'] : $this->Session->read('InstitutionSiteType.id') );
+		$this->set('siteType', $siteType);
 		$this->set('CustomFieldModelLists',$this->CustomFieldModelLists);
+		$this->set('selectedCategory', $category);
 	}
 } 

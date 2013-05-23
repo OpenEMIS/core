@@ -8,7 +8,7 @@ $obj = @$data['Teacher'];
 
 <div id="student" class="content_wrapper edit add">
 	<h1>
-		<span><?php echo __('Teacher Details'); ?></span>
+		<span><?php echo __('Teacher Information'); ?></span>
 		<?php
 		echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
 		echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
