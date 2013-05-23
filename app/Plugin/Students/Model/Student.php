@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class Student extends StudentsAppModel {
+    private $debug = false;
 	public $actsAs = array(
 		'TrackHistory' => array('historyTable' => 'Students.StudentHistory'),
 		'CascadeDelete' => array(
@@ -143,8 +144,6 @@ class Student extends StudentsAppModel {
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		//public $hasMany = array('InstitutionSiteStudents');
-		//pr($conditions);
 		$securityCond = $conditions['Security'];
 		
 		$this->bindModel(array('hasMany' => array('InstitutionSiteStudent')));
@@ -158,7 +157,6 @@ class Student extends StudentsAppModel {
 				'StudentHistory.last_name LIKE' =>"%".$conditions['SearchKey']."%"
 			));
 			
-			//$conditions = array_merge($conditions,array('AND'=>$securityCond));
 			$conditions = array('AND'=>array($conditions,$securityCond));
 			
 			$data = $this->find('all',array('fields' => array('Student.*','StudentHistory.*'),'joins' => array(
@@ -205,44 +203,49 @@ class Student extends StudentsAppModel {
 														,'conditions'=>$conditions
                                                         ,'group' => 'Student.id'));
 	   }else{
-		   
-		   //$conditions = array_merge($conditions,array('AND'=>$securityCond));
-		    $data = $this->find('all',array( 'limit' => $limit,
-												'offset' => (($page-1)*$limit),
-												'order'=>$order,
-												'joins' => array(
-																array(
-																	'table' => 'institution_site_students',
-																	'alias' => 'InstitutionSiteStudent',
-																	'type' => 'LEFT',
-																	'conditions' => array(
-																		'InstitutionSiteStudent.student_id = Student.id'
-																	)
-																)
-															)
-												,'conditions'=>$securityCond
-										)
-								);
-			$this->sqlPaginateCount = $this->find('count',array('joins' => 
-																array(
-																	array(
-																		'table' => 'institution_site_students',
-																		'alias' => 'InstitutionSiteStudent',
-																		'type' => 'LEFT',
-																		'conditions' => array(
-																			'InstitutionSiteStudent.student_id = Student.id'
-																		)
-																	)
-																)
-															,'conditions'=>$securityCond)
-												);
-		   
+			$ProgrammeStudent = ClassRegistry::init('InstitutionSiteStudent');
+			$db = $ProgrammeStudent->getDataSource();
+			$subQuery = $db->buildStatement(
+				array(
+					'fields'     => array('"InstitutionSiteStudent"."student_id"'),
+					'table'      => $db->fullTableName($ProgrammeStudent),
+					'alias'      => 'InstitutionSiteStudent',
+					'limit'      => null,
+					'offset'     => null,
+					'joins'      => array(),
+					'conditions' => $securityCond,
+					'order'      => null,
+					'group'      => null
+				),
+				$ProgrammeStudent
+			);
+			$subQuery = ' "Student"."id"  IN (' . $subQuery . ') ';
+			$subQueryExpression = $db->expression($subQuery);
+			$condi[] = $subQueryExpression;
+			$offset = (($page-1)*$limit);
+			$this->logtimer('start paginate');
+			$data =  $this->find('all', compact('condi','limit','order','offset'));
+			// sub query is faster than left join for this count case:
+			$this->logtimer('end paginate');
+			$this->logtimer('start paginate count');
+			$count =  $this->find('count', compact('condi'));
+			//$count =  1879836 ;
+			$this->logtimer('end paginate count');
+			if(isset($count)){
+				$this->sqlPaginateCount = $count;
+			}
 	   }
 	   
 	   return $data;
 	} 
+        
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
 		return $this->sqlPaginateCount;
 	}
+        
+	private function logtimer($str=''){
+		   if($this->debug == true)
+		   echo $str." ==> ".date("H:i:s")."<br>\n";
+   }
 }
 ?>

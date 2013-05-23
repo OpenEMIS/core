@@ -463,7 +463,7 @@ class SetupController extends AppController {
 		$field = $this->params->query['field'];
 		$siteType = $this->params->query['siteType'];
 		$arrFields = array(
-			'name' => __('Field Label'),
+			'name' => __('Field Label'), 
 			'order' => $order,
 			'type' => $type
 		);
