@@ -119,12 +119,8 @@ class InstitutionSitesController extends AppController {
     }
 	
 	public function view() {
-		
-		
 		$this->Navigation->addCrumb('Details');
-		
 		$levels = $this->AreaLevel->find('list',array('recursive'=>0));
-                
 		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
 		$areaLevel = $this->fetchtoParent($data['InstitutionSite']['area_id']);
 		$areaLevel = array_reverse($areaLevel);
@@ -134,6 +130,18 @@ class InstitutionSitesController extends AppController {
 		$this->set('levels',$levels);
 	}
 	
+	public  function viewMap(){
+		$this->layout = false;
+		$string = @file_get_contents('http://www.google.com');
+		if ($string){
+			$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
+			$this->set('data', $data);
+		}else{
+			$this->autoRender = false;
+		}
+	}
+
+
 	public function details() {
 		$this->autoRender = false;
 		
