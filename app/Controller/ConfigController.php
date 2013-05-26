@@ -416,5 +416,16 @@ class ConfigController extends AppController {
 		return  $groupByType;
 
 	}
+	public function getAllowedChar() {
+		$this->layout = 'ajax';
+		$this->autoRender = false;
+		echo $this->ConfigItem->getValue('special_characters');
+	}
+	public function getAllRules() {
+		$this->layout = 'ajax';
+		$this->autoRender = false;
+		$data = $this->ConfigItem->getAllCustomValidation();
+		echo json_encode($data);
+	}
 
 }
