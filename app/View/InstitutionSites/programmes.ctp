@@ -8,7 +8,7 @@ echo $this->Html->script('institution_site_programmes', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="programmes" class="content_wrapper">
-    <h1><?php echo __('Programmes'); ?></h1>
+    <h1><?php echo __('List of Programmes'); ?></h1>
     <?php echo $this->element('alert'); ?>
 	
 	<?php 
