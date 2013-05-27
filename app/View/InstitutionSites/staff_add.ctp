@@ -63,7 +63,7 @@ echo $this->Html->script('institution_site_staff', false);
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Add'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'teachers'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'staff'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>

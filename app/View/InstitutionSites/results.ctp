@@ -58,47 +58,22 @@ echo $this->Html->script('institution_site_results', false);
 		<legend><?php echo $obj['name']; ?></legend>
 		
 		<?php if(isset($obj['assessment'][$type['OFFICIAL']])) { ?>
-		<fieldset class="section_break">
-			<legend><?php echo __('Official'); ?></legend>
-			<div class="table allow_hover" action="InstitutionSites/resultsDetails/">
-				<div class="table_head">
-					<div class="table_cell cell_code"><?php echo __('Code'); ?></div>
-					<div class="table_cell cell_name"><?php echo __('Name'); ?></div>
-					<div class="table_cell"><?php echo __('Description'); ?></div>
-				</div>
-				<div class="table_body">
-					<?php foreach($obj['assessment'][$type['OFFICIAL']] as $item) { ?>
-					<div class="table_row <?php echo $item['visible'] == 0 ? 'inactive' : ''; ?>" row-id="<?php echo $item['id']; ?>">
-						<div class="table_cell"><?php echo $item['code']; ?></div>
-						<div class="table_cell"><?php echo $item['name']; ?></div>
-						<div class="table_cell"><?php echo $item['description']; ?></div>
-					</div>
-					<?php } ?>
-				</div>
+		<div class="table allow_hover" action="InstitutionSites/resultsDetails/">
+			<div class="table_head">
+				<div class="table_cell cell_code"><?php echo __('Code'); ?></div>
+				<div class="table_cell cell_name"><?php echo __('Name'); ?></div>
+				<div class="table_cell"><?php echo __('Description'); ?></div>
 			</div>
-		</fieldset>
-		<?php } ?>
-		
-		<?php if(isset($obj['assessment'][$type['NON_OFFICIAL']])) { ?>
-		<fieldset class="section_break">
-			<legend><?php echo __('Non-Official'); ?></legend>
-			<div class="table allow_hover" action="InstitutionSites/resultsDetails/">
-				<div class="table_head">
-					<div class="table_cell cell_code"><?php echo __('Code'); ?></div>
-					<div class="table_cell cell_name"><?php echo __('Name'); ?></div>
-					<div class="table_cell"><?php echo __('Description'); ?></div>
+			<div class="table_body">
+				<?php foreach($obj['assessment'][$type['OFFICIAL']] as $item) { ?>
+				<div class="table_row <?php echo $item['visible'] == 0 ? 'inactive' : ''; ?>" row-id="<?php echo $item['id']; ?>">
+					<div class="table_cell"><?php echo $item['code']; ?></div>
+					<div class="table_cell"><?php echo $item['name']; ?></div>
+					<div class="table_cell"><?php echo $item['description']; ?></div>
 				</div>
-				<div class="table_body">
-					<?php foreach($obj['assessment'][$type['NON_OFFICIAL']] as $item) { ?>
-					<div class="table_row <?php echo $item['visible'] == 0 ? 'inactive' : ''; ?>" row-id="<?php echo $item['id']; ?>">
-						<div class="table_cell"><?php echo $item['code']; ?></div>
-						<div class="table_cell"><?php echo $item['name']; ?></div>
-						<div class="table_cell"><?php echo $item['description']; ?></div>
-					</div>
-					<?php } ?>
-				</div>
+				<?php } ?>
 			</div>
-		</fieldset>
+		</div>
 		<?php } ?>
 	</fieldset>
 	<?php } ?>

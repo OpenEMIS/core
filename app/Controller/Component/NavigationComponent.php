@@ -170,8 +170,8 @@ class NavigationComponent extends Component {
 					$this->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
 					$this->createLink('Attachments', 'attachments'),
 					$this->createLink('Additional Info', 'additional'),
-					$this->createLink('Bank Accounts', 'bankAccounts'),
-					$this->createLink('Assessments', 'assessmentsList', array('pattern' => 'assessments'))
+					$this->createLink('Bank Accounts', 'bankAccounts')//,
+					//$this->createLink('Assessments', 'assessmentsList', array('pattern' => 'assessments'))
 				),
 				'SITE DETAILS' => array(
 					'_controller' => 'InstitutionSites',
