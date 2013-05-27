@@ -629,7 +629,7 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function programmes() {
-		$this->Navigation->addCrumb('Programmes');
+		$this->Navigation->addCrumb('List of Programmes');
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
@@ -681,8 +681,7 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function programmesView() {
-		$this->Navigation->addCrumb('Programmes', array('controller' => 'InstitutionSites', 'action' => 'programmes'));
-		$this->Navigation->addCrumb('Details');
+		$this->Navigation->addCrumb('Programme Details');
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
@@ -709,8 +708,7 @@ class InstitutionSitesController extends AppController {
 	
 	public function programmesEdit() {
 		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Programmes', array('controller' => 'InstitutionSites', 'action' => 'programmes'));
-			$this->Navigation->addCrumb('Edit Details');
+			$this->Navigation->addCrumb('Edit Programme Details');
 			
 			$yearOptions = $this->SchoolYear->getYearList();
 			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
@@ -811,7 +809,7 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function classes() {
-		$this->Navigation->addCrumb('Classes');
+		$this->Navigation->addCrumb('List of Classes');
 		$yearOptions = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
 		$data = $this->InstitutionSiteClass->getListOfClasses($selectedYear, $this->institutionSiteId);
@@ -1173,30 +1171,23 @@ class InstitutionSitesController extends AppController {
 			$studentId = $this->params['pass'][0];
 			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
 			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
-			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $data['Student']['id']));
-			$this->Navigation->addCrumb('Details');
+			$this->Navigation->addCrumb($name);
+			
+			$classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId, $this->institutionSiteId);
+			$results = $this->AssessmentItemResult->getResultsByStudent($studentId, $this->institutionSiteId);
+			$results = $this->AssessmentItemResult->groupItemResults($results);
+			$_view_details = $this->AccessControl->check('Students', 'view');
+			$this->set('_view_details', $_view_details);
 			$this->set('data', $data);
-		} else {
-			$this->redirect(array('action' => 'students'));
-		}
-	}
-	
-	public function studentsAssessmentView() {
-		if(isset($this->params['pass'][0])) {
-			$studentId = $this->params['pass'][0];
-			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
-			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $data['Student']['id']));
-			$this->Navigation->addCrumb('Assessment');
-			
-			
+			$this->set('classes', $classes);
+			$this->set('results', $results);
 		} else {
 			$this->redirect(array('action' => 'students'));
 		}
 	}
 	
 	public function teachers() {
-		$this->Navigation->addCrumb('Teachers');
+		$this->Navigation->addCrumb('List of Teachers');
 		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
 		$model = 'Teacher';
 		$orderBy = $model . '.first_name';
@@ -1267,7 +1258,6 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function teachersAdd() {
-		$this->Navigation->addCrumb('Teachers', array('controller' => 'InstitutionSites', 'action' => 'teachers'));
 		$this->Navigation->addCrumb('Add Teacher');
 		$yearOptions = $this->SchoolYear->getYearList('start_year');
 		$categoryOptions = $this->TeacherCategory->findList(true);
@@ -1286,15 +1276,16 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function teachersView() {
-		$this->Navigation->addCrumb('Teachers', array('controller' => 'InstitutionSites', 'action' => 'teachers'));
-		$this->Navigation->addCrumb('Teacher Details');
-		
 		if(isset($this->params['pass'][0])) {
 			$teacherId = $this->params['pass'][0];
 			$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+			$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
 			$positions = $this->InstitutionSiteTeacher->getPositions($teacherId, $this->institutionSiteId);
+			$this->Navigation->addCrumb($name);
 			if(!empty($positions)) {
 				$classes = $this->InstitutionSiteClassTeacher->getClasses($teacherId, $this->institutionSiteId);
+				$_view_details = $this->AccessControl->check('Teachers', 'view');
+				$this->set('_view_details', $_view_details);
 				$this->set('data', $data);
 				$this->set('positions', $positions);
 				$this->set('classes', $classes);
@@ -1307,17 +1298,20 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function teachersEdit() {
-		$this->Navigation->addCrumb('Teachers', array('controller' => 'InstitutionSites', 'action' => 'teachers'));
-		$this->Navigation->addCrumb('Edit Teacher Details');
-		
 		if(isset($this->params['pass'][0])) {
 			$teacherId = $this->params['pass'][0];
 			
 			if($this->request->is('get')) {
 				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+				$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
 				$positions = $this->InstitutionSiteTeacher->getPositions($teacherId, $this->institutionSiteId);
+				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $data['Teacher']['id']));
+				$this->Navigation->addCrumb('Edit');
+				
 				if(!empty($positions)) {
 					$classes = $this->InstitutionSiteClassTeacher->getClasses($teacherId, $this->institutionSiteId);
+					$_view_details = $this->AccessControl->check('Teachers', 'view');
+					$this->set('_view_details', $_view_details);
 					$this->set('data', $data);
 					$this->set('positions', $positions);
 					$this->set('classes', $classes);
@@ -1349,7 +1343,7 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function staff() {
-		$this->Navigation->addCrumb('Staff');
+		$this->Navigation->addCrumb('List of Staff');
 		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
 		$model = 'Staff';
 		$orderBy = $model . '.first_name';
@@ -1420,7 +1414,6 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function staffAdd() {
-		$this->Navigation->addCrumb('Staff', array('controller' => 'InstitutionSites', 'action' => 'staff'));
 		$this->Navigation->addCrumb('Add Staff');
 		$yearOptions = $this->SchoolYear->getYearList('start_year');
 		$categoryOptions = $this->StaffCategory->findList(true);
@@ -1438,14 +1431,15 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function staffView() {
-		$this->Navigation->addCrumb('Staff', array('controller' => 'InstitutionSites', 'action' => 'staff'));
-		$this->Navigation->addCrumb('Staff Details');
-		
 		if(isset($this->params['pass'][0])) {
 			$staffId = $this->params['pass'][0];
 			$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+			$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
 			$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
+			$this->Navigation->addCrumb($name);
 			if(!empty($positions)) {
+				$_view_details = $this->AccessControl->check('Staff', 'view');
+				$this->set('_view_details', $_view_details);
 				$this->set('data', $data);
 				$this->set('positions', $positions);
 			} else {
@@ -1457,16 +1451,18 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function staffEdit() {
-		$this->Navigation->addCrumb('Staff', array('controller' => 'InstitutionSites', 'action' => 'staff'));
-		$this->Navigation->addCrumb('Edit Staff Details');
-		
 		if(isset($this->params['pass'][0])) {
 			$staffId = $this->params['pass'][0];
 			
 			if($this->request->is('get')) {
 				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+				$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
 				$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
+				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $data['Staff']['id']));
+				$this->Navigation->addCrumb('Edit');
 				if(!empty($positions)) {
+					$_view_details = $this->AccessControl->check('Staff', 'view');
+					$this->set('_view_details', $_view_details);
 					$this->set('data', $data);
 					$this->set('positions', $positions);
 				} else {
@@ -1496,6 +1492,7 @@ class InstitutionSitesController extends AppController {
 		$this->set('categoryOptions', $categoryOptions);
 	}
 	
+	/* Currently disabled for now
 	public function assessmentsList() {
 		$this->Navigation->addCrumb('Assessments');
 		
@@ -1705,6 +1702,7 @@ class InstitutionSitesController extends AppController {
 			$this->redirect(array('action' => 'assessmentsList'));
 		}
 	}
+	*/
 	
 	public function results() {
 		$this->Navigation->addCrumb('Results');
