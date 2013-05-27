@@ -7,7 +7,7 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 
 <div id="staff" class="content_wrapper">	
 	<h1>
-		<span><?php echo __('Staff Details'); ?></span>
+		<span><?php echo __('Staff Information'); ?></span>
 		<?php 
 		$obj = $data['Staff'];
 		if($_edit) {
@@ -25,7 +25,15 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 		?>
 		<div class="row">
 			<div class="label"><?php echo __('Identification No.'); ?></div>
-			<div class="value"><?php echo $obj['identification_no']; ?></div>
+			<div class="value">
+				<?php
+				if($_view_details) {
+					echo $this->Html->link($obj['identification_no'], array('controller' => 'Staff', 'action' => 'viewStaff', $obj['id']), array('class' => 'link_back'));
+				} else {
+					echo $obj['identification_no'];
+				}
+				?>
+			</div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
@@ -43,30 +51,6 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 		<div class="row">
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
-		</div>
-	</fieldset>
-
-	<fieldset class="section_break">
-		<legend><?php echo __('Address'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Address'); ?></div>
-			<div class="value address"><?php echo nl2br($obj['address']); ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Postal Code'); ?></div>
-			<div class="value"><?php echo $obj['postal_code']; ?></div>
-		</div>
-	</fieldset>
-	
-	<fieldset class="section_break">
-		<legend><?php echo __('Contact'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $obj['telephone']; ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Email'); ?></div>
-			<div class="value"><?php echo $obj['email']; ?></div>
 		</div>
 	</fieldset>
 	

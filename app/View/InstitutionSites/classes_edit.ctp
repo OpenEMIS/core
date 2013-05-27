@@ -9,7 +9,7 @@ echo $this->Html->script('institution_site_classes', false);
 
 <div id="classes" class="content_wrapper edit">
     <h1>
-        <span><?php echo $className; ?></span>
+        <span><?php echo __('Edit') . ' ' . $className; ?></span>
 		<?php
 		echo $this->Html->link(__('View'), array('action' => 'classesView', $classId), array('class' => 'divider'));
 		?>
