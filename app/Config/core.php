@@ -276,3 +276,10 @@ Cache::config('_cake_model_', array(
 	'serialize' => ($engine === 'File'),
 	'duration' => $duration
 ));
+
+/**
+ * 
+ */
+Configure::write('xml.indicators.query_path', APP.'Config'.DS);
+Configure::write('xml.indicators.filename', 'indicatorQueries.xml');
+
