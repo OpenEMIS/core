@@ -1,7 +1,7 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
-// echo $this->Html->script('institution_site', false);
+echo $this->Html->script('app.date', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
