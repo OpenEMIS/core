@@ -16,6 +16,8 @@ have received a copy of the GNU General Public License along with this program. 
  
 class NavigationComponent extends Component {
 	private $controller;
+	public $topNavigations;
+	public $leftNavigations;
 	public $navigations;
 	public $breadcrumbs;
 	public $params;
@@ -27,6 +29,7 @@ class NavigationComponent extends Component {
 	public function initialize(Controller $controller) {
 		$this->controller =& $controller;
 		$this->navigations = $this->getLinks();
+		$this->topNavigations = array();
 	}
 	
 	//called after Controller::beforeFilter()
@@ -37,7 +40,8 @@ class NavigationComponent extends Component {
 		if(!$this->skip) {
 			$this->apply($controller->params['controller'], $this->controller->action);
 		}
-		$this->controller->set('_navigations', $this->navigations);
+		$this->controller->set('_topNavigations', $this->topNavigations);
+		$this->controller->set('_leftNavigations', $this->leftNavigations);
 		$this->controller->set('_params', $this->params);
 		$this->controller->set('_breadcrumbs', $this->breadcrumbs);
 	}
@@ -57,66 +61,57 @@ class NavigationComponent extends Component {
 		$this->breadcrumbs[] = $item;
 	}
 	
-	public function createLink($title, $action, $params=array()) {
+	public function createLink($title, $controller, $action, $pattern='', $params=array()) {
 		$attr = array();
 		$attr['title'] = $title;
 		$attr['display'] = false;
 		$attr['selected'] = false;
+		$attr['controller'] = $controller;
 		$attr['action'] = $action;
+		$attr['pattern'] = strlen($pattern)==0 ? $action : $pattern;
 		return array_merge($attr, $params);
 	}
 	
-	public function apply($controller, $action, $actionFound=false) {
-		foreach($this->navigations as $module => &$obj) { // looping through modules
-			$moduleDisplay = false;
-			$moduleSelected = false;
-			foreach($obj['links'] as &$links) { // looping through modules links
-				$linkListDisplay = false;
-				foreach($links as $title => &$linkList) { // looping through the list of links
-					if($title === '_display') continue;
-					$linkFound = false;
-					foreach($linkList as $key => &$link) { // looping through each link
-						if($key === '_controller' || $key === '_display') continue;
-						$_controller = isset($linkList['_controller']) ? $linkList['_controller'] : $link['controller'];
-						$pattern = isset($link['pattern']) ? $link['pattern'] : $link['action'];
+	public function apply($controller, $action) {
+		$navigations = array();
+		$found = false;
+		foreach($this->navigations as $module => $obj) {
+			foreach($obj['links'] as $links) {
+				foreach($links as $title => &$linkList) {
+					if(!is_array($linkList)) continue;
+					foreach($linkList as $link => &$attr) {
+						if(!is_array($attr)) continue;
+						$_controller = $attr['controller'];
+						$pattern = $attr['pattern'];
 						
 						// Checking access control
-						if($this->AccessControl->check($_controller, $link['action']) || $_controller === 'Home') {
-							$link['display'] = true;
-							$moduleDisplay = true;
-							$linkList['_display'] = true;
+						if($this->AccessControl->check($_controller, $attr['action']) || $_controller === 'Home') {
+							$linkList['display'] = true;
+							$attr['display'] = true;
+							if(!array_key_exists($module, $this->topNavigations)) {
+								$this->topNavigations[$module] = array(
+									'controller' => $obj['controller'], 
+									'action' => isset($obj['action']) ? $obj['action'] : '',
+									'selected' => false
+								);
+							}
 						}
 						// End access control
 						
 						// To check which link is selected
-						
-						if(!$linkFound && strcasecmp($_controller, $controller)==0 && preg_match(sprintf('/^%s/i', $pattern), $action)) {
-							$linkFound = true;
-							$link['selected'] = true;
-							$linkListDisplay = true;
-							$moduleSelected = true;
-							$actionFound = true;
-							if(!$moduleDisplay) {
-								$moduleDisplay = true;
-							}
-							$linkList['_display'] = true;
+						if(!$found && strcasecmp($_controller, $controller)==0 && preg_match(sprintf('/^%s/i', $pattern), $action)) {
+							$found = true;
+							$attr['selected'] = true;
+							$this->topNavigations[$module]['selected'] = true;
 						}
 					}
-					if(!isset($linkList['_display'])) {
-						$linkList['_display'] = false;
+				}
+				if($found) {
+					if(empty($this->leftNavigations)) {
+						$this->leftNavigations = $links;
 					}
 				}
-				$links['_display'] = $linkListDisplay;
 			}
-			$obj['display'] = $moduleDisplay;
-			$obj['selected'] = $moduleSelected;
-		}
-		
-		if(!$actionFound) {
-			$parentId = $this->AccessControl->check($controller, $action);
-			$parent = $this->AccessControl->getFunctionParent($parentId['parent_id']);
-			$parentAction = $parent['_view'];
-			$this->apply($controller, $parentAction, true);
 		}
 	}
 	
@@ -136,7 +131,7 @@ class NavigationComponent extends Component {
 		}
 		// End initialise
 		
-		$nav['Settings'] = array('controller' => 'Setup', 'links' => $this->getSettingsLinks());
+		$nav['Settings'] = array('controller' => 'Areas', 'links' => $this->getSettingsLinks());
 		return $nav;
 	}
 	
@@ -144,17 +139,15 @@ class NavigationComponent extends Component {
 		$links = array(
 			array(
 				array(
-					'_controller' => 'Home',
-					$this->createLink('My Details', 'details'),
-					$this->createLink('Change Password', 'password')
+					$this->createLink('My Details', 'Home', 'details'),
+					$this->createLink('Change Password', 'Home', 'password')
 				)
 			),
 			array(
 				array(
-					'_controller' => 'Home',
-					$this->createLink('Support', 'support'),
-					$this->createLink('System Information', 'systemInfo'),
-					$this->createLink('License', 'license')
+					$this->createLink('Support', 'Home', 'support'),
+					$this->createLink('System Information', 'Home', 'systemInfo'),
+					$this->createLink('License', 'Home', 'license')
 				)
 			)
 		);
@@ -165,88 +158,78 @@ class NavigationComponent extends Component {
 		$links = array(
 			array(
 				array(
-					'_controller' => 'Institutions',
-					$this->createLink('List of Institutions', 'index', array('pattern' => 'index$')),
-					$this->createLink('Add new Institution', 'add', array('pattern' => 'add$'))
+					$this->createLink('List of Institutions', 'Institutions', 'index', 'index$'),
+					$this->createLink('Add new Institution', 'Institutions', 'add', 'add$')
 				)
 			),
 			array(
 				'INFORMATION' => array(
-					'_controller' => 'Institutions',
-					$this->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
-					$this->createLink('Attachments', 'attachments'),
-					$this->createLink('More', 'additional')
+					$this->createLink('General', 'Institutions', 'view', 'view$|^edit$|history$'),
+					$this->createLink('Attachments', 'Institutions', 'attachments'),
+					$this->createLink('More', 'Institutions', 'additional')
 				),
-				'INSTITUTION SITES' => array(
-					$this->createLink('List of Institution Sites', 'listSites', array('pattern' => 'listSites$', 'controller' => 'Institutions')),
-					$this->createLink('Add New Institution Site', 'add', array('pattern' => 'add$', 'controller' => 'InstitutionSites'))
+				'INSTITUTION SITE' => array(
+					$this->createLink('List of Institution Sites', 'Institutions', 'listSites', 'listSites$'),
+					$this->createLink('Add new Institution Site', 'Institutions', 'add', 'add$')
 				)
 			),
 			array(
 				'INFORMATION' => array(
-					'_controller' => 'InstitutionSites',
-					$this->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
-					$this->createLink('Attachments', 'attachments'),
-					$this->createLink('Bank Accounts', 'bankAccounts'),
-					$this->createLink('More', 'additional')
+					$this->createLink('General', 'InstitutionSites', 'view', 'view$|^edit$|history$'),
+					$this->createLink('Attachments', 'InstitutionSites', 'attachments'),
+					$this->createLink('Bank Accounts', 'InstitutionSites', 'bankAccounts'),
+					$this->createLink('More', 'InstitutionSites', 'additional')
 				),
 				'DETAILS' => array(
-					'_controller' => 'InstitutionSites',
-					$this->createLink('Programmes', 'programmes'),
-					$this->createLink('Classes', 'classes'),
-					$this->createLink('Students', 'students'),
-					$this->createLink('Teachers', 'teachers'),
-					$this->createLink('Staff', 'staff'),
-					$this->createLink('Results', 'results')
+					$this->createLink('Programmes', 'InstitutionSites', 'programmes'),
+					$this->createLink('Classes', 'InstitutionSites', 'classes'),
+					$this->createLink('Students', 'InstitutionSites', 'students'),
+					$this->createLink('Teachers', 'InstitutionSites', 'teachers'),
+					$this->createLink('Staff', 'InstitutionSites', 'staff')
 				),
 				'TOTALS' => array(
-					'_controller' => 'Census',
-					$this->createLink('Enrolment', 'enrolment'),
-					$this->createLink('Graduates', 'graduates'),
-					$this->createLink('Classes', 'classes'),
-					$this->createLink('Textbooks', 'textbooks'),
-					$this->createLink('Teachers', 'teachers'),
-					$this->createLink('Staff', 'staff'),
-					$this->createLink('Infrastructure', 'infrastructure'),
-					$this->createLink('Finances', 'finances'),
-					$this->createLink('More', 'otherforms')
+					$this->createLink('Enrolment', 'Census', 'enrolment'),
+					$this->createLink('Graduates', 'Census', 'graduates'),
+					$this->createLink('Classes', 'Census', 'classes'),
+					$this->createLink('Textbooks', 'Census', 'textbooks'),
+					$this->createLink('Teachers', 'Census', 'teachers'),
+					$this->createLink('Staff', 'Census', 'staff'),
+					$this->createLink('Infrastructure', 'Census', 'infrastructure'),
+					$this->createLink('Finances', 'Census', 'finances'),
+					$this->createLink('More', 'Census', 'otherforms')
 				)
 			)
 		);
 		return $links;
 	}
 	
-	public function getSettingsLinks() {
+	public function getSettingsLinks() {		
 		$links = array(
 			array(
 				'SYSTEM SETUP' => array(
-					$this->createLink('Administrative Boundaries', 'index', array('pattern' => 'index$|levels|edit$', 'controller' => 'Areas')),
-					$this->createLink('Education Structure', 'index', array('pattern' => 'index$|setup$', 'controller' => 'Education')),
-					$this->createLink('National Assessments', 'index', array('pattern' => 'index|assessment', 'controller' => 'Assessment')),
-					$this->createLink('Field Options', 'setupVariables', array('pattern' => '^setupVariables|^custom', 'controller' => 'Setup')),
-					$this->createLink('System Configurations', 'index', array('pattern' => 'index$|edit$|^dashboard', 'controller' => 'Config'))
+					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit$'),
+					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup$'),
+					$this->createLink('Setup Variables', 'Setup', 'setupVariables'),
+					$this->createLink('Custom Fields', 'Setup', 'customFields', 'custom'),
+					$this->createLink('System Configurations', 'Config', 'index', 'index$|edit$|^dashboard')
 				),
 				'ACCOUNTS &amp; SECURITY' => array(
-					'_controller' => 'Security',
-					$this->createLink('Users', 'users'),
-					$this->createLink('Roles', 'roles', array('pattern' => '^role')),
-					$this->createLink('Permissions', 'permissions')
+					$this->createLink('Users', 'Security', 'users'),
+					$this->createLink('Roles', 'Security', 'roles', '^role'),
+					$this->createLink('Permissions', 'Security', 'permissions')
 				),
 				'NATIONAL DENOMINATORS' => array(
-					$this->createLink('Population', 'index', array('pattern' => 'index$|edit$', 'controller' => 'Population')),
-					$this->createLink('Finance', 'index', array('pattern' => 'index$|edit$|financePerEducationLevel$', 'controller' => 'Finance'))
+					$this->createLink('Population', 'Population', 'index', 'index$|edit$'),
+					$this->createLink('Finance', 'Finance', 'index', 'index$|edit$|financePerEducationLevel$')
 				),
 				'DATA PROCESSING' => array(
-					'_controller' => 'DataProcessing',
-					$this->createLink('Generate', 'reports'),
-					$this->createLink('Export', 'exports'),
-					$this->createLink('Processes', 'processes'),
-					//$this->createLink('Scheduler', 'scheduler')
+					$this->createLink('Generate', 'DataProcessing', 'reports'),
+					$this->createLink('Export', 'DataProcessing', 'indicators'),
+					$this->createLink('Processes', 'DataProcessing', 'processes')
 				),
 				'DATABASE' => array(
-					'_controller' => 'Database',
-					$this->createLink('Backup', 'backup'),
-					$this->createLink('Restore', 'restore')
+					$this->createLink('Backup', 'Database', 'backup'),
+					$this->createLink('Restore', 'Database', 'restore')
 				)
 			)
 		);
@@ -261,8 +244,7 @@ class NavigationComponent extends Component {
 		foreach($links as $i => $category) {
 			foreach($category as $j => $items) {
 				foreach($items as $k => $obj) {
-					if($k === '_controller') continue;
-					$controller = isset($obj['controller']) ? $obj['controller'] : $items['_controller'];
+					$controller = $obj['controller'];
 					$action = $obj['action'];
 					$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
 					$this->AccessControl->ignore($controller, $action);

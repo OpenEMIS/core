@@ -1,10 +1,6 @@
-<?php 
-echo $this->Html->css('jquery_ui', 'stylesheet', array('inline' => false));
+<?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
-echo $this->Html->script('jquery.ui', false);
-echo $this->Html->script('app', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>

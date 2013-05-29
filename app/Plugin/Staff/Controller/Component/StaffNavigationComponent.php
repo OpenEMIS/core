@@ -27,18 +27,16 @@ class StaffNavigationComponent extends Component {
 		$links = array(
 			array(
 				array(
-					'_controller' => $controller,
-					$navigation->createLink('List of Staff', 'index', array('pattern' => 'index$')),
-					$navigation->createLink('Add new Staff', 'add', array('pattern' => 'add$'))
+					$navigation->createLink('List of Staff', $controller, 'index', 'index$'),
+					$navigation->createLink('Add new Staff', $controller, 'add', 'add$')
 				)
 			),
 			array(
 				'INFORMATION' => array(
-					'_controller' => $controller,
-					$navigation->createLink('General', 'view', array('pattern' => 'view$|^edit$|history$')),
-					$navigation->createLink('Attachments', 'attachments'),
-					$navigation->createLink('More', 'additional'),
-					$navigation->createLink('Institutions', 'institutions'),
+					$navigation->createLink('General', $controller, 'view', 'view$|^edit$|history$'),
+					$navigation->createLink('Attachments', $controller, 'attachments'),
+					$navigation->createLink('More', $controller, 'additional'),
+					$navigation->createLink('Institutions', $controller, 'institutions'),
 				)
 			)
 		);

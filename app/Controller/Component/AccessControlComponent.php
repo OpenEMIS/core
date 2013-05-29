@@ -24,14 +24,14 @@ class AccessControlComponent extends Component {
 	private $RoleArea;
 	private $RoleInstitutionSite;
 	public $ignoreList = array(
-		'HOME' => array('index', 'details', 'detailsEdit', 'password'), 
+		'HOME' => array('index', 'details', 'detailsEdit', 'password'),
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
 		'STUDENTS' => array('viewStudent'),
 		'TEACHERS' => array('viewTeacher'),
 		'STAFF' => array('viewStaff')
 	);
-	public $operations = array('_view', '_edit', '_add', '_delete');
+	public $operations = array('_view', '_edit', '_add', '_delete', '_execute');
 	
 	private $modelMap = array(
 		'User' => 'SecurityUser',
