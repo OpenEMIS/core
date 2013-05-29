@@ -59,6 +59,13 @@ class ReportsController extends ReportsAppController {
 			}else{
 				$this->render('index');
 			}
+		} else if(strrpos($this->action, 'Download')!==false) {
+			if(isset($this->params['pass'][0])) {
+				$file = $this->params['pass'][0];
+				$this->download($file);
+			} else {
+				$this->redirect(array('action' => str_replace('Download', '', $this->action)));
+			}
 		}
     }
 	
@@ -67,13 +74,21 @@ class ReportsController extends ReportsAppController {
 	}
 	
 	public function Institution(){}
+	public function InstitutionDownload(){}
 	public function Student(){}
+	public function StudentDownload(){}
 	public function Staff(){}
+	public function StaffDownload(){}
 	public function Teacher(){}
+	public function TeacherDownload(){}
 	public function Consolidated(){}
+	public function ConsolidatedDownload(){}
 	public function Indicator(){}
+	public function IndicatorDownload(){}
 	public function Custom(){}
+	public function CustomDownload(){}
 	public function DataQuality(){}
+	public function DataQualityDownload(){}
 	
 	public function renderReport($reportType = 'Institution') {
 		if(isset($this->params['pass'][0])){

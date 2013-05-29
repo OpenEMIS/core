@@ -23,21 +23,18 @@ class StudentsNavigationComponent extends Component {
 	
 	public function getLinks($navigation) {
 		$controller = 'Students';
-
 		$links = array(
 			array(
 				array(
-					'_controller' => $controller,
-					$navigation->createLink('List of Students', 'index', array('pattern' => 'index$')),
-					$navigation->createLink('Add new Student', 'add', array('pattern' => 'add$'))
+					$navigation->createLink('List of Students', $controller, 'index', 'index$'),
+					$navigation->createLink('Add new Student', $controller, 'add', 'add$')
 				)
 			),
 			array(
 				'STUDENT INFORMATION' => array(
-					'_controller' => $controller,
-					$navigation->createLink('Details', 'view', array('pattern' => 'view$|^edit$|history$')),
-					$navigation->createLink('Attachments', 'attachments'),
-					$navigation->createLink('Additional Info', 'additional')
+					$navigation->createLink('Details', $controller, 'view', 'view$|^edit$|history$'),
+					$navigation->createLink('Attachments', $controller, 'attachments'),
+					$navigation->createLink('Additional Info', $controller, 'additional')
 					//$navigation->createLink('Institutions', 'institutions')
 				)/*,
 				'ASSESSMENT' => array(

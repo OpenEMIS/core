@@ -47,8 +47,10 @@ function clearallprocess(){
 	?>
 	<h1>
 		<span><?php echo __('Processes'); ?></span>
+		<?php if($_execute) { ?>
 		<a class="void divider" href="javascript: void(0);" onclick="killallprocess();"><?php echo __('Abort All'); ?></a>
 		<a class="void divider" href="javascript: void(0);" onclick="clearallprocess();"><?php echo __('Clear All'); ?></a>
+		<?php } ?>
 	</h1>
 	
 	<div class="table full_width" style="margin-left: 3px;">

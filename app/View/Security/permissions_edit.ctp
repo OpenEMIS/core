@@ -54,6 +54,7 @@ echo $this->Html->script('security', false);
 				<div class="table_cell"><?php echo __('Edit'); ?></div>
 				<div class="table_cell"><?php echo __('Add'); ?></div>
 				<div class="table_cell"><?php echo __('Delete'); ?></div>
+				<div class="table_cell"><?php echo __('Execute'); ?></div>
 			</div>
 			
 			<div class="table_body">
