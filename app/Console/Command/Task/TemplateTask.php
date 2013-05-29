@@ -19,7 +19,9 @@ App::uses('AppTask', 'Console/Command/Task');
 class TemplateTask extends AppTask {
     public $tasks = array('Common');
 	// to specify languages/font set not supported properly under mpdf's SetAutoFont
-	public $languageFont=array('chi'=>'sun-extA;',   
+	public $languageFont=array('chi'=>'sun-extA',   
+							);
+							
 ################# Start HTML ################
     public function setNewLine($num=1) {
         $html = "";
@@ -31,7 +33,7 @@ class TemplateTask extends AppTask {
 ################# End HTML ################
 
 	public function mapLanguageToFont($language){
-		if (isset($this->languageFont[$language])) {
+		if (isset($this->languageFont[$language])){
 			return $this->languageFont[$language];
 		}
 		return "";
