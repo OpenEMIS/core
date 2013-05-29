@@ -9,7 +9,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 		<?php echo $this->Paginator->next(__('Next') , null, null, $pageOptions); ?>
 	</ul>
 </div>
-<div class="table allow_hover">
+<div class="table allow_hover" action="Institutions/listSites/">
 	<div class="table_head">
 			<div class="table_cell cell_code"><span class="left"><?php echo __('Code'); ?></span><span class="icon_sort_<?php echo ($sortedcol =='Institution.code')?$sorteddir:'up'; ?>"  order="Institution.code"></span></div>
 			<div class="table_cell cell_name"><span class="left"><?php echo __('Institution Name'); ?></span><span class="icon_sort_<?php echo ($sortedcol =='Institution.name')?$sorteddir:'up'; ?>" order="Institution.name"></span></div>
@@ -26,7 +26,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 					$code = $this->Utility->highlight($searchField,$arrItems['Institution']['code']);
 					$name = $this->Utility->highlight($searchField,'<b>'.$arrItems['Institution']['name'].'</b>'.((isset($arrItems['InstitutionHistory']['name']))?'<br>'.$arrItems['InstitutionHistory']['name']:''));
 			?>
-					<div id="<?php echo $id ?>" class="table_row table_row_selection <?php echo ((($ctr++%2) != 0)?'odd':'even');?>">
+					<div row-id="<?php echo $id ?>" class="table_row table_row_selection <?php echo ((($ctr++%2) != 0)?'odd':'even');?>">
 						<div class="table_cell"><?php echo $code; ?></div>
 						<div class="table_cell"><?php echo $name; ?></div>
 						<div class="table_cell"><?php echo $arrItems['InstitutionSector']['name']; ?></div>
