@@ -29,6 +29,7 @@ var objSearch = {
 	
 	attachEvents: function() {
 		objSearch.attachSortOrder();
+		jsTable.attachHoverOnClickEvent();
 	},
 	
 	attachSortOrder:function() {
