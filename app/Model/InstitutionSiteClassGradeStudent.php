@@ -72,7 +72,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 				'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
 			),
 			array(
-				'table' => 'Education_cycles',
+				'table' => 'education_cycles',
 				'alias' => 'EducationCycle',
 				'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 			),
