@@ -1,4 +1,5 @@
 <?php
+echo $this->Html->script('app.date', false);
 echo $this->Html->script('institution_site', false);
 ?>
 
