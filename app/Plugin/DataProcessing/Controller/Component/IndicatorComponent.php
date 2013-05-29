@@ -144,7 +144,8 @@ class IndicatorComponent extends Component {
 		
 		$subgroupList = array();
 //		$permutations = $this->BatchIndicatorSubgroup->generateSubgroups($id, $subgroupList);
-		$permutations = $this->BatchIndicatorSubgroup->generateSubgroups($id, $subgroupList, $indicatorXml->subgroups->item);
+//		$permutations = $this->BatchIndicatorSubgroup->generateSubgroups($id, $subgroupList, $indicatorXml->subgroups->item);
+		$permutations = $this->generateSubgroups($id, $subgroupList, $indicatorXml->subgroups->item);
 
 		if(strpos($query, '-- {LEVEL}') === false) { // query does not execute per area level
 			foreach($permutations as $pattern) {
@@ -187,7 +188,8 @@ class IndicatorComponent extends Component {
                         $sql = $this->buildSQL($sql, $params);
 //                        echo 'Query: ' . $sql . PHP_EOL;
 					}
-					$subgroup = implode(' - ', $subgroups);
+//					$subgroup = implode(' - ', $subgroups);
+                    $subgroup = trim(implode(' - ', $subgroups), ' - ');
 					$sql = str_replace('-- {INDICATOR_ID}', $id, $sql);
 					$sql = str_replace('-- {SUBGROUPS}', "'" . $subgroup . "'", $sql);
 					$sql = str_replace('-- {USER_ID}', $userId, $sql);
@@ -240,6 +242,7 @@ class IndicatorComponent extends Component {
 
             if(!is_null($obj['reference']) AND !empty($obj['reference'])) {
                 $model = ClassRegistry::init((string)$obj['reference']);
+//                pr((string)$obj['reference']);
                 $list = $model->findListAsSubgroups();
                 pr($list);
 

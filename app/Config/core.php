@@ -278,7 +278,9 @@ Cache::config('_cake_model_', array(
 ));
 
 /**
- * 
+ * Indicators Path
+ * Configure the path and filename of the xml file that will be loading with
+ * SQL statement for generating indicator reports.
  */
 Configure::write('xml.indicators.query_path', APP.'Config'.DS);
 Configure::write('xml.indicators.filename', 'indicatorQueries.xml');
