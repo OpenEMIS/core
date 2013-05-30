@@ -6,7 +6,7 @@ echo $this->Html->script('institution_site', false);
 
 <div id="additional" class="content_wrapper edit">
 	<h1>
-		<span><?php echo __('Additional Info'); ?></span>
+		<span><?php echo __('More'); ?></span>
 		<?php echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider')); ?>
 	</h1>
 	<?php

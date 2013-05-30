@@ -57,7 +57,7 @@ var i18n = {
 	},
 	Population : {
 		textSelectCountry: '<?php echo T("Please select a country before adding new records.", true); ?>',
-		textErrorOccurred: '<?php echo T("Error have occurred.", true); ?>',
+		textErrorOccurred: '<?php echo T("Error has occurred.", true); ?>',
 		textEmptyAge: '<?php echo T("Age cannot be empty.", true); ?>',
 		textAgeMoreThanZero: '<?php echo T("Age must be more then 0.", true); ?>'
 	},

@@ -17,5 +17,5 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusFurniture extends AppModel {
-	var $useTable = 'census_furniture';
+	public $useTable = 'census_furniture';
 }

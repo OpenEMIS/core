@@ -14,7 +14,6 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-
 class TeacherCategory extends TeachersAppModel {
 	public function getLookupVariables() {
 		$lookup = array(

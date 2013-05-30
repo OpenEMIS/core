@@ -11,6 +11,8 @@ a.icon_plus {
 .icon_cross		{ float: left; width: 16px; height: 16px; background: url('../img/icons/cross.png') top left no-repeat; cursor: pointer; }
 .icon_cross:hover { background-color: #FAC6C7; outline: 1px solid #E40000; }
 
+#resetDefault.icon_delete { margin: 3px 0 0 3px; }
+
 .icon_up { background: url('../img/icons/up.png') top left no-repeat; }
 .icon_down { background: url('../img/icons/down.png') top left no-repeat; }
 

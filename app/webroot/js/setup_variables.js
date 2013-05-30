@@ -19,7 +19,6 @@ $(document).ready(function() {
 
 var setup = {
 	init: function() {
-		$('#edit-link').click(setup.navigate);
 		$('#setup-variables .icon_plus').each(function() {
 			$(this).click(function() { setup.add(this); });
 		});
@@ -31,13 +30,7 @@ var setup = {
 	},
 	
 	changeCategory: function() {
-		var href = $('.content_wrapper > form').attr('action');
-		window.location.href = href + '/' + $('#category').val();
-	},
-	
-	navigate: function() {
-		window.location.href = $('#edit-link').attr('href') + '/' + $('#category').val();
-		return false;
+		window.location.href = getRootURL() + $('#category').attr('url') + $('#category').val();
 	},
 	
 	toggleRadio: function(obj) {

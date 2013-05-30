@@ -127,7 +127,7 @@ class StaffController extends StaffAppController {
     }
 
     public function view() {
-        $this->Navigation->addCrumb('Details');
+        $this->Navigation->addCrumb('General');
         $this->Staff->id = $this->Session->read('StaffId');
         $data = $this->Staff->read();
 
@@ -136,7 +136,7 @@ class StaffController extends StaffAppController {
     }
 
     public function edit() {
-        $this->Navigation->addCrumb('Edit Details');
+        $this->Navigation->addCrumb('Edit');
         $this->Staff->id = $this->Session->read('StaffId');
 
         $imgValidate = new ImageValidate();
@@ -348,6 +348,7 @@ class StaffController extends StaffAppController {
     
     public function attachmentsEdit() {
         $this->Navigation->addCrumb('Edit Attachments');
+
         $id = $this->Session->read('StaffId');
         
         if($this->request->is('post')) { // save
@@ -412,6 +413,9 @@ class StaffController extends StaffAppController {
                 }
             }
         }
+		if(empty($data2)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
+		}
         
         $this->set('data',$data);
         $this->set('data2',$data2);

@@ -41,11 +41,10 @@ class SecurityFunction extends AppModel {
 		$list = $this->find('all', array(
 			'fields' => array(
 				'SecurityFunction.id', 'SecurityFunction.module', 'SecurityFunction.name', 'SecurityFunction._view', 
-				'SecurityFunction._edit', 'SecurityFunction._add', 'SecurityFunction._delete', 'SecurityFunction.visible',
+				'SecurityFunction._edit', 'SecurityFunction._add', 'SecurityFunction._delete', 'SecurityFunction._execute', 'SecurityFunction.visible',
 				'SecurityFunction.parent_id',
-				'SecurityRoleFunction.id',
-				'SecurityRoleFunction._view', 'SecurityRoleFunction._edit', 
-				'SecurityRoleFunction._add', 'SecurityRoleFunction._delete'
+				'SecurityRoleFunction.id', 'SecurityRoleFunction._view', 'SecurityRoleFunction._edit', 
+				'SecurityRoleFunction._add', 'SecurityRoleFunction._delete', 'SecurityRoleFunction._execute'
 			),
 			'joins' => array(
 				array(
@@ -88,7 +87,6 @@ class SecurityFunction extends AppModel {
 			$row['parent_id'] = $function['parent_id'];
 			$permissions[$module][] = $row;
 		}
-		
 		return $permissions;
 	}
 }

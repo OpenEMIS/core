@@ -22,7 +22,7 @@ App::uses('ImageValidate', 'Image');
 class StudentsController extends StudentsAppController {
 	public $studentId;
     public $studentObj;
-
+    private  $debug = false;
     public $uses = array(
         'Institution',
 		'InstitutionSiteProgramme',
@@ -35,7 +35,7 @@ class StudentsController extends StudentsAppController {
     );
         
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
-    // public $components = array('Paginator');
+	
     public $components = array(
         'UserSession',
         'Paginator',
@@ -72,10 +72,17 @@ class StudentsController extends StudentsAppController {
             }
 		}
     }
-
+    private function logtimer($str=''){
+            if($this->debug == true)
+            echo $str." ==> ".date("H:i:s")."<br>\n";
+    }
     public function index() {
+        $this->debug = false;
 		$this->Navigation->addCrumb('List of Students');
+                $this->logtimer('Start Get AccessibleSites');
 		$tmp = $this->AccessControl->getAccessibleSites();
+                $this->logtimer('End Get AccessibleSites');
+               
 		$programmeIds = $this->InstitutionSiteProgramme->find('list', array(
 			'fields' => array('InstitutionSiteProgramme.id'),
 			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $tmp)
@@ -124,7 +131,9 @@ class StudentsController extends StudentsAppController {
         $limit = ($this->Session->read('Search.perpageStudent'))?$this->Session->read('Search.perpageStudent'):30;
 
         $this->Paginator->settings = array_merge(array('limit' => $limit,'maxLimit' => 100), $order);
+        $this->logtimer('Start OutSide Get paginate');
         $data = $this->paginate('Student', $cond);
+        $this->logtimer('End OutSide Get paginate');
 
         $this->set('students', $data);
         $this->set('totalcount', $this->Student->sqlPaginateCount);
@@ -146,7 +155,7 @@ class StudentsController extends StudentsAppController {
     }
 	
 	public function view() {
-		$this->Navigation->addCrumb('Details');
+		$this->Navigation->addCrumb('General');
 		$this->Student->id = $this->Session->read('StudentId');
         $data = $this->Student->read();
 
@@ -155,7 +164,7 @@ class StudentsController extends StudentsAppController {
     }
 	
 	public function edit() {
-		$this->Navigation->addCrumb('Edit Details');
+		$this->Navigation->addCrumb('Edit');
         $this->Student->id = $this->Session->read('StudentId');
 
         $imgValidate = new ImageValidate();
@@ -242,7 +251,7 @@ class StudentsController extends StudentsAppController {
     }
 
     public function additional() {
-		$this->Navigation->addCrumb('Additional Info');
+		$this->Navigation->addCrumb('More');
 		
         // get all student custom field in order
         $datafields = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order'=>'StudentCustomField.order'));
@@ -269,7 +278,7 @@ class StudentsController extends StudentsAppController {
     }
 
     public function additionalEdit() {
-		$this->Navigation->addCrumb('Edit Additional Info');
+		$this->Navigation->addCrumb('Edit More');
 
         if ($this->request->is('post')) {
             //pr($this->data);
@@ -421,7 +430,6 @@ class StudentsController extends StudentsAppController {
         $data = $this->Student->findById($this->studentId);
         $data2 = array();
         foreach ($historyData as $key => $arrVal) {
-
             foreach($arrTables as $table){
             //pr($arrVal);die;
                 foreach($arrVal[$table] as $k => $v){
@@ -430,8 +438,11 @@ class StudentsController extends StudentsAppController {
                     $data2[$keyVal][$v] = $arrVal['StudentHistory']['created'];
                 }
             }
-
         }
+		if(empty($data2)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
+		}
+		
         $this->set('data',$data);
         $this->set('data2',$data2);
     }
