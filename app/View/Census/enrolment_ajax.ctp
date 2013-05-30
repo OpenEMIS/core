@@ -9,12 +9,12 @@ if(!empty($enrolment) && !(sizeof($enrolment)==1 && $enrolment[0]['male']==0 && 
 		$count++;
 		$total += $record['male'] + $record['female'];
 		$record_tag="";
-		switch ($record['source']) {
-			case 1:
-				$record_tag.="row_external";break;
-			case 2:
-				$record_tag.="row_estimate";break;
+		foreach ($source_type as $k => $v) {
+			if ($record['source']==$v) {
+				$record_tag = "row_" . $k;
+			}
 		}
+
 	?>
 	<div class="table_row <?php echo $count%2==0 ? 'even' : ''; ?>">
 		<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['age']; ?></div>
