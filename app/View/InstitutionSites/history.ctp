@@ -4,22 +4,14 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<style type="text/css">
-.row { border-bottom: 1px dotted #DEDEDE; padding-bottom: 10px; margin-bottom: 10px; }
-.row.last { border: 0; padding-bottom: 0; margin-bottom: 0; }
-.cell_value { width: 360px; }
-</style>
-
 <div id="site_history" class="content_wrapper">
 	<h1>
 		<span><?php echo __('Institution Site History'); ?></span>
 		<?php echo $this->Html->link(__('Details'), array('action' => 'view'), array('class' => 'divider')); ?>
 	</h1>
-	
-    <?php if (!$data2):
-            echo __("No history found.");
-    ?>
-    <?php else: ?>
+	<?php echo $this->element('alert'); ?>
+
+    <?php if(!empty($data2)) : ?>
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
 		<div class="row">

@@ -7,7 +7,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 
 <div id="institution" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Institution Details'); ?></span>
+		<span><?php echo __('Institution Information'); ?></span>
 		<?php
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
@@ -18,6 +18,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 		echo $this->Html->link(__('History'), array('action' => 'history'),	array('class' => 'divider')); 
 		?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	
 	<?php $obj = $data['Institution']; ?>
 	

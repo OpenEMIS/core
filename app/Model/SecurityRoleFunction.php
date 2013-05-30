@@ -46,7 +46,7 @@ class SecurityRoleFunction extends AppModel {
 			$function = $obj['SecurityFunction'];
 			$roleFunction = $obj['SecurityRoleFunction'];
 			
-			if($roleFunction['_view'] || $roleFunction['_edit'] || $roleFunction['_add'] || $roleFunction['_delete']) {
+			if($roleFunction['_view'] || $roleFunction['_edit'] || $roleFunction['_add'] || $roleFunction['_delete'] || $roleFunction['_execute']) {
 				if(!in_array($function['module'], $modules)) {
 					$modules[] = $function['module'];
 				}

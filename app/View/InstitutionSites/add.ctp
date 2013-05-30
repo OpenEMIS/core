@@ -1,6 +1,6 @@
 <?php
 echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
-
+echo $this->Html->script('app.date', false);
 echo $this->Html->script('institution', false);
 ?>
 

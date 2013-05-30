@@ -75,7 +75,7 @@ echo $this->Html->script('institution_site_students', false);
 		</div>
 		<?php } ?>
 
-        <div class="table">
+        <div class="table allow_hover" action="InstitutionSites/studentsView/">
             <div class="table_head">
 				<div class="table_cell cell_id_no">
 					<span class="left"><?php echo __('Identification No.'); ?></span>
@@ -102,7 +102,7 @@ echo $this->Html->script('institution_site_students', false);
 				$firstName = $this->Utility->highlight($searchField, $obj['Student']['first_name']);
 				$lastName = $this->Utility->highlight($searchField, $obj['Student']['last_name']);
 				?>
-                <div class="table_row">
+                <div class="table_row" row-id="<?php echo $obj['Student']['id']; ?>">
 					<div class="table_cell"><?php echo $idNo; ?></div>
 					<div class="table_cell"><?php echo $firstName; ?></div>
 					<div class="table_cell"><?php echo $lastName; ?></div>

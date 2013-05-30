@@ -49,7 +49,7 @@ echo $this->Html->script('search', false);
 				<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
 			</ul>
 		</div>
-		<div class="table allow_hover">
+		<div class="table allow_hover" action="Institutions/listSites/">
 			<div class="table_head">
 				<div class="table_cell cell_code">
 					<span class="left"><?php echo __('Code'); ?></span>
@@ -79,7 +79,7 @@ echo $this->Html->script('search', false);
 					$code = $this->Utility->highlight($searchField,$arrItems['Institution']['code']);
 					$name = $this->Utility->highlight($searchField,'<b>'.$arrItems['Institution']['name'].'</b>'.((isset($arrItems['InstitutionHistory']['name']))?'<br>'.$arrItems['InstitutionHistory']['name']:''));
 			?>
-					<div id="<?php echo $id ?>" class="table_row">
+					<div class="table_row" row-id="<?php echo $id ?>">
 						<div class="table_cell"><?php echo $code; ?></div>
 						<div class="table_cell"><?php echo $name; ?></div>
 						<div class="table_cell"><?php echo $arrItems['InstitutionSector']['name']; ?></div>

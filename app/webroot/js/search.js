@@ -28,13 +28,8 @@ var objSearch = {
 	},
 	
 	attachEvents: function() {
-		objSearch.attachRowClick();
 		objSearch.attachSortOrder();
-	},
-	
-	attachRowClick:function() {
-		var url = getRootURL() + $('#controller').val() + '/' + $('#action').val() + '/';
-		$('.search .allow_hover .table_row').click(function(e){ window.location = url+$(this).attr("id"); });
+		jsTable.attachHoverOnClickEvent();
 	},
 	
 	attachSortOrder:function() {

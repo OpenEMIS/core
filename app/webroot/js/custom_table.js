@@ -18,9 +18,8 @@ var CustomTable = {
 	rownum : 0,
 	init: function(){
 		this.attachInsertFunctions();
-		this.colnum = $('#XCatList div .field_value ul.quicksand').children().length;
-		this.rownum = $('#YCatList div .field_value ul.quicksand').children().length;
-		this.changeView();
+		this.colnum = $('#XCatList ul.quicksand').children().length;
+		this.rownum = $('#YCatList ul.quicksand').children().length;
         this.attachVisibleEvent();
 	},
 	insertRow : function(){
@@ -154,35 +153,10 @@ var CustomTable = {
                             '<span onclick="CustomTable.reorder(this);CustomTable.move'+label+'(this);" class="icon_down"></span>'+
                     '</li>';
 
-        $('#'+objList.attr('id')+' div .field_value ul.quicksand').append(tpl);
+        $('#'+objList.attr('id')+' ul.quicksand').append(tpl);
         CustomTable.reAttachVisibleEvent();
         CustomTable.renderTableStrip();
 		
-	},
-	changeCustomTableFilter: function(obj){
-		window.location = getRootURL()+'Setup/customTables/'+$(obj).val();
-	},
-
-	changeView : function() {
-        var selectedText = $('#customfieldchoices option:selected').text();
-        var selectedValue = $('#customfieldchoices option:selected').val();
-
-        // getting the link
-        var link = $('a.table-link');
-        var linkText = link.text();
-        // id from custom table list
-        var id = $('#CensusGridDataId').val();
-
-        siteTypeId = $('#institution_site_type_id').val();
-
-        if (linkText == "Add") {
-        	link.removeAttr("href");
-        	link.attr('href', getRootURL() + 'Setup/customTablesEdit/' + siteTypeId);
-        } else if (linkText == "List") {
-        	link.removeAttr("href");
-        	link.attr('href', getRootURL() + 'Setup/customTables/' + id);
-        	$('#siteTypeid').val(id);
-        }
 	},
 
     attachVisibleEvent: function(obj) {

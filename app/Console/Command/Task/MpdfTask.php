@@ -76,6 +76,8 @@ class MpdfTask extends AppTask {
 			$c[$key] = array_key_exists($key, $configuration) ? $configuration[$key] : $val;
 		// initialize
 		$this->pdf = new mPDF($c['mode'], $c['format'], $c['font_size'], $c['font'], $c['margin_left'], $c['margin_right'], $c['margin_top'], $c['margin_bottom'], $c['margin_header'], $c['margin_footer']);
+		$this->pdf->SetAutoFont();
+
 		$this->_init = true;
 	}
 	
@@ -105,6 +107,10 @@ class MpdfTask extends AppTask {
 			exit;
 		}
 	}
+
+	public function getDocPageNum() {
+		return $this->pdf->docPageNumTotal(); 
+	}
 	
 	/**
 	 * Passing method calls and variable setting to mPDF library.
@@ -128,8 +134,7 @@ class MpdfTask extends AppTask {
 	public function __call($name, $arguments) {
 		call_user_func_array(array($this->pdf, $name), $arguments);
 	}
-	
-	
+
 }
 
 ?>

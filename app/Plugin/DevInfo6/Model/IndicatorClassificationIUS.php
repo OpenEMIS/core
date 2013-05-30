@@ -14,10 +14,9 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-
 class IndicatorClassificationIUS extends DevInfo6AppModel {
 	public $useDbConfig = 'di6';
-	public $useTable = 'UT_Indicator_Classifications_IUS';
+	public $useTable = 'ut_indicator_classifications_ius';
 	public $dataSet = array(
 		'primaryKey' => array()
 	);

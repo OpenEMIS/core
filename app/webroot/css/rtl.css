@@ -226,6 +226,9 @@ fieldset#general.section_break > .profile_image{
 .legend span{
 	float:right;
 }
+.datepicker{
+	float:right;
+}
 
 /*popup box*/
 .dialog-box .dialog-controls{
