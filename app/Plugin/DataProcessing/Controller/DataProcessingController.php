@@ -14,7 +14,6 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-
 class DataProcessingController extends DataProcessingAppController {
 	public $uses = array(
 		'Reports.Report',
@@ -49,10 +48,10 @@ class DataProcessingController extends DataProcessingAppController {
 		$this->Navigation->addCrumb('Reports');
 		
 		$tmp = array();
-        $q = array();
+		$q = array();
 		if($this->request->is('post')){
-			$this->Report->processRequest($this->data['Reports']);	
-            $this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
+			$this->Report->processRequest($this->data['Reports']);
+			$this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
 			$this->redirect(array('action'=>'processes'));
 		}
 		$data = $this->Report->find('all');
@@ -74,27 +73,73 @@ class DataProcessingController extends DataProcessingAppController {
 		$this->set('queued',$q);
 	}
 	
-	public function indicators() {
-		$this->Navigation->addCrumb('Export Indicators');
-		
-		if($this->request->is('post')) {
-			$userId = $this->Auth->user('id');
-			$format = $this->data['DataProcessing']['export_format'];
-			//$indicatorIds = $this->data['BatchIndicator'];
-			$processName = 'Export Indicators (' . $this->BatchIndicator->exportOptions[$format] . ')';
-			$processId = $this->BatchProcess->createProcess($processName, $userId);
-			$params = array('indicator', 'run', $processId, $format);
-			$this->runJob($params);
-			$this->redirect(array('action'=>'processes'));
-		}
-		$list = $this->BatchIndicator->find('all', array(
-			'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.enabled'),
-			'order' => array('BatchIndicator.enabled DESC', 'BatchIndicator.id')
-		));
-		
-		$this->set('list', $list);
-		$this->set('exportOptions', $this->BatchIndicator->exportOptions);
-	}
+	public function exports($option='DevInfo6') {
+        $this->Navigation->addCrumb('Exports');
+
+        if($this->request->is('post')) {
+            $userId = $this->Auth->user('id');
+            $format = $this->data['DataProcessing']['export_format'];
+            switch($format){
+                case 'Olap':
+
+                    if($this->NumberOfOlapProcesses() > 0){
+                        $this->Session->write('DataProcessing.olap.error', 'Unable to Export. Process exist.');
+                        $this->redirect(array('action'=>'exports', $format));
+                    }
+                    $processName = 'Export '.$format;// (' . $format . ')';
+//                    pr($this->data['Olap']);
+//                    die();
+                    $tables = $this->data['Olap']['census'];
+                    $tables = array_merge($tables, $this->data['Olap']['lookup']);
+                    $processId = $this->BatchProcess->createProcess($processName, $userId);
+                    $params = array($processId, $format, implode(',', $tables));
+                    break;
+                case 'DevInfo7':
+                case 'DevInfo6':
+                default:
+                    $processName = 'Export Indicators (' . $this->BatchIndicator->exportOptions[$format] . ')';
+                    $processId = $this->BatchProcess->createProcess($processName, $userId);
+                    $params = array('indicator', 'run', $processId, $format);
+            }
+//            $indicatorIds = $this->data['BatchIndicator'];
+            $this->runJob($params);
+            $this->redirect(array('action'=>'processes'));
+        }
+
+        $viewFile = '';
+        switch(strtolower($option)){
+            case 'olap':
+                $this->set('olapList', $this->getOlapList());
+                $viewFile = 'olap';
+                break;
+            case 'sdmx':
+                break;
+            case 'devinfo7':
+                break;
+            default:
+                $list = $this->BatchIndicator->find('all', array(
+                    'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.enabled'),
+                    'order' => array('BatchIndicator.enabled DESC', 'BatchIndicator.id')
+                ));
+
+                $this->set('list', $list);
+                $viewFile = 'devinfo6';
+        }
+        if($this->Session->check('DataProcessing.olap.error')){
+            $this->set('error', $this->Session->read('DataProcessing.olap.error'));
+            $this->Session->delete('DataProcessing.olap.error');
+        }
+        $this->set('url', array(
+            "controller" => $this->request->params['controller'],
+            "action" => $this->request->params['action'],
+        ));
+        if($this->Session->check('DataProcessing.olap.error')){
+            $this->set('error', $this->Session->read('DataProcessing.olap.error'));
+        }
+//        FULL_BASE_URL.$this->request->base.DS.$this->request->params['controller'].DS.$this->request->params['action']
+        $this->set('exportOptions', $this->BatchIndicator->exportOptions);
+        $this->render($viewFile);
+    }
 	
 	public function processes($action = '') {
 		$this->Navigation->addCrumb('Processes');
@@ -135,11 +180,11 @@ class DataProcessingController extends DataProcessingAppController {
 			
 			$value['BatchProcess']['file_exists'] =  $isFileExist;
 			//var_dump($value['BatchProcess']['modified_user_id']);
-			if(!is_null($value['BatchProcess']['modified_user_id']) && $value['BatchProcess']['modified'] != ''){ 
-				$user= $this->SecurityUser->findById($value['BatchProcess']['modified_user_id'] ); 
+			if(!is_null($value['BatchProcess']['modified_user_id']) && $value['BatchProcess']['modified'] != ''){
+				$user= $this->SecurityUser->findById($value['BatchProcess']['modified_user_id'] );
 				
-			}elseif($value['BatchProcess']['created_user_id'] != ''){ 
-				$user = $this->SecurityUser->findById($value['BatchProcess']['created_user_id']); 
+			}elseif($value['BatchProcess']['created_user_id'] != ''){
+				$user = $this->SecurityUser->findById($value['BatchProcess']['created_user_id']);
 				
 			}
 			$value['BatchProcess']['startedBy'] = $user['SecurityUser']['username'];
@@ -154,35 +199,48 @@ class DataProcessingController extends DataProcessingAppController {
 	}
 	
 	public function runJob($params){
-		$this->autoRender = false;
-		
-		//APP."Console/cake.php -app ".APP." batch run";die;
-		$cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params)); 
-		
-		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-			//$WshShell = new COM("WScript.Shell");
-			//$oExec = $WshShell->Run("C:\wamp\bin\php\phpVERSIONNUMBER\php-win.exe -f C:/wamp/www/path/to/backgroundProcess.php", 0, false);
-			$handle = pclose(popen("start /B ". $cmd, "r"));
-			if ($handle === FALSE) {
-				die("Unable to execute $cmd");
-			}
-			pclose($handle);
-		} else {
-			//exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
-			//echo $r = shell_exec($cmd." > /dev/null &");
-			//echo $PID = shell_exec("nohup $cmd > /dev/null & echo $!");
-			
-			$nohup = 'nohup %s > %stmp/logs/processes.log &';
-			$shellCmd = sprintf($nohup, $cmd, APP);
-			$this->log($shellCmd, 'debug');
-			echo $PID = shell_exec($shellCmd);
-		}
-		//*NUX
-		//exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
-		//WINDOWS
-		//$WshShell = new COM("WScript.Shell");
-		//$oExec = $WshShell->Run("C:\wamp\bin\php\phpVERSIONNUMBER\php-win.exe -f C:/wamp/www/path/to/backgroundProcess.php", 0, false);
-	}
+        $this->autoRender = false;
+
+        //APP."Console/cake.php -app ".APP." batch run";die;
+        if(stristr('olap', $params[1])){
+//            $cmd = sprintf("%swebroot/olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
+            $cmd = sprintf("%sLib/Olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
+        }else{
+            $cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
+        }
+//        exit($cmd);
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            //$WshShell = new COM("WScript.Shell");
+            //$oExec = $WshShell->Run("C:\wamp\bin\php\phpVERSIONNUMBER\php-win.exe -f C:/wamp/www/path/to/backgroundProcess.php", 0, false);
+            $handle = pclose(popen("start /B ". $cmd, "r"));
+            if ($handle === FALSE) {
+                die("Unable to execute $cmd");
+            }
+            pclose($handle);
+        } else {
+            //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
+            //echo $r = shell_exec($cmd." > /dev/null &");
+            //echo $PID = shell_exec("nohup $cmd > /dev/null & echo $!");
+            if(stristr('olap',$params[1] )){
+                $nohup = 'nohup php %s > %stmp/logs/processes.log &';
+            }else{
+                $nohup = 'nohup %s > %stmp/logs/processes.log &';
+            }
+            $shellCmd = sprintf($nohup, $cmd, APP);
+//			$shellCmd = sprintf($nohup, $cmd, APP);
+            $this->log($shellCmd, 'debug');
+//            echo $shellCmd;die();
+//			echo $PID = shell_exec($shellCmd);
+            $PID = exec($shellCmd);
+            echo $PID;
+        }
+        //*NUX
+        //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
+        //WINDOWS
+        //$WshShell = new COM("WScript.Shell");
+        //$oExec = $WshShell->Run("C:\wamp\bin\php\phpVERSIONNUMBER\php-win.exe -f C:/wamp/www/path/to/backgroundProcess.php", 0, false);
+    }
 	
 	function is_running($PID){
 		$this->autoRender =false;
@@ -213,7 +271,7 @@ class DataProcessingController extends DataProcessingAppController {
 	}
 
 	public function downloadLog($id){
-		$this->viewClass = 'Media'; 
+		$this->viewClass = 'Media';
 		$rec = $this->BatchProcess->findById($id);
 		$path_parts = pathinfo($rec['BatchProcess']['file_name']);
 		$id=$path_parts['filename'];
@@ -227,4 +285,29 @@ class DataProcessingController extends DataProcessingAppController {
 		);
 		$this->set($params);
 	}
+	public function getOlapList(){
+        $config = Configure::read('Process.Olap.xml');
+        $list = array('census'=>array(), 'lookup'=>array());
+
+        if(file_exists($config['path'].DS.$config['filename'])){
+            $olap = simplexml_load_file($config['path'].DS.$config['filename']);
+            foreach($olap->xpath('//process[@type="census"]') as $row){
+                $list['census'][] = (string) $row['name'];
+
+            }
+            foreach($olap->xpath('//process[@type="lookup"]') as $row){
+                $list['lookup'][] = (string) $row['name'];
+
+            }
+//            pr($list);
+        }
+
+        return $list;
+    }
+
+    public function NumberOfOlapProcesses(){
+        $results = $this->BatchProcess->numberOfOlapProcesses();
+        return empty($results)? 0 : sizeof($results); exit;
+
+    }
 }

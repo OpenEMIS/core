@@ -189,28 +189,27 @@ $this->fontdata = array(
 		'B' => "XB RiyazBd.ttf",
 		'I' => "XB RiyazIt.ttf",
 		'BI' => "XB RiyazBdIt.ttf",
+		'unAGlyphs' => true,
 		),
 	"xbzar" => array(
 		'R' => "XB Zar.ttf",
 		'B' => "XB Zar Bd.ttf",
 		'I' => "XB Zar It.ttf",
 		'BI' => "XB Zar BdIt.ttf",
+		'unAGlyphs' => true,
 		),
-
-
-
 
 /* Examples of some CJK fonts */
-/*
-	"unbatang_0613" => array(
-		'R' => "UnBatang_0613.ttf",
-		),
 	"sun-exta" => array(
 		'R' => "Sun-ExtA.ttf",
 		'sip-ext' => 'sun-extb',
 		),
 	"sun-extb" => array(
 		'R' => "Sun-ExtB.ttf",
+		),
+/*
+	"unbatang_0613" => array(
+		'R' => "UnBatang_0613.ttf",
 		),
 	"hannoma" => array(
 		'R' => "HAN NOM A.ttf",

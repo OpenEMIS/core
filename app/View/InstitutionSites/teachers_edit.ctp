@@ -10,7 +10,7 @@ echo $this->Html->script('institution_site_teachers', false);
 
 <div id="teachersEdit" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Teacher Details'); ?></span>
+		<span><?php echo __('Teacher Information'); ?></span>
 		<?php 
 		$obj = $data['Teacher'];
 		if($_edit) {
@@ -28,7 +28,15 @@ echo $this->Html->script('institution_site_teachers', false);
 		?>
 		<div class="row">
 			<div class="label"><?php echo __('Identification No.'); ?></div>
-			<div class="value"><?php echo $obj['identification_no']; ?></div>
+			<div class="value">
+				<?php
+				if($_view_details) {
+					echo $this->Html->link($obj['identification_no'], array('controller' => 'Teachers', 'action' => 'viewTeacher', $obj['id']), array('class' => 'link_back'));
+				} else {
+					echo $obj['identification_no'];
+				}
+				?>
+			</div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
@@ -49,29 +57,6 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 	</fieldset>
 
-	<fieldset class="section_break">
-		<legend><?php echo __('Address'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Address'); ?></div>
-			<div class="value address"><?php echo nl2br($obj['address']); ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Postal Code'); ?></div>
-			<div class="value"><?php echo $obj['postal_code']; ?></div>
-		</div>
-	</fieldset>
-	
-	<fieldset class="section_break">
-		<legend><?php echo __('Contact'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $obj['telephone']; ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Email'); ?></div>
-			<div class="value"><?php echo $obj['email']; ?></div>
-		</div>
-	</fieldset>
 	<?php
 	echo $this->Form->create('InstitutionSiteTeacher', array(
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),

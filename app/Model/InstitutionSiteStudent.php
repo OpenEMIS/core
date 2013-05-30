@@ -237,7 +237,7 @@ class InstitutionSiteStudent extends AppModel {
 		unset($conditions['order']);
 		$this->paginateConditions($conditions);
 		$data = $this->find('all', array(
-			'fields' => array('Student.identification_no', 'Student.first_name', 'Student.last_name', 'EducationProgramme.name'),
+			'fields' => array('Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name', 'EducationProgramme.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $conditions,
 			'limit' => $limit,

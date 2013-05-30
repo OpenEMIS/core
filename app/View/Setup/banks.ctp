@@ -10,19 +10,19 @@ echo $this->Html->script('setup_variables', false);
 <div id="banks" class="content_wrapper banks">
 	<?php
 	echo $this->Form->create('SetupVariables', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Setup', 'action' => 'setupVariables')
 	));
 	?>
 	<h1>
-		<span><?php echo __('Setup Variables'); ?></span>
+		<span><?php echo __($header); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'setupVariablesEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'setupVariablesEdit', $selectedCategory), array('class' => 'divider'));
 		}
 		?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	
 	<div class="row category">
 		<?php
@@ -30,6 +30,7 @@ echo $this->Html->script('setup_variables', false);
 			'id' => 'category',
 			'options' => $categoryList,
 			'default' => $selectedCategory,
+			'url' => 'Setup/setupVariables/',
 			'onchange' => 'setup.changeCategory()'
 		));
 		?>

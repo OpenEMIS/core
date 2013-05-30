@@ -18,9 +18,25 @@ App::uses('AppController', 'Controller');
 // App::uses('String', 'Utility');
 
 class HomeController extends AppController {
-
+    private $debug = false;
 	public $helpers = array('Number');
-
+	private $tableCounts = array(
+		'Added' => array(
+			// Model => db table
+			'Institution' => 'institutions',
+			'InstitutionSite' => 'institution_sites',
+			'Student' => 'students',
+			'Teacher' => 'teachers',
+			'Staff' => 'staff'
+		),
+		'Edited' => array(
+			'InstitutionHistory' => 'institution_history',
+			'InstitutionSiteHistory' => 'institution_site_history',
+			'StudentHistory' => 'student_history',
+			'TeacherHistory' => 'teacher_history',
+			'StaffHistory' => 'staff_history'
+		)
+	);
 	public $uses = array(
 		'ConfigItem',
 		'ConfigAttachment',
@@ -38,29 +54,13 @@ class HomeController extends AppController {
 		'SecurityUserRole',
 		'SecurityRoleFunction'
 	);
-
+	private function logtimer($str=''){
+			if($this->debug == true)
+			echo $str." ==> ".date("H:i:s")."<br>\n";
+	}
 	public function index() {
-
-		$totalInstitutions = $this->Institution->find('count');
-		$totalInstitutionSites = $this->InstitutionSite->find('count');
-
-		try {
-			$totalStudent = $this->Student->find('count');
-		} catch (MissingTableException $e) {
-			$totalStudent = 0;
-		}
-		
-		try {
-			$totalTeacher = $this->Teacher->find('count');
-		} catch (MissingTableException $e) {
-			$totalTeacher = 0;
-		}
-
-		try {
-			$totalStaff = 	$this->Staff->find('count');
-		} catch (MissingTableException $e) {
-			$totalStaff = 0;
-		}
+		$this->logtimer('Start');
+		$this->logtimer('Start Attachment');
 		$image = array();
 		$image = $this->ConfigAttachment->find('first', array('fields' => array('id','file_name'), 'conditions' => array('ConfigAttachment.active' => 1, 'ConfigAttachment.type' => 'dashboard')));
 
@@ -72,20 +72,14 @@ class HomeController extends AppController {
 			$this->set('image', $image/*$this->ConfigItem->getDashboardMastHead()*/);
 			
 		}
-
-		$this->set('institutions', $totalInstitutions);
-		$this->set('institutionSites', $totalInstitutionSites);
-		$this->set('students', $totalStudent);
-		$this->set('teachers', $totalTeacher);
-		$this->set('staffs', $totalStaff);
-		$this->set('latestActivities', $this->getLatestActivities());
+		$this->logtimer('End Attachment');
+		$this->logtimer('Start Notice');
 		$this->set('message', $this->ConfigItem->getNotice());
+		$this->logtimer('End Notice');
+		$this->logtimer('Start Adaptation');
 		$this->set('adaptation', $this->ConfigItem->getAdaptation());
-		$this->set('SeparateThousandsFormat', array(
-			'before' => '',
-			'places' => 0,
-		    'thousands' => ',',
-		));
+		$this->logtimer('End Adaptation');
+		
 	}
 	
 	public function details() {
@@ -235,124 +229,68 @@ class HomeController extends AppController {
 		}
 		return $rawData[0]['Institution']['name'];
 	}
-
-	private function getLatestActivities(){
+        
+        public function getLatestStatistics(){
+                $this->autoLayout = false;
+                foreach($this->tableCounts['Added'] as $key => $val){
+                    $rec = $this->{$key}->query('SELECT count(*) as count FROM '.$val.';');
+                    $total[$key] = (isset($rec[0][0]['count']))?$rec[0][0]['count']:'0';
+                }
+                $this->set('tableCounts', $total);
+                $this->set('SeparateThousandsFormat', array(
+			'before' => '',
+			'places' => 0,
+		    'thousands' => ',',
+		));
+        }
+	public function getLatestActivities(){
+                $this->autoLayout = false;
 		$query = '';
-		$tables = array(
-			'Added' => array(
-				// Model => db table
-				'Institution' => 'institution',
-				'InstitutionSite' => 'institution_site',
-				'Student' => 'student',
-				'Teacher' => 'teacher',
-				'Staff' => 'staff'
-			),
-			'Edited' => array(
-				'InstitutionHistory' => 'institution_history',
-				'InstitutionSiteHistory' => 'institution_site_history',
-				'StudentHistory' => 'student_history',
-				'TeacherHistory' => 'teacher_history',
-				'StaffHistory' => 'staff_history'
-			)
-		);
-
+               
 		$dbo = ConnectionManager::getDataSource('default');//$this->Institution->getDataSource();
 		// $dbo = $this->getDataSource();
 		
 		$limit = 7;
-
-		foreach ($tables as $key => $element) {
-			foreach($element as $innerKey => $innerElement){
-				// build fields
-				$fields = array();
-				$fieldsFormat = "`{$innerKey}`.`id`, 
-								%s
-								`{$innerKey}`.`first_name` AS `name`,
-								`{$innerKey}`.`last_name`,
-								'{$innerKey}' AS `table`,
-								'{$key}' as `action`,
-								`{$innerKey}`.`created`, 
-								`SecurityUser`.`first_name` AS `user_first_name`, 
-								`SecurityUser`.`last_name` AS `user_last_name` "
-							;
-				if(stristr($innerKey, 'Institution')){
-					$fieldsFormat = "`{$innerKey}`.`id`, 
-						%s
-						`{$innerKey}`.`name`, 
-						NULL as `last_name`,
-						'{$innerKey}' AS `table`,
-						'{$key}' as `action`,
-						`{$innerKey}`.`created`, 
-						`SecurityUser`.`first_name` AS `user_first_name`, 
-						`SecurityUser`.`last_name` AS `user_last_name` ";
-
-				}
-				if(stristr($innerKey, 'history')){
-					$table = $dbo->fullTableName($this->{$innerKey}, false, false);
-					$table = str_ireplace('_history', '', $table);
-					$fields[] = sprintf($fieldsFormat, "`{$innerKey}`.`".$table."_id` AS `parent_table_id`,");
-
-				}else{
-					$fields[] = sprintf($fieldsFormat, 'NULL AS `parent_table_id`,');
-					
-				}
-				$params = array(
-						'fields' => $fields,
-		               'table' => $dbo->fullTableName($this->{$innerKey}),
-		               'alias' => "{$innerKey}",
-		               'limit' => $limit,
-		               'offset' => 0,
-		               'joins' => array("LEFT JOIN `{$dbo->config['database']}`.`security_users` AS `SecurityUser` ON (`{$innerKey}`.`created_user_id` = `SecurityUser`.`id`)"),
-		               'conditions' => null,
-		               'order' => "created DESC",
-		               'group' => null
-		           );
-
-				$params['recursive'] = 1;
-
-				// build sub-query
-		       	$subQuery = $dbo->buildStatement(
-		           $params,
-		           $this->{$innerKey}
-		       );
-		        $query .= '('.$subQuery.')';
-		        $actions = array_keys($tables);
-		        $models = array_keys($element);
-		        // glue sub-queries
-		        if(!(end($actions) == $key && end($models) == $innerKey)){
-			        $query .= ' UNION ';
-		        }
-			}
-		}
-		// order query
-        $query .= ' ORDER BY `created` DESC ';
-        // pr($query);
-
-       $rawData = $dbo->query($query);
-       $topActivitiesRawData = array_slice($rawData, 0, $limit);
-       $formatedData = array();
-		foreach($topActivitiesRawData as $element){
-			$matches =array();
-			preg_match_all('/((?:^|[A-Z])[a-z]+)/',$element[0]['table'],$matches);
-			if(stristr($element[0]['action'], 'Added') && stristr($element[0]['table'], 'InstitutionSite')){
-				$element[0]['institution'] = $this->getInstitutionByInstitutionSite($element[0]);
-
-			}elseif(stristr($element[0]['action'], 'Edited') && stristr($element[0]['table'], 'InstitutionSiteHistory')){
-				$element[0]['institution'] = $this->getInstitutionByInstitutionSite($element[0]);
-
-			}
-			$element[0]['module'] = ''; 
-			$element[0]['module'] = implode(' ', $matches[1]);; 
-			$element[0]['module'] = trim(str_ireplace('History', '', $element[0]['module'])); 
-
-			$formatedData = array_merge($formatedData, $element);
-		}
-
-		foreach ($formatedData as $key => $value) {
-			$isDelete = $this->checkActivityDeleteStatus($formatedData[$key]);
-			if($isDelete){  $formatedData[$key]['action'] = 'Deleted'; }
-		}
-       return $formatedData;
+                $data = array();
+                foreach ($this->tableCounts as $key => $element) {
+                    foreach($element as $Model => $tablename){
+                        $this->logtimer('Start '.$Model);
+                        $sql = 'SELECT * FROM '.$tablename.' t LEFT JOIN security_users su ON (su.id = t.created_user_id) ORDER BY t.id DESC LIMIT '.$limit;
+                        if($this->debug) echo "<br><br>".$sql;
+                        $recs = $this->{$Model}->query($sql);
+                        $data[$Model] = $recs;
+                        $this->logtimer('End '.$Model);
+                    }
+                    
+                }
+                $activities = array();
+                
+                foreach($data as $tableName => &$arrVal){
+                    $action =  (isset($this->tableCounts['Added'][$tableName]))?'Added':'Edited';
+                    
+                    foreach($arrVal as $krec => &$vrec ){
+                        if($action == 'Edited'){
+                            $parentTable = str_replace('History','',$tableName);
+                            $foreignKey = strtolower(Inflector::underscore($parentTable)).'_id';
+                            $rec = $this->{$parentTable}->find('first',array('conditions'=>array( $parentTable.'.id' => $vrec['t'][$foreignKey])));
+                            if(!$rec) $action = 'Deleted';
+                        }
+                        $vrec['t']['user_first_name'] = $vrec['su']['first_name'];
+                        $vrec['t']['user_last_name'] = $vrec['su']['last_name'];
+                        $vrec['t']['action'] = $action;
+                        $tableName = str_ireplace('history','', $tableName);
+                        $vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
+                        $vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
+                        $vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
+                        $activities[strtotime($vrec['t']['created'])] = $vrec['t'];
+                    }
+                }
+                krsort($activities);
+                $activities = array_slice($activities, 0, $limit);
+                $this->logtimer('END');
+                $this->logtimer('Start lastest Activities');
+		$this->set('latestActivities', $activities);
+                $this->logtimer('End lastest Activities');
 	}
 
 	private function checkActivityDeleteStatus($obj) {
@@ -370,3 +308,4 @@ class HomeController extends AppController {
 	}
 
 }
+

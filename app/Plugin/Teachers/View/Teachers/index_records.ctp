@@ -10,7 +10,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
     </ul>
     <div style="clear:both"></div>
 </div>
-<div class="table allow_hover">
+<div class="table allow_hover" action="Teachers/viewTeacher/">
     <div class="table_head">
 
         <div class="table_cell cell_id_no">
@@ -49,7 +49,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
             $gender = $arrItems['Teacher']['gender'];
             $birthday = $arrItems['Teacher']['date_of_birth'];
     ?>
-            <div id="<?php echo $id ?>" class="table_row table_row_selection <?php echo ((($ctr++%2) != 0)?'odd':'even');?>">
+            <div row-id="<?php echo $id ?>" class="table_row table_row_selection <?php echo ((($ctr++%2) != 0)?'odd':'even');?>">
                 <div class="table_cell"><?php echo $identificationNo; ?></div>
                 <div class="table_cell"><?php echo $firstName; ?></div>
                 <div class="table_cell"><?php echo $lastName; ?></div>

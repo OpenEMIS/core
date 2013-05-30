@@ -8,7 +8,7 @@ $obj = @$data['Student'];
 
 <div id="student" class="content_wrapper edit add">
 	<h1>
-		<span><?php echo __('Student Details'); ?></span>
+		<span><?php echo __('Student Information'); ?></span>
 		<?php
 		echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
 		echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
@@ -68,7 +68,7 @@ $obj = @$data['Student'];
 		                <br/>
 		                <?php echo __("Format Supported:"). " .jpg, .jpeg, .png, .gif"; ?>
 		            </em>
-		            </div>
+				</div>
 		    </div>
 		</div>
 	</fieldset>

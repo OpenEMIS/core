@@ -45,12 +45,13 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		'url' => array('controller' => 'DataProcessing', 'action' => 'reports'),
 		'onsubmit' => 'return jsForm.isSubmitDisabled(this)'
 	));
-	
 	?>
 	<h1>
 		<span><?php echo __('Reports'); ?></span>
+		<?php if($_execute) { ?>
 		<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('on')"><?php echo __('Select All'); ?></a>
 		<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('off')"><?php echo __('De-Select All'); ?></a>
+		<?php } ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	<?php
@@ -64,7 +65,9 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			
 			<div class="table">
 				<div class="table_head">
+					<?php if($_execute) { ?>
 					<div class="table_cell cell_checkbox"><input type="checkbox" value="1" onChange="toggleSelect(this)" /></div>
+					<?php } ?>
 					<div class="table_cell cell_name"><?php echo __('Name'); ?></div>
 					<div class="table_cell cell_desc"><?php echo __('Description'); ?></div>
 				</div>
@@ -94,7 +97,9 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 					?>
 					
 					<div class="table_row">
+						<?php if($_execute) { ?>
 						<div class="table_cell cell_checkbox"><?php echo $this->Form->input('Reports',$arrExtra)?></div>
+						<?php } ?>
 						<div class="table_cell cell_name"><?php echo __($arrValues['name']); ?></div>
 						<div class="table_cell cell_desc"><?php echo __($arrValues['description']); ?></div>
 					</div>
@@ -110,14 +115,11 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	}
 	?>
 	
-	
-	
-	
-	
-	
+	<?php if($_execute) { ?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Generate'); ?>" class="btn_save <?php echo ($isBackupRunning)?"btn_disabled":"";?>" />
 	</div>
+	<?php } ?>
 	
 	<?php echo $this->Form->end(); ?>
 </div>

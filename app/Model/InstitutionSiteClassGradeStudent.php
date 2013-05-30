@@ -47,6 +47,115 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		return $list;
 	}
 	
+	public function getListOfClassByStudent($studentId, $institutionSiteId=0) {
+		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name');
+		
+		$joins = array(
+			array(
+				'table' => 'institution_site_class_grades',
+				'alias' => 'InstitutionSiteClassGrade',
+				'conditions' => array('InstitutionSiteClassGrade.id = InstitutionSiteClassGradeStudent.institution_site_class_grade_id')
+			),
+			array(
+				'table' => 'institution_site_classes',
+				'alias' => 'InstitutionSiteClass',
+				'conditions' => array('InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id')
+			),
+			array(
+				'table' => 'education_grades',
+				'alias' => 'EducationGrade',
+				'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+			),
+			array(
+				'table' => 'education_programmes',
+				'alias' => 'EducationProgramme',
+				'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+			),
+			array(
+				'table' => 'education_cycles',
+				'alias' => 'EducationCycle',
+				'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+			),
+			array(
+				'table' => 'school_years',
+				'alias' => 'SchoolYear',
+				'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+			)
+		);
+		
+		$conditions = array('InstitutionSiteClassGradeStudent.student_id' => $studentId);
+		
+		if($institutionSiteId == 0) {
+			$fields[] = 'InstitutionSite.name';
+			$fields[] = 'Institution.name';
+			$joins[] = array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array('InstitutionSite.id = InstitutionSiteClass.institution_site_id')
+			);
+			$joins[] = array(
+				'table' => 'institutions',
+				'alias' => 'Institution',
+				'conditions' => array('Institution.id = InstitutionSite.institution_id')
+			);
+		} else {
+			$conditions['InstitutionSiteClass.institution_site_id'] = $institutionSiteId;
+		}
+		
+		$data = $this->find('all', array(
+			'fields' => $fields,
+			'joins' => $joins,
+			'conditions' => $conditions,
+			'order' => array('SchoolYear.start_year DESC', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+		));
+		return $data;
+	}
+	
+	public function getStudentAssessmentResults($yearId, $institutionSiteId, $classId, $gradeId, $itemId) {
+		$data = $this->find('all', array(
+			'fields' => array(
+				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+				'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
+				'AssessmentResultType.name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+				),
+				array(
+					'table' => 'assessment_item_results',
+					'alias' => 'AssessmentItemResult',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'AssessmentItemResult.student_id = Student.id',
+						'AssessmentItemResult.institution_site_id = ' . $institutionSiteId,
+						'AssessmentItemResult.school_year_id = ' . $yearId,
+						'AssessmentItemResult.assessment_item_id = ' . $itemId
+					)
+				),
+				array(
+					'table' => 'assessment_result_types',
+					'alias' => 'AssessmentResultType',
+					'type' => 'LEFT',
+					'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
+				),
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.institution_site_class_id = ' . $classId,
+						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId,
+						'InstitutionSiteClassGrade.id = InstitutionSiteClassGradeStudent.institution_site_class_grade_id'
+					)
+				)
+			),
+			'order' => array('Student.first_name')
+		));
+		return $data;
+	}
+	
 	public function getGenderTotalByClass($classId) {
 		$joins = array(
 			array(
