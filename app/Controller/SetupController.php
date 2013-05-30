@@ -88,7 +88,7 @@ class SetupController extends AppController {
 			'editMethod' => array('action' => 'customFieldsEdit', 'InstitutionCustomField'),
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
-			'name' => 'More'
+			'name' => 'Custom Fields'
 		));
 		
 		$lookup[] = array('Institution Site' => array(
@@ -102,7 +102,7 @@ class SetupController extends AppController {
 			'editMethod' => array('action' => 'customFieldsEdit', 'InstitutionSiteCustomField'),
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
-			'name' => 'More'
+			'name' => 'Custom Fields'
 		));
 		
 		// Census
@@ -112,7 +112,7 @@ class SetupController extends AppController {
 			'editMethod' => array('action' => 'customFieldsEdit', 'CensusCustomField'),
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
-			'name' => 'More'
+			'name' => 'Custom Fields'
 		));
 		$lookup[] = array('Institution Site Totals' => array(
 			'viewMethod' => array('action' => 'customTables'),
@@ -120,7 +120,7 @@ class SetupController extends AppController {
 			'editMethod' => array('action' => 'customTablesEdit'),
 			'edit' => 'customTablesEdit',
 			'optgroup' => true,
-			'name' => 'Tables'
+			'name' => 'Custom Tables'
 		));
 		// End Census
 		
@@ -192,6 +192,10 @@ class SetupController extends AppController {
 			'edit' => 'school_year_edit',
 			'items' => $this->SchoolYear->getLookupVariables()
 		));
+
+		$lookup[] = array('Assessment' => array(
+			'items' => array('Result Type' => array('model' => 'AssessmentResultType'))
+		));
 		
 		// Student
 		$lookup[] = array('Student' => array(
@@ -205,7 +209,7 @@ class SetupController extends AppController {
 			'editMethod' => array('action' => 'customFieldsEdit', 'StudentCustomField'),
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
-			'name' => 'More'
+			'name' => 'Custom Fields'
 		));
 		// End Student
 		
@@ -227,7 +231,7 @@ class SetupController extends AppController {
 			'editMethod' => array('action' => 'customFieldsEdit', 'TeacherCustomField'),
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
-			'name' => 'More'
+			'name' => 'Custom Fields'
 		));
 		// End Teacher
 		
@@ -243,7 +247,7 @@ class SetupController extends AppController {
 			'editMethod' => array('action' => 'customFieldsEdit', 'StudentCustomField'),
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
-			'name' => 'More'
+			'name' => 'Custom Fields'
 		));
 		// End Staff
 		

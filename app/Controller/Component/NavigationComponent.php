@@ -185,7 +185,8 @@ class NavigationComponent extends Component {
 					$this->createLink('Classes', 'InstitutionSites', 'classes'),
 					$this->createLink('Students', 'InstitutionSites', 'students'),
 					$this->createLink('Teachers', 'InstitutionSites', 'teachers'),
-					$this->createLink('Staff', 'InstitutionSites', 'staff')
+					$this->createLink('Staff', 'InstitutionSites', 'staff'),
+					$this->createLink('Results', 'InstitutionSites', 'results')
 				),
 				'TOTALS' => array(
 					$this->createLink('Enrolment', 'Census', 'enrolment'),
@@ -209,7 +210,7 @@ class NavigationComponent extends Component {
 				'SYSTEM SETUP' => array(
 					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit$'),
 					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup$'),
-					$this->createLink('Assessments', 'Assessment', 'index', 'index$|assessment'),
+					$this->createLink('National Assessments', 'Assessment', 'index', 'index$|assessment'),
 					$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
 					$this->createLink('System Configurations', 'Config', 'index', 'index$|edit$|^dashboard')
 				),
