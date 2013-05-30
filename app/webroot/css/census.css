@@ -52,7 +52,9 @@
 .legend .dataentry { background-color: #666666; }
 .legend .external { background-color: #5B8BAF; }
 .legend .estimate { background-color: #FF0000; }
+.legend .internal { background-color: #809800; }
 .row_dataentry { color: #666666; }
 .row_external { color: #5B8BAF; }
 .row_estimate { color: #FF0000; }
+.row_internal { color: #809800; }
 /* End legend styles */

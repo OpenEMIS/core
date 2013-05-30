@@ -18,7 +18,13 @@ App::uses('AppController', 'Controller');
 
 class CensusController extends AppController {
 	public $institutionSiteId;
-    
+	public $source_type=array(
+						"dataentry" => 0,
+						"external" => 20,
+						"internal" => 30,
+						"estimate" => 40
+						);
+
 	public $uses = array(
 		'Institution',
 		'InstitutionSite',
@@ -85,6 +91,7 @@ class CensusController extends AppController {
 		} else {
 			$this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
 		}
+		$this->set('source_type', $this->source_type);
 	}
 	
 	private function getAvailableYearId($yearList) {

@@ -77,7 +77,7 @@ class CensusStudent extends AppModel {
 		return $data;
 	}
 	
-	public function saveCensusData($data, $institutionSiteId) {
+	public function saveCensusData($data, $institutionSiteId,$source=0) {
 		$keys = array();
 		$deleted = array();
 		
@@ -96,6 +96,7 @@ class CensusStudent extends AppModel {
 					$this->create();
 				}
 				$row['institution_site_id'] = $institutionSiteId;
+				$row['source'] = $source;
 				$save = $this->save(array('CensusStudent' => $row));
 				if($row['id'] == 0) {
 					$keys[strval($i+1)] = $save['CensusStudent']['id'];
