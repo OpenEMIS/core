@@ -8,7 +8,7 @@ echo $this->Html->script('institution_site_programmes', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="programmes" class="content_wrapper">
-    <h1><?php echo __('Programmes'); ?></h1>
+    <h1><?php echo __('List of Programmes'); ?></h1>
     <?php echo $this->element('alert'); ?>
 	
 	<?php 
@@ -36,8 +36,6 @@ echo $this->Html->script('institution_site_programmes', false);
 		<div class="table_head">
 			<div class="table_cell cell_system"><?php echo __('Programme'); ?></div>
 			<div class="table_cell"><?php echo __('System') . ' - ' . __('Cycle'); ?></div>
-			<div class="table_cell cell_gender"><?php echo __('Male'); ?></div>
-			<div class="table_cell cell_gender"><?php echo __('Female'); ?></div>
 		</div>
 		
 		<div class="table_body">
@@ -47,8 +45,6 @@ echo $this->Html->script('institution_site_programmes', false);
 				<div class="table_cell">
 					<?php echo sprintf('%s - %s', $obj['education_system_name'], $obj['education_cycle_name']); ?>
 				</div>
-				<div class="table_cell cell_number"><?php echo $obj['gender']['M']; ?></div>
-				<div class="table_cell cell_number"><?php echo $obj['gender']['F']; ?></div>
 			</div>
 			<?php } ?>
 		</div>

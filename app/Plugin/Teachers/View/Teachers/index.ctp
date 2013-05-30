@@ -18,8 +18,6 @@ echo $this->Html->script('search', false);
     <?php echo $this->element('alert'); ?>
 
     <div class="row">
-        <input type="hidden" id="controller" value="Teachers" />
-        <input type="hidden" id="action" value="viewTeacher" />
         <?php  echo $this->Form->create('Teacher', array('action' => 'search','id'=>false));  ?>
         <div class="search_wrapper">
         <?php echo $this->Form->input('SearchField', array(
@@ -51,7 +49,7 @@ echo $this->Html->script('search', false);
             </ul>
         </div>
 
-        <div class="table allow_hover">
+        <div class="table allow_hover" action="Teachers/viewTeacher/">
             <div class="table_head">
                 <div class="table_cell cell_id_no">
                     <span class="left"><?php echo __('Identification No.'); ?></span>
@@ -89,7 +87,7 @@ echo $this->Html->script('search', false);
                         $birthday = $arrItems['Teacher']['date_of_birth'];
 
                 ?>
-                    <div id="<?php echo $id ?>" class="table_row">
+                    <div class="table_row" row-id="<?php echo $id ?>">
                         <div class="table_cell"><?php echo $identificationNo; ?></div>
                         <div class="table_cell"><?php echo $firstName; ?></div>
                         <div class="table_cell"><?php echo $lastName; ?></div>

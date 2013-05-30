@@ -18,6 +18,8 @@ App::uses('AppController', 'Controller');
 App::uses('Folder', 'Utility');
 App::uses('File', 'Utility');
 App::uses('CakeNumber', 'Utility');
+App::uses('ImageMeta', 'Image');
+App::uses('ImageValidate', 'Image');
 
 class ConfigController extends AppController {
 	public $uses = array(
@@ -78,6 +80,16 @@ class ConfigController extends AppController {
 		foreach ($items as $key => $value) {
 			foreach ($items[$key] as $innerKey => $innerValue) {
 				$items[$key][$innerKey]['value'] = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
+				if ($items[$key][$innerKey]['name'] == "yearbook_logo") {
+					$items[$key][$innerKey]['hasYearbookLogoContent'] = false;
+
+					$attachment = $this->ConfigAttachment->findById($items[$key][$innerKey]['value']);
+
+					if (!empty($attachment['ConfigAttachment']['file_content'])) {
+						$items[$key][$innerKey]['hasYearbookLogoContent'] = true;
+					}
+
+				}
 			}
 		}
 
@@ -93,6 +105,7 @@ class ConfigController extends AppController {
 	}
 
 	public function edit(){
+
 		$this->Navigation->addCrumb('Edit System Configurations');
 
 		$items = $this->ConfigItem->find('all',array(
@@ -106,14 +119,14 @@ class ConfigController extends AppController {
 			}
 		}
 
-		$school_year_raw = $this->SchoolYear->find('list', array('fields' => 'name', 'order' => 'name desc'));
-		$school_year = array();
-		foreach ($school_year_raw as $value) {
-			$school_year[$value] = $value;
+		$schoolYearRaw = $this->SchoolYear->find('list', array('fields' => 'name', 'order' => 'name desc'));
+		$schoolYear = array();
+		foreach ($schoolYearRaw as $value) {
+			$schoolYear[$value] = $value;
 		}
 
 		$sorted = $this->groupByType($this->Utility->formatResult($items));
-		$this->set('school_years', $school_year);
+		$this->set('school_years', $schoolYear);
 		$this->set('items', $sorted);
 	}
 
@@ -130,21 +143,115 @@ class ConfigController extends AppController {
 				}
 			}
 			foreach($dataToBeSave as $key => $element){
-					foreach($element as $key => $innerElement){
-						if ($this->ConfigItem->save($innerElement)) {
-				            $savedItems = true;
-				        }else{
-				        	echo 'false<br/>';
-				        }
+				foreach($element as $innerKey => $innerElement){
+					$yearbookLogoElement = "";
+					$yearbookElements = $this->ConfigItem->findById($innerElement['id'], array('ConfigItem.name'));
+					$formData = $this->data;
 
+					// if yearbook publication date, massage date value 
+					if ($key == "yearbook" && $yearbookElements['ConfigItem']['name'] == "yearbook_publication_date") {
+						$pubYear = $formData['ConfigItem']['yearbook'][$innerKey]['value']['year'];
+						$pubMonth = $formData['ConfigItem']['yearbook'][$innerKey]['value']['month'];
+						$pubDay = $formData['ConfigItem']['yearbook'][$innerKey]['value']['day'];
+						unset($innerElement[$innerKey]['value']['year']);
+						$innerElement['value'] = date('Y-m-d', mktime(0,0,0,$pubDay,$pubMonth,$pubYear));
 					}
+
+					// if yearbook logo, upload the image
+					if ($key == "yearbook" && $yearbookElements['ConfigItem']['name'] == "yearbook_logo") {
+						$imgValidate = new ImageValidate(800,800);
+						$data = array();
+						$reset_image = $formData['ConfigItem']['yearbook'][$innerKey]['reset_yearbook_logo'];
+
+						// pr ($data['ConfigItem']['yearbook'][$innerKey]);
+						if (isset($formData['ConfigItem']['yearbook'][$innerKey]['file_value']) && $formData['ConfigItem']['yearbook'][$innerKey]['file_value']['error'] != UPLOAD_ERR_NO_FILE) {
+				            
+							if (array_key_exists('reset_yearbook_logo', $formData['ConfigItem']['yearbook'][$innerKey])) {
+								if (!empty($formData['ConfigItem']['yearbook'][$innerKey]['file_value'])) {
+						            $img = new ImageMeta($formData['ConfigItem']['yearbook'][$innerKey]['file_value']);
+						            // unset($formData['ConfigItem']['yearbook'][$innerKey]['file_value']);
+
+						            if($reset_image == 0){
+						                $validated = $imgValidate->validateImage($img);
+
+						                if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
+						                    $data['ConfigAttachment']['file_content'] = $img->getContent();
+						                    // $img->setContent('');
+						//                $data['ConfigItem']['photo_name'] = serialize($img);
+						                    $img->setName('yearbook_logo');
+						                    $data['ConfigAttachment']['id'] = $formData['ConfigItem']['yearbook'][$innerKey]['value'];
+						                    $data['ConfigAttachment']['file_name'] = $img->getFilename();
+						                    $data['ConfigAttachment']['type'] = "yearbook";
+						                    $data['ConfigAttachment']['name'] = $formData['ConfigItem']['yearbook'][$innerKey]['file_value']['name'];
+											$data['ConfigAttachment']['description']="";
+											$data['ConfigAttachment']['order']="0";
+						                }
+						                $rec = $this->ConfigAttachment->save($data);
+
+						                // check if yearbook logo is stored in attachment, and stored the id to config Item
+						                $innerElement['value'] = "";
+					            		if (!empty($rec) && $rec['ConfigAttachment']['id'] > 0) {
+					            			$innerElement['value'] = $rec['ConfigAttachment']['id'];
+										}
+						            }else{
+
+						                $data['ConfigAttachment']['file_content'] = '';
+						                $data['ConfigAttachment']['file_name'] = '';
+						            }
+						        }				            
+				            }
+							
+				        } else {
+				        	if ($reset_image == 1) {				            	
+								if ($formData['ConfigItem']['yearbook'][$innerKey]['value'] > 0 && $formData['ConfigItem']['yearbook'][$innerKey]['value'] != "" && !is_null($formData['ConfigItem']['yearbook'][$innerKey]['value'])) {
+									$data['ConfigAttachment']['id'] = $formData['ConfigItem']['yearbook'][$innerKey]['value'];
+									$data['ConfigAttachment']['file_content'] = "";
+									$data['ConfigAttachment']['file_name'] = "";					                    
+									$data['ConfigAttachment']['name'] = "";
+								}
+								$rec = $this->ConfigAttachment->save($data);
+					    	}
+				        }
+			        }
+
+					if ($this->ConfigItem->save($innerElement)) {
+						$savedItems = true;
+	                }else{
+	                    #echo 'false<br/>';
+	                }
+				}
+				// $this->ConfigItem->saveAll($element);
 			}
 			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
 			$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
+			$this->Session->write('configItem.yearbook_school_year', $this->ConfigItem->getValue('yearbook_school_year'));
 			$this->redirect('/Config');
 		}
 	}
 
+	################# Start Yearbook #################
+
+	public function fetchYearbookImage($id){
+        $this->autoRender = false;
+
+        $mime_types = ImageMeta::mimeTypes();
+
+        $imageRawData = $this->ConfigAttachment->findById($id);
+
+        if(empty($imageRawData['ConfigAttachment']['file_content']) || empty($imageRawData['ConfigAttachment']['file_content'])){
+            header("HTTP/1.0 404 Not Found");
+            die();
+        }else{
+            $imageFilename = $imageRawData['ConfigAttachment']['file_name'];
+            $fileExt = pathinfo($imageFilename, PATHINFO_EXTENSION);
+            $imageContent = $imageRawData['ConfigAttachment']['file_content'];
+       // header("Content-type: {$imageMeta->getMime()}");
+            header("Content-type: " . $mime_types[$fileExt]);
+            echo $imageContent;
+        }
+    }
+
+	################# End Yearbook #################
 	################# Start Dashboard #################
 
 	public function dashboard(){
@@ -313,7 +420,7 @@ class ConfigController extends AppController {
 				$this->Utility->alert(__('File have been updated successfully.'));
 				$this->redirect(array('action' => 'dashboard'));
 			}else{
-				$this->Utility->alert(__('File have not been updated successfully.'));
+				$this->Utility->alert(__('File has not been updated successfully.'));
 				$this->redirect(array('action' => 'dashboard'));
 
 			}
@@ -377,7 +484,7 @@ class ConfigController extends AppController {
 				// Check that image file is within the size limit.
 				if($isVaild && $images['files']['size'][$key] > $this->imageConfig['dashboard_img_size_limit']){
 					$isVaild = $isVaild && false;
-					$msg[$key] = __('Image have exceeded the allow file size of').' '.CakeNumber::toReadableSize($this->imageConfig['dashboard_img_size_limit']).'. '.__('Please reduce file size.');
+					$msg[$key] = __('Image has exceeded the allow file size of').' '.CakeNumber::toReadableSize($this->imageConfig['dashboard_img_size_limit']).'. '.__('Please reduce file size.');
 				}
 
 				// Check if uploaded image is within the limited width and height set in system

@@ -12,22 +12,23 @@ echo $this->Html->script('setup_variables', false);
 <div id="setup-variables" class="content_wrapper edit">
 	<?php
 	echo $this->Form->create('SetupVariables', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Setup', 'action' => 'setupVariablesEdit')
 	));
 	?>
 	<h1>
-		<span><?php echo __('Setup Variables'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'setupVariables'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<span><?php echo __($header); ?></span>
+		<?php echo $this->Html->link(__('View'), array('action' => 'setupVariables', $selectedCategory), array('class' => 'divider')); ?>
 	</h1>
 	
 	<div class="row category">
 		<?php
 		echo $this->Form->input('category', array(
 			'id' => 'category',
+			'class' => 'default',
 			'options' => $categoryList,
 			'default' => $selectedCategory,
+			'url' => 'Setup/setupVariables/',
 			'onchange' => 'setup.changeCategory()'
 		));
 		?>
@@ -89,7 +90,7 @@ echo $this->Html->script('setup_variables', false);
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'setupVariables', $selectedCategory), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

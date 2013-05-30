@@ -130,6 +130,49 @@ class InstitutionSiteProgramme extends AppModel {
 		return $data;
 	}
 	
+	public function getSiteProgrammeOptions($institutionSiteId, $yearId, $withCycle=true) {
+		$data = array();
+		if($withCycle) {
+			$list = $this->getSiteProgrammes($institutionSiteId, $yearId);
+			foreach($list as &$obj) {
+				$data[$obj['education_programme_id']] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
+			}
+		} else {
+			$data = $this->find('list', array(
+				'recursive' => -1,
+				'fields' => array('EducationProgramme.id AS education_programme_id', 'EducationProgramme.name AS education_programme_name'),
+				'joins' => array(
+					array(
+						'table' => 'education_programmes',
+						'alias' => 'EducationProgramme',
+						'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+					),
+					array(
+						'table' => 'education_cycles',
+						'alias' => 'EducationCycle',
+						'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+					),
+					array(
+						'table' => 'education_levels',
+						'alias' => 'EducationLevel',
+						'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+					),
+					array(
+						'table' => 'education_systems',
+						'alias' => 'EducationSystem',
+						'conditions' => array('EducationSystem.id = EducationLevel.education_system_id')
+					)
+				),
+				'conditions' => array(
+					'InstitutionSiteProgramme.institution_site_id' => $institutionSiteId,
+					'InstitutionSiteProgramme.school_year_id' => $yearId
+				),
+				'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
+			));
+		}
+		return $data;
+	}
+	
 	// used by CensusController, classes/teachers
 	public function getProgrammeList($institutionSiteId, $yearId, $withGrades = true) {
 		$list = $this->getActiveProgrammes($institutionSiteId, $yearId);
@@ -239,4 +282,74 @@ class InstitutionSiteProgramme extends AppModel {
 		 return $arr;
 	   
 	}
+
+	// Required by Yearbook, summary by element and level
+	public function calculateTotalSitesPerEducationCycle($year) {
+
+		$startDate = mktime(0,0,0,1,1,$year);
+		$endDate = mktime(0,0,0,12,31,$year);
+
+		$this->unbindModel(array('belongsTo' => array('Institution')));
+
+        $options['fields'] = array(
+        	'EducationProgramme.education_cycle_id',
+            'COUNT(InstitutionSite.id) as TotalInstitutionSites'
+        );
+
+        $options['group'] = array('EducationProgramme.education_cycle_id');
+        $options['conditions'] = array(array('InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('EducationProgramme.education_cycle_id' => NULL, 'InstitutionSite.date_closed' => NULL, 'InstitutionSite.date_closed !=' => "0000-00-00"));
+
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		// massage data
+		foreach ($values as $k => $v) {
+			$eduCycleId = $v['education_cycle_id'];
+			$data[$eduCycleId] = $v['TotalInstitutionSites'];
+		}
+
+		return $data;
+	}
+
+	// Required by Yearbook, schools per level and provides
+	public function calculateTotalSchoolsPerLevel($year, $eduCycleId) {
+
+		$startDate = mktime(0,0,0,1,1,$year);
+		$endDate = mktime(0,0,0,12,31,$year);
+		$this->bindModel(array('hasOne' => array(
+			'InstitutionProvider' =>
+            array(
+                'className'              => 'InstitutionProvider',
+                'joinTable'              => 'institution_providers',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' Institution.institution_provider_id = InstitutionProvider.id '),
+            ),
+            'EducationCycle' =>
+            array(
+                'className'              => 'EducationCycle',
+                'joinTable'              => 'education_cycles',
+				'foreignKey' => false,
+				'dependent'    => false,
+                'conditions' => array(' EducationProgramme.education_cycle_id = EducationCycle.id '),
+            )
+        )));
+
+        $options['fields'] = array(
+        	'InstitutionProvider.id as ProviderId',
+        	'InstitutionProvider.name as ProviderName',
+        	'EducationCycle.id as CycleId',
+        	'EducationCycle.name as CycleName',
+        	'COUNT(InstitutionSite.id) as TotalInstitutionSites'
+        );
+
+        $options['group'] = array('InstitutionProvider.id','EducationProgramme.education_cycle_id');
+        // $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.date_opened >=' => date('Y-m-d', $startDate), 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('EducationProgramme.education_cycle_id'=>null));
+        $options['conditions'] = array('AND' => array('EducationProgramme.education_cycle_id' => $eduCycleId, 'InstitutionSite.date_opened <=' => date('Y-m-d', $endDate)), 'NOT' => array('EducationProgramme.education_cycle_id'=>null, 'InstitutionSite.date_closed' => NULL, 'InstitutionSite.date_closed !=' => "0000-00-00"));
+		$values = $this->find('all', $options);
+		$values = $this->formatArray($values);
+
+		return $values;
+	}
+
 }

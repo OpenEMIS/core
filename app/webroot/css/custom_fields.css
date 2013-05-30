@@ -6,6 +6,8 @@
 	text-align: center;
 }
 
+.field_list { margin-top: 20px; }
+
 .field_list > div {
 	width: 660px;
 	padding: 4px;
@@ -41,6 +43,7 @@
 	margin-top: 5px;
 	padding-top: 0;
 	padding-right: 0;
+	position: relative;
 }
 
 .field_list .action {
@@ -59,13 +62,13 @@
 	margin-right: 10px;
 }
 
-.field_list .custom_section_break .action {
-	margin-top: -11px;
-	border-top: 0;
-}
+.field_list .custom_section_break .action { position: absolute; right: 0px; top: 9px; }
+.chrome .field_list .custom_section_break .action { top: 11px; }
+.safari .field_list .custom_section_break .action { top: 11px; }
 
 .field_list .custom_field textarea { width: 608px; }
 .field_list .custom_field select { margin-bottom: 5px; margin-top: 5px; }
+.btn_field { padding: 3px 6px; }
 
 .options { margin-top: 5px; }
 
@@ -104,49 +107,17 @@
 	border-right: 1px solid #CCCCCC;
 }
 
-.action span {
-	float: left;
-	margin: 2px 3px 0 0;
-}
+.action span { float: left; margin: 2px 3px 0 0; }
 
 .add_option { margin-top: 5px; }
 
-.table {
-    margin-bottom: 0px;
-}
+.table { margin-bottom: 0px; margin-left: 3px; width: 678px; table-layout: auto; }
+.quicksand.table_body, 
+.quicksand.table_view { width: 682px; }
 
-ul.table_body li.table_row{
-    /*width: 682px;*/
-}
+.cell_name { width: 180px; }
+.cell_site_type { width: 100px; }
 
-.quicksand.table_body, .quicksand.table_view {
-    width: 682px;
-}
-.cell_visible {
-    min-width: 38px;
-    width: 38px !important;
-}
-
-.cell_name, .cell_description, .cell_site_type {
-    margin-left: -1px;
-    min-width: 165px;
-    width: 165px;
-}
-
-.cell_order{
-    border-left-width: 0px;
-    margin-left: -1px;
-    min-width: 58px;
-    width: 58px;
-}
-
-.li_even {
-    background-color: #EFEFEF;
-}
-.table {
-    /*margin-bottom: 0px;*/
-    table-layout: auto;
-    margin-left: 3px;
-    width: 678px;
-    /*width: 99% !important;*/
-}
+.table_view .cell_name { margin-left: -1px; width: 410px; line-height: 25px; }
+.table_view .cell_site_type { margin-left: -1px; line-height: 25px; }
+.table_view .cell_desc { margin-left: -1px; width: 213px; }

@@ -869,14 +869,14 @@ msgstr ""
 msgid "File have been updated successfully."
 msgstr ""
 
-msgid "File have not been updated successfully."
-msgstr "File has not been updated successfully."
+msgid "File has not been updated successfully."
+msgstr ""
 
 msgid "File format not supported."
 msgstr ""
 
-msgid "Image have exceeded the allow file size of"
-msgstr "Image has exceeded the allow file size of"
+msgid "Image has exceeded the allow file size of"
+msgstr ""
 
 msgid "Please reduce file size."
 msgstr ""
@@ -2088,8 +2088,8 @@ msgstr ""
 msgid "Please enter a name for the Field of Study."
 msgstr ""
 
-msgid "This Field of Study is already exists in the system."
-msgstr "This Field of Study already exists in the system."
+msgid "This Field of Study already exists in the system."
+msgstr ""
 
 msgid "Please select the programme orientation."
 msgstr ""
@@ -2166,8 +2166,8 @@ msgstr ""
 msgid "Please select a country before adding new records."
 msgstr ""
 
-msgid "Error have occurred."
-msgstr "Error has occurred."
+msgid "Error has occurred."
+msgstr ""
 
 msgid "Age cannot be empty."
 msgstr ""

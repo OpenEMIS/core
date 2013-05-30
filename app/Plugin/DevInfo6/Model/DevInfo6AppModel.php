@@ -14,7 +14,6 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-
 class DevInfo6AppModel extends AppModel {
 	public function truncate() {
 		if(isset($this->useTable)) {

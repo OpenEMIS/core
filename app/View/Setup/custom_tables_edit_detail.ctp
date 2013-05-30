@@ -1,6 +1,5 @@
 <?php
 echo $this->Html->script('custom_table', false);
-
 echo $this->Html->script('jquery.tools', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
@@ -14,37 +13,34 @@ $ctr = 1;
 
 <div id="custom" class="content_wrapper">
 	<h1>
-		<span ><?php echo __('Custom Table'); ?></span>
-		<?php echo $this->Html->link(__('List'), array('controller' => 'Setup', 'action' => 'CustomTables',$sitetype), array('class' => 'divider')); ?>
-		<?php //echo $this->Html->link(__('List'), array('controller' => 'Setup', 'action' => 'CustomTables',$sitetype), array('class' => 'divider table-link')); ?>
+		<span ><?php echo __('Institution Site Totals - Tables'); ?></span>
+		<?php echo $this->Html->link(__('List'), array('action' => 'setupVariables', $selectedCategory, $siteType), array('class' => 'divider')); ?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
+	
 	<?php
 	echo $this->Form->create('CensusGrid', array(
-			'id' => 'submitForm',
-			'inputDefaults' => array('label' => false, 'div' => false),
-			'url' => array('controller' => 'Setup', 'action' => 'customTablesEditDetail',$id)
-		)
-	);
+		'inputDefaults' => array('label' => false, 'div' => false),
+		'url' => array('controller' => 'Setup', 'action' => 'customTablesEditDetail', $selectedCategory, $siteType, $id)
+	));
 	?>
+	
 	<?php echo $this->Form->input('id',array('type'=>'hidden','value'=>$id));?>
-	<!-- if institution site or census -->
-	<div class="row input" style="padding: 10px">
-		<div class="label" style="width: 60px;"><?php echo __('Site Type'); ?></div>
+	<?php echo $this->Form->input('order',array('type'=>'hidden','value'=>0));?>
+	<div class="row edit" style="margin-bottom: 20px;">
+		<div class="label" style="width: 90px;"><?php echo __('Site Type'); ?></div>
 		<div class="value">
-		<?php if(count($siteTypes)>0) {
-		        //echo $this->Form->hidden('selected_siteTypeid', $sitetype);
-                echo '<input type="hidden" id="selected_siteTypeid" value="'.$sitetype.'"/>';
-				echo $this->Form->select('institution_site_type_id', $siteTypes, array(
-					'id'=>'siteTypeid',
-					//'options'=>,
-					'empty' => false,
-					'value'=>$sitetype
-				));
-		} ?>
+			<?php
+			echo $this->Form->input('institution_site_type_id',	array(
+				'id' => 'siteTypeId',
+				'class' => 'default',
+				'options' => $siteTypes,
+				'default' => $siteType
+			));
+			?>
 		</div>
 	</div>
-	<!-- end if -->
-	<?php ?>
+
 	<div class="custom_grid">
 		<fieldset class="custom_section_break">
 			<?php echo $this->Form->hidden('dataId', array('value'=>(array_key_exists('id', $data['CensusGrid'])?$data['CensusGrid']['id']:'') ) ); ?>
@@ -61,19 +57,15 @@ $ctr = 1;
 					<?php $inCtr= 1; foreach($data['CensusGridXCategory'] as $statVal) { ?>
 					<div class="table_cell">
 						<span id="Xlabel_<?php echo $inCtr;?>">
-						<?php
-						
-						echo   $statVal['name'];
-						?>
+						<?php echo $statVal['name']; ?>
 						</span>
 					</div>
 					<?php $inCtr++; } ?>
-					
 				</div>
 				
 				<div class="table_body" id="section">
 				<?php
-				 $inCtr= 1; 
+				$inCtr= 1;
 				foreach($data['CensusGridYCategory']  as $yCatId => $yCatName) {
 				?>
 					<div id="data-grid-row-<?php echo$inCtr;?>" class="table_row<?php echo $ctr++%2==0? ' even' : ''; ?>">
@@ -95,103 +87,71 @@ $ctr = 1;
 			</div>
 		</div>
 	</div>
-	<br>
-	<div class="table_wrapper" id="YCatList" style="padding-left:10px">
-		<div class="table" style="width:425px;margin-bottom:5px;">
-			<div class="table_body">
-				<div class="table_row">
-					<?php echo __('Y Category'); ?>
-				</div>
-				<div class="field_value" style="padding:0px 10px;">
-					<ul class="quicksand options" data-category="y">
+	
+	<div id="YCatList" class="custom_field" style="margin-top: 20px;">
+		<div class="field_label"><?php echo __('Y Category'); ?></div>
+		<div class="field_value">
+			<ul class="quicksand options" data-category="y">
 				<?php
 				$ctr = 1;
 				$fieldOption =  sprintf('data[%s][%%s][%%s]', 'CensusGridYCategory');
 				foreach($data['CensusGridYCategory']  as $yCatId => $yCatName) {
 				?>
 				
-					
-					<?php 	$isOptionVisible = $yCatName['visible']==1; ?>
-						<li data-id="<?php echo $ctr;?>" class="<?php echo !$isOptionVisible ? 'inactive' : ''; ?>">
-							<input type="hidden" id="order" name="<?php echo sprintf($fieldOption, $ctr, 'order'); ?>" value="<?php echo $ctr; ?>" />
-							<input type="hidden" id="visible" name="<?php echo sprintf($fieldOption, $ctr, 'visible'); ?>" value="<?php echo $yCatName['visible'] ?>" />
-                                                        <?php if(isset($yCatName['id'])){ ?>
-							<input type="hidden" id="id" name="<?php echo sprintf($fieldOption, $ctr, 'id'); ?>" value="<?php echo $yCatName['id']; ?>" />
-                                                        <?php } ?>
-							<input type="hidden" id="ref_id" name="<?php echo sprintf($fieldOption, $ctr, 'census_grid_id'); ?>" value="<?php echo $id; ?>" />
-							<input type="text" class="default" onKeyUp="$('#Ylabel_<?php echo $ctr; ?>').html(this.value);" name="<?php echo sprintf($fieldOption, $ctr, 'name'); ?>" value="<?php echo $yCatName['name']; ?>" />
-							<span class="icon_visible"></span>
-							<span class="icon_up" onClick="CustomTable.reorder(this);CustomTable.moveY(this);"></span>
-							<span class="icon_down" onClick="CustomTable.reorder(this);CustomTable.moveY(this);"></span>
-						</li>
-					
-					
+				<?php 	$isOptionVisible = $yCatName['visible']==1; ?>
+					<li data-id="<?php echo $ctr;?>" class="<?php echo !$isOptionVisible ? 'inactive' : ''; ?>">
+						<input type="hidden" id="order" name="<?php echo sprintf($fieldOption, $ctr, 'order'); ?>" value="<?php echo $ctr; ?>" />
+						<input type="hidden" id="visible" name="<?php echo sprintf($fieldOption, $ctr, 'visible'); ?>" value="<?php echo $yCatName['visible'] ?>" />
+													<?php if(isset($yCatName['id'])){ ?>
+						<input type="hidden" id="id" name="<?php echo sprintf($fieldOption, $ctr, 'id'); ?>" value="<?php echo $yCatName['id']; ?>" />
+													<?php } ?>
+						<input type="hidden" id="ref_id" name="<?php echo sprintf($fieldOption, $ctr, 'census_grid_id'); ?>" value="<?php echo $id; ?>" />
+						<input type="text" class="default" onKeyUp="$('#Ylabel_<?php echo $ctr; ?>').html(this.value);" name="<?php echo sprintf($fieldOption, $ctr, 'name'); ?>" value="<?php echo $yCatName['name']; ?>" />
+						<span class="icon_visible"></span>
+						<span class="icon_up" onClick="CustomTable.reorder(this);CustomTable.moveY(this);"></span>
+						<span class="icon_down" onClick="CustomTable.reorder(this);CustomTable.moveY(this);"></span>
+					</li>
 				<?php $ctr++;  ?>
 				<?php } ?>
-						</ul>
-				</div>
-			</div>
+			</ul>
+			<div class="row" style="margin: 5px 0"><a id="addRow" class="void icon_plus"><?php echo __('Add'); ?></a></div>
 		</div>
 	</div>
-	<div class="table_row">
-		<a id="addRow" class="void icon_plus" href="javascript: void(0)"><?php echo __('Add'); ?></a>
-	</div>
 	
-	<br><br>
-	<div class="table_wrapper" id="XCatList" style="padding-left:10px">
-		<div class="table" style="width:425px;margin-bottom:5px;">
-			<div class="table_body">
-				<div class="table_row">
-					<?php echo __('X Category'); ?>
-				</div>
-				<div class="field_value" style="padding:0px 10px;">
-					<ul class="quicksand options" data-category="x">
+	<div id="XCatList" class="custom_field" style="margin-top: 20px;">
+		<div class="field_label"><?php echo __('X Category'); ?></div>
+		<div class="field_value">
+			<ul class="quicksand options" data-category="x">
 				<?php
 				$ctr = 1;
 				$fieldOption =  sprintf('data[%s][%%s][%%s]', 'CensusGridXCategory');
 				foreach($data['CensusGridXCategory']  as $xCatId => $xCatName) {
 				?>
-				
 					
-					<?php 	$isOptionVisible = $xCatName['visible']==1; ?>
-						<li data-id="<?php echo $ctr;?>" class="<?php echo !$isOptionVisible ? 'inactive' : ''; ?>">
-							<input type="hidden" id="order" name="<?php echo sprintf($fieldOption, $ctr, 'order'); ?>" value="<?php echo $ctr; ?>" />
-							<input type="hidden" id="visible" name="<?php echo sprintf($fieldOption, $ctr, 'visible'); ?>" value="<?php echo $xCatName['visible'] ?>" />
-                                                        <?php if(isset($xCatName['id'])){ ?>
-							<input type="hidden" id="id" name="<?php echo sprintf($fieldOption, $ctr, 'id'); ?>" value="<?php echo $xCatName['id']; ?>" />
-                                                        <?php } ?>
-							<input type="hidden" id="ref_id" name="<?php echo sprintf($fieldOption, $ctr, 'census_grid_id'); ?>" value="<?php echo $id; ?>" />
-							<input type="text" class="default" onKeyUp="$('#Xlabel_<?php echo $ctr;?>').html(this.value);" name="<?php echo sprintf($fieldOption, $ctr, 'name'); ?>" value="<?php echo $xCatName['name']; ?>" />
-							<span class="icon_visible"></span>
-							<span class="icon_up" onClick="CustomTable.reorder(this);CustomTable.moveX(this);"></span>
-							<span class="icon_down" onClick="CustomTable.reorder(this);CustomTable.moveX(this);"></span>
-						</li>
-					
+				<?php $isOptionVisible = $xCatName['visible']==1; ?>
+					<li data-id="<?php echo $ctr;?>" class="<?php echo !$isOptionVisible ? 'inactive' : ''; ?>">
+						<input type="hidden" id="order" name="<?php echo sprintf($fieldOption, $ctr, 'order'); ?>" value="<?php echo $ctr; ?>" />
+						<input type="hidden" id="visible" name="<?php echo sprintf($fieldOption, $ctr, 'visible'); ?>" value="<?php echo $xCatName['visible'] ?>" />
+						<?php if(isset($xCatName['id'])){ ?>
+						<input type="hidden" id="id" name="<?php echo sprintf($fieldOption, $ctr, 'id'); ?>" value="<?php echo $xCatName['id']; ?>" />
+						<?php } ?>
+						<input type="hidden" id="ref_id" name="<?php echo sprintf($fieldOption, $ctr, 'census_grid_id'); ?>" value="<?php echo $id; ?>" />
+						<input type="text" class="default" onKeyUp="$('#Xlabel_<?php echo $ctr;?>').html(this.value);" name="<?php echo sprintf($fieldOption, $ctr, 'name'); ?>" value="<?php echo $xCatName['name']; ?>" />
+						<span class="icon_visible"></span>
+						<span class="icon_up" onClick="CustomTable.reorder(this);CustomTable.moveX(this);"></span>
+						<span class="icon_down" onClick="CustomTable.reorder(this);CustomTable.moveX(this);"></span>
+					</li>
 					
 				<?php $ctr++;  ?>
 				<?php } ?>
-					</ul>
-				</div>
-			</div>
+			</ul>
+			<div class="row" style="margin: 5px 0"><a id="addCol" class="void icon_plus"><?php echo __('Add'); ?></a></div>
 		</div>
 	</div>
 	
-	<div class="table_row">
-		<a id="addCol" class="void icon_plus" href="javascript: void(0)"><?php echo __('Add'); ?></a>
-	</div>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" onClick="window.location=getRootURL()+'Setup/customTables/<?php echo (empty($sitetype))? : $sitetype; ?>';" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'setupVariables', $selectedCategory, $siteType), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
-
-<script type="text/javascript">
-$(document).ready(function(){
-    var selectedSiteTypeId = $('#selected_siteTypeid');
-    if(selectedSiteTypeId.length > 0 ){
-        $('#siteTypeid option[value="' + selectedSiteTypeId.val() + '"]').attr('selected', true);
-    }
-
-});
-</script>

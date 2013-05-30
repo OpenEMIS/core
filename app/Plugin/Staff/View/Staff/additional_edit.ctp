@@ -6,8 +6,8 @@ echo $this->Html->script('institution_site', false);
 
 <div id="site" class="content_wrapper edit">
     <h1>
-        <span><?php echo __('Additional Info'); ?></span>
-        <?php echo $this->Html->link(__('Edit'), array('action' => 'additional'), array('class' => 'divider')); ?>
+        <span><?php echo __('More'); ?></span>
+        <?php echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider')); ?>
     </h1>
     <?php
     echo $this->Form->create('StaffCustomValue', array(

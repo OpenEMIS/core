@@ -14,7 +14,6 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-
 class BatchShell extends AppShell {
     
     public $uses = array('BatchProcess','Reports.Report','Reports.BatchReport');
@@ -106,9 +105,16 @@ class BatchShell extends AppShell {
 			
 			 $this->Vcf->genVCF($settings);
         }elseif($file_type == 'ind'){
-			
+
 			 $this->Ind->genIND($settings);
-        }
+        }elseif($file_type='yearbook'){
+			echo "yearbook";
+			if(sizeof($this->args) == 1) {
+				$this->dispatchShell('yearbook',$this->args[0]);
+			} else {
+				$this->dispatchShell('yearbook');
+			}
+		}
 		
     }
 }
