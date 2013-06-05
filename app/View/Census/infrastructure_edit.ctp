@@ -163,8 +163,8 @@ echo $this->Html->script('infrastructure', false);
 	</fieldset>
 	<?php } ?>
 	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn btn_save btn_right" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn btn_cancel btn_left" />
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
