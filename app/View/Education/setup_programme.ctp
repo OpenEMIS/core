@@ -39,30 +39,26 @@ echo $this->Html->script('education', false);
 		?>
 	</div>
 	
-	<?php foreach($list as $systemName => $levels) { ?>
+	<?php foreach($list as $systemId => $systemObj) { ?>
 	<fieldset class="section_group">
-		<legend><?php echo $systemName; ?></legend>
+		<legend><?php echo $systemObj['name']; ?></legend>
 		
-		<?php foreach($levels as $levelName => $programmes) { ?>
+		<?php foreach($systemObj['cycles'] as $cycleId => $cycleObj) { ?>
 		<fieldset class="section_break">
-			<legend><?php echo $levelName; ?></legend>
+			<legend><?php echo $cycleObj['name']; ?></legend>
 			
 			<div class="table">
 				<div class="table_head">
 					<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-					<div class="table_cell cell_cycle_short"><?php echo __('Cycle'); ?></div>
 					<div class="table_cell"><?php echo __($pageTitle); ?></div>
 					<div class="table_cell cell_duration"><?php echo __('Duration'); ?></div>
 					<div class="table_cell cell_grade_link"><?php echo __('Grades'); ?></div>
 				</div>
 				
 				<div class="table_body">
-					<?php foreach($programmes as $key => $obj) { 
-							if($key === 'id') continue;
-					?>
+					<?php foreach($cycleObj['programmes'] as $key => $obj) { ?>
 					<div class="table_row<?php echo $obj['visible']!=1 ? ' inactive' : ''; ?>">
 						<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']); ?></div>
-						<div class="table_cell"><?php echo $obj['cycle_name']; ?></div>
 						<div class="table_cell"><?php echo $obj['name']; ?></div>
 						<div class="table_cell center"><?php echo $obj['duration'] . ' years'; ?></div>
 						<div class="table_cell center">

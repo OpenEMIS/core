@@ -185,6 +185,7 @@ class InstitutionSitesController extends AppController {
 			 */
 			if($last_area_id != 0){
 				$areaLevel = $this->fetchtoParent($last_area_id);
+
 				$areaLevel = array_reverse($areaLevel);
 				$areadropdowns = array();
 				foreach($areaLevel as $index => &$arrVals){
