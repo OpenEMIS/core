@@ -3,9 +3,9 @@
 .edit .table { margin-bottom: 0; }
 .table .cell_admission_age { width: 100px; }
 .table .cell_cycle_short { width: 100px; }
-.table .cell_duration { width: 60px; }
+.table .cell_duration { width: 70px; }
 .table .cell_subject_link { width: 70px; }
-.table .cell_grade_link { min-width: 50px !important; width: 50px; }
+.table .cell_grade_link { width: 60px; }
 .table .cell_subject_code { width: 150px; }
 .table .cell_hours { width: 110px; }
 .table .cell_hours input { text-align: right; }
@@ -23,16 +23,16 @@
 .chrome .table_view .cell_cycle_short{
 	width:101px;
 }
-.table_view .cell_duration { width: 60px; margin-left: -1px; }
-.table_view .cell_programme { width: 230px; margin-left: -1px; line-height: 25px; }
+.table_view .cell_duration { width: 70px; margin-left: -1px; }
+.table_view .cell_programme { width: 327px; margin-left: -1px; line-height: 25px; }
 .chrome .table_view .cell_programme, .safari .table_view .cell_programme{
-	width:226px;
+	width:323px;
 }
 .opera .table_view .cell_programme{
-	width:229px;
+	width:326px;
 }
 .table_view .cell_subject_link { width: 70px; margin-left: -1px; text-align: center; line-height: 25px; }
-.table_view .cell_grade_link { width: 50px; margin-left: -1px; text-align: center; line-height: 25px; }
+.table_view .cell_grade_link { width: 60px; margin-left: -1px; text-align: center; line-height: 25px; }
 
 .table_view .cell_orientation { width: 257px; margin-left: -1px; }
 .table_view .cell_subject_code { width: 150px; margin-left: -1px; line-height: 25px; }

@@ -39,13 +39,13 @@ echo $this->Html->script('education', false);
 		?>
 	</div>
 	
-	<?php foreach($list as $systemName => $levels) { ?>
+	<?php foreach($list as $systemId => $systemObj) { ?>
 	<fieldset class="section_group">
-		<legend><?php echo $systemName; ?></legend>
+		<legend><?php echo $systemObj['name']; ?></legend>
 		
-		<?php foreach($levels as $levelName => $cycles) { ?>
+		<?php foreach($systemObj['levels'] as $levelId => $levelObj) { ?>
 		<fieldset class="section_break" style="margin-bottom: 0;">
-			<legend><?php echo $levelName; ?></legend>
+			<legend><?php echo $levelObj['name']; ?></legend>
 			
 			<div class="table">
 				<div class="table_head">
@@ -55,7 +55,7 @@ echo $this->Html->script('education', false);
 				</div>
 				
 				<div class="table_body">
-					<?php foreach($cycles as $key => $obj) {
+					<?php foreach($levelObj['cycles'] as $key => $obj) {
 						if($key === 'id') continue;
 					?>
 					<div class="table_row<?php echo $obj['visible']!=1 ? ' inactive' : ''; ?>">

@@ -44,17 +44,17 @@ echo $this->Html->script('jquery.sort', false);
 	
 	<?php 
 	$index = 0;
-	foreach($list as $systemName => $levels) { 
+	foreach($list as $systemId => $systemObj) {
 	?>
 	<fieldset class="section_group">
-		<legend><?php echo $systemName; ?></legend>
+		<legend><?php echo $systemObj['name']; ?></legend>
 		
-		<?php foreach($levels as $levelName => $cycles) { ?>
+		<?php foreach($systemObj['levels'] as $levelId => $levelObj) { ?>
 		<fieldset class="section_break" style="margin-bottom: 0;">
-			<legend><?php echo $levelName; ?></legend>
+			<legend><?php echo $levelObj['name']; ?></legend>
 			
 			<div class="params none">
-				<span name="education_level_id"><?php echo $cycles['id']; ?></span>
+				<span name="education_level_id"><?php echo $levelId; ?></span>
 			</div>
 			
 			<div class="table full_width">
@@ -68,7 +68,7 @@ echo $this->Html->script('jquery.sort', false);
 			
 			<?php
 			echo $this->Utility->getListStart();
-			foreach($cycles as $i => $obj) {
+			foreach($levelObj['cycles'] as $i => $obj) {
 				if($i === 'id') continue;
 				$isVisible = $obj['visible']==1;
 				$fieldName = sprintf('data[%s][%s][%%s]', $model, $index++);

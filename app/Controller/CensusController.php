@@ -1068,4 +1068,4 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $yearId);
 		$this->set('years', $yearList);
 	}
-}
+} 

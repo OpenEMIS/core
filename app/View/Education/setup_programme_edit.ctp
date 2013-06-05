@@ -44,23 +44,22 @@ echo $this->Html->script('jquery.sort', false);
 	
 	<?php 
 	$index = 0;
-	foreach($list as $systemName => $levels) { 
+	foreach($list as $systemId => $systemObj) {
 	?>
 	<fieldset class="section_group">
-		<legend><?php echo $systemName; ?></legend>
+		<legend><?php echo $systemObj['name']; ?></legend>
 		
-		<?php foreach($levels as $levelName => $programmes) { ?>
+		<?php foreach($systemObj['cycles'] as $cycleId => $cycleObj) { ?>
 		<fieldset class="section_break" style="margin-bottom: 0;">
-			<legend><?php echo $levelName; ?></legend>
+			<legend><?php echo $cycleObj['name']; ?></legend>
 
 			<div class="params none">
-				<span name="education_level_id"><?php echo $programmes['id']; ?></span>
+				<span name="education_cycle_id"><?php echo $cycleId; ?></span>
 			</div>
 
 			<div class="table full_width">
 				<div class="table_head">
 					<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-					<div class="table_cell cell_cycle_short"><?php echo __('Cycle'); ?></div>
 					<div class="table_cell"><?php echo __($pageTitle); ?></div>
 					<div class="table_cell cell_duration"><?php echo __('Duration'); ?></div>
 					<div class="table_cell cell_grade_link"><?php echo __('Grades'); ?></div>
@@ -70,15 +69,13 @@ echo $this->Html->script('jquery.sort', false);
 			
 			<?php
 			echo $this->Utility->getListStart();
-			foreach($programmes as $i => $obj) {
-				if($i === 'id') continue;
+			foreach($cycleObj['programmes'] as $i => $obj) {
 				$isVisible = $obj['visible']==1;
 				$fieldName = sprintf('data[%s][%s][%%s]', $model, $index++);
 				echo $this->Utility->getListRowStart($i, $isVisible);
 				echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
 				echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
 				echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
-				echo '<div class="cell cell_cycle_short">' . $obj['cycle_name'] . '</div>';
 				echo '<div class="cell cell_programme">' . $obj['name'] . '</div>';
 				echo '<div class="cell cell_duration"><div class="input_wrapper">';
 				$inputOpts = array(
