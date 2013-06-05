@@ -49,3 +49,4 @@ app/webroot/img/.DS_Store
 app/webroot/logs/*
 *.mo
 .DS_Store
+.idea/*
