@@ -152,12 +152,22 @@ class EducationController extends AppController {
 	private function processSave($data, $model, $action) {
 		if(isset($data[$model])) {
 			$dataObjects = $data[$model];
-			foreach($dataObjects as $key => &$obj) {
-				if(isset($obj['name']) && strlen($obj['name']) == 0) {
-					unset($dataObjects[$key]);
-				}
-				if(isset($obj['admission_age']) && strlen($obj['admission_age']) == 0) {
-					$obj['admission_age'] = 0;
+			foreach($dataObjects as $key => $obj) {
+				if(isset($obj['name'])) {
+					if(strlen($obj['name']) == 0) {
+						unset($dataObjects[$key]);
+					} else {
+						if($model == 'EducationSystem') {
+							$name = preg_replace('/\s+/', ' ', trim($obj['name']));
+							$find = $this->EducationSystem->find('first', array(
+								'recursive' => -1,
+								'conditions' => array('UPPER(EducationSystem.name)' => strtoupper($name))
+							));
+							if($find) { // remove duplicate names from adding into database
+								unset($dataObjects[$key]);
+							}
+						}
+					}
 				}
 			}
 			$this->{$model}->saveMany($dataObjects);
@@ -227,13 +237,13 @@ class EducationController extends AppController {
 		// For adding education grade subjects
 		if(isset($this->params->query['education_grade_id'])) {
 			$gradeId = $this->params->query['education_grade_id'];
+			$subjectIds = $this->params->query['subjectIds'];
 			
-			$findOptions = array('recursive' => 0, 'order' => 'order');
-			if(isset($this->params->query['subjectIds'])) {
-				$subjectIds = $this->params->query['subjectIds'];
-				$findOptions['conditions'] = array('EducationSubject.id NOT' => $subjectIds);
-			}
-			$list = $this->EducationSubject->find('all', $findOptions);
+			$list = $this->EducationSubject->find('all', array(
+				'recursive' => 0,
+				'conditions' => array('EducationSubject.id NOT' => $subjectIds),
+				'order' => 'order'
+			));
 			
 			$subjectList = array();
 			foreach($list as $obj) {
@@ -274,7 +284,6 @@ class EducationController extends AppController {
 			$levelList['id'] = $system['id'];
 			$list[$systemName] = $levelList;
 		}
-		
 		$this->set('list', $list);
 		$this->set('isced', $this->EducationLevelIsced->getList());
 	}
@@ -284,18 +293,17 @@ class EducationController extends AppController {
 		$conditions = array('conditions' => array('EducationSystem.visible' => 1));
 		$systemList = $this->EducationSystem->findOptions($conditions);
 		
-		foreach($systemList as $system) {
-			$systemName = $system['name'];
-			if(!isset($list[$systemName])) { 
-				$list[$systemName] = array();
+		foreach($systemList as $systemObj) {
+			$systemId = $systemObj['id'];
+			if(!isset($list[$systemId])) { 
+				$list[$systemId] = array('name' => $systemObj['name'], 'levels' => array());
 			}
-			$conditions = array('conditions' => array('EducationLevel.visible' => 1, 'education_system_id' => $system['id']));
+			$conditions = array('conditions' => array('EducationLevel.visible' => 1, 'education_system_id' => $systemId));
 			$levelList = $this->EducationLevel->findOptions($conditions);
-			foreach($levelList as $level) {
-				$levelName = $level['name'];
-				$cycleList = $this->EducationCycle->findOptions(array('conditions' => array('education_level_id' => $level['id'])));
-				$cycleList['id'] = $level['id'];
-				$list[$systemName][$levelName] = $cycleList;
+			foreach($levelList as $levelObj) {
+				$levelId = $levelObj['id'];
+				$cycleList = $this->EducationCycle->findOptions(array('conditions' => array('education_level_id' => $levelId)));
+				$list[$systemId]['levels'][$levelId] = array('name' => $levelObj['name'], 'cycles' => $cycleList);
 			}
 		}
 		$this->set('list', $list);
@@ -306,35 +314,31 @@ class EducationController extends AppController {
 		$conditions = array('conditions' => array('EducationSystem.visible' => 1));
 		$systemList = $this->EducationSystem->findOptions($conditions);
 		
-		foreach($systemList as $system) {
-			$systemName = $system['name'];
-			if(!isset($list[$systemName])) { 
-				$list[$systemName] = array();
+		foreach($systemList as $systemObj) {
+			$systemId = $systemObj['id'];
+			if(!isset($list[$systemId])) { 
+				$list[$systemId] = array('name' => $systemObj['name'], 'levels' => array());
 			}
-			$conditions = array('conditions' => array('EducationLevel.visible' => 1, 'education_system_id' => $system['id']));
+			$conditions = array('conditions' => array('EducationLevel.visible' => 1, 'education_system_id' => $systemId));
 			$levelList = $this->EducationLevel->findOptions($conditions);
 			
-			foreach($levelList as $level) {
-				$levelName = $level['name'];
-				if(!isset($list[$systemName][$levelName])) {
-					$list[$systemName][$levelName] = array();
-				}
-				$conditions = array('conditions' => array('EducationCycle.visible' => 1, 'education_level_id' => $level['id']));
+			foreach($levelList as $levelObj) {
+				$levelId = $levelObj['id'];
+				
+				$conditions = array('conditions' => array('EducationCycle.visible' => 1, 'education_level_id' => $levelId));
 				$cycleList = $this->EducationCycle->findOptions($conditions);
 				
-				foreach($cycleList as $cycle) {
-					$cycleName = $cycle['name'];
-					
-					$programmeList = $this->EducationProgramme->findOptions(array(
-						'conditions' => array('education_cycle_id' => $cycle['id'])
-					));
+				foreach($cycleList as $cycleObj) {
+					$cycleId = $cycleObj['id'];
+					if(!isset($list[$systemId]['cycles'][$cycleId])) {
+						$list[$systemId]['cycles'][$cycleId] = array('name' => $levelObj['name'] . ' - ' . $cycleObj['name'], 'programmes' => array());
+					}
+					$programmeList = $this->EducationProgramme->findOptions(array('conditions' => array('education_cycle_id' => $cycleObj['id'])));
 					
 					foreach($programmeList as $programme) {
-						$programme['cycle_name'] = $cycleName;
-						$list[$systemName][$levelName][] = $programme;
+						$list[$systemId]['cycles'][$cycleId]['programmes'][] = $programme;
 					}
 				}
-				$list[$systemName][$levelName]['id'] = $level['id'];
 			}
 		}
 		$this->set('list', $list);
@@ -344,21 +348,24 @@ class EducationController extends AppController {
 		if($this->request->is('get')) {
 			$this->layout = 'ajax';
 			$model = 'EducationProgramme';
-			$levelId = $this->params->query['education_level_id'];
 			$count = $this->params->query['count'];
-			$obj = $this->EducationLevel->find('first', array('conditions' => array('EducationLevel.id' => $levelId)));
-			$cycleList = $this->EducationCycle->find('list', array('conditions' => array('education_level_id' => $levelId)));
+			$cycleId = $this->params->query['education_cycle_id'];
+			$cycleObj = $this->EducationCycle->find('first', array('conditions' => array('EducationCycle.id' => $cycleId)));
+			$levelObj = $this->EducationLevel->find('first', array('conditions' => array('EducationLevel.id' => $cycleObj['EducationCycle']['education_level_id'])));
+			
 			$fieldList = $this->EducationFieldOfStudy->findList();
 			$certificationList = $this->EducationCertification->findList();
 			
-			$systemName = $obj['EducationSystem']['name'];
-			$levelName = $obj['EducationLevel']['name'];
+			$systemName = $levelObj['EducationSystem']['name'];
+			$levelName = $levelObj['EducationLevel']['name'];
+			$cycleName = $cycleObj['EducationCycle']['name'];
 			$this->set('model', $model);
 			$this->set('count', $count);
 			$this->set('action', $this->action);
 			$this->set('systemName', $systemName);
 			$this->set('levelName', $levelName);
-			$this->set('cycleList', $cycleList);
+			$this->set('cycleName', $cycleName);
+			$this->set('cycleId', $cycleId);
 			$this->set('fieldList', $fieldList);
 			$this->set('certificationList', $certificationList);
 		} else {
