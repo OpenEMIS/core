@@ -13,7 +13,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	));
 	?>
 	<h1>
-		<span><?php echo __("Exports"); ?></span>
+		<span><?php echo __("Export"); ?></span>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	<div class="row input" style="margin-left: 5px;">

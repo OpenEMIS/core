@@ -73,8 +73,8 @@ class DataProcessingController extends DataProcessingAppController {
 		$this->set('queued',$q);
 	}
 	
-	public function exports($option='DevInfo6') {
-        $this->Navigation->addCrumb('Exports');
+	public function export($option='DevInfo6') {
+        $this->Navigation->addCrumb('Export');
 
         if($this->request->is('post')) {
             $userId = $this->Auth->user('id');
