@@ -10,11 +10,10 @@ if(!empty($enrolment)) { ?>
 		$count++;
 		$total += $record['male'] + $record['female'];
 		$record_tag="";
-		switch ($record['source']) {
-			case 1:
-				$record_tag.="row_external";break;
-			case 2:
-				$record_tag.="row_estimate";break;
+		foreach ($source_type as $k => $v) {
+			if ($record['source']==$v) {
+				$record_tag = "row_" . $k;
+			}
 		}
 	?>
 	
