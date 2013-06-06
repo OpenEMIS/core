@@ -18,7 +18,7 @@ class BatchShell extends AppShell {
     
     public $uses = array('BatchProcess','Reports.Report','Reports.BatchReport');
 	
-	public $tasks = array('Common','Kml','Csv','Vcf','Ind');
+	public $tasks = array('Common','Kml','Csv','Vcf','Ind','Est');
     
     public function main(){
 
@@ -115,6 +115,10 @@ class BatchShell extends AppShell {
 				$this->dispatchShell('yearbook');
 			}
 		}
+        }elseif($file_type == 'est'){
+			
+			 $this->Est->genEST($settings);
+        }
 		
     }
 }

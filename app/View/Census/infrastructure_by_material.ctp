@@ -109,12 +109,12 @@ foreach($data as $infraname => $arrval){
 			 }
 			 
 			$record_tag="";
-			switch ($infraSource) {
-				case 1:
-					$record_tag.="row_external";break;
-				case 2:
-					$record_tag.="row_estimate";break;
+			foreach ($source_type as $k => $v) {
+				if ($infraSource==$v) {
+					$record_tag = "row_" . $k;
+				}
 			}
+		
 			 echo '<div class="table_cell cell_number ' . $record_tag.'">'. $cell_html . '</div>';
 			 $statusTotal += $infraVal;
 			 $ctrModel++;

@@ -3,13 +3,14 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
+
 echo $this->Html->script('census_enrolment', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="enrolment" class="content_wrapper">
-	<?php
+	<?php 
 	echo $this->Form->create('CensusStudent', array(
 			'id' => 'submitForm',
 			'onsubmit' => 'return false',
@@ -40,13 +41,7 @@ echo $this->Html->script('census_enrolment', false);
 			?>
 		</div>
 		
-		<div class="row_item_legend">
-		<ul class="legend">
-			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
-			<li><span class="external"></span><?php echo __('External'); ?></li>
-			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
-		</ul>
-		</div>
+		<?php echo $this->element('census_legend'); ?>
 	</div>
 	
 	<?php foreach($data as $key => $obj) { ?>
@@ -96,11 +91,11 @@ echo $this->Html->script('census_enrolment', false);
 				foreach($records as $record) {
 					$total += $record['male'] + $record['female'];
 					$record_tag="";
-					switch ($record['source']) {
-						case 1:
-							$record_tag.="row_external";break;
-						case 2:
-							$record_tag.="row_estimate";break;
+
+					foreach ($source_type as $k => $v) {
+						if ($record['source']==$v) {
+							$record_tag = "row_" . $k;
+						}
 					}
 				?>
 				<div class="table_row">
