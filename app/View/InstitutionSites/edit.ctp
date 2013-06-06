@@ -1,8 +1,13 @@
 <?php
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('institution_site', false);
+echo $this->Html->script('config', false); 
 ?>
-
+<script>
+	$(document).ready(function() {
+		Config.applyRule();
+	});
+</script>
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="site" class="content_wrapper edit add">
@@ -96,7 +101,7 @@ echo $this->Html->script('institution_site', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Postal Code'); ?></div>
-			<div class="value"><?php echo $this->Form->input('postal_code', array('value' => $obj['postal_code'])); ?></div>
+			<div class="value"><?php echo $this->Form->input('postal_code', array('value' => $obj['postal_code'],'validate'=>'postal')); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Locality'); ?></div>
@@ -125,7 +130,7 @@ echo $this->Html->script('institution_site', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $this->Form->input('telephone', array('value' => $obj['telephone'])); ?></div>
+			<div class="value"><?php echo $this->Form->input('telephone', array('value' => $obj['telephone'],'validate'=>'phone')); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Fax'); ?></div>

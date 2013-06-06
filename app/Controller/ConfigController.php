@@ -106,6 +106,7 @@ class ConfigController extends AppController {
 
 	public function edit(){
 
+
 		$this->Navigation->addCrumb('Edit System Configurations');
 
 		$items = $this->ConfigItem->find('all',array(
@@ -376,6 +377,7 @@ class ConfigController extends AppController {
 				$result['alertType'] = $this->Utility->getAlertType('alert.error');
 				$result['alertOpt']['text'] = __('Error occurred while deleting file.');
 			}
+
 			
 			return json_encode($result);
         }
@@ -523,5 +525,15 @@ class ConfigController extends AppController {
 		return  $groupByType;
 
 	}
-
+	public function getAllowedChar() {
+		$this->layout = 'ajax';
+		$this->autoRender = false;
+		echo $this->ConfigItem->getValue('special_characters');
+	}
+	public function getAllRules() {
+		$this->layout = 'ajax';
+		$this->autoRender = false;
+		$data = $this->ConfigItem->getAllCustomValidation();
+		echo json_encode($data);
+	}
 }
