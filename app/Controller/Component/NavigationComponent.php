@@ -225,7 +225,7 @@ class NavigationComponent extends Component {
 				),
 				'DATA PROCESSING' => array(
 					$this->createLink('Generate', 'DataProcessing', 'reports'),
-					$this->createLink('Export', 'DataProcessing', 'exports'),
+					$this->createLink('Export', 'DataProcessing', 'export'),
 					$this->createLink('Processes', 'DataProcessing', 'processes')
 				),
 				'DATABASE' => array(
