@@ -43,7 +43,10 @@ echo $this->Html->script('education', false);
 	<fieldset class="section_group">
 		<legend><?php echo $systemObj['name']; ?></legend>
 		
-		<?php foreach($systemObj['cycles'] as $cycleId => $cycleObj) { ?>
+		<?php 
+		if(isset($systemObj['cycles'])) {
+			foreach($systemObj['cycles'] as $cycleId => $cycleObj) { 
+		?>
 		<fieldset class="section_break">
 			<legend><?php echo $cycleObj['name']; ?></legend>
 			
@@ -69,7 +72,10 @@ echo $this->Html->script('education', false);
 				</div>
 			</div>
 		</fieldset> <!-- end section break -->
-		<?php } ?>
+		<?php 
+			} // end for(cycles)
+		} // end if(cycles) 
+		?>
 	</fieldset> <!-- end section group -->
 	<?php } ?>
 	

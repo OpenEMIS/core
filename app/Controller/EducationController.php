@@ -152,9 +152,9 @@ class EducationController extends AppController {
 	private function processSave($data, $model, $action) {
 		if(isset($data[$model])) {
 			$dataObjects = $data[$model];
-			foreach($dataObjects as $key => $obj) {
+			foreach($dataObjects as $key => &$obj) {
 				if(isset($obj['name'])) {
-					if(strlen($obj['name']) == 0) {
+					if(strlen(trim($obj['name'])) == 0) {
 						unset($dataObjects[$key]);
 					} else {
 						if($model == 'EducationSystem') {
@@ -167,7 +167,10 @@ class EducationController extends AppController {
 								unset($dataObjects[$key]);
 							}
 						}
-					}
+					}					
+				}
+				if(isset($obj['admission_age']) && strlen($obj['admission_age']) == 0) {
+					$obj['admission_age'] = 0;
 				}
 			}
 			$this->{$model}->saveMany($dataObjects);
