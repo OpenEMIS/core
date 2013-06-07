@@ -84,7 +84,8 @@ echo $this->Html->script('jquery.sort', false);
 					'value' => $obj['admission_age'],
 					'before' => '<div class="input_wrapper">',
 					'after' => '</div>',
-					'maxlength' => 2
+					'maxlength' => 2,
+					'onkeypress' => 'return utility.integerCheck(event)'
 				));
 				echo '</div>';
 				
