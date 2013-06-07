@@ -49,7 +49,10 @@ echo $this->Html->script('jquery.sort', false);
 	<fieldset class="section_group">
 		<legend><?php echo $systemObj['name']; ?></legend>
 		
-		<?php foreach($systemObj['cycles'] as $cycleId => $cycleObj) { ?>
+		<?php 
+		if(isset($systemObj['cycles'])) {
+			foreach($systemObj['cycles'] as $cycleId => $cycleObj) { 
+		?>
 		<fieldset class="section_break" style="margin-bottom: 0;">
 			<legend><?php echo $cycleObj['name']; ?></legend>
 
@@ -97,7 +100,10 @@ echo $this->Html->script('jquery.sort', false);
 			if($_add) { echo $this->Utility->getAddRow($pageTitle); }
 			?>
 		</fieldset>
-		<?php } ?>
+		<?php 
+			} // end for(cycles)
+		} // end if(cycles) 
+		?>
 	</fieldset>
 	<?php } ?>
 	
