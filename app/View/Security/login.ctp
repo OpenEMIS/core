@@ -85,7 +85,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 <!-- footer -->
     <!-- (2)*****************************************-->
     <div class="footer">
-        <div class="language">
+        <div class="language" dir="ltr">
         	<img src="img/UNESCO.gif" /><br />
             <?php 
 				if($this->Session->check('footer')){

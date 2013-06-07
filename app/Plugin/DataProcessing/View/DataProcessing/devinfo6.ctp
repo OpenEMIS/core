@@ -8,12 +8,12 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<?php
 	echo $this->Form->create('DataProcessing', array(
 		'inputDefaults' => array('label' => false, 'div' => false),
-		'url' => array('plugin' => 'DataProcessing', 'controller' => 'DataProcessing', 'action' => 'exports'),
+		'url' => array('plugin' => 'DataProcessing', 'controller' => 'DataProcessing', 'action' => 'export'),
 		'onsubmit' => 'return jsForm.isSubmitDisabled(this)'
 	));
 	?>
 	<h1>
-		<span><?php echo __("Exports"); ?></span>
+		<span><?php echo __("Export"); ?></span>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	<div class="row input" style="margin-left: 5px;">
