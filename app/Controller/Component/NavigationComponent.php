@@ -209,7 +209,7 @@ class NavigationComponent extends Component {
 			array(
 				'SYSTEM SETUP' => array(
 					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit$'),
-					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup$'),
+					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup'),
 					$this->createLink('National Assessments', 'Assessment', 'index', 'index$|assessment'),
 					$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
 					$this->createLink('System Configurations', 'Config', 'index', 'index$|edit$|^dashboard')
@@ -225,7 +225,7 @@ class NavigationComponent extends Component {
 				),
 				'DATA PROCESSING' => array(
 					$this->createLink('Generate', 'DataProcessing', 'reports'),
-					$this->createLink('Export', 'DataProcessing', 'exports'),
+					$this->createLink('Export', 'DataProcessing', 'export'),
 					$this->createLink('Processes', 'DataProcessing', 'processes')
 				),
 				'DATABASE' => array(

@@ -6,6 +6,7 @@ echo $this->Form->create($model, array(
 );
 echo $this->Form->hidden('order', array('value' => ($count+1)));
 echo $this->Form->hidden('visible', array('value' => 1));
+echo $this->Form->hidden('education_cycle_id', array('value' => $cycleId));
 ?>
 <div class="field_row">
 	<div class="field_name"><?php echo __('System'); ?></div>
@@ -15,9 +16,9 @@ echo $this->Form->hidden('visible', array('value' => 1));
 	<div class="field_name"><?php echo __('Level'); ?></div>
 	<div class="field_value"><?php echo $levelName; ?></div>
 </div>
-<div class="field_row field_input">
+<div class="field_row">
 	<div class="field_name"><?php echo __('Cycle'); ?></div>
-	<div class="field_value"><?php echo $this->Form->select('education_cycle_id', $cycleList, array('empty' => false)); ?></div>
+	<div class="field_value"><?php echo $cycleName; ?></div>
 </div>
 <div class="field_row field_input">
 	<div class="field_name"><?php echo __('Programme'); ?></div>
