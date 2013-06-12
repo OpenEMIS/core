@@ -1,0 +1,78 @@
+<indicators>
+    <indicator id="25">
+        <subgroups>
+            <item name="National Level Indicator" type="National" order="2">
+                <mysql>
+                    <select>
+                        <![CDATA[
+                            IFNULL(ROUND(`main_data`.`numerator` / `main_data`.`denominator` * 100, 2), 'No Data') AS `data_value`,
+`main_data`.`numerator` + IFNULL(`indicator_results`.`numerator`, 0) AS `numerator`,
+`main_data`.`denominator` + IFNULL(`indicator_results`.`denominator`, 0) AS `denominator`,
+					]]>
+                    </select>
+                </mysql>
+            </item>
+
+        </subgroups>
+        <query>
+            <mysql>
+                <insert>
+                    <![CDATA[
+                        INSERT INTO `batch_indicator_results`
+                        SELECT
+                        NULL,
+                        -- {INDICATOR_ID} AS `batch_indicator_id`,
+                        -- {SUBGROUPS} AS `subgroups`,
+                        `main_data`.`area_id`,
+                        `main_data`.`year` AS `timeperiod`,
+                        -- {SELECT}
+                        `main_data`.`classification`,
+                        -- {USER_ID},
+                        NOW()
+
+                        FROM (
+                            SELECT
+                                `areas`.`id` AS `area_id`,
+                                `public_expenditure_education_level`.`year`,
+                                `public_expenditure_education_level`.`value` AS `numerator`,
+                                `public_expenditure`.`total_public_expenditure_education` AS `denominator`,
+                                CONCAT('Finances - ', `education_level_isced`.`name`) AS `classification`
+                            FROM `areas`
+                            JOIN `public_expenditure_education_level` ON `public_expenditure_education_level`.`area_id` = `areas`.`id`
+                            JOIN `public_expenditure`
+                                ON `public_expenditure`.`area_id` = `public_expenditure_education_level`.`area_id`
+                                AND `public_expenditure`.`year` = `public_expenditure_education_level`.`year`
+                            JOIN `education_levels` ON `education_levels`.`id` = `public_expenditure_education_level`.`education_level_id`
+                            JOIN `education_level_isced` ON `education_level_isced`.`id` = `education_levels`.`education_level_isced_id`
+                            WHERE `areas`.`area_level_id` = -- {LEVEL}
+                        ) AS `main_data`
+
+                        -- Aggregation by Area Start
+                        LEFT JOIN (
+                            SELECT
+                            `areas`.`parent_id` AS `area_parent_id`,
+                            `batch_indicator_results`.`timeperiod`,
+                            SUM(`batch_indicator_results`.`numerator`) AS `numerator`,
+                            SUM(`batch_indicator_results`.`denominator`) AS `denominator`,
+                            `batch_indicator_results`.`classification`
+                            FROM `batch_indicator_results`
+                            JOIN `areas` ON `areas`.`id` = `batch_indicator_results`.`area_id`
+                            WHERE `batch_indicator_results`.`batch_indicator_id` = -- {INDICATOR_ID}
+                            AND `batch_indicator_results`.`subgroups` = -- {SUBGROUPS}
+                            GROUP BY
+                            `areas`.`parent_id`,
+                            `batch_indicator_results`.`timeperiod`,
+                            `batch_indicator_results`.`classification`
+                        ) AS `indicator_results`
+                            ON `indicator_results`.`area_parent_id` = `main_data`.`area_id`
+                            AND `indicator_results`.`timeperiod` = `main_data`.`year`
+                            AND `indicator_results`.`classification` = `main_data`.`classification`
+                        -- Aggregation by Area End
+				]]>
+                </insert>
+            </mysql>
+        </query>
+
+    </indicator>
+
+</indicators>
