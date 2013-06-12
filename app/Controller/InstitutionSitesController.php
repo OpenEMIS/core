@@ -123,7 +123,7 @@ class InstitutionSitesController extends AppController {
     }
 	
 	public function view() {
-		$this->Navigation->addCrumb('General');
+		$this->Navigation->addCrumb('Overview');
 		
 		$levels = $this->AreaLevel->find('list',array('recursive'=>0));
 		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));

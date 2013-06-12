@@ -10,14 +10,13 @@ echo $this->Html->script('census', false);
 <div id="textbooks" class="content_wrapper edit">
 	<?php
 	echo $this->Form->create('CensusTextbook', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Census', 'action' => 'textbooksEdit')
 	));
 	?>
 	<h1>
 		<span><?php echo __('Textbooks'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'textbooks'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<?php echo $this->Html->link(__('View'), array('action' => 'textbooks', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
@@ -26,9 +25,10 @@ echo $this->Html->script('census', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
 				'options' => $years,
-				'default' => $selectedYear
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
@@ -79,6 +79,7 @@ echo $this->Html->script('census', false);
 					<div class="table_cell">
 						<div class="input_wrapper">
 						<?php echo $this->Form->input($index . '.value', array(
+								'type' => 'text',
 								'value' => $record['total'],
 								'class'=>$record_tag,
 								'maxlength' => 10,
@@ -97,7 +98,7 @@ echo $this->Html->script('census', false);
 	<?php if(!empty($data)) { ?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'textbooks', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php } ?>
 	

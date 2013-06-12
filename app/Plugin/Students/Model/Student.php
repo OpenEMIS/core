@@ -96,13 +96,6 @@ class Student extends StudentsAppModel {
 		)
 	);
 	
-	// Used by SetupController
-	public function getLookupVariables() {
-		$lookup = array('Category' => array('model' => 'Students.StudentCategory'));
-		
-		return $lookup;
-	}
-	
 	// Used by InstitutionSiteController for searching
 	public function search($searchStr, $programmeId, $institutionSiteId, $yearId, $limit=false) {
 		$notExists = '

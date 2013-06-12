@@ -166,7 +166,7 @@ class InstitutionsController extends AppController {
     }
 	
     public function view() {
-		$this->Navigation->addCrumb('General');
+		$this->Navigation->addCrumb('Overview');
 		$id = $this->Session->read('InstitutionId');
         $this->Institution->id = $id;
         $data = $this->Institution->read();

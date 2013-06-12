@@ -20,7 +20,7 @@ echo $this->Html->script('infrastructure', false);
 	?>
 	<h1>
 		<span><?php echo __('Infrastructure'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'infrastructure'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<?php echo $this->Html->link(__('View'), array('action' => 'infrastructure', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	
 	<div class="row year">
@@ -28,9 +28,10 @@ echo $this->Html->script('infrastructure', false);
 		<div class="value">
 			<?php
 				echo $this->Form->input('school_year_id', array(
-					'id' => 'SchoolYearId',
 					'options' => $years,
-					'default' => $selectedYear
+					'default' => $selectedYear,
+					'onchange' => 'Census.navigateYear(this)',
+					'url' => 'Census/' . $this->action
 				));
 			?>
 		</div>
@@ -164,7 +165,7 @@ echo $this->Html->script('infrastructure', false);
 	<?php } ?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn btn_save btn_right" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn btn_cancel btn_left" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'infrastructure', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>

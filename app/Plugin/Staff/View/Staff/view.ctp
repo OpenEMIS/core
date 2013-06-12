@@ -8,7 +8,7 @@ echo $this->Html->script('/Staff/js/staff', false);
 <div id="staff" class="content_wrapper">
 	
 	<h1>
-		<span><?php echo __('Staff Information'); ?></span>
+		<span><?php echo __('Overview'); ?></span>
 		<?php 
 		if ($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
@@ -24,7 +24,7 @@ echo $this->Html->script('/Staff/js/staff', false);
 	<?php $obj = $data['Staff']; ?>
 	
 	<fieldset class="section_break" id="general">
-		<legend><?php echo __('General'); ?></legend>
+		<legend><?php echo __('Information'); ?></legend>
 		<?php
 		    $path = (isset($obj['photo_content']) && !empty($obj['photo_content']) && !stristr($obj['photo_content'], 'null'))? "/Staff/fetchImage/{$obj['id']}":"/Staff/img/default_staff_profile.jpg";
 		    echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));

@@ -127,7 +127,7 @@ class StaffController extends StaffAppController {
     }
 
     public function view() {
-        $this->Navigation->addCrumb('General');
+        $this->Navigation->addCrumb('Overview');
         $this->Staff->id = $this->Session->read('StaffId');
         $data = $this->Staff->read();
 
