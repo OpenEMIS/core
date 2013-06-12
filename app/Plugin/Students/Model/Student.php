@@ -144,10 +144,10 @@ class Student extends StudentsAppModel {
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$securityCond = $conditions['Security'];
+		//$securityCond = $conditions['Security'];
 		
 		$this->bindModel(array('hasMany' => array('InstitutionSiteStudent')));
-	   if($conditions['SearchKey'] != ''){
+		if($conditions['SearchKey'] != ''){
 			$conditions = array( 'OR' => array(
 				'Student.identification_no LIKE' => "%".$conditions['SearchKey']."%",
 				'Student.first_name LIKE' => "%".$conditions['SearchKey']."%",
@@ -157,7 +157,7 @@ class Student extends StudentsAppModel {
 				'StudentHistory.last_name LIKE' =>"%".$conditions['SearchKey']."%"
 			));
 			
-			$conditions = array('AND'=>array($conditions,$securityCond));
+			//$conditions = array('AND'=>array($conditions,$securityCond));
 			
 			$data = $this->find('all',array('fields' => array('Student.*','StudentHistory.*'),'joins' => array(
 															array(
@@ -213,7 +213,7 @@ class Student extends StudentsAppModel {
 					'limit'      => null,
 					'offset'     => null,
 					'joins'      => array(),
-					'conditions' => $securityCond,
+					'conditions' => $conditions,
 					'order'      => null,
 					'group'      => null
 				),
