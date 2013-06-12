@@ -11,7 +11,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
     <div style="clear:both"></div>
 </div>
 <div class="table allow_hover" action="Students/viewStudent/">
-    <div class="table_head">
+    <div class="table_head" url="Students/index">
 
         <div class="table_cell cell_id_no">
                 <span class="left"><?php echo __('Identification No.'); ?></span>

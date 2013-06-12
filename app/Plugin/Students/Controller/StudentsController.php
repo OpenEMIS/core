@@ -88,6 +88,7 @@ class StudentsController extends StudentsAppController {
 			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $tmp)
 		));
 		
+		/*
 		$security = array(
 			'OR' => array(
 				'InstitutionSiteStudent.id' => null,
@@ -96,6 +97,7 @@ class StudentsController extends StudentsAppController {
 					'InstitutionSiteStudent.end_date >=' => date('Y-m-d')
 				)
 		));
+		*/
 				
         if ($this->request->is('post')){
             if(isset($this->request->data['Student']['SearchField'])){
@@ -126,7 +128,7 @@ class StudentsController extends StudentsAppController {
         $order = array('order'=>array($fieldordername => $fieldorderdir));
 
         $cond = array('SearchKey' => $this->Session->read('Search.SearchFieldStudent'));
-		$cond = array_merge($cond,array('Security'=>$security));
+		//$cond = array_merge($cond,array('Security'=>$security));
 		
         $limit = ($this->Session->read('Search.perpageStudent'))?$this->Session->read('Search.perpageStudent'):30;
 

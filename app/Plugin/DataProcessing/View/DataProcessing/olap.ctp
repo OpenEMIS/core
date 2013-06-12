@@ -8,7 +8,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<?php
 	echo $this->Form->create('DataProcessing', array(
 		'inputDefaults' => array('label' => false, 'div' => false),
-		'url' => array('plugin' => 'DataProcessing', 'controller' => 'DataProcessing', 'action' => 'exports'),
+		'url' => array('plugin' => 'DataProcessing', 'controller' => 'DataProcessing', 'action' => 'export'),
 		'onsubmit' => 'return jsForm.isSubmitDisabled(this)'
 	));
 	?>
