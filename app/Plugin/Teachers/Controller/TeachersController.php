@@ -132,7 +132,7 @@ class TeachersController extends TeachersAppController {
     }
 
     public function view() {
-        $this->Navigation->addCrumb('General');
+        $this->Navigation->addCrumb('Overview');
         $this->Teacher->id = $this->Session->read('TeacherId');
         $data = $this->Teacher->read();
 

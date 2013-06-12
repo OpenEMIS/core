@@ -32,6 +32,8 @@ class SetupController extends AppController {
 		'CensusGridYCategory',
 		'InfrastructureCategory',
 		'Students.Student',
+		'Students.StudentCategory',
+		'Students.StudentBehaviourCategory',
 		'Teachers.Teacher',
 		'Teachers.TeacherCategory',
 		'Teachers.TeacherQualificationCategory',
@@ -201,7 +203,12 @@ class SetupController extends AppController {
 		$lookup[] = array('Student' => array(
 			'optgroup' => true,
 			'name' => 'Category',
-			'items' => $this->Student->getLookupVariables()
+			'items' => $this->StudentCategory->getLookupVariables()
+		));
+		$lookup[] = array('Student' => array(
+			'optgroup' => true,
+			'name' => 'Behaviour Category',
+			'items' => $this->StudentBehaviourCategory->getLookupVariables()
 		));
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
