@@ -18,8 +18,6 @@ echo $this->Html->script('search', false);
 	<?php echo $this->element('alert'); ?>
 	
 	<div class="row">
-		<input type="hidden" id="controller" value="Institutions" />
-		<input type="hidden" id="action" value="listSites" />
         <?php echo $this->Form->create('Institution', array('action'=>'search','id'=>false)); ?>
 		<div class="search_wrapper">
 			<?php echo $this->Form->input('SearchField', array(
@@ -50,7 +48,7 @@ echo $this->Html->script('search', false);
 			</ul>
 		</div>
 		<div class="table allow_hover" action="Institutions/listSites/">
-			<div class="table_head">
+			<div class="table_head" url="Institutions/index">
 				<div class="table_cell cell_code">
 					<span class="left"><?php echo __('Code'); ?></span>
 					<span class="icon_sort_<?php echo ($sortedcol =='Institution.code')?$sorteddir:'up'; ?>" order="Institution.code"></span>
