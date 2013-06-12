@@ -5,6 +5,8 @@ class IndicatorComponent extends Component {
 	private $controller;
     private $indicatorsQueries;
     private $di6XmlPath;
+    private $systemIndicatorPath;
+    private $userIndicatorPath;
 	public $Area;
 	public $AreaLevel;
 	public $BatchIndicator;
@@ -40,11 +42,17 @@ class IndicatorComponent extends Component {
 		
 		$this->Logger->init('indicator');
 
-        if(Configure::read('xml.indicators.query_path') && Configure::read('xml.indicators.filename')){
-            $this->di6XmlPath = Configure::read('xml.indicators.query_path').Configure::read('xml.indicators.filename');
-        }else{
-            $this->di6XmlPath = APP.'Config'.DS.'indicatorQueries.xml';
+        if(Configure::read('xml.indicators.system')){
+            $this->systemIndicatorPath = Configure::read('xml.indicators.system');
         }
+
+        if(Configure::read('xml.indicators.user')){
+            $this->userIndicatorPath = Configure::read('xml.indicators.user');
+        }
+
+//        else{
+//            $this->di6XmlPath = APP.'Config'.DS.'indicatorQueries.xml';
+//        }
 	}
 	
 	public function run($settings=array()) {
@@ -66,10 +74,10 @@ class IndicatorComponent extends Component {
 	
 		$this->Logger->start();
         try{
-            if(!file_exists($this->di6XmlPath)) throw new Exception("Error file do not exist in the location: {$this->di6XmlPath}");
+//            if(!file_exists($this->di6XmlPath)) throw new Exception("Error file do not exist in the location: {$this->di6XmlPath}");
 
-            $this->indicatorsQueries = simplexml_load_file($this->di6XmlPath);
-            pr($indicators);
+//            $this->indicatorsQueries = simplexml_load_file($this->di6XmlPath);
+//            var_dump($indicators);
             foreach($indicators as $indicatorId) {
                 if(!empty($onBeforeGenerate['callback'])) {
                     if(!call_user_func_array($onBeforeGenerate['callback'], $onBeforeGenerate['params'])) {
@@ -78,6 +86,7 @@ class IndicatorComponent extends Component {
                 }
                 try {
                     $this->BatchIndicatorResult->truncate($indicatorId);
+                    echo 'indicator ID: '.$indicatorId.PHP_EOL;
                     $this->generateIndicator($indicatorId, $userId);
                 } catch(Exception $ex) {
                     $error = $ex->getMessage();
@@ -134,11 +143,17 @@ class IndicatorComponent extends Component {
 	}
 	
 	public function generateIndicator($id, $userId=0) {
+        $areaLevels = $this->AreaLevel->find('list', array('order' => 'level DESC'));
+        $indicator = $this->BatchIndicator->find('first', array('conditions' => array('BatchIndicator.id' => $id)));
+        $indicatorName = $indicator['BatchIndicator']['name'];
+        $unitName = $indicator['BatchIndicator']['unit'];
+        $path = (($indicator['BatchIndicator']['type'] == 'system')? $this->systemIndicatorPath: $this->userIndicatorPath).$indicator['BatchIndicator']['filename'];
+        if(!file_exists($path)) {
+            throw new Exception("Error file do not exist in the location: {$path}");
+        }
+        $this->indicatorsQueries = simplexml_load_file($path);
+
         $indicatorXml = array_shift($this->indicatorsQueries->xpath('//indicator[@id='.$id.']'));
-		$areaLevels = $this->AreaLevel->find('list', array('order' => 'level DESC'));
-		$indicator = $this->BatchIndicator->find('first', array('conditions' => array('BatchIndicator.id' => $id)));
-		$indicatorName = $indicator['BatchIndicator']['name'];
-		$unitName = $indicator['BatchIndicator']['unit'];
 //        $query = $indicator['BatchIndicator']['query'];
 		$query = $indicatorXml->query->mysql->insert;
 		
