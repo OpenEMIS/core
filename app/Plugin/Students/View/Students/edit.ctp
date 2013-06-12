@@ -8,7 +8,7 @@ $obj = @$data['Student'];
 
 <div id="student" class="content_wrapper edit add">
 	<h1>
-		<span><?php echo __('Student Information'); ?></span>
+		<span><?php echo __('Overview'); ?></span>
 		<?php
 		echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
 		echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
@@ -24,7 +24,7 @@ $obj = @$data['Student'];
 	?>
 
 	<fieldset class="section_break">
-		<legend><?php echo __('General'); ?></legend>
+		<legend><?php echo __('Information'); ?></legend>
         <div class="row">
 			<div class="label"><?php echo  __('Identification No.'); ?></div>
 			<div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'])); ?></div>

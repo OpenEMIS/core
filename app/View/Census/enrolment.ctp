@@ -10,20 +10,11 @@ echo $this->Html->script('census_enrolment', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="enrolment" class="content_wrapper">
-	<?php 
-	echo $this->Form->create('CensusStudent', array(
-			'id' => 'submitForm',
-			'onsubmit' => 'return false',
-			'inputDefaults' => array('label' => false, 'div' => false),	
-			'url' => array('controller' => 'Census', 'action' => 'enrolment')
-		)
-	);
-	?>
 	<h1>
 		<span><?php echo __('Enrolment'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'enrolmentEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'enrolmentEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -34,9 +25,12 @@ echo $this->Html->script('census_enrolment', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
+				'label' => false,
+				'div' => false,
 				'options' => $years,
-				'default' => $selectedYear
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
@@ -54,6 +48,8 @@ echo $this->Html->script('census_enrolment', false);
 			<?php
 				echo $this->Form->input('education_grade_id', array(
 					'id' => 'EducationGradeId',
+					'label' => false,
+					'div' => false,
 					'options' => $obj['grades'],
 					'onchange' => 'CensusEnrolment.get(this)',
 					'autocomplete' => 'off'
@@ -65,6 +61,8 @@ echo $this->Html->script('census_enrolment', false);
 			<?php
 				echo $this->Form->input('student_category_id', array(
 					'id' => 'StudentCategoryId',
+					'label' => false,
+					'div' => false,
 					'options' => $category,
 					'onchange' => 'CensusEnrolment.get(this)',
 					'autocomplete' => 'off'
@@ -117,6 +115,4 @@ echo $this->Html->script('census_enrolment', false);
 		</div>
 	</fieldset>
 	<?php } // end foreach (data) ?>
-	
-	<?php echo $this->Form->end(); ?>
 </div>

@@ -8,17 +8,11 @@ echo $this->Html->script('census', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="graduates" class="content_wrapper">
-	<?php
-	echo $this->Form->create('CensusGraduate', array(
-		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'Census', 'action' => 'graduates')
-	));
-	?>
 	<h1>
 		<span><?php echo __('Graduates'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'graduatesEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'graduatesEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -29,9 +23,12 @@ echo $this->Html->script('census', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
+				'label' => false,
+				'div' => false,
 				'options' => $years,
-				'default' => $selectedYear
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
@@ -73,6 +70,4 @@ echo $this->Html->script('census', false);
 		</div>
 	</fieldset>
 	<?php } ?>
-	
-	<?php echo $this->Form->end(); ?>
 </div>

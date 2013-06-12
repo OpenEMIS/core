@@ -1,6 +1,5 @@
 .year { margin-bottom: 10px; }
 .year .label { width: 30px; line-height: 25px; }
-.year select { width: 65px; }
 
 /* Enrolment */
 #enrolment .label.grade { width: 35px; line-height: 25px; font-size: 11px; }
@@ -13,6 +12,11 @@
 #teachers .label.grade { width: 35px; line-height: 25px; font-size: 11px; }
 #teachers .value.grade select { width: 90px; }
 /* End Teachers */
+
+#attendance .row .label { line-height: 25px; }
+#attendance .school_days { margin-bottom: 15px; }
+#attendance .school_days .default { width: 82px; }
+#attendance .table_head .table_cell { vertical-align: top; }
 
 .custom_grid .table_wrapper {
 	overflow: auto;

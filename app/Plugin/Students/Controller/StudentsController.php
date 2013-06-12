@@ -157,7 +157,7 @@ class StudentsController extends StudentsAppController {
     }
 	
 	public function view() {
-		$this->Navigation->addCrumb('General');
+		$this->Navigation->addCrumb('Overview');
 		$this->Student->id = $this->Session->read('StudentId');
         $data = $this->Student->read();
 

@@ -24,7 +24,7 @@ echo $this->Html->script('jquery.scrollTo', false);
 			echo $this->Html->link(__('Add'), array(), array('class' => 'divider void', 'onclick' => "CensusFinance.show('CensusFinanceAdd')"));
 		}
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'financesEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'financesEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -34,9 +34,12 @@ echo $this->Html->script('jquery.scrollTo', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
+				'label' => false,
+				'div' => false,
 				'options' => $years,
-				'default' => $selectedYear
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
