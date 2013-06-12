@@ -48,7 +48,7 @@ echo $this->Html->script('search', false);
         </div>
 
         <div class="table allow_hover" action="Staff/viewStaff/">
-            <div class="table_head">
+            <div class="table_head" url="Staff/index">
                 <div class="table_cell cell_id_no">
                     <span class="left"><?php echo __('Identification No.'); ?></span>
                     <span class="icon_sort_<?php echo ($sortedcol =='Staff.identification_no')?$sorteddir:'up'; ?>"  order="Staff.identification_no"></span>

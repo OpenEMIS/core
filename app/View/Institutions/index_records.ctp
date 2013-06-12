@@ -10,7 +10,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 	</ul>
 </div>
 <div class="table allow_hover" action="Institutions/listSites/">
-	<div class="table_head">
+	<div class="table_head" url="Institutions/index">
 			<div class="table_cell cell_code"><span class="left"><?php echo __('Code'); ?></span><span class="icon_sort_<?php echo ($sortedcol =='Institution.code')?$sorteddir:'up'; ?>"  order="Institution.code"></span></div>
 			<div class="table_cell cell_name"><span class="left"><?php echo __('Institution Name'); ?></span><span class="icon_sort_<?php echo ($sortedcol =='Institution.name')?$sorteddir:'up'; ?>" order="Institution.name"></span></div>
 			<div class="table_cell"><span class="left"><?php echo __('Sector'); ?></span><span class="icon_sort_<?php echo ($sortedcol =='InstitutionSector.name')?$sorteddir:'up'; ?>" order="InstitutionSector.name"></span></div>
