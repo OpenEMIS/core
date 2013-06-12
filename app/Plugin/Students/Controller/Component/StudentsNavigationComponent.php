@@ -31,8 +31,8 @@ class StudentsNavigationComponent extends Component {
 				)
 			),
 			array(
-				'INFORMATION' => array(
-					$navigation->createLink('General', $controller, 'view', 'view$|^edit$|history$'),
+				'GENERAL' => array(
+					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					$navigation->createLink('More', $controller, 'additional')
 					//$navigation->createLink('Institutions', 'institutions')

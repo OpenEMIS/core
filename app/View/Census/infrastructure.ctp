@@ -10,20 +10,11 @@ echo $this->Html->script('infrastructure', false);
 <?php echo $this->element('breadcrumb'); ?>
 <input type="hidden" id="is_edit" value="false">
 <div id="infrastructure" class="content_wrapper">
-        <?php
-	echo $this->Form->create('CensusInfrastructure', array(
-			'id' => 'submitForm',
-			'onsubmit' => 'return false',
-			'inputDefaults' => array('label' => false, 'div' => false),	
-			'url' => array('controller' => 'Census', 'action' => 'infrastructure')
-		)
-	);
-	?>
 	<h1>
 		<span><?php echo __('Infrastructure'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'infrastructureEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'infrastructureEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -33,9 +24,12 @@ echo $this->Html->script('infrastructure', false);
 		<div class="value">
 			<?php
 				echo $this->Form->input('school_year_id', array(
-					'id' => 'SchoolYearId',
+					'label' => false,
+					'div' => false,
 					'options' => $years,
-					'default' => $selectedYear
+					'default' => $selectedYear,
+					'onchange' => 'Census.navigateYear(this)',
+					'url' => 'Census/' . $this->action
 				));
 			?>
 		</div>

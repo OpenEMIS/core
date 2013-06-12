@@ -5,12 +5,13 @@
 .edit .table { margin-bottom: 0; }
 
 .school_year .table .table_body .table_cell { text-align: center; }
-.school_year .table .icon_delete { margin-left: 26px; }
-.school_year .table .cell_datepicker { width: 202px; }
+.school_year .table .table_body .label { text-align: left; width: 50px; }
+.school_year .table .icon_delete { margin-left: 29px; }
+.school_year .table .cell_datepicker { width: 265px; }
 .school_year .table .datepicker_day { width: 45px; }
 .school_year .table .datepicker_month { width: 80px; }
-.school_year .table .cell_current { min-width: 50px !important; width: 50px; }
-.school_year .table .cell_current { width: 60px; }
+.school_year .cell_current { min-width: 50px !important; width: 50px; }
+.school_year .cell_days { width: 110px; }
 
 .banks .cell_code { width: 100px; }
 .banks .cell_name { width: 466px; }

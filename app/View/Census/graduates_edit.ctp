@@ -3,7 +3,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
-echo $this->Html->script('census_graduates', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -17,7 +16,7 @@ echo $this->Html->script('census_graduates', false);
 	?>
 	<h1>
 		<span><?php echo __('Graduates'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'graduates'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<?php echo $this->Html->link(__('View'), array('action' => 'graduates', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
@@ -26,9 +25,10 @@ echo $this->Html->script('census_graduates', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
 				'options' => $years,
-				'default' => $selectedYear
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
@@ -76,11 +76,12 @@ echo $this->Html->script('census_graduates', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input($index . '.male', array(
 								'id' => 'CensusGraduateMale',
-								'class'=>$record_tag,
+								'class' => 'computeTotal ' . $record_tag,
 								'type' => 'text',
 								'value' => is_null($record['male']) ? 0 : $record['male'],
 								'maxlength' => 9,
-								'onkeypress' => 'return utility.integerCheck(event)'
+								'onkeypress' => 'return utility.integerCheck(event)',
+								'onkeyup' => 'Census.computeTotal(this)'
 							)); 
 						?>
 						</div>
@@ -89,11 +90,12 @@ echo $this->Html->script('census_graduates', false);
 						<div class="input_wrapper">
 						<?php echo $this->Form->input($index . '.female', array(
 								'id' => 'CensusGraduateFemale',
-								'class'=>$record_tag,
+								'class' => 'computeTotal ' . $record_tag,
 								'type' => 'text',
 								'value' => is_null($record['female']) ? 0 : $record['female'],
 								'maxlength' => 9,
-								'onkeypress' => 'return utility.integerCheck(event)'
+								'onkeypress' => 'return utility.integerCheck(event)',
+								'onkeyup' => 'Census.computeTotal(this)'
 							));
 						?>
 						</div>
@@ -117,7 +119,7 @@ echo $this->Html->script('census_graduates', false);
 	<?php if(!empty($data)) { ?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'graduates', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php } ?>
 	

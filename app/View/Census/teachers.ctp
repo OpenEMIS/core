@@ -3,25 +3,16 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
-echo $this->Html->script('census_teachers', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="teachers" class="content_wrapper">
-	<?php
-	echo $this->Form->create('CensusTeacher', array(
-		'id' => 'submitForm',
-		'onsubmit' => 'return false',
-		'inputDefaults' => array('label' => false, 'div' => false),
-		'url' => array('controller' => 'Census', 'action' => 'teachers')
-	));
-	?>
 	<h1>
 		<span><?php echo __('Teachers'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'teachersEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'teachersEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -32,9 +23,12 @@ echo $this->Html->script('census_teachers', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
+				'label' => false,
+				'div' => false,
 				'options' => $years,
-				'default' => $selectedYear
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
@@ -234,5 +228,4 @@ echo $this->Html->script('census_teachers', false);
 	</fieldset>
 	
 	<?php } // end display content ?>
-	<?php echo $this->Form->end(); ?>
 </div>

@@ -3,27 +3,16 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
-
-//echo $this->Html->script('customgrid', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="grid" class="content_wrapper">
-    <?php
-	echo $this->Form->create('CensusGrid', array(
-			'id' => 'submitForm',
-			'onsubmit' => 'return false',
-			'inputDefaults' => array('label' => false, 'div' => false),	
-			'url' => array('controller' => 'Census', 'action' => 'otherforms')
-		)
-	);
-	?>
 	<h1>
 		<span><?php echo __('Other Forms'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit'), array('id' => 'edit-link', 'class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -32,11 +21,14 @@ echo $this->Html->script('census', false);
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
 			<?php
-				echo $this->Form->input('school_year_id', array(
-					'id' => 'SchoolYearId',
-					'options' => $years,
-					'default' => $selectedYear
-				));
+			echo $this->Form->input('school_year_id', array(
+				'label' => false,
+				'div' => false,
+				'options' => $years,
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
+			));
 			?>
 		</div>
 	</div>

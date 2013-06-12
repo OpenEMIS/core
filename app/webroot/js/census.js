@@ -20,19 +20,30 @@ $(document).ready(function() {
 var Census = {
 	yearId: '#SchoolYearId',
 	init: function() {
-		$('#edit-link').click(Census.navigate);
-		$(Census.yearId).change(Census.changeYear);
-		$('.controls .btn_cancel').click(Census.navigate);
+		
 	},
 	
-	navigate: function() {
-		window.location.href = $('#edit-link').attr('href') + '/' + $(Census.yearId).val();
-		return false;
+	navigateYear: function(obj) {
+		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
 	},
 	
-	changeYear: function() {
-		var href = $('.content_wrapper > form').attr('action');
-		window.location.href = href + '/' + $(Census.yearId).val();
+	computeTotal: function(obj) {
+		var row = $(obj).closest('.table_row');
+		var subtotal = 0;
+		row.find('.computeTotal').each(function() {
+			if($(this).val().isEmpty()) {
+				$(this).val(0).select();
+			} else {
+				subtotal += $(this).val().toInt();
+			}
+		});
+		row.find('.cell_total').html(subtotal);
+		table = row.closest('.table');
+		var total = 0;
+		table.find('.table_row').each(function() {
+			total += $(this).find('.cell_total').html().toInt();
+		});
+		table.find('.table_foot .cell_value').html(total);
 	},
 	
 	loadGradeList: function(obj) {
