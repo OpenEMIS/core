@@ -84,11 +84,11 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 				<?php foreach($positions as $obj) { ?>
 				<div class="table_row">
 					<div class="table_cell"><?php echo $obj['TeacherCategory']['name']; ?></div>
-					<div class="table_cell center"><?php echo $obj['InstitutionSiteTeacher']['start_date']; ?></div>
+					<div class="table_cell center"><?php echo $this->Utility->formatDate($obj['InstitutionSiteTeacher']['start_date']); ?></div>
 					<div class="table_cell center">
 						<?php
 						$endDate = $obj['InstitutionSiteTeacher']['end_date'];
-						echo is_null($endDate) ? __('Current') : $endDate;
+						echo is_null($endDate) ? __('Current') : $this->Utility->formatDate($endDate);
 						?>
 					</div>
 					<div class="table_cell cell_number"><?php echo $obj['InstitutionSiteTeacher']['salary']; ?></div>
@@ -102,15 +102,15 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 		<legend><?php echo __('Classes'); ?></legend>
 		<div class="table full_width" style="margin-top: 5px;">
 			<div class="table_head">
-				<div class="table_cell" style="width: 400px;"><?php echo __('Education Level'); ?></div>
 				<div class="table_cell"><?php echo __('Class'); ?></div>
+				<div class="table_cell" style="width: 400px;"><?php echo __('Education Level'); ?></div>
 			</div>
 			
 			<div class="table_body">
 				<?php foreach($classes as $obj) { ?>
 				<div class="table_row">
-					<div class="table_cell"><?php echo $obj['EducationLevel']['name']; ?></div>
 					<div class="table_cell"><?php echo $obj['InstitutionSiteClass']['name']; ?></div>
+					<div class="table_cell"><?php echo $obj['EducationLevel']['name']; ?></div>
 				</div>
 				<?php } ?>
 			</div>

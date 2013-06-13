@@ -156,7 +156,7 @@ class UtilityHelper extends AppHelper {
 			}
 		}
 		
-		if(isset($settings['desc'])) {
+		if(isset($_settings['desc'])) {
 			krsort($year);
 		}
 		
