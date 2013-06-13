@@ -3,6 +3,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
+echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('institution_site_programmes', false);
 ?>
