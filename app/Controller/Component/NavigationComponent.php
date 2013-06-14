@@ -163,19 +163,19 @@ class NavigationComponent extends Component {
 				)
 			),
 			array(
-				'INFORMATION' => array(
-					$this->createLink('General', 'Institutions', 'view', 'view$|^edit$|history$'),
+				'GENERAL' => array(
+					$this->createLink('Overview', 'Institutions', 'view', 'view$|^edit$|history$'),
 					$this->createLink('Attachments', 'Institutions', 'attachments'),
 					$this->createLink('More', 'Institutions', 'additional')
 				),
 				'INSTITUTION SITE' => array(
 					$this->createLink('List of Institution Sites', 'Institutions', 'listSites', 'listSites$'),
-					$this->createLink('Add new Institution Site', 'Institutions', 'add', 'add$')
+					$this->createLink('Add new Institution Site', 'InstitutionSites', 'add', 'add$')
 				)
 			),
 			array(
-				'INFORMATION' => array(
-					$this->createLink('General', 'InstitutionSites', 'view', 'view$|^edit$|history$'),
+				'GENERAL' => array(
+					$this->createLink('Overview', 'InstitutionSites', 'view', 'view$|^edit$|history$'),
 					$this->createLink('Attachments', 'InstitutionSites', 'attachments'),
 					$this->createLink('Bank Accounts', 'InstitutionSites', 'bankAccounts'),
 					$this->createLink('More', 'InstitutionSites', 'additional')
@@ -197,6 +197,8 @@ class NavigationComponent extends Component {
 					$this->createLink('Staff', 'Census', 'staff'),
 					$this->createLink('Infrastructure', 'Census', 'infrastructure'),
 					$this->createLink('Finances', 'Census', 'finances'),
+					$this->createLink('Attendance', 'Census', 'attendance'),
+					$this->createLink('Behaviour', 'Census', 'behaviour'),
 					$this->createLink('More', 'Census', 'otherforms')
 				)
 			)
@@ -204,7 +206,7 @@ class NavigationComponent extends Component {
 		return $links;
 	}
 	
-	public function getSettingsLinks() {		
+	public function getSettingsLinks() {
 		$links = array(
 			array(
 				'SYSTEM SETUP' => array(

@@ -97,6 +97,7 @@ var setup = {
 					list.append(data);
 					jsTable.fixTable();
 					jsDate.initDatepicker('.new_row:last .datepicker');
+					ComboBox.attachFocusEvent($('.new_row:last ' + ComboBox.classname));
 				};
 				$.unmask({id: maskId, callback: callback});
 			}
@@ -138,16 +139,5 @@ var setup = {
 				$.unmask({id: maskId, callback: callback});
 			}
 		});
-	},
-	
-	updateYear: function() {
-		$('.new_row').each(function() {
-			var obj = $(this);
-			var startYear = obj.find('.start_date').val().split('-').shift();
-			var endYear = obj.find('.end_date').val().split('-').shift();
-			obj.find('.start_year').val(startYear);
-			obj.find('.end_year').val(endYear);
-		});
-		return true;
 	}
 };
