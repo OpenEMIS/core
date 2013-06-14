@@ -55,18 +55,18 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		<div class="table full_width" style="margin-top: 10px;">
 			<div class="table_head">
 				<div class="table_cell" style="width: 80px;"><?php echo __('Year'); ?></div>
+				<div class="table_cell" style="width: 120px;"><?php echo __('Class'); ?></div>
 				<div class="table_cell"><?php echo __('Programme'); ?></div>
 				<div class="table_cell" style="width: 120px;"><?php echo __('Grade'); ?></div>
-				<div class="table_cell" style="width: 120px;"><?php echo __('Class'); ?></div>
 			</div>
 			
 			<div class="table_body">
 				<?php foreach($classes as $class) { ?>
 				<div class="table_row">
 					<div class="table_cell"><?php echo $class['SchoolYear']['name']; ?></div>
+					<div class="table_cell"><?php echo $class['InstitutionSiteClass']['name']; ?></div>
 					<div class="table_cell"><?php echo $class['EducationCycle']['name'] . ' - ' . $class['EducationProgramme']['name']; ?></div>
 					<div class="table_cell"><?php echo $class['EducationGrade']['name']; ?></div>
-					<div class="table_cell"><?php echo $class['InstitutionSiteClass']['name']; ?></div>
 				</div>
 				<?php } ?>
 			</div>

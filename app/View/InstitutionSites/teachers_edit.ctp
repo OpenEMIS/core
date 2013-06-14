@@ -156,15 +156,15 @@ echo $this->Html->script('institution_site_teachers', false);
 		<legend><?php echo __('Classes'); ?></legend>
 		<div class="table full_width" style="margin-top: 5px;">
 			<div class="table_head">
-				<div class="table_cell" style="width: 400px;"><?php echo __('Education Level'); ?></div>
 				<div class="table_cell"><?php echo __('Class'); ?></div>
+				<div class="table_cell" style="width: 400px;"><?php echo __('Education Level'); ?></div>
 			</div>
 			
 			<div class="table_body">
 				<?php foreach($classes as $cls) { ?>
 				<div class="table_row">
-					<div class="table_cell"><?php echo $cls['EducationLevel']['name']; ?></div>
 					<div class="table_cell"><?php echo $cls['InstitutionSiteClass']['name']; ?></div>
+					<div class="table_cell"><?php echo $cls['EducationLevel']['name']; ?></div>
 				</div>
 				<?php } ?>
 			</div>
