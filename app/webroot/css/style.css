@@ -342,7 +342,7 @@ a.btn:hover { text-decoration: none; }
 
 .datepicker { float: left; }
 .datepicker_date { display: none; }
-.datepicker_day { width: 50px; padding-left: 2px !important; }
+.datepicker_day { width: 55px; padding-left: 2px !important; }
 .datepicker_month { width: 85px; padding-left: 2px !important; }
 .datepicker_year { width: 56px; padding-left: 2px !important; }
 .add .datepicker_day { width: 64px; }

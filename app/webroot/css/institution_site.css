@@ -21,7 +21,7 @@
 #teachersAdd select.default, #staffAdd select.default { width: 212px; }
 #teachersAdd .icon_search, #staffAdd .icon_search { height: 22px; width: 24px; }
 #teachersAdd .section_break, #staffAdd .section_break { padding-top: 10px; }
-#teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 70px; line-height: 24px; }
+#teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 65px; line-height: 24px; }
 
 .cell_system { width: 200px; }
 .cell_date { width: 110px; }
@@ -49,14 +49,3 @@
 #student_group .list_wrapper { height: 242px; }
 .ie8 #search_group .list_wrapper { height: 111px; }
 .ie8 #student_group .list_wrapper { height: 243px; }
-
-/* Fix scrollbar in chrome / safari */
-::-webkit-scrollbar {
-	-webkit-appearance: none;
-	width: 7px;
-}
-::-webkit-scrollbar-thumb {
-	border-radius: 4px;
-	background-color: rgba(0,0,0,.5);
-	-webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
-}
