@@ -41,12 +41,12 @@ var objSearch = {
 			else $(this).attr('class', 'icon_sort_up');
 			$.ajax({ 
 				type: "post",
-				url: getRootURL() + $('#controller').val() + "/index",
+				url: getRootURL() + $(this).closest('.table_head').attr('url'),
 				data: {order:order,sortdir : sort}, 
 				success: function(data){
 					$('#mainlist').html(data).promise().done(function(){
 						objSearch.attachSortOrder();
-						objSearch.attachRowClick();
+						jsTable.attachHoverOnClickEvent();
 					});
 					
 				}
