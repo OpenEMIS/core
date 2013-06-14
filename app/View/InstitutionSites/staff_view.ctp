@@ -68,11 +68,11 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 				<?php foreach($positions as $obj) { ?>
 				<div class="table_row">
 					<div class="table_cell"><?php echo $obj['StaffCategory']['name']; ?></div>
-					<div class="table_cell center"><?php echo $obj['InstitutionSiteStaff']['start_date']; ?></div>
+					<div class="table_cell center"><?php echo $this->Utility->formatDate($obj['InstitutionSiteStaff']['start_date']); ?></div>
 					<div class="table_cell center">
 						<?php
 						$endDate = $obj['InstitutionSiteStaff']['end_date'];
-						echo is_null($endDate) ? __('Current') : $endDate;
+						echo is_null($endDate) ? __('Current') : $this->Utility->formatDate($endDate);
 						?>
 					</div>
 					<div class="table_cell cell_number"><?php echo $obj['InstitutionSiteStaff']['salary']; ?></div>
