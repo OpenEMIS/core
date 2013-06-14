@@ -7,16 +7,16 @@ echo $this->Html->script('census', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="staff" class="content_wrapper edit">
+<div id="behaviour" class="content_wrapper edit">
 	<?php
-	echo $this->Form->create('CensusStaff', array(
+	echo $this->Form->create('CensusBehaviour', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'Census', 'action' => 'staffEdit')
+		'url' => array('controller' => 'Census', 'action' => 'behaviourEdit')
 	));
 	?>
 	<h1>
-		<span><?php echo __('Staff'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'staff', $selectedYear), array('class' => 'divider')); ?>
+		<span><?php echo __('Behaviour'); ?></span>
+		<?php echo $this->Html->link(__('View'), array('action' => 'behaviour', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	
 	<div class="row year">
@@ -53,9 +53,8 @@ echo $this->Html->script('census', false);
 			$total = 0;
 			$index = 0;
 			foreach($data as $record) {
-				if($record['staff_category_visible'] == 1) {
-					$total += $record['male'] + $record['female'];
-					$record_tag="";
+				$total += $record['male'] + $record['female'];
+				$record_tag="";
 					switch ($record['source']) {
 						case 1:
 							$record_tag.="row_external";break;
@@ -66,9 +65,9 @@ echo $this->Html->script('census', false);
 			<div class="table_row">
 				<?php
 				echo $this->Form->hidden($index . '.id', array('value' => $record['id']));
-				echo $this->Form->hidden($index . '.staff_category_id', array('value' => $record['staff_category_id']));
+				echo $this->Form->hidden($index . '.student_behaviour_category_id', array('value' => $record['student_behaviour_category_id']));
 				?>
-				<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['staff_category_name']; ?></div>
+				<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['name']; ?></div>
 				<div class="table_cell">
 					<div class="input_wrapper">
 					<?php 
@@ -99,11 +98,7 @@ echo $this->Html->script('census', false);
 				</div>
 				<div class="table_cell cell_total cell_number"><?php echo $record['male'] + $record['female']; ?></div>
 			</div>
-			<?php 
-					$index++; 
-				} 
-			}
-			?>
+			<?php $index++; } ?>
 		</div>
 		
 		<div class="table_foot">
@@ -116,7 +111,7 @@ echo $this->Html->script('census', false);
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'staff', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'behaviour', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>

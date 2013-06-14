@@ -3,24 +3,21 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
-
-//echo $this->Html->script('customgrid', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="infrastructure" class="content_wrapper">
-        <?php
+	<?php
 	echo $this->Form->create('CensusGridValue', array(
-			'id' => 'submitForm',
-			'inputDefaults' => array('label' => false, 'div' => false),	
-			'url' => array('controller' => 'Census', 'action' => 'otherformsEdit')
-		)
-	);
+		'id' => 'submitForm',
+		'inputDefaults' => array('label' => false, 'div' => false),	
+		'url' => array('controller' => 'Census', 'action' => 'otherformsEdit')
+	));
 	?>
 	<h1>
 		<span><?php echo __('Other Forms'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'otherforms'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<?php echo $this->Html->link(__('View'), array('action' => 'otherforms', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	
 	<div class="row year">
@@ -236,7 +233,7 @@ echo $this->Html->script('census', false);
         ?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'otherforms', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 	

@@ -69,6 +69,14 @@ class UtilityHelper extends AppHelper {
 		return $yearSelect;
 	}
 	
+	public function generateYearList($sort='asc') {
+		$utility = new UtilityComponent(new ComponentCollection);
+		$list = DateTimeComponent::generateYear();
+		if($sort==='desc') {
+			krsort($list);
+		}
+		return $list;
+	}
 
 	public function showArea($form,$id,$value,$settings=array()){
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);

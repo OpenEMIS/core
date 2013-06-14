@@ -11,14 +11,13 @@ echo $this->Html->script('census_teachers', false);
 <div id="teachers" class="content_wrapper edit">
 	<?php
 	echo $this->Form->create('CensusTeacher', array(
-		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 		'url' => array('controller' => 'Census', 'action' => 'teachersEdit')
 	));
 	?>
 	<h1>
 		<span><?php echo __('Teachers'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'teachers'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<?php echo $this->Html->link(__('View'), array('action' => 'teachers', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>	
 	
@@ -27,10 +26,11 @@ echo $this->Html->script('census_teachers', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
 				'name' => 'school_year_id',
 				'options' => $years,
-				'default' => $selectedYear
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
@@ -391,7 +391,7 @@ echo $this->Html->script('census_teachers', false);
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'teachers', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php } // end display content ?>

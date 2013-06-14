@@ -21,20 +21,21 @@ echo $this->Html->script('census_finance', false);
 <div id="finances" class="content_wrapper edit">
 	<h1>
 		<span><?php echo __('Finances'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'finances'), array('id' => 'edit-link', 'class' => 'divider')); ?>
+		<?php echo $this->Html->link(__('View'), array('action' => 'finances', $selectedYear), array('class' => 'divider')); ?>
 		
 	</h1>
 	
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
-			<select id="SchoolYearId" >
-				<?php 
-					foreach($years as $id => $year){
-						echo '<option value="'.$id.'" '.($selectedYear == $id?'selected="selected"':'').'>'.$year.'</option>';
-					}
-				?>
-			</select>
+			<?php
+			echo $this->Form->input('school_year_id', array(
+				'options' => $years,
+				'default' => $selectedYear,
+				'onchange' => 'Census.navigateYear(this)',
+				'url' => 'Census/' . $this->action
+			));
+			?>
 		</div>
 		<div class="row_item_legend">
 		<ul class="legend">

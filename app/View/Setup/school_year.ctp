@@ -47,6 +47,7 @@ echo $this->Html->script('setup_variables', false);
 			<div class="table_cell"><?php echo __('Year'); ?></div>
 			<div class="table_cell cell_start_date"><?php echo __('Start Date'); ?></div>
 			<div class="table_cell cell_end_date"><?php echo __('End Date'); ?></div>
+			<div class="table_cell"><?php echo __('School Days'); ?></div>
 			<div class="table_cell"><?php echo __('Current'); ?></div>
 			<div class="table_cell"><?php echo __('Available'); ?></div>
 		</div>
@@ -57,6 +58,7 @@ echo $this->Html->script('setup_variables', false);
 				<div class="table_cell"><?php echo $row['name'] ?></div>
 				<div class="table_cell"><?php echo $this->Utility->formatDate($row['start_date']); ?></div>
 				<div class="table_cell"><?php echo $this->Utility->formatDate($row['end_date']); ?></div>
+				<div class="table_cell"><?php echo $row['school_days']; ?></div>
 				<div class="table_cell"><?php echo $this->Utility->checkOrCrossMarker($row['current']); ?></div>
 				<div class="table_cell"><?php echo $this->Utility->checkOrCrossMarker($row['available']); ?></div>
 			</div>
