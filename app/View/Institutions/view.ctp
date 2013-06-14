@@ -7,7 +7,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 
 <div id="institution" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Institution Information'); ?></span>
+		<span><?php echo __('Overview'); ?></span>
 		<?php
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
@@ -23,7 +23,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 	<?php $obj = $data['Institution']; ?>
 	
 	<fieldset class="section_break">
-		<legend><?php echo __('General'); ?></legend>
+		<legend><?php echo __('Information'); ?></legend>
 		<div class="row">
 			<div class="label"><?php echo __('Institution Name'); ?></div>
 			<div class="value"><?php echo $obj['name']; ?></div>

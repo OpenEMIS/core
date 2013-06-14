@@ -115,6 +115,7 @@ echo $this->Html->script('institution_site_staff', false);
 						echo $this->Form->input($i . '.salary', array(
 							'label' => false,
 							'div' => false,
+							'type' => 'text',
 							'name' => sprintf($fieldName, $i, 'salary'),
 							'value' => $pos['InstitutionSiteStaff']['salary']
 						));
