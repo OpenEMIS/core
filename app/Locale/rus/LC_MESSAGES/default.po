@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2013-04-25 17:18+0800\n"
+"PO-Revision-Date: 2013-06-17 17:00+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: rus\n"
@@ -15,13 +15,13 @@ msgstr ""
 "X-Generator: Poedit 1.5.5\n"
 
 msgid "Home"
-msgstr "дома"
+msgstr "Главная страница"
 
 msgid "Welcome"
 msgstr "Добро пожаловать"
 
 msgid "Account"
-msgstr "Счет"
+msgstr "Вход"
 
 msgid "Help"
 msgstr "Помощь"
@@ -39,7 +39,7 @@ msgid "Teachers"
 msgstr "Учителя"
 
 msgid "Staff"
-msgstr "персонал"
+msgstr "Персонал"
 
 msgid "Reports"
 msgstr "Отчеты"
@@ -51,7 +51,7 @@ msgid "Demo"
 msgstr "Демо"
 
 msgid "--Select--"
-msgstr "- Select -"
+msgstr "- Выберите -"
 
 msgid "Day"
 msgstr "День"
@@ -93,19 +93,19 @@ msgid "Cancel"
 msgstr "Отмена"
 
 msgid "Update"
-msgstr "Update"
+msgstr "Обновить"
 
 msgid "Previous"
 msgstr "Назад"
 
 msgid "Next"
-msgstr "Next"
+msgstr "Следующий"
 
 msgid "Statistics"
 msgstr "Статистика"
 
 msgid "Institutions Sites"
-msgstr "учреждения сайтов"
+msgstr "Cайты  учреждений "
 
 msgid "Activities"
 msgstr "Мероприятия"
@@ -132,7 +132,7 @@ msgid "Note: Max upload file size is 2MB."
 msgstr "Примечание: Максимальная загрузка файла размером 2 Мб."
 
 msgid "Image"
-msgstr "Image"
+msgstr "Картинка"
 
 msgid "Document"
 msgstr "Документ"
@@ -168,13 +168,13 @@ msgid "Error occurred while deleting record."
 msgstr "Ошибка при удалении записи."
 
 msgid " have been deleted successfully."
-msgstr "был успешно удален."
+msgstr "были успешно удалены."
 
 msgid "Searching..."
-msgstr "Поиск ..."
+msgstr "Поиск …"
 
 msgid "%s have been deleted successfully."
-msgstr "%s была успешно удалена"
+msgstr "%s была успешно удалены"
 
 msgid "Please enter a unique Identification No"
 msgstr "Пожалуйста, введите уникальный Идентификационный номер"
@@ -186,13 +186,13 @@ msgid "List of Students"
 msgstr "Список студентов"
 
 msgid "Add new Student"
-msgstr "Добавить новый студент"
+msgstr "Добавить нового студента"
 
 msgid "Details"
-msgstr "Подробности"
+msgstr "Детали"
 
 msgid "Attachments"
-msgstr "Вложения"
+msgstr "Приложения"
 
 msgid "Additional Info"
 msgstr "Дополнительная информация"
@@ -207,16 +207,16 @@ msgid "Assessment Results"
 msgstr "Результаты оценки"
 
 msgid "Student Details"
-msgstr "Подробности Студент"
+msgstr "Подробная информация о студенте"
 
 msgid "Student History"
-msgstr "Студенческая история"
+msgstr "История Студента"
 
 msgid "Add"
 msgstr "Добавить"
 
 msgid "Attachment"
-msgstr "Вложение"
+msgstr "Приложение"
 
 msgid "Student Identification No, First Name or Last Name"
 msgstr "Студенческая Идентификационный номер, Имя или Фамилия"
@@ -228,10 +228,10 @@ msgid "Identification No"
 msgstr "Идентификационный номер"
 
 msgid "First Name"
-msgstr "First Name"
+msgstr "Имя"
 
 msgid "Last Name"
-msgstr "Last Name"
+msgstr "Фамилия"
 
 msgid "Gender"
 msgstr "Пол"
@@ -267,13 +267,13 @@ msgid "Address"
 msgstr "Адрес"
 
 msgid "Postal Code"
-msgstr "почтовый код"
+msgstr "Почтовый Индекс"
 
 msgid "Telephone"
 msgstr "Телефон"
 
 msgid "Email"
-msgstr "E-mail"
+msgstr "Эл. Почта"
 
 msgid "General"
 msgstr "Общие"
@@ -282,52 +282,52 @@ msgid "Contact"
 msgstr "Контакт"
 
 msgid "No Student found."
-msgstr "Ни один студент не найдено."
+msgstr "Студент не найден."
 
 msgid "No history found."
-msgstr "Нет истории найдены"
+msgstr "Истории не найдено"
 
 msgid "List of Staff"
 msgstr "Список сотрудников"
 
 msgid "Add new Staff"
-msgstr "Добавить новый персонал"
+msgstr "Добавить нового сотрудника"
 
 msgid "STAFF INFORMATION"
-msgstr "STAFF ИНФОРМАЦИИ"
+msgstr "ИНФОРМАЦИЯ О СОТРУДНИКАХ"
 
 msgid "Staff Details"
-msgstr "Подробности Staff"
+msgstr "Подробности о сотрудниках"
 
 msgid "No Staff found."
-msgstr "Нет Персонал найден."
+msgstr "Информация о сотруднике не найдена."
 
 msgid "Staff History"
-msgstr "Сотрудники История"
+msgstr "История о Сотруднике"
 
 msgid "List of Teachers"
 msgstr "Список учителей"
 
 msgid "Add new Teacher"
-msgstr "Добавить новый учитель"
+msgstr "Добавить нового учителя"
 
 msgid "Qualifications"
 msgstr "Квалификация"
 
 msgid "Training"
-msgstr "обучение"
+msgstr "профессиональная подготовка"
 
 msgid "TEACHER INFORMATION"
-msgstr "УЧИТЕЛЬ ИНФОРМАЦИИ"
+msgstr "ИНФОРМАЦИЯ ОБ УЧИТЕЛЕ"
 
 msgid "OTHER INFORMATION"
 msgstr "ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ"
 
 msgid "Teacher Details"
-msgstr "Подробности учителя"
+msgstr "Подробности об учителе"
 
 msgid "Teacher History"
-msgstr "Учитель истории"
+msgstr "История учителя"
 
 msgid "Date of Issue"
 msgstr "Дата выдачи"
@@ -342,7 +342,7 @@ msgid "Issued By"
 msgstr ", выданного"
 
 msgid "Completed Date"
-msgstr "Завершено Дата"
+msgstr "Дата завершения "
 
 msgid "Category"
 msgstr "Категория"
@@ -351,19 +351,19 @@ msgid "Certifications"
 msgstr "Сертификаты"
 
 msgid "No Teacher found."
-msgstr "Ни один учитель не найден."
+msgstr "Учитель не найден."
 
 msgid "Teacher"
 msgstr "Учитель"
 
 msgid "Please enter a valid First Name"
-msgstr "Пожалуйста, укажите действительный First Name"
+msgstr "Пожалуйста, укажите правильное ИМЯ"
 
 msgid "Please enter a valid Last Name"
-msgstr "Пожалуйста, укажите действительный Last Name"
+msgstr "Пожалуйста, укажите правильную ФАМИЛИЮ"
 
 msgid "Please enter a valid Identification No"
-msgstr "Пожалуйста, введите действительное удостоверение личности нет"
+msgstr "Пожалуйста, введите правильный Идентификационный номер"
 
 msgid "Please select a Gender"
 msgstr "Пожалуйста, выберите пол"
@@ -393,13 +393,13 @@ msgid "Please enter a valid password"
 msgstr "Пожалуйста, введите пароль"
 
 msgid "You need to assign a role to the user"
-msgstr "Вы должны назначить пользователю роль"
+msgstr "Вы должны назначить роль пользователю"
 
 msgid "No Institution Sites"
-msgstr "Нет Сайты учреждения"
+msgstr "Сайты учреждений не разрешены"
 
 msgid "No Areas"
-msgstr "Нет зона"
+msgstr "Нет сетей"
 
 msgid "Permissions"
 msgstr "Разрешения"
@@ -408,10 +408,10 @@ msgid "Edit Permissions"
 msgstr "Изменить разрешения"
 
 msgid "Edit Role - Area Restricted"
-msgstr "Edit роль - Площадь ограничениями"
+msgstr "Редактировать роль – Доступ ограничен"
 
 msgid "Role - Area Restricted"
-msgstr "Роль - области, ограниченной"
+msgstr "Роль - Доступ ограничен"
 
 msgid "Edit Role Assignment"
 msgstr "Изменение назначения ролей"
@@ -420,7 +420,7 @@ msgid "Role Assignment"
 msgstr "назначение ролей"
 
 msgid "Edit Roles"
-msgstr "Edit ролей"
+msgstr "Изменение ролей"
 
 msgid "Users"
 msgstr "Пользователи"
@@ -432,10 +432,10 @@ msgid "Roles"
 msgstr "Роли"
 
 msgid "Edit Details"
-msgstr "Edit Details"
+msgstr "Редактировать информацию"
 
 msgid "Edit Additional Info"
-msgstr "Редактировать Дополнительная информация"
+msgstr "Редактировать дополнительную информацию"
 
 msgid "Edit Programmes"
 msgstr "Редактирование программ"
@@ -447,34 +447,34 @@ msgid "Name"
 msgstr "Имя"
 
 msgid "Area"
-msgstr "Площадь"
+msgstr "Область"
 
 msgid "Site Type"
 msgstr "Тип сайта"
 
 msgid "Site Code"
-msgstr "Сайт кодекс"
+msgstr "Код сайта"
 
 msgid "Code"
-msgstr "Кодекс"
+msgstr "Код"
 
 msgid "Institution Name"
-msgstr "учреждениях"
+msgstr "Название учреждения"
 
 msgid "Sector"
 msgstr "сектор"
 
 msgid "Provider"
-msgstr "Поставщик"
+msgstr "Провайдер"
 
 msgid "Site Name"
-msgstr "Имя узла"
+msgstr "Имя сайта"
 
 msgid "Type"
-msgstr "Type"
+msgstr "Тип"
 
 msgid "Ownership"
-msgstr "Собственность"
+msgstr "Принадлежность"
 
 msgid "Country"
 msgstr "Страна"
@@ -486,55 +486,55 @@ msgid "District"
 msgstr "Район"
 
 msgid "LLG"
-msgstr "LLG"
+msgstr "ЛЛГ"
 
 msgid "Ward"
-msgstr "Ward"
+msgstr "Приход"
 
 msgid "Locality"
 msgstr "Регион"
 
 msgid "Latitude"
-msgstr "широта"
+msgstr "Широта"
 
 msgid "Longitude"
 msgstr "Долгота"
 
 msgid "No Institution Sites."
-msgstr "Нет учреждение сайтов"
+msgstr "Сайты учреждений не разрешены "
 
 msgid "Institution Site Details"
-msgstr "Подробности учреждение Сайт"
+msgstr "Подробности сайта учреждений "
 
 msgid "Please enter a valid Name"
 msgstr "Пожалуйста, введите действительное имя"
 
 msgid "Please enter a valid Code"
-msgstr "Пожалуйста, введите код"
+msgstr "Пожалуйста, введите действующий код"
 
 msgid "Please select a Provider"
-msgstr "Пожалуйста, выберите поставщика"
+msgstr "Пожалуйста, выберите провайдера"
 
 msgid "Please select a Status"
 msgstr "Пожалуйста, выберите статус"
 
 msgid "Please select the Date Opened"
-msgstr "Пожалуйста, выберите Дата открытия"
+msgstr "Пожалуйста, выберите дату открытия"
 
 msgid "Please select a Site Type"
-msgstr "Пожалуйста, выберите сайт типа"
+msgstr "Пожалуйста, выберите тип сайта"
 
 msgid "Please select an Ownership"
-msgstr "Пожалуйста, выберите собственности"
+msgstr "Пожалуйста, выберите принадлежность"
 
 msgid "Please select an Area"
 msgstr "Пожалуйста, выберите область"
 
 msgid "Institution Code"
-msgstr "Институт кодекс"
+msgstr "Код Учреждения"
 
 msgid "Institution Name or Code"
-msgstr "Название учреждения или кодекс"
+msgstr "Название учреждения или код"
 
 msgid "Status"
 msgstr "Статус"
@@ -543,10 +543,10 @@ msgid "Date Opened"
 msgstr "Дата открытия"
 
 msgid "Date Closed"
-msgstr "Дата Closed"
+msgstr "Дата Закрытия"
 
 msgid "Location"
-msgstr "Location"
+msgstr "Место расположения"
 
 msgid "Contact Person"
 msgstr "Контактное лицо"
@@ -558,13 +558,13 @@ msgid "Website"
 msgstr "Сайт"
 
 msgid "Add New"
-msgstr "Add New"
+msgstr "Добавьте новый"
 
 msgid "Active"
 msgstr "Активный"
 
 msgid "Account Name"
-msgstr "Account Name"
+msgstr "Название счета"
 
 msgid "Account Number"
 msgstr "номер счета"
@@ -591,52 +591,52 @@ msgid "Age"
 msgstr "Возраст"
 
 msgid "Total"
-msgstr "Total"
+msgstr "Общее число"
 
 msgid "Source"
 msgstr "Источник"
 
 msgid "Nature"
-msgstr "Природа"
+msgstr "Характер"
 
 msgid "Amount"
 msgstr "Сумма"
 
 msgid "Edit Teachers"
-msgstr "Edit учителей"
+msgstr "Редактировать список учителей"
 
 msgid "Edit Training"
-msgstr "Edit обучения"
+msgstr "Редактировать список тренингов"
 
 msgid "Edit Bank Accounts"
-msgstr "Счета Edit Банк"
+msgstr "Редактировать банковские детали"
 
 msgid "Edit Classes"
-msgstr "Edit классы"
+msgstr "Редактировать список классов"
 
 msgid "Edit Finances"
-msgstr "Edit Финансы"
+msgstr "Редактировать Финансы"
 
 msgid "Edit Other Forms"
-msgstr "Изменить другие формы"
+msgstr "Редактировать другие формы"
 
 msgid "Edit Infrastructure"
-msgstr "Edit инфраструктуры"
+msgstr "Редактировать список инфраструктур"
 
 msgid "Trained Teachers"
-msgstr "подготовленных учителей"
+msgstr "Подготовленные учителя"
 
 msgid "No Available Programmes"
-msgstr "Нет Доступные программы"
+msgstr "Недоступные программы"
 
 msgid "Institution History"
-msgstr "Институт истории"
+msgstr "История учреждения"
 
 msgid "Institution Site History"
-msgstr "Учреждение сайта История"
+msgstr "Сайт Истории учреждения"
 
 msgid "My Details"
-msgstr "Мои данные"
+msgstr "Личные данные"
 
 msgid "has been updated successfully."
 msgstr "был успешно обновлен"
@@ -651,16 +651,16 @@ msgid "Please try again later."
 msgstr "Пожалуйста, повторите попытку позже"
 
 msgid "Please enter your current password"
-msgstr "Пожалуйста, введите ваш текущий пароль"
+msgstr "Пожалуйста, введите ваш действующий пароль"
 
 msgid "Current password does not match."
-msgstr "Текущий пароль не совпадают"
+msgstr "Настоящий пароль не совпадает"
 
 msgid "New password required."
-msgstr "Новый пароль требуется"
+msgstr "Требуется новый пароль"
 
 msgid "Please enter a min of 6 alpha numeric characters."
-msgstr "Пожалуйста, введите мин из 6 буквенно-цифровых символов."
+msgstr "Пожалуйста, введите минимум 6 буквенно-цифровых символов."
 
 msgid "Please enter alpha numeric characters."
 msgstr "Пожалуйста, введите буквенно-цифровые символы»"
@@ -669,40 +669,41 @@ msgid "Passwords do not match."
 msgstr "Пароли не совпадают"
 
 msgid "System Information"
-msgstr "Системные сведения"
+msgstr "Системные данные"
 
 msgid "Support"
-msgstr "Поддержка"
+msgstr "Тех. Поддержка"
 
 msgid "License"
 msgstr "Лицензия"
 
 msgid "Edit My Details"
-msgstr "Редактировать данные"
+msgstr "Редактировать личные данные"
 
 msgid "Finance"
 msgstr "Финансы"
 
 msgid "Total Public Expenditure"
-msgstr "общих государственных расходов"
+msgstr "Общая сумма государственных расходов"
 
 msgid "National Denominators"
-msgstr "Национальный знаменателями"
+msgstr "Национальные знаменатели"
 
 msgid "Select"
-msgstr "Select"
+msgstr "Выбрать"
 
 msgid "Total Public Expenditure Per Education Level"
-msgstr "общих государственных расходов на образование по Level"
+msgstr ""
+"Общая сумма государственных расходов, в зависимости от уровня образования"
 
 msgid "System"
 msgstr "Система"
 
 msgid "Level"
-msgstr "Level"
+msgstr "Уровень"
 
 msgid "Cycle"
-msgstr "Cycle"
+msgstr "Цикл"
 
 msgid "Programme"
 msgstr "Программа"
@@ -714,7 +715,7 @@ msgid "Field of Study"
 msgstr "Специальность"
 
 msgid "Certification"
-msgstr "Сертификация"
+msgstr "Сертификат"
 
 msgid "Subject"
 msgstr "Тема"
@@ -756,7 +757,7 @@ msgid "December"
 msgstr "Декабрь"
 
 msgid "Your session is timed out. Please login again."
-msgstr "Что вы сессии истекло. Пожалуйста, войдите снова."
+msgstr "Ваша сессия закончилась. Пожалуйста, войдите снова."
 
 msgid "You are not an authorized user."
 msgstr "Вы не авторизированный пользователь."
@@ -765,17 +766,16 @@ msgid ""
 "You have encountered an unexpected error. Please contact the system "
 "administrator for assistance."
 msgstr ""
-"Вы произошла непредвиденная ошибка. Пожалуйста, обратитесь к системному "
-"администратору."
+"Непредвиденная ошибка. Пожалуйста, обратитесь к системному администратору."
 
 msgid "Host Unreachable"
-msgstr "Host Unreachable"
+msgstr "Узел недоступен"
 
 msgid "Host is unreachable, please check your internet connection."
-msgstr "Хост недоступен, пожалуйста, проверьте подключение к Интернету."
+msgstr "Узел недоступен, пожалуйста, проверьте подключение к Интернету."
 
 msgid "Session Timed Out"
-msgstr "Session Timed Out"
+msgstr "Время сессии закончено"
 
 msgid "Page not found"
 msgstr "Страница не найдена"
@@ -790,31 +790,31 @@ msgid "An unexpected error has occurred."
 msgstr "произошла непредвиденная ошибка"
 
 msgid "JSON parse failed"
-msgstr "JSON разбора не удалось"
+msgstr "JSON разобрать не удалось"
 
 msgid "Invalid JSON data."
 msgstr "Неверные данные JSON"
 
 msgid "Request Timeout"
-msgstr "Request Timeout"
+msgstr "Срок запроса истек"
 
 msgid "Your request has been timed out. Please try again."
-msgstr "Ваш запрос был тайм-аут. Пожалуйста, попробуйте еще раз."
+msgstr "Срок Вашего запроса истек. Пожалуйста, попробуйте еще раз."
 
 msgid "Request Aborted"
-msgstr "Request Aborted"
+msgstr "Запрос прерван"
 
 msgid "Your request has been aborted."
-msgstr "Что вы запроса была прервана."
+msgstr "Ваш запрос прерван."
 
 msgid "Unexpected Error"
-msgstr "Неожиданная ошибка"
+msgstr "Неизвестная ошибка"
 
 msgid "Edit System Configurations"
-msgstr "Конфигурации Edit System"
+msgstr "Редактировать конфигурацию системы"
 
 msgid "File is updated successfully."
-msgstr "Файл успешно обновлены."
+msgstr "Файл успешно обновлен."
 
 msgid "Error occurred while updating file."
 msgstr "Ошибка при обновлении файла"
@@ -823,19 +823,19 @@ msgid "File have been updated successfully."
 msgstr "Файл был успешно обновлен"
 
 msgid "File has not been updated successfully."
-msgstr "Файл не были успешно обновлены."
+msgstr "Файл не был успешно обновлен."
 
 msgid "File format not supported."
-msgstr "Формат файла не поддерживается"
+msgstr "Неподдерживаемый формат файла "
 
 msgid "Image has exceeded the allow file size of"
-msgstr "Image превысили позволяет размер файла"
+msgstr "Картинка превысила позволяемый размер файла"
 
 msgid "Please reduce file size."
 msgstr "Пожалуйста, уменьшить размер файла"
 
 msgid "Image resolution is too small."
-msgstr "разрешение изображения слишком мал"
+msgstr "Разрешение изображения слишком мало"
 
 msgid "error"
 msgstr "Ошибка"
@@ -850,7 +850,7 @@ msgid "Add new Institution"
 msgstr "Добавить новое учреждение"
 
 msgid "Institution Details"
-msgstr "Институт Подробности"
+msgstr "Подробности об учреждении"
 
 msgid "SITE INFORMATION"
 msgstr "Информация о сайте"
@@ -871,7 +871,7 @@ msgid "CENSUS"
 msgstr "ПЕРЕПИСЬ"
 
 msgid "Enrolment"
-msgstr "Прием"
+msgstr "Запись"
 
 msgid "Programmes"
 msgstr "Программы"
@@ -892,7 +892,7 @@ msgid "Other Forms"
 msgstr "Другие формы"
 
 msgid "SYSTEM SETUP"
-msgstr "SYSTEM SETUP"
+msgstr "Настройка системы"
 
 msgid "Administrative Boundaries"
 msgstr "Административные границы"
@@ -901,22 +901,22 @@ msgid "Education Structure"
 msgstr "Структура образования"
 
 msgid "Setup Variables"
-msgstr "Переменные Setup"
+msgstr "Переменные настроек"
 
 msgid "Edit Setup Variables"
-msgstr "Переменные Edit Setup"
+msgstr "Редактировать настройки переменных "
 
 msgid "Custom Fields"
 msgstr "Пользовательские поля"
 
 msgid "Edit Custom Fields"
-msgstr "Редактирование пользовательских полей"
+msgstr "Редактировать Пользовательские поля"
 
 msgid "Custom Table"
 msgstr "Пользовательские таблицы"
 
 msgid "Edit Custom Table"
-msgstr "Редактировать пользовательские таблицы"
+msgstr "Редактировать Пользовательские таблицы"
 
 msgid "System Configurations"
 msgstr "Конфигурация системы"
@@ -928,7 +928,7 @@ msgid "ACCOUNTS & SECURITY"
 msgstr "счета и БЕЗОПАСНОСТЬ"
 
 msgid "NATIONAL DENOMINATORS"
-msgstr "НАЦИОНАЛЬНЫЙ знаменателями"
+msgstr "НАЦИОНАЛЬНЫЕ ЗНАМЕНАТЕЛИ"
 
 msgid "Population"
 msgstr "Население"
@@ -940,7 +940,7 @@ msgid "Generate Reports"
 msgstr "Создание отчетов"
 
 msgid "Export Indicators"
-msgstr "Экспорт индикаторов"
+msgstr "Индикаторы Экспорта"
 
 msgid "Processes"
 msgstr "Процессы"
@@ -949,13 +949,13 @@ msgid "DATABASE"
 msgstr "База данных"
 
 msgid "Backup"
-msgstr "Backup"
+msgstr "Резервирование"
 
 msgid "Restore"
 msgstr "Восстановить"
 
 msgid "Setup"
-msgstr "Setup"
+msgstr "Установка"
 
 msgid "The census data has been updated successfully."
 msgstr "Данные переписи были успешно обновлены."
@@ -964,7 +964,7 @@ msgid "Graduates not required."
 msgstr "Выпускники не требуется."
 
 msgid "No Custom Census Table."
-msgstr "Нет пользовательские таблицы переписи."
+msgstr "Отсутствуют настраиваемые таблицы переписи."
 
 msgid "Message Not Found."
 msgstr "Сообщение не найдено."
@@ -976,7 +976,7 @@ msgid "Fair"
 msgstr "Ярмарка"
 
 msgid "Poor"
-msgstr "Poor"
+msgstr "Плохо"
 
 msgid "Current Password"
 msgstr "Текущий пароль"
@@ -1009,7 +1009,7 @@ msgid "Area Levels"
 msgstr "Уровни области"
 
 msgid "Edit Area Levels"
-msgstr "Уровни Edit Area"
+msgstr "Редактировать Уровни Области "
 
 msgid "Structure"
 msgstr "структура"
@@ -1021,22 +1021,22 @@ msgid "Education Level"
 msgstr "Уровень образования"
 
 msgid "Education System"
-msgstr "Образование"
+msgstr "Система Образование"
 
 msgid "Admission Age"
-msgstr "Прием век"
+msgstr "Возраст Приема"
 
 msgid "Programme Orientation"
-msgstr "Программы ориентации"
+msgstr "Программная Ориентация"
 
 msgid "Order"
 msgstr "Заказать"
 
 msgid "Field Of Study"
-msgstr "Полевые исследования"
+msgstr "Область исследования"
 
 msgid "ISCED Level"
-msgstr "МСКО уровень"
+msgstr "Уровень МСКО"
 
 msgid "Subjects"
 msgstr "субъектов"
@@ -1045,22 +1045,22 @@ msgid "Duration"
 msgstr "Продолжительность"
 
 msgid "Grades"
-msgstr "Марки"
+msgstr "Оценки"
 
 msgid "Grade Subject"
-msgstr "класса Subject"
+msgstr "Тема урока"
 
 msgid "Back to Programmes"
-msgstr "Редактирование программ"
+msgstr "Вернуться к программам"
 
 msgid "Back to Grades"
-msgstr "Вернуться к списку"
+msgstr "Вернуться в класс"
 
 msgid "Graduates"
 msgstr "Выпускники"
 
 msgid "Please select a programme first."
-msgstr "Пожалуйста, выберите программу первым."
+msgstr "Пожалуйста, выберите сначала программу."
 
 msgid "Option"
 msgstr "Опция"
@@ -1069,13 +1069,13 @@ msgid "an option"
 msgstr "опции"
 
 msgid "School Year"
-msgstr "Школа года"
+msgstr "Школный год"
 
 msgid "Current"
-msgstr "Current"
+msgstr "Текущий"
 
 msgid "Available"
-msgstr "Доступный"
+msgstr "Доступен"
 
 msgid "Categories"
 msgstr "Категории"
@@ -1096,7 +1096,7 @@ msgid "Energy"
 msgstr "Энергия"
 
 msgid "Rooms"
-msgstr "Номера"
+msgstr "Комнаты"
 
 msgid "Sanitation"
 msgstr "санитария"
@@ -1132,16 +1132,16 @@ msgid "Facilities"
 msgstr "Услуги"
 
 msgid "Qualification Certificates"
-msgstr "квалификационные сертификаты"
+msgstr "Сертификаты квалификации "
 
 msgid "Qualification Categories"
-msgstr "квалификационных категорий"
+msgstr "Категории квалификации"
 
 msgid "Qualification Institutions"
-msgstr "Квалификация учреждений"
+msgstr "Учреждения по Квалификации"
 
 msgid "Training Categories"
-msgstr "Категории Тренинг"
+msgstr "Категории Тренинга"
 
 msgid "Sources"
 msgstr "Истоки"
@@ -1150,16 +1150,16 @@ msgid "Branches"
 msgstr "Филиалы"
 
 msgid "Sanitations"
-msgstr "Sanitations"
+msgstr "Санитария"
 
 msgid "Section Break"
-msgstr "Раздел Break"
+msgstr "Параграф"
 
 msgid "Single Line Text"
-msgstr "Единый текст Line"
+msgstr "Однострочный текст"
 
 msgid "Multi Line Text"
-msgstr "Multi Текст Line"
+msgstr "Многострочный текст"
 
 msgid "DropDown List"
 msgstr "выпадающий список"
@@ -1171,31 +1171,31 @@ msgid "Checkboxes"
 msgstr "Флажки"
 
 msgid "Institution Custom Fields"
-msgstr "Поля учреждение Custom"
+msgstr "Поля для настроики учреждения"
 
 msgid "Institution Site Custom Fields"
-msgstr "Институт Поля сайта Custom"
+msgstr "Поля настроики учреждения сайта"
 
 msgid "Census Custom Fields"
-msgstr "Перепись Пользовательские поля"
+msgstr "Поля настроики переписи"
 
 msgid "Student Custom Fields"
-msgstr "Поля Студенческая Custom"
+msgstr "Поля настроики для студентов"
 
 msgid "Teacher Custom Fields"
-msgstr "Поля Учитель Custom"
+msgstr "Поля настроики для учитилей"
 
 msgid "Staff Custom Fields"
-msgstr "Персонал Пользовательские поля"
+msgstr "Поля настроики для персонала"
 
 msgid "Census Custom Tables"
-msgstr "Перепись пользовательских таблиц"
+msgstr "Таблицы настроики переписи"
 
 msgid "Field Label"
-msgstr "Поле Label"
+msgstr "Метка поля"
 
 msgid "List of Custom Census Table"
-msgstr "Список пользовательские таблицы переписи населения"
+msgstr "Список пользовательских таблиц переписи населения"
 
 msgid "Filter by"
 msgstr "Фильтр по"
@@ -1210,16 +1210,16 @@ msgid "List"
 msgstr "Список"
 
 msgid "Dashboard Image"
-msgstr "Dashboard Image"
+msgstr "Dashboard Изображение"
 
 msgid "Back to Config"
-msgstr "Назад в Config"
+msgstr "Назад в Настроики"
 
 msgid "Title"
-msgstr "Title"
+msgstr "Название"
 
 msgid "Date Format"
-msgstr "Формат даты"
+msgstr "Формат дат"
 
 msgid "Currency"
 msgstr "Валюта"
@@ -1240,28 +1240,28 @@ msgid "Login"
 msgstr "Логин"
 
 msgid "Education Management Information System"
-msgstr "Образование Management Information System"
+msgstr "Информационная  Система Управления Образованием"
 
 msgid "Function"
 msgstr "Функция"
 
 msgid "Institution Site"
-msgstr "Институт сайта"
+msgstr "Сайт Учреждения"
 
 msgid "Census"
 msgstr "Перепись"
 
 msgid "Accounts &amp; Security"
-msgstr "Учетные записи и безопасность"
+msgstr "Логины и безопасность"
 
 msgid "Data Processing"
-msgstr "Data Processing"
+msgstr "Переработка данных"
 
 msgid "Export Indicator"
-msgstr "Экспорт Индикатор"
+msgstr "Индикатор Экспорта"
 
 msgid "Custom Tables"
-msgstr "Custom таблицы"
+msgstr "Таблицы настроики "
 
 msgid "Configurations"
 msgstr "Конфигурации"
@@ -1288,19 +1288,19 @@ msgid "Full access on all modules"
 msgstr "Полный доступ ко всем модулям"
 
 msgid "Back to Roles"
-msgstr "Вернуться к списку"
+msgstr "Вернуться к списку Ролей"
 
 msgid "Database"
 msgstr "База данных"
 
 msgid "PHP Version"
-msgstr "PHP Version"
+msgstr "Версия PHP"
 
 msgid "Web Server"
-msgstr "Web Server"
+msgstr "Web-сервер"
 
 msgid "Operating System"
-msgstr "Операционные системы"
+msgstr "Операционная систем"
 
 msgid "Data not available."
 msgstr "Нет данных"
@@ -1309,247 +1309,246 @@ msgid "The selected report is currently being processed."
 msgstr "выбранный отчет в настоящее время обрабатывается."
 
 msgid "Institution Reports"
-msgstr "Учреждение об"
+msgstr "Учреждение предоставляет отчет по"
 
 msgid "Student Reports"
-msgstr "Отчеты Студент"
+msgstr "Отчеты Студентов"
 
 msgid "Teacher Reports"
 msgstr "Отчеты учителей"
 
 msgid "Staff Reports"
-msgstr "Отчеты Staff"
+msgstr "Отчеты Персонала"
 
 msgid "Consolidated Reports"
-msgstr "консолидированной отчетности"
+msgstr "Консолидированные Отчеты"
 
 msgid "Indicator Reports"
-msgstr "Отчеты Индикатор"
+msgstr "Отчеты по Индикаторам"
 
 msgid "Data Quality Reports"
-msgstr "Отчеты Data Quality"
+msgstr "Отчеты по Качеству Данных"
 
 msgid "DataQuality Reports"
 msgstr "Отчеты DataQuality"
 
 msgid "Custom Reports"
-msgstr "Пользовательские отчеты"
+msgstr "Отчеты Пользователей"
 
 msgid "Please contact"
-msgstr "Пожалуйста, обращайтесь в компанию"
+msgstr "Пожалуйста, обращайтесь"
 
 msgid "support"
-msgstr "поддержки"
+msgstr "Поддержка"
 
 msgid "for more information on Custom Reports."
-msgstr "Более подробную информацию о пользовательских отчетов"
+msgstr "Более подробная информация об отчетах пользователей"
 
 msgid "Last Run"
-msgstr "Последние Run"
+msgstr "Последние Запуск"
 
 msgid "Types"
 msgstr "Типы"
 
 msgid "Institution Report"
-msgstr "Учреждение об"
+msgstr "Отчет Учреждения"
 
 msgid "List of Institutions"
-msgstr "Список организаций"
+msgstr "Список учреждений"
 
 msgid "Institution Additional Info Report"
-msgstr "Институт Дополнительная информация Список"
+msgstr "Отчет Дополнительной Информации Учреждения"
 
 msgid "List of Institutions with additional info"
-msgstr "Список высших учебных заведений дополнительная информация"
+msgstr "Список учреждений с дополнительной информацией"
 
 msgid "Institution Site Report"
-msgstr "Учреждение об"
+msgstr "Отчет Сайта Учреждение "
 
 msgid "List of Institution Sites"
-msgstr "Список учреждение сайты"
+msgstr "Список сайтов учреждений"
 
 msgid "Institution Site Additional Info Report"
-msgstr "Институт сайта Дополнительная информация Список"
+msgstr "Отчет Дополнительной Информации о Сайте Учреждения "
 
 msgid "List of Institution Sites with additional info"
-msgstr "Отчет о дополнительной информации учреждении сайта"
+msgstr "Список сайтов учреждений с дополнительной информацией "
 
 msgid "Institution Site Programme Report"
-msgstr "Программы учреждение Сайт"
+msgstr "Программный Отчет о Сайте Учреждения"
 
 msgid "List of Institution Sites with Programmes"
-msgstr "Список учреждение сайта с их программами предложили"
+msgstr "Список сайтов учреждений, предлогающих программы"
 
 msgid "Institution Site Bank Account Report"
-msgstr "Институт счетов сайт банка"
+msgstr "Отчет Сайта Учреждения по Банковским счетам "
 
 msgid "List of Institution Sites with Bank Accounts"
-msgstr "Список учреждение сайта с их банковских счетов"
+msgstr "Список сайтов учреждений с их банковскими реквезитами"
 
 msgid "Enrolment Report"
-msgstr "Прием отчетов"
+msgstr "Отчет по Зачислению"
 
 msgid "Summary of enrolment from census"
-msgstr "Основная информация о зачислении переписи"
+msgstr "Основная информация о зачислении из переписи"
 
 msgid "Class Report"
-msgstr "Класс отчет"
+msgstr "Отчет по Классам"
 
 msgid "Summary of classes from census"
-msgstr "Резюме классы от переписи"
+msgstr "Основная информация о классах из переписи"
 
 msgid "Textbook Report"
-msgstr "Учебник отчет"
+msgstr "Отчет по Учебникам"
 
 msgid "Summary of textbooks from census"
-msgstr "Обзор учебников из переписи"
+msgstr "Основная информация об учебниках из переписи"
 
 msgid "Teacher Report"
-msgstr "Учитель отчет"
+msgstr "Учительский Отчет"
 
 msgid "Summary of teachers from census"
-msgstr "Резюме преподавателей из переписи"
+msgstr "Основная информация о преподавателях из переписи"
 
 msgid "Training Report"
-msgstr "Подготовка отчетов"
+msgstr "Отчет по тренингу"
 
 msgid "Summary of teacher training from census"
-msgstr "Резюме подготовки учителей от переписи"
+msgstr "Основная информация о тренинге учителей из переписи"
 
 msgid "Staff Report"
-msgstr "Доклад персонала"
+msgstr "Отчет персонала"
 
 msgid "Summary of staff from census"
-msgstr "Резюме сотрудников переписи"
+msgstr "Основная информация по сотрудникам из переписи"
 
 msgid "Census Additional Info Report"
-msgstr "Перепись Дополнительная информация отчет"
+msgstr "Отчет по Дополнительной Информации о Переписи"
 
 msgid "Summary of additional info from census"
-msgstr "Резюме дополнительную информацию от переписи"
+msgstr "Резюме дополнительной информации из переписи"
 
 msgid "Census Tables"
-msgstr "Перепись таблицы"
+msgstr "Таблицы Переписи"
 
 msgid "Summary of additional info tables from census"
-msgstr "Резюме дополнительных таблиц информации из переписи населения"
+msgstr "Резюме дополнительной информации таблиз из переписи населения"
 
 msgid "Income Report"
-msgstr "Доходы Report"
+msgstr "Отчет по Доходам"
 
 msgid "Summary of income from census"
-msgstr "Суммарный доход от переписи"
+msgstr "Суммарный доход из переписи"
 
 msgid "Expenditure Report"
 msgstr "Отчет о расходах"
 
 msgid "Summary of expenditure from census"
-msgstr "Сводка расходов от переписи"
+msgstr "Сводка расходов из переписи"
 
 msgid "Building Report"
-msgstr "Здание отчет"
+msgstr "Отчет по Зданиям"
 
 msgid "Summary of buildings and condition from census"
-msgstr "Основная зданий и состояние от переписи"
+msgstr "Резюме по зданиям и их состояния из переписи"
 
 msgid "Rooms Report"
-msgstr "Номера Отчет"
+msgstr "Отчет по комнатам"
 
 msgid "Summary of rooms and condition from census"
-msgstr "Краткая информация о номерах и состоянии от переписи"
+msgstr "Резюме по комнатам и их состояния из переписи"
 
 msgid "Sanitation Report"
-msgstr "Санитарные отчет"
+msgstr "Отчет по санитарии"
 
 msgid "Summary of sanitation, gender and condition from census"
-msgstr "Резюме санитарии, пол и состояние от переписи"
+msgstr "Резюме по санитарии, гендерному признаку и их условиях из переписи"
 
 msgid "Furniture Report"
-msgstr "Мебель Report"
+msgstr "Отчет по Мебели"
 
 msgid "Summary of furniture and condition from census"
-msgstr "Основная мебель и состояние от переписи"
+msgstr "Основная мебель и ее состояние по переписи"
 
 msgid "Resource Report"
-msgstr "Resource Report"
+msgstr "Отчет по ресурсам"
 
 msgid "Summary of resources and condition from census"
-msgstr "Сводные данные о ресурсах и состоянии от переписи"
+msgstr "Сводные данные о ресурсах и их состоянии по переписи"
 
 msgid "Energy Report"
-msgstr "Сообщить энергии"
+msgstr "Отчет по энергии"
 
 msgid "Summary of power and condition from census"
-msgstr "Резюме власть и состояние от переписи"
+msgstr "Сводные данные по энергии и ее состоянию по переписи"
 
 msgid "Water Report"
-msgstr "Доклад о состоянии водных"
+msgstr "Отчет по воде"
 
 msgid "Summary of water and condition from census"
-msgstr "Резюме воды и состояние от переписи"
+msgstr "Сводные данные по воде и ее состоянию по переписи"
 
 msgid "Student Report"
 msgstr "Студенческий доклад"
 
 msgid "Report on student"
-msgstr "Отчет о студенту"
+msgstr "Отчет по студенту"
 
 msgid "Students Additional Info Report"
-msgstr "Студенты Дополнительная информация отчет"
+msgstr "Отчет Дополнительной Информации по Студентам"
 
 msgid "List of Students with additional info"
 msgstr "Список студентов с дополнительной информацией"
 
 msgid "Teacher List"
-msgstr "Учитель список"
+msgstr "Список учителей"
 
 msgid "Report on Teachers"
-msgstr "Отчет о учителей"
+msgstr "Отчет по учителям"
 
 msgid "Teachers Additional Info Report"
-msgstr "Учителя Дополнительная информация отчет"
+msgstr "Отчет Дополнительной Информации по Учителям"
 
 msgid "List of Teachers with additional info"
 msgstr "Список учителей с дополнительной информацией"
 
 msgid "Staff List"
-msgstr "штатное расписание"
+msgstr "Список сотрудников"
 
 msgid "Report on Staff"
-msgstr "Сообщить о персонале"
+msgstr "Отчет о персонале"
 
 msgid "Staff Additional Info Report"
-msgstr "Персонал Дополнительная информация отчет"
+msgstr "Отчет по персоналу с дополнительной информацией"
 
 msgid "List of Staff with additional info"
 msgstr "Список сотрудников с дополнительной информацией"
 
 msgid "Wheres My School Report"
-msgstr "Где моя школа доклад"
+msgstr "Отчет “Где моя школа"
 
 msgid ""
 "A Google Earth (KML) file containing all the location of all Institution "
 "Sites"
-msgstr ""
-"Google Earth (KML) файл, содержащий все расположение всех Учреждение сайтов"
+msgstr "Google Earth (KML) файл, содержащий расположение всех Учреждение"
 
 msgid "Year Book Report"
-msgstr "Сообщить Year Book"
+msgstr "Отчет Ежегодной Книги"
 
 msgid "Formatted summary of census data for a given year"
-msgstr "Форматированный резюме данные переписи за данный год"
+msgstr "Форматированный резюме данных переписи за текущий год"
 
 msgid "Return Rate"
-msgstr "Вернуться Оценить"
+msgstr "Дата по возращению"
 
 msgid "Census Discrepancy"
 msgstr "Несоответствие переписи"
 
 msgid "Backup files found."
-msgstr "Резервное копирование файлов не найдено."
+msgstr "Резервное копирование файлов найдено."
 
 msgid "Custom"
-msgstr "обычай"
+msgstr "Пользовательский"
 
 msgid "Consolidated"
 msgstr "Консолидированный"
@@ -1561,25 +1560,26 @@ msgid "Summary of School's Census Data"
 msgstr "Резюме данных школы переписи населения"
 
 msgid "Non-Responsive Schools Report"
-msgstr "Не отвечающих школы Сообщить"
+msgstr "Отчет по школам, неучавствующих в проекте"
 
 msgid ""
 "List of Institution Sites that do not contain census data for a given year"
-msgstr ""
-"Список учреждение сайты, которые не содержат данные переписи за данный год"
+msgstr "Список учреждений, которые не содержат данные переписи за текущий год"
 
 msgid "Data Discrepancy Report"
-msgstr "Данные несоответствия отчета"
+msgstr "Отчета по данным несоответствия"
 
 msgid ""
 "List of Institution Sites with questionable census data compared to the "
 "previous year"
 msgstr ""
-"Список учреждение сайты с сомнительным данным переписи по сравнению с "
-"предыдущим годом"
+"Список учреждении с сомнительными данными переписи по сравнению с предыдущим "
+"годом"
 
 msgid "Number of students (enrollment) by sex, age, locality and grade"
-msgstr "Количество студентов (учащихся) по полу, возрасту, местности и степени"
+msgstr ""
+"Количество студентов (зачисленных) по полу, возрасту, местности и уровню "
+"образованию"
 
 msgid "Number of teachers by sex, locality and grade"
 msgstr "Количество учителей по полу, местности и степени"
@@ -1588,25 +1588,25 @@ msgid "Number of staff by sex and locality"
 msgstr "Численность персонала по полу и местности"
 
 msgid "Institutions Report"
-msgstr "Учреждения Сообщить"
+msgstr "Отчет по Учреждениям"
 
 msgid "Number of institutions by provider and sector"
-msgstr "Количество учреждений поставщика и сектора"
+msgstr "Количество учреждений по провайдерам и секторам"
 
 msgid "Institution Sites Report"
-msgstr "Учреждение сайты Сообщить"
+msgstr "Отчет по сайтам учреждении "
 
 msgid "Number of institution sites by locality and type"
-msgstr "Количество учреждения сайтов местности и типа"
+msgstr "Количество учреждений по местности и типу"
 
 msgid "Population Report"
-msgstr "Население отчет"
+msgstr "Отчет по населению"
 
 msgid "Number of people by sex and age"
 msgstr "Число людей по полу и возрасту"
 
 msgid "Net Enrolment Rate Report"
-msgstr "Чистая Прием отчетов Оценить"
+msgstr "Отчет по коэффициенту зачисления"
 
 msgid ""
 "Divide the number of pupils (or students) enrolled who are of the official "
@@ -1614,13 +1614,13 @@ msgid ""
 "group and multiply the result by 100. This indicator has dimension values of "
 "sex, locality and grade."
 msgstr ""
-"Разделите количество учащихся (или студентов) поступил которые имеют "
-"официальный возрастной группе для данного уровня образования населения в той "
-"же возрастной группе и умножить результат на 100. Этот показатель имеет "
-"размерность значения пола, местности и класса."
+"Разделите количество зачисленных учащихся (или студентов), в \"\"официальный "
+"возрастной группе для данного уровня образования на население в той же "
+"возрастной группе и умножьте результат на 100. Этот показатель различается "
+"по полу, местности и классам."
 
 msgid "Gross Enrolment Rate Report"
-msgstr "Общий коэффициент охвата отчета"
+msgstr "Отчет по общему коэффициенту зачисления"
 
 msgid ""
 "Divide the number of pupils (or students) enrolled in a given level of "
@@ -1629,13 +1629,13 @@ msgid ""
 "result by 100. This indicator has dimension values of sex, locality and "
 "grade."
 msgstr ""
-"Разделите количество учащихся (или студентов), обучающихся в данном уровне "
-"образования независимо от возраста, население возрастной группы, которая "
-"официально соответствует данному уровню образования, и умножить результат на "
-"100. Этот показатель имеет размерность значения пола, местности и класса."
+"Разделите количество учащихся (или студентов), обучающихся на данном уровне "
+"образования, независимо от возраста, на население возрастной группы, которая "
+"официально соответствует данному уровню образования, и умножьте результат на "
+"100. Этот показатель различается по полу, местности и классам."
 
 msgid "Net Intake Rate Report"
-msgstr "Чистая Сообщить скорость потребления"
+msgstr "Отчет по коэффициенту чистого приема"
 
 msgid ""
 "Divide the number of children of official primary school-entrance age who "
@@ -1643,13 +1643,13 @@ msgid ""
 "population of the same age, and multiply the result by 100. This indicator "
 "has dimension values of sex and locality."
 msgstr ""
-"Разделите число детей официального младшего школьного возраста, которые "
-"входом введите первый класс начальной школы в первый раз со стороны "
-"населения того же возраста, и умножить результат на 100. Этот показатель "
-"имеет размерность значения сексу и местности."
+"Разделите число детей официально-приемливого младшего школьного возраста, "
+"которые поступают в первый класс начальной школы в первый раз на население "
+"того же возраста, и умножьте результат на 100. Этот показатель различается "
+"по полу и местности."
 
 msgid "Gross Intake Rate Report"
-msgstr "Валовой Сообщить скорость потребления"
+msgstr "Отчет по общему коэффициенту приема"
 
 msgid ""
 "Divide the number of new entrants in grade 1, irrespective of age, by the "
@@ -1657,11 +1657,11 @@ msgid ""
 "This indicator has dimension values of sex, locality and grade."
 msgstr ""
 "Разделите число учащихся, поступивших в 1-й класс, независимо от возраста, "
-"население официального школьного возраста вход, и умножить результат на 100. "
-"Этот показатель имеет размерность значения пола, местности и класса."
+"на население официального поступления в школу, и умножьте результат на 100. "
+"Этот показатель различается по полу, местности и классам."
 
 msgid "Repetition Rate Report"
-msgstr "Сообщить Частота повторения"
+msgstr "Отчет по коэффициенту повторения"
 
 msgid ""
 "Divide the number of repeaters in a given grade in school year t+1 by the "
@@ -1669,25 +1669,25 @@ msgid ""
 "previous school year t . This indicator has dimension values of sex, "
 "locality, sector and grade."
 msgstr ""
-"Разделите количество ретрансляторов в данном классе в учебном году Т +1 по "
-"количеству учеников из той же когорты поступил в том же классе и в "
-"предыдущем т учебный год. Этот показатель имеет размерность значения пола, "
-"местности, отрасли и класса."
+"Разделите количество “второгодников”в данном классе этого учебного года -Т "
+"+1- на количество учеников из той же самой когорты, учившихся в том же самом "
+"классе предыдущего учебного года -T-. Этот показатель различается по полу, "
+"местности, сектору и классам."
 
 msgid "Completion Rate Report"
-msgstr "Сообщить Завершение Оценить"
+msgstr "Отчет по коэффициенту окончания"
 
 msgid ""
 "Divide the number of primary graduates, irrespective of age, by the "
 "population of theoretical primary graduation, and multiply the result by "
 "100. This indicator has dimension values of sex, locality and sector."
 msgstr ""
-"Разделите число первичных выпускников, независимо от возраста, население "
-"теоретических первичной окончания, и умножить результат на 100. Этот "
-"показатель имеет размерность значения пола, местности и сектора."
+"Разделите число выпускников начальной школы, независимо от возраста на "
+"теоретическое число выпускников и умножьте результат на 100. Этот показатель "
+"различается по полу, местности, секторам."
 
 msgid "Survival Rate Report"
-msgstr "Сообщить выживаемость"
+msgstr "Отчет по выживаемости"
 
 msgid ""
 "Divide the total number of pupils belonging to a school-cohort who reached "
@@ -1698,16 +1698,16 @@ msgid ""
 "uses data on enrolment and repeaters for two consecutive years. This "
 "indicator has dimension values of sex, locality and sector."
 msgstr ""
-"Разделить общее количество учеников, принадлежащих к школе-когорты, которые "
-"достигли каждый последующий класс указанного уровня образования количество "
-"учащихся в школе-когорты, т.е. тех, которые изначально поступил в первый "
-"класс начальной школы, и умножьте результат на 100. Выживаемости "
-"рассчитывается на основе реконструированных методом когорта, которая "
-"использует данные о регистрации и ретрансляторов в течение двух лет подряд. "
-"Этот показатель имеет размерность значения пола, местности и сектора."
+"Разделить общее количество учеников, принадлежащих к когорте школы, которые "
+"доучились до класса, указанного уровнем образования на количество учащихся в "
+"когорте школы, т.е. тех, которые изначально поступил в первый класс "
+"начальной школы, и умножьте результат на 100. Коэффициент выживаемости "
+"рассчитывается на основе реконструированного метода когорты, который "
+"использует данные о регистрации и второгодниках в течение двух лет. Этот "
+"показатель различается по полу, местности и секторам."
 
 msgid "Transition Rate Report"
-msgstr "Сообщить скорость перехода"
+msgstr "Отчет по коэффициенту перехода"
 
 msgid ""
 "Divide the number of new entrants in the first grade of the specified higher "
@@ -1716,38 +1716,38 @@ msgid ""
 "school year, and multiply by 100. This indicator has dimension values of "
 "sex, locality, sector and grade."
 msgstr ""
-"Разделите число учащихся, поступивших в первый класс указанного выше цикла "
-"или уровня образования на количество учеников, которые были включены в "
-"итоговую оценку предшествующего цикла или уровня образования в предыдущем "
-"учебном году, и умножить на 100. Этот показатель имеет размерность значения "
-"пола, местности, отрасли и класса."
+"Разделите число учащихся, поступивших в первый класс, указанного ранее цикла "
+"или уровня образования на количество учеников, которые были зачислены в "
+"последний класс, предшествующего цикла или уровня образования в предыдущем "
+"учебном году и умножьте на 100. Этот показатель различается по полу, "
+"местности, сектору и классам."
 
 msgid "Pupil Teacher Ratio Report"
-msgstr "Ученик одного учителя отчет"
+msgstr "Отчет по соотношению учеников к учителям"
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of teachers at the same level. This indicator has "
 "dimension values of locality, sector and level of education."
 msgstr ""
-"Разделить общее количество учащихся на определенный уровень образования по "
-"числу учителей на том же уровне. Этот показатель имеет размерность величины "
-"населенного пункта, сектора и уровня образования."
+"Разделить общее количество учащихся на определенном уровне образования на "
+"число учителей на том же уровне. Этот показатель различается по местности, "
+"сектору и уровню образования."
 
 msgid "Pupil Class Ratio Report"
-msgstr "Ученик класса Соотношение отчет"
+msgstr "Отчет по соотношению учеников к классу"
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of classes at the same level. This indicator has "
 "dimension values of locality and sector."
 msgstr ""
-"Разделить общее количество учащихся на заданном уровне образования по числу "
-"классов на том же уровне. Этот показатель имеет значения размеров местности "
-"и сектора."
+"Разделить общее количество учащихся на заданном уровне образования на число "
+"классов на том же уровне. Этот показатель различается по местности и "
+"секторам."
 
 msgid "Trained Teachers Report"
-msgstr "Квалифицированные учителя Сообщить"
+msgstr "Отчет по квалифицированным учителям "
 
 msgid ""
 "Divide the number of teachers of the specified level of education who have "
@@ -1756,26 +1756,24 @@ msgid ""
 "This indicator has dimension values of locality, sector and level of "
 "education."
 msgstr ""
-"Разделите количество учителей указанного уровня образования, которые "
-"получили минимальный необходимый подготовки учителей на общее количество "
-"учителей на том же уровне образования, и умножить результат на 100. Этот "
-"показатель имеет размерность величины населенного пункта, сектора и уровня "
-"образования."
+"Разделите количество учителей, указанного уровня образования, которые "
+"получили минимальный тренинг, необходимый для подготовки учителей на общее "
+"количество учителей на том же уровне образования и умножьте результат на "
+"100. Этот показатель различается по местности, секторам и образованию."
 
 msgid "Gender Parity Index (Students) Report"
-msgstr "Индекс гендерного паритета (для студентов) доклад"
+msgstr "Отчет по индексу гендерного паритета (студенты) "
 
 msgid ""
 "Divide the number of female students by the number of male students. This "
 "indicator has dimension values of sex, locality, sector and level of "
 "education."
 msgstr ""
-"Разделите число студенток по количеству студентов мужского пола. Этот "
-"показатель имеет размерность значения пола, местности, отрасли и уровня "
-"образования."
+"Разделите число студенток на количеству студентов мужского пола. Этот "
+"показатель различается по полу, местности, сектору и образованию."
 
 msgid "Female Students Report"
-msgstr "Женский Студенты Сообщить"
+msgstr "Отчет по студенткам "
 
 msgid ""
 "Divide the number of female tertiary students enrolled in a specified ISCED "
@@ -1783,14 +1781,13 @@ msgid ""
 "given academic-year, and multiply the result by 100. This indicator has "
 "dimension values of locality, sector and level of education."
 msgstr ""
-"Разделите число женщин-студентов высших учебных заведений, обучающихся в "
-"указанном уровне МСКО от общего числа студентов (мужчина плюс женщина) на "
-"этом уровне в данный учебный год, и умножить результат на 100. Этот "
-"показатель имеет размерность величины населенного пункта, сектора и уровня "
-"образования."
+"Разделите число женщин-студентов высших учебных заведений, обучающихся на "
+"указанном уровне МСКО на общее число студентов (мужчин и женщин) на этом "
+"уровне в данный учебный год и умножьте результат на 100. Этот показатель "
+"различается по местности, сектору и образованию."
 
 msgid "Female Teachers Report"
-msgstr "Женский Учителя Сообщить"
+msgstr "Отчет по женщинам преподавателям"
 
 msgid ""
 "Divide the total number of female teachers at a given level of education by "
@@ -1800,11 +1797,11 @@ msgid ""
 msgstr ""
 "Разделить общее количество учителей-женщин на данном уровне образования, на "
 "общее количество учителей (мужчин и женщин) на том же уровне в данном "
-"учебном году, и умножить на 100. Этот показатель имеет размерность величины "
-"населенного пункта, сектора и уровня образования."
+"учебном году и умножьте на 100. Этот показатель различается по местности, "
+"сектору и образованию."
 
 msgid "Private Enrolment Report"
-msgstr "Частный отчет зачисления"
+msgstr "Отчет по частному зачислению"
 
 msgid ""
 "Divide the number of pupils (or students) enrolled in private educational "
@@ -1813,90 +1810,91 @@ msgid ""
 "This indicator has dimension values of sex, locality and level of education."
 msgstr ""
 "Разделите количество учащихся (или студентов), обучающихся в частных учебных "
-"заведений в данном уровне образования общего числа учащихся (государственных "
-"и частных) на том же уровне образования, и умножить результат на 100. Этот "
-"показатель имеет размерность значения пола, местности и уровня образования."
+"заведениях на данном уровне образования на общее число учащихся "
+"(государственных и частных) на том же уровне образования и умножьте "
+"результат на 100. Этот показатель различается по полу, местности, сектору и "
+"образованию."
 
 msgid "Pupil Textbook Ratio Report"
-msgstr "Ученик Учебник Соотношение отчет"
+msgstr "Отчет по cоотношению учеников к учебникам "
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of textbooks at the same level. This indicator has "
 "dimension values of locality, and sector."
 msgstr ""
-"Разделить общее количество учащихся на определенный уровень образования в "
-"ряде учебников на том же уровне. Этот показатель имеет размерность величины "
-"населенного пункта, а также сектор."
+"Разделить общее количество учащихся на определенный уровень образования на "
+"количество учебников на том же уровне. Этот показатель различается по "
+"местности,  и секторам."
 
 msgid "Water Sources Report"
-msgstr "Вода источники сообщают"
+msgstr "Отчет по источникам воды"
 
 msgid ""
 "Number of water sources by type. This indicator has dimension values of "
 "locality, sector and condition."
 msgstr ""
-"Количество источников воды типа. Этот показатель имеет размерность величины "
-"населенного пункта, сектора и состояния."
+"Количество источников воды по типу. Этот показатель различается по "
+"местности, сектору и условиям."
 
 msgid "Sanitation Facilities Report"
-msgstr "Санитарии Сообщить"
+msgstr "Отчет по санитарии"
 
 msgid ""
 "Number of sanitation facilities by type. This indicator has dimension values "
 "of locality, sector and condition."
 msgstr ""
-"Количество санитарных объектов по типу. Этот показатель имеет размерность "
-"величины населенного пункта, сектора и состояния."
+"Количество санитарных объектов по типу. Этот показатель различается по "
+"местности, сектору и условиям."
 
 msgid "Public Expenditure per Education Level Report"
-msgstr "Государственные расходы на образование Сообщить уровень"
+msgstr "Отчет по Государственным расходам в зависимости от уровня образования"
 
 msgid ""
 "Divide total public expenditure for each level of education in a given "
 "financial year by the total public expenditure on education for the same "
 "financial year and multiply the result by 100. "
 msgstr ""
-"Разделите общего объема государственных расходов для каждого уровня "
-"образования в данном финансовом году общий государственных расходов на "
-"образование за тот же финансовый год и умножить результат на 100."
+"Разделите общий объем государственных расходов для каждого уровняобразования "
+"в данном финансовом году на общий объем государственных расходов на "
+"образование за тот же финансовый год и умножьте результат на 100."
 
 msgid "Public Expenditure on Education Report"
-msgstr "Государственные расходы на образование отчет"
+msgstr "Отчет по Государственным расходам на образование"
 
 msgid ""
 "Divide total public expenditure on education incurred by all government "
 "agencies/departments in a given financial year by the total government "
 "expenditure for the same financial year and multiply by 100."
 msgstr ""
-"Разделяй общего объема государственных расходов на образование, понесенных "
-"всех государственных учреждений / департаментов в данном финансовом году "
-"совокупные государственные расходы за тот же финансовый год и умножить на "
-"100."
+"Разделите общий объем государственных расходов на образование, понесенных "
+"всеми государственными учреждениями / департаментами в данном финансовом "
+"году на совокупные государственные расходы за тот же финансовый год и "
+"умножьте на 100."
 
 msgid "Public Expenditure on Education by GNP Report"
-msgstr "Государственные расходы на образование от ВВП отчета"
+msgstr "Отчет ВВП по Государственным расходам на образование"
 
 msgid ""
 "Divide total public expenditure on education in a given financial year by "
 "the Gross National Product (GNP) or Gross National Income (GNI) of the "
 "country for the corresponding year and multiply by 100."
 msgstr ""
-"Разделите общую государственных расходов на образование в данном финансовом "
-"году валовой национальный продукт (ВНП) или валовой национальный доход (ВНД) "
-"страны на соответствующий год и умножить на 100."
+"Разделите общие государственные расходы на образование в данном финансовом "
+"году на валовый национальный продукт (ВНП) или валовой национальный доход "
+"(ВНД) страны на соответствующий год и умножьте на 100."
 
 msgid "Public Expenditure per Pupil Report"
-msgstr "Государственные расходы на одного ученика отчет"
+msgstr "Отчет по Государственным расходам на одного ученика "
 
 msgid ""
 "Divide per pupil public current expenditure on each level of education in a "
 "given year by the GNI per capita for the same year and multiply by 100. This "
 "indicator has dimension values of level of education."
 msgstr ""
-"Разделить на одного ученика общественного текущие расходы на каждого уровня "
-"образования в данном году по ВВП на душу населения за тот же год и умножить "
-"на 100. Этот показатель имеет размерность значений уровня образования."
+"Разделите текущие общественные расходы на каждого ученика на всех уровнях "
+"образования данного года по ВВП на душу населения за тот же год и умножьте "
+"на 100. Этот показатель различается по образованию."
 
 msgid "Process"
 msgstr "Процесс"
@@ -1905,19 +1903,19 @@ msgid "Abort All"
 msgstr "Отменить все"
 
 msgid "Clear All"
-msgstr "Clear All"
+msgstr "Удалить все"
 
 msgid "Started By"
-msgstr "Ответов"
+msgstr "Автор"
 
 msgid "Started Date"
-msgstr "начала Дата"
+msgstr "Дата начала"
 
 msgid "Finished Date"
-msgstr "Готовые Дата"
+msgstr "Дата окончания"
 
 msgid "Log"
-msgstr "Log"
+msgstr "Лог"
 
 msgid "Processing"
 msgstr "Обработка"
@@ -1926,7 +1924,7 @@ msgid "Pending"
 msgstr "Ожидание"
 
 msgid "Aborted"
-msgstr "Aborted"
+msgstr "Прервано"
 
 msgid "Completed"
 msgstr "Завершено"
@@ -1941,67 +1939,64 @@ msgid "No Data"
 msgstr "Нет данных"
 
 msgid "GNP"
-msgstr "GNP"
+msgstr "ВНП"
 
 msgid "Total Public Expenditure For Education"
-msgstr "Total государственных расходов на образование"
+msgstr "Полный бюджет государственных расходов на образование"
 
 msgid "No Available Finance Records"
-msgstr "Нет доступных записей Финанс"
+msgstr "Финансовые отчеты не доступны "
 
 msgid "Gender Parity Index"
-msgstr "Индекс гендерного равенства"
+msgstr "Индекс гендерного паритета"
 
 msgid "Click the Generate button to create a restore point."
 msgstr "Нажмите кнопку Сгенерировать, чтобы создать точку восстановления"
 
 msgid "All data will be backed up except for following tables:"
-msgstr "Все данные будут сохранены, за исключением следующих таблицах:"
+msgstr "Все данные будут сохранены, за исключением следующих таблиц:"
 
 msgid "Security Users, Roles, and Functions"
 msgstr "Безопасность пользователей, роли и функции"
 
 msgid "System Configuration Values"
-msgstr "Ценности System Configuration"
+msgstr "Ценности системы конфигурации"
 
 msgid "Security"
 msgstr "Безопасность"
 
 msgid "Please note that it may take sometime for the backup process to finish."
-msgstr ""
-"Обратите внимание, что это может занять некоторое для резервного копирования "
-"и до конца."
+msgstr "Внимание: резервное копирование заимет некоторое время."
 
 msgid "Run Reports"
-msgstr "Отчеты Run"
+msgstr "Отчеты Работы системы"
 
 msgid "Select All"
 msgstr "Выделить все"
 
 msgid "De-Select All"
-msgstr "De-Select All"
+msgstr "Отменить выделение всего "
 
 msgid "Generate"
-msgstr "Generate"
+msgstr "Генерировать"
 
 msgid ""
 "The system will %s the current data and restore to your previous data based "
 "on the restore point you selected."
 msgstr ""
-"Система %s текущие данные и восстановить предыдущие данные, основанные на "
-"точку восстановления, которую вы выбрали."
+"Система % текущие данные и восстановит предыдущие данные, основанные на "
+"точке восстановления, которую вы выбрали."
 
 msgid "OVERWRITE ALL"
 msgstr "Заменить все"
 
 msgid "Please note that the system will not restore the following tables:"
-msgstr ""
-"Обратите внимание, что система не будет восстанавливать следующие таблицы:"
+msgstr "Внимание: система не восстановит следующие таблицы:"
 
 msgid ""
 "Below are the list of available backup dates, please choose a restore point."
 msgstr ""
-"Ниже список доступных резервных дат, пожалуйста, выберите точку "
+"Ниже находиться список доступных резервных дат, пожалуйста, выберите точку "
 "восстановления"
 
 msgid "Files"
@@ -2011,34 +2006,36 @@ msgid "Format not support."
 msgstr "Формат не поддерживается."
 
 msgid "Image filesize too large."
-msgstr "Изображение Размер файла слишком большой"
+msgstr "Размер файла изображения превышает максимально допустимые нормы"
 
 msgid "Resolution too large."
-msgstr "Разрешение слишком большой"
+msgstr "Слишком большое разрешение"
 
 msgid "File uploaded with success."
 msgstr "Файл успешно загружен"
 
 msgid "Image exceeds system max filesize."
-msgstr "Изображение Размер файла превышает максимально системы"
+msgstr "Размер файла изображения превышает максимально допустимые нормы"
 
 msgid "Image exceeds max file size in the HTML form."
-msgstr "Image превышает максимальный размер файла в HTML форме"
+msgstr ""
+"Размер файла изображения превышает максимально допустимые нормы в формате "
+"HTML"
 
 msgid "Image was only partially uploaded."
-msgstr "Изображение был загружен лишь частично"
+msgstr "Изображение загружено лишь частично"
 
 msgid "No image was uploaded."
-msgstr "Нет изображения были загружены"
+msgstr "Изображение не было загружено"
 
 msgid "Missing a temporary folder."
-msgstr "Временная папка"
+msgstr "Временная папка отсутсвует"
 
 msgid "Failed to write file to disk."
 msgstr "Не удалось записать файл на диск"
 
 msgid "A PHP extension stopped the file upload."
-msgstr "Расширение PHP остановил загрузку файлов"
+msgstr "Расширение PHP остановило загрузку файла"
 
 msgid "Max Resolution:"
 msgstr "Максимальное разрешение:"
@@ -2047,40 +2044,40 @@ msgid "Max File Size:"
 msgstr "Максимальный размер файла:"
 
 msgid "Max Resolution: %s pixels"
-msgstr "Максимальное разрешение: пикселы %s"
+msgstr "Максимальное разрешение: %s пикселов "
 
 msgid "Format Supported:"
 msgstr "Поддерживаемые форматы:"
 
 msgid "Profile Image"
-msgstr "Профиль Image"
+msgstr "Изображение Профиля"
 
 msgid "Please enter the code for the Area."
-msgstr "Пожалуйста, введите код района»"
+msgstr "Пожалуйста, введите индекс района»"
 
 msgid "There are duplicate area code."
-msgstr "Есть повторяющийся код зоны"
+msgstr "Дупликаты индекса района"
 
 msgid "Please enter the name for the Area."
-msgstr "Пожалуйста, введите имя для области"
+msgstr "Пожалуйста, введите название области"
 
 msgid "Please supply a valid image."
-msgstr "Пожалуйста, укажите действительный образ"
+msgstr "Пожалуйста, укажите подходящее изображение"
 
 msgid "Please enter a name for the Field of Study."
-msgstr "Пожалуйста, введите имя для области исследования"
+msgstr "Пожалуйста, введите название области исследования"
 
 msgid "This Field of Study already exists in the system."
-msgstr "Этот Специальность уже существует в системе"
+msgstr "Эта область исследования уже существует в системе"
 
 msgid "Please select the programme orientation."
-msgstr "Пожалуйста, выберите программу ориентации"
+msgstr "Пожалуйста, выберите программную ориентацию"
 
 msgid "Please enter a name for the Subject."
-msgstr "Пожалуйста, введите имя субъекта"
+msgstr "Пожалуйста, введите название специальности"
 
 msgid "This subject already exists in the system."
-msgstr "Этот объект уже существует в системе"
+msgstr "Это название уже существует в системе"
 
 msgid "You have entered an invalid username or password."
 msgstr "Вы ввели неверное имя пользователя или пароль."
@@ -2096,11 +2093,11 @@ msgid ""
 "information of this record will also be deleted.<br><br>Are you sure you "
 "want to do this?"
 msgstr ""
-"Вы можете удалить эту запись в базе данных. <br> <br> Все информацией этой "
-"записи также будут удалены. <br> <br> Вы уверены, что хотите это сделать?"
+"Вы можете удалить эту запись в базе данных. <br> <br> Вся информация этой "
+"записи также будут удалены. <br> <br> Вы уверены, что хотите это сделать?\""
 
 msgid "Deleting attachment..."
-msgstr "Удаление вложений ..."
+msgstr "Удаление приложения  …"
 
 msgid "Delete Attachment"
 msgstr "Удалить приложение"
@@ -2109,16 +2106,16 @@ msgid "Do you wish to delete this record?"
 msgstr "Вы хотите удалить эту запись?"
 
 msgid "Updating attachment..."
-msgstr "Обновление привязанность ..."
+msgstr "Обновление приложения …"
 
 msgid "Bank Branch is required!"
-msgstr "Отделение банка не требуется!"
+msgstr "Требуется отделение банка!"
 
 msgid "Value"
-msgstr "Value"
+msgstr "Стоимость"
 
 msgid "value"
-msgstr "значение"
+msgstr "Стоимость"
 
 msgid "Unsaved Data"
 msgstr "несохраненные данные"
@@ -2126,34 +2123,34 @@ msgstr "несохраненные данные"
 msgid "Please save your data before proceed. <br><br>Do you want to save now?"
 msgstr ""
 "Пожалуйста, сохраните ваши данные, прежде чем продолжить. <br> <br> Вы "
-"хотите, чтобы сохранить сейчас?"
+"хотите сохранить это сейчас?"
 
 msgid "Are you sure you want to leave?"
-msgstr "Вы уверены, что хотите уйти?"
+msgstr "Вы уверены, что хотите выйти?"
 
 msgid "GNP value is required."
-msgstr "ВНП требуется значение"
+msgstr "Требуется ВНП "
 
 msgid "Category is required!"
-msgstr "Категория не требуется!"
+msgstr "Требуется категория!"
 
 msgid "Certificate is required!"
-msgstr "сертификат не требуется!"
+msgstr "Требуется сертификат!"
 
 msgid "Institute is required!"
-msgstr "Институт не требуется!"
+msgstr "Требуется название института!"
 
 msgid "Please select a country before adding new records."
-msgstr "выберите страну, прежде чем добавлять новые записи."
+msgstr "Пожалуйста, выберите страну, прежде чем добавлять новые записи."
 
 msgid "Error has occurred."
-msgstr "Ошибка произошло"
+msgstr "Произошла ошибка"
 
 msgid "Age cannot be empty."
-msgstr "Возраст не может быть пустым"
+msgstr "Не оставляйте граффу возраста пустой"
 
 msgid "Age must be more then 0."
-msgstr "Возраст должен быть более 0"
+msgstr "Возраст должен быть выше 0"
 
 msgid "No"
 msgstr "нет"
@@ -2165,28 +2162,28 @@ msgid "Dialog"
 msgstr "Диалог"
 
 msgid "Required Field"
-msgstr "Обязательное поле"
+msgstr "Обязательная граффа"
 
 msgid "Retrieving..."
-msgstr "Получение ..."
+msgstr "Получение …"
 
 msgid "Adding row..."
-msgstr "Добавление строк ..."
+msgstr "Добавление строк …"
 
 msgid "Adding option..."
-msgstr "Добавление опции ..."
+msgstr "Добавление опции …"
 
 msgid "Loading..."
-msgstr "Loading ..."
+msgstr "Загрузка …"
 
 msgid "Loading list..."
-msgstr "Загрузка списка ..."
+msgstr "Загрузка списка …"
 
 msgid "File is required!"
-msgstr "Файл не требуется!"
+msgstr "Требуется файл!"
 
 msgid "Status is required!"
-msgstr "Статус не требуется!"
+msgstr "Требуется статус!"
 
 msgid "Move Up"
 msgstr "Вверх"
@@ -2195,61 +2192,61 @@ msgid "Move Down"
 msgstr "Вниз"
 
 msgid "Toggle this field active/inactive"
-msgstr "Переключить этой области активных / неактивных"
+msgstr "Переключить эту область в активный / неактивный режим"
 
 msgid "Delete Confirmation"
-msgstr "Delete Confirmation"
+msgstr "Подтверждение удаления"
 
 msgid "Click to dismiss"
-msgstr "Нажмите, чтобы уволить"
+msgstr "Кликните здесь для удаления"
 
 msgid "Unable to add Areas.<br/>Please create Area Level before adding Areas."
 msgstr ""
-"Не удалось добавить районов. <br/> пожалуйста, создайте Площадь уровень, "
-"прежде чем добавить районах"
+"Не удалось добавить название районов. <br/> Пожалуйста, создайте уровень "
+"района, прежде чем добавлять название районов"
 
 msgid "Saving please wait..."
-msgstr "Сохранение пожалуйста, подождите ..."
+msgstr "Идет сохранение, пожалуйста, подождите  …"
 
 msgid "Loading Areas"
-msgstr "Области Loading"
+msgstr "Загрузка областей"
 
 msgid "Batch executed successfully."
-msgstr "Batch успешно выполнен»"
+msgstr "Партия успешна выполнена»"
 
 msgid "Running batch..."
-msgstr "Запуск партии ..."
+msgstr "Запуск партии …"
 
 msgid "Adding Field..."
-msgstr "Добавление поля ..."
+msgstr "Добавление поля …"
 
 msgid "Please select a valid Start Date"
 msgstr "Пожалуйста, выберите действительную дату начала"
 
 msgid "Please select a valid End Date"
-msgstr "Пожалуйста, выберите правильный Дата окончания"
+msgstr "Пожалуйста, выберите действительную дату окончания"
 
 msgid "Please add a programme to this institution site."
-msgstr "Пожалуйста, добавьте программу в этой организации сайта."
+msgstr "Пожалуйста, добавьте программу для сайта этой организации."
 
 msgid "Missing Coordinates Report"
-msgstr "Отсутствует Координаты отчет"
+msgstr "Отчет по Отсутствующим Координатам"
 
 msgid ""
 "List of Institution Sites with latitude and/or longitude values of 0 or null"
-msgstr "Список учреждение сайты с широтой и / или долготы значения 0 или NULL"
+msgstr "Список учреждении с широтой и / или долготы:  0 или NULL"
 
 msgid "OLAP Report"
-msgstr "OLAP-отчетов"
+msgstr "Отчет по OLAP"
 
 msgid "Generated"
 msgstr "Сгенерировано"
 
 msgid "Generating OLAP Report..."
-msgstr "Генерирующая OLAP отчетов…"
+msgstr "Генерирует отчет OLAP …"
 
 msgid "Indicator"
-msgstr "индикатор"
+msgstr "показатель"
 
 msgid "Sub Groups"
 msgstr "подгруппы"
@@ -2273,37 +2270,37 @@ msgid "Education Programme Name"
 msgstr "Название программы образования"
 
 msgid "Bank Account Name"
-msgstr "Банковский счет Имя"
+msgstr "Название банковского счета"
 
 msgid "Bank Account Number"
-msgstr "Банковский счет номер"
+msgstr "Номер банковского счета"
 
 msgid "Bank Account Active"
-msgstr "Банковский счет активного"
+msgstr "Банковский счет--активен"
 
 msgid "Bank Branch Name"
-msgstr "Банк Название филиала"
+msgstr "Название филиала банка"
 
 msgid "Academic Year"
 msgstr "Учебный год"
 
 msgid "Education Grade Name"
-msgstr "Имя образования класс"
+msgstr "Имя класса"
 
 msgid "Class"
 msgstr "класс"
 
 msgid "Education Subject Name"
-msgstr "Имя Тема образования"
+msgstr "Имя специальности/предмета"
 
 msgid "No Of Textbooks"
 msgstr "Ряд учебников"
 
 msgid "Grid X Category"
-msgstr "Сетка X Категория"
+msgstr "Категория сетки X"
 
 msgid "Grid Y Category"
-msgstr "Сетка Y категории"
+msgstr "Категория сетки Y"
 
 msgid "Building"
 msgstr "Здание"
@@ -2312,7 +2309,7 @@ msgid "Material"
 msgstr "материал"
 
 msgid "Room"
-msgstr "номер"
+msgstr "комната"
 
 msgid "Resource"
 msgstr "Ресурс"
@@ -2324,7 +2321,7 @@ msgid "Teacher Name"
 msgstr "Имя учителя"
 
 msgid "Staff Name"
-msgstr "Персонал название"
+msgstr "Имя сотрудника"
 
 msgid "Available Variables"
 msgstr "Доступные переменные"
@@ -2333,31 +2330,31 @@ msgid "Selected Variables"
 msgstr "Выбранные переменные"
 
 msgid "Institution Provider"
-msgstr "Учреждение поставщика"
+msgstr "Провайдер Учреждения"
 
 msgid "Institution Status"
-msgstr "Учреждение статуса"
+msgstr "Статус учреждения"
 
 msgid "Institution Site Locality"
-msgstr "Местность учреждение сайта"
+msgstr "Нахождение учреждения"
 
 msgid "Institution Site Type"
-msgstr "Тип учреждения сайту"
+msgstr "Тип места учреждения"
 
 msgid "Institution Site Ownership"
-msgstr "Собственность учреждение сайта"
+msgstr "Собственность учреждения"
 
 msgid "Institution Site Status"
-msgstr "Статус учреждение сайта"
+msgstr "Статус учреждение"
 
 msgid "Education Programme"
 msgstr "Образовательная программа"
 
 msgid "Education Grade"
-msgstr "Образование класс"
+msgstr "Образовательная класс"
 
 msgid "Student Category"
-msgstr "Студенческие категории"
+msgstr "Студенческая категория"
 
 msgid "No backup files found."
 msgstr "Нет резервного копирования файлов не найдено."
