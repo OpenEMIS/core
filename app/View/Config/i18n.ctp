@@ -69,7 +69,9 @@ var i18n = {
 		textGenerateOlapReport: '<?php echo T("Generating OLAP Report...", true); ?>'
 	},
 	Search: {
-		textNoCriteria: '<?php echo T("Please enter a search criteria.", true); ?>'
+		textSearching: '<?php echo T("Searching...", true); ?>',
+		textNoCriteria: '<?php echo T("Please enter a search criteria.", true); ?>',
+		textNoResult: '<?php echo T("Your search returns no result.", true); ?>'
 	},
 	General : {
 		textDismiss : '<?php echo T("Click to dismiss", true); ?>',
@@ -100,6 +102,6 @@ var i18n = {
 		textStatusRequired : '<?php echo T("Status is required!", true); ?>',
 		iconMoveUp : '<?php echo T("Move Up", true); ?>',
 		iconMoveDown : '<?php echo T("Move Down", true); ?>',
-		iconToggleField : '<?php echo T("Toggle this field active/inactive", true); ?>'
+		iconToggleField : '<?php echo T("Toggle this field active/inactive", true); ?>',
 	}
 }

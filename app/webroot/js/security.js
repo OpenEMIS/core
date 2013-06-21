@@ -14,21 +14,21 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-	security.init();
+	Security.init();
 });
 
-var security = {
-	operations: ['_view', '_edit', '_add', '_delete'],
+var Security = {
+	operations: ['_view', '_edit', '_add', '_delete', '_execute'],
 	init: function() {
 		$('#permissions.edit input[type="hidden"]:disabled').removeAttr('disabled');
-		$('#permissions.edit .module_checkbox').change(security.toggleModule);
+		$('#permissions.edit .module_checkbox').change(Security.toggleModule);
 		$('#SecurityView, #SecurityEdit, #SecurityAdd, #SecurityDelete').each(function() {
 			
 		});
 		
-		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled)').change(security.toggleOperation);
-		$('#roles .icon_plus').click(security.addRole);
-		$('fieldset[type] .icon_plus').click(function() { security.addRoleArea(this); });
+		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled)').change(Security.toggleOperation);
+		$('#roles .icon_plus').click(Security.addRole);
+		$('fieldset[type] .icon_plus').click(function() { Security.addRoleArea(this); });
 	},
 	
 	navigate: function(obj) {
@@ -38,6 +38,64 @@ var security = {
 	
 	switchRole: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('href') + '/' + $(obj).val();
+	},
+	
+	usersSearch: function(obj) {
+		var url = getRootURL() + $(obj).attr('url');
+		var searchString = $(obj).siblings('.search_wrapper').find('input').val();
+		
+		var alertOpt = {
+			id: 'search_alert',
+			parent: '#group_admin',
+			type: alertType.error,
+			position: 'center'
+		}
+		
+		if(!searchString.isEmpty()) {
+			$.ajax({
+				type: 'GET',
+				dataType: 'text',
+				url: url,
+				data: {searchString: searchString},
+				beforeSend: function (jqXHR) {
+					maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching});
+				},
+				success: function (data, textStatus) {
+					var callback = function() {
+						if(data.isEmpty()) {
+							alertOpt['text'] = i18n.Search.textNoResult;
+							$.alert(alertOpt);
+						} else {
+							$(obj).closest('.table_cell').siblings('.name').html(data);
+						}
+					};
+					$.unmask({id: maskId, callback: callback});
+				}
+			});
+		} else {
+			alertOpt['text'] = i18n.Search.textNoCriteria;
+			$.alert(alertOpt);
+		}
+	},
+	
+	addGroupAdmin: function(obj) {
+		var index = $('#group_admin .table_row').length;
+		
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + $(obj).attr('url'),
+			data: {index: index},
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					$('#group_admin .table_body').append(data);
+				};
+				$.unmask({id: maskId, callback: callback});
+			}
+		});
 	},
 	
 	addRole: function() {
@@ -111,7 +169,7 @@ var security = {
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
-					var list = security.buildOptionList(data);
+					var list = Security.buildOptionList(data);
 					$(obj).parent().parent().find('#' + id).html(list);
 				};
 				$.unmask({id: maskId, callback: callback});
@@ -138,7 +196,7 @@ var security = {
 					$(this).removeAttr('checked');
 				}
 			}
-			security.checkModuleToggled($(this));
+			Security.checkModuleToggled($(this));
 		});
 	},
 	
@@ -185,7 +243,7 @@ var security = {
 		var checked = obj.is(':checked');
 		var parent = obj.closest('.table_row');
 		var id = obj.attr('id');
-		var operations = security.operations.slice();
+		var operations = Security.operations.slice();
 		var op, opObj, selector;
 		
 		if(!checked) operations.reverse();
@@ -202,6 +260,6 @@ var security = {
 				break;
 			}
 		}
-		security.checkModuleToggled(obj);
+		Security.checkModuleToggled(obj);
 	}
 };

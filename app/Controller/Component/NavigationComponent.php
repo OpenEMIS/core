@@ -218,8 +218,9 @@ class NavigationComponent extends Component {
 				),
 				'ACCOUNTS &amp; SECURITY' => array(
 					$this->createLink('Users', 'Security', 'users'),
-					$this->createLink('Roles', 'Security', 'roles', '^role'),
-					$this->createLink('Permissions', 'Security', 'permissions')
+					$this->createLink('Groups', 'Security', 'groups', '^group'),
+					$this->createLink('Roles', 'Security', 'roles', '^role|^permissions')//,
+					//$this->createLink('Permissions', 'Security', 'permissions')
 				),
 				'NATIONAL DENOMINATORS' => array(
 					$this->createLink('Population', 'Population', 'index', 'index$|edit$'),

@@ -8,6 +8,8 @@
 	-webkit-border-radius: 2px;
 }
 
+.search_wrapper input { float: left; border: 0 !important; box-shadow: none; }
+
 .chrome .search_wrapper { padding-bottom: 0; }
 .chrome .search_wrapper .icon_clear,
 .safari .search_wrapper .icon_clear { padding-top: 4px; height: 20px; }

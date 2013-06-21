@@ -21,11 +21,20 @@ echo $this->Html->script('security', false);
 		<?php echo $this->Html->link(__('View'), array('action' => 'roles'), array('class' => 'divider')); ?>
 	</h1>
 	
-	<div class="table full_width" style="margin-bottom: 0">
+	<div class="row edit">
+		<div class="label" style="width: 80px;"><?php echo __('Group'); ?></div>
+		<div class="value">
+			<select>
+				<option>Ministry</option>
+			</select>
+		</div>
+	</div>
+	
+	<div class="table full_width" style="margin-bottom: 0; margin-top: 10px;">
 		<div class="table_head">
 			<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
 			<div class="table_cell"><?php echo __('Role'); ?></div>
-			<div class="table_cell cell_order"><?php echo __('Privilege Level'); ?></div>
+			<div class="table_cell cell_order"><?php echo __('Privilege'); ?></div>
 		</div>
 	</div>
 		

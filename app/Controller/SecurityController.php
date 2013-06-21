@@ -25,11 +25,13 @@ class SecurityController extends AppController {
 		'InstitutionSite',
 		'SecurityUser',
 		'SecurityRole',
+		'SecurityGroup',
+		'SecurityGroupUser',
 		'SecurityFunction',
 		'SecurityUserRole',
 		'SecurityRoleFunction',
-		'SecurityRoleArea',
-		'SecurityRoleInstitutionSite'
+		'SecurityGroupArea',
+		'SecurityGroupInstitutionSite'
 	);
 	
 	public function beforeFilter() {
@@ -159,21 +161,56 @@ class SecurityController extends AppController {
 	}
 	
 	public function users() {
-		$this->Navigation->addCrumb('Users');
-		$list = $this->SecurityUser->find('all', array(
-			'order' => array('SecurityUser.super_admin DESC', 'SecurityUser.status DESC', 'SecurityUser.username')
-		));
+		App::uses('Sanitize', 'Utility');
+		$this->Navigation->addCrumb('List of Users');
 		
-		$data = array();
-		foreach($list as $key => $user) {
-			$obj = $user['SecurityUser'];
-			$roleIds = $this->SecurityUserRole->find('list', array(
-				'fields' => array('SecurityUserRole.id', 'SecurityUserRole.security_role_id'),
-				'conditions' => array('SecurityUserRole.security_user_id' => $obj['id'])));
-			$roles = $this->SecurityRole->find('list', array('conditions' => array('SecurityRole.id' => array_values($roleIds))));
-			$obj['roles'] = implode(', ', $roles);
-			$data[$key] = $obj;
+		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
+		
+		$selectedYear = "";
+		$selectedProgramme = "";
+		$searchField = "";
+		$orderBy = 'SecurityUser.first_name';
+		$order = 'asc';
+		$prefix = 'SecurityUser.Search.%s';
+		if($this->request->is('post')) {
+			$searchField = Sanitize::escape(trim($this->data['SecurityUser']['SearchField']));
+			if(isset($this->data['SecurityUser']['orderBy'])) {
+				$orderBy = $this->data['SecurityUser']['orderBy'];
+			}
+			if(isset($this->data['SecurityUser']['order'])) {
+				$order = $this->data['SecurityUser']['order'];
+			}
+			
+			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+			$this->Session->write(sprintf($prefix, 'order'), $order);
+			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+		} else {
+			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
+			
+			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
+				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			}
+			if($this->Session->check(sprintf($prefix, 'order'))) {
+				$order = $this->Session->read(sprintf($prefix, 'order'));
+			}
 		}
+		$conditions = array('search' => $searchField, 'SecurityUser.super_admin' => 0);
+		
+		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
+		$data = $this->paginate('SecurityUser', $conditions);
+		
+		if(!empty($data)) {
+			foreach($data as &$user) {
+				$obj = $user['SecurityUser'];
+				$groups = $this->SecurityGroup->getGroupsByUser($obj['id']);
+				$user['SecurityUser']['groups'] = implode(', ', $groups);
+			}
+		}
+		
+		$this->set('searchField', $searchField);
+		$this->set('page', $page);
+		$this->set('orderBy', $orderBy);
+		$this->set('order', $order);
 		$this->set('data', $data);
 	}
 	
@@ -256,6 +293,16 @@ class SecurityController extends AppController {
 		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
 		$this->Navigation->addCrumb('Add User');
 		
+		$isSuperUser = $this->Auth->user('super_admin')==1;
+		$groupOptions = $this->SecurityGroup->getGroupOptions($isSuperUser ? false : $this->Auth->user('id'));
+		
+		if(empty($groupOptions)) {
+			if($isSuperUser) {
+				//$this->Utility->alert($this->Utility->getMessage(), array());
+			} else {
+				//$this->Utility->alert();
+			}
+		}
 		if($this->request->is('post')) {
 			$data = $this->data;
 			$roles = isset($data['SecurityRole']) ? $data['SecurityRole'] : array();
@@ -263,9 +310,9 @@ class SecurityController extends AppController {
 			
 			$this->SecurityUser->set($data);
 			if($this->SecurityUser->validates()) {
-				if(sizeof($roles) == 0) {
-					$this->Utility->alert('You need to assign a role to the user', array('type' => 'error'));
-				} else {
+				//if(sizeof($roles) == 0) {
+					//$this->Utility->alert('You need to assign a role to the user', array('type' => 'error'));
+				//} else {
 					$result =  $this->SecurityUser->save($data);
 					$userId = $result['SecurityUser']['id'];
 					
@@ -277,11 +324,92 @@ class SecurityController extends AppController {
 					$name = trim($data['SecurityUser']['first_name'] . ' ' . $data['SecurityUser']['last_name']);
 					$this->Utility->alert($name . ' has been added successfully.');
 					$this->redirect(array('action' => 'users'));
-				}
+				//}
 			}
 		}
 		$roleList = $this->SecurityRoleFunction->getModules();
 		$this->set('roles', $roleList);
+	}
+	
+	public function usersSearch() {
+		$this->autoRender = false;
+		$searchString = $this->params->query['searchString'];
+		$obj = $this->SecurityUser->find('first', array(
+			'fields' => array('SecurityUser.first_name', 'SecurityUser.last_name'),
+			'conditions' => array('SecurityUser.identification_no' => $searchString)
+		));
+		
+		$name = $obj ? $obj['SecurityUser']['first_name'] . ' ' . $obj['SecurityUser']['last_name'] : '';
+		return $name;
+	}
+	
+	public function usersAddAdmin() {
+		$this->layout = 'ajax';
+		$index = $this->params->query['index'];
+		
+		$this->set('index', $index);
+	}
+	
+	public function groups() {
+		App::uses('Sanitize', 'Utility');
+		$this->Navigation->addCrumb('List of Groups');
+		
+		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
+		
+		$selectedYear = "";
+		$selectedProgramme = "";
+		$searchField = "";
+		$orderBy = 'SecurityGroup.name';
+		$order = 'asc';
+		$prefix = 'SecurityGroup.Search.%s';
+		if($this->request->is('post')) {
+			$searchField = Sanitize::escape(trim($this->data['SecurityGroup']['SearchField']));
+			if(isset($this->data['SecurityGroup']['orderBy'])) {
+				$orderBy = $this->data['SecurityGroup']['orderBy'];
+			}
+			if(isset($this->data['SecurityGroup']['order'])) {
+				$order = $this->data['SecurityGroup']['order'];
+			}
+			
+			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+			$this->Session->write(sprintf($prefix, 'order'), $order);
+			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+		} else {
+			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
+			
+			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
+				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			}
+			if($this->Session->check(sprintf($prefix, 'order'))) {
+				$order = $this->Session->read(sprintf($prefix, 'order'));
+			}
+		}
+		$conditions = array('search' => $searchField);
+		
+		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
+		$data = $this->paginate('SecurityGroup', $conditions);
+		
+		if(!empty($data)) {
+			foreach($data as &$group) {
+				$obj = $group['SecurityGroup'];
+				$count = $this->SecurityGroupUser->find('count', array('SecurityGroupUser.security_group_id' => $obj['id']));
+				$group['SecurityGroup']['count'] = $count;
+			}
+		}
+		
+		$this->set('searchField', $searchField);
+		$this->set('page', $page);
+		$this->set('orderBy', $orderBy);
+		$this->set('order', $order);
+		$this->set('data', $data);
+	}
+	
+	public function groupsAdd() {
+		$this->Navigation->addCrumb('Add Group');
+	}
+	
+	public function groupsView() {
+		$this->Navigation->addCrumb('Group Details');
 	}
 	
 	public function roles() {
@@ -418,6 +546,7 @@ class SecurityController extends AppController {
 		}
 	}
 	
+	/*
 	public function roleAreas() {
 		$this->Navigation->addCrumb('Role - Area Restricted');
 		
@@ -492,6 +621,7 @@ class SecurityController extends AppController {
 			$this->redirect(array('action' => 'roles'));
 		}
 	}
+	*/
 	
 	public function loadOptionList() {
 		$this->autoRender = false;

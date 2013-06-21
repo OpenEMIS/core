@@ -16,13 +16,22 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 		?>
 	</h1>
 	
-	<div class="table full_width">
+	<div class="row edit">
+		<div class="label" style="width: 80px;"><?php echo __('Group'); ?></div>
+		<div class="value">
+			<select>
+				<option>Ministry</option>
+			</select>
+		</div>
+	</div>
+	
+	<div class="table full_width" style="margin-top: 15px;">
 		<div class="table_head">
 			<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
 			<div class="table_cell"><?php echo __('Role'); ?></div>
 			<div class="table_cell cell_permissions"><?php echo __('Permissions'); ?></div>
 			<div class="table_cell cell_users"><?php echo __('Users'); ?></div>
-			<div class="table_cell cell_users"><?php echo __('Areas'); ?></div>
+			<!--div class="table_cell cell_users"><?php echo __('Areas'); ?></div-->
 		</div>
 		
 		<div class="table_body">
@@ -36,9 +45,9 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 				<div class="table_cell cell_users">
 					<?php echo $this->Html->link(__('Users'), array('action' => 'roleUsers', $obj['id'])); ?>
 				</div>
-				<div class="table_cell cell_users">
+				<!--div class="table_cell cell_users">
 					<?php echo $this->Html->link(__('Areas'), array('action' => 'roleAreas', $obj['id'])); ?>
-				</div>
+				</div-->
 			</div>
 			<?php } ?>
 		</div>
