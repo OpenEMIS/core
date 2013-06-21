@@ -9,3 +9,5 @@
 .cell_permissions { width: 90px; text-align: center; }
 .cell_area, .cell_institution { width: 250px; }
 .table_view .cell_name { width: 532px; margin-left: -1px; }
+
+#group_admin .search_wrapper { margin-top: 2px; }
