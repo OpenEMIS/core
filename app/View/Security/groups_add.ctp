@@ -49,37 +49,36 @@ echo $this->Html->script('Security', false);
 	<fieldset class="section_group">
 		<legend><?php echo __('Group Access'); ?></legend>
 		<fieldset class="section_break">
-			<legend>Areas</legend>
+			<legend><?php echo __('Areas'); ?></legend>
 			<div class="table">
 				<div class="table_head">
 					<div class="table_cell cell_area"><?php echo __('Level'); ?></div>
 					<div class="table_cell"><?php echo __('Area'); ?></div>
+					<div class="table_cell cell_delete"></div>
 				</div>
 				
-				<div class="table_body">
-					
-				</div>
+				<div class="table_body"></div>
 			</div>
 			
 			<div class="row" style="margin-left: 0;">
-				<a class="void icon_plus" url="Security/loadOptionList/"><?php echo __('Add').' '.__('Area'); ?></a>
+				<a class="void icon_plus" url="Security/groupsAddAccessOptions/areas" onclick="Security.addGroupAccessOptions(this)"><?php echo __('Add').' '.__('Area'); ?></a>
 			</div>
 		</fieldset>
 		
 		<fieldset class="section_break">
-			<legend>Institution Sites</legend>
+			<legend><?php echo __('Institution Sites'); ?></legend>
 			<div class="table">
 				<div class="table_head">
 					<div class="table_cell cell_institution"><?php echo __('Institution'); ?></div>
 					<div class="table_cell"><?php echo __('Institution Site'); ?></div>
+					<div class="table_cell cell_delete"></div>
 				</div>
 				
-				<div class="table_body">
-				</div>
+				<div class="table_body"></div>
 			</div>
 			
 			<div class="row" style="margin-left: 0;">
-				<a class="void icon_plus" url="Security/loadOptionList/"><?php echo __('Add').' '.__('Institution Site'); ?></a>
+				<a class="void icon_plus" url="Security/groupsAddAccessOptions/sites" onclick="Security.addGroupAccessOptions(this)"><?php echo __('Add').' '.__('Institution Site'); ?></a>
 			</div>
 		</fieldset>
 	</fieldset>
