@@ -404,8 +404,56 @@ class SecurityController extends AppController {
 		$this->set('data', $data);
 	}
 	
+	public function groupsAddAccessOptions() {
+		$this->layout = 'ajax';
+		$type = $this->params['pass'][0];
+		$index = $this->params->query['index'];
+		$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
+		
+		$levelOptions = array();
+		$valueOptions = array();
+		$model = $type==='areas' ? $this->Area : $this->InstitutionSite;
+		$levelOptions = $model->getGroupAccessList($exclude);
+		
+		$emptyOption = '-- ' . 'No records' . ' --';
+		
+		if(!empty($levelOptions)) {
+			$parentId = key($levelOptions);
+			$valueOptions = $model->getGroupAccessValueList($parentId, $exclude);
+			if(empty($valueOptions)) {
+				$valueOptions = array('0' => $emptyOption);
+			}
+		} else {
+			$levelOptions = array('0' => $emptyOption);
+		}
+		
+		$this->set('index', $index);
+		$this->set('type', $type);
+		$this->set('levelOptions', $levelOptions);
+		$this->set('valueOptions', $valueOptions);
+	}
+	
+	public function groupsLoadValueOptions() {
+		$this->layout = 'ajax';
+		$type = $this->params['pass'][0];
+	}
+	
 	public function groupsAdd() {
 		$this->Navigation->addCrumb('Add Group');
+		
+		if($this->request->is('post')) {
+			pr($this->data);
+			$groupObj = $this->data['SecurityGroup'];
+			if(isset($this->data['SecurityGroupArea'])) {
+				$areaObj = $this->data['SecurityGroupArea'];
+			}
+			if(isset($this->data['SecurityGroupInstitutionSite'])) {
+				$siteObj = $this->data['SecurityGroupInstitutionSite'];
+			}
+			
+		} else {
+			//pr($this->Area->getGroupAccessList(array()));
+		}
 	}
 	
 	public function groupsView() {
@@ -545,6 +593,8 @@ class SecurityController extends AppController {
 			$this->redirect(array('action' => 'roles'));
 		}
 	}
+	
+	
 	
 	/*
 	public function roleAreas() {

@@ -70,7 +70,7 @@ class AccessControlComponent extends Component {
 	public function init($userId) {
 		$this->setUserPermissions($userId);
 		$this->loadAreas();
-		$this->loadInstitutions($this->Session->read('AccessControl.areas'));
+		//$this->loadInstitutions($this->Session->read('AccessControl.areas'));
 	}
 	
 	public function setUserPermissions($userId) {

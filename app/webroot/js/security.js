@@ -120,39 +120,35 @@ var Security = {
 		});
 	},
 	
-	addRoleArea: function(obj) {
-		var parent = $(obj).closest('fieldset');
-		var type = parent.attr('type');
-		var orderObj = $('fieldset[type="' + type + '"] .table_row:last #order');
-		var order = orderObj.length>0 ? orderObj.val() : 0;
-		var roleId = $('#roleId').text();
-		var url = getRootURL() + 'Security/' + $('#url').text();
+	addGroupAccessOptions: function(obj) {
+		var parent = $(obj).closest('.section_break');
+		var index = parent.find('.table_row').length;
 		var exclude = [];
-		$(type==='areas' ? '.area_id' : '.institution_site_id').each(function() {
+		parent.find('.value_id').each(function() {
 			exclude.push($(this).val());
 		});
 		
 		$.ajax({
 			type: 'GET',
 			dataType: 'text',
-			url: url,
-			data: {type: type, order: order, roleId: roleId, exclude: exclude},
+			url: getRootURL() + $(obj).attr('url'),
+			data: {index: index, exclude: exclude},
 			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: 'fieldset[type="' + type + '"]', text: i18n.General.textAddingRow});
+				maskId = $.mask({parent: parent, text: i18n.General.textAddingRow});
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
 					parent.find('.table_body').append(data);
-					jsTable.init();
+					jsTable.init(parent);
 				};
 				$.unmask({id: maskId, callback: callback});
 			}
 		});
 	},
 	
-	loadOptionList: function(obj, type) {
+	loadOptionList: function(obj) {
 		var parentId = $(obj).val();
-		var url = getRootURL() + 'Security/loadOptionList';
+		var url = getRootURL()
 		var id = type==='areas' ? 'area_id' : 'institution_site_id';
 		var exclude = [];
 		$('.' + id).each(function() {
@@ -162,7 +158,7 @@ var Security = {
 		$.ajax({
 			type: 'GET',
 			dataType: 'json',
-			url: url,
+			url: getRootURL() + $(obj).attr('url'),
 			data: {type: type, parentId: parentId, exclude: exclude},
 			beforeSend: function (jqXHR) {
 				maskId = $.mask({parent: 'fieldset[type="' + type + '"]', text: i18n.General.textLoadingList});

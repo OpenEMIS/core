@@ -17,6 +17,19 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityGroup extends AppModel {
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'message' => 'Please enter a valid name.'
+			),
+			'ruleUnique' => array(
+				'rule' => 'isUnique',
+				'message' => 'This name is already in use.'
+			)
+		)
+	);
+	
 	public function getGroupOptions($userId=false) {
 		$options = array(
 			'recursive' => -1,
