@@ -128,6 +128,60 @@ class ReportsController extends ReportsAppController {
         $this->set('msg',$msg);
 		$this->set('data',$tmp);
 	}
+
+    public function Sdmx($indicatorId = ''){
+//            $this->autoRender = false;
+        App::uses('Sdmx', 'Lib/Sdmx');
+        $sdmxObj = new Sdmx($this->BatchProcess);
+        if($this->request->is('post')){
+//            $this->autoRender = false;
+            echo $sdmxObj->create($this->data['Sdmx']['indicator'], implode(',', $this->data['Sdmx']['areas']), implode(',',$this->data['Sdmx']['timeperiods']));
+        }else{
+            $data['indicators'] = $sdmxObj->getIndicatorList();
+            if(empty($indicatorId)){
+                reset($data['indicators']);
+                $tmpIndicator = current($data['indicators']);
+                $indicatorId = $tmpIndicator['Indicator_Nid'];
+            }
+            $data['areas'] = $sdmxObj->getAreaList($indicatorId);
+            $data['timeperiods'] = $sdmxObj->getTimePeriod($indicatorId);
+//        echo '<pre>';
+//        echo $sdmxObj->create(1, 1, '23,24,25', '1,2,3');
+//        echo $sdmxObj->output();
+//        echo '</pre>';
+//        pr($sdmxObj);
+//        pr($data['areas']);
+//        foreach(array_pop($data['areas']) as $element){
+//            print "{$element['Area_NId']}-{$element['Area_Name']}<br/>";
+//        }
+//        pr($tmpIndicator);
+//        pr($sdmxObj->getTimePeriod($tmpIndicator['Indicator_Nid']));
+//        die();
+
+//        $this->set('data', $data);
+            $this->set('indicators', $data['indicators']);
+            $this->set('selectedIndicator', $indicatorId);
+            $this->set('areas', $data['areas']);
+            $this->set('timeperiods', $data['timeperiods']);
+
+        }
+    }
+
+    public function downloadSDMX(){
+        $this->autoRender = false;
+        App::uses('Sdmx', 'Lib/Sdmx');
+        $sdmxObj = new Sdmx($this->BatchProcess);
+//        var_dump($this->data['Sdmx']['indicator']);
+//        var_dump(implode(',', $this->data['Sdmx']['areas']));
+//        var_dump(implode(',',$this->data['Sdmx']['timeperiods']));
+        try{
+            echo $sdmxObj->create( $this->data['Sdmx']['indicator'], implode(',', $this->data['Sdmx']['areas']), implode(',',$this->data['Sdmx']['timeperiods']));
+        }catch(Exception $e){
+            $this->redirect('sdmx');
+        }
+
+    }
+
 	
     public function olap(){
 //        $this->autoRender = false;
