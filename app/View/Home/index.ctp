@@ -66,7 +66,7 @@
     $(document).ready(function(){
         var Stats = ['Statistics','Activities'];
         $.each(Stats,function(i,v){
-             $.get('Home/getLatest'+v, function(data) {
+            $.get(getRootURL()+'Home/getLatest'+v, function(data) {
                 $('#'+v+'Content').fadeOut(500,function(){
                     $('#'+v+'Content').html(data).promise().done(function(){
                         $('#'+v+'Content').fadeIn(500);    
