@@ -17,7 +17,45 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityGroupArea extends AppModel {
-	public $belongsTo = array('SecurityRole', 'Area');
+	public function saveGroupAccess($groupId, $data) {
+		$id = array();
+		$this->deleteAll(array('SecurityGroupArea.security_group_id' => $groupId), false);
+		
+		foreach($data as $obj) {
+			$areaId = $obj['area_id'];
+			if(!in_array($areaId, $id)) {
+				$dataObj = array('SecurityGroupArea' => array(
+					'security_group_id' => $groupId,
+					'area_id' => $areaId
+				));
+				$this->create();
+				$this->save($dataObj);
+				$id[] = $areaId;
+			}
+		}
+	}
+	
+	public function getAreas($groupId) {
+		$this->formatResult = true;
+		$data = $this->find('all', array(
+			'fields' => array('AreaLevel.name AS area_level_name', 'Area.id AS area_id', 'Area.name AS area_name'),
+			'joins' => array(
+				array(
+					'table' => 'areas',
+					'alias' => 'Area',
+					'conditions' => array('Area.id = SecurityGroupArea.area_id')
+				),
+				array(
+					'table' => 'area_levels',
+					'alias' => 'AreaLevel',
+					'conditions' => array('AreaLevel.id = Area.area_level_id')
+				)
+			),
+			'conditions' => array('SecurityGroupArea.security_group_id' => $groupId),
+			'order' => array('AreaLevel.level', 'Area.order')
+		));
+		return $data;
+	}
 	
 	public function filterData(&$data) {
 		$tmpData = $data;

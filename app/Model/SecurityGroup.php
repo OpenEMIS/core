@@ -17,22 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityGroup extends AppModel {
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'message' => 'Please enter a valid name.'
-			),
-			'ruleUnique' => array(
-				'rule' => 'isUnique',
-				'message' => 'This name is already in use.'
-			)
-		)
-	);
-	
 	public function getGroupOptions($userId=false) {
 		$options = array(
 			'recursive' => -1,
+			'fields' => array('SecurityGroup.id', 'SecurityGroup.name'),
 			'order' => array('SecurityGroup.name')
 		);
 		
@@ -48,7 +36,7 @@ class SecurityGroup extends AppModel {
 				)
 			);
 		}
-		$data = $this->find('all', $options);
+		$data = $this->find('list', $options);
 		return $data;
 	}
 	
@@ -71,30 +59,38 @@ class SecurityGroup extends AppModel {
 	}
 	
 	public function paginateJoins(&$conditions) {
-		$joins = array(
-			array(
+		$joins = array();
+		
+		if($conditions['super_admin'] == false) {
+			$joins[] = array(
 				'table' => 'security_group_users',
 				'alias' => 'SecurityGroupUser',
-				'conditions' => array('SecurityGroupUser.security_group_id = SecurityGroup.id')
-			)
-		);
+				'conditions' => array(
+					'SecurityGroupUser.security_group_id = SecurityGroup.id',
+					'SecurityGroupUser.security_user_id = ' . $conditions['user_id']
+				)
+			);
+		}
+		unset($conditions['super_admin']);
+		unset($conditions['user_id']);
 		return $joins;
 	}
 	
 	public function paginateConditions(&$conditions) {
-		if(isset($conditions['search']) && !empty($conditions['search'])) {
-			$search = $conditions['search'];
-			$search = '%' . $search . '%';
-			$conditions['OR'] = array('SecurityGroup.name LIKE' => $search);
+		if(isset($conditions['search'])) {
+			if(!empty($conditions['search'])) {
+				$search = '%' . $conditions['search'] . '%';
+				$conditions['OR'] = array('SecurityGroup.name LIKE' => $search);
+			}
+			unset($conditions['search']);
 		}
-		unset($conditions['search']);
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$this->paginateConditions($conditions);
 		$data = $this->find('all', array(
 			'fields' => array('SecurityGroup.id', 'SecurityGroup.name'),
-			//'joins' => $this->paginateJoins($conditions),
+			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $conditions,
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
@@ -102,11 +98,11 @@ class SecurityGroup extends AppModel {
 		));
 		return $data;
 	}
-	 
+	
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
 		$this->paginateConditions($conditions);
 		$count = $this->find('count', array(
-			//'joins' => $this->paginateJoins($conditions), 
+			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $conditions
 		));
 		return $count;

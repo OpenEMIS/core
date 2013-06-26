@@ -1,21 +1,20 @@
 <?php
-$model = sprintf('SecurityGroupUser.%s.id', $index);
+$model = sprintf('SecurityGroupUser.%s.security_user_id', $index);
 ?>
 
 <div class="table_row">
+	<?php echo $this->Form->hidden($model, array('id' => 'UserId', 'value' => 0)) ; ?>
 	<div class="table_cell">
-		<?php echo $this->Form->hidden($model, array('value' => 0)) ; ?>
-		<div class="search_wrapper">
+		<div class="input_wrapper">
 			<?php 
-				echo $this->Form->input('SearchField', array(
+				echo $this->Form->input('search', array(
 					'label' => false,
 					'div' => false,
-					'class' => 'search_field',
-					'style' => 'width: 220px'
+					'onblur' => 'Security.usersSearch(this)',
+					'url' => 'Security/usersSearch'
 				));
 			?>
 		</div>
-		<span class="left icon_search" url="Security/usersSearch/" onclick="Security.usersSearch(this)"></span>
 	</div>
 	<div class="table_cell name"></div>
 	<div class="table_cell"><span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="jsTable.doRemove(this)"></span></div>

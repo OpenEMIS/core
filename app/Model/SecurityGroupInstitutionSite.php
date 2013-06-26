@@ -17,7 +17,45 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityGroupInstitutionSite extends AppModel {
-	public $belongsTo = array('SecurityRole', 'InstitutionSite');
+	public function saveGroupAccess($groupId, $data) {
+		$id = array();
+		$this->deleteAll(array('SecurityGroupInstitutionSite.security_group_id' => $groupId), false);
+		
+		foreach($data as $obj) {
+			$siteId = $obj['institution_site_id'];
+			if(!in_array($siteId, $id)) {
+				$dataObj = array('SecurityGroupInstitutionSite' => array(
+					'security_group_id' => $groupId,
+					'institution_site_id' => $siteId
+				));
+				$this->create();
+				$this->save($dataObj);
+				$id[] = $siteId;
+			}
+		}
+	}
+	
+	public function getSites($groupId) {
+		$this->formatResult = true;
+		$data = $this->find('all', array(
+			'fields' => array('Institution.name AS institution_name', 'InstitutionSite.id AS institution_site_id', 'InstitutionSite.name AS institution_site_name'),
+			'joins' => array(
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array('InstitutionSite.id = SecurityGroupInstitutionSite.institution_site_id')
+				),
+				array(
+					'table' => 'institutions',
+					'alias' => 'Institution',
+					'conditions' => array('Institution.id = InstitutionSite.institution_id')
+				)
+			),
+			'conditions' => array('SecurityGroupInstitutionSite.security_group_id' => $groupId),
+			'order' => array('Institution.name', 'InstitutionSite.name')
+		));
+		return $data;
+	}
 	
 	public function filterData(&$data) {
 		$tmpData = $data;

@@ -17,12 +17,13 @@ echo $this->Html->script('Security', false);
 	<?php
 	echo $this->Form->create('SecurityGroup', array(
 		'url' => array('controller' => 'Security', 'action' => 'groupsAdd'),
-		'inputDefaults' => array('label' => false, 'div' => false)
+		'inputDefaults' => array('label' => false, 'div' => false),
+		'onsubmit' => 'return Security.validateGroupName(this);'
 	));
 	?>
 	
-	<fieldset class="section_group" style="padding-bottom: 10px;">
-		<legend><?php echo __('Group Information'); ?></legend>
+	<fieldset class="section_group" style="padding-bottom: 10px; position: relative;" id="group_info">
+		<legend><?php echo __('Information'); ?></legend>
 		<div class="row">
 			<div class="label"><?php echo __('Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('name', array('class' => 'default')); ?></div>
@@ -30,7 +31,7 @@ echo $this->Html->script('Security', false);
 	</fieldset>
 	
 	<fieldset class="section_group" style="padding-bottom: 10px;" id="group_admin">
-		<legend><?php echo __('Group Administrator'); ?></legend>
+		<legend><?php echo __('Administrator'); ?></legend>
 		
 		<div class="table">
 			<div class="table_head">
@@ -47,7 +48,7 @@ echo $this->Html->script('Security', false);
 	</fieldset>
 	
 	<fieldset class="section_group">
-		<legend><?php echo __('Group Access'); ?></legend>
+		<legend><?php echo __('Access Control'); ?></legend>
 		<fieldset class="section_break">
 			<legend><?php echo __('Areas'); ?></legend>
 			<div class="table">
@@ -60,7 +61,7 @@ echo $this->Html->script('Security', false);
 				<div class="table_body"></div>
 			</div>
 			
-			<div class="row" style="margin-left: 0;">
+			<div class="row icon_add_row">
 				<a class="void icon_plus" url="Security/groupsAddAccessOptions/areas" onclick="Security.addGroupAccessOptions(this)"><?php echo __('Add').' '.__('Area'); ?></a>
 			</div>
 		</fieldset>
@@ -87,4 +88,6 @@ echo $this->Html->script('Security', false);
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'groups'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
+	
+	<?php echo $this->Form->end(); ?>
 </div>

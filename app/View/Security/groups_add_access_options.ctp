@@ -11,8 +11,8 @@ $fieldName = sprintf('%s.%s.', $model, $index);
 			'label' => false,
 			'class' => 'full_width',
 			'options' => $levelOptions,
-			'onchange' => 'Security.groupsLoadValueOptions(this)',
-			'url' => 'Security/groupsAddAccessOptions/' . $type
+			'onchange' => 'Security.addGroupValueOptions(this)',
+			'url' => 'Security/groupsLoadValueOptions/' . $type
 		));
 		?>
 	</div>

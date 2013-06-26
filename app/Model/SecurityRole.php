@@ -17,6 +17,63 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityRole extends AppModel {
-	public $hasMany = array('SecurityUserRole', 'SecurityRoleFunction');
+	public $hasMany = array('SecurityRoleFunction');
 	public $actsAs = array('Named');
+	
+	public function getGroupAdministratorRole() {
+		$roleId = 1; // Role Id for Group Administrator is always 1
+		$data = $this->find('first', array('SecurityRole.id' => $roleId));
+		return $data;
+	}
+	
+	public function getGroupName($roleId, $userId=false) {
+		$this->formatResult = true;
+		$joins = array(
+			array(
+				'table' => 'security_groups',
+				'alias' => 'SecurityGroup',
+				'conditions' => array('SecurityGroup.id = SecurityRole.security_group_id')
+			)
+		);
+		
+		if($userId != false) {
+			$joins[] = array(
+				'table' => 'security_group_users',
+				'alias' => 'SecurityGroupUser',
+				'conditions' => array(
+					'SecurityGroupUser.security_group_id = SecurityGroup.id',
+					'SecurityGroupUser.security_user_id = ' . $userId
+				)
+			);
+		}
+		
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array('SecurityGroup.id', 'SecurityGroup.name'),
+			'joins' => $joins,
+			'conditions' => array('SecurityRole.id' => $roleId)
+		));
+		return $data;
+	}
+	
+	public function getRoles($groupId) {
+		$this->formatResult = true;
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'conditions' => array('SecurityRole.security_group_id' => $groupId),
+			'order' => array('SecurityRole.order')
+		));
+		return $data;
+	}
+	
+	public function getRoleOptions($groupId) {
+		$this->formatResult = true;
+		$data = $this->find('list', array(
+			'fields' => array('SecurityRole.id', 'SecurityRole.name'),
+			'recursive' => -1,
+			'conditions' => array('SecurityRole.security_group_id' => $groupId),
+			'order' => array('SecurityRole.order')
+		));
+		return $data;
+	}
 }
