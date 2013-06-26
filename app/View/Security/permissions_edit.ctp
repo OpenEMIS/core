@@ -29,10 +29,10 @@ echo $this->Html->script('security', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('security_role_id', array(
-				'href' => $this->params['controller'] . '/' . $this->params['action'],
 				'options' => $roles,
 				'default' => $selectedRole,
-				'onchange' => 'security.switchRole(this)'
+				'url' => $this->params['controller'] . '/' . $this->params['action'],
+				'onchange' => 'jsForm.change(this)'
 			));
 			?>
 		</div>

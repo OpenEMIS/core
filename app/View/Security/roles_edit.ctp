@@ -11,58 +11,97 @@ echo $this->Html->script('security', false);
 
 <div id="roles" class="content_wrapper edit">
 	<?php
-	echo $this->Form->create('Security', array(
+	echo $this->Form->create('SecurityGroup', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Security', 'action' => 'rolesEdit')
 	));
 	?>
 	<h1>
 		<span><?php echo __('Roles'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'roles'), array('class' => 'divider')); ?>
+		<?php echo $this->Html->link(__('View'), array('action' => 'roles', $selectedGroup), array('class' => 'divider')); ?>
 	</h1>
 	
-	<div class="row edit">
-		<div class="label" style="width: 80px;"><?php echo __('Group'); ?></div>
-		<div class="value">
-			<select>
-				<option>Ministry</option>
-			</select>
-		</div>
-	</div>
-	
-	<div class="table full_width" style="margin-bottom: 0; margin-top: 10px;">
-		<div class="table_head">
-			<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-			<div class="table_cell"><?php echo __('Role'); ?></div>
-			<div class="table_cell cell_order"><?php echo __('Privilege'); ?></div>
-		</div>
-	</div>
+	<?php if(AuthComponent::user('super_admin')==1) { ?>
+	<fieldset class="section_group">
+		<legend><?php echo __('System Defined Roles'); ?></legend>
 		
-	<ul class="quicksand table_view">
-		<?php
-		foreach($list as $i => $obj) {
-			$isVisible = $obj['visible']==1;
-			$fieldName = sprintf('data[SecurityRole][%s][%%s]', $i);
-		
-			echo $this->Utility->getListRowStart($i, $isVisible);
-			echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
-			echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
-			echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
-			echo $this->Utility->getNameInput($this->Form, $fieldName, $obj['name']);
-			echo $this->Utility->getOrderControls();
-			echo $this->Utility->getListRowEnd();
-		} ?>
-	</ul>
+		<div class="table full_width">
+			<div class="table_head">
+				<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
+				<div class="table_cell"><?php echo __('Role'); ?></div>
+				<div class="table_cell cell_permissions"><?php echo __('Permissions'); ?></div>
+			</div>
+			
+			<div class="table_body">
+				<?php foreach($systemRoles as $obj) { ?>
+				<div class="table_row">
+					<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></div>
+					<div class="table_cell"><?php echo $obj['name']; ?></div>
+					<div class="table_cell cell_permissions">
+						<?php echo $this->Html->link(__('Permissions'), array('action' => 'permissions', $obj['id'])); ?>
+					</div>
+				</div>
+				<?php }?>
+			</div>
+		</div>
+	</fieldset>
+	<?php } ?>
 	
-	<?php 
-	if($_add) {
-		echo $this->Utility->getAddRow('Role');
-	} 
-	?>
+	<?php if(!empty($groupOptions)) { ?>
+	<fieldset class="section_group">
+		<legend><?php echo __('User Defined Roles'); ?></legend>
+		
+		<div class="row" style="margin: 0 0 10px 10px; line-height: 25px;">
+			<div class="label" style="width: 60px;"><?php echo __('Group'); ?></div>
+			<div class="value">
+				<?php
+				echo $this->Form->input('security_group_id', array(
+					'label' => false,
+					'div' => false,
+					'options' => $groupOptions,
+					'default' => $selectedGroup,
+					'url' => $this->params['controller'] . '/' . $this->params['action'],
+					'onchange' => 'jsForm.change(this)'
+				));
+				?>
+			</div>
+		</div>
+		
+		<div class="table full_width" style="margin-bottom: 0; margin-top: 10px;">
+			<div class="table_head">
+				<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
+				<div class="table_cell"><?php echo __('Role'); ?></div>
+				<div class="table_cell cell_order"><?php echo __('Privilege'); ?></div>
+			</div>
+		</div>
+		
+		<ul class="quicksand table_view">
+			<?php
+			foreach($userRoles as $i => $obj) {
+				$isVisible = $obj['visible']==1;
+				$fieldName = sprintf('data[SecurityRole][%s][%%s]', $i);
+			
+				echo $this->Utility->getListRowStart($i, $isVisible);
+				echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
+				echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
+				echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
+				echo $this->Utility->getNameInput($this->Form, $fieldName, $obj['name']);
+				echo $this->Utility->getOrderControls();
+				echo $this->Utility->getListRowEnd();
+			} ?>
+		</ul>
+		
+		<?php 
+		if($_add) {
+			echo $this->Utility->getAddRow('Role');
+		} 
+		?>
+	</fieldset>
+	<?php } // end if ?>
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'roles'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'roles', $selectedGroup), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

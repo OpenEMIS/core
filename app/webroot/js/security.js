@@ -22,9 +22,6 @@ var Security = {
 	init: function() {
 		$('#permissions.edit input[type="hidden"]:disabled').removeAttr('disabled');
 		$('#permissions.edit .module_checkbox').change(Security.toggleModule);
-		$('#SecurityView, #SecurityEdit, #SecurityAdd, #SecurityDelete').each(function() {
-			
-		});
 		
 		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled)').change(Security.toggleOperation);
 		$('#roles .icon_plus').click(Security.addRole);
@@ -41,8 +38,7 @@ var Security = {
 	},
 	
 	usersSearch: function(obj) {
-		var url = getRootURL() + $(obj).attr('url');
-		var searchString = $(obj).siblings('.search_wrapper').find('input').val();
+		var searchString = $(obj).val();
 		
 		var alertOpt = {
 			id: 'search_alert',
@@ -52,29 +48,28 @@ var Security = {
 		}
 		
 		if(!searchString.isEmpty()) {
+			$(obj).closest('.table_row').find('#UserId').val(0);
 			$.ajax({
 				type: 'GET',
-				dataType: 'text',
-				url: url,
+				dataType: 'json',
+				url: getRootURL() + $(obj).attr('url'),
 				data: {searchString: searchString},
 				beforeSend: function (jqXHR) {
 					maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching});
 				},
 				success: function (data, textStatus) {
 					var callback = function() {
-						if(data.isEmpty()) {
+						if(data.type==='error') {
 							alertOpt['text'] = i18n.Search.textNoResult;
 							$.alert(alertOpt);
 						} else {
-							$(obj).closest('.table_cell').siblings('.name').html(data);
+							$(obj).closest('.table_cell').siblings('.name').html(data.name);
+							$(obj).closest('.table_row').find('#UserId').val(data.id);
 						}
 					};
 					$.unmask({id: maskId, callback: callback});
 				}
 			});
-		} else {
-			alertOpt['text'] = i18n.Search.textNoCriteria;
-			$.alert(alertOpt);
 		}
 	},
 	
@@ -92,28 +87,6 @@ var Security = {
 			success: function (data, textStatus) {
 				var callback = function() {
 					$('#group_admin .table_body').append(data);
-				};
-				$.unmask({id: maskId, callback: callback});
-			}
-		});
-	},
-	
-	addRole: function() {
-		var size = $('.table_view li').length;
-		var maskId;
-		var url = getRootURL() + 'Security/rolesAdd';
-		
-		$.ajax({
-			type: 'GET',
-			dataType: 'text',
-			url: url,
-			data: {order: size},
-			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
-			},
-			success: function (data, textStatus) {
-				var callback = function() {
-					$('.table_view').append(data);
 				};
 				$.unmask({id: maskId, callback: callback});
 			}
@@ -146,39 +119,83 @@ var Security = {
 		});
 	},
 	
-	loadOptionList: function(obj) {
+	addGroupValueOptions: function(obj) {
+		var parent = $(obj).closest('.section_break');
 		var parentId = $(obj).val();
-		var url = getRootURL()
-		var id = type==='areas' ? 'area_id' : 'institution_site_id';
 		var exclude = [];
-		$('.' + id).each(function() {
+		parent.find('.value_id').each(function() {
 			exclude.push($(this).val());
 		});
 		
 		$.ajax({
 			type: 'GET',
-			dataType: 'json',
+			dataType: 'text',
 			url: getRootURL() + $(obj).attr('url'),
-			data: {type: type, parentId: parentId, exclude: exclude},
+			data: {parentId: parentId, exclude: exclude},
 			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: 'fieldset[type="' + type + '"]', text: i18n.General.textLoadingList});
+				maskId = $.mask({parent: parent, text: i18n.General.textLoadingList});
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
-					var list = Security.buildOptionList(data);
-					$(obj).parent().parent().find('#' + id).html(list);
+					$(obj).closest('.table_row').find('.value_id').html(data);
 				};
 				$.unmask({id: maskId, callback: callback});
 			}
 		});
 	},
 	
-	buildOptionList: function(data) {
-		var html = '';
-		for(var i in data) {
-			html += '<option value="' + i + '">' + data[i] + '</option>';
-		}
-		return html;
+	validateGroupAdd: function(obj) {
+		var name = $('#SecurityGroupName').val();
+		var alertOpt = {
+			id: 'add_alert',
+			parent: '#group_info',
+			type: alertType.error,
+			css: {left: '410px', top: '17px'}
+		};
+		
+		$.ajax({
+			type: 'GET',
+			dataType: 'json',
+			url: getRootURL() + 'Security/groupsAddValidate',
+			data: {name: name},
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textValidating});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					if(data.type=='error') {
+						alertOpt['text'] = data.msg;
+						$.alert(alertOpt);
+					} else {
+						obj.submit();
+					}
+				};
+				$.unmask({id: maskId, callback: callback});
+			}
+		});
+		return false;
+	},
+	
+	addRole: function() {
+		var size = $('.table_view li').length;
+		var maskId;
+		var url = getRootURL() + 'Security/rolesAdd';
+		
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: url,
+			data: {order: size},
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					$('.table_view').append(data);
+				};
+				$.unmask({id: maskId, callback: callback});
+			}
+		});
 	},
 	
 	toggleModule: function() {

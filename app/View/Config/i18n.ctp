@@ -90,6 +90,7 @@ var i18n = {
 		textAddingOption : '<?php echo T("Adding option...", true); ?>',
 		textLoading : '<?php echo T("Loading...", true); ?>',
 		textLoadingList : '<?php echo T("Loading list...", true); ?>',
+		textValidating: '<?php echo T("Validating...", true); ?>',
 		textDelete : '<?php echo T("Delete", true); ?>',
 		textAdding: '<?php echo T("Adding...", true); ?>',
 		textRemoving: '<?php echo T("Removing...", true); ?>',

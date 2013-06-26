@@ -170,6 +170,10 @@ var jsForm = {
         //this.datepickerUpdateSelector();
 	},
 	
+	change: function(obj) {
+		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
+	},
+	
 	initDatepicker: function(p) {
 		$(p).find('.datepicker select').change(jsForm.datepickerUpdate);
 	},

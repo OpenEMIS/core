@@ -37,15 +37,9 @@ class SecurityFunction extends AppModel {
 	}
 	
 	public function getPermissions($roleId, $operations) {
-		$this->unbindModel(array('hasMany' => array('SecurityRoleFunction')));
 		$list = $this->find('all', array(
-			'fields' => array(
-				'SecurityFunction.id', 'SecurityFunction.module', 'SecurityFunction.name', 'SecurityFunction._view', 
-				'SecurityFunction._edit', 'SecurityFunction._add', 'SecurityFunction._delete', 'SecurityFunction._execute', 'SecurityFunction.visible',
-				'SecurityFunction.parent_id',
-				'SecurityRoleFunction.id', 'SecurityRoleFunction._view', 'SecurityRoleFunction._edit', 
-				'SecurityRoleFunction._add', 'SecurityRoleFunction._delete', 'SecurityRoleFunction._execute'
-			),
+			'recursive' => -1,
+			'fields' => array('SecurityFunction.*', 'SecurityRoleFunction.*'),
 			'joins' => array(
 				array(
 					'table' => 'security_role_functions',
@@ -58,7 +52,6 @@ class SecurityFunction extends AppModel {
 				)
 			)
 		));
-		$this->bindModel(array('hasMany' => array('SecurityRoleFunction')));
 		
 		$permissions = array();
 		foreach($list as $obj) {
