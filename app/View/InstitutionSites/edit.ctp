@@ -77,7 +77,7 @@ echo $this->Html->script('institution_site', false);
 		
 		foreach($levels as $levelid => $levelName){
 			echo '<div class="row">
-					<div class="label">'. __("$levelName") .'</div>
+					<div class="label">'."$levelName".'</div>
 					<div class="value">'. $this->Form->input('area_level_'.$ctr,array('style'=>'float:left','default'=>@$arealevel[$ctr]['id'],'options'=>$areadropdowns['area_level_'.$ctr]['options'])).
 							($ctr == 0 ? $this->Form->input('area_id',array('type'=>'text','style'=>'display:none','value' => $obj['area_id'])):''). 
 					'</div>
