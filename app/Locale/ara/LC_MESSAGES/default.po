@@ -191,14 +191,32 @@ msgstr "إضافة طالب جديد"
 msgid "Details"
 msgstr "التفاصيل"
 
+msgid "DETAILS"
+msgstr "التفاصيل"
+
 msgid "Attachments"
 msgstr "المرفقات"
+
+msgid "Overview"
+msgstr ""
+
+msgid "More"
+msgstr ""
 
 msgid "Additional Info"
 msgstr "معلومات إضافية"
 
 msgid "STUDENT INFORMATION"
 msgstr "معلومات عن الطالب"
+
+msgid "Static Fields"
+msgstr ""
+
+msgid "Field Options"
+msgstr ""
+
+msgid "National Assessments"
+msgstr ""
 
 msgid "ASSESSMENT"
 msgstr "التقييم"
@@ -220,6 +238,15 @@ msgstr "المرفق"
 
 msgid "Student Identification No, First Name or Last Name"
 msgstr "رقم الطالب التعريفي أو الاسم الأول أو اسم العائلة "
+
+msgid "Student Identification"
+msgstr "Student Identification"
+
+msgid "Teacher Identification"
+msgstr "Teacher Identification"
+
+msgid "Staff Identification"
+msgstr "Staff Identification"
 
 msgid "Identification No."
 msgstr "رقم التعريف"
@@ -266,6 +293,12 @@ msgstr " تاريخ الانتهاء"
 msgid "Address"
 msgstr "العنوان"
 
+msgid "Address Area"
+msgstr "منطقة العنوان"
+
+msgid "Birth Place Area"
+msgstr "Birth Place Area"
+
 msgid "Postal Code"
 msgstr " الرمز البريدي"
 
@@ -275,7 +308,13 @@ msgstr "الهاتف"
 msgid "Email"
 msgstr "البريد الإلكتروني"
 
+msgid "E-mail"
+msgstr "البريد الإلكتروني"
+
 msgid "General"
+msgstr "عام"
+
+msgid "GENERAL"
 msgstr "عام"
 
 msgid "Contact"
@@ -491,6 +530,18 @@ msgstr "LLG"
 msgid "Ward"
 msgstr "وارد"
 
+msgid "Street"
+msgstr "Street"
+
+msgid "Block"
+msgstr "Block"
+
+msgid "Axis"
+msgstr "Axis"
+
+msgid "State"
+msgstr "State"
+
 msgid "Locality"
 msgstr " الموقع المحلي"
 
@@ -505,6 +556,9 @@ msgstr "لا يوجد مواقع للمؤسسات."
 
 msgid "Institution Site Details"
 msgstr " تفاصيل مواقع المؤسسات"
+
+msgid "Institution Site Code"
+msgstr " تفاصيل مواقع"
 
 msgid "Please enter a valid Name"
 msgstr "الرجاء إدخال اسم صالح"
@@ -589,6 +643,18 @@ msgstr " المقاعد"
 
 msgid "Age"
 msgstr " العُمْر"
+
+msgid "Attendance"
+msgstr "Attendance"
+
+msgid "Behaviour"
+msgstr "Behaviour"
+
+msgid "Results"
+msgstr "Results"
+
+msgid "TOTALS"
+msgstr " الإجمالي"
 
 msgid "Total"
 msgstr " الإجمالي"
@@ -1242,6 +1308,9 @@ msgid "Function"
 msgstr " الوظيف"
 
 msgid "Institution Site"
+msgstr " موقع المؤسسة"
+
+msgid "INSTITUTION SITE"
 msgstr " موقع المؤسسة"
 
 msgid "Census"
@@ -1960,6 +2029,9 @@ msgstr " إلغاء اختيار الجميع "
 
 msgid "Generate"
 msgstr "إنشاء"
+
+msgid "Generated Files"
+msgstr "الملفات إنشاء"
 
 msgid ""
 "The system will %s the current data and restore to your previous data based "
