@@ -114,7 +114,7 @@ class BatchShell extends AppShell {
 			} else {
 				$this->dispatchShell('yearbook');
 			}
-		}
+		
         }elseif($file_type == 'est'){
 			
 			 $this->Est->genEST($settings);
