@@ -51,7 +51,7 @@ msgid "Demo"
 msgstr "Демо"
 
 msgid "--Select--"
-msgstr "- Select -"
+msgstr "--Выбрать--"
 
 msgid "Day"
 msgstr "День"
@@ -99,7 +99,7 @@ msgid "Previous"
 msgstr "Назад"
 
 msgid "Next"
-msgstr "Next"
+msgstr "Следующий"
 
 msgid "Statistics"
 msgstr "Статистика"
@@ -129,10 +129,10 @@ msgid "Notice"
 msgstr "Уведомление"
 
 msgid "Note: Max upload file size is 2MB."
-msgstr "Примечание: Максимальная загрузка файла размером 2 Мб."
+msgstr "Примечание: Максимальная загрузка <br/>файла размером 2 Мб."
 
 msgid "Image"
-msgstr "Image"
+msgstr "Картинка"
 
 msgid "Document"
 msgstr "Документ"
@@ -177,7 +177,7 @@ msgid "%s have been deleted successfully."
 msgstr "%s была успешно удалена"
 
 msgid "Please enter a unique Identification No"
-msgstr "Пожалуйста, введите уникальный Идентификационный номер"
+msgstr "Пожалуйста, введите уникальный <br/>Идентификационный номер"
 
 msgid "Please enter a unique Code"
 msgstr "Пожалуйста, введите уникальный код"
@@ -191,14 +191,32 @@ msgstr "Добавить новый студент"
 msgid "Details"
 msgstr "Подробности"
 
+msgid "DETAILS"
+msgstr "Подробности"
+
 msgid "Attachments"
 msgstr "Вложения"
+
+msgid "Overview"
+msgstr "обзор"
+
+msgid "More"
+msgstr "больше"
 
 msgid "Additional Info"
 msgstr "Дополнительная информация"
 
 msgid "STUDENT INFORMATION"
 msgstr "СВЕДЕНИЯ ОБ УЧАЩИХСЯ"
+
+msgid "Static Fields"
+msgstr "Статические поля"
+
+msgid "Field Options"
+msgstr "Параметры поля"
+
+msgid "National Assessments"
+msgstr "национальных оценок"
 
 msgid "ASSESSMENT"
 msgstr "ОЦЕНКА"
@@ -221,6 +239,15 @@ msgstr "Вложение"
 msgid "Student Identification No, First Name or Last Name"
 msgstr "Студенческая Идентификационный номер, Имя или Фамилия"
 
+msgid "Student Identification"
+msgstr "студенческий билет"
+
+msgid "Teacher Identification"
+msgstr "Учитель Идентификация"
+
+msgid "Staff Identification"
+msgstr "идентификации работников"
+
 msgid "Identification No."
 msgstr "Идентификационный номер"
 
@@ -228,10 +255,10 @@ msgid "Identification No"
 msgstr "Идентификационный номер"
 
 msgid "First Name"
-msgstr "First Name"
+msgstr "Имя"
 
 msgid "Last Name"
-msgstr "Last Name"
+msgstr "Фамилия"
 
 msgid "Gender"
 msgstr "Пол"
@@ -266,6 +293,12 @@ msgstr "Дата окончания"
 msgid "Address"
 msgstr "Адрес"
 
+msgid "Address Area"
+msgstr "поле адреса"
+
+msgid "Birth Place Area"
+msgstr "Площадь Место рождения"
+
 msgid "Postal Code"
 msgstr "почтовый код"
 
@@ -273,9 +306,15 @@ msgid "Telephone"
 msgstr "Телефон"
 
 msgid "Email"
-msgstr "E-mail"
+msgstr "Эл. Почта"
+
+msgid "E-mail"
+msgstr "Эл. Почта"
 
 msgid "General"
+msgstr "Общие"
+
+msgid "GENERAL"
 msgstr "Общие"
 
 msgid "Contact"
@@ -294,10 +333,10 @@ msgid "Add new Staff"
 msgstr "Добавить новый персонал"
 
 msgid "STAFF INFORMATION"
-msgstr "STAFF ИНФОРМАЦИИ"
+msgstr "ИНФОРМАЦИЯ О СОТРУДНИКАХ"
 
 msgid "Staff Details"
-msgstr "Подробности Staff"
+msgstr "Подробности о сотрудниках"
 
 msgid "No Staff found."
 msgstr "Нет Персонал найден."
@@ -357,10 +396,10 @@ msgid "Teacher"
 msgstr "Учитель"
 
 msgid "Please enter a valid First Name"
-msgstr "Пожалуйста, укажите действительный First Name"
+msgstr "Пожалуйста, укажите правильное ИМЯ"
 
 msgid "Please enter a valid Last Name"
-msgstr "Пожалуйста, укажите действительный Last Name"
+msgstr "Пожалуйста, укажите правильную ФАМИЛИЮ"
 
 msgid "Please enter a valid Identification No"
 msgstr "Пожалуйста, введите действительное удостоверение личности нет"
@@ -408,7 +447,7 @@ msgid "Edit Permissions"
 msgstr "Изменить разрешения"
 
 msgid "Edit Role - Area Restricted"
-msgstr "Edit роль - Площадь ограничениями"
+msgstr "Редактировать роль – Доступ ограничен"
 
 msgid "Role - Area Restricted"
 msgstr "Роль - области, ограниченной"
@@ -420,7 +459,7 @@ msgid "Role Assignment"
 msgstr "назначение ролей"
 
 msgid "Edit Roles"
-msgstr "Edit ролей"
+msgstr "Изменение ролей"
 
 msgid "Users"
 msgstr "Пользователи"
@@ -432,7 +471,7 @@ msgid "Roles"
 msgstr "Роли"
 
 msgid "Edit Details"
-msgstr "Edit Details"
+msgstr "Редактировать информацию"
 
 msgid "Edit Additional Info"
 msgstr "Редактировать Дополнительная информация"
@@ -471,7 +510,7 @@ msgid "Site Name"
 msgstr "Имя узла"
 
 msgid "Type"
-msgstr "Type"
+msgstr "сайта"
 
 msgid "Ownership"
 msgstr "Собственность"
@@ -486,10 +525,22 @@ msgid "District"
 msgstr "Район"
 
 msgid "LLG"
-msgstr "LLG"
+msgstr "ЛЛГ"
 
 msgid "Ward"
-msgstr "Ward"
+msgstr "палата"
+
+msgid "Street"
+msgstr "улица"
+
+msgid "Block"
+msgstr "блокировать"
+
+msgid "Axis"
+msgstr "ось"
+
+msgid "State"
+msgstr "государство"
 
 msgid "Locality"
 msgstr "Регион"
@@ -505,6 +556,9 @@ msgstr "Нет учреждение сайтов"
 
 msgid "Institution Site Details"
 msgstr "Подробности учреждение Сайт"
+
+msgid "Institution Site Code"
+msgstr "Подробности учреждение"
 
 msgid "Please enter a valid Name"
 msgstr "Пожалуйста, введите действительное имя"
@@ -543,10 +597,10 @@ msgid "Date Opened"
 msgstr "Дата открытия"
 
 msgid "Date Closed"
-msgstr "Дата Closed"
+msgstr "Дата Закрытия"
 
 msgid "Location"
-msgstr "Location"
+msgstr "Место расположения"
 
 msgid "Contact Person"
 msgstr "Контактное лицо"
@@ -558,13 +612,13 @@ msgid "Website"
 msgstr "Сайт"
 
 msgid "Add New"
-msgstr "Add New"
+msgstr "Добавьте новый"
 
 msgid "Active"
 msgstr "Активный"
 
 msgid "Account Name"
-msgstr "Account Name"
+msgstr "Название счета"
 
 msgid "Account Number"
 msgstr "номер счета"
@@ -590,8 +644,20 @@ msgstr "Места"
 msgid "Age"
 msgstr "Возраст"
 
+msgid "Attendance"
+msgstr "Attendance"
+
+msgid "Behaviour"
+msgstr "Behaviour"
+
+msgid "Results"
+msgstr "оценки"
+
+msgid "TOTALS"
+msgstr "Общее число"
+
 msgid "Total"
-msgstr "Total"
+msgstr "Общее число"
 
 msgid "Source"
 msgstr "Источник"
@@ -603,25 +669,25 @@ msgid "Amount"
 msgstr "Сумма"
 
 msgid "Edit Teachers"
-msgstr "Edit учителей"
+msgstr "Редактировать список учителей"
 
 msgid "Edit Training"
-msgstr "Edit обучения"
+msgstr "Редактировать список тренингов"
 
 msgid "Edit Bank Accounts"
-msgstr "Счета Edit Банк"
+msgstr "Редактировать банковские детали"
 
 msgid "Edit Classes"
-msgstr "Edit классы"
+msgstr "Редактировать список классов"
 
 msgid "Edit Finances"
-msgstr "Edit Финансы"
+msgstr "Редактировать Финансы"
 
 msgid "Edit Other Forms"
 msgstr "Изменить другие формы"
 
 msgid "Edit Infrastructure"
-msgstr "Edit инфраструктуры"
+msgstr "Редактировать список инфраструктур"
 
 msgid "Trained Teachers"
 msgstr "подготовленных учителей"
@@ -690,7 +756,7 @@ msgid "National Denominators"
 msgstr "Национальный знаменателями"
 
 msgid "Select"
-msgstr "Select"
+msgstr "Выбрать"
 
 msgid "Total Public Expenditure Per Education Level"
 msgstr "общих государственных расходов на образование по Level"
@@ -699,10 +765,10 @@ msgid "System"
 msgstr "Система"
 
 msgid "Level"
-msgstr "Level"
+msgstr "Уровень"
 
 msgid "Cycle"
-msgstr "Cycle"
+msgstr "Цикл"
 
 msgid "Programme"
 msgstr "Программа"
@@ -769,13 +835,13 @@ msgstr ""
 "администратору."
 
 msgid "Host Unreachable"
-msgstr "Host Unreachable"
+msgstr "Узел недоступен"
 
 msgid "Host is unreachable, please check your internet connection."
 msgstr "Хост недоступен, пожалуйста, проверьте подключение к Интернету."
 
 msgid "Session Timed Out"
-msgstr "Session Timed Out"
+msgstr "Время сессии закончено"
 
 msgid "Page not found"
 msgstr "Страница не найдена"
@@ -796,13 +862,13 @@ msgid "Invalid JSON data."
 msgstr "Неверные данные JSON"
 
 msgid "Request Timeout"
-msgstr "Request Timeout"
+msgstr "Срок запроса истек"
 
 msgid "Your request has been timed out. Please try again."
 msgstr "Ваш запрос был тайм-аут. Пожалуйста, попробуйте еще раз."
 
 msgid "Request Aborted"
-msgstr "Request Aborted"
+msgstr "Запрос прерван"
 
 msgid "Your request has been aborted."
 msgstr "Что вы запроса была прервана."
@@ -811,7 +877,7 @@ msgid "Unexpected Error"
 msgstr "Неожиданная ошибка"
 
 msgid "Edit System Configurations"
-msgstr "Конфигурации Edit System"
+msgstr "Редактировать конфигурацию системы"
 
 msgid "File is updated successfully."
 msgstr "Файл успешно обновлены."
@@ -892,7 +958,7 @@ msgid "Other Forms"
 msgstr "Другие формы"
 
 msgid "SYSTEM SETUP"
-msgstr "SYSTEM SETUP"
+msgstr "Настройка системы"
 
 msgid "Administrative Boundaries"
 msgstr "Административные границы"
@@ -901,10 +967,10 @@ msgid "Education Structure"
 msgstr "Структура образования"
 
 msgid "Setup Variables"
-msgstr "Переменные Setup"
+msgstr "Переменные настроек"
 
 msgid "Edit Setup Variables"
-msgstr "Переменные Edit Setup"
+msgstr "Редактировать настройки переменных "
 
 msgid "Custom Fields"
 msgstr "Пользовательские поля"
@@ -949,13 +1015,13 @@ msgid "DATABASE"
 msgstr "База данных"
 
 msgid "Backup"
-msgstr "Backup"
+msgstr "Резервирование"
 
 msgid "Restore"
 msgstr "Восстановить"
 
 msgid "Setup"
-msgstr "Setup"
+msgstr "Установка"
 
 msgid "The census data has been updated successfully."
 msgstr "Данные переписи были успешно обновлены."
@@ -976,7 +1042,7 @@ msgid "Fair"
 msgstr "Ярмарка"
 
 msgid "Poor"
-msgstr "Poor"
+msgstr "Плохо"
 
 msgid "Current Password"
 msgstr "Текущий пароль"
@@ -1003,13 +1069,13 @@ msgid "Visible"
 msgstr "Видимый"
 
 msgid "Area Level"
-msgstr "Площадь Level"
+msgstr "Уровень Области"
 
 msgid "Area Levels"
 msgstr "Уровни области"
 
 msgid "Edit Area Levels"
-msgstr "Уровни Edit Area"
+msgstr "Редактировать Уровни Области "
 
 msgid "Structure"
 msgstr "структура"
@@ -1048,7 +1114,7 @@ msgid "Grades"
 msgstr "Марки"
 
 msgid "Grade Subject"
-msgstr "класса Subject"
+msgstr "Тема урока"
 
 msgid "Back to Programmes"
 msgstr "Редактирование программ"
@@ -1072,7 +1138,7 @@ msgid "School Year"
 msgstr "Школа года"
 
 msgid "Current"
-msgstr "Current"
+msgstr "Текущий"
 
 msgid "Available"
 msgstr "Доступный"
@@ -1150,7 +1216,7 @@ msgid "Branches"
 msgstr "Филиалы"
 
 msgid "Sanitations"
-msgstr "Sanitations"
+msgstr "Санитария"
 
 msgid "Section Break"
 msgstr "Раздел Break"
@@ -1159,7 +1225,7 @@ msgid "Single Line Text"
 msgstr "Единый текст Line"
 
 msgid "Multi Line Text"
-msgstr "Multi Текст Line"
+msgstr "Многострочный текст"
 
 msgid "DropDown List"
 msgstr "выпадающий список"
@@ -1171,19 +1237,19 @@ msgid "Checkboxes"
 msgstr "Флажки"
 
 msgid "Institution Custom Fields"
-msgstr "Поля учреждение Custom"
+msgstr "Поля для настроики учреждения"
 
 msgid "Institution Site Custom Fields"
-msgstr "Институт Поля сайта Custom"
+msgstr "Поля настроики учреждения сайта"
 
 msgid "Census Custom Fields"
 msgstr "Перепись Пользовательские поля"
 
 msgid "Student Custom Fields"
-msgstr "Поля Студенческая Custom"
+msgstr "Поля настроики для студентов"
 
 msgid "Teacher Custom Fields"
-msgstr "Поля Учитель Custom"
+msgstr "Поля настроики для учитилей"
 
 msgid "Staff Custom Fields"
 msgstr "Персонал Пользовательские поля"
@@ -1192,7 +1258,7 @@ msgid "Census Custom Tables"
 msgstr "Перепись пользовательских таблиц"
 
 msgid "Field Label"
-msgstr "Поле Label"
+msgstr "Метка поля"
 
 msgid "List of Custom Census Table"
 msgstr "Список пользовательские таблицы переписи населения"
@@ -1210,13 +1276,13 @@ msgid "List"
 msgstr "Список"
 
 msgid "Dashboard Image"
-msgstr "Dashboard Image"
+msgstr "Dashboard Изображение"
 
 msgid "Back to Config"
-msgstr "Назад в Config"
+msgstr "Назад в Настроики"
 
 msgid "Title"
-msgstr "Title"
+msgstr "Название"
 
 msgid "Date Format"
 msgstr "Формат даты"
@@ -1240,12 +1306,15 @@ msgid "Login"
 msgstr "Логин"
 
 msgid "Education Management Information System"
-msgstr "Образование Management Information System"
+msgstr "Информационная  Система Управления Образованием"
 
 msgid "Function"
 msgstr "Функция"
 
 msgid "Institution Site"
+msgstr "Институт сайта"
+
+msgid "INSTITUTION SITE"
 msgstr "Институт сайта"
 
 msgid "Census"
@@ -1261,7 +1330,7 @@ msgid "Export Indicator"
 msgstr "Экспорт Индикатор"
 
 msgid "Custom Tables"
-msgstr "Custom таблицы"
+msgstr "Таблицы настроики"
 
 msgid "Configurations"
 msgstr "Конфигурации"
@@ -1294,10 +1363,10 @@ msgid "Database"
 msgstr "База данных"
 
 msgid "PHP Version"
-msgstr "PHP Version"
+msgstr "Версия PHP"
 
 msgid "Web Server"
-msgstr "Web Server"
+msgstr "Web-сервер"
 
 msgid "Operating System"
 msgstr "Операционные системы"
@@ -1318,7 +1387,7 @@ msgid "Teacher Reports"
 msgstr "Отчеты учителей"
 
 msgid "Staff Reports"
-msgstr "Отчеты Staff"
+msgstr "Отчеты Персонала"
 
 msgid "Consolidated Reports"
 msgstr "консолидированной отчетности"
@@ -1327,7 +1396,7 @@ msgid "Indicator Reports"
 msgstr "Отчеты Индикатор"
 
 msgid "Data Quality Reports"
-msgstr "Отчеты Data Quality"
+msgstr "Отчеты по Качеству Данных"
 
 msgid "DataQuality Reports"
 msgstr "Отчеты DataQuality"
@@ -1435,7 +1504,7 @@ msgid "Summary of additional info tables from census"
 msgstr "Резюме дополнительных таблиц информации из переписи населения"
 
 msgid "Income Report"
-msgstr "Доходы Report"
+msgstr "Отчет по Доходам"
 
 msgid "Summary of income from census"
 msgstr "Суммарный доход от переписи"
@@ -1465,13 +1534,13 @@ msgid "Summary of sanitation, gender and condition from census"
 msgstr "Резюме санитарии, пол и состояние от переписи"
 
 msgid "Furniture Report"
-msgstr "Мебель Report"
+msgstr "Отчет по Мебели"
 
 msgid "Summary of furniture and condition from census"
 msgstr "Основная мебель и состояние от переписи"
 
 msgid "Resource Report"
-msgstr "Resource Report"
+msgstr "Отчет по ресурсам"
 
 msgid "Summary of resources and condition from census"
 msgstr "Сводные данные о ресурсах и состоянии от переписи"
@@ -1534,7 +1603,7 @@ msgstr ""
 "Google Earth (KML) файл, содержащий все расположение всех Учреждение сайтов"
 
 msgid "Year Book Report"
-msgstr "Сообщить Year Book"
+msgstr "Отчет Ежегодной Книги"
 
 msgid "Formatted summary of census data for a given year"
 msgstr "Форматированный резюме данные переписи за данный год"
@@ -1905,7 +1974,7 @@ msgid "Abort All"
 msgstr "Отменить все"
 
 msgid "Clear All"
-msgstr "Clear All"
+msgstr "Удалить все"
 
 msgid "Started By"
 msgstr "Ответов"
@@ -1917,7 +1986,7 @@ msgid "Finished Date"
 msgstr "Готовые Дата"
 
 msgid "Log"
-msgstr "Log"
+msgstr "Лог"
 
 msgid "Processing"
 msgstr "Обработка"
@@ -1926,7 +1995,7 @@ msgid "Pending"
 msgstr "Ожидание"
 
 msgid "Aborted"
-msgstr "Aborted"
+msgstr "Прервано"
 
 msgid "Completed"
 msgstr "Завершено"
@@ -1941,10 +2010,10 @@ msgid "No Data"
 msgstr "Нет данных"
 
 msgid "GNP"
-msgstr "GNP"
+msgstr "ВНП"
 
 msgid "Total Public Expenditure For Education"
-msgstr "Total государственных расходов на образование"
+msgstr "Полный бюджет государственных расходов на образование"
 
 msgid "No Available Finance Records"
 msgstr "Нет доступных записей Финанс"
@@ -1962,7 +2031,7 @@ msgid "Security Users, Roles, and Functions"
 msgstr "Безопасность пользователей, роли и функции"
 
 msgid "System Configuration Values"
-msgstr "Ценности System Configuration"
+msgstr "Ценности системы конфигурации"
 
 msgid "Security"
 msgstr "Безопасность"
@@ -1973,16 +2042,16 @@ msgstr ""
 "и до конца."
 
 msgid "Run Reports"
-msgstr "Отчеты Run"
+msgstr "Отчеты Работы системы"
 
 msgid "Select All"
 msgstr "Выделить все"
 
 msgid "De-Select All"
-msgstr "De-Select All"
+msgstr "Отменить выделение всего"
 
 msgid "Generate"
-msgstr "Generate"
+msgstr "Генерировать"
 
 msgid ""
 "The system will %s the current data and restore to your previous data based "
@@ -2023,7 +2092,7 @@ msgid "Image exceeds system max filesize."
 msgstr "Изображение Размер файла превышает максимально системы"
 
 msgid "Image exceeds max file size in the HTML form."
-msgstr "Image превышает максимальный размер файла в HTML форме"
+msgstr "Размер файла изображения превышает максимально допустимые нормы в формате HTML"
 
 msgid "Image was only partially uploaded."
 msgstr "Изображение был загружен лишь частично"
@@ -2053,7 +2122,7 @@ msgid "Format Supported:"
 msgstr "Поддерживаемые форматы:"
 
 msgid "Profile Image"
-msgstr "Профиль Image"
+msgstr "Изображение Профиля"
 
 msgid "Please enter the code for the Area."
 msgstr "Пожалуйста, введите код района»"
@@ -2115,10 +2184,10 @@ msgid "Bank Branch is required!"
 msgstr "Отделение банка не требуется!"
 
 msgid "Value"
-msgstr "Value"
+msgstr "Стоимость"
 
 msgid "value"
-msgstr "значение"
+msgstr "Стоимость"
 
 msgid "Unsaved Data"
 msgstr "несохраненные данные"
@@ -2165,7 +2234,7 @@ msgid "Dialog"
 msgstr "Диалог"
 
 msgid "Required Field"
-msgstr "Обязательное поле"
+msgstr "Обязательная граффа"
 
 msgid "Retrieving..."
 msgstr "Получение ..."
@@ -2177,7 +2246,7 @@ msgid "Adding option..."
 msgstr "Добавление опции ..."
 
 msgid "Loading..."
-msgstr "Loading ..."
+msgstr "Загрузка ..."
 
 msgid "Loading list..."
 msgstr "Загрузка списка ..."
@@ -2198,7 +2267,7 @@ msgid "Toggle this field active/inactive"
 msgstr "Переключить этой области активных / неактивных"
 
 msgid "Delete Confirmation"
-msgstr "Delete Confirmation"
+msgstr "Подтверждение удаления"
 
 msgid "Click to dismiss"
 msgstr "Нажмите, чтобы уволить"
@@ -2212,10 +2281,10 @@ msgid "Saving please wait..."
 msgstr "Сохранение пожалуйста, подождите ..."
 
 msgid "Loading Areas"
-msgstr "Области Loading"
+msgstr "Загрузка областей"
 
 msgid "Batch executed successfully."
-msgstr "Batch успешно выполнен»"
+msgstr "Партия успешна выполнена»"
 
 msgid "Running batch..."
 msgstr "Запуск партии ..."
@@ -2245,8 +2314,11 @@ msgstr "OLAP-отчетов"
 msgid "Generated"
 msgstr "Сгенерировано"
 
+msgid "Generated Files"
+msgstr "Сгенерировано Файлы"
+
 msgid "Generating OLAP Report..."
-msgstr "Генерирующая OLAP отчетов…"
+msgstr "Генерирует отчет OLAP …"
 
 msgid "Indicator"
 msgstr "индикатор"
@@ -2388,7 +2460,7 @@ msgid "Page Orientation"
 msgstr "Ориентация страницы"
 
 msgid "Yearbook Logo"
-msgstr "ежегодник Logo"
+msgstr "ежегодник логотип"
 
 msgid "Maximum Student Age"
 msgstr "Максимальный возраст студентов"
