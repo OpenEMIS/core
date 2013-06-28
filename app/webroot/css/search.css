@@ -8,7 +8,7 @@
 	-webkit-border-radius: 2px;
 }
 
-.search_wrapper input { float: left; border: 0 !important; box-shadow: none; }
+.search_wrapper input { float: left; border: 0 !important; box-shadow: none; margin-top: 2px; }
 
 .chrome .search_wrapper { padding-bottom: 0; }
 .chrome .search_wrapper .icon_clear,

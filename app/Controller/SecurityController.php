@@ -203,7 +203,7 @@ class SecurityController extends AppController {
 			foreach($data as &$user) {
 				$obj = $user['SecurityUser'];
 				$groups = $this->SecurityGroup->getGroupsByUser($obj['id']);
-				$user['SecurityUser']['groups'] = implode(', ', $groups);
+				$user['SecurityUser']['groups'] = '';//implode(', ', $groups);
 			}
 		}
 		
@@ -333,24 +333,37 @@ class SecurityController extends AppController {
 	}
 	
 	public function usersSearch() {
-		$this->autoRender = false;
 		$searchString = $this->params->query['searchString'];
-		$obj = $this->SecurityUser->find('first', array(
-			'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
-			'conditions' => array('SecurityUser.identification_no' => $searchString)
-		));
+		$searchType = isset($this->params['pass'][0]) ? $this->params['pass'][0] : 0;
 		
-		$name = $obj ? $obj['SecurityUser']['first_name'] . ' ' . $obj['SecurityUser']['last_name'] : '';
-		
-		$result = array();
-		if(empty($name)) {
-			$result['type'] = 'error';
-		} else {
-			$result['type'] = 'ok';
-			$result['id'] = $obj['SecurityUser']['id'];
-			$result['name'] = $name;
+		if($searchType==0) { // only search by identification no and display name
+			$this->autoRender = false;
+			$obj = $this->SecurityUser->search($searchType, $searchString);
+			$name = $obj ? $obj['SecurityUser']['first_name'] . ' ' . $obj['SecurityUser']['last_name'] : '';
+			$result = array();
+			if(empty($name)) {
+				$result['type'] = 'error';
+			} else {
+				$result['type'] = 'ok';
+				$result['id'] = $obj['SecurityUser']['id'];
+				$result['name'] = $name;
+			}
+			return json_encode($result);
+		} else { // search by identification or name and display rows
+			$this->layout = 'ajax';
+			$groupId = $this->params['pass'][1];
+			$params = array('limit' => 100);
+			$data = $this->SecurityUser->search($searchType, $searchString, $params);
+			if($data) {
+				foreach($data as &$user) {
+					$obj = $user['SecurityUser'];
+					$roleOptions = $this->SecurityRole->getRoleOptions($groupId, $obj['id']);
+					$user['SecurityUser']['roles'] = $roleOptions;
+				}
+			}
+			$this->set('search', $searchString);
+			$this->set('data', $data);
 		}
-		return json_encode($result);
 	}
 	
 	public function usersAddAdmin() {
@@ -565,6 +578,23 @@ class SecurityController extends AppController {
 			if($data) {
 				$this->set('data', $data);
 				
+			} else {
+				$this->redirect(array('action' => 'groups'));
+			}
+		} else {
+			$this->redirect(array('action' => 'groups'));
+		}
+	}
+	
+	public function groupsUsers() {
+		$this->Navigation->addCrumb('Group Users');
+		
+		if(isset($this->params['pass'][0])) {
+			$groupId = $this->params['pass'][0];
+			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
+			if($data) {
+				
+				$this->set('data', $data);
 			} else {
 				$this->redirect(array('action' => 'groups'));
 			}

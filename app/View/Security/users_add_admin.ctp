@@ -11,7 +11,7 @@ $model = sprintf('SecurityGroupUser.%s.security_user_id', $index);
 					'label' => false,
 					'div' => false,
 					'onblur' => 'Security.usersSearch(this)',
-					'url' => 'Security/usersSearch'
+					'url' => 'Security/usersSearch/0'
 				));
 			?>
 		</div>
