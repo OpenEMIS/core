@@ -19,7 +19,6 @@ App::uses('AppModel', 'Model');
 class SecurityUser extends AppModel {
 	public $hasMany = array('SecurityUserRole');
 	
-	// public $status = array(0 => 'Inactive', 1 => 'Active');
 	public $status = array();
 	public function beforeFind() {
 		$this->status = array(0 => __('Inactive', true), 1 => __('Active', true));
@@ -107,48 +106,64 @@ class SecurityUser extends AppModel {
 		$this->saveField('last_login', date('Y-m-d H:i:s'));
 	}
 	
-	public function paginateJoins(&$conditions) {
-		$institutionSiteId = $conditions['institution_site_id'];
-		unset($conditions['institution_site_id']);
-		
-		$programmeConditions = array(
-			'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
-			'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
-		);
-		
-		if(isset($conditions['year'])) {
-			$year = $conditions['year'];
-			unset($conditions['year']);
-			
-			$conditions = array_merge($conditions, array( // if the year falls between the start and end date
-				'InstitutionSiteStudent.start_year <=' => $year,
-				'InstitutionSiteStudent.end_year >=' => $year
+	public function search($type, $search, $params=array()) {
+		$data = array();
+		if($type==0) {
+			$data = $this->find('first', array(
+				'recursive' => -1,
+				'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
+				'conditions' => array('SecurityUser.identification_no' => $search),
+				'order' => array('SecurityUser.first_name')
 			));
+		} else {
+			$search = '%' . $search . '%';
+			$limit = isset($params['limit']) ? $params['limit'] : false;
+			
+			$conditions = array(
+				'OR' => array(
+					'SecurityUser.identification_no LIKE' => $search,
+					'SecurityUser.first_name LIKE' => $search,
+					'SecurityUser.last_name LIKE' => $search
+				)
+			);
+			
+			$options = array(
+				'recursive' => -1,
+				'conditions' => $conditions,
+				'order' => array('SecurityUser.first_name')
+			);
+			
+			$count = $this->find('count', $options);
+			
+			$data = false;
+			if($limit === false || $count < $limit) {
+				$options['fields'] = array('SecurityUser.*');
+				$data = $this->find('all', $options);
+			}
+			return $data;
 		}
 		
-		if(isset($conditions['education_programme_id'])) {
-			$programmeConditions[] = 'InstitutionSiteProgramme.education_programme_id = ' . $conditions['education_programme_id'];
-			unset($conditions['education_programme_id']);
-		}
+	/*
+		$notExists = '
+			NOT EXISTS (
+				SELECT institution_site_students.student_id 
+				FROM institution_site_students
+				JOIN institution_site_programmes
+					ON institution_site_programmes.id = institution_site_students.institution_site_programme_id
+					AND institution_site_programmes.institution_site_id = %d
+					AND institution_site_programmes.education_programme_id = %d
+					AND institution_site_programmes.school_year_id = %d
+				WHERE institution_site_students.student_id = Student.id
+			)';
+		*/	
+		//$this->formatResult = true;
+		//$searchStr = '%' . $searchStr . '%';
+			
+		return $data;
+	}
+	
+	public function paginateJoins(&$conditions) {
 		
-		$joins = array(
-			array(
-				'table' => 'students',
-				'alias' => 'Student',
-				'conditions' => array('Student.id = InstitutionSiteStudent.student_id')
-			),
-			array(
-				'table' => 'institution_site_programmes',
-				'alias' => 'InstitutionSiteProgramme',
-				'conditions' => $programmeConditions
-			),
-			array(
-				'table' => 'education_programmes',
-				'alias' => 'EducationProgramme',
-				'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
-			)
-		);
-		return $joins;
 	}
 	
 	public function paginateConditions(&$conditions) {

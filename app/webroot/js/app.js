@@ -440,6 +440,33 @@ var jsTable = {
 		}
 	},
 	
+	tableScrollableAdd: function(parent, data) {
+		var hide = 'hidden';
+		var active = 'scroll_active';
+		var scrollable = parent + ' .table_scrollable';
+		var list = scrollable + ' .list_wrapper';
+		var selector = list + ' .table_body';
+		
+		if($(data).hasClass('alert')) {
+			var alertOpt = {
+				id: 'scrollable_alert',
+				parent: parent,
+				position: 'center'
+			}
+			alertOpt['type'] = $(data).attr('type');
+			alertOpt['text'] = $(data).html();
+			$(scrollable).removeClass(active);
+			if(!$(list).hasClass(hide)) {
+				$(list).addClass(hide);
+			}
+			$.alert(alertOpt);
+		} else {
+			$(selector).append(data);
+			jsTable.toggleTableScrollable(parent);
+			jsTable.fixTable($(selector).parent());
+		}
+	},
+	
 	doRemove: function(obj) {
 		$(obj).closest('.table_row').remove();
 		jsTable.fixTable();

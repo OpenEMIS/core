@@ -1,115 +1,131 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
+echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false));
+
+echo $this->Html->script('security', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="roles" class="content_wrapper edit">
 	<h1>
-		<span><?php echo __('Group Details'); ?></span>
+		<span><?php echo __('Group Users'); ?></span>
 		<?php
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'groupsEdit', $data['SecurityGroup']['id']), array('class' => 'divider'));
 		}
-		echo $this->Html->link(__('Users'), array('action' => 'groupsUsers', $data['SecurityGroup']['id']), array('class' => 'divider'));
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
-	<fieldset class="section_group" style="padding-bottom: 10px;">
+	<?php
+	echo $this->Form->create('InstitutionSiteStudent', array(
+		'inputDefaults' => array('label' => false, 'div' => false),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'programmesEdit')
+	));
+	?>
+	
+	<!--fieldset class="section_group" style="padding-bottom: 10px;">
 		<legend><?php echo __('Information'); ?></legend>
 		<div class="row">
 			<div class="label"><?php echo __('Group Name'); ?></div>
-			<div class="value"><?php echo $data['SecurityGroup']['name']; ?></div>
+			<div class="value"></div>
+		</div>
+	</fieldset-->
+	
+	<fieldset class="section_group" id="search_user">
+		<legend><?php echo __('Search'); ?></legend>
+		
+		<div class="row">
+			<div class="search_wrapper">
+				<?php 
+					echo $this->Form->input('SearchField', array(
+						'id' => 'SearchField',
+						'value' => '',
+						'class' => 'default',
+						//'onkeypress' => 'InstitutionSiteProgrammes.doSearch(event)',
+						'placeholder' => __('Identification No, First Name or Last Name')
+					));
+				?>
+				<span class="icon_clear" onClick="$('#SearchField').val('')">X</span>
+			</div>
+			<span class="left icon_search" url="Security/usersSearch/1/<?php echo $data['SecurityGroup']['id']; ?>" onClick="Security.usersSearch(this)"></span>
+		</div>
+		
+		<div class="table_scrollable" url="Security/groupsAddUser/">
+			<div class="table table_header">
+				<div class="table_head">
+					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell"><?php echo __('Name'); ?></div>
+					<div class="table_cell cell_role"><?php echo __('Role'); ?></div>
+					<div class="table_cell cell_icon_action"></div>
+				</div>
+			</div>
+			<div class="list_wrapper hidden" limit="3">
+				<div class="table">
+					<div class="table_body"></div>
+				</div>
+			</div>
 		</div>
 	</fieldset>
 	
 	<fieldset class="section_group">
-		<legend><?php echo __('Access Control'); ?></legend>
-		<fieldset class="section_break">
-			<legend><?php echo __('Areas'); ?></legend>
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell cell_area"><?php echo __('Level'); ?></div>
-					<div class="table_cell"><?php echo __('Area'); ?></div>
-				</div>
-				
-				<div class="table_body">
-					<?php foreach($data['SecurityGroup']['areas'] as $areaObj) { ?>
-					<div class="table_row">
-						<div class="table_cell"><?php echo $areaObj['area_level_name']; ?></div>
-						<div class="table_cell"><?php echo $areaObj['area_name']; ?></div>
-					</div>
-					<?php } ?>
-				</div>
-			</div>
-		</fieldset>
+		<legend><?php echo __('Users'); ?></legend>
 		
 		<fieldset class="section_break">
-			<legend><?php echo __('Institution Sites'); ?></legend>
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell cell_institution"><?php echo __('Institution'); ?></div>
-					<div class="table_cell"><?php echo __('Institution Site'); ?></div>
-				</div>
-				
-				<div class="table_body">
-					<?php foreach($data['SecurityGroup']['sites'] as $siteObj) { ?>
-					<div class="table_row">
-						<div class="table_cell"><?php echo $siteObj['institution_name']; ?></div>
-						<div class="table_cell"><?php echo $siteObj['institution_site_name']; ?></div>
-					</div>
-					<?php } ?>
-				</div>
-			</div>
-		</fieldset>
-	</fieldset>
-	
-	<fieldset class="section_group" style="padding-bottom: 10px;">
-		<legend><?php echo __('Roles'); ?></legend>
-		
-		<fieldset class="section_break">
-			<legend><?php echo __('System Defined Roles'); ?></legend>
+			<legend>Group Admin</legend>
 			
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell"><?php echo __('Role'); ?></div>
-					<div class="table_cell cell_users"><?php echo __('Users'); ?></div>
+			<div class="table_scrollable scroll_active" url="InstitutionSites/programmesAddStudent/">
+				<div class="table table_header">
+					<div class="table_head">
+						<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+						<div class="table_cell"><?php echo __('Name'); ?></div>
+						<div class="table_cell cell_icon_action"></div>
+					</div>
 				</div>
-				
-				<div class="table_body">
-					<?php foreach($data['SecurityRole']['system'] as $obj) { ?>
-					<div class="table_row">
-						<div class="table_cell"><?php echo $obj['name']; ?></div>
-						<div class="table_cell cell_users">
-							<?php echo $this->Html->link(__('Users'), array('action' => 'roleUsers', $data['SecurityGroup']['id'], $obj['id'])); ?>
+				<div class="list_wrapper" style="height: 120px;" limit="4">
+					<div class="table">
+						<div class="table_body">
+							<div class="table_row">
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+							</div>
+							<div class="table_row">
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+							</div>
+							<div class="table_row">
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+							</div>
+							<div class="table_row">
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+							</div>
+							<div class="table_row">
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+							</div>
+							<div class="table_row">
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+							</div>
+							<div class="table_row">
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+								<div class="table_cell">asd</div>
+							</div>
 						</div>
 					</div>
-					<?php }?>
-				</div>
-			</div>
-		</fieldset>
-		
-		<fieldset class="section_break">
-			<legend><?php echo __('User Defined Roles'); ?></legend>
-			
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell"><?php echo __('Role'); ?></div>
-					<div class="table_cell cell_users"><?php echo __('Users'); ?></div>
-				</div>
-				
-				<div class="table_body">
-					<?php foreach($data['SecurityRole']['user'] as $obj) { ?>
-					<div class="table_row">
-						<div class="table_cell"><?php echo $obj['name']; ?></div>
-						<div class="table_cell cell_users">
-							<?php echo $this->Html->link(__('Users'), array('action' => 'roleUsers', $data['SecurityGroup']['id'], $obj['id'])); ?>
-						</div>
-					</div>
-					<?php }?>
 				</div>
 			</div>
 		</fieldset>
@@ -158,4 +174,5 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 		</div>
 	</fieldset>
 	-->
+	<?php echo $this->Form->end(); ?>
 </div>

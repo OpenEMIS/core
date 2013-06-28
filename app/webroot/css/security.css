@@ -11,8 +11,8 @@
 .table_view .cell_name { width: 506px; margin-left: -1px; }
 
 #group_admin .search_wrapper { margin-top: 2px; }
-
-.cell_group_role { width: 180px; }
-.cell_user_count { width: 90px; }
-
 #groups.edit .cell_name { width: 491px; }
+
+.cell_id_no { width: 110px; }
+
+#search_user .list_wrapper { height: 104px; }

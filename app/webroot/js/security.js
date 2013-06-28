@@ -38,7 +38,14 @@ var Security = {
 	},
 	
 	usersSearch: function(obj) {
-		var searchString = $(obj).val();
+		var searchString = '';
+		var dataType = 'json';
+		if($(obj).prop('tagName')==='SPAN') {
+			dataType = 'text';
+			searchString = $(obj).siblings('.search_wrapper').find('input').val();
+		} else {
+			searchString = $(obj).val();
+		}
 		
 		var alertOpt = {
 			id: 'search_alert',
@@ -51,7 +58,7 @@ var Security = {
 			$(obj).closest('.table_row').find('#UserId').val(0);
 			$.ajax({
 				type: 'GET',
-				dataType: 'json',
+				dataType: dataType,
 				url: getRootURL() + $(obj).attr('url'),
 				data: {searchString: searchString},
 				beforeSend: function (jqXHR) {
@@ -59,12 +66,18 @@ var Security = {
 				},
 				success: function (data, textStatus) {
 					var callback = function() {
-						if(data.type==='error') {
-							alertOpt['text'] = i18n.Search.textNoResult;
-							$.alert(alertOpt);
+						if(dataType==='json') {
+							if(data.type==='error') {
+								alertOpt['text'] = i18n.Search.textNoResult;
+								$.alert(alertOpt);
+							} else {
+								$(obj).closest('.table_cell').siblings('.name').html(data.name);
+								$(obj).closest('.table_row').find('#UserId').val(data.id);
+							}
 						} else {
-							$(obj).closest('.table_cell').siblings('.name').html(data.name);
-							$(obj).closest('.table_row').find('#UserId').val(data.id);
+							var parent = '#search_user';
+							$(parent).find('.table_body').empty();
+							jsTable.tableScrollableAdd(parent, data);
 						}
 					};
 					$.unmask({id: maskId, callback: callback});
@@ -91,6 +104,10 @@ var Security = {
 				$.unmask({id: maskId, callback: callback});
 			}
 		});
+	},
+	
+	addGroupUser: function(obj) {
+		
 	},
 	
 	addGroupAccessOptions: function(obj) {

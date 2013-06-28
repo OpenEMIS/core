@@ -66,12 +66,21 @@ class SecurityRole extends AppModel {
 		return $data;
 	}
 	
-	public function getRoleOptions($groupId) {
+	public function getRoleOptions($groupId, $userId=false) {
 		$this->formatResult = true;
+		$conditions = array('SecurityRole.security_group_id' => $groupId);
+		
+		if($userId!==false) {
+			$conditions[] = sprintf('NOT EXISTS (
+				SELECT id FROM security_group_users
+				WHERE security_group_id = SecurityRole.security_group_id 
+				AND security_role_id = SecurityRole.id
+				AND security_user_id = %d)', $userId);
+		}
 		$data = $this->find('list', array(
-			'fields' => array('SecurityRole.id', 'SecurityRole.name'),
 			'recursive' => -1,
-			'conditions' => array('SecurityRole.security_group_id' => $groupId),
+			'fields' => array('SecurityRole.id', 'SecurityRole.name'),		
+			'conditions' => $conditions,
 			'order' => array('SecurityRole.order')
 		));
 		return $data;
