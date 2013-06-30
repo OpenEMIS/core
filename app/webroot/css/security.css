@@ -15,4 +15,6 @@
 
 .cell_id_no { width: 110px; }
 
-#search_user .list_wrapper { height: 104px; }
+#search_user .list_wrapper { height: 70px; }
+.group_user_list.scroll_active .table_header { width: 633px !important; }
+.group_user_list .list_wrapper { height: 109px; }
