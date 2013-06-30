@@ -112,7 +112,7 @@ class SecurityUser extends AppModel {
 			$data = $this->find('first', array(
 				'recursive' => -1,
 				'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
-				'conditions' => array('SecurityUser.identification_no' => $search),
+				'conditions' => array('SecurityUser.identification_no' => $search, 'SecurityUser.super_admin <>' => 1),
 				'order' => array('SecurityUser.first_name')
 			));
 		} else {
@@ -120,6 +120,7 @@ class SecurityUser extends AppModel {
 			$limit = isset($params['limit']) ? $params['limit'] : false;
 			
 			$conditions = array(
+				'SecurityUser.super_admin <>' => 1,
 				'OR' => array(
 					'SecurityUser.identification_no LIKE' => $search,
 					'SecurityUser.first_name LIKE' => $search,

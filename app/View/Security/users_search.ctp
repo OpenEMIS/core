@@ -23,12 +23,15 @@ if($data !== false) {
 					'label' => false,
 					'div' => false,
 					'class' => 'full_width',
-					'options' => $obj['roles']
+					'options' => !empty($obj['roles']) ? $obj['roles'] : array('-- ' . __('No roles available') . ' --')
 				));
+				
 				?>
 			</div>
 			<div class="table_cell cell_icon_action">
+				<?php if(!empty($obj['roles'])) { ?>
 				<span class="icon_plus" user-id="<?php echo $obj['id']; ?>" onClick="Security.addGroupUser(this)"></span>
+				<?php } ?>
 			</div>
 		</div>
 	

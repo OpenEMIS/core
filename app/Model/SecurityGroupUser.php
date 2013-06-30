@@ -17,5 +17,35 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityGroupUser extends AppModel {
-	
+	public function getUsers($groupId) {
+		$roles = $this->find('all', array(
+			'fields' => array('SecurityRole.*', 'SecurityUser.id', 'SecurityUser.identification_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'security_roles',
+					'alias' => 'SecurityRole',
+					'conditions' => array('SecurityRole.id = SecurityGroupUser.security_role_id')
+				),
+				array(
+					'table' => 'security_users',
+					'alias' => 'SecurityUser',
+					'conditions' => array('SecurityUser.id = SecurityGroupUser.security_user_id')
+				)
+			),
+			'conditions' => array('SecurityGroupUser.security_group_id' => $groupId),
+			'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
+		));
+		
+		$data = array();
+		foreach($roles as $obj) {
+			$role = $obj['SecurityRole'];
+			$roleId = $role['id'];
+			if(!array_key_exists($roleId, $data)) {
+				$data[$roleId] = array('name' => $role['name'], 'users' => array());
+			}
+			$data[$roleId]['users'][] = $obj['SecurityUser'];
+		}
+		return $data;
+	}
 }

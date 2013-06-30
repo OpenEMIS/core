@@ -586,14 +586,40 @@ class SecurityController extends AppController {
 		}
 	}
 	
+	public function groupsUserAdd() {
+		if($this->request->is('post')) {
+			$data = $this->data['SecurityGroupUser'];
+			if($this->SecurityGroupUser->save($data)) {
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_GRP_USER_ADD'));
+			}
+			$this->redirect(array('action' => 'groupsUsers', $groupId));
+		}
+	}
+	
+	public function groupsUserRemove() {
+		if(!$this->RequestHandler->isAjax()) {
+			$groupId = $this->params['pass'][0];
+			$userId = $this->params['pass'][1];
+			$roleId = $this->params['pass'][2];
+			
+			pr($this->SecurityGroupUser->deleteAll(array(
+				'SecurityGroupUser.security_group_id' => $groupId,
+				'SecurityGroupUser.security_user_id' => $userId,
+				'SecurityGroupUser.security_role_id' => $roleId
+			)));
+		}
+	}
+	
 	public function groupsUsers() {
 		$this->Navigation->addCrumb('Group Users');
 		
 		if(isset($this->params['pass'][0])) {
 			$groupId = $this->params['pass'][0];
-			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
-			if($data) {
-				
+			$group = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
+			if($group) {
+				$data = $this->SecurityGroupUser->getUsers($groupId);
+				//pr($data);
+				$this->set('group', $group['SecurityGroup']);
 				$this->set('data', $data);
 			} else {
 				$this->redirect(array('action' => 'groups'));

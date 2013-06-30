@@ -107,7 +107,43 @@ var Security = {
 	},
 	
 	addGroupUser: function(obj) {
+		var userId = $(obj).attr('user-id');
+		var roleId = $(obj).closest('.table_cell').siblings('.cell_role').find('select').val();
+		$('#SecurityUserId').val(userId);
+		$('#SecurityRoleId').val(roleId);
+		$('form').submit();
+	},
+	
+	removeGroupUser: function(obj) {
+		var row = $(obj).closest('.table_row');
+		var id = row.length>0 ? row.attr('row-id') : -1;
 		
+		var maskId;
+		var url = $('#student_group .table_scrollable').attr('url');
+		var ajaxParams = {rowId: id};
+		var ajaxSuccess = function(data, textStatus) {
+			var callback = function() {
+				if(id != -1) {
+					row.fadeOut(300, function() {
+						row.remove();
+						jsTable.fixTable('#student_group .list_wrapper .table');
+					});
+				} else {
+					$('#student_group .table_row').remove();
+					
+				}
+				jsTable.toggleTableScrollable('#student_group');
+			};
+			$.unmask({id: maskId, callback: callback});
+		};
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + url,
+			data: ajaxParams,
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#student_group', text: i18n.General.textRemoving}); },
+			success: ajaxSuccess
+		});
 	},
 	
 	addGroupAccessOptions: function(obj) {
