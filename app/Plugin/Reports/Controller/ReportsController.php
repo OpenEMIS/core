@@ -39,7 +39,7 @@ class ReportsController extends ReportsAppController {
 		'Teacher'=>array('enable'=>true),
 		'Staff'=>array('enable'=>true),
 		'Consolidated'=>array('enable'=>true),
-		'Indicator'=>array('enable'=>true),
+//		'Indicator'=>array('enable'=>true),
 		'DataQuality'=>array('enable'=>true),
 		'Custom'=>array('enable'=>true));
 	
@@ -83,8 +83,8 @@ class ReportsController extends ReportsAppController {
 	public function TeacherDownload(){}
 	public function Consolidated(){}
 	public function ConsolidatedDownload(){}
-	public function Indicator(){}
-	public function IndicatorDownload(){}
+//	public function Indicator(){}
+//	public function IndicatorDownload(){}
 	public function Custom(){}
 	public function CustomDownload(){}
 	public function DataQuality(){}
@@ -129,22 +129,26 @@ class ReportsController extends ReportsAppController {
 		$this->set('data',$tmp);
 	}
 
-    public function Sdmx($indicatorId = ''){
+    public function Indicator($indicatorId = ''){
+//        pr('die');die();
 //            $this->autoRender = false;
-        App::uses('Sdmx', 'Lib/Sdmx');
-        $sdmxObj = new Sdmx($this->BatchProcess);
+        App::uses('IndicatorReport', 'Lib/IndicatorReport');
+        $this->Navigation->addCrumb('Indicator Reports');
+
+        $indicatorReportObj = new IndicatorReport($this->BatchProcess);
         if($this->request->is('post')){
-//            $this->autoRender = false;
-            echo $sdmxObj->create($this->data['Sdmx']['indicator'], implode(',', $this->data['Sdmx']['areas']), implode(',',$this->data['Sdmx']['timeperiods']));
+            $this->autoRender = false;
+            echo $indicatorReportObj->create($this->data['Sdmx']['indicator'], implode(',', $this->data['Sdmx']['areas']), implode(',',$this->data['Sdmx']['timeperiods']));
+//            die('post');
         }else{
-            $data['indicators'] = $sdmxObj->getIndicatorList();
+            $data['indicators'] = $indicatorReportObj->getIndicatorList();
             if(empty($indicatorId)){
                 reset($data['indicators']);
                 $tmpIndicator = current($data['indicators']);
                 $indicatorId = $tmpIndicator['Indicator_Nid'];
             }
-            $data['areas'] = $sdmxObj->getAreaList($indicatorId);
-            $data['timeperiods'] = $sdmxObj->getTimePeriod($indicatorId);
+            $data['areas'] = $indicatorReportObj->getAreaList($indicatorId);
+            $data['timeperiods'] = $indicatorReportObj->getTimePeriod($indicatorId);
 //        echo '<pre>';
 //        echo $sdmxObj->create(1, 1, '23,24,25', '1,2,3');
 //        echo $sdmxObj->output();
@@ -167,17 +171,18 @@ class ReportsController extends ReportsAppController {
         }
     }
 
-    public function downloadSDMX(){
+    public function DownloadIndicator(){
         $this->autoRender = false;
-        App::uses('Sdmx', 'Lib/Sdmx');
-        $sdmxObj = new Sdmx($this->BatchProcess);
+        App::uses('IndicatorReport', 'Lib/IndicatorReport');
+        $indicatorReportObj = new IndicatorReport($this->BatchProcess);
 //        var_dump($this->data['Sdmx']['indicator']);
 //        var_dump(implode(',', $this->data['Sdmx']['areas']));
 //        var_dump(implode(',',$this->data['Sdmx']['timeperiods']));
         try{
-            echo $sdmxObj->create( $this->data['Sdmx']['indicator'], implode(',', $this->data['Sdmx']['areas']), implode(',',$this->data['Sdmx']['timeperiods']));
+            echo $indicatorReportObj->create( $this->data['Sdmx']['indicator'], implode(',', $this->data['Sdmx']['areas']), implode(',',$this->data['Sdmx']['timeperiods']), $this->data['Sdmx']['export']);
         }catch(Exception $e){
-            $this->redirect('sdmx');
+            pr($e->getMessage());
+//            $this->redirect('Indicator');
         }
 
     }
