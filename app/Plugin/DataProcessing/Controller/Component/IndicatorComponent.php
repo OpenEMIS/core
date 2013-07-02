@@ -18,6 +18,9 @@ App::uses('Component', 'Controller');
 
 class IndicatorComponent extends Component {
 	private $controller;
+    private $indicatorsQueries;
+    private $systemIndicatorPath;
+    private $userIndicatorPath;
 	public $Area;
 	public $AreaLevel;
 	public $BatchIndicator;
@@ -52,6 +55,14 @@ class IndicatorComponent extends Component {
 		$this->BatchIndicatorResult = ClassRegistry::init('DataProcessing.BatchIndicatorResult');
 		
 		$this->Logger->init('indicator');
+
+        if(Configure::read('xml.indicators.system')){
+            $this->systemIndicatorPath = Configure::read('xml.indicators.system');
+        }
+
+        if(Configure::read('xml.indicators.user')){
+            $this->userIndicatorPath = Configure::read('xml.indicators.user');
+        }
 	}
 	
 	public function run($settings=array()) {
@@ -128,17 +139,30 @@ class IndicatorComponent extends Component {
 	}
 	
 	public function generateIndicator($id, $userId=0) {
-		$areaLevels = $this->AreaLevel->find('list', array('order' => 'level DESC'));
-		$indicator = $this->BatchIndicator->find('first', array('conditions' => array('BatchIndicator.id' => $id)));
-		$indicatorName = $indicator['BatchIndicator']['name'];
-		$unitName = $indicator['BatchIndicator']['unit'];
-		$query = $indicator['BatchIndicator']['query'];
-		
+        $areaLevels = $this->AreaLevel->find('list', array('order' => 'level DESC'));
+        $indicator = $this->BatchIndicator->find('first', array('conditions' => array('BatchIndicator.id' => $id)));
+        $indicatorName = $indicator['BatchIndicator']['name'];
+        $unitName = $indicator['BatchIndicator']['unit'];
+        $path = ((isset($indicator['BatchIndicator']['type']) AND $indicator['BatchIndicator']['type'] == 'user')? $this->userIndicatorPath: $this->systemIndicatorPath).$indicator['BatchIndicator']['filename'];
+        if(!file_exists($path)) {
+            throw new Exception("Error file do not exist in the location: {$path}");
+        }
+//        var_dump($path);
+        $this->indicatorsQueries = simplexml_load_file($path);
+        $indicatorXml = array_shift($this->indicatorsQueries->xpath('//indicator[@id='.$id.']'));
+        $query = $indicatorXml->query->mysql->insert;
+//		$query = $indicator['BatchIndicator']['query']; # Read query from DB table
+
 		$subgroupList = array();
-		$permutations = $this->BatchIndicatorSubgroup->generateSubgroups($id, $subgroupList);
+//		$permutations = $this->BatchIndicatorSubgroup->generateSubgroups($id, $subgroupList);
+        $permutations = $this->generateSubgroups($id, $subgroupList, $indicatorXml->subgroups->item);
+
+        $permutationCounter = 0; # for debug
 		
 		if(strpos($query, '-- {LEVEL}') === false) { // query does not execute per area level
 			foreach($permutations as $pattern) {
+//                if($this->isMaxPermutations($permutationCounter)) break; #for debugging
+
 				$sql = $query;
 				$subgroups = array();
 				foreach($pattern as $s) {
@@ -163,6 +187,8 @@ class IndicatorComponent extends Component {
 		} else {
 			foreach($areaLevels as $levelId => $levelName) {
 				foreach($permutations as $pattern) {
+//                    if($this->isMaxPermutations($permutationCounter)) break; #for debugging
+
 					$sql = $query;
 					$subgroups = array();
 					foreach($pattern as $s) {
@@ -188,5 +214,128 @@ class IndicatorComponent extends Component {
 			}
 		}
 	}
+
+    public function generateSubgroups($indicatorId, &$subgroups, SimpleXMLElement $list) {
+        $class = 'BatchIndicatorSubgroup';
+        $index = 0;
+        $subgroupIndex = 0;
+        $subgroups = array();
+        $subgroupTypes = array();
+        $permutationList = array();
+        $ageList = array();
+
+        foreach($list as $item) {
+            $obj = $item;
+            $type = (string) $obj['type'];
+            $name = (string) $obj['name'];
+            $where = (string) $obj->mysql->where;
+
+            if(!isset($subgroupTypes[$type])) {
+                $subgroupTypes[$type] = $index++;
+            }
+
+            $subgroups[$subgroupIndex] = array(
+                'id' => 0,
+                'name' => $name,
+                'type' => $type,
+                'select' => (string) $obj->mysql->select,
+                'join' => (string) $obj->mysql->join,
+                'where' => $where,
+                'group' => (string) $obj->mysql->group
+            );
+
+            $permutationList[$subgroupTypes[$type]][] = array($subgroupIndex++ => $name);
+
+            if(!is_null($obj['reference']) AND !empty($obj['reference'])) {
+                $model = ClassRegistry::init((string)$obj['reference']);
+//                pr((string)$obj['reference']);
+                $list = $model->findListAsSubgroups();
+                pr($list);
+
+                if($type==='Age') {
+                    $ageList = $list;
+                }
+
+                foreach($list as $key => $value) {
+                    if(!is_null($where) && strpos($where, '{KEY}') !== false) {
+                        $whereClause = str_replace('{KEY}', $key, $where);
+                    }
+
+                    $subgroups[$subgroupIndex] = array(
+                        'id' => $key,
+                        'name' => $type==='Age' ? ('Age ' . $key) : $value,
+                        'type' => $type,
+                        'select' => (string) $obj->mysql->select,
+                        'join' => (string) $obj->mysql->join,
+                        'where' => $whereClause,
+                        'group' => (string) $obj->mysql->group
+                    );
+                    if($type !== 'Age') {
+                        $permutationList[$subgroupTypes[$type]][] = array($subgroupIndex => $value);
+                    } else {
+                        $ageList[$key]['index'] = $subgroupIndex;
+                    }
+                    $subgroupIndex++;
+                }
+            }
+        }
+
+        $permutations = $this->permutate($permutationList);
+
+        // To add age permutations into the list
+        if(sizeof($ageList) > 0) {
+            $ageIndex = $subgroupTypes['Age'];
+            $gradeIndex = $subgroupTypes['Grade'];
+            foreach($permutations as $obj) {
+                foreach($ageList as $age => $attr) {
+                    $grade = $subgroups[key($obj[$gradeIndex])];
+                    $newPermutation = $obj;
+                    if($grade['id'] == 0) {
+                        $newPermutation[$ageIndex] = array($attr['index'] => $subgroups[$attr['index']]['name']);
+                        $permutations[] = $newPermutation;
+                    } else {
+                        if(in_array($grade['id'], $attr['grades'])) {
+                            $newPermutation[$ageIndex] = array($attr['index'] => $subgroups[$attr['index']]['name']);
+                            $permutations[] = $newPermutation;
+                        }
+                    }
+                }
+            }
+        }
+        // end age permutations
+
+        return $permutations;
+    }
+
+    public function permutate($array) {
+        $permutations = array();
+        $iter = 0;
+
+        while(1) {
+            $num = $iter++;
+            $pick = array();
+
+            for($i=0; $i<sizeof($array); $i++) {
+                $groupSize = sizeof($array[$i]);
+                $r = $num % $groupSize;
+                $num = ($num - $r) / $groupSize;
+                array_push($pick, $array[$i][$r]);
+            }
+            if($num > 0) break;
+
+            array_push($permutations, $pick);
+        }
+        return $permutations;
+    }
+
+    private function isMaxPermutations(&$counter){
+        $max = 5;
+        if($counter > $max){
+            return true;
+        }else{
+            $counter++;
+            return false;
+        }
+    }
 }
 ?>
