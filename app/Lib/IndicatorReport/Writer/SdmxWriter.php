@@ -13,18 +13,19 @@ or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more 
 have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
-//namespace Sdmx;
 
 //date_default_timezone_set('Asia/Singapore');
 
-class SdmxWriter extends XMLWriter{
+class SdmxWriter extends \XMLWriter{
     const OUTPUT_FILE = 1;
     const OUTPUT_ECHO = 2;
+    const FILE_EXT = '.xml';
 
     public $head;
     public $body;
     private $xmlLang = 'en';
     private $filename;
+    private $tmpFilename;
     private $timeFormat = 'Y-m-d H:i:s';                    # Time format.
     private $logType = array(                               # Log Type.
                             LOG_ALERT => "Alert",
@@ -36,14 +37,14 @@ class SdmxWriter extends XMLWriter{
                             LOG_DEBUG => "Debug",
                         );
 
-    function __construct($filename ="test.xml") {
-        $this->filename = $filename;
+    function __construct() {
+        $this->tmpFilename = tempnam(sys_get_temp_dir(), 'sdmx');
         $this->log("Init SDMX writer...", LOG_INFO);
 //        print date($this->timeFormat)." Info: Init SDMX writer...\n";
 //        $this->writer = new DOMDocument('1.0');
 //        $this->writer = new $this;
 
-        $this->openUri($this->filename);
+        $this->openUri($this->tmpFilename);
 //        $this->openMemory();
         $this->setIndent(true);
         $this->startDocument("1.0", 'utf-8');
@@ -59,6 +60,22 @@ class SdmxWriter extends XMLWriter{
         $this->writeAttribute("xmlns:registry", "http://www.sdmx.org/resources/sdmxml/schemas/v2_1/registry");
         $this->writeAttribute("xmlns:message", "http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message");
 
+    }
+
+    public function generate($resultSet){
+        $this->log("Creating SDMX file.", LOG_INFO);
+        $this->createHeader();
+        $this->startDataSet();
+        $this->setFilenameFromIndicator(reset($resultSet));
+        foreach($resultSet as $series){
+            $attributes = array_merge($series->getAttributes(), $this->arrayifySubgroup($series->getSubgroups()));
+            $this->startSeries($series->getIndicator(), $series->getUnit(), $series->getArea(), $series->getSource(), $attributes);
+            foreach($series->getObservations() as $observation){
+                $this->createObservation($observation->getValue(), $observation->getTimeperiod(), $observation->getDenominator(), $observation->getFootnote(), $observation->getAttributes());
+            }
+            $this->endSeries();
+        }
+        $this->output();
     }
 
     public function createHeader() {
@@ -249,6 +266,16 @@ class SdmxWriter extends XMLWriter{
 //        print date($this->timeFormat). " {$this->logType[$type]}: {$message}".PHP_EOL;
     }
 
+    private function arrayifySubgroup($subgroups){
+        $arrayifiedSubgroup = array();
+        foreach($subgroups as $subgroup){
+            $arrayifiedSubgroup[$subgroup->getSubType()] = $subgroup->getName();
+        }
+
+        return $arrayifiedSubgroup;
+
+    }
+
     public function setLang($lang="en"){
         $this->xmlLang = $lang;
     }
@@ -260,42 +287,21 @@ class SdmxWriter extends XMLWriter{
         header('Content-type: text/xml charset=utf-8');
 //        header('Content-type: text/plain');
         //open/save dialog box
-        header('Content-Disposition: attachment; filename="sdmx_report_'.date('d_M_Y').'.xml"');
-        header('Content-Length: ' . filesize($this->filename));
+//        header('Content-Disposition: attachment; filename="sdmx_report_'.date('d_M_Y').'.xml"');
+        header('Content-Disposition: attachment; filename="'.$this->filename.'"');
+        header('Content-Length: ' . filesize($this->tmpFilename));
         ob_clean();
         flush();
         //read from server and write to buffer
-        readfile($this->filename);
-        unlink($this->filename);
+        readfile($this->tmpFilename);
+        unlink($this->tmpFilename);
         exit;
     }
 
-}
+    public function setFilenameFromIndicator($firstSeries){
+        $filename = $firstSeries->getIndicator();
+        $this->filename = str_ireplace(' ', '_', $filename).SdmxWriter::FILE_EXT;
 
-//$sdmx = new SdmxWriter();
-//$sdmx->createHeader();
-//$sdmx->startDataSet();
-////for($i=0; $i<50000; $i++){
-//    $sdmx->startSeries("student", "Number", "Singapore", "testing", array('SEX'=>'total', 'locality' => 'total'));
-//
-//    for($j=0; $j<10; $j++)
-//        $sdmx->createObservation(rand(0,500)+($j*rand(1,10)), 2000+$j, 0, "123123 sdvs");
-//
-//    $sdmx->endSeries();
-//
-//    $sdmx->startSeries("student", "Number", "Singapore", "testing", array('SEX'=>'Male', 'locality' => 'total'));
-//
-//    for($j=0; $j<10; $j++)
-//        $sdmx->createObservation(rand(0,500)+($j*rand(1,10)), 2000+$j, 0, "123123 sdvs");
-//
-//    $sdmx->endSeries();
-//
-//    $sdmx->startSeries("student", "Number", "Singapore", "testing", array('SEX'=>'Female', 'locality' => 'total'));
-//
-//    for($j=0; $j<10; $j++)
-//        $sdmx->createObservation(rand(0,500)+($j*rand(1,10)), 2000+$j, 0, "123123 sdvs");
-//
-//    $sdmx->endSeries();
-////}
-//$sdmx->endDataSet();
-////$sdmx->assemble();
+    }
+
+}
