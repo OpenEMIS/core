@@ -1899,7 +1899,7 @@ class InstitutionSitesController extends AppController {
 	
 	public function teachersCustFieldYrView(){
 		extract($this->teachersCustFieldYrInits());
-		$this->Navigation->addCrumb('Annual Info');
+		$this->Navigation->addCrumb('Academic');
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
@@ -1951,7 +1951,7 @@ class InstitutionSitesController extends AppController {
 	
 	public function studentsCustFieldYrView(){
 		extract($this->studentsCustFieldYrInits());
-		$this->Navigation->addCrumb('Annual Info');
+		$this->Navigation->addCrumb('Academic');
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
@@ -2001,7 +2001,7 @@ class InstitutionSitesController extends AppController {
 	
 	public function staffCustFieldYrView(){
 		extract($this->staffCustFieldYrInits());
-		$this->Navigation->addCrumb('Annual Info');
+		$this->Navigation->addCrumb('Academic');
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);

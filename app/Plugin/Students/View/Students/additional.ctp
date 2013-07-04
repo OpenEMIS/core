@@ -11,6 +11,7 @@
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'additionalEdit'),	array('class' => 'divider')); 
 		}
+		echo $this->Html->link(__('Academic'), array('action' => 'custFieldYrView'), array('class' => 'divider'));
 		?>
     </h1>
     <?php echo $this->element('alert'); ?>

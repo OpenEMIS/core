@@ -126,5 +126,4 @@ echo $this->Html->script('institution_site', false);
 	<script>
 		$('#gmap').load(getRootURL()+'InstitutionSites/viewMap/');
 	</script>
-    
 </div>
