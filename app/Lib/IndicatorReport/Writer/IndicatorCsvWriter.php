@@ -30,7 +30,7 @@ class IndicatorCsvWriter {
         $this->downloadHeader($filename);
         echo $this->processData($resultSet);
 //        $this->output();
-        exit;
+//        exit;
     }
 
     public function downloadHeader($filename=""){
