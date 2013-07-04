@@ -90,11 +90,14 @@ var custom = {
 	},
 	
 	attachIconTitle: function() {
+		
+		try{
 		$('.icon_up').attr('title', i18n.General.iconMoveUp);
 		$('.icon_down').attr('title', i18n.General.iconMoveDown);
 		$('.icon_visible').attr('title', i18n.General.iconToggleField);
 		$('.tooltip').remove();
 		$('span[title]').tooltip({position: 'top center', effect: 'slide'});
+		}catch(e){}
 	},
 	
 	attachAddOptionEvent: function() {
@@ -203,5 +206,15 @@ var custom = {
 				$.unmask({id: maskId, callback: callback});
 			}
 		});
+	},
+	view : {
+		changeCategory : function(a,b){
+			var site = (b) ? $('#institution_site_id').val() : '' ;
+			location.href = getRootURL()+ $(a).attr('url')+'/'+$('#school_year_id').val()+'/'+ site;
+		},
+		redirect:function(a){
+            location.href = $(a).attr('href') +'/'+$('#school_year_id').val();
+			return false;
+		}
 	}
 };

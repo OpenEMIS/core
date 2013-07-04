@@ -53,16 +53,25 @@ class SetupController extends AppController {
 		'FinanceNature',
 		'FinanceType',
 		'FinanceCategory',
-		'FinanceSource'
+		'FinanceSource',
+		'StudentDetailsCustomField',
+		'StudentDetailsCustomFieldOption',
+		'TeacherDetailsCustomField',
+		'TeacherDetailsCustomFieldOption',
+		'StaffDetailsCustomField',
+		'StaffDetailsCustomFieldOption'
 	);
 	
 	private $CustomFieldModelLists = array(
 		'InstitutionCustomField' => array('hasSiteType' => false, 'label' => 'Institution Custom Fields'),
-		'InstitutionSiteCustomField' => array('hasSiteType' => true, 'label' => 'Institution Site Custom Fields'),
+		'InstitutionSiteCustomField' => array('hasSiteType' => true, 'label' => 'Institution Site Custom Fields'), 
 		'CensusCustomField' => array('hasSiteType' => true, 'label' => 'Census Custom Fields'),
 		'StudentCustomField' => array('hasSiteType' => false, 'label' => 'Student Custom Fields'),
+		'StudentDetailsCustomField' => array('hasSiteType' => false, 'label' => 'Student Details Custom Fields'),
 		'TeacherCustomField' => array('hasSiteType' => false, 'label' => 'Teacher Custom Fields'),
+		'TeacherDetailsCustomField' => array('hasSiteType' => false, 'label' => 'Teacher Details Custom Fields'),
 		'StaffCustomField' => array('hasSiteType' => false, 'label' => 'Staff Custom Fields'),
+		'StaffDetailsCustomField' => array('hasSiteType' => false, 'label' => 'Staff Details Custom Fields'),
 		'CensusGrid' => array('hasSiteType' => true, 'label' => 'Census Custom Tables')
 	);
 	
@@ -218,6 +227,14 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Custom Fields'
 		));
+		$lookup[] = array('Student' => array(
+			'viewMethod' => array('action' => 'customFields', 'StudentDetailsCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'StudentDetailsCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'Custom Fields (Annual)'
+		));
 		// End Student
 		
 		// Teacher
@@ -240,6 +257,14 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Custom Fields'
 		));
+		$lookup[] = array('Teacher' => array(
+			'viewMethod' => array('action' => 'customFields', 'TeacherDetailsCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'TeacherDetailsCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'Custom Fields  (Annual)'
+		));
 		// End Teacher
 		
 		// Staff
@@ -249,12 +274,12 @@ class SetupController extends AppController {
 			'items' => $this->Staff->getLookupVariables()
 		));
 		$lookup[] = array('Staff' => array(
-			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
+			'viewMethod' => array('action' => 'customFields', 'StaffDetailsCustomField'),
 			'view' => 'customFields',
-			'editMethod' => array('action' => 'customFieldsEdit', 'StudentCustomField'),
+			'editMethod' => array('action' => 'customFieldsEdit', 'StaffDetailsCustomField'),
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
-			'name' => 'Custom Fields'
+			'name' => 'Custom Fields (Annual)'
 		));
 		// End Staff
 		
@@ -407,7 +432,7 @@ class SetupController extends AppController {
 		$cond = ($sitetype != '')
 			  ? array('conditions'=>array('institution_site_type_id' => $sitetype),'order'=>'order') 
 			  : array('order'=>'order');
-			
+		$this->{$model}->bindModel(array('hasMany'=>array($model.'Option' => array('order'=> 'order'))));
 		return $data = $this->{$model}->find('all',$cond);
 	}
 	
