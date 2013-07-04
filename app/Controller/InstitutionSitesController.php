@@ -23,6 +23,8 @@ class InstitutionSitesController extends AppController {
 	public $uses = array(
 		'Area',
 		'AreaLevel',
+		'AdministrativeArea',
+		'AdministrativeAreaLevel',
 		'Bank',
 		'BankBranch',
 		'EducationSubject',
@@ -126,13 +128,21 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Overview');
 		
 		$levels = $this->AreaLevel->find('list',array('recursive'=>0));
+		$adminarealevels = $this->AdministrativeAreaLevel->find('list',array('recursive'=>0));
 		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
 		$areaLevel = $this->fetchtoParent($data['InstitutionSite']['area_id']);
 		$areaLevel = array_reverse($areaLevel);
+	
+		$adminarea = $this->fetchtoParent($data['InstitutionSite']['administrative_area_id'],array('AdministrativeArea','AdministrativeAreaLevel'));
+		$adminarea = array_reverse($adminarea);
 		
 		$this->set('data', $data);
-		$this->set('arealevel',$areaLevel);
 		$this->set('levels',$levels);
+		$this->set('adminarealevel',$adminarealevels);
+		
+		$this->set('arealevel',$areaLevel);
+		$this->set('adminarea',$adminarea);
+		
 	}
 	
 	public  function viewMap(){
@@ -329,6 +339,10 @@ class InstitutionSitesController extends AppController {
         $this->set('institutionId',$institutionId);
         $this->set('arealevel',$areaLevel);
 		$this->set('levels',$levels);
+		
+		$this->set('adminarealevel',$areaLevel);
+		$this->set('adminlevels',$levels);
+		
 		$this->set('areadropdowns',$areadropdowns);
         $this->set('highestLevel',$topArea);
     }
@@ -398,11 +412,13 @@ class InstitutionSitesController extends AppController {
         $this->FileAttachment->download($id);
     }
 	
-	private function getAllSiteAreaToParent($siteId) {
+	private function getAllSiteAreaToParent($siteId,$arrMap = array('Area','AreaLevel')) {
+		$AreaLevelfk = Inflector::underscore($arrMap[1]);
+		
 		if($this->institutionSiteObj['InstitutionSite']['area_id'] == 0) $this->institutionSiteObj['InstitutionSite']['area_id'] = 1;
-
+		
 		$lowest =  $siteId;
-		$areas = $this->fetchtoParent($lowest);
+		$areas = $this->fetchtoParent($lowest,$arrMap);
 		$areas = array_reverse($areas);
 		
 		/*foreach($areas as $index => &$arrVals){
@@ -413,28 +429,30 @@ class InstitutionSitesController extends AppController {
 		}*/
 		$arrDisabledList = array();
 		foreach($areas as $index => &$arrVals){
-			$siblings = $this->Area->find('all',array('fields'=>Array('Area.id','Area.name','Area.parent_id','Area.visible'),'conditions'=>array('Area.parent_id' => $arrVals['parent_id'])));
+			
+			$siblings = $this->Area->find('all',array('fields'=>Array($arrMap[0].'.id',$arrMap[0].'.name',$arrMap[0].'.parent_id',$arrMap[0].'.visible'),'conditions'=>array($arrMap[0].'.parent_id' => $arrVals['parent_id'])));
 			//echo "<br>";
+			
 			$opt = array();
 			foreach($siblings as &$sibVal){
 				 
-					 $arrDisabledList[$sibVal['Area']['id']] = array('parent_id'=>$sibVal['Area']['parent_id'],'id'=>$sibVal['Area']['id'],'name'=>$sibVal['Area']['name'],'visible'=>$sibVal['Area']['visible']);
+					 $arrDisabledList[$sibVal[$arrMap[0]]['id']] = array('parent_id'=>$sibVal[$arrMap[0]]['parent_id'],'id'=>$sibVal[$arrMap[0]]['id'],'name'=>$sibVal[$arrMap[0]]['name'],'visible'=>$sibVal[$arrMap[0]]['visible']);
 				
-					 if(isset($arrDisabledList[$sibVal['Area']['parent_id']])){
+					 if(isset($arrDisabledList[$sibVal[$arrMap[0]]['parent_id']])){
 						 
 						//echo $sibVal['Area']['name']. ' '.$arrDisabledList[$sibVal['Area']['parent_id']]['visible'].' <br>';
-						if($arrDisabledList[$sibVal['Area']['parent_id']]['visible'] == 0){
-							$sibVal['Area']['visible'] = 0;
-							$arrDisabledList[$sibVal['Area']['id']]['visible'] = 0;
+						if($arrDisabledList[$sibVal[$arrMap[0]]['parent_id']]['visible'] == 0){
+							$sibVal[$arrMap[0]]['visible'] = 0;
+							$arrDisabledList[$sibVal[$arrMap[0]]['id']]['visible'] = 0;
 						}
 						 
 					 }
 			}
 			//pr($arrDisabledList);
 			foreach($siblings as $sibVal2){
-				$o = array('name'=>$sibVal2['Area']['name'],'value'=>$sibVal2['Area']['id']);
+				$o = array('name'=>$sibVal2[$arrMap[0]]['name'],'value'=>$sibVal2[$arrMap[0]]['id']);
 				
-				if($sibVal2['Area']['visible'] == 0){
+				if($sibVal2[$arrMap[0]]['visible'] == 0){
 					$o['disabled'] = 'disabled';
 					
 				}
@@ -445,50 +463,57 @@ class InstitutionSitesController extends AppController {
 			
 			//pr($opt);
 			
-			$colInfo['area_level_'.$index]['options'] = $opt;
+			$colInfo[$AreaLevelfk.'_'.$index]['options'] = $opt;
 		}
 		
 		$maxAreaIndex = max(array_keys($areas));//starts with 0
 		$totalAreaLevel = $this->AreaLevel->find('count'); //starts with 1
 		for($i = $maxAreaIndex; $i < $totalAreaLevel;$i++ ){
-			$colInfo['area_level_'.($i+1)]['options'] = array('0'=>'--'.__('Select').'--');
+			$colInfo[$AreaLevelfk.'_'.($i+1)]['options'] = array('0'=>'--'.__('Select').'--');
 		}
 		
 		return $colInfo;
 	}
 	
-	public function viewAreaChildren($id) {
+	public function viewAreaChildren($id,$arrMap = array('Area','AreaLevel')) {
+		
 		$this->autoRender = false;
-		$value =$this->Area->find('list',array('conditions'=>array('Area.parent_id' => $id,'Area.visible' => 1)));
+		$value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
 		$this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
 		echo json_encode($value);
 	}
 	
-	private function fetchtoParent($lowest){
+	private function fetchtoParent($lowest,$arrMap = array('Area','AreaLevel')){
 		
+		$AreaLevelfk = Inflector::underscore($arrMap[1]);
 		$arrVals = Array();
 		//pr($lowest);die;
 		//$this->autoRender = false; // AJAX
-		$list = $this->Area->find('first', array(
-								'fields' => array('Area.id', 'Area.name', 'Area.parent_id', 'Area.area_level_id','AreaLevel.name'),
-								'conditions' => array('Area.id' => $lowest)));
-	
+			
+			echo "d1";
+			echo "<br> ".$AreaLevelfk;
+		$list = $this->{$arrMap[0]}->find('first', array(
+								'fields' => array($arrMap[0].'.id', $arrMap[0].'.name', $arrMap[0].'.parent_id', $arrMap[0].'.'.$AreaLevelfk.'_id',$arrMap[1].'.name'),
+								'conditions' => array($arrMap[0].'.id' => $lowest)));
+		echo "d2";
 		//check if not false
-		if($list){
-			$arrVals[$list['Area']['area_level_id']] = Array('level_id'=>$list['Area']['area_level_id'],'id'=>$list['Area']['id'],'name'=>$list['Area']['name'],'parent_id'=>$list['Area']['parent_id'],'AreaLevelName'=>$list['AreaLevel']['name']);
-			if($list['Area']['area_level_id'] > 1){
-				if($list['Area']['area_level_id']){
+		if($list){ 
+			$arrVals[$list[$arrMap[0]][$AreaLevelfk.'_id']] = Array('level_id'=>$list[$arrMap[0]][$AreaLevelfk.'_id'],'id'=>$list[$arrMap[0]]['id'],'name'=>$list[$arrMap[0]]['name'],'parent_id'=>$list[$arrMap[0]]['parent_id'],'AreaLevelName'=>$list[$arrMap[1]]['name']);
+		
+			if($list[$arrMap[0]][$AreaLevelfk.'_id'] > 1){
+				if($list[$arrMap[0]][$AreaLevelfk.'_id']){
 					do {
-						$list = $this->Area->find('first', array(
-								'fields' => array('Area.id', 'Area.name', 'Area.parent_id', 'Area.area_level_id','AreaLevel.name', 'Area.visible'),
-								'conditions' => array('Area.id' => $list['Area']['parent_id'])));
-						$arrVals[$list['Area']['area_level_id']] = Array('visible'=>$list['Area']['visible'],'level_id'=>$list['Area']['area_level_id'],'id'=>$list['Area']['id'],'name'=>$list['Area']['name'],'parent_id'=>$list['Area']['parent_id'],'AreaLevelName'=>$list['AreaLevel']['name']);
-					} while ($list['Area']['area_level_id'] != 1);
+						$list = $this->{$arrMap[0]}->find('first', array(
+								'fields' => array($arrMap[0].'.id', $arrMap[0].'.name', $arrMap[0].'.parent_id', $arrMap[0].'.'.$AreaLevelfk.'_id',$arrMap[1].'.name', $arrMap[0].'.visible'),
+								'conditions' => array($arrMap[0].'.id' => $list[$arrMap[0]]['parent_id'])));
+						$arrVals[$list[$arrMap[0]][$AreaLevelfk.'_id']] = Array('visible'=>$list[$arrMap[0]]['visible'],'level_id'=>$list[$arrMap[0]][$AreaLevelfk.'_id'],'id'=>$list[$arrMap[0]]['id'],'name'=>$list[$arrMap[0]]['name'],'parent_id'=>$list[$arrMap[0]]['parent_id'],'AreaLevelName'=>$list[$arrMap[1]]['name']);
+					} while ($list[$arrMap[0]][$AreaLevelfk.'_id'] != 1);
 				}
 			}
+			
 		}
+		
 		return $arrVals;
-	  //echo $arrVals;
 	}
 	
 	public function additional() {
