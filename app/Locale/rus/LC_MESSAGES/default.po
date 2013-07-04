@@ -15,13 +15,13 @@ msgstr ""
 "X-Generator: Poedit 1.5.5\n"
 
 msgid "Home"
-msgstr "дома"
+msgstr "Главная страница"
 
 msgid "Welcome"
 msgstr "Добро пожаловать"
 
 msgid "Account"
-msgstr "Счет"
+msgstr "Вход"
 
 msgid "Help"
 msgstr "Помощь"
@@ -93,7 +93,7 @@ msgid "Cancel"
 msgstr "Отмена"
 
 msgid "Update"
-msgstr "Update"
+msgstr "Обновить"
 
 msgid "Previous"
 msgstr "Назад"
@@ -105,7 +105,7 @@ msgid "Statistics"
 msgstr "Статистика"
 
 msgid "Institutions Sites"
-msgstr "учреждения сайтов"
+msgstr "Cайты учреждений"
 
 msgid "Activities"
 msgstr "Мероприятия"
@@ -126,7 +126,7 @@ msgid "by"
 msgstr "на"
 
 msgid "Notice"
-msgstr "Уведомление"
+msgstr "Примечание"
 
 msgid "Note: Max upload file size is 2MB."
 msgstr "Примечание: Максимальная загрузка <br/>файла размером 2 Мб."
@@ -159,7 +159,7 @@ msgid "Some errors have been encountered while saving files."
 msgstr "Некоторые ошибки, которые возникли при сохранении файлов."
 
 msgid "Records have been added/updated successfully."
-msgstr "Записи, которые были добавлены / обновлены успешно"
+msgstr "Записи были успешно добавлены / обновлены"
 
 msgid "Records have been deleted successfully."
 msgstr "Записи были успешно удалены."
@@ -174,7 +174,7 @@ msgid "Searching..."
 msgstr "Поиск ..."
 
 msgid "%s have been deleted successfully."
-msgstr "%s была успешно удалена"
+msgstr "% были успешно удалены"
 
 msgid "Please enter a unique Identification No"
 msgstr "Пожалуйста, введите уникальный <br/>Идентификационный номер"
@@ -189,13 +189,13 @@ msgid "Add new Student"
 msgstr "Добавить новый студент"
 
 msgid "Details"
-msgstr "Подробности"
+msgstr "Детали"
 
 msgid "DETAILS"
 msgstr "Подробности"
 
 msgid "Attachments"
-msgstr "Вложения"
+msgstr "Приложения"
 
 msgid "Overview"
 msgstr "обзор"
@@ -225,19 +225,19 @@ msgid "Assessment Results"
 msgstr "Результаты оценки"
 
 msgid "Student Details"
-msgstr "Подробности Студент"
+msgstr "Подробная информация о студенте"
 
 msgid "Student History"
-msgstr "Студенческая история"
+msgstr "История Студента"
 
 msgid "Add"
 msgstr "Добавить"
 
 msgid "Attachment"
-msgstr "Вложение"
+msgstr "Приложение"
 
 msgid "Student Identification No, First Name or Last Name"
-msgstr "Студенческая Идентификационный номер, Имя или Фамилия"
+msgstr "Студенческий Идентификационный номер, Имя или Фамилия"
 
 msgid "Student Identification"
 msgstr "студенческий билет"
@@ -249,7 +249,7 @@ msgid "Staff Identification"
 msgstr "идентификации работников"
 
 msgid "Identification No."
-msgstr "Идентификационный номер"
+msgstr "Идентификационный номер."
 
 msgid "Identification No"
 msgstr "Идентификационный номер"
@@ -300,7 +300,7 @@ msgid "Birth Place Area"
 msgstr "Площадь Место рождения"
 
 msgid "Postal Code"
-msgstr "почтовый код"
+msgstr "Почтовый Индекс"
 
 msgid "Telephone"
 msgstr "Телефон"
@@ -321,10 +321,10 @@ msgid "Contact"
 msgstr "Контакт"
 
 msgid "No Student found."
-msgstr "Ни один студент не найдено."
+msgstr "Студент не найден."
 
 msgid "No history found."
-msgstr "Нет истории найдены"
+msgstr "Истории не найдено"
 
 msgid "List of Staff"
 msgstr "Список сотрудников"
@@ -339,34 +339,34 @@ msgid "Staff Details"
 msgstr "Подробности о сотрудниках"
 
 msgid "No Staff found."
-msgstr "Нет Персонал найден."
+msgstr "Информация о сотруднике не найдена."
 
 msgid "Staff History"
-msgstr "Сотрудники История"
+msgstr "История о Сотруднике"
 
 msgid "List of Teachers"
 msgstr "Список учителей"
 
 msgid "Add new Teacher"
-msgstr "Добавить новый учитель"
+msgstr "Добавить нового учителя"
 
 msgid "Qualifications"
 msgstr "Квалификация"
 
 msgid "Training"
-msgstr "обучение"
+msgstr "профессиональная подготовка"
 
 msgid "TEACHER INFORMATION"
-msgstr "УЧИТЕЛЬ ИНФОРМАЦИИ"
+msgstr "ИНФОРМАЦИЯ ОБ УЧИТЕЛЕ"
 
 msgid "OTHER INFORMATION"
 msgstr "ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ"
 
 msgid "Teacher Details"
-msgstr "Подробности учителя"
+msgstr "Подробности об учителе"
 
 msgid "Teacher History"
-msgstr "Учитель истории"
+msgstr "История учителя"
 
 msgid "Date of Issue"
 msgstr "Дата выдачи"
@@ -381,7 +381,7 @@ msgid "Issued By"
 msgstr ", выданного"
 
 msgid "Completed Date"
-msgstr "Завершено Дата"
+msgstr "Дата завершения"
 
 msgid "Category"
 msgstr "Категория"
@@ -390,7 +390,7 @@ msgid "Certifications"
 msgstr "Сертификаты"
 
 msgid "No Teacher found."
-msgstr "Ни один учитель не найден."
+msgstr "Учитель не найден."
 
 msgid "Teacher"
 msgstr "Учитель"
@@ -753,7 +753,7 @@ msgid "Total Public Expenditure"
 msgstr "общих государственных расходов"
 
 msgid "National Denominators"
-msgstr "Национальный знаменателями"
+msgstr "Национальные знаменатели"
 
 msgid "Select"
 msgstr "Выбрать"
@@ -994,7 +994,7 @@ msgid "ACCOUNTS & SECURITY"
 msgstr "счета и БЕЗОПАСНОСТЬ"
 
 msgid "NATIONAL DENOMINATORS"
-msgstr "НАЦИОНАЛЬНЫЙ знаменателями"
+msgstr "НАЦИОНАЛЬНЫЕ ЗНАМЕНАТЕЛИ"
 
 msgid "Population"
 msgstr "Население"
@@ -2494,3 +2494,159 @@ msgstr "Отчеты Данные несоответствия"
 
 msgid "age"
 msgstr "возраст"
+
+msgid "Completion Rate / Gross Primary Graduation Ratio"
+msgstr "коэффициент окончания / общий коэффициент окончания начальной школы"
+
+msgid "Divide the number of primary graduates, irrespective of age, by the population of theoretical primary graduation, and multiply the result by 100."
+msgstr "Разделить число выпускников начальной школы, независимо от возраста на теоретическое количество выпускников начальной школы и умножьте результат на 100."
+
+msgid "Percentage of Trained Teachers"
+msgstr "Процент квалифицированных учителей"
+
+msgid "Divide the female value of a given indicator by that of the male."
+msgstr "Разделите женский коэффициент данного показателя на мужской"
+
+msgid "Percent of Female Students"
+msgstr "Процент студенток"
+
+msgid "Percent of Female Teachers"
+msgstr "Процент учителей-женщин"
+
+msgid "Percentage of Private Enrolment"
+msgstr "Процент частного зачисления"
+
+msgid "Percentage of schools with improved drinking water sources"
+msgstr "Процент школ с улучшенным источникам питьевой воды"
+
+msgid "Percentage of schools with adequate sanitation facilities"
+msgstr "Процент школ с надлежащими санитарно-гигиеническими условиями"
+
+msgid "Public Expenditure as percentage of Total Public Expenditure on Education"
+msgstr "Государственные расходы как процент от общих государственных расходов на образование"
+
+msgid "Divide public current expenditure devoted to each level of education by the total public current expenditure on education, and multiply the result by 100. Divide public current expenditure on education in a given financial year by the total public expenditure on education for the same financial year and multiply the result by 100."
+msgstr "Разделите текущие общественные расходы, направленные на каждый уровень образования, на текущие общую сумму общественных расходов на образование и умножьте результат на 100. Разделите текущие общественные расходы на образование в данном финансовом году на общую сумму  государственных расходов на образование за тот же финансовый год и умножьть результат на 100."
+
+msgid "Public Expenditure as percentage of Total Government Expenditure"
+msgstr "Общественные расходы как процент от общих государственных расходов"
+
+msgid "Public Expenditure as percentage of Gross National Product (GNP)"
+msgstr "Общественные расходы как процент от валового национального продукта (ВНП)"
+
+msgid "Number of teachers"
+msgstr "Количество учителей"
+
+msgid "Net Admission Rate / Net Intake Rate"
+msgstr "Коэффициент чистого зачисления / коэффициент чистого приема"
+
+msgid "Gross Admission Rate / Gross Intake Rate"
+msgstr "Общий коэффициент зачисления / общий коэффициент допуска"
+
+msgid "Summary report on Census Additional Information about enrolment"
+msgstr "Сводный отчет о переписи дополнительной информации о зачислении"
+
+msgid "Summary report on Buildings"
+msgstr "Сводный отчет о зданиях"
+
+msgid "Summary report on Buildings"
+msgstr "Сводный отчет о зданиях"
+
+msgid "Report on Rooms"
+msgstr "Отчет по комнатам"
+
+msgid "Report on number of Sanitations and Conditions"
+msgstr "Отчет по количеству санузлов и их состояние"
+
+msgid "Report on number of Furnitures and its conditions"
+msgstr "Отчет по количеству мебели и ее состоянии"
+
+msgid "Report on number and kinds of Resources as well as Condition status"
+msgstr "Отчет о количестве и видах ресурсов, а также статус их состояния"
+
+msgid "Report on Power sources"
+msgstr "Отчет по источникам питания"
+
+msgid "Report on number of Powers types and Conditions"
+msgstr "Отчет по количеству типов электропитания и их состояние"
+
+msgid "Report on Water"
+msgstr "Отчет по воде"
+
+msgid "Report on conditions, number, kinds of water source of Institutions"
+msgstr "Отчет по условиям, количеству, типам водоснабжения для учреждений"
+
+msgid "Student List"
+msgstr "Список студентов"
+
+msgid "Report on student additional info"
+msgstr "Отчет по дополнительной информации о студентах"
+
+msgid "Report on Teachers Additional Info"
+msgstr "Отчет по дополнительной информации о преподавателях"
+
+msgid "Report on Staff Additional Info"
+msgstr "Отчет по дополнительной информации о персонале "
+
+msgid "List of institution's additional info"
+msgstr "Отчет по дополнительной информации об учреждениях"
+
+msgid "Enrolment Summary"
+msgstr "Резюме зачисления"
+
+msgid "Class List"
+msgstr "Список классов"
+
+msgid "Report on classes"
+msgstr "Отчет по классам"
+
+msgid "Summary report on Textbooks"
+msgstr "Сводный отчет по учебникам"
+
+msgid "Summary report on Teachers"
+msgstr "Сводный отчет по учителям"
+
+msgid "Trainings"
+msgstr "Тренинги"
+
+msgid "Staffs"
+msgstr "Персонал"
+
+msgid "Summary report on Institution Staffs"
+msgstr "Сводный отчет по персоналу учреждений"
+
+msgid "Summary report on Census Table Related Information"
+msgstr "Сводный отчет по дополнительная информации таблицах переписи "
+
+msgid "Summary report on income"
+msgstr "Сводный отчет о доходах"
+
+msgid "Report on expenditure"
+msgstr "Отчет о расходах"
+
+msgid "Institution List"
+msgstr "Список учреждени"
+
+msgid "Report on institutions"
+msgstr "Отчет об учреждениях"
+
+msgid "Institution Site List"
+msgstr "Список учреждений"
+
+msgid "Report on institution sites"
+msgstr "Отчет по учреждениям"
+
+msgid "Please contact support for more information on Custom Report."
+msgstr "Пожалуйста, свяжитесь со службой поддержки для получения дополнительной информации о пользовательских отчетах."
+
+msgid "This is a report on classes"
+msgstr "Это отчет по классам"
+
+msgid "This is a report on student"
+msgstr "Это отчет по студентам"
+
+msgid "This is a report on Teachers"
+msgstr "Это отчет по учителям"
+
+msgid "This is a report on Staff"
+msgstr "Это отчет по персоналу"
