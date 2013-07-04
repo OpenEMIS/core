@@ -218,13 +218,31 @@ msgstr ""
 msgid "Details"
 msgstr ""
 
+msgid "DETAILS"
+msgstr ""
+
 msgid "Attachments"
+msgstr ""
+
+msgid "Overview"
+msgstr ""
+
+msgid "More"
 msgstr ""
 
 msgid "Additional Info"
 msgstr ""
 
 msgid "STUDENT INFORMATION"
+msgstr ""
+
+msgid "Static Fields"
+msgstr ""
+
+msgid "Field Options"
+msgstr ""
+
+msgid "National Assessments"
 msgstr ""
 
 msgid "ASSESSMENT"
@@ -246,6 +264,15 @@ msgid "Attachment"
 msgstr ""
 
 msgid "Student Identification No, First Name or Last Name"
+msgstr ""
+
+msgid "Student Identification"
+msgstr ""
+
+msgid "Teacher Identification"
+msgstr ""
+
+msgid "Staff Identification"
 msgstr ""
 
 msgid "Identification No."
@@ -293,6 +320,12 @@ msgstr ""
 msgid "Address"
 msgstr ""
 
+msgid "Address Area"
+msgstr ""
+
+msgid "Birth Place Area"
+msgstr ""
+
 msgid "Postal Code"
 msgstr ""
 
@@ -302,7 +335,13 @@ msgstr ""
 msgid "Email"
 msgstr ""
 
+msgid "E-mail"
+msgstr ""
+
 msgid "General"
+msgstr ""
+
+msgid "GENERAL"
 msgstr ""
 
 msgid "Contact"
@@ -533,6 +572,18 @@ msgstr ""
 msgid "Ward"
 msgstr ""
 
+msgid "Street"
+msgstr ""
+
+msgid "Block"
+msgstr ""
+
+msgid "Axis"
+msgstr ""
+
+msgid "State"
+msgstr ""
+
 msgid "Locality"
 msgstr ""
 
@@ -546,6 +597,9 @@ msgid "No Institution Sites."
 msgstr ""
 
 msgid "Institution Site Details"
+msgstr ""
+
+msgid "Institution Site Code"
 msgstr ""
 
 msgid "Please enter a valid Name"
@@ -630,6 +684,18 @@ msgid "Seats"
 msgstr ""
 
 msgid "Age"
+msgstr ""
+
+msgid "Attendance"
+msgstr ""
+
+msgid "Behaviour"
+msgstr ""
+
+msgid "Results"
+msgstr ""
+
+msgid "TOTALS"
 msgstr ""
 
 msgid "Total"
@@ -1353,6 +1419,9 @@ msgid "Function"
 msgstr ""
 
 msgid "Institution Site"
+msgstr ""
+
+msgid "INSTITUTION SITE"
 msgstr ""
 
 msgid "Census"
@@ -2208,6 +2277,9 @@ msgid "OLAP Report"
 msgstr ""
 
 msgid "Generated"
+msgstr ""
+
+msgid "Generated Files"
 msgstr ""
 
 msgid "Generating OLAP Report..."

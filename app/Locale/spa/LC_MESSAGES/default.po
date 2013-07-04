@@ -191,14 +191,32 @@ msgstr "Añadir nuevo Estudiante"
 msgid "Details"
 msgstr "Detalles"
 
+msgid "DETAILS"
+msgstr "Detalles"
+
 msgid "Attachments"
 msgstr "Archivos adjuntos"
+
+msgid "Overview"
+msgstr ""
+
+msgid "More"
+msgstr ""
 
 msgid "Additional Info"
 msgstr "Información Adicional"
 
 msgid "STUDENT INFORMATION"
 msgstr "INFORMACIÓN  DEL ESTUDIANTE "
+
+msgid "Static Fields"
+msgstr ""
+
+msgid "Field Options"
+msgstr ""
+
+msgid "National Assessments"
+msgstr ""
 
 msgid "ASSESSMENT"
 msgstr "EVALUACIÓN"
@@ -220,6 +238,15 @@ msgstr "Archivo adjunto"
 
 msgid "Student Identification No, First Name or Last Name"
 msgstr "No. de Identificación del Estudiante, Nombre o Apellido"
+
+msgid "Student Identification"
+msgstr "Student Identification"
+
+msgid "Teacher Identification"
+msgstr "Teacher Identification"
+
+msgid "Staff Identification"
+msgstr "Staff Identification"
 
 msgid "Identification No."
 msgstr "No. de identificación"
@@ -266,6 +293,12 @@ msgstr "Fecha de finalización"
 msgid "Address"
 msgstr "Dirección"
 
+msgid "Address Area"
+msgstr "Dirección Áreas"
+
+msgid "Birth Place Area"
+msgstr "Birth Place Area"
+
 msgid "Postal Code"
 msgstr "Código Postal"
 
@@ -275,7 +308,13 @@ msgstr "Teléfono"
 msgid "Email"
 msgstr "Correo electrónico"
 
+msgid "E-mail"
+msgstr "Correo electrónico"
+
 msgid "General"
+msgstr "General"
+
+msgid "GENERAL"
 msgstr "General"
 
 msgid "Contact"
@@ -491,6 +530,18 @@ msgstr "LLG"
 msgid "Ward"
 msgstr "Ward"
 
+msgid "Street"
+msgstr "Street"
+
+msgid "Block"
+msgstr "Block"
+
+msgid "Axis"
+msgstr "Axis"
+
+msgid "State"
+msgstr "State"
+
 msgid "Locality"
 msgstr "Localidad"
 
@@ -504,6 +555,9 @@ msgid "No Institution Sites."
 msgstr "No hay ubicación de instituciónes"
 
 msgid "Institution Site Details"
+msgstr "Información sobre la ubicación de instituciónes "
+
+msgid "Institution Site Code"
 msgstr "Información sobre la ubicación de instituciónes "
 
 msgid "Please enter a valid Name"
@@ -589,6 +643,18 @@ msgstr "Asientos"
 
 msgid "Age"
 msgstr "Edad"
+
+msgid "Attendance"
+msgstr "Attendance"
+
+msgid "Behaviour"
+msgstr "Behaviour"
+
+msgid "Results"
+msgstr "Results"
+
+msgid "TOTALS"
+msgstr "TOTALS"
 
 msgid "Total"
 msgstr "Total"
@@ -1246,6 +1312,9 @@ msgid "Function"
 msgstr "Función"
 
 msgid "Institution Site"
+msgstr "Instituciones"
+
+msgid "INSTITUTION SITE"
 msgstr "Instituciones"
 
 msgid "Census"
@@ -2257,6 +2326,9 @@ msgstr "Informes OLAP"
 
 msgid "Generated"
 msgstr "Generado"
+
+msgid "Generated Files"
+msgstr "Generado Archivos"
 
 msgid "Generating OLAP Report..."
 msgstr "Generación de informes OLAP…"
