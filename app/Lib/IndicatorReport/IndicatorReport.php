@@ -198,7 +198,7 @@ EOD;
         INNER JOIN `ut_area_en` ON `ut_area_en`.`Area_NId` = `ut_data`.`Area_NId`
         INNER JOIN `ut_area_level_en` ON `ut_area_level_en`.`Area_Level` = `ut_area_en`.`Area_Level`
         WHERE `ut_data`.`Indicator_Nid` = {{ Indicator_Nid }}
-        ORDER BY `ut_area_en`.`Area_Name` ASC;
+        ORDER BY `ut_area_level_en`.`Area_Level` ASC, `ut_area_en`.`Area_Name` ASC;
 EOD;
         $sql = str_ireplace('{{ Indicator_Nid }}', '?' , $sql);
 
