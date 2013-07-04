@@ -9,7 +9,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 	<h1>
 		<span><?php echo __('Student Information'); ?></span>
 			<?php $obj = $data['Student']; 
-			echo $this->Html->link(__('Annual Info'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider')); ?>
+			echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
