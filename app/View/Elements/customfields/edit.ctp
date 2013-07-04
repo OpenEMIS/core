@@ -7,7 +7,7 @@ echo $this->Html->script('custom_field', false);
 
 <div id="additional" class="content_wrapper edit">
 	<h1>
-		<span><?php echo __('Annual Details'); ?></span>
+		<span><?php echo __('Academic'); ?></span>
 		<?php
 		if($_edit) {
 			echo $this->Html->link(__('View'), array('action' => rtrim($this->action,'Edit').'View',$id),	array('class' => 'divider','onClick'=>'return custom.view.redirect(this)')); 
