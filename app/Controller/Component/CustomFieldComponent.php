@@ -45,7 +45,7 @@ class CustomFieldComponent extends Component {
 	
 	public function getCustomFields(){
 		$this->customField->bindModel(array('hasMany'=>array($this->settings['CustomFieldOption'] => array('order'=>'order'))));
-		$arr = $this->customField->find('all',array('conditions' => array('visible'=> '1')));
+		$arr = $this->customField->find('all',array('conditions' => array('visible'=> '1'),'order'=>'order'));
 		
 		return ($arr) ? $arr : array();
 	}
