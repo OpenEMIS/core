@@ -1,6 +1,7 @@
 <?php 
 echo $this->Html->script('custom_field', false);
 //echo $this->Html->css('census', 'stylesheet', array('inline' => false));
+
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -17,8 +18,8 @@ echo $this->Html->script('custom_field', false);
 		
 		?>
 	</h1>
-	<div class="row" style="margin-left:5px;">
-		<div class="label"><?php echo __('Year'); ?></div>
+	<div class="row year" style="margin-left:5px;">
+		<div class="label" style="width: 90px;"><?php echo __('Year'); ?></div>
 		<div class="value">
 			<?php
 				echo $this->Form->input('school_year_id', array(
@@ -34,8 +35,8 @@ echo $this->Html->script('custom_field', false);
 	</div>
 	<?php if(isset($institution_sites)) { ?>
 	<div class="row" style="margin-left:5px;">
-		<div class="label"><?php echo __('Institution Sites'); ?></div>
-		<div class="value">
+		<div class="label" style="width: 90px;"><?php echo __('Institution Sites'); ?></div>
+		<div class="value" style="margin-bottom: 10px;">
 			<?php
 				echo $this->Form->input('institution_site_id', array(
 					'label' => false,
@@ -49,7 +50,6 @@ echo $this->Html->script('custom_field', false);
 		</div>
 	</div>
 	<?php } ?>
-	<br />
     <?php
 		if(count(@$dataFields) > 0 ) {
             foreach($dataFields as $arrVals){
