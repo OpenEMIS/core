@@ -74,27 +74,6 @@ echo $this->Html->script('institution_site', false);
 		?>
 	</fieldset>
 	
-	<fieldset class="section_break">
-		<legend><?php echo __('Administrative Area'); ?></legend>   
-		<?php
-		//pr($adminarealevel);
-		$ctr = 0;
-		foreach($adminarealevel as $levelid => $levelName){
-			$areaVal = array('id'=>'0','name'=>'a');
-			foreach($adminarea as $arealevelid => $arrval){
-				if($arrval['level_id'] == $levelid) {
-					$areaVal = $arrval;
-					continue;
-				}
-			}
-			echo '<div class="row">
-						<div class="label">'.__($levelName).'</div>
-						<div class="value" value="'.$areaVal['id'].'" name="area_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
-					</div>';
-			$ctr++;
-		}
-		?>
-	</fieldset>
 	
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>
