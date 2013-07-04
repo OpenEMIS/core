@@ -89,45 +89,46 @@ class IndTask extends AppTask {
 		$Indicator = new IndicatorComponent(new ComponentCollection);
 		$Indicator->init();
 		$Indicator->run(array('indicators' => array($indicatorRec['BatchIndicator']['id'])));
-		
-		$tpl = $settings['tpl'];
-		$procId = $settings['batchProcessId'];
-		$count = $this->BatchIndicatorResult->find('count');
-		$recusive = ceil($count / $this->limit);
-		$this->prepareIndCSV($settings);
-		for($i=0;$i<$recusive;$i++){
-			$offset = ($this->limit*$i);
-			try{
-				$this->BatchIndicatorResult->bindModel(array(
-					'belongsTo'=> array(
-						'Area'=>array('foreignKey' => 'area_id'),
-						'BatchIndicator'=>array('foreignKey' => 'batch_indicator_id')    
-						)
-					)
-				);
-				$data = $this->BatchIndicatorResult->find('all',array('fields'=>array(
-					'BatchIndicator.name AS Indicator',
-					'BatchIndicatorResult.subgroups AS SubGroup',
-					'Area.name AS AreaName',
-					'BatchIndicatorResult.timeperiod AS TimePeriod',
-					'BatchIndicatorResult.data_value AS DataValue',
-					'BatchIndicatorResult.classification AS Classification'),'limit'=>$this->limit,'offset'=>$offset));
-				
-			} catch (Exception $e) {
-				// Update the status for the Processed item to (-1) ERROR
-				$errLog = $e->getMessage();
-				$this->Common->updateStatus($procId,'-1');
-				$this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
-			}
-			
-			$this->Common->formatData($data);
-			
-			$this->writeIndCSV($data, $settings);
-			
-			echo json_encode(array('processed_records'=>($offset+$this->limit),'batch'=>($i+1)));
-		}
-		
-		$this->closeIndCSV($settings);
+
+        # Use to generate data dump into csv format.
+//		$tpl = $settings['tpl'];
+//		$procId = $settings['batchProcessId'];
+//		$count = $this->BatchIndicatorResult->find('count');
+//		$recusive = ceil($count / $this->limit);
+//		$this->prepareIndCSV($settings);
+//		for($i=0;$i<$recusive;$i++){
+//			$offset = ($this->limit*$i);
+//			try{
+//				$this->BatchIndicatorResult->bindModel(array(
+//					'belongsTo'=> array(
+//						'Area'=>array('foreignKey' => 'area_id'),
+//						'BatchIndicator'=>array('foreignKey' => 'batch_indicator_id')
+//						)
+//					)
+//				);
+//				$data = $this->BatchIndicatorResult->find('all',array('fields'=>array(
+//					'BatchIndicator.name AS Indicator',
+//					'BatchIndicatorResult.subgroups AS SubGroup',
+//					'Area.name AS AreaName',
+//					'BatchIndicatorResult.timeperiod AS TimePeriod',
+//					'BatchIndicatorResult.data_value AS DataValue',
+//					'BatchIndicatorResult.classification AS Classification'),'limit'=>$this->limit,'offset'=>$offset));
+//
+//			} catch (Exception $e) {
+//				// Update the status for the Processed item to (-1) ERROR
+//				$errLog = $e->getMessage();
+//				$this->Common->updateStatus($procId,'-1');
+//				$this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
+//			}
+//
+//			$this->Common->formatData($data);
+//
+//			$this->writeIndCSV($data, $settings);
+//
+//			echo json_encode(array('processed_records'=>($offset+$this->limit),'batch'=>($i+1)));
+//		}
+//
+//		$this->closeIndCSV($settings);
 		
 		
 		

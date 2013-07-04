@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('Folder', 'Utility');
 App::uses('File', 'Utility');
+App::uses('Sanitize', 'Utility');
 class ReportsController extends ReportsAppController {
     public $bodyTitle = 'Reports';
     public $headerSelected = 'Reports';
@@ -39,7 +40,7 @@ class ReportsController extends ReportsAppController {
 		'Teacher'=>array('enable'=>true),
 		'Staff'=>array('enable'=>true),
 		'Consolidated'=>array('enable'=>true),
-		'Indicator'=>array('enable'=>true),
+//		'Indicator'=>array('enable'=>true),
 		'DataQuality'=>array('enable'=>true),
 		'Custom'=>array('enable'=>true));
 	
@@ -83,8 +84,8 @@ class ReportsController extends ReportsAppController {
 	public function TeacherDownload(){}
 	public function Consolidated(){}
 	public function ConsolidatedDownload(){}
-	public function Indicator(){}
-	public function IndicatorDownload(){}
+//	public function Indicator(){}
+//	public function IndicatorDownload(){}
 	public function Custom(){}
 	public function CustomDownload(){}
 	public function DataQuality(){}
@@ -128,7 +129,108 @@ class ReportsController extends ReportsAppController {
         $this->set('msg',$msg);
 		$this->set('data',$tmp);
 	}
-	
+
+    public function Indicator($indicatorId = ''){
+//            $this->autoRender = false;
+        App::uses('IndicatorReport', 'Lib/IndicatorReport');
+
+        $this->Navigation->addCrumb('Indicator Reports');
+
+        $exportFormat = array(
+            array(
+                'value'=>'csv',
+                'selected' => false
+            ),
+            array(
+                'value'=>'sdmx',
+                'selected' => false
+            )
+        );
+
+        if($this->Session->check('Report.Indicator.error')) {
+            $this->set('alert', $this->Session->read('Report.Indicator.error'));
+            $this->Session->delete('Report.Indicator.error');
+        }
+
+        $indicatorReportObj = new IndicatorReport($this->BatchProcess);
+
+        if($this->request->is('post')){
+            $this->autoRender = false;
+            $userInput = $this->sanitizeIndicatorInput();
+            echo $indicatorReportObj->create($userInput['Sdmx']['indicator'], implode(',', $userInput['Sdmx']['areas']), implode(',',$userInput['Sdmx']['timeperiods']));
+        }else{
+            $data['indicators'] = $indicatorReportObj->getIndicatorList();
+            if(empty($indicatorId) AND sizeof($data['indicators']) > 0){
+                reset($data['indicators']);
+                $tmpIndicator = current($data['indicators']);
+                $indicatorId = $tmpIndicator['Indicator_Nid'];
+            }
+            $data['areas'] = $indicatorReportObj->getAreaList($indicatorId);
+            $data['timeperiods'] = $indicatorReportObj->getTimePeriod($indicatorId);
+
+            if($this->Session->check('Report.Indicator.userInput')){
+                $userInput = $this->Session->read('Report.Indicator.userInput');
+                $this->set('selectedAreas', $userInput['areas']);
+                $this->set('selectedTimeperiods', $userInput['timeperiods']);
+                foreach($exportFormat as &$format){
+                    if(strcmp($format['value'], $userInput['format']) == 0){
+                        $format['selected']=true;
+                        break;
+                    }
+                }
+                $this->Session->delete('Report.Indicator.userInput');
+            }else{
+                $this->set('selectedAreas', array());
+                $this->set('selectedTimeperiods', array());
+
+            }
+
+            $this->set('selectedIndicator', $indicatorId);
+            $this->set('indicators', $data['indicators']);
+            $this->set('formats', $exportFormat);
+            $this->set('areas', $data['areas']);
+            $this->set('timeperiods', $data['timeperiods']);
+
+        }
+    }
+
+    private function sanitizeIndicatorInput(){
+        #init variables
+        $data = array();
+        $areas = array();
+        $timepreiods = array();
+
+        $data['Sdmx']['indicator'] = Sanitize::clean($this->data['Sdmx']['indicator']);
+        $data['Sdmx']['format'] = Sanitize::clean($this->data['Sdmx']['format']);
+        foreach($this->data['Sdmx']['areas'] as $area){
+            array_push($areas, Sanitize::clean($area));
+        }
+
+        foreach($this->data['Sdmx']['timeperiods'] as $timepreiod){
+            array_push($timepreiods, Sanitize::clean($timepreiod));
+        }
+        $data['Sdmx']['areas'] = $areas;
+        $data['Sdmx']['timeperiods'] = $timepreiods;
+
+        return $data;
+    }
+
+    public function DownloadIndicator(){
+        $this->autoRender = false;
+        App::uses('IndicatorReport', 'Lib/IndicatorReport');
+        try{
+            $indicatorReportObj = new IndicatorReport($this->BatchProcess);
+            $userInput = $this->sanitizeIndicatorInput();
+
+            echo $indicatorReportObj->create( $userInput['Sdmx']['indicator'], implode(',', $userInput['Sdmx']['areas']), implode(',',$userInput['Sdmx']['timeperiods']), $userInput['Sdmx']['format']);
+        }catch(Exception $e){
+            $this->Session->write('Report.Indicator.error', $e->getMessage());
+            $this->Session->write('Report.Indicator.userInput', $this->data['Sdmx']);
+            $this->redirect(array('controller' => 'Reports', 'action' => 'Indicator', $this->data['Sdmx']['indicator']));
+        }
+
+    }
+
     public function olap(){
 //        $this->autoRender = false;
 
