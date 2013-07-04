@@ -1,0 +1,81 @@
+<indicators>
+    <indicator id="28">
+        <subgroups>
+            <item name="National Level Indicator" type="National" order="2">
+                <mysql>
+                    <select>
+                        <![CDATA[
+                                ]]>
+                    </select>
+                </mysql>
+            </item>
+
+        </subgroups>
+        <query>
+            <mysql>
+                <insert>
+                    <![CDATA[
+                            INSERT INTO `batch_indicator_results`
+                            SELECT
+                            NULL,
+                            -- {INDICATOR_ID} AS `batch_indicator_id`,
+                            -- {SUBGROUPS} AS `subgroups`,
+                            `main_data`.`area_id`,
+                            `main_data`.`year` AS `timeperiod`,
+                            `main_data`.`numerator` / `main_data_b`.`denominator` * 100 AS `data_value`,
+                            `main_data`.`numerator` AS `numerator`,
+                            `main_data_b`.`denominator` AS `denominator`,
+                            `main_data`.`classification`,
+                            -- {USER_ID},
+                            NOW()
+
+                            FROM (
+                                SELECT
+                                    `areas`.`id` AS `area_id`,
+                                    `public_expenditure_education_level`.`year`,
+                                    `public_expenditure_education_level`.`value` / SUM(`census_students`.`male` + `census_students`.`female`) AS `numerator`,
+                                    CONCAT('Finances - ', `education_level_isced`.`name`) AS `classification`
+                                FROM `areas`
+                                JOIN `public_expenditure_education_level` ON `public_expenditure_education_level`.`area_id` = `areas`.`id`
+                                JOIN `school_years` ON `school_years`.`name` = `public_expenditure_education_level`.`year`
+                                JOIN `education_levels` ON `education_levels`.`id` = `public_expenditure_education_level`.`education_level_id`
+                                JOIN `education_level_isced` ON `education_level_isced`.`id` = `education_levels`.`education_level_isced_id`
+                                JOIN `education_cycles` ON `education_cycles`.`education_level_id` = `education_levels`.`id`
+                                JOIN `education_programmes` ON `education_programmes`.`education_cycle_id` = `education_cycles`.`id`
+                                JOIN `education_grades` ON `education_grades`.`education_programme_id` = `education_programmes`.`id`
+                                JOIN `census_students`
+                                    ON `census_students`.`education_grade_id` = `education_grades`.`id`
+                                    AND `census_students`.`school_year_id` = `school_years`.`id`
+                                WHERE `areas`.`parent_id` = -1
+                                GROUP BY `education_levels`.`id`, `school_years`.`id`
+                                ORDER BY `education_level_isced`.`isced_level`
+                            ) AS `main_data`
+
+                            JOIN (
+                                SELECT
+                                    `areas`.`id` AS `area_id`,
+                                    `public_expenditure`.`year`,
+                                    `public_expenditure`.`gross_national_product` / SUM(`population`.`male` + `population`.`female`) AS `denominator`
+                                FROM `areas`
+                                JOIN `public_expenditure` ON `public_expenditure`.`area_id` = `areas`.`id`
+                                JOIN `population`
+                                    ON `population`.`area_id` = `areas`.`id`
+                                    AND `population`.`year` = `public_expenditure`.`year`
+                                WHERE `areas`.`parent_id` = -1
+                                GROUP BY `areas`.`id`, `population`.`year`
+                            ) AS `main_data_b`
+                                ON `main_data_b`.`area_id` = `main_data`.`area_id`
+                                AND `main_data_b`.`year` = `main_data`.`year`
+
+                            GROUP BY
+                            `main_data`.`area_id`,
+                            `main_data`.`year`,
+                            `main_data`.`classification`
+				]]>
+                </insert>
+            </mysql>
+        </query>
+
+    </indicator>
+
+</indicators>
