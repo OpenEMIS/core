@@ -115,6 +115,33 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Custom Fields'
 		));
+		$lookup[] = array('Institution Site' => array(
+			'viewMethod' => array('action' => 'customFields', 'StudentDetailsCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'StudentDetailsCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'Student Custom Fields (Academic)'
+		));
+		
+		$lookup[] = array('Institution Site' => array(
+			'viewMethod' => array('action' => 'customFields', 'TeacherDetailsCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'TeacherDetailsCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'Teacher Custom Fields  (Academic)'
+		));
+		
+		
+		$lookup[] = array('Institution Site' => array(
+			'viewMethod' => array('action' => 'customFields', 'StaffDetailsCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'StaffDetailsCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'Staff Custom Fields (Academic)'
+		));
 		
 		// Census
 		$lookup[] = array('Institution Site Totals' => array(
@@ -227,14 +254,7 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Custom Fields'
 		));
-		$lookup[] = array('Student' => array(
-			'viewMethod' => array('action' => 'customFields', 'StudentDetailsCustomField'),
-			'view' => 'customFields',
-			'editMethod' => array('action' => 'customFieldsEdit', 'StudentDetailsCustomField'),
-			'edit' => 'customFieldsEdit',
-			'optgroup' => true,
-			'name' => 'Custom Fields (Annual)'
-		));
+		
 		// End Student
 		
 		// Teacher
@@ -257,14 +277,6 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Custom Fields'
 		));
-		$lookup[] = array('Teacher' => array(
-			'viewMethod' => array('action' => 'customFields', 'TeacherDetailsCustomField'),
-			'view' => 'customFields',
-			'editMethod' => array('action' => 'customFieldsEdit', 'TeacherDetailsCustomField'),
-			'edit' => 'customFieldsEdit',
-			'optgroup' => true,
-			'name' => 'Custom Fields  (Annual)'
-		));
 		// End Teacher
 		
 		// Staff
@@ -272,14 +284,6 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Category',
 			'items' => $this->Staff->getLookupVariables()
-		));
-		$lookup[] = array('Staff' => array(
-			'viewMethod' => array('action' => 'customFields', 'StaffDetailsCustomField'),
-			'view' => 'customFields',
-			'editMethod' => array('action' => 'customFieldsEdit', 'StaffDetailsCustomField'),
-			'edit' => 'customFieldsEdit',
-			'optgroup' => true,
-			'name' => 'Custom Fields (Annual)'
 		));
 		// End Staff
 		
