@@ -1,0 +1,95 @@
+<indicators>
+    <indicator id="5">
+        <subgroups>
+            <item name="All Localities" type="locality" order="3" reference="InstitutionSiteLocality">
+                <mysql>
+                    <where>
+                        <![CDATA[
+							AND `institution_sites`.`institution_site_locality_id` = {KEY}
+						]]>
+                    </where>
+                </mysql>
+            </item>
+            <item name="All Types" type="Type" order="9" reference="InstitutionSiteType">
+                <mysql>
+                    <where>
+                        <![CDATA[
+							AND `institution_sites`.`institution_site_type_id` = {KEY}
+						]]>
+                    </where>
+                </mysql>
+            </item>
+
+        </subgroups>
+        <query>
+            <mysql>
+                <insert>
+                    <![CDATA[
+                        INSERT INTO `batch_indicator_results`
+                        SELECT
+                        NULL,
+                        -- {INDICATOR_ID} AS `batch_indicator_id`,
+                        -- {SUBGROUPS} AS `subgroups`,
+                        `main_data`.`area_id`,
+                        `main_data`.`year` AS `timeperiod`,
+                        IFNULL((SUM(`main_data`.`total`) + IFNULL(`indicator_results`.`numerator`, 0)), 'No Data') AS `data_value`,
+                        (SUM(`main_data`.`total`) + IFNULL(`indicator_results`.`numerator`, 0)) AS `numerator`,
+                        NULL AS `denominator`,
+                        `main_data`.`classification`,
+                        -- {USER_ID},
+                        NOW()
+
+                        FROM (
+                            SELECT
+                                `areas`.`id` AS `area_id`,
+                                CONCAT('Institution Sites - ', `institution_site_statuses`.`name`) AS `classification`,
+                                YEAR(`institution_sites`.`date_opened`) AS `year`,
+                                COUNT(`institution_sites`.`id`) AS `total`
+                            FROM `areas`
+                            JOIN `institution_sites` ON `institution_sites`.`area_id` = `areas`.`id`
+                            	JOIN `institution_site_types` ON `institution_site_types`.`id` = `institution_sites`.`institution_site_type_id`
+                            	JOIN `institution_site_localities` ON `institution_site_localities`.`id` = `institution_sites`.`institution_site_locality_id`
+                            	JOIN `institution_site_statuses` ON `institution_site_statuses`.`id` = `institution_sites`.`institution_site_status_id`
+                            WHERE `areas`.`area_level_id` = -- {LEVEL}
+                            -- {WHERE}
+
+                            GROUP BY
+                            -- {GROUP}
+                            `areas`.`id`,
+                            `institution_sites`.`institution_site_status_id`,
+                            YEAR(`institution_sites`.`date_opened`)
+                        ) AS `main_data`
+
+                        -- Aggregation by Area Start
+                        LEFT JOIN (
+                            SELECT
+                            `areas`.`parent_id` AS `area_parent_id`,
+                            `batch_indicator_results`.`timeperiod`,
+                            SUM(`batch_indicator_results`.`numerator`) AS `numerator`,
+                            SUM(`batch_indicator_results`.`denominator`) AS `denominator`,
+                            `batch_indicator_results`.`classification`
+                            FROM `batch_indicator_results`
+                            JOIN `areas` ON `areas`.`id` = `batch_indicator_results`.`area_id`
+                            WHERE `batch_indicator_results`.`batch_indicator_id` = -- {INDICATOR_ID}
+                            AND `batch_indicator_results`.`subgroups` = -- {SUBGROUPS}
+                            GROUP BY
+                            `areas`.`parent_id`,
+                            `batch_indicator_results`.`timeperiod`,
+                            `batch_indicator_results`.`classification`
+                        ) AS `indicator_results`
+                            ON `indicator_results`.`area_parent_id` = `main_data`.`area_id`
+                            AND `indicator_results`.`timeperiod` = `main_data`.`year`
+                            AND `indicator_results`.`classification` = `main_data`.`classification`
+                        -- Aggregation by Area End
+
+                        GROUP BY
+                        `main_data`.`year`,
+                        `main_data`.`area_id`,
+                        `main_data`.`classification`
+				]]>
+                </insert>
+            </mysql>
+        </query>
+
+    </indicator>
+</indicators>

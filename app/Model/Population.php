@@ -18,6 +18,23 @@ class Population extends AppModel {
 	public $useTable = 'population';
 	// public $belongTo = array('Area');
 
+    public function findListAsSubgroups() {
+        $this->formatResult = true;
+        $list = $this->find('all', array(
+            'fields' => array('DISTINCT(Population.age)')
+        ));
+
+        $ageList = array();
+        foreach($list as $obj) {
+            $age = $obj['age'];
+            if(!isset($ageList[$age])) {
+                $ageList[$age] = array('grades' => array());
+            }
+        }
+
+        return $ageList;
+    }
+
 	public function getData($year=0, $areaId=0) {
 
 		// if($year <= 0 || ($areaId <= 0 && $parentAreaId <= 0 )){
