@@ -20,6 +20,11 @@
  */
 
 /**
+ * Add Composer autoload file
+ */
+require_once dirname(__DIR__) . '/Vendor/autoload.php';
+
+/**
  * CakePHP Debug Level:
  *
  * Production Mode:
@@ -277,11 +282,11 @@ Cache::config('_cake_model_', array(
 	'duration' => $duration
 ));
 
-App::import('Vendor', array('file' => 'autoload'));
 /**
  * Indicators Path
  * Configure the path and filename of the xml file that will be loading with
  * SQL statement for generating indicator reports.
  */
-Configure::write('xml.indicators.query_path', APP.'Config'.DS);
+Configure::write('xml.indicators.system', APP.'Config'.DS.'indicators'.DS);
+Configure::write('xml.indicators.user', WWW_ROOT.'custom_indicators'.DS);
 Configure::write('xml.indicators.filename', 'indicatorQueries.xml');
