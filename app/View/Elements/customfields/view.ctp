@@ -7,7 +7,7 @@ echo $this->Html->script('custom_field', false);
 
 <div id="site" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Annual Details'); ?></span>
+		<span><?php echo __('Academic'); ?></span>
 		<?php
 			if(@$displayEdit){
 				if($_edit) {
