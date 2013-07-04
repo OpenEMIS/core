@@ -22,4 +22,8 @@ class InstitutionSiteType extends AppModel {
     public function getSiteTypesList(){
         return $this->find('list',array('conditions'=>array('visible'=>1)));
     }
+
+    public function findListAsSubgroups() {
+        return $this->findList(true);
+    }
 }
