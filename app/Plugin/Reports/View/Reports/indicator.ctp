@@ -120,9 +120,16 @@ echo $this->Html->script('app', false);
     <div id="format_selector" class="custom_div">
         <div class="custom_div_label"><?php echo __("Format"); ?></div>
         <div class="custom_div_content">
-        <select name="data[Sdmx][export]" class="default">
-            <option value="csv">CSV</option>
-            <option value="sdmx">SDMX</option>
+        <select name="data[Sdmx][format]" class="default">
+            <?php
+            $optionElementTemplate = '<option value="{{ value }}" {{ selected }}>{{ text }}</option>';
+            foreach($formats as $format){
+                $optionElement = str_ireplace('{{ value }}', $format['value'], $optionElementTemplate);
+                $optionElement = str_ireplace('{{ text }}', strtoupper($format['value']), $optionElement);
+                $optionElement = str_ireplace('{{ selected }}', ($format['selected'])?'selected':'', $optionElement);
+                echo $optionElement;
+            }
+            ?>
         </select>
         </div>
     </div>
@@ -139,7 +146,7 @@ echo $this->Html->script('app', false);
                         $cssId = str_replace(' ', '_', trim($area['Area_Name'])) . '_' . $area['Area_NId'];
                     ?>
                         <li>
-                            <input id="<?php echo $cssId?>" class='areas_input' type="checkbox" name="data[Sdmx][areas][]" value="<?php echo $area['Area_NId']; ?>"/ > <label for="<?php echo $cssId?>"><?php echo trim($area['Area_Name']); ?></label>
+                            <input id="<?php echo $cssId?>" class='areas_input' type="checkbox" name="data[Sdmx][areas][]" value="<?php echo $area['Area_NId']; ?>" <?php echo (!in_array($area['Area_NId'], $selectedAreas))?:'checked'; ?>/> <label for="<?php echo $cssId?>"><?php echo trim($area['Area_Name']); ?></label>
                         </li>
                     <?php } ?>
                     </ul>
@@ -158,7 +165,7 @@ echo $this->Html->script('app', false);
                     $cssId = str_replace(' ', '_', trim($timeperiod['TimePeriod'])). '_' .$timeperiod['TimePeriod_NId'];
                 ?>
                     <li>
-                        <input id="<?php echo $cssId?>" class="timeperiods_input" type="checkbox" name="data[Sdmx][timeperiods][]" value="<?php echo $timeperiod['TimePeriod_NId']; ?>"/> <label for="<?php echo $cssId?>"><?php echo trim($timeperiod['TimePeriod']); ?></label>
+                        <input id="<?php echo $cssId?>" class="timeperiods_input" type="checkbox" name="data[Sdmx][timeperiods][]" value="<?php echo $timeperiod['TimePeriod_NId']; ?>" <?php echo (!in_array($timeperiod['TimePeriod_NId'], $selectedTimeperiods))?:'checked'; ?>/> <label for="<?php echo $cssId?>"><?php echo trim($timeperiod['TimePeriod']); ?></label>
                     </li>
                 <?php } ?>
                 </ul>
@@ -179,6 +186,24 @@ echo $this->Html->script('app', false);
 <script>
 $(document).ready(function(){
 
+
+    var alertOpt = {
+        // id: 'alert-' + new Date().getTime(),
+        parent: 'body',
+        title: i18n.General.textDismiss,
+        text: '<div style=\"text-align:center;\">' + 'test' +'</div>',
+        type: alertType.warn, // alertType.info or alertType.warn or alertType.error
+        position: 'top',
+        css: {}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
+        autoFadeOut: true
+    };
+
+    <?php if(isset($alert)){ ?>
+        alertOpt.type = alertType.error;
+        alertOpt.text = '<?php echo nl2br(__($alert)); ?>';
+        $.alert(alertOpt);
+    <?php } ?>
+
     $('#indicator_selector select').change(function(){
        window.location = "<?php echo $this->Html->url(array(
                                       "controller" => "Reports",
@@ -186,7 +211,36 @@ $(document).ready(function(){
                                   ));?>/"+ $(this).find("option:selected").val();
     });
 
-    $('.areas_input, .timeperiods_input').change(function(){
+    isCheckboxChecked();
+
+    $('.areas_input, .timeperiods_input').change(isCheckboxChecked);
+
+    $('#generate').click(function(){
+        maxAreaSelected = 5;
+
+        areasCount = $('.areas_input[type="checkbox"]:checked').length;
+        timeperiodsCount = $('.timeperiods_input[type="checkbox"]:checked').length;
+        if(areasCount < 1){
+            // alert('<?php echo __("Please select an Area."); ?>');
+            alertOpt.text = '<?php echo __("Please select an Area."); ?>';
+            $.alert(alertOpt);
+            return false;
+        }else if(timeperiodsCount < 1){
+            alert('<?php echo __("Please select a Timeperiod."); ?>');
+            alertOpt.text = '<?php echo __("Please select a Timeperiod."); ?>';
+            $.alert(alertOpt);
+            return false;
+        }else if(areasCount > maxAreaSelected){
+            //alert('<?php echo __("You have selected maximum of Areas allowed."); ?>');
+            alertOpt.text = '<?php echo __("You have selected maximum of Areas allowed."); ?>';
+            $.alert(alertOpt);
+            return false;
+        }else{
+            $('#sdmx-download').submit();
+        }
+    });
+
+    function isCheckboxChecked(){
         var totalAreas = $('.areas_input[type="checkbox"]:checked').length;
         var totalTimeperiod = $('.timeperiods_input[type="checkbox"]:checked').length;
         if(totalAreas > 0 && totalTimeperiod > 0){
@@ -196,25 +250,6 @@ $(document).ready(function(){
             $('#generate').addClass('btn_disabled');
             $('#generate').prop("disabled", "disabled");
         }
-    });
-
-    $('#generate').click(function(){
-        maxAreaSelected = 5;
-
-        areasCount = $('.areas_input[type="checkbox"]:checked').length;
-        timeperiodsCount = $('.timeperiods_input[type="checkbox"]:checked').length;
-        if(areasCount < 1){
-            alert('<?php echo __("Please select an Area."); ?>');
-            return false;
-        }else if(timeperiodsCount < 1){
-            alert('<?php echo __("Please select a Timeperiod."); ?>');
-            return false;
-        }else if(areasCount > maxAreaSelected){
-            alert('<?php echo __("You have selected maximum of Areas allowed."); ?>');
-            return false;
-        }else{
-            $('#sdmx-download').submit();
-        }
-    });
+    }
 });
 </script>

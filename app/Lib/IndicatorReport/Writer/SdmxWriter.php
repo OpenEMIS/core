@@ -64,18 +64,22 @@ class SdmxWriter extends \XMLWriter{
 
     public function generate($resultSet){
         $this->log("Creating SDMX file.", LOG_INFO);
-        $this->createHeader();
-        $this->startDataSet();
-        $this->setFilenameFromIndicator(reset($resultSet));
-        foreach($resultSet as $series){
-            $attributes = array_merge($series->getAttributes(), $this->arrayifySubgroup($series->getSubgroups()));
-            $this->startSeries($series->getIndicator(), $series->getUnit(), $series->getArea(), $series->getSource(), $attributes);
-            foreach($series->getObservations() as $observation){
-                $this->createObservation($observation->getValue(), $observation->getTimeperiod(), $observation->getDenominator(), $observation->getFootnote(), $observation->getAttributes());
+        try{
+            $this->createHeader();
+            $this->startDataSet();
+            $this->setFilenameFromIndicator(reset($resultSet));
+            foreach($resultSet as $series){
+                $attributes = array_merge($series->getAttributes(), $this->arrayifySubgroup($series->getSubgroups()));
+                $this->startSeries($series->getIndicator(), $series->getUnit(), $series->getArea(), $series->getSource(), $attributes);
+                foreach($series->getObservations() as $observation){
+                    $this->createObservation($observation->getValue(), $observation->getTimeperiod(), $observation->getDenominator(), $observation->getFootnote(), $observation->getAttributes());
+                }
+                $this->endSeries();
             }
-            $this->endSeries();
+            $this->output();
+        }catch (Exception $e){
+            throw $e;
         }
-        $this->output();
     }
 
     public function createHeader() {
@@ -280,7 +284,6 @@ class SdmxWriter extends \XMLWriter{
         $this->xmlLang = $lang;
     }
 
-//    public function __destruct() {
     public function output() {
         $this->assemble();
         //content type
@@ -295,7 +298,7 @@ class SdmxWriter extends \XMLWriter{
         //read from server and write to buffer
         readfile($this->tmpFilename);
         unlink($this->tmpFilename);
-        exit;
+//        exit;
     }
 
     public function setFilenameFromIndicator($firstSeries){
