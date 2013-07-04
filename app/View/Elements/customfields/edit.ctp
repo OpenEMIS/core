@@ -1,4 +1,3 @@
-
 <?php 
 echo $this->Html->script('custom_field', false);
 ?>
@@ -14,8 +13,8 @@ echo $this->Html->script('custom_field', false);
 		}
 		?>
 	</h1>
-	<div class="row"  style="margin-left:5px;">
-		<div class="label"><?php echo __('Year'); ?></div>
+	<div class="row year"  style="margin-left:5px;">
+		<div class="label" style="width: 90px;"><?php echo __('Year'); ?></div>
 		<div class="value">
 			<?php
 				echo $this->Form->input('school_year_id', array(
@@ -29,8 +28,6 @@ echo $this->Html->script('custom_field', false);
 			?>
 		</div>
 	</div>
-	
-	<br />
 	<?php
 	echo $this->Form->create($arrMap['CustomValue']);
 	?>
