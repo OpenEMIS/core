@@ -37,6 +37,9 @@ class UtilityComponent extends Component {
 	
 	public function getMessage($code) {
 		$msgList = array();
+		
+		// Custom Fields
+		$msgList['CUSTOM_FIELDS_NO_CONFIG'] = "There are no academic configured in the system.";
 		// General Messages
 		$msgList['ERROR_UNEXPECTED'] = "You have encountered an unexpected error. Please contact the system administrator for assistance.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
