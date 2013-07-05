@@ -1903,6 +1903,7 @@ class InstitutionSitesController extends AppController {
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		if(empty($data['dataFields'])) $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
 		$displayEdit = true;
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
@@ -1955,6 +1956,7 @@ class InstitutionSitesController extends AppController {
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		if(empty($data['dataFields'])) $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
 		$displayEdit = true;
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
@@ -2005,6 +2007,7 @@ class InstitutionSitesController extends AppController {
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		if(empty($data['dataFields'])) $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
 		$displayEdit = true;
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
