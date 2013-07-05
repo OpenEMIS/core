@@ -61,6 +61,7 @@ class InstitutionsController extends AppController {
     }
 	
 	public function index() {
+		$this->AccessControl->init($this->Auth->user('id'));
 		$instIds = $this->AccessControl->getAccessibleInstitutions();
 
         $this->Navigation->addCrumb('List of Institutions');

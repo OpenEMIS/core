@@ -393,7 +393,7 @@ var jsTable = {
 			}
 			obj.find('.table_body').each(function() {
 				$(this).find('.table_row.even').removeClass('even');
-				$(this).find('.table_row:odd').addClass('even');
+				$(this).find('.table_row:visible:odd').addClass('even');
 			});
 		});
 	},
@@ -421,23 +421,25 @@ var jsTable = {
 	toggleTableScrollable: function(parent) {
 		var hide = 'hidden';
 		var active = 'scroll_active';
-		var scrollable = parent + ' .table_scrollable';
-		var list = scrollable + ' .list_wrapper';
-		var selector = list + ' .table_body';
-		var rows = $(selector).find('.table_row').length;
-		
-		if(rows > $(list).attr('limit')) {
-			if(!$(scrollable).hasClass(active)) {							
-				$(scrollable).addClass(active);
+		selector = parent!=undefined ? parent : '.table_scrollable';
+		$(selector).each(function() {
+			var rows = $(this).find('.table_body .table_row:visible').length;
+			var list = $(this).find('.list_wrapper');
+			var scrollable = list.closest('.table_scrollable');
+			console.log(scrollable);
+			if(rows > list.attr('limit')) {
+				if(!scrollable.hasClass(active)) {							
+					scrollable.addClass(active);
+				}
+			} else {
+				if(scrollable.hasClass(active)) {							
+					scrollable.removeClass(active);
+				}
 			}
-		} else {
-			if($(scrollable).hasClass(active)) {							
-				$(scrollable).removeClass(active);
+			if(list.hasClass(hide)) {
+				list.removeClass(hide);
 			}
-		}
-		if($(list).hasClass(hide)) {
-			$(list).removeClass(hide);
-		}
+		});
 	},
 	
 	tableScrollableAdd: function(parent, data) {

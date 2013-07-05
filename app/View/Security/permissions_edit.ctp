@@ -15,12 +15,9 @@ echo $this->Html->script('security', false);
 	));
 	?>
 	<h1>
+		<span><?php echo __('Permissions'); ?></span>
 		<?php
-		echo '<span>'.__('Permissions').'</span>';
-		echo $this->Html->link(__('View'), 
-				array('action' => 'permissions'), 
-				array('class' => 'divider', 'onclick' => 'return security.navigate(this)'
-			));
+		echo $this->Html->link(__('View'), array('action' => 'permissions', $selectedRole), array('class' => 'divider'));
 		?>
 	</h1>
 	

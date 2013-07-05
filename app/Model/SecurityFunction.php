@@ -18,6 +18,8 @@ App::uses('AppModel', 'Model');
 
 class SecurityFunction extends AppModel {
 	public $hasMany = array('SecurityRoleFunction');
+	public $operations = array('_view', '_edit', '_add', '_delete', '_execute');
+	public $rootAccessModules = array('List of Users', 'Users', 'List of Groups', 'Groups', 'Group Users', 'Roles');
 	
 	public function getFunctions() {
 		$functions = $this->find('all', array('conditions' => array('visible' => 1)));
@@ -36,7 +38,43 @@ class SecurityFunction extends AppModel {
 		return $list;
 	}
 	
-	public function getPermissions($roleId, $operations) {
+	public function arrange($list, $isSuperUser=false) {
+		$operations = $this->operations;
+		$data = array();
+		foreach($list as $obj) {
+			$function = $obj['SecurityFunction'];
+			$roleFunction = $obj['SecurityRoleFunction'];
+			$operationObj = array_key_exists('_view', $roleFunction) ? $roleFunction : $obj[0];
+			$module = $function['module'];
+			
+			// if super user then show all permissions, if not super user then only show restricted permissions
+			if($isSuperUser || ($isSuperUser == false && !in_array($function['name'], $this->rootAccessModules))) {
+				if(!isset($data[$module])) {
+					$data[$module] = array('enabled' => false);
+				}
+				$row = array();
+				foreach($operations as $op) {
+					if(!is_null($function[$op])) {
+						$row[$op] = is_null($operationObj[$op]) ? 0 : $operationObj[$op];
+						if($row[$op]==1 && $function['visible'] == 1 && $data[$module]['enabled'] == false) { // for enabling the module in view
+							$data[$module]['enabled'] = true;
+						}
+					} else {
+						$row[$op] = NULL;
+					}
+				}
+				$row['id'] = $roleFunction['id'];
+				$row['security_function_id'] = $function['id'];
+				$row['name'] = $function['name'];
+				$row['visible'] = $function['visible'];
+				$row['parent_id'] = $function['parent_id'];
+				$data[$module][$function['id']] = $row;
+			}
+		}//pr($data);
+		return $data;
+	}
+	
+	public function getPermissions($roleId, $isSuperUser=false) {
 		$list = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array('SecurityFunction.*', 'SecurityRoleFunction.*'),
@@ -52,33 +90,77 @@ class SecurityFunction extends AppModel {
 				)
 			)
 		));
-		
-		$permissions = array();
-		foreach($list as $obj) {
-			$function = $obj['SecurityFunction'];
-			$roleFunction = $obj['SecurityRoleFunction'];
-			$module = $function['module'];
-			
-			if(!isset($permissions[$module])) {
-				$permissions[$module] = array('enabled' => false);
-			}
-			$row = array();
-			foreach($operations as $op) {
-				if(!is_null($function[$op])) {
-					$row[$op] = is_null($roleFunction[$op]) ? 0 : $roleFunction[$op];
-					if($row[$op]==1 && $function['visible'] == 1 && $permissions[$module]['enabled'] == false) { // for enabling the module in view
-						$permissions[$module]['enabled'] = true;
+		return $this->arrange($list, $isSuperUser);
+	}
+	
+	public function getUserPermissions($userId, $arrange = false) {
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'SecurityFunction.*',
+				'SecurityRole.visible',
+				'SecurityRoleFunction.id',
+				'BIT_OR(SecurityRoleFunction._view) AS _view',
+				'BIT_OR(SecurityRoleFunction._edit) AS _edit',
+				'BIT_OR(SecurityRoleFunction._add) AS _add',
+				'BIT_OR(SecurityRoleFunction._delete) AS _delete',
+				'BIT_OR(SecurityRoleFunction._execute) AS _execute'
+			),
+			'joins' => array(
+				array(
+					'table' => 'security_role_functions',
+					'alias' => 'SecurityRoleFunction',
+					'conditions' => array('SecurityRoleFunction.security_function_id = SecurityFunction.id')
+				),
+				array(
+					'table' => 'security_roles',
+					'alias' => 'SecurityRole',
+					'conditions' => array('SecurityRole.id = SecurityRoleFunction.security_role_id')
+				),
+				array(
+					'table' => 'security_group_users',
+					'alias' => 'SecurityGroupUser',
+					'conditions' => array(
+						'SecurityGroupUser.security_role_id = SecurityRoleFunction.security_role_id',
+						'SecurityGroupUser.security_user_id = ' . $userId
+					)
+				)
+			),
+			'group' => array('SecurityFunction.id')
+		));
+		return $arrange ? $this->arrange($list) : $list;
+	}
+	
+	public function getAllowedPermissions($roleId, $userId, $isSuperUser) {
+		$operations = $this->operations;
+		$permissions = $this->getPermissions($roleId, $isSuperUser);//pr($permissions);
+		$userPermissions = $this->getUserPermissions($userId, true);
+		//pr($userPermissions);
+		foreach($permissions as $module => &$functions) {//pr($functions);pr($userPermissions[$module]);die;
+			foreach($functions as $key => &$data) {
+				if($key == 'enabled') continue;
+				
+				if(isset($userPermissions[$module])) { // if module exists in user's permissions
+					if(isset($userPermissions[$module][$key])) { // if function exists in user's permissions
+						//pr($userPermissions[$module][$key]);
+						$userData = $userPermissions[$module][$key];
+						foreach($operations as $op) {
+							if($userData[$op]==0) {
+								if($data[$op] == 1) {
+									$data[$op] = 2; // checked but disabled
+								} else {
+									$data[$op] = null;
+								}
+							}/* else if($userData[$op] == 1) {
+								
+							}*/
+						}
 					}
 				} else {
-					$row[$op] = NULL;
+					//pr($module);
 				}
+				//pr(isset($userPermissions[$module][$key]['_view']));
 			}
-			$row['id'] = $roleFunction['id'];
-			$row['security_function_id'] = $function['id'];
-			$row['name'] = $function['name'];
-			$row['visible'] = $function['visible'];
-			$row['parent_id'] = $function['parent_id'];
-			$permissions[$module][] = $row;
 		}
 		return $permissions;
 	}

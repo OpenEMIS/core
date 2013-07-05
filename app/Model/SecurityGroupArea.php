@@ -57,15 +57,6 @@ class SecurityGroupArea extends AppModel {
 		return $data;
 	}
 	
-	public function filterData(&$data) {
-		$tmpData = $data;
-		foreach($tmpData as $key => $obj) {
-			if($obj['area_id']==0) {
-				unset($data[$key]);
-			}
-		}
-	}
-	
 	public function fetchAreas($levelList, $conditions) {
 		$this->formatResult = true;
 		$list = $this->find('all', array(
@@ -80,10 +71,20 @@ class SecurityGroupArea extends AppModel {
 		return $list;
 	}
 	
-	public function findAreasByRoles($roleIds) {
+	public function findAreasByUserId($userId) {
 		$areas = $this->find('list', array(
-			'fields' => array('SecurityRoleArea.id', 'SecurityRoleArea.area_id'),
-			'conditions' => array('SecurityRoleArea.security_role_id' => $roleIds)
+			'recursive' => -1,
+			'fields' => array('SecurityGroupArea.security_group_id', 'SecurityGroupArea.area_id'),
+			'joins' => array(
+				array(
+					'table' => 'security_group_users',
+					'alias' => 'SecurityGroupUser',
+					'conditions' => array(
+						'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id',
+						'SecurityGroupUser.security_user_id = ' . $userId
+					)
+				)
+			)
 		));
 		return $areas;
 	}

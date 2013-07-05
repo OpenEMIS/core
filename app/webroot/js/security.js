@@ -86,6 +86,23 @@ var Security = {
 		}
 	},
 	
+	usersSearchOnPage: function(obj) {
+		var searchString = $(obj).siblings('.search_wrapper').find('input').val().toLowerCase();
+		if(!searchString.isEmpty()) {
+			$('.list_wrapper .table_row').css('display', 'none');
+			$('[tags*="' + searchString + '"]').css('display', 'table-row');
+			jsTable.toggleTableScrollable('.section_break');
+			jsTable.fixTable();
+		}
+	},
+	
+	cancelUsersSearchOnPage: function(obj) {
+		$('#SearchField').val('');
+		$('.list_wrapper .table_row').css('display', 'table-row');
+		jsTable.toggleTableScrollable('.section_break');
+		jsTable.fixTable();
+	},
+	
 	addGroupAdmin: function(obj) {
 		var index = $('#group_admin .table_row').length;
 		
@@ -116,32 +133,26 @@ var Security = {
 	
 	removeGroupUser: function(obj) {
 		var row = $(obj).closest('.table_row');
-		var id = row.length>0 ? row.attr('row-id') : -1;
 		
 		var maskId;
-		var url = $('#student_group .table_scrollable').attr('url');
-		var ajaxParams = {rowId: id};
+		var ajaxParams = {};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				if(id != -1) {
-					row.fadeOut(300, function() {
-						row.remove();
-						jsTable.fixTable('#student_group .list_wrapper .table');
-					});
-				} else {
-					$('#student_group .table_row').remove();
-					
-				}
-				jsTable.toggleTableScrollable('#student_group');
+				var count = row.closest('.section_break').find('.user_count');
+				var table = row.closest('.table');
+				count.html(count.html().toInt()-1);
+				row.remove();
+				jsTable.fixTable(table);
+				jsTable.toggleTableScrollable(table.closest('.section_break'));
 			};
 			$.unmask({id: maskId, callback: callback});
 		};
 		$.ajax({
 			type: 'GET',
 			dataType: 'text',
-			url: getRootURL() + url,
+			url: getRootURL() + $(obj).attr('url'),
 			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#student_group', text: i18n.General.textRemoving}); },
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textRemoving}); },
 			success: ajaxSuccess
 		});
 	},
@@ -199,6 +210,13 @@ var Security = {
 	
 	validateGroupAdd: function(obj) {
 		var name = $('#SecurityGroupName').val();
+		
+		if($('#SecurityGroupName').attr('default')!=undefined) {
+			if($('#SecurityGroupName').attr('default') === name.trim()) {
+				return true;
+			}
+		}
+		
 		var alertOpt = {
 			id: 'add_alert',
 			parent: '#group_info',

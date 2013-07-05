@@ -68,21 +68,25 @@ class SecurityRole extends AppModel {
 	
 	public function getRoleOptions($groupId, $userId=false) {
 		$this->formatResult = true;
-		$conditions = array(
-			'OR' => array(
-				'SecurityRole.security_group_id' => $groupId, 
-				'SecurityRole.security_group_id' => 0
-			),
-			'AND' => array('SecurityRole.visible' => 1)
-		);
+		$conditions = array();
 		
 		if($userId!==false) {
+			$conditions = array(
+				'OR' => array(
+					'SecurityRole.security_group_id' => $groupId, 
+					'SecurityRole.security_group_id <=' => 0
+				),
+				'AND' => array('SecurityRole.visible' => 1)
+			);
 			$conditions['AND'][] = sprintf('NOT EXISTS (
 				SELECT id FROM security_group_users
-				WHERE security_group_id = ' . $groupId . '
-				AND security_role_id = SecurityRole.id
-				AND security_user_id = %d)', $userId);
+				WHERE security_role_id = SecurityRole.id
+				AND security_group_id = %d
+				AND security_user_id = %d)', $groupId, $userId);
+		} else {
+			$conditions = array('SecurityRole.security_group_id' => $groupId, 'SecurityRole.visible' => 1);
 		}
+		
 		$data = $this->find('list', array(
 			'recursive' => -1,
 			'fields' => array('SecurityRole.id', 'SecurityRole.name'),		

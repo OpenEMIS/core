@@ -79,7 +79,7 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 		</div>
 	</fieldset>
 	
-	<fieldset class="section_break">
+	<!--fieldset class="section_break">
 		<legend><?php echo __('Roles'); ?></legend>
 		<div class="table full_width">
 			<div class="table_head">
@@ -116,7 +116,7 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 				<?php } ?>
 			</div>
 		</div>
-	</fieldset>
+	</fieldset-->
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />

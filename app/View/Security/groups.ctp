@@ -11,7 +11,7 @@ echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 	<h1>
 		<span><?php echo __('Groups'); ?></span>
 		<?php
-		if($_add) {
+		if($_accessControl->check($this->params['controller'], 'groupsAdd')) {
 			echo $this->Html->link(__('Add'), array('action' => 'groupsAdd'), array('class' => 'divider'));
 		}
 		?>

@@ -13,7 +13,7 @@ echo $this->Html->script('security', false);
 		<?php
 		echo $this->Html->link(__('Back'), array('action' => 'roles', $group['id']), array('class' => 'divider'));
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'permissionsEdit'), array('class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'permissionsEdit', $selectedRole), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -64,7 +64,7 @@ echo $this->Html->script('security', false);
 				<div class="table_row">
 					<div class="table_cell"><?php echo __($obj['name']); ?></div>
 					<?php foreach($_operations as $op) { ?>
-					<div class="table_cell center"><?php echo $this->Utility->checkOrCrossMarker($obj[$op]==1); ?></div>
+					<div class="table_cell center"><?php echo $this->Utility->checkOrCrossMarker($obj[$op]>=1); ?></div>
 					<?php } ?>
 				</div>
 				<?php } ?> <!-- end if -->

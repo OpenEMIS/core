@@ -19,8 +19,8 @@ App::uses('AppModel', 'Model');
 class SecurityGroupUser extends AppModel {
 	public function getUsers($groupId) {
 		$roles = $this->find('all', array(
-			'fields' => array('SecurityRole.*', 'SecurityUser.id', 'SecurityUser.identification_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),
 			'recursive' => -1,
+			'fields' => array('SecurityRole.*', 'SecurityUser.id', 'SecurityUser.identification_no', 'SecurityUser.first_name', 'SecurityUser.last_name'),		
 			'joins' => array(
 				array(
 					'table' => 'security_roles',
@@ -34,7 +34,7 @@ class SecurityGroupUser extends AppModel {
 				)
 			),
 			'conditions' => array('SecurityGroupUser.security_group_id' => $groupId),
-			'order' => array('SecurityRole.security_group_id', 'SecurityRole.order')
+			'order' => array('SecurityRole.security_group_id', 'SecurityRole.order', 'SecurityUser.first_name')
 		));
 		
 		$data = array();
@@ -46,6 +46,44 @@ class SecurityGroupUser extends AppModel {
 			}
 			$data[$roleId]['users'][] = $obj['SecurityUser'];
 		}
+		return $data;
+	}
+	
+	public function getGroupsByUserId($userId) {
+		$this->formatResult = true;
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('SecurityGroup.name AS security_group_name', 'SecurityRole.name AS security_role_name'),
+			'joins' => array(
+				array(
+					'table' => 'security_groups',
+					'alias' => 'SecurityGroup',
+					'conditions' => array('SecurityGroup.id = SecurityGroupUser.security_group_id')
+				),
+				array(
+					'table' => 'security_roles',
+					'alias' => 'SecurityRole',
+					'conditions' => array('SecurityRole.id = SecurityGroupUser.security_role_id')
+				)
+			),
+			'conditions' => array('SecurityGroupUser.security_user_id' => $userId),
+			'order' => array('SecurityGroup.name', 'SecurityRole.order')
+		));
+		return $data;
+	}
+	
+	public function getRolesByUserId($userId) {
+		$data = $this->find('all', array(
+			'fields' => array('SecurityRole.*'),
+			'joins' => array(
+				array(
+					'table' => 'security_roles',
+					'alias' => 'SecurityRole',
+					'conditions' => array('SecurityRole.id = SecurityGroupUser.security_role_id')
+				)
+			),
+			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
+		));
 		return $data;
 	}
 }

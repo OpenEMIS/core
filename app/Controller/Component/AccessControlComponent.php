@@ -19,10 +19,12 @@ class AccessControlComponent extends Component {
 	private $User;
 	private $Role;
 	private $Function;
-	private $UserRole;
 	private $RoleFunction;
-	private $RoleArea;
-	private $RoleInstitutionSite;
+	private $Group;
+	private $GroupUser;
+	private $GroupArea;
+	private $GroupInstitutionSite;
+	
 	public $ignoreList = array(
 		'HOME' => array('index', 'details', 'detailsEdit', 'password'),
 		'SECURITY' => array('login', 'logout'), 
@@ -37,10 +39,11 @@ class AccessControlComponent extends Component {
 		'User' => 'SecurityUser',
 		'Role' => 'SecurityRole',
 		'Function' => 'SecurityFunction',
-		'UserRole' => 'SecurityUserRole',
 		'RoleFunction' => 'SecurityRoleFunction',
-		'RoleArea' => 'SecurityRoleArea',
-		'RoleInstitutionSite' => 'SecurityRoleInstitutionSite',
+		'Group' => 'SecurityGroup',
+		'GroupUser' => 'SecurityGroupUser',
+		'GroupArea' => 'SecurityGroupArea',
+		'GroupInstitutionSite' => 'SecurityGroupInstitutionSite',
         'Area' => 'Area'
 	);
 	
@@ -70,7 +73,7 @@ class AccessControlComponent extends Component {
 	public function init($userId) {
 		$this->setUserPermissions($userId);
 		$this->loadAreas();
-		//$this->loadInstitutions($this->Session->read('AccessControl.areas'));
+		$this->loadInstitutions($this->Session->read('AccessControl.areas'));
 	}
 	
 	public function setUserPermissions($userId) {
@@ -85,18 +88,19 @@ class AccessControlComponent extends Component {
 	public function getPermissions($userId) {
 		$modelMap = $this->modelMap;
 		$separator = ':';
+		$divider = '|';
 		$permissions = array();
 		$check = array();
 		$apply = array();
 		
 		if($this->Auth->user('super_admin')==0) {
-			$foreignKeyUserId = sprintf('%s.%s_id', $modelMap['UserRole'], Inflector::underscore($modelMap['User']));
-			$foreignKeyRoleId = sprintf('%s.%s_id', $modelMap['RoleFunction'], Inflector::underscore($modelMap['Role']));
-			$list = $this->UserRole->find('all', array('conditions' => array($foreignKeyUserId => $userId)));
-			foreach($list as $obj) {
-				$role = $obj[$modelMap['Role']];
-				$roleFunctions = $this->RoleFunction->find('all', array('conditions' => array($foreignKeyRoleId => $role['id'])));
-				
+			$list = $this->GroupUser->getRolesByUserId($userId);
+			
+			//foreach($list as $obj) {
+				//$role = $obj[$modelMap['Role']];
+				//$roleFunctions = $this->RoleFunction->find('all', array('conditions' => array('SecurityRoleFunction.security_role_id' => $role['id'])));
+				//pr($roleFunctions);
+				$roleFunctions = $this->Function->getUserPermissions($userId);//pr($roleFunctions);die;
 				foreach($roleFunctions as $obj) {
 					$function = $obj[$modelMap['Function']];
 					$roleFunction = $obj[$modelMap['RoleFunction']];
@@ -108,12 +112,16 @@ class AccessControlComponent extends Component {
 						$apply[$controller] = array();
 					}
 					
+					$operationObj = $obj[0];
 					foreach($this->operations as $op) {
-						if($roleFunction[$op]==1 && !is_null($function[$op])) {
+						if($operationObj[$op]==1 && !is_null($function[$op])) {
 							$action = explode($separator, $function[$op]); // separate the action and the dependency
 							if(sizeof($action) == 1) { // if the array size is 1, then there is no dependency
 								if(strlen($action[0]) > 0) {
-									$check[$controller][$action[0]] = $functionAttr;
+									$actionList = explode($divider, $action[0]);
+									foreach($actionList as $a) {
+										$check[$controller][$a] = $functionAttr;
+									}
 								}
 							} else { // the action is dependent on another action
 								$actionParent = $function[$action[0]];
@@ -122,19 +130,26 @@ class AccessControlComponent extends Component {
 									$actionParent = $actionParent[1];
 								}
 								
-								if(!isset($apply[$controller][$actionParent])) {
-									$apply[$controller][$actionParent] = array();
+								$actionList = explode($divider, $actionParent);
+								foreach($actionList as $a) {
+									if(!isset($apply[$controller][$a])) {
+										$apply[$controller][$a] = array();
+									}
+									$apply[$controller][$a][$op] = true;
 								}
-								$apply[$controller][$actionParent][$op] = true;
 								if(strlen($action[1]) > 0) {
-									$check[$controller][$action[1]] = $functionAttr;
+									$actionList = explode($divider, $action[1]);
+									foreach($actionList as $a) {
+										$check[$controller][$a] = $functionAttr;
+									}
 								}
 							}
 						}
 					}
 				}
 			}
-		} else {
+		//} else {
+		/*
 			$list = $this->Function->find('all');
 			foreach($list as $obj) {
 				$function = $obj[$modelMap['Function']];
@@ -147,7 +162,7 @@ class AccessControlComponent extends Component {
 				}
 				
 				foreach($this->operations as $op) {
-					if(!is_null($function[$op])) {
+					if(!is_null($function[$op])) { // super admin doesn't need to check for role
 						$action = explode($separator, $function[$op]); // separate the action and the dependency
 						if(sizeof($action) == 1) { // if the array size is 1, then there is no dependency
 							if(strlen($action[0]) > 0) {
@@ -171,7 +186,8 @@ class AccessControlComponent extends Component {
 					}
 				}
 			}
-		}
+			*/
+		//}
 		$permissions['check'] = $check;
 		$permissions['apply'] = $apply;
 		//pr($check);
@@ -309,8 +325,7 @@ class AccessControlComponent extends Component {
                 'conditions' => array('Area.parent_id' => '-1', 'Area.visible' => 1)
             ));
         }else{
-            $roles = $this->UserRole->getUserRoles($userId);
-            $areas = $this->RoleArea->findAreasByRoles(array_values($roles));
+            $areas = $this->GroupArea->findAreasByUserId($userId);
         }
 
 		foreach($areas as $key => $areaId) {
@@ -322,8 +337,7 @@ class AccessControlComponent extends Component {
 	
 	public function loadInstitutions($areas) {
 		$userId = $this->Auth->user('id');
-		$roles = $this->UserRole->getUserRoles($userId);
-		$sites = $this->RoleInstitutionSite->findSitesByRoles(array_values($roles));
+		$sites = $this->GroupInstitutionSite->findSitesByUserId($userId);
 		
 		$InstitutionSite = ClassRegistry::init('InstitutionSite');
 		$list = $InstitutionSite->getInstitutionsByAreas(array_keys($areas));
@@ -363,7 +377,7 @@ class AccessControlComponent extends Component {
 	}
 
 	public function getAccessibleSites() {
-		$sites =  $this->Session->read('AccessControl.sites');
+		$sites = $this->Session->read('AccessControl.sites');
 		
 		return $sites;
 	}

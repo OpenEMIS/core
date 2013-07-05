@@ -13,7 +13,9 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'groupsEdit', $data['SecurityGroup']['id']), array('class' => 'divider'));
 		}
-		echo $this->Html->link(__('Users'), array('action' => 'groupsUsers', $data['SecurityGroup']['id']), array('class' => 'divider'));
+		if($_accessControl->check($this->params['controller'], 'groupsUsers')) {
+			echo $this->Html->link(__('Users & Roles'), array('action' => 'groupsUsers', $data['SecurityGroup']['id']), array('class' => 'divider'));
+		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
@@ -21,7 +23,7 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 	<fieldset class="section_group" style="padding-bottom: 10px;">
 		<legend><?php echo __('Information'); ?></legend>
 		<div class="row">
-			<div class="label"><?php echo __('Group Name'); ?></div>
+			<div class="label"><?php echo __('Name'); ?></div>
 			<div class="value"><?php echo $data['SecurityGroup']['name']; ?></div>
 		</div>
 	</fieldset>
@@ -67,7 +69,7 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 		</fieldset>
 	</fieldset>
 	
-	<fieldset class="section_group" style="padding-bottom: 10px;">
+	<!--fieldset class="section_group" style="padding-bottom: 10px;">
 		<legend><?php echo __('Roles'); ?></legend>
 		
 		<fieldset class="section_break">
@@ -83,9 +85,7 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 					<?php foreach($data['SecurityRole']['system'] as $obj) { ?>
 					<div class="table_row">
 						<div class="table_cell"><?php echo $obj['name']; ?></div>
-						<div class="table_cell cell_users">
-							<?php echo $this->Html->link(__('Users'), array('action' => 'roleUsers', $data['SecurityGroup']['id'], $obj['id'])); ?>
-						</div>
+						<div class="table_cell cell_users"><?php echo $obj['count']; ?></div>
 					</div>
 					<?php }?>
 				</div>
@@ -105,15 +105,13 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 					<?php foreach($data['SecurityRole']['user'] as $obj) { ?>
 					<div class="table_row">
 						<div class="table_cell"><?php echo $obj['name']; ?></div>
-						<div class="table_cell cell_users">
-							<?php echo $this->Html->link(__('Users'), array('action' => 'roleUsers', $data['SecurityGroup']['id'], $obj['id'])); ?>
-						</div>
+						<div class="table_cell cell_users"><?php echo $obj['count']; ?></div>
 					</div>
 					<?php }?>
 				</div>
 			</div>
 		</fieldset>
-	</fieldset>
+	</fieldset-->
 	
 	<!--
 	<fieldset class="section_group" style="padding-bottom: 10px;">

@@ -18,7 +18,7 @@ echo $this->Html->script('Security', false);
 	echo $this->Form->create('SecurityGroup', array(
 		'url' => array('controller' => 'Security', 'action' => 'groupsAdd'),
 		'inputDefaults' => array('label' => false, 'div' => false),
-		'onsubmit' => 'return Security.validateGroupName(this);'
+		'onsubmit' => 'return Security.validateGroupAdd(this)'
 	));
 	?>
 	
