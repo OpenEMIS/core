@@ -25,6 +25,7 @@ class StaffController extends StaffAppController {
 
     public $uses = array(
         'Institution',
+		'InstitutionSite',
         'Staff.InstitutionSiteStaff',
         'Staff.Staff',
         'Staff.StaffHistory',
@@ -489,5 +490,46 @@ class StaffController extends StaffAppController {
             return json_encode($result);
         }
     }
+	
+	private function custFieldYrInits(){
+		$this->Navigation->addCrumb('Annual Info');
+		$action = $this->action;
+		$siteid = @$this->request->params['pass'][2];
+		$id = $this->staffId;
+		$schoolYear = ClassRegistry::init('SchoolYear');
+		$years = $schoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
+		$condParam = array('staff_id'=>$id,'institution_site_id'=>$siteid,'school_year_id'=>$selectedYear);
+		
+		$arrMap = array('CustomField'=>'StaffDetailsCustomField',
+						'CustomFieldOption'=>'StaffDetailsCustomFieldOption',
+						'CustomValue'=>'StaffDetailsCustomValue',
+						'Year'=>'SchoolYear');
+		return compact('action','siteid','id','years','selectedYear','condParam','arrMap');
+	}
+	private function custFieldSY($school_yr_ids){
+		return $this->InstitutionSite->find('list',array('conditions'=>array('InstitutionSite.id'=>$school_yr_ids)));
+	}
+	private function custFieldSites($institution_sites){
+		$institution_sites = $this->InstitutionSite->find('all',array('fields'=>array('InstitutionSite.id','InstitutionSite.name','Institution.name'),'conditions'=>array('InstitutionSite.id'=>$institution_sites)));
+		$tmp = array('0'=>'--');
+		foreach($institution_sites as $arrVal){ 
+			$tmp[$arrVal['InstitutionSite']['id']] = $arrVal['Institution']['name'].' - '.$arrVal['InstitutionSite']['name']; 
+		}
+		return $tmp;
+	}
+	
+	public function custFieldYrView(){
+		extract($this->custFieldYrInits());
+		$customfield = $this->Components->load('CustomField',$arrMap);
+		$data = array();
+		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		$institution_sites = $customfield->getCustomValuebyCond('list',array('fields'=>array('institution_site_id','school_year_id'),'conditions'=>array('school_year_id'=>$selectedYear,'staff_id'=>$id)));
+		$institution_sites = $this->custFieldSites(array_keys($institution_sites));
+		$displayEdit = false;
+		$this->set(compact('arrMap','selectedYear','siteid','years','action','id','institution_sites','displayEdit'));
+		$this->set($data);
+		$this->render('/Elements/customfields/view');
+	}
 
 }

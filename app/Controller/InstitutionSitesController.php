@@ -1875,4 +1875,158 @@ class InstitutionSitesController extends AppController {
 			$this->redirect(array('action' => 'results'));
 		}
 	}
+	
+	//TEACHER CUSTOM FIELD PER YEAR - STARTS - 
+	private function teachersCustFieldYrInits(){
+		$action = $this->action;
+		$siteid = $this->institutionSiteId;
+		$id = @$this->request->params['pass'][0];
+		$years = $this->SchoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
+		$condParam = array('teacher_id'=>$id,'institution_site_id'=>$siteid,'school_year_id'=>$selectedYear);
+		$arrMap = array('CustomField'=>'TeacherDetailsCustomField',
+						'CustomFieldOption'=>'TeacherDetailsCustomFieldOption',
+						'CustomValue'=>'TeacherDetailsCustomValue',
+						'Year'=>'SchoolYear');
+		//BreadCrumb -- jeff logic
+		$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $id)));
+		$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+		$positions = $this->InstitutionSiteTeacher->getPositions($id, $this->institutionSiteId);
+		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $data['Teacher']['id']));
+		
+		return compact('action','siteid','id','years','selectedYear','condParam','arrMap');
+	}
+	
+	public function teachersCustFieldYrView(){
+		extract($this->teachersCustFieldYrInits());
+		$this->Navigation->addCrumb('Academic');
+		$customfield = $this->Components->load('CustomField',$arrMap);
+		$data = array();
+		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		if(empty($data['dataFields'])) $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+		$displayEdit = true;
+		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
+		$this->set($data);
+		$this->render('/Elements/customfields/view');
+	}
+	
+	public function teachersCustFieldYrEdit(){
+		if ($this->request->is('post')) {
+			extract($this->teachersCustFieldYrInits());
+			$customfield = $this->Components->load('CustomField',$arrMap);
+			$cond = array('institution_site_id' => $siteid, 
+						  'teacher_id' => $id, 
+						  'school_year_id' => $selectedYear);
+			$customfield->saveCustomFields($this->request->data,$cond);
+			$this->redirect(array('action' => 'teachersCustFieldYrView',$id,$selectedYear));
+		}else{
+			$this->teachersCustFieldYrView();
+			$this->render('/Elements/customfields/edit');
+		}
+	}
+	//TEACHER CUSTOM FIELD PER YEAR - ENDS - 
+	
+	
+	
+	
+	
+	//STUDENTS CUSTOM FIELD PER YEAR - STARTS - 
+	private function studentsCustFieldYrInits(){
+		$action = $this->action;
+		$siteid = $this->institutionSiteId;
+		$id = @$this->request->params['pass'][0];
+		$years = $this->SchoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
+		$condParam = array('student_id'=>$id,'institution_site_id'=>$siteid,'school_year_id'=>$selectedYear);
+		$arrMap = array('CustomField'=>'StudentDetailsCustomField',
+						'CustomFieldOption'=>'StudentDetailsCustomFieldOption',
+						'CustomValue'=>'StudentDetailsCustomValue',
+						'Year'=>'SchoolYear');
+		
+		$studentId = $this->params['pass'][0];
+		$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+		$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $data['Student']['id']));
+		return compact('action','siteid','id','years','selectedYear','condParam','arrMap');
+	}
+	
+	public function studentsCustFieldYrView(){
+		extract($this->studentsCustFieldYrInits());
+		$this->Navigation->addCrumb('Academic');
+		$customfield = $this->Components->load('CustomField',$arrMap);
+		$data = array();
+		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		if(empty($data['dataFields'])) $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+		$displayEdit = true;
+		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
+		$this->set($data);
+		$this->render('/Elements/customfields/view');
+	}
+	
+	public function studentsCustFieldYrEdit(){
+		if ($this->request->is('post')) {
+			extract($this->studentsCustFieldYrInits());
+			$customfield = $this->Components->load('CustomField',$arrMap);
+			$cond = array('institution_site_id' => $siteid, 
+						  'student_id' => $id, 
+						  'school_year_id' => $selectedYear);
+			$customfield->saveCustomFields($this->request->data,$cond);
+			$this->redirect(array('action' => 'studentsCustFieldYrView',$id,$selectedYear));
+		}else{
+			$this->studentsCustFieldYrView();
+			$this->render('/Elements/customfields/edit');
+		}
+	}
+	//STUDENTS CUSTOM FIELD PER YEAR - ENDS - 
+	
+	
+	
+	//STAFF CUSTOM FIELD PER YEAR - STARTS - 
+	private function staffCustFieldYrInits(){
+		$action = $this->action;
+		$siteid = $this->institutionSiteId;
+		$id = @$this->request->params['pass'][0];
+		$years = $this->SchoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
+		$condParam = array('staff_id'=>$id,'institution_site_id'=>$siteid,'school_year_id'=>$selectedYear);
+		$arrMap = array('CustomField'=>'StaffDetailsCustomField',
+						'CustomFieldOption'=>'StaffDetailsCustomFieldOption',
+						'CustomValue'=>'StaffDetailsCustomValue',
+						'Year'=>'SchoolYear');
+		
+		$staffId = $this->params['pass'][0];
+		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+		$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $data['Staff']['id']));
+		return compact('action','siteid','id','years','selectedYear','condParam','arrMap');
+	}
+	
+	public function staffCustFieldYrView(){
+		extract($this->staffCustFieldYrInits());
+		$this->Navigation->addCrumb('Academic');
+		$customfield = $this->Components->load('CustomField',$arrMap);
+		$data = array();
+		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		if(empty($data['dataFields'])) $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+		$displayEdit = true;
+		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
+		$this->set($data);
+		$this->render('/Elements/customfields/view');
+	}
+	
+	public function staffCustFieldYrEdit(){
+		if ($this->request->is('post')) {
+			extract($this->staffCustFieldYrInits());
+			$customfield = $this->Components->load('CustomField',$arrMap);
+			$cond = array('institution_site_id' => $siteid, 
+						  'staff_id' => $id, 
+						  'school_year_id' => $selectedYear);
+			$customfield->saveCustomFields($this->request->data,$cond);
+			$this->redirect(array('action' => 'staffCustFieldYrView',$id,$selectedYear));
+		}else{
+			$this->staffCustFieldYrView();
+			$this->render('/Elements/customfields/edit');
+		}
+	}
+	//STAFF CUSTOM FIELD PER YEAR - ENDS - 
 }
