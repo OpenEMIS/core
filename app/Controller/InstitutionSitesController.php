@@ -167,18 +167,31 @@ class InstitutionSitesController extends AppController {
 			 * need to sort the Area to get the the lowest level
 			 */
 			$last_area_id = 0;
+			$last_adminarea_id = 0;
 			//this key sort is impt so that the lowest area level will be saved correctly
 			ksort($this->request->data['InstitutionSite']);
 			foreach($this->request->data['InstitutionSite'] as $key => $arrValSave){
 				if(stristr($key,'area_level_') == true && ($arrValSave != '' && $arrValSave != 0)){
 					$last_area_id = $arrValSave;
 				}
+				if(stristr($key,'administrative_area_level_') == true && ($arrValSave != '' && $arrValSave != 0)){
+					$last_adminarea_id = $arrValSave;
+				}
 			}
+			
+			
 			
 			if($last_area_id == 0){
 				$last_area_id = $this->institutionSiteObj['InstitutionSite']['area_id'];
 			}
 			$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+			
+			
+			if($last_adminarea_id == 0){
+				$last_adminarea_id = $this->institutionSiteObj['InstitutionSite']['administrative_area_id'];
+			}
+			$this->request->data['InstitutionSite']['administrative_area_id'] = $last_adminarea_id;
+			
 			
 			$this->InstitutionSite->set($this->request->data);
 			if($this->InstitutionSite->validates()) {
@@ -210,6 +223,26 @@ class InstitutionSitesController extends AppController {
 				}
 			}
 			
+			if($last_adminarea_id != 0){
+				$adminareaLevel = $this->fetchtoParent($last_adminarea_id,array('AdministrativeArea','AdministrativeAreaLevel'));
+				
+				$adminareaLevel = array_reverse($adminareaLevel);
+				
+				$adminareadropdowns = array();
+				foreach($adminareaLevel as $index => &$arrVals){
+					$siblings = $this->AdministrativeArea->find('list',array('conditions'=>array('AdministrativeArea.parent_id' => $arrVals['parent_id'])));
+					$this->Utility->unshiftArray($siblings,array('0'=>'--'.__('Select').'--'));
+					$adminareadropdowns['administrative_area_level_'.$index]['options'] = $siblings;
+				}
+				
+				
+				$maxAreaIndex = max(array_keys($adminareaLevel));//starts with 0
+				$totalAreaLevel = $this->AdministrativeAreaLevel->find('count'); //starts with 1
+				for($i = $maxAreaIndex; $i <= $totalAreaLevel; $i++ ){
+					$adminareadropdowns['administrative_area_level_'.($i+1)]['options'] = array('0'=>'--'.__('Select').'--');
+				}
+			}
+			
 			
 			
 		}else{
@@ -217,7 +250,16 @@ class InstitutionSitesController extends AppController {
 			$this->set('data', $data);
 			$areaLevel = $this->fetchtoParent($data['InstitutionSite']['area_id']);
 			$areaLevel = array_reverse($areaLevel);
+			
+			
+			$adminareaLevel = $this->fetchtoParent($data['InstitutionSite']['administrative_area_id']);
+			$adminareaLevel = array_reverse($adminareaLevel);
+			
 			$areadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['area_id']);
+			//pr($data['InstitutionSite']);
+			
+			$adminareadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['administrative_area_id'],$arrMap = array('AdministrativeArea','AdministrativeAreaLevel'));
+			
 		}
 		
 		
@@ -225,6 +267,7 @@ class InstitutionSitesController extends AppController {
 		$disabledAreas = $this->Area->find('list',array('conditions'=>array('Area.visible' => '0')));
 		$this->Utility->unshiftArray($topArea, array('0'=>'--'.__('Select').'--'));
 		$levels = $this->AreaLevel->find('list');
+		$adminlevels = $this->AdministrativeAreaLevel->find('list');
 		$visible = true;
         $type = $this->InstitutionSiteType->findList($visible);
 		$ownership = $this->InstitutionSiteOwnership->findList($visible);
@@ -240,8 +283,12 @@ class InstitutionSitesController extends AppController {
         $this->set('locality_options',$locality);
         $this->set('status_options',$status);
 		$this->set('arealevel',$areaLevel);
+		$this->set('adminarealevel',$adminareaLevel);
 		$this->set('levels',$levels);
+		$this->set('adminlevels',$adminlevels);
 		$this->set('areadropdowns',$areadropdowns);
+		$this->set('adminareadropdowns',$adminareadropdowns);
+		
 		$this->set('disabledAreas',$disabledAreas);
 		
 		
@@ -418,7 +465,9 @@ class InstitutionSitesController extends AppController {
 		if($this->institutionSiteObj['InstitutionSite']['area_id'] == 0) $this->institutionSiteObj['InstitutionSite']['area_id'] = 1;
 		
 		$lowest =  $siteId;
+		
 		$areas = $this->fetchtoParent($lowest,$arrMap);
+		
 		$areas = array_reverse($areas);
 		
 		/*foreach($areas as $index => &$arrVals){
@@ -430,7 +479,7 @@ class InstitutionSitesController extends AppController {
 		$arrDisabledList = array();
 		foreach($areas as $index => &$arrVals){
 			
-			$siblings = $this->Area->find('all',array('fields'=>Array($arrMap[0].'.id',$arrMap[0].'.name',$arrMap[0].'.parent_id',$arrMap[0].'.visible'),'conditions'=>array($arrMap[0].'.parent_id' => $arrVals['parent_id'])));
+			$siblings = $this->{$arrMap[0]}->find('all',array('fields'=>Array($arrMap[0].'.id',$arrMap[0].'.name',$arrMap[0].'.parent_id',$arrMap[0].'.visible'),'conditions'=>array($arrMap[0].'.parent_id' => $arrVals['parent_id'])));
 			//echo "<br>";
 			
 			$opt = array();
@@ -476,7 +525,10 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function viewAreaChildren($id,$arrMap = array('Area','AreaLevel')) {
-		
+		//if ajax
+		if($this->RequestHandler->isAjax()){
+			$arrMap = ($arrMap == 'admin')?  array('AdministrativeArea','AdministrativeAreaLevel') : array('Area','AreaLevel') ;
+		}
 		$this->autoRender = false;
 		$value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
 		$this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
@@ -489,13 +541,11 @@ class InstitutionSitesController extends AppController {
 		$arrVals = Array();
 		//pr($lowest);die;
 		//$this->autoRender = false; // AJAX
-			
-			echo "d1";
-			echo "<br> ".$AreaLevelfk;
+		
 		$list = $this->{$arrMap[0]}->find('first', array(
 								'fields' => array($arrMap[0].'.id', $arrMap[0].'.name', $arrMap[0].'.parent_id', $arrMap[0].'.'.$AreaLevelfk.'_id',$arrMap[1].'.name'),
 								'conditions' => array($arrMap[0].'.id' => $lowest)));
-		echo "d2";
+		
 		//check if not false
 		if($list){ 
 			$arrVals[$list[$arrMap[0]][$AreaLevelfk.'_id']] = Array('level_id'=>$list[$arrMap[0]][$AreaLevelfk.'_id'],'id'=>$list[$arrMap[0]]['id'],'name'=>$list[$arrMap[0]]['name'],'parent_id'=>$list[$arrMap[0]]['parent_id'],'AreaLevelName'=>$list[$arrMap[1]]['name']);
@@ -512,6 +562,8 @@ class InstitutionSitesController extends AppController {
 			}
 			
 		}
+		
+		
 		
 		return $arrVals;
 	}
