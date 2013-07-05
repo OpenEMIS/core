@@ -174,7 +174,7 @@ msgid "Searching..."
 msgstr "Поиск ..."
 
 msgid "%s have been deleted successfully."
-msgstr "% были успешно удалены"
+msgstr "%s были успешно удалены"
 
 msgid "Please enter a unique Identification No"
 msgstr "Пожалуйста, введите уникальный <br/>Идентификационный номер"
@@ -2000,7 +2000,7 @@ msgid ""
 "The system will %s the current data and restore to your previous data based "
 "on the restore point you selected."
 msgstr ""
-"Система % текущие данные и восстановит предыдущие данные, основанные на точке восстановления, которую вы выбрали."
+"Система %s текущие данные и восстановит предыдущие данные, основанные на точке восстановления, которую вы выбрали."
 
 msgid "OVERWRITE ALL"
 msgstr "Заменить все"
@@ -2058,7 +2058,7 @@ msgid "Max File Size:"
 msgstr "Максимальный размер файла:"
 
 msgid "Max Resolution: %s pixels"
-msgstr "Максимальное разрешение: % пикселов "
+msgstr "Максимальное разрешение: %s пикселов "
 
 msgid "Format Supported:"
 msgstr "Поддерживаемые форматы:"
