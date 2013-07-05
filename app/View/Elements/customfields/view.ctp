@@ -18,6 +18,11 @@ echo $this->Html->script('custom_field', false);
 		
 		?>
 	</h1>
+	<?php
+	echo $this->element('alert'); 
+	
+	if(count(@$dataFields)) {
+	?>
 	<div class="row year" style="margin-left:5px;">
 		<div class="label" style="width: 90px;"><?php echo __('Year'); ?></div>
 		<div class="value">
@@ -121,6 +126,8 @@ echo $this->Html->script('custom_field', false);
                 
             }
         
-		} ?>
+		} 
+		
+	}?>
 	
 </div>
