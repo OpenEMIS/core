@@ -12,30 +12,27 @@ echo $this->Html->script('Security', false);
 	<h1>
 		<span><?php echo __('Group Details'); ?></span>
 		<?php
-		echo $this->Html->link(__('View'), array('action' => 'groupsView', $data['SecurityGroup']['id']), array('class' => 'divider'));
+		$groupId = $data['SecurityGroup']['id'];
+		$groupName = $data['SecurityGroup']['name'];
+		echo $this->Html->link(__('View'), array('action' => 'groupsView', $groupId), array('class' => 'divider'));
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
 	<?php
 	echo $this->Form->create('SecurityGroup', array(
-		'url' => array('controller' => 'Security', 'action' => 'groupsEdit'),
-		'inputDefaults' => array('label' => false, 'div' => false)
+		'url' => array('controller' => 'Security', 'action' => 'groupsEdit', $groupId),
+		'inputDefaults' => array('label' => false, 'div' => false),
+		'onsubmit' => 'return Security.validateGroupAdd(this)'
 	));
+	echo $this->Form->hidden('id', array('value' => $groupId));
 	?>
 	
-	<fieldset class="section_group" style="padding-bottom: 10px;">
+	<fieldset class="section_group" style="padding-bottom: 10px; position: relative;" id="group_info">
 		<legend><?php echo __('Information'); ?></legend>
 		<div class="row">
-			<div class="label"><?php echo __('Group Name'); ?></div>
-			<div class="value">
-				<?php 
-				echo $this->Form->input('name', array(
-					'class' => 'default',
-					'value' => $data['SecurityGroup']['name']
-				));
-				?>
-			</div>
+			<div class="label"><?php echo __('Name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('name', array('class' => 'default', 'default' => $groupName, 'value' => $groupName)); ?></div>
 		</div>
 	</fieldset>
 	
@@ -77,8 +74,9 @@ echo $this->Html->script('Security', false);
 				</div>
 				
 				<div class="table_body">
-					<?php foreach($data['SecurityGroup']['sites'] as $siteObj) { ?>
+					<?php foreach($data['SecurityGroup']['sites'] as $index => $siteObj) { ?>
 					<div class="table_row">
+						<?php echo $this->Form->hidden('SecurityGroupInstitutionSite.'.$index.'.institution_site_id', array('class' => 'value_id', 'value' => $siteObj['institution_site_id'])); ?>
 						<div class="table_cell"><?php echo $siteObj['institution_name']; ?></div>
 						<div class="table_cell"><?php echo $siteObj['institution_site_name']; ?></div>
 						<div class="table_cell"><span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="jsTable.doRemove(this)"></span></div>
@@ -93,7 +91,7 @@ echo $this->Html->script('Security', false);
 		</fieldset>
 	</fieldset>
 	
-	<fieldset class="section_group" style="padding-bottom: 10px;">
+	<!--fieldset class="section_group" style="padding-bottom: 10px;">
 		<legend>
 			<span><?php echo __('Roles'); ?></span>
 		</legend>
@@ -111,9 +109,7 @@ echo $this->Html->script('Security', false);
 					<?php foreach($data['SecurityRole']['system'] as $obj) { ?>
 					<div class="table_row">
 						<div class="table_cell"><?php echo $obj['name']; ?></div>
-						<div class="table_cell cell_users">
-							<?php echo $this->Html->link(__('Users'), array('action' => 'roleUsers', $data['SecurityGroup']['id'], $obj['id'])); ?>
-						</div>
+						<div class="table_cell cell_users"><?php echo $obj['count']; ?></div>
 					</div>
 					<?php }?>
 				</div>
@@ -138,66 +134,17 @@ echo $this->Html->script('Security', false);
 					<?php foreach($data['SecurityRole']['user'] as $obj) { ?>
 					<div class="table_row">
 						<div class="table_cell"><?php echo $obj['name']; ?></div>
-						<div class="table_cell cell_users">
-							<?php echo $this->Html->link(__('Users'), array('action' => 'roleUsers', $data['SecurityGroup']['id'], $obj['id'])); ?>
-						</div>
+						<div class="table_cell cell_users"><?php echo $obj['count']; ?></div>
 					</div>
 					<?php }?>
 				</div>
 			</div>
 		</fieldset>
-	</fieldset>
-	
-	<fieldset class="section_group" style="padding-bottom: 10px;">
-		<legend>
-			<span><?php echo __('Users'); ?></span>
-			<?php
-			echo $this->Html->link(__('Manage'), array('action' => 'groupsView', $data['SecurityGroup']['id']), array('class' => 'divider'));
-			?>
-		</legend>
-		<div class="row">
-			<div class="search_wrapper">
-				<?php 
-					echo $this->Form->input('SearchField', array(
-						'id' => 'SearchField',
-						'label' => false,
-						'div' => false,
-						'value' => '',
-						'class' => 'default',
-						'onkeypress' => 'InstitutionSiteProgrammes.doSearch(event)',
-						'placeholder' => __('Search User')
-					));
-				?>
-				<span class="icon_clear" onClick="InstitutionSiteProgrammes.clearSearch(this)">X</span>
-			</div>
-			<span class="left icon_search" url="InstitutionSites/studentsSearch?master" onClick="InstitutionSiteProgrammes.search(this)"></span>
-		</div>
-		
-		<div class="table allow_hover">
-			<div class="table_head">
-				<div class="table_cell" style="width: 180px;"><?php echo __('Name'); ?></div>
-				<div class="table_cell"><?php echo __('Role'); ?></div>
-				<div class="table_cell" style="width: 90px;"><?php echo __('Status'); ?></div>
-			</div>
-			
-			<div class="table_body">
-				<div class="table_row">
-					<div class="table_cell">Jeff Zheng</div>
-					<div class="table_cell">Group Administrator</div>
-					<div class="table_cell center">Active</div>
-				</div>
-				<div class="table_row">
-					<div class="table_cell">Adrian Lee</div>
-					<div class="table_cell">Teacher</div>
-					<div class="table_cell center">Active</div>
-				</div>
-			</div>
-		</div>
-	</fieldset>
+	</fieldset-->
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'groups'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'groupsView', $data['SecurityGroup']['id']), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

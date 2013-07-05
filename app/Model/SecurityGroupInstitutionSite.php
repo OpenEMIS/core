@@ -57,15 +57,6 @@ class SecurityGroupInstitutionSite extends AppModel {
 		return $data;
 	}
 	
-	public function filterData(&$data) {
-		$tmpData = $data;
-		foreach($tmpData as $key => $obj) {
-			if($obj['institution_site_id']==0) {
-				unset($data[$key]);
-			}
-		}
-	}
-	
 	public function fetchSites($institutionList, $conditions) {
 		$this->formatResult = true;
 		$list = $this->find('all', array(
@@ -85,29 +76,45 @@ class SecurityGroupInstitutionSite extends AppModel {
 		return array_values($sortList);
 	}
 	
-	public function findSitesByRoles($roleIds) {
-		$institutions = array();
+	public function findSitesByUserId($userId) {
+		$data = array();
 		$list = $this->find('all', array(
+			'recursive' => -1,
 			'fields' => array('InstitutionSite.id', 'InstitutionSite.institution_id'),
-			'conditions' => array('SecurityRoleInstitutionSite.security_role_id' => $roleIds)
+			'joins' => array(
+				array(
+					'table' => 'security_group_users',
+					'alias' => 'SecurityGroupUser',
+					'conditions' => array(
+						'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
+						'SecurityGroupUser.security_user_id = ' . $userId
+					)
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array('InstitutionSite.id = SecurityGroupInstitutionSite.institution_site_id')
+				)
+			)
 		));
+		
 		foreach($list as $obj) {
 			$site = $obj['InstitutionSite'];
 			$institutionId = $site['institution_id'];
-			if(!isset($institutions[$institutionId])) {
-				$institutions[$institutionId] = array();
+			if(!isset($data[$institutionId])) {
+				$data[$institutionId] = array();
 			}
-			$institutions[$institutionId][] = $site['id'];
+			$data[$institutionId][] = $site['id'];
 		}
-		return $institutions;
+		return $data;
 	}
         
-        public function addInstitutionSitetoRole($arrSettings){
-                if($arrSettings['security_role_id'] > 0 && $arrSettings['institution_site_id'] > 0){
-                    $records = $this->find('all',array('conditions'=> $arrSettings)); //check if there's an Existing Site to a role
-                    if(count($records) == 0){
-                       $this->save($arrSettings);
-                    }
-                }
-        }
+	public function addInstitutionSitetoRole($arrSettings){
+		if($arrSettings['security_role_id'] > 0 && $arrSettings['institution_site_id'] > 0){
+			$records = $this->find('all',array('conditions'=> $arrSettings)); //check if there's an Existing Site to a role
+			if(count($records) == 0){
+			   $this->save($arrSettings);
+			}
+		}
+	}
 }

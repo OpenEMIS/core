@@ -390,7 +390,6 @@ class UtilityHelper extends AppHelper {
 			'type' => 'checkbox',
 			'value' => 1,
 			'autocomplete' => 'off',
-			//'onchange' => 'jsList.activate(this)',
 			'before' => '<div class="table_cell center">',
 			'after' => '</div>'
 		);
@@ -400,6 +399,9 @@ class UtilityHelper extends AppHelper {
 		} else {
 			if($value == 1) {
 				$options['checked'] = 'checked';
+			} else if($value == 2) {
+				$options['checked'] = 'checked';
+				$options['disabled'] = 'disabled';
 			}
 		}
 		

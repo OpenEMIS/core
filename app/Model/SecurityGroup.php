@@ -53,7 +53,8 @@ class SecurityGroup extends AppModel {
 					)
 				)
 			),
-			'order' => array('SecurityGroup.name')
+			'order' => array('SecurityGroup.name'),
+			'group' => array('SecurityGroup.id')
 		));
 		return $data;
 	}
@@ -92,6 +93,7 @@ class SecurityGroup extends AppModel {
 			'fields' => array('SecurityGroup.id', 'SecurityGroup.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $conditions,
+			'group' => array('SecurityGroup.id'),
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
 			'order' => $order

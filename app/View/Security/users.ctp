@@ -13,7 +13,7 @@ echo $this->Html->script('search', false);
 	<h1>
 		<span><?php echo __('Users'); ?></span>
 		<?php
-		if($_add) {
+		if($_accessControl->check($this->params['controller'], 'usersAdd')) {
 			echo $this->Html->link(__('Add'), array('action' => 'usersAdd'), array('class' => 'divider'));
 		}
 		?>
@@ -55,9 +55,9 @@ echo $this->Html->script('search', false);
 	
 		<div class="table allow_hover" action="<?php echo $this->params['controller'] . DS . 'usersView' . DS; ?>">
 			<div class="table_head">
-				<div class="table_cell" style="width: 130px;"><?php echo __('Username'); ?></div>
-				<div class="table_cell"><?php echo __('Name'); ?></div>
-				<div class="table_cell"><?php echo __('Groups'); ?></div>
+				<div class="table_cell"><?php echo __('Username'); ?></div>
+				<div class="table_cell"><?php echo __('First Name'); ?></div>
+				<div class="table_cell"><?php echo __('Last Name'); ?></div>
 				<div class="table_cell cell_status"><?php echo __('Status'); ?></div>
 			</div>
 			
@@ -67,8 +67,8 @@ echo $this->Html->script('search', false);
 				?>
 				<div class="table_row" row-id="<?php echo $obj['id']; ?>">
 					<div class="table_cell"><?php echo $obj['username']; ?></div>
-					<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
-					<div class="table_cell"><?php echo $obj['groups']; ?></div>
+					<div class="table_cell"><?php echo $obj['first_name']; ?></div>
+					<div class="table_cell"><?php echo $obj['last_name']; ?></div>
 					<div class="table_cell cell_status"><?php echo $this->Utility->getStatus($obj['status']); ?></div>
 				</div>
 				<?php } ?>
