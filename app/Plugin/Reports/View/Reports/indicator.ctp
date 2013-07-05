@@ -48,14 +48,19 @@ echo $this->Html->script('app', false);
     margin-bottom: 10px;
 }
 
-.custom_div .custom_div_label{
+.row .label{
     width:130px;
     margin-right: 10px;
     margin-left: 20px;
-    float:left;
+    /*float:left;*/
 }
 
-.custom_div#indicator_selector .custom_div_content select{
+.row .value{
+    min-width:360px;
+    max-width:360px;
+}
+
+.row#indicator_selector .value select{
     /*min-width:360px;*/
     overflow-wrap:initial;
 }
@@ -63,7 +68,6 @@ echo $this->Html->script('app', false);
 .custom_box {
     overflow: scroll;
     overflow-x: hidden;
-    margin: 0 15px 15px 10px;
     border: 1px solid #CCCCCC;
     min-height: 50px;
     max-height: 150px;
@@ -104,9 +108,9 @@ echo $this->Html->script('app', false);
 				<span><?php echo __(ucwords("Indicator Reports")); ?></span>
 			</h1>
 <form id="sdmx-download" method="post" action="<?php echo $this->Html->url(array( "controller" => "Reports", "action" => "downloadIndicator"));?>" >
-    <div id="indicator_selector" class="custom_div">
-        <div class="custom_div_label"><?php echo __("Indicator"); ?></div>
-        <div class="custom_div_content">
+    <div id="indicator_selector" class="row">
+        <div class="label"><?php echo __("Indicator"); ?></div>
+        <div class="value">
             <select name="data[Sdmx][indicator]" class="default">
             <php? //pr($indicators); ?>
                 <option value="" >-- Select one --</option>
@@ -117,9 +121,9 @@ echo $this->Html->script('app', false);
         </div>
 
     </div>
-    <div id="format_selector" class="custom_div">
-        <div class="custom_div_label"><?php echo __("Format"); ?></div>
-        <div class="custom_div_content">
+    <div id="format_selector" class="row">
+        <div class="label"><?php echo __("Format"); ?></div>
+        <div class="value">
         <select name="data[Sdmx][format]" class="default">
             <?php
             $optionElementTemplate = '<option value="{{ value }}" {{ selected }}>{{ text }}</option>';
@@ -133,9 +137,9 @@ echo $this->Html->script('app', false);
         </select>
         </div>
     </div>
-    <div id="sdmx-areas" class="custom_div">
-        <div class="custom_div_label"><?php echo __("Areas"); ?></div>
-        <div class="custom_div_content">
+    <div id="sdmx-areas" class="row">
+        <div class="label"><?php echo __("Areas"); ?></div>
+        <div class="value">
             <div class="custom_box">
                 <?php foreach($areas as $key=>$tmpAreas){ ?>
                     <div class="custom_label"><?php echo __(Inflector::humanize(Inflector::underscore($key))); ?></div>
@@ -155,9 +159,9 @@ echo $this->Html->script('app', false);
             </div>
         </div>
     </div>
-    <div id="sdmx-timeperiods" class="custom_div">
-        <div class="custom_div_label"><?php echo __("Time Periods"); ?></div>
-        <div class="custom_div_content">
+    <div id="sdmx-timeperiods" class="row">
+        <div class="label"><?php echo __("Time Periods"); ?></div>
+        <div class="value">
             <div class="custom_box">
                 <div class="custom_value">
                 <ul>
