@@ -370,6 +370,20 @@ class UtilityHelper extends AppHelper {
 		return $input;
 	}
 	
+	public function getTextInput($form, $fieldName, $value, $name, $length, $editable=true) {
+		$options = array(
+			'name' => sprintf($fieldName, $name),
+			'type' => 'text',
+			'value' => $value,
+			'before' => '<div class="cell cell_'.$name.'"><div class="input_wrapper">',
+			'after' => '</div></div>',
+			'maxlength' => $length
+		);
+		$text = '<div class="cell cell_name"><span>%s</span></div>';
+		$input = $editable ? $form->input('name', $options) : sprintf($text, $value);
+		return $input;
+	}
+	
 	public function getAddRow($caption) {
 		return sprintf('<div class="row"><a class="void icon_plus">%s %s</a></div>', __('Add'), __($caption));
 	}
