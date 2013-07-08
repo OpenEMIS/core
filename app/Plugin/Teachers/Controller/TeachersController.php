@@ -737,8 +737,11 @@ class TeachersController extends TeachersAppController {
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		
 		$institution_sites = $customfield->getCustomValuebyCond('list',array('fields'=>array('institution_site_id','school_year_id'),'conditions'=>array('school_year_id'=>$selectedYear,'teacher_id'=>$id)));
+		
 		$institution_sites = $this->custFieldSites(array_keys($institution_sites));
+		if(count($institution_sites)<2)  $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
 		$displayEdit = false;
 		$this->set(compact('arrMap','selectedYear','siteid','years','action','id','institution_sites','displayEdit'));
 		$this->set($data);
