@@ -40,6 +40,8 @@ class UtilityComponent extends Component {
 		
 		// Custom Fields
 		$msgList['CUSTOM_FIELDS_NO_CONFIG'] = "There are no academic configured in the system.";
+		$msgList['CUSTOM_FIELDS_NO_RECORD'] = "No records available.";
+		
 		// General Messages
 		$msgList['ERROR_UNEXPECTED'] = "You have encountered an unexpected error. Please contact the system administrator for assistance.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
