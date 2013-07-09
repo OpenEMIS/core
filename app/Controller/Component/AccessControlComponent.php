@@ -96,63 +96,12 @@ class AccessControlComponent extends Component {
 		if($this->Auth->user('super_admin')==0) {
 			$list = $this->GroupUser->getRolesByUserId($userId);
 			
-			//foreach($list as $obj) {
-				//$role = $obj[$modelMap['Role']];
-				//$roleFunctions = $this->RoleFunction->find('all', array('conditions' => array('SecurityRoleFunction.security_role_id' => $role['id'])));
-				//pr($roleFunctions);
-				$roleFunctions = $this->Function->getUserPermissions($userId);//pr($roleFunctions);die;
-				foreach($roleFunctions as $obj) {
-					$function = $obj[$modelMap['Function']];
-					$roleFunction = $obj[$modelMap['RoleFunction']];
-					$functionAttr = array('parent_id' => $function['parent_id']);
-					
-					$controller = strtoupper($function['controller']);
-					if(!isset($check[$controller])) {
-						$check[$controller] = array();
-						$apply[$controller] = array();
-					}
-					
-					$operationObj = $obj[0];
-					foreach($this->operations as $op) {
-						if($operationObj[$op]==1 && !is_null($function[$op])) {
-							$action = explode($separator, $function[$op]); // separate the action and the dependency
-							if(sizeof($action) == 1) { // if the array size is 1, then there is no dependency
-								if(strlen($action[0]) > 0) {
-									$actionList = explode($divider, $action[0]);
-									foreach($actionList as $a) {
-										$check[$controller][$a] = $functionAttr;
-									}
-								}
-							} else { // the action is dependent on another action
-								$actionParent = $function[$action[0]];
-								if(strpos($function[$action[0]], $separator) !== false) { // check if the parent has dependency
-									$actionParent = explode($separator, $function[$action[0]]);
-									$actionParent = $actionParent[1];
-								}
-								
-								$actionList = explode($divider, $actionParent);
-								foreach($actionList as $a) {
-									if(!isset($apply[$controller][$a])) {
-										$apply[$controller][$a] = array();
-									}
-									$apply[$controller][$a][$op] = true;
-								}
-								if(strlen($action[1]) > 0) {
-									$actionList = explode($divider, $action[1]);
-									foreach($actionList as $a) {
-										$check[$controller][$a] = $functionAttr;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		//} else {
-		/*
-			$list = $this->Function->find('all');
-			foreach($list as $obj) {
+			$roleFunctions = $this->Function->getUserPermissions($userId);
+			foreach($roleFunctions as $obj) {
+				if($obj[$modelMap['Role']]['visible'] != 1) continue; // if role is disabled then skip this permission
+				
 				$function = $obj[$modelMap['Function']];
+				$roleFunction = $obj[$modelMap['RoleFunction']];
 				$functionAttr = array('parent_id' => $function['parent_id']);
 				
 				$controller = strtoupper($function['controller']);
@@ -161,12 +110,16 @@ class AccessControlComponent extends Component {
 					$apply[$controller] = array();
 				}
 				
+				$operationObj = $obj[0];
 				foreach($this->operations as $op) {
-					if(!is_null($function[$op])) { // super admin doesn't need to check for role
+					if($operationObj[$op]==1 && !is_null($function[$op])) {
 						$action = explode($separator, $function[$op]); // separate the action and the dependency
 						if(sizeof($action) == 1) { // if the array size is 1, then there is no dependency
 							if(strlen($action[0]) > 0) {
-								$check[$controller][$action[0]] = $functionAttr;
+								$actionList = explode($divider, $action[0]);
+								foreach($actionList as $a) {
+									$check[$controller][$a] = $functionAttr;
+								}
 							}
 						} else { // the action is dependent on another action
 							$actionParent = $function[$action[0]];
@@ -175,19 +128,24 @@ class AccessControlComponent extends Component {
 								$actionParent = $actionParent[1];
 							}
 							
-							if(!isset($apply[$controller][$actionParent])) {
-								$apply[$controller][$actionParent] = array();
+							$actionList = explode($divider, $actionParent);
+							foreach($actionList as $a) {
+								if(!isset($apply[$controller][$a])) {
+									$apply[$controller][$a] = array();
+								}
+								$apply[$controller][$a][$op] = true;
 							}
-							$apply[$controller][$actionParent][$op] = true;
 							if(strlen($action[1]) > 0) {
-								$check[$controller][$action[1]] = $functionAttr;
+								$actionList = explode($divider, $action[1]);
+								foreach($actionList as $a) {
+									$check[$controller][$a] = $functionAttr;
+								}
 							}
 						}
 					}
 				}
 			}
-			*/
-		//}
+		}
 		$permissions['check'] = $check;
 		$permissions['apply'] = $apply;
 		//pr($check);

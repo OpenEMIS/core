@@ -12,7 +12,7 @@ echo $this->Html->script('security', false);
 		<span><?php echo __('Permissions'); ?></span>
 		<?php
 		echo $this->Html->link(__('Back'), array('action' => 'roles', $group['id']), array('class' => 'divider'));
-		if($_edit) {
+		if($_edit && $allowEdit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'permissionsEdit', $selectedRole), array('class' => 'divider'));
 		}
 		?>

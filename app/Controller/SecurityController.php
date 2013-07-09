@@ -361,7 +361,7 @@ class SecurityController extends AppController {
 		
 		foreach($data as &$group) {
 			$obj = $group['SecurityGroup'];
-			$count = $this->SecurityGroupUser->find('count', array('SecurityGroupUser.security_group_id' => $obj['id']));
+			$count = $this->SecurityGroupUser->find('count', array('conditions' => array('SecurityGroupUser.security_group_id' => $obj['id'])));
 			$group['SecurityGroup']['count'] = $count;
 		}
 		
@@ -879,49 +879,78 @@ class SecurityController extends AppController {
 			$userId = $isSuperUser ? false : $this->Auth->user('id');
 			$groupObj = $this->SecurityRole->getGroupName($selectedRole, $userId);
 			
+			$allowEdit = true;
+			if(!$isSuperUser) {
+				$userRoles = $this->SecurityGroupUser->getRolesByUserId($userId);
+				foreach($userRoles as $obj) {
+					if($obj['SecurityRole']['id'] === $selectedRole) {
+						$allowEdit = false;
+						break;
+					}
+				}
+			}
 			$roles = $groupObj ? $this->SecurityRole->getRoleOptions($groupObj['id']) : $this->SecurityRole->getRoleOptions(array(0, -1));
-			$roleId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($roles);
 			$permissions = array();
 			if($isSuperUser) {
-				$permissions = $this->SecurityFunction->getPermissions($roleId, $isSuperUser);
+				$permissions = $this->SecurityFunction->getPermissions($selectedRole, $isSuperUser);
 			} else {
-				$permissions = $this->SecurityFunction->getAllowedPermissions($roleId, $userId, $isSuperUser);
+				$permissions = $this->SecurityFunction->getAllowedPermissions($selectedRole, $userId, $isSuperUser);
 			}
 			$this->set('_operations', $this->AccessControl->operations);
-			$this->set('selectedRole', $roleId);
+			$this->set('selectedRole', $selectedRole);
 			$this->set('roles', $roles);
 			$this->set('permissions', $permissions);
 			$this->set('group', $groupObj);
+			$this->set('allowEdit', $allowEdit);
 		} else {
 			$this->redirect(array('action' => 'roles'));
 		}
 	}
 	
 	public function permissionsEdit() {
-		$roles = $this->SecurityRole->findList();
-		$roleId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($roles);
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Permissions');
+		if(isset($this->params['pass'][0])) {
+			$selectedRole = $this->params['pass'][0];
 			
-			$isSuperUser = $this->Auth->user('super_admin')==1;
-			$userId = $isSuperUser ? false : $this->Auth->user('id');
-			$operations = $this->AccessControl->operations;
-			
-			$permissions = array();
-			if($isSuperUser) {
-				$permissions = $this->SecurityFunction->getPermissions($roleId, $isSuperUser);
+			if($this->request->is('get')) {
+				$this->Navigation->addCrumb('Edit Permissions');
+				
+				$isSuperUser = $this->Auth->user('super_admin')==1;
+				$userId = $isSuperUser ? false : $this->Auth->user('id');			
+				$allowEdit = true;
+				if(!$isSuperUser) {
+					$userRoles = $this->SecurityGroupUser->getRolesByUserId($userId);
+					foreach($userRoles as $obj) {
+						if($obj['SecurityRole']['id'] === $selectedRole) {
+							$allowEdit = false;
+							break;
+						}
+					}
+				}
+				if($allowEdit) {
+					$groupObj = $this->SecurityRole->getGroupName($selectedRole, $userId);
+					$roles = $groupObj ? $this->SecurityRole->getRoleOptions($groupObj['id']) : $this->SecurityRole->getRoleOptions(array(0, -1));
+					$permissions = array();
+					if($isSuperUser) {
+						$permissions = $this->SecurityFunction->getPermissions($selectedRole, $isSuperUser);
+					} else {
+						$permissions = $this->SecurityFunction->getAllowedPermissions($selectedRole, $userId, $isSuperUser);
+					}
+					
+					$this->set('_operations', $this->AccessControl->operations);
+					$this->set('selectedRole', $selectedRole);
+					$this->set('roles', $roles);
+					$this->set('permissions', $permissions);
+					$this->set('group', $groupObj);
+				} else {
+					$this->redirect(array('action' => 'permissions', $selectedRole));
+				}
 			} else {
-				$permissions = $this->SecurityFunction->getAllowedPermissions($roleId, $userId, $isSuperUser);
+				$data = $this->data['SecurityRoleFunction'];
+				$this->SecurityRoleFunction->saveAll($data);
+				$this->redirect(array('action' => 'permissions', $selectedRole));
 			}
-			
-			$this->set('_operations', $operations);
-			$this->set('selectedRole', $roleId);
-			$this->set('roles', $roles);
-			$this->set('permissions', $permissions);
 		} else {
-			$data = $this->data['SecurityRoleFunction'];
-			$this->SecurityRoleFunction->saveAll($data);
-			$this->redirect(array('action' => 'permissions', $roleId));
+			$this->redirect(array('action' => 'roles'));
 		}
 	}
 }
