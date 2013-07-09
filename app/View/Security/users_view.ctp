@@ -47,6 +47,10 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
 		<div class="row">
+			<div class="label"><?php echo __('Identification No'); ?></div>
+			<div class="value"><?php echo $data['identification_no']; ?></div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $data['first_name']; ?></div>
 		</div>

@@ -249,12 +249,14 @@ class SecurityController extends AppController {
 					$postRoles = isset($this->data['SecurityRole']) ? $this->data['SecurityRole'] : array();
 					
 					if($this->SecurityUser->doValidate($postData)) {
+						/*
 						$this->SecurityUserRole->deleteAll(array('SecurityUserRole.security_user_id' => $userId));
 						$userRoles = array();
 						foreach($postRoles as $roleId => $value) {
 							$userRoles[] = array('security_user_id' => $userId, 'security_role_id' => $roleId);
 						}
 						$this->SecurityUserRole->saveMany($userRoles);
+						*/
 						$name = $postData['first_name'] . ' ' . $postData['last_name'];
 						$this->Utility->alert($name . ' has been updated successfully.');
 						$this->redirect(array('action' => 'usersView', $userId));
