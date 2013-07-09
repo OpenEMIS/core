@@ -28,7 +28,6 @@ class SecurityController extends AppController {
 		'SecurityGroup',
 		'SecurityGroupUser',
 		'SecurityFunction',
-		'SecurityUserRole',
 		'SecurityRoleFunction',
 		'SecurityGroupArea',
 		'SecurityGroupInstitutionSite'
@@ -198,14 +197,6 @@ class SecurityController extends AppController {
 		
 		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
 		$data = $this->paginate('SecurityUser', $conditions);
-		
-		if(!empty($data)) {
-			foreach($data as &$user) {
-				$obj = $user['SecurityUser'];
-				$groups = $this->SecurityGroup->getGroupsByUser($obj['id']);
-				$user['SecurityUser']['groups'] = '';//implode(', ', $groups);
-			}
-		}
 		
 		$this->set('searchField', $searchField);
 		$this->set('page', $page);

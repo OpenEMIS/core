@@ -56,6 +56,7 @@ var Security = {
 		
 		if(!searchString.isEmpty()) {
 			$(obj).closest('.table_row').find('#UserId').val(0);
+			var maskId;
 			$.ajax({
 				type: 'GET',
 				dataType: dataType,

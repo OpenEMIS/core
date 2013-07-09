@@ -17,8 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityUser extends AppModel {
-	public $hasMany = array('SecurityUserRole');
-	
 	public $status = array();
 	public function beforeFind() {
 		$this->status = array(0 => __('Inactive', true), 1 => __('Active', true));
@@ -141,25 +139,7 @@ class SecurityUser extends AppModel {
 				$options['fields'] = array('SecurityUser.*');
 				$data = $this->find('all', $options);
 			}
-			return $data;
 		}
-		
-	/*
-		$notExists = '
-			NOT EXISTS (
-				SELECT institution_site_students.student_id 
-				FROM institution_site_students
-				JOIN institution_site_programmes
-					ON institution_site_programmes.id = institution_site_students.institution_site_programme_id
-					AND institution_site_programmes.institution_site_id = %d
-					AND institution_site_programmes.education_programme_id = %d
-					AND institution_site_programmes.school_year_id = %d
-				WHERE institution_site_students.student_id = Student.id
-			)';
-		*/	
-		//$this->formatResult = true;
-		//$searchStr = '%' . $searchStr . '%';
-			
 		return $data;
 	}
 	
