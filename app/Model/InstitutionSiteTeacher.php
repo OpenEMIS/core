@@ -135,7 +135,8 @@ class InstitutionSiteTeacher extends AppModel {
 			'conditions' => $this->paginateConditions($conditions),
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
-			'order' => $order
+			'order' => $order,
+			'group' => array('Teacher.id')
 		));
 		return $data;
 	}

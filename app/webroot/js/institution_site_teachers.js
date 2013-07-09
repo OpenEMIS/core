@@ -23,7 +23,7 @@ var InstitutionSiteTeachers = {
 	init: function() {
 		//$('.btn_save').click(InstitutionSiteStudents.saveStudentList);
 		this.attachSortOrder();
-		$('.icon_search').click(InstitutionSiteTeachers.search);
+		//$('.icon_search').click(InstitutionSiteTeachers.search);
 		$('#teachersEdit .icon_plus').click(InstitutionSiteTeachers.addPosition);
 	},
 	
@@ -44,15 +44,60 @@ var InstitutionSiteTeachers = {
 		});
 	},
 	
-	search: function() {
+	search: function(obj) {
 		var alertOpt = {
 			id: 'search_alert',
-			parent: '.info',
+			parent: '#search',
 			position: 'center'
 		}
-		var id = $('#IdentificationNo').val();
+		var searchString = $(obj).siblings('.search_wrapper').find('input').val();
+		
+		if(!searchString.isEmpty()) {
+			var maskId;
+			var ajaxParams = {searchString: searchString};
+			var ajaxSuccess = function(data, textStatus) {
+				var callback = function() {
+					/*
+					if(data.type == ajaxType['success']) {
+						if(data['status'] > 0) { // teacher is already employed for that site
+							window.location.href = getRootURL() + $('.info').attr('url') + data['id'];
+						} else {
+							$('#TeacherId').val(data['id']);
+							$('#FirstName').val(data['first_name']);
+							$('#LastName').val(data['last_name']);
+							$('#Gender').val(data['gender']);
+						}
+					} else if(data.type == ajaxType['alert']) {
+						alertOpt['type'] = data['alertOpt']['type'];
+						alertOpt['text'] = data['alertOpt']['text'];
+						$.alert(alertOpt);
+					}
+					*/
+					
+					if(!$(data).hasClass('alert')) {
+						//table.append(data);
+						//jsTable.fixTable(table.parent());
+					} else {
+						alertOpt['type'] = $(data).attr('type');
+						alertOpt['text'] = $(data).html();
+						$.alert(alertOpt);
+					}
+				};
+				$.unmask({id: maskId, callback: callback});
+			};
+			$.ajax({
+				type: 'GET',
+				dataType: 'text',
+				url: getRootURL() + $(obj).attr('url'),
+				data: {searchString: searchString},
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.info', text: i18n.Search.textSearching}); },
+				success: ajaxSuccess
+			});
+		}
+		
+		/*
 		var maskId;
-		var ajaxParams = {id: id};
+		var ajaxParams = {searchString: searchString};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
 				if(data.type == ajaxType['success']) {
@@ -77,9 +122,10 @@ var InstitutionSiteTeachers = {
 			dataType: 'json',
 			url: getRootURL() + $(this).attr('url'),
 			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.info'}); },
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.info', text: i18n.Search.textSearching}); },
 			success: ajaxSuccess
 		});
+		*/
 	},
 	
 	validateTeacherAdd: function() {

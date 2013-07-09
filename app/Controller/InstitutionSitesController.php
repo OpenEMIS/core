@@ -1247,9 +1247,15 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function teachersSearch() {
-		$this->autoRender = false;
-		$id = trim($this->params->query['id']);
-		$result = array();
+		$this->layout = 'ajax';
+		$search = trim($this->params->query['searchString']);
+		$params = array('limit' => 100);
+		$data = $this->Teacher->search($search, $params);
+		//pr($data);
+		$this->set('search', $search);
+		$this->set('data', $data);
+		
+		/*
 		if(strlen($id) == 0) {
 			$this->Utility->setAjaxResult('alert', $result);
 			$result['alertOpt'] = array();
@@ -1277,7 +1283,8 @@ class InstitutionSitesController extends AppController {
 				$result['alertOpt']['text'] = $this->Utility->getMessage('TEACHER_NOT_FOUND');
 			}
 		}
-		return json_encode($result);
+		*/
+		//return json_encode($result);
 	}
 	
 	public function teachersAdd() {

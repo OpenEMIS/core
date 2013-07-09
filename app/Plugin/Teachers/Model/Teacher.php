@@ -117,6 +117,36 @@ class Teacher extends TeachersAppModel {
 		);
 		return $lookup;
 	}
+	
+	public function search($search, $params=array()) {
+		$data = array();
+		$search = '%' . $search . '%';
+		$limit = isset($params['limit']) ? $params['limit'] : false;
+		
+		$conditions = array(
+			'OR' => array(
+				'Teacher.identification_no LIKE' => $search,
+				'Teacher.first_name LIKE' => $search,
+				'Teacher.last_name LIKE' => $search
+			)
+		);
+		
+		$options = array(
+			'recursive' => -1,
+			'conditions' => $conditions,
+			'order' => array('Teacher.first_name')
+		);
+		
+		$count = $this->find('count', $options);
+		
+		$data = false;
+		if($limit === false || $count < $limit) {
+			$options['fields'] = array('Teacher.*');
+			$data = $this->find('all', $options);
+		}
+		return $data;
+	}
+	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 	   if($conditions['SearchKey'] != ''){
 			$conditions = array( 'OR' => array(
