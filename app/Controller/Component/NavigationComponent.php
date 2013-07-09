@@ -85,21 +85,33 @@ class NavigationComponent extends Component {
 						$pattern = $attr['pattern'];
 						
 						// Checking access control
-						if($this->AccessControl->check($_controller, $attr['action']) || $_controller === 'Home') {
+						$check = $this->AccessControl->check($_controller, $attr['action']);
+						//pr($attr);
+						
+						if($check || $_controller === 'Home') {
 							$linkList['display'] = true;
 							$attr['display'] = true;
-							if(!array_key_exists($module, $this->topNavigations)) {
-								$this->topNavigations[$module] = array(
-									'controller' => $obj['controller'], 
-									'action' => isset($obj['action']) ? $obj['action'] : '',
-									'selected' => false
-								);
+							
+							if($check === true || (isset($check['parent_id']) && $check['parent_id'] == -1) || in_array($module, array('Settings', 'Reports'))) { // to initialise top navigation menu
+								if(!array_key_exists($module, $this->topNavigations)) {
+									$objController = $module !== 'Settings' ?  : $_controller;
+									$this->topNavigations[$module] = array(
+										'controller' => $obj['controller'], 
+										'action' => isset($obj['action']) ? $obj['action'] : '',
+										'selected' => false
+									);
+								} else {
+									if($module !== 'Settings') {
+										$this->topNavigations[$module]['controller'] = $obj['controller'];
+										$this->topNavigations[$module]['action'] = isset($obj['action']) ? $obj['action'] : '';
+									}
+								}
 							}
 						}
 						// End access control
 						
 						// To check which link is selected
-						if(!$found && strcasecmp($_controller, $controller)==0 && preg_match(sprintf('/^%s/i', $pattern), $action)) {
+						if(!$found && strcasecmp($_controller, $controller)==0 && preg_match(sprintf('/^%s/i', $pattern), $action)) {//pr($attr);
 							$found = true;
 							$attr['selected'] = true;
 							$this->topNavigations[$module]['selected'] = true;
@@ -112,7 +124,7 @@ class NavigationComponent extends Component {
 					}
 				}
 			}
-		}
+		}//pr($this->navigations);
 	}
 	
 	public function getLinks() {
