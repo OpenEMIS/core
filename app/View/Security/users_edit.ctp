@@ -1,6 +1,8 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
+echo $this->Html->css('search', 'stylesheet', array('inline' => false));
+echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false));
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -28,7 +30,7 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('New Password'); ?></div>
-			<div class="value"><?php echo $this->Form->input('new_password', array('type' => 'password')); ?></div>
+			<div class="value"><?php echo $this->Form->input('new_password', array('type' => 'password', 'autocomplete' => 'off')); ?></div>
 			<?php echo $this->Form->input('password', array('class' => 'none')); ?>
 		</div>
 		<div class="row">
@@ -58,6 +60,10 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
 		<div class="row">
+			<div class="label"><?php echo __('Identification No'); ?></div>
+			<div class="value"><?php echo $this->Form->input('identification_no', array('value' => $data['identification_no'])); ?></div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('first_name', array('value' => $data['first_name'])); ?></div>
 		</div>
@@ -78,45 +84,6 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 			<div class="value"><?php echo $this->Form->input('email', array('value' => $data['email'])); ?></div>
 		</div>
 	</fieldset>
-	
-	<!--fieldset class="section_break">
-		<legend><?php echo __('Roles'); ?></legend>
-		<div class="table full_width">
-			<div class="table_head">
-				<div class="table_cell cell_checkbox"><input type="checkbox" onchange="jsForm.toggleSelect(this);" /></div>
-				<div class="table_cell" style="width: 120px;"><?php echo __('Role'); ?></div>
-				<div class="table_cell"><?php echo __('Modules'); ?></div>
-			</div>
-			
-			<div class="table_body">
-				<?php 
-				if($data['super_admin']==0) {
-					foreach($roles as $key => $list) {
-						foreach($list as $roleId => $role) {
-				?>
-				<div class="table_row <?php echo $key==1 ? 'inactive' : ''; ?>">
-					<div class="table_cell">
-						<input type="checkbox" name="data[SecurityRole][<?php echo $roleId; ?>]" <?php echo $key==0 ? 'checked="checked"' : ''; ?> autocomplete="off" onChange="jsList.activate(this, '.table_row')" />
-					</div>
-					<div class="table_cell"><?php echo $role['name']; ?></div>
-					<div class="table_cell"><?php echo $role['modulesToString']; ?></div>
-				</div>
-				<?php
-						}
-					}
-				} else {
-				?>
-				
-				<div class="table_row">
-					<div class="table_cell"><input type="checkbox" checked="checked" disabled="disabled" /></div>
-					<div class="table_cell"><?php echo __('Super Administrator'); ?></div>
-					<div class="table_cell"><?php echo __('Full access on all modules'); ?></div>
-				</div>
-				
-				<?php } ?>
-			</div>
-		</div>
-	</fieldset-->
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
