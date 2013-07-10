@@ -26,7 +26,7 @@ class AccessControlComponent extends Component {
 	private $GroupInstitutionSite;
 	
 	public $ignoreList = array(
-		'HOME' => array('index', 'details', 'detailsEdit', 'password'),
+		'HOME' => array('index', 'details', 'detailsEdit', 'password', 'support', 'systemInfo', 'license'),
 		'SECURITY' => array('login', 'logout'), 
 		'CONFIG' => array('getI18n', 'getJSConfig', 'fetchImage'),
 		'STUDENTS' => array('viewStudent'),
