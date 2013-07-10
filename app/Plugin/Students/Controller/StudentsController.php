@@ -221,12 +221,12 @@ SELECT
 	`EducationProgramme`.`name` AS `education_programme`,
 	`EducationGrade`.`name` AS `education_grade`,
 	`InstitutionSiteClass`.`name` AS `institution_site_class`
-FROM `tst_openemis_demo`.`institution_site_class_grade_students` AS `InstitutionSiteClassGradeStudent`
-JOIN `tst_openemis_demo`.`institution_site_class_grades` AS `InstitutionSiteClassGrade` ON (`InstitutionSiteClassGrade`.`id` = `InstitutionSiteClassGradeStudent`.`institution_site_class_grade_id`)
-JOIN `tst_openemis_demo`.`institution_site_classes` AS `InstitutionSiteClass` ON (`InstitutionSiteClass`.`id` = `InstitutionSiteClassGrade`.`institution_site_class_id`)
-JOIN `tst_openemis_demo`.`education_grades` AS `EducationGrade` ON (`EducationGrade`.`id` = `InstitutionSiteClassGrade`.`education_grade_id`)
-JOIN `tst_openemis_demo`.`education_programmes` AS `EducationProgramme` ON (`EducationProgramme`.`id` = `EducationGrade`.`education_programme_id`)
-JOIN `tst_openemis_demo`.`school_years` AS `SchoolYear` ON (`SchoolYear`.`id` = `InstitutionSiteClass`.`school_year_id`)
+FROM `institution_site_class_grade_students` AS `InstitutionSiteClassGradeStudent`
+JOIN `institution_site_class_grades` AS `InstitutionSiteClassGrade` ON (`InstitutionSiteClassGrade`.`id` = `InstitutionSiteClassGradeStudent`.`institution_site_class_grade_id`)
+JOIN ``institution_site_classes` AS `InstitutionSiteClass` ON (`InstitutionSiteClass`.`id` = `InstitutionSiteClassGrade`.`institution_site_class_id`)
+JOIN `education_grades` AS `EducationGrade` ON (`EducationGrade`.`id` = `InstitutionSiteClassGrade`.`education_grade_id`)
+JOIN ``education_programmes` AS `EducationProgramme` ON (`EducationProgramme`.`id` = `EducationGrade`.`education_programme_id`)
+JOIN ``school_years` AS `SchoolYear` ON (`SchoolYear`.`id` = `InstitutionSiteClass`.`school_year_id`)
 JOIN `institution_sites` AS `InstitutionSite` ON (`InstitutionSite`.`id` = `InstitutionSiteClass`.`institution_site_id`)
 JOIN `institutions` AS `Institution` ON (`Institution`.`id` = `InstitutionSite`.`institution_id`)
 WHERE `InstitutionSiteClassGradeStudent`.`student_id` = ?

@@ -196,8 +196,8 @@ SELECT
 	`InstitutionSiteStaff`.`end_date`,
 	`InstitutionSiteStaff`.`salary`,
 	`StaffCategory`.`name`
-FROM `tst_openemis_demo`.`institution_site_staff` AS `InstitutionSiteStaff`
-JOIN `tst_openemis_demo`.`staff_categories` AS `StaffCategory` ON (`StaffCategory`.`id` = `InstitutionSiteStaff`.`staff_category_id`)
+FROM `institution_site_staff` AS `InstitutionSiteStaff`
+JOIN `staff_categories` AS `StaffCategory` ON (`StaffCategory`.`id` = `InstitutionSiteStaff`.`staff_category_id`)
 JOIN `institution_sites` AS `InstitutionSite` ON (`InstitutionSite`.`id` = `InstitutionSiteStaff`.`institution_site_id`)
 JOIN `institutions` AS `Institution` ON (`Institution`.`id` = `InstitutionSite`.`institution_id`)
 WHERE `InstitutionSiteStaff`.`staff_id` = ?
