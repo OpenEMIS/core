@@ -36,7 +36,10 @@ class StudentsNavigationComponent extends Component {
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					$navigation->createLink('More', $controller, 'additional')
 					//$navigation->createLink('Institutions', 'institutions')
-				)/*,
+				),
+				'ACADEMIC' => array(
+                    $navigation->createLink('Classes', $controller, 'classes')
+                )/*,
 				'ASSESSMENT' => array(
 					'_controller' => $controller,
 					$this->Navigation->createLink('Assessment Results', 'assessments')

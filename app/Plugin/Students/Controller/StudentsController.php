@@ -208,6 +208,55 @@ class StudentsController extends StudentsAppController {
 		$this->set('data', $data);
     }
 
+    public function classes(){
+        $this->Navigation->addCrumb(ucfirst($this->action));
+        $this->Student->id = $this->Session->read('StudentId');
+        $data = array();
+        $ds = $this->Student->getDatasource();
+        $query = <<<EOD
+SELECT
+	`Institution`.`name` AS `institution`,
+	`InstitutionSite`.`name` AS `institution_site`,
+	`SchoolYear`.`name` AS `school_year`,
+	`EducationProgramme`.`name` AS `education_programme`,
+	`EducationGrade`.`name` AS `education_grade`,
+	`InstitutionSiteClass`.`name` AS `institution_site_class`
+FROM `tst_openemis_demo`.`institution_site_class_grade_students` AS `InstitutionSiteClassGradeStudent`
+JOIN `tst_openemis_demo`.`institution_site_class_grades` AS `InstitutionSiteClassGrade` ON (`InstitutionSiteClassGrade`.`id` = `InstitutionSiteClassGradeStudent`.`institution_site_class_grade_id`)
+JOIN `tst_openemis_demo`.`institution_site_classes` AS `InstitutionSiteClass` ON (`InstitutionSiteClass`.`id` = `InstitutionSiteClassGrade`.`institution_site_class_id`)
+JOIN `tst_openemis_demo`.`education_grades` AS `EducationGrade` ON (`EducationGrade`.`id` = `InstitutionSiteClassGrade`.`education_grade_id`)
+JOIN `tst_openemis_demo`.`education_programmes` AS `EducationProgramme` ON (`EducationProgramme`.`id` = `EducationGrade`.`education_programme_id`)
+JOIN `tst_openemis_demo`.`school_years` AS `SchoolYear` ON (`SchoolYear`.`id` = `InstitutionSiteClass`.`school_year_id`)
+JOIN `institution_sites` AS `InstitutionSite` ON (`InstitutionSite`.`id` = `InstitutionSiteClass`.`institution_site_id`)
+JOIN `institutions` AS `Institution` ON (`Institution`.`id` = `InstitutionSite`.`institution_id`)
+WHERE `InstitutionSiteClassGradeStudent`.`student_id` = ?
+ORDER BY
+	`SchoolYear`.`start_year` ASC,
+	`EducationProgramme`.`order` ASC,
+	`EducationGrade`.`order` ASC;
+EOD;
+
+        foreach($ds->fetchAll($query, array($this->Student->id)) as $row) {
+            $result = array();
+            $dataKey = '';
+            foreach($row as $element){ // compact array
+                if(array_key_exists('institution', $element)){
+                    $dataKey .= $element['institution'];
+                    continue;
+                }
+                if(array_key_exists('institution_site', $element)){
+                    $dataKey .= ' - '.$element['institution_site'];
+                    continue;
+                }
+                $result = array_merge($result, $element);
+            }
+            $data[$dataKey][] = $result;
+        }
+
+        $this->set('data', $data);
+
+    }
+
     public function fetchImage($id){
         $this->autoRender = false;
 
