@@ -125,6 +125,35 @@ class Staff extends StaffAppModel {
 		return $lookup;
 	}
 	
+	public function search($search, $params=array()) {
+		$model = $this->alias;
+		$data = array();
+		$search = '%' . $search . '%';
+		$limit = isset($params['limit']) ? $params['limit'] : false;
+		
+		$conditions = array(
+			'OR' => array(
+				$model . '.identification_no LIKE' => $search,
+				$model . '.first_name LIKE' => $search,
+				$model . '.last_name LIKE' => $search
+			)
+		);
+		
+		$options = array(
+			'recursive' => -1,
+			'conditions' => $conditions,
+			'order' => array($model . '.first_name')
+		);
+		
+		$count = $this->find('count', $options);
+		
+		$data = false;
+		if($limit === false || $count < $limit) {
+			$options['fields'] = array($model . '.*');
+			$data = $this->find('all', $options);
+		}
+		return $data;
+	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$securityCond = $conditions['Security'];
