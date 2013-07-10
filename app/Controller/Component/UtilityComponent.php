@@ -90,6 +90,9 @@ class UtilityComponent extends Component {
 		$msgList['SITE_CLASS_NO_GRADES'] = "Please add a grade to this class.";
 		$msgList['SITE_CLASS_NO_CLASSES'] = "There are no classes for the selected year.";
 		
+		$msgList['NO_EMPLOYMENT'] = "No Employment found.";
+		$msgList['NO_CLASSES'] = "No Classes found.";
+		
 		// Students
 		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";
 		

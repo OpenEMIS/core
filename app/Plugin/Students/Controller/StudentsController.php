@@ -27,6 +27,7 @@ class StudentsController extends StudentsAppController {
         'Institution',
 		'InstitutionSite',
 		'InstitutionSiteProgramme',
+		'InstitutionSiteClassGradeStudent',
         'Students.Student',
         'Students.StudentHistory',
         'Students.StudentCustomField',
@@ -207,6 +208,22 @@ class StudentsController extends StudentsAppController {
 		$gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
 		$this->set('gender', $gender);
 		$this->set('data', $data);
+    }
+
+    public function classes(){
+        $this->Navigation->addCrumb(ucfirst($this->action));
+        $studentId = $this->Session->read('StudentId');
+        $data = array();
+		$classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId);
+		
+        foreach($classes as $row) {
+			$key = $row['Institution']['name'] . ' - ' . $row['InstitutionSite']['name'];
+			$data[$key][] = $row;
+        }
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_CLASSES'), array('type' => 'info', 'dismissOnClick' => false));
+		}
+        $this->set('data', $data);
     }
 
     public function fetchImage($id){
