@@ -51,7 +51,6 @@ class HomeController extends AppController {
 		'Teachers.TeacherHistory',
 		'Staff.StaffHistory',
 		'SecurityUser',
-		'SecurityUserRole',
 		'SecurityRoleFunction'
 	);
 	private function logtimer($str=''){
@@ -89,11 +88,13 @@ class HomeController extends AppController {
 		$userId = $this->Auth->user('id');
 		$this->SecurityUser->id = $userId;
 		$obj = $this->SecurityUser->read();
+		/*
 		$roleIds = $this->SecurityUserRole->find('list', array(
 			'fields' => array('SecurityUserRole.security_role_id'),
 			'conditions' => array('SecurityUserRole.security_user_id' => $userId)
 		));
 		$obj['SecurityUser']['roles'] = $this->SecurityRoleFunction->getModules($roleIds);
+		*/
 		$this->set('obj', $obj['SecurityUser']);
 	}
 	public function detailsEdit() {

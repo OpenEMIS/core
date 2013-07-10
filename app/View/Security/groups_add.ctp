@@ -3,7 +3,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 
-echo $this->Html->script('Security', false);
+echo $this->Html->script('security', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
