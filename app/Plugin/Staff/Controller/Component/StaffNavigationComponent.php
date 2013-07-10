@@ -37,6 +37,7 @@ class StaffNavigationComponent extends Component {
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					$navigation->createLink('More', $controller, 'additional'),
 					$navigation->createLink('Institutions', $controller, 'institutions'),
+                    $navigation->createLink('Employment', $controller, 'employment')
 				)
 			)
 		);

@@ -181,6 +181,52 @@ class StaffController extends StaffAppController {
         $this->set('data', $data);
     }
 
+    public function employment() {
+        $this->Navigation->addCrumb(ucfirst($this->action));
+        $this->Staff->id = $this->Session->read('StaffId');
+        $data = array();
+        $ds = $this->Staff->getDatasource();
+        $query = <<<EOD
+-- Staffs
+SELECT
+	`Institution`.`name` AS `institution`,
+	`InstitutionSite`.`name` AS `institution_site`,
+	`InstitutionSiteStaff`.`id`,
+	`InstitutionSiteStaff`.`start_date`,
+	`InstitutionSiteStaff`.`end_date`,
+	`InstitutionSiteStaff`.`salary`,
+	`StaffCategory`.`name`
+FROM `tst_openemis_demo`.`institution_site_staff` AS `InstitutionSiteStaff`
+JOIN `tst_openemis_demo`.`staff_categories` AS `StaffCategory` ON (`StaffCategory`.`id` = `InstitutionSiteStaff`.`staff_category_id`)
+JOIN `institution_sites` AS `InstitutionSite` ON (`InstitutionSite`.`id` = `InstitutionSiteStaff`.`institution_site_id`)
+JOIN `institutions` AS `Institution` ON (`Institution`.`id` = `InstitutionSite`.`institution_id`)
+WHERE `InstitutionSiteStaff`.`staff_id` = ?
+ORDER BY
+	`InstitutionSiteStaff`.`start_date` DESC,
+	`InstitutionSiteStaff`.`end_date` ASC;
+EOD;
+
+        foreach($ds->fetchAll($query, array($this->Staff->id)) as $row) {
+            $result = array();
+            $dataKey = '';
+            foreach($row as $element){ // compact array
+                if(array_key_exists('institution', $element)){
+                    $dataKey .= $element['institution'];
+                    continue;
+                }
+                if(array_key_exists('institution_site', $element)){
+                    $dataKey .= ' - '.$element['institution_site'];
+                    continue;
+                }
+                $result = array_merge($result, $element);
+            }
+            $data[$dataKey][] = $result;
+        }
+
+        $this->set('data', $data);
+
+    }
+
     public function fetchImage($id){
         $this->autoRender = false;
 
