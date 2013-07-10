@@ -6,7 +6,7 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="users" class="content_wrapper edit details">
-	<h1><?php echo __('Add New User'); ?></h1>
+	<h1><?php echo __('Add User'); ?></h1>
 	<?php echo $this->element('alert'); ?>
 	
 	<?php
@@ -15,7 +15,7 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default')
 	));
 	?>
-		
+	
 	<fieldset class="section_break">
 		<legend><?php echo __('Login'); ?></legend>
 		<div class="row">
@@ -29,7 +29,11 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 	</fieldset>
 	
 	<fieldset class="section_break">
-		<legend><?php echo __('General'); ?></legend>
+		<legend><?php echo __('Information'); ?></legend>
+		<div class="row">
+			<div class="label"><?php echo __('Identification No'); ?></div>
+			<div class="value"><?php echo $this->Form->input('identification_no'); ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('first_name'); ?></div>
@@ -52,7 +56,7 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 		</div>
 	</fieldset>
 	
-	<fieldset class="section_break">
+	<!--fieldset class="section_break">
 		<legend><?php echo __('Roles'); ?></legend>
 		<div class="table full_width">
 			<div class="table_head">
@@ -71,7 +75,7 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 				<?php } ?>
 			</div>
 		</div>
-	</fieldset>
+	</fieldset-->
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />

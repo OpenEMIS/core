@@ -21,9 +21,7 @@ var InstitutionSiteTeachers = {
 	yearId: '#SchoolYearId',
 	
 	init: function() {
-		//$('.btn_save').click(InstitutionSiteStudents.saveStudentList);
 		this.attachSortOrder();
-		$('.icon_search').click(InstitutionSiteTeachers.search);
 		$('#teachersEdit .icon_plus').click(InstitutionSiteTeachers.addPosition);
 	},
 	
@@ -44,41 +42,60 @@ var InstitutionSiteTeachers = {
 		});
 	},
 	
-	search: function() {
+	search: function(obj) {
 		var alertOpt = {
 			id: 'search_alert',
-			parent: '.info',
+			parent: '#search',
 			position: 'center'
 		}
-		var id = $('#IdentificationNo').val();
-		var maskId;
-		var ajaxParams = {id: id};
-		var ajaxSuccess = function(data, textStatus) {
-			var callback = function() {
-				if(data.type == ajaxType['success']) {
-					if(data['status'] > 0) { // teacher is already employed for that site
-						window.location.href = getRootURL() + $('.info').attr('url') + data['id'];
+		var searchString = $(obj).siblings('.search_wrapper').find('input').val();
+		
+		if(!searchString.isEmpty()) {
+			var maskId;
+			var ajaxParams = {searchString: searchString};
+			var ajaxSuccess = function(data, textStatus) {
+				var callback = function() {
+					if(!$(data).hasClass('alert')) {
+						var parent = '#search';
+						$(parent).find('.table_body').empty();
+						jsTable.tableScrollableAdd(parent, data);
 					} else {
-						$('#TeacherId').val(data['id']);
-						$('#FirstName').val(data['first_name']);
-						$('#LastName').val(data['last_name']);
-						$('#Gender').val(data['gender']);
+						alertOpt['type'] = $(data).attr('type');
+						alertOpt['text'] = $(data).html();
+						$.alert(alertOpt);
 					}
-				} else if(data.type == ajaxType['alert']) {
-					alertOpt['type'] = data['alertOpt']['type'];
-					alertOpt['text'] = data['alertOpt']['text'];
-					$.alert(alertOpt);
-				}
+				};
+				$.unmask({id: maskId, callback: callback});
 			};
-			$.unmask({id: maskId, callback: callback});
-		};
-		$.ajax({
-			type: 'GET',
-			dataType: 'json',
-			url: getRootURL() + $(this).attr('url'),
-			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.info'}); },
-			success: ajaxSuccess
+			$('#TeacherId').val(0);
+			$.ajax({
+				type: 'GET',
+				dataType: 'text',
+				url: getRootURL() + $(obj).attr('url'),
+				data: {searchString: searchString},
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching}); },
+				success: ajaxSuccess
+			});
+		}
+	},
+	
+	addTeacher: function(obj) {
+		var row = $(obj).closest('.table_row');
+		var id = row.attr('row-id');
+		var idNo = row.attr('id-no');
+		var fName = row.attr('first-name');
+		var lName = row.attr('last-name');
+		var gender = row.attr('gender');
+		
+		$('#TeacherId').val(id);
+		$('#IdentificationNo').val(idNo);
+		$('#FirstName').val(fName);
+		$('#LastName').val(lName);
+		$('#Gender').val(gender);
+		
+		row.fadeOut(500, function() {
+			row.remove();
+			jsTable.toggleTableScrollable($('#search'));
 		});
 	},
 	

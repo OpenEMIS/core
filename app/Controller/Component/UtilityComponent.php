@@ -77,6 +77,9 @@ class UtilityComponent extends Component {
 		
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";
+		$msgList['SECURITY_GRP_NO_NAME'] = "Please enter a valid name.";
+		$msgList['SECURITY_GRP_NAME_EXISTS'] = "The name is already in use.";
+		$msgList['SECURITY_GRP_USER_ADD'] = "The user has been added to the role.";
 		
 		// Institution Sites
 		$msgList['NO_SITES'] = "No Institution Sites";

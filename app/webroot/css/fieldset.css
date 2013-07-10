@@ -57,7 +57,10 @@ fieldset.section_break > legend {
 	color: #999999;
 }
 
+fieldset.section_break > legend a {	font-size: 11px; }
+
 fieldset.section_break > .row { margin-left: 15px; }
+fieldset.section_break > .row.icon_add_row { margin-left: 5px; }
 /* End fieldset section_break */
 
 
@@ -74,7 +77,7 @@ fieldset.section_group {
 	-moz-border-radius: 2px;
 	-webkit-border-radius: 2px;
 	border-radius: 2px;
-	padding: 12px 12px 0 12px;
+	padding: 12px;
 }
 
 fieldset.section_group > legend {

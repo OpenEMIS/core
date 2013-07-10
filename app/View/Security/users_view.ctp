@@ -47,6 +47,10 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
 		<div class="row">
+			<div class="label"><?php echo __('Identification No'); ?></div>
+			<div class="value"><?php echo $data['identification_no']; ?></div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $data['first_name']; ?></div>
 		</div>
@@ -69,30 +73,19 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 	</fieldset>
 	
 	<fieldset class="section_break">
-		<legend><?php echo __('Roles'); ?></legend>
+		<legend><?php echo __('Groups'); ?></legend>
 		<div class="table full_width">
 			<div class="table_head">
-				<div class="table_cell" style="width: 120px;"><?php echo __('Role'); ?></div>
-				<div class="table_cell"><?php echo __('Modules'); ?></div>
+				<div class="table_cell" style="width: 200px;"><?php echo __('Group'); ?></div>
+				<div class="table_cell"><?php echo __('Role'); ?></div>
 			</div>
 			
 			<div class="table_body">
-				<?php if($data['super_admin']==0) { ?>
-				
-				<?php foreach($data['roles'] as $roleId => $role) { ?>
-				<div class="table_row">
-					<div class="table_cell"><?php echo $role['name']; ?></div>
-					<div class="table_cell"><?php echo $role['modulesToString']; ?></div>
-				</div>
-				<?php } ?>
-				
-				<?php } else { ?>
-				
-				<div class="table_row">
-					<div class="table_cell">Super Administrator</div>
-					<div class="table_cell"><?php echo __('Full access on all modules'); ?></div>
-				</div>
-				
+				<?php foreach($data['groups'] as $group) { ?>
+					<div class="table_row">
+						<div class="table_cell"><?php echo $group['security_group_name']; ?></div>
+						<div class="table_cell"><?php echo $group['security_role_name']; ?></div>
+					</div>
 				<?php } ?>
 			</div>
 		</div>

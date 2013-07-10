@@ -109,7 +109,8 @@ class InstitutionSiteStaff extends AppModel {
 			'conditions' => $this->paginateConditions($conditions),
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
-			'order' => $order
+			'order' => $order,
+			'group' => array('Staff.id')
 		));
 		return $data;
 	}
