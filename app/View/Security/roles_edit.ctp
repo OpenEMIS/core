@@ -13,7 +13,7 @@ echo $this->Html->script('security', false);
 	<?php
 	echo $this->Form->create('SecurityGroup', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'Security', 'action' => 'rolesEdit')
+		'url' => array('controller' => 'Security', 'action' => 'rolesEdit', $selectedGroup)
 	));
 	?>
 	<h1>
@@ -24,26 +24,55 @@ echo $this->Html->script('security', false);
 	<?php if(AuthComponent::user('super_admin')==1) { ?>
 	<fieldset class="section_group">
 		<legend><?php echo __('System Defined Roles'); ?></legend>
-		
-		<div class="table full_width">
+		<?php echo $this->Form->hidden('security_group_id', array('id' => 'SecurityGroupId', 'value' => 0)); ?>
+		<div class="table full_width" style="margin-bottom: 0; margin-top: 10px;">
 			<div class="table_head">
 				<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
 				<div class="table_cell"><?php echo __('Role'); ?></div>
-				<div class="table_cell cell_permissions"><?php echo __('Permissions'); ?></div>
-			</div>
-			
-			<div class="table_body">
-				<?php foreach($systemRoles as $obj) { ?>
-				<div class="table_row">
-					<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></div>
-					<div class="table_cell"><?php echo $obj['name']; ?></div>
-					<div class="table_cell cell_permissions">
-						<?php echo $this->Html->link(__('Permissions'), array('action' => 'permissions', $obj['id'])); ?>
-					</div>
-				</div>
-				<?php }?>
+				<div class="table_cell cell_order"><?php echo __('Privilege'); ?></div>
 			</div>
 		</div>
+		
+		<ul class="quicksand table_view">
+			<?php
+			foreach($systemRoles as $i => $obj) {
+				$isVisible = $obj['visible']==1;
+				$isSystemRole = $obj['security_group_id'] == -1;
+				$fieldName = sprintf('data[SecurityRole][%s][%%s]', $i);
+				
+				echo $this->Utility->getListRowStart($i, $isVisible);
+				echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
+				echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));			
+				if($isSystemRole) {
+					$name = $obj['name'] . ' (Not Editable)';
+					$options = array(
+						'name' => sprintf($fieldName, 'visible'),
+						'type' => 'checkbox',
+						'autocomplete' => 'off',
+						'disabled' => 'disabled',
+						'before' => '<div class="cell cell_visible">',
+						'after' => '</div>'
+					);
+					
+					if($obj['visible']==1) {
+						$options['checked'] = 'checked';
+					}
+					echo $this->Form->input('visible', $options);
+					echo $this->Utility->getNameInput($this->Form, $fieldName, $name, false);
+				} else {
+					echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
+					echo $this->Utility->getNameInput($this->Form, $fieldName, $obj['name']);
+					
+				}
+				echo $this->Utility->getOrderControls();
+				echo $this->Utility->getListRowEnd();
+			} ?>
+		</ul>
+		<?php if($_add) { ?>
+		<div class="row">
+			<a class="void icon_plus" url="Security/rolesAdd" onclick="Security.addRole(this)"><?php echo __('Add').' '.__('Role'); ?></a>
+		</div>
+		<?php } ?>
 	</fieldset>
 	<?php } ?>
 	
@@ -56,8 +85,7 @@ echo $this->Html->script('security', false);
 			<div class="value">
 				<?php
 				echo $this->Form->input('security_group_id', array(
-					'label' => false,
-					'div' => false,
+					'id' => 'SecurityGroupId',
 					'options' => $groupOptions,
 					'default' => $selectedGroup,
 					'url' => $this->params['controller'] . '/' . $this->params['action'],
@@ -90,12 +118,11 @@ echo $this->Html->script('security', false);
 				echo $this->Utility->getListRowEnd();
 			} ?>
 		</ul>
-		
-		<?php 
-		if($_add) {
-			echo $this->Utility->getAddRow('Role');
-		} 
-		?>
+		<?php if($_add) { ?>
+		<div class="row">
+			<a class="void icon_plus" url="Security/rolesAdd" onclick="Security.addRole(this)"><?php echo __('Add').' '.__('Role'); ?></a>
+		</div>
+		<?php } ?>
 	</fieldset>
 	<?php } // end if ?>
 	

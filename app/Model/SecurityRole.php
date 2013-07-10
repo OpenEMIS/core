@@ -66,9 +66,11 @@ class SecurityRole extends AppModel {
 		return $data;
 	}
 	
-	public function getRoleOptions($groupId, $userId=false) {
+	public function getRoleOptions($groupId, $userId=false, $optGroup=false) {
 		$this->formatResult = true;
+		$fields = array('SecurityRole.id', 'SecurityRole.name');
 		$conditions = array();
+		$type = 'list';
 		
 		if($userId!==false) {
 			$conditions = array(
@@ -87,12 +89,32 @@ class SecurityRole extends AppModel {
 			$conditions = array('SecurityRole.security_group_id' => $groupId, 'SecurityRole.visible' => 1);
 		}
 		
-		$data = $this->find('list', array(
+		if($optGroup) {
+			$type = 'all';
+			$fields[] = 'SecurityRole.security_group_id';
+		}
+		
+		$list = $this->find($type, array(
 			'recursive' => -1,
-			'fields' => array('SecurityRole.id', 'SecurityRole.name'),		
+			'fields' => $fields,		
 			'conditions' => $conditions,
 			'order' => array('SecurityRole.order')
 		));
+		
+		$data = array();
+		if($optGroup) {
+			$systemDefined = __('System Defined Roles');
+			$userDefined = __('User Defined Roles');
+			foreach($list as $obj) {
+				$roleType = $obj['security_group_id'] > 0 ? $userDefined : $systemDefined;
+				if(!array_key_exists($roleType, $data)) {
+					$data[$roleType] = array();
+				}
+				$data[$roleType][$obj['id']] = $obj['name'];
+			}
+		} else {
+			$data = $list;
+		}
 		return $data;
 	}
 }
