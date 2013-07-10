@@ -1,5 +1,6 @@
 <div class="header_nav">
 	<?php
+	$navigationBar = array();
 	$linkHTML = '<a href="%s"><div class="header_nav_function">%s<div class="header_nav_function_hover %s"></div></div></a>';
 	$divider = '<div class="header_nav_function_divi"></div>';
 	foreach($_topNavigations as $title => $attr) {

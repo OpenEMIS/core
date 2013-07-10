@@ -14,21 +14,18 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-	security.init();
+	Security.init();
 });
 
-var security = {
-	operations: ['_view', '_edit', '_add', '_delete'],
+var Security = {
+	operations: ['_view', '_edit', '_add', '_delete', '_execute'],
 	init: function() {
 		$('#permissions.edit input[type="hidden"]:disabled').removeAttr('disabled');
-		$('#permissions.edit .module_checkbox').change(security.toggleModule);
-		$('#SecurityView, #SecurityEdit, #SecurityAdd, #SecurityDelete').each(function() {
-			
-		});
+		$('#permissions.edit .module_checkbox').change(Security.toggleModule);
 		
-		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled)').change(security.toggleOperation);
-		$('#roles .icon_plus').click(security.addRole);
-		$('fieldset[type] .icon_plus').click(function() { security.addRoleArea(this); });
+		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled)').change(Security.toggleOperation);
+		$('#roles .icon_plus').click(Security.addRole);
+		$('fieldset[type] .icon_plus').click(function() { Security.addRoleArea(this); });
 	},
 	
 	navigate: function(obj) {
@@ -38,6 +35,217 @@ var security = {
 	
 	switchRole: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('href') + '/' + $(obj).val();
+	},
+	
+	usersSearch: function(obj) {
+		var searchString = '';
+		var dataType = 'json';
+		if($(obj).prop('tagName')==='SPAN') {
+			dataType = 'text';
+			searchString = $(obj).siblings('.search_wrapper').find('input').val();
+		} else {
+			searchString = $(obj).val();
+		}
+		
+		var alertOpt = {
+			id: 'search_alert',
+			parent: '#group_admin',
+			type: alertType.error,
+			position: 'center'
+		}
+		
+		if(!searchString.isEmpty()) {
+			$(obj).closest('.table_row').find('#UserId').val(0);
+			var maskId;
+			$.ajax({
+				type: 'GET',
+				dataType: dataType,
+				url: getRootURL() + $(obj).attr('url'),
+				data: {searchString: searchString},
+				beforeSend: function (jqXHR) {
+					maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching});
+				},
+				success: function (data, textStatus) {
+					var callback = function() {
+						if(dataType==='json') {
+							if(data.type==='error') {
+								alertOpt['text'] = i18n.Search.textNoResult;
+								$.alert(alertOpt);
+							} else {
+								$(obj).closest('.table_cell').siblings('.name').html(data.name);
+								$(obj).closest('.table_row').find('#UserId').val(data.id);
+							}
+						} else {
+							var parent = '#search_user';
+							$(parent).find('.table_body').empty();
+							jsTable.tableScrollableAdd(parent, data);
+						}
+					};
+					$.unmask({id: maskId, callback: callback});
+				}
+			});
+		}
+	},
+	
+	usersSearchOnPage: function(obj) {
+		var searchString = $(obj).siblings('.search_wrapper').find('input').val().toLowerCase();
+		if(!searchString.isEmpty()) {
+			$('.list_wrapper .table_row').css('display', 'none');
+			$('[tags*="' + searchString + '"]').css('display', 'table-row');
+			jsTable.toggleTableScrollable('.section_break');
+			jsTable.fixTable();
+		}
+	},
+	
+	cancelUsersSearchOnPage: function(obj) {
+		$('#SearchField').val('');
+		$('.list_wrapper .table_row').css('display', 'table-row');
+		jsTable.toggleTableScrollable('.section_break');
+		jsTable.fixTable();
+	},
+	
+	addGroupAdmin: function(obj) {
+		var index = $('#group_admin .table_row').length;
+		
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + $(obj).attr('url'),
+			data: {index: index},
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					$('#group_admin .table_body').append(data);
+				};
+				$.unmask({id: maskId, callback: callback});
+			}
+		});
+	},
+	
+	addGroupUser: function(obj) {
+		var userId = $(obj).attr('user-id');
+		var roleId = $(obj).closest('.table_cell').siblings('.cell_role').find('select').val();
+		$('#SecurityUserId').val(userId);
+		$('#SecurityRoleId').val(roleId);
+		$('form').submit();
+	},
+	
+	removeGroupUser: function(obj) {
+		var row = $(obj).closest('.table_row');
+		
+		var maskId;
+		var ajaxParams = {};
+		var ajaxSuccess = function(data, textStatus) {
+			var callback = function() {
+				var count = row.closest('.section_break').find('.user_count');
+				var table = row.closest('.table');
+				count.html(count.html().toInt()-1);
+				row.remove();
+				jsTable.fixTable(table);
+				jsTable.toggleTableScrollable(table.closest('.section_break'));
+			};
+			$.unmask({id: maskId, callback: callback});
+		};
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + $(obj).attr('url'),
+			data: ajaxParams,
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textRemoving}); },
+			success: ajaxSuccess
+		});
+	},
+	
+	addGroupAccessOptions: function(obj) {
+		var parent = $(obj).closest('.section_break');
+		var index = parent.find('.table_row').length;
+		var exclude = [];
+		parent.find('.value_id').each(function() {
+			exclude.push($(this).val());
+		});
+		
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + $(obj).attr('url'),
+			data: {index: index, exclude: exclude},
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({parent: parent, text: i18n.General.textAddingRow});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					parent.find('.table_body').append(data);
+					jsTable.init(parent);
+				};
+				$.unmask({id: maskId, callback: callback});
+			}
+		});
+	},
+	
+	addGroupValueOptions: function(obj) {
+		var parent = $(obj).closest('.section_break');
+		var parentId = $(obj).val();
+		var exclude = [];
+		parent.find('.value_id').each(function() {
+			exclude.push($(this).val());
+		});
+		
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + $(obj).attr('url'),
+			data: {parentId: parentId, exclude: exclude},
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({parent: parent, text: i18n.General.textLoadingList});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					$(obj).closest('.table_row').find('.value_id').html(data);
+				};
+				$.unmask({id: maskId, callback: callback});
+			}
+		});
+	},
+	
+	validateGroupAdd: function(obj) {
+		var name = $('#SecurityGroupName').val();
+		
+		if($('#SecurityGroupName').attr('default')!=undefined) {
+			if($('#SecurityGroupName').attr('default') === name.trim()) {
+				return true;
+			}
+		}
+		
+		var alertOpt = {
+			id: 'add_alert',
+			parent: '#group_info',
+			type: alertType.error,
+			css: {left: '410px', top: '17px'}
+		};
+		
+		$.ajax({
+			type: 'GET',
+			dataType: 'json',
+			url: getRootURL() + 'Security/groupsAddValidate',
+			data: {name: name},
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textValidating});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					if(data.type=='error') {
+						alertOpt['text'] = data.msg;
+						$.alert(alertOpt);
+					} else {
+						obj.submit();
+					}
+				};
+				$.unmask({id: maskId, callback: callback});
+			}
+		});
+		return false;
 	},
 	
 	addRole: function() {
@@ -62,71 +270,6 @@ var security = {
 		});
 	},
 	
-	addRoleArea: function(obj) {
-		var parent = $(obj).closest('fieldset');
-		var type = parent.attr('type');
-		var orderObj = $('fieldset[type="' + type + '"] .table_row:last #order');
-		var order = orderObj.length>0 ? orderObj.val() : 0;
-		var roleId = $('#roleId').text();
-		var url = getRootURL() + 'Security/' + $('#url').text();
-		var exclude = [];
-		$(type==='areas' ? '.area_id' : '.institution_site_id').each(function() {
-			exclude.push($(this).val());
-		});
-		
-		$.ajax({
-			type: 'GET',
-			dataType: 'text',
-			url: url,
-			data: {type: type, order: order, roleId: roleId, exclude: exclude},
-			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: 'fieldset[type="' + type + '"]', text: i18n.General.textAddingRow});
-			},
-			success: function (data, textStatus) {
-				var callback = function() {
-					parent.find('.table_body').append(data);
-					jsTable.init();
-				};
-				$.unmask({id: maskId, callback: callback});
-			}
-		});
-	},
-	
-	loadOptionList: function(obj, type) {
-		var parentId = $(obj).val();
-		var url = getRootURL() + 'Security/loadOptionList';
-		var id = type==='areas' ? 'area_id' : 'institution_site_id';
-		var exclude = [];
-		$('.' + id).each(function() {
-			exclude.push($(this).val());
-		});
-		
-		$.ajax({
-			type: 'GET',
-			dataType: 'json',
-			url: url,
-			data: {type: type, parentId: parentId, exclude: exclude},
-			beforeSend: function (jqXHR) {
-				maskId = $.mask({parent: 'fieldset[type="' + type + '"]', text: i18n.General.textLoadingList});
-			},
-			success: function (data, textStatus) {
-				var callback = function() {
-					var list = security.buildOptionList(data);
-					$(obj).parent().parent().find('#' + id).html(list);
-				};
-				$.unmask({id: maskId, callback: callback});
-			}
-		});
-	},
-	
-	buildOptionList: function(data) {
-		var html = '';
-		for(var i in data) {
-			html += '<option value="' + i + '">' + data[i] + '</option>';
-		}
-		return html;
-	},
-	
 	toggleModule: function() {
 		var checked = $(this).is(':checked');
 		var parent = $(this).closest('.section_group');
@@ -138,7 +281,7 @@ var security = {
 					$(this).removeAttr('checked');
 				}
 			}
-			security.checkModuleToggled($(this));
+			Security.checkModuleToggled($(this));
 		});
 	},
 	
@@ -185,7 +328,7 @@ var security = {
 		var checked = obj.is(':checked');
 		var parent = obj.closest('.table_row');
 		var id = obj.attr('id');
-		var operations = security.operations.slice();
+		var operations = Security.operations.slice();
 		var op, opObj, selector;
 		
 		if(!checked) operations.reverse();
@@ -202,6 +345,6 @@ var security = {
 				break;
 			}
 		}
-		security.checkModuleToggled(obj);
+		Security.checkModuleToggled(obj);
 	}
 };

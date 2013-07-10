@@ -25,11 +25,12 @@ class SecurityController extends AppController {
 		'InstitutionSite',
 		'SecurityUser',
 		'SecurityRole',
+		'SecurityGroup',
+		'SecurityGroupUser',
 		'SecurityFunction',
-		'SecurityUserRole',
 		'SecurityRoleFunction',
-		'SecurityRoleArea',
-		'SecurityRoleInstitutionSite'
+		'SecurityGroupArea',
+		'SecurityGroupInstitutionSite'
 	);
 	
 	public function beforeFilter() {
@@ -159,21 +160,48 @@ class SecurityController extends AppController {
 	}
 	
 	public function users() {
-		$this->Navigation->addCrumb('Users');
-		$list = $this->SecurityUser->find('all', array(
-			'order' => array('SecurityUser.super_admin DESC', 'SecurityUser.status DESC', 'SecurityUser.username')
-		));
+		App::uses('Sanitize', 'Utility');
+		$this->Navigation->addCrumb('List of Users');
 		
-		$data = array();
-		foreach($list as $key => $user) {
-			$obj = $user['SecurityUser'];
-			$roleIds = $this->SecurityUserRole->find('list', array(
-				'fields' => array('SecurityUserRole.id', 'SecurityUserRole.security_role_id'),
-				'conditions' => array('SecurityUserRole.security_user_id' => $obj['id'])));
-			$roles = $this->SecurityRole->find('list', array('conditions' => array('SecurityRole.id' => array_values($roleIds))));
-			$obj['roles'] = implode(', ', $roles);
-			$data[$key] = $obj;
+		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
+		
+		$selectedYear = "";
+		$selectedProgramme = "";
+		$searchField = "";
+		$orderBy = 'SecurityUser.first_name';
+		$order = 'asc';
+		$prefix = 'SecurityUser.Search.%s';
+		if($this->request->is('post')) {
+			$searchField = Sanitize::escape(trim($this->data['SecurityUser']['SearchField']));
+			if(isset($this->data['SecurityUser']['orderBy'])) {
+				$orderBy = $this->data['SecurityUser']['orderBy'];
+			}
+			if(isset($this->data['SecurityUser']['order'])) {
+				$order = $this->data['SecurityUser']['order'];
+			}
+			
+			$this->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+			$this->Session->write(sprintf($prefix, 'order'), $order);
+			$this->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+		} else {
+			$searchField = $this->Session->read(sprintf($prefix, 'SearchField'));
+			
+			if($this->Session->check(sprintf($prefix, 'orderBy'))) {
+				$orderBy = $this->Session->read(sprintf($prefix, 'orderBy'));
+			}
+			if($this->Session->check(sprintf($prefix, 'order'))) {
+				$order = $this->Session->read(sprintf($prefix, 'order'));
+			}
 		}
+		$conditions = array('search' => $searchField, 'SecurityUser.super_admin' => 0);
+		
+		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
+		$data = $this->paginate('SecurityUser', $conditions);
+		
+		$this->set('searchField', $searchField);
+		$this->set('page', $page);
+		$this->set('orderBy', $orderBy);
+		$this->set('order', $order);
 		$this->set('data', $data);
 	}
 	
@@ -184,11 +212,7 @@ class SecurityController extends AppController {
 			$userId = $this->params['pass'][0];
 			$this->SecurityUser->formatResult = true;
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$roleIds = $this->SecurityUserRole->find('list', array(
-				'fields' => array('SecurityUserRole.security_role_id'),
-				'conditions' => array('SecurityUserRole.security_user_id' => $userId)
-			));
-			$data['roles'] = !empty($roleIds) ? $this->SecurityRoleFunction->getModules($roleIds) : $roleIds;
+			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
 			
 			$allowEdit = $this->Auth->user('super_admin')==1 || $this->Auth->user('super_admin')==$data['super_admin'];
 			$this->set('data', $data);
@@ -216,12 +240,14 @@ class SecurityController extends AppController {
 					$postRoles = isset($this->data['SecurityRole']) ? $this->data['SecurityRole'] : array();
 					
 					if($this->SecurityUser->doValidate($postData)) {
+						/*
 						$this->SecurityUserRole->deleteAll(array('SecurityUserRole.security_user_id' => $userId));
 						$userRoles = array();
 						foreach($postRoles as $roleId => $value) {
 							$userRoles[] = array('security_user_id' => $userId, 'security_role_id' => $roleId);
 						}
 						$this->SecurityUserRole->saveMany($userRoles);
+						*/
 						$name = $postData['first_name'] . ' ' . $postData['last_name'];
 						$this->Utility->alert($name . ' has been updated successfully.');
 						$this->redirect(array('action' => 'usersView', $userId));
@@ -229,20 +255,6 @@ class SecurityController extends AppController {
 						$data = array_merge($data, $postData);
 					}
 				}
-				$roles = array();
-				$roleList = $this->SecurityRoleFunction->getModules();
-				$roleIds = $this->SecurityUserRole->find('list', array(
-					'fields' => array('SecurityUserRole.security_role_id'),
-					'conditions' => array('SecurityUserRole.security_user_id' => $userId)
-				));
-				$userRoleList = !empty($roleIds) ? $this->SecurityRoleFunction->getModules($roleIds) : $roleIds;
-				
-				$roles[0] = $userRoleList;
-				foreach($userRoleList as $key => $value) {
-					unset($roleList[$key]);
-				}
-				$roles[1] = $roleList;
-				$this->set('roles', $roles);
 				$this->set('data', $data);
 				$this->set('statusOptions', $this->SecurityUser->status);
 				$this->Navigation->addCrumb($name);
@@ -258,50 +270,405 @@ class SecurityController extends AppController {
 		
 		if($this->request->is('post')) {
 			$data = $this->data;
-			$roles = isset($data['SecurityRole']) ? $data['SecurityRole'] : array();
-			unset($data['SecurityRole']);
-			
 			$this->SecurityUser->set($data);
 			if($this->SecurityUser->validates()) {
-				if(sizeof($roles) == 0) {
-					$this->Utility->alert('You need to assign a role to the user', array('type' => 'error'));
-				} else {
-					$result =  $this->SecurityUser->save($data);
-					$userId = $result['SecurityUser']['id'];
-					
-					$userRoles = array();
-					foreach($roles as $roleId) {
-						$userRoles[] = array('security_user_id' => $userId, 'security_role_id' => $roleId);
-					}
-					$this->SecurityUserRole->saveMany($userRoles);
-					$name = trim($data['SecurityUser']['first_name'] . ' ' . $data['SecurityUser']['last_name']);
-					$this->Utility->alert($name . ' has been added successfully.');
-					$this->redirect(array('action' => 'users'));
-				}
+				$result =  $this->SecurityUser->save($data);
+				$userId = $result['SecurityUser']['id'];
+				$name = trim($data['SecurityUser']['first_name'] . ' ' . $data['SecurityUser']['last_name']);
+				$this->Utility->alert($name . ' has been added successfully.');
+				$this->redirect(array('action' => 'usersView', $userId));
 			}
 		}
-		$roleList = $this->SecurityRoleFunction->getModules();
-		$this->set('roles', $roleList);
+	}
+	
+	public function usersSearch() {
+		$searchString = $this->params->query['searchString'];
+		$searchType = isset($this->params['pass'][0]) ? $this->params['pass'][0] : 0;
+		
+		if($searchType==0) { // only search by identification no and display name
+			$this->autoRender = false;
+			$obj = $this->SecurityUser->search($searchType, $searchString);
+			$name = $obj ? $obj['SecurityUser']['first_name'] . ' ' . $obj['SecurityUser']['last_name'] : '';
+			$result = array();
+			if(empty($name)) {
+				$result['type'] = 'error';
+			} else {
+				$result['type'] = 'ok';
+				$result['id'] = $obj['SecurityUser']['id'];
+				$result['name'] = $name;
+			}
+			return json_encode($result);
+		} else { // search by identification or name and display rows
+			$this->layout = 'ajax';
+			$groupId = $this->params['pass'][1];
+			$params = array('limit' => 100);
+			$data = $this->SecurityUser->search($searchType, $searchString, $params);
+			if($data) {
+				foreach($data as &$user) {
+					$obj = $user['SecurityUser'];
+					$roleOptions = $this->SecurityRole->getRoleOptions($groupId, $obj['id']);
+					$user['SecurityUser']['roles'] = $roleOptions;
+				}
+			}
+			$this->set('search', $searchString);
+			$this->set('data', $data);
+		}
+	}
+	
+	public function usersAddAdmin() {
+		$this->layout = 'ajax';
+		$index = $this->params->query['index'];
+		
+		$this->set('index', $index);
+	}
+	
+	public function groups() {
+		App::uses('Sanitize', 'Utility');
+		$this->Navigation->addCrumb('List of Groups');
+		
+		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
+		
+		$selectedYear = "";
+		$selectedProgramme = "";
+		$searchField = "";
+		$orderBy = 'SecurityGroup.name';
+		$order = 'asc';
+		$prefix = 'SecurityGroup.Search.%s';
+		if($this->request->is('post')) {
+			$searchField = Sanitize::escape(trim($this->data['SecurityGroup']['SearchField']));
+			if(isset($this->data['SecurityGroup']['orderBy'])) {
+				$orderBy = $this->data['SecurityGroup']['orderBy'];
+			}
+			if(isset($this->data['SecurityGroup']['order'])) {
+				$order = $this->data['SecurityGroup']['order'];
+			}
+		}
+		$conditions = array(
+			'search' => $searchField, 
+			'super_admin' => $this->Auth->user('super_admin')==1,
+			'user_id' => $this->Auth->user('id')
+		);
+		
+		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
+		$data = $this->paginate('SecurityGroup', $conditions);
+		
+		foreach($data as &$group) {
+			$obj = $group['SecurityGroup'];
+			$count = $this->SecurityGroupUser->find('count', array('conditions' => array('SecurityGroupUser.security_group_id' => $obj['id'])));
+			$group['SecurityGroup']['count'] = $count;
+		}
+		
+		$this->set('searchField', $searchField);
+		$this->set('page', $page);
+		$this->set('orderBy', $orderBy);
+		$this->set('order', $order);
+		$this->set('data', $data);
+		$this->set('groupCount', $this->SecurityGroup->paginateCount($conditions));
+	}
+	
+	public function groupsAddAccessOptions() {
+		$this->layout = 'ajax';
+		
+		$type = $this->params['pass'][0];
+		$index = $this->params->query['index'];
+		$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
+		
+		$levelOptions = array();
+		$valueOptions = array();
+		$model = $type==='areas' ? $this->Area : $this->InstitutionSite;
+		$levelOptions = $model->getGroupAccessList($exclude);
+		
+		$emptyOption = '-- ' . __('No records') . ' --';
+		
+		if(!empty($levelOptions)) {
+			$parentId = key($levelOptions);
+			$valueOptions = $model->getGroupAccessValueList($parentId, $exclude);
+			if(empty($valueOptions)) {
+				$valueOptions = array('0' => $emptyOption);
+			}
+		} else {
+			$levelOptions = array('0' => $emptyOption);
+		}
+		
+		$this->set('index', $index);
+		$this->set('type', $type);
+		$this->set('levelOptions', $levelOptions);
+		$this->set('valueOptions', $valueOptions);
+	}
+	
+	public function groupsLoadValueOptions() {
+		$this->layout = 'ajax';
+		$type = $this->params['pass'][0];
+		$parentId = $this->params->query['parentId'];
+		$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
+		$model = $type==='areas' ? $this->Area : $this->InstitutionSite;
+		$emptyOption = '-- ' . __('No records') . ' --';
+		
+		$valueOptions = $model->getGroupAccessValueList($parentId, $exclude);
+		if(empty($valueOptions)) {
+			$valueOptions = array('0' => $emptyOption);
+		}
+		$this->set('valueOptions', $valueOptions);
+	}
+	
+	public function groupsAddValidate() {
+		$this->autoRender = false;
+		$name = trim($this->params->query['name']);
+		
+		$msg = '';
+		$result = array('type' => 'error');
+		if(empty($name)) {
+			$msg = $this->Utility->getMessage('SECURITY_GRP_NO_NAME');
+		} else {
+			$found = $this->SecurityGroup->field('id', array('SecurityGroup.name' => $name));
+			if($found) {
+				$msg = $this->Utility->getMessage('SECURITY_GRP_NAME_EXISTS');
+			} else {
+				$result['type'] = 'ok';
+			}
+		}
+		$result['msg'] = $msg;
+		return json_encode($result);
+	}
+	
+	public function groupsAdd() {
+		$this->Navigation->addCrumb('Add Group');
+		
+		if($this->request->is('post')) {
+			$groupData = $this->data['SecurityGroup'];
+			$groupObj = $this->SecurityGroup->save($groupData);
+			if($groupObj) {
+				$groupId = $groupObj['SecurityGroup']['id'];
+				
+				// Group Users
+				if(isset($this->data['SecurityGroupUser'])) {
+					$userData = $this->data['SecurityGroupUser'];
+					$role = $this->SecurityRole->getGroupAdministratorRole();
+					foreach($userData as &$user) {
+						$user['security_group_id'] = $groupId;
+						$user['security_role_id'] = $role['SecurityRole']['id'];
+					}
+					$this->SecurityGroupUser->saveMany($userData);
+				}
+				
+				// Group Areas
+				if(isset($this->data['SecurityGroupArea'])) {
+					$areaData = $this->data['SecurityGroupArea'];
+					$this->SecurityGroupArea->saveGroupAccess($groupId, $areaData);
+				}
+				
+				// Group Institution Sites
+				if(isset($this->data['SecurityGroupInstitutionSite'])) {
+					$siteData = $this->data['SecurityGroupInstitutionSite'];
+					$this->SecurityGroupInstitutionSite->saveGroupAccess($groupId, $siteData);
+				}
+				$this->redirect(array('action' => 'groupsView', $groupId));
+			}
+		}
+	}
+	
+	public function groupsView() {
+		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
+		
+		if(isset($this->params['pass'][0])) {
+			$groupId = $this->params['pass'][0];
+			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
+			if($data) {
+				$this->Navigation->addCrumb($data['SecurityGroup']['name']);
+				$areas = $this->SecurityGroupArea->getAreas($groupId);
+				$sites = $this->SecurityGroupInstitutionSite->getSites($groupId);
+				$systemRoles = $this->SecurityRole->getRoles(0);
+				$userRoles = $this->SecurityRole->getRoles($groupId);
+				$roles = array('system' => $systemRoles, 'user' => $userRoles);
+				
+				foreach($roles as &$roleList) {
+					foreach($roleList as &$role) {
+						$role['count'] = $this->SecurityGroupUser->find('count', array(
+							'conditions' => array('SecurityGroupUser.security_group_id' => $groupId, 'SecurityGroupUser.security_role_id' => $role['id'])
+						));
+					}
+				}
+				$data['SecurityGroup']['areas'] = $areas;
+				$data['SecurityGroup']['sites'] = $sites;
+				$data['SecurityRole'] = $roles;
+				
+				$this->set('data', $data);
+			} else {
+				$this->redirect(array('action' => 'groups'));
+			}
+		} else {
+			$this->redirect(array('action' => 'groups'));
+		}
+	}
+	
+	public function groupsEdit() {
+		$this->Navigation->addCrumb('Edit Group Details');
+		
+		if(isset($this->params['pass'][0])) {
+			$groupId = $this->params['pass'][0];
+			
+			if($this->request->is('post')) {
+				$this->SecurityGroup->save($this->data['SecurityGroup']);
+				$areaData = isset($this->data['SecurityGroupArea']) ? $this->data['SecurityGroupArea'] : array();
+				$siteData = isset($this->data['SecurityGroupInstitutionSite']) ? $this->data['SecurityGroupInstitutionSite'] : array();
+				$this->SecurityGroupArea->saveGroupAccess($groupId, $areaData);
+				$this->SecurityGroupInstitutionSite->saveGroupAccess($groupId, $siteData);
+				
+				$this->redirect(array('action' => 'groupsView', $groupId));
+			}
+			
+			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
+			if($data) {
+				$areas = $this->SecurityGroupArea->getAreas($groupId);
+				$sites = $this->SecurityGroupInstitutionSite->getSites($groupId);
+				$systemRoles = $this->SecurityRole->getRoles(0);
+				$userRoles = $this->SecurityRole->getRoles($groupId);
+				$roles = array('system' => $systemRoles, 'user' => $userRoles);
+				
+				foreach($roles as &$roleList) {
+					foreach($roleList as &$role) {
+						$role['count'] = $this->SecurityGroupUser->find('count', array(
+							'conditions' => array('SecurityGroupUser.security_group_id' => $groupId, 'SecurityGroupUser.security_role_id' => $role['id'])
+						));
+					}
+				}
+				$data['SecurityGroup']['areas'] = $areas;
+				$data['SecurityGroup']['sites'] = $sites;
+				$data['SecurityRole'] = $roles;
+				
+				$this->set('data', $data);
+			} else {
+				$this->redirect(array('action' => 'groups'));
+			}
+		} else {
+			$this->redirect(array('action' => 'groups'));
+		}
+	}
+	
+	public function groupsRolesAdd() {
+		$this->Navigation->addCrumb('Add Group Roles');
+		
+		if(isset($this->params['pass'][0])) {
+			$groupId = $this->params['pass'][0];
+			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
+			if($data) {
+				$this->set('data', $data);
+				
+			} else {
+				$this->redirect(array('action' => 'groups'));
+			}
+		} else {
+			$this->redirect(array('action' => 'groups'));
+		}
+	}
+	
+	public function groupsUserAdd() {
+		if($this->request->is('post')) {
+			$data = $this->data['SecurityGroupUser'];
+			$groupId = $data['security_group_id'];
+			if($this->SecurityGroupUser->save($data)) {
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_GRP_USER_ADD'));
+			}
+			$this->redirect(array('action' => 'groupsUsers', $groupId, 'edit'));
+		}
+	}
+	
+	public function groupsUserRemove() {
+		if($this->RequestHandler->isAjax()) {
+			$this->autoRender = false;
+			$groupId = $this->params['pass'][0];
+			$roleId = $this->params['pass'][1];
+			$userId = $this->params['pass'][2];
+			
+			$this->SecurityGroupUser->deleteAll(array(
+				'SecurityGroupUser.security_group_id' => $groupId,
+				'SecurityGroupUser.security_user_id' => $userId,
+				'SecurityGroupUser.security_role_id' => $roleId
+			), false);
+		}
+	}
+	
+	public function groupsUsers() {
+		$this->Navigation->addCrumb('Group Users');
+		
+		if(isset($this->params['pass'][0])) {
+			$groupId = $this->params['pass'][0];
+			$group = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
+			if($group) {
+				$data = $this->SecurityGroupUser->getUsers($groupId);
+				$this->set('group', $group['SecurityGroup']);
+				$this->set('data', $data);
+				
+				if(isset($this->params['pass'][1]) && $this->params['pass'][1] === 'edit') {
+					$this->render('groupsUsersEdit');
+				}
+			} else {
+				$this->redirect(array('action' => 'groups'));
+			}
+		} else {
+			$this->redirect(array('action' => 'groups'));
+		}
 	}
 	
 	public function roles() {
 		$this->Navigation->addCrumb('Roles');
-		$list = $this->SecurityRole->findOptions();
-		$this->set('list', $list);
+		
+		$systemRoles = $this->SecurityRole->getRoles(array(0, -1));
+		$isSuperUser = $this->Auth->user('super_admin')==1;
+		$groupOptions = $this->SecurityGroup->getGroupOptions($isSuperUser ? false : $this->Auth->user('id'));
+		$userRoles = array();
+		$selectedGroup = 0;
+		
+		if(!empty($groupOptions)) {
+			if(isset($this->params['pass'][0])) {
+				$groupId = $this->params['pass'][0];
+				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
+			} else {
+				$selectedGroup = key($groupOptions);
+			}
+			$userRoles = $this->SecurityRole->getRoles($selectedGroup);
+		}
+		
+		$this->set('systemRoles', $systemRoles);
+		$this->set('userRoles', $userRoles);
+		$this->set('groupOptions', $groupOptions);
+		$this->set('selectedGroup', $selectedGroup);
 	}
 	
 	public function rolesEdit() {
 		$this->Navigation->addCrumb('Edit Roles');
 		
-		if($this->request->is('post')) {
-			$data = $this->data;
-			$this->SecurityRole->removeUnnamed(&$data);
-			$this->SecurityRole->saveMany($data['SecurityRole']);
-			$this->redirect(array('action' => 'roles'));
+		$systemRoles = $this->SecurityRole->getRoles(array(0, -1));
+		$isSuperUser = $this->Auth->user('super_admin')==1;
+		$groupOptions = $this->SecurityGroup->getGroupOptions($isSuperUser ? false : $this->Auth->user('id'));
+		$userRoles = array();
+		$selectedGroup = 0;
+		
+		if(!empty($groupOptions)) {
+			if(isset($this->params['pass'][0])) {
+				$groupId = $this->params['pass'][0];
+				$selectedGroup = array_key_exists($groupId, $groupOptions) ? $groupId : key($groupOptions);
+			} else {
+				$selectedGroup = key($groupOptions);
+			}
+			$userRoles = $this->SecurityRole->getRoles($selectedGroup);
 		}
 		
-		$list = $this->SecurityRole->findOptions();
-		$this->set('list', $list);
+		if($this->request->is('post')) {
+			$data = $this->data;
+			$groupId = $this->data['SecurityGroup']['security_group_id'];
+			$this->SecurityRole->removeUnnamed(&$data);
+			foreach($data['SecurityRole'] as &$obj) {
+				$obj['security_group_id'] = $groupId;
+			}
+			$this->SecurityRole->saveMany($data['SecurityRole']);
+			$this->redirect(array('action' => 'roles', $groupId));
+		}
+		
+		$this->set('systemRoles', $systemRoles);
+		$this->set('userRoles', $userRoles);
+		$this->set('groupOptions', $groupOptions);
+		$this->set('selectedGroup', $selectedGroup);
 	}
 	
 	public function rolesAdd() {
@@ -418,6 +785,7 @@ class SecurityController extends AppController {
 		}
 	}
 	
+	/*
 	public function roleAreas() {
 		$this->Navigation->addCrumb('Role - Area Restricted');
 		
@@ -492,60 +860,90 @@ class SecurityController extends AppController {
 			$this->redirect(array('action' => 'roles'));
 		}
 	}
-	
-	public function loadOptionList() {
-		$this->autoRender = false;
-		$parentId = $this->params->query['parentId'];
-		$exclude = $this->params->query['exclude'];
-		$type = $this->params->query['type'];
-		$options = array();
-		$conditions = array();
-		if($type==='areas') {
-			$conditions['Area.area_level_id'] = $parentId;
-			$conditions['Area.id NOT'] = $exclude;
-			$options = $this->Area->findList(array('conditions' => $conditions));
-		} else {
-			$conditions['InstitutionSite.institution_id'] = $parentId;
-			$conditions['InstitutionSite.id NOT'] = $exclude;
-			$options = $this->InstitutionSite->find('list', array('conditions' => $conditions, 'order' => array('InstitutionSite.name')));
-		}
-		if(empty($options)) {
-			$options[] = $type==='areas' ? '-- '.__('No Areas').' --' : '-- '.__('No Institution Sites').' --';
-		}
-		echo json_encode($options);
-	}
+	*/
 	
 	public function permissions() {
 		$this->Navigation->addCrumb('Permissions');
 		
-		$operations = $this->AccessControl->operations;
-		$roles = $this->SecurityRole->findList();
-		$roleId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($roles);
-		$permissions = $this->SecurityFunction->getPermissions($roleId, $operations);
-		
-		$this->set('_operations', $operations);
-		$this->set('selectedRole', $roleId);
-		$this->set('roles', $roles);
-		$this->set('permissions', $permissions);
+		if(isset($this->params['pass'][0])) {
+			$selectedRole = $this->params['pass'][0];
+			
+			$isSuperUser = $this->Auth->user('super_admin')==1;
+			$userId = $isSuperUser ? false : $this->Auth->user('id');
+			$groupObj = $this->SecurityRole->getGroupName($selectedRole, $userId);
+			
+			$allowEdit = true;
+			if(!$isSuperUser) {
+				$userRoles = $this->SecurityGroupUser->getRolesByUserId($userId);
+				foreach($userRoles as $obj) {
+					if($obj['SecurityRole']['id'] === $selectedRole) {
+						$allowEdit = false;
+						break;
+					}
+				}
+			}
+			$roles = $groupObj ? $this->SecurityRole->getRoleOptions($groupObj['id']) : $this->SecurityRole->getRoleOptions(array(0, -1));
+			$permissions = array();
+			if($isSuperUser) {
+				$permissions = $this->SecurityFunction->getPermissions($selectedRole, $isSuperUser);
+			} else {
+				$permissions = $this->SecurityFunction->getAllowedPermissions($selectedRole, $userId, $isSuperUser);
+			}
+			$this->set('_operations', $this->AccessControl->operations);
+			$this->set('selectedRole', $selectedRole);
+			$this->set('roles', $roles);
+			$this->set('permissions', $permissions);
+			$this->set('group', $groupObj);
+			$this->set('allowEdit', $allowEdit);
+		} else {
+			$this->redirect(array('action' => 'roles'));
+		}
 	}
 	
 	public function permissionsEdit() {
-		$roles = $this->SecurityRole->findList();
-		$roleId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($roles);
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Permissions');
+		if(isset($this->params['pass'][0])) {
+			$selectedRole = $this->params['pass'][0];
 			
-			$operations = $this->AccessControl->operations;	
-			$permissions = $this->SecurityFunction->getPermissions($roleId, $operations);
-			
-			$this->set('_operations', $operations);
-			$this->set('selectedRole', $roleId);
-			$this->set('roles', $roles);
-			$this->set('permissions', $permissions);
+			if($this->request->is('get')) {
+				$this->Navigation->addCrumb('Edit Permissions');
+				
+				$isSuperUser = $this->Auth->user('super_admin')==1;
+				$userId = $isSuperUser ? false : $this->Auth->user('id');			
+				$allowEdit = true;
+				if(!$isSuperUser) {
+					$userRoles = $this->SecurityGroupUser->getRolesByUserId($userId);
+					foreach($userRoles as $obj) {
+						if($obj['SecurityRole']['id'] === $selectedRole) {
+							$allowEdit = false;
+							break;
+						}
+					}
+				}
+				if($allowEdit) {
+					$groupObj = $this->SecurityRole->getGroupName($selectedRole, $userId);
+					$roles = $groupObj ? $this->SecurityRole->getRoleOptions($groupObj['id']) : $this->SecurityRole->getRoleOptions(array(0, -1));
+					$permissions = array();
+					if($isSuperUser) {
+						$permissions = $this->SecurityFunction->getPermissions($selectedRole, $isSuperUser);
+					} else {
+						$permissions = $this->SecurityFunction->getAllowedPermissions($selectedRole, $userId, $isSuperUser);
+					}
+					
+					$this->set('_operations', $this->AccessControl->operations);
+					$this->set('selectedRole', $selectedRole);
+					$this->set('roles', $roles);
+					$this->set('permissions', $permissions);
+					$this->set('group', $groupObj);
+				} else {
+					$this->redirect(array('action' => 'permissions', $selectedRole));
+				}
+			} else {
+				$data = $this->data['SecurityRoleFunction'];
+				$this->SecurityRoleFunction->saveAll($data);
+				$this->redirect(array('action' => 'permissions', $selectedRole));
+			}
 		} else {
-			$data = $this->data['SecurityRoleFunction'];
-			$this->SecurityRoleFunction->saveAll($data);
-			$this->redirect(array('action' => 'permissions', $roleId));
+			$this->redirect(array('action' => 'roles'));
 		}
 	}
 }
