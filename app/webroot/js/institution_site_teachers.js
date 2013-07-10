@@ -21,9 +21,7 @@ var InstitutionSiteTeachers = {
 	yearId: '#SchoolYearId',
 	
 	init: function() {
-		//$('.btn_save').click(InstitutionSiteStudents.saveStudentList);
 		this.attachSortOrder();
-		//$('.icon_search').click(InstitutionSiteTeachers.search);
 		$('#teachersEdit .icon_plus').click(InstitutionSiteTeachers.addPosition);
 	},
 	
@@ -57,26 +55,10 @@ var InstitutionSiteTeachers = {
 			var ajaxParams = {searchString: searchString};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
-					/*
-					if(data.type == ajaxType['success']) {
-						if(data['status'] > 0) { // teacher is already employed for that site
-							window.location.href = getRootURL() + $('.info').attr('url') + data['id'];
-						} else {
-							$('#TeacherId').val(data['id']);
-							$('#FirstName').val(data['first_name']);
-							$('#LastName').val(data['last_name']);
-							$('#Gender').val(data['gender']);
-						}
-					} else if(data.type == ajaxType['alert']) {
-						alertOpt['type'] = data['alertOpt']['type'];
-						alertOpt['text'] = data['alertOpt']['text'];
-						$.alert(alertOpt);
-					}
-					*/
-					
 					if(!$(data).hasClass('alert')) {
-						//table.append(data);
-						//jsTable.fixTable(table.parent());
+						var parent = '#search';
+						$(parent).find('.table_body').empty();
+						jsTable.tableScrollableAdd(parent, data);
 					} else {
 						alertOpt['type'] = $(data).attr('type');
 						alertOpt['text'] = $(data).html();
@@ -85,47 +67,36 @@ var InstitutionSiteTeachers = {
 				};
 				$.unmask({id: maskId, callback: callback});
 			};
+			$('#TeacherId').val(0);
 			$.ajax({
 				type: 'GET',
 				dataType: 'text',
 				url: getRootURL() + $(obj).attr('url'),
 				data: {searchString: searchString},
-				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.info', text: i18n.Search.textSearching}); },
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching}); },
 				success: ajaxSuccess
 			});
 		}
+	},
+	
+	addTeacher: function(obj) {
+		var row = $(obj).closest('.table_row');
+		var id = row.attr('row-id');
+		var idNo = row.attr('id-no');
+		var fName = row.attr('first-name');
+		var lName = row.attr('last-name');
+		var gender = row.attr('gender');
 		
-		/*
-		var maskId;
-		var ajaxParams = {searchString: searchString};
-		var ajaxSuccess = function(data, textStatus) {
-			var callback = function() {
-				if(data.type == ajaxType['success']) {
-					if(data['status'] > 0) { // teacher is already employed for that site
-						window.location.href = getRootURL() + $('.info').attr('url') + data['id'];
-					} else {
-						$('#TeacherId').val(data['id']);
-						$('#FirstName').val(data['first_name']);
-						$('#LastName').val(data['last_name']);
-						$('#Gender').val(data['gender']);
-					}
-				} else if(data.type == ajaxType['alert']) {
-					alertOpt['type'] = data['alertOpt']['type'];
-					alertOpt['text'] = data['alertOpt']['text'];
-					$.alert(alertOpt);
-				}
-			};
-			$.unmask({id: maskId, callback: callback});
-		};
-		$.ajax({
-			type: 'GET',
-			dataType: 'json',
-			url: getRootURL() + $(this).attr('url'),
-			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.info', text: i18n.Search.textSearching}); },
-			success: ajaxSuccess
+		$('#TeacherId').val(id);
+		$('#IdentificationNo').val(idNo);
+		$('#FirstName').val(fName);
+		$('#LastName').val(lName);
+		$('#Gender').val(gender);
+		
+		row.fadeOut(500, function() {
+			row.remove();
+			jsTable.toggleTableScrollable($('#search'));
 		});
-		*/
 	},
 	
 	validateTeacherAdd: function() {

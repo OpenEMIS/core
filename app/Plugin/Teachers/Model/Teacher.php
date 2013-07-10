@@ -119,29 +119,30 @@ class Teacher extends TeachersAppModel {
 	}
 	
 	public function search($search, $params=array()) {
+		$model = $this->alias;
 		$data = array();
 		$search = '%' . $search . '%';
 		$limit = isset($params['limit']) ? $params['limit'] : false;
 		
 		$conditions = array(
 			'OR' => array(
-				'Teacher.identification_no LIKE' => $search,
-				'Teacher.first_name LIKE' => $search,
-				'Teacher.last_name LIKE' => $search
+				$model . '.identification_no LIKE' => $search,
+				$model . '.first_name LIKE' => $search,
+				$model . '.last_name LIKE' => $search
 			)
 		);
 		
 		$options = array(
 			'recursive' => -1,
 			'conditions' => $conditions,
-			'order' => array('Teacher.first_name')
+			'order' => array($model . '.first_name')
 		);
 		
 		$count = $this->find('count', $options);
 		
 		$data = false;
 		if($limit === false || $count < $limit) {
-			$options['fields'] = array('Teacher.*');
+			$options['fields'] = array($model . '.*');
 			$data = $this->find('all', $options);
 		}
 		return $data;

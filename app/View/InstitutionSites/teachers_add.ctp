@@ -18,7 +18,7 @@ echo $this->Html->script('institution_site_teachers', false);
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'teachersAdd')
 	));
-	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => 0));
+	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => 0, 'autocomplete' => 'off'));
 	?>
 	<h1>
 		<span><?php echo __('Add Teacher'); ?></span>
@@ -53,7 +53,7 @@ echo $this->Html->script('institution_site_teachers', false);
 					<div class="table_cell cell_icon_action"></div>
 				</div>
 			</div>
-			<div class="list_wrapper hidden" limit="3" style="height: 98px;">
+			<div class="list_wrapper hidden" limit="4" style="height: 109px;">
 				<div class="table">
 					<div class="table_body"></div>
 				</div>
@@ -61,11 +61,10 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 	</fieldset>
 	
-	<div class="info" url="InstitutionSites/teachersView/">
+	<div class="info">
 		<div class="row">
 			<div class="label"><?php echo __('Identification No'); ?></div>
-			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo')); ?></div>
-			<!--span class="left icon_search" url="InstitutionSites/teachersSearch"></span-->
+			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo', 'disabled' => 'disabled')); ?></div>
 		</div>
 		
 		<div class="row">

@@ -1251,40 +1251,8 @@ class InstitutionSitesController extends AppController {
 		$search = trim($this->params->query['searchString']);
 		$params = array('limit' => 100);
 		$data = $this->Teacher->search($search, $params);
-		//pr($data);
 		$this->set('search', $search);
 		$this->set('data', $data);
-		
-		/*
-		if(strlen($id) == 0) {
-			$this->Utility->setAjaxResult('alert', $result);
-			$result['alertOpt'] = array();
-			$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
-			$result['alertOpt']['text'] = $this->Utility->getMessage('INVALID_ID_NO');
-		} else {
-			$obj = $this->Teacher->find('first', array(
-				'fields' => array('Teacher.id', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
-				'conditions' => array('Teacher.identification_no' => $id)
-			));
-			if($obj) {
-				$teacherId = $obj['Teacher']['id'];
-				$status = $this->InstitutionSiteTeacher->checkEmployment($this->institutionSiteId, $teacherId);
-				
-				$this->Utility->setAjaxResult('success', $result);
-				$result['id'] = $obj['Teacher']['id'];
-				$result['first_name'] = $obj['Teacher']['first_name'];
-				$result['last_name'] = $obj['Teacher']['last_name'];
-				$result['gender'] = $this->Utility->formatGender($obj['Teacher']['gender']);
-				$result['status'] = $status;
-			} else {
-				$this->Utility->setAjaxResult('alert', $result);
-				$result['alertOpt'] = array();
-				$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
-				$result['alertOpt']['text'] = $this->Utility->getMessage('TEACHER_NOT_FOUND');
-			}
-		}
-		*/
-		//return json_encode($result);
 	}
 	
 	public function teachersAdd() {
@@ -1410,37 +1378,12 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function staffSearch() {
-		$this->autoRender = false;
-		$id = trim($this->params->query['id']);
-		$result = array();
-		if(strlen($id) == 0) {
-			$this->Utility->setAjaxResult('alert', $result);
-			$result['alertOpt'] = array();
-			$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
-			$result['alertOpt']['text'] = $this->Utility->getMessage('INVALID_ID_NO');
-		} else {
-			$obj = $this->Staff->find('first', array(
-				'fields' => array('Staff.id', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
-				'conditions' => array('Staff.identification_no' => $id)
-			));
-			if($obj) {
-				$staffId = $obj['Staff']['id'];
-				$status = $this->InstitutionSiteStaff->checkEmployment($this->institutionSiteId, $staffId);
-				
-				$this->Utility->setAjaxResult('success', $result);
-				$result['id'] = $obj['Staff']['id'];
-				$result['first_name'] = $obj['Staff']['first_name'];
-				$result['last_name'] = $obj['Staff']['last_name'];
-				$result['gender'] = $this->Utility->formatGender($obj['Staff']['gender']);
-				$result['status'] = $status;
-			} else {
-				$this->Utility->setAjaxResult('alert', $result);
-				$result['alertOpt'] = array();
-				$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
-				$result['alertOpt']['text'] = $this->Utility->getMessage('STAFF_NOT_FOUND');
-			}
-		}
-		return json_encode($result);
+		$this->layout = 'ajax';
+		$search = trim($this->params->query['searchString']);
+		$params = array('limit' => 100);
+		$data = $this->Staff->search($search, $params);
+		$this->set('search', $search);
+		$this->set('data', $data);
 	}
 	
 	public function staffAdd() {
