@@ -24,7 +24,7 @@ class TeachersController extends TeachersAppController {
 
     public $uses = array(
         'Institution',
-        'Teachers.InstitutionSiteTeacher',
+        'InstitutionSiteTeacher',
         'Teachers.Teacher',
         'Teachers.TeacherHistory',
         'Teachers.TeacherCustomField',
@@ -190,30 +190,11 @@ class TeachersController extends TeachersAppController {
 
     public function employment() {
         $this->Navigation->addCrumb(ucfirst($this->action));
-        $this->Teacher->id = $this->Session->read('TeacherId');
+        $teacherId = $this->Session->read('TeacherId');
         $data = array();
-        $ds = $this->Teacher->getDatasource();
-        $query = <<<EOD
--- teachers
-SELECT
-	`Institution`.`name` AS `institution`,
-	`InstitutionSite`.`name` AS `institution_site`,
-	`InstitutionSiteTeacher`.`id`,
-	`InstitutionSiteTeacher`.`start_date`,
-	`InstitutionSiteTeacher`.`end_date`,
-	`InstitutionSiteTeacher`.`salary`,
-	`TeacherCategory`.`name`
-FROM `institution_site_teachers` AS `InstitutionSiteTeacher`
-JOIN `teacher_categories` AS `TeacherCategory` ON (`TeacherCategory`.`id` = `InstitutionSiteTeacher`.`teacher_category_id`)
-JOIN `institution_sites` AS `InstitutionSite` ON (`InstitutionSite`.`id` = `InstitutionSiteTeacher`.`institution_site_id`)
-JOIN `institutions` AS `Institution` ON (`Institution`.`id` = `InstitutionSite`.`institution_id`)
-WHERE `InstitutionSiteTeacher`.`teacher_id` = ?
-ORDER BY
-	`InstitutionSiteTeacher`.`start_date` ASC,
-	`InstitutionSiteTeacher`.`end_date` ASC;
-EOD;
-
-        foreach($ds->fetchAll($query, array($this->Teacher->id)) as $row) {
+		
+        $list = $this->InstitutionSiteTeacher->getPositions($teacherId);
+        foreach($list as $row) {
             $result = array();
             $dataKey = '';
             foreach($row as $element){ // compact array
@@ -229,9 +210,10 @@ EOD;
             }
             $data[$dataKey][] = $result;
         }
-
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_EMPLOYMENT'), array('type' => 'info', 'dismissOnClick' => false));
+		}
         $this->set('data', $data);
-
     }
 
     public function fetchImage($id){

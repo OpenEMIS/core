@@ -25,7 +25,7 @@ class StaffController extends StaffAppController {
 
     public $uses = array(
         'Institution',
-        'Staff.InstitutionSiteStaff',
+        'InstitutionSiteStaff',
         'Staff.Staff',
         'Staff.StaffHistory',
         'Staff.StaffCustomField',
@@ -183,30 +183,11 @@ class StaffController extends StaffAppController {
 
     public function employment() {
         $this->Navigation->addCrumb(ucfirst($this->action));
-        $this->Staff->id = $this->Session->read('StaffId');
+        $staffId = $this->Session->read('StaffId');
         $data = array();
-        $ds = $this->Staff->getDatasource();
-        $query = <<<EOD
--- Staffs
-SELECT
-	`Institution`.`name` AS `institution`,
-	`InstitutionSite`.`name` AS `institution_site`,
-	`InstitutionSiteStaff`.`id`,
-	`InstitutionSiteStaff`.`start_date`,
-	`InstitutionSiteStaff`.`end_date`,
-	`InstitutionSiteStaff`.`salary`,
-	`StaffCategory`.`name`
-FROM `institution_site_staff` AS `InstitutionSiteStaff`
-JOIN `staff_categories` AS `StaffCategory` ON (`StaffCategory`.`id` = `InstitutionSiteStaff`.`staff_category_id`)
-JOIN `institution_sites` AS `InstitutionSite` ON (`InstitutionSite`.`id` = `InstitutionSiteStaff`.`institution_site_id`)
-JOIN `institutions` AS `Institution` ON (`Institution`.`id` = `InstitutionSite`.`institution_id`)
-WHERE `InstitutionSiteStaff`.`staff_id` = ?
-ORDER BY
-	`InstitutionSiteStaff`.`start_date` DESC,
-	`InstitutionSiteStaff`.`end_date` ASC;
-EOD;
-
-        foreach($ds->fetchAll($query, array($this->Staff->id)) as $row) {
+		
+		$list = $this->InstitutionSiteStaff->getPositions($staffId);
+        foreach($list as $row) {
             $result = array();
             $dataKey = '';
             foreach($row as $element){ // compact array
@@ -222,9 +203,10 @@ EOD;
             }
             $data[$dataKey][] = $result;
         }
-
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_EMPLOYMENT'), array('type' => 'info', 'dismissOnClick' => false));
+		}
         $this->set('data', $data);
-
     }
 
     public function fetchImage($id){
