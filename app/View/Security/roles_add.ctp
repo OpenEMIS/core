@@ -1,23 +1,13 @@
 <?php
-$index = $order-1;
+$index = $size;
 $fieldName = sprintf('data[SecurityRole][%s][%%s]', $index);
 ?>
 
 <li data-id="<?php echo ($index); ?>" class="new_row <?php echo $order%2==0 ? 'li_even' : ''; ?>">
 	<?php
-	echo $this->Form->hidden('id', array(
-		'label' => false,
-		'div' => false,
-		'name' => sprintf($fieldName, 'id'),
-		'value' => 0
-	));
-	echo $this->Form->hidden('order', array(
-		'label' => false,
-		'div' => false,
-		'id' => 'order',
-		'name' => sprintf($fieldName, 'order'),
-		'value' => $order
-	));
+	echo $this->Form->hidden('id', array('name' => sprintf($fieldName, 'id'), 'value' => 0));
+	echo $this->Form->hidden('order', array('id' => 'order', 'name' => sprintf($fieldName, 'order'), 'value' => $order));
+	echo $this->Form->hidden('security_group_id', array('name' => sprintf($fieldName, 'security_group_id'),	'value' => $groupId));
 	?>
 	<div class="cell cell_visible">
 		<?php
