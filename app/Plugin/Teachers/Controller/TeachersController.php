@@ -188,6 +188,52 @@ class TeachersController extends TeachersAppController {
 		$this->set('data', $data);
     }
 
+    public function employment() {
+        $this->Navigation->addCrumb(ucfirst($this->action));
+        $this->Teacher->id = $this->Session->read('TeacherId');
+        $data = array();
+        $ds = $this->Teacher->getDatasource();
+        $query = <<<EOD
+-- teachers
+SELECT
+	`Institution`.`name` AS `institution`,
+	`InstitutionSite`.`name` AS `institution_site`,
+	`InstitutionSiteTeacher`.`id`,
+	`InstitutionSiteTeacher`.`start_date`,
+	`InstitutionSiteTeacher`.`end_date`,
+	`InstitutionSiteTeacher`.`salary`,
+	`TeacherCategory`.`name`
+FROM `tst_openemis_demo`.`institution_site_teachers` AS `InstitutionSiteTeacher`
+JOIN `tst_openemis_demo`.`teacher_categories` AS `TeacherCategory` ON (`TeacherCategory`.`id` = `InstitutionSiteTeacher`.`teacher_category_id`)
+JOIN `institution_sites` AS `InstitutionSite` ON (`InstitutionSite`.`id` = `InstitutionSiteTeacher`.`institution_site_id`)
+JOIN `institutions` AS `Institution` ON (`Institution`.`id` = `InstitutionSite`.`institution_id`)
+WHERE `InstitutionSiteTeacher`.`teacher_id` = ?
+ORDER BY
+	`InstitutionSiteTeacher`.`start_date` ASC,
+	`InstitutionSiteTeacher`.`end_date` ASC;
+EOD;
+
+        foreach($ds->fetchAll($query, array($this->Teacher->id)) as $row) {
+            $result = array();
+            $dataKey = '';
+            foreach($row as $element){ // compact array
+                if(array_key_exists('institution', $element)){
+                    $dataKey .= $element['institution'];
+                    continue;
+                }
+                if(array_key_exists('institution_site', $element)){
+                    $dataKey .= ' - '.$element['institution_site'];
+                    continue;
+                }
+                $result = array_merge($result, $element);
+            }
+            $data[$dataKey][] = $result;
+        }
+
+        $this->set('data', $data);
+
+    }
+
     public function fetchImage($id){
         $this->autoRender = false;
 
