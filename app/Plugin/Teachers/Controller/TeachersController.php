@@ -203,8 +203,8 @@ SELECT
 	`InstitutionSiteTeacher`.`end_date`,
 	`InstitutionSiteTeacher`.`salary`,
 	`TeacherCategory`.`name`
-FROM `tst_openemis_demo`.`institution_site_teachers` AS `InstitutionSiteTeacher`
-JOIN `tst_openemis_demo`.`teacher_categories` AS `TeacherCategory` ON (`TeacherCategory`.`id` = `InstitutionSiteTeacher`.`teacher_category_id`)
+FROM `institution_site_teachers` AS `InstitutionSiteTeacher`
+JOIN `teacher_categories` AS `TeacherCategory` ON (`TeacherCategory`.`id` = `InstitutionSiteTeacher`.`teacher_category_id`)
 JOIN `institution_sites` AS `InstitutionSite` ON (`InstitutionSite`.`id` = `InstitutionSiteTeacher`.`institution_site_id`)
 JOIN `institutions` AS `Institution` ON (`Institution`.`id` = `InstitutionSite`.`institution_id`)
 WHERE `InstitutionSiteTeacher`.`teacher_id` = ?
