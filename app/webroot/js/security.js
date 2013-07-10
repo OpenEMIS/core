@@ -24,7 +24,6 @@ var Security = {
 		$('#permissions.edit .module_checkbox').change(Security.toggleModule);
 		
 		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled)').change(Security.toggleOperation);
-		$('#roles .icon_plus').click(Security.addRole);
 		$('fieldset[type] .icon_plus').click(function() { Security.addRoleArea(this); });
 	},
 	
@@ -248,22 +247,23 @@ var Security = {
 		return false;
 	},
 	
-	addRole: function() {
+	addRole: function(obj) {
+		var parent = $(obj).closest('.section_group');
 		var size = $('.table_view li').length;
+		var order = parent.find('.table_view li').length;
+		var groupId = parent.find('#SecurityGroupId').val();
 		var maskId;
-		var url = getRootURL() + 'Security/rolesAdd';
-		
 		$.ajax({
 			type: 'GET',
 			dataType: 'text',
-			url: url,
-			data: {order: size},
+			url: getRootURL() + 'Security/rolesAdd',
+			data: {size: size, order: order, groupId: groupId},
 			beforeSend: function (jqXHR) {
 				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
 			},
 			success: function (data, textStatus) {
 				var callback = function() {
-					$('.table_view').append(data);
+					parent.find('.table_view').append(data);
 				};
 				$.unmask({id: maskId, callback: callback});
 			}

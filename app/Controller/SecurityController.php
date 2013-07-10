@@ -656,11 +656,7 @@ class SecurityController extends AppController {
 		
 		if($this->request->is('post')) {
 			$data = $this->data;
-			$groupId = $this->data['SecurityGroup']['security_group_id'];
 			$this->SecurityRole->removeUnnamed(&$data);
-			foreach($data['SecurityRole'] as &$obj) {
-				$obj['security_group_id'] = $groupId;
-			}
 			$this->SecurityRole->saveMany($data['SecurityRole']);
 			$this->redirect(array('action' => 'roles', $groupId));
 		}
@@ -673,41 +669,15 @@ class SecurityController extends AppController {
 	
 	public function rolesAdd() {
 		$this->layout = 'ajax';
+		$size = $this->params->query['size'];
 		$order = $this->params->query['order'] + 1;
+		$groupId = $this->params->query['groupId'];
+		$this->set('size', $size);
 		$this->set('order', $order);
-
-		if(isset($this->params->query['type'])) {
-			$type = $this->params->query['type'];
-			$levelList = array();
-			$nameOptions = array();
-			$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
-			if($type==='areas') {
-				$levelOptions = $this->AreaLevel->find('list', array('order' => array('AreaLevel.level')));
-				if(!empty($levelOptions)) {
-					$conditions = array('Area.area_level_id' => key($levelOptions), 'Area.visible' => 1, 'Area.id NOT' => $exclude);
-					$nameOptions = $this->Area->findList(array('conditions' => $conditions));
-					if(empty($nameOptions)) {
-						$nameOptions[] = '--'.__('No Areas').'--';
-					}
-				}
-			} else {
-				$levelOptions = $this->Institution->find('list', array('order' => array('Institution.name')));
-				if(!empty($levelOptions)) {
-					$conditions = array('InstitutionSite.institution_id' => key($levelOptions), 'InstitutionSite.id NOT' => $exclude);
-					$nameOptions = $this->InstitutionSite->find('list', array('conditions' => $conditions, 'order' => array('InstitutionSite.name')));
-					if(empty($nameOptions)) {
-						$nameOptions[] = '--'.__('No Institution Sites').'--';
-					}
-				}
-			}
-			$this->set('type', $type);
-			$this->set('levelOptions', $levelOptions);
-			$this->set('nameOptions', $nameOptions);
-			$this->set('roleId', $this->params->query['roleId']);
-			$this->render('roles_add_area');
-		}
+		$this->set('groupId', $groupId);
 	}
 	
+	/*
 	public function roleUsers() {
 		$this->Navigation->addCrumb('Role Assignment');
 		
@@ -777,82 +747,6 @@ class SecurityController extends AppController {
 				$this->set('roleOptions', $roleList);
 				$this->set('data', $data);
 				
-			} else {
-				$this->redirect(array('action' => 'roles'));
-			}
-		} else {
-			$this->redirect(array('action' => 'roles'));
-		}
-	}
-	
-	/*
-	public function roleAreas() {
-		$this->Navigation->addCrumb('Role - Area Restricted');
-		
-		if(isset($this->params['pass'][0])) {
-			$roleId = $this->params['pass'][0];
-			$roleList = $this->SecurityRole->findList(true);
-			
-			if(array_key_exists($roleId, $roleList)) {
-				$this->set('roleId', $roleId);
-				$this->set('roleOptions', $roleList);
-				$areaConditions = array('SecurityRoleArea.security_role_id' => $roleId);
-				$areaLevelList = $this->AreaLevel->find('list', array('order' => array('AreaLevel.level')));
-				$areaList = $this->SecurityRoleArea->fetchAreas($areaLevelList, $areaConditions);
-				
-				$siteConditions = array('SecurityRoleInstitutionSite.security_role_id' => $roleId);
-				$institutionList = $this->Institution->find('list', array('order' => array('Institution.name')));
-				$siteList = $this->SecurityRoleInstitutionSite->fetchSites($institutionList, $siteConditions);
-				
-				$this->set('areaList', $areaList);
-				$this->set('siteList', $siteList);
-			} else {
-				$this->redirect(array('action' => 'roles'));
-			}
-		} else {
-			$this->redirect(array('action' => 'roles'));
-		}
-	}
-	
-	public function roleAreasEdit() {
-		$this->Navigation->addCrumb('Edit Role - Area Restricted');
-		
-		if(isset($this->params['pass'][0])) {
-			$roleId = $this->params['pass'][0];
-			$roleList = $this->SecurityRole->findList(true);
-			
-			if(array_key_exists($roleId, $roleList)) {
-				$this->set('roleId', $roleId);
-				$this->set('roleOptions', $roleList);
-				
-				$areaConditions = array('SecurityRoleArea.security_role_id' => $roleId);
-				$siteConditions = array('SecurityRoleInstitutionSite.security_role_id' => $roleId);
-				if($this->request->is('post')) {
-					$this->SecurityRoleArea->deleteAll($areaConditions);
-					if(isset($this->data['SecurityRoleArea'])) {
-						$areas = $this->data['SecurityRoleArea'];						
-						$this->SecurityRoleArea->filterData($areas);
-						$this->SecurityRoleArea->saveMany($areas);
-					}
-					
-					$this->SecurityRoleInstitutionSite->deleteAll($siteConditions);
-					if(isset($this->data['SecurityRoleInstitutionSite'])) {
-						$sites = $this->data['SecurityRoleInstitutionSite'];
-						$this->SecurityRoleInstitutionSite->filterData($sites);
-						$this->SecurityRoleInstitutionSite->saveMany($sites);
-					}
-					$this->Utility->alert('Permissions have been saved successfully.');
-					$this->redirect(array('action' => 'roleAreas', $roleId));
-				}
-				
-				$areaLevelList = $this->AreaLevel->find('list', array('order' => array('AreaLevel.level')));
-				$areaList = $this->SecurityRoleArea->fetchAreas($areaLevelList, $areaConditions);
-				
-				$institutionList = $this->Institution->find('list', array('order' => array('Institution.name')));
-				$siteList = $this->SecurityRoleInstitutionSite->fetchSites($institutionList, $siteConditions);
-				
-				$this->set('areaList', $areaList);
-				$this->set('siteList', $siteList);
 			} else {
 				$this->redirect(array('action' => 'roles'));
 			}
