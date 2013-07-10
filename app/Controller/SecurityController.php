@@ -306,7 +306,8 @@ class SecurityController extends AppController {
 			if($data) {
 				foreach($data as &$user) {
 					$obj = $user['SecurityUser'];
-					$roleOptions = $this->SecurityRole->getRoleOptions($groupId, $obj['id']);
+					$roleOptions = $this->SecurityRole->getRoleOptions($groupId, $obj['id'], true);
+					//pr($roleOptions);
 					$user['SecurityUser']['roles'] = $roleOptions;
 				}
 			}
@@ -656,6 +657,7 @@ class SecurityController extends AppController {
 		
 		if($this->request->is('post')) {
 			$data = $this->data;
+			$groupId = $this->params['pass'][0];
 			$this->SecurityRole->removeUnnamed(&$data);
 			$this->SecurityRole->saveMany($data['SecurityRole']);
 			$this->redirect(array('action' => 'roles', $groupId));
