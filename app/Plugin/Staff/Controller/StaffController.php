@@ -26,7 +26,7 @@ class StaffController extends StaffAppController {
     public $uses = array(
         'Institution',
 		'InstitutionSite',
-        'Staff.InstitutionSiteStaff',
+        'InstitutionSiteStaff',
         'Staff.Staff',
         'Staff.StaffHistory',
         'Staff.StaffCustomField',
@@ -179,6 +179,34 @@ class StaffController extends StaffAppController {
 
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
         $this->set('gender', $gender);
+        $this->set('data', $data);
+    }
+
+    public function employment() {
+        $this->Navigation->addCrumb(ucfirst($this->action));
+        $staffId = $this->Session->read('StaffId');
+        $data = array();
+		
+		$list = $this->InstitutionSiteStaff->getPositions($staffId);
+        foreach($list as $row) {
+            $result = array();
+            $dataKey = '';
+            foreach($row as $element){ // compact array
+                if(array_key_exists('institution', $element)){
+                    $dataKey .= $element['institution'];
+                    continue;
+                }
+                if(array_key_exists('institution_site', $element)){
+                    $dataKey .= ' - '.$element['institution_site'];
+                    continue;
+                }
+                $result = array_merge($result, $element);
+            }
+            $data[$dataKey][] = $result;
+        }
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_EMPLOYMENT'), array('type' => 'info', 'dismissOnClick' => false));
+		}
         $this->set('data', $data);
     }
 

@@ -44,28 +44,89 @@ class InstitutionSiteTeacher extends AppModel {
 		$this->saveMany($data);
 	}
 	
-	public function getPositions($teacherId, $institutionSiteId) {
+	public function getPositions($teacherId, $institutionSiteId=0) {
+		$fields = array(
+			'InstitutionSiteTeacher.id', 'InstitutionSiteTeacher.start_date', 'InstitutionSiteTeacher.end_date',
+			'InstitutionSiteTeacher.salary', 'TeacherCategory.name'
+		);
+		
+		$joins = array(
+			array(
+				'table' => 'teacher_categories',
+				'alias' => 'TeacherCategory',
+				'conditions' => array('TeacherCategory.id = InstitutionSiteTeacher.teacher_category_id')
+			)
+		);
+		
+		$conditions = array('InstitutionSiteTeacher.teacher_id' => $teacherId);
+		
+		if($institutionSiteId==0) {
+			$fields[] = 'Institution.name AS institution';
+			$fields[] = 'InstitutionSite.name as institution_site';
+			
+			$joins[] = array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array('InstitutionSite.id = InstitutionSiteTeacher.institution_site_id')
+			);
+			$joins[] = array(
+				'table' => 'institutions',
+				'alias' => 'Institution',
+				'conditions' => array('Institution.id = InstitutionSite.institution_id')
+			);
+		} else {
+			$conditions['InstitutionSiteTeacher.institution_site_id'] = $institutionSiteId;
+		}
+		
 		$data = $this->find('all', array(
-			'fields' => array(
-				'InstitutionSiteTeacher.id', 'InstitutionSiteTeacher.start_date',
-				'InstitutionSiteTeacher.end_date', 'InstitutionSiteTeacher.salary',
-				'TeacherCategory.name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'teacher_categories',
-					'alias' => 'TeacherCategory',
-					'conditions' => array('TeacherCategory.id = InstitutionSiteTeacher.teacher_category_id')
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteTeacher.teacher_id' => $teacherId,
-				'InstitutionSiteTeacher.institution_site_id' => $institutionSiteId
-			),
+			'fields' => $fields,
+			'joins' => $joins,
+			'conditions' => $conditions,
 			'order' => array('InstitutionSiteTeacher.start_date DESC', 'InstitutionSiteTeacher.end_date')
 		));
 		return $data;
 	}
+	
+	public function getData($id) {
+        $options['joins'] = array(
+            array('table' => 'institution_sites',
+                'alias' => 'InstitutionSite',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSite.id = InstitutionSiteTeacher.institution_site_id'
+                )
+            ),
+            array('table' => 'institutions',
+                'alias' => 'Institution',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'Institution.id = InstitutionSite.institution_id'
+                )
+            )
+        );
+
+        $options['conditions'] = array('InstitutionSiteTeacher.teacher_id' => $id);
+
+        $options['fields'] = array(
+            'InstitutionSite.name',
+            'Institution.id',
+            'Institution.name',
+            'Institution.code',
+            'InstitutionSiteTeacher.id',
+            'InstitutionSiteTeacher.institution_site_id',
+            'InstitutionSiteTeacher.start_date',
+            'InstitutionSiteTeacher.end_date',
+        );
+
+        $list = $this->find('all', $options);
+
+        return $list;
+    }
+
+    public function getInstitutionSelectionValues($list) {
+        $InstitutionSite = ClassRegistry::init('InstitutionSite');
+        return $data = $InstitutionSite->find('all',array('fields'=>array('InstitutionSite.id','Institution.name','InstitutionSite.name'),'conditions'=>array('InstitutionSite.id  '=>$list)));
+    }
 	
 	// Used by institution site classes
 	public function getTeacherSelectList($year, $institutionSiteId) {

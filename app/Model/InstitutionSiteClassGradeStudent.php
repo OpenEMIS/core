@@ -86,8 +86,8 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		$conditions = array('InstitutionSiteClassGradeStudent.student_id' => $studentId);
 		
 		if($institutionSiteId == 0) {
-			$fields[] = 'InstitutionSite.name';
 			$fields[] = 'Institution.name';
+			$fields[] = 'InstitutionSite.name';
 			$joins[] = array(
 				'table' => 'institution_sites',
 				'alias' => 'InstitutionSite',
