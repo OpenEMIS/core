@@ -13,7 +13,7 @@ echo $this->Html->script('security', false);
 	<?php
 	echo $this->Form->create('SecurityGroup', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'Security', 'action' => 'rolesEdit')
+		'url' => array('controller' => 'Security', 'action' => 'rolesEdit', $selectedGroup)
 	));
 	?>
 	<h1>
@@ -36,18 +36,36 @@ echo $this->Html->script('security', false);
 		<ul class="quicksand table_view">
 			<?php
 			foreach($systemRoles as $i => $obj) {
-				if($obj['security_group_id'] == 0) {
-					$isVisible = $obj['visible']==1;
-					$fieldName = sprintf('data[SecurityRole][%s][%%s]', $i);
+				$isVisible = $obj['visible']==1;
+				$isSystemRole = $obj['security_group_id'] == -1;
+				$fieldName = sprintf('data[SecurityRole][%s][%%s]', $i);
 				
-					echo $this->Utility->getListRowStart($i, $isVisible);
-					echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
-					echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
+				echo $this->Utility->getListRowStart($i, $isVisible);
+				echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
+				echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));			
+				if($isSystemRole) {
+					$name = $obj['name'] . ' (Not Editable)';
+					$options = array(
+						'name' => sprintf($fieldName, 'visible'),
+						'type' => 'checkbox',
+						'autocomplete' => 'off',
+						'disabled' => 'disabled',
+						'before' => '<div class="cell cell_visible">',
+						'after' => '</div>'
+					);
+					
+					if($obj['visible']==1) {
+						$options['checked'] = 'checked';
+					}
+					echo $this->Form->input('visible', $options);
+					echo $this->Utility->getNameInput($this->Form, $fieldName, $name, false);
+				} else {
 					echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
 					echo $this->Utility->getNameInput($this->Form, $fieldName, $obj['name']);
-					echo $this->Utility->getOrderControls();
-					echo $this->Utility->getListRowEnd();
+					
 				}
+				echo $this->Utility->getOrderControls();
+				echo $this->Utility->getListRowEnd();
 			} ?>
 		</ul>
 		<?php if($_add) { ?>
