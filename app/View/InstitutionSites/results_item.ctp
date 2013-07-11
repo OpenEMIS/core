@@ -74,7 +74,7 @@ echo $this->Html->script('institution_site_results', false);
 					<div class="table_cell center">
 					<?php 
 					$marks = $obj['AssessmentItemResult']['marks'];
-					if(empty($marks)) {
+					if(is_null($marks) || strlen(trim($marks))==0) {
 						echo __('Not Recorded');
 					} else {
 						if($marks < $data['AssessmentItem']['min']) {
