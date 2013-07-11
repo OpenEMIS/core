@@ -57,7 +57,6 @@ echo $this->Html->script('institution_site_programmes', false);
 		</div>
 	</fieldset>
 	
-	<?php if($_add) { ?>
 	<fieldset class="section_group" id="search_group">
 		<legend><?php echo __('Search'); ?></legend>
 		
@@ -92,7 +91,6 @@ echo $this->Html->script('institution_site_programmes', false);
 			</div>
 		</div>
 	</fieldset>
-	<?php } ?>
 	
 	<?php echo $this->Form->end(); ?>
 	

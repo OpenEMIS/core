@@ -927,11 +927,15 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Edit Finances');
 				
 		if($this->request->is('post')) {
-			foreach($this->request->data['CensusFinance'] as &$val){
+			$data = $this->data['CensusFinance'];
+			$yearId = $data['school_year_id'];
+			unset($data['school_year_id']);
+			foreach($data as &$val){
 				$val['institution_site_id']= $this->institutionSiteId;
+				$val['school_year_id'] = $yearId;
 			}
 			//pr($this->request->data);die;
-			$this->CensusFinance->saveAll($this->request->data['CensusFinance']);
+			$this->CensusFinance->saveMany($data);
 			
 			$this->redirect(array('action' => 'finances'));
 		}
