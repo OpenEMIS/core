@@ -69,7 +69,7 @@ $arrOptions = array('date_format' => array(
 				<?php }elseif(stristr($item['name'], 'yearbook_orientation')){ ?>
 				<div class="table_cell"><?php echo $arrOptions['yearbook_orientation'][$item['value']]; ?></div>
 		<?php }elseif(stristr($item['name'], 'yearbook_publication_date')){ ?>
-				<div class="table_cell"><?php echo $this->Utility->formatDate($item['value'], "d F Y"); ?></div>
+				<div class="table_cell"><?php echo $this->Utility->formatDate($item['value']); ?></div>
 		<?php }elseif(stristr($item['name'], 'yearbook_logo')){ ?>
 				<div class="table_cell">
 				<?php 
