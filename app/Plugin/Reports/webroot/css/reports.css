@@ -10,3 +10,64 @@
 #student-list .icon_sort_down { float: left; margin-left: 8px; }
 
 .content_wrapper > h1 > .total { font-size: 10px; font-weight: normal; }
+
+.clear { clear:both; }
+
+.custom_div{
+    margin-bottom: 10px;
+}
+
+.row .label{
+    width:130px;
+    margin-right: 10px;
+    margin-left: 20px;
+    /*float:left;*/
+}
+
+.row .value{
+    min-width:360px;
+    max-width:360px;
+}
+
+.row#indicator_selector .value select{
+    /*min-width:360px;*/
+    overflow-wrap:initial;
+}
+
+.custom_box {
+    overflow: scroll;
+    overflow-x: hidden;
+    border: 1px solid #CCCCCC;
+    min-height: 50px;
+    max-height: 150px;
+    min-width: 100px;
+    max-width: 250px;
+    /*max-width: 360px;*/
+}
+
+.custom_box .custom_label {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-bottom: 1px solid #CCCCCC;
+    border-top: 1px solid #CCCCCC;
+    background-color: #EFEFEF;
+    color: #666666;
+    overflow: hidden;
+}
+
+.custom_box .custom_label:first-child {
+    border-top: none;
+}
+
+.custom_box .custom_value {
+    overflow: hidden;
+    padding: 5px 10px;
+    font-size: 11px;
+    color: #666666;
+}
+.custom_box .custom_value ul{
+    list-style-type: none;
+    padding:0px;
+    margin: 0px;
+}
