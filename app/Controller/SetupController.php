@@ -249,9 +249,9 @@ class SetupController extends AppController {
 			'items' => $this->Staff->getLookupVariables()
 		));
 		$lookup[] = array('Staff' => array(
-			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
+			'viewMethod' => array('action' => 'customFields', 'StaffCustomField'),
 			'view' => 'customFields',
-			'editMethod' => array('action' => 'customFieldsEdit', 'StudentCustomField'),
+			'editMethod' => array('action' => 'customFieldsEdit', 'StaffCustomField'),
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
 			'name' => 'Custom Fields'
