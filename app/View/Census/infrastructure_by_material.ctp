@@ -52,7 +52,7 @@ foreach($data as $infraname => $arrval){
 				$infraVal = isset($data[$infraname]['data'][$typeid][$statids][$material_id][$gender])
 						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$gender]
 						  : '';
-				$infraSource = isset($data[$infraname]['data'][$typeid][$statids][$material_id][$source])
+				$infraSource = @isset($data[$infraname]['data'][$typeid][$statids][$material_id][$source])
 						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$source]
 						  : '';
 
@@ -61,7 +61,7 @@ foreach($data as $infraname => $arrval){
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_sanitation_id]" value="'.$typeid.'">';
 					$cell_html.= $this->Form->input('value', array(
-							'class'=>$record_tag,
+							'class'=>@$record_tag,
 							'type' => 'text',
 							'label' => false,
 							'div' => false,

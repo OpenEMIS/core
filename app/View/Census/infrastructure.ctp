@@ -24,6 +24,7 @@ echo $this->Html->script('infrastructure', false);
 		<div class="value">
 			<?php
 				echo $this->Form->input('school_year_id', array(
+					'id' =>'SchoolYearId',
 					'label' => false,
 					'div' => false,
 					'options' => $years,
