@@ -90,7 +90,7 @@ echo $this->Html->script('search', false);
                         <div class="table_cell"><?php echo $firstName; ?></div>
                         <div class="table_cell"><?php echo $lastName; ?></div>
                         <div class="table_cell"><?php echo $gender; ?></div>
-                        <div class="table_cell"><?php echo $birthday; ?></div>
+                        <div class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></div>
                     </div>
                     <?php endforeach;
                 }
