@@ -26,6 +26,7 @@ echo $this->Html->script('census_enrolment', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
+				'id' => 'SchoolYearId',
 				'options' => $years,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
@@ -74,9 +75,7 @@ echo $this->Html->script('census_enrolment', false);
 				<div class="table_cell"><?php echo __('Male'); ?></div>
 				<div class="table_cell"><?php echo __('Female'); ?></div>
 				<div class="table_cell"><?php echo __('Total'); ?></div>
-				<?php if($_delete) { ?>
 				<div class="table_cell cell_delete">&nbsp;</div>
-				<?php } ?>
 			</div>
 			
 			<div class="table_body">
@@ -139,9 +138,7 @@ echo $this->Html->script('census_enrolment', false);
 						</div>
 					</div>
 					<div class="table_cell cell_total cell_number"><?php echo $record['male'] + $record['female']; ?></div>
-					<?php if($_delete) { ?>
 					<div class="table_cell"><span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="CensusEnrolment.removeRow(this)"></span></div>
-					<?php } ?>
 				</div>
 				<?php } // end foreach (records) ?>
 			</div> <!-- End Table Body -->
