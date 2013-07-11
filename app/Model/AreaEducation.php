@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class AdministrativeArea extends AppModel {
+class AreaEducation extends AppModel {
 	public $validate = array(
 		'code' => array(
 			'notEmpty' => array(
@@ -38,20 +38,20 @@ class AdministrativeArea extends AppModel {
 		)
 	);
 	
-	public $belongsTo = array('AdministrativeAreaLevel');
+	public $belongsTo = array('AreaEducationLevel');
 
 	public function fetchSubLevelList($parentId) {
 
 		$children = $this->find('all', array(
-			'conditions' => array('AdministrativeArea.parent_id' => $parentId ),
-			'fields' => 'GROUP_CONCAT(AdministrativeArea.id) as children'
+			'conditions' => array('AreaEducation.parent_id' => $parentId ),
+			'fields' => 'GROUP_CONCAT(AreaEducation.id) as children'
 		));
 		$data = $children[0][0]['children'];
 		return $data;
 	}
 
 	public function getChildren($parentId, $str=null) {
-		$children = $this->find('all', array('conditions' => array('AdministrativeArea.parent_id' => $parentId ), 'fields' => 'GROUP_CONCAT(AdministrativeArea.id) as children'));
+		$children = $this->find('all', array('conditions' => array('AreaEducation.parent_id' => $parentId ), 'fields' => 'GROUP_CONCAT(AreaEducation.id) as children'));
 		$childrenId = $children[0][0]['children'];
 
 		if ($childrenId == "") { return $str; }
@@ -76,6 +76,6 @@ class AdministrativeArea extends AppModel {
 	 */
 	public function getName($id) {
 		$data = $this->findById($id);	
-		return $data['AdministrativeArea']['name'];
+		return $data['AreaEducation']['name'];
 	}
 }

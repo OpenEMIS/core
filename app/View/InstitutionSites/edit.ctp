@@ -88,15 +88,15 @@ echo $this->Html->script('institution_site', false);
 		
 	</fieldset>
 	<fieldset class="section_break">
-		<legend><?php echo __('Administrative Area'); ?></legend>   
+		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
 		<?php
 		$ctr = 0; //pr($areadropdowns);
 		
 		foreach($adminlevels as $levelid => $levelName){
 			echo '<div class="row">
 					<div class="label">'. __("$levelName") .'</div>
-					<div class="value">'. $this->Form->input('administrative_area_level_'.$ctr,array('style'=>'float:left','default'=>@$adminarealevel[$ctr]['id'],'options'=>$adminareadropdowns['administrative_area_level_'.$ctr]['options'])).
-							($ctr == 0 ? $this->Form->input('administrative_area_id',array('type'=>'text','style'=>'display:none','value' => $obj['area_id'])):''). 
+					<div class="value">'. $this->Form->input('area_education_level_'.$ctr,array('style'=>'float:left','default'=>@$adminarealevel[$ctr]['id'],'options'=>$adminareadropdowns['area_education_level_'.$ctr]['options'])).
+							($ctr == 0 ? $this->Form->input('area_education_id',array('type'=>'text','style'=>'display:none','value' => $obj['area_id'])):''). 
 					'</div>
 				</div>';
 			$ctr++;
