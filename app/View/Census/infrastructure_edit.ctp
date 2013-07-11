@@ -52,9 +52,9 @@ echo $this->Html->script('infrastructure', false);
 		<?php } }?>
                 <?php if($infraname==='Sanitation' ) { ?>
                 <select name="data[Census<?php echo $infranameSing; ?>][gender]" id="SanitationGender" style="margin: 0 0 10px 10px;">
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="unisex" >Unisex</option>
+                    <option value="male"><?php echo __('Male'); ?></option>
+                    <option value="female"><?php echo __('Female'); ?></option>
+                    <option value="unisex" ><?php echo __('Unisex'); ?></option>
                     
 		</select>
 		<?php } ?>

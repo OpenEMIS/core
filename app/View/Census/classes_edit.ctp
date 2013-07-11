@@ -26,6 +26,8 @@ echo $this->Html->script('census_classes', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
+				'id' => 'SchoolYearId',
+				'name' => 'school_year_id',
 				'options' => $years,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
