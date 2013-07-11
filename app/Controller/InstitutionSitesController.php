@@ -59,8 +59,6 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteTeacher',
 		'InstitutionSiteStaff',
 		'CensusStudent',
-		'SecurityUserRole',
-		'SecurityRoleInstitutionSite',
 		'SchoolYear',
 		'Students.Student',
 		'Teachers.Teacher',
@@ -276,15 +274,7 @@ class InstitutionSitesController extends AppController {
 				$sites = $this->Session->read('AccessControl.institutions');
 				$sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][]=$institutionSiteId;
 				$this->Session->write('AccessControl.institutions', $sites);
-				
 				$this->Session->write('InstitutionSiteId', $institutionSiteId);
-                                
-                //** Push Site to Highest Role Area**/
-                //get highest Role of userid
-                $highestRole = $this->SecurityUserRole->getHighestUserRole($this->Auth->user('id'));
-                $arrSettings = array('security_role_id'=>$highestRole['SecurityRole']['id'],'institution_site_id'=>$institutionSiteId);
-                $this->SecurityRoleInstitutionSite->addInstitutionSitetoRole($arrSettings);
-                //
 				
 				$this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
 			}

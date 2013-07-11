@@ -240,7 +240,7 @@ class EducationController extends AppController {
 		// For adding education grade subjects
 		if(isset($this->params->query['education_grade_id'])) {
 			$gradeId = $this->params->query['education_grade_id'];
-			$subjectIds = $this->params->query['subjectIds'];
+			$subjectIds = isset($this->params->query['subjectIds']) ? $this->params->query['subjectIds'] : array();
 			
 			$list = $this->EducationSubject->find('all', array(
 				'recursive' => 0,
