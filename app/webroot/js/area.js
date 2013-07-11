@@ -29,6 +29,7 @@ var areas = {
     currentAreaId: 0,
     isEditable: false,
     baseURL: getRootURL() + 'Areas/',
+	extraParam : '',
     id: '#area',
     deletedRecords: [],
     ajaxUrl: 'areaAjax',
@@ -72,15 +73,18 @@ var areas = {
         $('#'+id).show();
     },
     addAreaSwitching : function(){
-
+		
         var saveBtn = $('.btn_save');
         $('select[name*="[area_level_"]').each(function(i, obj){
             $(obj).change(function (d, o){
+				
                 var TotalAreaLevel = $('select[name*="[area_level_"]').length;
                 var isAreaLevelForInput = $(this).parent().parent().parent().attr('id');
                 var currentSelctedOptionValue = parseInt($(this).find(':selected').val());
                 var currentSelctedOptionTitle = $(this).find(':selected').html();
-                var currentSelect = $(this).attr('name').replace('data[Area][area_level_','');
+				var Model = $(this).closest('form').attr('model');
+				console.log(Model);
+                var currentSelect = $(this).attr('name').replace('data['+Model+'][area_level_','');
 
                 currentSelect = currentSelect.replace(']','');
                 currentSelect = parseInt(currentSelect);
@@ -90,21 +94,21 @@ var areas = {
                 }else {
                     isAreaLevelForInput = false;
                 }
-
+				
                 if(isAreaLevelForInput){
                     for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
                         //disable the select element
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').attr('disabled','disabled');
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
 
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').find('option').remove();
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').find('option').remove();
                     }
 				}else {
                     for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
                         //disable the select element
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').find('option').remove();
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').attr('disabled','disabled');
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').find('option').remove();
                     }
 				}
 
@@ -148,7 +152,7 @@ var areas = {
         
         var selected = $(currentobj).val();
         var maskId;
-        var url =  areas.baseURL +'viewAreaChildren/'+selected;
+        var url =  areas.baseURL +'viewAreaChildren/'+selected+'/'+areas.extraParam;
         $.ajax({
             type: 'GET',
             dataType: 'json',
@@ -201,7 +205,7 @@ var areas = {
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: url,
+            url: url+'/'+areas.extraParam,
             beforeSend: function (jqXHR) {
 
                 maskId = $.mask({parent: '#data_section_group'});

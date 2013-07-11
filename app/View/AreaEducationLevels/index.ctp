@@ -12,7 +12,7 @@ echo $this->Html->script('area', false);
 		<span><?php echo __('Administrative Boundaries'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'levelsEdit'), array('class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'AreaEducationLevelsEdit'), array('class' => 'divider'));
 		}
 		//echo $this->Html->link(__('Areas'), array('action' => 'index'), array('class' => 'divider', 'id' => 'viewAreas'));
 		?>
@@ -34,14 +34,9 @@ echo $this->Html->script('area', false);
 
 <script type="text/javascript">
 $(document).ready(function () {
-	$('#edit').click(function(event){
-		event.preventDefault();
-		var form = $('form').attr('action', getRootURL() + 'Areas/edit');
-		$('form').submit();
-	});
-
+	areas.extraParam = 'Education';
 	<?php if(isset($initAreaSelection) && count($initAreaSelection) > 0){ ?>
-	areas.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
+		areas.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
 	var currentSelect;
 	for(var key in areas.initAreaSelection){
 		currentSelect = $('select[name*="['+key+']"]');
@@ -52,7 +47,7 @@ $(document).ready(function () {
 
 	currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).trigger('change');	
 	<?php } ?>
-
+	
 });
 
 </script>

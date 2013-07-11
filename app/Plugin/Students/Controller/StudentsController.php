@@ -65,7 +65,7 @@ class StudentsController extends StudentsAppController {
 			} else {
 				
                 if($this->Auth->User('id') > 0){
-					$this->redirect(array('action' => 'index'));
+					$this->redirect(array('action' => 'index'));	
 				}else{
 					$this->redirect(array('controller'=>'SecurityUsers','action' => 'login'));
 				}
@@ -83,12 +83,12 @@ class StudentsController extends StudentsAppController {
 		$tmp = $this->AccessControl->getAccessibleSites();
                 $this->logtimer('End Get AccessibleSites');
                
-		$programmeIds = $this->InstitutionSiteProgramme->find('list', array(
+		/*$programmeIds = $this->InstitutionSiteProgramme->find('list', array(
 			'fields' => array('InstitutionSiteProgramme.id'),
 			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $tmp)
 		));
 		
-		/*
+		
 		$security = array(
 			'OR' => array(
 				'InstitutionSiteStudent.id' => null,

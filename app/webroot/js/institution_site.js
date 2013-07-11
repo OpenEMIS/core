@@ -23,7 +23,7 @@ var objInstitutionSite = {
 		
 	},
     addAreaSwitching : function(){
-		var areatype = ['administrative_area','area']
+		var areatype = ['area_education','area']
 		for(p in areatype){
 			$('select[name*="['+areatype[p]+'_level_"]').each(function(l,obj){
 				$(obj).attr('areatype',areatype[p]);

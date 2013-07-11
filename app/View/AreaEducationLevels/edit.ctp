@@ -13,12 +13,12 @@ echo $this->Html->script('area', false);
 	<h1>
 		<span><?php echo __('Administrative Boundaries'); ?></span>
 		<?php
-		echo $this->Html->link(__('View'), array('action' => 'levels'), array('class' => 'divider', 'id' => 'view'));
+		echo $this->Html->link(__('View'), array('action' => 'AreaEducationLevels'), array('class' => 'divider'));
 		//echo $this->Html->link(__('Areas'), array('action' => 'index'), array('class' => 'divider', 'id' => 'viewAreas')); 
 		?>
 	</h1>
 	<?php echo $this->element('area_categories'); ?>
-	<?php echo $this->Form->create('AreaLevels', array(
+	<?php echo $this->Form->create('AreaEducationLevels', array(
 	    'inputDefaults' => array(
 	        'label' => false,
 	        'div' => false
@@ -85,7 +85,7 @@ echo $this->Html->script('area', false);
 
 <script type="text/javascript">
 $(document).ready(function(){
-
+	areas.extraParam = 'Education';
 	var getKeys = function(obj){
 	   var keys = [];
 	   for(var key in obj){
@@ -95,7 +95,7 @@ $(document).ready(function(){
 	}
 
 	areas.isEditable = true;
-
+	areas.extraParam = 'Education';
 	jsList.init($('.table_view'));
 
 	$('.btn_cancel').click(function(event){
@@ -103,7 +103,7 @@ $(document).ready(function(){
 
 		window.location = areas.baseURL;
 	});
-
+	
 });
 
 </script>

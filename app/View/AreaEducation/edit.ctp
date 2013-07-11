@@ -13,17 +13,16 @@ echo $this->Html->script('area', false);
 	<h1>
 		<span><?php echo __('Administrative Boundaries'); ?></span>
 		<?php 
-			echo $this->Html->link(__('View'), array('action' => 'index'), array('class' => 'divider', 'id' => 'view')); 
+			echo $this->Html->link(__('View'), array('action' => 'AreaEducation'), array('class' => 'divider')); 
 			
 			// if($_view_levels) {
 			//echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
-			
 			// }
 		?>
 	</h1>
 	<?php echo $this->element('area_categories'); ?>
 	<?php
-	echo $this->Form->create('Area', array(
+	echo $this->Form->create('AreaEducation', array(
 			'url' => array(
 				'controller' => 'Areas',
 				'action' => 'edit'
@@ -145,11 +144,11 @@ $(document).ready(function(){
 
 	currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).trigger('change');	
 	<?php }else{ ?>
-
+	areas.extraParam = 'Education';
 	areas.fetchData();
 	<?php } ?>
 
-
+	
 
 });
 

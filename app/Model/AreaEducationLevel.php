@@ -16,8 +16,8 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class AdministrativeAreaLevel extends AppModel {
-	public $hasMany = array('AdministrativeArea');
+class AreaEducationLevel extends AppModel {
+	public $hasMany = array('AreaEducation');
 
 	public function saveAreaLevelData($data) {
 		$keys = array();
@@ -39,10 +39,10 @@ class AdministrativeAreaLevel extends AppModel {
 				if($row['id'] == 0) {
 				 	$this->create();
 				 }
-				$save = $this->save(array('AdministrativeAreaLevel' => $row));
+				$save = $this->save(array('AreaEducationLevel' => $row));
 				
 				if($row['id'] == 0) {
-					$keys[strval($i+1)] = $save['AdministrativeAreaLevel']['id'];
+					$keys[strval($i+1)] = $save['AreaEducationLevel']['id'];
 				}
 			} /*else if($row['id'] > 0 && $row['male'] == 0 && $row['female'] == 0) {
 				$this->delete($row['id']);

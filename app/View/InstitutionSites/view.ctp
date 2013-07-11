@@ -74,7 +74,7 @@ echo $this->Html->script('institution_site', false);
 		?>
 	</fieldset>
 	<fieldset class="section_break">
-		<legend><?php echo __('Administrative Area'); ?></legend>   
+		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>   
 		<?php
 		$ctr = 0;
 		foreach($adminarealevel as $levelid => $levelName){

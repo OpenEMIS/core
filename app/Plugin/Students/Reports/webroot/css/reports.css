@@ -1,0 +1,12 @@
+#student-list { min-height: 450px; }
+#student-list .col_id { width: 120px; }
+#student-list .col_name { width: 180px; }
+#student-list .col_gender { width: 80px; }
+#student-list .table { margin-top: 10px; }
+#student-list .table_row { cursor: pointer; }
+#student-list .table_row:hover,
+#student-list .table_row.even:hover { background-image: url("../../img/header_bg.png"); color: #FFFFFF; }
+#student-list .icon_sort_up { float: left; margin-top: 2px; margin-left: 8px; }
+#student-list .icon_sort_down { float: left; margin-left: 8px; }
+
+.content_wrapper > h1 > .total { font-size: 10px; font-weight: normal; }

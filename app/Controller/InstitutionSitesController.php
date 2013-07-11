@@ -23,8 +23,8 @@ class InstitutionSitesController extends AppController {
 	public $uses = array(
 		'Area',
 		'AreaLevel',
-		'AdministrativeArea',
-		'AdministrativeAreaLevel',
+		'AreaEducation',
+		'AreaEducationLevel',
 		'Bank',
 		'BankBranch',
 		'EducationSubject',
@@ -128,12 +128,13 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Overview');
 		
 		$levels = $this->AreaLevel->find('list',array('recursive'=>0));
-		$adminarealevels = $this->AdministrativeAreaLevel->find('list',array('recursive'=>0));
+		$adminarealevels = $this->AreaEducationLevel->find('list',array('recursive'=>0));
 		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
+		
 		$areaLevel = $this->fetchtoParent($data['InstitutionSite']['area_id']);
 		$areaLevel = array_reverse($areaLevel);
 	
-		$adminarea = $this->fetchtoParent($data['InstitutionSite']['administrative_area_id'],array('AdministrativeArea','AdministrativeAreaLevel'));
+		$adminarea = $this->fetchtoParent($data['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
 		$adminarea = array_reverse($adminarea);
 		
 		$this->set('data', $data);
@@ -174,7 +175,7 @@ class InstitutionSitesController extends AppController {
 				if(stristr($key,'area_level_') == true && ($arrValSave != '' && $arrValSave != 0)){
 					$last_area_id = $arrValSave;
 				}
-				if(stristr($key,'administrative_area_level_') == true && ($arrValSave != '' && $arrValSave != 0)){
+				if(stristr($key,'area_education_level_') == true && ($arrValSave != '' && $arrValSave != 0)){
 					$last_adminarea_id = $arrValSave;
 				}
 			}
@@ -188,9 +189,9 @@ class InstitutionSitesController extends AppController {
 			
 			
 			if($last_adminarea_id == 0){
-				$last_adminarea_id = $this->institutionSiteObj['InstitutionSite']['administrative_area_id'];
+				$last_adminarea_id = $this->institutionSiteObj['InstitutionSite']['area_education_id'];
 			}
-			$this->request->data['InstitutionSite']['administrative_area_id'] = $last_adminarea_id;
+			$this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
 			
 			
 			$this->InstitutionSite->set($this->request->data);
@@ -224,22 +225,22 @@ class InstitutionSitesController extends AppController {
 			}
 			
 			if($last_adminarea_id != 0){
-				$adminareaLevel = $this->fetchtoParent($last_adminarea_id,array('AdministrativeArea','AdministrativeAreaLevel'));
+				$adminareaLevel = $this->fetchtoParent($last_adminarea_id,array('AreaEducation','AreaEducationLevel'));
 				
 				$adminareaLevel = array_reverse($adminareaLevel);
 				
 				$adminareadropdowns = array();
 				foreach($adminareaLevel as $index => &$arrVals){
-					$siblings = $this->AdministrativeArea->find('list',array('conditions'=>array('AdministrativeArea.parent_id' => $arrVals['parent_id'])));
+					$siblings = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => $arrVals['parent_id'])));
 					$this->Utility->unshiftArray($siblings,array('0'=>'--'.__('Select').'--'));
-					$adminareadropdowns['administrative_area_level_'.$index]['options'] = $siblings;
+					$adminareadropdowns['area_education_level_'.$index]['options'] = $siblings;
 				}
 				
 				
 				$maxAreaIndex = max(array_keys($adminareaLevel));//starts with 0
-				$totalAreaLevel = $this->AdministrativeAreaLevel->find('count'); //starts with 1
+				$totalAreaLevel = $this->AreaEducationLevel->find('count'); //starts with 1
 				for($i = $maxAreaIndex; $i <= $totalAreaLevel; $i++ ){
-					$adminareadropdowns['administrative_area_level_'.($i+1)]['options'] = array('0'=>'--'.__('Select').'--');
+					$adminareadropdowns['area_education_level_'.($i+1)]['options'] = array('0'=>'--'.__('Select').'--');
 				}
 			}
 			
@@ -252,13 +253,13 @@ class InstitutionSitesController extends AppController {
 			$areaLevel = array_reverse($areaLevel);
 			
 			
-			$adminareaLevel = $this->fetchtoParent($data['InstitutionSite']['administrative_area_id']);
+			$adminareaLevel = $this->fetchtoParent($data['InstitutionSite']['area_education_id']);
 			$adminareaLevel = array_reverse($adminareaLevel);
 			
 			$areadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['area_id']);
 			//pr($data['InstitutionSite']);
 			
-			$adminareadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['administrative_area_id'],$arrMap = array('AdministrativeArea','AdministrativeAreaLevel'));
+			$adminareadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['area_education_id'],$arrMap = array('AreaEducation','AreaEducationLevel'));
 			
 		}
 		
@@ -267,7 +268,7 @@ class InstitutionSitesController extends AppController {
 		$disabledAreas = $this->Area->find('list',array('conditions'=>array('Area.visible' => '0')));
 		$this->Utility->unshiftArray($topArea, array('0'=>'--'.__('Select').'--'));
 		$levels = $this->AreaLevel->find('list');
-		$adminlevels = $this->AdministrativeAreaLevel->find('list');
+		$adminlevels = $this->AreaEducationLevel->find('list');
 		$visible = true;
         $type = $this->InstitutionSiteType->findList($visible);
 		$ownership = $this->InstitutionSiteOwnership->findList($visible);
@@ -527,7 +528,7 @@ class InstitutionSitesController extends AppController {
 	public function viewAreaChildren($id,$arrMap = array('Area','AreaLevel')) {
 		//if ajax
 		if($this->RequestHandler->isAjax()){
-			$arrMap = ($arrMap == 'admin')?  array('AdministrativeArea','AdministrativeAreaLevel') : array('Area','AreaLevel') ;
+			$arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
 		}
 		$this->autoRender = false;
 		$value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
@@ -562,7 +563,6 @@ class InstitutionSitesController extends AppController {
 			}
 			
 		}
-		
 		
 		
 		return $arrVals;
