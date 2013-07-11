@@ -1228,6 +1228,11 @@ class InstitutionSitesController extends AppController {
 		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
 		$data = $this->paginate('InstitutionSiteTeacher', $conditions);
 		
+		// Checking if user has access to add
+		$_add_teacher = $this->AccessControl->check('InstitutionSites', 'teachersAdd');
+		$this->set('_add_teacher', $_add_teacher);
+		// End Access Control
+		
 		$this->set('page', $page);
 		$this->set('orderBy', $orderBy);
 		$this->set('order', $order);
@@ -1358,6 +1363,11 @@ class InstitutionSitesController extends AppController {
 		
 		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
 		$data = $this->paginate('InstitutionSiteStaff', $conditions);
+		
+		// Checking if user has access to add
+		$_add_staff = $this->AccessControl->check('InstitutionSites', 'staffAdd');
+		$this->set('_add_staff', $_add_staff);
+		// End Access Control
 		
 		$this->set('page', $page);
 		$this->set('orderBy', $orderBy);
