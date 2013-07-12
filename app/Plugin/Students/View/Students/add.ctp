@@ -18,6 +18,10 @@ $obj = @$data['Student'];
 	
 	<fieldset class="section_break">
 		<legend>General</legend>
+        <div class="row">
+			<div class="label">&nbsp;</div>
+			<div class="value"><input type="button" value="<?php echo __('Generate Identification No.'); ?>" onClick="js:objStudent.getUniqueID();" class="btn_right" /></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Identification No.'); ?></div>
 			<div class="value"><?php echo $this->Form->input('identification_no'); ?></div>

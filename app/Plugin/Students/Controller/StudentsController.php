@@ -533,4 +533,11 @@ class StudentsController extends StudentsAppController {
     public function assessments() {
 		$this->Navigation->addCrumb('Assessment Results');
     }
+	
+	public function getUniqueID() {
+        $this->layout = 'ajax';
+		// Get Last ID in student
+        $id = $this->Student->getLastInsertID();
+		return $id;
+    }
 }
