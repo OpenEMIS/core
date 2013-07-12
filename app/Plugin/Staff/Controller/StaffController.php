@@ -27,12 +27,14 @@ class StaffController extends StaffAppController {
         'Institution',
 		'InstitutionSite',
         'InstitutionSiteStaff',
+        'Staff.InstitutionSiteStaff',
         'Staff.Staff',
         'Staff.StaffHistory',
         'Staff.StaffCustomField',
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
-        'Staff.StaffAttachment'
+        'Staff.StaffAttachment',
+		'ConfigItem'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -61,12 +63,6 @@ class StaffController extends StaffAppController {
                 $name = $staffFirstName ." ". $staffLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('action' => 'view'));
-            } else {
-                if($this->Auth->User('id') > 0){
-                        $this->redirect(array('action' => 'index'));
-                }else{
-                        $this->redirect(array('controller'=>'SecurityUsers','action' => 'login'));
-                }
             }
         }
     }
@@ -561,4 +557,44 @@ class StaffController extends StaffAppController {
 		$this->render('/Elements/customfields/view');
 	}
 
+}
+
+	public function getUniqueID() {
+        $this->autoRender = false;
+		$generate_no = '';
+     	$str = $this->Staff->find('first', array('order' => array('Staff.id DESC'), 'limit' => 1, 'fields'=>'Staff.id'));
+		$pattern = $this->ConfigItem->find('first', array('limit' => 1, 
+													  'fields'=>'ConfigItem.value',
+													  'conditions'=>array(
+																			'ConfigItem.name' => 'staff_identification'
+																		 )
+									   ));
+		$pattern = $pattern['ConfigItem']['value'];
+    	$id = $str['Staff']['id']+1; 
+		
+		if(isset($pattern) && $pattern!=''){
+			$str = str_replace("C", 'E', $pattern);
+			if(substr_count($pattern, 'N')>=strlen($id)){
+				$id = str_pad($id,substr_count($pattern, 'N'),"0",STR_PAD_LEFT);
+				$strlen = strlen($str);
+				$cnt = 0;
+				for( $i = 0; $i <= $strlen; $i++ ) {
+					$char = substr( $str, $i, 1 );
+					if($char!='E')
+					{
+						$char = substr($id,$cnt,1);
+						$cnt++;
+					}
+					$generate_no .= $char;
+				}
+			}else{
+				$generate_no = 'Fail';
+			}
+		}else{
+			// Apply default pattern
+			$str = str_pad($id,7,"0",STR_PAD_LEFT);
+			$generate_no = 'E'.$str.'E';
+		}
+		echo $generate_no;
+    }
 }
