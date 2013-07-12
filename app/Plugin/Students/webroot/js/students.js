@@ -87,9 +87,16 @@ var objStudent = {
             type: "get",
             url: getRootURL()+"Students/getUniqueID",
             success: function(data){
-				alert(data);
-            // console.log(data);
-                //objTeacherQualifications.certificatesData = data;
+				if(data!='Fail'){
+					document.getElementById('StudentIdentificationNo').value = data;
+				}else{
+					var element = $("input:[id*=Gen]").parent().parent().find(".error-message");
+					if(element.length > 0){
+						element.html('Unable to Generate with custom format.');
+					}else{
+						$("input:[id*=Gen]").parent().parent().append("<div class='error-message'>Unable to Generate with custom format.</div>");
+					}
+				}
             }
         });
     },
