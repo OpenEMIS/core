@@ -1793,13 +1793,9 @@ class InstitutionSitesController extends AppController {
 					if($this->request->is('post')) {
 						$result = $this->data['AssessmentItemResult'];
 						foreach($result as $key => &$obj) {
-							if(empty($obj['id']) && empty($obj['marks'])) {
-								unset($result[$key]);
-							} else {
-								$obj['assessment_item_id'] = $itemId;
-								$obj['institution_site_id'] = $this->institutionSiteId;
-								$obj['school_year_id'] = $selectedYear;
-							}
+							$obj['assessment_item_id'] = $itemId;
+							$obj['institution_site_id'] = $this->institutionSiteId;
+							$obj['school_year_id'] = $selectedYear;
 						}
 						if(!empty($result)) {
 							$this->AssessmentItemResult->saveMany($result);
