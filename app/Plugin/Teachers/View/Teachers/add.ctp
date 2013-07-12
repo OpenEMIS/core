@@ -20,13 +20,12 @@ $obj = @$data['Teacher'];
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
         <div class="row">
-			<div class="label">&nbsp;</div>
-			<div class="value"><input type="button" id='Gen' name='Gen' value="<?php echo __('Generate Identification No.'); ?>" onClick="js:objTeacher.getUniqueID();" class="btn_right" /></div>
-		</div>
-		<div class="row">
 			<div class="label"><?php echo __('Identification No.'); ?></div>
-			<div class="value"><?php echo $this->Form->input('identification_no'); ?></div>
-		</div>
+			<div class="value"><?php echo $this->Form->input('identification_no',
+															 array('style' => 'width:170px;')); ?>
+			</div>
+            <div class="value" style="padding-top:1px; padding-left:5px;"><input type="button" id='Gen' name='Gen' value="<?php echo __('Generate'); ?>" onClick="js:objTeacher.getUniqueID();" class="btn_right" /></div>
+		</div>	
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('first_name'); ?></div>
