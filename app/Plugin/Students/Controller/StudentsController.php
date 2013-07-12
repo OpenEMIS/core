@@ -33,7 +33,8 @@ class StudentsController extends StudentsAppController {
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-        'Students.StudentAttachment'
+        'Students.StudentAttachment',
+		'ConfigItem'
     );
         
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -64,14 +65,7 @@ class StudentsController extends StudentsAppController {
 				$this->bodyTitle = $name;
 				$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
 				
-			} else {
-				
-                if($this->Auth->User('id') > 0){
-					$this->redirect(array('action' => 'index'));
-				}else{
-					$this->redirect(array('controller'=>'SecurityUsers','action' => 'login'));
-				}
-            }
+			} 
 		}
     }
     private function logtimer($str=''){
@@ -551,7 +545,7 @@ class StudentsController extends StudentsAppController {
     public function assessments() {
 		$this->Navigation->addCrumb('Assessment Results');
     }
-	
+
 	private function custFieldYrInits(){
 		$this->Navigation->addCrumb('Annual Info');
 		$action = $this->action;
@@ -595,4 +589,43 @@ class StudentsController extends StudentsAppController {
 		$this->set($data);
 		$this->render('/Elements/customfields/view');
 	}
+	
+	public function getUniqueID() {
+        $this->autoRender = false;
+		$generate_no = '';
+     	$str = $this->Student->find('first', array('order' => array('Student.id DESC'), 'limit' => 1, 'fields'=>'Student.id'));
+		$pattern = $this->ConfigItem->find('first', array('limit' => 1, 
+													  'fields'=>'ConfigItem.value',
+													  'conditions'=>array(
+																			'ConfigItem.name' => 'student_identification'
+																		 )
+									   ));
+		$pattern = $pattern['ConfigItem']['value'];
+    	$id = $str['Student']['id']+1; 
+		
+		if(isset($pattern) && $pattern!=''){
+			$str = str_replace("C", 'E', $pattern);
+			if(substr_count($pattern, 'N')>=strlen($id)){
+				$id = str_pad($id,substr_count($pattern, 'N'),"0",STR_PAD_LEFT);
+				$strlen = strlen($str);
+				$cnt = 0;
+				for( $i = 0; $i <= $strlen; $i++ ) {
+					$char = substr( $str, $i, 1 );
+					if($char!='E')
+					{
+						$char = substr($id,$cnt,1);
+						$cnt++;
+					}
+					$generate_no .= $char;
+				}
+			}else{
+				$generate_no = 'Fail';
+			}
+		}else{
+			// Apply default pattern
+			$str = str_pad($id,7,"0",STR_PAD_LEFT);
+			$generate_no = 'E'.$str.'E';
+		}
+		echo $generate_no;
+    }
 }
