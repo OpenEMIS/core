@@ -82,6 +82,18 @@ var objStudent = {
         row.remove();
     },
 
+	getUniqueID : function (){
+        $.ajax({ 
+            type: "get",
+            url: getRootURL()+"Students/getUniqueID",
+            success: function(data){
+				alert(data);
+            // console.log(data);
+                //objTeacherQualifications.certificatesData = data;
+            }
+        });
+    },
+	
     validateAdd : function(){
         var bool = true,
             table = $('.table'),
