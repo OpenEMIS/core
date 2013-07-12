@@ -62,14 +62,7 @@ class StudentsController extends StudentsAppController {
 				$this->bodyTitle = $name;
 				$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
 				
-			} else {
-				
-                if($this->Auth->User('id') > 0){
-					$this->redirect(array('action' => 'index'));
-				}else{
-					$this->redirect(array('controller'=>'SecurityUsers','action' => 'login'));
-				}
-            }
+			} 
 		}
     }
     private function logtimer($str=''){
@@ -535,9 +528,13 @@ class StudentsController extends StudentsAppController {
     }
 	
 	public function getUniqueID() {
-        $this->layout = 'ajax';
-		// Get Last ID in student
-        $id = $this->Student->getLastInsertID();
-		return $id;
+        $this->autoRender = false;
+     	$str = $this->Student->find('first', array('order' => array('Student.id DESC'), 'limit' => 1, 'fields'=>'Student.id'));
+    	$id = $str['Student']['id']+1; 
+		
+		// Apply default pattern
+		$str = str_pad($id,7,"0",STR_PAD_LEFT);
+		$str = 'E'.$str.'E';
+		echo $str;
     }
 }
