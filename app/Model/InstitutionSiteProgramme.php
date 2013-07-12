@@ -240,7 +240,10 @@ class InstitutionSiteProgramme extends AppModel {
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
+					'conditions' => array(
+						'EducationGrade.education_programme_id = EducationProgramme.id',
+						'EducationGrade.visible = 1'
+					)
 				)
 			),
 			'conditions' => array(
