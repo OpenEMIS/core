@@ -27,7 +27,7 @@ echo $this->Html->script('area', false);
 				'controller' => 'Areas',
 				'action' => 'edit'
 			),
-			'model' => 'Area',
+			'model' => 'AreaEducation',
             'inputDefaults' => array('label' => false, 'div' =>false)
 		)
 	);

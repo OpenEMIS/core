@@ -53,11 +53,11 @@ echo $this->Html->script('area', false);
 		<ul class="quicksand table_view">
 		<?php for ($i=0; $i < count($levels); $i++) { ?>
 			<li data-id="<?php echo $i+1; ?>">
-				<input type="hidden" name="data[AreaLevel][<?php echo $i; ?>][id]" id="id" value="<?php echo $levels[$i]['id']; ?>">
-				<input type="hidden" name="data[AreaLevel][<?php echo $i; ?>][level]" id="order" value="<?php echo $i+1; ?>">
+				<input type="hidden" name="data[AreaEducationLevel][<?php echo $i; ?>][id]" id="id" value="<?php echo $levels[$i]['id']; ?>">
+				<input type="hidden" name="data[AreaEducationLevel][<?php echo $i; ?>][level]" id="order" value="<?php echo $i+1; ?>">
 				<div class="cell cell_name_area_level">
 					<div class="input_wrapper">
-						<input type="text" name="data[AreaLevel][<?php echo $i; ?>][name]" value="<?php echo $levels[$i]['name']; ?>">
+						<input type="text" name="data[AreaEducationLevel][<?php echo $i; ?>][name]" value="<?php echo $levels[$i]['name']; ?>">
 					</div>
 				</div>
 				<div class="cell cell_order_area_level"><!-- 
