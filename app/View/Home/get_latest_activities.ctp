@@ -7,7 +7,10 @@
                 <?php echo $this->Utility->formatDate($element['created']);//date('d M Y',strtotime($element['created'])); ?>
             </div>
             <?php 
-                $name = @$element['name'].(@is_null($element['last_name'])? '': @$element['last_name']);
+				//pr($element['name']);
+				
+				
+                $name = @$element['name'];//. (@is_null($element['last_name'])? '' : @$element['last_name']);
 
                 $truncate_size = 35;
 
