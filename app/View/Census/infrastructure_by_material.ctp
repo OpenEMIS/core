@@ -31,7 +31,7 @@ foreach($data as $infraname => $arrval){
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_building_id]" value="'.$typeid.'">';
 					$cell_html.= $this->Form->input('value', array(
-							'class'=>$record_tag,
+							'class'=>@$record_tag,
 							'type' => 'text',
 							'label' => false,
 							'div' => false,
