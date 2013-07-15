@@ -83,7 +83,7 @@ var areas = {
                 var currentSelctedOptionValue = parseInt($(this).find(':selected').val());
                 var currentSelctedOptionTitle = $(this).find(':selected').html();
 				var Model = $(this).closest('form').attr('model');
-				console.log(Model);
+				
                 var currentSelect = $(this).attr('name').replace('data['+Model+'][area_level_','');
 
                 currentSelect = currentSelect.replace(']','');
@@ -545,23 +545,24 @@ var areas = {
 
     renderRecordToHtmlTableRowForEdit: function (data) {
         var html = '', i ;
-
+		var  Model= $(this).closest('form').attr('model');
+		
         $.each(data,function(index,element){
             i = (element.indexCount !== undefined && element.indexCount !== 0 )? element.indexCount : index;
             
             html += '<li data-id="' + (i+1) + '" ' + ((element.isNew !== undefined && element.isNew)? 'class="new_row" ':'') + '>';
-            html += '<input type="hidden" name="data[Area]['+ i +'][order]" id="order" value="'+(i+1)/*element.order*/+'" />';
+            html += '<input type="hidden" name="data['+Model+']['+ i +'][order]" id="order" value="'+(i+1)/*element.order*/+'" />';
 
-            html += '<input type="hidden" name="data[Area]['+ i +'][id]" id="id" value="'+element.id/*element.order*/+'" />';
+            html += '<input type="hidden" name="data['+Model+']['+ i +'][id]" id="id" value="'+element.id/*element.order*/+'" />';
 
             html += '<div class="cell cell_visible">';
-            html += '        <input type="hidden" name="data[Area]['+i+'][visible]" id="PostVisible_" value="0" />';
-            html += '        <input type="checkbox" name="data[Area]['+i+'][visible]" value="1" id="PostVisible" '+((parseInt(element.visible) === 1)? 'checked="checked"':'') +'/>';
+            html += '        <input type="hidden" name="data['+Model+']['+i+'][visible]" id="PostVisible_" value="0" />';
+            html += '        <input type="checkbox" name="data['+Model+']['+i+'][visible]" value="1" id="PostVisible" '+((parseInt(element.visible) === 1)? 'checked="checked"':'') +'/>';
 
             html += '</div>';
             
             html += '<div class="cell cell_level">';
-            html += '   <select name="data[Area]['+i+'][area_level_id]" style="width:100px;">';
+            html += '   <select name="data['+Model+']['+i+']['+((Model=='AreaEducation')?'area_education_level_id':'area_level_id')+']" style="width:100px;">';
 
             $.each(areas.area_levels, function(i,o){
                 html += '<option value="'+o.id+'" ';
@@ -578,13 +579,13 @@ var areas = {
 
             html += '<div class="cell cell_code">';
             html += '   <div class="input_wrapper">';
-            html += '       <input name="data[Area]['+i+'][code]" value="'+element.code+'" type="text" id="AreaCode">';
+            html += '       <input name="data['+Model+']['+i+'][code]" value="'+element.code+'" type="text" id="AreaCode">';
             html += '   </div>';
             html += '</div>';
             
             html += '<div class="cell cell_name">';
             html += '   <div class="input_wrapper">';
-            html += '        <input name="data[Area]['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme">';
+            html += '        <input name="data['+Model+']['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme">';
             html += '   </div>';
             html += '</div>';
             

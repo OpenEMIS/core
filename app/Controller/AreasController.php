@@ -192,7 +192,13 @@ class AreasController extends AppController {
      * @return json                    
      */
 	public function viewData($parentId = -1, $arrModels = array('Area','AreaLevel')) {
-		if(!is_int($parentId)) $parentId = -1;
+		
+		if(!isset($this->request['pass'][0]) || $this->request['pass'][0] == 'Education'){ 
+			$parentId = -1;
+			$arrModels = 'Education';
+		}else{
+			$parentId = $this->request['pass'][0];
+		}
 		$arrModels = ($arrModels == 'Education' && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
 		
 		$this->autoRender = false;
