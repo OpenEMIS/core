@@ -26,6 +26,10 @@ echo $this->Html->script('institution', false);
 			<div class="label"><?php echo __('Institution Code'); ?></div>
 			<div class="value"><?php echo $this->Form->input('code'); ?></div>
 		</div>
+        <div class="row">
+			<div class="label"><?php echo __('Sector'); ?></div>
+			<div class="value"><?php echo $this->Form->input('institution_sector_id', array('options'=>$sector_options)); ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Provider'); ?></div>
 			<div class="value"><?php echo $this->Form->input('institution_provider_id', array('options'=>$provider_options)); ?></div>
