@@ -1,12 +1,13 @@
 <?php
 echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => false));
+echo $this->Html->script('app.date', false);
 echo $this->Html->script('/Teachers/js/teachers', false);
 $obj = @$data['Teacher'];
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="student" class="content_wrapper edit add">
+<div id="teacher" class="content_wrapper edit add">
 	<h1>
 		<span><?php echo __('Overview'); ?></span>
 		<?php
