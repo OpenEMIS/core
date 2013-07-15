@@ -602,6 +602,7 @@ class InstitutionSitesController extends AppController {
 			//pr($this->request->data['InstitutionSiteBankAccount']);
 			//die;
 			$this->InstitutionSiteBankAccount->saveAll($this->request->data['InstitutionSiteBankAccount']);
+			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'bankAccounts'));
 		}
 		$data = $this->InstitutionSiteBankAccount->find('all',array('conditions'=>array('InstitutionSiteBankAccount.institution_site_id'=>$this->institutionSiteId)));
 		$bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));

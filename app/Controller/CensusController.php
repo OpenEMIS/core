@@ -899,10 +899,11 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Finances');
                 
 		if($this->request->is('post')) {
+			$yearId = $this->data['CensusFinance']['school_year_id'];
 			$this->request->data['CensusFinance']['institution_site_id'] = $this->institutionSiteId;
 			$this->CensusFinance->save($this->request->data['CensusFinance']);
 			
-			$this->redirect(array('action' => 'finances'));
+			$this->redirect(array('action' => 'finances', $yearId));
 		}
 		
 		$yearList = $this->SchoolYear->getYearList();
@@ -937,7 +938,7 @@ class CensusController extends AppController {
 			//pr($this->request->data);die;
 			$this->CensusFinance->saveMany($data);
 			
-			$this->redirect(array('action' => 'finances'));
+			$this->redirect(array('action' => 'finances', $yearId));
 		}
                 
 		$yearList = $this->SchoolYear->getAvailableYears();
