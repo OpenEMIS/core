@@ -807,5 +807,4 @@ class TeachersController extends TeachersAppController {
 		}
 		echo $generate_no;
     }
->>>>>>> PHPOE-383
 }

@@ -557,8 +557,6 @@ class StaffController extends StaffAppController {
 		$this->render('/Elements/customfields/view');
 	}
 
-}
-
 	public function getUniqueID() {
         $this->autoRender = false;
 		$generate_no = '';
