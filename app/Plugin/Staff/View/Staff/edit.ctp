@@ -1,5 +1,6 @@
 <?php
 echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false));
+echo $this->Html->script('app.date', false);
 echo $this->Html->script('/Staff/js/staff', false);
 $obj = @$data['Staff'];
 ?>
