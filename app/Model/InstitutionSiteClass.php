@@ -19,6 +19,15 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteClass extends AppModel {
 	public $belongsTo = array('SchoolYear');
 	
+	public $actsAs = array(
+		'CascadeDelete' => array(
+			'cascade' => array(
+				'InstitutionSiteClassGrade',
+				'InstitutionSiteClassTeacher'
+			)
+		)
+	);
+	
 	public function isNameExists($name, $institutionSiteId, $yearId) {
 		$count = $this->find('count', array(
 			'conditions' => array(

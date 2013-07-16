@@ -15,7 +15,7 @@ echo $this->Html->script('search', false);
 			echo $this->Html->link(__('Edit'), array('action' => 'classesEdit', $classId), array('class' => 'divider'));
 		}
 		if($_delete) {
-			//echo $this->Html->link(__('Delete'), array('action' => 'classesDelete'), array('class' => 'divider'));
+			echo $this->Html->link(__('Delete'), array('action' => 'classesDelete', $classId), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 		}
 		?>
     </h1>
