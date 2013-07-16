@@ -129,7 +129,14 @@ echo $this->Html->script('config', false);
 
 							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
 							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
-	
+							
+						} elseif($item['name'] == 'student_prefix' || $item['name'] == 'teacher_prefix' || $item['name'] == 'staff_prefix'){
+							$itemsVal = explode(",", $item['value']);
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value.prefix', 
+													array('default' => $itemsVal[0], 'label'=>false, 'div' => false, 'style'=>'width: 100px;'));
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value.enable',
+													array('label'=>'Enabled', 'div' => false, 'type'=>'checkbox', 
+													 'style'=>'width: 30px;', 'checked' => $itemsVal[1]));
 						}elseif(array_key_exists($item['name'], $arrOptions)){
 							$options = $arrOptions[$item['name']];
 							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
