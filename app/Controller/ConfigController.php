@@ -149,6 +149,24 @@ class ConfigController extends AppController {
 					$yearbookElements = $this->ConfigItem->findById($innerElement['id'], array('ConfigItem.name'));
 					$formData = $this->data;
 
+					// if student/teacher/staff prefix
+					if($yearbookElements['ConfigItem']['name'] == "student_prefix" || $yearbookElements['ConfigItem']['name'] == "teacher_prefix" || $yearbookElements['ConfigItem']['name'] == "staff_prefix") {
+						$prefix = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['prefix'];
+						$enable = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['enable'];
+						unset($innerElement[$innerKey]['value']['prefix']);
+						unset($innerElement[$innerKey]['value']['enable']);
+						$innerElement['value'] = $prefix.','.$enable;
+					}
+					
+					// if student/teacher/staff prefix
+					if($yearbookElements['ConfigItem']['name'] == "student_prefix" || $yearbookElements['ConfigItem']['name'] == "teacher_prefix" || $yearbookElements['ConfigItem']['name'] == "staff_prefix") {
+						$prefix = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['prefix'];
+						$enable = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['enable'];
+						unset($innerElement[$innerKey]['value']['prefix']);
+						unset($innerElement[$innerKey]['value']['enable']);
+						$innerElement['value'] = $prefix.','.$enable;
+					}
+					
 					// if yearbook publication date, massage date value 
 					if ($key == "yearbook" && $yearbookElements['ConfigItem']['name'] == "yearbook_publication_date") {
 						$pubYear = $formData['ConfigItem']['yearbook'][$innerKey]['value']['year'];
