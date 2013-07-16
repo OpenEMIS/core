@@ -1,6 +1,7 @@
 <?php
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Students/js/students', false);
+echo $this->Html->script('config', false);
 $obj = @$data['Student'];
 ?>
 
@@ -20,13 +21,16 @@ $obj = @$data['Student'];
 		<legend>General</legend>
         <div class="row">
 			<div class="label"><?php echo __('Identification No.'); ?>
+            <?php if($autoid!=''){ ?>
             <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid)); ?>
+            <?php } ?>
             </div>
             <div class="value">
             <?php if($autoid!=''){ ?>
             	 <?php echo $autoid; ?>
             <?php }else{ ?>
-                <?php echo $this->Form->input('identification_no'); ?>
+                <?php echo $this->Form->input('identification_no', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');")) ?>
+            	<input type="hidden" name="validate_student_identification" id="validate_student_identification"/>
             <?php } ?>
             </div>
 		</div>
@@ -57,7 +61,9 @@ $obj = @$data['Student'];
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Postal Code'); ?></div>
-			<div class="value"><?php echo $this->Form->input('postal_code'); ?></div>
+			<div class="value"><?php echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_postal_code');")) ?>
+            <input type="hidden" name="validate_student_postal_code" id="validate_student_postal_code"/>
+            </div>
 		</div>
 	</fieldset>
 	
@@ -75,7 +81,9 @@ $obj = @$data['Student'];
 		<legend>Contact</legend>
 		<div class="row">
 			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $this->Form->input('telephone'); ?></div>
+			<div class="value"><?php echo $this->Form->input('telephone', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_telephone');")) ?>
+            <input type="hidden" name="validate_student_telephone" id="validate_student_telephone"/>
+            </div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Email'); ?></div>
@@ -84,7 +92,7 @@ $obj = @$data['Student'];
 	</fieldset>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" <?php if($autoid==''){ ?>onclick="return Config.checkValidate();"<?php } ?>/>
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
