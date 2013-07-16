@@ -30,7 +30,7 @@ class CascadeDeleteBehavior extends ModelBehavior {
 			foreach($cascadeList as $table) {
 				$cascadeModel = ClassRegistry::init($table);
 				$this->log(sprintf('Deleting %s of %s (id: %s)', $table, $model->alias, $model->id) , 'debug');
-				$cascadeModel->deleteAll(array($foreignKey => $model->id), true, true);
+				$cascadeModel->deleteAll(array($foreignKey => $model->id), false, false);
 			}
 		} catch(Exception $ex) {
 			$this->log($ex->getMessage(), 'error');
