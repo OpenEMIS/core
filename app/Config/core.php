@@ -234,7 +234,7 @@ require_once dirname(__DIR__) . '/Vendor/autoload.php';
  * Uncomment this line and correct your server timezone to fix 
  * any date & time related errors.
  */
-	date_default_timezone_set('UTC');
+	//date_default_timezone_set('UTC');
 
 /**
  * Pick the caching engine to use.  If APC is enabled use it.
