@@ -120,7 +120,7 @@ class Staff extends StaffAppModel {
 	
 	public function getLookupVariables() {
 		$lookup = array(
-			'Categories' => array('model' => 'Staff.StaffCategory')
+			'Positions' => array('model' => 'Staff.StaffCategory')
 		);
 		return $lookup;
 	}

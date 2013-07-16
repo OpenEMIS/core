@@ -37,7 +37,7 @@ echo $this->Html->script('census', false);
 		
 	<div class="table full_width">
 		<div class="table_head">
-			<div class="table_cell cell_category"><?php echo __('Category'); ?></div>
+			<div class="table_cell cell_category"><?php echo __('Position'); ?></div>
 			<div class="table_cell"><?php echo __('Male'); ?></div>
 			<div class="table_cell"><?php echo __('Female'); ?></div>
 			<div class="table_cell"><?php echo __('Total'); ?></div>
