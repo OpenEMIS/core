@@ -84,13 +84,8 @@ $arrOptions = array('date_format' => array(
 				$val = '';
                 if(substr($item['value'], -1)>0) {
                     $val = str_replace(",","",substr($item['value'],0,-1));
-					
+					echo $val==''? 'Enabled' : 'Enabled ('.$val.')';
                 }
-				echo $this->Form->input('prefix',
-													array('default' => $val, 'label'=>false, 'disabled' => 'disabled', 'div' => false, 'style'=>'width: 100px;'));
-				echo $this->Form->input('checkbutton',
-													array('label'=>'Enabled', 'div' => false, 'type'=>'checkbox', 'disabled' => 'disabled',
-													 'style'=>'width: 30px;', 'checked' => substr($item['value'], -1)));
                 ?>
                 </div>		
         <?php }else{ ?>
