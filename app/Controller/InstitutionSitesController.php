@@ -945,6 +945,14 @@ class InstitutionSitesController extends AppController {
 		}
 	}
 	
+	public function classesDelete() {
+		$id = $this->params['pass'][0];
+		$name = $this->InstitutionSiteClass->field('name', array('InstitutionSiteClass.id' => $id));
+		$this->InstitutionSiteClass->delete($id);
+		$this->Utility->alert($name . ' have been deleted successfully.');
+		$this->redirect(array('action' => 'classes'));
+	}
+	
 	public function classesAddGrade() {
 		$this->layout = 'ajax';
 		$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
