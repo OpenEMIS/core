@@ -113,7 +113,7 @@ class Teacher extends TeachersAppModel {
 	
 	public function getLookupVariables() {
 		$lookup = array(
-			'Categories' => array('model' => 'Teachers.TeacherCategory')
+			'Positions' => array('model' => 'Teachers.TeacherCategory')
 		);
 		return $lookup;
 	}
