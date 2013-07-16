@@ -78,7 +78,15 @@ $arrOptions = array('date_format' => array(
 				}
 		    	?>
 				</div>	
-		<?php }else{ ?>
+		<?php }elseif(stristr($item['name'], 'student_prefix') || stristr($item['name'], 'teacher_prefix') || stristr($item['name'], 'staff_prefix')){ ?>
+                <div class="table_cell">
+                <?php 
+                if(substr($item['value'], -1)>0) {
+                    echo str_replace(",","",substr($item['value'],0,-1));
+                }
+                ?>
+                </div>		
+        <?php }else{ ?>
 				<div class="table_cell"><?php echo $item['value']; ?></div>
 		<?php } ?>
 			</div>

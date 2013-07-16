@@ -179,6 +179,7 @@ class TeachersController extends TeachersAppController {
 		}
 
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
+		$this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
 		$this->set('data', $data);
     }
@@ -243,6 +244,7 @@ class TeachersController extends TeachersAppController {
             }
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
+		$this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
 		$this->set('data', $this->data);
     }
@@ -770,41 +772,22 @@ class TeachersController extends TeachersAppController {
 		$this->render('/Elements/customfields/view');
 	}
 	public function getUniqueID() {
-        $this->autoRender = false;
 		$generate_no = '';
      	$str = $this->Teacher->find('first', array('order' => array('Teacher.id DESC'), 'limit' => 1, 'fields'=>'Teacher.id'));
-		$pattern = $this->ConfigItem->find('first', array('limit' => 1, 
+		$prefix = $this->ConfigItem->find('first', array('limit' => 1, 
 													  'fields'=>'ConfigItem.value',
 													  'conditions'=>array(
-																			'ConfigItem.name' => 'teacher_identification'
+																			'ConfigItem.name' => 'teacher_prefix'
 																		 )
 									   ));
-		$pattern = $pattern['ConfigItem']['value'];
-    	$id = $str['Teacher']['id']+1; 
-		
-		if(isset($pattern) && $pattern!=''){
-			$str = str_replace("C", 'E', $pattern);
-			if(substr_count($pattern, 'N')>=strlen($id)){
-				$id = str_pad($id,substr_count($pattern, 'N'),"0",STR_PAD_LEFT);
-				$strlen = strlen($str);
-				$cnt = 0;
-				for( $i = 0; $i <= $strlen; $i++ ) {
-					$char = substr( $str, $i, 1 );
-					if($char!='E')
-					{
-						$char = substr($id,$cnt,1);
-						$cnt++;
-					}
-					$generate_no .= $char;
-				}
-			}else{
-				$generate_no = 'Fail';
-			}
-		}else{
-			// Apply default pattern
+		$prefix = explode(",",$prefix['ConfigItem']['value']);
+    	
+		if($prefix[1]>0){
+			$id = $str['Teacher']['id']+1; 
 			$str = str_pad($id,7,"0",STR_PAD_LEFT);
-			$generate_no = 'E'.$str.'E';
+			$generate_no = $prefix[0].$str;
 		}
-		echo $generate_no;
+		
+		return $generate_no;
     }
 }
