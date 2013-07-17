@@ -46,7 +46,7 @@ echo $this->Html->script('config', false);
 					$str = $innerElement['value'];
 				}
 			}
-			echo "<div style='padding:5px 0 0 5px;'><b>N</b>(numbers) | <b>C</b>(Character) | $str (Special Chars)</div>";
+			echo "<div style='padding:5px 0 0 5px;'><b>N</b>(numbers) | <b>A</b>(Alpha Character) | $str (Special Chars)</div>";
 		}
 		?>
 		<div class="table">

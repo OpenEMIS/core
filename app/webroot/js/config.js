@@ -21,8 +21,8 @@ var Config = {
 		$.get(getRootURL()+'Config/getAllowedChar', function(data) {
 			
 			$('.custom_validation').keyup(function() {
-				if (this.value.match("[^NC"+data+"]",'g')) {
-					var re = new RegExp("[^NC"+data+"]","g");
+				if (this.value.match("^[AN_ ()"+data+"]",'g')) {
+					var re = new RegExp("[^AN_ ()"+data+"]","g");
 					this.value = this.value.replace(re, '');
 				}
 			});
@@ -56,8 +56,8 @@ var Config = {
 				if($("input:[id*=validate_"+k+"]").val().length > 0){
 					$("input:[id*=validate_"+k+"]").each(function(){
 						var p = Config.validationRule[k];
-						
 						var regexObj = new RegExp("^"+p+"$");
+						
 						console.log(this.value);
 						if (!regexObj.test(this.value)) {
 							var myStr = k.replace(/_/g, ' ');
