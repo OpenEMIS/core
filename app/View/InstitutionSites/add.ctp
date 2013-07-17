@@ -104,7 +104,9 @@ echo $this->Html->script('institution', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $this->Form->input('telephone'); ?></div>
+			<div class="value"><?php echo $this->Form->input('telephone', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_institution_site_telephone');")) ?>
+            <input type="hidden" name="validate_institution_site_telephone" id="validate_institution_site_telephone"/>
+            </div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Fax'); ?></div>
@@ -123,7 +125,7 @@ echo $this->Html->script('institution', false);
 	</fieldset>
     
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onClick="return Config.checkValidate() ? objInstitution.addSite(): false" />
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onClick="return Config.checkValidate();" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
