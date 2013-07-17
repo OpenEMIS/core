@@ -192,7 +192,7 @@ class AreasController extends AppController {
      */
 	public function viewData($parentId = -1, $previousParentId = 0) {
 		$this->autoRender = false;
-		
+		$this->Area->formatResult = false;
 		$listAreas = $this->Area->find('all', array(
 			'recursive' => 0,
 	        'conditions' => array('Area.parent_id' => $parentId),
