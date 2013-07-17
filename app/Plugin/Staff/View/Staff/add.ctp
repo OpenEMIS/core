@@ -20,13 +20,16 @@ $obj = @$data['Staff'];
 		<legend><?php echo __('General'); ?></legend>
 		<div class="row">
 			<div class="label"><?php echo __('Identification No.'); ?>
-            <?php echo $this->Form->input('identification_no', array('hidden'=>true, 'default'=>$autoid)); ?>
+            <?php if($autoid!=''){ ?>
+            <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid)); ?>
+            <?php } ?>
             </div>
             <div class="value">
             <?php if($autoid!=''){ ?>
             	 <?php echo $autoid; ?>
             <?php }else{ ?>
-                <?php echo $this->Form->input('identification_no'); ?>
+                <?php echo $this->Form->input('identification_no', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_identification');")) ?>
+            	<input type="hidden" name="validate_staff_identification" id="validate_staff_identification"/>
             <?php } ?>
             </div>
 		</div>
@@ -56,7 +59,9 @@ $obj = @$data['Staff'];
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Postal Code'); ?></div>
-			<div class="value"><?php echo $this->Form->input('postal_code'); ?></div>
+			<div class="value"><?php echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_postal_code');")) ?>
+            <input type="hidden" name="validate_staff_postal_code" id="validate_staff_postal_code"/>
+            </div>
 		</div>
 	</fieldset>
 	
@@ -74,7 +79,9 @@ $obj = @$data['Staff'];
 		<legend><?php echo __('Contact'); ?></legend>
 		<div class="row">
 			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $this->Form->input('telephone'); ?></div>
+			<div class="value"><?php echo $this->Form->input('telephone', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_telephone');")) ?>
+            <input type="hidden" name="validate_staff_telephone" id="validate_staff_telephone"/>
+            </div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Email'); ?></div>
@@ -83,7 +90,7 @@ $obj = @$data['Staff'];
 	</fieldset>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" <?php if($autoid==''){ ?>onclick="return Config.checkValidate();"<?php } ?>/>
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	

@@ -6,6 +6,7 @@
 
 $(document).ready(function() {
 	Config.init();
+	Config.applyRule(); 
 });
 
 var Config = {
@@ -29,11 +30,9 @@ var Config = {
 	},
 	applyRule : function(){
 		
-		
 		$.get(getRootURL()+'Config/getAllRules', function(data) {
 			
 			Config.validationRule = $.parseJSON(data);
-			
 			//$("input[validate=postal]").length
 			/*$('.custom_validation').keyup(function() {
 				if (this.value.match("[^NC"+data+"]",'g')) {
@@ -43,54 +42,47 @@ var Config = {
 			});*/
 		});
 		
-	}
-	,checkValidate : function(){
+	},
+	
+	checkValidate : function(){
 		Config.err = {};
 		var sizectr = 0;
+		// Unmask this if need to use this format    
+		var bool = true;
+		
 		for(k in Config.validationRule){
 			if(k == 'special_charaters') continue;
-			//console.log("input[validate="+k+"] "+ $("input[validate="+k+"]").length) ;
-			if($("input[validate="+k+"]").length > 0){
-				
-				
-				$("input[validate="+k+"]").each(function(){
-					var p = Config.validationRule[k];
-					
-					var regexObj = new RegExp("^"+p+"$");
-					console.log(this.value);
-					if (regexObj.test(this.value)) {
-						//valid
-					} else {
-						// Invalid 
-						sizectr++;
-						Config.err[k] = this.value;
-					}
-				})
-				
-				/*$('.custom_validation').keyup(function() {
-						if (this.value.match("[^NC"+data+"]",'g')) {
-							var re = new RegExp("[^NC"+data+"]","g");
-							this.value = this.value.replace(re, '');
+			try{
+				if($("input:[id*=validate_"+k+"]").val().length > 0){
+					$("input:[id*=validate_"+k+"]").each(function(){
+						var p = Config.validationRule[k];
+						
+						var regexObj = new RegExp("^"+p+"$");
+						console.log(this.value);
+						if (!regexObj.test(this.value)) {
+							var myStr = k.replace(/_/g, ' ');
+							var element = $("input:[id*=validate_"+k+"]").parent().parent().find(".error-message");
+							if(element.length > 0){
+								element.html('Please enter a valid ' + myStr);
+							}else{
+								$("input:[id*=validate_"+k+"]").parent().parent().append("<div class='error-message'>Please enter a valid " + myStr + "</div>");
+							}
+							bool = false
 						}
-				});*/
+					})
+				}
+			}catch(e){
+				
 			}
 		}
 		
-		if(sizectr > 0){
-			
-			var  msg = "Invalid Fields \n"; 
-			for(p in Config.err){
-				msg += p+" : "+Config.err[p]+"\n";
-			}
-			alert(msg);
-			return false
-		}else{
-			return true;
-		}
-		//console.log(retval)
-		//return retval;
+		return bool;
 	}
 	
+}
+
+function updateHiddenField(myform, updateform) {
+  document.getElementById(updateform).value = document.getElementById(myform.id).value  
 }
 
 
