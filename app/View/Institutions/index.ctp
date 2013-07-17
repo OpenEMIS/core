@@ -20,7 +20,7 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 	<h1>
 		<span><?php echo __('List of Institutions'); ?></span>
 		<span class="divider"></span>
-		<span class="total"><?php echo $total ?> <?php echo __('Institutions'); ?></span>
+		<span class="total"><span><?php echo $total ?></span> <?php echo __('Institutions'); ?></span>
 	</h1>
 	
 	<?php echo $this->element('alert'); ?>

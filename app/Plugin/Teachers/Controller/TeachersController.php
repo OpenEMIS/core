@@ -110,7 +110,7 @@ class TeachersController extends TeachersAppController {
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
 		}
-		
+		$this->set('limit', $limit);
         $this->set('teachers', $data);
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
