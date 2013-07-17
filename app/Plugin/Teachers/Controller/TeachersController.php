@@ -771,6 +771,7 @@ class TeachersController extends TeachersAppController {
 		$this->set($data);
 		$this->render('/Elements/customfields/view');
 	}
+	
 	public function getUniqueID() {
 		$generate_no = '';
      	$str = $this->Teacher->find('first', array('order' => array('Teacher.id DESC'), 'limit' => 1, 'fields'=>'Teacher.id'));
