@@ -91,7 +91,7 @@ $obj = @$data['Staff'];
 	</fieldset>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" <?php if($autoid==''){ ?>onclick="return Config.checkValidate();"<?php } ?>/>
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
