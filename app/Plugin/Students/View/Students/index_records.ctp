@@ -10,7 +10,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
     </ul>
     <div style="clear:both"></div>
 </div>
-<div class="table allow_hover" action="Students/viewStudent/">
+<div class="table allow_hover" action="Students/viewStudent/" total="<?php echo $this->Paginator->counter('{:count}'); ?>">
     <div class="table_head" url="Students/index">
 
         <div class="table_cell cell_id_no">
