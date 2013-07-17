@@ -426,7 +426,7 @@ var jsTable = {
 			var rows = $(this).find('.table_body .table_row:visible').length;
 			var list = $(this).find('.list_wrapper');
 			var scrollable = list.closest('.table_scrollable');
-			console.log(scrollable);
+			
 			if(rows > list.attr('limit')) {
 				if(!scrollable.hasClass(active)) {							
 					scrollable.addClass(active);

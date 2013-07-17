@@ -72,8 +72,7 @@ class TeachersController extends TeachersAppController {
 
     public function index() {
         $this->Navigation->addCrumb('List of Teachers');
-		$tmp = $this->AccessControl->getAccessibleSites();
-		$security = array('OR'=>array('InstitutionSiteTeacher.id'=>null,'InstitutionSiteTeacher.institution_site_id'=>$tmp));
+		
         if ($this->request->is('post')){
             if(isset($this->request->data['Teacher']['SearchField'])){
                 Sanitize::clean($this->request->data);
@@ -83,38 +82,40 @@ class TeachersController extends TeachersAppController {
                 }
             }
 
-            if(isset($this->request->data['sortdir']) && isset($this->request->data['order']) ){
-
+            if(isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
                 if($this->request->data['sortdir'] != $this->Session->read('Search.sortdirTeacher')) {
                     $this->Session->delete('Search.sortdirTeacher');
                     $this->Session->write('Search.sortdirTeacher', $this->request->data['sortdir']);
                 }
-
                 if($this->request->data['order'] != $this->Session->read('Search.orderTeacher')) {
                     $this->Session->delete('Search.orderTeacher');
                     $this->Session->write('Search.orderTeacher', $this->request->data['order']);
                 }
-
             }
         }
 
         $fieldordername = ($this->Session->read('Search.orderTeacher'))?$this->Session->read('Search.orderTeacher'):'Teacher.first_name';
         $fieldorderdir = ($this->Session->read('Search.sortdirTeacher'))?$this->Session->read('Search.sortdirTeacher'):'asc';
-        $order = array('order'=>array($fieldordername => $fieldorderdir));
-
-        $cond = array('SearchKey' => $this->Session->read('Search.SearchFieldTeacher'));
-		$cond = array_merge($cond,array('Security'=>$security));
-        $limit = ($this->Session->read('Search.perpageTeacher'))?$this->Session->read('Search.perpageTeacher'):30;
-
-        $this->Paginator->settings = array_merge(array('limit' => $limit,'maxLimit' => 100), $order);
-        $data = $this->paginate('Teacher', $cond);
-
+		
+		$searchKey = stripslashes($this->Session->read('Search.SearchFieldTeacher'));
+		$conditions = array('SearchKey' => $searchKey);
+		if($this->Auth->user('super_admin')==0) {
+			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
+		}
+		$order = array('order' => array($fieldordername => $fieldorderdir));
+		$limit = ($this->Session->read('Search.perpageTeacher')) ? $this->Session->read('Search.perpageTeacher') : 30;
+        $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
+		
+        $data = $this->paginate('Teacher', $conditions);
+		if(empty($data) && !$this->request->is('ajax')) {
+			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+		
         $this->set('teachers', $data);
-        $this->set('totalcount', $this->Teacher->find('count'));
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
-        $this->set('searchField', $this->Session->read('Search.SearchFieldTeacher'));
-        if ($this->request->is('post')){
+        $this->set('searchField', $searchKey);
+        if($this->request->is('post')){
             $this->render('index_records','ajax');
         }
     }

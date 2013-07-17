@@ -116,9 +116,7 @@ echo $this->Html->script('institution_site_programmes', false);
 					<div class="table_cell"><?php echo __('Name'); ?></div>
 					<div class="table_cell cell_start_date"><?php echo __('Start Date'); ?></div>
 					<div class="table_cell cell_datepicker"><?php echo __('Completion Date'); ?></div>
-					<?php if($_delete) { ?>
 					<div class="table_cell cell_icon_action"></div>
-					<?php } ?>
 				</div>
 			</div>
 				
@@ -156,11 +154,9 @@ echo $this->Html->script('institution_site_programmes', false);
 								));
 								?>
 							</div>
-							<?php if($_delete) { ?>
 							<div class="table_cell cell_icon_action">
 								<span class="icon_delete" onclick="InstitutionSiteProgrammes.removeStudentFromList(this)"></span>
 							</div>
-							<?php } ?>
 						</div>
 						<?php } ?>
 					</div>

@@ -136,109 +136,97 @@ class Student extends StudentsAppModel {
 		return $data;
 	}
 	
-	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		//$securityCond = $conditions['Security'];
+	public function paginateJoins(&$conditions) {
+		$joins = array();
 		
-		$this->bindModel(array('hasMany' => array('InstitutionSiteStudent')));
-		if($conditions['SearchKey'] != ''){
-			$conditions = array( 'OR' => array(
-				'Student.identification_no LIKE' => "%".$conditions['SearchKey']."%",
-				'Student.first_name LIKE' => "%".$conditions['SearchKey']."%",
-				'Student.last_name LIKE' =>"%".$conditions['SearchKey']."%",
-				'StudentHistory.identification_no LIKE' => "%".$conditions['SearchKey']."%",
-				'StudentHistory.first_name LIKE' => "%".$conditions['SearchKey']."%",
-				'StudentHistory.last_name LIKE' =>"%".$conditions['SearchKey']."%"
-			));
-			
-			//$conditions = array('AND'=>array($conditions,$securityCond));
-			
-			$data = $this->find('all',array('fields' => array('Student.*','StudentHistory.*'),'joins' => array(
-															array(
-																'table' => 'student_history',
-																'alias' => 'StudentHistory',
-																'type' => 'LEFT',
-																'conditions' => array(
-																	'StudentHistory.student_id = Student.id'
-																)
-															),
-															array(
-																'table' => 'institution_site_students',
-																'alias' => 'InstitutionSiteStudent',
-																'type' => 'LEFT',
-																'conditions' => array(
-																	'InstitutionSiteStudent.student_id = Student.id'
-																)
-															)
-														),
-											'conditions'=>$conditions,
-											'limit' => $limit,
-											'offset' => (($page-1)*$limit),
-                                            'group' => 'Student.id',
-											'order'=>$order));
-			$this->sqlPaginateCount = $this->find('count',array( 'joins' => array(
-															array(
-																'table' => 'student_history',
-																'alias' => 'StudentHistory',
-																'type' => 'LEFT',
-																'conditions' => array(
-																	'StudentHistory.student_id = Student.id'
-																)
-															),
-															array(
-																'table' => 'institution_site_students',
-																'alias' => 'InstitutionSiteStudent',
-																'type' => 'LEFT',
-																'conditions' => array(
-																	'InstitutionSiteStudent.student_id = Student.id'
-																)
-															)
-														)
-														,'conditions'=>$conditions
-                                                        ,'group' => 'Student.id'));
-	   }else{
-			$ProgrammeStudent = ClassRegistry::init('InstitutionSiteStudent');
-			$db = $ProgrammeStudent->getDataSource();
-			$subQuery = $db->buildStatement(
-				array(
-					'fields'     => array('"InstitutionSiteStudent"."student_id"'),
-					'table'      => $db->fullTableName($ProgrammeStudent),
-					'alias'      => 'InstitutionSiteStudent',
-					'limit'      => null,
-					'offset'     => null,
-					'joins'      => array(),
-					'conditions' => $conditions,
-					'order'      => null,
-					'group'      => null
-				),
-				$ProgrammeStudent
+		if(strlen($conditions['SearchKey']) != 0) {
+			$joins[] = array(
+				'table' => 'student_history',
+				'alias' => 'StudentHistory',
+				'type' => 'LEFT',
+				'conditions' => array('StudentHistory.student_id = Student.id')
 			);
-			$subQuery = ' "Student"."id"  IN (' . $subQuery . ') ';
-			$subQueryExpression = $db->expression($subQuery);
-			$condi[] = $subQueryExpression;
-			$offset = (($page-1)*$limit);
-			$this->logtimer('start paginate');
-			$data =  $this->find('all', compact('condi','limit','order','offset'));
-			// sub query is faster than left join for this count case:
-			$this->logtimer('end paginate');
-			$this->logtimer('start paginate count');
-			$count =  $this->find('count', compact('condi'));
-			//$count =  1879836 ;
-			$this->logtimer('end paginate count');
-			if(isset($count)){
-				$this->sqlPaginateCount = $count;
-			}
-	   }
-	   
-	   return $data;
-	} 
-        
-	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-		return $this->sqlPaginateCount;
+		}
+		
+		if(array_key_exists('InstitutionSiteId', $conditions)) {
+			$institutionSiteId = $conditions['InstitutionSiteId'];
+			unset($conditions['InstitutionSiteId']);
+			
+			$programmeConditions = !empty($institutionSiteId) ? implode(',', $institutionSiteId) : 0;
+			
+			$joins[] = array(
+				'table' => 'institution_site_students',
+				'alias' => 'InstitutionSiteStudent',
+				'type' => 'LEFT',
+				'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
+			);
+			$joins[] = array(
+				'table' => 'institution_site_programmes',
+				'alias' => 'InstitutionSiteProgramme',
+				'type' => !empty($institutionSiteId) ? 'LEFT' : 'INNER',
+				'conditions' => array(
+					'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
+					'InstitutionSiteProgramme.institution_site_id IN (' . $programmeConditions .')'
+				)
+			);
+		}
+		return $joins;
+	}
+	
+	public function paginateConditions($conditions) {
+		if(strlen($conditions['SearchKey']) != 0) {
+			$search = "%".$conditions['SearchKey']."%";
+			$conditions['OR'] = array(
+				'Student.identification_no LIKE' => $search,
+				'Student.first_name LIKE' => $search,
+				'Student.last_name LIKE' => $search,
+				'StudentHistory.identification_no LIKE' => $search,
+				'StudentHistory.first_name LIKE' => $search,
+				'StudentHistory.last_name LIKE' => $search
+			);
+		}
+		unset($conditions['SearchKey']);
+		return $conditions;
+	}
+	
+	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+		$fields = array(
+			'Student.id',
+			'Student.identification_no',
+			'Student.first_name',
+			'Student.last_name',
+			'Student.gender',
+			'Student.date_of_birth'
+		);
+		
+		if(strlen($conditions['SearchKey']) != 0) {
+			$fields[] = 'StudentHistory.id';
+			$fields[] = 'StudentHistory.identification_no';
+			$fields[] = 'StudentHistory.first_name';
+			$fields[] = 'StudentHistory.last_name';
+			$fields[] = 'StudentHistory.gender';
+			$fields[] = 'StudentHistory.date_of_birth';
+		}
+		
+		$data = $this->find('all', array(
+			'fields' => $fields,
+			'joins' => $this->paginateJoins($conditions),
+			'conditions' => $this->paginateConditions($conditions),
+			'limit' => $limit,
+			'offset' => (($page-1)*$limit),
+			'group' => 'Student.id',
+			'order' => $order
+		));
+		return $data;
 	}
         
-	private function logtimer($str=''){
-		   if($this->debug == true)
-		   echo $str." ==> ".date("H:i:s")."<br>\n";
-   }
+	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
+		$count = $this->find('count', array(
+			'joins' => $this->paginateJoins($conditions),
+			'conditions' => $this->paginateConditions($conditions),
+			'group' => 'Student.id'
+		));
+		return $count;
+	}
 }
 ?>

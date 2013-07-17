@@ -56,6 +56,10 @@ class AccessControlComponent extends Component {
 			$this->{$model} = ClassRegistry::init($modelClass);
 		}
 		$this->setUserPermissions($this->Auth->user('id'));
+		if($this->Auth->user('super_admin')==0) {
+			$this->loadAreas();
+			$this->loadInstitutions();
+		}
 	}
 	
 	//called after Controller::beforeFilter()
@@ -72,8 +76,11 @@ class AccessControlComponent extends Component {
 	
 	public function init($userId) {
 		$this->setUserPermissions($userId);
-		$this->loadAreas();
-		$this->loadInstitutions($this->Session->read('AccessControl.areas'));
+		
+		if($this->Auth->user('super_admin')==0) {
+			$this->loadAreas();
+			$this->loadInstitutions();
+		}
 	}
 	
 	public function setUserPermissions($userId) {
@@ -274,52 +281,81 @@ class AccessControlComponent extends Component {
 	
 	public function loadAreas() {
 		$userId = $this->Auth->user('id');
-		$areaList = array();
-        $isSuperAdmin = $this->Auth->user('super_admin');
-
-        if($isSuperAdmin == 1) {
-            $areas = $this->Area->find('list', array(
-                'fields' => array('Area.id'),
-                'conditions' => array('Area.parent_id' => '-1', 'Area.visible' => 1)
-            ));
-        }else{
-            $areas = $this->GroupArea->findAreasByUserId($userId);
-        }
-
-		foreach($areas as $key => $areaId) {
-			$areaList[$areaId] = 0;
-			$this->AreaHandler->getAreasByParent($areaList, $areaId);
+		if($userId > 0) {
+			$areaList = array();
+			$isSuperAdmin = $this->Auth->user('super_admin');
+	
+			if($isSuperAdmin == 0) {
+				$areas = $this->GroupArea->findAreasByUserId($userId);
+				foreach($areas as $key => $areaId) {
+					$areaList[$areaId] = 0;
+					$this->AreaHandler->getAreasByParent($areaList, $areaId);
+				}
+				$this->Session->write('AccessControl.areas', $areaList);
+			}
 		}
-		$this->Session->write('AccessControl.areas', $areaList);
 	}
 	
-	public function loadInstitutions($areas) {
+	public function loadInstitutions() {
 		$userId = $this->Auth->user('id');
-		$sites = $this->GroupInstitutionSite->findSitesByUserId($userId);
-		
-		$InstitutionSite = ClassRegistry::init('InstitutionSite');
-		$list = $InstitutionSite->getInstitutionsByAreas(array_keys($areas));
-		$siteOnly = array();
-		foreach($list as $obj) {
-			$site = $obj['InstitutionSite'];
-			$institutionId = $site['institution_id'];
-			if(!isset($sites[$institutionId])) {
-				$sites[$institutionId] = array();
+		$groupMaps = array();
+		if($userId > 0) {
+			// getting all accessible sites
+			$sites = $this->GroupInstitutionSite->findSitesByUserId($userId);
+			$siteOnly = array();
+			
+			foreach($sites as $key => $obj) {
+				$siteOnly = array_merge($siteOnly, $obj);
 			}
-			if(!in_array($site['id'], $sites[$institutionId])) {
-				$sites[$institutionId][] = $site['id'];
-				$siteOnly[]=$site['id'];
-			}
-		}
-		if(empty($list)){
-			foreach($sites as $arrSites) {
-				foreach ($arrSites as $arrSitesValue) {
-					$siteOnly[] = $arrSitesValue;
+			
+			// For institutions without a site, only display the institutions to 
+			// users in the same group as the creator of that institution
+			// if creator has no group anymore, the institution will be displayed to everyone
+			$Institution = ClassRegistry::init('Institution');
+			$institutionList = $Institution->getInstitutionsWithoutSites();
+			$userGroups = $this->GroupUser->getGroupIdsByUserId($userId);
+			
+			foreach($institutionList as $key => $obj) {
+				$creator = $obj['Institution']['created_user_id'];
+				$creatorGroups = array();
+				if(!array_key_exists($creator, $groupMaps)) {
+					$creatorGroups = $this->GroupUser->getGroupIdsByUserId($creator);
+					$groupMaps[$creator] = $creatorGroups;
+				} else {
+					$creatorGroups = $groupMaps[$creator];
+				}
+				if(!empty($creatorGroups)) {
+					$existsInGroup = array_intersect($creatorGroups, $userGroups);
+					if(empty($existsInGroup)) { // user and creator is in same group
+						unset($institutionList[$key]);
+					} else {
+						$sites[$obj['Institution']['id']] = array();
+					}
+				} else {
+					$sites[$obj['Institution']['id']] = array();
 				}
 			}
+			
+			$InstitutionSite = ClassRegistry::init('InstitutionSite');
+			$areas = $this->Session->read('AccessControl.areas');
+			if(!empty($areas)) {
+				// getting all sites from accessible areas
+				$list = $InstitutionSite->getInstitutionsByAreas(array_keys($areas));
+				foreach($list as $obj) {
+					$site = $obj['InstitutionSite'];
+					$institutionId = $site['institution_id'];
+					if(!isset($sites[$institutionId])) {
+						$sites[$institutionId] = array();
+					}
+					if(!in_array($site['id'], $sites[$institutionId])) {
+						$sites[$institutionId][] = $site['id'];
+						$siteOnly[] = $site['id'];
+					}
+				}
+			}
+			$this->Session->write('AccessControl.institutions', $sites);
+			$this->Session->write('AccessControl.sites', $siteOnly);
 		}
-		$this->Session->write('AccessControl.institutions', $sites);
-		$this->Session->write('AccessControl.sites', $siteOnly);
 	}
 	
 	public function getAccessibleAreas() {

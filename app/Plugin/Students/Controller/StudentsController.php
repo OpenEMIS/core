@@ -68,32 +68,9 @@ class StudentsController extends StudentsAppController {
 			} 
 		}
     }
-    private function logtimer($str=''){
-            if($this->debug == true)
-            echo $str." ==> ".date("H:i:s")."<br>\n";
-    }
+    
     public function index() {
-        $this->debug = false;
 		$this->Navigation->addCrumb('List of Students');
-                $this->logtimer('Start Get AccessibleSites');
-		$tmp = $this->AccessControl->getAccessibleSites();
-                $this->logtimer('End Get AccessibleSites');
-               
-		/*$programmeIds = $this->InstitutionSiteProgramme->find('list', array(
-			'fields' => array('InstitutionSiteProgramme.id'),
-			'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $tmp)
-		));
-		
-		
-		$security = array(
-			'OR' => array(
-				'InstitutionSiteStudent.id' => null,
-				'AND' => array(
-					'InstitutionSiteStudent.institution_site_programme_id' => $programmeIds,
-					'InstitutionSiteStudent.end_date >=' => date('Y-m-d')
-				)
-		));
-		*/
 				
         if ($this->request->is('post')){
             if(isset($this->request->data['Student']['SearchField'])){
@@ -104,41 +81,40 @@ class StudentsController extends StudentsAppController {
                 }
             }
 
-            if(isset($this->request->data['sortdir']) && isset($this->request->data['order']) ){
-
+            if(isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
                 if($this->request->data['sortdir'] != $this->Session->read('Search.sortdirStudent')) {
                     $this->Session->delete('Search.sortdirStudent');
                     $this->Session->write('Search.sortdirStudent', $this->request->data['sortdir']);
                 }
-
                 if($this->request->data['order'] != $this->Session->read('Search.orderStudent')) {
                     $this->Session->delete('Search.orderStudent');
                     $this->Session->write('Search.orderStudent', $this->request->data['order']);
                 }
-
             }
         }
 		
         $fieldordername = ($this->Session->read('Search.orderStudent'))?$this->Session->read('Search.orderStudent'):'Student.first_name';
         $fieldorderdir = ($this->Session->read('Search.sortdirStudent'))?$this->Session->read('Search.sortdirStudent'):'asc';
-        $order = array('order'=>array($fieldordername => $fieldorderdir));
-
-        $cond = array('SearchKey' => $this->Session->read('Search.SearchFieldStudent'));
-		//$cond = array_merge($cond,array('Security'=>$security));
 		
-        $limit = ($this->Session->read('Search.perpageStudent'))?$this->Session->read('Search.perpageStudent'):30;
-
-        $this->Paginator->settings = array_merge(array('limit' => $limit,'maxLimit' => 100), $order);
-        $this->logtimer('Start OutSide Get paginate');
-        $data = $this->paginate('Student', $cond);
-        $this->logtimer('End OutSide Get paginate');
-
+		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStudent'));
+		$conditions = array('SearchKey' => $searchKey);
+		if($this->Auth->user('super_admin')==0) {
+			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
+		}
+		$order = array('order' => array($fieldordername => $fieldorderdir));
+		$limit = ($this->Session->read('Search.perpageStudent')) ? $this->Session->read('Search.perpageStudent') : 30;
+        $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
+		
+        $data = $this->paginate('Student', $conditions);
+		if(empty($data) && !$this->request->is('ajax')) {
+			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+		$this->set('limit', $limit);
         $this->set('students', $data);
-        $this->set('totalcount', $this->Student->sqlPaginateCount);
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
-		$this->set('searchField',  stripslashes($this->Session->read('Search.SearchFieldStudent')));
-        if ($this->request->is('post')){
+		$this->set('searchField', $searchKey);
+        if($this->request->is('post')){
             $this->render('index_records','ajax');
         }
     }

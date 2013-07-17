@@ -49,6 +49,14 @@ class SecurityGroupUser extends AppModel {
 		return $data;
 	}
 	
+	public function getGroupIdsByUserId($userId) {
+		$data = $this->find('list', array(
+			'fields' => array('SecurityGroupUser.security_group_id', 'SecurityGroupUser.security_group_id'),
+			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
+		));
+		return $data;
+	}
+	
 	public function getGroupsByUserId($userId) {
 		$this->formatResult = true;
 		$data = $this->find('all', array(

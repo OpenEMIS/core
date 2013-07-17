@@ -69,9 +69,7 @@ class StaffController extends StaffAppController {
 
     public function index() {
         $this->Navigation->addCrumb('List of Staff');
-		$tmp = $this->AccessControl->getAccessibleSites();
-		$security = array('OR'=>array('InstitutionSiteStaff.id'=>null,'InstitutionSiteStaff.institution_site_id'=>$tmp));
-        if ($this->request->is('post')){
+        if($this->request->is('post')){
             if(isset($this->request->data['Staff']['SearchField'])){
                $this->request->data['Staff']['SearchField'] = Sanitize::escape($this->request->data['Staff']['SearchField']);
                 if($this->request->data['Staff']['SearchField'] != $this->Session->read('Search.SearchFieldStaff')) {
@@ -80,38 +78,40 @@ class StaffController extends StaffAppController {
                 }
             }
 
-            if(isset($this->request->data['sortdir']) && isset($this->request->data['order']) ){
-
+            if(isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
                 if($this->request->data['sortdir'] != $this->Session->read('Search.sortdirStaff')) {
                     $this->Session->delete('Search.sortdirStaff');
                     $this->Session->write('Search.sortdirStaff', $this->request->data['sortdir']);
                 }
-
                 if($this->request->data['order'] != $this->Session->read('Search.orderStaff')) {
                     $this->Session->delete('Search.orderStaff');
                     $this->Session->write('Search.orderStaff', $this->request->data['order']);
                 }
-
             }
         }
 
         $fieldordername = ($this->Session->read('Search.orderStaff'))?$this->Session->read('Search.orderStaff'):'Staff.first_name';
         $fieldorderdir = ($this->Session->read('Search.sortdirStaff'))?$this->Session->read('Search.sortdirStaff'):'asc';
-        $order = array('order'=>array($fieldordername => $fieldorderdir));
-
-        $cond = array('SearchKey' => $this->Session->read('Search.SearchFieldStaff'));
-		$cond = array_merge($cond,array('Security'=>$security));
-        $limit = ($this->Session->read('Search.perpageStaff'))?$this->Session->read('Search.perpageStaff'):30;
-
-        $this->Paginator->settings = array_merge(array('limit' => $limit,'maxLimit' => 100), $order);
-        $data = $this->paginate('Staff', $cond);
+		
+		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStaff'));
+		$conditions = array('SearchKey' => $searchKey);
+		if($this->Auth->user('super_admin')==0) {
+			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
+		}
+		$order = array('order' => array($fieldordername => $fieldorderdir));
+		$limit = ($this->Session->read('Search.perpageStaff')) ? $this->Session->read('Search.perpageStaff') : 30;
+        $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
+		
+        $data = $this->paginate('Staff', $conditions);
+		if(empty($data) && !$this->request->is('ajax')) {
+			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
 
         $this->set('staff', $data);
-        $this->set('totalcount', $this->Staff->find('count'));
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
-        $this->set('searchField', stripslashes($this->Session->read('Search.SearchFieldStaff')));
-        if ($this->request->is('post')){
+        $this->set('searchField', $searchKey);
+        if($this->request->is('post')){
             $this->render('index_records','ajax');
         }
     }

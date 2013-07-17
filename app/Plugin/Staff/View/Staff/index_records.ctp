@@ -54,7 +54,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
                 <div class="table_cell"><?php echo $firstName; ?></div>
                 <div class="table_cell"><?php echo $lastName; ?></div>
                 <div class="table_cell"><?php echo $gender; ?></div>
-                <div class="table_cell"><?php echo $birthday; ?></div>
+                <div class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></div>
             </div>
         <?php endforeach;
     }
@@ -63,7 +63,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 </div>
 
 <?php if(sizeof($staff)==0) { ?>
-<div class="row center" style="color: red"><?php echo __('No Staff found.'); ?></div>
+<div class="row center" style="color: red; margin-top: 15px;"><?php echo __('No Staff found.'); ?></div>
 <?php } ?>
 <div class="row">
     <ul id="pagination">
