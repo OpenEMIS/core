@@ -388,7 +388,7 @@ class ConfigItem extends AppModel {
 		$newArr = array();
 		foreach($data as $arrVal){
 			if($arrVal['ConfigItem']['value'] != '')
-			$newArr[$arrVal['ConfigItem']['name']] = str_replace (array("N","C"), array("\\d","\\w"), $arrVal['ConfigItem']['value']);
+			$newArr[$arrVal['ConfigItem']['name']] = str_replace (array("N","A","_", " ", "(", ")"), array("\\d","[a-zA-Z]", "[_]", "\\s", "[(]", "[)]"), $arrVal['ConfigItem']['value']);
 		}
 		return $newArr;
 	}
