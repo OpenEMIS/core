@@ -49,6 +49,7 @@ class UtilityComponent extends Component {
 		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
 		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
 		$msgList['NO_HISTORY'] = "No history found.";
+		$msgList['NO_RECORD'] = "There are no records.";
 		
 		// Login Messages
 		$msgList['LOGIN_TIMEOUT'] = "Your session is timed out. Please login again.";

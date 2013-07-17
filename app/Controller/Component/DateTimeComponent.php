@@ -21,8 +21,15 @@ class DateTimeComponent extends Component {
 	 * @return string [date format]
 	 */
 	public static function getConfigDateFormat() {
-		$configItem = ClassRegistry::init('ConfigItem');
-		return $configItem->getValue('date_format');
+		$format = '';
+		if(isset($_SESSION['Config.DateFormat'])) {
+			$format = $_SESSION['Config.DateFormat'];
+		} else {
+			$configItem = ClassRegistry::init('ConfigItem');
+			$format = $configItem->getValue('date_format');
+			$_SESSION['Config.DateFormat'] = $format;
+		}
+		return $format;
 	}
 	
 	public static function getConfigLowestYear() {

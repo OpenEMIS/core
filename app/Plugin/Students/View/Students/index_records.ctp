@@ -46,7 +46,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
             $id = $arrItems['Student']['id'];
             $identificationNo = $this->Utility->highlight($searchField, $arrItems['Student']['identification_no']);
             $firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['StudentHistory']['first_name']))?'<br>'.$arrItems['StudentHistory']['first_name']:''));
-                        $lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['StudentHistory']['last_name']))?'<br>'.$arrItems['StudentHistory']['last_name']:''));
+			$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['StudentHistory']['last_name']))?'<br>'.$arrItems['StudentHistory']['last_name']:''));
             $gender = $arrItems['Student']['gender'];
             $birthday = $arrItems['Student']['date_of_birth'];
     ?>
@@ -55,7 +55,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
                 <div class="table_cell"><?php echo $firstName; ?></div>
                 <div class="table_cell"><?php echo $lastName; ?></div>
                 <div class="table_cell"><?php echo $gender; ?></div>
-                <div class="table_cell"><?php echo $birthday; ?></div>
+                <div class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></div>
             </div>
         <?php endforeach;
     }
@@ -64,7 +64,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 </div>
 
 <?php if(sizeof($students)==0) { ?>
-<div class="row center" style="color: red"><?php echo __('No Student found.'); ?></div>
+<div class="row center" style="color: red; margin-top: 15px;"><?php echo __('No Student found.'); ?></div>
 <?php } ?>
 <div class="row">
     <ul id="pagination">

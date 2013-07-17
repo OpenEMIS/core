@@ -62,14 +62,11 @@ class InstitutionsController extends AppController {
 	
 	public function index() {
 		$this->AccessControl->init($this->Auth->user('id'));
-		$instIds = $this->AccessControl->getAccessibleInstitutions();
 
         $this->Navigation->addCrumb('List of Institutions');
         if ($this->request->is('post')){
-			
 			if(isset($this->request->data['Institution']['SearchField'])){
-				$this->request->data['Institution']['SearchField'] = Sanitize::escape($this->request->data['Institution']['SearchField']);
-				
+				$this->request->data['Institution']['SearchField'] = Sanitize::escape(trim($this->request->data['Institution']['SearchField']));
 				
 				if($this->request->data['Institution']['SearchField'] != $this->Session->read('Search.SearchField')) {
 					$this->Session->delete('Search.SearchField');
@@ -92,21 +89,28 @@ class InstitutionsController extends AppController {
 		$fieldordername = ($this->Session->read('Search.order'))?$this->Session->read('Search.order'):'Institution.name';
 		$fieldorderdir = ($this->Session->read('Search.sortdir'))?$this->Session->read('Search.sortdir'):'asc';
 		
-		$order = array('order'=>array($fieldordername => $fieldorderdir));
-        if(sizeof($instIds)> 0){
-            $cond = array('SearchKey' => stripslashes($this->Session->read('Search.SearchField')),'ids'=>$instIds);
-        }else{
-            $cond = array('SearchKey' => stripslashes($this->Session->read('Search.SearchField')));
-        }
-        $limit = ($this->Session->read('Search.perpage'))?$this->Session->read('Search.perpage'):30;
-        // pr($order);
-        // pr($limit);
-        $this->Paginator->settings = array_merge(array('limit' => $limit,'maxLimit' => 100),$order);
+		$searchKey = stripslashes($this->Session->read('Search.SearchField'));
+		$conditions = array('SearchKey' => $searchKey);
+		if($this->Auth->user('super_admin')==0) {
+			$conditions['Institution.id'] = $this->AccessControl->getAccessibleInstitutions();
+		}
+		$order = array('order' => array($fieldordername => $fieldorderdir));
+        $limit = ($this->Session->read('Search.perpage')) ? $this->Session->read('Search.perpage') : 30;
+        $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
 		
-        $data = $this->paginate('Institution',$cond);
+        $data = $this->paginate('Institution', $conditions);
+		if(!$this->Session->check('Search.SearchField')) {
+			// if user do not have access to add institution and the records is 1, redirect to list of sites
+			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+				$this->redirect(array('action' => 'listSites', $data['Institution']['id']));
+			}
+		}
 		
+		if(empty($data) && !$this->request->is('ajax')) {
+			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+		$this->set('limit', $limit);
         $this->set('institutions', $data);
-        $this->set('totalcount', $this->Institution->paginateCount());
 		$this->set('sortedcol', $fieldordername);
 		$this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
 		$this->set('searchField', stripslashes($this->Session->read('Search.SearchField'))); 
