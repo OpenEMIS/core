@@ -14,12 +14,12 @@ echo $this->Html->script('area', false);
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'index'), array('class' => 'divider', 'id'=>'edit'));
 		}
-		if($_view_levels) {
+		/*if($_view_levels) {
 			echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
-		}
+		}*/
 		?>
 	</h1>
-	
+	<?php echo $this->element('area_categories'); ?>
 	<?php
 	echo $this->Form->create('Area', array(
 			'url' => array(
