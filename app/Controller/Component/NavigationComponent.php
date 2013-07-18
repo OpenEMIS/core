@@ -222,7 +222,7 @@ class NavigationComponent extends Component {
 		$links = array(
 			array(
 				'SYSTEM SETUP' => array(
-					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit$'),
+					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit|EducationArea|$'),
 					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup'),
 					$this->createLink('National Assessments', 'Assessment', 'index', '^index|assessment'),
 					$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
