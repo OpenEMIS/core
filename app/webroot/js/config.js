@@ -21,7 +21,7 @@ var Config = {
 		$.get(getRootURL()+'Config/getAllowedChar', function(data) {
 			
 			$('.custom_validation').keyup(function() {
-				if (this.value.match("^[AN_ ()-"+data+"]",'g')) {
+				if (this.value.match("[^AN_ ()-"+data+"]",'g')) {
 					var re = new RegExp("[^AN_ ()-"+data+"]","g");
 					this.value = this.value.replace(re, '');
 				}
