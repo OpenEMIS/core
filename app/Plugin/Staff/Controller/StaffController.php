@@ -244,11 +244,25 @@ class StaffController extends StaffAppController {
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewStaff', $newStaffRec['Staff']['id']));
             }else{
-				$this->request->data["Staff"]["identification_no"] = $this->getUniqueID();
-				$newStaffRec =  $this->Staff->save($this->request->data);
-				// create the session for successfully adding of student
-                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); // Change if wants to let user know another id used
-				$this->redirect(array('action' => 'viewStaff', $newStaffRec['Staff']['id']));
+				$errors = $this->Staff->validationErrors;
+				if($this->getUniqueID()!=''){ // If Auto id
+					if(isset($errors["identification_no"])){ // If its ID error
+						if(sizeof($errors)<2){ // If only 1 faulty
+							$this->Staff->set($this->request->data);
+							do{
+								$this->request->data["Staff"]["identification_no"] = $this->getUniqueID();
+								$conditions = array(
+									'Staff.identification_no' => $this->request->data["Staff"]["identification_no"]
+								);
+							}while($this->Staff->hasAny($conditions));
+							$this->Staff->set($this->request->data);
+							$newStaffRec =  $this->Staff->save($this->request->data);
+							// create the session for successfully adding of Staff
+							$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); 
+							$this->redirect(array('action' => 'viewStaff', $newStaffRec['Staff']['id']));
+						}
+					}
+				}
 			}
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));

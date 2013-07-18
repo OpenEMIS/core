@@ -228,11 +228,26 @@ class StudentsController extends StudentsAppController {
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
 				$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
 			}else{
-				$this->request->data["Student"]["identification_no"] = $this->getUniqueID();
-				$newStudentRec =  $this->Student->save($this->request->data);
-				// create the session for successfully adding of student
-                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); // Change if wants to let user know another id used
-				$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
+				$errors = $this->Student->validationErrors;
+				if($this->getUniqueID()!=''){ // If Auto id
+					if(isset($errors["identification_no"])){ // If its ID error
+						if(sizeof($errors)<2){ // If only 1 faulty
+							$this->Student->set($this->request->data);
+							do{
+								$this->request->data["Student"]["identification_no"] = $this->getUniqueID();
+								$conditions = array(
+									'Student.identification_no' => $this->request->data["Student"]["identification_no"]
+								);
+							}while($this->Student->hasAny($conditions));
+							$this->Student->set($this->request->data);
+							$newStudentRec =  $this->Student->save($this->request->data);
+							// create the session for successfully adding of student
+							$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); 
+							$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
+						}
+					}
+				}
+				
 			}
 		}
 		$gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
@@ -598,7 +613,6 @@ class StudentsController extends StudentsAppController {
 			$generate_no = $prefix[0].$str.$rnd1.$rnd2;
 		}
 		
-
 		return $generate_no;
     }
 }

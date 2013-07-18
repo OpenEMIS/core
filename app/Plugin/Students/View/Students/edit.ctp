@@ -29,10 +29,10 @@ $obj = @$data['Student'];
 		<legend><?php echo __('Information'); ?></legend>
         <div class="row">
 			<div class="label"><?php echo __('Identification No.'); ?></div>
-			<?php if($autoid!=''){ ?>
+			<?php if($autoid==''){ ?>
             <div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'],
-														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_teacher_identification');")); ?>
-           		<input type="hidden" name="validate_teacher_identification" id="validate_teacher_identification" value="<?php echo $obj['identification_no']; ?>"/>
+														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');")); ?>
+           		<input type="hidden" name="validate_student_identification" id="validate_student_identification" value="<?php echo $obj['identification_no']; ?>"/>
             </div>
             <?php }else{ ?>
             <div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'])); ?>
