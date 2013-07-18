@@ -355,7 +355,7 @@ class AreasController extends AppController {
 		$this->Navigation->addCrumb('Areas');
 
 		$areas = array();
-        $levels = $this->AreaLevel->find('list', array('order'=>array('AreaLevel.level ASC')));
+        $levels = $this->AreaEducationLevel->find('list', array('order'=>array('AreaEducationLevel.level ASC')));
         $topArea = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => '-1')));
         $this->unshift_array($topArea, array('0'=>__('--Select--')));
         $areas[] = $topArea;

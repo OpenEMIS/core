@@ -40,7 +40,6 @@ echo $this->Html->script('area', false);
                 $firstElement = reset($levels);
                 $lastElement = array_pop($levels);
                 foreach($levels as $levelid => $levelName){
-                    
                     echo '<div class="row input">
                                 <div class="label'. ((!isset($highestLevel[$ctr]))?' disabled':'') .'">'.$levelName.'</div>'.
                                 //'<div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
