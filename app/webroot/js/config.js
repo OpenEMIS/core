@@ -57,7 +57,6 @@ var Config = {
 					$("input:[id*=validate_"+k+"]").each(function(){
 						var p = Config.validationRule[k];
 						var regexObj = new RegExp("^"+p+"$");
-						
 						console.log(this.value);
 						if (!regexObj.test(this.value)) {
 							var myStr = k.replace(/_/g, ' ');
