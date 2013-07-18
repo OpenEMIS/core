@@ -224,6 +224,14 @@ class StudentsController extends StudentsAppController {
 			$this->Student->set($this->data);
 			if($this->Student->validates()) {
 				$newStudentRec =  $this->Student->save($this->data);
+				// create the session for successfully adding of student
+                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
+				$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
+			}else{
+				$this->request->data["Student"]["identification_no"] = $this->getUniqueID();
+				$newStudentRec =  $this->Student->save($this->request->data);
+				// create the session for successfully adding of student
+                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); // Change if wants to let user know another id used
 				$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
 			}
 		}
@@ -581,10 +589,16 @@ class StudentsController extends StudentsAppController {
     	
 		if($prefix[1]>0){
 			$id = $str['Student']['id']+1; 
-			$str = str_pad($id,7,"0",STR_PAD_LEFT);
-			$generate_no = $prefix[0].$str;
+			if(strlen($id)<6){
+				$str = str_pad($id,6,"0",STR_PAD_LEFT);
+			}
+			// Get two random number
+			$rnd1 = rand(0,9);
+			$rnd2 = rand(0,9);
+			$generate_no = $prefix[0].$str.$rnd1.$rnd2;
 		}
 		
+
 		return $generate_no;
     }
 }

@@ -242,7 +242,13 @@ class TeachersController extends TeachersAppController {
                 // create the session for successfully adding of teacher
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
-            }
+            }else{
+				$this->request->data["Teacher"]["identification_no"] = $this->getUniqueID();
+				$newTeacherRec =  $this->Teacher->save($this->request->data);
+				// create the session for successfully adding of student
+                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); // Change if wants to let user know another id used
+				$this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
+			}
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
 		$this->set('autoid', $this->getUniqueID());
@@ -786,8 +792,13 @@ class TeachersController extends TeachersAppController {
     	
 		if($prefix[1]>0){
 			$id = $str['Teacher']['id']+1; 
-			$str = str_pad($id,7,"0",STR_PAD_LEFT);
-			$generate_no = $prefix[0].$str;
+			if(strlen($id)<6){
+				$str = str_pad($id,6,"0",STR_PAD_LEFT);
+			}
+			// Get two random number
+			$rnd1 = rand(0,9);
+			$rnd2 = rand(0,9);
+			$generate_no = $prefix[0].$str.$rnd1.$rnd2;
 		}
 		
 		return $generate_no;
