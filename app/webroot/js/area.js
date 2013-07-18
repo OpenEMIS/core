@@ -409,6 +409,7 @@ var areas = {
 
     
     save: function() {
+		var Model = ($('form').attr('model'));
         if($('.btn_save').hasClass('btn_disabled')) {
             return;
         }
@@ -425,16 +426,24 @@ var areas = {
             
 
             index++;
-            data.push({
+			
+			dataval = {
                 id: id,
-                area_level_id: area_level_id,
                 code: code,
                 name: name,
                 order: order,
                 visible: (visible === 1? visible: 0),
                 parent_id: (areas.parentAreaIds.length < 1)? -1: areas.parentAreaIds[areas.parentAreaIds.length-1]
                 // area_id: (typeof area_id !== 'undefined')? area_id : areaarea.currentAreaId
-            });
+            }
+			
+			if(Model=='AreaEducation'){
+				dataval.area_education_level_id = area_level_id;
+			}else{
+				dataval.area_level_id = area_level_id;
+			}
+			
+            data.push(dataval);
             
             if(id===0) {
                 $(this).attr('index', index);
@@ -442,7 +451,8 @@ var areas = {
         });
         
         var maskId;
-        var url = this.baseURL + this.ajaxUrl;
+		
+        var url = this.baseURL + this.ajaxUrl + '/' +Model;
         
         $.ajax({
             type: 'POST',
@@ -545,8 +555,7 @@ var areas = {
 
     renderRecordToHtmlTableRowForEdit: function (data) {
         var html = '', i ;
-		var  Model= $(this).closest('form').attr('model');
-		
+		var  Model= $('form').attr('model');
         $.each(data,function(index,element){
             i = (element.indexCount !== undefined && element.indexCount !== 0 )? element.indexCount : index;
             
@@ -605,6 +614,8 @@ var areas = {
     },
 
     renderRecordToHtmlTableRowForEditAreaLevels: function (data) {
+		
+		var  Model= $('form').attr('model');
         var html = '', i ;
 
         $.each(data,function(index, element){
@@ -615,12 +626,12 @@ var areas = {
             html += 'class="' + ((element.isNew !== undefined && element.isNew)? ' new_row': '' )+ '" ';
             html += '>';
 
-            html += '<input type="hidden" name="data[AreaLevel]['+ i +'][level]" id="order" value="'+(i + 1)+'"/>';
-            html += '<input type="hidden" name="data[AreaLevel]['+ i +'][id]" id="id" value="'+element.id+'"/>';
+            html += '<input type="hidden" name="data['+Model+']['+ i +'][level]" id="order" value="'+(i + 1)+'"/>';
+            html += '<input type="hidden" name="data['+Model+']['+ i +'][id]" id="id" value="'+element.id+'"/>';
             
             html += '<div class="cell cell_name_area_level">';
             html += '   <div class="input_wrapper">';
-            html += '        <input name="data[AreaLevel]['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme"/>';
+            html += '        <input name="data['+Model+']['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme"/>';
             html += '   </div>';
             html += '</div>';
             

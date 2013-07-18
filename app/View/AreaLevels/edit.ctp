@@ -19,6 +19,7 @@ echo $this->Html->script('area', false);
 	</h1>
 	<?php echo $this->element('area_categories'); ?>
 	<?php echo $this->Form->create('AreaLevels', array(
+		'model' => 'AreaLevel',
 	    'inputDefaults' => array(
 	        'label' => false,
 	        'div' => false
