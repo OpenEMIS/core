@@ -243,11 +243,25 @@ class TeachersController extends TeachersAppController {
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
             }else{
-				$this->request->data["Teacher"]["identification_no"] = $this->getUniqueID();
-				$newTeacherRec =  $this->Teacher->save($this->request->data);
-				// create the session for successfully adding of student
-                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); // Change if wants to let user know another id used
-				$this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
+				$errors = $this->Teacher->validationErrors;
+				if($this->getUniqueID()!=''){ // If Auto id
+					if(isset($errors["identification_no"])){ // If its ID error
+						if(sizeof($errors)<2){ // If only 1 faulty
+							$this->Teacher->set($this->request->data);
+							do{
+								$this->request->data["Teacher"]["identification_no"] = $this->getUniqueID();
+								$conditions = array(
+									'Teacher.identification_no' => $this->request->data["Teacher"]["identification_no"]
+								);
+							}while($this->Teacher->hasAny($conditions));
+							$this->Teacher->set($this->request->data);
+							$newTeacherRec =  $this->Teacher->save($this->request->data);
+							// create the session for successfully adding of teacher
+							$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); 
+							$this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
+						}
+					}
+				}
 			}
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
