@@ -243,7 +243,27 @@ class StaffController extends StaffAppController {
                 $newStaffRec =  $this->Staff->save($this->data);
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewStaff', $newStaffRec['Staff']['id']));
-            }
+            }else{
+				$errors = $this->Staff->validationErrors;
+				if($this->getUniqueID()!=''){ // If Auto id
+					if(isset($errors["identification_no"])){ // If its ID error
+						if(sizeof($errors)<2){ // If only 1 faulty
+							$this->Staff->set($this->request->data);
+							do{
+								$this->request->data["Staff"]["identification_no"] = $this->getUniqueID();
+								$conditions = array(
+									'Staff.identification_no' => $this->request->data["Staff"]["identification_no"]
+								);
+							}while($this->Staff->hasAny($conditions));
+							$this->Staff->set($this->request->data);
+							$newStaffRec =  $this->Staff->save($this->request->data);
+							// create the session for successfully adding of Staff
+							$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); 
+							$this->redirect(array('action' => 'viewStaff', $newStaffRec['Staff']['id']));
+						}
+					}
+				}
+			}
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
 		$this->set('autoid', $this->getUniqueID());
@@ -572,8 +592,13 @@ class StaffController extends StaffAppController {
     	
 		if($prefix[1]>0){
 			$id = $str['Staff']['id']+1; 
-			$str = str_pad($id,7,"0",STR_PAD_LEFT);
-			$generate_no = $prefix[0].$str;
+			if(strlen($id)<6){
+				$str = str_pad($id,6,"0",STR_PAD_LEFT);
+			}
+			// Get two random number
+			$rnd1 = rand(0,9);
+			$rnd2 = rand(0,9);
+			$generate_no = $prefix[0].$str.$rnd1.$rnd2;
 		}
 		
 		return $generate_no;

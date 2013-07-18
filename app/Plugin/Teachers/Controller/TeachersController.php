@@ -242,7 +242,27 @@ class TeachersController extends TeachersAppController {
                 // create the session for successfully adding of teacher
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
-            }
+            }else{
+				$errors = $this->Teacher->validationErrors;
+				if($this->getUniqueID()!=''){ // If Auto id
+					if(isset($errors["identification_no"])){ // If its ID error
+						if(sizeof($errors)<2){ // If only 1 faulty
+							$this->Teacher->set($this->request->data);
+							do{
+								$this->request->data["Teacher"]["identification_no"] = $this->getUniqueID();
+								$conditions = array(
+									'Teacher.identification_no' => $this->request->data["Teacher"]["identification_no"]
+								);
+							}while($this->Teacher->hasAny($conditions));
+							$this->Teacher->set($this->request->data);
+							$newTeacherRec =  $this->Teacher->save($this->request->data);
+							// create the session for successfully adding of teacher
+							$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); 
+							$this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
+						}
+					}
+				}
+			}
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
 		$this->set('autoid', $this->getUniqueID());
@@ -786,8 +806,13 @@ class TeachersController extends TeachersAppController {
     	
 		if($prefix[1]>0){
 			$id = $str['Teacher']['id']+1; 
-			$str = str_pad($id,7,"0",STR_PAD_LEFT);
-			$generate_no = $prefix[0].$str;
+			if(strlen($id)<6){
+				$str = str_pad($id,6,"0",STR_PAD_LEFT);
+			}
+			// Get two random number
+			$rnd1 = rand(0,9);
+			$rnd2 = rand(0,9);
+			$generate_no = $prefix[0].$str.$rnd1.$rnd2;
 		}
 		
 		return $generate_no;
