@@ -9,7 +9,7 @@ $arrMap = array(
 ?>
 
 <div style="margin-bottom: 10px;">
-	Category
+	
 	<?php
 	
 	echo  $this->Form->input('area_cat', array(

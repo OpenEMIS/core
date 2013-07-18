@@ -20,6 +20,7 @@ class AreaEducationLevel extends AppModel {
 	public $hasMany = array('AreaEducation');
 
 	public function saveAreaLevelData($data) {
+		
 		$keys = array();
 		$levels = array();
 		

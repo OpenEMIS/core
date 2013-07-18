@@ -65,6 +65,8 @@ class AreasController extends AppController {
 
         }
 		
+		
+		
 		// Checking if user has access to _view for area levels
 		$_view_levels = false;
 		if($this->AccessControl->check($this->params['controller'], 'levels')) {
@@ -153,7 +155,7 @@ class AreasController extends AppController {
 
         if($this->request->is('post')) {
             $this->AreaLevel->saveAreaLevelData($this->data['AreaLevel']);
-            $this->redirect('/Areas/levelsEdit');
+            $this->redirect('/Areas/levels');
             // pr($this->data);
         }
 
@@ -192,13 +194,15 @@ class AreasController extends AppController {
      * @return json                    
      */
 	public function viewData($parentId = -1, $arrModels = array('Area','AreaLevel')) {
-		
-		if(!isset($this->request['pass'][0]) || $this->request['pass'][0] == 'Education'){ 
+		$request = @$this->request['pass'][0];
+		if($request == 'Education'){ 
 			$parentId = -1;
 			$arrModels = 'Education';
+			
 		}else{
-			$parentId = $this->request['pass'][0];
+			$parentId = is_null($request)?-1:$request;
 		}
+		
 		$arrModels = ($arrModels == 'Education' && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
 		
 		$this->autoRender = false;
@@ -231,7 +235,7 @@ class AreasController extends AppController {
         }
 		
         $listAreaLevels = $db->fetchAll( $query, array($parentId));
-
+		
 	    //$this->Area->formatResult($listAreas);
 
 	    echo json_encode(array('data' => $this->Utility->formatResult($listAreas), 'area_levels' => $this->Utility->formatResult($listAreaLevels)));
@@ -242,15 +246,15 @@ class AreasController extends AppController {
      * Created by: Eugene Wong
      * @return [type] [description]
      */
-    public function areaAjax() {
+    public function areaAjax($type='Area') {
         $this->autoRender = false;
         $validateFailed = false; 
         //header("Status: 404 Not Found");
         $return = array();
         $return['data'] = array('new'=>array(),'error'=>array());
         foreach ($this->data as $key => $element) {
-            $this->Area->set($element);
-            if(!$this->Area->validates()) {
+            $this->{$type}->set($element);
+            if(!$this->{$type}->validates()) {
 
                 // $this->Utility->setAjaxResult('error', $return);
                 // $msg = $this->Utility->getFirstError($this->action, $this->Area, $this->Auth->user());
@@ -261,11 +265,11 @@ class AreasController extends AppController {
 
             } else {
 
-                $result = $this->Area->save($element);
+                $result = $this->{$type}->save($element);
                 // $$result['data']['new'][$key+1] = $result;
                 
                 if($result) {
-                    $areaId = $result['Area']['id'];
+                    $areaId = $result[$type]['id'];
                     $return['data']['new'][$key+1] = $areaId;
                     // $return['id'] = $subjectId;
                     // $return['name'] = $name;
@@ -280,7 +284,7 @@ class AreasController extends AppController {
             $this->Utility->setAjaxResult('success', $return);
         }else{
             $this->Utility->setAjaxResult('error', $return);
-            $msg = $this->Utility->getFirstError($this->action, $this->Area, $this->Auth->user());
+            $msg = $this->Utility->getFirstError($this->action, $this->{$type}, $this->Auth->user());
             $return['msg'] = __($msg);
         }
         //$return['data']= $this->data;
@@ -336,7 +340,7 @@ class AreasController extends AppController {
 
         if($this->request->is('post')) {
             $this->AreaEducationLevel->saveAreaLevelData($this->data['AreaEducationLevel']);
-            $this->redirect('/Areas/levelsEdit');
+            $this->redirect('/Areas/AreaEducationLevels');
             // pr($this->data);
         }
 
@@ -352,12 +356,13 @@ class AreasController extends AppController {
 
 		$areas = array();
         $levels = $this->AreaLevel->find('list', array('order'=>array('AreaLevel.level ASC')));
-        $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1')));
+        $topArea = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => '-1')));
         $this->unshift_array($topArea, array('0'=>__('--Select--')));
         $areas[] = $topArea;
 
 
         if($this->request->is('post')) {
+			
             if(isset($this->request->data['Area'])){
                 for ($i = 0; $i < count($this->request->data['Area'])-1; $i++) {
                     $area = $this->Area->find('list',array(

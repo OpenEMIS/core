@@ -24,7 +24,7 @@ echo $this->Html->script('area', false);
 	echo $this->Form->create('AreaEducation', array(
 			'url' => array(
 				'controller' => 'Areas',
-				'action' => 'index'
+				'action' => 'AreaEducation'
 			),
 			'model' => 'AreaEducation',
             'inputDefaults' => array('label' => false, 'div' =>false)
