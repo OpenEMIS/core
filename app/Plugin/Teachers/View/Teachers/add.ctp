@@ -23,7 +23,7 @@ $obj = @$data['Teacher'];
         <div class="row">
 			<div class="label"><?php echo __('Identification No.'); ?>
             <?php if($autoid!=''){ ?>
-            <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid)); ?>
+            <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid, 'error' => false)); ?>
             <?php } ?>
             </div>
             <div class="value">
