@@ -76,13 +76,6 @@ class Staff extends StaffAppModel {
 				'message' => 'Please enter a valid Address'
 			)
 		),
-		'postal_code' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Postal Code'
-			)
-		),
 		'date_of_birth' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
