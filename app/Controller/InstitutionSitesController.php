@@ -1215,7 +1215,7 @@ class InstitutionSitesController extends AppController {
 		$orderBy = $model . '.first_name';
 		$order = 'asc';
 		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : '';
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if($this->request->is('post')) {
 			$selectedYear = $this->data[$model]['school_year'];
@@ -1351,7 +1351,7 @@ class InstitutionSitesController extends AppController {
 		$orderBy = $model . '.first_name';
 		$order = 'asc';
 		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : '';
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if($this->request->is('post')) {
 			$selectedYear = $this->data[$model]['school_year'];

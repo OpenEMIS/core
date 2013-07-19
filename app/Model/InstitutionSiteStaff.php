@@ -152,13 +152,15 @@ class InstitutionSiteStaff extends AppModel {
 			$year = $conditions['year'];
 			unset($conditions['year']);
 			
-			$conditions = array_merge($conditions, array( // if the year falls between the start and end date
-				'InstitutionSiteStaff.start_year <=' => $year,
-				'OR' => array(
-					'InstitutionSiteStaff.end_year >=' => $year,
-					'InstitutionSiteStaff.end_year IS NULL'
-				)
-			));
+			if(strlen($year)>0) {
+				$conditions = array_merge($conditions, array( // if the year falls between the start and end date
+					'InstitutionSiteStaff.start_year <=' => $year,
+					'OR' => array(
+						'InstitutionSiteStaff.end_year >=' => $year,
+						'InstitutionSiteStaff.end_year IS NULL'
+					)
+				));
+			}
 		}
 		return $conditions;
 	}
