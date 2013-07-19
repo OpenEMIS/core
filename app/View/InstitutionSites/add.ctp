@@ -2,7 +2,7 @@
 echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('config', false);
-echo $this->Html->script('institution_site', false);
+echo $this->Html->script('institution', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>

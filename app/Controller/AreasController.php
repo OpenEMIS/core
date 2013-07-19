@@ -211,6 +211,7 @@ class AreasController extends AppController {
 		$fkAreaLevel = Inflector::underscore($arrModels[1]);
 		$area_table_name = Inflector::tableize($arrModels[0]);;
 		$area_level_table_name = Inflector::tableize($arrModels[1]);;
+		$this->{$area}->formatResult = false;
 		$listAreas = $this->{$area}->find('all', array(
 			'recursive' => 0,
 	        'conditions' => array($arrModels[0].'.parent_id' => $parentId),
