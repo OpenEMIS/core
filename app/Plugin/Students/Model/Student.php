@@ -129,10 +129,10 @@ class Student extends StudentsAppModel {
 		return $data;
 	}
 	
-	public function paginateJoins(&$conditions) {
+	public function paginateJoins($search, $institutionSiteId, $userId, $noSites=true) {
 		$joins = array();
 		
-		if(strlen($conditions['SearchKey']) != 0) {
+		if($search) {
 			$joins[] = array(
 				'table' => 'student_history',
 				'alias' => 'StudentHistory',
@@ -141,35 +141,48 @@ class Student extends StudentsAppModel {
 			);
 		}
 		
-		if(array_key_exists('InstitutionSiteId', $conditions)) {
-			$institutionSiteId = $conditions['InstitutionSiteId'];
-			unset($conditions['InstitutionSiteId']);
-			
-			$programmeConditions = !empty($institutionSiteId) ? implode(',', $institutionSiteId) : 0;
-			
-			$joins[] = array(
-				'table' => 'institution_site_students',
-				'alias' => 'InstitutionSiteStudent',
-				'type' => 'LEFT',
-				'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
-			);
-			$joins[] = array(
-				'table' => 'institution_site_programmes',
-				'alias' => 'InstitutionSiteProgramme',
-				'type' => !empty($institutionSiteId) ? 'LEFT' : 'INNER',
-				'conditions' => array(
-					'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
-					'InstitutionSiteProgramme.institution_site_id IN (' . $programmeConditions .')'
-				)
-			);
+		if(is_array($institutionSiteId)) {
+			if(!$noSites) { // for students with no institution sites
+				$conditions = !empty($institutionSiteId) ? implode(',', $institutionSiteId) : 0;
+				$joins[] = array(
+					'table' => 'institution_site_students',
+					'alias' => 'InstitutionSiteStudent',
+					'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
+				);
+				$joins[] = array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id',
+						'InstitutionSiteProgramme.institution_site_id IN (' . $conditions .')'
+					)
+				);
+			} else {
+				if($userId !== false) {
+					$joins[] = array(
+						'table' => 'security_group_users',
+						'alias' => 'GroupA',
+						'conditions' => array('GroupA.security_user_id = Student.created_user_id')
+					);
+					$joins[] = array(
+						'table' => 'security_group_users',
+						'alias' => 'GroupB',
+						'conditions' => array(
+							'GroupB.security_group_id = GroupA.security_group_id',
+							'GroupB.security_user_id = ' . $userId
+						)
+					);
+				}
+			}
 		}
 		return $joins;
 	}
 	
-	public function paginateConditions($conditions) {
+	public function paginateConditions($conditions, $noSites=true) {
+		$paginateConditions = array();
 		if(strlen($conditions['SearchKey']) != 0) {
 			$search = "%".$conditions['SearchKey']."%";
-			$conditions['OR'] = array(
+			$paginateConditions['OR'] = array(
 				'Student.identification_no LIKE' => $search,
 				'Student.first_name LIKE' => $search,
 				'Student.last_name LIKE' => $search,
@@ -178,47 +191,151 @@ class Student extends StudentsAppModel {
 				'StudentHistory.last_name LIKE' => $search
 			);
 		}
-		unset($conditions['SearchKey']);
-		return $conditions;
+		if($noSites) {
+			$paginateConditions['AND'] = array(
+				'NOT EXISTS (SELECT `institution_site_students`.`student_id` FROM `institution_site_students` WHERE `institution_site_students`.`student_id` = Student.id)'
+			);
+			$userId = array_key_exists('UserId', $conditions) ? $conditions['UserId'] : false;
+			if($userId !== false) { // applies only to non-super user
+				$paginateConditions['AND']['OR'] = array( // only creator or users in creator's group can access
+					'GroupA.security_group_id IS NULL',
+					'AND' => array('GroupA.security_group_id IS NOT NULL', 'GroupB.security_group_id IS NOT NULL')
+				);
+			}
+		}
+		return $paginateConditions;
+	}
+	
+	public function paginateQuery($conditions, $order, $limit, $page, $count = false) {
+		$fields = $count 
+				? array('Student.id')
+				: array(
+					'Student.id', 'Student.identification_no',
+					'Student.first_name', 'Student.last_name',
+					'Student.gender', 'Student.date_of_birth'
+				);
+		
+		$search = strlen($conditions['SearchKey']) != 0;
+		if($search && $count == false) {
+			$fields[] = 'StudentHistory.identification_no AS student_history_identification_no';
+			$fields[] = 'StudentHistory.first_name AS student_history_first_name';
+			$fields[] = 'StudentHistory.last_name AS student_history_last_name';
+		}
+		
+		$institutionSiteId = array_key_exists('InstitutionSiteId', $conditions) ? $conditions['InstitutionSiteId'] : false;
+		$userId = array_key_exists('UserId', $conditions) ? $conditions['UserId'] : false;
+		$dbo = $this->getDataSource();
+		
+		// retrieve the list of students without a site
+		$studentsNoSites = $dbo->buildStatement(array(
+			'fields' => $fields,
+			'table' => $dbo->fullTableName($this),
+			'alias' => 'Student',
+			'limit' => null, 
+			'offset' => null,
+			'joins' => $this->paginateJoins($search, $institutionSiteId, $userId),
+			'conditions' => $this->paginateConditions($conditions),
+			'group' => null,
+			'order' => null
+		), $this);
+		
+		// retrieve the list of students with sites that the user can access
+		$studentWithSites = $dbo->buildStatement(array(
+			'fields' => $fields,
+			'table' => $dbo->fullTableName($this),
+			'alias' => 'Student',
+			'limit' => null, 
+			'offset' => null,
+			'joins' => $this->paginateJoins($search, $institutionSiteId, $userId, false),
+			'conditions' => $this->paginateConditions($conditions, false),
+			'group' => null,
+			'order' => null
+		), $this);
+		
+		if($count==false) {
+			$fields = array(
+				'Student.id', 'Student.identification_no',
+				'Student.first_name', 'Student.last_name',
+				'Student.gender', 'Student.date_of_birth'
+			);
+			
+			if($search) {
+				$fields[] = 'student_history_identification_no';
+				$fields[] = 'student_history_first_name';
+				$fields[] = 'student_history_last_name';
+			}
+		} else {
+			$fields = array('COUNT(1) AS COUNT');
+		}
+		
+		$options = array(
+			'fields' => $fields,
+			'table' => sprintf('(%s UNION %s)', $studentsNoSites, $studentWithSites),
+			'alias' => 'Student',
+			'limit' => null,
+			'conditions' => array(),
+			'group' => null,
+			'order' => null
+		);
+		
+		if($count==false) {
+			$options['limit'] = $limit;
+			$options['offset'] = (($page-1)*$limit);
+			$options['order'] = $order;
+		}
+		$query = $dbo->buildStatement($options, $this);
+		return $query;
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$fields = array(
-			'Student.id',
-			'Student.identification_no',
-			'Student.first_name',
-			'Student.last_name',
-			'Student.gender',
-			'Student.date_of_birth'
-		);
+		$data = array();
+		$institutionSiteId = array_key_exists('InstitutionSiteId', $conditions) ? $conditions['InstitutionSiteId'] : false;
 		
-		if(strlen($conditions['SearchKey']) != 0) {
-			$fields[] = 'StudentHistory.id';
-			$fields[] = 'StudentHistory.identification_no';
-			$fields[] = 'StudentHistory.first_name';
-			$fields[] = 'StudentHistory.last_name';
-			$fields[] = 'StudentHistory.gender';
-			$fields[] = 'StudentHistory.date_of_birth';
+		if(is_array($institutionSiteId)) {
+			$query = $this->paginateQuery($conditions, $order, $limit, $page);
+			$dbo = $this->getDataSource();
+			$data = $dbo->fetchAll($query);
+		} else {
+			$fields = array(
+				'Student.id', 'Student.identification_no',
+				'Student.first_name', 'Student.last_name',
+				'Student.gender', 'Student.date_of_birth'
+			);
+			$search = strlen($conditions['SearchKey']) != 0;
+			if($search != 0) {
+				$fields[] = 'StudentHistory.identification_no AS student_history_identification_no';
+				$fields[] = 'StudentHistory.first_name AS student_history_first_name';
+				$fields[] = 'StudentHistory.last_name AS student_history_last_name';
+			}
+			$data = $this->find('all', array(
+				'fields' => $fields,
+				'joins' => $this->paginateJoins($search, $institutionSiteId, false, false),
+				'conditions' => $this->paginateConditions($conditions, false),
+				'limit' => $limit,
+				'offset' => (($page-1)*$limit),
+				'group' => 'Student.id',
+				'order' => $order
+			));
 		}
-		
-		$data = $this->find('all', array(
-			'fields' => $fields,
-			'joins' => $this->paginateJoins($conditions),
-			'conditions' => $this->paginateConditions($conditions),
-			'limit' => $limit,
-			'offset' => (($page-1)*$limit),
-			'group' => 'Student.id',
-			'order' => $order
-		));
 		return $data;
 	}
         
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-		$count = $this->find('count', array(
-			'joins' => $this->paginateJoins($conditions),
-			'conditions' => $this->paginateConditions($conditions),
-			'group' => 'Student.id'
-		));
+		$count = 0;
+		$institutionSiteId = array_key_exists('InstitutionSiteId', $conditions) ? $conditions['InstitutionSiteId'] : false;
+		if(is_array($institutionSiteId)) {
+			$query = $this->paginateQuery($conditions, null, 0, 1, true);
+			$dbo = $this->getDataSource();
+			$data = $dbo->fetchAll($query);
+			$count = $data[0][0]['COUNT'];
+		} else {
+			$search = strlen($conditions['SearchKey']) != 0;
+			$count = $this->find('count', array(
+				'joins' => $this->paginateJoins($search, $institutionSiteId, false),
+				'conditions' => $this->paginateConditions($conditions, false),
+				'group' => 'Student.id'
+			));
+		}
 		return $count;
 	}
 }

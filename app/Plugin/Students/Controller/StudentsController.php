@@ -100,6 +100,7 @@ class StudentsController extends StudentsAppController {
 		$conditions = array('SearchKey' => $searchKey);
 		if($this->Auth->user('super_admin')==0) {
 			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
+			$conditions['UserId'] = $this->Auth->user('id');
 		}
 		$order = array('order' => array($fieldordername => $fieldorderdir));
 		$limit = ($this->Session->read('Search.perpageStudent')) ? $this->Session->read('Search.perpageStudent') : 30;

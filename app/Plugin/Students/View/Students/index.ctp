@@ -89,8 +89,8 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 				foreach ($students as $arrItems):
 					$id = $arrItems['Student']['id'];
 					$identificationNo = $this->Utility->highlight($searchField, $arrItems['Student']['identification_no']);
-					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['StudentHistory']['first_name']))?'<br>'.$arrItems['StudentHistory']['first_name']:''));
-					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['StudentHistory']['last_name']))?'<br>'.$arrItems['StudentHistory']['last_name']:''));
+					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['Student']['student_history_first_name']))?'<br>'.$arrItems['Student']['first_name']:''));
+					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['Student']['student_history_last_name']))?'<br>'.$arrItems['Student']['last_name']:''));
 					$gender = $arrItems['Student']['gender'];
 					$birthday = $arrItems['Student']['date_of_birth'];
 			?>
