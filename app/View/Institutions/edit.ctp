@@ -1,6 +1,7 @@
 <?php
 echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
+echo $this->Html->script('config', false);
 echo $this->Html->script('institution', false);
 ?>
 
@@ -32,7 +33,11 @@ echo $this->Html->script('institution', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Institution Code'); ?></div>
-			<div class="value"><?php echo $this->Form->input('code', array('value' => $obj['code'])); ?></div>
+			<div class="value">
+				<?php echo $this->Form->input('code', array('value' => $obj['code'],
+														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_institution_code');")); ?>
+           		<input type="hidden" name="validate_institution_code" id="validate_institution_code" value="<?php echo $obj['code']; ?>"/>
+			</div>
 		</div>
         <div class="row">
 			<div class="label"><?php echo __('Sector'); ?></div>
@@ -85,7 +90,11 @@ echo $this->Html->script('institution', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Postal Code'); ?></div>
-			<div class="value"><?php echo $this->Form->input('postal_code', array('value' => $obj['postal_code'])); ?></div>
+			<div class="value">
+				<?php echo $this->Form->input('postal_code', array('value' => $obj['postal_code'],
+																   'onkeyup'=>"javascript:updateHiddenField(this, 'validate_institution_postal_code');")); ?>
+           		<input type="hidden" name="validate_institution_postal_code" id="validate_institution_postal_code" value="<?php echo $obj['postal_code']; ?>"/>
+			</div>
 		</div>
 	</fieldset>
 	
@@ -97,11 +106,19 @@ echo $this->Html->script('institution', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $this->Form->input('telephone', array('value' => $obj['telephone'])); ?></div>
+			<div class="value">
+				<?php echo $this->Form->input('telephone', array('value' => $obj['telephone'],
+														         'onkeyup'=>"javascript:updateHiddenField(this, 'validate_institution_telephone');")); ?>
+           		<input type="hidden" name="validate_institution_telephone" id="validate_institution_telephone" value="<?php echo $obj['telephone']; ?>"/>
+			</div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Fax'); ?></div>
-			<div class="value"><?php echo $this->Form->input('fax', array('value' => $obj['fax'])); ?></div>
+			<div class="value">
+				<?php echo $this->Form->input('fax', array('value' => $obj['fax'],
+														   'onkeyup'=>"javascript:updateHiddenField(this, 'validate_institution_fax');")); ?>
+           		<input type="hidden" name="validate_institution_fax" id="validate_institution_fax" value="<?php echo $obj['fax']; ?>"/>
+			</div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Email'); ?></div>
@@ -114,7 +131,7 @@ echo $this->Html->script('institution', false);
 	</fieldset>
 
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	

@@ -32,18 +32,12 @@ echo $this->Html->script('census', false);
 			));
 			?>
 		</div>
-		<div class="row_item_legend">
-		<ul class="legend">
-			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
-			<li><span class="external"></span><?php echo __('External'); ?></li>
-			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
-		</ul>
-		</div>
+	<?php echo $this->element('census_legend'); ?>
 	</div>
 		
 	<div class="table full_width">
 		<div class="table_head">
-			<div class="table_cell cell_category"><?php echo __('Category'); ?></div>
+			<div class="table_cell cell_category"><?php echo __('Position'); ?></div>
 			<div class="table_cell"><?php echo __('Male'); ?></div>
 			<div class="table_cell"><?php echo __('Female'); ?></div>
 			<div class="table_cell"><?php echo __('Total'); ?></div>
@@ -56,11 +50,10 @@ echo $this->Html->script('census', false);
 				if($record['staff_category_visible'] == 1) {
 					$total += $record['male'] + $record['female'];
 					$record_tag="";
-					switch ($record['source']) {
-						case 1:
-							$record_tag.="row_external";break;
-						case 2:
-							$record_tag.="row_estimate";break;
+					foreach ($source_type as $k => $v) {
+						if ($record['source']==$v) {
+							$record_tag = "row_" . $k;
+						}
 					}
 			?>
 			<div class="table_row">

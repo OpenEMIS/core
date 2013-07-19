@@ -78,4 +78,41 @@ class Area extends AppModel {
 		$data = $this->findById($id);	
 		return $data['Area']['name'];
 	}
+	
+	// Used by SecurityController
+	public function getGroupAccessList($exclude) {
+		$conditions = array('Area.visible' => 1);
+		if(!empty($exclude)) {
+			$conditions['Area.id NOT'] = $exclude;
+		}
+		
+		$data = $this->find('list', array(
+			'fields' => array('AreaLevel.id', 'AreaLevel.name'),
+			'joins' => array(
+				array(
+					'table' => 'area_levels',
+					'alias' => 'AreaLevel',
+					'conditions' => array('AreaLevel.id = Area.area_level_id')
+				)
+			),
+			'conditions' => $conditions,
+			'group' => array('AreaLevel.id HAVING COUNT(Area.id) > 0'),
+			'order' => array('AreaLevel.level')
+		));
+		return $data;
+	}
+	
+	public function getGroupAccessValueList($parentId, $exclude) {
+		$conditions = array('Area.area_level_id' => $parentId, 'Area.visible' => 1);
+		if(!empty($exclude)) {
+			$conditions['Area.id NOT'] = $exclude;
+		}
+		
+		$data = $this->find('list', array(
+			'fields' => array('Area.id', 'Area.name'),
+			'conditions' => $conditions,
+			'order' => array('Area.order')
+		));
+		return $data;
+	}
 }

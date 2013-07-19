@@ -49,6 +49,7 @@ class UtilityComponent extends Component {
 		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
 		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
 		$msgList['NO_HISTORY'] = "No history found.";
+		$msgList['NO_RECORD'] = "There are no records.";
 		
 		// Login Messages
 		$msgList['LOGIN_TIMEOUT'] = "Your session is timed out. Please login again.";
@@ -77,6 +78,9 @@ class UtilityComponent extends Component {
 		
 		// Access Control Messages
 		$msgList['SECURITY_NO_ACCESS'] = "You do not have access to this functionality.";
+		$msgList['SECURITY_GRP_NO_NAME'] = "Please enter a valid name.";
+		$msgList['SECURITY_GRP_NAME_EXISTS'] = "The name is already in use.";
+		$msgList['SECURITY_GRP_USER_ADD'] = "The user has been added to the role.";
 		
 		// Institution Sites
 		$msgList['NO_SITES'] = "No Institution Sites";
@@ -86,6 +90,9 @@ class UtilityComponent extends Component {
 		$msgList['SITE_CLASS_DUPLICATE_NAME'] = "The name is already existed.";
 		$msgList['SITE_CLASS_NO_GRADES'] = "Please add a grade to this class.";
 		$msgList['SITE_CLASS_NO_CLASSES'] = "There are no classes for the selected year.";
+		
+		$msgList['NO_EMPLOYMENT'] = "No Employment found.";
+		$msgList['NO_CLASSES'] = "No Classes found.";
 		
 		// Students
 		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";

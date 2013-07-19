@@ -18,7 +18,13 @@ App::uses('AppController', 'Controller');
 
 class CensusController extends AppController {
 	public $institutionSiteId;
-    
+	public $source_type=array(
+						"dataentry" => 0,
+						"external" => 20,
+						"internal" => 30,
+						"estimate" => 40
+						);
+
 	public $uses = array(
 		'Institution',
 		'InstitutionSite',
@@ -87,6 +93,7 @@ class CensusController extends AppController {
 		} else {
 			$this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
 		}
+		$this->set('source_type', $this->source_type);
 	}
 	
 	private function getAvailableYearId($yearList) {
@@ -892,10 +899,11 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Finances');
                 
 		if($this->request->is('post')) {
+			$yearId = $this->data['CensusFinance']['school_year_id'];
 			$this->request->data['CensusFinance']['institution_site_id'] = $this->institutionSiteId;
 			$this->CensusFinance->save($this->request->data['CensusFinance']);
 			
-			$this->redirect(array('action' => 'finances'));
+			$this->redirect(array('action' => 'finances', $yearId));
 		}
 		
 		$yearList = $this->SchoolYear->getYearList();
@@ -920,13 +928,17 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Edit Finances');
 				
 		if($this->request->is('post')) {
-			foreach($this->request->data['CensusFinance'] as &$val){
+			$data = $this->data['CensusFinance'];
+			$yearId = $data['school_year_id'];
+			unset($data['school_year_id']);
+			foreach($data as &$val){
 				$val['institution_site_id']= $this->institutionSiteId;
+				$val['school_year_id'] = $yearId;
 			}
 			//pr($this->request->data);die;
-			$this->CensusFinance->saveAll($this->request->data['CensusFinance']);
+			$this->CensusFinance->saveMany($data);
 			
-			$this->redirect(array('action' => 'finances'));
+			$this->redirect(array('action' => 'finances', $yearId));
 		}
                 
 		$yearList = $this->SchoolYear->getAvailableYears();
@@ -1164,4 +1176,4 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $yearId);
 		$this->set('years', $yearList);
 	}
-} 
+}

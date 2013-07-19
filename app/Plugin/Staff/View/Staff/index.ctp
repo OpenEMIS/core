@@ -8,20 +8,30 @@ echo $this->Html->script('search', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
+<?php
+$total = 0;
+
+if(strlen($this->Paginator->counter('{:count}')) > 0) {
+	$total = $this->Paginator->counter('{:count}');
+}
+?>
+
 <div id="staff-list" class="content_wrapper search">
     <h1>
         <span><?php echo __('List of Staff'); ?></span>
         <span class="divider"></span>
-        <span class="total"><?php echo $totalcount;?> <?php echo __('Staff'); ?></span>
+        <span class="total"><span><?php echo $total;?></span> <?php echo __('Staff'); ?></span>
     </h1>
+	 <?php echo $this->element('alert'); ?>
 
+	<?php if($this->Session->check('Search.SearchFieldStaff') || $total > $limit) { ?>
     <div class="row">
         <?php  echo $this->Form->create('Staff', array('action' => 'search','id'=>false));  ?>
         <div class="search_wrapper">
             <?php echo $this->Form->input('SearchField', array(
                 'id'=>'SearchField',
                 'value'=>$searchField,
-                'placeholder'=> __("Student Identification No, First Name or Last Name"),
+                'placeholder'=> __("Staff Identification No, First Name or Last Name"),
                 'class'=>'default',
                 'label'=>false,
                 'div'=>false)); 
@@ -37,6 +47,7 @@ echo $this->Html->script('search', false);
         ?>
         <?php echo $this->Form->end(); ?>
     </div>
+	<?php } ?>
 
     <div id="mainlist">
         <div class="row">
@@ -46,7 +57,7 @@ echo $this->Html->script('search', false);
                 <?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
             </ul>
         </div>
-
+		<?php if($total > 0) { ?>
         <div class="table allow_hover" action="Staff/viewStaff/">
             <div class="table_head" url="Staff/index">
                 <div class="table_cell cell_id_no">
@@ -72,34 +83,27 @@ echo $this->Html->script('search', false);
             </div>
             
             <div class="table_body">
-                <?php
-                    // pr($staff);
-                if(isset($staff) && count($staff) > 0){
-                    $ctr = 1;
-                    foreach ($staff as $arrItems):
-                        $id = $arrItems['Staff']['id'];
-                        $identificationNo = $this->Utility->highlight($searchField, $arrItems['Staff']['identification_no']);
-                        $firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['first_name'].'</b>'.((isset($arrItems['StaffHistory']['first_name']))?'<br>'.$arrItems['StaffHistory']['first_name']:''));
-                        $lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['last_name'].'</b>'.((isset($arrItems['StaffHistory']['last_name']))?'<br>'.$arrItems['StaffHistory']['last_name']:''));
-                        $gender = $arrItems['Staff']['gender'];
-                        $birthday = $arrItems['Staff']['date_of_birth'];
+			<?php
+				foreach ($staff as $arrItems):
+					$id = $arrItems['Staff']['id'];
+					$identificationNo = $this->Utility->highlight($searchField, $arrItems['Staff']['identification_no']);
+					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['first_name'].'</b>'.((isset($arrItems['StaffHistory']['first_name']))?'<br>'.$arrItems['StaffHistory']['first_name']:''));
+					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['last_name'].'</b>'.((isset($arrItems['StaffHistory']['last_name']))?'<br>'.$arrItems['StaffHistory']['last_name']:''));
+					$gender = $arrItems['Staff']['gender'];
+					$birthday = $arrItems['Staff']['date_of_birth'];
 
-                ?>
-                    <div class="table_row" row-id="<?php echo $id ?>">
-                        <div class="table_cell"><?php echo $identificationNo; ?></div>
-                        <div class="table_cell"><?php echo $firstName; ?></div>
-                        <div class="table_cell"><?php echo $lastName; ?></div>
-                        <div class="table_cell"><?php echo $gender; ?></div>
-                        <div class="table_cell"><?php echo $birthday; ?></div>
-                    </div>
-                    <?php endforeach;
-                }
-                ?>
+			?>
+				<div class="table_row" row-id="<?php echo $id ?>">
+					<div class="table_cell"><?php echo $identificationNo; ?></div>
+					<div class="table_cell"><?php echo $firstName; ?></div>
+					<div class="table_cell"><?php echo $lastName; ?></div>
+					<div class="table_cell"><?php echo $gender; ?></div>
+					<div class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></div>
+				</div>
+			<?php endforeach; ?>
             </div>
         </div>
-        <?php if(sizeof($staff)==0) { ?>
-        <div class="row center" style="color: red"><?php echo __('No Staff found.'); ?></div>
-        <?php } ?>
+        <?php } // end if total ?>
 
         <div class="row">
             <ul id="pagination">

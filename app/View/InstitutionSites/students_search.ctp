@@ -13,10 +13,10 @@ if($data !== false) {
 			$name = $firstName . ' ' . $lastName;
 ?>
 		
-		<div class="table_row">
+		<div class="table_row" row-id="<?php echo $obj['id']; ?>">
 			<div class="table_cell cell_id_no"><?php echo $id_no; ?></div>
 			<div class="table_cell" name="<?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?>"><?php echo $name; ?></div>
-			<div class="table_cell cell_icon_action"><span class="icon_plus" student-id="<?php echo $obj['id']; ?>"></span></div>
+			<div class="table_cell cell_icon_action"><span class="icon_plus" onclick="InstitutionSiteProgrammes.addStudentToList(this)"></span></div>
 		</div>
 	
 <?php 

@@ -1,7 +1,7 @@
 /* Dialog Box */
-.dialog-mask { position: absolute; display: none; z-index: 1998; background-color: #FFFFFF; }
+.dialog-mask { position: absolute; display: none; z-index: 3001; background-color: #FFFFFF; }
 
-.dialog-container {	position: absolute; display: block; z-index: 1998; }
+.dialog-container {	position: absolute; display: block; z-index: 3001; }
 
 .dialog-box {
 	position: absolute;

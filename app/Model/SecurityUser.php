@@ -17,9 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityUser extends AppModel {
-	public $hasMany = array('SecurityUserRole');
-	
-	// public $status = array(0 => 'Inactive', 1 => 'Active');
 	public $status = array();
 	public function beforeFind() {
 		$this->status = array(0 => __('Inactive', true), 1 => __('Active', true));
@@ -105,5 +102,83 @@ class SecurityUser extends AppModel {
 	public function updateLastLogin($id) {
 		$this->id = $id;
 		$this->saveField('last_login', date('Y-m-d H:i:s'));
+	}
+	
+	public function search($type, $search, $params=array()) {
+		$data = array();
+		if($type==0) {
+			$data = $this->find('first', array(
+				'recursive' => -1,
+				'fields' => array('SecurityUser.id', 'SecurityUser.first_name', 'SecurityUser.last_name'),
+				'conditions' => array('SecurityUser.identification_no' => $search, 'SecurityUser.super_admin <>' => 1),
+				'order' => array('SecurityUser.first_name')
+			));
+		} else {
+			$search = '%' . $search . '%';
+			$limit = isset($params['limit']) ? $params['limit'] : false;
+			
+			$conditions = array(
+				'SecurityUser.super_admin <>' => 1,
+				'OR' => array(
+					'SecurityUser.identification_no LIKE' => $search,
+					'SecurityUser.first_name LIKE' => $search,
+					'SecurityUser.last_name LIKE' => $search
+				)
+			);
+			
+			$options = array(
+				'recursive' => -1,
+				'conditions' => $conditions,
+				'order' => array('SecurityUser.first_name')
+			);
+			
+			$count = $this->find('count', $options);
+			
+			$data = false;
+			if($limit === false || $count < $limit) {
+				$options['fields'] = array('SecurityUser.*');
+				$data = $this->find('all', $options);
+			}
+		}
+		return $data;
+	}
+	
+	public function paginateJoins(&$conditions) {
+		
+	}
+	
+	public function paginateConditions(&$conditions) {
+		if(isset($conditions['search']) && !empty($conditions['search'])) {
+			$search = $conditions['search'];
+			$search = '%' . $search . '%';
+			$conditions['OR'] = array(
+				'SecurityUser.username LIKE' => $search,
+				'SecurityUser.first_name LIKE' => $search,
+				'SecurityUser.last_name LIKE' => $search
+			);
+		}
+		unset($conditions['search']);
+	}
+	
+	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+		$this->paginateConditions($conditions);
+		$data = $this->find('all', array(
+			'fields' => array('SecurityUser.id', 'SecurityUser.username', 'SecurityUser.first_name', 'SecurityUser.last_name', 'SecurityUser.status'),
+			//'joins' => $this->paginateJoins($conditions),
+			'conditions' => $conditions,
+			'limit' => $limit,
+			'offset' => (($page-1)*$limit),
+			'order' => $order
+		));
+		return $data;
+	}
+	 
+	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
+		$this->paginateConditions($conditions);
+		$count = $this->find('count', array(
+			//'joins' => $this->paginateJoins($conditions), 
+			'conditions' => $conditions
+		));
+		return $count;
 	}
 }

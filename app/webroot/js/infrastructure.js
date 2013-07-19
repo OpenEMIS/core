@@ -17,7 +17,7 @@ var Infrastructure = {
     init : function(){
         this.attachOnChange();
     },
-    getCensusByMaterial : function (id,model){ console.log(model);
+    getCensusByMaterial : function (id,model){ 
         var maskId;
         var parent = $('#'+model).closest('.section_group');
 		var gender = ($('#'+model+'Gender').val() == undefined)?'':'/'+$('#'+model+'Gender').val();
@@ -33,7 +33,6 @@ var Infrastructure = {
 				$.unmask({
 					id: maskId, 
 					callback: function() {
-						console.log("here");
 						$('#'+model+'_section').html(data);
 						var total = 0;
 						parent.find('.table_row').each(function() {

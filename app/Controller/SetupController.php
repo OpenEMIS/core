@@ -259,7 +259,7 @@ class SetupController extends AppController {
 		
 		// Teacher
 		$teacherOptions = array(
-			'Categories' => $this->TeacherCategory,
+			'Positions' => $this->TeacherCategory,
 			'Qualification Categories' => $this->TeacherQualificationCategory,
 			'Qualification Certificates' => $this->TeacherQualificationCertificate,
 			'Qualification Institutions' => $this->TeacherQualificationInstitution,
@@ -282,8 +282,16 @@ class SetupController extends AppController {
 		// Staff
 		$lookup[] = array('Staff' => array(
 			'optgroup' => true,
-			'name' => 'Category',
+			'name' => 'Positions',
 			'items' => $this->Staff->getLookupVariables()
+		));
+		$lookup[] = array('Staff' => array(
+			'viewMethod' => array('action' => 'customFields', 'StaffCustomField'),
+			'view' => 'customFields',
+			'editMethod' => array('action' => 'customFieldsEdit', 'StaffCustomField'),
+			'edit' => 'customFieldsEdit',
+			'optgroup' => true,
+			'name' => 'Custom Fields'
 		));
 		// End Staff
 		

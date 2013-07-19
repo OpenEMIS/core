@@ -43,13 +43,7 @@ echo $this->Html->script('jquery.scrollTo', false);
 			));
 			?>
 		</div>
-		<div class="row_item_legend">
-		<ul class="legend">
-			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
-			<li><span class="external"></span><?php echo __('External'); ?></li>
-			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
-		</ul>
-		</div>
+	<?php echo $this->element('census_legend'); ?>
 	</div>
 	<?php
         //pr($data);

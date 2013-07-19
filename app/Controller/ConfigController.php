@@ -106,6 +106,7 @@ class ConfigController extends AppController {
 
 	public function edit(){
 
+
 		$this->Navigation->addCrumb('Edit System Configurations');
 
 		$items = $this->ConfigItem->find('all',array(
@@ -148,6 +149,24 @@ class ConfigController extends AppController {
 					$yearbookElements = $this->ConfigItem->findById($innerElement['id'], array('ConfigItem.name'));
 					$formData = $this->data;
 
+					// if student/teacher/staff prefix
+					if($yearbookElements['ConfigItem']['name'] == "student_prefix" || $yearbookElements['ConfigItem']['name'] == "teacher_prefix" || $yearbookElements['ConfigItem']['name'] == "staff_prefix") {
+						$prefix = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['prefix'];
+						$enable = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['enable'];
+						unset($innerElement[$innerKey]['value']['prefix']);
+						unset($innerElement[$innerKey]['value']['enable']);
+						$innerElement['value'] = $prefix.','.$enable;
+					}
+					
+					// if student/teacher/staff prefix
+					if($yearbookElements['ConfigItem']['name'] == "student_prefix" || $yearbookElements['ConfigItem']['name'] == "teacher_prefix" || $yearbookElements['ConfigItem']['name'] == "staff_prefix") {
+						$prefix = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['prefix'];
+						$enable = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['enable'];
+						unset($innerElement[$innerKey]['value']['prefix']);
+						unset($innerElement[$innerKey]['value']['enable']);
+						$innerElement['value'] = $prefix.','.$enable;
+					}
+					
 					// if yearbook publication date, massage date value 
 					if ($key == "yearbook" && $yearbookElements['ConfigItem']['name'] == "yearbook_publication_date") {
 						$pubYear = $formData['ConfigItem']['yearbook'][$innerKey]['value']['year'];
@@ -376,6 +395,7 @@ class ConfigController extends AppController {
 				$result['alertType'] = $this->Utility->getAlertType('alert.error');
 				$result['alertOpt']['text'] = __('Error occurred while deleting file.');
 			}
+
 			
 			return json_encode($result);
         }
@@ -523,5 +543,15 @@ class ConfigController extends AppController {
 		return  $groupByType;
 
 	}
-
+	public function getAllowedChar() {
+		$this->layout = 'ajax';
+		$this->autoRender = false;
+		echo $this->ConfigItem->getValue('special_characters');
+	}
+	public function getAllRules() {
+		$this->layout = 'ajax';
+		$this->autoRender = false;
+		$data = $this->ConfigItem->getAllCustomValidation();
+		echo json_encode($data);
+	}
 }

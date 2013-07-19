@@ -8,15 +8,24 @@ echo $this->Html->script('search', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
+<?php
+$total = 0;
+
+if(strlen($this->Paginator->counter('{:count}')) > 0) {
+	$total = $this->Paginator->counter('{:count}');
+}
+?>
+
 <div id="institution-list" class="content_wrapper search">
 	<h1>
 		<span><?php echo __('List of Institutions'); ?></span>
 		<span class="divider"></span>
-		<span class="total"><?php echo $totalcount;?> <?php echo __('Institutions'); ?></span>
+		<span class="total"><span><?php echo $total ?></span> <?php echo __('Institutions'); ?></span>
 	</h1>
 	
 	<?php echo $this->element('alert'); ?>
 	
+	<?php if($this->Session->check('Search.SearchField') || $total > $limit) { ?>
 	<div class="row">
         <?php echo $this->Form->create('Institution', array('action'=>'search','id'=>false)); ?>
 		<div class="search_wrapper">
@@ -39,6 +48,8 @@ echo $this->Html->script('search', false);
 		?>
 		<?php echo $this->Form->end(); ?>
 	</div>
+	<?php } ?>
+	
     <div id="mainlist">
 		<div class="row">
 			<ul id="pagination">
@@ -47,6 +58,7 @@ echo $this->Html->script('search', false);
 				<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
 			</ul>
 		</div>
+		<?php if($total > 0) { ?>
 		<div class="table allow_hover" action="Institutions/listSites/">
 			<div class="table_head" url="Institutions/index">
 				<div class="table_cell cell_code">
@@ -68,29 +80,22 @@ echo $this->Html->script('search', false);
 			</div>
 			<div class="table_body">
 			<?php
-			//pr($institutions);
-			if(isset($institutions) && count($institutions) > 0){
-				$ctr = 1;
 				foreach ($institutions as $arrItems):
-					//$area = (strlen($arrItems['Area']['name'])>14?substr($arrItems['Area']['name'], 0, 14).'...':$arrItems['Area']['name']);
 					$id = $arrItems['Institution']['id'];
 					$code = $this->Utility->highlight($searchField,$arrItems['Institution']['code']);
 					$name = $this->Utility->highlight($searchField,'<b>'.$arrItems['Institution']['name'].'</b>'.((isset($arrItems['InstitutionHistory']['name']))?'<br>'.$arrItems['InstitutionHistory']['name']:''));
 			?>
-					<div class="table_row" row-id="<?php echo $id ?>">
-						<div class="table_cell"><?php echo $code; ?></div>
-						<div class="table_cell"><?php echo $name; ?></div>
-						<div class="table_cell"><?php echo $arrItems['InstitutionSector']['name']; ?></div>
-						<div class="table_cell"><?php echo $arrItems['InstitutionProvider']['name']; ?></div>
-					</div>
-				<?php endforeach;
-			}
-			?>
+				<div class="table_row" row-id="<?php echo $id ?>">
+					<div class="table_cell"><?php echo $code; ?></div>
+					<div class="table_cell"><?php echo $name; ?></div>
+					<div class="table_cell"><?php echo $arrItems['InstitutionSector']['name']; ?></div>
+					<div class="table_cell"><?php echo $arrItems['InstitutionProvider']['name']; ?></div>
+				</div>
+			<?php endforeach; ?>
 			</div>
 		</div>
-		<?php if(sizeof($institutions)==0) { ?>
-		<div class="row center" style="color: red">No Institution found.</div>
-		<?php } ?>
+		<?php } // end if total ?>
+		
 		<div class="row">
 			<ul id="pagination">
 				<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>

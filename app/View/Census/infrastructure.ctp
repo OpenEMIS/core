@@ -24,6 +24,7 @@ echo $this->Html->script('infrastructure', false);
 		<div class="value">
 			<?php
 				echo $this->Form->input('school_year_id', array(
+					'id' =>'SchoolYearId',
 					'label' => false,
 					'div' => false,
 					'options' => $years,
@@ -33,13 +34,7 @@ echo $this->Html->script('infrastructure', false);
 				));
 			?>
 		</div>
-		<div class="row_item_legend">
-		<ul class="legend">
-			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
-			<li><span class="external"></span><?php echo __('External'); ?></li>
-			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
-		</ul>
-		</div>
+	<?php echo $this->element('census_legend'); ?>
 	</div>
 	
 	<?php foreach($data as $infraname => $arrval) { $total = 0; ?>
@@ -98,12 +93,12 @@ echo $this->Html->script('infrastructure', false);
 						}
 						$statusTotal += $val;
 						$record_tag="";
-						switch ($source) {
-							case 1:
-								$record_tag.="row_external";break;
-							case 2:
-								$record_tag.="row_estimate";break;
+						foreach ($source_type as $k => $v) {
+							if ($source==$v) {
+								$record_tag = "row_" . $k;
+							}
 						}
+
 					?>
 					
 					<div class="table_cell cell_number <?php echo $record_tag; ?>">

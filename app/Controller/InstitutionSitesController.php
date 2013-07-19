@@ -59,8 +59,6 @@ class InstitutionSitesController extends AppController {
 		'InstitutionSiteTeacher',
 		'InstitutionSiteStaff',
 		'CensusStudent',
-		'SecurityUserRole',
-		'SecurityRoleInstitutionSite',
 		'SchoolYear',
 		'Students.Student',
 		'Teachers.Teacher',
@@ -276,15 +274,7 @@ class InstitutionSitesController extends AppController {
 				$sites = $this->Session->read('AccessControl.institutions');
 				$sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][]=$institutionSiteId;
 				$this->Session->write('AccessControl.institutions', $sites);
-				
 				$this->Session->write('InstitutionSiteId', $institutionSiteId);
-                                
-                //** Push Site to Highest Role Area**/
-                //get highest Role of userid
-                $highestRole = $this->SecurityUserRole->getHighestUserRole($this->Auth->user('id'));
-                $arrSettings = array('security_role_id'=>$highestRole['SecurityRole']['id'],'institution_site_id'=>$institutionSiteId);
-                $this->SecurityRoleInstitutionSite->addInstitutionSitetoRole($arrSettings);
-                //
 				
 				$this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
 			}
@@ -612,6 +602,7 @@ class InstitutionSitesController extends AppController {
 			//pr($this->request->data['InstitutionSiteBankAccount']);
 			//die;
 			$this->InstitutionSiteBankAccount->saveAll($this->request->data['InstitutionSiteBankAccount']);
+			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'bankAccounts'));
 		}
 		$data = $this->InstitutionSiteBankAccount->find('all',array('conditions'=>array('InstitutionSiteBankAccount.institution_site_id'=>$this->institutionSiteId)));
 		$bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
@@ -954,6 +945,14 @@ class InstitutionSitesController extends AppController {
 		}
 	}
 	
+	public function classesDelete() {
+		$id = $this->params['pass'][0];
+		$name = $this->InstitutionSiteClass->field('name', array('InstitutionSiteClass.id' => $id));
+		$this->InstitutionSiteClass->delete($id);
+		$this->Utility->alert($name . ' have been deleted successfully.');
+		$this->redirect(array('action' => 'classes'));
+	}
+	
 	public function classesAddGrade() {
 		$this->layout = 'ajax';
 		$exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
@@ -1216,7 +1215,7 @@ class InstitutionSitesController extends AppController {
 		$orderBy = $model . '.first_name';
 		$order = 'asc';
 		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : '';
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if($this->request->is('post')) {
 			$selectedYear = $this->data[$model]['school_year'];
@@ -1238,6 +1237,11 @@ class InstitutionSitesController extends AppController {
 		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
 		$data = $this->paginate('InstitutionSiteTeacher', $conditions);
 		
+		// Checking if user has access to add
+		$_add_teacher = $this->AccessControl->check('InstitutionSites', 'teachersAdd');
+		$this->set('_add_teacher', $_add_teacher);
+		// End Access Control
+		
 		$this->set('page', $page);
 		$this->set('orderBy', $orderBy);
 		$this->set('order', $order);
@@ -1247,37 +1251,12 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function teachersSearch() {
-		$this->autoRender = false;
-		$id = trim($this->params->query['id']);
-		$result = array();
-		if(strlen($id) == 0) {
-			$this->Utility->setAjaxResult('alert', $result);
-			$result['alertOpt'] = array();
-			$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
-			$result['alertOpt']['text'] = $this->Utility->getMessage('INVALID_ID_NO');
-		} else {
-			$obj = $this->Teacher->find('first', array(
-				'fields' => array('Teacher.id', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
-				'conditions' => array('Teacher.identification_no' => $id)
-			));
-			if($obj) {
-				$teacherId = $obj['Teacher']['id'];
-				$status = $this->InstitutionSiteTeacher->checkEmployment($this->institutionSiteId, $teacherId);
-				
-				$this->Utility->setAjaxResult('success', $result);
-				$result['id'] = $obj['Teacher']['id'];
-				$result['first_name'] = $obj['Teacher']['first_name'];
-				$result['last_name'] = $obj['Teacher']['last_name'];
-				$result['gender'] = $this->Utility->formatGender($obj['Teacher']['gender']);
-				$result['status'] = $status;
-			} else {
-				$this->Utility->setAjaxResult('alert', $result);
-				$result['alertOpt'] = array();
-				$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
-				$result['alertOpt']['text'] = $this->Utility->getMessage('TEACHER_NOT_FOUND');
-			}
-		}
-		return json_encode($result);
+		$this->layout = 'ajax';
+		$search = trim($this->params->query['searchString']);
+		$params = array('limit' => 100);
+		$data = $this->Teacher->search($search, $params);
+		$this->set('search', $search);
+		$this->set('data', $data);
 	}
 	
 	public function teachersAdd() {
@@ -1372,7 +1351,7 @@ class InstitutionSitesController extends AppController {
 		$orderBy = $model . '.first_name';
 		$order = 'asc';
 		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : '';
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if($this->request->is('post')) {
 			$selectedYear = $this->data[$model]['school_year'];
@@ -1394,6 +1373,11 @@ class InstitutionSitesController extends AppController {
 		$this->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
 		$data = $this->paginate('InstitutionSiteStaff', $conditions);
 		
+		// Checking if user has access to add
+		$_add_staff = $this->AccessControl->check('InstitutionSites', 'staffAdd');
+		$this->set('_add_staff', $_add_staff);
+		// End Access Control
+		
 		$this->set('page', $page);
 		$this->set('orderBy', $orderBy);
 		$this->set('order', $order);
@@ -1403,37 +1387,12 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function staffSearch() {
-		$this->autoRender = false;
-		$id = trim($this->params->query['id']);
-		$result = array();
-		if(strlen($id) == 0) {
-			$this->Utility->setAjaxResult('alert', $result);
-			$result['alertOpt'] = array();
-			$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
-			$result['alertOpt']['text'] = $this->Utility->getMessage('INVALID_ID_NO');
-		} else {
-			$obj = $this->Staff->find('first', array(
-				'fields' => array('Staff.id', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
-				'conditions' => array('Staff.identification_no' => $id)
-			));
-			if($obj) {
-				$staffId = $obj['Staff']['id'];
-				$status = $this->InstitutionSiteStaff->checkEmployment($this->institutionSiteId, $staffId);
-				
-				$this->Utility->setAjaxResult('success', $result);
-				$result['id'] = $obj['Staff']['id'];
-				$result['first_name'] = $obj['Staff']['first_name'];
-				$result['last_name'] = $obj['Staff']['last_name'];
-				$result['gender'] = $this->Utility->formatGender($obj['Staff']['gender']);
-				$result['status'] = $status;
-			} else {
-				$this->Utility->setAjaxResult('alert', $result);
-				$result['alertOpt'] = array();
-				$result['alertOpt']['type'] = $this->Utility->getAlertType('alert.error');
-				$result['alertOpt']['text'] = $this->Utility->getMessage('STAFF_NOT_FOUND');
-			}
-		}
-		return json_encode($result);
+		$this->layout = 'ajax';
+		$search = trim($this->params->query['searchString']);
+		$params = array('limit' => 100);
+		$data = $this->Staff->search($search, $params);
+		$this->set('search', $search);
+		$this->set('data', $data);
 	}
 	
 	public function staffAdd() {
@@ -1843,13 +1802,9 @@ class InstitutionSitesController extends AppController {
 					if($this->request->is('post')) {
 						$result = $this->data['AssessmentItemResult'];
 						foreach($result as $key => &$obj) {
-							if(empty($obj['id']) && empty($obj['marks'])) {
-								unset($result[$key]);
-							} else {
-								$obj['assessment_item_id'] = $itemId;
-								$obj['institution_site_id'] = $this->institutionSiteId;
-								$obj['school_year_id'] = $selectedYear;
-							}
+							$obj['assessment_item_id'] = $itemId;
+							$obj['institution_site_id'] = $this->institutionSiteId;
+							$obj['school_year_id'] = $selectedYear;
 						}
 						if(!empty($result)) {
 							$this->AssessmentItemResult->saveMany($result);

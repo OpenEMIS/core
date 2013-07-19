@@ -56,6 +56,7 @@ var objSearch = {
 	
 	callback: function(data) {
 		$("#mainlist").html(data);
+		$('.total span').text($('.table').attr('total'));
 		objSearch.attachEvents();
 	}
 };
