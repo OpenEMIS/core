@@ -8,15 +8,24 @@ echo $this->Html->script('search', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
+<?php
+$total = 0;
+
+if(strlen($this->Paginator->counter('{:count}')) > 0) {
+	$total = $this->Paginator->counter('{:count}');
+}
+?>
+
 <div id="student-list" class="content_wrapper search">
     <h1>
         <span><?php echo __('List of Students'); ?></span>
         <span class="divider"></span>
-        <span class="total"><?php echo $totalcount;?> <?php echo __('Students'); ?></span>
+        <span class="total"><span><?php echo $total;?></span> <?php echo __('Students'); ?></span>
     </h1>
 
     <?php echo $this->element('alert'); ?>
 
+	<?php if($this->Session->check('Search.SearchFieldStudent') || $total > $limit) { ?>
     <div class="row">
         <?php  echo $this->Form->create('Student', array('action' => 'search','id'=>false));  ?>
         <div class="search_wrapper">
@@ -39,6 +48,7 @@ echo $this->Html->script('search', false);
 		?>
         <?php echo $this->Form->end(); ?>
     </div>
+	<?php } ?>
 
     <div id="mainlist">
         <div class="row">
@@ -49,7 +59,7 @@ echo $this->Html->script('search', false);
                 
             </ul>
         </div>
-
+		<?php if($total > 0) { ?>
         <div class="table allow_hover" action="Students/viewStudent/">
             <div class="table_head" url="Students/index">
                 <div class="table_cell cell_id_no">
@@ -75,34 +85,26 @@ echo $this->Html->script('search', false);
             </div>
             
             <div class="table_body">
-                <?php
-                    // pr($students);
-                if(isset($students) && count($students) > 0){
-                    $ctr = 1;
-                    foreach ($students as $arrItems):
-                        $id = $arrItems['Student']['id'];
-                        $identificationNo = $this->Utility->highlight($searchField, $arrItems['Student']['identification_no']);
-                        $firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['StudentHistory']['first_name']))?'<br>'.$arrItems['StudentHistory']['first_name']:''));
-                        $lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['StudentHistory']['last_name']))?'<br>'.$arrItems['StudentHistory']['last_name']:''));
-                        $gender = $arrItems['Student']['gender'];
-                        $birthday = $arrItems['Student']['date_of_birth'];
-
-                ?>
-                    <div class="table_row" row-id="<?php echo $id ?>">
-                        <div class="table_cell"><?php echo $identificationNo; ?></div>
-                        <div class="table_cell"><?php echo $firstName; ?></div>
-                        <div class="table_cell"><?php echo $lastName; ?></div>
-                        <div class="table_cell"><?php echo $gender; ?></div>
-                        <div class="table_cell"><?php echo $birthday; ?></div>
-                    </div>
-                    <?php endforeach;
-                }
-                ?>
+			<?php
+				foreach ($students as $arrItems):
+					$id = $arrItems['Student']['id'];
+					$identificationNo = $this->Utility->highlight($searchField, $arrItems['Student']['identification_no']);
+					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['Student']['student_history_first_name']))?'<br>'.$arrItems['Student']['first_name']:''));
+					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['Student']['student_history_last_name']))?'<br>'.$arrItems['Student']['last_name']:''));
+					$gender = $arrItems['Student']['gender'];
+					$birthday = $arrItems['Student']['date_of_birth'];
+			?>
+				<div class="table_row" row-id="<?php echo $id ?>">
+					<div class="table_cell"><?php echo $identificationNo; ?></div>
+					<div class="table_cell"><?php echo $firstName; ?></div>
+					<div class="table_cell"><?php echo $lastName; ?></div>
+					<div class="table_cell"><?php echo $gender; ?></div>
+					<div class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></div>
+				</div>
+			<?php endforeach; ?>
             </div>
         </div>
-        <?php if(sizeof($students)==0) { ?>
-        <div class="row center" style="color: red"><?php echo __('No Student found.'); ?></div>
-        <?php } ?>
+		<?php } // end if total ?>
 
         <div class="row">
             <ul id="pagination">

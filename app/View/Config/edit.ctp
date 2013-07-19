@@ -2,6 +2,7 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
+echo $this->Html->script('config', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -37,6 +38,17 @@ echo $this->Html->script('app.date', false);
 		?>
 	<fieldset class="section_break">
 		<legend><?php echo __(ucwords($key)); ?></legend>
+		<?php
+		if($key == 'custom validation'){
+			$str = '';
+			foreach($element as $innerKey => $innerElement){ 
+				if($innerElement['name'] == 'special_characters'){
+					$str = $innerElement['value'];
+				}
+			}
+			echo "<div style='padding:5px 0 0 5px;'><b>N</b>(numbers) | <b>A</b>(Alpha Character) | $str (Special Chars)</div>";
+		}
+		?>
 		<div class="table">
 			<div class="table_body">
 		<?php 
@@ -67,6 +79,9 @@ echo $this->Html->script('app.date', false);
 							);
 		foreach($element as $innerKey => $innerElement){ 
 				$item = $innerElement; 
+				
+				if($item['name'] == 'special_characters') continue;
+				$addClass = ($item['type'] == 'custom validation')?'custom_validation':'';
 		?>
 		
 			<div class="table_row <?php echo ($key+1)%2==0? 'even':''; ?>">
@@ -78,7 +93,7 @@ echo $this->Html->script('app.date', false);
 					if($item['visible']>0){
 						$options = array(
 							'value' => $item['value'],
-							'class' => 'default'
+							'class' => 'default '.$addClass
 						);
 							$options['maxlength'] = 300;
 						if(stristr($item['name'], 'dashboard_notice')){
@@ -114,7 +129,16 @@ echo $this->Html->script('app.date', false);
 
 							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
 							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
-	
+							
+						} elseif($item['name'] == 'student_prefix' || $item['name'] == 'teacher_prefix' || $item['name'] == 'staff_prefix'){
+							$itemsVal = explode(",", $item['value']);
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value.enable',
+													array('label'=>'Enabled', 'div' => false, 'type'=>'checkbox', 
+													 'style'=>'width: 30px;', 'checked' => $itemsVal[1]));
+							echo '&nbsp;&nbsp;';
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value.prefix', 
+													array('default' => $itemsVal[0], 'label'=>false, 'div' => false, 
+													'class' => 'default', 'style'=>'width: 100px;'));
 						}elseif(array_key_exists($item['name'], $arrOptions)){
 							$options = $arrOptions[$item['name']];
 							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);

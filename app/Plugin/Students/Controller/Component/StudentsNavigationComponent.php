@@ -34,9 +34,13 @@ class StudentsNavigationComponent extends Component {
 				'GENERAL' => array(
 					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
-					$navigation->createLink('More', $controller, 'additional')
+					//$navigation->createLink('Annual Info', $controller, 'custFieldYrView'),
+					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 					//$navigation->createLink('Institutions', 'institutions')
-				)/*,
+				),
+				'DETAILS' => array(
+                    $navigation->createLink('Classes', $controller, 'classes')
+                )/*,
 				'ASSESSMENT' => array(
 					'_controller' => $controller,
 					$this->Navigation->createLink('Assessment Results', 'assessments')

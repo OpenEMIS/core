@@ -69,7 +69,7 @@ $arrOptions = array('date_format' => array(
 				<?php }elseif(stristr($item['name'], 'yearbook_orientation')){ ?>
 				<div class="table_cell"><?php echo $arrOptions['yearbook_orientation'][$item['value']]; ?></div>
 		<?php }elseif(stristr($item['name'], 'yearbook_publication_date')){ ?>
-				<div class="table_cell"><?php echo $this->Utility->formatDate($item['value'], "d F Y"); ?></div>
+				<div class="table_cell"><?php echo $this->Utility->formatDate($item['value']); ?></div>
 		<?php }elseif(stristr($item['name'], 'yearbook_logo')){ ?>
 				<div class="table_cell">
 				<?php 
@@ -78,7 +78,26 @@ $arrOptions = array('date_format' => array(
 				}
 		    	?>
 				</div>	
-		<?php }else{ ?>
+		<?php }elseif(stristr($item['name'], 'student_prefix') || stristr($item['name'], 'teacher_prefix') || stristr($item['name'], 'staff_prefix')){ ?>
+                <div class="table_cell">
+                <?php 
+				$val = '';
+                if(substr($item['value'], -1)>0) {
+                    $val = str_replace(",","",substr($item['value'],0,-1));
+					//echo __($val==''? 'Enabled' : 'Enabled ('.$val.')');
+					echo '<div>';
+					echo '<div class="left">';
+					echo __('Enabled');
+					echo '</div>';
+					if($val!=''){
+						echo '<div class="left">&nbsp;';
+						echo __('('.$val.')');
+						echo '</div></div>';
+					}
+                }
+                ?>
+                </div>		
+        <?php }else{ ?>
 				<div class="table_cell"><?php echo $item['value']; ?></div>
 		<?php } ?>
 			</div>

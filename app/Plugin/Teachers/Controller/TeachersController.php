@@ -24,7 +24,8 @@ class TeachersController extends TeachersAppController {
 
     public $uses = array(
         'Institution',
-        'Teachers.InstitutionSiteTeacher',
+		'InstitutionSite',
+        'InstitutionSiteTeacher',
         'Teachers.Teacher',
         'Teachers.TeacherHistory',
         'Teachers.TeacherCustomField',
@@ -36,7 +37,8 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherQualification',
         'Teachers.TeacherQualificationCategory',
         'Teachers.TeacherQualificationCertificate',
-        'Teachers.TeacherQualificationInstitution'
+        'Teachers.TeacherQualificationInstitution',
+		'ConfigItem'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -64,21 +66,13 @@ class TeachersController extends TeachersAppController {
                 $name = $teacherFirstName ." ". $teacherLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('action' => 'view'));
-            } else {
-                
-                if($this->Auth->User('id') > 0){
-                        $this->redirect(array('action' => 'index'));
-                }else{
-                        $this->redirect(array('controller'=>'SecurityUsers','action' => 'login'));
-                }
             }
         }
     }
 
     public function index() {
         $this->Navigation->addCrumb('List of Teachers');
-		$tmp = $this->AccessControl->getAccessibleSites();
-		$security = array('OR'=>array('InstitutionSiteTeacher.id'=>null,'InstitutionSiteTeacher.institution_site_id'=>$tmp));
+		
         if ($this->request->is('post')){
             if(isset($this->request->data['Teacher']['SearchField'])){
                 Sanitize::clean($this->request->data);
@@ -88,38 +82,40 @@ class TeachersController extends TeachersAppController {
                 }
             }
 
-            if(isset($this->request->data['sortdir']) && isset($this->request->data['order']) ){
-
+            if(isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
                 if($this->request->data['sortdir'] != $this->Session->read('Search.sortdirTeacher')) {
                     $this->Session->delete('Search.sortdirTeacher');
                     $this->Session->write('Search.sortdirTeacher', $this->request->data['sortdir']);
                 }
-
                 if($this->request->data['order'] != $this->Session->read('Search.orderTeacher')) {
                     $this->Session->delete('Search.orderTeacher');
                     $this->Session->write('Search.orderTeacher', $this->request->data['order']);
                 }
-
             }
         }
 
         $fieldordername = ($this->Session->read('Search.orderTeacher'))?$this->Session->read('Search.orderTeacher'):'Teacher.first_name';
         $fieldorderdir = ($this->Session->read('Search.sortdirTeacher'))?$this->Session->read('Search.sortdirTeacher'):'asc';
-        $order = array('order'=>array($fieldordername => $fieldorderdir));
-
-        $cond = array('SearchKey' => $this->Session->read('Search.SearchFieldTeacher'));
-		$cond = array_merge($cond,array('Security'=>$security));
-        $limit = ($this->Session->read('Search.perpageTeacher'))?$this->Session->read('Search.perpageTeacher'):30;
-
-        $this->Paginator->settings = array_merge(array('limit' => $limit,'maxLimit' => 100), $order);
-        $data = $this->paginate('Teacher', $cond);
-
+		
+		$searchKey = stripslashes($this->Session->read('Search.SearchFieldTeacher'));
+		$conditions = array('SearchKey' => $searchKey);
+		if($this->Auth->user('super_admin')==0) {
+			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
+		}
+		$order = array('order' => array($fieldordername => $fieldorderdir));
+		$limit = ($this->Session->read('Search.perpageTeacher')) ? $this->Session->read('Search.perpageTeacher') : 30;
+        $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
+		
+        $data = $this->paginate('Teacher', $conditions);
+		if(empty($data) && !$this->request->is('ajax')) {
+			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+		$this->set('limit', $limit);
         $this->set('teachers', $data);
-        $this->set('totalcount', $this->Teacher->find('count'));
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
-        $this->set('searchField', $this->Session->read('Search.SearchFieldTeacher'));
-        if ($this->request->is('post')){
+        $this->set('searchField', $searchKey);
+        if($this->request->is('post')){
             $this->render('index_records','ajax');
         }
     }
@@ -184,8 +180,37 @@ class TeachersController extends TeachersAppController {
 		}
 
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
+		$this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
 		$this->set('data', $data);
+    }
+
+    public function employment() {
+        $this->Navigation->addCrumb(ucfirst($this->action));
+        $teacherId = $this->Session->read('TeacherId');
+        $data = array();
+		
+        $list = $this->InstitutionSiteTeacher->getPositions($teacherId);
+        foreach($list as $row) {
+            $result = array();
+            $dataKey = '';
+            foreach($row as $element){ // compact array
+                if(array_key_exists('institution', $element)){
+                    $dataKey .= $element['institution'];
+                    continue;
+                }
+                if(array_key_exists('institution_site', $element)){
+                    $dataKey .= ' - '.$element['institution_site'];
+                    continue;
+                }
+                $result = array_merge($result, $element);
+            }
+            $data[$dataKey][] = $result;
+        }
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_EMPLOYMENT'), array('type' => 'info', 'dismissOnClick' => false));
+		}
+        $this->set('data', $data);
     }
 
     public function fetchImage($id){
@@ -217,9 +242,30 @@ class TeachersController extends TeachersAppController {
                 // create the session for successfully adding of teacher
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
-            }
+            }else{
+				$errors = $this->Teacher->validationErrors;
+				if($this->getUniqueID()!=''){ // If Auto id
+					if(isset($errors["identification_no"])){ // If its ID error
+						if(sizeof($errors)<2){ // If only 1 faulty
+							$this->Teacher->set($this->request->data);
+							do{
+								$this->request->data["Teacher"]["identification_no"] = $this->getUniqueID();
+								$conditions = array(
+									'Teacher.identification_no' => $this->request->data["Teacher"]["identification_no"]
+								);
+							}while($this->Teacher->hasAny($conditions));
+							$this->Teacher->set($this->request->data);
+							$newTeacherRec =  $this->Teacher->save($this->request->data);
+							// create the session for successfully adding of teacher
+							$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); 
+							$this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
+						}
+					}
+				}
+			}
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
+		$this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
 		$this->set('data', $this->data);
     }
@@ -701,5 +747,74 @@ class TeachersController extends TeachersAppController {
             
             return json_encode($result);
         }
+    }
+	
+	private function custFieldYrInits(){
+		$this->Navigation->addCrumb('Annual Info');
+		$action = $this->action;
+		$siteid = @$this->request->params['pass'][2];
+		$id = $this->teacherId;;
+		$schoolYear = ClassRegistry::init('SchoolYear');
+		$years = $schoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($years);
+		$condParam = array('teacher_id'=>$id,'institution_site_id'=>$siteid,'school_year_id'=>$selectedYear);
+		
+		$arrMap = array('CustomField'=>'TeacherDetailsCustomField',
+						'CustomFieldOption'=>'TeacherDetailsCustomFieldOption',
+						'CustomValue'=>'TeacherDetailsCustomValue',
+						'Year'=>'SchoolYear');
+		return compact('action','siteid','id','years','selectedYear','condParam','arrMap');
+	}
+	private function custFieldSY($school_yr_ids){
+		return $this->InstitutionSite->find('list',array('conditions'=>array('InstitutionSite.id'=>$school_yr_ids)));
+	}
+	private function custFieldSites($institution_sites){
+		$institution_sites = $this->InstitutionSite->find('all',array('fields'=>array('InstitutionSite.id','InstitutionSite.name','Institution.name'),'conditions'=>array('InstitutionSite.id'=>$institution_sites)));
+		$tmp = array('0'=>'--');
+		foreach($institution_sites as $arrVal){ 
+			$tmp[$arrVal['InstitutionSite']['id']] = $arrVal['Institution']['name'].' - '.$arrVal['InstitutionSite']['name']; 
+		}
+		return $tmp;
+	}
+	
+	public function custFieldYrView(){
+		extract($this->custFieldYrInits());
+		$customfield = $this->Components->load('CustomField',$arrMap);
+		$data = array();
+		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
+		
+		$institution_sites = $customfield->getCustomValuebyCond('list',array('fields'=>array('institution_site_id','school_year_id'),'conditions'=>array('school_year_id'=>$selectedYear,'teacher_id'=>$id)));
+		
+		$institution_sites = $this->custFieldSites(array_keys($institution_sites));
+		if(count($institution_sites)<2)  $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+		$displayEdit = false;
+		$this->set(compact('arrMap','selectedYear','siteid','years','action','id','institution_sites','displayEdit'));
+		$this->set($data);
+		$this->render('/Elements/customfields/view');
+	}
+	
+	public function getUniqueID() {
+		$generate_no = '';
+     	$str = $this->Teacher->find('first', array('order' => array('Teacher.id DESC'), 'limit' => 1, 'fields'=>'Teacher.id'));
+		$prefix = $this->ConfigItem->find('first', array('limit' => 1, 
+													  'fields'=>'ConfigItem.value',
+													  'conditions'=>array(
+																			'ConfigItem.name' => 'teacher_prefix'
+																		 )
+									   ));
+		$prefix = explode(",",$prefix['ConfigItem']['value']);
+    	
+		if($prefix[1]>0){
+			$id = $str['Teacher']['id']+1; 
+			if(strlen($id)<6){
+				$str = str_pad($id,6,"0",STR_PAD_LEFT);
+			}
+			// Get two random number
+			$rnd1 = rand(0,9);
+			$rnd2 = rand(0,9);
+			$generate_no = $prefix[0].$str.$rnd1.$rnd2;
+		}
+		
+		return $generate_no;
     }
 }

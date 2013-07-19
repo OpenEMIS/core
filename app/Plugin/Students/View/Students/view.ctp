@@ -66,12 +66,12 @@ echo $this->Html->script('/Students/js/students', false);
 	</fieldset>
 		<fieldset class="section_break">
 		<legend><?php echo __('Address Area'); ?></legend>   
-		<?php echo $this->Utility->showArea($this->Form, 'address_area_id',@$obj['address_area_id'], array()); ?>
+		<?php echo @$this->Utility->showArea($this->Form, 'address_area_id',$obj['address_area_id'], array()); ?>
 	</fieldset>
 
 	<fieldset class="section_break">
 		<legend><?php echo __('Birth Place Area'); ?></legend>   
-		<?php echo $this->Utility->showArea($this->Form, 'birthplace_area_id',@$obj['birthplace_area_id'], array()); ?>
+		<?php echo @$this->Utility->showArea($this->Form, 'birthplace_area_id',$obj['birthplace_area_id'], array()); ?>
 	</fieldset>
 	
 	<fieldset class="section_break">

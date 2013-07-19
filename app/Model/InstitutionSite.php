@@ -192,6 +192,43 @@ class InstitutionSite extends AppModel {
 		return $lookup;
 	}
 	
+	// Used by SecurityController
+	public function getGroupAccessList($exclude) {
+		$conditions = array();
+		if(!empty($exclude)) {
+			$conditions['InstitutionSite.id NOT'] = $exclude;
+		}
+		
+		$data = $this->find('list', array(
+			'fields' => array('Institution.id', 'Institution.name'),
+			'joins' => array(
+				array(
+					'table' => 'institutions',
+					'alias' => 'Institution',
+					'conditions' => array('Institution.id = InstitutionSite.institution_id')
+				)
+			),
+			'conditions' => $conditions,
+			'group' => array('Institution.id HAVING COUNT(InstitutionSite.id) > 0'),
+			'order' => array('Institution.name')
+		));
+		return $data;
+	}
+	
+	public function getGroupAccessValueList($parentId, $exclude) {
+		$conditions = array('InstitutionSite.institution_id' => $parentId);
+		if(!empty($exclude)) {
+			$conditions['InstitutionSite.id NOT'] = $exclude;
+		}
+		
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSite.id', 'InstitutionSite.name'),
+			'conditions' => $conditions,
+			'order' => array('InstitutionSite.name')
+		));
+		return $data;
+	}
+	
 	public function getInstitutionsByAreas($areas) {
 		$list = $this->find('all', array(
 			'recursive' => 0,

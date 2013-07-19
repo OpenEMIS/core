@@ -17,6 +17,11 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteClassGrade extends AppModel {
+	public $actsAs = array(
+		'CascadeDelete' => array(
+			'cascade' => array('InstitutionSiteClassGradeStudent')
+		)
+	);
 	
 	// used by InstitutionSite classes
 	public function getGradesByClass($classId) {

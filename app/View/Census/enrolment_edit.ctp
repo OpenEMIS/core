@@ -26,6 +26,7 @@ echo $this->Html->script('census_enrolment', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
+				'id' => 'SchoolYearId',
 				'options' => $years,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
@@ -34,13 +35,7 @@ echo $this->Html->script('census_enrolment', false);
 			?>
 		</div>
 		
-		<div class="row_item_legend">
-		<ul class="legend">
-			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
-			<li><span class="external"></span><?php echo __('External'); ?></li>
-			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
-		</ul>
-		</div>
+	<?php echo $this->element('census_legend'); ?>
 	</div>
 	
 	<?php foreach($data as $key => $obj) { ?>
@@ -80,9 +75,7 @@ echo $this->Html->script('census_enrolment', false);
 				<div class="table_cell"><?php echo __('Male'); ?></div>
 				<div class="table_cell"><?php echo __('Female'); ?></div>
 				<div class="table_cell"><?php echo __('Total'); ?></div>
-				<?php if($_delete) { ?>
 				<div class="table_cell cell_delete">&nbsp;</div>
-				<?php } ?>
 			</div>
 			
 			<div class="table_body">
@@ -92,11 +85,10 @@ echo $this->Html->script('census_enrolment', false);
 				foreach($records as $record) {
 					$total += $record['male'] + $record['female'];
 					$record_tag="";
-					switch ($record['source']) {
-						case 1:
-							$record_tag.="row_external";break;
-						case 2:
-							$record_tag.="row_estimate";break;
+					foreach ($source_type as $k => $v) {
+						if ($record['source']==$v) {
+							$record_tag = "row_" . $k;
+						}
 					}
 				?>
 				<div class="table_row" record-id="<?php echo $record['id']; ?>">
@@ -146,9 +138,7 @@ echo $this->Html->script('census_enrolment', false);
 						</div>
 					</div>
 					<div class="table_cell cell_total cell_number"><?php echo $record['male'] + $record['female']; ?></div>
-					<?php if($_delete) { ?>
 					<div class="table_cell"><span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="CensusEnrolment.removeRow(this)"></span></div>
-					<?php } ?>
 				</div>
 				<?php } // end foreach (records) ?>
 			</div> <!-- End Table Body -->
