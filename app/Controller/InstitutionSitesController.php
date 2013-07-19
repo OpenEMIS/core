@@ -245,22 +245,31 @@ class InstitutionSitesController extends AppController {
 			
 			
 		}else{
+			
 			$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $id)));
 			$this->set('data', $data);
+			
 			$areaLevel = $this->fetchtoParent($data['InstitutionSite']['area_id']);
 			$areaLevel = array_reverse($areaLevel);
-			
-			
-			$adminareaLevel = $this->fetchtoParent($data['InstitutionSite']['area_education_id']);
-			$adminareaLevel = array_reverse($adminareaLevel);
-			
-			$areadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['area_id']);
-			//pr($data['InstitutionSite']);
-			
-			$adminareadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['area_education_id'],$arrMap = array('AreaEducation','AreaEducationLevel'));
-			
-		}
 		
+			$adminareaLevel = $this->fetchtoParent($data['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
+			$adminareaLevel = array_reverse($adminareaLevel);
+
+			$areadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['area_id']);
+			//pr($areadropdowns);
+			//pr($data['InstitutionSite']);
+			if(!is_null($data['InstitutionSite']['area_education_id'])){
+				$adminareadropdowns = $this->getAllSiteAreaToParent($data['InstitutionSite']['area_education_id'], array('AreaEducation','AreaEducationLevel'));
+				
+			}else{
+				$topEdArea = $this->AreaEducation->find('list',array('conditions'=>array('parent_id'=>-1)));
+				$arr[]  = '--'.__('Select').'--';
+				foreach($topEdArea as $k => $v){
+					$arr[] = array('name'=>$v,'value'=>$k);
+				}
+				$adminareadropdowns = array('area_education_level_0'=>array('options'=>$arr));
+			}	
+		}
 		
 		$topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1')));
 		$disabledAreas = $this->Area->find('list',array('conditions'=>array('Area.visible' => '0')));
@@ -299,6 +308,7 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Add New Institution Site');
 		$institutionId = $this->Session->read('InstitutionId');
 		$areadropdowns = array('0'=>'--'.__('Select').'--');
+		$adminareadropdowns = array('0'=>'--'.__('Select').'--');
 		$areaLevel = array();
 		if($this->request->is('post')) {
 			
@@ -333,6 +343,12 @@ class InstitutionSitesController extends AppController {
 				$sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][]=$institutionSiteId;
 				$this->Session->write('AccessControl.institutions', $sites);
 				$this->Session->write('InstitutionSiteId', $institutionSiteId);
+                                
+                //** Push Site to Highest Role Area**/
+                //get highest Role of userid
+                $highestRole = $this->SecurityUserRole->getHighestUserRole($this->Auth->user('id'));
+                $arrSettings = array('security_role_id'=>$highestRole['SecurityRole']['id'],'institution_site_id'=>$institutionSiteId);
+                $this->SecurityRoleInstitutionSite->addInstitutionSitetoRole($arrSettings);
 				
 				$this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
 			}
@@ -368,7 +384,13 @@ class InstitutionSitesController extends AppController {
         
         $levels = $this->AreaLevel->find('list');
         $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1','Area.visible' => 1)));
+		
+		$topAdminArea = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => '-1','AreaEducation.visible' => 1)));
+		
         $this->Utility->unshiftArray($topArea, array('0'=>'--'.__('Select').'--'));
+		$this->Utility->unshiftArray($topAdminArea, array('0'=>'--'.__('Select').'--'));
+		
+		$adminlevels = $this->AreaEducationLevel->find('list');
 		
         $this->set('type_options',$type);
         $this->set('ownership_options',$ownership);
@@ -379,10 +401,12 @@ class InstitutionSitesController extends AppController {
 		$this->set('levels',$levels);
 		
 		$this->set('adminarealevel',$areaLevel);
-		$this->set('adminlevels',$levels);
+		$this->set('adminlevels',$adminlevels);
 		
 		$this->set('areadropdowns',$areadropdowns);
+		$this->set('adminareadropdowns',$adminareadropdowns);
         $this->set('highestLevel',$topArea);
+		$this->set('highestAdminLevel',$topAdminArea);
     }
 	
 	public function delete() {
@@ -473,7 +497,7 @@ class InstitutionSitesController extends AppController {
 			$siblings = $this->{$arrMap[0]}->find('all',array('fields'=>Array($arrMap[0].'.id',$arrMap[0].'.name',$arrMap[0].'.parent_id',$arrMap[0].'.visible'),'conditions'=>array($arrMap[0].'.parent_id' => $arrVals['parent_id'])));
 			//echo "<br>";
 			
-			$opt = array();
+			$opt =  array('0'=>'--'.__('Select').'--');
 			foreach($siblings as &$sibVal){
 				 
 					 $arrDisabledList[$sibVal[$arrMap[0]]['id']] = array('parent_id'=>$sibVal[$arrMap[0]]['parent_id'],'id'=>$sibVal[$arrMap[0]]['id'],'name'=>$sibVal[$arrMap[0]]['name'],'visible'=>$sibVal[$arrMap[0]]['visible']);
