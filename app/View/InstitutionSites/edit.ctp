@@ -95,6 +95,26 @@ echo $this->Html->script('config', false);
 		?>
 		
 	</fieldset>
+	<fieldset class="section_break">
+		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
+		<?php
+		$ctr = 0; //pr($areadropdowns);
+		//pr($adminareadropdowns);
+		foreach($adminlevels as $levelid => $levelName){
+			if(!isset($adminareadropdowns['area_education_level_'.$ctr]['options'])){
+				$adminareadropdowns['area_education_level_'.$ctr]['options'] = array('--'.__('Select').'--');	
+			}
+			echo '<div class="row">
+					<div class="label">'. __("$levelName") .'</div>
+					<div class="value">'. $this->Form->input('area_education_level_'.$ctr,array('style'=>'float:left','default'=>@$adminarealevel[$ctr]['id'],'options'=>$adminareadropdowns['area_education_level_'.$ctr]['options'])).
+							($ctr == 0 ? $this->Form->input('area_education_id',array('type'=>'text','style'=>'display:none','value' => $obj['area_education_id'])):''). 
+					'</div>
+				</div>';
+			$ctr++;
+		}
+		?>
+		
+	</fieldset>
 	
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>

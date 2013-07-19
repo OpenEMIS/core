@@ -12,7 +12,7 @@ echo $this->Html->script('area', false);
 		<span><?php echo __('Administrative Boundaries'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'index'), array('class' => 'divider', 'id'=>'edit'));
+			echo $this->Html->link(__('Edit'), array('action' => 'AreaEducationEdit'), array('class' => 'divider'));
 		}
 		/*if($_view_levels) {
 			echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
@@ -21,12 +21,12 @@ echo $this->Html->script('area', false);
 	</h1>
 	<?php echo $this->element('area_categories'); ?>
 	<?php
-	echo $this->Form->create('Area', array(
+	echo $this->Form->create('AreaEducation', array(
 			'url' => array(
 				'controller' => 'Areas',
-				'action' => 'index'
+				'action' => 'AreaEducation'
 			),
-			'model' => 'Area',
+			'model' => 'AreaEducation',
             'inputDefaults' => array('label' => false, 'div' =>false)
 		)
 	);
@@ -40,7 +40,6 @@ echo $this->Html->script('area', false);
                 $firstElement = reset($levels);
                 $lastElement = array_pop($levels);
                 foreach($levels as $levelid => $levelName){
-                    
                     echo '<div class="row input">
                                 <div class="label'. ((!isset($highestLevel[$ctr]))?' disabled':'') .'">'.$levelName.'</div>'.
                                 //'<div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
@@ -86,11 +85,7 @@ echo $this->Html->script('area', false);
 
 <script type="text/javascript">
 $(document).ready(function () {
-	$('#edit').click(function(event){
-		event.preventDefault();
-		var form = $('form').attr('action', getRootURL() + 'Areas/edit');
-		$('form').submit();
-	});
+	
 
 	<?php if(isset($initAreaSelection) && count($initAreaSelection) > 0){ ?>
 	areas.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
@@ -104,9 +99,10 @@ $(document).ready(function () {
 
 	currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).trigger('change');	
 	<?php }else{?>
-
+	areas.extraParam = 'Education';
 	areas.fetchData();
 	<?php } ?>
+	
 });
 
 </script>
