@@ -550,7 +550,7 @@ class InstitutionSitesController extends AppController {
 		$arrVals = Array();
 		//pr($lowest);die;
 		//$this->autoRender = false; // AJAX
-		
+		$this->{$arrMap[0]}->formatResult = false;
 		$list = $this->{$arrMap[0]}->find('first', array(
 								'fields' => array($arrMap[0].'.id', $arrMap[0].'.name', $arrMap[0].'.parent_id', $arrMap[0].'.'.$AreaLevelfk.'_id',$arrMap[1].'.name'),
 								'conditions' => array($arrMap[0].'.id' => $lowest)));
