@@ -102,7 +102,7 @@ class InstitutionsController extends AppController {
 		if(!$this->Session->check('Search.SearchField')) {
 			// if user do not have access to add institution and the records is 1, redirect to list of sites
 			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
-				$this->redirect(array('action' => 'listSites', $data['Institution']['id']));
+				$this->redirect(array('action' => 'listSites', $data[0]['Institution']['id']));
 			}
 		}
 		

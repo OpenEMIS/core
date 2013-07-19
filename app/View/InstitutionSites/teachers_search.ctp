@@ -11,11 +11,10 @@ if($data !== false) {
 			$firstName = $obj['Teacher']['first_name'];
 			$lastName = $obj['Teacher']['last_name'];
 ?>
-		<div class="table_row" row-id="<?php echo $id; ?>" id-no="<?php echo $id_no; ?>" first-name="<?php echo $firstName; ?>" last-name="<?php echo $lastName; ?>" gender="<?php echo $gender; ?>">
+		<div class="table_row" row-id="<?php echo $id; ?>" id-no="<?php echo $id_no; ?>" first-name="<?php echo $firstName; ?>" last-name="<?php echo $lastName; ?>" gender="<?php echo $gender; ?>" onclick="InstitutionSiteTeachers.addTeacher(this)">
 			<div class="table_cell cell_id_no"><?php echo $this->Utility->highlight($search, $id_no); ?></div>
 			<div class="table_cell"><?php echo $this->Utility->highlight($search, $firstName); ?></div>
 			<div class="table_cell"><?php echo $this->Utility->highlight($search, $lastName); ?></div>
-			<div class="table_cell cell_icon_action"><span class="icon_plus" onclick="InstitutionSiteTeachers.addTeacher(this)"></span></div>
 		</div>
 <?php 
 		}
