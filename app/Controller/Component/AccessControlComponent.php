@@ -56,10 +56,6 @@ class AccessControlComponent extends Component {
 			$this->{$model} = ClassRegistry::init($modelClass);
 		}
 		$this->setUserPermissions($this->Auth->user('id'));
-		if($this->Auth->user('super_admin')==0) {
-			$this->loadAreas();
-			$this->loadInstitutions();
-		}
 	}
 	
 	//called after Controller::beforeFilter()
