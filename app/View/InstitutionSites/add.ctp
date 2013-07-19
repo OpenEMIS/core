@@ -2,7 +2,7 @@
 echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('config', false);
-echo $this->Html->script('institution', false);
+echo $this->Html->script('institution_site', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -69,6 +69,23 @@ echo $this->Html->script('institution', false);
 		}
 		?>
 	</fieldset>
+	<fieldset class="section_break">
+		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
+		<?php
+		$ctr = 0;
+		
+		foreach($adminlevels as $levelid => $levelName){
+			echo '<div class="row">
+					<div class="label">'.__("$levelName").'</div>
+					<div class="value">'. $this->Form->input('area_education_level_'.$ctr,array('class' => 'form-error default', 'default'=>@$adminarealevel[$ctr]['id'],'options'=>(isset($adminareadropdowns['area_education_level_'.$ctr]['options'])?$adminareadropdowns['area_education_level_'.$ctr]['options']:($ctr == 0?$highestAdminLevel:array('0'=>'--'.__('Select').'--'))))).
+							($ctr == 0 ? $this->Form->input('area_education_id',array('type'=>'text','style'=>'display:none')):''). 
+					'</div>
+				</div>';
+			$ctr++;
+		}
+		?>
+	</fieldset>
+	
 	
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>
