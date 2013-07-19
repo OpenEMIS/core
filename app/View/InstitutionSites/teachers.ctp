@@ -32,6 +32,7 @@ echo $this->Html->script('institution_site_teachers', false);
 			echo $this->Form->input('school_year', array(
 				'id' => 'SchoolYearId',
 				'options' => $yearOptions,
+				'empty' => __('All Years'),
 				'default' => $selectedYear,
 				'onchange' => 'InstitutionSiteTeachers.navigate()'
 			));

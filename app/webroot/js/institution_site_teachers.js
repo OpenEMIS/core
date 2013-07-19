@@ -80,7 +80,7 @@ var InstitutionSiteTeachers = {
 	},
 	
 	addTeacher: function(obj) {
-		var row = $(obj).closest('.table_row');
+		var row = $(obj);
 		var id = row.attr('row-id');
 		var idNo = row.attr('id-no');
 		var fName = row.attr('first-name');
@@ -92,11 +92,6 @@ var InstitutionSiteTeachers = {
 		$('#FirstName').val(fName);
 		$('#LastName').val(lName);
 		$('#Gender').val(gender);
-		
-		row.fadeOut(500, function() {
-			row.remove();
-			jsTable.toggleTableScrollable($('#search'));
-		});
 	},
 	
 	validateTeacherAdd: function() {
