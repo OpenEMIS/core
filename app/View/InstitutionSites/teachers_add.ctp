@@ -50,11 +50,10 @@ echo $this->Html->script('institution_site_teachers', false);
 					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
 					<div class="table_cell"><?php echo __('First Name'); ?></div>
 					<div class="table_cell"><?php echo __('Last Name'); ?></div>
-					<div class="table_cell cell_icon_action"></div>
 				</div>
 			</div>
-			<div class="list_wrapper hidden" limit="4" style="height: 109px;">
-				<div class="table">
+			<div class="list_wrapper hidden" limit="4" style="height: 98px;">
+				<div class="table allow_hover">
 					<div class="table_body"></div>
 				</div>
 			</div>

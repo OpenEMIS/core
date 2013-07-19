@@ -343,12 +343,6 @@ class InstitutionSitesController extends AppController {
 				$sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][]=$institutionSiteId;
 				$this->Session->write('AccessControl.institutions', $sites);
 				$this->Session->write('InstitutionSiteId', $institutionSiteId);
-                                
-                //** Push Site to Highest Role Area**/
-                //get highest Role of userid
-                $highestRole = $this->SecurityUserRole->getHighestUserRole($this->Auth->user('id'));
-                $arrSettings = array('security_role_id'=>$highestRole['SecurityRole']['id'],'institution_site_id'=>$institutionSiteId);
-                $this->SecurityRoleInstitutionSite->addInstitutionSitetoRole($arrSettings);
 				
 				$this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
 			}
@@ -1316,7 +1310,7 @@ class InstitutionSitesController extends AppController {
 		$orderBy = $model . '.first_name';
 		$order = 'asc';
 		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : '';
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if($this->request->is('post')) {
 			$selectedYear = $this->data[$model]['school_year'];
@@ -1452,7 +1446,7 @@ class InstitutionSitesController extends AppController {
 		$orderBy = $model . '.first_name';
 		$order = 'asc';
 		$yearOptions = $this->SchoolYear->getYearListValues('start_year');
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : '';
 		$prefix = sprintf('InstitutionSite%s.List.%%s', $model);
 		if($this->request->is('post')) {
 			$selectedYear = $this->data[$model]['school_year'];
