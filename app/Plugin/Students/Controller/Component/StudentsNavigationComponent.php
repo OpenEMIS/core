@@ -37,7 +37,10 @@ class StudentsNavigationComponent extends Component {
 					//$navigation->createLink('Annual Info', $controller, 'custFieldYrView'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 					//$navigation->createLink('Institutions', 'institutions')
-				)/*,
+				),
+				'DETAILS' => array(
+                    $navigation->createLink('Classes', $controller, 'classes')
+                )/*,
 				'ASSESSMENT' => array(
 					'_controller' => $controller,
 					$this->Navigation->createLink('Assessment Results', 'assessments')

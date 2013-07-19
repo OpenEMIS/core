@@ -66,14 +66,13 @@ echo $this->Html->script('institution_site', false);
 				}
 			}
 			echo '<div class="row">
-						<div class="label">'.__($levelName).'</div>
+						<div class="label">'.$levelName.'</div>
 						<div class="value" value="'.$areaVal['id'].'" name="area_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
 					</div>';
 			$ctr++;
 		}
 		?>
 	</fieldset>
-	
 	
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>
@@ -127,5 +126,4 @@ echo $this->Html->script('institution_site', false);
 	<script>
 		$('#gmap').load(getRootURL()+'InstitutionSites/viewMap/');
 	</script>
-    
 </div>

@@ -213,14 +213,32 @@ msgstr "添加新学生"
 msgid "Details"
 msgstr "详细资料"
 
+msgid "DETAILS"
+msgstr "详细资料"
+
 msgid "Attachments"
 msgstr "附件"
+
+msgid "Overview"
+msgstr ""
+
+msgid "More"
+msgstr ""
 
 msgid "Additional Info"
 msgstr "附加信息"
 
 msgid "STUDENT INFORMATION"
 msgstr "学生资料"
+
+msgid "Static Fields"
+msgstr ""
+
+msgid "Field Options"
+msgstr ""
+
+msgid "National Assessments"
+msgstr ""
 
 msgid "ASSESSMENT"
 msgstr "评估"
@@ -242,6 +260,15 @@ msgstr "附件"
 
 msgid "Student Identification No, First Name or Last Name"
 msgstr "学生证件号码、名字或姓氏"
+
+msgid "Student Identification"
+msgstr "Student Identification"
+
+msgid "Teacher Identification"
+msgstr "Teacher Identification"
+
+msgid "Staff Identification"
+msgstr "Staff Identification"
 
 msgid "Identification No."
 msgstr "证件号码"
@@ -288,6 +315,12 @@ msgstr "结束日期"
 msgid "Address"
 msgstr "地址"
 
+msgid "Address Area"
+msgstr "地址 区域"
+
+msgid "Birth Place Area"
+msgstr "Birth Place Area"
+
 msgid "Postal Code"
 msgstr "邮政编码"
 
@@ -297,7 +330,13 @@ msgstr "电话"
 msgid "Email"
 msgstr "电子邮件"
 
+msgid "E-mail"
+msgstr "电子邮件"
+
 msgid "General"
+msgstr "基本资料"
+
+msgid "GENERAL"
 msgstr "基本资料"
 
 msgid "Contact"
@@ -540,6 +579,18 @@ msgstr "地方一级政府"
 msgid "Ward"
 msgstr "Ward"
 
+msgid "Street"
+msgstr "Street"
+
+msgid "Block"
+msgstr "Block"
+
+msgid "Axis"
+msgstr "Axis"
+
+msgid "State"
+msgstr "State"
+
 msgid "Locality"
 msgstr "地点"
 
@@ -553,6 +604,9 @@ msgid "No Institution Sites."
 msgstr "没有学院分校记录。"
 
 msgid "Institution Site Details"
+msgstr "学院分校详细资料"
+
+msgid "Institution Site Code"
 msgstr "学院分校详细资料"
 
 # ###########################################################################
@@ -650,6 +704,18 @@ msgstr "座椅"
 
 msgid "Age"
 msgstr "年龄"
+
+msgid "Attendance"
+msgstr "Attendance"
+
+msgid "Behaviour"
+msgstr "Behaviour"
+
+msgid "Results"
+msgstr "Results"
+
+msgid "TOTALS"
+msgstr "总数"
 
 msgid "Total"
 msgstr "总数"
@@ -1341,6 +1407,9 @@ msgid "Function"
 msgstr "功能"
 
 msgid "Institution Site"
+msgstr "学院分校"
+
+msgid "INSTITUTION SITE"
 msgstr "学院分校"
 
 msgid "Census"
@@ -2336,6 +2405,9 @@ msgstr "OLAP 报告"
 
 msgid "Generated"
 msgstr "生成"
+
+msgid "Generated Files"
+msgstr "生成 文档"
 
 msgid "Generating OLAP Report..."
 msgstr "生成 OLAP 报告..."

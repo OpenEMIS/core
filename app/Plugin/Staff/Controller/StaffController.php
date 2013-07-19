@@ -26,13 +26,15 @@ class StaffController extends StaffAppController {
     public $uses = array(
         'Institution',
 		'InstitutionSite',
+        'InstitutionSiteStaff',
         'Staff.InstitutionSiteStaff',
         'Staff.Staff',
         'Staff.StaffHistory',
         'Staff.StaffCustomField',
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
-        'Staff.StaffAttachment'
+        'Staff.StaffAttachment',
+		'ConfigItem'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -61,21 +63,13 @@ class StaffController extends StaffAppController {
                 $name = $staffFirstName ." ". $staffLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('action' => 'view'));
-            } else {
-                if($this->Auth->User('id') > 0){
-                        $this->redirect(array('action' => 'index'));
-                }else{
-                        $this->redirect(array('controller'=>'SecurityUsers','action' => 'login'));
-                }
             }
         }
     }
 
     public function index() {
         $this->Navigation->addCrumb('List of Staff');
-		$tmp = $this->AccessControl->getAccessibleSites();
-		$security = array('OR'=>array('InstitutionSiteStaff.id'=>null,'InstitutionSiteStaff.institution_site_id'=>$tmp));
-        if ($this->request->is('post')){
+        if($this->request->is('post')){
             if(isset($this->request->data['Staff']['SearchField'])){
                $this->request->data['Staff']['SearchField'] = Sanitize::escape($this->request->data['Staff']['SearchField']);
                 if($this->request->data['Staff']['SearchField'] != $this->Session->read('Search.SearchFieldStaff')) {
@@ -84,38 +78,40 @@ class StaffController extends StaffAppController {
                 }
             }
 
-            if(isset($this->request->data['sortdir']) && isset($this->request->data['order']) ){
-
+            if(isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
                 if($this->request->data['sortdir'] != $this->Session->read('Search.sortdirStaff')) {
                     $this->Session->delete('Search.sortdirStaff');
                     $this->Session->write('Search.sortdirStaff', $this->request->data['sortdir']);
                 }
-
                 if($this->request->data['order'] != $this->Session->read('Search.orderStaff')) {
                     $this->Session->delete('Search.orderStaff');
                     $this->Session->write('Search.orderStaff', $this->request->data['order']);
                 }
-
             }
         }
 
         $fieldordername = ($this->Session->read('Search.orderStaff'))?$this->Session->read('Search.orderStaff'):'Staff.first_name';
         $fieldorderdir = ($this->Session->read('Search.sortdirStaff'))?$this->Session->read('Search.sortdirStaff'):'asc';
-        $order = array('order'=>array($fieldordername => $fieldorderdir));
-
-        $cond = array('SearchKey' => $this->Session->read('Search.SearchFieldStaff'));
-		$cond = array_merge($cond,array('Security'=>$security));
-        $limit = ($this->Session->read('Search.perpageStaff'))?$this->Session->read('Search.perpageStaff'):30;
-
-        $this->Paginator->settings = array_merge(array('limit' => $limit,'maxLimit' => 100), $order);
-        $data = $this->paginate('Staff', $cond);
-
+		
+		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStaff'));
+		$conditions = array('SearchKey' => $searchKey);
+		if($this->Auth->user('super_admin')==0) {
+			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
+		}
+		$order = array('order' => array($fieldordername => $fieldorderdir));
+		$limit = ($this->Session->read('Search.perpageStaff')) ? $this->Session->read('Search.perpageStaff') : 30;
+        $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
+		
+        $data = $this->paginate('Staff', $conditions);
+		if(empty($data) && !$this->request->is('ajax')) {
+			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+		}
+		$this->set('limit', $limit);
         $this->set('staff', $data);
-        $this->set('totalcount', $this->Staff->find('count'));
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
-        $this->set('searchField', stripslashes($this->Session->read('Search.SearchFieldStaff')));
-        if ($this->request->is('post')){
+        $this->set('searchField', $searchKey);
+        if($this->request->is('post')){
             $this->render('index_records','ajax');
         }
     }
@@ -178,7 +174,36 @@ class StaffController extends StaffAppController {
 		}
 
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
+		$this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
+        $this->set('data', $data);
+    }
+
+    public function employment() {
+        $this->Navigation->addCrumb(ucfirst($this->action));
+        $staffId = $this->Session->read('StaffId');
+        $data = array();
+		
+		$list = $this->InstitutionSiteStaff->getPositions($staffId);
+        foreach($list as $row) {
+            $result = array();
+            $dataKey = '';
+            foreach($row as $element){ // compact array
+                if(array_key_exists('institution', $element)){
+                    $dataKey .= $element['institution'];
+                    continue;
+                }
+                if(array_key_exists('institution_site', $element)){
+                    $dataKey .= ' - '.$element['institution_site'];
+                    continue;
+                }
+                $result = array_merge($result, $element);
+            }
+            $data[$dataKey][] = $result;
+        }
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('NO_EMPLOYMENT'), array('type' => 'info', 'dismissOnClick' => false));
+		}
         $this->set('data', $data);
     }
 
@@ -218,9 +243,30 @@ class StaffController extends StaffAppController {
                 $newStaffRec =  $this->Staff->save($this->data);
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewStaff', $newStaffRec['Staff']['id']));
-            }
+            }else{
+				$errors = $this->Staff->validationErrors;
+				if($this->getUniqueID()!=''){ // If Auto id
+					if(isset($errors["identification_no"])){ // If its ID error
+						if(sizeof($errors)<2){ // If only 1 faulty
+							$this->Staff->set($this->request->data);
+							do{
+								$this->request->data["Staff"]["identification_no"] = $this->getUniqueID();
+								$conditions = array(
+									'Staff.identification_no' => $this->request->data["Staff"]["identification_no"]
+								);
+							}while($this->Staff->hasAny($conditions));
+							$this->Staff->set($this->request->data);
+							$newStaffRec =  $this->Staff->save($this->request->data);
+							// create the session for successfully adding of Staff
+							$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view'); 
+							$this->redirect(array('action' => 'viewStaff', $newStaffRec['Staff']['id']));
+						}
+					}
+				}
+			}
         }
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
+		$this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
 		$this->set('data', $this->data);
     }
@@ -533,4 +579,28 @@ class StaffController extends StaffAppController {
 		$this->render('/Elements/customfields/view');
 	}
 
+	public function getUniqueID() {
+		$generate_no = '';
+     	$str = $this->Staff->find('first', array('order' => array('Staff.id DESC'), 'limit' => 1, 'fields'=>'Staff.id'));
+		$prefix = $this->ConfigItem->find('first', array('limit' => 1, 
+													  'fields'=>'ConfigItem.value',
+													  'conditions'=>array(
+																			'ConfigItem.name' => 'staff_prefix'
+																		 )
+									   ));
+		$prefix = explode(",",$prefix['ConfigItem']['value']);
+    	
+		if($prefix[1]>0){
+			$id = $str['Staff']['id']+1; 
+			if(strlen($id)<6){
+				$str = str_pad($id,6,"0",STR_PAD_LEFT);
+			}
+			// Get two random number
+			$rnd1 = rand(0,9);
+			$rnd2 = rand(0,9);
+			$generate_no = $prefix[0].$str.$rnd1.$rnd2;
+		}
+		
+		return $generate_no;
+    }
 }

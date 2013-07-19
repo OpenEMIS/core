@@ -11,7 +11,7 @@ echo $this->Html->script('institution_site_teachers', false);
     <h1>
 		<span><?php echo __('List of Teachers'); ?></span>
 		<?php
-		if($_add) {
+		if($_add_teacher) {
 			echo $this->Html->link(__('Add'), array('action' => 'teachersAdd'), array('class' => 'divider'));
 		}
 		?>
@@ -32,6 +32,7 @@ echo $this->Html->script('institution_site_teachers', false);
 			echo $this->Form->input('school_year', array(
 				'id' => 'SchoolYearId',
 				'options' => $yearOptions,
+				'empty' => __('All Years'),
 				'default' => $selectedYear,
 				'onchange' => 'InstitutionSiteTeachers.navigate()'
 			));

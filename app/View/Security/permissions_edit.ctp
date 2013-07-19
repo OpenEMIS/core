@@ -15,24 +15,28 @@ echo $this->Html->script('security', false);
 	));
 	?>
 	<h1>
+		<span><?php echo __('Permissions'); ?></span>
 		<?php
-		echo '<span>'.__('Permissions').'</span>';
-		echo $this->Html->link(__('View'), 
-				array('action' => 'permissions'), 
-				array('class' => 'divider', 'onclick' => 'return security.navigate(this)'
-			));
+		echo $this->Html->link(__('View'), array('action' => 'permissions', $selectedRole), array('class' => 'divider'));
 		?>
 	</h1>
 	
-	<div class="row input role_select">
-		<div class="label"><?php echo __('Roles'); ?></div>
+	<?php if(!empty($group)) { ?>
+	<div class="row">
+		<div class="label" style="width: 100px;"><?php echo __('Group Name'); ?></div>
+		<div class="value"><?php echo $group['name']; ?></div>
+	</div>
+	<?php } ?>
+	
+	<div class="row input" style="margin-bottom: 15px;">
+		<div class="label" style="width: 100px;"><?php echo __('Roles'); ?></div>
 		<div class="value">
 			<?php
 			echo $this->Form->input('security_role_id', array(
-				'href' => $this->params['controller'] . '/' . $this->params['action'],
 				'options' => $roles,
 				'default' => $selectedRole,
-				'onchange' => 'security.switchRole(this)'
+				'url' => $this->params['controller'] . '/' . $this->params['action'],
+				'onchange' => 'jsForm.change(this)'
 			));
 			?>
 		</div>

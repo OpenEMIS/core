@@ -1,6 +1,8 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
+echo $this->Html->css('search', 'stylesheet', array('inline' => false));
+echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('institution_site_staff', false);
@@ -16,18 +18,52 @@ echo $this->Html->script('institution_site_staff', false);
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'staffAdd')
 	));
-	echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'value' => 0));
+	echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'value' => 0, 'autocomplete' => 'off'));
 	?>
 	<h1>
 		<span><?php echo __('Add Staff'); ?></span>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
-	<div class="info" url="InstitutionSites/staffView/">
+	<fieldset class="section_group" id="search">
+		<legend><?php echo __('Search'); ?></legend>
+		
+		<div class="row">
+			<div class="search_wrapper">
+				<?php 
+					echo $this->Form->input('SearchField', array(
+						'id' => 'SearchField',
+						'label' => false,
+						'div' => false,
+						'class' => 'default',
+						'placeholder' => __('Identification No, First Name or Last Name')
+					));
+				?>
+				<span class="icon_clear" onClick="$('#SearchField').val('')">X</span>
+			</div>
+			<span class="left icon_search" url="InstitutionSites/staffSearch/" onClick="InstitutionSiteStaff.search(this)"></span>
+		</div>
+		
+		<div class="table_scrollable">
+			<div class="table table_header">
+				<div class="table_head">
+					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell"><?php echo __('First Name'); ?></div>
+					<div class="table_cell"><?php echo __('Last Name'); ?></div>
+				</div>
+			</div>
+			<div class="list_wrapper hidden" limit="4" style="height: 98px;">
+				<div class="table allow_hover">
+					<div class="table_body"></div>
+				</div>
+			</div>
+		</div>
+	</fieldset>
+	
+	<div class="info">
 		<div class="row">
 			<div class="label"><?php echo __('Identification No'); ?></div>
-			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo')); ?></div>
-			<span class="left icon_search" url="InstitutionSites/staffSearch"></span>
+			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo', 'disabled' => 'disabled')); ?></div>
 		</div>
 		
 		<div class="row">

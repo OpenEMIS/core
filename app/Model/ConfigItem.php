@@ -382,4 +382,15 @@ class ConfigItem extends AppModel {
 		return $coordinates;
 
 	}
+	
+	public function getAllCustomValidation(){
+		$data = $this->findAllByType('custom validation');
+		$newArr = array();
+		foreach($data as $arrVal){
+			if($arrVal['ConfigItem']['value'] != '')
+			$newArr[$arrVal['ConfigItem']['name']] = str_replace("[a[\\-]zA[\\-]Z]", "[a-zA-Z]",str_replace (array("N","A","_", " ", "(", ")", "-"), array("\\d","[a-zA-Z]", "[_]", "\\s", "[(]", "[)]", "[\\-]"), $arrVal['ConfigItem']['value']));
+		}
+		return $newArr;
+	}
+	
 }
