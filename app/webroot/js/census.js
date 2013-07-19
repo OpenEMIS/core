@@ -78,12 +78,23 @@ var Census = {
 		var ajaxParams = {index: index, tableBody: tableBody};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				if(tableBody==1) {
-					$('.multi .table_body').append(data);
+				if(!$(data).hasClass('alert')) {
+					if(tableBody==1) {
+						$('.multi .table_body').append(data);
+					} else {
+						$('.multi .table_head').after(data);
+					}
+					jsTable.fixTable();
 				} else {
-					$('.multi .table_head').after(data);
+					var alertOpt = {
+						id: 'multi_alert',
+						parent: '.multi',
+						type: $(data).attr('type'),
+						text: $(data).html(),
+						position: 'center'
+					};
+					$.alert(alertOpt);
 				}
-				jsTable.fixTable();
 			};
 			$.unmask({id: maskId, callback: callback});
 		};

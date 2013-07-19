@@ -13,6 +13,7 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'teachersEdit', $obj['id']), array('class' => 'divider'));
 		}
+		echo $this->Html->link(__('Academic'), array('action' => 'teachersCustFieldYrView', $obj['id']), array('class' => 'divider'));
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>

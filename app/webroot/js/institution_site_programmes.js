@@ -164,7 +164,6 @@ var InstitutionSiteProgrammes = {
 				} else {
 					jsTable.toggleTableScrollable('#search_group');
 					jsTable.fixTable('#search_group .list_wrapper .table');
-					$('.icon_plus[student-id]').click(InstitutionSiteProgrammes.addStudentToList);
 				}
 			};
 			$.unmask({id: maskId, callback: callback});
@@ -179,11 +178,11 @@ var InstitutionSiteProgrammes = {
 		});
 	},
 	
-	addStudentToList: function() {
-		var obj = $(this);
-		var studentId = obj.attr('student-id');
-		var name = $(obj).closest('.table_row').find('.table_cell[name]').attr('name');
-		var idNo = $(obj).closest('.table_row').find('.cell_id_no').html();
+	addStudentToList: function(obj) {
+		var row = $(obj).closest('.table_row');
+		var studentId = row.attr('row-id');
+		var name = row.find('.table_cell[name]').attr('name');
+		var idNo = row.find('.cell_id_no').html();
 		var i = $('#student_group .table_row').length;
 		
 		$(obj).unbind('click');
@@ -192,7 +191,7 @@ var InstitutionSiteProgrammes = {
 		var ajaxParams = {studentId: studentId, name: name, idNo: idNo, i: i};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				obj.closest('.table_row').fadeOut(300, function() {
+				row.fadeOut(300, function() {console.log(data);
 					$(this).remove();
 					$('#student_group .list_wrapper .table_body').prepend(data);
 					jsTable.toggleTableScrollable('#search_group');

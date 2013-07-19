@@ -43,35 +43,4 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 			<div class="value"><?php echo !is_null($obj['email']) ? $obj['email'] : ''; ?></div>
 		</div>
 	</fieldset>
-	
-	<fieldset class="section_break">
-		<legend><?php echo __('Roles'); ?></legend>
-		
-		<div class="table full_width">
-			<div class="table_head">
-				<div class="table_cell" style="width: 120px;"><?php echo __('Role'); ?></div>
-				<div class="table_cell"><?php echo __('Modules'); ?></div>
-			</div>
-			
-			<div class="table_body">
-				<?php if($obj['super_admin']==0) { ?>
-				
-				<?php foreach($obj['roles'] as $roleId => $role) { ?>
-				<div class="table_row">
-					<div class="table_cell"><?php echo $role['name']; ?></div>
-					<div class="table_cell"><?php echo $role['modulesToString']; ?></div>
-				</div>
-				<?php } ?>
-				
-				<?php } else { ?>
-				
-				<div class="table_row">
-					<div class="table_cell">Super Administrator</div>
-					<div class="table_cell">Full access on all modules</div>
-				</div>
-				
-				<?php } ?>
-			</div>
-		</div>
-	</fieldset>
 </div>

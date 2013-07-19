@@ -10,7 +10,7 @@
 .cell_status { width: 60px; text-align: center; }
 /* end programmes */
 
-.cell_active { min-width: 10px !important; width: 30px; text-align: center; }
+.cell_active { min-width: 10px !important; width: auto; text-align: center; }
 
 #bank_accounts .icon_delete { margin-top: 5px; }
 #attachments.edit .table_cell { vertical-align: top !important; }

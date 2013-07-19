@@ -8,33 +8,34 @@ echo $this->Html->script('security', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="permissions" class="content_wrapper">
-	<?php
-	echo $this->Form->create('Security', array(
-		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'Security', 'action' => 'permissions')
-	));
-	?>
 	<h1>
+		<span><?php echo __('Permissions'); ?></span>
 		<?php
-		echo '<span>'.__('Permissions').'</span>';
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), 
-				array('action' => 'permissionsEdit'), 
-				array('class' => 'divider', 'onclick' => 'return security.navigate(this)'
-			));
+		echo $this->Html->link(__('Back'), array('action' => 'roles', $group['id']), array('class' => 'divider'));
+		if($_edit && $allowEdit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'permissionsEdit', $selectedRole), array('class' => 'divider'));
 		}
 		?>
 	</h1>
 	
-	<div class="row input role_select">
-		<div class="label"><?php echo __('Roles'); ?></div>
+	<?php if(!empty($group)) { ?>
+	<div class="row">
+		<div class="label" style="width: 100px;"><?php echo __('Group Name'); ?></div>
+		<div class="value"><?php echo $group['name']; ?></div>
+	</div>
+	<?php } ?>
+	
+	<div class="row input" style="margin-bottom: 15px;">
+		<div class="label" style="width: 100px;"><?php echo __('Roles'); ?></div>
 		<div class="value">
 			<?php
 			echo $this->Form->input('security_role_id', array(
-				'href' => $this->params['controller'] . '/' . $this->params['action'],
+				'label' => false,
+				'div' => false,
 				'options' => $roles,
 				'default' => $selectedRole,
-				'onchange' => 'security.switchRole(this)'
+				'url' => $this->params['controller'] . '/' . $this->params['action'],
+				'onchange' => 'jsForm.change(this)'
 			));
 			?>
 		</div>
@@ -63,7 +64,7 @@ echo $this->Html->script('security', false);
 				<div class="table_row">
 					<div class="table_cell"><?php echo __($obj['name']); ?></div>
 					<?php foreach($_operations as $op) { ?>
-					<div class="table_cell center"><?php echo $this->Utility->checkOrCrossMarker($obj[$op]==1); ?></div>
+					<div class="table_cell center"><?php echo $this->Utility->checkOrCrossMarker($obj[$op]>=1); ?></div>
 					<?php } ?>
 				</div>
 				<?php } ?> <!-- end if -->
@@ -73,6 +74,4 @@ echo $this->Html->script('security', false);
 	</fieldset>
 	
 	<?php } ?>
-	
-	<?php echo $this->Form->end(); ?>
 </div>

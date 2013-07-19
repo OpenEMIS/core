@@ -107,8 +107,7 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 						<div class="table_cell"><?php echo __('Total'); ?></div>
 						<div class="table_cell cell_delete">&nbsp;</div>
 				</div>
-				<div class="table_body" style="display:none;">
-				</div>
+				<div class="table_body" style="display:none;">&nbsp;</div>
 				
 				<div class="table_foot">
 					<div class="table_cell"></div>

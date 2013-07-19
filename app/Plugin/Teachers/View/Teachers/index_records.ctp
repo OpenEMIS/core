@@ -10,7 +10,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
     </ul>
     <div style="clear:both"></div>
 </div>
-<div class="table allow_hover" action="Teachers/viewTeacher/">
+<div class="table allow_hover" action="Teachers/viewTeacher/" total="<?php echo $this->Paginator->counter('{:count}'); ?>">
     <div class="table_head" url="Teachers/index">
 
         <div class="table_cell cell_id_no">
@@ -54,7 +54,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
                 <div class="table_cell"><?php echo $firstName; ?></div>
                 <div class="table_cell"><?php echo $lastName; ?></div>
                 <div class="table_cell"><?php echo $gender; ?></div>
-                <div class="table_cell"><?php echo $birthday; ?></div>
+                <div class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></div>
             </div>
         <?php endforeach;
     }

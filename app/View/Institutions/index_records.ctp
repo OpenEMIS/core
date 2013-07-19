@@ -2,6 +2,7 @@
 $pageOptions = array('escape'=>false,'style' => 'display:none');
 $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li', 'separator'=>'','ellipsis'=>'<li><span class="ellipsis">...</span></li>');
 ?>
+
 <div class="row">
 	<ul id="pagination">
 		<?php echo $this->Paginator->prev(__('Previous') , null, null, $pageOptions); ?>
@@ -9,7 +10,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 		<?php echo $this->Paginator->next(__('Next') , null, null, $pageOptions); ?>
 	</ul>
 </div>
-<div class="table allow_hover" action="Institutions/listSites/">
+<div class="table allow_hover" action="Institutions/listSites/" total="<?php echo $this->Paginator->counter('{:count}'); ?>">
 	<div class="table_head" url="Institutions/index">
 			<div class="table_cell cell_code"><span class="left"><?php echo __('Code'); ?></span><span class="icon_sort_<?php echo ($sortedcol =='Institution.code')?$sorteddir:'up'; ?>"  order="Institution.code"></span></div>
 			<div class="table_cell cell_name"><span class="left"><?php echo __('Institution Name'); ?></span><span class="icon_sort_<?php echo ($sortedcol =='Institution.name')?$sorteddir:'up'; ?>" order="Institution.name"></span></div>
@@ -38,7 +39,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 	</div>
 </div>
 <?php if(sizeof($institutions)==0) { ?>
-<div class="row center" style="color: red">No Institution found.</div>
+<div class="row center" style="color: red; margin-top: 15px;"><?php echo __('No Institution found.'); ?></div>
 <?php } ?>
 <div class="row">
 	<ul id="pagination">

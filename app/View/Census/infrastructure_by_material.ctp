@@ -31,7 +31,7 @@ foreach($data as $infraname => $arrval){
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_building_id]" value="'.$typeid.'">';
 					$cell_html.= $this->Form->input('value', array(
-							'class'=>$record_tag,
+							'class'=>@$record_tag,
 							'type' => 'text',
 							'label' => false,
 							'div' => false,
@@ -52,7 +52,7 @@ foreach($data as $infraname => $arrval){
 				$infraVal = isset($data[$infraname]['data'][$typeid][$statids][$material_id][$gender])
 						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$gender]
 						  : '';
-				$infraSource = isset($data[$infraname]['data'][$typeid][$statids][$material_id][$source])
+				$infraSource = @isset($data[$infraname]['data'][$typeid][$statids][$material_id][$source])
 						  ? $data[$infraname]['data'][$typeid][$statids][$material_id][$source]
 						  : '';
 
@@ -61,7 +61,7 @@ foreach($data as $infraname => $arrval){
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_status_id]" value="'.$statids.'">';
 					$cell_html.= '<input type="hidden" name="' . $inputName . '[infrastructure_sanitation_id]" value="'.$typeid.'">';
 					$cell_html.= $this->Form->input('value', array(
-							'class'=>$record_tag,
+							'class'=>@$record_tag,
 							'type' => 'text',
 							'label' => false,
 							'div' => false,
@@ -109,12 +109,12 @@ foreach($data as $infraname => $arrval){
 			 }
 			 
 			$record_tag="";
-			switch ($infraSource) {
-				case 1:
-					$record_tag.="row_external";break;
-				case 2:
-					$record_tag.="row_estimate";break;
+			foreach ($source_type as $k => $v) {
+				if ($infraSource==$v) {
+					$record_tag = "row_" . $k;
+				}
 			}
+		
 			 echo '<div class="table_cell cell_number ' . $record_tag.'">'. $cell_html . '</div>';
 			 $statusTotal += $infraVal;
 			 $ctrModel++;

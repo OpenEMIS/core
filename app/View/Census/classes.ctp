@@ -33,13 +33,7 @@ echo $this->Html->script('census', false);
 			?>
 		</div>
 		
-		<div class="row_item_legend">
-		<ul class="legend">
-			<li><span class="dataentry"></span><?php echo __('Data Entry'); ?></li>
-			<li><span class="external"></span><?php echo __('External'); ?></li>
-			<li><span class="estimate"></span><?php echo __('Estimate'); ?></li>
-		</ul>
-		</div>
+	<?php echo $this->element('census_legend'); ?>
 	</div>
 	
 	<?php if($displayContent) { ?>
@@ -64,11 +58,10 @@ echo $this->Html->script('census', false);
 					$totalClasses += $grade['classes'];
 					$totalSeats += $grade['seats'];
 					$record_tag="";
-					switch ($grade['source']) {
-						case 1:
-							$record_tag.="row_external";break;
-						case 2:
-							$record_tag.="row_estimate";break;
+					foreach ($source_type as $k => $v) {
+						if ($grade['source']==$v) {
+							$record_tag = "row_" . $k;
+						}
 					}
 			?>
 			
@@ -117,11 +110,10 @@ echo $this->Html->script('census', false);
 					$totalClasses += $obj['classes'];
 					$totalSeats += $obj['seats'];
 					$record_tag="";
-					switch ($obj['source']) {
-						case 1:
-							$record_tag.="row_external";break;
-						case 2:
-							$record_tag.="row_estimate";break;
+					foreach ($source_type as $k => $v) {
+						if ($obj['source']==$v) {
+							$record_tag = "row_" . $k;
+						}
 					}
 					?>
 					<div class="table_cell <?php echo $record_tag; ?>">

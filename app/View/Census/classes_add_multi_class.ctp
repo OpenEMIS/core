@@ -13,12 +13,11 @@ foreach($programmeGrades as $obj) {
 		}
 	}
 }
-
-if($body==0) {
-	echo '<div class="table_body">';
-}
 ?>
 
+<?php if(sizeof($displayDefault) >= 2) { ?>
+
+<?php if($body==0) { echo '<div class="table_body">'; } ?>
 <div class="table_row" row="<?php echo $i; ?>">
 	<div class="table_cell programme_list">
 		<div class="table_cell_row">
@@ -114,9 +113,10 @@ if($body==0) {
 		<?php echo $this->Utility->getDeleteControl(array('onclick' => "jsTable.computeAllTotal('.multi');")); ?>
 	</div>
 </div>
+<?php if($body==0) { echo '</div>'; } ?>
 
-<?php
-if($body==0) {
-	echo '</div>';
-}
-?>
+<?php } else { ?>
+
+<div class="alert none" type="0"><?php echo __("There are not enough grades."); ?></div>
+
+<?php } ?>

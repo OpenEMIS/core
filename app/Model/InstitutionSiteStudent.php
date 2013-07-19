@@ -98,7 +98,7 @@ class InstitutionSiteStudent extends AppModel {
 			'fields' => array(
 				'InstitutionSiteProgramme.id',
 				'EducationProgramme.duration',
-				'SchoolYear.name AS year'
+				'SchoolYear.start_year AS year'
 			),
 			'joins' => array(
 				array(

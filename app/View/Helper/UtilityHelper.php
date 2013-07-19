@@ -94,7 +94,7 @@ class UtilityHelper extends AppHelper {
 				}
 			}
 			echo '<div class="row">
-						<div class="label">'.__($levelName).'</div>
+						<div class="label">'.$levelName.'</div>
 						<div class="value" value="'.$areaVal['id'].'" name="area_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
 					</div>';
 			$ctr++;
@@ -113,7 +113,7 @@ class UtilityHelper extends AppHelper {
 
 		foreach($this->fieldLevels as $levelid => $levelName){
 			echo '<div class="row">
-					<div class="label">'. __("$levelName") .'</div>
+					<div class="label">'."$levelName".'</div>
 					<div class="value">'. $form->input('area_level_'.$ctr,
 														array('class'=>'areapicker default',
 														'style'=>'float:left','default'=>@$this->fieldAreaLevels[$ctr]['id'],
@@ -390,7 +390,6 @@ class UtilityHelper extends AppHelper {
 			'type' => 'checkbox',
 			'value' => 1,
 			'autocomplete' => 'off',
-			//'onchange' => 'jsList.activate(this)',
 			'before' => '<div class="table_cell center">',
 			'after' => '</div>'
 		);
@@ -400,6 +399,9 @@ class UtilityHelper extends AppHelper {
 		} else {
 			if($value == 1) {
 				$options['checked'] = 'checked';
+			} else if($value == 2) {
+				$options['checked'] = 'checked';
+				$options['disabled'] = 'disabled';
 			}
 		}
 		

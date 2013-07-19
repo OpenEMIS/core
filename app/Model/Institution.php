@@ -115,134 +115,82 @@ class Institution extends AppModel {
 		return $lookup;
 	}
 	
+	public function getInstitutionsWithoutSites() {
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('Institution.*'),
+			'joins' => array(
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'type' => 'LEFT',
+					'conditions' => array('InstitutionSite.institution_id = Institution.id')
+				)
+			),
+			'group' => array('Institution.id HAVING COUNT(InstitutionSite.id) = 0')
+		));
+		return $data;
+	}
+	
+	public function paginateJoins(&$conditions) {
+		$joins = array();
+		if(strlen($conditions['SearchKey']) != 0) {
+			$joins[] = array(
+				'table' => 'institution_history',
+				'alias' => 'InstitutionHistory',
+				'type' => 'LEFT',
+				'conditions' => array('InstitutionHistory.institution_id = Institution.id')
+			);
+		}
+		return $joins;
+	}
+	
+	public function paginateConditions($conditions) {
+		if(strlen($conditions['SearchKey']) != 0) {
+			$search = "%".$conditions['SearchKey']."%";
+			$conditions['OR'] = array(
+				'Institution.name LIKE' => $search,
+				'Institution.code LIKE' => $search,
+				'InstitutionHistory.name LIKE' => $search,
+				'InstitutionHistory.code LIKE' => $search
+			);
+		}
+		unset($conditions['SearchKey']);
+		return $conditions;
+	}
+	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+		$fields = array(
+			'Institution.*',
+			'Area.name',
+			'InstitutionStatus.name',
+			'InstitutionProvider.name',
+			'InstitutionSector.name'
+		);
 		
+		if(strlen($conditions['SearchKey']) != 0) {
+			$fields[] = 'InstitutionHistory.*';
+		}
 		
-	   if($conditions['SearchKey'] != ''){
-				$cond = array( 'OR' => array(
-						'Institution.name LIKE' => "%".$conditions['SearchKey']."%",
-						'Institution.code LIKE' =>"%".$conditions['SearchKey']."%",
-						'InstitutionHistory.name LIKE' => "%".$conditions['SearchKey']."%",
-						'InstitutionHistory.code LIKE' =>"%".$conditions['SearchKey']."%"
-				));
-				//$cond = array('OR'=> array('InstitutionSite.id'=>null,array('AND'=>array($cond,array('Institution.id' => $conditions['ids'])))));//$conditions['ids']
-
-
-				//if string is in the list of allowable institution or in a no site
-                $innerCond = array();
-                if(array_key_exists('ids', $conditions)){
-                    $innerCond =array(
-                                'OR'=> array(
-                                    'InstitutionSite.id'=>null,
-                                    array('Institution.id' => $conditions['ids'])
-                                )
-                            );
-                }
-				$cond = array(
-							array( 
-								'AND'=> array(
-									$cond,
-									$innerCond
-								 )
-							)
-						);//$conditions['ids']
-
-				$this->unbindModel(array('hasMany' => array('InstitutionSite')));
-
-				$data = $this->find('all',
-								array(
-									'fields' => array(
-										'Institution.*',
-										'Area.*',
-										'InstitutionStatus.*',
-										'InstitutionProvider.*',
-										'InstitutionSector.*',
-										'InstitutionHistory.*')
-									,'joins' => array(
-										array(
-											'table' => 'institution_history',
-											'alias' => 'InstitutionHistory',
-											'type' => 'LEFT',
-											'conditions' => array( 'InstitutionHistory.institution_id = Institution.id' )
-										),
-										array(
-												'table' => 'institution_sites',
-												'alias' => 'InstitutionSite',
-												'type' => 'LEFT',
-												'conditions' => array(
-														'InstitutionSite.institution_id = Institution.id'
-												)
-										)
-									),
-									'conditions'=>$cond,
-									'limit' => $limit,
-									'offset' => (($page-1)*$limit),
-									'group' => 'Institution.id',
-									'order'=>$order)
-						);
-
-				$this->sqlPaginateCount = $this->find('count',
-								array(
-                                    'fields' => array('DISTINCT Institution.id'),
-                                    'joins' => array(
-											array(
-												'table' => 'institution_history',
-												'alias' => 'InstitutionHistory',
-												'type' => 'LEFT',
-												'conditions' => array( 'InstitutionHistory.institution_id = Institution.id' )
-											),
-											array(
-													'table' => 'institution_sites',
-													'alias' => 'InstitutionSite',
-													'type' => 'LEFT',
-													'conditions' => array(
-															'InstitutionSite.institution_id = Institution.id'
-													)
-											)
-										),'conditions'=>$cond
-										 ,'group' => 'Institution.id')
-				);
-           }else{
-                $cond = array();
-                if(array_key_exists('ids', $conditions)){
-                    $cond = array('OR'=> array('InstitutionSite.id'=>null,array('Institution.id' => $conditions['ids']))	);//$conditions['ids']
-                }
-				//pr($cond);
-				$data = $this->find('all',
-						array( 
-							'limit' => $limit,
-							'offset' => (($page-1)*$limit),
-							'order'=>$order,
-							'joins' => array(
-								array(
-									'table' => 'institution_sites',
-									'alias' => 'InstitutionSite',
-									'type' => 'LEFT',
-									'conditions' => array( 'InstitutionSite.institution_id = Institution.id' )
-								)
-							),
-							'conditions'=>$cond,
-							'group' => 'Institution.id')
-				);
-				
-				$this->sqlPaginateCount = $this->find('count',
-						array(
-							'joins' => array(
-								array(
-									'table' => 'institution_sites',
-									'alias' => 'InstitutionSite',
-									'type' => 'LEFT',
-									'conditions' => array( 'InstitutionSite.institution_id = Institution.id')
-								)
-							)
-							,'conditions'=>$cond
-							,'group' => 'Institution.id')
-				);
-
-           }
-           return $data;
-	} 
+		$this->unbindModel(array('hasMany' => array('InstitutionSite')));
+		$data = $this->find('all', array(
+			'fields' => $fields,
+			'joins' => $this->paginateJoins($conditions),
+			'conditions' => $this->paginateConditions($conditions),
+			'limit' => $limit,
+			'offset' => (($page-1)*$limit),
+			'group' => 'Institution.id',
+			'order' => $order
+		));
+		return $data;
+	}
+	
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-		return $this->sqlPaginateCount;
+		$count = $this->find('count', array(
+			'joins' => $this->paginateJoins($conditions),
+			'conditions' => $this->paginateConditions($conditions),
+			'group' => 'Institution.id'
+		));
+		return $count;
 	}
 }
