@@ -201,7 +201,8 @@ var areas = {
         }else if(typeof parentAreaIds !== "undefined" && parseInt(parentAreaIds) !== 0){
             url += parentAreaIds;
         }
-
+		var Model = ($('form').attr('model'));
+		areas.extraParam = Model;
         $.ajax({
             type: 'GET',
             dataType: 'json',
