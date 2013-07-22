@@ -13,7 +13,7 @@ echo $this->Html->script('area', false);
 	<h1>
 		<span><?php echo __('Administrative Boundaries'); ?></span>
 		<?php 
-			echo $this->Html->link(__('View'), array('action' => 'AreaEducation'), array('class' => 'divider')); 
+			echo $this->Html->link(__('View'), array('action' => 'AreaEducation'), array('class' => 'divider','id'=>'view')); 
 			
 			// if($_view_levels) {
 			//echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
@@ -36,9 +36,6 @@ echo $this->Html->script('area', false);
 	<fieldset id="area_section_group" class="section_group">
 		<legend><?php echo __('Area'); ?></legend>
 		<?php
-                
-                // pr($arealevel);
-                // pr($levels);
             $ctr = 0;
             if(isset($levels)){
                 $firstElement = reset($levels);
@@ -59,13 +56,6 @@ echo $this->Html->script('area', false);
             						).
                                 '</div>
                             </div>';
-                    /*
-                    echo '<div class="row">
-                                <div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
-                                <div class="value">'. $this->Form->select('area_level_'.$ctr,($ctr == 0)?$highestLevel:array(''=>'--Select--'), array('disabled' => 
-($levelName != $firstElement)?true:false, 'empty' => ($levelName != $firstElement)?true:false)).'</div>
-                            </div>';
-                    */
                     $ctr++;
                 }
             }
@@ -121,7 +111,7 @@ $(document).ready(function(){
 	areas.isEditable = true;
 	$('#view, .btn_cancel').click(function(event){
 		event.preventDefault();
-		var form = $('form').attr('action', getRootURL() +'Areas/');
+		var form = $('form').attr('action', getRootURL() +'/Areas/AreaEducation/');
 		form.submit();
 	});
 	
