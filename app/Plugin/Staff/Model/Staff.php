@@ -148,10 +148,10 @@ class Staff extends StaffAppModel {
 		return $data;
 	}
 	
-	public function paginateJoins(&$conditions) {
+	public function paginateJoins($search, $institutionSiteId, $userId, $noSites=true) {
 		$joins = array();
 		
-		if(strlen($conditions['SearchKey']) != 0) {
+		if($search) {
 			$joins[] = array(
 				'table' => 'staff_history',
 				'alias' => 'StaffHistory',
@@ -160,29 +160,43 @@ class Staff extends StaffAppModel {
 			);
 		}
 		
-		if(array_key_exists('InstitutionSiteId', $conditions)) {
-			$institutionSiteId = $conditions['InstitutionSiteId'];
-			unset($conditions['InstitutionSiteId']);
-			
-			$staffConditions = !empty($institutionSiteId) ? implode(',', $institutionSiteId) : 0;
-			
-			$joins[] = array(
-				'table' => 'institution_site_staff',
-				'alias' => 'InstitutionSiteStaff',
-				'type' => !empty($institutionSiteId) ? 'LEFT' : 'INNER',
-				'conditions' => array(
-					'InstitutionSiteStaff.staff_id = Staff.id',
-					'InstitutionSiteStaff.institution_site_id IN (' . $staffConditions .')'
-				)
-			);
+		if(is_array($institutionSiteId)) {
+			if(!$noSites) { // for staff with no institution sites
+				$conditions = !empty($institutionSiteId) ? implode(',', $institutionSiteId) : 0;
+				$joins[] = array(
+					'table' => 'institution_site_staff',
+					'alias' => 'InstitutionSiteStaff',
+					'conditions' => array(
+						'InstitutionSiteStaff.staff_id = Staff.id',
+						'InstitutionSiteStaff.institution_site_id IN (' . $conditions .')'
+					)
+				);
+			} else {
+				if($userId !== false) {
+					$joins[] = array(
+						'table' => 'security_group_users',
+						'alias' => 'GroupA',
+						'conditions' => array('GroupA.security_user_id = Staff.created_user_id')
+					);
+					$joins[] = array(
+						'table' => 'security_group_users',
+						'alias' => 'GroupB',
+						'conditions' => array(
+							'GroupB.security_group_id = GroupA.security_group_id',
+							'GroupB.security_user_id = ' . $userId
+						)
+					);
+				}
+			}
 		}
 		return $joins;
 	}
 	
-	public function paginateConditions($conditions) {
+	public function paginateConditions($conditions, $noSites=true) {
+		$paginateConditions = array();
 		if(strlen($conditions['SearchKey']) != 0) {
 			$search = "%".$conditions['SearchKey']."%";
-			$conditions['OR'] = array(
+			$paginateConditions['OR'] = array(
 				'Staff.identification_no LIKE' => $search,
 				'Staff.first_name LIKE' => $search,
 				'Staff.last_name LIKE' => $search,
@@ -191,47 +205,151 @@ class Staff extends StaffAppModel {
 				'StaffHistory.last_name LIKE' => $search
 			);
 		}
-		unset($conditions['SearchKey']);
-		return $conditions;
+		if($noSites) {
+			$paginateConditions['AND'] = array(
+				'NOT EXISTS (SELECT institution_site_staff.staff_id FROM institution_site_staff WHERE institution_site_staff.staff_id = Staff.id)'
+			);
+			$userId = array_key_exists('UserId', $conditions) ? $conditions['UserId'] : false;
+			if($userId !== false) { // applies only to non-super user
+				$paginateConditions['AND']['OR'] = array( // only creator or users in creator's group can access
+					'GroupA.security_group_id IS NULL',
+					'AND' => array('GroupA.security_group_id IS NOT NULL', 'GroupB.security_group_id IS NOT NULL')
+				);
+			}
+		}
+		return $paginateConditions;
+	}
+	
+	public function paginateQuery($conditions, $order, $limit, $page, $count = false) {
+		$fields = $count 
+				? array('Staff.id')
+				: array(
+					'Staff.id', 'Staff.identification_no',
+					'Staff.first_name', 'Staff.last_name',
+					'Staff.gender', 'Staff.date_of_birth'
+				);
+		
+		$search = strlen($conditions['SearchKey']) != 0;
+		if($search && $count == false) {
+			$fields[] = 'StaffHistory.identification_no AS history_identification_no';
+			$fields[] = 'StaffHistory.first_name AS history_first_name';
+			$fields[] = 'StaffHistory.last_name AS history_last_name';
+		}
+		
+		$institutionSiteId = array_key_exists('InstitutionSiteId', $conditions) ? $conditions['InstitutionSiteId'] : false;
+		$userId = array_key_exists('UserId', $conditions) ? $conditions['UserId'] : false;
+		$dbo = $this->getDataSource();
+		
+		// retrieve the list of staff without a site
+		$dataNoSites = $dbo->buildStatement(array(
+			'fields' => $fields,
+			'table' => $dbo->fullTableName($this),
+			'alias' => 'Staff',
+			'limit' => null, 
+			'offset' => null,
+			'joins' => $this->paginateJoins($search, $institutionSiteId, $userId),
+			'conditions' => $this->paginateConditions($conditions),
+			'group' => null,
+			'order' => null
+		), $this);
+		
+		// retrieve the list of staff with sites that the user can access
+		$dataWithSites = $dbo->buildStatement(array(
+			'fields' => $fields,
+			'table' => $dbo->fullTableName($this),
+			'alias' => 'Staff',
+			'limit' => null, 
+			'offset' => null,
+			'joins' => $this->paginateJoins($search, $institutionSiteId, $userId, false),
+			'conditions' => $this->paginateConditions($conditions, false),
+			'group' => null,
+			'order' => null
+		), $this);
+		
+		if($count==false) {
+			$fields = array(
+				'Staff.id', 'Staff.identification_no',
+				'Staff.first_name', 'Staff.last_name',
+				'Staff.gender', 'Staff.date_of_birth'
+			);
+			
+			if($search) {
+				$fields[] = 'history_identification_no';
+				$fields[] = 'history_first_name';
+				$fields[] = 'history_last_name';
+			}
+		} else {
+			$fields = array('COUNT(1) AS COUNT');
+		}
+		
+		$options = array(
+			'fields' => $fields,
+			'table' => sprintf('(%s UNION %s)', $dataNoSites, $dataWithSites),
+			'alias' => 'Staff',
+			'limit' => null,
+			'conditions' => array(),
+			'group' => null,
+			'order' => null
+		);
+		
+		if($count==false) {
+			$options['limit'] = $limit;
+			$options['offset'] = (($page-1)*$limit);
+			$options['order'] = $order;
+		}
+		$query = $dbo->buildStatement($options, $this);
+		return $query;
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-		$fields = array(
-			'Staff.id',
-			'Staff.identification_no',
-			'Staff.first_name',
-			'Staff.last_name',
-			'Staff.gender',
-			'Staff.date_of_birth'
-		);
+		$data = array();
+		$institutionSiteId = array_key_exists('InstitutionSiteId', $conditions) ? $conditions['InstitutionSiteId'] : false;
 		
-		if(strlen($conditions['SearchKey']) != 0) {
-			$fields[] = 'StaffHistory.id';
-			$fields[] = 'StaffHistory.identification_no';
-			$fields[] = 'StaffHistory.first_name';
-			$fields[] = 'StaffHistory.last_name';
-			$fields[] = 'StaffHistory.gender';
-			$fields[] = 'StaffHistory.date_of_birth';
+		if(is_array($institutionSiteId)) {
+			$query = $this->paginateQuery($conditions, $order, $limit, $page);
+			$dbo = $this->getDataSource();
+			$data = $dbo->fetchAll($query);
+		} else {
+			$fields = array(
+				'Staff.id', 'Staff.identification_no',
+				'Staff.first_name', 'Staff.last_name',
+				'Staff.gender', 'Staff.date_of_birth'
+			);
+			$search = strlen($conditions['SearchKey']) != 0;
+			if($search != 0) {
+				$fields[] = 'StaffHistory.identification_no AS history_identification_no';
+				$fields[] = 'StaffHistory.first_name AS history_first_name';
+				$fields[] = 'StaffHistory.last_name AS history_last_name';
+			}
+			$data = $this->find('all', array(
+				'fields' => $fields,
+				'joins' => $this->paginateJoins($search, $institutionSiteId, false, false),
+				'conditions' => $this->paginateConditions($conditions, false),
+				'limit' => $limit,
+				'offset' => (($page-1)*$limit),
+				'group' => 'Staff.id',
+				'order' => $order
+			));
 		}
-		
-		$data = $this->find('all', array(
-			'fields' => $fields,
-			'joins' => $this->paginateJoins($conditions),
-			'conditions' => $this->paginateConditions($conditions),
-			'limit' => $limit,
-			'offset' => (($page-1)*$limit),
-			'group' => 'Staff.id',
-			'order' => $order
-		));
 		return $data;
 	}
         
 	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-		$count = $this->find('count', array(
-			'joins' => $this->paginateJoins($conditions),
-			'conditions' => $this->paginateConditions($conditions),
-			'group' => 'Staff.id'
-		));
+		$count = 0;
+		$institutionSiteId = array_key_exists('InstitutionSiteId', $conditions) ? $conditions['InstitutionSiteId'] : false;
+		if(is_array($institutionSiteId)) {
+			$query = $this->paginateQuery($conditions, null, 0, 1, true);
+			$dbo = $this->getDataSource();
+			$data = $dbo->fetchAll($query);
+			$count = $data[0][0]['COUNT'];
+		} else {
+			$search = strlen($conditions['SearchKey']) != 0;
+			$count = $this->find('count', array(
+				'joins' => $this->paginateJoins($search, $institutionSiteId, false),
+				'conditions' => $this->paginateConditions($conditions, false),
+				'group' => 'Staff.id'
+			));
+		}
 		return $count;
 	}
 }
