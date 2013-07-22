@@ -8,105 +8,14 @@ echo $this->Html->script('app', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<style type="text/css">
-.col_age { width: 90px; text-align: center; }
-.col_name { width: 130px; }
-.col_desc { width: 300px; }
-.col_lastgen { width: 70px; }
-
-.btn-add-single,
-.btn-remove-single,
-.btn-add-all,
-.btn-remove-all{
-    width: 50px;
-    display: block;
-    margin: 26px 15px
-}
-
-.icon_up, .icon_down{
-    clear: both;
-    width: 30px;
-    height: 30px;
-    margin-left: 5px;
-}
-
-.icon_up {
-    background: url('../img/icons/up_30.png') top left no-repeat;
-    margin-top:50px;
-}
-
-.icon_down {
-    background: url('../img/icons/down_30.png') top left no-repeat;
-    margin-top: 60px;
-}
-
-.controls { margin-top: 10px; }
-
-.clear { clear:both; }
-
-.custom_div{
-    margin-bottom: 10px;
-}
-
-.custom_div .custom_div_label{
-    width:130px;
-    margin-right: 10px;
-    margin-left: 20px;
-    float:left;
-}
-
-.custom_div#indicator_selector .custom_div_content select{
-    /*min-width:360px;*/
-    overflow-wrap:initial;
-}
-
-.custom_box {
-    overflow: scroll;
-    overflow-x: hidden;
-    margin: 0 15px 15px 10px;
-    border: 1px solid #CCCCCC;
-    min-height: 50px;
-    max-height: 150px;
-    min-width: 100px;
-    max-width: 250px;
-    /*max-width: 360px;*/
-}
-
-.custom_box .custom_label {
-    font-size: 11px;
-    font-weight: bold;
-    padding: 5px 10px;
-    border-bottom: 1px solid #CCCCCC;
-    border-top: 1px solid #CCCCCC;
-    background-color: #EFEFEF;
-    color: #666666;
-    overflow: hidden;
-}
-
-.custom_box .custom_label:first-child {
-    border-top: none;
-}
-
-.custom_box .custom_value {
-    overflow: hidden;
-    padding: 5px 10px;
-    font-size: 11px;
-    color: #666666;
-}
-.custom_box .custom_value ul{
-    list-style-type: none;
-    padding:0px;
-    margin: 0px;
-}
-</style>
 <div id="report-list" class="content_wrapper">
 			<h1>
 				<span><?php echo __(ucwords("Indicator Reports")); ?></span>
 			</h1>
 <form id="sdmx-download" method="post" action="<?php echo $this->Html->url(array( "controller" => "Reports", "action" => "downloadIndicator"));?>" >
-    <div id="indicator_selector" class="custom_div">
-        <div class="custom_div_label"><?php echo __("Indicator"); ?></div>
-        <div class="custom_div_content">
+    <div id="indicator_selector" class="row">
+        <div class="label"><?php echo __("Indicator"); ?></div>
+        <div class="value">
             <select name="data[Sdmx][indicator]" class="default">
             <php? //pr($indicators); ?>
                 <option value="" >-- Select one --</option>
@@ -117,9 +26,9 @@ echo $this->Html->script('app', false);
         </div>
 
     </div>
-    <div id="format_selector" class="custom_div">
-        <div class="custom_div_label"><?php echo __("Format"); ?></div>
-        <div class="custom_div_content">
+    <div id="format_selector" class="row">
+        <div class="label"><?php echo __("Format"); ?></div>
+        <div class="value">
         <select name="data[Sdmx][format]" class="default">
             <?php
             $optionElementTemplate = '<option value="{{ value }}" {{ selected }}>{{ text }}</option>';
@@ -133,9 +42,9 @@ echo $this->Html->script('app', false);
         </select>
         </div>
     </div>
-    <div id="sdmx-areas" class="custom_div">
-        <div class="custom_div_label"><?php echo __("Areas"); ?></div>
-        <div class="custom_div_content">
+    <div id="sdmx-areas" class="row">
+        <div class="label"><?php echo __("Areas"); ?></div>
+        <div class="value">
             <div class="custom_box">
                 <?php foreach($areas as $key=>$tmpAreas){ ?>
                     <div class="custom_label"><?php echo __(Inflector::humanize(Inflector::underscore($key))); ?></div>
@@ -155,9 +64,9 @@ echo $this->Html->script('app', false);
             </div>
         </div>
     </div>
-    <div id="sdmx-timeperiods" class="custom_div">
-        <div class="custom_div_label"><?php echo __("Time Periods"); ?></div>
-        <div class="custom_div_content">
+    <div id="sdmx-timeperiods" class="row">
+        <div class="label"><?php echo __("Time Periods"); ?></div>
+        <div class="value">
             <div class="custom_box">
                 <div class="custom_value">
                 <ul>
