@@ -12,7 +12,7 @@ echo $this->Html->script('area', false);
 		<span><?php echo __('Administrative Boundaries'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'AreaEducationEdit'), array('class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'AreaEducationEdit'), array('class' => 'divider','id'=>'edit'));
 		}
 		/*if($_view_levels) {
 			echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
@@ -85,7 +85,11 @@ echo $this->Html->script('area', false);
 
 <script type="text/javascript">
 $(document).ready(function () {
-	
+	$('#edit').click(function(event){
+		event.preventDefault();
+		var form = $('form').attr('action', getRootURL() + 'Areas/AreaEducationEdit');
+		$('form').submit();
+	});
 
 	<?php if(isset($initAreaSelection) && count($initAreaSelection) > 0){ ?>
 	areas.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;

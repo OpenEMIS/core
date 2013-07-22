@@ -173,7 +173,7 @@ class AreasController extends AppController {
      */
 	public function viewAreaChildren($parentId = 0,$arrModels = array('Area','AreaLevel')) {
 		$this->autoRender = false;
-		$arrModels = ($arrModels == 'Education' && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
+		$arrModels = (($arrModels == 'Education'|| $arrModels == 'AreaEducation') && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
 		$area = $arrModels[0];
 		$listAreas = $this->{$area}->find('list', array(
             'fields' => array($area.'.id', $area.'.name'),
@@ -203,7 +203,7 @@ class AreasController extends AppController {
 			$parentId = is_null($request)?-1:$request;
 		}
 		
-		$arrModels = ($arrModels == 'Education' && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
+		$arrModels = (($arrModels == 'Education'|| $arrModels == 'AreaEducation') && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
 		
 		$this->autoRender = false;
 		$area = $arrModels[0];
@@ -363,12 +363,11 @@ class AreasController extends AppController {
 
 
         if($this->request->is('post')) {
-			
-            if(isset($this->request->data['Area'])){
-                for ($i = 0; $i < count($this->request->data['Area'])-1; $i++) {
-                    $area = $this->Area->find('list',array(
+            if(isset($this->request->data['AreaEducation'])){
+                for ($i = 0; $i < count($this->request->data['AreaEducation'])-1; $i++) {
+                    $area = $this->AreaEducation->find('list',array(
                                                     'conditions' => array(
-                                                        'Area.parent_id' => $this->request->data['Area']['area_level_'.$i]
+                                                        'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_level_'.$i]
                                                     )
                                                 )
                                             );
@@ -376,11 +375,11 @@ class AreasController extends AppController {
                     $this->unshift_array($area, array('0'=>__('--Select--')));
                     $areas[] = $area;
                 }
-                if(end($this->request->data['Area']) == 0 ){
-                    array_pop($this->request->data['Area']);
+                if(end($this->request->data['AreaEducation']) == 0 ){
+                    array_pop($this->request->data['AreaEducation']);
                 }
             }
-            $this->set('initAreaSelection', (isset($this->request->data['Area']) && count($this->request->data['Area']) > 0)?$this->request->data['Area']: null);
+            $this->set('initAreaSelection', (isset($this->request->data['AreaEducation']) && count($this->request->data['AreaEducation']) > 0)?$this->request->data['AreaEducation']: null);
 
         }
 		
@@ -408,11 +407,11 @@ class AreasController extends AppController {
         $areas[] = $topArea;
 
         if($this->request->is('post')) {
-            if(isset($this->request->data['Area'])){
+            if(isset($this->request->data['AreaEducation'])){
                 for ($i = 0; $i < count($this->request->data['AreaEducation'])-1; $i++) {
                     $area = $this->AreaEducation->find('list',array(
                             'conditions'=> array(
-                                'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_education_level_'.$i]
+                                'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_level_'.$i]
                             )
                         )
                     );
@@ -432,6 +431,6 @@ class AreasController extends AppController {
 
         $this->set('levels', $levels);
         $this->set('highestLevel',$areas);
-		 $this->render('/AreaEducation/edit');
+		$this->render('/AreaEducation/edit');
     }
 }
