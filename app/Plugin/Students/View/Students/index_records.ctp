@@ -45,8 +45,8 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
         foreach ($students as $arrItems):
             $id = $arrItems['Student']['id'];
             $identificationNo = $this->Utility->highlight($searchField, $arrItems['Student']['identification_no']);
-            $firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['StudentHistory']['first_name']))?'<br>'.$arrItems['StudentHistory']['first_name']:''));
-			$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['StudentHistory']['last_name']))?'<br>'.$arrItems['StudentHistory']['last_name']:''));
+            $firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['Student']['history_first_name']))?'<br>'.$arrItems['Student']['history_first_name']:''));
+			$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['Student']['history_last_name']))?'<br>'.$arrItems['Student']['history_last_name']:''));
             $gender = $arrItems['Student']['gender'];
             $birthday = $arrItems['Student']['date_of_birth'];
     ?>
