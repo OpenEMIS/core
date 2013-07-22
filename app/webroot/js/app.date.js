@@ -60,37 +60,35 @@ var jsDate = {
 	},
 	
 	updateDay: function(obj) {
-		if($(obj).hasClass('datepicker_month') || $(obj).hasClass('datepicker_year')) {
-			var parent = $(obj).parent();
-			var dayObj = parent.find('.datepicker_day');
-			var monthObj = parent.find('.datepicker_month');
-			var yearObj = parent.find('.datepicker_year');
-			var dateObj = parent.parent().find('.datepicker_date');
-			var monthVal = monthObj.val().toInt();
-			var yearVal = yearObj.val().toInt();
-			
-			if(dayObj.val().toInt() != 0 && monthVal != 0 && yearVal != 0) {
-				var noOfDays = jsDate.daysInMonth(yearVal, monthVal);
-				var dayOptions = dayObj.find('option');
-				if(parent.attr('start') == undefined && parent.attr('end') == undefined) {
-					dayObj.find('option').css('display', 'block');
-				} else {
-					if('#' + parent.attr('id') === parent.attr('start')) {
-						$(parent.attr('start')).find('.datepicker_day > option').css('display', 'block');
-					}
+		var parent = $(obj).parent();
+		var dayObj = parent.find('.datepicker_day');
+		var monthObj = parent.find('.datepicker_month');
+		var yearObj = parent.find('.datepicker_year');
+		var dateObj = parent.parent().find('.datepicker_date');
+		var monthVal = monthObj.val().toInt();
+		var yearVal = yearObj.val().toInt();
+		
+		if(dayObj.val().toInt() != 0 && monthVal != 0 && yearVal != 0) {
+			var noOfDays = jsDate.daysInMonth(yearVal, monthVal);
+			var dayOptions = dayObj.find('option');
+			if(parent.attr('start') == undefined && parent.attr('end') == undefined) {
+				dayObj.find('option').css('display', 'block');
+			} else {
+				if('#' + parent.attr('id') === parent.attr('start')) {
+					$(parent.attr('start')).find('.datepicker_day > option').css('display', 'block');
 				}
-				if(dayObj.val() > noOfDays) {
-					dayObj.val(noOfDays);
-				}
-				dayOptions.each(function() {
-					var day = $(this).val().toInt();
-					if(noOfDays < day) {
-						$(this).css('display', 'none');
-					}
-				});
-				var dayVal = dayObj.val();
-				dateObj.val(yearVal + '-' + monthVal + '-' + dayVal);
 			}
+			if(dayObj.val() > noOfDays) {
+				dayObj.val(noOfDays);
+			}
+			dayOptions.each(function() {
+				var day = $(this).val().toInt();
+				if(noOfDays < day) {
+					$(this).css('display', 'none');
+				}
+			});
+			var dayVal = dayObj.val();
+			dateObj.val(yearVal + '-' + monthVal + '-' + dayVal);
 		}
 	},
 	
@@ -182,7 +180,7 @@ var jsDate = {
 						// show only days after start day
 						dayObj.find('> option').each(function() {
 							var val = $(this).val().toInt();
-							$(this).css('display', val < startDay && val != 0 ? 'none' : 'block');
+							$(this).css('display', val <= startDay && val != 0 ? 'none' : 'block');
 						});
 					} else if(startMonth < endMonth) {
 						dayObj.find('> option').css('display', 'block');

@@ -193,7 +193,7 @@ class Student extends StudentsAppModel {
 		}
 		if($noSites) {
 			$paginateConditions['AND'] = array(
-				'NOT EXISTS (SELECT `institution_site_students`.`student_id` FROM `institution_site_students` WHERE `institution_site_students`.`student_id` = Student.id)'
+				'NOT EXISTS (SELECT institution_site_students.student_id FROM institution_site_students WHERE institution_site_students.student_id = Student.id)'
 			);
 			$userId = array_key_exists('UserId', $conditions) ? $conditions['UserId'] : false;
 			if($userId !== false) { // applies only to non-super user
@@ -217,9 +217,9 @@ class Student extends StudentsAppModel {
 		
 		$search = strlen($conditions['SearchKey']) != 0;
 		if($search && $count == false) {
-			$fields[] = 'StudentHistory.identification_no AS student_history_identification_no';
-			$fields[] = 'StudentHistory.first_name AS student_history_first_name';
-			$fields[] = 'StudentHistory.last_name AS student_history_last_name';
+			$fields[] = 'StudentHistory.identification_no AS history_identification_no';
+			$fields[] = 'StudentHistory.first_name AS history_first_name';
+			$fields[] = 'StudentHistory.last_name AS history_last_name';
 		}
 		
 		$institutionSiteId = array_key_exists('InstitutionSiteId', $conditions) ? $conditions['InstitutionSiteId'] : false;
@@ -227,7 +227,7 @@ class Student extends StudentsAppModel {
 		$dbo = $this->getDataSource();
 		
 		// retrieve the list of students without a site
-		$studentsNoSites = $dbo->buildStatement(array(
+		$dataNoSites = $dbo->buildStatement(array(
 			'fields' => $fields,
 			'table' => $dbo->fullTableName($this),
 			'alias' => 'Student',
@@ -240,7 +240,7 @@ class Student extends StudentsAppModel {
 		), $this);
 		
 		// retrieve the list of students with sites that the user can access
-		$studentWithSites = $dbo->buildStatement(array(
+		$dataWithSites = $dbo->buildStatement(array(
 			'fields' => $fields,
 			'table' => $dbo->fullTableName($this),
 			'alias' => 'Student',
@@ -260,9 +260,9 @@ class Student extends StudentsAppModel {
 			);
 			
 			if($search) {
-				$fields[] = 'student_history_identification_no';
-				$fields[] = 'student_history_first_name';
-				$fields[] = 'student_history_last_name';
+				$fields[] = 'history_identification_no';
+				$fields[] = 'history_first_name';
+				$fields[] = 'history_last_name';
 			}
 		} else {
 			$fields = array('COUNT(1) AS COUNT');
@@ -270,7 +270,7 @@ class Student extends StudentsAppModel {
 		
 		$options = array(
 			'fields' => $fields,
-			'table' => sprintf('(%s UNION %s)', $studentsNoSites, $studentWithSites),
+			'table' => sprintf('(%s UNION %s)', $dataNoSites, $dataWithSites),
 			'alias' => 'Student',
 			'limit' => null,
 			'conditions' => array(),
@@ -303,9 +303,9 @@ class Student extends StudentsAppModel {
 			);
 			$search = strlen($conditions['SearchKey']) != 0;
 			if($search != 0) {
-				$fields[] = 'StudentHistory.identification_no AS student_history_identification_no';
-				$fields[] = 'StudentHistory.first_name AS student_history_first_name';
-				$fields[] = 'StudentHistory.last_name AS student_history_last_name';
+				$fields[] = 'StudentHistory.identification_no AS history_identification_no';
+				$fields[] = 'StudentHistory.first_name AS history_first_name';
+				$fields[] = 'StudentHistory.last_name AS history_last_name';
 			}
 			$data = $this->find('all', array(
 				'fields' => $fields,
