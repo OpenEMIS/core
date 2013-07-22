@@ -28,13 +28,13 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
     <div class="row">
         <?php  echo $this->Form->create('Teacher', array('action' => 'search','id'=>false));  ?>
         <div class="search_wrapper">
-        <?php echo $this->Form->input('SearchField', array(
-            'id'=>'SearchField',
-            'value'=>$searchField,
-            'placeholder'=> __("Student Identification No, First Name or Last Name"),
-            'class'=>'default',
-            'label'=>false,
-            'div'=>false)); 
+			<?php echo $this->Form->input('SearchField', array(
+				'id'=>'SearchField',
+				'value'=>$searchField,
+				'placeholder'=> __("Teacher Identification No, First Name or Last Name"),
+				'class'=>'default',
+				'label'=>false,
+				'div'=>false)); 
             ?>
             <span class="icon_clear">X</span>
         </div>
@@ -87,8 +87,8 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 				foreach ($teachers as $arrItems):
 					$id = $arrItems['Teacher']['id'];
 					$identificationNo = $this->Utility->highlight($searchField, $arrItems['Teacher']['identification_no']);
-					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['first_name'].'</b>'.((isset($arrItems['TeacherHistory']['first_name']))?'<br>'.$arrItems['TeacherHistory']['first_name']:''));
-					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['last_name'].'</b>'.((isset($arrItems['TeacherHistory']['last_name']))?'<br>'.$arrItems['TeacherHistory']['last_name']:''));
+					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['first_name'].'</b>'.((isset($arrItems['Teacher']['history_first_name']))?'<br>'.$arrItems['Teacher']['history_first_name']:''));
+					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['last_name'].'</b>'.((isset($arrItems['Teacher']['history_last_name']))?'<br>'.$arrItems['Teacher']['history_last_name']:''));
 					$gender = $arrItems['Teacher']['gender'];
 					$birthday = $arrItems['Teacher']['date_of_birth'];
 			?>

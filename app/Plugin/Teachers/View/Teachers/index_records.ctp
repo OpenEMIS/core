@@ -44,8 +44,8 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
         foreach ($teachers as $arrItems):
             $id = $arrItems['Teacher']['id'];
             $identificationNo = $this->Utility->highlight($searchField, $arrItems['Teacher']['identification_no']);
-            $firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['first_name'].'</b>'.((isset($arrItems['TeacherHistory']['first_name']))?'<br>'.$arrItems['TeacherHistory']['first_name']:''));
-                        $lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['last_name'].'</b>'.((isset($arrItems['TeacherHistory']['last_name']))?'<br>'.$arrItems['TeacherHistory']['last_name']:''));
+            $firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['first_name'].'</b>'.((isset($arrItems['Teacher']['history_first_name']))?'<br>'.$arrItems['Teacher']['history_first_name']:''));
+            $lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['last_name'].'</b>'.((isset($arrItems['Teacher']['history_last_name']))?'<br>'.$arrItems['Teacher']['history_last_name']:''));
             $gender = $arrItems['Teacher']['gender'];
             $birthday = $arrItems['Teacher']['date_of_birth'];
     ?>
@@ -63,7 +63,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
 </div>
 
 <?php if(sizeof($teachers)==0) { ?>
-<div class="row center" style="color: red"><?php echo __('No Teacher found.'); ?></div>
+<div class="row center" style="color: red; margin-top: 15px;"><?php echo __('No Teacher found.'); ?></div>
 <?php } ?>
 <div class="row">
     <ul id="pagination">
