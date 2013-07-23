@@ -146,11 +146,11 @@ class ConfigController extends AppController {
 			foreach($dataToBeSave as $key => $element){
 				foreach($element as $innerKey => $innerElement){
 					$yearbookLogoElement = "";
-					$yearbookElements = $this->ConfigItem->findById($innerElement['id'], array('ConfigItem.name'));
+					$configItem = $this->ConfigItem->findById($innerElement['id'], array('ConfigItem.name'));
 					$formData = $this->data;
-
+					
 					// if student/teacher/staff prefix
-					if($yearbookElements['ConfigItem']['name'] == "student_prefix" || $yearbookElements['ConfigItem']['name'] == "teacher_prefix" || $yearbookElements['ConfigItem']['name'] == "staff_prefix") {
+					if($configItem['ConfigItem']['name'] == "student_prefix" || $configItem['ConfigItem']['name'] == "teacher_prefix" || $configItem['ConfigItem']['name'] == "staff_prefix") {
 						$prefix = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['prefix'];
 						$enable = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['enable'];
 						unset($innerElement[$innerKey]['value']['prefix']);
@@ -159,7 +159,7 @@ class ConfigController extends AppController {
 					}
 					
 					// if student/teacher/staff prefix
-					if($yearbookElements['ConfigItem']['name'] == "student_prefix" || $yearbookElements['ConfigItem']['name'] == "teacher_prefix" || $yearbookElements['ConfigItem']['name'] == "staff_prefix") {
+					if($configItem['ConfigItem']['name'] == "student_prefix" || $configItem['ConfigItem']['name'] == "teacher_prefix" || $configItem['ConfigItem']['name'] == "staff_prefix") {
 						$prefix = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['prefix'];
 						$enable = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['enable'];
 						unset($innerElement[$innerKey]['value']['prefix']);
@@ -168,7 +168,7 @@ class ConfigController extends AppController {
 					}
 					
 					// if yearbook publication date, massage date value 
-					if ($key == "yearbook" && $yearbookElements['ConfigItem']['name'] == "yearbook_publication_date") {
+					if ($key == "yearbook" && $configItem['ConfigItem']['name'] == "yearbook_publication_date") {
 						$pubYear = $formData['ConfigItem']['yearbook'][$innerKey]['value']['year'];
 						$pubMonth = $formData['ConfigItem']['yearbook'][$innerKey]['value']['month'];
 						$pubDay = $formData['ConfigItem']['yearbook'][$innerKey]['value']['day'];
@@ -177,7 +177,7 @@ class ConfigController extends AppController {
 					}
 
 					// if yearbook logo, upload the image
-					if ($key == "yearbook" && $yearbookElements['ConfigItem']['name'] == "yearbook_logo") {
+					if ($key == "yearbook" && $configItem['ConfigItem']['name'] == "yearbook_logo") {
 						$imgValidate = new ImageValidate(800,800);
 						$data = array();
 						$reset_image = $formData['ConfigItem']['yearbook'][$innerKey]['reset_yearbook_logo'];
@@ -235,6 +235,9 @@ class ConfigController extends AppController {
 
 					if ($this->ConfigItem->save($innerElement)) {
 						$savedItems = true;
+						if($configItem['ConfigItem']['name'] == "date_format") {
+							$_SESSION['Config.DateFormat'] = $innerElement['value'];
+						}
 	                }else{
 	                    #echo 'false<br/>';
 	                }
