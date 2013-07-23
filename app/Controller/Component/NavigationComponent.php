@@ -246,6 +246,11 @@ class NavigationComponent extends Component {
 				'DATABASE' => array(
 					$this->createLink('Backup', 'Database', 'backup'),
 					$this->createLink('Restore', 'Database', 'restore')
+				),
+				'SURVEY' => array(
+					'_controller' => 'Survey',
+					$this->createLink('New', 'Survey', 'index', 'index$|^add$|^edit$'),
+					$this->createLink('Completed', 'Survey', 'import', 'import$|^synced$')
 				)
 			)
 		);
