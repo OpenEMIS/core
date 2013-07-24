@@ -29,6 +29,7 @@ var areas = {
     currentAreaId: 0,
     isEditable: false,
     baseURL: getRootURL() + 'Areas/',
+	extraParam : '',
     id: '#area',
     deletedRecords: [],
     ajaxUrl: 'areaAjax',
@@ -72,15 +73,18 @@ var areas = {
         $('#'+id).show();
     },
     addAreaSwitching : function(){
-
+		
         var saveBtn = $('.btn_save');
         $('select[name*="[area_level_"]').each(function(i, obj){
             $(obj).change(function (d, o){
+				
                 var TotalAreaLevel = $('select[name*="[area_level_"]').length;
                 var isAreaLevelForInput = $(this).parent().parent().parent().attr('id');
                 var currentSelctedOptionValue = parseInt($(this).find(':selected').val());
                 var currentSelctedOptionTitle = $(this).find(':selected').html();
-                var currentSelect = $(this).attr('name').replace('data[Area][area_level_','');
+				var Model = $(this).closest('form').attr('model');
+				
+                var currentSelect = $(this).attr('name').replace('data['+Model+'][area_level_','');
 
                 currentSelect = currentSelect.replace(']','');
                 currentSelect = parseInt(currentSelect);
@@ -90,21 +94,21 @@ var areas = {
                 }else {
                     isAreaLevelForInput = false;
                 }
-
+				
                 if(isAreaLevelForInput){
                     for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
                         //disable the select element
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').attr('disabled','disabled');
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
 
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').find('option').remove();
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').find('option').remove();
                     }
 				}else {
                     for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
                         //disable the select element
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
-                        $('select[name=data\\[Area\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').find('option').remove();
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').attr('disabled','disabled');
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
+                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').find('option').remove();
                     }
 				}
 
@@ -148,7 +152,7 @@ var areas = {
         
         var selected = $(currentobj).val();
         var maskId;
-        var url =  areas.baseURL +'viewAreaChildren/'+selected;
+        var url =  areas.baseURL +'viewAreaChildren/'+selected+'/'+areas.extraParam;
         $.ajax({
             type: 'GET',
             dataType: 'json',
@@ -197,11 +201,12 @@ var areas = {
         }else if(typeof parentAreaIds !== "undefined" && parseInt(parentAreaIds) !== 0){
             url += parentAreaIds;
         }
-
+		var Model = ($('form').attr('model'));
+		areas.extraParam = Model;
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: url,
+            url: url+'/'+areas.extraParam,
             beforeSend: function (jqXHR) {
 
                 maskId = $.mask({parent: '#data_section_group'});
@@ -405,6 +410,7 @@ var areas = {
 
     
     save: function() {
+		var Model = ($('form').attr('model'));
         if($('.btn_save').hasClass('btn_disabled')) {
             return;
         }
@@ -421,16 +427,24 @@ var areas = {
             
 
             index++;
-            data.push({
+			
+			dataval = {
                 id: id,
-                area_level_id: area_level_id,
                 code: code,
                 name: name,
                 order: order,
                 visible: (visible === 1? visible: 0),
                 parent_id: (areas.parentAreaIds.length < 1)? -1: areas.parentAreaIds[areas.parentAreaIds.length-1]
                 // area_id: (typeof area_id !== 'undefined')? area_id : areaarea.currentAreaId
-            });
+            }
+			
+			if(Model=='AreaEducation'){
+				dataval.area_education_level_id = area_level_id;
+			}else{
+				dataval.area_level_id = area_level_id;
+			}
+			
+            data.push(dataval);
             
             if(id===0) {
                 $(this).attr('index', index);
@@ -438,7 +452,8 @@ var areas = {
         });
         
         var maskId;
-        var url = this.baseURL + this.ajaxUrl;
+		
+        var url = this.baseURL + this.ajaxUrl + '/' +Model;
         
         $.ajax({
             type: 'POST',
@@ -541,23 +556,23 @@ var areas = {
 
     renderRecordToHtmlTableRowForEdit: function (data) {
         var html = '', i ;
-
+		var  Model= $('form').attr('model');
         $.each(data,function(index,element){
             i = (element.indexCount !== undefined && element.indexCount !== 0 )? element.indexCount : index;
             
             html += '<li data-id="' + (i+1) + '" ' + ((element.isNew !== undefined && element.isNew)? 'class="new_row" ':'') + '>';
-            html += '<input type="hidden" name="data[Area]['+ i +'][order]" id="order" value="'+(i+1)/*element.order*/+'" />';
+            html += '<input type="hidden" name="data['+Model+']['+ i +'][order]" id="order" value="'+(i+1)/*element.order*/+'" />';
 
-            html += '<input type="hidden" name="data[Area]['+ i +'][id]" id="id" value="'+element.id/*element.order*/+'" />';
+            html += '<input type="hidden" name="data['+Model+']['+ i +'][id]" id="id" value="'+element.id/*element.order*/+'" />';
 
             html += '<div class="cell cell_visible">';
-            html += '        <input type="hidden" name="data[Area]['+i+'][visible]" id="PostVisible_" value="0" />';
-            html += '        <input type="checkbox" name="data[Area]['+i+'][visible]" value="1" id="PostVisible" '+((parseInt(element.visible) === 1)? 'checked="checked"':'') +'/>';
+            html += '        <input type="hidden" name="data['+Model+']['+i+'][visible]" id="PostVisible_" value="0" />';
+            html += '        <input type="checkbox" name="data['+Model+']['+i+'][visible]" value="1" id="PostVisible" '+((parseInt(element.visible) === 1)? 'checked="checked"':'') +'/>';
 
             html += '</div>';
             
             html += '<div class="cell cell_level">';
-            html += '   <select name="data[Area]['+i+'][area_level_id]" style="width:100px;">';
+            html += '   <select name="data['+Model+']['+i+']['+((Model=='AreaEducation')?'area_education_level_id':'area_level_id')+']" style="width:100px;">';
 
             $.each(areas.area_levels, function(i,o){
                 html += '<option value="'+o.id+'" ';
@@ -574,13 +589,13 @@ var areas = {
 
             html += '<div class="cell cell_code">';
             html += '   <div class="input_wrapper">';
-            html += '       <input name="data[Area]['+i+'][code]" value="'+element.code+'" type="text" id="AreaCode">';
+            html += '       <input name="data['+Model+']['+i+'][code]" value="'+element.code+'" type="text" id="AreaCode">';
             html += '   </div>';
             html += '</div>';
             
             html += '<div class="cell cell_name">';
             html += '   <div class="input_wrapper">';
-            html += '        <input name="data[Area]['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme">';
+            html += '        <input name="data['+Model+']['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme">';
             html += '   </div>';
             html += '</div>';
             
@@ -600,6 +615,8 @@ var areas = {
     },
 
     renderRecordToHtmlTableRowForEditAreaLevels: function (data) {
+		
+		var  Model= $('form').attr('model');
         var html = '', i ;
 
         $.each(data,function(index, element){
@@ -610,12 +627,12 @@ var areas = {
             html += 'class="' + ((element.isNew !== undefined && element.isNew)? ' new_row': '' )+ '" ';
             html += '>';
 
-            html += '<input type="hidden" name="data[AreaLevel]['+ i +'][level]" id="order" value="'+(i + 1)+'"/>';
-            html += '<input type="hidden" name="data[AreaLevel]['+ i +'][id]" id="id" value="'+element.id+'"/>';
+            html += '<input type="hidden" name="data['+Model+']['+ i +'][level]" id="order" value="'+(i + 1)+'"/>';
+            html += '<input type="hidden" name="data['+Model+']['+ i +'][id]" id="id" value="'+element.id+'"/>';
             
             html += '<div class="cell cell_name_area_level">';
             html += '   <div class="input_wrapper">';
-            html += '        <input name="data[AreaLevel]['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme"/>';
+            html += '        <input name="data['+Model+']['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme"/>';
             html += '   </div>';
             html += '</div>';
             

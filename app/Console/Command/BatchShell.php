@@ -65,7 +65,7 @@ class BatchShell extends AppShell {
 			   
 			   //DOUBLE CHECK if Status was Aborted while report is being process - else just proceed with the Next QUEUE
                $check = $this->BatchProcess->find('first',array('conditions'=>array('id'=>$id)));
-               if($check['BatchProcess']['status'] != 1) continue;
+               if($check === false) continue;
 			   
                // Update the status for the Processed item to (3) Complete
                $this->Common->updateStatus($id,3);

@@ -20,9 +20,8 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
     <h1>
         <span><?php echo __('List of Students'); ?></span>
         <span class="divider"></span>
-        <span class="total"><span><?php echo $total;?></span> <?php echo __('Students'); ?></span>
+        <span class="total"><span><?php echo $total; ?></span> <?php echo __('Students'); ?></span>
     </h1>
-
     <?php echo $this->element('alert'); ?>
 
 	<?php if($this->Session->check('Search.SearchFieldStudent') || $total > $limit) { ?>
@@ -56,7 +55,6 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
                 <?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
                 <?php echo $this->Paginator->numbers($this->Utility->getPageNumberOptions()); ?>
                 <?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
-                
             </ul>
         </div>
 		<?php if($total > 0) { ?>
@@ -89,8 +87,8 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 				foreach ($students as $arrItems):
 					$id = $arrItems['Student']['id'];
 					$identificationNo = $this->Utility->highlight($searchField, $arrItems['Student']['identification_no']);
-					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['Student']['student_history_first_name']))?'<br>'.$arrItems['Student']['first_name']:''));
-					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['Student']['student_history_last_name']))?'<br>'.$arrItems['Student']['last_name']:''));
+					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['first_name'].'</b>'.((isset($arrItems['Student']['history_first_name']))?'<br>'.$arrItems['Student']['history_first_name']:''));
+					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Student']['last_name'].'</b>'.((isset($arrItems['Student']['history_last_name']))?'<br>'.$arrItems['Student']['history_last_name']:''));
 					$gender = $arrItems['Student']['gender'];
 					$birthday = $arrItems['Student']['date_of_birth'];
 			?>
