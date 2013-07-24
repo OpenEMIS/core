@@ -152,6 +152,20 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			</div>
 		</div>
     </fieldset>
+
+    <?php if(@sizeof($data2['address_area_id'])>1){ ?>
+        <fieldset class="section_break">
+            <legend><?php echo __('Address Area'); ?></legend>
+            <?php echo @$this->Utility->showAreaHistory($this->Form, 'address_area_id', array(), $data['Teacher']['address_area_id'],$data2['address_area_id']);  ?>
+        </fieldset>
+        <?php } ?>
+        <?php if(@sizeof($data2['birthplace_area_id'])>1){ ?>
+        <fieldset class="section_break">
+            <legend><?php echo __('Birth Place Area'); ?></legend>
+            <?php echo @$this->Utility->showAreaHistory($this->Form, 'address_area_id', array(), $data['Teacher']['birthplace_area_id'],$data2['birthplace_area_id']);  ?>
+        </fieldset>
+        <?php } ?>
+
     <fieldset class="section_break">
         <legend><?php echo __('Address'); ?></legend>    
 		<div class="row">
