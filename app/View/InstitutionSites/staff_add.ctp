@@ -11,15 +11,6 @@ echo $this->Html->script('institution_site_staff', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="staffAdd" class="content_wrapper edit">
-	<?php
-	echo $this->Form->create('InstitutionSiteStaff', array(
-		'id' => 'submitForm',
-		'onsubmit' => 'return InstitutionSiteStaff.validateStaffAdd()',
-		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'staffAdd')
-	));
-	echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'value' => 0, 'autocomplete' => 'off'));
-	?>
 	<h1>
 		<span><?php echo __('Add Staff'); ?></span>
 	</h1>
@@ -59,6 +50,16 @@ echo $this->Html->script('institution_site_staff', false);
 			</div>
 		</div>
 	</fieldset>
+	
+	<?php
+	echo $this->Form->create('InstitutionSiteStaff', array(
+		'id' => 'submitForm',
+		'onsubmit' => 'return InstitutionSiteStaff.validateStaffAdd()',
+		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'staffSave')
+	));
+	echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'value' => 0, 'autocomplete' => 'off'));
+	?>
 	
 	<div class="info">
 		<div class="row">

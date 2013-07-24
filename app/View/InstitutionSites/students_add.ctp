@@ -5,14 +5,14 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('app.date', false);
-echo $this->Html->script('institution_site_teachers', false);
+echo $this->Html->script('institution_site_students', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="teachersAdd" class="content_wrapper edit">
 	<h1>
-		<span><?php echo __('Add Teacher'); ?></span>
+		<span><?php echo __('Add Student'); ?></span>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
@@ -32,7 +32,7 @@ echo $this->Html->script('institution_site_teachers', false);
 				?>
 				<span class="icon_clear" onClick="$('#SearchField').val('')">X</span>
 			</div>
-			<span class="left icon_search" url="InstitutionSites/teachersSearch/" onClick="InstitutionSiteTeachers.search(this)"></span>
+			<span class="left icon_search" url="InstitutionSites/studentsSearch/" onClick="InstitutionSiteStudents.search(this)"></span>
 		</div>
 		
 		<div class="table_scrollable">
@@ -52,13 +52,13 @@ echo $this->Html->script('institution_site_teachers', false);
 	</fieldset>
 	
 	<?php
-	echo $this->Form->create('InstitutionSiteTeacher', array(
+	echo $this->Form->create('InstitutionSiteStudent', array(
 		'id' => 'submitForm',
-		'onsubmit' => 'return InstitutionSiteTeachers.validateTeacherAdd()',
+		'onsubmit' => 'return InstitutionSiteStudents.validateStudentAdd()',
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'teachersSave')
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'studentsSave')
 	));
-	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => 0, 'autocomplete' => 'off'));
+	echo $this->Form->hidden('student_id', array('id' => 'StudentId', 'value' => 0, 'autocomplete' => 'off'));
 	?>
 	
 	<div class="info">
@@ -69,12 +69,12 @@ echo $this->Html->script('institution_site_teachers', false);
 		
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('first_name', array('class' => 'default', 'id' => 'FirstName', 'disabled' => 'disabled')); ?></div>
+			<div class="value"><?php echo $this->Form->input('first_name', array('class' => 'default', 'id' => 'FirstName')); ?></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('last_name', array('class' => 'default', 'id' => 'LastName', 'disabled' => 'disabled')); ?></div>
+			<div class="value"><?php echo $this->Form->input('last_name', array('class' => 'default', 'id' => 'LastName')); ?></div>
 		</div>
 		
 		<div class="row">
@@ -83,24 +83,33 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('Position'); ?></div>
-			<div class="value"><?php echo $this->Form->input('teacher_category_id', array('class' => 'default', 'options' => $categoryOptions)); ?></div>
+			<div class="label"><?php echo __('Year'); ?></div>
+			<div class="value">
+				<?php 
+				echo $this->Form->input('school_year_id', array(
+					'class' => 'default',
+					'options' => $yearOptions,
+					'url' => 'InstitutionSites/programmesOptions',
+					'onchange' => 'InstitutionSiteStudents.getProgrammeOptions(this)'
+				));
+				?>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="label"><?php echo __('Programme'); ?></div>
+			<div class="value"><?php echo $this->Form->input('institution_site_programme_id', array('id' => 'InstitutionSiteProgrammeId', 'class' => 'default', 'options' => $programmeOptions)); ?></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
 			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'start_date'); ?></div>
 		</div>
-		
-		<div class="row">
-			<div class="label"><?php echo __('Salary'); ?></div>
-			<div class="value"><?php echo $this->Form->input('salary', array('class' => 'default', 'value' => 0)); ?></div>
-		</div>
 	</div>
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Add'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'teachers'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'students'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
