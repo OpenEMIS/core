@@ -11,15 +11,6 @@ echo $this->Html->script('institution_site_teachers', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="teachersAdd" class="content_wrapper edit">
-	<?php
-	echo $this->Form->create('InstitutionSiteTeacher', array(
-		'id' => 'submitForm',
-		'onsubmit' => 'return InstitutionSiteTeachers.validateTeacherAdd()',
-		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'teachersAdd')
-	));
-	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => 0, 'autocomplete' => 'off'));
-	?>
 	<h1>
 		<span><?php echo __('Add Teacher'); ?></span>
 	</h1>
@@ -59,6 +50,16 @@ echo $this->Html->script('institution_site_teachers', false);
 			</div>
 		</div>
 	</fieldset>
+	
+	<?php
+	echo $this->Form->create('InstitutionSiteTeacher', array(
+		'id' => 'submitForm',
+		'onsubmit' => 'return InstitutionSiteTeachers.validateTeacherAdd()',
+		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'teachersSave')
+	));
+	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => 0, 'autocomplete' => 'off'));
+	?>
 	
 	<div class="info">
 		<div class="row">

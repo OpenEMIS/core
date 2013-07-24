@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppController', 'Controller');
 
 class AreasController extends AppController {
-	public $uses = array('Area', 'AreaLevel');
+	public $uses = array('Area', 'AreaLevel','AreaEducation', 'AreaEducationLevel');
 
     /**
      * Created by: Eugene Wong
@@ -64,6 +64,8 @@ class AreasController extends AppController {
             $this->set('initAreaSelection', (isset($this->request->data['Area']) && count($this->request->data['Area']) > 0)?$this->request->data['Area']: null);
 
         }
+		
+		
 		
 		// Checking if user has access to _view for area levels
 		$_view_levels = false;
@@ -153,7 +155,7 @@ class AreasController extends AppController {
 
         if($this->request->is('post')) {
             $this->AreaLevel->saveAreaLevelData($this->data['AreaLevel']);
-            $this->redirect('/Areas/levelsEdit');
+            $this->redirect('/Areas/levels');
             // pr($this->data);
         }
 
@@ -169,13 +171,14 @@ class AreasController extends AppController {
      * @param  integer $parentId Find the next children levels data by parent id.
      * @return json            
      */
-	public function viewAreaChildren($parentId = 0) {
+	public function viewAreaChildren($parentId = 0,$arrModels = array('Area','AreaLevel')) {
 		$this->autoRender = false;
-
-		$listAreas = $this->Area->find('list', array(
-            'fields' => array('Area.id', 'Area.name'),
-	        'conditions' => array('Area.parent_id' => $parentId),
-            'order' => array('Area.order ASC')
+		$arrModels = (($arrModels == 'Education'|| $arrModels == 'AreaEducation') && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
+		$area = $arrModels[0];
+		$listAreas = $this->{$area}->find('list', array(
+            'fields' => array($area.'.id', $area.'.name'),
+	        'conditions' => array($area.'.parent_id' => $parentId),
+            'order' => array($area.'.order ASC')
 	    ));
 
 	    $this->unshift_array($listAreas, array(0 => __('--Select--')));
@@ -190,58 +193,50 @@ class AreasController extends AppController {
      * @param  integer $previousParentId Find the previous parent id.
      * @return json                    
      */
-	public function viewData($parentId = -1, $previousParentId = 0) {
-		$this->autoRender = false;
-		$this->Area->formatResult = false;
-		$listAreas = $this->Area->find('all', array(
-			'recursive' => 0,
-	        'conditions' => array('Area.parent_id' => $parentId),
-		    'fields' => array('Area.id', 'Area.code', 'Area.name', 'Area.visible', 'Area.order', 'Area.area_level_id AS area_level_id', 'AreaLevel.name AS level_name'),
-            'order' => array('Area.order ASC', 'Area.id ASC')
-	    ));
-
-        $db = $this->AreaLevel->getDataSource();
+	public function viewData($parentId = -1, $arrModels = array('Area','AreaLevel')) {
+		$request = @$this->request['pass'][0];
+		if($request == 'Education'){ 
+			$parentId = -1;
+			$arrModels = 'Education';
+			
+		}else{
+			$parentId = is_null($request)?-1:$request;
+		}
 		
-        $query = "SELECT DISTINCT `area_levels`.name, `area_levels`.`id`
-                        FROM  `area_levels` 
-                        WHERE `area_levels`.`id` > (
-                            SELECT `areas`.`area_level_id`
-                            FROM `areas`
-                            WHERE `areas`.`id` = ?
+		$arrModels = (($arrModels == 'Education'|| $arrModels == 'AreaEducation') && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
+		
+		$this->autoRender = false;
+		$area = $arrModels[0];
+		$arealevel = $arrModels[1];
+		$fkAreaLevel = Inflector::underscore($arrModels[1]);
+		$area_table_name = Inflector::tableize($arrModels[0]);;
+		$area_level_table_name = Inflector::tableize($arrModels[1]);;
+		$this->{$area}->formatResult = false;
+		$listAreas = $this->{$area}->find('all', array(
+			'recursive' => 0,
+	        'conditions' => array($arrModels[0].'.parent_id' => $parentId),
+		    'fields' => array($area.'.id', $area.'.code', $area.'.name', $area.'.visible', $area.'.order', $area.'.'.$fkAreaLevel.'_id AS area_level_id', $arealevel.'.name AS level_name'),
+            'order' => array($area.'.order ASC', $area.'.id ASC')
+	    ));
+		
+
+        $db = $this->{$arealevel}->getDataSource();
+		
+        $query = "SELECT DISTINCT `$area_level_table_name`.name, `$area_level_table_name`.`id`
+                        FROM  `$area_level_table_name` 
+                        WHERE `$area_level_table_name`.`id` > (
+                            SELECT `$area_table_name`.`".$fkAreaLevel."_id`
+                            FROM `$area_table_name`
+                            WHERE `$area_table_name`.`id` = ?
                         )";
-
-        // $query = "SELECT DISTINCT `area_levels`.name, `area_levels`.id
-        //                 FROM  `area_levels` 
-        //                 LEFT JOIN `areas` ON `areas`.`area_level_id` = `area_levels`.`id` 
-        //                 WHERE `areas`.`parent_id` >= ?";
-
-        // $query = "SELECT `area_levels`.id, `area_levels`.name
-        //                         FROM  `area_levels` 
-        //                         WHERE `area_levels`.id > ( 
-        //                         SELECT  `areas`.`area_level_id` 
-        //                         FROM  `areas` 
-        //                         WHERE  `areas`.`id` = ?
-        //                         LIMIT 1 ) ";
         if($parentId == -1){
-            $query = "SELECT DISTINCT `area_levels`.name, `area_levels`.`id`
-                        FROM  `area_levels` ";
-
-            // $query = "SELECT DISTINCT `area_levels`.id, `area_levels`.name
-            //             FROM  `area_levels` 
-            //             LEFT JOIN `areas` ON `areas`.`area_level_id` = `area_levels`.`id` 
-            //             WHERE `areas`.`parent_id` = ? OR `areas`.`id` IS NULL";
-
-            // $query = "SELECT `area_levels`.id, `area_levels`.name
-            //                     FROM  `area_levels` 
-            //                     WHERE `area_levels`.id >= ( 
-            //                     SELECT  `areas`.`area_level_id` 
-            //                     FROM  `areas` 
-            //                     WHERE  `areas`.`parent_id` = ?
-            //                     LIMIT 1 ) ";
+            $query = "SELECT DISTINCT `$area_level_table_name`.name, `$area_level_table_name`.`id`
+                        FROM  `$area_level_table_name` ";
 
         }
+		
         $listAreaLevels = $db->fetchAll( $query, array($parentId));
-
+		
 	    //$this->Area->formatResult($listAreas);
 
 	    echo json_encode(array('data' => $this->Utility->formatResult($listAreas), 'area_levels' => $this->Utility->formatResult($listAreaLevels)));
@@ -252,15 +247,15 @@ class AreasController extends AppController {
      * Created by: Eugene Wong
      * @return [type] [description]
      */
-    public function areaAjax() {
+    public function areaAjax($type='Area') {
         $this->autoRender = false;
         $validateFailed = false; 
         //header("Status: 404 Not Found");
         $return = array();
         $return['data'] = array('new'=>array(),'error'=>array());
         foreach ($this->data as $key => $element) {
-            $this->Area->set($element);
-            if(!$this->Area->validates()) {
+            $this->{$type}->set($element);
+            if(!$this->{$type}->validates()) {
 
                 // $this->Utility->setAjaxResult('error', $return);
                 // $msg = $this->Utility->getFirstError($this->action, $this->Area, $this->Auth->user());
@@ -271,11 +266,11 @@ class AreasController extends AppController {
 
             } else {
 
-                $result = $this->Area->save($element);
+                $result = $this->{$type}->save($element);
                 // $$result['data']['new'][$key+1] = $result;
                 
                 if($result) {
-                    $areaId = $result['Area']['id'];
+                    $areaId = $result[$type]['id'];
                     $return['data']['new'][$key+1] = $areaId;
                     // $return['id'] = $subjectId;
                     // $return['name'] = $name;
@@ -290,7 +285,7 @@ class AreasController extends AppController {
             $this->Utility->setAjaxResult('success', $return);
         }else{
             $this->Utility->setAjaxResult('error', $return);
-            $msg = $this->Utility->getFirstError($this->action, $this->Area, $this->Auth->user());
+            $msg = $this->Utility->getFirstError($this->action, $this->{$type}, $this->Auth->user());
             $return['msg'] = __($msg);
         }
         //$return['data']= $this->data;
@@ -314,5 +309,128 @@ class AreasController extends AppController {
             $tmpArray[$key] = $val;
         }
         $origArray = $tmpArray;
+    }
+	//AREA 2
+	
+    public function AreaEducationLevels() {
+		$this->Navigation->addCrumb('Area Levels (Education');
+
+        $areas = array();
+        $levels = $this->AreaEducationLevel->find('all', array(
+            'fields' => array('AreaEducationLevel.id', 'AreaEducationLevel.name', 'AreaEducationLevel.level'),
+            'order' => array('AreaEducationLevel.level ASC'),
+            'recursive' => 0, //int
+        ));
+
+        $this->set('levels', $this->Utility->formatResult($levels));
+  //       $this->set('highestLevel',$areas);  
+        
+        $this->render('/AreaEducationLevels/index');
+    }
+
+    
+	public function AreaEducationLevelsEdit() {
+		$this->Navigation->addCrumb('Edit Area Levels (Education)');
+
+		$areas = array();
+        $levels = $this->AreaEducationLevel->find('all', array(
+            'fields' => array('AreaEducationLevel.id', 'AreaEducationLevel.name', 'AreaEducationLevel.level'),
+            'order' => array('AreaEducationLevel.level ASC'),
+            'recursive' => 0, //int
+        ));
+
+        if($this->request->is('post')) {
+            $this->AreaEducationLevel->saveAreaLevelData($this->data['AreaEducationLevel']);
+            $this->redirect('/Areas/AreaEducationLevels');
+            // pr($this->data);
+        }
+
+        $this->set('levels', $this->Utility->formatResult($levels));
+  //       $this->set('highestLevel',$areas);  
+        
+        $this->render('/AreaEducationLevels/edit');
+
+	}
+	
+	public function AreaEducation() {
+		$this->Navigation->addCrumb('Areas');
+
+		$areas = array();
+        $levels = $this->AreaEducationLevel->find('list', array('order'=>array('AreaEducationLevel.level ASC')));
+        $topArea = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => '-1')));
+        $this->unshift_array($topArea, array('0'=>__('--Select--')));
+        $areas[] = $topArea;
+
+
+        if($this->request->is('post')) {
+            if(isset($this->request->data['AreaEducation'])){
+                for ($i = 0; $i < count($this->request->data['AreaEducation'])-1; $i++) {
+                    $area = $this->AreaEducation->find('list',array(
+                                                    'conditions' => array(
+                                                        'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_level_'.$i]
+                                                    )
+                                                )
+                                            );
+                    
+                    $this->unshift_array($area, array('0'=>__('--Select--')));
+                    $areas[] = $area;
+                }
+                if(end($this->request->data['AreaEducation']) == 0 ){
+                    array_pop($this->request->data['AreaEducation']);
+                }
+            }
+            $this->set('initAreaSelection', (isset($this->request->data['AreaEducation']) && count($this->request->data['AreaEducation']) > 0)?$this->request->data['AreaEducation']: null);
+
+        }
+		
+		// Checking if user has access to _view for area levels
+		$_view_levels = false;
+		if($this->AccessControl->check($this->params['controller'], 'levels')) {
+			$_view_levels = true;
+		}
+		$this->set('_view_levels', $_view_levels);
+		// End Access Control
+		
+		$this->set('levels', $levels);
+        $this->set('highestLevel',$areas);	
+		 $this->render('/AreaEducation/index');
+	}
+
+    public function AreaEducationEdit() {
+		
+		$this->Navigation->addCrumb('Edit Areas (Education)');
+		
+        $areas = array();
+        $levels = $this->AreaEducationLevel->find('list');
+        $topArea = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => '-1')));
+        $this->unshift_array($topArea, array('0'=>__('--Select--')));
+        $areas[] = $topArea;
+
+        if($this->request->is('post')) {
+            if(isset($this->request->data['AreaEducation'])){
+                for ($i = 0; $i < count($this->request->data['AreaEducation'])-1; $i++) {
+                    $area = $this->AreaEducation->find('list',array(
+                            'conditions'=> array(
+                                'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_level_'.$i]
+                            )
+                        )
+                    );
+                    
+                    $this->unshift_array($area, array('0'=>__('--Select--')));
+                    $areas[] = $area;
+                }
+                
+            }
+
+            if(isset($this->request->data['AreaEducation']) &&  end($this->request->data['AreaEducation']) == 0 ){
+                array_pop($this->request->data['AreaEducation']);
+            }
+            $this->set('initAreaSelection', (isset($this->request->data['AreaEducation']))?$this->request->data['AreaEducation']: null);
+
+        }
+
+        $this->set('levels', $levels);
+        $this->set('highestLevel',$areas);
+		$this->render('/AreaEducation/edit');
     }
 }

@@ -17,12 +17,12 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 ?>
 
 <div id="staff-list" class="content_wrapper search">
-    <h1>
-        <span><?php echo __('List of Staff'); ?></span>
-        <span class="divider"></span>
-        <span class="total"><span><?php echo $total;?></span> <?php echo __('Staff'); ?></span>
-    </h1>
-	 <?php echo $this->element('alert'); ?>
+	<h1>
+		<span><?php echo __('List of Staff'); ?></span>
+		<span class="divider"></span>
+		<span class="total"><span><?php echo $total;?></span> <?php echo __('Staff'); ?></span>
+	</h1>
+	<?php echo $this->element('alert'); ?>
 
 	<?php if($this->Session->check('Search.SearchFieldStaff') || $total > $limit) { ?>
     <div class="row">
@@ -87,8 +87,8 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 				foreach ($staff as $arrItems):
 					$id = $arrItems['Staff']['id'];
 					$identificationNo = $this->Utility->highlight($searchField, $arrItems['Staff']['identification_no']);
-					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['first_name'].'</b>'.((isset($arrItems['StaffHistory']['first_name']))?'<br>'.$arrItems['StaffHistory']['first_name']:''));
-					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['last_name'].'</b>'.((isset($arrItems['StaffHistory']['last_name']))?'<br>'.$arrItems['StaffHistory']['last_name']:''));
+					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['first_name'].'</b>'.((isset($arrItems['Staff']['history_first_name']))?'<br>'.$arrItems['Staff']['history_first_name']:''));
+					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['last_name'].'</b>'.((isset($arrItems['Staff']['history_last_name']))?'<br>'.$arrItems['Staff']['history_last_name']:''));
 					$gender = $arrItems['Staff']['gender'];
 					$birthday = $arrItems['Staff']['date_of_birth'];
 

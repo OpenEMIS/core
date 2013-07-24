@@ -194,23 +194,23 @@ class NavigationComponent extends Component {
 				),
 				'DETAILS' => array(
 					$this->createLink('Programmes', 'InstitutionSites', 'programmes'),
-					$this->createLink('Classes', 'InstitutionSites', 'classes'),
 					$this->createLink('Students', 'InstitutionSites', 'students'),
 					$this->createLink('Teachers', 'InstitutionSites', 'teachers'),
 					$this->createLink('Staff', 'InstitutionSites', 'staff'),
+					$this->createLink('Classes', 'InstitutionSites', 'classes'),
 					$this->createLink('Results', 'InstitutionSites', 'results')
 				),
 				'TOTALS' => array(
-					$this->createLink('Enrolment', 'Census', 'enrolment'),
-					$this->createLink('Graduates', 'Census', 'graduates'),
-					$this->createLink('Classes', 'Census', 'classes'),
-					$this->createLink('Textbooks', 'Census', 'textbooks'),
+					$this->createLink('Students', 'Census', 'enrolment'),
 					$this->createLink('Teachers', 'Census', 'teachers'),
 					$this->createLink('Staff', 'Census', 'staff'),
-					$this->createLink('Infrastructure', 'Census', 'infrastructure'),
-					$this->createLink('Finances', 'Census', 'finances'),
+					$this->createLink('Classes', 'Census', 'classes'),
+					$this->createLink('Graduates', 'Census', 'graduates'),
 					$this->createLink('Attendance', 'Census', 'attendance'),
 					$this->createLink('Behaviour', 'Census', 'behaviour'),
+					$this->createLink('Textbooks', 'Census', 'textbooks'),
+					$this->createLink('Infrastructure', 'Census', 'infrastructure'),
+					$this->createLink('Finances', 'Census', 'finances'),
 					$this->createLink('More', 'Census', 'otherforms')
 				)
 			)
@@ -222,7 +222,7 @@ class NavigationComponent extends Component {
 		$links = array(
 			array(
 				'SYSTEM SETUP' => array(
-					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit$'),
+					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit|EducationArea|$'),
 					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup'),
 					$this->createLink('National Assessments', 'Assessment', 'index', '^index|assessment'),
 					$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
@@ -246,6 +246,11 @@ class NavigationComponent extends Component {
 				'DATABASE' => array(
 					$this->createLink('Backup', 'Database', 'backup'),
 					$this->createLink('Restore', 'Database', 'restore')
+				),
+				'SURVEY' => array(
+					'_controller' => 'Survey',
+					$this->createLink('New', 'Survey', 'index', 'index$|^add$|^edit$'),
+					$this->createLink('Completed', 'Survey', 'import', 'import$|^synced$')
 				)
 			)
 		);
