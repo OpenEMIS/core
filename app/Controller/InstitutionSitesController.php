@@ -817,7 +817,7 @@ class InstitutionSitesController extends AppController {
 		$this->layout = 'ajax';
 		
 		$yearId = $this->params->query['yearId'];
-		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId, false);
+		$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeForSelection($this->institutionSiteId, $yearId, false);
 		$this->set('programmeOptions', $programmeOptions);
 		$this->render('/Elements/programmes/programmes_options');
 	}
