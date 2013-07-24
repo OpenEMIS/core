@@ -113,7 +113,6 @@ class Teacher extends TeachersAppModel {
 	
 	public function search($search, $params=array()) {
 		$model = $this->alias;
-		$data = array();
 		$search = '%' . $search . '%';
 		$limit = isset($params['limit']) ? $params['limit'] : false;
 		
@@ -130,7 +129,6 @@ class Teacher extends TeachersAppModel {
 			'conditions' => $conditions,
 			'order' => array($model . '.first_name')
 		);
-		
 		$count = $this->find('count', $options);
 		
 		$data = false;

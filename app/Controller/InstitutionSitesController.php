@@ -63,6 +63,7 @@ class InstitutionSitesController extends AppController {
 		'CensusStudent',
 		'SchoolYear',
 		'Students.Student',
+		'Students.StudentCategory',
 		'Teachers.Teacher',
 		'Teachers.TeacherCategory',
 		'Staff.Staff',
@@ -741,20 +742,31 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function programmes() {
-		$this->Navigation->addCrumb('List of Programmes');
+		$this->Navigation->addCrumb('Programmes');
 		
 		$yearOptions = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
 		$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		
-		// Checking if user has access to add
-		$_add_programme = $this->AccessControl->check('InstitutionSites', 'programmesAdd');
-		$this->set('_add_programme', $_add_programme);
-		// End Access Control
-		
 		$this->set('yearOptions', $yearOptions);
 		$this->set('selectedYear', $selectedYear);
 		$this->set('data', $data);
+	}
+	
+	public function programmesEdit() {
+		if($this->request->is('get')) {
+			$this->Navigation->addCrumb('Edit Programmes');
+			
+			$yearOptions = $this->SchoolYear->getYearList();
+			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+			$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
+			
+			$this->set('yearOptions', $yearOptions);
+			$this->set('selectedYear', $selectedYear);
+			$this->set('data', $data);
+		} else {
+			$this->autoRender = false;
+		}
 	}
 	
 	public function programmesAdd() {
@@ -763,7 +775,9 @@ class InstitutionSitesController extends AppController {
 			$this->layout = 'ajax';
 			
 			$data = $this->EducationProgramme->getAvailableProgrammeOptions($this->institutionSiteId, $yearId);
+			$_delete_programme = $this->AccessControl->check('InstitutionSites', 'programmesDelete');
 			$this->set('data', $data);
+			$this->set('_delete_programme', $_delete_programme);
 		} else {
 			$this->autoRender = false;
 			$programmeId = $this->params->data['programmeId'];
@@ -787,105 +801,25 @@ class InstitutionSitesController extends AppController {
 		}
 	}
 	
-	public function programmesView() {
-		$this->Navigation->addCrumb('Programme Details');
-		
-		$yearOptions = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $selectedYear);
-		$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
-		
-		if(!array_key_exists($selectedProgramme, $programmeOptions)) {
-			$selectedProgramme = key($programmeOptions);
-		}
-		
-		$data = array();
-		if(empty($programmeOptions)) {
-			$programmeOptions[] = '-- ' . __('No Programme') . ' --';
-		} else {
-			$data = $this->InstitutionSiteStudent->getStudentList($selectedProgramme, $this->institutionSiteId, $selectedYear);
-		}
-		
-		$this->set('yearOptions', $yearOptions);
-		$this->set('selectedYear', $selectedYear);
-		$this->set('programmeOptions', $programmeOptions);
-		$this->set('selectedProgramme', $selectedProgramme);
-		$this->set('data', $data);
-	}
-	
-	public function programmesEdit() {
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Programme Details');
-			
-			$yearOptions = $this->SchoolYear->getYearList();
-			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-			$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $selectedYear);
-			$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
-			
-			if(!array_key_exists($selectedProgramme, $programmeOptions)) {
-				$selectedProgramme = key($programmeOptions);
-			}
-			
-			$data = array();
-			if(empty($programmeOptions)) {
-				$this->redirect(array('action' => programmes));
-			} else {
-				$data = $this->InstitutionSiteStudent->getStudentList($selectedProgramme, $this->institutionSiteId, $selectedYear);
-				$this->set('yearOptions', $yearOptions);
-				$this->set('selectedYear', $selectedYear);
-				$this->set('programmeOptions', $programmeOptions);
-				$this->set('selectedProgramme', $selectedProgramme);
-				$this->set('data', $data);
-			}
-		} else {
+	public function programmesDelete() {
+		if(count($this->params['pass']) == 2) {
 			$this->autoRender = false;
-			$data = $this->data['InstitutionSiteStudent'];
-			foreach($data as &$obj) {
-				$start = $obj['start_date'];
-				$end = $obj['end_date'];
-				$obj['start_date'] = sprintf('%d-%d-%d', $start['year'], $start['month'], $start['day']);
-				$obj['end_date'] = sprintf('%d-%d-%d', $end['year'], $end['month'], $end['day']);
-				$this->InstitutionSiteStudent->save($obj);
-			}
+			$yearId = $this->params['pass'][0];
+			$id = $this->params['pass'][1];
+			
+			$this->InstitutionSiteProgramme->delete($id, false);
+			$this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
+			$this->redirect(array('action' => 'programmes', $yearId));
 		}
 	}
 	
-	public function programmesAddStudent() {
+	public function programmesOptions() {
 		$this->layout = 'ajax';
-		$studentId = $this->params->query['studentId'];
-		$name = $this->params->query['name'];
-		$idNo = $this->params->query['idNo'];
-		$i = $this->params->query['i'];
-		$yearId = $this->params['pass'][0];
-		$programmeId = $this->params['pass'][1];
 		
-		$obj = $this->InstitutionSiteStudent->addStudentToProgramme($studentId, $programmeId, $this->institutionSiteId, $yearId);
-		
-		$this->set('idNo', $idNo);
-		$this->set('name', $name);
-		$this->set('i', $i);
-		$this->set('obj', $obj['InstitutionSiteStudent']);
-	}
-	
-	public function programmesRemoveStudent() {
-		$this->autoRender = false;
-		$id = $this->params->query['rowId'];
-		$yearId = $this->params['pass'][0];
-		$programmeId = $this->params['pass'][1];
-		
-		if($id != -1) {
-			$this->InstitutionSiteStudent->delete($id, false);
-		} else {
-			$conditions = array(
-				'school_year_id' => $yearId,
-				'education_programme_id' => $programmeId,
-				'institution_site_id' => $this->institutionSiteId
-			);
-			$institutionSiteProgrammeId = $this->InstitutionSiteProgramme->field('id', $conditions);
-			$this->InstitutionSiteStudent->deleteAll(array(
-				'InstitutionSiteStudent.institution_site_programme_id' => $institutionSiteProgrammeId
-			), false);
-		}
+		$yearId = $this->params->query['yearId'];
+		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId, false);
+		$this->set('programmeOptions', $programmeOptions);
+		$this->render('/Elements/programmes/programmes_options');
 	}
         
 	public function history() {
@@ -1081,7 +1015,12 @@ class InstitutionSitesController extends AppController {
 			
 			$result = false;
 			if($action === 'add') {
-				$data = array('student_id' => $studentId, 'institution_site_class_grade_id' => $gradeId);
+				$categoryId = $this->params->query['categoryId'];
+				$data = array(
+					'student_id' => $studentId, 
+					'student_category_id' => $categoryId,
+					'institution_site_class_grade_id' => $gradeId
+				);
 				$this->InstitutionSiteClassGradeStudent->create();
 				$result = $this->InstitutionSiteClassGradeStudent->save($data);
 			} else {
@@ -1110,9 +1049,11 @@ class InstitutionSitesController extends AppController {
 			$gradeId = $this->params['pass'][1];
 			$index = $this->params->query['index'];
 			$data = $this->InstitutionSiteStudent->getStudentSelectList($year, $this->institutionSiteId, $gradeId);
+			$categoryOptions = $this->StudentCategory->findList(true);
 			$this->set('index', $index);
 			$this->set('gradeId', $gradeId);
 			$this->set('data', $data);
+			$this->set('categoryOptions', $categoryOptions);
 		}
 	}
 	
@@ -1257,6 +1198,12 @@ class InstitutionSitesController extends AppController {
 		if(empty($data)) {
 			$this->Utility->alert($this->Utility->getMessage('STUDENT_SEARCH_NO_RESULT'), array('type' => 'info', 'dismissOnClick' => false));
 		}
+		
+		// Checking if user has access to add
+		$_add_student = $this->AccessControl->check('InstitutionSites', 'studentsAdd');
+		$this->set('_add_student', $_add_student);
+		// End Access Control
+		
 		$this->set('searchField', $searchField);
 		$this->set('page', $page);
 		$this->set('orderBy', $orderBy);
@@ -1270,16 +1217,49 @@ class InstitutionSitesController extends AppController {
 	
 	public function studentsSearch() {
 		$this->layout = 'ajax';
-		$master = isset($this->params->query['master']);
-		$searchStr = trim($this->params->query['searchStr']);
-		$yearId = $this->params->query['yearId'];
-		$programmeId = $this->params->query['programmeId'];
-		
-		if($master) { // searching students in master list
-			$limit = 200;
-			$data = $this->Student->search($searchStr, $programmeId, $this->institutionSiteId, $yearId, $limit);
-			$this->set('searchStr', $searchStr);
-			$this->set('data', $data);
+		$search = trim($this->params->query['searchString']);
+		$params = array('limit' => 100);
+		$data = $this->Student->search($search, $params);
+		$this->set('search', $search);
+		$this->set('data', $data);
+	}
+	
+	public function studentsAdd() {
+		$this->Navigation->addCrumb('Add Student');
+		$yearOptions = $this->SchoolYear->getYearList();
+		$programmeOptions = array();
+		$selectedYear = '';
+		if(!empty($yearOptions)) {
+			$selectedYear = key($yearOptions);
+			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeForSelection($this->institutionSiteId, $selectedYear);
+		}
+		$this->set('yearOptions', $yearOptions);
+		$this->set('programmeOptions', $programmeOptions);
+	}
+	
+	public function studentsSave() {
+		if($this->request->is('post')) {
+			$data = $this->data['InstitutionSiteStudent'];
+			if(isset($data['student_id'])) {
+				$data['start_year'] = date('Y', strtotime($data['start_date']));
+				$name = $data['first_name'] . ' ' . $data['last_name'];
+				$siteProgrammeId = $data['institution_site_programme_id'];
+				$exists = $this->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
+				
+				if(!$exists) {
+					$duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
+					$startDate = new DateTime($data['start_date']);
+					$endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
+					$endYear = $endDate->format('Y');
+					$data['end_date'] = $endDate->format('Y-m-d');
+					$data['end_year'] = $endYear;
+					$this->InstitutionSiteStudent->save($data);
+					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				} else {
+					$this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+				}
+				$this->redirect(array('action' => 'studentsAdd'));
+			}
 		}
 	}
 	
@@ -1359,17 +1339,21 @@ class InstitutionSitesController extends AppController {
 		$yearOptions = $this->SchoolYear->getYearList('start_year');
 		$categoryOptions = $this->TeacherCategory->findList(true);
 		
+		$this->set('yearOptions', $yearOptions);
+		$this->set('categoryOptions', $categoryOptions);
+	}
+	
+	public function teachersSave() {
 		if($this->request->is('post')) {
 			$data = $this->data['InstitutionSiteTeacher'];
 			if(isset($data['teacher_id'])) {
 				$data['institution_site_id'] = $this->institutionSiteId;
 				$data['start_year'] = date('Y', strtotime($data['start_date']));
 				$this->InstitutionSiteTeacher->save($data);
-				$this->redirect(array('action' => 'teachersView', $data['teacher_id']));
+				$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				$this->redirect(array('action' => 'teachersAdd'));
 			}
 		}
-		$this->set('yearOptions', $yearOptions);
-		$this->set('categoryOptions', $categoryOptions);
 	}
 	
 	public function teachersView() {
@@ -1494,17 +1478,22 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Add Staff');
 		$yearOptions = $this->SchoolYear->getYearList('start_year');
 		$categoryOptions = $this->StaffCategory->findList(true);
+		
+		$this->set('yearOptions', $yearOptions);
+		$this->set('categoryOptions', $categoryOptions);
+	}
+	
+	public function staffSave() {
 		if($this->request->is('post')) {
 			$data = $this->data['InstitutionSiteStaff'];
 			if(isset($data['staff_id'])) {
 				$data['institution_site_id'] = $this->institutionSiteId;
 				$data['start_year'] = date('Y', strtotime($data['start_date']));
 				$this->InstitutionSiteStaff->save($data);
-				$this->redirect(array('action' => 'staffView', $data['staff_id']));
+				$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				$this->redirect(array('action' => 'staffAdd'));
 			}
 		}
-		$this->set('yearOptions', $yearOptions);
-		$this->set('categoryOptions', $categoryOptions);
 	}
 	
 	public function staffView() {
