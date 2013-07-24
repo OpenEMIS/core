@@ -80,14 +80,13 @@ echo $this->Html->script('institution_site_classes', false);
 		<fieldset class="section_break">
 			<legend>
 				<span><?php echo $name ?></span>
-				<!--?php echo $this->Html->link(__('Remove All'), array('action' => 'studentsRemove'), array('class' => 'divider')); ?-->
 			</legend>
 			
 			<div class="table">
 				<div class="table_head">
 					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
 					<div class="table_cell"><?php echo __('Name'); ?></div>
-					<div class="table_cell cell_gender"><?php echo __('Gender'); ?></div>
+					<div class="table_cell cell_category"><?php echo __('Category'); ?></div>
 					<div class="table_cell cell_delete"></div>
 				</div>
 				
@@ -97,7 +96,7 @@ echo $this->Html->script('institution_site_classes', false);
 					<div class="table_row" student-id="<?php echo $obj['id']; ?>">
 						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
 						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
-						<div class="table_cell"><?php echo $this->Utility->formatGender($obj['gender']); ?></div>
+						<div class="table_cell"><?php echo $obj['category']; ?></div>
 						<div class="table_cell">
 							<?php echo $this->Utility->getDeleteControl(array(
 								'onclick' => 'InstitutionSiteClasses.deleteStudent(this)',
@@ -118,10 +117,4 @@ echo $this->Html->script('institution_site_classes', false);
 		</fieldset>
 		<?php } ?>
 	</fieldset>
-	
-	
-	<!--div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classesList'), array('class' => 'btn_cancel btn_left')); ?>
-	</div-->
 </div>

@@ -8,15 +8,15 @@ echo $this->Html->script('institution_site_programmes', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="programmes" class="content_wrapper">
-    <h1><?php echo __('List of Programmes'); ?></h1>
+	<h1>
+		<span><?php echo __('Programmes'); ?></span>
+		<?php
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'programmesEdit', $selectedYear), array('class' => 'divider'));
+		}
+		?>
+	</h1>
     <?php echo $this->element('alert'); ?>
-	
-	<?php 
-	echo $this->Form->create('InstitutionSite', array(
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'programmes'),
-		'inputDefaults' => array('label' => false, 'div' => false)
-	)); 
-	?>
 	
 	<div class="row year">
 		<div class="label"><?php echo __('Year'); ?></div>
@@ -24,15 +24,18 @@ echo $this->Html->script('institution_site_programmes', false);
 			<?php
 			echo $this->Form->input('school_year_id', array(
 				'id' => 'SchoolYearId',
+				'label' => false,
+				'div' => false,
 				'options' => $yearOptions,
 				'default' => $selectedYear,
-				'onchange' => 'InstitutionSiteProgrammes.navigate()'
+				'url' => 'InstitutionSites/programmes',
+				'onchange' => 'jsForm.change(this)'
 			));
 			?>
 		</div>
 	</div>
 	
-	<div class="table full_width allow_hover" action="InstitutionSites/programmesView/<?php echo $selectedYear; ?>/">
+	<div class="table full_width">
 		<div class="table_head">
 			<div class="table_cell cell_system"><?php echo __('Programme'); ?></div>
 			<div class="table_cell"><?php echo __('System') . ' - ' . __('Cycle'); ?></div>
@@ -42,17 +45,9 @@ echo $this->Html->script('institution_site_programmes', false);
 			<?php foreach($data as $obj) { ?>
 			<div class="table_row" row-id="<?php echo $obj['education_programme_id']; ?>">
 				<div class="table_cell"><?php echo $obj['education_programme_name']; ?></div>
-				<div class="table_cell">
-					<?php echo sprintf('%s - %s', $obj['education_system_name'], $obj['education_cycle_name']); ?>
-				</div>
+				<div class="table_cell"><?php echo sprintf('%s - %s', $obj['education_system_name'], $obj['education_cycle_name']); ?></div>
 			</div>
 			<?php } ?>
 		</div>
 	</div>
-	
-	<?php if($_add_programme) { ?>
-	<div class="row">
-		<a class="void icon_plus" url="InstitutionSites/programmesAdd/<?php echo $selectedYear; ?>"><?php echo __('Add').' '.__('Programme'); ?></a>
-	</div>
-	<?php } ?>
 </div>

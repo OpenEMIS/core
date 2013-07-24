@@ -53,8 +53,8 @@ class InstitutionSiteStudent extends AppModel {
 		
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 
-				'Student.last_name', 'Student.gender'
+				'Student.id', 'Student.identification_no', 
+				'Student.first_name', 'Student.last_name'
 			),
 			'joins' => array(
 				array(
@@ -173,6 +173,17 @@ class InstitutionSiteStudent extends AppModel {
 			'order' => array('Student.first_name', 'Student.last_name')
 		));
 		return $data;
+	}
+	
+	public function isStudentExistsInProgramme($studentId, $siteProgrammeId, $year) {
+		$count = $this->find('count', array(
+			'conditions' => array(
+				'InstitutionSiteStudent.student_id' => $studentId,
+				'InstitutionSiteStudent.institution_site_programme_id' => $siteProgrammeId,
+				'InstitutionSiteStudent.start_year' => $year
+			)
+		));
+		return $count==1;
 	}
 	
 	public function paginateJoins(&$conditions) {
