@@ -18,36 +18,38 @@ $(document).ready(function() {
 });
 
 var objInstitutionSite = {
+	onChangefunction : function(){
+		
+		
+	},
     addAreaSwitching : function(){
-        
-        $('select[name*="[area_level_"]').each(function(i,obj){
-           
-            $(obj).change(function(o){
-                var TotalAreaLevel = $('select[name*="[area_level_"]').length;
-				
-                var currentSelect = $(this).attr('name').replace('data[InstitutionSite][area_level_','');
-				
-                currentSelect = currentSelect.replace(']','');
-                currentSelect = parseInt(currentSelect);
-				
-                for(i=currentSelect+1;i<TotalAreaLevel;i++){
-                    //console.log($('select[name=data\\[InstitutionSite\\]\\[area_level_'+i+'\\]]'));
-                    $('select[name=data\\[InstitutionSite\\]\\[area_level_'+i+'\\]]').find('option').remove();
-                }
-                objInstitutionSite.fetchChildren(this);
-                
-            });
-            
-        });
+		var areatype = ['area_education','area']
+		for(p in areatype){
+			$('select[name*="['+areatype[p]+'_level_"]').each(function(l,obj){
+				$(obj).attr('areatype',areatype[p]);
+				$(obj).change(function(o){
+					var TotalAreaLevel = $('select[name*="['+$(this).attr('areatype')+'_level_"]').length;
+					var currentSelect = $(this).attr('name').replace('data[InstitutionSite]['+$(this).attr('areatype')+'_level_','');
+					currentSelect = currentSelect.replace(']','');
+					currentSelect = parseInt(currentSelect);
+					for(i=currentSelect+1;i<TotalAreaLevel;i++){
+						$('select[name=data\\[InstitutionSite\\]\\['+$(this).attr('areatype')+'_level_'+i+'\\]]').find('option').remove();
+					};
+					objInstitutionSite.fetchChildren(this);
+				});
+			});
+		}
     },
 	
     fetchChildren :function (currentobj){
         var selected = $(currentobj).val();
         var maskId;
+		var edutype = $(currentobj).closest('fieldset').find('legend').text().match(/Education/);;
+		atype=(edutype?'admin':'Area');
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: getRootURL()+'/InstitutionSites/viewAreaChildren/'+selected,
+            url: getRootURL()+'/InstitutionSites/viewAreaChildren/'+selected+'/'+atype,
             beforeSend: function (jqXHR) {
 				maskId = $.mask({text:i18n.General.textLoadAreas});
             },

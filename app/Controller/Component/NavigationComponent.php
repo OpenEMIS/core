@@ -222,7 +222,7 @@ class NavigationComponent extends Component {
 		$links = array(
 			array(
 				'SYSTEM SETUP' => array(
-					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit$'),
+					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit|EducationArea|$'),
 					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup'),
 					$this->createLink('National Assessments', 'Assessment', 'index', '^index|assessment'),
 					$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
@@ -246,6 +246,11 @@ class NavigationComponent extends Component {
 				'DATABASE' => array(
 					$this->createLink('Backup', 'Database', 'backup'),
 					$this->createLink('Restore', 'Database', 'restore')
+				),
+				'SURVEY' => array(
+					'_controller' => 'Survey',
+					$this->createLink('New', 'Survey', 'index', 'index$|^add$|^edit$'),
+					$this->createLink('Completed', 'Survey', 'import', 'import$|^synced$')
 				)
 			)
 		);

@@ -21,6 +21,8 @@ class InstitutionsController extends AppController {
     public $uses = Array(
 		'Area',
 		'AreaLevel',
+		'AreaEducation',
+		'AreaEducationLevel',
 		'Institution',
 		'InstitutionSite',
 		'InstitutionCustomField',
@@ -456,38 +458,46 @@ class InstitutionsController extends AppController {
         $this->set('data2',$data2);
     }
 	
-	public function viewAreaChildren($id) {
+	public function viewAreaChildren($id,$arrMap = array('Area','AreaLevel')) {
+		//if ajax
+		if($this->RequestHandler->isAjax()){
+			$arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
+		}
 		$this->autoRender = false;
-		$value =$this->Area->find('list',array('conditions'=>array('Area.parent_id' => $id)));
+		$value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
 		$this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
 		echo json_encode($value);
 	}
 	
-	private function fetchtoParent($lowest){
+	private function fetchtoParent($lowest,$arrMap = array('Area','AreaLevel')){
+		
+		$AreaLevelfk = Inflector::underscore($arrMap[1]);
 		$arrVals = Array();
 		//pr($lowest);die;
 		//$this->autoRender = false; // AJAX
-		$list = $this->Area->find('first', array(
-								'fields' => array('Area.id', 'Area.name', 'Area.parent_id', 'Area.area_level_id','AreaLevel.name'),
-								'conditions' => array('Area.id' => $lowest)));
-
+		
+		$list = $this->{$arrMap[0]}->find('first', array(
+								'fields' => array($arrMap[0].'.id', $arrMap[0].'.name', $arrMap[0].'.parent_id', $arrMap[0].'.'.$AreaLevelfk.'_id',$arrMap[1].'.name'),
+								'conditions' => array($arrMap[0].'.id' => $lowest)));
+		
 		//check if not false
-		if($list){
-			$arrVals[$list['Area']['area_level_id']] = Array('level_id'=>$list['Area']['area_level_id'],'id'=>$list['Area']['id'],'name'=>$list['Area']['name'],'parent_id'=>$list['Area']['parent_id'],'AreaLevelName'=>$list['AreaLevel']['name']);
-			if($list['Area']['area_level_id'] > 1){
-				if($list['Area']['area_level_id']){
+		if($list){ 
+			$arrVals[$list[$arrMap[0]][$AreaLevelfk.'_id']] = Array('level_id'=>$list[$arrMap[0]][$AreaLevelfk.'_id'],'id'=>$list[$arrMap[0]]['id'],'name'=>$list[$arrMap[0]]['name'],'parent_id'=>$list[$arrMap[0]]['parent_id'],'AreaLevelName'=>$list[$arrMap[1]]['name']);
+		
+			if($list[$arrMap[0]][$AreaLevelfk.'_id'] > 1){
+				if($list[$arrMap[0]][$AreaLevelfk.'_id']){
 					do {
-						$list = $this->Area->find('first', array(
-								'fields' => array('Area.id', 'Area.name', 'Area.parent_id', 'Area.area_level_id','AreaLevel.name'),
-								'conditions' => array('Area.id' => $list['Area']['parent_id'])));
-						$arrVals[$list['Area']['area_level_id']] = Array('level_id'=>$list['Area']['area_level_id'],'id'=>$list['Area']['id'],'name'=>$list['Area']['name'],'parent_id'=>$list['Area']['parent_id'],'AreaLevelName'=>$list['AreaLevel']['name']);
-					} while ($list['Area']['area_level_id'] != 1);
+						$list = $this->{$arrMap[0]}->find('first', array(
+								'fields' => array($arrMap[0].'.id', $arrMap[0].'.name', $arrMap[0].'.parent_id', $arrMap[0].'.'.$AreaLevelfk.'_id',$arrMap[1].'.name', $arrMap[0].'.visible'),
+								'conditions' => array($arrMap[0].'.id' => $list[$arrMap[0]]['parent_id'])));
+						$arrVals[$list[$arrMap[0]][$AreaLevelfk.'_id']] = Array('visible'=>$list[$arrMap[0]]['visible'],'level_id'=>$list[$arrMap[0]][$AreaLevelfk.'_id'],'id'=>$list[$arrMap[0]]['id'],'name'=>$list[$arrMap[0]]['name'],'parent_id'=>$list[$arrMap[0]]['parent_id'],'AreaLevelName'=>$list[$arrMap[1]]['name']);
+					} while ($list[$arrMap[0]][$AreaLevelfk.'_id'] != 1);
 				}
 			}
+			
 		}
-
+		
 		
 		return $arrVals;
-	  //echo $arrVals;
 	}
 }
