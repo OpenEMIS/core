@@ -16,11 +16,12 @@ echo $this->Html->script('area', false);
 			echo $this->Html->link(__('View'), array('action' => 'index'), array('class' => 'divider', 'id' => 'view')); 
 			
 			// if($_view_levels) {
-			echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
+			//echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
+			
 			// }
 		?>
 	</h1>
-
+	<?php echo $this->element('area_categories'); ?>
 	<?php
 	echo $this->Form->create('Area', array(
 			'url' => array(

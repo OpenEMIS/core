@@ -11,14 +11,15 @@ echo $this->Html->script('area', false);
 
 <div class="content_wrapper edit" style="min-height: 650px;">
 	<h1>
-		<span><?php echo __('Area Levels'); ?></span>
+		<span><?php echo __('Administrative Boundaries'); ?></span>
 		<?php
 		echo $this->Html->link(__('View'), array('action' => 'levels'), array('class' => 'divider', 'id' => 'view'));
-		echo $this->Html->link(__('Areas'), array('action' => 'index'), array('class' => 'divider', 'id' => 'viewAreas')); 
+		//echo $this->Html->link(__('Areas'), array('action' => 'index'), array('class' => 'divider', 'id' => 'viewAreas')); 
 		?>
 	</h1>
-	
+	<?php echo $this->element('area_categories'); ?>
 	<?php echo $this->Form->create('AreaLevels', array(
+		'model' => 'AreaLevel',
 	    'inputDefaults' => array(
 	        'label' => false,
 	        'div' => false

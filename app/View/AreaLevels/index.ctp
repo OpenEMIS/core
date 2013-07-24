@@ -9,15 +9,15 @@ echo $this->Html->script('area', false);
 
 <div class="content_wrapper" style="min-height: 650px;">
 	<h1>
-		<span><?php echo __('Area Levels'); ?></span>
+		<span><?php echo __('Administrative Boundaries'); ?></span>
 		<?php
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'levelsEdit'), array('class' => 'divider'));
 		}
-		echo $this->Html->link(__('Areas'), array('action' => 'index'), array('class' => 'divider', 'id' => 'viewAreas'));
+		//echo $this->Html->link(__('Areas'), array('action' => 'index'), array('class' => 'divider', 'id' => 'viewAreas'));
 		?>
 	</h1>
-
+	<?php echo $this->element('area_categories'); ?>
 	<div class="table full_width">
 		<div class="table_head">
 			<div class="table_cell" style="width:569px;"><span class="left"><?php echo __('Name'); ?></span></div>
