@@ -77,7 +77,7 @@ echo $this->Html->script('search', false);
 				<div class="table_head">
 					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
 					<div class="table_cell"><?php echo __('Name'); ?></div>
-					<div class="table_cell cell_gender">Gender</div>
+					<div class="table_cell cell_category"><?php echo __('Category'); ?></div>
 				</div>
 				
 				<div class="table_body">
@@ -86,7 +86,7 @@ echo $this->Html->script('search', false);
 					<div class="table_row">
 						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
 						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
-						<div class="table_cell"><?php echo $this->Utility->formatGender($obj['gender']); ?></div>
+						<div class="table_cell"><?php echo $obj['category']; ?></div>
 					</div>
 					<?php } // end for ?>
 					<?php } // end if ?>

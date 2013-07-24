@@ -44,7 +44,9 @@ class UtilityComponent extends Component {
 		
 		// General Messages
 		$msgList['ERROR_UNEXPECTED'] = "You have encountered an unexpected error. Please contact the system administrator for assistance.";
+		$msgList['CREATE_SUCCESS'] = "The record has been created successfully.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
+		$msgList['DELETE_SUCCESS'] = "Record has been deleted.";
 		$msgList['SAVE_SUCCESS'] = "Your data has been saved successfully.";
 		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
 		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
@@ -96,6 +98,7 @@ class UtilityComponent extends Component {
 		
 		// Students
 		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";
+		$msgList['STUDENT_ALREADY_ADDED'] = "is already exists in this institution site.";
 		
 		// Teachers
 		$msgList['TEACHER_NOT_FOUND'] = "No Teacher found.";

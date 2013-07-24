@@ -31,7 +31,7 @@ var InstitutionSiteStudents = {
 		window.location.href = href + '/' + $(this.yearId).val() + '/' + $(this.programmeId).val();
 	},
 	
-	attachSortOrder:function() {
+	attachSortOrder: function() {
 		$('#students_search [orderby]').click(function(){
 			var order = $(this).attr('orderby');
 			var sort = $(this).hasClass('icon_sort_up') ? 'desc' : 'asc';
@@ -41,5 +41,81 @@ var InstitutionSiteStudents = {
 			$('#students_search form').attr('action', action);
 			$('#students_search form').submit();
 		});
-	}
+	},
+	
+	getProgrammeOptions: function(obj) {
+		var $this = $(obj);
+		var maskId;
+		var ajaxParams = {yearId: $this.val()};
+		var ajaxSuccess = function(data, textStatus) {
+			var callback = function() {
+				$('#InstitutionSiteProgrammeId').html(data);
+			};
+			$.unmask({id: maskId, callback: callback});
+		};
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + $this.attr('url'),
+			data: ajaxParams,
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.info'}); },
+			success: ajaxSuccess
+		});
+	},
+	
+	search: function(obj) {
+		var alertOpt = {
+			id: 'search_alert',
+			parent: '#search',
+			position: 'center'
+		}
+		var searchString = $(obj).siblings('.search_wrapper').find('input').val();
+		
+		if(!searchString.isEmpty()) {
+			var maskId;
+			var ajaxParams = {searchString: searchString};
+			var ajaxSuccess = function(data, textStatus) {
+				var callback = function() {
+					if(!$(data).hasClass('alert')) {
+						var parent = '#search';
+						$(parent).find('.table_body').empty();
+						jsTable.tableScrollableAdd(parent, data);
+					} else {
+						alertOpt['type'] = $(data).attr('type');
+						alertOpt['text'] = $(data).html();
+						$.alert(alertOpt);
+					}
+				};
+				$.unmask({id: maskId, callback: callback});
+			};
+			$('#StudentId').val(0);
+			$.ajax({
+				type: 'GET',
+				dataType: 'text',
+				url: getRootURL() + $(obj).attr('url'),
+				data: {searchString: searchString},
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching}); },
+				success: ajaxSuccess
+			});
+		}
+	},
+	
+	addStudent: function(obj) {
+		var row = $(obj);
+		var id = row.attr('row-id');
+		var idNo = row.attr('id-no');
+		var fName = row.attr('first-name');
+		var lName = row.attr('last-name');
+		var gender = row.attr('gender');
+		
+		$('#StudentId').val(id);
+		$('#IdentificationNo').val(idNo);
+		$('#FirstName').val(fName);
+		$('#LastName').val(lName);
+		$('#Gender').val(gender);
+	},
+	
+	validateStudentAdd: function() {
+		return $('#StudentId').val()!=0;
+	},
 }
