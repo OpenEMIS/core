@@ -116,6 +116,6 @@ var InstitutionSiteStudents = {
 	},
 	
 	validateStudentAdd: function() {
-		return $('#StudentId').val()!=0;
+		return $('#StudentId').val()!=0 && $('#InstitutionSiteProgrammeId').val()>0;
 	},
 }
