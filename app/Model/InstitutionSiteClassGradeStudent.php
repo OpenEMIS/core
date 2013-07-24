@@ -22,14 +22,20 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 	public function getStudentsByGrade($gradeIds) {
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name', 'Student.gender', 
-				'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id'
+				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+				'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
+				'StudentCategory.name'
 			),
 			'joins' => array(
 				array(
 					'table' => 'students',
 					'alias' => 'Student',
 					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+				),
+				array(
+					'table' => 'student_categories',
+					'alias' => 'StudentCategory',
+					'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
 				)
 			),
 			'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeIds),
@@ -42,7 +48,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 			if(!isset($list[$gradeId])) {
 				$list[$gradeId] = array();
 			}
-			$list[$gradeId][] = $obj['Student'];
+			$list[$gradeId][] = array_merge($obj['Student'], array('category' => $obj['StudentCategory']['name']));
 		}
 		return $list;
 	}

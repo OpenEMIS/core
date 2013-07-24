@@ -90,40 +90,29 @@ class Student extends StudentsAppModel {
 	);
 	
 	// Used by InstitutionSiteController for searching
-	public function search($searchStr, $programmeId, $institutionSiteId, $yearId, $limit=false) {
-		$notExists = '
-			NOT EXISTS (
-				SELECT institution_site_students.student_id 
-				FROM institution_site_students
-				JOIN institution_site_programmes
-					ON institution_site_programmes.id = institution_site_students.institution_site_programme_id
-					AND institution_site_programmes.institution_site_id = %d
-					AND institution_site_programmes.education_programme_id = %d
-					AND institution_site_programmes.school_year_id = %d
-				WHERE institution_site_students.student_id = Student.id
-			)';
-			
-		$this->formatResult = true;
-		$searchStr = '%' . $searchStr . '%';
+	public function search($search, $params=array()) {
+		$model = $this->alias;
+		$search = '%' . $search . '%';
+		$limit = isset($params['limit']) ? $params['limit'] : false;
+		
 		$conditions = array(
-			sprintf($notExists, $institutionSiteId, $programmeId, $yearId),
 			'OR' => array(
-				'Student.identification_no LIKE' => $searchStr,
-				'Student.first_name LIKE' => $searchStr,
-				'Student.last_name LIKE' => $searchStr
+				$model . '.identification_no LIKE' => $search,
+				$model . '.first_name LIKE' => $search,
+				$model . '.last_name LIKE' => $search
 			)
 		);
 		
 		$options = array(
 			'recursive' => -1,
 			'conditions' => $conditions,
-			'order' => array('Student.first_name')
+			'order' => array($model . '.first_name')
 		);
 		$count = $this->find('count', $options);
 		
 		$data = false;
 		if($limit === false || $count < $limit) {
-			$options['fields'] = array('Student.id, Student.identification_no, Student.first_name, Student.last_name');
+			$options['fields'] = array($model . '.*');
 			$data = $this->find('all', $options);
 		}		
 		return $data;

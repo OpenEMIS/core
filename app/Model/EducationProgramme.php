@@ -45,6 +45,23 @@ class EducationProgramme extends AppModel {
 	public $belongsTo = array('EducationCycle', 'EducationFieldOfStudy', 'EducationCertification');
 	public $hasMany = array('EducationGrade', 'InstitutionSiteProgramme');
 	
+	public function getDurationBySiteProgramme($siteProgrammeId) {
+		$obj = $this->find('first', array(
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
+						'InstitutionSiteProgramme.id = ' . $siteProgrammeId
+					)
+				)
+			)
+		));
+		return $obj['EducationProgramme']['duration'];
+	}
+	
 	// Used by InstitutionSiteController->programmeAdd
 	public function getAvailableProgrammeOptions($institutionSiteId, $yearId) {
 		$table = 'institution_site_programmes';
