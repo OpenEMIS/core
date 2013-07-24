@@ -311,7 +311,10 @@ var jsForm = {
 	},
 	
 	confirmDelete: function(obj) {
-		var href = obj.href;
+		var href = $(obj).attr('href');
+		if($(obj).prop('tagName') !== 'A') {
+			href = getRootURL() + href;
+		}
 		var btn = {
 			value: i18n.General.textDelete,
 			callback: function() { window.location.href = href; }

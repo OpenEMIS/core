@@ -30,6 +30,7 @@
 .safari .cell_datepicker { width: 203px; }
 .cell_class { width: 100px; }
 .cell_gender { width: 60px; }
+.cell_category { width: 180px; }
 .cell_grade { width: 200px; }
 .cell_phone { width: 110px; }
 .cell_year { width: 70px; vertical-align: top !important; text-align: center; }

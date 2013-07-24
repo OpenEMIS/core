@@ -30,17 +30,6 @@ class InstitutionSiteProgramme extends AppModel {
             )
 	);
 	
-	public $actsAs = array(
-		'CascadeDelete' => array(
-			'cascade' => array(
-				'CensusClass',
-				'CensusTextbook',
-				'CensusStudent',
-				'CensusTeacher'
-			)
-		)
-	);
-	
 	/* can't work if recursive is set to 0
 	public $virtualFields = array(
 		'name' => 'EducationProgramme.name'
@@ -127,6 +116,15 @@ class InstitutionSiteProgramme extends AppModel {
 			),
 			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
 		));
+		return $data;
+	}
+	
+	public function getSiteProgrammeForSelection($institutionSiteId, $yearId) {
+		$data = array();
+		$list = $this->getSiteProgrammes($institutionSiteId, $yearId);
+		foreach($list as &$obj) {
+			$data[$obj['id']] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
+		}
 		return $data;
 	}
 	

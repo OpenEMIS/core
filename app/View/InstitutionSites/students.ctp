@@ -10,7 +10,14 @@ echo $this->Html->script('institution_site_students', false);
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="students_search" class="content_wrapper search">
-    <h1><?php echo __('List of Students'); ?></h1>
+    <h1>
+		<span><?php echo __('List of Students'); ?></span>
+		<?php
+		if($_add_student) {
+			echo $this->Html->link(__('Add'), array('action' => 'studentsAdd', $selectedYear), array('class' => 'divider'));
+		}
+		?>
+	</h1>
     <?php echo $this->element('alert'); ?>
 	
 	<?php 
