@@ -175,7 +175,24 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			</div>
 		</div>
 	</fieldset>
-	
+
+	<fieldset class="section_break">
+        <legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
+        <?php
+            echo '<div class="row">
+                    <div class="label">&nbsp;&nbsp;</div>
+                    <div class="value">'.$arrEducationVal.'</span>';
+            echo '<div class="table">
+                            <div class="table_body">';
+            foreach($arrEducation as $id=>$val){
+                echo '<div class="table_row"><div class="table_cell cell_value">'.$val['val'].'</div>
+                      <div class="table_cell cell_datetime">'.$val['time'].'</div>
+                      </div>';
+            }
+            echo '</div></div></div></div>';
+        ?>
+    </fieldset>
+
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>
 		<div class="row">
