@@ -1248,7 +1248,7 @@ class InstitutionSitesController extends AppController {
 				
 				if(!$exists) {
 					$duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
-					$startDate = new DateTime($data['start_date']);
+					$startDate = new DateTime(date('Y-m-d', strtotime($data['start_date'])));
 					$endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
 					$endYear = $endDate->format('Y');
 					$data['end_date'] = $endDate->format('Y-m-d');
