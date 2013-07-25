@@ -11,6 +11,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 			<?php $obj = $data['Student']; 
 			    echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
 		        echo $this->Html->link(__('Behaviour'), array('action' => 'studentsBehaviour', $obj['id']), array('class' => 'divider'));
+				echo $this->Html->link(__('Attendance'), array('action' => 'studentsAttendance'), array('class' => 'divider'));
 		    ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
