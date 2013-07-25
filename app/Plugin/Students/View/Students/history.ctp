@@ -157,7 +157,7 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
 		</div>
     </fieldset>
     <fieldset class="section_break">
-        <legend><?php echo __('Address</le'); ?>gend>    
+        <legend><?php echo __('Contact'); ?></legend>
 		<div class="row">
 			<div class="label"><?php echo __('Telephone'); ?></div>
 			<div class="value">
