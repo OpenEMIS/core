@@ -20,12 +20,12 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 	<?php echo $this->Form->create('Survey',array('url'=>array('plugin'=>'Survey','controller'=>'Survey','action'=>'index')));?>
     <div class="row">
 			<div>
-                <div class="left" style="width:300px;">
+                <div class="left" style="width:300px; padding-left:3px;">
                     <div class="search_wrapper">
                         <?php echo $this->Form->input('Search', array(
 							'id' => 'SearchField',
 							'value' => $pattern,
-							'placeholder' => __("Filename"),
+							'placeholder' => __("Survey Name"),
 							'class' => 'default',
 							'div' => false,
 							'label' => false));
@@ -40,7 +40,7 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
                 </div>
                 <div class="left" style="width:375px;">
                 	<?php if($totalfiles>0){ ?>
-                    <span class="total"><?php echo $totalfiles; ?> <?php echo __('Surveys'); ?></span>
+                    <span class="total"><?php echo $totalfiles; ?> <?php echo __('Survey(s)'); ?></span>
                     <?php } ?>
                 </div>
 			</div>
