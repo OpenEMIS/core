@@ -211,7 +211,7 @@ class StudentsController extends StudentsAppController {
             die();
         }else{
             $imageFilename = $imageRawData['Student']['photo_name'];
-            $fileExt = pathinfo($imageFilename, PATHINFO_EXTENSION);
+            $fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
             $imageContent = $imageRawData['Student']['photo_content'];
 //        header("Content-type: {$imageMeta->getMime()}");
             header("Content-type: " . $mime_types[$fileExt]);
