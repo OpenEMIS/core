@@ -22,4 +22,11 @@ class StudentBehaviourCategory extends AppModel {
 		$lookup = array('Behaviour Category' => array('model' => 'Students.StudentBehaviourCategory'));
 		return $lookup;
 	}
+	
+	public function getCategory(){
+		$list = $this->find('list',array(
+									'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
+									'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
+		return $list;
+	}
 }
