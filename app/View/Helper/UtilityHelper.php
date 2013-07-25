@@ -100,6 +100,56 @@ class UtilityHelper extends AppHelper {
 			$ctr++;
 		}
 	}
+
+    public function showAreaHistory($form,$id,$settings=array(),$orgValue,$arrRec){
+        $this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+        $this->fieldLevels = $this->AreaHandler->getAreaList();
+
+        $ctr = 0;
+
+        $val = '';
+        foreach($this->fieldLevels as $levelid => $levelName){
+            if (!is_numeric($orgValue) || !isset($orgValue) ) {$orgValue=0;}
+            $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($orgValue));
+            foreach($this->fieldAreaLevels as $arealevelid => $arrval){
+                if($arrval['level_id'] == $levelid) {
+                    $areaVal = $arrval;
+                    if(($areaVal['name']=='a'?'':$areaVal['name'])!=''){
+                        $val .= ($areaVal['name']=='a'?'':$areaVal['name']).',';
+                    }
+                    continue;
+                }
+            }
+        }
+
+        echo '<div class="row">
+					<div class="label">&nbsp;&nbsp;</div>
+					<div class="value">'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
+        echo '<div class="table">
+							<div class="table_body">';
+        foreach($arrRec as $value => $time){
+            if($value>0){
+                $myVal = '';
+                foreach($this->fieldLevels as $levelid => $levelName){
+                    if (!is_numeric($value) || !isset($value) ) {$value=0;}
+                    $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
+                    foreach($this->fieldAreaLevels as $arealevelid => $arrval){
+                        if($arrval['level_id'] == $levelid) {
+                            $areaVal = $arrval;
+                            if(($areaVal['name']=='a'?'':$areaVal['name'])!=''){
+                                $myVal .= ($areaVal['name']=='a'?'':$areaVal['name']).',';
+                            }
+                            continue;
+                        }
+                    }
+                }
+                echo '<div class="table_row"><div class="table_cell cell_value">'.str_replace(',',' &rarr; ',rtrim($myVal,',')).'</div>
+					  <div class="table_cell cell_datetime">'.$time.'</div>
+					  </div>';
+            }
+        }
+        echo '</div></div></div></div>';
+    }
 	
 	public function getAreaPicker($form,$id,$value,$settings=array()){
 		//settings unused
