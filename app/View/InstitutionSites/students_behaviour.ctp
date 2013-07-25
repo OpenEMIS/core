@@ -53,6 +53,9 @@ echo $this->Html->script('institution_site_classes', false);
                 <div class="table_cell cell_behaviour_title"><?php echo $obj['StudentBehaviour']['title']; ?></div>
 			</div>
 			<?php } // end for (multigrade) ?>
+            <?php if(sizeof($data)==0) { ?>
+            <div class="row center" style="color: red; width:700px;"><?php echo __('No behaviour found.'); ?></div>
+            <?php } ?>
 		</div>
 	</div>
 </div>
