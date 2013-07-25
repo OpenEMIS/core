@@ -115,7 +115,7 @@ class UtilityHelper extends AppHelper {
                 if($arrval['level_id'] == $levelid) {
                     $areaVal = $arrval;
                     if(($areaVal['name']=='a'?'':$areaVal['name'])!=''){
-                        $val .= ($areaVal['name']=='a'?'':$areaVal['name']).',';
+                        $val .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
                     }
                     continue;
                 }
@@ -124,9 +124,10 @@ class UtilityHelper extends AppHelper {
 
         echo '<div class="row">
 					<div class="label">&nbsp;&nbsp;</div>
-					<div class="value">'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
-        echo '<div class="table">
+					<div class="value"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
+        echo '<div class="table" style="width:500px;">
 							<div class="table_body">';
+		$myCompVal = str_replace(',',' &rarr; ',rtrim($val,','));
         foreach($arrRec as $value => $time){
             if($value>0){
                 $myVal = '';
@@ -137,15 +138,19 @@ class UtilityHelper extends AppHelper {
                         if($arrval['level_id'] == $levelid) {
                             $areaVal = $arrval;
                             if(($areaVal['name']=='a'?'':$areaVal['name'])!=''){
-                                $myVal .= ($areaVal['name']=='a'?'':$areaVal['name']).',';
+                                $myVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
                             }
                             continue;
                         }
                     }
                 }
-                echo '<div class="table_row"><div class="table_cell cell_value">'.str_replace(',',' &rarr; ',rtrim($myVal,',')).'</div>
-					  <div class="table_cell cell_datetime">'.$time.'</div>
-					  </div>';
+				$thisVal = str_replace(',',' &rarr; ',rtrim($myVal,','));
+				if($thisVal!=$myCompVal){
+					echo '<div class="table_row"><div class="table_cell cell_value">'.$thisVal.'</div>
+						  <div class="table_cell cell_datetime">'.$time.'</div>
+						  </div>';
+					$myCompVal = $thisVal;
+				}
             }
         }
         echo '</div></div></div></div>';
