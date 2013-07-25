@@ -100,6 +100,9 @@ class UtilityComponent extends Component {
 		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";
 		$msgList['STUDENT_ALREADY_ADDED'] = "is already exists in this institution site.";
 		
+		// Students Attendance
+		$msgList['CENSUS_UPDATED'] = "The Student attendance data has been updated successfully.";
+		
 		// Teachers
 		$msgList['TEACHER_NOT_FOUND'] = "No Teacher found.";
 		
