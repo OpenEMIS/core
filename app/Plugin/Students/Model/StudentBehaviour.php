@@ -25,4 +25,23 @@ class StudentBehaviour extends StudentsAppModel {
 			)
 		)
 	);
+	
+	public function getBehaviourData($studentId){
+		$list = $this->find('all',array(
+												 	'recursive' => -1,
+													'joins' => array(
+															array(
+																'table' => 'student_behaviour_categories',
+																'alias' => 'StudentBehaviourCategory',
+																'type' => 'INNER',
+																'conditions' => array(
+																	'StudentBehaviourCategory.id = StudentBehaviour.student_behaviour_category_id'
+																)
+															)
+														),
+                                                    'fields' =>array('StudentBehaviour.id','StudentBehaviour.title','StudentBehaviour.date_of_behaviour',
+																	 'StudentBehaviourCategory.name'),
+                                                    'conditions'=>array('StudentBehaviour.student_id' => $studentId)));
+		return $list;
+	}
 }
