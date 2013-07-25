@@ -862,12 +862,12 @@ class InstitutionSitesController extends AppController {
                     foreach($adminarea as $arealevelid => $arrval){
                         if($arrval['level_id'] == $levelid) {
                             $areaVal = $arrval;
-                            $arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' &rarr; ';
+                            $arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
                             continue;
                         }
                     }
                 }
-                $arrEducation[] =array('val'=> rtrim($arrVal,' &rarr; '),'time'=>$time);
+                $arrEducation[] =array('val'=> str_replace(',',' &rarr; ',rtrim($arrVal,',')),'time'=>$time);
             }
         }
 
@@ -880,7 +880,7 @@ class InstitutionSitesController extends AppController {
             foreach($adminarea as $arealevelid => $arrval){
                 if($arrval['level_id'] == $levelid) {
                     $areaVal = $arrval;
-                    $arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).',';
+                    $arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
                     continue;
                 }
             }
