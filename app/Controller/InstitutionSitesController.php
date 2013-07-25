@@ -63,6 +63,8 @@ class InstitutionSitesController extends AppController {
 		'CensusStudent',
 		'SchoolYear',
 		'Students.Student',
+        'Students.StudentBehaviour',
+		'Students.StudentBehaviourCategory',
 		'Teachers.Teacher',
 		'Teachers.TeacherCategory',
 		'Staff.Staff',
@@ -2088,5 +2090,160 @@ class InstitutionSitesController extends AppController {
 			$this->render('/Elements/customfields/edit');
 		}
 	}
-	//STAFF CUSTOM FIELD PER YEAR - ENDS - 
+	//STAFF CUSTOM FIELD PER YEAR - ENDS -
+
+    // STUDENT BEHAVIOUR PART
+
+    public function studentsBehaviour(){
+        extract($this->studentsCustFieldYrInits());
+        $this->Navigation->addCrumb('Behaviour');
+
+        // Checking if user has access to add
+        // $_add_behaviour = $this->AccessControl->check('InstitutionSites', 'studentsBehaviourAdd');
+        $_add_behaviour = true;
+
+        $yearOptions = $this->SchoolYear->getYearList();
+        $selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
+
+        $data = array();
+        $data = $this->StudentBehaviour->find('all',array(
+												 	'recursive' => -1,
+													'joins' => array(
+															array(
+																'table' => 'student_behaviour_categories',
+																'alias' => 'StudentBehaviourCategory',
+																'type' => 'INNER',
+																'conditions' => array(
+																	'StudentBehaviourCategory.id = StudentBehaviour.student_behaviour_category_id'
+																)
+															)
+														),
+                                                    'fields' =>array('StudentBehaviour.id','StudentBehaviour.title','StudentBehaviour.date_of_behaviour',
+																	 'StudentBehaviourCategory.name'),
+                                                    'conditions'=>array('StudentBehaviour.student_id' => $id)));
+													
+        $this->set('_add_behaviour',$_add_behaviour);
+        $this->set('yearOptions', $yearOptions);
+        $this->set('selectedYear', $selectedYear);
+        $this->set('id', $id);
+        $this->set('data', $data);
+        $this->render('students_behaviour');
+    }
+
+    public function studentsBehaviourAdd() {
+        if($this->request->is('get')) {
+            $studentId = $this->params['pass'][0];
+            $data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+            $name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+            $this->Navigation->addCrumb($name, '../InstitutionSites/studentsView/'.$studentId);
+            $this->Navigation->addCrumb('Add Behaviour');
+            
+            $yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			
+			$categoryOptions = array();
+			$categoryOptions = $this->StudentBehaviourCategory->find('list',array(
+                                                    'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
+                                                    'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
+			$this->set('id',$studentId);
+           	$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+        } else {
+            $studentBehaviourData = $this->data['InstitutionSiteStudentBehaviour'];
+			$studentBehaviourData = array_merge($studentBehaviourData,array('institution_site_id'=>$this->institutionSiteId));
+			$studentBehaviourData = array_merge($studentBehaviourData,array('student_action_category_id'=>'0'));
+			$studentBehaviourData = array_merge($studentBehaviourData,array('created'=>date("Y-m-d H:i:s")));
+			
+            $this->StudentBehaviour->create();
+			if(!$this->StudentBehaviour->save($studentBehaviourData)){
+				// Validation Errors
+				//debug($this->StudentBehaviour->validationErrors); 
+				//die;
+			}
+            
+            $this->redirect(array('action' => 'studentsBehaviour', $studentBehaviourData['student_id']));
+        }
+    }
+
+    public function studentsbehaviourView() {
+		$studentBehaviourId = $this->params['pass'][0];
+		$studentBehaviourObj = $this->StudentBehaviour->find('all',array('conditions'=>array('StudentBehaviour.id' => $studentBehaviourId)));
+		
+		if(!empty($studentBehaviourObj)) {
+			$this->Navigation->addCrumb('Overview');
+			
+			$yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			$categoryOptions = array();
+			$categoryOptions = $this->StudentBehaviourCategory->find('list',array(
+                                                    'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
+                                                    'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
+			
+			$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+			$this->set('studentBehaviourObj', $studentBehaviourObj);
+		} else {
+			//$this->redirect(array('action' => 'classesList'));
+		}
+    }
+	
+	public function studentsbehaviourEdit() {
+		if($this->request->is('get')) {
+			$studentBehaviourId = $this->params['pass'][0];
+			$studentBehaviourObj = $this->StudentBehaviour->find('all',array('conditions'=>array('StudentBehaviour.id' => $studentBehaviourId)));
+			
+			if(!empty($studentBehaviourObj)) {
+				$this->Navigation->addCrumb('Overview');
+				
+				$yearOptions = array();
+				$yearOptions = $this->SchoolYear->getYearList();
+				$categoryOptions = array();
+				$categoryOptions = $this->StudentBehaviourCategory->find('list',array(
+														'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
+														'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
+				
+				$this->set('categoryOptions', $categoryOptions);
+				$this->set('yearOptions', $yearOptions);
+				$this->set('studentBehaviourObj', $studentBehaviourObj);
+			} else {
+				//$this->redirect(array('action' => 'classesList'));
+			}
+		 } else {
+			$studentBehaviourData = $this->data['InstitutionSiteStudentBehaviour'];
+			$studentBehaviourData = array_merge($studentBehaviourData,array('institution_site_id'=>$this->institutionSiteId));
+			$studentBehaviourData = array_merge($studentBehaviourData,array('student_action_category_id'=>'0'));
+			$studentBehaviourData = array_merge($studentBehaviourData,array('created'=>date("Y-m-d H:i:s")));
+			
+            $this->StudentBehaviour->create();
+			if(!$this->StudentBehaviour->save($studentBehaviourData)){
+				// Validation Errors
+				//debug($this->StudentBehaviour->validationErrors); 
+				//die;
+			}
+            
+            $this->redirect(array('action' => 'studentsBehaviourView', $studentBehaviourData['id']));
+		 }
+	}
+	
+	public function studentsbehaviourDelete() {
+		$studentBehaviourData = $this->data['DeleteBehaviour'];
+		$id = $studentBehaviourData['id'];
+		$title = $this->StudentBehaviour->field('title', array('StudentBehaviour.id' => $id));
+		$this->StudentBehaviour->delete($id);
+		$this->Utility->alert($title . ' have been deleted successfully.');
+		$this->redirect(array('action' => 'studentsBehaviour', $studentBehaviourData['student_id']));
+	}
+	
+	public function studentsbehaviourCheckName() {
+		$this->autoRender = false;
+		$title = trim($this->params->query['title']);
+		
+		if(strlen($title) == 0) {
+			return $this->Utility->getMessage('SITE_STUDENT_BEHAVIOUR_EMPTY_TITLE');
+		} 
+		
+		return 'true';
+	}
+
+    // END STUDENT BEHAVIOUR PART
 }

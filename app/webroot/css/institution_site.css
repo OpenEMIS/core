@@ -22,12 +22,16 @@
 #teachersAdd .section_break, #staffAdd .section_break { padding-top: 10px; }
 #teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 65px; line-height: 24px; }
 
+.labelbehaviour { width: 120px; float:left; margin-top:2px; }
 .cell_system { width: 200px; }
 .cell_date { width: 110px; }
 .cell_start_date { width: 140px; }
 .cell_datepicker { width: 195px; }
 .chrome .cell_datepicker { width: 202px; }
 .safari .cell_datepicker { width: 203px; }
+.cell_behaviour_date { width: 70px; text-align:left; }
+.cell_behaviour_title { width: 300px; text-align:left; }
+.cell_behaviour_category { width: 100px; text-align:left; }
 .cell_class { width: 100px; }
 .cell_gender { width: 60px; }
 .cell_grade { width: 200px; }
