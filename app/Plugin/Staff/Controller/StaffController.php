@@ -220,7 +220,7 @@ class StaffController extends StaffAppController {
             die();
         }else{
             $imageFilename = $imageRawData['Staff']['photo_name'];
-            $fileExt = pathinfo($imageFilename, PATHINFO_EXTENSION);
+            $fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
             $imageContent = $imageRawData['Staff']['photo_content'];
     //        header("Content-type: {$imageMeta->getMime()}");
             header("Content-type: {$mime_types[$fileExt]}");
