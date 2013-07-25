@@ -2137,21 +2137,7 @@ class InstitutionSitesController extends AppController {
         $selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
 
         $data = array();
-        $data = $this->StudentBehaviour->find('all',array(
-												 	'recursive' => -1,
-													'joins' => array(
-															array(
-																'table' => 'student_behaviour_categories',
-																'alias' => 'StudentBehaviourCategory',
-																'type' => 'INNER',
-																'conditions' => array(
-																	'StudentBehaviourCategory.id = StudentBehaviour.student_behaviour_category_id'
-																)
-															)
-														),
-                                                    'fields' =>array('StudentBehaviour.id','StudentBehaviour.title','StudentBehaviour.date_of_behaviour',
-																	 'StudentBehaviourCategory.name'),
-                                                    'conditions'=>array('StudentBehaviour.student_id' => $id)));
+        $data = $this->StudentBehaviour->getBehaviourData($id);
 													
         $this->set('_add_behaviour',$_add_behaviour);
         $this->set('yearOptions', $yearOptions);
@@ -2166,24 +2152,20 @@ class InstitutionSitesController extends AppController {
             $studentId = $this->params['pass'][0];
             $data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
             $name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
-            $this->Navigation->addCrumb($name, '../InstitutionSites/studentsView/'.$studentId);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $studentId));
             $this->Navigation->addCrumb('Add Behaviour');
             
             $yearOptions = array();
 			$yearOptions = $this->SchoolYear->getYearList();
 			
 			$categoryOptions = array();
-			$categoryOptions = $this->StudentBehaviourCategory->find('list',array(
-                                                    'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
-                                                    'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
+			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
 			$this->set('id',$studentId);
            	$this->set('categoryOptions', $categoryOptions);
 		    $this->set('yearOptions', $yearOptions);
         } else {
             $studentBehaviourData = $this->data['InstitutionSiteStudentBehaviour'];
-			$studentBehaviourData = array_merge($studentBehaviourData,array('institution_site_id'=>$this->institutionSiteId));
-			$studentBehaviourData = array_merge($studentBehaviourData,array('student_action_category_id'=>'0'));
-			$studentBehaviourData = array_merge($studentBehaviourData,array('created'=>date("Y-m-d H:i:s")));
+			$studentBehaviourData['institution_site_id'] = $this->institutionSiteId;
 			
             $this->StudentBehaviour->create();
 			if(!$this->StudentBehaviour->save($studentBehaviourData)){
@@ -2191,7 +2173,7 @@ class InstitutionSitesController extends AppController {
 				//debug($this->StudentBehaviour->validationErrors); 
 				//die;
 			}
-            
+			
             $this->redirect(array('action' => 'studentsBehaviour', $studentBehaviourData['student_id']));
         }
     }
@@ -2206,9 +2188,7 @@ class InstitutionSitesController extends AppController {
 			$yearOptions = array();
 			$yearOptions = $this->SchoolYear->getYearList();
 			$categoryOptions = array();
-			$categoryOptions = $this->StudentBehaviourCategory->find('list',array(
-                                                    'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
-                                                    'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
+			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
 			
 			$this->set('categoryOptions', $categoryOptions);
 		    $this->set('yearOptions', $yearOptions);
@@ -2229,9 +2209,7 @@ class InstitutionSitesController extends AppController {
 				$yearOptions = array();
 				$yearOptions = $this->SchoolYear->getYearList();
 				$categoryOptions = array();
-				$categoryOptions = $this->StudentBehaviourCategory->find('list',array(
-														'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
-														'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
+				$categoryOptions = $this->StudentBehaviourCategory->getCategory();
 				
 				$this->set('categoryOptions', $categoryOptions);
 				$this->set('yearOptions', $yearOptions);
@@ -2241,9 +2219,7 @@ class InstitutionSitesController extends AppController {
 			}
 		 } else {
 			$studentBehaviourData = $this->data['InstitutionSiteStudentBehaviour'];
-			$studentBehaviourData = array_merge($studentBehaviourData,array('institution_site_id'=>$this->institutionSiteId));
-			$studentBehaviourData = array_merge($studentBehaviourData,array('student_action_category_id'=>'0'));
-			$studentBehaviourData = array_merge($studentBehaviourData,array('created'=>date("Y-m-d H:i:s")));
+			$studentBehaviourData['institution_site_id'] = $this->institutionSiteId;
 			
             $this->StudentBehaviour->create();
 			if(!$this->StudentBehaviour->save($studentBehaviourData)){
