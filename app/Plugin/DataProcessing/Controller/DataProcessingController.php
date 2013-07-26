@@ -41,25 +41,10 @@ class DataProcessingController extends DataProcessingAppController {
 	}
 	
 	public function index() {
-		$this->redirect(array('action' => 'reports'));
+		$this->redirect(array('action' => 'genReports'));
 	}
 	
-	public function reports() {
-		$this->Navigation->addCrumb('Reports');
-		
-		$tmp = array();
-		$q = array();
-		if($this->request->is('post')){
-			$this->Report->processRequest($this->data['Reports']);
-			$this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
-			$this->redirect(array('action'=>'processes'));
-		}
-		$data = $this->Report->find('all');
-		$QR = $this->Report->getQueuedRunningReport();
-
-		foreach($QR as $arrV){
-			$q[] = $arrV['Filename'];
-		}
+	private function formatTable($data){
 		foreach($data as $k => $val){
 			if(isset($tmp['Reports'][$val['Report']['module']][$val['Report']['name']])){
 				 $tmp['Reports'][$val['Report']['module']][$val['Report']['name']]['file_kinds'][$val['Report']['id']] = $val['Report']['file_type'];
@@ -68,6 +53,76 @@ class DataProcessingController extends DataProcessingAppController {
 				$tmp['Reports'][$val['Report']['module']][$val['Report']['name']] =  $val['Report'];
 			}
 		}
+		return $tmp;
+	}
+	
+	private function processGenerate($data){
+		$this->Report->processRequest($this->data['Reports']);
+			$this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
+			$this->redirect(array('action'=>'processes'));
+	}
+
+	public function genReports() {
+		$this->Navigation->addCrumb('Generate');
+		
+		$tmp = array();
+		$q = array();
+		if($this->request->is('post')){
+			$this->processGenerate($this->data['Reports']);
+		}
+		$data = $this->Report->find('all',array('conditions'=>array('NOT'=>array('file_type'=>array('ind','est')))));
+		$QR = $this->Report->getQueuedRunningReport();
+
+		foreach($QR as $arrV){
+			$q[] = $arrV['Filename'];
+		}
+		
+		$tmp = $this->formatTable($data);
+		
+		//pr($tmp);die;
+		$this->set('data',$tmp);
+		$this->set('queued',$q);
+	}
+	
+	public function genIndicators() {
+		$this->Navigation->addCrumb('Generate');
+		
+		$tmp = array();
+		$q = array();
+		if($this->request->is('post')){
+			$this->processGenerate($this->data['Reports']);
+		}
+		$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'ind')));
+		$QR = $this->Report->getQueuedRunningReport();
+
+		foreach($QR as $arrV){
+			$q[] = $arrV['Filename'];
+		}
+		
+		$tmp = $this->formatTable($data);
+		
+		//pr($tmp);die;
+		$this->set('data',$tmp);
+		$this->set('queued',$q);
+	}
+	
+	public function genEstimates() {
+		$this->Navigation->addCrumb('Generate');
+		
+		$tmp = array();
+		$q = array();
+		if($this->request->is('post')){
+			$this->processGenerate($this->data['Reports']);
+		}
+		$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'est')));
+		$QR = $this->Report->getQueuedRunningReport();
+
+		foreach($QR as $arrV){
+			$q[] = $arrV['Filename'];
+		}
+		
+		$tmp = $this->formatTable($data);
+		
 		//pr($tmp);die;
 		$this->set('data',$tmp);
 		$this->set('queued',$q);
