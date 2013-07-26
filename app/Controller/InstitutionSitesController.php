@@ -64,6 +64,9 @@ class InstitutionSitesController extends AppController {
 		'SchoolYear',
 		'Students.Student',
 		'Students.StudentCategory',
+		'Students.StudentBehaviour',
+		'Students.StudentBehaviourCategory',
+		'Students.StudentAttendance',
 		'Teachers.Teacher',
 		'Teachers.TeacherCategory',
 		'Staff.Staff',
@@ -845,6 +848,46 @@ class InstitutionSitesController extends AppController {
 		
 		if(empty($data2)) {
 			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
+		} else {
+			$adminarealevels = $this->AreaEducationLevel->find('list',array('recursive'=>0));
+			$arrEducation = array();
+			foreach($data2['area_education_id'] as $val => $time){
+				if($val>0){
+					$adminarea = $this->fetchtoParent($val,array('AreaEducation','AreaEducationLevel'));
+					$adminarea = array_reverse($adminarea);
+	
+					$arrVal = '';
+					foreach($adminarealevels as $levelid => $levelName){
+						$areaVal = array('id'=>'0','name'=>'a');
+						foreach($adminarea as $arealevelid => $arrval){
+							if($arrval['level_id'] == $levelid) {
+								$areaVal = $arrval;
+								$arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
+								continue;
+							}
+						}
+					}
+					$arrEducation[] =array('val'=> str_replace(',',' &rarr; ',rtrim($arrVal,',')),'time'=>$time);
+				}
+			}
+	
+			$myData = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
+			$adminarea = $this->fetchtoParent($myData['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
+			$adminarea = array_reverse($adminarea);
+			$arrVal = '';
+			foreach($adminarealevels as $levelid => $levelName){
+				$areaVal = array('id'=>'0','name'=>'a');
+				foreach($adminarea as $arealevelid => $arrval){
+					if($arrval['level_id'] == $levelid) {
+						$areaVal = $arrval;
+						$arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
+						continue;
+					}
+				}
+			}
+			$arrEducationVal = str_replace(',',' &rarr; ',rtrim($arrVal,','));
+			$this->set('arrEducation',$arrEducation);
+			$this->set('arrEducationVal',$arrEducationVal);
 		}
 		$this->set('data',$this->institutionSiteObj);
 		$this->set('data2',$data2);
@@ -1266,6 +1309,7 @@ class InstitutionSitesController extends AppController {
 	public function studentsView() {
 		if(isset($this->params['pass'][0])) {
 			$studentId = $this->params['pass'][0];
+			$this->Session->write('InstitutionSiteStudentId', $studentId);
 			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
 			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
 			$this->Navigation->addCrumb($name);
@@ -1873,6 +1917,7 @@ class InstitutionSitesController extends AppController {
 				if(!empty($data) && $data['AssessmentItemType']['visible']==1) {
 					$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($yearOptions);
 					$gradeId = $data['EducationGradeSubject']['education_grade_id'];
+
 					$classOptions = $this->InstitutionSiteClass->getClassOptions($selectedYear, $this->institutionSiteId, $gradeId);
 					$selectedClass = 0;
 					$students = array();
@@ -1944,7 +1989,7 @@ class InstitutionSitesController extends AppController {
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
 		$displayEdit = true;
 		if(count($data['dataFields']) == 0) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'), array('type' => 'info'));
 			$displayEdit = false;
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
@@ -2001,7 +2046,7 @@ class InstitutionSitesController extends AppController {
 		
 		$displayEdit = true;
 		if(count($data['dataFields']) == 0) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'), array('type' => 'info'));
 			$displayEdit = false;
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
@@ -2055,7 +2100,7 @@ class InstitutionSitesController extends AppController {
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
 		$displayEdit = true;
 		if(count($data['dataFields']) == 0) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'), array('type' => 'info'));
 			$displayEdit = false;
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
@@ -2077,5 +2122,202 @@ class InstitutionSitesController extends AppController {
 			$this->render('/Elements/customfields/edit');
 		}
 	}
-	//STAFF CUSTOM FIELD PER YEAR - ENDS - 
+
+	//STAFF CUSTOM FIELD PER YEAR - ENDS -
+
+    // STUDENT BEHAVIOUR PART
+
+    public function studentsBehaviour(){
+        extract($this->studentsCustFieldYrInits());
+        $this->Navigation->addCrumb('List of Behaviour');
+
+        $data = $this->StudentBehaviour->getBehaviourData($id);
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('STUDENT_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
+		}
+		
+        $this->set('id', $id);
+        $this->set('data', $data);
+    }
+
+    public function studentsBehaviourAdd() {
+        if($this->request->is('get')) {
+            $studentId = $this->params['pass'][0];
+            $data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+            $name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $studentId));
+            $this->Navigation->addCrumb('Add Behaviour');
+            
+            $yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			
+			$categoryOptions = array();
+			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
+			$this->set('id',$studentId);
+           	$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+        } else {
+            $studentBehaviourData = $this->data['InstitutionSiteStudentBehaviour'];
+			$studentBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->StudentBehaviour->create();
+			if(!$this->StudentBehaviour->save($studentBehaviourData)){
+				// Validation Errors
+				//debug($this->StudentBehaviour->validationErrors); 
+				//die;
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+			
+            $this->redirect(array('action' => 'studentsBehaviour', $studentBehaviourData['student_id']));
+        }
+    }
+
+    public function studentsBehaviourView() {
+		$studentBehaviourId = $this->params['pass'][0];
+		$studentBehaviourObj = $this->StudentBehaviour->find('all',array('conditions'=>array('StudentBehaviour.id' => $studentBehaviourId)));
+		
+		if(!empty($studentBehaviourObj)) {
+			$this->Navigation->addCrumb('Behaviour Details');
+			
+			$yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			$categoryOptions = array();
+			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
+			
+			$this->Session->write('StudentBehavourId', $studentBehaviourId);
+			$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+			$this->set('studentBehaviourObj', $studentBehaviourObj);
+		} else {
+			//$this->redirect(array('action' => 'classesList'));
+		}
+    }
+	
+	public function studentsBehaviourEdit() {
+		if($this->request->is('get')) {
+			$studentBehaviourId = $this->params['pass'][0];
+			$studentBehaviourObj = $this->StudentBehaviour->find('all',array('conditions'=>array('StudentBehaviour.id' => $studentBehaviourId)));
+			
+			if(!empty($studentBehaviourObj)) {
+				$this->Navigation->addCrumb('Edit Behaviour Details');
+				
+				$yearOptions = array();
+				$yearOptions = $this->SchoolYear->getYearList();
+				$categoryOptions = array();
+				$categoryOptions = $this->StudentBehaviourCategory->getCategory();
+				
+				$this->set('categoryOptions', $categoryOptions);
+				$this->set('yearOptions', $yearOptions);
+				$this->set('studentBehaviourObj', $studentBehaviourObj);
+			} else {
+				//$this->redirect(array('action' => 'studentsBehaviour'));
+			}
+		 } else {
+			$studentBehaviourData = $this->data['InstitutionSiteStudentBehaviour'];
+			$studentBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->StudentBehaviour->create();
+			if(!$this->StudentBehaviour->save($studentBehaviourData)){
+				// Validation Errors
+				//debug($this->StudentBehaviour->validationErrors); 
+				//die;
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+            
+            $this->redirect(array('action' => 'studentsBehaviourView', $studentBehaviourData['id']));
+		 }
+	}
+	
+	public function studentsBehaviourDelete() {
+		if($this->Session->check('InstitutionSiteStudentId') && $this->Session->check('StudentBehavourId')) {
+			$id = $this->Session->read('StudentBehavourId');
+			$studentId = $this->Session->read('InstitutionSiteStudentId');
+			$name = $this->StudentBehaviour->field('title', array('StudentBehaviour.id' => $id));
+			$this->StudentBehaviour->delete($id);
+			$this->Utility->alert($name . ' have been deleted successfully.');
+			$this->redirect(array('action' => 'studentsBehaviour', $studentId));
+		}
+	}
+	
+	public function studentsBehaviourCheckName() {
+		$this->autoRender = false;
+		$title = trim($this->params->query['title']);
+		
+		if(strlen($title) == 0) {
+			return $this->Utility->getMessage('SITE_STUDENT_BEHAVIOUR_EMPTY_TITLE');
+		} 
+		
+		return 'true';
+	}
+
+    // END STUDENT BEHAVIOUR PART
+	
+	// STUDENT ATTENDANCE PART
+    public function studentsAttendance(){
+        $this->Navigation->addCrumb('Attendance');
+		
+		$id = @$this->request->params['pass'][0];
+		$yearList = $this->SchoolYear->getYearList();
+		$yearId = $this->getAvailableYearId($yearList);
+		$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+		
+		$data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),isset($id)? $id:$yearId);							
+		
+		$this->set('selectedYear', $yearId);
+		$this->set('years', $yearList);
+		$this->set('data', $data);
+		$this->set('schoolDays', $schoolDays);
+        $this->render('students_attendance');
+    }
+
+    public function studentsAttendanceEdit() {
+        if($this->request->is('get')) {
+			$this->Navigation->addCrumb('Edit Attendance');
+			
+			$yearList = $this->SchoolYear->getYearList();
+			$yearId = $this->getAvailableYearId($yearList);
+			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+			
+			$data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),$yearId);				
+			
+			$this->set('studentid',$this->Session->read('InstitutionSiteStudentId'));
+			$this->set('institutionSiteId',$this->institutionSiteId);
+			$this->set('selectedYear', $yearId);
+			$this->set('years', $yearList);
+			$this->set('schoolDays', $schoolDays);
+			$this->set('data', $data);
+		} else {
+			$schoolDayNo = $this->request->data['schoolDays'];
+			$totalNo = $this->request->data['StudentAttendance']['total_no_attend'] + $this->request->data['StudentAttendance']['total_no_absence'];
+			unset($this->request->data['schoolDays']);
+			
+			$data = $this->request->data['StudentAttendance'];
+			$yearId = $data['school_year_id'];
+			
+			if($schoolDayNo<$totalNo){
+				$this->Utility->alert('Totals day attended and absenced cannot exceed no of school days.', array('type' => 'error'));
+				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendanceEdit', $yearId));
+			}else{	
+				$this->StudentAttendance->save($data);
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
+				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendance', $yearId));
+			}
+		}
+    }
+	
+	private function getAvailableYearId($yearList) {
+		$yearId = 0;
+		if(isset($this->params['pass'][0])) {
+			$yearId = $this->params['pass'][0];
+			if(!array_key_exists($yearId, $yearList)) {
+				$yearId = key($yearList);
+			}
+		} else {
+			$yearId = key($yearList);
+		}
+		return $yearId;
+	}
+    // END STUDENT ATTENDANCE PART
 }
