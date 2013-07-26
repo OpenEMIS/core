@@ -88,7 +88,8 @@ class SecurityFunction extends AppModel {
 						'SecurityRoleFunction.security_role_id = ' . $roleId
 					)
 				)
-			)
+			),
+			'order' => array('SecurityFunction.order')
 		));
 		return $this->arrange($list, $isSuperUser);
 	}
@@ -126,7 +127,8 @@ class SecurityFunction extends AppModel {
 					)
 				)
 			),
-			'group' => array('SecurityFunction.id')
+			'group' => array('SecurityFunction.id'),
+			'order' => array('SecurityFunction.order')
 		));
 		return $arrange ? $this->arrange($list) : $list;
 	}

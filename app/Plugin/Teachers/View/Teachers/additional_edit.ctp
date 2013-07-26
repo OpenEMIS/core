@@ -97,7 +97,7 @@ echo $this->Html->script('institution_site', false);
 
     ?>
     <div class="controls">
-        <input type="submit" value="<?php echo __('Save'); ?>" class="btn-save btn-right" />
+        <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn-right" />
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'additional'), array('class' => 'btn_cancel btn_left')); ?>
     </div>
     <?php echo $this->Form->end(); ?>
