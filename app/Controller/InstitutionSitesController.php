@@ -848,51 +848,50 @@ class InstitutionSitesController extends AppController {
 		
 		if(empty($data2)) {
 			$this->Utility->alert($this->Utility->getMessage('NO_HISTORY'), array('type' => 'info', 'dismissOnClick' => false));
+		} else {
+			$adminarealevels = $this->AreaEducationLevel->find('list',array('recursive'=>0));
+			$arrEducation = array();
+			foreach($data2['area_education_id'] as $val => $time){
+				if($val>0){
+					$adminarea = $this->fetchtoParent($val,array('AreaEducation','AreaEducationLevel'));
+					$adminarea = array_reverse($adminarea);
+	
+					$arrVal = '';
+					foreach($adminarealevels as $levelid => $levelName){
+						$areaVal = array('id'=>'0','name'=>'a');
+						foreach($adminarea as $arealevelid => $arrval){
+							if($arrval['level_id'] == $levelid) {
+								$areaVal = $arrval;
+								$arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
+								continue;
+							}
+						}
+					}
+					$arrEducation[] =array('val'=> str_replace(',',' &rarr; ',rtrim($arrVal,',')),'time'=>$time);
+				}
+			}
+	
+			$myData = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
+			$adminarea = $this->fetchtoParent($myData['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
+			$adminarea = array_reverse($adminarea);
+			$arrVal = '';
+			foreach($adminarealevels as $levelid => $levelName){
+				$areaVal = array('id'=>'0','name'=>'a');
+				foreach($adminarea as $arealevelid => $arrval){
+					if($arrval['level_id'] == $levelid) {
+						$areaVal = $arrval;
+						$arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
+						continue;
+					}
+				}
+			}
+			$arrEducationVal = str_replace(',',' &rarr; ',rtrim($arrVal,','));
+			$this->set('arrEducation',$arrEducation);
+			$this->set('arrEducationVal',$arrEducationVal);
 		}
-
-        $adminarealevels = $this->AreaEducationLevel->find('list',array('recursive'=>0));
-        $arrEducation = array();
-        foreach($data2['area_education_id'] as $val => $time){
-            if($val>0){
-                $adminarea = $this->fetchtoParent($val,array('AreaEducation','AreaEducationLevel'));
-                $adminarea = array_reverse($adminarea);
-
-                $arrVal = '';
-                foreach($adminarealevels as $levelid => $levelName){
-                    $areaVal = array('id'=>'0','name'=>'a');
-                    foreach($adminarea as $arealevelid => $arrval){
-                        if($arrval['level_id'] == $levelid) {
-                            $areaVal = $arrval;
-                            $arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
-                            continue;
-                        }
-                    }
-                }
-                $arrEducation[] =array('val'=> str_replace(',',' &rarr; ',rtrim($arrVal,',')),'time'=>$time);
-            }
-        }
-
-        $myData = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
-        $adminarea = $this->fetchtoParent($myData['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
-        $adminarea = array_reverse($adminarea);
-        $arrVal = '';
-        foreach($adminarealevels as $levelid => $levelName){
-            $areaVal = array('id'=>'0','name'=>'a');
-            foreach($adminarea as $arealevelid => $arrval){
-                if($arrval['level_id'] == $levelid) {
-                    $areaVal = $arrval;
-                    $arrVal .= ($areaVal['name']=='a'?'':$areaVal['name']).' ('.$levelName.') '.',';
-                    continue;
-                }
-            }
-        }
-        $arrEducationVal = str_replace(',',' &rarr; ',rtrim($arrVal,','));
-
 		$this->set('data',$this->institutionSiteObj);
 		$this->set('data2',$data2);
 		$this->set('id',$this->institutionSiteId);
-        $this->set('arrEducation',$arrEducation);
-        $this->set('arrEducationVal',$arrEducationVal);
 	}
 	
 	public function classes() {
