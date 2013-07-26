@@ -14,19 +14,12 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
-
-class StudentBehaviourCategory extends AppModel {
-	// Used by SetupController
-	public function getLookupVariables() {
-		$lookup = array('Behaviour Category' => array('model' => 'Students.StudentBehaviourCategory'));
-		return $lookup;
-	}
+class StudentAttendance extends StudentsAppModel {
+	public $useTable = 'student_attendances';
 	
-	public function getCategory(){
-		$list = $this->find('list',array(
-									'fields' =>array('StudentBehaviourCategory.id','StudentBehaviourCategory.name'),
-									'conditions'=>array('StudentBehaviourCategory.visible' => '1')));
+	public function getAttendanceData($id,$yearId) {
+		$list = $this->find('all',array(
+										'conditions'=>array('StudentAttendance.student_id' => $id, 'StudentAttendance.school_year_id' => $yearId)));
 		return $list;
 	}
 }
