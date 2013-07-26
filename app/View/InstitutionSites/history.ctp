@@ -1,5 +1,6 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('history', 'stylesheet', array('inline' => false));
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -152,30 +153,34 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		</div>
 	</fieldset>
 	
+    <?php if(@sizeof($data2['area_id'])>1){ ?>
 	<fieldset class="section_break">
 		<legend><?php echo __('Area'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Level'); ?></div>
-			<div class="value">
-				<span style="margin-left: 8px;"><?php echo $data['Area']['name']; ?></span>
-				<?php if(@sizeof($data2['Area_name'])>0){ // && ( sizeof($data2['Area_name']) != 1 && array_key_exists($data['Area']['name'], $data2['Area_name']) ) ) { ?>
-				<div class="table" style="margin-top: 10px;">
-					<div class="table_body">
-						<?php $ctr = 1; foreach($data2['Area_name'] as $val => $time):?>
-						<?php if($ctr == 1 && $data['Area']['name'] == $val) continue; ?>
-						<div class="table_row">
-							<div class="table_cell cell_value"><?php echo $val; ?></div>
-							<div class="table_cell"><?php echo $time; ?></div>
-
-						</div>
-						<?php $ctr++; endforeach;?>
-					</div>
-				</div>
-				<?php } ?>
-			</div>
-		</div>
+		<?php echo @$this->Utility->showAreaHistory($this->Form, 'area_id', array(), $data['InstitutionSite']['area_id'],$data2['area_id']);  ?>
 	</fieldset>
-	
+	<?php } ?>
+    
+	<fieldset class="section_break">
+        <legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
+        <?php
+            echo '<div class="row">
+                    <div class="label">&nbsp;&nbsp;</div>
+                    <div class="value">'.$arrEducationVal.'</span>';
+            echo '<div class="table" style="width:500px;">
+                            <div class="table_body">';
+			$myVal = $arrEducationVal;
+            foreach($arrEducation as $id=>$val){
+				if($val['val']!=$myVal){
+					echo '<div class="table_row"><div class="table_cell cell_value">'.$val['val'].'</div>
+						  <div class="table_cell cell_datetime">'.$val['time'].'</div>
+						  </div>';
+					$myVal = $val['val'];
+				}
+            }
+            echo '</div></div></div></div>';
+        ?>
+    </fieldset>
+
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>
 		<div class="row">
