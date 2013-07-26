@@ -1310,7 +1310,7 @@ class InstitutionSitesController extends AppController {
 	public function studentsView() {
 		if(isset($this->params['pass'][0])) {
 			$studentId = $this->params['pass'][0];
-			$this->Session->write('StudentAttendanceStudentId', $studentId);
+			$this->Session->write('InstitutionSiteStudentId', $studentId);
 			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
 			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
 			$this->Navigation->addCrumb($name);
@@ -1990,7 +1990,7 @@ class InstitutionSitesController extends AppController {
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
 		$displayEdit = true;
 		if(count($data['dataFields']) == 0) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'), array('type' => 'info'));
 			$displayEdit = false;
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
@@ -2047,7 +2047,7 @@ class InstitutionSitesController extends AppController {
 		
 		$displayEdit = true;
 		if(count($data['dataFields']) == 0) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'), array('type' => 'info'));
 			$displayEdit = false;
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
@@ -2101,7 +2101,7 @@ class InstitutionSitesController extends AppController {
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
 		$displayEdit = true;
 		if(count($data['dataFields']) == 0) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'));
+			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_CONFIG'), array('type' => 'info'));
 			$displayEdit = false;
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
@@ -2130,24 +2130,15 @@ class InstitutionSitesController extends AppController {
 
     public function studentsBehaviour(){
         extract($this->studentsCustFieldYrInits());
-        $this->Navigation->addCrumb('Behaviour');
+        $this->Navigation->addCrumb('List of Behaviour');
 
-        // Checking if user has access to add
-        // $_add_behaviour = $this->AccessControl->check('InstitutionSites', 'studentsBehaviourAdd');
-        $_add_behaviour = true;
-
-        $yearOptions = $this->SchoolYear->getYearList();
-        $selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-
-        $data = array();
         $data = $this->StudentBehaviour->getBehaviourData($id);
-													
-        $this->set('_add_behaviour',$_add_behaviour);
-        $this->set('yearOptions', $yearOptions);
-        $this->set('selectedYear', $selectedYear);
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('STUDENT_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
+		}
+		
         $this->set('id', $id);
         $this->set('data', $data);
-        $this->render('students_behaviour');
     }
 
     public function studentsBehaviourAdd() {
@@ -2175,24 +2166,27 @@ class InstitutionSitesController extends AppController {
 				// Validation Errors
 				//debug($this->StudentBehaviour->validationErrors); 
 				//die;
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
 			}
 			
             $this->redirect(array('action' => 'studentsBehaviour', $studentBehaviourData['student_id']));
         }
     }
 
-    public function studentsbehaviourView() {
+    public function studentsBehaviourView() {
 		$studentBehaviourId = $this->params['pass'][0];
 		$studentBehaviourObj = $this->StudentBehaviour->find('all',array('conditions'=>array('StudentBehaviour.id' => $studentBehaviourId)));
 		
 		if(!empty($studentBehaviourObj)) {
-			$this->Navigation->addCrumb('Overview');
+			$this->Navigation->addCrumb('Behaviour Details');
 			
 			$yearOptions = array();
 			$yearOptions = $this->SchoolYear->getYearList();
 			$categoryOptions = array();
 			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
 			
+			$this->Session->write('StudentBehavourId', $studentBehaviourId);
 			$this->set('categoryOptions', $categoryOptions);
 		    $this->set('yearOptions', $yearOptions);
 			$this->set('studentBehaviourObj', $studentBehaviourObj);
@@ -2201,13 +2195,13 @@ class InstitutionSitesController extends AppController {
 		}
     }
 	
-	public function studentsbehaviourEdit() {
+	public function studentsBehaviourEdit() {
 		if($this->request->is('get')) {
 			$studentBehaviourId = $this->params['pass'][0];
 			$studentBehaviourObj = $this->StudentBehaviour->find('all',array('conditions'=>array('StudentBehaviour.id' => $studentBehaviourId)));
 			
 			if(!empty($studentBehaviourObj)) {
-				$this->Navigation->addCrumb('Overview');
+				$this->Navigation->addCrumb('Edit Behaviour Details');
 				
 				$yearOptions = array();
 				$yearOptions = $this->SchoolYear->getYearList();
@@ -2218,7 +2212,7 @@ class InstitutionSitesController extends AppController {
 				$this->set('yearOptions', $yearOptions);
 				$this->set('studentBehaviourObj', $studentBehaviourObj);
 			} else {
-				//$this->redirect(array('action' => 'classesList'));
+				//$this->redirect(array('action' => 'studentsBehaviour'));
 			}
 		 } else {
 			$studentBehaviourData = $this->data['InstitutionSiteStudentBehaviour'];
@@ -2229,22 +2223,26 @@ class InstitutionSitesController extends AppController {
 				// Validation Errors
 				//debug($this->StudentBehaviour->validationErrors); 
 				//die;
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
 			}
             
             $this->redirect(array('action' => 'studentsBehaviourView', $studentBehaviourData['id']));
 		 }
 	}
 	
-	public function studentsbehaviourDelete() {
-		$studentBehaviourData = $this->data['DeleteBehaviour'];
-		$id = $studentBehaviourData['id'];
-		$title = $this->StudentBehaviour->field('title', array('StudentBehaviour.id' => $id));
-		$this->StudentBehaviour->delete($id);
-		$this->Utility->alert($title . ' have been deleted successfully.');
-		$this->redirect(array('action' => 'studentsBehaviour', $studentBehaviourData['student_id']));
+	public function studentsBehaviourDelete() {
+		if($this->Session->check('InstitutionSiteStudentId') && $this->Session->check('StudentBehavourId')) {
+			$id = $this->Session->read('StudentBehavourId');
+			$studentId = $this->Session->read('InstitutionSiteStudentId');
+			$name = $this->StudentBehaviour->field('title', array('StudentBehaviour.id' => $id));
+			$this->StudentBehaviour->delete($id);
+			$this->Utility->alert($name . ' have been deleted successfully.');
+			$this->redirect(array('action' => 'studentsBehaviour', $studentId));
+		}
 	}
 	
-	public function studentsbehaviourCheckName() {
+	public function studentsBehaviourCheckName() {
 		$this->autoRender = false;
 		$title = trim($this->params->query['title']);
 		
@@ -2266,7 +2264,7 @@ class InstitutionSitesController extends AppController {
 		$yearId = $this->getAvailableYearId($yearList);
 		$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 		
-		$data = $this->StudentAttendance->getAttendanceData($this->Session->read('StudentAttendanceStudentId'),isset($id)? $id:$yearId);							
+		$data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),isset($id)? $id:$yearId);							
 		
 		$this->set('selectedYear', $yearId);
 		$this->set('years', $yearList);
@@ -2283,9 +2281,9 @@ class InstitutionSitesController extends AppController {
 			$yearId = $this->getAvailableYearId($yearList);
 			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 			
-			$data = $this->StudentAttendance->getAttendanceData($this->Session->read('StudentAttendanceStudentId'),$yearId);				
+			$data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),$yearId);				
 			
-			$this->set('studentid',$this->Session->read('StudentAttendanceStudentId'));
+			$this->set('studentid',$this->Session->read('InstitutionSiteStudentId'));
 			$this->set('institutionSiteId',$this->institutionSiteId);
 			$this->set('selectedYear', $yearId);
 			$this->set('years', $yearList);

@@ -8,29 +8,17 @@ echo $this->Html->script('search', false);
 
 <div id="classes" class="content_wrapper">
     <h1>
-        <span><?php echo __('Overview'); ?></span>
+        <span><?php echo __('Behaviour Details'); ?></span>
 		<?php
-		echo $this->Html->link(__('List'), array('action' => 'studentsBehaviour', $studentBehaviourObj[0]['StudentBehaviour']['student_id']), array('class' => 'divider'));
-		echo $this->Html->link(__('Edit'), array('action' => 'studentsBehaviourEdit', $studentBehaviourObj[0]['StudentBehaviour']['id']), array('class' => 'divider'));
-		echo '<a href="#" class="divider" onclick=\'$("#delButton").click();\'>Delete</a>';
+		$data = $studentBehaviourObj[0]['StudentBehaviour'];
+		echo $this->Html->link(__('List'), array('action' => 'studentsBehaviour', $data['student_id']), array('class' => 'divider'));
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'studentsBehaviourEdit', $data['id']), array('class' => 'divider'));
+		}
+		if($_delete) {
+			echo $this->Html->link(__('Delete'), array('action' => 'studentsBehaviourDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+		}
 		?>
-        
-        <?php
-            echo $this->Form->create('DeleteBehaviour', array(
-                'id' => 'delbehaviour',
-                'inputDefaults' => array('label' => false, 'div' => false),	
-                'url' => array('controller' => 'InstitutionSites','action' => 'studentsBehaviourDelete')
-            ));
-        ?>
-        <input type="hidden" name="data[DeleteBehaviour][student_id]" id="student_id" value="<?php echo $studentBehaviourObj[0]['StudentBehaviour']['student_id']; ?>" />
-        <input type="hidden" name="data[DeleteBehaviour][id]" id="id" value="<?php echo $studentBehaviourObj[0]['StudentBehaviour']['id']; ?>" />
-        <?php
-            echo $this->Form->input('delButton', array(
-                'id' => 'delButton',
-                'type' => 'submit',
-                'style' => 'visibility:hidden; display:none;'
-            ));
-        ?>
     </h1>
     <?php echo $this->element('alert'); ?>
     
@@ -42,7 +30,7 @@ echo $this->Html->script('search', false);
 			'id' => 'student_behaviour_category_id',
 			'label' => false, 
 			'options' => $categoryOptions,
-			'default' => $studentBehaviourObj[0]['StudentBehaviour']['student_behaviour_category_id'],
+			'default' => $data['student_behaviour_category_id'],
 			'disabled' => true
 		));
 		?>
@@ -51,21 +39,21 @@ echo $this->Html->script('search', false);
 	
 	<div class="row edit">
 		<div class="labelbehaviour"><?php echo __('Title'); ?></div>
-		<div class="value"><?php echo $studentBehaviourObj[0]['StudentBehaviour']['title']; ?></div>
+		<div class="value"><?php echo $data['title']; ?></div>
 	</div>
 	
 	<div class="row edit">
 		<div class="labelbehaviour"><?php echo __('Description'); ?></div>
-		<div class="value"><?php echo $studentBehaviourObj[0]['StudentBehaviour']['description']; ?></div>
+		<div class="value"><?php echo $data['description']; ?></div>
 	</div>
     
     <div class="row edit">
 		<div class="labelbehaviour"><?php echo __('Action'); ?></div>
-		<div class="value"><?php echo $studentBehaviourObj[0]['StudentBehaviour']['action']; ?></div>
+		<div class="value"><?php echo $data['action']; ?></div>
 	</div>
     
     <div class="row edit">
 		<div class="labelbehaviour"><?php echo __('Date'); ?></div>
-		<div class="value"><?php echo $this->Utility->formatDate($studentBehaviourObj[0]['StudentBehaviour']['date_of_behaviour']); ?></div>
+		<div class="value"><?php echo $this->Utility->formatDate($data['date_of_behaviour']); ?></div>
 	</div>
 </div>
