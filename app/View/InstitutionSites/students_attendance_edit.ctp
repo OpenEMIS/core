@@ -1,8 +1,6 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->script('app.date', false);
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
-echo $this->Html->script('institution_site_student_attendance', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -15,7 +13,7 @@ echo $this->Html->script('institution_site_student_attendance', false);
 	));
 	?>
     <h1>
-        <span><?php echo __('Overview'); ?></span>
+        <span><?php echo __('Edit Attendance'); ?></span>
 		<?php
 			echo $this->Html->link(__('View'), array('action' => 'studentsAttendance', $selectedYear), array('class' => 'divider'));
 		?>
@@ -29,8 +27,8 @@ echo $this->Html->script('institution_site_student_attendance', false);
 			echo $this->Form->input('school_year_id', array(
 				'options' => $years,
 				'default' => $selectedYear,
-				'onchange' => 'InstitutionSiteStudentAttendance.navigateYear(this)',
-				'url' => 'InstitutionSites/' . $this->action
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action
 			));
 			?>
 		</div>
@@ -40,14 +38,14 @@ echo $this->Html->script('institution_site_student_attendance', false);
 		<div class="labelattendance"><?php echo __('School Days'); ?></div>
 		<div class="value">
         <input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" />
-         <input type="hidden" id="schoolDays" name="schoolDays" class="default" value="<?php echo $schoolDays; ?>"/>
+        <input type="hidden" id="schoolDays" name="schoolDays" class="default" value="<?php echo $schoolDays; ?>"/>
         </div>
 	</div>
     
     <div class="table full_width">
 		<div class="table_head">
 			<div class="table_cell"><?php echo __('Total no of days attended'); ?></div>
-			<div class="table_cell"><?php echo __('Total no of days absenced'); ?></div>
+			<div class="table_cell"><?php echo __('Total no of days absent'); ?></div>
              <div class="table_cell"><?php echo __('Total'); ?></div>
 		</div>
 		
@@ -72,11 +70,11 @@ echo $this->Html->script('institution_site_student_attendance', false);
 					<?php 
 					echo $this->Form->input('total_no_attend', array(
 						'type' => 'text',
-						'class' => 'computeTotal',
+						'computeType' => 'computeTotal',
 						'value' => empty($data[0]['StudentAttendance']['total_no_attend']) ? 0 : $data[0]['StudentAttendance']['total_no_attend'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)',
-						'onkeyup' => 'InstitutionSiteStudentAttendance.computeTotal(this)'
+						'onkeyup' => 'jsTable.computeSubtotal(this)'
 					));
 					?>
 					</div>
@@ -86,16 +84,16 @@ echo $this->Html->script('institution_site_student_attendance', false);
 					<?php 
 					echo $this->Form->input('total_no_absence', array(
 						'type' => 'text',
-						'class' => 'computeTotal',
+						'computeType' => 'computeTotal',
 						'value' => empty($data[0]['StudentAttendance']['total_no_absence']) ? 0 : $data[0]['StudentAttendance']['total_no_absence'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)',
-						'onkeyup' => 'InstitutionSiteStudentAttendance.computeTotal(this)'
+						'onkeyup' => 'jsTable.computeSubtotal(this)'
 					));
 					?>
 					</div>
 				</div>
-                <div class="table_cell cell_total cell_number"><?php echo $total; ?></div>
+                <div class="table_cell cell_subtotal cell_number"><?php echo $total; ?></div>
 			</div>
 		</div>
 	</div>

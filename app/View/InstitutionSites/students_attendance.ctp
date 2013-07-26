@@ -1,16 +1,17 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
-echo $this->Html->script('institution_site_student_attendance', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="classes" class="content_wrapper">
+<div id="student_attendance" class="content_wrapper">
     <h1>
         <span><?php echo __('Attendance'); ?></span>
 		<?php
+		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'studentsAttendanceEdit', $selectedYear), array('class' => 'divider'));
+		}
 		?>
     </h1>
     <?php echo $this->element('alert'); ?>
@@ -31,8 +32,8 @@ echo $this->Html->script('institution_site_student_attendance', false);
 				'div' => false,
 				'options' => $years,
 				'default' => $selectedYear,
-				'onchange' => 'InstitutionSiteStudentAttendance.navigateYear(this)',
-				'url' => 'InstitutionSites/' . $this->action
+				'onchange' => 'jsForm.change(this)',
+				'url' => $this->params['controller'] . '/' . $this->action
 			));
 			?>
 		</div>
@@ -43,10 +44,10 @@ echo $this->Html->script('institution_site_student_attendance', false);
 		<div class="value"><input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
 	</div>
     
-	<div class="table full_width">
+	<div class="table full_width" style="margin-top: 10px;">
 		<div class="table_head">
 			<div class="table_cell"><?php echo __('Total no of days attended'); ?></div>
-			<div class="table_cell"><?php echo __('Total no of days absenced'); ?></div>
+			<div class="table_cell"><?php echo __('Total no of days absent'); ?></div>
             <div class="table_cell"><?php echo __('Total'); ?></div>
             <?php
 				$total = 0;
