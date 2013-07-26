@@ -16,6 +16,9 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 		if($_accessControl->check($this->params['controller'], 'teachersCustFieldYrView')) {
 			echo $this->Html->link(__('Academic'), array('action' => 'teachersCustFieldYrView', $obj['id']), array('class' => 'divider'));
 		}
+		//if($_accessControl->check($this->params['controller'], 'teachersAttendance')) {
+			echo $this->Html->link(__('Attendance'), array('action' => 'teachersAttendance'), array('class' => 'divider'));
+		//}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
