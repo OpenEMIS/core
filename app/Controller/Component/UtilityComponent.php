@@ -103,13 +103,15 @@ class UtilityComponent extends Component {
 		$msgList['STUDENT_ALREADY_ADDED'] = "is already exists in this institution site.";
 		$msgList['STUDENT_NO_BEHAVIOUR_DATA'] = "No behaviour found.";
 		$msgList['SITE_STUDENT_BEHAVIOUR_EMPTY_TITLE'] = "Please enter a valid title.";
-		$msgList['CENSUS_UPDATED'] = "The Student attendance data has been updated successfully.";
+		$msgList['SITE_STUDENT_ATTENDANCE_UPDATED'] = "The Student attendance data has been updated successfully.";
 		
 		// Teachers
 		$msgList['TEACHER_NOT_FOUND'] = "No Teacher found.";
+		$msgList['SITE_TEACHER_ATTENDANCE_UPDATED'] = "The Teacher attendance data has been updated successfully.";
 		
 		// Staff
 		$msgList['STAFF_NOT_FOUND'] = "No Staff found.";
+		$msgList['SITE_STAFF_ATTENDANCE_UPDATED'] = "The Staff attendance data has been updated successfully.";
 		
 		// Reports
 		$msgList['REPORT_NO_FILES'] = "There are no available files found for this report.";
