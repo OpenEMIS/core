@@ -52,6 +52,34 @@ $fieldName = sprintf('data[%s][%s][%%s]', $model, $index);
 		echo $this->Form->input('name', $inputOpts);
 		?>
 	</div>
+    <div class="cell cell_national_code">
+		<?php
+		$inputOpts = array(
+			'label' => false,
+			'div' => false,
+			'name' => sprintf($fieldName, 'national_code'),
+			'type' => 'text',
+			'maxlength' => 10,
+			'before' => '<div class="input_wrapper">',
+			'after' => '</div>'
+		);
+		echo $this->Form->input('name', $inputOpts);
+		?>
+	</div>
+    <div class="cell cell_international_code">
+		<?php
+		$inputOpts = array(
+			'label' => false,
+			'div' => false,
+			'name' => sprintf($fieldName, 'international_code'),
+			'type' => 'text',
+			'maxlength' => 10,
+			'before' => '<div class="input_wrapper">',
+			'after' => '</div>'
+		);
+		echo $this->Form->input('name', $inputOpts);
+		?>
+	</div>
 	<div class="cell cell_order">
 		<span class="icon_up" onclick="jsList.doSort(this)"></span>
 		<span class="icon_down" onclick="jsList.doSort(this)"></span>
