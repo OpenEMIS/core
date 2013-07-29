@@ -5,12 +5,12 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="student_attendance" class="content_wrapper">
+<div id="staff_attendance" class="content_wrapper">
     <h1>
         <span><?php echo __('Attendance'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'studentsAttendanceEdit', $selectedYear), array('class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'staffAttendanceEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
     </h1>
@@ -44,20 +44,20 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
             <div class="table_cell"><?php echo __('Total'); ?></div>
             <?php
 				$total = 0;
-				if(!empty($data[0]['StudentAttendance']['total_no_attend'])){
-					$total += $data[0]['StudentAttendance']['total_no_attend'];
+				if(!empty($data[0]['StaffAttendance']['total_no_attend'])){
+					$total += $data[0]['StaffAttendance']['total_no_attend'];
 				}
-				if(!empty($data[0]['StudentAttendance']['total_no_attend'])){
-					$total += $data[0]['StudentAttendance']['total_no_absence'];
+				if(!empty($data[0]['StaffAttendance']['total_no_attend'])){
+					$total += $data[0]['StaffAttendance']['total_no_absence'];
 				}
 			?>
 		</div>
 		
 		<div class="table_body">
 			<div class="table_row">
-				<div class="table_cell cell_totals"><?php echo empty($data[0]['StudentAttendance']['total_no_attend']) ? 0 : $data[0]['StudentAttendance']['total_no_attend'] ?>
+				<div class="table_cell cell_totals"><?php echo empty($data[0]['StaffAttendance']['total_no_attend']) ? 0 : $data[0]['StaffAttendance']['total_no_attend'] ?>
                 </div>
-				<div class="table_cell cell_totals"><?php echo empty($data[0]['StudentAttendance']['total_no_absence']) ? 0 : $data[0]['StudentAttendance']['total_no_absence'] ?>
+				<div class="table_cell cell_totals"><?php echo empty($data[0]['StaffAttendance']['total_no_absence']) ? 0 : $data[0]['StaffAttendance']['total_no_absence'] ?>
                 </div>
                 <div class="table_cell cell_total cell_number"><?php echo $total; ?></div>
 			</div>
