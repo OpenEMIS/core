@@ -18,6 +18,8 @@ class AreaHandlerComponent extends Component {
 	private $controller;
 	private $Area;
 	private $AreaLevel;
+    private $AreaEducation;
+    private $AreaEducationLevel;
 	
 	//public $components = array('Auth', 'Session');
 	public function __construct(ComponentCollection $collection, $settings = array()) {
@@ -33,6 +35,8 @@ class AreaHandlerComponent extends Component {
 	public function init() {
 		$this->Area = ClassRegistry::init('Area');
 		$this->AreaLevel = ClassRegistry::init('AreaLevel');
+        $this->AreaEducation = ClassRegistry::init('AreaEducation');
+        $this->AreaEducationLevel = ClassRegistry::init('AreaEducationLevel');
 	}
 	
 	//called after Controller::beforeFilter()
@@ -76,8 +80,11 @@ class AreaHandlerComponent extends Component {
 			}
 		}
 	}
-	
-	
+
+    public function getAreaEducationList(){
+        return $this->AreaEducationLevel->find('list',array('recursive'=>0));
+    }
+
 	public function getAreaList(){
 		return $this->AreaLevel->find('list',array('recursive'=>0));
 	}
@@ -146,6 +153,70 @@ class AreaHandlerComponent extends Component {
 		}
         return $colInfo;
     }
-	
+
+    public function getAreaEducationtoParent($lowest){
+        $arrVals = Array();
+        $list = $this->AreaEducation->find('first', array(
+            'fields' => array('AreaEducation.id', 'AreaEducation.name', 'AreaEducation.parent_id', 'AreaEducation.area_education_level_id','AreaEducationLevel.name'),
+            'conditions' => array('AreaEducation.id' => $lowest)));
+
+        //check if not false
+        if($list){
+            $arrVals[$list['AreaEducation']['area_education_level_id']] = Array('level_id'=>$list['AreaEducation']['area_education_level_id'],'id'=>$list['AreaEducation']['id'],'name'=>$list['AreaEducation']['name'],'parent_id'=>$list['AreaEducation']['parent_id'],'AreaEducationLevelName'=>$list['AreaEducationLevel']['name']);
+            if($list['AreaEducation']['area_education_level_id'] > 1){
+                if($list['AreaEducation']['area_education_level_id']){
+                    do {
+                        $list = $this->AreaEducation->find('first', array(
+                            'fields' => array('AreaEducation.id', 'AreaEducation.name', 'AreaEducation.parent_id', 'AreaEducation.area_education_level_id','AreaEducationLevel.name', 'AreaEducation.visible'),
+                            'conditions' => array('AreaEducation.id' => $list['AreaEducation']['parent_id'])));
+                        $arrVals[$list['AreaEducation']['area_education_level_id']] = Array('visible'=>$list['AreaEducation']['visible'],'level_id'=>$list['AreaEducation']['area_education_level_id'],'id'=>$list['AreaEducation']['id'],'name'=>$list['AreaEducation']['name'],'parent_id'=>$list['AreaEducation']['parent_id'],'AreaEducationLevelName'=>$list['AreaEducationLevel']['name']);
+                    } while ($list['AreaEducation']['area_education_level_id'] != 1);
+                }
+            }
+        }
+        return $arrVals;
+    }
+
+    public function getAllSiteAreaEducationToParent($siteId,$options=array()) {
+        $lowest = ($siteId<1) ? 1 : $siteId;
+        $areas = $this->getAreaEducationtoParent($lowest);
+        $areas = array_reverse($areas);
+
+        $arrDisabledList = array();
+        foreach($areas as $index => &$arrVals){
+            $siblings = $this->AreaEducation->find('all',array('fields'=>Array('AreaEducation.id','AreaEducation.name','AreaEducation.parent_id','AreaEducation.visible'),'conditions'=>array('AreaEducation.parent_id' => $arrVals['parent_id'])));
+            $opt = array();
+            foreach($siblings as &$sibVal){
+                $arrDisabledList[$sibVal['AreaEducation']['id']] = array('parent_id'=>$sibVal['AreaEducation']['parent_id'],'id'=>$sibVal['AreaEducation']['id'],'name'=>$sibVal['AreaEducation']['name'],'visible'=>$sibVal['AreaEducation']['visible']);
+                if(isset($arrDisabledList[$sibVal['AreaEducation']['parent_id']])){
+                    if($arrDisabledList[$sibVal['AreaEducation']['parent_id']]['visible'] == 0){
+                        $sibVal['AreaEducation']['visible'] = 0;
+                        $arrDisabledList[$sibVal['AreaEducation']['id']]['visible'] = 0;
+                    }
+
+                }
+            }
+            foreach($siblings as $sibVal2){
+                $o = array('name'=>$sibVal2['AreaEducation']['name'],'value'=>$sibVal2['AreaEducation']['id']);
+                if($sibVal2['AreaEducation']['visible'] == 0){
+                    $o['disabled'] = 'disabled';
+                }
+                $opt[] = $o;
+            }
+            $colInfo['area_education_level_'.$index]['options'] = $opt;
+        }
+
+        if (isset($options['empty_areaeducationlevel_placeholder'])) {
+            if ($siteId<1) { //don't force selection of country 3
+                array_unshift($colInfo['area_education_level_0']['options'] , array('0'=>$options['empty_areaeducationlevel_placeholder']));
+            }
+            $maxAreaIndex = (sizeof($areas)==0) ? -1 : max(array_keys($areas));//starts with 0
+            $totalAreaEducationLevel = $this->AreaEducationLevel->find('count'); //starts with 1
+            for($i = $maxAreaIndex; $i < $totalAreaEducationLevel;$i++ ){
+                $colInfo['area_education_level_'.($i+1)]['options'] = array('0'=>$options['empty_areaeducationlevel_placeholder']);
+            }
+        }
+        return $colInfo;
+    }
 }
 ?>

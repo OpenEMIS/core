@@ -54,44 +54,11 @@ echo $this->Html->script('institution_site', false);
 	
 	<fieldset class="section_break">
 		<legend><?php echo __('Area'); ?></legend>   
-		<?php
-		//pr($arealevel);
-		$ctr = 0;
-		foreach($levels as $levelid => $levelName){
-			$areaVal = array('id'=>'0','name'=>'a');
-			foreach($arealevel as $arealevelid => $arrval){
-				if($arrval['level_id'] == $levelid) {
-					$areaVal = $arrval;
-					continue;
-				}
-			}
-			echo '<div class="row">
-						<div class="label">'.__($levelName).'</div>
-						<div class="value" value="'.$areaVal['id'].'" name="area_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
-					</div>';
-			$ctr++;
-		}
-		?>
+		<?php echo @$this->Utility->showArea($this->Form, 'area_id',$obj['area_id'], array()); ?>
 	</fieldset>
 	<fieldset class="section_break">
 		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>   
-		<?php
-		$ctr = 0;
-		foreach($adminarealevel as $levelid => $levelName){
-			$areaVal = array('id'=>'0','name'=>'a');
-			foreach($adminarea as $arealevelid => $arrval){
-				if($arrval['level_id'] == $levelid) {
-					$areaVal = $arrval;
-					continue;
-				}
-			}
-			echo '<div class="row">
-						<div class="label">'.__($levelName).'</div>
-						<div class="value" value="'.$areaVal['id'].'" name="area_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
-					</div>';
-			$ctr++;
-		}
-		?>
+		<?php echo @$this->Utility->showAreaEducation($this->Form, 'area_id',$obj['area_education_id'], array()); ?>
 	</fieldset>
 	
 	<fieldset class="section_break">

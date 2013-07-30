@@ -251,11 +251,14 @@ var jsForm = {
 	
 	getAreaChildren :function (currentobj){      
         var selected = $(currentobj).val();
+
+        var edutype = $(currentobj).closest('fieldset').find('legend').text().match(/Education/);;
+        atype=(edutype?'admin':'Area');
         var maskId;
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: getRootURL()+'/Areas/viewAreaChildren/'+selected,
+            url: getRootURL()+'/InstitutionSites/viewAreaChildren/'+selected+'/'+atype,
             beforeSend: function (jqXHR) {
                     maskId = $.mask({text:i18n.General.textLoadAreas});
             },
@@ -267,7 +270,7 @@ var jsForm = {
                             })
                             var nextselect = $(currentobj).parent().parent().next().find('select');
                             nextselect.find('option').remove();
-                            nextselect.append(tpl);  
+                            nextselect.append(tpl);
                     };
                     $.unmask({ id: maskId,callback: callback(data)});
             }
