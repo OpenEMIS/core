@@ -110,7 +110,9 @@ class StudentsController extends StudentsAppController {
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
 		}
-		$this->set('limit', $limit);
+		if(empty($searchKey) && count($data)==1) {
+			$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
+		}
         $this->set('students', $data);
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
