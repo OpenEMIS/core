@@ -54,6 +54,8 @@ echo $this->Html->script('setup_variables', false);
 					<div class="table_head">
 						<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
 						<div class="table_cell"><?php echo __('Option'); ?></div>
+                        <div class="table_cell cell_national_code"><?php echo __('National Code'); ?></div>
+                    	<div class="table_cell cell_international_code"><?php echo __('International Code'); ?></div>
 						<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
 					</div>
 				</div>
@@ -79,6 +81,8 @@ echo $this->Html->script('setup_variables', false);
 					}
 					echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
 					echo $this->Utility->getNameInput($this->Form, $fieldName, $values['name']);
+					echo $this->Utility->getTextInput($this->Form, $fieldName, $values['national_code'], 'national_code', '10');
+					echo $this->Utility->getTextInput($this->Form, $fieldName, $values['international_code'], 'international_code', '10');
 					echo $this->Utility->getOrderControls();
 					echo $this->Utility->getListRowEnd();
 				}

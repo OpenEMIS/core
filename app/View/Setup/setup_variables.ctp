@@ -46,6 +46,8 @@ echo $this->Html->script('setup_variables', false);
 				<div class="table_head">
 					<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
 					<div class="table_cell cell_option"><?php echo __('Option'); ?></div>
+                    <div class="table_cell cell_national_code"><?php echo __('National Code'); ?></div>
+                    <div class="table_cell cell_international_code"><?php echo __('International Code'); ?></div>
 				</div>
 				
 				<div class="table_body">
@@ -53,6 +55,8 @@ echo $this->Html->script('setup_variables', false);
 					<div class="table_row<?php echo $obj['visible']!=1 ? ' inactive' : ''; ?>">
 						<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></div>
 						<div class="table_cell"><?php echo $obj['name'] ?></div>
+                        <div class="table_cell cell_national_code"><?php echo $obj['national_code'] ?></div>
+                        <div class="table_cell cell_international_code"><?php echo $obj['international_code'] ?></div>
 					</div>
 					<?php } ?>
 				</div>
