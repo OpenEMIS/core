@@ -285,7 +285,7 @@ class DataProcessingController extends DataProcessingAppController {
             $shellCmd = sprintf($nohup, $cmd, APP);
 //			$shellCmd = sprintf($nohup, $cmd, APP);
             $this->log($shellCmd, 'debug');
-//            echo $shellCmd;die();
+            //echo $shellCmd;die();
 			echo $PID = shell_exec($shellCmd);
             //$PID = exec($shellCmd);
 			//$PID = exec('/Library/WebServer/Documents/openemis/app/Console/cake.php -app batch run eng');
