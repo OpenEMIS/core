@@ -216,22 +216,29 @@ class TeachersController extends TeachersAppController {
 
     public function fetchImage($id){
         $this->autoRender = false;
+		
+		$url = Router::url('/Teachers/img/default_teacher_profile.jpg', true);
+        $mime_types = ImageMeta::mimeTypes();
 
-        $mime_type= ImageMeta::mimeTypes();
-
-        $imageRawData = $this->Teacher->findById($id);
-//        $imageMeta = unserialize($imageRawData['Teacher']['photo_name']);
-        if(empty($imageRawData['Teacher']['photo_content']) || empty($imageRawData['Teacher']['photo_name'])){
-            header("HTTP/1.0  404 Not Found");
-            die();
-        }else{
-            $imageFilename = $imageRawData['Teacher']['photo_name'];
-            $fileExt = pathinfo($imageFilename, PATHINFO_EXTENSION);
-            $imageContent = $imageRawData['Teacher']['photo_content'];
-//        header("Content-type: {$imageMeta->getMime()}");
-            header("Content-type: {$mime_type[$fileExt]}");
-            echo $imageContent;
-        }
+        $imageRawData = $this->Teachers->findById($id);
+		$imageFilename = $imageRawData['Teachers']['photo_name'];
+		$fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
+	
+		
+		if(empty($imageRawData['Teachers']['photo_content']) || empty($imageRawData['Teachers']['photo_name']) || !in_array($mime_types[$fileExt], $mime_types)){
+			if($this->Session->check('Teachers.defaultImg'))
+    		{
+				$imageContent = $this->Session->read('Teachers.defaultImg');
+			}else{
+				$imageContent = file_get_contents($url);
+				$this->Session->write('Teachers.defaultImg', $imageContent);
+			}
+			echo $imageContent;
+		}else{
+			$imageContent = $imageRawData['Teachers']['photo_content'];
+			header("Content-type: " . $mime_types[$fileExt]);
+			echo $imageContent;
+		}
     }
 
     public function add() {

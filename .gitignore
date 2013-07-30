@@ -50,3 +50,4 @@ app/webroot/logs/*
 *.mo
 .DS_Store
 .idea/*
+*.json
