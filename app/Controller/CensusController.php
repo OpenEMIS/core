@@ -20,9 +20,9 @@ class CensusController extends AppController {
 	public $institutionSiteId;
 	public $source_type=array(
 						"dataentry" => 0,
-						"external" => 20,
-						"internal" => 30,
-						"estimate" => 40
+						"external" => 1,
+						"internal" => 3,
+						"estimate" => 2
 						);
 
 	public $uses = array(
