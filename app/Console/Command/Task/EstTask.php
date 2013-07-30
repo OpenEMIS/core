@@ -25,13 +25,21 @@ class EstTask extends AppTask {
 		}
 	}
 	
+	public function getSchoolYearWithOffset($offset=0){ //defaults to current
+		
+		$sql = "select id from school_years order by current desc,start_year desc limit " . $offset . ",1";
+		$db = ConnectionManager::getDataSource('default');
+		$arr =  $db->fetchAll($sql);
+		$year = (int)$arr[0]['school_years']['id'];
+		return $year;
+	}
 	public function censusAggregateFromStudentRegisters($current_year,$options=array()){
 		
 		$sql = <<<EOD
 				DELETE FROM census_students WHERE source = 3 AND school_year_id = {curr_year};
 				INSERT INTO census_students
 				(
-					SELECT null, A1.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female), 1,  A1.education_grade_id,  A1.institution_site_id, 1,  {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00'  
+					SELECT null, A1.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female), 1,  A1.education_grade_id,  A1.institution_site_id, {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00'  
 					FROM (
 							SELECT count(a.student_id) as Male, 
 									a.institution_site_class_grade_id, 
@@ -69,7 +77,7 @@ class EstTask extends AppTask {
 				)
 				UNION
 				(
-					SELECT null,A2.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female),1,  A2.education_grade_id,  A2.institution_site_id, 1,  {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00' 
+					SELECT null,A2.age, IF(ISNULL(A1.male),0,A1.male), IF(ISNULL(A2.female),0,A2.female),1,  A2.education_grade_id,  A2.institution_site_id,  {curr_year},3,1,'0000-00-00 00:00:00',1,'0000-00-00 00:00:00' 
 					FROM (
 							SELECT count(a.student_id) as Male, 
 									a.institution_site_class_grade_id, 
@@ -115,7 +123,7 @@ EOD;
 	public function censusShiftPastYearToCurrentYear($current_year,$previous_year,$options=array()){
 		$sql_past_year_data = <<<EOD
 				INSERT INTO census_students
-				SELECT null,age+1,cs.male,cs.female,1,cs.eg.nextGradeId,institution_site_id,institution_site_programme_id,{curr_year},2,0,'0000-00-00 00:00:00',1,NOW()
+				SELECT null,age+1,cs.male,cs.female,1,cs.eg.nextGradeId,institution_site_id,{curr_year},2,0,'0000-00-00 00:00:00',1,NOW()
 				FROM census_students cs 
 				LEFT JOIN (
 							(SELECT * FROM education_grades t1 
@@ -157,7 +165,7 @@ EOD;
 				ALTER TABLE magic ADD INDEX (education_grade_id, institution_site_type_id,area_id,age);
 
 
-				SELECT null,ec.admission_age,IF(ISNULL(FLOOR(avg_male)),0,FLOOR(avg_male)),IF(ISNULL(FLOOR(avg_female)),0,FLOOR(avg_female)),1,eg.id,isi.institution_site_type_id,1,{curr_year},2,0,'0000-00-00 00:00:00',1,NOW()
+				SELECT null,ec.admission_age,IF(ISNULL(FLOOR(avg_male)),0,FLOOR(avg_male)),IF(ISNULL(FLOOR(avg_female)),0,FLOOR(avg_female)),1,eg.id,isi.institution_site_id,{curr_year},2,0,'0000-00-00 00:00:00',1,NOW()
 				-- SELECT isi.id as school_id,eg.name, isi.area_id, isi.institution_site_type_id , isi.name as school_name, eg.id as Grade_ID, ec.admission_age, cens.* 
 				FROM institution_sites isi 
 				LEFT JOIN institution_site_programmes isp ON isi.id = isp.institution_site_id
