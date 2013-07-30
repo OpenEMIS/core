@@ -10,11 +10,13 @@
 .cell_area, .cell_institution { width: 250px; }
 .table_view .cell_name { width: 506px; margin-left: -1px; }
 .table_view .cell_name span { line-height: 25px; }
+.cell_module { width: 120px; }
 
 #group_admin .search_wrapper { margin-top: 2px; }
 #groups.edit .cell_name { width: 491px; }
 
 .cell_id_no { width: 110px; }
 
-#search_user .list_wrapper { height: 70px; }
 .group_user_list.scroll_active .table_header { width: 633px !important; }
+#users #search .scroll_active .table_header { width: 623px !important; }
+.safari #users #search .scroll_active .table_header { width: 627px !important; }
