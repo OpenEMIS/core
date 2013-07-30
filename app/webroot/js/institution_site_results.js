@@ -37,7 +37,10 @@ var InstitutionSiteResults = {
 	navigateClass: function(obj, both) {
 		var href = getRootURL() + $(obj).attr('url') + '/' + $(this.yearId).val();
 		if(both && $(this.classId).length==1) {
-			href += '/' + $(this.classId).val();
+			var classId = $(this.classId).val();
+			if(classId != null) {
+				href += '/' + classId;
+			}
 		}
 		window.location.href = href;
 	}

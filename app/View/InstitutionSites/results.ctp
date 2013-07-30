@@ -58,7 +58,7 @@ echo $this->Html->script('institution_site_results', false);
 		<legend><?php echo $obj['name']; ?></legend>
 		
 		<?php if(isset($obj['assessment'][$type['OFFICIAL']])) { ?>
-		<div class="table allow_hover" action="InstitutionSites/resultsDetails/">
+		<div class="table allow_hover" action="InstitutionSites/resultsDetails/<?php echo $selectedYear; ?>/">
 			<div class="table_head">
 				<div class="table_cell cell_code"><?php echo __('Code'); ?></div>
 				<div class="table_cell cell_name"><?php echo __('Name'); ?></div>
