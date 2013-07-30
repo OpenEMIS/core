@@ -8,10 +8,18 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 <div id="student" class="content_wrapper">
 	<h1>
 		<span><?php echo __('Student Information'); ?></span>
-			<?php $obj = $data['Student']; 
-			    echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
-		        echo $this->Html->link(__('Behaviour'), array('action' => 'studentsBehaviour', $obj['id']), array('class' => 'divider'));
-		    ?>
+		<?php 
+		$obj = $data['Student'];
+		if($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
+			echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
+		}
+		if($_accessControl->check($this->params['controller'], 'studentsAttendance')) {
+			echo $this->Html->link(__('Attendance'), array('action' => 'studentsAttendance'), array('class' => 'divider'));
+		}
+		if($_accessControl->check($this->params['controller'], 'studentsBehaviour')) {
+			echo $this->Html->link(__('Behaviour'), array('action' => 'studentsBehaviour', $obj['id']), array('class' => 'divider'));
+		}
+		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	

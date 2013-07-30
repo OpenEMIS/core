@@ -1,5 +1,6 @@
 .year { margin-bottom: 10px; }
 .year .label { width: 60px; line-height: 25px; }
+.labelattendance{ width:100px; float:left; line-height: 25px; }
 
 /* Students search */
 .cell_id_no { width: 110px; }
@@ -29,6 +30,7 @@
 .cell_datepicker { width: 195px; }
 .chrome .cell_datepicker { width: 202px; }
 .safari .cell_datepicker { width: 203px; }
+.cell_totals { text-align:right; width:100px; }
 .cell_behaviour_date { width: 70px; text-align:left; }
 .cell_behaviour_title { width: 300px; text-align:left; }
 .cell_behaviour_category { width: 100px; text-align:left; }

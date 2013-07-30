@@ -13,7 +13,12 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'staffEdit', $obj['id']), array('class' => 'divider'));
 		}
-		echo $this->Html->link(__('Academic'), array('action' => 'staffCustFieldYrView', $obj['id']), array('class' => 'divider'));
+		if($_accessControl->check($this->params['controller'], 'staffCustFieldYrView')) {
+			echo $this->Html->link(__('Academic'), array('action' => 'staffCustFieldYrView', $obj['id']), array('class' => 'divider'));
+		}
+		if($_accessControl->check($this->params['controller'], 'staffAttendance')) {
+			echo $this->Html->link(__('Attendance'), array('action' => 'staffAttendance'), array('class' => 'divider'));
+		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
