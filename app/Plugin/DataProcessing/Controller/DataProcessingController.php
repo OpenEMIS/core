@@ -263,7 +263,7 @@ class DataProcessingController extends DataProcessingAppController {
         }else{
             $cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
         }
-//        exit($cmd);
+//       exit($cmd);
 
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             //$WshShell = new COM("WScript.Shell");
@@ -286,9 +286,11 @@ class DataProcessingController extends DataProcessingAppController {
 //			$shellCmd = sprintf($nohup, $cmd, APP);
             $this->log($shellCmd, 'debug');
 //            echo $shellCmd;die();
-//			echo $PID = shell_exec($shellCmd);
-            $PID = exec($shellCmd);
-            echo $PID;
+			echo $PID = shell_exec($shellCmd);
+            //$PID = exec($shellCmd);
+			//$PID = exec('/Library/WebServer/Documents/openemis/app/Console/cake.php -app batch run eng');
+            //echo $PID; 
+			//die("<===");
         }
         //*NUX
         //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");

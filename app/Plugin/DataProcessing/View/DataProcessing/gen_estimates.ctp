@@ -94,7 +94,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 													}
                                                 }
                                                 $beingProc = ($isBackupRunning) ? 1: $beingProc;
-                                                $arrExtra = array('hiddenField' => false,'type'=>'checkbox','name'=>'data[Reports][]','value'=>$chkval);
+                                                $arrExtra = array('hiddenField' => false,'type'=>'checkbox','name'=>'data[Reports][]','value'=>$chkval, 'disabled' => (($chkval == '2000' || $chkval == '2001')?'':'disabled'));
                                                 $arrExtra = ($beingProc == 1)?  array_merge($arrExtra,array('disabled'=>'disabled')):$arrExtra;
 					?>
 					
