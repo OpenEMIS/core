@@ -214,7 +214,7 @@ class StaffController extends StaffAppController {
 		$url = Router::url('/Staff/img/default_staff_profile.jpg', true);
         $mime_types = ImageMeta::mimeTypes();
 
-        $imageRawData = $this->Student->findById($id);
+        $imageRawData = $this->Staff->findById($id);
 		$imageFilename = $imageRawData['Staff']['photo_name'];
 		$fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
 	

@@ -220,7 +220,7 @@ class TeachersController extends TeachersAppController {
 		$url = Router::url('/Teachers/img/default_teacher_profile.jpg', true);
         $mime_types = ImageMeta::mimeTypes();
 
-        $imageRawData = $this->Teachers->findById($id);
+        $imageRawData = $this->Teacher->findById($id);
 		$imageFilename = $imageRawData['Teachers']['photo_name'];
 		$fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
 	
