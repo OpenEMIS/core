@@ -32,10 +32,6 @@ var Security = {
 		return false;
 	},
 	
-	switchRole: function(obj) {
-		window.location.href = getRootURL() + $(obj).attr('href') + '/' + $(obj).val();
-	},
-	
 	usersSearch: function(obj) {
 		var searchString = '';
 		var dataType = 'json';
@@ -55,12 +51,16 @@ var Security = {
 		
 		if(!searchString.isEmpty()) {
 			$(obj).closest('.table_row').find('#UserId').val(0);
+			var params = {searchString: searchString};
+			if($('#module').length==1) {
+				params['module'] = $('#module').val();
+			}
 			var maskId;
 			$.ajax({
 				type: 'GET',
 				dataType: dataType,
 				url: getRootURL() + $(obj).attr('url'),
-				data: {searchString: searchString},
+				data: params,
 				beforeSend: function (jqXHR) {
 					maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching});
 				},
@@ -75,9 +75,16 @@ var Security = {
 								$(obj).closest('.table_row').find('#UserId').val(data.id);
 							}
 						} else {
-							var parent = '#search_user';
-							$(parent).find('.table_body').empty();
-							jsTable.tableScrollableAdd(parent, data);
+							if(!$(data).hasClass('alert')) {
+								var parent = '#search';
+								$(parent).find('.table_body').empty();
+								jsTable.tableScrollableAdd(parent, data);
+							} else {
+								alertOpt['parent'] = '#search';
+								alertOpt['type'] = $(data).attr('type');
+								alertOpt['text'] = $(data).html();
+								$.alert(alertOpt);
+							}
 						}
 					};
 					$.unmask({id: maskId, callback: callback});
@@ -101,6 +108,49 @@ var Security = {
 		$('.list_wrapper .table_row').css('display', 'table-row');
 		jsTable.toggleTableScrollable('.section_break');
 		jsTable.fixTable();
+	},
+	
+	addAccessUser: function(obj) {
+		var table = $(obj).closest('.table');
+		var tableId = $(obj).attr('user-id');
+		var tableName = $('#module').val();
+		
+		var maskId;
+		var ajaxParams = {table_id: tableId, table_name: tableName};
+		var ajaxSuccess = function(data, textStatus) {
+			var callback = function() {
+				window.location.reload();
+			};
+			$.unmask({id: maskId, callback: callback});
+		};
+		$.ajax({
+			type: 'POST',
+			dataType: 'text',
+			url: getRootURL() + table.attr('url'),
+			data: ajaxParams,
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAdding}); },
+			success: ajaxSuccess
+		});
+	},
+	
+	removeAccessUser: function(obj) {
+		var maskId;
+		var ajaxSuccess = function(data, textStatus) {
+			var callback = function() {
+				var row = $(obj).closest('.table_row');
+				row.remove();
+				jsTable.fixTable();
+			};
+			$.unmask({id: maskId, callback: callback});
+		};
+		$.ajax({
+			type: 'POST',
+			dataType: 'text',
+			url: getRootURL() + $(obj).attr('url'),
+			data: {},
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textRemoving}); },
+			success: ajaxSuccess
+		});
 	},
 	
 	addGroupAdmin: function(obj) {

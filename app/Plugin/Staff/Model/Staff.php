@@ -18,6 +18,7 @@ class Staff extends StaffAppModel {
 	public $useTable = 'staff';
 
 	public $actsAs = array(
+		'UserAccess',
 		'TrackHistory' => array('historyTable' => 'Staff.StaffHistory'),
 		'CascadeDelete' => array(
 			'cascade' => array(
@@ -192,7 +193,7 @@ class Staff extends StaffAppModel {
 		return $joins;
 	}
 	
-	public function paginateConditions($conditions, $noSites=true) {
+	public function paginateConditions($conditions, $noSites=true, $access=array()) {
 		$paginateConditions = array();
 		if(strlen($conditions['SearchKey']) != 0) {
 			$search = "%".$conditions['SearchKey']."%";
@@ -204,6 +205,9 @@ class Staff extends StaffAppModel {
 				'StaffHistory.first_name LIKE' => $search,
 				'StaffHistory.last_name LIKE' => $search
 			);
+		}
+		if(!empty($access)) {
+			$paginateConditions['AND']['Staff.id'] = $access;
 		}
 		if($noSites) {
 			$paginateConditions['AND'] = array(
@@ -266,6 +270,29 @@ class Staff extends StaffAppModel {
 			'order' => null
 		), $this);
 		
+		// Security User Access
+		$access = $this->getUserAccess($userId);
+		$dataWithAccess = null;
+		if(!empty($access)) {
+			$dataWithAccess = $dbo->buildStatement(array(
+				'fields' => $fields,
+				'table' => $dbo->fullTableName($this),
+				'alias' => 'Staff',
+				'limit' => null, 
+				'offset' => null,
+				'joins' => $this->paginateJoins($search, null, $userId, false),
+				'conditions' => $this->paginateConditions($conditions, false, $access),
+				'group' => null,
+				'order' => null
+			), $this);
+		}
+		// End
+		
+		$unions = array($dataNoSites, $dataWithSites);
+		if(!is_null($dataWithAccess)) {
+			$unions[] = $dataWithAccess;
+		}
+		
 		if($count==false) {
 			$fields = array(
 				'Staff.id', 'Staff.identification_no',
@@ -284,7 +311,7 @@ class Staff extends StaffAppModel {
 		
 		$options = array(
 			'fields' => $fields,
-			'table' => sprintf('(%s UNION %s)', $dataNoSites, $dataWithSites),
+			'table' => '(' . implode(' UNION ', $unions) . ')',
 			'alias' => 'Staff',
 			'limit' => null,
 			'conditions' => array(),
