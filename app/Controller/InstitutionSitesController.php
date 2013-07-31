@@ -2118,7 +2118,12 @@ class InstitutionSitesController extends AppController {
 			if($schoolDayNo<$totalNo){
 				$this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendanceEdit', $yearId));
-			}else{	
+			}else{
+                $thisId = $this->StudentAttendance->findID($this->Session->read('InstitutionSiteStudentId'),$yearId);
+                if($thisId!='')
+                {
+                    $data['id'] = $thisId;
+                }
 				$this->StudentAttendance->save($data);
 				$this->Utility->alert($this->Utility->getMessage('SITE_STUDENT_ATTENDANCE_UPDATED'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendance', $yearId));
@@ -2142,11 +2147,16 @@ class InstitutionSitesController extends AppController {
 			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 			
 			$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'),isset($id)? $id:$yearId);							
-			
+
 			$this->set('selectedYear', $yearId);
 			$this->set('years', $yearList);
 			$this->set('data', $data);
 			$this->set('schoolDays', $schoolDays);
+
+            $id = @$this->request->params['pass'][0];
+            $yearList = $this->SchoolYear->getYearList();
+            $yearId = $this->getAvailableYearId($yearList);
+            $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 		}
     }
 
@@ -2183,7 +2193,12 @@ class InstitutionSitesController extends AppController {
 			if($schoolDayNo<$totalNo){
 				$this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'teachersAttendanceEdit', $yearId));
-			}else{	
+			}else{
+                $thisId = $this->TeacherAttendance->findID($this->Session->read('InstitutionSiteTeachersId'),$yearId);
+                if($thisId!='')
+                {
+                    $data['id'] = $thisId;
+                }
 				$this->TeacherAttendance->save($data);
 				$this->Utility->alert($this->Utility->getMessage('SITE_TEACHER_ATTENDANCE_UPDATED'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'teachersAttendance', $yearId));
@@ -2248,7 +2263,12 @@ class InstitutionSitesController extends AppController {
 			if($schoolDayNo<$totalNo){
 				$this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'staffAttendanceEdit', $yearId));
-			}else{	
+			}else{
+                $thisId = $this->StaffAttendance->findID($this->Session->read('InstitutionSiteStaffId'),$yearId);
+                if($thisId!='')
+                {
+                    $data['id'] = $thisId;
+                }
 				$this->StaffAttendance->save($data);
 				$this->Utility->alert($this->Utility->getMessage('SITE_STAFF_ATTENDANCE_UPDATED'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'staffAttendance', $yearId));
