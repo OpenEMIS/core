@@ -1,6 +1,7 @@
 .category { margin-bottom: 20px; }
 
 .edit .table { margin-bottom: 0; }
+.table .cell_code { width: 100px; }
 .table .cell_admission_age { width: 100px; }
 .table .cell_cycle_short { width: 100px; }
 .table .cell_duration { width: 70px; }
@@ -14,7 +15,8 @@
 .setup_cycle .table_view .cell_name { width: 374px; margin-left: -1px; }
 .setup_field .table_view .cell_name { width: 258px; margin-left: -1px; }
 .setup_subject .table_view .cell_name { width: 365px; margin-left: -1px; }
-.setup_grade .table_view .cell_name { width: 419px; margin-left: -1px; }
+.setup_grade .table_view .cell_name { width: 252px; margin-left: -1px; }
+.safari .setup_grade .table_view .cell_name { width: 251px; margin-left: -1px; }
 
 .table_view .cell > span { line-height: 25px; }
 .table_view .cell_isced { width: 244px; margin-left: -1px; }
@@ -24,12 +26,13 @@
 	width:101px;
 }
 .table_view .cell_duration { width: 70px; margin-left: -1px; }
-.table_view .cell_programme { width: 327px; margin-left: -1px; line-height: 25px; }
+.table_view .cell_code { width: 100px; margin-left: -1px; }
+.table_view .cell_programme { width: 210px; margin-left: -1px; line-height: 25px; }
 .chrome .table_view .cell_programme, .safari .table_view .cell_programme{
-	width:323px;
+	width:206px;
 }
 .opera .table_view .cell_programme{
-	width:326px;
+	width:209px;
 }
 .table_view .cell_subject_link { width: 70px; margin-left: -1px; text-align: center; line-height: 25px; }
 .table_view .cell_grade_link { width: 60px; margin-left: -1px; text-align: center; line-height: 25px; }
