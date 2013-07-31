@@ -74,7 +74,8 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 						'value' => empty($data[0]['StudentAttendance']['total_no_attend']) ? 0 : $data[0]['StudentAttendance']['total_no_attend'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)',
-						'onkeyup' => 'jsTable.computeSubtotal(this)'
+						'onkeyup' => 'jsTable.computeSubtotal(this)',
+						'style' => 'text-align:right'
 					));
 					?>
 					</div>
@@ -88,7 +89,8 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 						'value' => empty($data[0]['StudentAttendance']['total_no_absence']) ? 0 : $data[0]['StudentAttendance']['total_no_absence'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)',
-						'onkeyup' => 'jsTable.computeSubtotal(this)'
+						'onkeyup' => 'jsTable.computeSubtotal(this)',
+						'style' => 'text-align:right'
 					));
 					?>
 					</div>
