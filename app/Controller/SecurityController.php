@@ -218,10 +218,14 @@ class SecurityController extends AppController {
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
 			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
-			$allowEdit = $this->Auth->user('super_admin')==1 || $this->Auth->user('super_admin')==$data['super_admin'];
 			
-			// retrieve user access
-			
+			$allowEdit = false;
+			if($this->Auth->user('super_admin')==1) {
+				// if the user himself is a super admin, then allow edit
+				$allowEdit = true;
+			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
+				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+			}
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
 			$this->Navigation->addCrumb($data['first_name'] . ' ' . $data['last_name']);
@@ -239,9 +243,14 @@ class SecurityController extends AppController {
 			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
 			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
 			$name = $data['first_name'] . ' ' . $data['last_name'];
-			$allowEdit = $this->Auth->user('super_admin')==1 || $this->Auth->user('super_admin')==$data['super_admin'];
+			$allowEdit = false;
+			if($this->Auth->user('super_admin')==1) {
+				$allowEdit = true;
+			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
+				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+			}
 			
-			if(!$allowEdit) { // need to modify to only allow users within the same group to edit
+			if(!$allowEdit) {
 				$this->redirect(array('action' => 'users'));
 			} else {
 				if($this->request->is('post') || $this->request->is('put')) {
