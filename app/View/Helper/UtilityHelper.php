@@ -79,11 +79,19 @@ class UtilityHelper extends AppHelper {
 	}
 
 	public function showArea($form,$id,$value,$settings=array()){
+
+        $arrmap = array('Area','AreaLevel');
+        $arealevelfk = 'area_level';
+        if($id=='area_education_id'){
+            $arrmap = array('AreaEducation','AreaEducationLevel');
+            $arealevelfk = 'area_education_level';
+        }
+
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
-		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
-		$this->fieldLevels = $this->AreaHandler->getAreaList();
-		
+		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
+		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
+
 		$ctr = 0;
 		foreach($this->fieldLevels as $levelid => $levelName){
 			$areaVal = array('id'=>'0','name'=>'a');
@@ -95,34 +103,11 @@ class UtilityHelper extends AppHelper {
 			}
 			echo '<div class="row">
 						<div class="label">'.$levelName.'</div>
-						<div class="value" value="'.$areaVal['id'].'" name="area_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
+						<div class="value" value="'.$areaVal['id'].'" name="'.$arealevelfk.'_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
 					</div>';
 			$ctr++;
 		}
 	}
-
-    public function showAreaEducation($form,$id,$value,$settings=array()){
-        $this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-        if (!is_numeric($value) || !isset($value) ) {$value=0;}
-        $this->fieldAreaEducationLevels = array_reverse($this->AreaHandler->getAreaEducationtoParent($value));
-        $this->fieldLevels = $this->AreaHandler->getAreaEducationList();
-
-        $ctr = 0;
-        foreach($this->fieldLevels as $levelid => $levelName){
-            $areaVal = array('id'=>'0','name'=>'a');
-            foreach($this->fieldAreaEducationLevels as $arealevelid => $arrval){
-                if($arrval['level_id'] == $levelid) {
-                    $areaVal = $arrval;
-                    continue;
-                }
-            }
-            echo '<div class="row">
-						<div class="label">'.$levelName.'</div>
-						<div class="value" value="'.$areaVal['id'].'" name="area_education_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
-					</div>';
-            $ctr++;
-        }
-    }
 
     public function showAreaHistory($form,$id,$settings=array(),$orgValue,$arrRec){
         $this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
@@ -180,22 +165,29 @@ class UtilityHelper extends AppHelper {
     }
 	
 	public function getAreaPicker($form,$id,$value,$settings=array()){
+        $arrmap = array('Area','AreaLevel');
+        $arealevelfk = 'area_level';
+        if($id=='area_education_id'){
+            $arrmap = array('AreaEducation','AreaEducationLevel');
+            $arealevelfk = 'area_education_level';
+        }
+
 		//settings unused
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
-		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
-		$this->fieldLevels = $this->AreaHandler->getAreaList();
-		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,array('empty_arealevel_placeholder'=>'--'.__('Select').'--'));
-
+		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
+		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
+		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
+    pr('here');
 		$ctr = 0;
 
 		foreach($this->fieldLevels as $levelid => $levelName){
 			echo '<div class="row">
 					<div class="label">'."$levelName".'</div>
-					<div class="value">'. $form->input('area_level_'.$ctr,
+					<div class="value">'. $form->input($arealevelfk.'_'.$ctr,
 														array('class'=>'areapicker default',
 														'style'=>'float:left','default'=>@$this->fieldAreaLevels[$ctr]['id'],
-														'options'=>$this->fieldAreadropdowns['area_level_'.$ctr]['options']));
+														'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
 			if ($ctr==0){
 				echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
 			}
@@ -204,32 +196,6 @@ class UtilityHelper extends AppHelper {
 			$ctr++;
 		}
 	}
-
-    public function getAreaEducationPicker($form,$id,$value,$settings=array()){
-        //settings unused
-        $this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-        if (!is_numeric($value) || !isset($value) ) {$value=0;}
-        $this->fieldAreaEducationLevels = array_reverse($this->AreaHandler->getAreaEducationtoParent($value));
-        $this->fieldLevels = $this->AreaHandler->getAreaEducationList();
-        $this->fieldAreaEducationdropdowns = $this->AreaHandler->getAllSiteAreaEducationToParent($value,array('empty_areaeducationlevel_placeholder'=>'--'.__('Select').'--'));
-
-        $ctr = 0;
-
-        foreach($this->fieldLevels as $levelid => $levelName){
-            echo '<div class="row">
-					<div class="label">'."$levelName".'</div>
-					<div class="value">'. $form->input('area_education_level_'.$ctr,
-                    array('class'=>'areapicker default',
-                        'style'=>'float:left','default'=>@$this->fieldAreaEducationLevels[$ctr]['id'],
-                        'options'=>$this->fieldAreaEducationdropdowns['area_education_level_'.$ctr]['options']));
-            if ($ctr==0){
-                echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
-            }
-            echo		'</div>
-				</div>';
-            $ctr++;
-        }
-    }
 
 	public function getDatePicker($form, $id, $settings=array()) {
 		$_settings = array(
