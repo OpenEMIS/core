@@ -214,6 +214,7 @@ class SecurityController extends AppController {
 		
 		if(isset($this->params['pass'][0])) {
 			$userId = $this->params['pass'][0];
+			$this->Session->write('SecurityUserId', $userId);
 			$this->SecurityUser->formatResult = true;
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
@@ -264,10 +265,8 @@ class SecurityController extends AppController {
 						$data = array_merge($data, $postData);
 					}
 				}
-				$moduleOptions = array('Student' => __('Student'), 'Teacher' => __('Teacher'), 'Staff' => __('Staff'));
 				$this->set('data', $data);
 				$this->set('statusOptions', $this->SecurityUser->getStatus());
-				$this->set('moduleOptions', $moduleOptions);
 				$this->Navigation->addCrumb($name);
 			}
 		} else {
@@ -334,17 +333,30 @@ class SecurityController extends AppController {
 		$this->set('type', $searchType);
 	}
 	
-	public function usersAddAccess() {
-		if($this->request->is('ajax')) {
-			$this->autoRender = false;
-			$userId = $this->params['pass'][0];
-			$data = $this->data;
-			$data['security_user_id'] = $userId;
-			if(!$this->SecurityUserAccess->isAccessExists($data)) {
-				$this->SecurityUserAccess->save($data);
-			} else {
-				$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_EXISTS'), array('type' => 'error'));
+	public function usersAccess() {
+		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
+		if($this->Session->check('SecurityUserId')) {
+			if($this->request->is('post') || $this->request->is('put')) {
+				$postData = $this->data['SecurityUserAccess'];
+				unset($postData['SearchField']);
+				if(!$this->SecurityUserAccess->isAccessExists($postData)) {
+					$this->SecurityUserAccess->save($postData);
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_LINKED'));
+				} else {
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_EXISTS'), array('type' => 'error'));
+				}
 			}
+			$userId = $this->Session->read('SecurityUserId');
+			$this->SecurityUser->formatResult = true;
+			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
+			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
+			$name = $data['first_name'] . ' ' . $data['last_name'];
+			$moduleOptions = array('Student' => __('Student'), 'Teacher' => __('Teacher'), 'Staff' => __('Staff'));
+			$this->set('data', $data);
+			$this->set('moduleOptions', $moduleOptions);
+			$this->Navigation->addCrumb($name);
+		} else {
+			$this->redirect(array('action' => 'users'));
 		}
 	}
 	

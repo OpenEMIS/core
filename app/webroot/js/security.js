@@ -113,24 +113,8 @@ var Security = {
 	addAccessUser: function(obj) {
 		var table = $(obj).closest('.table');
 		var tableId = $(obj).attr('user-id');
-		var tableName = $('#module').val();
-		
-		var maskId;
-		var ajaxParams = {table_id: tableId, table_name: tableName};
-		var ajaxSuccess = function(data, textStatus) {
-			var callback = function() {
-				window.location.reload();
-			};
-			$.unmask({id: maskId, callback: callback});
-		};
-		$.ajax({
-			type: 'POST',
-			dataType: 'text',
-			url: getRootURL() + table.attr('url'),
-			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAdding}); },
-			success: ajaxSuccess
-		});
+		$('#TableId').val(tableId);
+		$('form').submit();
 	},
 	
 	removeAccessUser: function(obj) {

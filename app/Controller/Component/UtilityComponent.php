@@ -86,6 +86,7 @@ class UtilityComponent extends Component {
 		$msgList['SECURITY_GRP_NAME_EXISTS'] = "The name is already in use.";
 		$msgList['SECURITY_GRP_USER_ADD'] = "The user has been added to the role.";
 		$msgList['SECURITY_ACCESS_EXISTS'] = "This account is already linked to that user.";
+		$msgList['SECURITY_ACCESS_LINKED'] = "This account has been linked to the selected user.";
 		
 		// Institution Sites
 		$msgList['NO_SITES'] = "No Institution Sites";
