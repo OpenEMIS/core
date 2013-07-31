@@ -53,6 +53,7 @@ echo $this->Html->script('education', false);
 			<div class="table">
 				<div class="table_head">
 					<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
+					<div class="table_cell cell_code"><?php echo __('Code'); ?></div>
 					<div class="table_cell"><?php echo __($pageTitle); ?></div>
 					<div class="table_cell cell_duration"><?php echo __('Duration'); ?></div>
 					<div class="table_cell cell_grade_link"><?php echo __('Grades'); ?></div>
@@ -62,6 +63,7 @@ echo $this->Html->script('education', false);
 					<?php foreach($cycleObj['programmes'] as $key => $obj) { ?>
 					<div class="table_row<?php echo $obj['visible']!=1 ? ' inactive' : ''; ?>">
 						<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']); ?></div>
+						<div class="table_cell"><?php echo $obj['code']; ?></div>
 						<div class="table_cell"><?php echo $obj['name']; ?></div>
 						<div class="table_cell center"><?php echo $obj['duration'] . ' years'; ?></div>
 						<div class="table_cell center">
