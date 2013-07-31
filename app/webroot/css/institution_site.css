@@ -40,6 +40,7 @@
 .cell_grade { width: 200px; }
 .cell_phone { width: 110px; }
 .cell_year { width: 70px; vertical-align: top !important; text-align: center; }
+.cell_subtotal{ padding-top: 8px; }
 #classes.add .table_cell select { width: 100%; }
 #classes .section_break .row { margin-left: 0; }
 
