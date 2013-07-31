@@ -22,4 +22,15 @@ class StaffAttendance extends StaffAppModel {
 										'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.school_year_id' => $yearId)));
 		return $list;
 	}
+
+    public function findID($id,$yearId) {
+        $list = $this->find('all',array(
+            'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.school_year_id' => $yearId)));
+        $myid='';
+        if(count($list)>0){
+            $myid = $list[0]['StaffAttendance']['id'];
+        }
+        return $myid;
+    }
+
 }

@@ -51,18 +51,18 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 		
         <?php
 			$total = 0;
-			if(!empty($data[0]['TeachersAttendance']['total_no_attend'])){
-				$total += $data[0]['TeachersAttendance']['total_no_attend'];
+			if(!empty($data[0]['TeacherAttendance']['total_no_attend'])){
+				$total += $data[0]['TeacherAttendance']['total_no_attend'];
 			}
-			if(!empty($data[0]['TeachersAttendance']['total_no_attend'])){
-				$total += $data[0]['TeachersAttendance']['total_no_absence'];
+			if(!empty($data[0]['TeacherAttendance']['total_no_attend'])){
+				$total += $data[0]['TeacherAttendance']['total_no_absence'];
 			}
 		?>
 		
 		<div class="table_body">
 			<div class="table_row">
 				<?php
-				echo $this->Form->hidden('id', array('value' => empty($data[0]['TeachersAttendance']['id']) ? 0 : $data[0]['TeachersAttendance']['id']));
+				echo $this->Form->hidden('id', array('value' => empty($data[0]['TeacherAttendance']['id']) ? 0 : $data[0]['TeacherAttendance']['id']));
 				echo $this->Form->hidden('teacher_id', array('value' => $teacherid));
 				echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
 				?><div class="table_cell cell_totals">
@@ -71,10 +71,11 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 					echo $this->Form->input('total_no_attend', array(
 						'type' => 'text',
 						'computeType' => 'computeTotal',
-						'value' => empty($data[0]['TeachersAttendance']['total_no_attend']) ? 0 : $data[0]['TeachersAttendance']['total_no_attend'],
+						'value' => empty($data[0]['TeacherAttendance']['total_no_attend']) ? 0 : $data[0]['TeacherAttendance']['total_no_attend'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)',
-						'onkeyup' => 'jsTable.computeSubtotal(this)'
+						'onkeyup' => 'jsTable.computeSubtotal(this)',
+						'style' => 'text-align:right'
 					));
 					?>
 					</div>
@@ -85,10 +86,11 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 					echo $this->Form->input('total_no_absence', array(
 						'type' => 'text',
 						'computeType' => 'computeTotal',
-						'value' => empty($data[0]['TeachersAttendance']['total_no_absence']) ? 0 : $data[0]['TeachersAttendance']['total_no_absence'],
+						'value' => empty($data[0]['TeacherAttendance']['total_no_absence']) ? 0 : $data[0]['TeacherAttendance']['total_no_absence'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)',
-						'onkeyup' => 'jsTable.computeSubtotal(this)'
+						'onkeyup' => 'jsTable.computeSubtotal(this)',
+						'style' => 'text-align:right'
 					));
 					?>
 					</div>
@@ -100,7 +102,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'teachersAttendance', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'teacherAttendance', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
