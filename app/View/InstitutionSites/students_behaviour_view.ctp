@@ -36,7 +36,12 @@ echo $this->Html->script('search', false);
 		?>
 		</div>
 	</div>
-	
+
+	<div class="row edit">
+        <div class="labelbehaviour"><?php echo __('Date'); ?></div>
+        <div class="value"><?php echo $this->Utility->formatDate($data['date_of_behaviour']); ?></div>
+    </div>
+
 	<div class="row edit">
 		<div class="labelbehaviour"><?php echo __('Title'); ?></div>
 		<div class="value"><?php echo $data['title']; ?></div>
@@ -50,10 +55,5 @@ echo $this->Html->script('search', false);
     <div class="row edit">
 		<div class="labelbehaviour"><?php echo __('Action'); ?></div>
 		<div class="value"><?php echo $data['action']; ?></div>
-	</div>
-    
-    <div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Date'); ?></div>
-		<div class="value"><?php echo $this->Utility->formatDate($data['date_of_behaviour']); ?></div>
 	</div>
 </div>

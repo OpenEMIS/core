@@ -38,6 +38,12 @@ echo $this->Html->script('app.date', false);
 		?>
 		</div>
 	</div>
+
+	<div class="row edit">
+        <div class="labelbehaviour"><?php echo __('Date'); ?></div>
+        <div class="value">
+        <?php echo $this->Utility->getDatePicker($this->Form, 'date_of_behaviour',array('desc' => true,	'value' =>$data['date_of_behaviour'])); ?></div>
+    </div>
 	
 	<div class="row edit">
 		<div class="labelbehaviour"><?php echo __('Title'); ?></div>
@@ -60,12 +66,6 @@ echo $this->Html->script('app.date', false);
 		<?php echo $this->Form->input('action', array('class' => 'default', 'type' => 'textarea', 'onkeyup' => 'utility.charLimit(this)',
 		'default'=>$data['action'])); ?>
 		</div>
-	</div>
-    
-    <div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Date'); ?></div>
-		<div class="value">
-		<?php echo $this->Utility->getDatePicker($this->Form, 'date_of_behaviour',array('desc' => true,	'value' =>$data['date_of_behaviour'])); ?></div>
 	</div>
     
     <div class="controls">
