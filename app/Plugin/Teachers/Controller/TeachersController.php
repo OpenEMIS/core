@@ -221,21 +221,21 @@ class TeachersController extends TeachersAppController {
         $mime_types = ImageMeta::mimeTypes();
 
         $imageRawData = $this->Teacher->findById($id);
-		$imageFilename = $imageRawData['Teachers']['photo_name'];
+		$imageFilename = $imageRawData['Teacher']['photo_name'];
 		$fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
 	
 		
-		if(empty($imageRawData['Teachers']['photo_content']) || empty($imageRawData['Teachers']['photo_name']) || !in_array($mime_types[$fileExt], $mime_types)){
-			if($this->Session->check('Teachers.defaultImg'))
+		if(empty($imageRawData['Teacher']['photo_content']) || empty($imageRawData['Teacher']['photo_name']) || !in_array($mime_types[$fileExt], $mime_types)){
+			if($this->Session->check('Teacher.defaultImg'))
     		{
-				$imageContent = $this->Session->read('Teachers.defaultImg');
+				$imageContent = $this->Session->read('Teacher.defaultImg');
 			}else{
 				$imageContent = file_get_contents($url);
-				$this->Session->write('Teachers.defaultImg', $imageContent);
+				$this->Session->write('Teacher.defaultImg', $imageContent);
 			}
 			echo $imageContent;
 		}else{
-			$imageContent = $imageRawData['Teachers']['photo_content'];
+			$imageContent = $imageRawData['Teacher']['photo_content'];
 			header("Content-type: " . $mime_types[$fileExt]);
 			echo $imageContent;
 		}
