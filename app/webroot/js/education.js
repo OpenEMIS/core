@@ -19,21 +19,6 @@ $(document).ready(function() {
 
 var education = {
 	init: function() {
-		$('.radio_wrapper input').each(function() {
-			$(this).click(function() {
-				var id = $(this).attr('id');
-				var maskId = $.mask({parent: '.content_wrapper', position: true, top: '100px'});
-				
-				setTimeout(function() {
-					var callback = function() {
-						$('.programme_group.current').removeClass('current');
-						$('.programme_group[level="' + id + '"]').addClass('current');
-					};
-					$.unmask({id: maskId, callback: callback});
-				}, 300);
-			});
-		});
-		
 		$('.programme_grades .wrapper').each(function() {
 			$(this).click(function() { education.switchGrade(this); });
 		});
@@ -47,8 +32,17 @@ var education = {
 		window.location.href = getRootURL() + 'Education/' + (!isEdit ? 'setup/' : 'setupEdit/') + $(obj).val();
 	},
 	
-	switchSystem: function() {
-		window.location.href = $('#education form').attr('action') + '/index/' + $('#EducationSystemId').val();
+	switchLevel: function(obj) {
+		var id = $(obj).find('> option:selected').html();
+		var maskId = $.mask({parent: '.content_wrapper', position: true, top: '100px'});
+		
+		setTimeout(function() {
+			var callback = function() {
+				$('.programme_group.current').removeClass('current');
+				$('.programme_group[level="' + id + '"]').addClass('current');
+			};
+			$.unmask({id: maskId, callback: callback});
+		}, 300);
 	},
 	
 	switchGrade: function(obj) {
@@ -144,14 +138,17 @@ var education = {
 					title: i18n.General.textDismiss,
 					type: alertType.error
 				}
-				if($('#EducationProgrammeName').val().isEmpty()) {
-					alertOpt['text'] = i18n.Education.emptyProgrammeName,
-					$.alert(alertOpt);
+				if($('#EducationProgrammeCode').val().isEmpty()) {
+					alertOpt['text'] = i18n.Education.emptyProgrammeCode;
+				} else if($('#EducationProgrammeName').val().isEmpty()) {
+					alertOpt['text'] = i18n.Education.emptyProgrammeName;
 				} else if($('#EducationProgrammeDuration').val().isEmpty()) {
-					alertOpt['text'] = i18n.Education.emptyDuration,
-					$.alert(alertOpt);
+					alertOpt['text'] = i18n.Education.emptyDuration;
 				} else {
 					$('#' + dlgId + ' form').submit();
+				}
+				if(!alertOpt['text'].isEmpty()) {
+					$.alert(alertOpt);
 				}
 			}
 		};
