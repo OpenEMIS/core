@@ -1,22 +1,17 @@
-#users.details .section_break { padding-top: 10px; margin-top: 0 !important; }
-.role_select { margin: 0 0 20px 5px; }
-.role_select .label { width: 50px; }
-.role_select select { width: 150px; }
-.module_checkbox { margin: 0 8px 0 0; }
-.cell_function { width: 300px; }
-.cell_users { width: 60px; text-align: center; }
-.cell_status { width: 60px; text-align: center; }
-.cell_permissions { width: 90px; text-align: center; }
-.cell_area, .cell_institution { width: 250px; }
-.table_view .cell_name { width: 506px; margin-left: -1px; }
-.table_view .cell_name span { line-height: 25px; }
-.cell_module { width: 120px; }
-
-#group_admin .search_wrapper { margin-top: 2px; }
-#groups.edit .cell_name { width: 491px; }
-
-.cell_id_no { width: 110px; }
-
-.group_user_list.scroll_active .table_header { width: 633px !important; }
-#users #search .scroll_active .table_header { width: 623px !important; }
-.safari #users #search .scroll_active .table_header { width: 627px !important; }
+#users.details .section_break { padding-top: 10px; margin-top: 0 !important }
+.role_select { margin: 0 0 20px 5px }
+.role_select .label { width: 50px }
+.role_select select { width: 150px }
+.module_checkbox { margin: 0 8px 0 0 }
+.cell_function { width: 300px }
+.cell_users, .cell_status { width: 60px; text-align: center }
+.cell_permissions { width: 90px; text-align: center }
+.cell_area, .cell_institution { width: 250px }
+.table_view .cell_name { width: 506px; margin-left: -1px }
+.table_view .cell_name span { line-height: 25px }
+.cell_module { width: 120px }
+.cell_id_no { width: 110px }
+#group_admin .search_wrapper { margin-top: 2px }
+#groups.edit .cell_name { width: 491px }
+.group_user_list.scroll_active .table_header { width: 633px !important }
+.module { width: 269px }
