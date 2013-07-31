@@ -24,7 +24,6 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 	</h1>
 	<?php echo $this->element('alert'); ?>
 
-	<?php if($this->Session->check('Search.SearchFieldStaff') || $total > $limit) { ?>
     <div class="row">
         <?php  echo $this->Form->create('Staff', array('action' => 'search','id'=>false));  ?>
         <div class="search_wrapper">
@@ -47,7 +46,6 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
         ?>
         <?php echo $this->Form->end(); ?>
     </div>
-	<?php } ?>
 
     <div id="mainlist">
         <div class="row">
