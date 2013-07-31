@@ -249,16 +249,17 @@ var jsForm = {
 		});
 	},
 	
-	getAreaChildren :function (currentobj){      
+	getAreaChildren :function (currentobj){
         var selected = $(currentobj).val();
 
-        var edutype = $(currentobj).closest('fieldset').find('legend').text().match(/Education/);;
+        var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
+
         atype=(edutype?'admin':'Area');
         var maskId;
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: getRootURL()+'/InstitutionSites/viewAreaChildren/'+selected+'/'+atype,
+            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+atype,
             beforeSend: function (jqXHR) {
                     maskId = $.mask({text:i18n.General.textLoadAreas});
             },

@@ -53,12 +53,12 @@ echo $this->Html->script('institution_site', false);
 	</fieldset>
 	
 	<fieldset class="section_break">
-		<legend><?php echo __('Area'); ?></legend>   
+		<legend><?php echo __('Area'); ?></legend>
 		<?php echo @$this->Utility->showArea($this->Form, 'area_id',$obj['area_id'], array()); ?>
 	</fieldset>
 	<fieldset class="section_break">
-		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>   
-		<?php echo @$this->Utility->showAreaEducation($this->Form, 'area_id',$obj['area_education_id'], array()); ?>
+		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
+		<?php echo @$this->Utility->showArea($this->Form, 'area_education_id',$obj['area_education_id'], array()); ?>
 	</fieldset>
 	
 	<fieldset class="section_break">

@@ -83,8 +83,8 @@ echo $this->Html->script('config', false);
         <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$obj['area_id'], array()); ?>
 	</fieldset>
 	<fieldset class="section_break">
-		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
-		<?php echo @$this->Utility->getAreaEducationPicker($this->Form, 'area_education_id',$obj['area_education_id'], array()); ?>
+		<legend id="Education"><?php echo __('Area').' ('.__('Education').')'; ?></legend>
+		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id',$obj['area_education_id'], array()); ?>
 		
 	</fieldset>
 	
