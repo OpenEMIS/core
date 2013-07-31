@@ -5,6 +5,7 @@ var i18n = {
 	Education : {
 		textAddProgramme : '<?php echo T("Add Programme", true); ?>',
 		noMoreSubjects: '<?php echo T("All subjects have been added.", true); ?>',
+		emptyProgrammeCode: '<?php echo T("Please enter a programme code.", true); ?>',
 		emptyProgrammeName: '<?php echo T("Please enter a programme name.", true); ?>',
 		emptyDuration : '<?php echo T("Please enter a duration."); ?>'
 	},

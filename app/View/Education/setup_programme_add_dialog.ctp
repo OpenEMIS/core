@@ -21,6 +21,10 @@ echo $this->Form->hidden('education_cycle_id', array('value' => $cycleId));
 	<div class="field_value"><?php echo $cycleName; ?></div>
 </div>
 <div class="field_row field_input">
+	<div class="field_name"><?php echo __('Code'); ?></div>
+	<div class="field_value"><?php echo $this->Form->input('code', array('id' => 'EducationProgrammeCode')); ?></div>
+</div>
+<div class="field_row field_input">
 	<div class="field_name"><?php echo __('Programme'); ?></div>
 	<div class="field_value"><?php echo $this->Form->input('name', array('id' => 'EducationProgrammeName')); ?></div>
 </div>
