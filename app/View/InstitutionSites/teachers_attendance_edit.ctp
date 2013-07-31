@@ -102,7 +102,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'teacherAttendance', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'teachersAttendance', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
