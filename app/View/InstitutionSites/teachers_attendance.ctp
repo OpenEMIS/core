@@ -47,7 +47,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 				if(!empty($data[0]['TeacherAttendance']['total_no_attend'])){
 					$total += $data[0]['TeacherAttendance']['total_no_attend'];
 				}
-				if(!empty($data[0]['TeacherAttendance']['total_no_attend'])){
+				if(!empty($data[0]['TeacherAttendance']['total_no_absence'])){
 					$total += $data[0]['TeacherAttendance']['total_no_absence'];
 				}
 			?>
