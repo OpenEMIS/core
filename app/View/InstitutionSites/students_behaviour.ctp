@@ -6,7 +6,7 @@ echo $this->Html->script('institution_site_classes', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="classes" class="content_wrapper">
+<div id="studentBehaviour" class="content_wrapper">
     <h1>
         <span><?php echo __('List of Behaviour'); ?></span>
 		<?php
