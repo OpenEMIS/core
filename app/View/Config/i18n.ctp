@@ -97,6 +97,8 @@ var i18n = {
 		textRemoving: '<?php echo T("Removing...", true); ?>',
 		textLoadAreas : '<?php echo T("Loading Areas", true); ?>',
 		textSelect : '<?php echo T("--Select--", true); ?>',
+		textConfirm : '<?php echo T("Confirm", true); ?>',
+		textConfirmation : '<?php echo T("Confirmation", true); ?>',
 		textDeleteConfirmation : '<?php echo T("Delete Confirmation", true); ?>',
 		textDeleteConfirmationMessage : '<?php echo T("Do you wish to delete this record?", true); ?>',
 		textRecordUpdateSuccess : '<?php echo T("Records have been added/updated successfully.", true); ?>',
