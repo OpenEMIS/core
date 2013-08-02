@@ -891,7 +891,8 @@ class InstitutionSitesController extends AppController {
 			$this->set('arrEducation',$arrEducation);
 			$this->set('arrEducationVal',$arrEducationVal);
 		}
-		$this->set('data',$this->institutionSiteObj);
+        $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
+		$this->set('data',$data);
 		$this->set('data2',$data2);
 		$this->set('id',$this->institutionSiteId);
 	}
