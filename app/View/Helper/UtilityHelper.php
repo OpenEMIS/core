@@ -174,11 +174,12 @@ class UtilityHelper extends AppHelper {
 
 		//settings unused
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
+
+		if (!is_numeric($value) || !isset($value) ) {$value=1;}
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
-  
+
 		$ctr = 0;
 
 		foreach($this->fieldLevels as $levelid => $levelName){
@@ -195,7 +196,9 @@ class UtilityHelper extends AppHelper {
 				</div>';
 			$ctr++;
 		}
-	}
+
+
+    }
 
 	public function getDatePicker($form, $id, $settings=array()) {
 		$_settings = array(
