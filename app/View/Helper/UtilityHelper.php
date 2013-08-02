@@ -189,7 +189,7 @@ class UtilityHelper extends AppHelper {
 			'glue' => "\n<span>-</span>\n",
 			'yearRange' => array(),
 			'yearAdjust' => 0,
-			'emptySelect' => false,
+			'emptySelect' => $id=='date_closed'? true:false,
 			'endDateValidation' => ''
 		);
 		$_settings = array_merge($_settings, $settings);
@@ -227,11 +227,12 @@ class UtilityHelper extends AppHelper {
 		$defaultMonth = 0;
 		$defaultYear = 0;
 		
-		if($_settings['emptySelect']) {
-			$utility->unshiftArray($day, array('0' => __('Day')));
-			$utility->unshiftArray($month, array('0' => __('Month')));
-			$utility->unshiftArray($year, array('0' => __('Year')));
-		}
+		// added to allow blank choice for date closed
+        if($_settings['emptySelect']){
+            $utility->unshiftArray($day, array('0' => __(' ')));
+            $utility->unshiftArray($month, array('0' => __(' ')));
+            $utility->unshiftArray($year, array('0' => __(' ')));
+        }
 		
 		$dateOptions = array('class' => 'datepicker_date', 'type' => 'text', 'div' => false, 'label' => false);
 		if(isset($_settings['name'])) {
