@@ -38,6 +38,8 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherQualificationCategory',
         'Teachers.TeacherQualificationCertificate',
         'Teachers.TeacherQualificationInstitution',
+        'Teachers.TeacherAttendance',
+        'SchoolYear',
 		'ConfigItem'
         );
 
@@ -802,7 +804,46 @@ class TeachersController extends TeachersAppController {
 		$this->set($data);
 		$this->render('/Elements/customfields/view');
 	}
-	
+
+    // Teacher ATTENDANCE PART
+    public function attendance(){
+        $teacherId = $this->teacherId;
+        $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+        $name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+        $this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
+        $this->Navigation->addCrumb('Attendance');
+
+        $id = @$this->request->params['pass'][0];
+        $yearList = $this->SchoolYear->getYearList();
+        $yearId = $this->getAvailableYearId($yearList);
+        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+
+        $data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'),isset($id)? $id:$yearId);
+
+        $this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+        $this->set('data', $data);
+        $this->set('schoolDays', $schoolDays);
+
+        $id = @$this->request->params['pass'][0];
+        $yearList = $this->SchoolYear->getYearList();
+        $yearId = $this->getAvailableYearId($yearList);
+        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+    }
+
+    private function getAvailableYearId($yearList) {
+        $yearId = 0;
+        if(isset($this->params['pass'][0])) {
+            $yearId = $this->params['pass'][0];
+            if(!array_key_exists($yearId, $yearList)) {
+                $yearId = key($yearList);
+            }
+        } else {
+            $yearId = key($yearList);
+        }
+        return $yearId;
+    }
+
 	public function getUniqueID() {
 		$generate_no = '';
      	$str = $this->Teacher->find('first', array('order' => array('Teacher.id DESC'), 'limit' => 1, 'fields'=>'Teacher.id'));

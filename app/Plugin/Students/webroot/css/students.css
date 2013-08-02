@@ -44,3 +44,8 @@ fieldset.section_break#general > .profile_image {
     padding-top:0px;
     line-height:10px;
 }
+
+#behaviour .label {width:120px; margin-top:2px;}
+#behaviourView .label {width:120px; margin-top:2px;}
+#attendance .label { width:100px; line-height: 25px;}
+#attendance .school_days .default { width: 82px; }

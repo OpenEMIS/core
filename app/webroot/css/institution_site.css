@@ -15,6 +15,8 @@
 #studentBehaviourView .label {width:120px; margin-top:2px;}
 #studentAttendance .label { width:100px; line-height: 25px;}
 #studentAttendanceEdit .label { width: 100px; line-height: 25px;}
+#studentAttendance .school_days .default { width: 82px; }
+#studentAttendanceEdit .school_days .default { width: 82px; }
 #classes .label { width: 60px; }
 #classes #grade_list .icon_delete { margin-top: 4px; }
 #classes .table_cell_row { margin-top: 0; margin-bottom: 5px; }
@@ -28,8 +30,13 @@
 #teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 65px; line-height: 24px; }
 #teachersAttendance .label { width:100px; line-height: 25px;}
 #teachersAttendanceEdit .label { width: 100px; line-height: 25px;}
+#teachersAttendance .school_days .default { width: 82px; }
+#teachersAttendanceEdit .school_days .default { width: 82px; }
 #staffAttendance .label { width:100px; line-height: 25px;}
 #staffAttendanceEdit .label { width: 100px; line-height: 25px;}
+#staffAttendance .school_days .default { width: 82px; }
+#staffAttendanceEdit .school_days .default { width: 82px; }
+
 
 .cell_system { width: 200px; }
 .cell_date { width: 110px; }
