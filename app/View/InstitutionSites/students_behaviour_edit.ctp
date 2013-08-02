@@ -7,7 +7,7 @@ echo $this->Html->script('app.date', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="classes" class="content_wrapper">
+<div id="studentBehaviourEdit" class="content_wrapper">
     <h1>
         <span><?php echo __('Edit Behaviour Details'); ?></span>
 		<?php
@@ -27,7 +27,7 @@ echo $this->Html->script('app.date', false);
 	?>
 	
     <div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Category'); ?></div>
+		<div class="label"><?php echo __('Category'); ?></div>
 		<div class="value">
 		<?php 
 		echo $this->Form->input('student_behaviour_category_id', array(
@@ -40,20 +40,20 @@ echo $this->Html->script('app.date', false);
 	</div>
 
 	<div class="row edit">
-        <div class="labelbehaviour"><?php echo __('Date'); ?></div>
+        <div class="label"><?php echo __('Date'); ?></div>
         <div class="value">
         <?php echo $this->Utility->getDatePicker($this->Form, 'date_of_behaviour',array('desc' => true,	'value' =>$data['date_of_behaviour'])); ?></div>
     </div>
 	
 	<div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Title'); ?></div>
+		<div class="label"><?php echo __('Title'); ?></div>
 		<div class="value">
 		<?php echo $this->Form->input('title', array('id' => 'title', 'class' => 'default', 'default' => $data['title'])); ?>
 		</div>
 	</div>
 	
 	<div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Description'); ?></div>
+		<div class="label"><?php echo __('Description'); ?></div>
 		<div class="value">
 		<?php echo $this->Form->input('description', array('class' => 'default', 'type' => 'textarea', 'onkeyup' => 'utility.charLimit(this)',
 		'default' => $data['description'])); ?>
@@ -61,7 +61,7 @@ echo $this->Html->script('app.date', false);
 	</div>
     
     <div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Action'); ?></div>
+		<div class="label"><?php echo __('Action'); ?></div>
 		<div class="value">
 		<?php echo $this->Form->input('action', array('class' => 'default', 'type' => 'textarea', 'onkeyup' => 'utility.charLimit(this)',
 		'default'=>$data['action'])); ?>
