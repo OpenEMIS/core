@@ -339,11 +339,13 @@ class SecurityController extends AppController {
 			if($this->request->is('post') || $this->request->is('put')) {
 				$postData = $this->data['SecurityUserAccess'];
 				unset($postData['SearchField']);
-				if(!$this->SecurityUserAccess->isAccessExists($postData)) {
-					$this->SecurityUserAccess->save($postData);
-					$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_LINKED'));
-				} else {
-					$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_EXISTS'), array('type' => 'error'));
+				if($postData['table_id'] != 0) {
+					if(!$this->SecurityUserAccess->isAccessExists($postData)) {
+						$this->SecurityUserAccess->save($postData);
+						$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_LINKED'));
+					} else {
+						$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_EXISTS'), array('type' => 'error'));
+					}
 				}
 			}
 			$userId = $this->Session->read('SecurityUserId');
