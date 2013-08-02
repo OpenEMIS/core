@@ -34,6 +34,8 @@ class StaffController extends StaffAppController {
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
         'Staff.StaffAttachment',
+        'Staff.StaffAttendance',
+        'SchoolYear',
 		'ConfigItem'
         );
 
@@ -588,6 +590,38 @@ class StaffController extends StaffAppController {
 		$this->set($data);
 		$this->render('/Elements/customfields/view');
 	}
+
+    // Staff ATTENDANCE PART
+    public function attendance(){
+        $staffId = $this->staffId;
+        $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+        $this->Navigation->addCrumb('Attendance');
+
+        $id = @$this->request->params['pass'][0];
+        $yearList = $this->SchoolYear->getYearList();
+        $yearId = $this->getAvailableYearId($yearList);
+        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+
+        $data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'),isset($id)? $id:$yearId);
+
+        $this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+        $this->set('data', $data);
+        $this->set('schoolDays', $schoolDays);
+    }
+
+    private function getAvailableYearId($yearList) {
+        $yearId = 0;
+        if(isset($this->params['pass'][0])) {
+            $yearId = $this->params['pass'][0];
+            if(!array_key_exists($yearId, $yearList)) {
+                $yearId = key($yearList);
+            }
+        } else {
+            $yearId = key($yearList);
+        }
+        return $yearId;
+    }
 
 	public function getUniqueID() {
 		$generate_no = '';
