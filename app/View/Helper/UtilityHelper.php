@@ -178,7 +178,7 @@ class UtilityHelper extends AppHelper {
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
-    pr('here');
+  
 		$ctr = 0;
 
 		foreach($this->fieldLevels as $levelid => $levelName){
