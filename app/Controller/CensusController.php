@@ -32,6 +32,7 @@ class CensusController extends AppController {
 		'EducationCycle',
 		'EducationGrade',
 		'SchoolYear',
+		'CensusValidation',
 		'CensusStudent',
 		'CensusAttendance',
 		'CensusBehaviour',
@@ -117,8 +118,51 @@ class CensusController extends AppController {
 		return json_encode($list);
 	}
 	
+	public function validations() {
+		$this->Navigation->addCrumb('Validations');
+		$institutionSiteId = $this->Session->read('InstitutionSiteId');
+		$data = $this->CensusValidation->getValidations($institutionSiteId);
+		$validatedYears = $this->SchoolYear->getYearListForValidation($institutionSiteId);
+		$unvalidatedYears = $this->SchoolYear->getYearListForValidation($institutionSiteId, false);
+		$this->set('data', $data);
+		$this->set('allowValidate', count($validatedYears) > 0);
+		$this->set('allowUnvalidate', count($unvalidatedYears) > 0);
+	}
+	
+	public function validates() {
+		if($this->request->is('ajax')) {
+			$institutionSiteId = $this->Session->read('InstitutionSiteId');
+			if($this->request->is('get')) {
+				$this->layout = 'ajax';
+				$status = $this->params['pass'][0];
+				$msg = $this->Utility->getMessage($status==1 ? 'CENSUS_VALIDATE' : 'CENSUS_UNVALIDATE');
+				$label = '';
+				$yearOptions = array();
+				
+				if($status==1) {
+					$label = __('Year to validate');
+					$yearOptions = $this->SchoolYear->getYearListForValidation($institutionSiteId);
+				} else {
+					$label = __('Year to unvalidate');
+					$yearOptions = $this->SchoolYear->getYearListForValidation($institutionSiteId, false);
+				}
+				$this->set('msg', $msg);
+				$this->set('label', $label);
+				$this->set('yearOptions', $yearOptions);
+			} else { // post
+				$this->autoRender = false;
+				$status = $this->params['pass'][0];
+				$data = array('institution_site_id' => $institutionSiteId, 'status' => $status);
+				$data = array_merge($data, $this->data);
+				if($this->CensusValidation->save($data)) {
+					return true;
+				}
+			}
+		}
+	}
+	
 	public function enrolment() {
-		$this->Navigation->addCrumb('Enrolment');
+		$this->Navigation->addCrumb('Students');
 		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
 		$categoryList = $this->StudentCategory->findList();
@@ -150,10 +194,11 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('category', $categoryList);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function enrolmentEdit() {
-		$this->Navigation->addCrumb('Edit Enrolment');
+		$this->Navigation->addCrumb('Edit Students');
 		$yearList = $this->SchoolYear->getAvailableYears(); // check for empty year list
 		$selectedYear = $this->getAvailableYearId($yearList);
 		$categoryList = $this->StudentCategory->findList();
@@ -161,24 +206,29 @@ class CensusController extends AppController {
 		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		
 		$data = array();
-		if(empty($programmes)) {
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		if(!$editable) {
+			$this->redirect(array('action' => 'enrolment', $selectedYear));
 		} else {
-			foreach($programmes as $obj) {
-				$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
-				$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
-				
-				$enrolment = array();
-				if(!empty($gradeList)) {
-					$enrolment = $this->CensusStudent->getCensusData($this->institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
-				} else {
-					$gradeList[0] = '-- ' . __('No Grade') . ' --';
+			if(empty($programmes)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			} else {
+				foreach($programmes as $obj) {
+					$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
+					$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
+					
+					$enrolment = array();
+					if(!empty($gradeList)) {
+						$enrolment = $this->CensusStudent->getCensusData($this->institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
+					} else {
+						$gradeList[0] = '-- ' . __('No Grade') . ' --';
+					}
+					$data[] = array(
+						'name' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
+						'grades' => $gradeList,
+						'enrolment' => $enrolment
+					);
 				}
-				$data[] = array(
-					'name' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
-					'grades' => $gradeList,
-					'enrolment' => $enrolment
-				);
 			}
 		}
 		$this->set('data', $data);
@@ -248,6 +298,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('schoolDays', $schoolDays);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function attendanceEdit() {
@@ -260,22 +311,27 @@ class CensusController extends AppController {
 			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYear));
 			
 			$data = array();
-			if(empty($programmes)) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			if(!$editable) {
+				$this->redirect(array('action' => 'attendance', $selectedYear));
 			} else {
-				foreach($programmes as $obj) {
-					$programmeId = $obj['education_programme_id'];
-					$list = $this->CensusAttendance->getCensusData($this->institutionSiteId, $selectedYear, $programmeId);
-					$data[$programmeId] = array(
-						'name' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
-						'data' => $list
-					);
+				if(empty($programmes)) {
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+				} else {
+					foreach($programmes as $obj) {
+						$programmeId = $obj['education_programme_id'];
+						$list = $this->CensusAttendance->getCensusData($this->institutionSiteId, $selectedYear, $programmeId);
+						$data[$programmeId] = array(
+							'name' => $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'],
+							'data' => $list
+						);
+					}
 				}
+				$this->set('data', $data);
+				$this->set('selectedYear', $selectedYear);
+				$this->set('years', $yearList);
+				$this->set('schoolDays', $schoolDays);
 			}
-			$this->set('data', $data);
-			$this->set('selectedYear', $selectedYear);
-			$this->set('years', $yearList);
-			$this->set('schoolDays', $schoolDays);
 		} else {
 			$data = $this->data['CensusAttendance'];
 			$yearId = $data['school_year_id'];
@@ -295,6 +351,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function behaviourEdit() {
@@ -302,12 +359,16 @@ class CensusController extends AppController {
 			$this->Navigation->addCrumb('Edit Behaviour');
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
-			$yearId = $this->getAvailableYearId($yearList);
-			$data = $this->CensusBehaviour->getCensusData($this->institutionSiteId, $yearId);
-			
-			$this->set('selectedYear', $yearId);
-			$this->set('years', $yearList);
-			$this->set('data', $data);
+			$selectedYear = $this->getAvailableYearId($yearList);
+			$data = $this->CensusBehaviour->getCensusData($this->institutionSiteId, $selectedYear);
+			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			if(!$editable) {
+				$this->redirect(array('action' => 'behaviour', $selectedYear));
+			} else {
+				$this->set('selectedYear', $selectedYear);
+				$this->set('years', $yearList);
+				$this->set('data', $data);
+			}
 		} else {
 			$data = $this->data['CensusBehaviour'];
 			$yearId = $data['school_year_id'];
@@ -335,6 +396,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function graduatesEdit() {
@@ -351,12 +413,17 @@ class CensusController extends AppController {
 		$selectedYear = $this->getAvailableYearId($yearList);
 		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		$data = array();
-		if(empty($programmes)) {
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		if(!$editable) {
+			$this->redirect(array('action' => 'graduates', $selectedYear));
 		} else {
-			$data = $this->CensusGraduate->getCensusData($this->institutionSiteId, $selectedYear);
-			if(empty($data)) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
+			if(empty($programmes)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			} else {
+				$data = $this->CensusGraduate->getCensusData($this->institutionSiteId, $selectedYear);
+				if(empty($data)) {
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
+				}
 			}
 		}
 		$this->set('selectedYear', $selectedYear);
@@ -387,6 +454,7 @@ class CensusController extends AppController {
 		$this->set('displayContent', $displayContent);
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function classesEdit() {
@@ -395,26 +463,31 @@ class CensusController extends AppController {
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);
-			$displayContent = true;
-			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
-			if(empty($programmeGrades)) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-				$displayContent = false;
+			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			if(!$editable) {
+				$this->redirect(array('action' => 'classes', $selectedYear));
 			} else {
-				$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear, false);
-				$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
-				$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
-				$singleGradeData = $programmeGrades;
-				$this->CensusClass->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
-				
-				$this->set('programmes', $programmes);
-				$this->set('programmeGrades', $programmeGrades);
-				$this->set('singleGradeData', $singleGradeData);
-				$this->set('multiGradeData', $multiGradeData);
+				$displayContent = true;
+				$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+				if(empty($programmeGrades)) {
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+					$displayContent = false;
+				} else {
+					$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear, false);
+					$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+					$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
+					$singleGradeData = $programmeGrades;
+					$this->CensusClass->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+					
+					$this->set('programmes', $programmes);
+					$this->set('programmeGrades', $programmeGrades);
+					$this->set('singleGradeData', $singleGradeData);
+					$this->set('multiGradeData', $multiGradeData);
+				}
+				$this->set('displayContent', $displayContent);
+				$this->set('selectedYear', $selectedYear);
+				$this->set('years', $yearList);
 			}
-			$this->set('displayContent', $displayContent);
-			$this->set('selectedYear', $selectedYear);
-			$this->set('years', $yearList);
 		} else {
 			$yearId = $this->data['school_year_id'];
 			$data = $this->CensusClass->clean($this->data['CensusClass'], $yearId, $this->institutionSiteId);
@@ -469,22 +542,22 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Textbooks');
 		
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
 		
-		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $yearId);
+		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		$data = array();
 		if(empty($programmes)) {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 		} else {
-			$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $yearId);
+			$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $selectedYear);
 			if(empty($data)) {
 				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
 			}
 		}
-		
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function textbooksEdit() {
@@ -492,21 +565,25 @@ class CensusController extends AppController {
 			$this->Navigation->addCrumb('Edit Textbooks');
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
-			$yearId = $this->getAvailableYearId($yearList);
-			
-			$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $yearId);
-			$data = array();
-			if(empty($programmes)) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			$selectedYear = $this->getAvailableYearId($yearList);
+			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			if(!$editable) {
+				$this->redirect(array('action' => 'textbooks', $selectedYear));
 			} else {
-				$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $yearId);
-				if(empty($data)) {
-					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+				$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
+				$data = array();
+				if(empty($programmes)) {
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+				} else {
+					$data = $this->CensusTextbook->getCensusData($this->institutionSiteId, $selectedYear);
+					if(empty($data)) {
+						$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+					}
 				}
+				$this->set('selectedYear', $selectedYear);
+				$this->set('years', $yearList);
+				$this->set('data', $data);
 			}
-			$this->set('selectedYear', $yearId);
-			$this->set('years', $yearList);
-			$this->set('data', $data);
 		} else {
 			$data = $this->data['CensusTextbook'];
 			$yearId = $data['school_year_id'];
@@ -542,6 +619,7 @@ class CensusController extends AppController {
 		$this->set('displayContent', $displayContent);
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function teachersEdit() {
@@ -550,31 +628,35 @@ class CensusController extends AppController {
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);
-			$displayContent = true;
-			
-			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
-			
-			if(empty($programmeGrades)) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-				$displayContent = false;
+			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			if(!$editable) {
+				$this->redirect(array('action' => 'teachers', $selectedYear));
 			} else {
-				$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear, false);
-				$fte = $this->CensusTeacherFte->getCensusData($this->institutionSiteId, $selectedYear);
-				$training = $this->CensusTeacherTraining->getCensusData($this->institutionSiteId, $selectedYear);
-				$singleGradeTeachers = $this->CensusTeacher->getSingleGradeData($this->institutionSiteId, $selectedYear);
-				$multiGradeData = $this->CensusTeacher->getMultiGradeData($this->institutionSiteId, $selectedYear);
-				$singleGradeData = $programmeGrades;
-				$this->CensusTeacher->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
-				$this->set('programmes', $programmes);
-				$this->set('programmeGrades', $programmeGrades);
-				$this->set('fte', $fte);
-				$this->set('training', $training);
-				$this->set('singleGradeData', $singleGradeData);
-				$this->set('multiGradeData', $multiGradeData);
+				$displayContent = true;
+				$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+				
+				if(empty($programmeGrades)) {
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+					$displayContent = false;
+				} else {
+					$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear, false);
+					$fte = $this->CensusTeacherFte->getCensusData($this->institutionSiteId, $selectedYear);
+					$training = $this->CensusTeacherTraining->getCensusData($this->institutionSiteId, $selectedYear);
+					$singleGradeTeachers = $this->CensusTeacher->getSingleGradeData($this->institutionSiteId, $selectedYear);
+					$multiGradeData = $this->CensusTeacher->getMultiGradeData($this->institutionSiteId, $selectedYear);
+					$singleGradeData = $programmeGrades;
+					$this->CensusTeacher->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
+					$this->set('programmes', $programmes);
+					$this->set('programmeGrades', $programmeGrades);
+					$this->set('fte', $fte);
+					$this->set('training', $training);
+					$this->set('singleGradeData', $singleGradeData);
+					$this->set('multiGradeData', $multiGradeData);
+				}
+				$this->set('displayContent', $displayContent);
+				$this->set('selectedYear', $selectedYear);
+				$this->set('years', $yearList);
 			}
-			$this->set('displayContent', $displayContent);
-			$this->set('selectedYear', $selectedYear);
-			$this->set('years', $yearList);
 		} else {
 			$yearId = $this->data['school_year_id'];
 			$fte = $this->data['CensusTeacherFte'];
@@ -634,12 +716,13 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Staff');
 		
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$data = $this->CensusStaff->getCensusData($this->institutionSiteId, $yearId);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		$data = $this->CensusStaff->getCensusData($this->institutionSiteId, $selectedYear);
 		
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function staffEdit() {
@@ -647,12 +730,16 @@ class CensusController extends AppController {
 			$this->Navigation->addCrumb('Edit Staff');
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
-			$yearId = $this->getAvailableYearId($yearList);
-			$data = $this->CensusStaff->getCensusData($this->institutionSiteId, $yearId);
-			
-			$this->set('selectedYear', $yearId);
-			$this->set('years', $yearList);
-			$this->set('data', $data);
+			$selectedYear = $this->getAvailableYearId($yearList);
+			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			if(!$editable) {
+				$this->redirect(array('action' => 'staff', $selectedYear));
+			} else {
+				$data = $this->CensusStaff->getCensusData($this->institutionSiteId, $selectedYear);
+				$this->set('selectedYear', $selectedYear);
+				$this->set('years', $yearList);
+				$this->set('data', $data);
+			}
 		} else {
 			$data = $this->data['CensusStaff'];
 			$yearId = $data['school_year_id'];
@@ -688,7 +775,7 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Infrastructure');
 		
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
 		$arrCensusInfra = array();
 		
 		$data = $this->InfrastructureCategory->find('list',array('conditions'=>array('InfrastructureCategory.visible'=>1),'order'=>'InfrastructureCategory.order'));
@@ -697,7 +784,7 @@ class CensusController extends AppController {
 
 			if(method_exists($this, $val)){
 
-				$arrCensusInfra[$val] = $this->$val($yearId);
+				$arrCensusInfra[$val] = $this->$val($selectedYear);
 				$status =  $this->InfrastructureStatus->find('list',array('conditions'=>array('InfrastructureStatus.infrastructure_category_id'=>$key,'InfrastructureStatus.visible'=>1)));
 				//pr($arrCensusInfra[$val]);die;
 				$arrCensusInfra[$val]['status'] = $status;
@@ -705,8 +792,9 @@ class CensusController extends AppController {
 		}
 		//pr($arrCensusInfra);
 		$this->set('data',$arrCensusInfra);
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
         
 	public function infrastructureEdit() {
@@ -761,26 +849,30 @@ class CensusController extends AppController {
 		
 		$arrCensusInfra = array();
 		$yearList = $this->SchoolYear->getAvailableYears();
-		$yearId = $this->getAvailableYearId($yearList);
-		
-		foreach($data as $key => $val){
-			//pr($data);die;
-			if(method_exists($this, $val)){
-				
-				$arrCensusInfra[$val] = $this->$val($yearId);
-				$status =  $this->InfrastructureStatus->find('list',array(
-					'conditions'=>array(
-						'InfrastructureStatus.infrastructure_category_id'=>$key,
-						'InfrastructureStatus.visible'=>1)
-				));
-				//pr($arrCensusInfra[$val]);die;
-				$arrCensusInfra[$val]['status'] = $status;
+		$selectedYear = $this->getAvailableYearId($yearList);
+		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		if(!$editable) {
+			$this->redirect(array('action' => 'infrastructure', $selectedYear));
+		} else {
+			foreach($data as $key => $val){
+				//pr($data);die;
+				if(method_exists($this, $val)){
+					
+					$arrCensusInfra[$val] = $this->$val($selectedYear);
+					$status =  $this->InfrastructureStatus->find('list',array(
+						'conditions'=>array(
+							'InfrastructureStatus.infrastructure_category_id'=>$key,
+							'InfrastructureStatus.visible'=>1)
+					));
+					//pr($arrCensusInfra[$val]);die;
+					$arrCensusInfra[$val]['status'] = $status;
+				}
 			}
+			//pr($arrCensusInfra);
+			$this->set('data',$arrCensusInfra);
+			$this->set('selectedYear', $selectedYear);
+			$this->set('years', $yearList);
 		}
-		//pr($arrCensusInfra);
-		$this->set('data',$arrCensusInfra);
-		$this->set('selectedYear', $yearId);
-		$this->set('years', $yearList);
 	}
 	
 	private function buildings($yr,$materialid = null){
@@ -907,8 +999,8 @@ class CensusController extends AppController {
 		}
 		
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-        $data = $this->CensusFinance->find('all',array('recursive'=>3,'conditions'=>array('CensusFinance.institution_site_id'=>$this->institutionSiteId,'CensusFinance.school_year_id'=>$yearId)));
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+        $data = $this->CensusFinance->find('all',array('recursive'=>3,'conditions'=>array('CensusFinance.institution_site_id'=>$this->institutionSiteId,'CensusFinance.school_year_id'=>$selectedYear)));
 		$newSort = array();
         //pr($data);
 		foreach($data as $k => $arrv){
@@ -918,10 +1010,11 @@ class CensusController extends AppController {
 		$natures = $this->FinanceNature->find('list',array('recursive'=>2,'conditions'=>array('FinanceNature.visible'=>1)));
 		$sources = $this->FinanceSource->find('list',array('conditions'=>array('FinanceSource.visible'=>1)));
 		$this->set('data', $newSort);
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('natures',$natures);
 		$this->set('sources',$sources);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function financesEdit() {
@@ -942,26 +1035,31 @@ class CensusController extends AppController {
 		}
                 
 		$yearList = $this->SchoolYear->getAvailableYears();
-		$yearId = $this->getAvailableYearId($yearList);
-		$data = $this->CensusFinance->find('all',array('recursive'=>3,'conditions'=>array('CensusFinance.institution_site_id'=>$this->institutionSiteId,'CensusFinance.school_year_id'=>$yearId)));
-		$newSort = array();
-		//pr($data);
-		foreach($data as $k => $arrv){
-			//$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
-			
-			
-			$arrv['CategoryTypes'] = $this->getFinanceCatByFinanceType($arrv['FinanceCategory']['FinanceType']['id']);
-			$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
-			
+		$selectedYear = $this->getAvailableYearId($yearList);
+		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		if(!$editable) {
+			$this->redirect(array('action' => 'finances', $selectedYear));
+		} else {
+			$data = $this->CensusFinance->find('all',array('recursive'=>3,'conditions'=>array('CensusFinance.institution_site_id'=>$this->institutionSiteId,'CensusFinance.school_year_id'=>$selectedYear)));
+			$newSort = array();
+			//pr($data);
+			foreach($data as $k => $arrv){
+				//$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
+				
+				
+				$arrv['CategoryTypes'] = $this->getFinanceCatByFinanceType($arrv['FinanceCategory']['FinanceType']['id']);
+				$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
+				
+			}
+				 
+			$natures = $this->FinanceNature->find('list',array('recursive'=>2,'conditions'=>array('FinanceNature.visible'=>1)));
+			$sources = $this->FinanceSource->find('list',array('conditions'=>array('FinanceSource.visible'=>1)));
+			$this->set('data', $newSort);
+			$this->set('selectedYear', $selectedYear);
+			$this->set('years', $yearList);
+			$this->set('natures',$natures);        
+			$this->set('sources',$sources);
 		}
-		     
-		$natures = $this->FinanceNature->find('list',array('recursive'=>2,'conditions'=>array('FinanceNature.visible'=>1)));
-		$sources = $this->FinanceSource->find('list',array('conditions'=>array('FinanceSource.visible'=>1)));
-		$this->set('data', $newSort);
-		$this->set('selectedYear', $yearId);
-		$this->set('years', $yearList);
-		$this->set('natures',$natures);        
-		$this->set('sources',$sources);
 	}
 	
 	public function financesDelete($id) {
@@ -998,7 +1096,7 @@ class CensusController extends AppController {
 		$this->Navigation->addCrumb('Other Forms');
 			
 		$yearList = $this->SchoolYear->getYearList();
-		$yearId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
 		$arrCensusInfra = array();
 		
 		$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
@@ -1006,7 +1104,7 @@ class CensusController extends AppController {
 			
 		//pr($data);
 		foreach($data as &$arrDataVal){
-			$dataAnswer = $this->CensusGridValue->find('all',array('conditions'=>array('CensusGridValue.institution_site_id'=>$this->institutionSiteId,'CensusGridValue.census_grid_id'=>$arrDataVal['CensusGrid']['id'],'CensusGridValue.school_year_id'=>$yearId)));
+			$dataAnswer = $this->CensusGridValue->find('all',array('conditions'=>array('CensusGridValue.institution_site_id'=>$this->institutionSiteId,'CensusGridValue.census_grid_id'=>$arrDataVal['CensusGrid']['id'],'CensusGridValue.school_year_id'=>$selectedYear)));
 			
 			$tmp = array();
 			foreach($dataAnswer as $arrV){
@@ -1029,7 +1127,7 @@ class CensusController extends AppController {
 		$this->CensusCustomValue->unbindModel(
 			array('belongsTo' => array('InstitutionSite'))
 		);
-		$datavalues = $this->CensusCustomValue->find('all',array('conditions'=>array('CensusCustomValue.institution_site_id'=>$this->institutionSiteId,'CensusCustomValue.school_year_id'=>$yearId)));
+		$datavalues = $this->CensusCustomValue->find('all',array('conditions'=>array('CensusCustomValue.institution_site_id'=>$this->institutionSiteId,'CensusCustomValue.school_year_id'=>$selectedYear)));
 		$tmp=array();
 		foreach($datavalues as $arrV){
 			$tmp[$arrV['CensusCustomField']['id']][] = $arrV['CensusCustomValue'];
@@ -1040,8 +1138,9 @@ class CensusController extends AppController {
 		$this->set('datafields',$datafields);
 		$this->set('datavalues',$tmp);
 		$this->set('data',$data);
-		$this->set('selectedYear', $yearId);
+		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
+		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function otherformsEdit(){
@@ -1131,49 +1230,50 @@ class CensusController extends AppController {
 		
 		$arrCensusInfra = array();
 		$yearList = $this->SchoolYear->getAvailableYears();
-		$yearId = $this->getAvailableYearId($yearList);
-		
-		$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
-		$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
+		$selectedYear = $this->getAvailableYearId($yearList);
+		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		if(!$editable) {
+			$this->redirect(array('action' => 'otherforms', $selectedYear));
+		} else {
+			$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
+			$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
 			
-			
-		foreach($data as &$arrDataVal){
-			$dataAnswer = $this->CensusGridValue->find('all',array('conditions'=>array('CensusGridValue.institution_site_id'=>$this->institutionSiteId,'CensusGridValue.census_grid_id'=>$arrDataVal['CensusGrid']['id'],'CensusGridValue.school_year_id'=>$yearId)));
-			
-			$tmp = array();
-			foreach($dataAnswer as $arrV){
-			   $tmp[$arrV['CensusGridValue']['census_grid_x_category_id']][$arrV['CensusGridValue']['census_grid_y_category_id']] =  $arrV['CensusGridValue'];
+			foreach($data as &$arrDataVal){
+				$dataAnswer = $this->CensusGridValue->find('all',array('conditions'=>array('CensusGridValue.institution_site_id'=>$this->institutionSiteId,'CensusGridValue.census_grid_id'=>$arrDataVal['CensusGrid']['id'],'CensusGridValue.school_year_id'=>$selectedYear)));
+				
+				$tmp = array();
+				foreach($dataAnswer as $arrV){
+				   $tmp[$arrV['CensusGridValue']['census_grid_x_category_id']][$arrV['CensusGridValue']['census_grid_y_category_id']] =  $arrV['CensusGridValue'];
+				}
+				$dataAnswer = $tmp;
+				$arrDataVal['answer'] = $dataAnswer;
+				
 			}
-			$dataAnswer = $tmp;
-			$arrDataVal['answer'] = $dataAnswer;
+				
+			/***
+			 * CustomFields
+			 */
+			$site = $this->InstitutionSite->findById($this->institutionSiteId); 
 			
+			$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
+			//pr($datafields); echo "d2";
+			$this->CensusCustomValue->unbindModel(
+				array('belongsTo' => array('InstitutionSite'))
+			);
+			$datavalues = $this->CensusCustomValue->find('all',array('conditions'=>array('CensusCustomValue.institution_site_id'=>$this->institutionSiteId,'CensusCustomValue.school_year_id'=>$selectedYear)));
+			$tmp=array();
+			foreach($datavalues as $arrV){
+				$tmp[$arrV['CensusCustomField']['id']][] = $arrV['CensusCustomValue'];
+			}
+			$datavalues = $tmp;
+			
+			//pr($datafields);
+				
+			$this->set('datafields',$datafields);
+			$this->set('datavalues',$tmp);
+			$this->set('data',$data);
+			$this->set('selectedYear', $selectedYear);
+			$this->set('years', $yearList);
 		}
-			
-			
-			
-		/***
-		 * CustomFields
-		 */
-		$site = $this->InstitutionSite->findById($this->institutionSiteId); 
-		
-		$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
-		//pr($datafields); echo "d2";
-		$this->CensusCustomValue->unbindModel(
-			array('belongsTo' => array('InstitutionSite'))
-		);
-		$datavalues = $this->CensusCustomValue->find('all',array('conditions'=>array('CensusCustomValue.institution_site_id'=>$this->institutionSiteId,'CensusCustomValue.school_year_id'=>$yearId)));
-		$tmp=array();
-		foreach($datavalues as $arrV){
-			$tmp[$arrV['CensusCustomField']['id']][] = $arrV['CensusCustomValue'];
-		}
-		$datavalues = $tmp;
-		
-		//pr($datafields);
-			
-		$this->set('datafields',$datafields);
-		$this->set('datavalues',$tmp);
-		$this->set('data',$data);
-		$this->set('selectedYear', $yearId);
-		$this->set('years', $yearList);
 	}
 }

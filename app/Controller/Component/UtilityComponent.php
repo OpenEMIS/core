@@ -68,6 +68,8 @@ class UtilityComponent extends Component {
 		$msgList['CENSUS_UPDATED'] = "The census data has been updated successfully.";
 		$msgList['CENSUS_GRADUATE_NOT_REQUIRED'] = "Graduates not required.";
 		$msgList['CENSUS_NO_SUBJECTS'] = "There are no subjects configured in the system";
+		$msgList['CENSUS_VALIDATE'] = "The data will not be editable once it has been validated." . "<br><br>" . "Are you sure you want to do this?";
+		$msgList['CENSUS_UNVALIDATE'] = "The data will be editable when it is unvalidated." . "<br><br>" . " Are you sure you want to do this?";
 		
 		// Education Messages
 		$msgList['EDUCATION_NO_LEVEL'] = "There is no active education level in this Education System.";
