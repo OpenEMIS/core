@@ -75,7 +75,7 @@ echo $this->Html->script('config', false);
 
 		<div class="row">
 			<div class="label"><?php echo __('Date Closed'); ?></div>
-			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_closed', array('desc' => true,'value' => $obj['date_closed'])); ?></div>
+			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_closed', array('desc' => true,'value' => $obj['date_closed'],'emptySelect'=>true));?></div>
 		</div>
 	</fieldset>
 	<fieldset class="section_break">
@@ -151,7 +151,7 @@ echo $this->Html->script('config', false);
 	</fieldset>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if(jsDate.checkValidDateClosed() && Config.checkValidate()){ return true; }else{ return false; }"/>
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
