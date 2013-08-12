@@ -50,7 +50,7 @@ echo $this->Html->script('institution', false);
 
 		<div class="row">
 			<div class="label"><?php echo __('Date Closed'); ?></div>
-			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_closed'); ?></div>
+			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_closed', array('emptySelect'=>true)); ?></div>
 		</div>
 
 	</fieldset>
