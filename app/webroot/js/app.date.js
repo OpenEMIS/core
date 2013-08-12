@@ -113,6 +113,7 @@ var jsDate = {
                 monthObj.val(0);
                 yearObj.val(0);
             }
+			dateObj.val('0000-00-00');
         }
 	},
 	

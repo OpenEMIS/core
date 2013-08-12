@@ -189,7 +189,7 @@ class UtilityHelper extends AppHelper {
 			'glue' => "\n<span>-</span>\n",
 			'yearRange' => array(),
 			'yearAdjust' => 0,
-			'emptySelect' => $id=='date_closed'? true:false,
+			'emptySelect' => false,
 			'endDateValidation' => ''
 		);
 		$_settings = array_merge($_settings, $settings);
@@ -227,12 +227,11 @@ class UtilityHelper extends AppHelper {
 		$defaultMonth = 0;
 		$defaultYear = 0;
 		
-		// added to allow blank choice for date closed
-        if($_settings['emptySelect']){
-            $utility->unshiftArray($day, array('0' => __(' ')));
-            $utility->unshiftArray($month, array('0' => __(' ')));
-            $utility->unshiftArray($year, array('0' => __(' ')));
-        }
+		if($_settings['emptySelect']) {
+			$utility->unshiftArray($day, array('0' => __('Day')));
+			$utility->unshiftArray($month, array('0' => __('Month')));
+			$utility->unshiftArray($year, array('0' => __('Year')));
+		}
 		
 		$dateOptions = array('class' => 'datepicker_date', 'type' => 'text', 'div' => false, 'label' => false);
 		if(isset($_settings['name'])) {
@@ -420,20 +419,6 @@ class UtilityHelper extends AppHelper {
 			'before' => '<div class="cell cell_name"><div class="input_wrapper">',
 			'after' => '</div></div>',
 			'maxlength' => '50'
-		);
-		$text = '<div class="cell cell_name"><span>%s</span></div>';
-		$input = $editable ? $form->input('name', $options) : sprintf($text, $value);
-		return $input;
-	}
-	
-	public function getTextInput($form, $fieldName, $value, $name, $length, $editable=true) {
-		$options = array(
-			'name' => sprintf($fieldName, $name),
-			'type' => 'text',
-			'value' => $value,
-			'before' => '<div class="cell cell_'.$name.'"><div class="input_wrapper">',
-			'after' => '</div></div>',
-			'maxlength' => $length
 		);
 		$text = '<div class="cell cell_name"><span>%s</span></div>';
 		$input = $editable ? $form->input('name', $options) : sprintf($text, $value);
