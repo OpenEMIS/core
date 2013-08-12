@@ -125,6 +125,13 @@ class HomeController extends AppController {
 		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('Change Password');
 		
+		$allowChangePassword = (bool) $this->ConfigItem->getValue('change_password');
+		
+		if(!$allowChangePassword) {
+			$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));
+		}
+		$this->set('allowChangePassword', $allowChangePassword);
+		
 		if($this->request->is('post')) {
 			$data = $this->data;
 			$data['SecurityUser']['id'] = $this->Auth->user('id');
