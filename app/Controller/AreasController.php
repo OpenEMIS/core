@@ -173,9 +173,13 @@ class AreasController extends AppController {
      */
     public function viewAreaChildren($id,$arrMap = array('Area','AreaLevel')) {
         //if ajax
-        if($this->RequestHandler->isAjax()){
+        if($arrMap=='AreaEducation'){
+            $arrMap = array('AreaEducation','AreaEducationLevel');
+        }else{
             $arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
         }
+        $AreaLevelfk = Inflector::underscore($arrMap[1]);
+
         $this->autoRender = false;
         $value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
         $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
@@ -183,8 +187,13 @@ class AreasController extends AppController {
     }
 
     public function getAreaLevel($id,$arrMap = array('Area','AreaLevel')) {
-        $arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
+        if($arrMap=='AreaEducation'){
+            $arrMap = array('AreaEducation','AreaEducationLevel');
+        }else{
+            $arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
+        }
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
+
         $this->autoRender = false;
 
         $levelname = $this->{$arrMap[0]}->find('all', array(
