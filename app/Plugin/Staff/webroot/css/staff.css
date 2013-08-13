@@ -41,6 +41,7 @@ span.highlight{
 .cell_month, #StaffDateOfBirthMonth { width: 90px; }
 .cell_day, #StaffDateOfBirthDay { width: 75px; }
 .cell_year, #StaffDateOfBirthYear { width: 75px; }
+.cell_totals { text-align:right; width:100px; }
 
 .inline_block, .dob-edit > .value > .input { display: inline-block; }
 
@@ -77,5 +78,5 @@ fieldset.section_break#general > .profile_image {
     line-height:10px;
 }
 
-#attendance .label { width:100px; line-height: 25px;}
+#attendance .myyear .label { line-height: 25px;}
 #attendance .school_days .default { width: 82px; }
