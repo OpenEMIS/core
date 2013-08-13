@@ -46,31 +46,65 @@ var objInstitutionSite = {
         var maskId;
         var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
 		atype=(edutype?'admin':'Area');
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+atype,
-            beforeSend: function (jqXHR) {
-				maskId = $.mask({text:i18n.General.textLoadAreas});
-            },
-            success: function (data, textStatus) {
-				//console.log(data)
-			
-				var callback = function(data) {
-						tpl = '';
-						$.each(data,function(i,o){
-							//console.log(o)
-							tpl += '<option value="'+i+'">'+data[i]+'</option>';
-						})
-						var nextselect = $(currentobj).parent().parent().next().find('select');
-						//console.log(nextselect)
-						nextselect.find('option').remove();
-						nextselect.append(tpl);
-						
-				};
-				$.unmask({ id: maskId,callback: callback(data)});
-            }
-        })
+        var url =  getRootURL() +'/Areas/viewAreaChildren/'+selected+'/'+atype;
+        var level = '&nbsp;&nbsp;';
+        $.when(
+            $.ajax({
+                type: "GET",
+                url: getRootURL() +'/Areas/getAreaLevel/'+selected+'/'+atype,
+                success: function (data) {
+                    level = data;
+                    var myselect = $(currentobj).parent().parent().find('select');
+                    var myLabel = myselect.parent().parent().find('.label');
+                    myLabel.show();
+                    myLabel.html(level);
+                }
+            })
+        ).then(function() {
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: url,
+                beforeSend: function (jqXHR) {
+                    // maskId = $.mask({parent: '.content_wrapper'});
+                    maskId = $.mask({parent: '#area_section_group', text: i18n.General.textLoadAreas});
+                },
+                success: function (data, textStatus) {
+                    var callback = function(data) {
+                        tpl = '';
+                        var nextselect = $(currentobj).parent().parent().next().find('select');
+                        var nextLabel = nextselect.parent().parent().find('.label');
+                        //data[1] += nextLabel.text().toUpperCase(); // Add "ALL <text>" option in the select element
+                        $.each(data,function(i,o){
+                            tpl += '<option value="'+i+'">'+o+'</option>';
+                        });
+                        if(level=='&nbsp;&nbsp;'){
+                            nextLabel.hide();
+                            nextselect.hide();
+                        }else{
+                            nextLabel.show();
+                            nextselect.show();
+                            nextLabel.removeClass('disabled');
+                            nextLabel.html('&nbsp;');
+                            nextselect.find('option').remove();
+                            nextselect.removeAttr('disabled');
+                            nextselect.append(tpl);
+                        }
+                        var myselect = nextselect.parent().parent().next().find('select');
+                        var mylabel = myselect.parent().parent().find('.label');
+                        do{
+                            myselect.hide();
+                            mylabel.hide();
+                            myselect = myselect.parent().parent().next().find('select');
+                            mylabel = myselect.parent().parent().find('.label');
+                        }while(myselect.length>0)
+
+                    };
+                    $.unmask({ id: maskId,callback: callback(data)});
+                }
+
+            });
+        });
     },
 	
 	getGradeList: function(obj) {

@@ -181,6 +181,25 @@ class AreasController extends AppController {
         $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
         echo json_encode($value);
     }
+
+    public function getAreaLevel($id,$arrMap = array('Area','AreaLevel')) {
+        $arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
+        $AreaLevelfk = Inflector::underscore($arrMap[1]);
+        $this->autoRender = false;
+
+        $levelname = $this->{$arrMap[0]}->find('all', array(
+            'contain' => array($arrMap[1]),
+            'conditions' => array(
+                $arrMap[0].'.id' => $id
+            ),
+            'fields' => array($arrMap[1].'.name')
+        ));
+        if (array_key_exists(0, $levelname)) {
+            echo $levelname[0][$arrMap[1]]['name'];
+        }else{
+            echo '&nbsp;&nbsp;';
+        }
+    }
     
     /**
      * Created by: Eugene Wong
