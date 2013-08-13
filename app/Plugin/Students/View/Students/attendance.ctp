@@ -11,7 +11,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
     </h1>
     <?php echo $this->element('alert'); ?>
     
-    <div class="row year">
+    <div class="row myyear">
     		<div class="label"><?php echo __('Year'); ?></div>
     		<div class="value">
     			<?php
