@@ -111,30 +111,18 @@ var objInstitution = {
                                 counter +=1;
                             });
                             if(level=='&nbsp;&nbsp;' || counter <2){
-                                nextLabel.hide();
-                                nextselect.hide();
+                                nextrow.hide();
                             }else{
-                                nextLabel.show();
-                                nextselect.show();
+                                nextrow.show();
                                 nextLabel.removeClass('disabled');
-                                nextLabel.html('(AreaLevel)');
+                                nextLabel.html('(Area Level)');
                                 nextselect.find('option').remove();
                                 nextselect.removeAttr('disabled');
                                 nextselect.append(tpl);
                             }
-                            var myselect = nextselect.parent().parent().next().find('select');
-                            var mylabel = myselect.parent().parent().find('.label');
-                            do{
-                                myselect.hide();
-                                mylabel.hide();
-                                myselect = myselect.parent().parent().next().find('select');
-                                mylabel = myselect.parent().parent().find('.label');
-                            }while(myselect.length>0)
-
                         };
                         $.unmask({ id: maskId,callback: callback(data)});
                     }
-
                 });
             });
     },

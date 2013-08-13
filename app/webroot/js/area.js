@@ -113,6 +113,7 @@ var areas = {
                         do{
                             myselect.hide();
                             mylabel.hide();
+
                             myselect = myselect.parent().parent().next().find('select');
                             mylabel = myselect.parent().parent().find('.label');
                         }while(myselect.length>0)
