@@ -191,11 +191,11 @@ class UtilityHelper extends AppHelper {
             if($mylevel===''){
                 $display = 'display:none;';
             }
-            echo '<div class="row">
-                    <div class="label" style="'.$display.'">'.$mylevel.'</div>
+            echo '<div class="row" style="'.$display.'">
+                    <div class="label">'.$mylevel.'</div>
                     <div class="value">'. $form->input($arealevelfk.'_'.$ctr,
                                                         array('class'=>'areapicker default',
-                                                        'style'=>'float:left;'.$display,
+                                                        'style'=>'float:left;',
                                                         'default'=>@$this->fieldAreaLevels[$ctr]['id'],
                                                         'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
             if ($ctr==0){
