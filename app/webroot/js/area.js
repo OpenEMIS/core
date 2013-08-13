@@ -103,14 +103,21 @@ var areas = {
 
                         $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').find('option').remove();
                     }
-				}else {
-                    for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
-                        //disable the select element
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').find('option').remove();
+                }else {
+                    if(currentSelctedOptionValue==0){
+                        var nowSelect = $(this).parent().parent().find('select');
+                        var nowLabel = nowSelect.parent().parent().find('.label');
+                        nowLabel.html('&nbsp;');
+                        var myselect = $(this).parent().parent().next().find('select');
+                        var mylabel = myselect.parent().parent().find('.label');
+                        do{
+                            myselect.hide();
+                            mylabel.hide();
+                            myselect = myselect.parent().parent().next().find('select');
+                            mylabel = myselect.parent().parent().find('.label');
+                        }while(myselect.length>0)
                     }
-				}
+                }
 
                 if(currentSelctedOptionValue > 0 ){
                     areas.parentAreaIds[currentSelect] = currentSelctedOptionValue;//areas.currentAreaId;
@@ -149,21 +156,34 @@ var areas = {
         });
     },
     fetchChildren :function (currentobj){
-        
+        alert('aa');
         var selected = $(currentobj).val();
         var maskId;
         var url =  areas.baseURL +'viewAreaChildren/'+selected+'/'+areas.extraParam;
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            url: url,
-            beforeSend: function (jqXHR) {
-                    // maskId = $.mask({parent: '.content_wrapper'});
-                    maskId = $.mask({parent: '#area_section_group', text: i18n.General.textLoadAreas});
-            },
-            success: function (data, textStatus) {
-                
-                    var callback = function(data) {
+        var level = '&nbsp;&nbsp;';
+        $.when(
+                $.ajax({
+                    type: "GET",
+                    url: areas.baseURL +'getAreaLevel/'+selected+'/'+areas.extraParam,
+                    success: function (data) {
+                        level = data;
+                        var myselect = $(currentobj).parent().parent().find('select');
+                        var myLabel = myselect.parent().parent().find('.label');
+                        myLabel.show();
+                        myLabel.html(level);
+                    }
+                })
+            ).then(function() {
+                $.ajax({
+                    type: 'GET',
+                    dataType: 'json',
+                    url: url,
+                    beforeSend: function (jqXHR) {
+                        // maskId = $.mask({parent: '.content_wrapper'});
+                        maskId = $.mask({parent: '#area_section_group', text: i18n.General.textLoadAreas});
+                    },
+                    success: function (data, textStatus) {
+                        var callback = function(data) {
                             tpl = '';
                             var nextselect = $(currentobj).parent().parent().next().find('select');
                             var nextLabel = nextselect.parent().parent().find('.label');
@@ -171,16 +191,33 @@ var areas = {
                             $.each(data,function(i,o){
                                 tpl += '<option value="'+i+'">'+o+'</option>';
                             });
-                            nextLabel.removeClass('disabled');
-                            nextselect.find('option').remove();
-                            nextselect.removeAttr('disabled');
-                            nextselect.append(tpl);
-                            
-                    };
-                    $.unmask({ id: maskId,callback: callback(data)});
-            }
+                            if(level=='&nbsp;&nbsp;'){
+                                nextLabel.hide();
+                                nextselect.hide();
+                            }else{
+                                nextLabel.show();
+                                nextselect.show();
+                                nextLabel.removeClass('disabled');
+                                nextLabel.html('&nbsp;');
+                                nextselect.find('option').remove();
+                                nextselect.removeAttr('disabled');
+                                nextselect.append(tpl);
+                            }
+                            var myselect = nextselect.parent().parent().next().find('select');
+                            var mylabel = myselect.parent().parent().find('.label');
+                            do{
+                                myselect.hide();
+                                mylabel.hide();
+                                myselect = myselect.parent().parent().next().find('select');
+                                mylabel = myselect.parent().parent().find('.label');
+                            }while(myselect.length>0)
 
-        });
+                        };
+                        $.unmask({ id: maskId,callback: callback(data)});
+                    }
+
+                });
+            });
     },
     fetchData: function(currentObject){
         // init values
