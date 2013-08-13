@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppHelper', 'View/Helper');
 App::uses('DateTimeComponent', 'Controller/Component');
 App::uses('AreaHandlerComponent', 'Controller/Component');
+App::uses('Areas', 'Controller/Component');
 App::uses('String', 'Utility');
 
 class UtilityHelper extends AppHelper {
@@ -101,10 +102,12 @@ class UtilityHelper extends AppHelper {
 					continue;
 				}
 			}
-			echo '<div class="row">
-						<div class="label">'.$levelName.'</div>
-						<div class="value" value="'.$areaVal['id'].'" name="'.$arealevelfk.'_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
-					</div>';
+            if($areaVal['name']!='a'){
+                echo '<div class="row">
+                            <div class="label">'.$levelName.'</div>
+                            <div class="value" value="'.$areaVal['id'].'" name="'.$arealevelfk.'_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
+                        </div>';
+            }
 			$ctr++;
 		}
 	}
@@ -183,17 +186,23 @@ class UtilityHelper extends AppHelper {
 		$ctr = 0;
 
 		foreach($this->fieldLevels as $levelid => $levelName){
-			echo '<div class="row">
-					<div class="label">'."$levelName".'</div>
-					<div class="value">'. $form->input($arealevelfk.'_'.$ctr,
-														array('class'=>'areapicker default',
-														'style'=>'float:left','default'=>@$this->fieldAreaLevels[$ctr]['id'],
-														'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
-			if ($ctr==0){
-				echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
-			}
-			echo		'</div>
-				</div>';
+            $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
+            $display = '';
+            if($mylevel===''){
+                $display = 'display:none;';
+            }
+            echo '<div class="row">
+                    <div class="label" style="'.$display.'">'.$mylevel.'</div>
+                    <div class="value">'. $form->input($arealevelfk.'_'.$ctr,
+                                                        array('class'=>'areapicker default',
+                                                        'style'=>'float:left;'.$display,
+                                                        'default'=>@$this->fieldAreaLevels[$ctr]['id'],
+                                                        'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
+            if ($ctr==0){
+                echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
+            }
+            echo		'</div>
+                </div>';
 			$ctr++;
 		}
 

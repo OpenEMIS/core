@@ -156,7 +156,6 @@ var areas = {
         });
     },
     fetchChildren :function (currentobj){
-        alert('aa');
         var selected = $(currentobj).val();
         var maskId;
         var url =  areas.baseURL +'viewAreaChildren/'+selected+'/'+areas.extraParam;

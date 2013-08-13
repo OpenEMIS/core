@@ -85,7 +85,7 @@ var objInstitutionSite = {
                             nextLabel.show();
                             nextselect.show();
                             nextLabel.removeClass('disabled');
-                            nextLabel.html('&nbsp;');
+                            nextLabel.html('(AreaLevel)');
                             nextselect.find('option').remove();
                             nextselect.removeAttr('disabled');
                             nextselect.append(tpl);
