@@ -7,6 +7,7 @@
 .cell_title { width: 150px; }
 .cell_filetype { width: 60px; }
 .cell_date { width: 110px; }
+.cell_totals { text-align:right; width:100px; }
 
 /* institutions */
 .cell_year_month { width: 151px; }
@@ -47,5 +48,5 @@ fieldset.section_break#general > .profile_image {
 
 #behaviour .label {width:120px; margin-top:2px;}
 #behaviourView .label {width:120px; margin-top:2px;}
-#attendance .label { width:100px; line-height: 25px;}
+#attendance .myyear .label { line-height: 25px;}
 #attendance .school_days .default { width: 82px; }
