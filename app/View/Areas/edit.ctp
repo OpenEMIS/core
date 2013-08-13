@@ -37,7 +37,7 @@ echo $this->Html->script('area', false);
 	<fieldset id="area_section_group" class="section_group">
 		<legend><?php echo __('Area'); ?></legend>
 		<?php
-                
+
                 // pr($arealevel);
                 // pr($levels);
             $ctr = 0;
@@ -47,11 +47,11 @@ echo $this->Html->script('area', false);
 	                $lastElement = array_pop($levels);
                 }
                 foreach($levels as $levelid => $levelName){
-                    
+
                     echo '<div class="row input">
                                 <div class="label'. ((!isset($highestLevel[$ctr]))?' disabled':'') .'">'.$levelName.'</div>'.
                                 //'<div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
-                                '<div class="value">'. 
+                                '<div class="value">'.
 	                                $this->Form->select(
                 						'area_level_'.$ctr,
                 						/*($ctr == 0)*/(isset($highestLevel[$ctr]))?$highestLevel[$ctr]:array(''=>__('--Select--')),
@@ -63,7 +63,7 @@ echo $this->Html->script('area', false);
                     /*
                     echo '<div class="row">
                                 <div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
-                                <div class="value">'. $this->Form->select('area_level_'.$ctr,($ctr == 0)?$highestLevel:array(''=>'--Select--'), array('disabled' => 
+                                <div class="value">'. $this->Form->select('area_level_'.$ctr,($ctr == 0)?$highestLevel:array(''=>'--Select--'), array('disabled' =>
 ($levelName != $firstElement)?true:false, 'empty' => ($levelName != $firstElement)?true:false)).'</div>
                             </div>';
                     */
@@ -71,9 +71,6 @@ echo $this->Html->script('area', false);
                 }
             }
         ?>
-
-
-		
 	</fieldset>
 
 	<?php echo $this->Form->end(); ?>

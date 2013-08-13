@@ -159,17 +159,23 @@ var areas = {
         var selected = $(currentobj).val();
         var maskId;
         var url =  areas.baseURL +'viewAreaChildren/'+selected+'/'+areas.extraParam;
+
         var level = '&nbsp;&nbsp;';
         $.when(
                 $.ajax({
                     type: "GET",
                     url: areas.baseURL +'getAreaLevel/'+selected+'/'+areas.extraParam,
                     success: function (data) {
+                        alert(areas.baseURL +'getAreaLevel/'+selected+'/'+areas.extraParam);
                         level = data;
                         var myselect = $(currentobj).parent().parent().find('select');
                         var myLabel = myselect.parent().parent().find('.label');
                         myLabel.show();
-                        myLabel.html(level);
+                        if(level=='&nbsp;&nbsp;'){
+                            myLabel.html('(Area Level)');
+                        }else{
+                            myLabel.html(level);
+                        }
                     }
                 })
             ).then(function() {
@@ -187,17 +193,19 @@ var areas = {
                             var nextselect = $(currentobj).parent().parent().next().find('select');
                             var nextLabel = nextselect.parent().parent().find('.label');
                             //data[1] += nextLabel.text().toUpperCase(); // Add "ALL <text>" option in the select element
+                            var counter = 0;
                             $.each(data,function(i,o){
                                 tpl += '<option value="'+i+'">'+o+'</option>';
+                                counter +=1;
                             });
-                            if(level=='&nbsp;&nbsp;'){
+                            if(level=='&nbsp;&nbsp;' || counter <2){
                                 nextLabel.hide();
                                 nextselect.hide();
                             }else{
                                 nextLabel.show();
                                 nextselect.show();
                                 nextLabel.removeClass('disabled');
-                                nextLabel.html('&nbsp;');
+                                nextLabel.html('(Area Level)');
                                 nextselect.find('option').remove();
                                 nextselect.removeAttr('disabled');
                                 nextselect.append(tpl);
