@@ -251,41 +251,67 @@ var jsForm = {
 	
 	getAreaChildren :function (currentobj){
         var selected = $(currentobj).val();
-        alert($(currentobj).val());
         var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
         var maskId;
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+edutype,
-            beforeSend: function (jqXHR) {
-                    maskId = $.mask({text:i18n.General.textLoadAreas});
-            },
-            success: function (data, textStatus) {
+        var url =  getRootURL() +'/Areas/viewAreaChildren/'+selected+'/'+edutype;
+        var level = '&nbsp;&nbsp;';
+        $.when(
+            $.ajax({
+                type: "GET",
+                url: getRootURL() +'/Areas/getAreaLevel/'+selected+'/'+edutype,
+                success: function (data) {
+                    level = data;
+                    var myselect = $(currentobj).parent().parent().find('select');
+                    var myLabel = myselect.parent().parent().find('.label');
+                    myLabel.show();
+                    if(level=='&nbsp;&nbsp;'){
+                        myLabel.html('(Area Level)');
+                    }else{
+                        myLabel.html(level);
+                    }
+                }
+            })
+        ).then(function() {
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: url,
+                beforeSend: function (jqXHR) {
+                    // maskId = $.mask({parent: '.content_wrapper'});
+                    maskId = $.mask({parent: '#area_section_group', text: i18n.General.textLoadAreas});
+                },
+                success: function (data, textStatus) {
                     var callback = function(data) {
-                            tpl = '';
-                            var counter = 0;
-                            $.each(data,function(i,o){
-                                tpl += '<option value="'+i+'">'+data[i]+'</option>';
-                                counter +=1;
-                            })
-                            var nextselect = $(currentobj).parent().parent().next().find('select');
-                            var nextLabel = nextselect.parent().parent().find('.label');
-                            var nextrow = $(currentobj).parent().parent().next('.row');
-                            //if(counter <2){
-                                //nextrow.hide();
-                            //}else{
-                                nextrow.show();
-                                nextLabel.removeClass('disabled');
-                                nextLabel.html('(Area Level)');
-                                nextselect.find('option').remove();
-                                nextselect.removeAttr('disabled');
-                                nextselect.append(tpl);
-                            //}
+                        tpl = '';
+                        var nextselect = $(currentobj).parent().parent().next().find('select');
+                        var nextLabel = nextselect.parent().parent().find('.label');
+                        var nextrow = $(currentobj).parent().parent().next('.row');
+                        //data[1] += nextLabel.text().toUpperCase(); // Add "ALL <text>" option in the select element
+                        var counter = 0;
+                        $.each(data,function(i,o){
+                            tpl += '<option value="'+i+'">'+o+'</option>';
+                            counter +=1;
+                        });
+                        if(level=='&nbsp;&nbsp;' || counter <2){
+                            nextrow.hide();
+                        }else{
+                            nextrow.show();
+                            nextLabel.removeClass('disabled');
+                            nextLabel.html('(Area Level)');
+                            nextselect.find('option').remove();
+                            nextselect.removeAttr('disabled');
+                            nextselect.append(tpl);
+                        }
+                        var myselect = nextselect.parent().parent().next().find('select');
+                        do{
+                            myselect.parent().parent().hide();
+                            myselect = myselect.parent().parent().next().find('select');
+                        }while(myselect.length>0)
                     };
                     $.unmask({ id: maskId,callback: callback(data)});
-            }
-        })
+                }
+            });
+        });
     },
 	
 	updateDatepickerValue: function(parent, date) {

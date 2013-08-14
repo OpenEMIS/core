@@ -82,7 +82,9 @@ class AreaHandlerComponent extends Component {
 	}
 
     public function getAreaLevel($id,$arrMap = array('Area','AreaLevel')) {
-        $arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
+        if(!is_array($arrMap)){
+            $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
+        }
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
         $this->autoRender = false;
 

@@ -180,7 +180,9 @@ class AreasController extends AppController {
     }
 
     public function getAreaLevel($id,$arrMap = array('Area','AreaLevel')) {
-        $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
+        if(!is_array($arrMap)){
+            $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
+        }
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
 
         $this->autoRender = false;
@@ -379,7 +381,7 @@ class AreasController extends AppController {
                 for ($i = 0; $i < count($this->request->data['AreaEducation'])-1; $i++) {
                     $area = $this->AreaEducation->find('list',array(
                                                     'conditions' => array(
-                                                        'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_level_'.$i]
+                                                        'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_education_level_'.$i]
                                                     )
                                                 )
                                             );
@@ -423,7 +425,7 @@ class AreasController extends AppController {
                 for ($i = 0; $i < count($this->request->data['AreaEducation'])-1; $i++) {
                     $area = $this->AreaEducation->find('list',array(
                             'conditions'=> array(
-                                'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_level_'.$i]
+                                'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_education_level_'.$i]
                             )
                         )
                     );
