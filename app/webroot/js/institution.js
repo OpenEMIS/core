@@ -19,7 +19,7 @@ $(document).ready(function() {
 
 var objInstitution = {	
 	init :function(){
-		objInstitution.addAreaSwitching();
+
 	},
     addSite: function() {
 		var bool = true;
@@ -49,87 +49,6 @@ var objInstitution = {
 		}
 		return bool;
 	},
-	addAreaSwitching : function(){
-		var areatype = ['area_education','area']
-		for(p in areatype){
-			$('select[name*="['+areatype[p]+'_level_"]').each(function(l,obj){
-				$(obj).attr('areatype',areatype[p]);
-				$(obj).change(function(o){
-					var TotalAreaLevel = $('select[name*="['+$(this).attr('areatype')+'_level_"]').length;
-					var currentSelect = $(this).attr('name').replace('data[InstitutionSite]['+$(this).attr('areatype')+'_level_','');
-					currentSelect = currentSelect.replace(']','');
-					currentSelect = parseInt(currentSelect);
-					for(i=currentSelect+1;i<TotalAreaLevel;i++){
-						$('select[name=data\\[InstitutionSite\\]\\['+$(this).attr('areatype')+'_level_'+i+'\\]]').find('option').remove();
-					};
-					objInstitution.fetchChildren(this);
-				});
-			});
-		}
-    },
-	fetchChildren :function (currentobj){
-        var selected = $(currentobj).val();
-        var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
-        var maskId;
-        var url =  getRootURL() +'/Areas/viewAreaChildren/'+selected+'/'+edutype;
-        var level = '&nbsp;&nbsp;';
-        $.when(
-                $.ajax({
-                    type: "GET",
-                    url: getRootURL() +'/Areas/getAreaLevel/'+selected+'/'+edutype,
-                    success: function (data) {
-                        level = data;
-                        var myselect = $(currentobj).parent().parent().find('select');
-                        var myLabel = myselect.parent().parent().find('.label');
-                        myLabel.show();
-                        if(level=='&nbsp;&nbsp;'){
-                            myLabel.html('(Area Level)');
-                        }else{
-                            myLabel.html(level);
-                        }
-                    }
-                })
-            ).then(function() {
-                $.ajax({
-                    type: 'GET',
-                    dataType: 'json',
-                    url: url,
-                    beforeSend: function (jqXHR) {
-                        // maskId = $.mask({parent: '.content_wrapper'});
-                        maskId = $.mask({parent: '#area_section_group', text: i18n.General.textLoadAreas});
-                    },
-                    success: function (data, textStatus) {
-                        var callback = function(data) {
-                            tpl = '';
-                            var nextselect = $(currentobj).parent().parent().next().find('select');
-                            var nextLabel = nextselect.parent().parent().find('.label');
-                            //data[1] += nextLabel.text().toUpperCase(); // Add "ALL <text>" option in the select element
-                            var counter = 0;
-                            $.each(data,function(i,o){
-                                tpl += '<option value="'+i+'">'+o+'</option>';
-                                counter +=1;
-                            });
-                            if(level=='&nbsp;&nbsp;' || counter <2){
-                                nextrow.hide();
-                            }else{
-                                nextrow.show();
-                                nextLabel.removeClass('disabled');
-                                nextLabel.html('(Area Level)');
-                                nextselect.find('option').remove();
-                                nextselect.removeAttr('disabled');
-                                nextselect.append(tpl);
-                            }
-                            var myselect = nextselect.parent().parent().next().find('select');
-                            do{
-                                myselect.parent().parent().hide();
-                                myselect = myselect.parent().parent().next().find('select');
-                            }while(myselect.length>0)
-                        };
-                        $.unmask({ id: maskId,callback: callback(data)});
-                    }
-                });
-            });
-    },
     cancelAddSite: function(id){
 		window.location = getRootURL()+"Institutions/listSites/"+id;
 	}

@@ -170,9 +170,29 @@ class UtilityHelper extends AppHelper {
 	public function getAreaPicker($form,$id,$value,$settings=array()){
         $arrmap = array('Area','AreaLevel');
         $arealevelfk = 'area_level';
-        if($id=='area_education_id'){
-            $arrmap = array('AreaEducation','AreaEducationLevel');
-            $arealevelfk = 'area_education_level';
+        switch($id){
+            case 'birthplace_area_id':
+                $arrmap = array('Area','AreaLevel');
+                $arealevelfk = 'area_level';
+                break;
+
+            case 'address_area_id':
+                $arrmap = array('Area','AreaLevel');
+                $arealevelfk = 'area_level';
+                break;
+
+            case 'area_id':
+                $arrmap = array('Area','AreaLevel');
+                $arealevelfk = 'area_level';
+                break;
+
+            case 'area_education_id':
+                $arrmap = array('AreaEducation','AreaEducationLevel');
+                $arealevelfk = 'area_education_level';
+                break;
+
+            default:
+                break;
         }
 
 		//settings unused
