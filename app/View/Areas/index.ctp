@@ -33,13 +33,8 @@ echo $this->Html->script('area', false);
 
 	?>
 	<fieldset id="area_section_group" class="section_group">
-		<legend><?php echo __('Area'); ?></legend>
-		<?php if(isset($initAreaSelection) && count($initAreaSelection) > 0){
-		        echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array());
-		      }else{
-		        echo @$this->Utility->getAreaPicker($this->Form, 'area_id','', array());
-		      }
-		?>
+		<legend id="area"><?php echo __('Area'); ?></legend>
+		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
 	</fieldset>
 
 	<?php echo $this->Form->end(); ?>
@@ -61,7 +56,6 @@ echo $this->Html->script('area', false);
 		</div>
 	</fieldset>
 </div>
-<?php pr($initAreaSelection); ?>
 <input id="selectedArea" type="hidden" value="1" name="selectedArea"></input>
 
 <script type="text/javascript">

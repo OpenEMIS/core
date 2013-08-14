@@ -170,12 +170,7 @@ class AreasController extends AppController {
      * @return json            
      */
     public function viewAreaChildren($id,$arrMap = array('Area','AreaLevel')) {
-        //if ajax
-        if($arrMap=='AreaEducation'){
-            $arrMap = array('AreaEducation','AreaEducationLevel');
-        }else{
-            $arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
-        }
+        $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
 
         $this->autoRender = false;
@@ -185,11 +180,7 @@ class AreasController extends AppController {
     }
 
     public function getAreaLevel($id,$arrMap = array('Area','AreaLevel')) {
-        if($arrMap=='AreaEducation'){
-            $arrMap = array('AreaEducation','AreaEducationLevel');
-        }else{
-            $arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
-        }
+        $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
 
         $this->autoRender = false;

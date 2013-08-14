@@ -184,19 +184,18 @@ class UtilityHelper extends AppHelper {
 		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
 
 		$ctr = 0;
-
 		foreach($this->fieldLevels as $levelid => $levelName){
             $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
             $display = '';
             if($mylevel===''){
                 $display = 'display:none;';
-            }
+            };
             echo '<div class="row" style="'.$display.'">
                     <div class="label">'.$mylevel.'</div>
                     <div class="value">'. $form->input($arealevelfk.'_'.$ctr,
                                                         array('class'=>'areapicker default',
                                                         'style'=>'float:left;',
-                                                        'default'=>($v@$this->fieldAreaLevels[$ctr]['id'],
+                                                        'default'=>@$this->fieldAreaLevels[$ctr]['id'],
                                                         'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
             if ($ctr==0){
                 echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
