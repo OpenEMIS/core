@@ -20,11 +20,13 @@ echo $this->Html->script('jquery.scrollTo', false);
 	<h1>
 		<span><?php echo __('Finances'); ?></span>
 		<?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array(), array('class' => 'divider void', 'onclick' => "CensusFinance.show('CensusFinanceAdd')"));
-		}
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'financesEdit', $selectedYear), array('class' => 'divider'));
+		if($isEditable) {
+			if($_add) {
+				echo $this->Html->link(__('Add'), array(), array('class' => 'divider void', 'onclick' => "CensusFinance.show('CensusFinanceAdd')"));
+			}
+			if($_edit) {
+				echo $this->Html->link(__('Edit'), array('action' => 'financesEdit', $selectedYear), array('class' => 'divider'));
+			}
 		}
 		?>
 	</h1>
@@ -85,7 +87,8 @@ echo $this->Html->script('jquery.scrollTo', false);
             echo    '</fieldset>';
         }
 	?>
-		
+	
+	<?php if($isEditable) { ?>
 	<fieldset id="CensusFinanceAdd" class="section_group" style="<?php ((count($data)>0)?'visibility: hidden':'');?>">
 		<legend><?php echo __('Add New'); ?></legend>
 		
@@ -140,7 +143,8 @@ echo $this->Html->script('jquery.scrollTo', false);
 			<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onClick="return CensusFinance.validateAdd();" />
 			<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" onClick="CensusFinance.hide('CensusFinanceAdd')" />
 		</div>
-	</fieldset>	
+	</fieldset>
+	<?php } ?>
 </div>
 
 <?php echo $this->Form->end(); ?>

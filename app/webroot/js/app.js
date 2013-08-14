@@ -398,10 +398,12 @@ var jsTable = {
 			&& obj.find('.table_body').html().isEmpty()) {
 				obj.find('.table_body').remove();
 			}
-			obj.find('.table_body').each(function() {
-				$(this).find('.table_row.even').removeClass('even');
-				$(this).find('.table_row:visible:odd').addClass('even');
-			});
+			if(!obj.hasClass('no_strips')) {
+				obj.find('.table_body').each(function() {
+					$(this).find('.table_row.even').removeClass('even');
+					$(this).find('.table_row:visible:odd').addClass('even');
+				});
+			}
 		});
 	},
 	

@@ -63,6 +63,42 @@ class SchoolYear extends AppModel {
 		return $result;
 	}
 	
+	public function getYearListForVerification($institutionSiteId, $validate=true) {
+		$CensusVerification = ClassRegistry::init('CensusVerification');
+		$yearIds = $CensusVerification->find('list', array(
+			'fields' => array('CensusVerification.school_year_id'),
+			'joins' => array(
+				array(
+					'table' => 'census_verifications',
+					'alias' => 'CensusVerification2',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'CensusVerification2.school_year_id = CensusVerification.school_year_id',
+						'CensusVerification2.institution_site_id = CensusVerification.institution_site_id',
+						'CensusVerification2.created > CensusVerification.created'
+					)
+				)
+			),
+			'conditions' => array(
+				'CensusVerification.status' => 1,
+				'CensusVerification.institution_site_id' => $institutionSiteId,
+				'CensusVerification2.id IS NULL'
+			)
+		));
+		
+		$conditions = array();
+		if($validate) {
+			$conditions['id NOT'] = array_values($yearIds);
+		} else {
+			$conditions['id'] = array_values($yearIds);
+		}
+		$data = $this->find('list', array(
+			'fields' => array('SchoolYear.id', 'SchoolYear.name'),
+			'conditions' => $conditions
+		));
+		return $data;
+	}
+	
 	public function getLookupVariables() {
 		return array('School Year' => array('model' => 'SchoolYear'));
 	}

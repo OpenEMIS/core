@@ -318,15 +318,21 @@ class UtilityHelper extends AppHelper {
 	 * @param  string $format [leave null to get from config setting]
 	 * @return string         [formatted date]
 	 */
-	public function formatDate($date, $format=null) {
+	public function formatDate($date, $format=null, $echo=true) {
 		if (is_null($format)) {
 			$format = DateTimeComponent::getConfigDateFormat();
 		}
+		$output = null;
 		if($date == '0000-00-00' || $date == ''){ 
-			echo "";
+			$output = '';
 		}else{
 			$date = new DateTime($date);
-			echo $date->format($format);
+			$output = $date->format($format);
+		}
+		if($echo) {
+			echo $output;
+		} else {
+			return $output;
 		}
 	}
 

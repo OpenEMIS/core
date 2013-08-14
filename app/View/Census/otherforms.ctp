@@ -11,7 +11,7 @@ echo $this->Html->script('census', false);
 	<h1>
 		<span><?php echo __('Other Forms'); ?></span>
 		<?php
-		if($_edit) {
+		if($_edit && $isEditable) {
 			echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
