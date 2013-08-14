@@ -201,7 +201,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Results', 'InstitutionSites', 'results')
 				),
 				'TOTALS' => array(
-					$this->createLink('Validations', 'Census', 'validations'),
+					$this->createLink('Verifications', 'Census', 'verifications'),
 					$this->createLink('Students', 'Census', 'enrolment'),
 					$this->createLink('Teachers', 'Census', 'teachers'),
 					$this->createLink('Staff', 'Census', 'staff'),

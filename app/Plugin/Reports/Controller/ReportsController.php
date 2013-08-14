@@ -110,7 +110,7 @@ class ReportsController extends ReportsAppController {
 		//pr($this->InstitutionSiteProgramme->find('all',array('limit'=>2)));
 		$reportType = Inflector::underscore($reportType);
 		$reportType = str_replace('_',' ',$reportType);
-		$data = $this->Report->find('all',array('conditions'=>array('category'=>$reportType.' Reports')));
+		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'category'=>$reportType.' Reports'), 'order' => array('Report.order')));
 		
         $checkFileExist = array();
 		$tmp = array();

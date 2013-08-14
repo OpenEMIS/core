@@ -16,11 +16,11 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class CensusValidation extends AppModel {
-	public function getValidations($institutionSiteId) {
+class CensusVerification extends AppModel {
+	public function getVerifications($institutionSiteId) {
 		$data = $this->find('all', array(
 			'fields' => array(
-				'CensusValidation.*', 'SchoolYear.name',
+				'CensusVerification.*', 'SchoolYear.name',
 				'SecurityUser.username', 'SecurityUser.first_name', 'SecurityUser.last_name'
 			),
 			'recursive' => -1,
@@ -28,28 +28,23 @@ class CensusValidation extends AppModel {
 				array(
 					'table' => 'security_users',
 					'alias' => 'SecurityUser',
-					'conditions' => array('SecurityUser.id = CensusValidation.created_user_id')
+					'conditions' => array('SecurityUser.id = CensusVerification.created_user_id')
 				),
 				array(
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
-					'conditions' => array('SchoolYear.id = CensusValidation.school_year_id')
+					'conditions' => array('SchoolYear.id = CensusVerification.school_year_id')
 				)
 			),
-			'order' => array('SchoolYear.name', 'CensusValidation.created')
+			'order' => array('SchoolYear.name', 'CensusVerification.created')
 		));
 		return $data;
 	}
 	
 	public function isEditable($institutionSiteId, $yearId) {
-		$data = $this->find('first', array(
-			'recursive' => -1,
-			'conditions' => array(
-				'CensusValidation.institution_site_id' => $institutionSiteId,
-				'CensusValidation.school_year_id' => $yearId
-			),
-			'order' => array('CensusValidation.created DESC')
-		));
-		return !is_array($data);
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$yearList = $SchoolYear->getYearListForVerification($institutionSiteId);
+		
+		return array_key_exists($yearId, $yearList);
 	}
 }
