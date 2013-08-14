@@ -196,7 +196,7 @@ class UtilityHelper extends AppHelper {
                     <div class="value">'. $form->input($arealevelfk.'_'.$ctr,
                                                         array('class'=>'areapicker default',
                                                         'style'=>'float:left;',
-                                                        'default'=>@$this->fieldAreaLevels[$ctr]['id'],
+                                                        'default'=>($v@$this->fieldAreaLevels[$ctr]['id'],
                                                         'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
             if ($ctr==0){
                 echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));

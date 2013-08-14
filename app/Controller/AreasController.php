@@ -64,9 +64,7 @@ class AreasController extends AppController {
             $this->set('initAreaSelection', (isset($this->request->data['Area']) && count($this->request->data['Area']) > 0)?$this->request->data['Area']: null);
 
         }
-		
-		
-		
+
 		// Checking if user has access to _view for area levels
 		$_view_levels = false;
 		if($this->AccessControl->check($this->params['controller'], 'levels')) {

@@ -183,17 +183,15 @@ class InstitutionSitesController extends AppController {
 					$last_adminarea_id = $arrValSave;
 				}
 			}
-			
-			
-			
+
 			if($last_area_id == 0){
-				$last_area_id = $this->institutionSiteObj['InstitutionSite']['area_id'];
+				$last_area_id = '';
 			}
 			$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
 			
 			
 			if($last_adminarea_id == 0){
-				$last_adminarea_id = $this->institutionSiteObj['InstitutionSite']['area_education_id'];
+				$last_adminarea_id = '';
 			}
 			$this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
 			
@@ -296,12 +294,12 @@ class InstitutionSitesController extends AppController {
         $this->set('ownership_options',$ownership);
         $this->set('locality_options',$locality);
         $this->set('status_options',$status);
-		$this->set('arealevel',$areaLevel);
-		$this->set('adminarealevel',$adminareaLevel);
-		$this->set('levels',$levels);
-		$this->set('adminlevels',$adminlevels);
-		$this->set('areadropdowns',$areadropdowns);
-		$this->set('adminareadropdowns',$adminareadropdowns);
+		//$this->set('arealevel',$areaLevel);
+		//$this->set('adminarealevel',$adminareaLevel);
+		//$this->set('levels',$levels);
+		//$this->set('adminlevels',$adminlevels);
+		//$this->set('areadropdowns',$areadropdowns);
+		//$this->set('adminareadropdowns',$adminareadropdowns);
 		
 		$this->set('disabledAreas',$disabledAreas);
 		
