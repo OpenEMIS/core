@@ -70,7 +70,7 @@ class DataProcessingController extends DataProcessingAppController {
 		if($this->request->is('post')){
 			$this->processGenerate($this->data['Reports']);
 		}
-		$data = $this->Report->find('all',array('conditions'=>array('NOT'=>array('file_type'=>array('ind','est')))));
+		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est'))), 'order' => array('Report.order')));
 		$QR = $this->Report->getQueuedRunningReport();
 
 		foreach($QR as $arrV){

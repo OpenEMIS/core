@@ -123,14 +123,14 @@ var Census = {
 		});
 	},
 	
-	validate: function(obj, type) {
-		var dlgId = 'validate_dialog';
+	verify: function(obj, type) {
+		var dlgId = 'verify_dialog';
 		var url = $(obj).attr('href');
 		if(type==='GET') {			
 			var confirmBtn = {
 				value: i18n.General.textConfirm, // change to validate
 				callback: function() {
-					Census.validate(obj, 'POST');
+					Census.verify(obj, 'POST');
 				}
 			};
 			var dlgOpt = {

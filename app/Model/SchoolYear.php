@@ -63,26 +63,26 @@ class SchoolYear extends AppModel {
 		return $result;
 	}
 	
-	public function getYearListForValidation($institutionSiteId, $validate=true) {
-		$CensusValidation = ClassRegistry::init('CensusValidation');
-		$yearIds = $CensusValidation->find('list', array(
-			'fields' => array('CensusValidation.school_year_id'),
+	public function getYearListForVerification($institutionSiteId, $validate=true) {
+		$CensusVerification = ClassRegistry::init('CensusVerification');
+		$yearIds = $CensusVerification->find('list', array(
+			'fields' => array('CensusVerification.school_year_id'),
 			'joins' => array(
 				array(
-					'table' => 'census_validations',
-					'alias' => 'CensusValidation2',
+					'table' => 'census_verifications',
+					'alias' => 'CensusVerification2',
 					'type' => 'LEFT',
 					'conditions' => array(
-						'CensusValidation2.school_year_id = CensusValidation.school_year_id',
-						'CensusValidation2.institution_site_id = CensusValidation.institution_site_id',
-						'CensusValidation2.created > CensusValidation.created'
+						'CensusVerification2.school_year_id = CensusVerification.school_year_id',
+						'CensusVerification2.institution_site_id = CensusVerification.institution_site_id',
+						'CensusVerification2.created > CensusVerification.created'
 					)
 				)
 			),
 			'conditions' => array(
-				'CensusValidation.status' => 1,
-				'CensusValidation.institution_site_id' => $institutionSiteId,
-				'CensusValidation2.id IS NULL'
+				'CensusVerification.status' => 1,
+				'CensusVerification.institution_site_id' => $institutionSiteId,
+				'CensusVerification2.id IS NULL'
 			)
 		));
 		

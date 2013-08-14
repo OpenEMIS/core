@@ -32,7 +32,7 @@ class CensusController extends AppController {
 		'EducationCycle',
 		'EducationGrade',
 		'SchoolYear',
-		'CensusValidation',
+		'CensusVerification',
 		'CensusStudent',
 		'CensusAttendance',
 		'CensusBehaviour',
@@ -118,33 +118,33 @@ class CensusController extends AppController {
 		return json_encode($list);
 	}
 	
-	public function validations() {
-		$this->Navigation->addCrumb('Validations');
+	public function verifications() {
+		$this->Navigation->addCrumb('Verifications');
 		$institutionSiteId = $this->Session->read('InstitutionSiteId');
-		$data = $this->CensusValidation->getValidations($institutionSiteId);
-		$validatedYears = $this->SchoolYear->getYearListForValidation($institutionSiteId);
-		$unvalidatedYears = $this->SchoolYear->getYearListForValidation($institutionSiteId, false);
+		$data = $this->CensusVerification->getVerifications($institutionSiteId);
+		$verifiedYears = $this->SchoolYear->getYearListForVerification($institutionSiteId);
+		$unverifiedYears = $this->SchoolYear->getYearListForVerification($institutionSiteId, false);
 		$this->set('data', $data);
-		$this->set('allowValidate', count($validatedYears) > 0);
-		$this->set('allowUnvalidate', count($unvalidatedYears) > 0);
+		$this->set('allowVerify', count($verifiedYears) > 0);
+		$this->set('allowUnverify', count($unverifiedYears) > 0);
 	}
 	
-	public function validates() {
+	public function verifies() {
 		if($this->request->is('ajax')) {
 			$institutionSiteId = $this->Session->read('InstitutionSiteId');
 			if($this->request->is('get')) {
 				$this->layout = 'ajax';
 				$status = $this->params['pass'][0];
-				$msg = $this->Utility->getMessage($status==1 ? 'CENSUS_VALIDATE' : 'CENSUS_UNVALIDATE');
+				$msg = $this->Utility->getMessage($status==1 ? 'CENSUS_VERIFY' : 'CENSUS_UNVERIFY');
 				$label = '';
 				$yearOptions = array();
 				
 				if($status==1) {
-					$label = __('Year to validate');
-					$yearOptions = $this->SchoolYear->getYearListForValidation($institutionSiteId);
+					$label = __('Year to verify');
+					$yearOptions = $this->SchoolYear->getYearListForVerification($institutionSiteId);
 				} else {
-					$label = __('Year to unvalidate');
-					$yearOptions = $this->SchoolYear->getYearListForValidation($institutionSiteId, false);
+					$label = __('Year to unverify');
+					$yearOptions = $this->SchoolYear->getYearListForVerification($institutionSiteId, false);
 				}
 				$this->set('msg', $msg);
 				$this->set('label', $label);
@@ -154,7 +154,7 @@ class CensusController extends AppController {
 				$status = $this->params['pass'][0];
 				$data = array('institution_site_id' => $institutionSiteId, 'status' => $status);
 				$data = array_merge($data, $this->data);
-				if($this->CensusValidation->save($data)) {
+				if($this->CensusVerification->save($data)) {
 					return true;
 				}
 			}
@@ -194,7 +194,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('category', $categoryList);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function enrolmentEdit() {
@@ -206,7 +206,7 @@ class CensusController extends AppController {
 		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		
 		$data = array();
-		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 		if(!$editable) {
 			$this->redirect(array('action' => 'enrolment', $selectedYear));
 		} else {
@@ -298,7 +298,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('schoolDays', $schoolDays);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function attendanceEdit() {
@@ -311,7 +311,7 @@ class CensusController extends AppController {
 			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYear));
 			
 			$data = array();
-			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 			if(!$editable) {
 				$this->redirect(array('action' => 'attendance', $selectedYear));
 			} else {
@@ -351,7 +351,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function behaviourEdit() {
@@ -361,7 +361,7 @@ class CensusController extends AppController {
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);
 			$data = $this->CensusBehaviour->getCensusData($this->institutionSiteId, $selectedYear);
-			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 			if(!$editable) {
 				$this->redirect(array('action' => 'behaviour', $selectedYear));
 			} else {
@@ -396,7 +396,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function graduatesEdit() {
@@ -413,7 +413,7 @@ class CensusController extends AppController {
 		$selectedYear = $this->getAvailableYearId($yearList);
 		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		$data = array();
-		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 		if(!$editable) {
 			$this->redirect(array('action' => 'graduates', $selectedYear));
 		} else {
@@ -454,7 +454,7 @@ class CensusController extends AppController {
 		$this->set('displayContent', $displayContent);
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function classesEdit() {
@@ -463,7 +463,7 @@ class CensusController extends AppController {
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);
-			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 			if(!$editable) {
 				$this->redirect(array('action' => 'classes', $selectedYear));
 			} else {
@@ -557,7 +557,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function textbooksEdit() {
@@ -566,7 +566,7 @@ class CensusController extends AppController {
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);
-			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 			if(!$editable) {
 				$this->redirect(array('action' => 'textbooks', $selectedYear));
 			} else {
@@ -619,7 +619,7 @@ class CensusController extends AppController {
 		$this->set('displayContent', $displayContent);
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function teachersEdit() {
@@ -628,7 +628,7 @@ class CensusController extends AppController {
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);
-			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 			if(!$editable) {
 				$this->redirect(array('action' => 'teachers', $selectedYear));
 			} else {
@@ -722,7 +722,7 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function staffEdit() {
@@ -731,7 +731,7 @@ class CensusController extends AppController {
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);
-			$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 			if(!$editable) {
 				$this->redirect(array('action' => 'staff', $selectedYear));
 			} else {
@@ -794,7 +794,7 @@ class CensusController extends AppController {
 		$this->set('data',$arrCensusInfra);
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
         
 	public function infrastructureEdit() {
@@ -850,7 +850,7 @@ class CensusController extends AppController {
 		$arrCensusInfra = array();
 		$yearList = $this->SchoolYear->getAvailableYears();
 		$selectedYear = $this->getAvailableYearId($yearList);
-		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 		if(!$editable) {
 			$this->redirect(array('action' => 'infrastructure', $selectedYear));
 		} else {
@@ -1014,7 +1014,7 @@ class CensusController extends AppController {
 		$this->set('years', $yearList);
 		$this->set('natures',$natures);
 		$this->set('sources',$sources);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function financesEdit() {
@@ -1036,7 +1036,7 @@ class CensusController extends AppController {
                 
 		$yearList = $this->SchoolYear->getAvailableYears();
 		$selectedYear = $this->getAvailableYearId($yearList);
-		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 		if(!$editable) {
 			$this->redirect(array('action' => 'finances', $selectedYear));
 		} else {
@@ -1140,7 +1140,7 @@ class CensusController extends AppController {
 		$this->set('data',$data);
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
-		$this->set('isEditable', $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear));
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
 	public function otherformsEdit(){
@@ -1231,7 +1231,7 @@ class CensusController extends AppController {
 		$arrCensusInfra = array();
 		$yearList = $this->SchoolYear->getAvailableYears();
 		$selectedYear = $this->getAvailableYearId($yearList);
-		$editable = $this->CensusValidation->isEditable($this->institutionSiteId, $selectedYear);
+		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 		if(!$editable) {
 			$this->redirect(array('action' => 'otherforms', $selectedYear));
 		} else {
