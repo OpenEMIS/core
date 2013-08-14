@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2013-06-17 17:00+0800\n"
+"PO-Revision-Date: 2013-07-15 14:33+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: rus\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.5\n"
+"X-Generator: Poedit 1.5.7\n"
 
 msgid "Home"
 msgstr "Главная страница"
@@ -105,7 +105,7 @@ msgid "Statistics"
 msgstr "Статистика"
 
 msgid "Institutions Sites"
-msgstr "Cайты  учреждений "
+msgstr "Cайты учреждений"
 
 msgid "Activities"
 msgstr "Мероприятия"
@@ -126,7 +126,7 @@ msgid "by"
 msgstr "на"
 
 msgid "Notice"
-msgstr "Уведомление"
+msgstr "Примечание"
 
 msgid "Note: Max upload file size is 2MB."
 msgstr "Примечание: Максимальная загрузка <br/>файла размером 2 Мб."
@@ -159,7 +159,7 @@ msgid "Some errors have been encountered while saving files."
 msgstr "Некоторые ошибки, которые возникли при сохранении файлов."
 
 msgid "Records have been added/updated successfully."
-msgstr "Записи, которые были добавлены / обновлены успешно"
+msgstr "Записи были успешно добавлены / обновлены"
 
 msgid "Records have been deleted successfully."
 msgstr "Записи были успешно удалены."
@@ -174,7 +174,7 @@ msgid "Searching..."
 msgstr "Поиск …"
 
 msgid "%s have been deleted successfully."
-msgstr "%s была успешно удалены"
+msgstr "%s были успешно удалены"
 
 msgid "Please enter a unique Identification No"
 msgstr "Пожалуйста, введите уникальный <br/>Идентификационный номер"
@@ -237,7 +237,7 @@ msgid "Attachment"
 msgstr "Приложение"
 
 msgid "Student Identification No, First Name or Last Name"
-msgstr "Студенческая Идентификационный номер, Имя или Фамилия"
+msgstr "Студенческий Идентификационный номер, Имя или Фамилия"
 
 msgid "Student Identification"
 msgstr "студенческий билет"
@@ -249,7 +249,7 @@ msgid "Staff Identification"
 msgstr "идентификации работников"
 
 msgid "Identification No."
-msgstr "Идентификационный номер"
+msgstr "Идентификационный<br/>номер."
 
 msgid "Identification No"
 msgstr "Идентификационный номер"
@@ -381,7 +381,7 @@ msgid "Issued By"
 msgstr ", выданного"
 
 msgid "Completed Date"
-msgstr "Дата завершения "
+msgstr "Дата завершения"
 
 msgid "Category"
 msgstr "Категория"
@@ -510,7 +510,7 @@ msgid "Site Name"
 msgstr "Имя сайта"
 
 msgid "Type"
-msgstr "сайта"
+msgstr "Тип"
 
 msgid "Ownership"
 msgstr "Принадлежность"
@@ -528,7 +528,7 @@ msgid "LLG"
 msgstr "ЛЛГ"
 
 msgid "Ward"
-msgstr "палата"
+msgstr "Приход"
 
 msgid "Street"
 msgstr "улица"
@@ -654,7 +654,7 @@ msgid "Results"
 msgstr "оценки"
 
 msgid "TOTALS"
-msgstr "Общее число"
+msgstr "ОБЩЕЕ число"
 
 msgid "Total"
 msgstr "Общее число"
@@ -991,7 +991,7 @@ msgid "ACCOUNTS &amp; SECURITY"
 msgstr "счета и БЕЗОПАСНОСТЬ"
 
 msgid "ACCOUNTS & SECURITY"
-msgstr "счета и БЕЗОПАСНОСТЬ"
+msgstr "СЧЕТА и БЕЗОПАСНОСТЬ"
 
 msgid "NATIONAL DENOMINATORS"
 msgstr "НАЦИОНАЛЬНЫЕ ЗНАМЕНАТЕЛИ"
@@ -1198,7 +1198,7 @@ msgid "Facilities"
 msgstr "Услуги"
 
 msgid "Qualification Certificates"
-msgstr "Сертификаты квалификации "
+msgstr "Сертификаты квалификации"
 
 msgid "Qualification Categories"
 msgstr "Категории квалификации"
@@ -1228,7 +1228,7 @@ msgid "Multi Line Text"
 msgstr "Многострочный текст"
 
 msgid "DropDown List"
-msgstr "выпадающий список"
+msgstr "Раскрывающися список"
 
 msgid "Dropdown List"
 msgstr "раскрывающийся список"
@@ -1237,7 +1237,7 @@ msgid "Checkboxes"
 msgstr "Флажки"
 
 msgid "Institution Custom Fields"
-msgstr "Поля для настроики учреждения"
+msgstr "Поля для настроики учреждения "
 
 msgid "Institution Site Custom Fields"
 msgstr "Поля настроики учреждения сайта"
@@ -1315,7 +1315,7 @@ msgid "Institution Site"
 msgstr "Сайт Учреждения"
 
 msgid "INSTITUTION SITE"
-msgstr "Институт сайта"
+msgstr "Сайт Учреждения"
 
 msgid "Census"
 msgstr "Перепись"
@@ -1399,7 +1399,7 @@ msgid "Data Quality Reports"
 msgstr "Отчеты по Качеству Данных"
 
 msgid "DataQuality Reports"
-msgstr "Отчеты DataQuality"
+msgstr "Отчеты по Качеству Данных"
 
 msgid "Custom Reports"
 msgstr "Отчеты Пользователей"
@@ -1683,7 +1683,7 @@ msgid ""
 "group and multiply the result by 100. This indicator has dimension values of "
 "sex, locality and grade."
 msgstr ""
-"Разделите количество зачисленных учащихся (или студентов), в \"\"официальный "
+"Разделите количество зачисленных учащихся (или студентов), в официальный "
 "возрастной группе для данного уровня образования на население в той же "
 "возрастной группе и умножьте результат на 100. Этот показатель различается "
 "по полу, местности и классам."
@@ -1831,7 +1831,7 @@ msgstr ""
 "100. Этот показатель различается по местности, секторам и образованию."
 
 msgid "Gender Parity Index (Students) Report"
-msgstr "Отчет по индексу гендерного паритета (студенты) "
+msgstr "Отчет по индексу гендерного паритета (студенты)"
 
 msgid ""
 "Divide the number of female students by the number of male students. This "
@@ -2053,7 +2053,7 @@ msgid ""
 "The system will %s the current data and restore to your previous data based "
 "on the restore point you selected."
 msgstr ""
-"Система % текущие данные и восстановит предыдущие данные, основанные на "
+"Система %s текущие данные и восстановит предыдущие данные, основанные на "
 "точке восстановления, которую вы выбрали."
 
 msgid "OVERWRITE ALL"
@@ -2087,7 +2087,9 @@ msgid "Image exceeds system max filesize."
 msgstr "Размер файла изображения превышает максимально допустимые нормы"
 
 msgid "Image exceeds max file size in the HTML form."
-msgstr "Размер файла изображения превышает максимально допустимые нормы в формате HTML"
+msgstr ""
+"Размер файла изображения превышает максимально допустимые нормы в формате "
+"HTML"
 
 msgid "Image was only partially uploaded."
 msgstr "Изображение загружено лишь частично"
@@ -2164,7 +2166,7 @@ msgstr ""
 "записи также будут удалены. <br> <br> Вы уверены, что хотите это сделать?\""
 
 msgid "Deleting attachment..."
-msgstr "Удаление приложения  …"
+msgstr "Удаление приложения ..."
 
 msgid "Delete Attachment"
 msgstr "Удалить приложение"
@@ -2173,7 +2175,7 @@ msgid "Do you wish to delete this record?"
 msgstr "Вы хотите удалить эту запись?"
 
 msgid "Updating attachment..."
-msgstr "Обновление приложения …"
+msgstr "Обновление приложения..."
 
 msgid "Bank Branch is required!"
 msgstr "Требуется отделение банка!"
@@ -2196,7 +2198,7 @@ msgid "Are you sure you want to leave?"
 msgstr "Вы уверены, что хотите выйти?"
 
 msgid "GNP value is required."
-msgstr "Требуется ВНП "
+msgstr "Требуется ВНП"
 
 msgid "Category is required!"
 msgstr "Требуется категория!"
@@ -2273,7 +2275,7 @@ msgstr ""
 "района, прежде чем добавлять название районов"
 
 msgid "Saving please wait..."
-msgstr "Идет сохранение, пожалуйста, подождите  …"
+msgstr "Идет сохранение, пожалуйста, подождите ..."
 
 msgid "Loading Areas"
 msgstr "Загрузка областей"
@@ -2489,3 +2491,177 @@ msgstr "Отчеты Данные несоответствия"
 
 msgid "age"
 msgstr "возраст"
+
+msgid "Completion Rate / Gross Primary Graduation Ratio"
+msgstr "коэффициент окончания / общий коэффициент окончания начальной школы"
+
+msgid ""
+"Divide the number of primary graduates, irrespective of age, by the "
+"population of theoretical primary graduation, and multiply the result by 100."
+msgstr ""
+"Разделить число выпускников начальной школы, независимо от возраста на "
+"теоретическое количество выпускников начальной школы и умножьте результат на "
+"100."
+
+msgid "Percentage of Trained Teachers"
+msgstr "Процент квалифицированных учителей"
+
+msgid "Divide the female value of a given indicator by that of the male."
+msgstr "Разделите женский коэффициент данного показателя на мужской"
+
+msgid "Percent of Female Students"
+msgstr "Процент студенток"
+
+msgid "Percent of Female Teachers"
+msgstr "Процент учителей-женщин"
+
+msgid "Percentage of Private Enrolment"
+msgstr "Процент частного зачисления"
+
+msgid "Percentage of schools with improved drinking water sources"
+msgstr "Процент школ с улучшенным источникам питьевой воды"
+
+msgid "Percentage of schools with adequate sanitation facilities"
+msgstr "Процент школ с надлежащими санитарно-гигиеническими условиями"
+
+msgid ""
+"Public Expenditure as percentage of Total Public Expenditure on Education"
+msgstr ""
+"Государственные расходы как процент от общих государственных расходов на "
+"образование"
+
+msgid ""
+"Divide public current expenditure devoted to each level of education by the "
+"total public current expenditure on education, and multiply the result by "
+"100. Divide public current expenditure on education in a given financial "
+"year by the total public expenditure on education for the same financial "
+"year and multiply the result by 100."
+msgstr ""
+"Разделите текущие общественные расходы, направленные на каждый уровень "
+"образования, на текущие общую сумму общественных расходов на образование и "
+"умножьте результат на 100. Разделите текущие общественные расходы на "
+"образование в данном финансовом году на общую сумму  государственных "
+"расходов на образование за тот же финансовый год и умножьть результат на 100."
+
+msgid "Public Expenditure as percentage of Total Government Expenditure"
+msgstr "Общественные расходы как процент от общих государственных расходов"
+
+msgid "Public Expenditure as percentage of Gross National Product (GNP)"
+msgstr ""
+"Общественные расходы как процент от валового национального продукта (ВНП)"
+
+msgid "Number of teachers"
+msgstr "Количество учителей"
+
+msgid "Net Admission Rate / Net Intake Rate"
+msgstr "Коэффициент чистого зачисления / коэффициент чистого приема"
+
+msgid "Gross Admission Rate / Gross Intake Rate"
+msgstr "Общий коэффициент зачисления / общий коэффициент допуска"
+
+msgid "Summary report on Census Additional Information about enrolment"
+msgstr "Сводный отчет о переписи дополнительной информации о зачислении"
+
+msgid "Summary report on Buildings"
+msgstr "Сводный отчет о зданиях"
+
+msgid "Report on Rooms"
+msgstr "Отчет по комнатам"
+
+msgid "Report on number of Sanitations and Conditions"
+msgstr "Отчет по количеству санузлов и их состояние"
+
+msgid "Report on number of Furnitures and its conditions"
+msgstr "Отчет по количеству мебели и ее состоянии"
+
+msgid "Report on number and kinds of Resources as well as Condition status"
+msgstr "Отчет о количестве и видах ресурсов, а также статус их состояния"
+
+msgid "Report on Power sources"
+msgstr "Отчет по источникам питания"
+
+msgid "Report on number of Powers types and Conditions"
+msgstr "Отчет по количеству типов электропитания и их состояние"
+
+msgid "Report on Water"
+msgstr "Отчет по воде"
+
+msgid "Report on conditions, number, kinds of water source of Institutions"
+msgstr "Отчет по условиям, количеству, типам водоснабжения для учреждений"
+
+msgid "Student List"
+msgstr "Список студентов"
+
+msgid "Report on student additional info"
+msgstr "Отчет по дополнительной информации о студентах"
+
+msgid "Report on Teachers Additional Info"
+msgstr "Отчет по дополнительной информации о преподавателях"
+
+msgid "Report on Staff Additional Info"
+msgstr "Отчет по дополнительной информации о персонале "
+
+msgid "List of institution's additional info"
+msgstr "Отчет по дополнительной информации об учреждениях"
+
+msgid "Enrolment Summary"
+msgstr "Резюме зачисления"
+
+msgid "Class List"
+msgstr "Список классов"
+
+msgid "Report on classes"
+msgstr "Отчет по классам"
+
+msgid "Summary report on Textbooks"
+msgstr "Сводный отчет по учебникам"
+
+msgid "Summary report on Teachers"
+msgstr "Сводный отчет по учителям"
+
+msgid "Trainings"
+msgstr "Тренинги"
+
+msgid "Staffs"
+msgstr "Персонал"
+
+msgid "Summary report on Institution Staffs"
+msgstr "Сводный отчет по персоналу учреждений"
+
+msgid "Summary report on Census Table Related Information"
+msgstr "Сводный отчет по дополнительная информации таблицах переписи "
+
+msgid "Summary report on income"
+msgstr "Сводный отчет о доходах"
+
+msgid "Report on expenditure"
+msgstr "Отчет о расходах"
+
+msgid "Institution List"
+msgstr "Список учреждени"
+
+msgid "Report on institutions"
+msgstr "Отчет об учреждениях"
+
+msgid "Institution Site List"
+msgstr "Список учреждений"
+
+msgid "Report on institution sites"
+msgstr "Отчет по учреждениям"
+
+msgid "Please contact support for more information on Custom Report."
+msgstr ""
+"Пожалуйста, свяжитесь со службой поддержки для получения дополнительной "
+"информации о пользовательских отчетах."
+
+msgid "This is a report on classes"
+msgstr "Это отчет по классам"
+
+msgid "This is a report on student"
+msgstr "Это отчет по студентам"
+
+msgid "This is a report on Teachers"
+msgstr "Это отчет по учителям"
+
+msgid "This is a report on Staff"
+msgstr "Это отчет по персоналу"
