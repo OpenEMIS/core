@@ -103,21 +103,6 @@ var areas = {
 
                         $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').find('option').remove();
                     }
-                }else {
-                    if(currentSelctedOptionValue==0){
-                        var nowSelect = $(this).parent().parent().find('select');
-                        var nowLabel = nowSelect.parent().parent().find('.label');
-                        nowLabel.html('&nbsp;');
-                        var myselect = $(this).parent().parent().next().find('select');
-                        var mylabel = myselect.parent().parent().find('.label');
-                        do{
-                            myselect.hide();
-                            mylabel.hide();
-
-                            myselect = myselect.parent().parent().next().find('select');
-                            mylabel = myselect.parent().parent().find('.label');
-                        }while(myselect.length>0)
-                    }
                 }
 
                 if(currentSelctedOptionValue > 0 ){
@@ -167,12 +152,13 @@ var areas = {
                     type: "GET",
                     url: areas.baseURL +'getAreaLevel/'+selected+'/'+areas.extraParam,
                     success: function (data) {
-                        alert(areas.baseURL +'getAreaLevel/'+selected+'/'+areas.extraParam);
                         level = data;
                         var myselect = $(currentobj).parent().parent().find('select');
                         var myLabel = myselect.parent().parent().find('.label');
                         myLabel.show();
                         if(level=='&nbsp;&nbsp;'){
+                            var nextRow = myselect.parent().parent().find('.row');
+                            nextRow.hide();
                             myLabel.html('(Area Level)');
                         }else{
                             myLabel.html(level);
@@ -193,6 +179,7 @@ var areas = {
                             tpl = '';
                             var nextselect = $(currentobj).parent().parent().next().find('select');
                             var nextLabel = nextselect.parent().parent().find('.label');
+                            var nextrow = $(currentobj).parent().parent().next('.row');
                             //data[1] += nextLabel.text().toUpperCase(); // Add "ALL <text>" option in the select element
                             var counter = 0;
                             $.each(data,function(i,o){
@@ -200,30 +187,18 @@ var areas = {
                                 counter +=1;
                             });
                             if(level=='&nbsp;&nbsp;' || counter <2){
-                                nextLabel.hide();
-                                nextselect.hide();
+                                nextrow.hide();
                             }else{
-                                nextLabel.show();
-                                nextselect.show();
+                                nextrow.show();
                                 nextLabel.removeClass('disabled');
                                 nextLabel.html('(Area Level)');
                                 nextselect.find('option').remove();
                                 nextselect.removeAttr('disabled');
                                 nextselect.append(tpl);
                             }
-                            var myselect = nextselect.parent().parent().next().find('select');
-                            var mylabel = myselect.parent().parent().find('.label');
-                            do{
-                                myselect.hide();
-                                mylabel.hide();
-                                myselect = myselect.parent().parent().next().find('select');
-                                mylabel = myselect.parent().parent().find('.label');
-                            }while(myselect.length>0)
-
                         };
                         $.unmask({ id: maskId,callback: callback(data)});
                     }
-
                 });
             });
     },

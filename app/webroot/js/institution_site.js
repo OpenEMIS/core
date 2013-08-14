@@ -56,9 +56,15 @@ var objInstitutionSite = {
                     level = data;
                     var myselect = $(currentobj).parent().parent().find('select');
                     var myLabel = myselect.parent().parent().find('.label');
+                    var mynextRow = myselect.parent().parent().next().find('.row');
                     myLabel.show();
                     if(level=='&nbsp;&nbsp;'){
                         myLabel.html('(Area Level)');
+                        myselect = myselect.parent().parent().next().find('select');
+                        do{
+                            myselect.parent().parent().hide();
+                            myselect = myselect.parent().parent().next().find('select');
+                        }while(myselect.length>0)
                     }else{
                         myLabel.html(level);
                     }
