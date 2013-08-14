@@ -9,6 +9,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
     <h1>
         <span><?php echo __('Attendance'); ?></span>
 		<?php
+		echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites', 'action' => 'staffView', $id), array('class' => 'divider'));
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'staffAttendanceEdit', $selectedYear), array('class' => 'divider'));
 		}
