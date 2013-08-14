@@ -1797,6 +1797,8 @@ class InstitutionSitesController extends AppController {
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
+        $this->set('id',$id);
+        $this->set('myview', 'teachersView');
 		$this->render('/Elements/customfields/view');
 	}
 	
@@ -1854,6 +1856,8 @@ class InstitutionSitesController extends AppController {
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
+        $this->set('id',$id);
+        $this->set('myview', 'studentsView');
 		$this->render('/Elements/customfields/view');
 	}
 	
@@ -1908,6 +1912,8 @@ class InstitutionSitesController extends AppController {
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
+        $this->set('id',$id);
+        $this->set('myview', 'staffView');
 		$this->render('/Elements/customfields/view');
 	}
 	
@@ -2082,6 +2088,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('years', $yearList);
 			$this->set('data', $data);
 			$this->set('schoolDays', $schoolDays);
+            $this->set('id', $studentId);
 		}
     }
 
@@ -2152,6 +2159,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('years', $yearList);
 			$this->set('data', $data);
 			$this->set('schoolDays', $schoolDays);
+            $this->set('id', $teacherId);
 
             $id = @$this->request->params['pass'][0];
             $yearList = $this->SchoolYear->getYearList();
@@ -2227,6 +2235,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('years', $yearList);
 			$this->set('data', $data);
 			$this->set('schoolDays', $schoolDays);
+            $this->set('id', $staffId);
 		}
     }
 
