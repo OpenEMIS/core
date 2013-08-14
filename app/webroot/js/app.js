@@ -251,27 +251,37 @@ var jsForm = {
 	
 	getAreaChildren :function (currentobj){
         var selected = $(currentobj).val();
-
+        alert($(currentobj).val());
         var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
-
-        atype=(edutype?'admin':'Area');
         var maskId;
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+atype,
+            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+edutype,
             beforeSend: function (jqXHR) {
                     maskId = $.mask({text:i18n.General.textLoadAreas});
             },
             success: function (data, textStatus) {
                     var callback = function(data) {
                             tpl = '';
+                            var counter = 0;
                             $.each(data,function(i,o){
                                 tpl += '<option value="'+i+'">'+data[i]+'</option>';
+                                counter +=1;
                             })
                             var nextselect = $(currentobj).parent().parent().next().find('select');
-                            nextselect.find('option').remove();
-                            nextselect.append(tpl);
+                            var nextLabel = nextselect.parent().parent().find('.label');
+                            var nextrow = $(currentobj).parent().parent().next('.row');
+                            //if(counter <2){
+                                //nextrow.hide();
+                            //}else{
+                                nextrow.show();
+                                nextLabel.removeClass('disabled');
+                                nextLabel.html('(Area Level)');
+                                nextselect.find('option').remove();
+                                nextselect.removeAttr('disabled');
+                                nextselect.append(tpl);
+                            //}
                     };
                     $.unmask({ id: maskId,callback: callback(data)});
             }

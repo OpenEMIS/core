@@ -69,15 +69,14 @@ var objInstitution = {
     },
 	fetchChildren :function (currentobj){
         var selected = $(currentobj).val();
+        var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
         var maskId;
-		var edutype = $(currentobj).closest('fieldset').find('legend').text().match(/Education/);
-        atype=(edutype?'admin':'Area');
-        var url =  getRootURL() +'/Areas/viewAreaChildren/'+selected+'/'+atype;
+        var url =  getRootURL() +'/Areas/viewAreaChildren/'+selected+'/'+edutype;
         var level = '&nbsp;&nbsp;';
         $.when(
                 $.ajax({
                     type: "GET",
-                    url: getRootURL() +'/Areas/getAreaLevel/'+selected+'/'+atype,
+                    url: getRootURL() +'/Areas/getAreaLevel/'+selected+'/'+edutype,
                     success: function (data) {
                         level = data;
                         var myselect = $(currentobj).parent().parent().find('select');
@@ -120,6 +119,11 @@ var objInstitution = {
                                 nextselect.removeAttr('disabled');
                                 nextselect.append(tpl);
                             }
+                            var myselect = nextselect.parent().parent().next().find('select');
+                            do{
+                                myselect.parent().parent().hide();
+                                myselect = myselect.parent().parent().next().find('select');
+                            }while(myselect.length>0)
                         };
                         $.unmask({ id: maskId,callback: callback(data)});
                     }

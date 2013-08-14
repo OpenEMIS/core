@@ -73,7 +73,6 @@ var areas = {
         $('#'+id).show();
     },
     addAreaSwitching : function(){
-		
         var saveBtn = $('.btn_save');
         $('select[name*="[area_level_"]').each(function(i, obj){
             $(obj).change(function (d, o){
@@ -128,6 +127,19 @@ var areas = {
 
                 if(((currentSelect === 0 && currentSelctedOptionValue > 0) || (currentSelect !== 0 && currentSelctedOptionValue > 1))){
                     areas.fetchChildren(this);
+                }else{
+                    var myselect = $(this).parent().parent().find('select');
+                    var myLabel = myselect.parent().parent().find('.label');
+                    myLabel.show();
+                    var nextSelect = myselect.parent().parent().next().find('select');
+                    //var nextRow = myselect.parent().parent().next('.row');
+
+                    do{
+                        nextSelect.parent().parent().hide();
+                        nextSelect.find('option').remove();
+                        nextSelect = nextSelect.parent().parent().next().find('select');
+                    }while(nextSelect.length>0)
+                    myLabel.html('(Area Level)');
                 }
 
                 if( currentSelect === 0 && currentSelctedOptionValue === 0){
@@ -143,14 +155,14 @@ var areas = {
     },
     fetchChildren :function (currentobj){
         var selected = $(currentobj).val();
+        var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
         var maskId;
-        var url =  areas.baseURL +'viewAreaChildren/'+selected+'/'+areas.extraParam;
-
+        var url =  areas.baseURL +'viewAreaChildren/'+selected+'/'+edutype;
         var level = '&nbsp;&nbsp;';
         $.when(
                 $.ajax({
                     type: "GET",
-                    url: areas.baseURL +'getAreaLevel/'+selected+'/'+areas.extraParam,
+                    url: areas.baseURL +'getAreaLevel/'+selected+'/'+edutype,
                     success: function (data) {
                         level = data;
                         var myselect = $(currentobj).parent().parent().find('select');
@@ -196,6 +208,11 @@ var areas = {
                                 nextselect.removeAttr('disabled');
                                 nextselect.append(tpl);
                             }
+                            var myselect = nextselect.parent().parent().next().find('select');
+                            do{
+                                myselect.parent().parent().hide();
+                                myselect = myselect.parent().parent().next().find('select');
+                            }while(myselect.length>0)
                         };
                         $.unmask({ id: maskId,callback: callback(data)});
                     }
