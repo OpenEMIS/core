@@ -77,7 +77,7 @@ echo $this->Html->script('census_teachers', false);
 								'name' => sprintf($fieldName, $i, 'male'),
 								'computeType' => 'cell_value',
 								'value' => is_null($record['male'])||(!$record['male']>0) ? 0 : str_replace(".0","",$record['male']),
-								'maxlength' => 10,
+								'maxlength' => 7,
 								'onkeypress' => 'return CensusTeachers.decimalCheck(event,1)',
 								'onkeyup' => 'CensusTeachers.computeSubtotal(this)',
 								'onblur' => 'CensusTeachers.clearBlank(this)'
@@ -93,7 +93,7 @@ echo $this->Html->script('census_teachers', false);
 								'class' =>$record_tag,
 								'computeType' => 'cell_value',
 								'value' => is_null($record['female'])||(!$record['female']>0) ? 0 : str_replace(".0","",$record['female']),
-								'maxlength' => 10,
+								'maxlength' => 7,
 								'onkeypress' => 'return CensusTeachers.decimalCheck(event,1)',
 								'onkeyup' => 'CensusTeachers.computeSubtotal(this)',
 								'onblur' => 'CensusTeachers.clearBlank(this)'
