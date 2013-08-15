@@ -207,18 +207,18 @@ class AreasController extends AppController {
      * @param  integer $previousParentId Find the previous parent id.
      * @return json                    
      */
-	public function viewData($parentId = -1, $arrModels = array('Area','AreaLevel')) {
+	public function viewData($parentId = 0, $arrModels = array('Area','AreaLevel')) {
 		$request = @$this->request['pass'][0];
-		if($request == 'Education'){ 
-			$parentId = -1;
+		if($request == 'Education' || $request == 'AreaEducation'){
+			$parentId = 0;
 			$arrModels = 'Education';
 			
 		}else{
 			$parentId = is_null($request)?-1:$request;
 		}
-		
+
 		$arrModels = (($arrModels == 'Education'|| $arrModels == 'AreaEducation') && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
-		
+
 		$this->autoRender = false;
 		$area = $arrModels[0];
 		$arealevel = $arrModels[1];
@@ -243,14 +243,13 @@ class AreasController extends AppController {
                             FROM `$area_table_name`
                             WHERE `$area_table_name`.`id` = ?
                         )";
-        if($parentId == -1){
+        if($parentId == 0){
             $query = "SELECT DISTINCT `$area_level_table_name`.name, `$area_level_table_name`.`id`
                         FROM  `$area_level_table_name` ";
 
         }
 		
         $listAreaLevels = $db->fetchAll( $query, array($parentId));
-		
 	    //$this->Area->formatResult($listAreas);
 
 	    echo json_encode(array('data' => $this->Utility->formatResult($listAreas), 'area_levels' => $this->Utility->formatResult($listAreaLevels)));

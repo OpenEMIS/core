@@ -168,48 +168,38 @@ class UtilityHelper extends AppHelper {
     }
 	
 	public function getAreaPicker($form,$id,$value,$settings=array()){
-        $arrmap = array('Area','AreaLevel');
-        $arealevelfk = 'area_level';
         switch($id){
-            case 'birthplace_area_id':
-                $arrmap = array('Area','AreaLevel');
-                $arealevelfk = 'area_level';
-                break;
-
-            case 'address_area_id':
-                $arrmap = array('Area','AreaLevel');
-                $arealevelfk = 'area_level';
-                break;
-
-            case 'area_id':
-                $arrmap = array('Area','AreaLevel');
-                $arealevelfk = 'area_level';
-                break;
-
             case 'area_education_id':
                 $arrmap = array('AreaEducation','AreaEducationLevel');
                 $arealevelfk = 'area_education_level';
                 break;
 
             default:
+                $arrmap = array('Area','AreaLevel');
+                $arealevelfk = 'area_level';
                 break;
         }
 
-		//settings unused
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 
-		if (!is_numeric($value) || !isset($value) ) {$value=1;}
+		if (!is_numeric($value) || !isset($value) ) {$value=0;};
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
-		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
+
+        $this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
 
 		$ctr = 0;
 		foreach($this->fieldLevels as $levelid => $levelName){
             $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
+
             $display = '';
-            if($mylevel===''){
-                $display = 'display:none;';
-            };
+            if($value==0 && $ctr==0){
+                $mylevel = __('(Area Level)');
+            }else{
+                if($mylevel===''){
+                    $display = 'display:none;';
+                }
+            }
             echo '<div class="row" style="'.$display.'">
                     <div class="label">'.$mylevel.'</div>
                     <div class="value">'. $form->input($arealevelfk.'_'.$ctr,
@@ -224,8 +214,6 @@ class UtilityHelper extends AppHelper {
                 </div>';
 			$ctr++;
 		}
-
-
     }
 
 	public function getDatePicker($form, $id, $settings=array()) {

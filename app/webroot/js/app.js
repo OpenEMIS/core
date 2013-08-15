@@ -230,23 +230,24 @@ var jsForm = {
 		var areaItemSelected=$(this);
 
 		var hiddenValue= $(this).parents().find('.areapicker_areaid').first();
-		
-		var areaItems = $(this).parent().parent().parent().find('select[name*="[area_level_"]');
-		
-		areaItems.reverse().each(function(index) {
-			if (areaItemSelected.is($(this))){
-				var tmpVal=$(this).val();
-				if (tmpVal != 0 && !!tmpVal) {
-					hiddenValue.val(tmpVal);
-				}
-				jsForm.getAreaChildren(this);
-				return false;
-			} else {
-				//for some reason , some options drop down have "--selected" and some not . flush all options and re-add
-				$(this).find('option').remove(); 
-				$(this).append($('<option>', {value: 0,text: '--Select--'}));
-			}
-		});
+		var myAreaArr = ["area_level","area_education_level"];
+        for (var i = 0; i < myAreaArr.length; i++) {
+            var areaItems = $(this).parent().parent().parent().find('select[name*="['+myAreaArr[i]+'_"]');
+            areaItems.reverse().each(function(index) {
+                if (areaItemSelected.is($(this))){
+                    var tmpVal=$(this).val();
+                    if (tmpVal != 0 && !!tmpVal) {
+                        hiddenValue.val(tmpVal);
+                    }
+                    jsForm.getAreaChildren(this);
+                    return false;
+                } else {
+                    //for some reason , some options drop down have "--selected" and some not . flush all options and re-add
+                    $(this).find('option').remove();
+                    $(this).append($('<option>', {value: 0,text: '--Select--'}));
+                }
+            });
+        }
 	},
 	
 	getAreaChildren :function (currentobj){
@@ -313,7 +314,7 @@ var jsForm = {
             });
         });
     },
-	
+
 	updateDatepickerValue: function(parent, date) {
 		var day = date.getDate();
 		var mth = date.getMonth()+1;
