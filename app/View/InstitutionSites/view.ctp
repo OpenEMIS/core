@@ -51,16 +51,19 @@ echo $this->Html->script('institution_site', false);
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_closed']); ?></div>
 		</div>
 	</fieldset>
-	
+
+	<?php if($obj['area_id']>0){ ?>
 	<fieldset class="section_break">
 		<legend id="area"><?php echo __('Area'); ?></legend>
 		<?php echo @$this->Utility->showArea($this->Form, 'area_id',$obj['area_id'], array()); ?>
 	</fieldset>
+	<?php } ?>
+	<?php if($obj['area_education_id']>0){ ?>
 	<fieldset class="section_break">
 		<legend id="education"><?php echo __('Area').' ('.__('Education').')'; ?></legend>
 		<?php echo @$this->Utility->showArea($this->Form, 'area_education_id',$obj['area_education_id'], array()); ?>
 	</fieldset>
-	
+	<?php } ?>
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>
 		<div class="row">
