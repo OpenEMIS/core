@@ -94,7 +94,8 @@ class SchoolYear extends AppModel {
 		}
 		$data = $this->find('list', array(
 			'fields' => array('SchoolYear.id', 'SchoolYear.name'),
-			'conditions' => $conditions
+			'conditions' => $conditions,
+			'order' => 'SchoolYear.name'
 		));
 		return $data;
 	}
