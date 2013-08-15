@@ -47,4 +47,24 @@ class CensusVerification extends AppModel {
 		
 		return array_key_exists($yearId, $yearList);
 	}
+	
+	public function saveEntry($data) {
+		$result = $this->find('all', array(
+			'conditions' => array(
+				'CensusVerification.institution_site_id' => $data['institution_site_id'],
+				'CensusVerification.school_year_id' => $data['school_year_id']
+			),
+			'order' => array('CensusVerification.created DESC')
+		));
+		$insert = true;
+		if(count($result) > 0) {
+			$first = $result[0]['CensusVerification'];
+			if(intval($data['status']) === intval($first['status'])) {
+				$insert = false;
+			}
+		}
+		if($insert) {
+			$this->save($data);
+		}
+	}
 }
