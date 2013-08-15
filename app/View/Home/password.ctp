@@ -6,15 +6,16 @@
 </style>
 
 <div id="password" class="content_wrapper">
+	<h1><?php echo __('Change Password');?></h1>
+	<?php echo $this->element('alert'); ?>
+	
+	<?php if($allowChangePassword) { ?>
 	<?php
 	echo $this->Form->create('SecurityUser', array(
 		'url' => array('controller' => 'Home', 'action' => 'password'),
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
 	?>
-	<h1><?php echo __('Change Password');?></h1>
-	<?php echo $this->element('alert'); ?>
-		
 	<div class="row input" style="margin-left: 10px;">
 		<div class="label"><?php echo __('Current Password'); ?></div>
 		<div class="value"><?php echo $this->Form->input('oldPassword', array('id' => 'oldPassword', 'type' => 'password')); ?></div>
@@ -32,4 +33,5 @@
 		<input id="update" type="submit" value="<?php echo __('Update'); ?>" class="btn_save" />
 	</div>
 	<?php echo $this->Form->end(); ?>
+	<?php } // end if ?>
 </div>
