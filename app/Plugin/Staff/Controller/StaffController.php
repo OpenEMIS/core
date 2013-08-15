@@ -34,6 +34,8 @@ class StaffController extends StaffAppController {
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
         'Staff.StaffAttachment',
+        'Staff.StaffAttendance',
+        'SchoolYear',
 		'ConfigItem'
         );
 
@@ -107,7 +109,9 @@ class StaffController extends StaffAppController {
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
 		}
-		$this->set('limit', $limit);
+		if(empty($searchKey) && count($data)==1) {
+			$this->redirect(array('action' => 'viewStaff', $data[0]['Staff']['id']));
+		}
         $this->set('staff', $data);
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
@@ -210,22 +214,29 @@ class StaffController extends StaffAppController {
 
     public function fetchImage($id){
         $this->autoRender = false;
-
+		
+		$url = Router::url('/Staff/img/default_staff_profile.jpg', true);
         $mime_types = ImageMeta::mimeTypes();
 
         $imageRawData = $this->Staff->findById($id);
-//        $imageMeta = unserialize($imageRawData['Staff']['photo_name']);
-        if(empty($imageRawData['Staff']['photo_content']) || empty($imageRawData['Staff']['photo_name'])){
-            header("HTTP/1.0  404 Not Found");
-            die();
-        }else{
-            $imageFilename = $imageRawData['Staff']['photo_name'];
-            $fileExt = pathinfo($imageFilename, PATHINFO_EXTENSION);
-            $imageContent = $imageRawData['Staff']['photo_content'];
-    //        header("Content-type: {$imageMeta->getMime()}");
-            header("Content-type: {$mime_types[$fileExt]}");
-            echo $imageContent;
-        }
+		$imageFilename = $imageRawData['Staff']['photo_name'];
+		$fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
+	
+		
+		if(empty($imageRawData['Staff']['photo_content']) || empty($imageRawData['Staff']['photo_name']) || !in_array($mime_types[$fileExt], $mime_types)){
+			if($this->Session->check('Staff.defaultImg'))
+    		{
+				$imageContent = $this->Session->read('Staff.defaultImg');
+			}else{
+				$imageContent = file_get_contents($url);
+				$this->Session->write('Staff.defaultImg', $imageContent);
+			}
+			echo $imageContent;
+		}else{
+			$imageContent = $imageRawData['Staff']['photo_content'];
+			header("Content-type: " . $mime_types[$fileExt]);
+			echo $imageContent;
+		}
     }
 
     public function delete() {
@@ -579,6 +590,38 @@ class StaffController extends StaffAppController {
 		$this->set($data);
 		$this->render('/Elements/customfields/view');
 	}
+
+    // Staff ATTENDANCE PART
+    public function attendance(){
+        $staffId = $this->staffId;
+        $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+        $this->Navigation->addCrumb('Attendance');
+
+        $id = @$this->request->params['pass'][0];
+        $yearList = $this->SchoolYear->getYearList();
+        $yearId = $this->getAvailableYearId($yearList);
+        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+
+        $data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'),isset($id)? $id:$yearId);
+
+        $this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+        $this->set('data', $data);
+        $this->set('schoolDays', $schoolDays);
+    }
+
+    private function getAvailableYearId($yearList) {
+        $yearId = 0;
+        if(isset($this->params['pass'][0])) {
+            $yearId = $this->params['pass'][0];
+            if(!array_key_exists($yearId, $yearList)) {
+                $yearId = key($yearList);
+            }
+        } else {
+            $yearId = key($yearList);
+        }
+        return $yearId;
+    }
 
 	public function getUniqueID() {
 		$generate_no = '';

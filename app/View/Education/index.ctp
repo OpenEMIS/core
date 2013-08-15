@@ -36,7 +36,8 @@ echo $this->Html->script('education', false);
 					'id' => 'EducationSystemId',
 					'options' => $systems,
 					'default' => $selectedSystem,
-					'onchange' => 'education.switchSystem()'
+					'url' => 'Education/index',
+					'onchange' => 'jsForm.change(this)'
 				));
 			?>
 		</div>
@@ -47,15 +48,13 @@ echo $this->Html->script('education', false);
 	<div class="row select_row">
 		<div class="label"><?php echo __('Education Level'); ?></div>
 		<div class="value">
-			<?php 
-			$index = 0;
-			foreach($levels as $key => $val) {
+			<?php
+				echo $this->Form->input('education_level_id', array(
+					'id' => 'EducationLevelId',
+					'options' => $levels,
+					'onchange' => 'education.switchLevel(this)'
+				));
 			?>
-			<div class="radio_wrapper">
-				<input type="radio" name="level" id="<?php echo $val ?>" <?php echo $index++==0 ? 'checked="checked"' : '' ?>>
-				<label for="<?php echo $val ?>"><?php echo $val ?></label>
-			</div>
-			<?php } ?>
 		</div>
 	</div>
 	

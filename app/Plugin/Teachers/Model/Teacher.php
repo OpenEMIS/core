@@ -16,6 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class Teacher extends TeachersAppModel {
 	public $actsAs = array(
+		'UserAccess',
 		'TrackHistory' => array('historyTable' => 'Teachers.TeacherHistory'),
 		'CascadeDelete' => array(
 			'cascade' => array(
@@ -183,7 +184,7 @@ class Teacher extends TeachersAppModel {
 		return $joins;
 	}
 	
-	public function paginateConditions($conditions, $noSites=true) {
+	public function paginateConditions($conditions, $noSites=true, $access=array()) {
 		$paginateConditions = array();
 		if(strlen($conditions['SearchKey']) != 0) {
 			$search = "%".$conditions['SearchKey']."%";
@@ -195,6 +196,9 @@ class Teacher extends TeachersAppModel {
 				'TeacherHistory.first_name LIKE' => $search,
 				'TeacherHistory.last_name LIKE' => $search
 			);
+		}
+		if(!empty($access)) {
+			$paginateConditions['AND']['Teacher.id'] = $access;
 		}
 		if($noSites) {
 			$paginateConditions['AND'] = array(
@@ -257,6 +261,29 @@ class Teacher extends TeachersAppModel {
 			'order' => null
 		), $this);
 		
+		// Security User Access
+		$access = $this->getUserAccess($userId);
+		$dataWithAccess = null;
+		if(!empty($access)) {
+			$dataWithAccess = $dbo->buildStatement(array(
+				'fields' => $fields,
+				'table' => $dbo->fullTableName($this),
+				'alias' => 'Teacher',
+				'limit' => null, 
+				'offset' => null,
+				'joins' => $this->paginateJoins($search, null, $userId, false),
+				'conditions' => $this->paginateConditions($conditions, false, $access),
+				'group' => null,
+				'order' => null
+			), $this);
+		}
+		// End
+		
+		$unions = array($dataNoSites, $dataWithSites);
+		if(!is_null($dataWithAccess)) {
+			$unions[] = $dataWithAccess;
+		}
+		
 		if($count==false) {
 			$fields = array(
 				'Teacher.id', 'Teacher.identification_no',
@@ -275,7 +302,7 @@ class Teacher extends TeachersAppModel {
 		
 		$options = array(
 			'fields' => $fields,
-			'table' => sprintf('(%s UNION %s)', $dataNoSites, $dataWithSites),
+			'table' => '(' . implode(' UNION ', $unions) . ')',
 			'alias' => 'Teacher',
 			'limit' => null,
 			'conditions' => array(),

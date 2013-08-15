@@ -79,11 +79,19 @@ class UtilityHelper extends AppHelper {
 	}
 
 	public function showArea($form,$id,$value,$settings=array()){
+
+        $arrmap = array('Area','AreaLevel');
+        $arealevelfk = 'area_level';
+        if($id=='area_education_id'){
+            $arrmap = array('AreaEducation','AreaEducationLevel');
+            $arealevelfk = 'area_education_level';
+        }
+
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
-		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
-		$this->fieldLevels = $this->AreaHandler->getAreaList();
-		
+		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
+		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
+
 		$ctr = 0;
 		foreach($this->fieldLevels as $levelid => $levelName){
 			$areaVal = array('id'=>'0','name'=>'a');
@@ -95,7 +103,7 @@ class UtilityHelper extends AppHelper {
 			}
 			echo '<div class="row">
 						<div class="label">'.$levelName.'</div>
-						<div class="value" value="'.$areaVal['id'].'" name="area_level_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
+						<div class="value" value="'.$areaVal['id'].'" name="'.$arealevelfk.'_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
 					</div>';
 			$ctr++;
 		}
@@ -157,22 +165,30 @@ class UtilityHelper extends AppHelper {
     }
 	
 	public function getAreaPicker($form,$id,$value,$settings=array()){
+        $arrmap = array('Area','AreaLevel');
+        $arealevelfk = 'area_level';
+        if($id=='area_education_id'){
+            $arrmap = array('AreaEducation','AreaEducationLevel');
+            $arealevelfk = 'area_education_level';
+        }
+
 		//settings unused
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
-		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
-		$this->fieldLevels = $this->AreaHandler->getAreaList();
-		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,array('empty_arealevel_placeholder'=>'--'.__('Select').'--'));
-	
+
+		if (!is_numeric($value) || !isset($value) ) {$value=1;}
+		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
+		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
+		$this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
+
 		$ctr = 0;
 
 		foreach($this->fieldLevels as $levelid => $levelName){
 			echo '<div class="row">
 					<div class="label">'."$levelName".'</div>
-					<div class="value">'. $form->input('area_level_'.$ctr,
+					<div class="value">'. $form->input($arealevelfk.'_'.$ctr,
 														array('class'=>'areapicker default',
 														'style'=>'float:left','default'=>@$this->fieldAreaLevels[$ctr]['id'],
-														'options'=>$this->fieldAreadropdowns['area_level_'.$ctr]['options']));
+														'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
 			if ($ctr==0){
 				echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
 			}
@@ -180,8 +196,10 @@ class UtilityHelper extends AppHelper {
 				</div>';
 			$ctr++;
 		}
-	}	
-	
+
+
+    }
+
 	public function getDatePicker($form, $id, $settings=array()) {
 		$_settings = array(
 			'order' => 'dmy',
@@ -300,15 +318,21 @@ class UtilityHelper extends AppHelper {
 	 * @param  string $format [leave null to get from config setting]
 	 * @return string         [formatted date]
 	 */
-	public function formatDate($date, $format=null) {
+	public function formatDate($date, $format=null, $echo=true) {
 		if (is_null($format)) {
 			$format = DateTimeComponent::getConfigDateFormat();
 		}
+		$output = null;
 		if($date == '0000-00-00' || $date == ''){ 
-			echo "";
+			$output = '';
 		}else{
 			$date = new DateTime($date);
-			echo $date->format($format);
+			$output = $date->format($format);
+		}
+		if($echo) {
+			echo $output;
+		} else {
+			return $output;
 		}
 	}
 
@@ -419,6 +443,20 @@ class UtilityHelper extends AppHelper {
 			'before' => '<div class="cell cell_name"><div class="input_wrapper">',
 			'after' => '</div></div>',
 			'maxlength' => '50'
+		);
+		$text = '<div class="cell cell_name"><span>%s</span></div>';
+		$input = $editable ? $form->input('name', $options) : sprintf($text, $value);
+		return $input;
+	}
+	
+	public function getTextInput($form, $fieldName, $value, $name, $length, $editable=true) {
+		$options = array(
+			'name' => sprintf($fieldName, $name),
+			'type' => 'text',
+			'value' => $value,
+			'before' => '<div class="cell cell_'.$name.'"><div class="input_wrapper">',
+			'after' => '</div></div>',
+			'maxlength' => $length
 		);
 		$text = '<div class="cell cell_name"><span>%s</span></div>';
 		$input = $editable ? $form->input('name', $options) : sprintf($text, $value);

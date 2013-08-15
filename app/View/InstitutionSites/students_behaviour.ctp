@@ -6,10 +6,11 @@ echo $this->Html->script('institution_site_classes', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="classes" class="content_wrapper">
+<div id="studentBehaviour" class="content_wrapper">
     <h1>
         <span><?php echo __('List of Behaviour'); ?></span>
 		<?php
+		echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites', 'action' => 'studentsView', $id), array('class' => 'divider'));
 		if($_add) {
 			echo $this->Html->link(__('Add'), array('action' => 'studentsBehaviourAdd', $id), array('class' => 'divider'));
 		}

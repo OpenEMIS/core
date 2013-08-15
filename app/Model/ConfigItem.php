@@ -84,7 +84,7 @@ class ConfigItem extends AppModel {
 	
 	public function getValue($name) {
 		$value = $this->field('value', array('name' => $name));
-		return (empty($value))? $this->getDefaultValue($name):$value;
+		return (strlen($value)==0)? $this->getDefaultValue($name):$value;
 	}
 
 	public function getDefaultValue($name) {

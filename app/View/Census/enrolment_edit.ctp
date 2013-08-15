@@ -16,7 +16,7 @@ echo $this->Html->script('census_enrolment', false);
 	));
 	?>
 	<h1>
-		<span><?php echo __('Enrolment'); ?></span>
+		<span><?php echo __('Students'); ?></span>
 		<?php echo $this->Html->link(__('View'), array('action' => 'enrolment', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>

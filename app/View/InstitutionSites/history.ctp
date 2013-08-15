@@ -117,7 +117,7 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
 			<div class="label"><?php echo __('Date Opened'); ?></div>
 			<div class="value">
 				<span style="margin-left: 8px;"><?php echo $this->Utility->formatDate($data['InstitutionSite']['date_opened']); ?></span>
-				<?php if(@sizeof($data2['date_opened'])>0){ // && ( sizeof($data2['date_opened']) != 1 && array_key_exists($data['Institution']['date_opened'], $data2['date_opened']) ) ) { ?>
+				<?php if(@sizeof($data2['date_opened'])>0){ // && ( sizeof($data2['date_opened']) != 1 && array_key_exists($data['InstitutionSite']['date_opened'], $data2['date_opened']) ) ) { ?>
 				<div class="table" style="margin-top: 10px;">
 					<div class="table_body">
 						<?php $ctr = 1; foreach($data2['date_opened'] as $val => $time):?>

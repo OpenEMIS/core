@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class Student extends StudentsAppModel {
     private $debug = false;
 	public $actsAs = array(
+		'UserAccess',
 		'TrackHistory' => array('historyTable' => 'Students.StudentHistory'),
 		'CascadeDelete' => array(
 			'cascade' => array(
@@ -167,7 +168,7 @@ class Student extends StudentsAppModel {
 		return $joins;
 	}
 	
-	public function paginateConditions($conditions, $noSites=true) {
+	public function paginateConditions($conditions, $noSites=true, $access=array()) {
 		$paginateConditions = array();
 		if(strlen($conditions['SearchKey']) != 0) {
 			$search = "%".$conditions['SearchKey']."%";
@@ -179,6 +180,9 @@ class Student extends StudentsAppModel {
 				'StudentHistory.first_name LIKE' => $search,
 				'StudentHistory.last_name LIKE' => $search
 			);
+		}
+		if(!empty($access)) {
+			$paginateConditions['AND']['Student.id'] = $access;
 		}
 		if($noSites) {
 			$paginateConditions['AND'] = array(
@@ -241,6 +245,29 @@ class Student extends StudentsAppModel {
 			'order' => null
 		), $this);
 		
+		// Security User Access
+		$access = $this->getUserAccess($userId);
+		$dataWithAccess = null;
+		if(!empty($access)) {
+			$dataWithAccess = $dbo->buildStatement(array(
+				'fields' => $fields,
+				'table' => $dbo->fullTableName($this),
+				'alias' => 'Student',
+				'limit' => null, 
+				'offset' => null,
+				'joins' => $this->paginateJoins($search, null, $userId, false),
+				'conditions' => $this->paginateConditions($conditions, false, $access),
+				'group' => null,
+				'order' => null
+			), $this);
+		}
+		// End
+		
+		$unions = array($dataNoSites, $dataWithSites);
+		if(!is_null($dataWithAccess)) {
+			$unions[] = $dataWithAccess;
+		}
+		
 		if($count==false) {
 			$fields = array(
 				'Student.id', 'Student.identification_no',
@@ -259,7 +286,7 @@ class Student extends StudentsAppModel {
 		
 		$options = array(
 			'fields' => $fields,
-			'table' => sprintf('(%s UNION %s)', $dataNoSites, $dataWithSites),
+			'table' => '(' . implode(' UNION ', $unions) . ')',
 			'alias' => 'Student',
 			'limit' => null,
 			'conditions' => array(),

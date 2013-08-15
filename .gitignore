@@ -40,7 +40,7 @@ Thumbs.db
 ######################
 app/Config/database.php
 app/Backups/*
-app/webroot/reports/*
+app/webroot/reports/logs/*
 app/tmp/logs/*
 app/tmp/cache/*
 app/tmp/sessions/*
@@ -50,3 +50,7 @@ app/webroot/logs/*
 *.mo
 .DS_Store
 .idea/*
+*.json
+*.csv
+*.vcf
+*.pdf

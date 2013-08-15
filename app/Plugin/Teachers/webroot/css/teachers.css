@@ -8,6 +8,7 @@
 .cell_filetype { width: 60px; }
 /*.cell_date { width: 110px; }*/
 .cell_date { width: 220px; }
+.cell_totals { text-align:right; width:100px; }
 
 /* programmes */
 .cell_prog { width: 250px; }
@@ -44,3 +45,6 @@ fieldset.section_break#general > .profile_image {
     padding-top:0px;
     line-height:10px;
 }
+
+#attendance .myyear .label { line-height: 25px;}
+#attendance .school_days .default { width: 82px; }

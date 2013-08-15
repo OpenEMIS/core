@@ -11,7 +11,7 @@ echo $this->Html->script('census', false);
 	<h1>
 		<span><?php echo __('Teachers'); ?></span>
 		<?php
-		if($_edit) {
+		if($_edit && $isEditable) {
 			echo $this->Html->link(__('Edit'), array('action' => 'teachersEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
@@ -61,8 +61,8 @@ echo $this->Html->script('census', false);
 				?>
 				<div class="table_row">
 					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_level_name']; ?></div>
-					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['male']) ? 0 : $record['male']; ?></div>
-					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['female']) ? 0 : $record['female']; ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['male'])||(!$record['male']>0) ? 0 : str_replace(".0","",$record['male']); ?></div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['female'])||(!$record['female']>0) ? 0 : str_replace(".0","",$record['female']); ?></div>
 					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male'] + $record['female']; ?></div>
 				</div>
 				<?php } ?>

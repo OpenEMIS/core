@@ -91,57 +91,6 @@ echo $this->Html->script('security', false);
 		</fieldset>
 	</fieldset>
 	
-	<!--fieldset class="section_group" style="padding-bottom: 10px;">
-		<legend>
-			<span><?php echo __('Roles'); ?></span>
-		</legend>
-		
-		<fieldset class="section_break">
-			<legend><?php echo __('System Defined Roles'); ?></legend>
-			
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell"><?php echo __('Role'); ?></div>
-					<div class="table_cell cell_users"><?php echo __('Users'); ?></div>
-				</div>
-				
-				<div class="table_body">
-					<?php foreach($data['SecurityRole']['system'] as $obj) { ?>
-					<div class="table_row">
-						<div class="table_cell"><?php echo $obj['name']; ?></div>
-						<div class="table_cell cell_users"><?php echo $obj['count']; ?></div>
-					</div>
-					<?php }?>
-				</div>
-			</div>
-		</fieldset>
-		
-		<fieldset class="section_break">
-			<legend>
-				<span><?php echo __('User Defined Roles'); ?></span>
-				<?php
-				echo $this->Html->link(__('Manage'), array('action' => 'roles', $data['SecurityGroup']['id']), array('class' => 'divider'));
-				?>
-			</legend>
-			
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell"><?php echo __('Role'); ?></div>
-					<div class="table_cell cell_users"><?php echo __('Users'); ?></div>
-				</div>
-				
-				<div class="table_body">
-					<?php foreach($data['SecurityRole']['user'] as $obj) { ?>
-					<div class="table_row">
-						<div class="table_cell"><?php echo $obj['name']; ?></div>
-						<div class="table_cell cell_users"><?php echo $obj['count']; ?></div>
-					</div>
-					<?php }?>
-				</div>
-			</div>
-		</fieldset>
-	</fieldset-->
-	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'groupsView', $data['SecurityGroup']['id']), array('class' => 'btn_cancel btn_left')); ?>

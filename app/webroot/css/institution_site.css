@@ -1,6 +1,5 @@
 .year { margin-bottom: 10px; }
 .year .label { width: 60px; line-height: 25px; }
-.labelattendance{ width:100px; float:left; line-height: 25px; }
 
 /* Students search */
 .cell_id_no { width: 110px; }
@@ -11,6 +10,13 @@
 #students .label { width: 90px; }
 #students .row, #classes .row { margin-bottom: 10px; }
 #student_list { margin-top: 20px; }
+#studentBehaviourAdd .label {width:120px; margin-top:2px;}
+#studentBehaviourEdit .label {width:120px; margin-top:2px;}
+#studentBehaviourView .label {width:120px; margin-top:2px;}
+#studentAttendance .myyear .label { line-height: 25px;}
+#studentAttendanceEdit .myyear .label { line-height: 25px;}
+#studentAttendance .school_days .default { width: 82px; }
+#studentAttendanceEdit .school_days .default { width: 82px; }
 #classes .label { width: 60px; }
 #classes #grade_list .icon_delete { margin-top: 4px; }
 #classes .table_cell_row { margin-top: 0; margin-bottom: 5px; }
@@ -22,8 +28,16 @@
 #teachersAdd .icon_search, #staffAdd .icon_search { height: 22px; width: 24px; }
 #teachersAdd .section_break, #staffAdd .section_break { padding-top: 10px; }
 #teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 65px; line-height: 24px; }
+#teachersAttendance .myyear .label { line-height: 25px;}
+#teachersAttendanceEdit .myyear .label { line-height: 25px;}
+#teachersAttendance .school_days .default { width: 82px; }
+#teachersAttendanceEdit .school_days .default { width: 82px; }
+#staffAttendance .myyear .label { line-height: 25px;}
+#staffAttendanceEdit .myyear .label { line-height: 25px;}
+#staffAttendance .school_days .default { width: 82px; }
+#staffAttendanceEdit .school_days .default { width: 82px; }
 
-.labelbehaviour { width: 120px; float:left; margin-top:2px; }
+
 .cell_system { width: 200px; }
 .cell_date { width: 110px; }
 .cell_start_date { width: 140px; }
@@ -40,6 +54,7 @@
 .cell_grade { width: 200px; }
 .cell_phone { width: 110px; }
 .cell_year { width: 70px; vertical-align: top !important; text-align: center; }
+.cell_subtotal{ padding-top: 8px; }
 #classes.add .table_cell select { width: 100%; }
 #classes .section_break .row { margin-left: 0; }
 

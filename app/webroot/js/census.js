@@ -13,15 +13,8 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-$(document).ready(function() {
-	Census.init();
-});
-
 var Census = {
 	yearId: '#SchoolYearId',
-	init: function() {
-		
-	},
 	
 	navigateYear: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
@@ -104,7 +97,7 @@ var Census = {
 			url: getRootURL() + $(this).attr('url'),
 			data: ajaxParams,
 			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.multi'}); },
-			success: ajaxSuccess
+			success: ajaxSuccesss
 		});
 	},
 	
@@ -128,5 +121,45 @@ var Census = {
 			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.multi'});	},
 			success: ajaxSuccess
 		});
+	},
+	
+	verify: function(obj, type) {
+		var dlgId = 'verify_dialog';
+		var url = $(obj).attr('href');
+		if(type==='GET') {			
+			var confirmBtn = {
+				value: i18n.General.textConfirm, // change to validate
+				callback: function() {
+					Census.verify(obj, 'POST');
+				}
+			};
+			var dlgOpt = {
+				id: dlgId,
+				title: i18n.General.textConfirmation,
+				width: 400,
+				ajaxUrl: url,
+				buttons: [confirmBtn]
+			};
+			$.dialog(dlgOpt);
+			return false;
+		} else {
+			var yearId = $('#SchoolYearId').val();
+			var maskId;
+			var ajaxSuccess = function(data, textStatus) {
+				var callback = function() {
+					$.closeDialog({id: dlgId});
+					window.location.reload();
+				};
+				$.unmask({id: maskId, callback: callback});
+			};
+			$.ajax({
+				type: 'POST',
+				dataType: 'text',
+				url: url,
+				data: {school_year_id: yearId},
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper'}); },
+				success: ajaxSuccess
+			});
+		}
 	}
 }
