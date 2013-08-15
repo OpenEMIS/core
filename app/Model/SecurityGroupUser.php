@@ -94,4 +94,22 @@ class SecurityGroupUser extends AppModel {
 		));
 		return $data;
 	}
+	
+	public function isUserInSameGroup($userId, $targetUserId) {
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'security_group_users',
+					'alias' => 'SecurityGroupUser2',
+					'conditions' => array(
+						'SecurityGroupUser2.security_group_id = SecurityGroupUser.security_group_id',
+						'SecurityGroupUser2.security_user_id = ' . $targetUserId
+					)
+				)
+			),
+			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
+		));
+		return $data;
+	}
 }

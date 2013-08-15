@@ -41,25 +41,10 @@ class DataProcessingController extends DataProcessingAppController {
 	}
 	
 	public function index() {
-		$this->redirect(array('action' => 'reports'));
+		$this->redirect(array('action' => 'genReports'));
 	}
 	
-	public function reports() {
-		$this->Navigation->addCrumb('Reports');
-		
-		$tmp = array();
-		$q = array();
-		if($this->request->is('post')){
-			$this->Report->processRequest($this->data['Reports']);
-			$this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
-			$this->redirect(array('action'=>'processes'));
-		}
-		$data = $this->Report->find('all');
-		$QR = $this->Report->getQueuedRunningReport();
-
-		foreach($QR as $arrV){
-			$q[] = $arrV['Filename'];
-		}
+	private function formatTable($data){
 		foreach($data as $k => $val){
 			if(isset($tmp['Reports'][$val['Report']['module']][$val['Report']['name']])){
 				 $tmp['Reports'][$val['Report']['module']][$val['Report']['name']]['file_kinds'][$val['Report']['id']] = $val['Report']['file_type'];
@@ -68,6 +53,76 @@ class DataProcessingController extends DataProcessingAppController {
 				$tmp['Reports'][$val['Report']['module']][$val['Report']['name']] =  $val['Report'];
 			}
 		}
+		return $tmp;
+	}
+	
+	private function processGenerate($data){
+		$this->Report->processRequest($this->data['Reports']);
+			$this->runJob(array('batch', 'run', $this->Session->read('configItem.language')));
+			$this->redirect(array('action'=>'processes'));
+	}
+
+	public function genReports() {
+		$this->Navigation->addCrumb('Generate');
+		
+		$tmp = array();
+		$q = array();
+		if($this->request->is('post')){
+			$this->processGenerate($this->data['Reports']);
+		}
+		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est'))), 'order' => array('Report.order')));
+		$QR = $this->Report->getQueuedRunningReport();
+
+		foreach($QR as $arrV){
+			$q[] = $arrV['Filename'];
+		}
+		
+		$tmp = $this->formatTable($data);
+		
+		//pr($tmp);die;
+		$this->set('data',$tmp);
+		$this->set('queued',$q);
+	}
+	
+	public function genIndicators() {
+		$this->Navigation->addCrumb('Generate');
+		
+		$tmp = array();
+		$q = array();
+		if($this->request->is('post')){
+			$this->processGenerate($this->data['Reports']);
+		}
+		$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'ind')));
+		$QR = $this->Report->getQueuedRunningReport();
+
+		foreach($QR as $arrV){
+			$q[] = $arrV['Filename'];
+		}
+		
+		$tmp = $this->formatTable($data);
+		
+		//pr($tmp);die;
+		$this->set('data',$tmp);
+		$this->set('queued',$q);
+	}
+	
+	public function genEstimates() {
+		$this->Navigation->addCrumb('Generate');
+		
+		$tmp = array();
+		$q = array();
+		if($this->request->is('post')){
+			$this->processGenerate($this->data['Reports']);
+		}
+		$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'est')));
+		$QR = $this->Report->getQueuedRunningReport();
+
+		foreach($QR as $arrV){
+			$q[] = $arrV['Filename'];
+		}
+		
+		$tmp = $this->formatTable($data);
+		
 		//pr($tmp);die;
 		$this->set('data',$tmp);
 		$this->set('queued',$q);
@@ -208,7 +263,7 @@ class DataProcessingController extends DataProcessingAppController {
         }else{
             $cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
         }
-//        exit($cmd);
+//       exit($cmd);
 
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             //$WshShell = new COM("WScript.Shell");
@@ -230,10 +285,12 @@ class DataProcessingController extends DataProcessingAppController {
             $shellCmd = sprintf($nohup, $cmd, APP);
 //			$shellCmd = sprintf($nohup, $cmd, APP);
             $this->log($shellCmd, 'debug');
-//            echo $shellCmd;die();
-//			echo $PID = shell_exec($shellCmd);
-            $PID = exec($shellCmd);
-            echo $PID;
+            //echo $shellCmd;die();
+			echo $PID = shell_exec($shellCmd);
+            //$PID = exec($shellCmd);
+			//$PID = exec('/Library/WebServer/Documents/openemis/app/Console/cake.php -app batch run eng');
+            //echo $PID; 
+			//die("<===");
         }
         //*NUX
         //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");

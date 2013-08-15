@@ -11,9 +11,9 @@ echo $this->Html->script('census_enrolment', false);
 
 <div id="enrolment" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Enrolment'); ?></span>
+		<span><?php echo __('Students'); ?></span>
 		<?php
-		if($_edit) {
+		if($_edit && $isEditable) {
 			echo $this->Html->link(__('Edit'), array('action' => 'enrolmentEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>

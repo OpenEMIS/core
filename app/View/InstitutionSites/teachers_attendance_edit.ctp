@@ -5,7 +5,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="classes" class="content_wrapper">
+<div id="teachersAttendanceEdit" class="content_wrapper">
 	<?php
 	echo $this->Form->create('TeachersAttendance', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
@@ -20,8 +20,8 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
     </h1>
     <?php echo $this->element('alert'); ?>
     
-    <div class="row year">
-		<div class="labelattendance"><?php echo __('Year'); ?></div>
+    <div class="row myyear">
+		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
@@ -35,7 +35,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	</div>
     
     <div class="row school_days">
-		<div class="labelattendance"><?php echo __('School Days'); ?></div>
+		<div class="label"><?php echo __('School Days'); ?></div>
 		<div class="value">
         <input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" />
         <input type="hidden" id="schoolDays" name="schoolDays" class="default" value="<?php echo $schoolDays; ?>"/>
@@ -51,18 +51,18 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 		
         <?php
 			$total = 0;
-			if(!empty($data[0]['TeachersAttendance']['total_no_attend'])){
-				$total += $data[0]['TeachersAttendance']['total_no_attend'];
+			if(!empty($data[0]['TeacherAttendance']['total_no_attend'])){
+				$total += $data[0]['TeacherAttendance']['total_no_attend'];
 			}
-			if(!empty($data[0]['TeachersAttendance']['total_no_attend'])){
-				$total += $data[0]['TeachersAttendance']['total_no_absence'];
+			if(!empty($data[0]['TeacherAttendance']['total_no_absence'])){
+				$total += $data[0]['TeacherAttendance']['total_no_absence'];
 			}
 		?>
 		
 		<div class="table_body">
 			<div class="table_row">
 				<?php
-				echo $this->Form->hidden('id', array('value' => empty($data[0]['TeachersAttendance']['id']) ? 0 : $data[0]['TeachersAttendance']['id']));
+				echo $this->Form->hidden('id', array('value' => empty($data[0]['TeacherAttendance']['id']) ? 0 : $data[0]['TeacherAttendance']['id']));
 				echo $this->Form->hidden('teacher_id', array('value' => $teacherid));
 				echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
 				?><div class="table_cell cell_totals">
@@ -71,10 +71,11 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 					echo $this->Form->input('total_no_attend', array(
 						'type' => 'text',
 						'computeType' => 'computeTotal',
-						'value' => empty($data[0]['TeachersAttendance']['total_no_attend']) ? 0 : $data[0]['TeachersAttendance']['total_no_attend'],
+						'value' => empty($data[0]['TeacherAttendance']['total_no_attend']) ? 0 : $data[0]['TeacherAttendance']['total_no_attend'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)',
-						'onkeyup' => 'jsTable.computeSubtotal(this)'
+						'onkeyup' => 'jsTable.computeSubtotal(this)',
+						'style' => 'text-align:right'
 					));
 					?>
 					</div>
@@ -85,10 +86,11 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 					echo $this->Form->input('total_no_absence', array(
 						'type' => 'text',
 						'computeType' => 'computeTotal',
-						'value' => empty($data[0]['TeachersAttendance']['total_no_absence']) ? 0 : $data[0]['TeachersAttendance']['total_no_absence'],
+						'value' => empty($data[0]['TeacherAttendance']['total_no_absence']) ? 0 : $data[0]['TeacherAttendance']['total_no_absence'],
 						'maxlength' => 10,
 						'onkeypress' => 'return utility.integerCheck(event)',
-						'onkeyup' => 'jsTable.computeSubtotal(this)'
+						'onkeyup' => 'jsTable.computeSubtotal(this)',
+						'style' => 'text-align:right'
 					));
 					?>
 					</div>

@@ -7,7 +7,7 @@ if($data !== false) {
 <?php
 	} else {
 		foreach($data as $user) {
-			$obj = $user['SecurityUser'];
+			$obj = $type==1 ? $user['SecurityUser'] : $user[$module];
 			$id_no = $this->Utility->highlight($search, $obj['identification_no']);
 			$firstName = $this->Utility->highlight($search, $obj['first_name']);
 			$lastName = $this->Utility->highlight($search, $obj['last_name']);
@@ -16,6 +16,9 @@ if($data !== false) {
 		
 		<div class="table_row">
 			<div class="table_cell cell_id_no"><?php echo $id_no; ?></div>
+			
+			<?php if($type==1) { ?>
+			
 			<div class="table_cell"><?php echo $name; ?></div>
 			<div class="table_cell cell_role">
 				<?php
@@ -33,6 +36,15 @@ if($data !== false) {
 				<span class="icon_plus" user-id="<?php echo $obj['id']; ?>" onClick="Security.addGroupUser(this)"></span>
 				<?php } ?>
 			</div>
+			
+			<?php } else if($type==2) { ?>
+			
+			<div class="table_cell"><?php echo $firstName; ?></div>
+			<div class="table_cell"><?php echo $lastName; ?></div>
+			<div class="table_cell cell_icon_action">
+				<span class="icon_plus" user-id="<?php echo $obj['id']; ?>" onClick="Security.addAccessUser(this)"></span>
+			</div>
+			<?php } ?>
 		</div>
 	
 <?php 

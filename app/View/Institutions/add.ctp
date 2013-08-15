@@ -48,7 +48,7 @@ echo $this->Html->script('institution', false);
 
 		<div class="row">
 			<div class="label"><?php echo __('Date Closed'); ?></div>
-			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_closed'); ?></div>
+			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_closed', array('emptySelect'=>true));?></div>
 		</div>
 	</fieldset>
 	
@@ -95,7 +95,7 @@ echo $this->Html->script('institution', false);
 	</fieldset>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>"  onclick="return Config.checkValidate();" class="btn_save btn_right" />
+		<input type="submit" value="<?php echo __('Save'); ?>"  onclick="js:if(jsDate.checkValidDateClosed() && Config.checkValidate()){ return true; }else{ return false; }" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	

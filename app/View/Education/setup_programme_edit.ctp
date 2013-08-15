@@ -13,7 +13,7 @@ echo $this->Html->script('jquery.sort', false);
 	<?php
 	echo $this->Form->create('Education', array(
 			'id' => 'submitForm',
-			'inputDefaults' => array('label' => false, 'div' => false),
+			'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 			'url' => array('controller' => 'Education', 'action' => 'setupEdit', $selectedOption)
 		)
 	);
@@ -63,6 +63,7 @@ echo $this->Html->script('jquery.sort', false);
 			<div class="table full_width">
 				<div class="table_head">
 					<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
+					<div class="table_cell cell_code"><?php echo __('Code'); ?></div>
 					<div class="table_cell"><?php echo __($pageTitle); ?></div>
 					<div class="table_cell cell_duration"><?php echo __('Duration'); ?></div>
 					<div class="table_cell cell_grade_link"><?php echo __('Grades'); ?></div>
@@ -79,13 +80,17 @@ echo $this->Html->script('jquery.sort', false);
 				echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
 				echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
 				echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
-				echo '<div class="cell cell_programme">' . $obj['name'] . '</div>';
+				echo '<div class="cell cell_code"><div class="input_wrapper">';
+				echo $this->Form->input('code', array('name' => sprintf($fieldName, 'code'), 'value' => $obj['code']));
+				echo '</div></div>';
+				echo '<div class="cell cell_programme"><div class="input_wrapper">';
+				echo $this->Form->input('name', array('name' => sprintf($fieldName, 'name'), 'value' => $obj['name']));
+				echo '</div></div>';
 				echo '<div class="cell cell_duration"><div class="input_wrapper">';
 				$inputOpts = array(
 					'name' => sprintf($fieldName, 'duration'),
 					'type' => 'text',
 					'value' => $obj['duration'],
-					'autocomplete' => 'off',
 					'maxlength' => 2
 				);
 				echo $this->Form->input('duration', $inputOpts);

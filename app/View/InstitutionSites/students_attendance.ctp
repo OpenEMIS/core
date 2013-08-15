@@ -5,10 +5,11 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="student_attendance" class="content_wrapper">
+<div id="studentAttendance" class="content_wrapper">
     <h1>
         <span><?php echo __('Attendance'); ?></span>
 		<?php
+		echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites', 'action' => 'studentsView', $id), array('class' => 'divider'));
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'studentsAttendanceEdit', $selectedYear), array('class' => 'divider'));
 		}
@@ -16,8 +17,8 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
     </h1>
     <?php echo $this->element('alert'); ?>
 	
-	<div class="row year">
-		<div class="labelattendance"><?php echo __('Year'); ?></div>
+	<div class="row myyear">
+		<div class="label"><?php echo __('Year'); ?></div>
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
@@ -33,7 +34,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	</div>
 	
     <div class="row school_days">
-		<div class="labelattendance"><?php echo __('School Days'); ?></div>
+		<div class="label"><?php echo __('School Days'); ?></div>
 		<div class="value"><input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
 	</div>
     
@@ -47,7 +48,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 				if(!empty($data[0]['StudentAttendance']['total_no_attend'])){
 					$total += $data[0]['StudentAttendance']['total_no_attend'];
 				}
-				if(!empty($data[0]['StudentAttendance']['total_no_attend'])){
+				if(!empty($data[0]['StudentAttendance']['total_no_absence'])){
 					$total += $data[0]['StudentAttendance']['total_no_absence'];
 				}
 			?>

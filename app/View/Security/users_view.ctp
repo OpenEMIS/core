@@ -90,4 +90,25 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 			</div>
 		</div>
 	</fieldset>
+	
+	<fieldset class="section_break">
+		<legend><?php echo __('Access'); ?></legend>
+		<div class="table full_width">
+			<div class="table_head">
+				<div class="table_cell" style="width: 200px;"><?php echo __('Identification No'); ?></div>
+				<div class="table_cell"><?php echo __('Name'); ?></div>
+				<div class="table_cell cell_module"><?php echo __('Module'); ?></div>
+			</div>
+			
+			<div class="table_body">
+				<?php foreach($data['access'] as $obj) { ?>
+					<div class="table_row">
+						<div class="table_cell"><?php echo $obj['SecurityUserAccess']['identification_no']; ?></div>
+						<div class="table_cell"><?php echo $obj['SecurityUserAccess']['name']; ?></div>
+						<div class="table_cell"><?php echo $obj['SecurityUserAccess']['table_name']; ?></div>
+					</div>
+				<?php } ?>
+			</div>
+		</div>
+	</fieldset>
 </div>
