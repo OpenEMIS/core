@@ -36,6 +36,7 @@ class CensusVerification extends AppModel {
 					'conditions' => array('SchoolYear.id = CensusVerification.school_year_id')
 				)
 			),
+			'conditions' => array('CensusVerification.institution_site_id' => $institutionSiteId),
 			'order' => array('SchoolYear.name', 'CensusVerification.created')
 		));
 		return $data;
