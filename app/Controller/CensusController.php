@@ -154,9 +154,8 @@ class CensusController extends AppController {
 				$status = $this->params['pass'][0];
 				$data = array('institution_site_id' => $institutionSiteId, 'status' => $status);
 				$data = array_merge($data, $this->data);
-				if($this->CensusVerification->save($data)) {
-					return true;
-				}
+				$this->CensusVerification->saveEntry($data);
+				return true;
 			}
 		}
 	}
