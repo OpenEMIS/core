@@ -1,7 +1,7 @@
 <?php
 $arrMap = array(
 	'genReports'=>'Reports',
-	'genIndicators'=>'Indicator',
+	'genIndicators'=>'Indicators',
 	'genEstimates'=>'Estimates'
 );
 ?>
