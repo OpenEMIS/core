@@ -68,6 +68,8 @@ class UtilityComponent extends Component {
 		$msgList['CENSUS_UPDATED'] = "The census data has been updated successfully.";
 		$msgList['CENSUS_GRADUATE_NOT_REQUIRED'] = "Graduates not required.";
 		$msgList['CENSUS_NO_SUBJECTS'] = "There are no subjects configured in the system";
+		$msgList['CENSUS_VERIFY'] = "The data will not be editable once it has been verified." . "<br><br>" . "Are you sure you want to do this?";
+		$msgList['CENSUS_UNVERIFY'] = "The data will be editable when it is unverified." . "<br><br>" . " Are you sure you want to do this?";
 		
 		// Education Messages
 		$msgList['EDUCATION_NO_LEVEL'] = "There is no active education level in this Education System.";
@@ -85,6 +87,8 @@ class UtilityComponent extends Component {
 		$msgList['SECURITY_GRP_NO_NAME'] = "Please enter a valid name.";
 		$msgList['SECURITY_GRP_NAME_EXISTS'] = "The name is already in use.";
 		$msgList['SECURITY_GRP_USER_ADD'] = "The user has been added to the role.";
+		$msgList['SECURITY_ACCESS_EXISTS'] = "This account is already linked to that user.";
+		$msgList['SECURITY_ACCESS_LINKED'] = "This account has been linked to the selected user.";
 		
 		// Institution Sites
 		$msgList['NO_SITES'] = "No Institution Sites";
@@ -103,13 +107,15 @@ class UtilityComponent extends Component {
 		$msgList['STUDENT_ALREADY_ADDED'] = "is already exists in this institution site.";
 		$msgList['STUDENT_NO_BEHAVIOUR_DATA'] = "No behaviour found.";
 		$msgList['SITE_STUDENT_BEHAVIOUR_EMPTY_TITLE'] = "Please enter a valid title.";
-		$msgList['CENSUS_UPDATED'] = "The Student attendance data has been updated successfully.";
+		$msgList['SITE_STUDENT_ATTENDANCE_UPDATED'] = "The Student attendance data has been updated successfully.";
 		
 		// Teachers
 		$msgList['TEACHER_NOT_FOUND'] = "No Teacher found.";
+		$msgList['SITE_TEACHER_ATTENDANCE_UPDATED'] = "The Teacher attendance data has been updated successfully.";
 		
 		// Staff
 		$msgList['STAFF_NOT_FOUND'] = "No Staff found.";
+		$msgList['SITE_STAFF_ATTENDANCE_UPDATED'] = "The Staff attendance data has been updated successfully.";
 		
 		// Reports
 		$msgList['REPORT_NO_FILES'] = "There are no available files found for this report.";

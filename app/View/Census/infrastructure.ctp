@@ -13,7 +13,7 @@ echo $this->Html->script('infrastructure', false);
 	<h1>
 		<span><?php echo __('Infrastructure'); ?></span>
 		<?php
-		if($_edit) {
+		if($_edit && $isEditable) {
 			echo $this->Html->link(__('Edit'), array('action' => 'infrastructureEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>

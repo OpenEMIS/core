@@ -249,13 +249,17 @@ var jsForm = {
 		});
 	},
 	
-	getAreaChildren :function (currentobj){      
+	getAreaChildren :function (currentobj){
         var selected = $(currentobj).val();
+
+        var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
+
+        atype=(edutype?'admin':'Area');
         var maskId;
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: getRootURL()+'/Areas/viewAreaChildren/'+selected,
+            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+atype,
             beforeSend: function (jqXHR) {
                     maskId = $.mask({text:i18n.General.textLoadAreas});
             },
@@ -267,7 +271,7 @@ var jsForm = {
                             })
                             var nextselect = $(currentobj).parent().parent().next().find('select');
                             nextselect.find('option').remove();
-                            nextselect.append(tpl);  
+                            nextselect.append(tpl);
                     };
                     $.unmask({ id: maskId,callback: callback(data)});
             }
@@ -394,10 +398,12 @@ var jsTable = {
 			&& obj.find('.table_body').html().isEmpty()) {
 				obj.find('.table_body').remove();
 			}
-			obj.find('.table_body').each(function() {
-				$(this).find('.table_row.even').removeClass('even');
-				$(this).find('.table_row:visible:odd').addClass('even');
-			});
+			if(!obj.hasClass('no_strips')) {
+				obj.find('.table_body').each(function() {
+					$(this).find('.table_row.even').removeClass('even');
+					$(this).find('.table_row:visible:odd').addClass('even');
+				});
+			}
 		});
 	},
 	

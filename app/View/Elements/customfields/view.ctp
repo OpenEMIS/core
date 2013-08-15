@@ -10,6 +10,7 @@ echo $this->Html->script('custom_field', false);
 	<h1>
 		<span><?php echo __('Academic'); ?></span>
 		<?php
+		    echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites', 'action' => $myview, $id), array('class' => 'divider'));
 			if(@$displayEdit){
 				if($_edit) {
 					echo $this->Html->link(__('Edit'), array('action' => rtrim($this->action,'View').'Edit',$id),	array('class' => 'divider','onClick'=>'return custom.view.redirect(this)')); 

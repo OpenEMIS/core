@@ -72,7 +72,6 @@ class CsvTask extends AppTask {
 		//if ($batch == 0){ fputs ($this->fileFP, $tpl."\n"); }
         foreach($data as $k => $arrv){
 			$line = '';
-			pr ($arrTpl);
 			foreach($arrTpl as $column){
                             $line .= $this->Common->cleanContent($arrv[$column],array('preclean'=>$preclean)).',';
 			}

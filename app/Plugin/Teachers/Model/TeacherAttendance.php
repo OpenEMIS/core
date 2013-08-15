@@ -14,25 +14,22 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
-
-class SecurityUserRole extends AppModel {
-	public $belongsTo = array('SecurityRole');
+class TeacherAttendance extends TeachersAppModel {
+	public $useTable = 'teacher_attendances';
 	
-	public function getUserRoles($userId) {
-		$roles = $this->find('list', array(
-			'fields' => array('SecurityUserRole.id', 'SecurityUserRole.security_role_id'),
-			'conditions' => array('SecurityUserRole.security_user_id' => $userId)
-		));
-		return $roles;
+	public function getAttendanceData($id,$yearId) {
+		$list = $this->find('all',array(
+										'conditions'=>array('TeacherAttendance.teacher_id' => $id, 'TeacherAttendance.school_year_id' => $yearId)));
+		return $list;
 	}
-        
-	public function getHighestUserRole($userId){
-		$roles = $this->find('first', array(
-		'conditions' => array('SecurityUserRole.security_user_id' => $userId),
-			'order' => array('SecurityRole.order'),
-			'limit' => 1
-		));
-		return $roles;
-	}
+
+    public function findID($id,$yearId) {
+        $list = $this->find('all',array(
+                'conditions'=>array('TeacherAttendance.teacher_id' => $id, 'TeacherAttendance.school_year_id' => $yearId)));
+        $myid='';
+        if(count($list)>0){
+            $myid = $list[0]['TeacherAttendance']['id'];
+        }
+        return $myid;
+    }
 }

@@ -4,7 +4,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright ï¿½ 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -42,7 +42,7 @@ var jsDate = {
 		var y = $(p).find('.datepicker_year').val().toInt();
 		var m = $(p).find('.datepicker_month').val().toInt();
 		var d = $(p).find('.datepicker_day').val().toInt();
-		
+
 		return y==0 || m==0 || d==0 ? false : new Date(y,m-1,d);
 	},
 	
@@ -65,6 +65,7 @@ var jsDate = {
 		var monthObj = parent.find('.datepicker_month');
 		var yearObj = parent.find('.datepicker_year');
 		var dateObj = parent.parent().find('.datepicker_date');
+        var dayVal = dayObj.val().toInt();
 		var monthVal = monthObj.val().toInt();
 		var yearVal = yearObj.val().toInt();
 		
@@ -89,7 +90,31 @@ var jsDate = {
 			});
 			var dayVal = dayObj.val();
 			dateObj.val(yearVal + '-' + monthVal + '-' + dayVal);
-		}
+		}else{
+            var selection = $(obj).attr('class');
+            var myflag = false;
+            if(selection=='datepicker_day'){
+                if(dayVal==0){
+                    myflag = true;
+                }
+            }
+            if(selection=='datepicker_month'){
+                if(monthVal==0){
+                    myflag = true;
+                }
+            }
+            if(selection=='datepicker_year'){
+                if(yearVal==0){
+                    myflag = true;
+                }
+            }
+            if(myflag){
+                dayObj.val(0);
+                monthObj.val(0);
+                yearObj.val(0);
+            }
+			dateObj.val('0000-00-00');
+        }
 	},
 	
 	datepickerUpdate: function() {
@@ -222,5 +247,34 @@ var jsDate = {
 			var val = $(this).val().toInt();
 			$(this).css('display', val < d && val != 0 ? 'none' : 'block');
 		});
-	}
+	},
+
+    checkValidDateClosed : function(){
+        var yearVal = $('#date_closed').find('select.datepicker_year').val().toInt();;
+        var monthVal = $('#date_closed').find('select.datepicker_month').val().toInt();;
+        var dayVal = $('#date_closed').find('select.datepicker_day').val().toInt();;
+
+        var element = $('#date_closed').parent().parent().find(".error-message");
+        var bool = false;
+        if(dayVal == 0 && monthVal ==0 && yearVal==0){
+            bool = true;
+        }else{
+            if(dayVal == 0 || monthVal ==0 || yearVal==0){
+                if(element.length > 0){
+                    element.html('Please enter a valid date');
+                }else{
+                    $('#date_closed').parent().parent().append("<div class='error-message'>Please enter a valid date</div>");
+                }
+            }else{
+                bool = true;
+            }
+        }
+        if(bool){
+            if(element.length > 0){
+                element.hide();
+            }
+        }
+
+        return bool;
+    }
 };

@@ -34,6 +34,10 @@ class StudentsController extends StudentsAppController {
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
         'Students.StudentAttachment',
+        'Students.StudentBehaviour',
+        'Students.StudentBehaviourCategory',
+        'Students.StudentAttendance',
+        'SchoolYear',
 		'ConfigItem'
     );
         
@@ -110,7 +114,9 @@ class StudentsController extends StudentsAppController {
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
 		}
-		$this->set('limit', $limit);
+		if(empty($searchKey) && count($data)==1) {
+			$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
+		}
         $this->set('students', $data);
         $this->set('sortedcol', $fieldordername);
         $this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
@@ -199,24 +205,30 @@ class StudentsController extends StudentsAppController {
     }
 
     public function fetchImage($id){
-        $this->autoRender = false;
-
+		$this->autoRender = false;
+		
+		$url = Router::url('/Students/img/default_student_profile.jpg', true);
         $mime_types = ImageMeta::mimeTypes();
 
         $imageRawData = $this->Student->findById($id);
-//        $imageMeta = unserialize($imageRawData['Student']['photo_name']);
-
-        if(empty($imageRawData['Student']['photo_content']) || empty($imageRawData['Student']['photo_name'])){
-            header("HTTP/1.0 404 Not Found");
-            die();
-        }else{
-            $imageFilename = $imageRawData['Student']['photo_name'];
-            $fileExt = pathinfo($imageFilename, PATHINFO_EXTENSION);
-            $imageContent = $imageRawData['Student']['photo_content'];
-//        header("Content-type: {$imageMeta->getMime()}");
-            header("Content-type: " . $mime_types[$fileExt]);
-            echo $imageContent;
-        }
+		$imageFilename = $imageRawData['Student']['photo_name'];
+		$fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
+	
+		
+		if(empty($imageRawData['Student']['photo_content']) || empty($imageRawData['Student']['photo_name']) || !in_array($mime_types[$fileExt], $mime_types)){
+			if($this->Session->check('Student.defaultImg'))
+    		{
+				$imageContent = $this->Session->read('Student.defaultImg');
+			}else{
+				$imageContent = file_get_contents($url);
+				$this->Session->write('Student.defaultImg', $imageContent);
+			}
+			echo $imageContent;
+		}else{
+			$imageContent = $imageRawData['Student']['photo_content'];
+			header("Content-type: " . $mime_types[$fileExt]);
+			echo $imageContent;
+		}
     }
 	
     public function add() {
@@ -591,6 +603,73 @@ class StudentsController extends StudentsAppController {
 		$this->set($data);
 		$this->render('/Elements/customfields/view');
 	}
+
+    // STUDENT ATTENDANCE PART
+    public function attendance(){
+        $studentId = $this->studentId;
+        $data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+        $this->Navigation->addCrumb('Attendance');
+
+        $id = @$this->request->params['pass'][0];
+        $yearList = $this->SchoolYear->getYearList();
+        $yearId = $this->getAvailableYearId($yearList);
+        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+
+        $data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),isset($id)? $id:$yearId);
+
+        $this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+        $this->set('data', $data);
+        $this->set('schoolDays', $schoolDays);
+    }
+
+    // Student behaviour part
+    public function behaviour(){
+        $this->Navigation->addCrumb('List of Behaviour');
+
+        $data = $this->StudentBehaviour->getBehaviourData($this->studentId);
+        if(empty($data)) {
+            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
+
+        $this->set('data', $data);
+    }
+
+    public function behaviourView() {
+        $studentBehaviourId = $this->params['pass'][0];
+        $studentBehaviourObj = $this->StudentBehaviour->find('all',array('conditions'=>array('StudentBehaviour.id' => $studentBehaviourId)));
+
+        if(!empty($studentBehaviourObj)) {
+            $studentId = $studentBehaviourObj[0]['StudentBehaviour']['student_id'];
+            $data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+            $this->Navigation->addCrumb('Behaviour Details');
+
+            $yearOptions = array();
+            $yearOptions = $this->SchoolYear->getYearList();
+            $categoryOptions = array();
+            $categoryOptions = $this->StudentBehaviourCategory->getCategory();
+
+            $this->Session->write('StudentBehavourId', $studentBehaviourId);
+            $this->set('categoryOptions', $categoryOptions);
+            $this->set('yearOptions', $yearOptions);
+            $this->set('studentBehaviourObj', $studentBehaviourObj);
+        } else {
+            $this->redirect(array('action' => 'behaviour'));
+        }
+    }
+
+    private function getAvailableYearId($yearList) {
+        $yearId = 0;
+        if(isset($this->params['pass'][0])) {
+            $yearId = $this->params['pass'][0];
+            if(!array_key_exists($yearId, $yearList)) {
+                $yearId = key($yearList);
+            }
+        } else {
+            $yearId = key($yearList);
+        }
+        return $yearId;
+    }
 	
 	public function getUniqueID() {
 		$generate_no = '';

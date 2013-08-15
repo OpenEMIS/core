@@ -36,9 +36,9 @@ $nameField = $this->Form->input('name', array(
 	
 	echo $this->Utility->getVisibleInput($this->Form, $fieldName, true, true);
 	
-	if($category === 'Subject' || $category === 'GradeSubject') {
+	if($category === 'Subject' || $category === 'GradeSubject' || $category === 'Grade') {
 		echo '<div class="cell cell_subject_code">';
-		if($category === 'Subject') {
+		if($category === 'Subject' || $category === 'Grade') {
 			echo $this->Form->input('code', array(
 				'name' => sprintf($fieldName, 'code'),
 				'label' => false,
@@ -51,7 +51,7 @@ $nameField = $this->Form->input('name', array(
 			echo '&nbsp;';
 		}
 		echo '</div>';
-	} 
+	}
 	
 	if($category !== 'GradeSubject') {
 		echo sprintf('<div class="cell cell_name">%s</div>', $nameField);

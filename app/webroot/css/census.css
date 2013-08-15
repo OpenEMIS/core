@@ -46,6 +46,7 @@
 .table .icon_delete { float: left; }
 
 .row.last { margin-top: 10px; }
+.selected { background-color: #E7F0F7 }
 /* End Table styles */
 
 /* legend styles */

@@ -44,12 +44,12 @@ var objInstitutionSite = {
     fetchChildren :function (currentobj){
         var selected = $(currentobj).val();
         var maskId;
-		var edutype = $(currentobj).closest('fieldset').find('legend').text().match(/Education/);;
+        var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
 		atype=(edutype?'admin':'Area');
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: getRootURL()+'/InstitutionSites/viewAreaChildren/'+selected+'/'+atype,
+            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+atype,
             beforeSend: function (jqXHR) {
 				maskId = $.mask({text:i18n.General.textLoadAreas});
             },
