@@ -119,13 +119,6 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please select an Area'
 			)
 		),
-        'area_education_id' => array(
-            'ruleRequired' => array(
-                'rule' => array('comparison', '>', 0),
-                'required' => true,
-                'message' => 'Please select an Area (Education)'
-            )
-        ),
 		'email' => array(
 			'ruleRequired' => array(
 				'rule' => 'email',
