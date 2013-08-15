@@ -6,7 +6,7 @@ echo $this->Html->script('search', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="classes" class="content_wrapper">
+<div id="studentBehaviourView" class="content_wrapper">
     <h1>
         <span><?php echo __('Behaviour Details'); ?></span>
 		<?php
@@ -23,37 +23,47 @@ echo $this->Html->script('search', false);
     <?php echo $this->element('alert'); ?>
     
     <div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Category'); ?></div>
-		<div class="value">
-		<?php 
-		echo $this->Form->input('student_behaviour_category_id', array(
-			'id' => 'student_behaviour_category_id',
-			'label' => false, 
-			'options' => $categoryOptions,
-			'default' => $data['student_behaviour_category_id'],
-			'disabled' => true
-		));
-		?>
-		</div>
+		<div class="label"><?php echo __('Category'); ?></div>
+		<div class="value"><?php echo $categoryOptions[$data['student_behaviour_category_id']]; ?></div>
 	</div>
-	
+
 	<div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Title'); ?></div>
-		<div class="value"><?php echo $data['title']; ?></div>
-	</div>
-	
+        <div class="label"><?php echo __('Date'); ?></div>
+        <div class="value"><?php echo $this->Utility->formatDate($data['date_of_behaviour']); ?></div>
+    </div>
+
 	<div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Description'); ?></div>
-		<div class="value"><?php echo $data['description']; ?></div>
-	</div>
-    
-    <div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Action'); ?></div>
-		<div class="value"><?php echo $data['action']; ?></div>
-	</div>
-    
-    <div class="row edit">
-		<div class="labelbehaviour"><?php echo __('Date'); ?></div>
-		<div class="value"><?php echo $this->Utility->formatDate($data['date_of_behaviour']); ?></div>
-	</div>
+    		<div class="label"><?php echo __('Title'); ?></div>
+    		<div class="value">
+    		<?php echo $this->Form->input('title', array('id' => 'title',
+    		                                             'class' => 'default',
+    		                                             'label' => false,
+    		                                             'disabled' => true,
+    		                                             'default' => $data['title'])); ?>
+    		</div>
+    	</div>
+
+    	<div class="row edit">
+    		<div class="label"><?php echo __('Description'); ?></div>
+    		<div class="value">
+    		<?php echo $this->Form->input('description', array('class' => 'default',
+    		                                                   'label' => false,
+    		                                                   'disabled' => true,
+    		                                                   'type' => 'textarea',
+    		                                                   'onkeyup' => 'utility.charLimit(this)',
+    		'default' => $data['description'])); ?>
+    		</div>
+    	</div>
+
+        <div class="row edit">
+    		<div class="label"><?php echo __('Action'); ?></div>
+    		<div class="value">
+    		<?php echo $this->Form->input('action', array('class' => 'default',
+    		                                              'label' => false,
+    		                                              'disabled' => true,
+    		                                              'type' => 'textarea',
+    		                                              'onkeyup' => 'utility.charLimit(this)',
+    		'default'=>$data['action'])); ?>
+    		</div>
+    	</div>
 </div>

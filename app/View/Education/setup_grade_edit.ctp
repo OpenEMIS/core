@@ -52,6 +52,7 @@ echo $this->Html->script('jquery.sort', false);
 		<div class="table full_width">
 			<div class="table_head">
 				<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
+				<div class="table_cell cell_subject_code"><?php echo __('Code'); ?></div>
 				<div class="table_cell"><?php echo __($pageTitle); ?></div>
 				<div class="table_cell cell_subject_link"><?php echo __('Subjects'); ?></div>
 				<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
@@ -72,6 +73,9 @@ echo $this->Html->script('jquery.sort', false);
 			));
 			echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
 			echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
+			echo '<div class="cell cell_subject_code"><div class="input_wrapper">';
+			echo $this->Form->input('code', array('name' => sprintf($fieldName, 'code'), 'value' => $obj['code']));
+			echo '</div></div>';
 			echo $this->Utility->getNameInput($this->Form, $fieldName, $obj['name'], $isNameEditable);
 			echo '<div class="cell cell_subject_link">';
 			echo $this->Html->link(__('Subjects'), array('action' => 'setupEdit', 'GradeSubject', $programmeId, $obj['id']));

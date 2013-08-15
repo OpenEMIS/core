@@ -171,21 +171,16 @@ class AreasController extends AppController {
      * @param  integer $parentId Find the next children levels data by parent id.
      * @return json            
      */
-	public function viewAreaChildren($parentId = 0,$arrModels = array('Area','AreaLevel')) {
-		$this->autoRender = false;
-		$arrModels = (($arrModels == 'Education'|| $arrModels == 'AreaEducation') && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
-		$area = $arrModels[0];
-		$listAreas = $this->{$area}->find('list', array(
-            'fields' => array($area.'.id', $area.'.name'),
-	        'conditions' => array($area.'.parent_id' => $parentId),
-            'order' => array($area.'.order ASC')
-	    ));
-
-	    $this->unshift_array($listAreas, array(0 => __('--Select--')));
-
-	    echo json_encode($listAreas);
-
-	}
+    public function viewAreaChildren($id,$arrMap = array('Area','AreaLevel')) {
+        //if ajax
+        if($this->RequestHandler->isAjax()){
+            $arrMap = ($arrMap == 'admin')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel') ;
+        }
+        $this->autoRender = false;
+        $value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
+        $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
+        echo json_encode($value);
+    }
     
     /**
      * Created by: Eugene Wong

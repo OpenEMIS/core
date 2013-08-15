@@ -3,6 +3,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false));
+
+echo $this->Html->script('security', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -11,8 +13,8 @@ echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false)
 	<h1>
 		<span><?php echo __('User Details'); ?></span>
 		<?php echo $this->Html->link(__('View'), array('action' => 'usersView', $data['id']), array('class' => 'divider')); ?>
+		<?php echo $this->Html->link(__('Access'), array('action' => 'usersAccess'), array('class' => 'divider')); ?>
 	</h1>
-	<?php echo $this->element('alert'); ?>
 	
 	<?php
 	echo $this->Form->create('SecurityUser', array(
@@ -85,7 +87,47 @@ echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false)
 		</div>
 	</fieldset>
 	
-	<div class="controls view_controls">
+	<fieldset class="section_break">
+		<legend><?php echo __('Groups'); ?></legend>
+		<div class="table full_width">
+			<div class="table_head">
+				<div class="table_cell" style="width: 200px;"><?php echo __('Group'); ?></div>
+				<div class="table_cell"><?php echo __('Role'); ?></div>
+			</div>
+			
+			<div class="table_body">
+				<?php foreach($data['groups'] as $group) { ?>
+					<div class="table_row">
+						<div class="table_cell"><?php echo $group['security_group_name']; ?></div>
+						<div class="table_cell"><?php echo $group['security_role_name']; ?></div>
+					</div>
+				<?php } ?>
+			</div>
+		</div>
+	</fieldset>
+	
+	<fieldset class="section_break">
+		<legend><?php echo __('Access'); ?></legend>
+		<div class="table full_width">
+			<div class="table_head">
+				<div class="table_cell" style="width: 200px;"><?php echo __('Identification No'); ?></div>
+				<div class="table_cell"><?php echo __('Name'); ?></div>
+				<div class="table_cell cell_module"><?php echo __('Module'); ?></div>
+			</div>
+			
+			<div class="table_body">
+				<?php foreach($data['access'] as $obj) { ?>
+					<div class="table_row">
+						<div class="table_cell"><?php echo $obj['SecurityUserAccess']['identification_no']; ?></div>
+						<div class="table_cell"><?php echo $obj['SecurityUserAccess']['name']; ?></div>
+						<div class="table_cell"><?php echo $obj['SecurityUserAccess']['table_name']; ?></div>
+					</div>
+				<?php } ?>
+			</div>
+		</div>
+	</fieldset>
+	
+	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'usersView'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>

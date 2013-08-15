@@ -17,11 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityUser extends AppModel {
-	public $status = array();
-	public function beforeFind() {
-		$this->status = array(0 => __('Inactive', true), 1 => __('Active', true));
-	}
-	
 	public $validate = array(
 		'username' => array(
 			'ruleRequired' => array(
@@ -65,6 +60,10 @@ class SecurityUser extends AppModel {
 			)
 		)
 	);
+	
+	public function getStatus() {
+		return array(0 => __('Inactive', true), 1 => __('Active', true));
+	}
 	
 	public function doValidate($data) {
 		$validate = true;

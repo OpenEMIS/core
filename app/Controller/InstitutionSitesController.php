@@ -891,7 +891,8 @@ class InstitutionSitesController extends AppController {
 			$this->set('arrEducation',$arrEducation);
 			$this->set('arrEducationVal',$arrEducationVal);
 		}
-		$this->set('data',$this->institutionSiteObj);
+        $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
+		$this->set('data',$data);
 		$this->set('data2',$data2);
 		$this->set('id',$this->institutionSiteId);
 	}
@@ -1606,218 +1607,6 @@ class InstitutionSitesController extends AppController {
 		$this->set('categoryOptions', $categoryOptions);
 	}
 	
-	/* Currently disabled for now
-	public function assessmentsList() {
-		$this->Navigation->addCrumb('Assessments');
-		
-		$alertOptions = array('type' => 'warn', 'dismissOnClick' => false);
-		$yearOptions = $this->SchoolYear->getYearList();
-		$selectedYear = 0;
-		$selectedProgramme = 0;
-		$data = array();
-		$type = $this->AssessmentItemType->type['NON_OFFICIAL'];
-		if(!empty($yearOptions)) {
-			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($this->institutionSiteId, $selectedYear);
-			
-			if(!empty($programmeOptions)) {
-				$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
-				$list = $this->AssessmentItemType->getAssessmentByTypeAndProgramme($type, $selectedProgramme, array(
-					'institution_site_id' => $this->institutionSiteId,
-					'school_year_id' => $selectedYear
-				));
-				if(!empty($list)) {
-					$data = $this->AssessmentItemType->groupByGrades($list);
-				} else {
-					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT'), array('type' => 'info'));
-				}
-			} else {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), $alertOptions);
-			}
-			$this->set('programmeOptions', $programmeOptions);
-			$this->set('selectedProgramme', $selectedProgramme);
-		} else {
-			$this->Utility->alert($this->Utility->getMessage('SCHOOL_YEAR_EMPTY_LIST'), $alertOptions);
-		}
-		$this->set('yearOptions', $yearOptions);
-		$this->set('selectedYear', $selectedYear);
-		$this->set('data', $data);
-		$this->set('type', $type);
-	}
-	
-	public function assessmentsListEdit() {
-		$this->Navigation->addCrumb('Assessments');
-		$yearOptions = $this->SchoolYear->getYearList();
-		$selectedYear = 0;
-		$selectedProgramme = 0;
-		
-		if(!empty($yearOptions)) {
-			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-			$programmeOptions = $this->EducationProgramme->getProgrammeOptions();
-			$data = array();
-			$type = $this->AssessmentItemType->type['NON_OFFICIAL'];
-			if(!empty($programmeOptions)) {
-				$selectedProgramme = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($programmeOptions);
-				if($this->request->is('post')) {
-					$assessment = $this->data['AssessmentItemType'];
-					if($this->AssessmentItemType->saveMany($assessment, array('validate' => false))) {
-						$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-					} else {
-						$this->Utility->alert($this->Utility->getMessage('ERROR_UNEXPECTED'), array('type' => 'error'));
-					}
-					$this->redirect(array('action' => 'assessmentsList', $selectedYear, $selectedProgramme));
-				}
-				$list = $this->AssessmentItemType->getAssessmentByTypeAndProgramme($type, $selectedProgramme, array(
-						'institution_site_id' => $this->institutionSiteId,
-						'school_year_id' => $selectedYear
-					));
-				if(!empty($list)) {
-					$data = $this->AssessmentItemType->groupByGrades($list);
-				} else {
-					$this->redirect(array('action' => 'assessmentsList', $selectedYear, $selectedProgramme));
-				}
-			} else {
-				$this->redirect(array('action' => 'assessmentsList'));
-			}
-		} else {
-			$this->Utility->alert($this->Utility->getMessage('SCHOOL_YEAR_EMPTY_LIST'), $alertOptions);
-		}
-		$this->set('data', $data);
-		$this->set('yearOptions', $yearOptions);
-		$this->set('selectedYear', $selectedYear);
-		$this->set('programmeOptions', $programmeOptions);
-		$this->set('selectedProgramme', $selectedProgramme);
-		$this->set('type', $type);
-	}
-	
-	public function assessmentsAdd() {
-		$this->Navigation->addCrumb('Add Assessment');
-		
-		$programmeId = 0;
-		$gradeId = 0;
-		$selectedProgramme = 0;
-		$selectedGrade = '';
-		$selectedYear = 0;
-		$items = array();
-		if($this->request->is('post')) {
-			$programmeId = $this->data['AssessmentItemType']['education_programme_id'];
-			$gradeId = $this->data['AssessmentItemType']['education_grade_id'];
-			$selectedYear = $this->data['AssessmentItemType']['school_year_id'];
-			$assessment = $this->data['AssessmentItemType'];
-			$this->AssessmentItemType->set($assessment);
-			if(isset($this->data['AssessmentItem'])) {
-				$items = $this->data['AssessmentItem'];
-			}
-			if($this->AssessmentItemType->validates()) {
-				$order = 1;
-				$type = $this->AssessmentItemType->type['NON_OFFICIAL'];
-				$list = $this->AssessmentItemType->getAssessmentByTypeAndGrade($type, $gradeId);
-				if(!empty($list)) {
-					$last = array_pop($list);
-					$order = $last['AssessmentItemType']['order'] + 1;
-				}
-				$assessment['type'] = $type;
-				$assessment['order'] = $order;
-				$assessment['institution_site_id'] = $this->institutionSiteId;
-				$obj = $this->AssessmentItemType->save($assessment);
-				if($obj) {
-					$assessmentId = $obj['AssessmentItemType']['id'];
-					if(!empty($items)) {
-						foreach($items as $i => $val) {
-							if(isset($val['visible']) && $val['visible']==1) {
-								$val['assessment_item_type_id'] = $assessmentId;
-								$this->AssessmentItem->create();
-								$this->AssessmentItem->save($val);
-							}
-						}
-					}
-					$this->redirect(array('action' => 'assessmentsView', $assessmentId));
-				}
-			}
-		}
-		$yearOptions = $this->SchoolYear->getYearList();
-		if(!empty($yearOptions)) {
-			if($selectedYear==0) {
-				$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-			}
-			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeOptions($this->institutionSiteId, $selectedYear);
-			$gradeOptions = array();
-			if(!empty($programmeOptions)) {
-				if($programmeId == 0) {
-					$programmeId = key($programmeOptions);
-				}
-				$gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, null, true);
-			} else {
-				$this->Utility->alert($this->Utility->getMessage('EDUCATION_INACTIVE'), array('type' => 'warn'));
-			}
-			$this->set('selectedProgramme', $programmeId);
-			$this->set('selectedGrade', $gradeId);
-			$this->set('selectedYear', $selectedYear);
-			$this->set('programmeOptions', $programmeOptions);
-			$this->set('gradeOptions', $gradeOptions);
-			$this->set('items', $items);
-		} else {
-			$this->Utility->alert($this->Utility->getMessage('SCHOOL_YEAR_EMPTY_LIST'), array('type' => 'warn', 'dismissOnClick' => false));
-		}
-		$this->set('yearOptions', $yearOptions);
-	}
-	
-	public function assessmentsView() {
-		if(isset($this->params['pass'][0])) {
-			$this->Navigation->addCrumb('Assessment Details');
-			$assessmentId = $this->params['pass'][0];
-			$data = $this->AssessmentItemType->getAssessment($assessmentId);
-			$this->set('data', $data);
-		} else {
-			$this->redirect(array('action' => 'assessmentsList'));
-		}
-	}
-	
-	public function assessmentsEdit() {	
-		if(isset($this->params['pass'][0])) {
-			$this->Navigation->addCrumb('Edit Assessment Details');
-			$assessmentId = $this->params['pass'][0];
-			$data = $this->AssessmentItemType->getAssessment($assessmentId);
-			$items = array();
-			if($this->request->is('post')) {
-				$assessment = $this->data['AssessmentItemType'];
-				$assessment['education_grade_id'] = $data['education_grade_id'];
-				$data = array_merge($data, $assessment);
-				$this->AssessmentItemType->set($assessment);
-				if(isset($this->data['AssessmentItem'])) {
-					$items = $this->data['AssessmentItem'];
-				}
-				if($this->AssessmentItemType->validates()) {
-					$obj = $this->AssessmentItemType->save($assessment);
-					if($obj) {
-						$assessmentId = $obj['AssessmentItemType']['id'];
-						if(!empty($items)) {
-							foreach($items as $i => $val) {
-								if(!isset($val['visible'])) {
-									$val['visible'] = 0;
-								}
-								if($val['id'] > 0) {
-									$this->AssessmentItem->save($val);
-								} else {
-									if($val['visible']==1) {
-										$this->AssessmentItem->create();
-										$this->AssessmentItem->save($val);
-									}
-								}
-							}
-						}
-						$this->redirect(array('action' => 'assessmentsView', $assessmentId));
-					}
-				}
-				$data['AssessmentItem'] = $items;
-			}
-			$this->set('data', $data);
-		} else {
-			$this->redirect(array('action' => 'assessmentsList'));
-		}
-	}
-	*/
-	
 	public function results() {
 		$this->Navigation->addCrumb('Results');
 		
@@ -1856,10 +1645,12 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function resultsDetails() {
-		if(isset($this->params['pass'][0])) {
+		if(count($this->params['pass']) == 2) {
 			$this->Navigation->addCrumb('Results');
-			$assessmentId = $this->params['pass'][0];
+			$yearId = $this->params['pass'][0];
+			$assessmentId = $this->params['pass'][1];
 			$data = $this->AssessmentItemType->getAssessment($assessmentId);
+			$this->Session->write('Assessment.SchoolYearId', $yearId);
 			$this->set('data', $data);
 		} else {
 			$this->redirect(array('action' => 'results'));
@@ -1873,9 +1664,15 @@ class InstitutionSitesController extends AppController {
 			if(!empty($yearOptions)) {
 				$itemId = $this->params['pass'][0];
 				$data = $this->AssessmentItem->getItem($itemId);
+				$selectedYear = 0;
 				
 				if(!empty($data)) {
-					$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($yearOptions);
+					if($this->Session->check('Assessment.SchoolYearId')) {
+						$selectedYear = $this->Session->read('Assessment.SchoolYearId');
+						$this->Session->delete('Assessment.SchoolYearId');
+					} else {
+						$selectedYear = isset($this->params['pass'][1]) ? $this->params['pass'][1] : key($yearOptions);
+					}
 					$gradeId = $data['EducationGradeSubject']['education_grade_id'];
 					$classOptions = $this->InstitutionSiteClass->getClassOptions($selectedYear, $this->institutionSiteId, $gradeId);
 					$selectedClass = 0;
@@ -1933,14 +1730,17 @@ class InstitutionSitesController extends AppController {
 					}
 					
 					if($this->request->is('post')) {
-						$result = $this->data['AssessmentItemResult'];
-						foreach($result as $key => &$obj) {
-							$obj['assessment_item_id'] = $itemId;
-							$obj['institution_site_id'] = $this->institutionSiteId;
-							$obj['school_year_id'] = $selectedYear;
-						}
-						if(!empty($result)) {
-							$this->AssessmentItemResult->saveMany($result);
+						if(isset($this->data['AssessmentItemResult'])) {
+							$result = $this->data['AssessmentItemResult'];
+							foreach($result as $key => &$obj) {
+								$obj['assessment_item_id'] = $itemId;
+								$obj['institution_site_id'] = $this->institutionSiteId;
+								$obj['school_year_id'] = $selectedYear;
+							}
+							if(!empty($result)) {
+								$this->AssessmentItemResult->saveMany($result);
+								$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+							}
 						}
 						$this->redirect(array('action' => 'resultsItem', $itemId, $selectedYear, $selectedClass));
 					}
@@ -1998,6 +1798,8 @@ class InstitutionSitesController extends AppController {
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
+        $this->set('id',$id);
+        $this->set('myview', 'teachersView');
 		$this->render('/Elements/customfields/view');
 	}
 	
@@ -2055,6 +1857,8 @@ class InstitutionSitesController extends AppController {
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
+        $this->set('id',$id);
+        $this->set('myview', 'studentsView');
 		$this->render('/Elements/customfields/view');
 	}
 	
@@ -2109,6 +1913,8 @@ class InstitutionSitesController extends AppController {
 		}
 		$this->set(compact('arrMap','selectedYear','years','action','id','displayEdit'));
 		$this->set($data);
+        $this->set('id',$id);
+        $this->set('myview', 'staffView');
 		$this->render('/Elements/customfields/view');
 	}
 	
@@ -2283,6 +2089,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('years', $yearList);
 			$this->set('data', $data);
 			$this->set('schoolDays', $schoolDays);
+            $this->set('id', $studentId);
 		}
     }
 
@@ -2317,9 +2124,14 @@ class InstitutionSitesController extends AppController {
 			$yearId = $data['school_year_id'];
 			
 			if($schoolDayNo<$totalNo){
-				$this->Utility->alert('Totals day attended and absent cannot exceed no of school days.', array('type' => 'error'));
+				$this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendanceEdit', $yearId));
-			}else{	
+			}else{
+                $thisId = $this->StudentAttendance->findID($this->Session->read('InstitutionSiteStudentId'),$yearId);
+                if($thisId!='')
+                {
+                    $data['id'] = $thisId;
+                }
 				$this->StudentAttendance->save($data);
 				$this->Utility->alert($this->Utility->getMessage('SITE_STUDENT_ATTENDANCE_UPDATED'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendance', $yearId));
@@ -2343,11 +2155,17 @@ class InstitutionSitesController extends AppController {
 			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 			
 			$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'),isset($id)? $id:$yearId);							
-			
+
 			$this->set('selectedYear', $yearId);
 			$this->set('years', $yearList);
 			$this->set('data', $data);
 			$this->set('schoolDays', $schoolDays);
+            $this->set('id', $teacherId);
+
+            $id = @$this->request->params['pass'][0];
+            $yearList = $this->SchoolYear->getYearList();
+            $yearId = $this->getAvailableYearId($yearList);
+            $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 		}
     }
 
@@ -2382,9 +2200,14 @@ class InstitutionSitesController extends AppController {
 			$yearId = $data['school_year_id'];
 			
 			if($schoolDayNo<$totalNo){
-				$this->Utility->alert('Totals day attended and absent cannot exceed no of school days.', array('type' => 'error'));
+				$this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'teachersAttendanceEdit', $yearId));
-			}else{	
+			}else{
+                $thisId = $this->TeacherAttendance->findID($this->Session->read('InstitutionSiteTeachersId'),$yearId);
+                if($thisId!='')
+                {
+                    $data['id'] = $thisId;
+                }
 				$this->TeacherAttendance->save($data);
 				$this->Utility->alert($this->Utility->getMessage('SITE_TEACHER_ATTENDANCE_UPDATED'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'teachersAttendance', $yearId));
@@ -2413,6 +2236,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('years', $yearList);
 			$this->set('data', $data);
 			$this->set('schoolDays', $schoolDays);
+            $this->set('id', $staffId);
 		}
     }
 
@@ -2447,9 +2271,14 @@ class InstitutionSitesController extends AppController {
 			$yearId = $data['school_year_id'];
 			
 			if($schoolDayNo<$totalNo){
-				$this->Utility->alert('Totals day attended and absent cannot exceed no of school days.', array('type' => 'error'));
+				$this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'staffAttendanceEdit', $yearId));
-			}else{	
+			}else{
+                $thisId = $this->StaffAttendance->findID($this->Session->read('InstitutionSiteStaffId'),$yearId);
+                if($thisId!='')
+                {
+                    $data['id'] = $thisId;
+                }
 				$this->StaffAttendance->save($data);
 				$this->Utility->alert($this->Utility->getMessage('SITE_STAFF_ATTENDANCE_UPDATED'));
 				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'staffAttendance', $yearId));

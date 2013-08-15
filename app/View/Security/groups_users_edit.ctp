@@ -29,7 +29,7 @@ echo $this->Html->script('security', false);
 		</div>
 	</fieldset-->
 	
-	<fieldset class="section_group" id="search_user">
+	<fieldset class="section_group" id="search">
 		<legend><?php echo __('Search'); ?></legend>
 		
 		<div class="row">
@@ -67,7 +67,7 @@ echo $this->Html->script('security', false);
 					<div class="table_cell cell_icon_action"></div>
 				</div>
 			</div>
-			<div class="list_wrapper hidden" limit="2">
+			<div class="list_wrapper hidden" limit="2" style="height: 70px;">
 				<div class="table">
 					<div class="table_body"></div>
 				</div>

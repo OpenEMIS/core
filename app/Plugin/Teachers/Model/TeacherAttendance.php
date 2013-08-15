@@ -22,4 +22,14 @@ class TeacherAttendance extends TeachersAppModel {
 										'conditions'=>array('TeacherAttendance.teacher_id' => $id, 'TeacherAttendance.school_year_id' => $yearId)));
 		return $list;
 	}
+
+    public function findID($id,$yearId) {
+        $list = $this->find('all',array(
+                'conditions'=>array('TeacherAttendance.teacher_id' => $id, 'TeacherAttendance.school_year_id' => $yearId)));
+        $myid='';
+        if(count($list)>0){
+            $myid = $list[0]['TeacherAttendance']['id'];
+        }
+        return $myid;
+    }
 }
