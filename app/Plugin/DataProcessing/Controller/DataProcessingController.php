@@ -45,6 +45,7 @@ class DataProcessingController extends DataProcessingAppController {
 	}
 	
 	private function formatTable($data){
+        $tmp = array();
 		foreach($data as $k => $val){
 			if(isset($tmp['Reports'][$val['Report']['module']][$val['Report']['name']])){
 				 $tmp['Reports'][$val['Report']['module']][$val['Report']['name']]['file_kinds'][$val['Report']['id']] = $val['Report']['file_type'];
@@ -70,7 +71,7 @@ class DataProcessingController extends DataProcessingAppController {
 		if($this->request->is('post')){
 			$this->processGenerate($this->data['Reports']);
 		}
-		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est'))), 'order' => array('Report.order')));
+		$data = $this->Report->find('all',array('conditions'=>array('NOT'=>array('file_type'=>array('ind','est', 'cus')))));
 		$QR = $this->Report->getQueuedRunningReport();
 
 		foreach($QR as $arrV){
@@ -102,6 +103,28 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = $this->formatTable($data);
 		
 		//pr($tmp);die;
+		$this->set('data',$tmp);
+		$this->set('queued',$q);
+	}
+
+	public function genCustoms() {
+		$this->Navigation->addCrumb('Generate');
+
+		$tmp = array();
+		$q = array();
+		if($this->request->is('post')){
+			$this->processGenerate($this->data['Reports']);
+		}
+		$data = $this->Report->find('all',array('conditions'=>array('file_type'=>'cus')));
+		$QR = $this->Report->getQueuedRunningReport();
+
+		foreach($QR as $arrV){
+			$q[] = $arrV['Filename'];
+		}
+
+		$tmp = $this->formatTable($data);
+
+//		pr($tmp);die;
 		$this->set('data',$tmp);
 		$this->set('queued',$q);
 	}

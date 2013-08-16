@@ -108,5 +108,12 @@ class DateTimeComponent extends Component {
         }
         return $year;
     }
+
+    public static function dateAsSql($timeStamp, $timezone = NULL){
+        $date = new DateTime('@'.$timeStamp);
+        $sqlDateTimeFormat = 'Y-m-d H:i:s';
+        if(!is_null($timezone)) $date->setTimezone(new DateTimeZone($timezone));
+        return $date->format($sqlDateTimeFormat);
+    }
 	
 }
