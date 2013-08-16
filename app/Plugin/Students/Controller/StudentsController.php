@@ -601,7 +601,6 @@ class StudentsController extends StudentsAppController {
 		$displayEdit = false;
 		$this->set(compact('arrMap','selectedYear','siteid','years','action','id','institution_sites','displayEdit'));
 		$this->set($data);
-        $this->set('id','');
         $this->set('myview', 'additional');
 		$this->render('/Elements/customfields/view');
 	}
