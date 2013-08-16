@@ -40,7 +40,6 @@ class StudentsNavigationComponent extends Component {
 				),
 				'DETAILS' => array(
                     $navigation->createLink('Classes', $controller, 'classes'),
-                    $navigation->createLink('Academic', $controller, 'additional','additional|^custFieldYrView$'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
                     $navigation->createLink('Behaviour', $controller, 'behaviour','behaviour|^behaviourView$')
                 )/*,
