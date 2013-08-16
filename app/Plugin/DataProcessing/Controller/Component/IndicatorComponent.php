@@ -56,12 +56,12 @@ class IndicatorComponent extends Component {
 		
 		$this->Logger->init('indicator');
 
-        if(Configure::read('xml.indicators.system')){
-            $this->systemIndicatorPath = Configure::read('xml.indicators.system');
+        if(Configure::read('xml.indicators.system.path')){
+            $this->systemIndicatorPath = Configure::read('xml.indicators.system.path');
         }
 
-        if(Configure::read('xml.indicators.user')){
-            $this->userIndicatorPath = Configure::read('xml.indicators.user');
+        if(Configure::read('xml.indicators.custom.path')){
+            $this->userIndicatorPath = Configure::read('xml.indicators.custom.path');
         }
 	}
 	
@@ -75,7 +75,7 @@ class IndicatorComponent extends Component {
 			'onError' => array('callback' => array(), 'params' => array())
 		);
 		$_settings = array_merge($_settings, $settings);
-		
+
 		$indicators = $_settings['indicators'];		
 		$onBeforeGenerate = $_settings['onBeforeGenerate'];
 		$onAfterGenerate = $_settings['onAfterGenerate'];
@@ -143,13 +143,17 @@ class IndicatorComponent extends Component {
         $indicator = $this->BatchIndicator->find('first', array('conditions' => array('BatchIndicator.id' => $id)));
         $indicatorName = $indicator['BatchIndicator']['name'];
         $unitName = $indicator['BatchIndicator']['unit'];
-        $path = ((isset($indicator['BatchIndicator']['type']) AND $indicator['BatchIndicator']['type'] == 'user')? $this->userIndicatorPath: $this->systemIndicatorPath).$indicator['BatchIndicator']['filename'];
+        $path = ((isset($indicator['BatchIndicator']['type']) AND $indicator['BatchIndicator']['type'] == 'custom')? $this->userIndicatorPath: $this->systemIndicatorPath).$indicator['BatchIndicator']['filename'];
         if(!file_exists($path)) {
             throw new Exception("Error file do not exist in the location: {$path}");
         }
 //        var_dump($path);
         $this->indicatorsQueries = simplexml_load_file($path);
         $indicatorXml = array_shift($this->indicatorsQueries->xpath('//indicator[@id='.$id.']'));
+
+        if(is_null($indicatorXml)){
+            $indicatorXml = array_shift($this->indicatorsQueries->xpath('//indicator'));
+        }
         $query = $indicatorXml->query->mysql->insert;
 //		$query = $indicator['BatchIndicator']['query']; # Read query from DB table
 
