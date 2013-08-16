@@ -588,6 +588,7 @@ class StaffController extends StaffAppController {
 		$displayEdit = false;
 		$this->set(compact('arrMap','selectedYear','siteid','years','action','id','institution_sites','displayEdit'));
 		$this->set($data);
+        $this->set('myview', 'additional');
 		$this->render('/Elements/customfields/view');
 	}
 
