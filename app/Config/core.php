@@ -287,6 +287,14 @@ Cache::config('_cake_model_', array(
  * Configure the path and filename of the xml file that will be loading with
  * SQL statement for generating indicator reports.
  */
-Configure::write('xml.indicators.system', APP.'Config'.DS.'indicators'.DS);
-Configure::write('xml.indicators.user', WWW_ROOT.'custom_indicators'.DS);
+Configure::write('xml.indicators.system.path', APP.'Config'.DS.'indicators'.DS);
+Configure::write('xml.indicators.custom.path', WWW_ROOT.'custom_indicators'.DS);
+Configure::write('xml.indicators.custom.size', 3145728);
 Configure::write('xml.indicators.filename', 'indicatorQueries.xml');
+
+/**
+ * Xml Schemas Path
+ * Configure the path and filename of the xml file that will be loading with
+ * SQL statement for generating indicator reports.
+ */
+Configure::write('xml.schemas.path', WWW_ROOT.DS.'schemas'.DS);
