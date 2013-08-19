@@ -65,6 +65,8 @@ class AreasController extends AppController {
 
         }
 
+        if(count($topArea)<2) $this->Utility->alert($this->Utility->getMessage('AREAS_NO_AREA_LEVEL'));
+
 		// Checking if user has access to _view for area levels
 		$_view_levels = false;
 		if($this->AccessControl->check($this->params['controller'], 'levels')) {
@@ -72,7 +74,7 @@ class AreasController extends AppController {
 		}
 		$this->set('_view_levels', $_view_levels);
 		// End Access Control
-		
+        $this->set('topArea', $topArea);
 		$this->set('levels', $levels);
         $this->set('highestLevel',$areas);	
 	}
@@ -207,15 +209,15 @@ class AreasController extends AppController {
      * @param  integer $previousParentId Find the previous parent id.
      * @return json                    
      */
-	public function viewData($parentId = 0, $arrModels = array('Area','AreaLevel')) {
+	public function viewData($parentId = 1, $arrModels = array('Area','AreaLevel')) {
 		$request = @$this->request['pass'][0];
 		if($request == 'Education' || $request == 'AreaEducation'){
-			$parentId = 0;
+			$parentId = 1;
 			$arrModels = 'Education';
 			
-		}else{
-			$parentId = is_null($request)?-1:$request;
 		}
+
+        $parentId = ($parentId<1)? 1:$request;
 
 		$arrModels = (($arrModels == 'Education'|| $arrModels == 'AreaEducation') && !is_array($arrModels)) ? array('AreaEducation','AreaEducationLevel') :  array('Area','AreaLevel') ;
 
@@ -232,7 +234,7 @@ class AreasController extends AppController {
 		    'fields' => array($area.'.id', $area.'.code', $area.'.name', $area.'.visible', $area.'.order', $area.'.'.$fkAreaLevel.'_id AS area_level_id', $arealevel.'.name AS level_name'),
             'order' => array($area.'.order ASC', $area.'.id ASC')
 	    ));
-		
+
 
         $db = $this->{$arealevel}->getDataSource();
 		
@@ -243,13 +245,14 @@ class AreasController extends AppController {
                             FROM `$area_table_name`
                             WHERE `$area_table_name`.`id` = ?
                         )";
-        if($parentId == 0){
-            $query = "SELECT DISTINCT `$area_level_table_name`.name, `$area_level_table_name`.`id`
-                        FROM  `$area_level_table_name` ";
-
-        }
 		
         $listAreaLevels = $db->fetchAll( $query, array($parentId));
+
+        if(count($listAreaLevels)<1){
+            $query = "SELECT DISTINCT `$area_level_table_name`.name, `$area_level_table_name`.`id`
+                        FROM  `$area_level_table_name` order by id asc limit 1";
+            $listAreaLevels = $db->fetchAll( $query, array($parentId));
+        }
 	    //$this->Area->formatResult($listAreas);
 
 	    echo json_encode(array('data' => $this->Utility->formatResult($listAreas), 'area_levels' => $this->Utility->formatResult($listAreaLevels)));
@@ -395,7 +398,9 @@ class AreasController extends AppController {
             $this->set('initAreaSelection', (isset($this->request->data['AreaEducation']) && count($this->request->data['AreaEducation']) > 0)?$this->request->data['AreaEducation']: null);
 
         }
-		
+
+        if(count($topArea)<2)  $this->Utility->alert($this->Utility->getMessage('AREAS_NO_AREA_LEVEL'));
+
 		// Checking if user has access to _view for area levels
 		$_view_levels = false;
 		if($this->AccessControl->check($this->params['controller'], 'levels')) {
@@ -403,10 +408,10 @@ class AreasController extends AppController {
 		}
 		$this->set('_view_levels', $_view_levels);
 		// End Access Control
-		
+        $this->set('topArea', $topArea);
 		$this->set('levels', $levels);
         $this->set('highestLevel',$areas);	
-		 $this->render('/AreaEducation/index');
+		$this->render('/AreaEducation/index');
 	}
 
     public function AreaEducationEdit() {

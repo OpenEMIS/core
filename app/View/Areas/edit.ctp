@@ -50,7 +50,9 @@ echo $this->Html->script('area', false);
 				<div class="table_cell" style="width:99px;"><?php echo __('Level'); ?></div>
 				<div class="table_cell" style="width:90px;"><?php echo __('Code'); ?></div>
 				<div class="table_cell" style="width:280px;"><?php echo __('Name'); ?></div>
-				<div class="table_cell"><?php echo __('Order'); ?></div>
+				<?php if($_add && isset($initAreaSelection['area_id'])) { ?>
+                <div class="table_cell"><?php echo __('Order'); ?></div>
+                <?php } ?>
 			</div>
 			<div class="table_body" style="display:none;">
 			</div>
@@ -58,7 +60,7 @@ echo $this->Html->script('area', false);
 
 		<ul class="quicksand table_view" style="margin-bottom:12px;"></ul>
 		
-		<?php if($_add) { ?>
+		<?php if($_add && isset($initAreaSelection['area_id'])) { ?>
 		<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Area'); ?></a></div>
 		<?php } ?>
 			
