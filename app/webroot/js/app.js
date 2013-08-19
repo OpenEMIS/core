@@ -28,6 +28,9 @@ $(document).ready(function() {
 	jsForm.init();
 	jsTable.init();
 	jsList.init();
+    if($('html').attr('dir')=="rtl"){
+        jsForm.fixedBracket(); // This fix arabic translation brackets problem
+    }
 });
 
 var dataStorage = {};
@@ -364,7 +367,12 @@ var jsForm = {
 	
 	isSubmitDisabled: function(form) {
 		return !$(form).find('input[type="submit"]').hasClass('btn_disabled');
-	}
+	},
+
+    fixedBracket: function(){
+        var replaced = $("body").html().replace(/\)/g,')&#x200E;');
+        $("body").html(replaced);
+    }
 };
 
 var jsTable = {
@@ -664,3 +672,5 @@ var utils = {
 		w.print();
 	}
 }
+
+

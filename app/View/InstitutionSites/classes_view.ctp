@@ -5,7 +5,6 @@ echo $this->Html->script('search', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
-
 <div id="classes" class="content_wrapper">
     <h1>
         <span><?php echo $className; ?></span>
@@ -48,18 +47,12 @@ echo $this->Html->script('search', false);
 			<div class="table_head">
 				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
 				<div class="table_cell"><?php echo __('Name'); ?></div>
-				<div class="table_cell" style="width: 150px;"><?php echo __('Subject'); ?></div>
 			</div>
 			<div class="table_body">
 				<?php foreach($teachers as $obj) { ?>
 				<div class="table_row">
 					<div class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></div>
 					<div class="table_cell"><?php echo $obj['Teacher']['first_name'] . ' ' . $obj['Teacher']['last_name']; ?></div>
-					<div class="table_cell">
-					<?php
-					echo $obj['InstitutionSiteClassTeacher']['education_subject_id']==0 ? __('No Subject') : $obj['EducationSubject']['name'];
-					?>
-					</div>
 				</div>
 				<?php } ?>
 			</div>
