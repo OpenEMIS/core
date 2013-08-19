@@ -102,6 +102,12 @@ class AreaHandlerComponent extends Component {
         }
     }
 
+    public function getTopArea($arrMap = array('Area','AreaLevel')){
+        $arr = array_keys($this->{$arrMap[0]}->find('list',array('recursive'=>0, 'conditions' => array('parent_id' => '-1'))));
+        $id = $arr[0];
+        return $id;
+    }
+
 	public function getAreaList($arrMap = array('Area','AreaLevel')){
 		return $this->{$arrMap[1]}->find('list',array('recursive'=>0));
 	}
@@ -136,7 +142,7 @@ class AreaHandlerComponent extends Component {
 
     public function getAllSiteAreaToParent($siteId,$arrMap = array('Area','AreaLevel')) {
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
-        $lowest =  ($siteId == 0)? '1': $siteId;
+        $lowest =  $siteId;
 
         $areas = $this->getAreatoParent($lowest,$arrMap);
         $areas = array_reverse($areas);
@@ -145,16 +151,14 @@ class AreaHandlerComponent extends Component {
         foreach($areas as $index => &$arrVals){
 
             $siblings = $this->{$arrMap[0]}->find('all',array('fields'=>Array($arrMap[0].'.id',$arrMap[0].'.name',$arrMap[0].'.parent_id',$arrMap[0].'.visible'),'conditions'=>array($arrMap[0].'.parent_id' => $arrVals['parent_id'])));
-            //echo "<br>";
 
-            $opt =  array('0'=>'--'.__('Select').'--');
+            ($arrVals['parent_id']!=-1)?  $opt =  array('0'=>'--'.__('Select').'--'): ''; // No select for top tier
+
             foreach($siblings as &$sibVal){
 
                 $arrDisabledList[$sibVal[$arrMap[0]]['id']] = array('parent_id'=>$sibVal[$arrMap[0]]['parent_id'],'id'=>$sibVal[$arrMap[0]]['id'],'name'=>$sibVal[$arrMap[0]]['name'],'visible'=>$sibVal[$arrMap[0]]['visible']);
 
                 if(isset($arrDisabledList[$sibVal[$arrMap[0]]['parent_id']])){
-
-                    //echo $sibVal['Area']['name']. ' '.$arrDisabledList[$sibVal['Area']['parent_id']]['visible'].' <br>';
                     if($arrDisabledList[$sibVal[$arrMap[0]]['parent_id']]['visible'] == 0){
                         $sibVal[$arrMap[0]]['visible'] = 0;
                         $arrDisabledList[$sibVal[$arrMap[0]]['id']]['visible'] = 0;

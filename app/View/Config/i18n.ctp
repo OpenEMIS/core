@@ -14,7 +14,8 @@ var i18n = {
 		dlgOptErrorDialog : '<?php echo T("Unexpected Error"); ?>'
 	},
 	Areas : {
-		initAlertOptText : '<?php echo T("Unable to add Areas.<br/>Please create Area Level before adding Areas.", true); ?>'
+		initAlertOptText : '<?php echo T("Unable to add Areas.<br/>Please create Area Level before adding Areas.", true); ?>',
+		AreaLevelText : '<?php echo T("(Area Levels)"); ?>'
 	},
 	Attachments : {
 		maskDeleteAttachments : '<?php echo T("Deleting attachment...", true); ?>',

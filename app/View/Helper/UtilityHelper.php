@@ -80,7 +80,6 @@ class UtilityHelper extends AppHelper {
 	}
 
 	public function showArea($form,$id,$value,$settings=array()){
-
         $arrmap = array('Area','AreaLevel');
         $arealevelfk = 'area_level';
         if($id=='area_education_id'){
@@ -89,7 +88,7 @@ class UtilityHelper extends AppHelper {
         }
 
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-		if (!is_numeric($value) || !isset($value) ) {$value=0;} 
+		if (!is_numeric($value) || !isset($value) ) {$value=1;}
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 
@@ -182,7 +181,8 @@ class UtilityHelper extends AppHelper {
 
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 
-		if (!is_numeric($value) || !isset($value) ) {$value=0;};
+		if (!is_numeric($value) || !isset($value) ) {$value=$this->AreaHandler->getTopArea($arrmap);};
+
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 
@@ -193,12 +193,8 @@ class UtilityHelper extends AppHelper {
             $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
 
             $display = '';
-            if($value==0 && $ctr==0){
-                $mylevel = __('(Area Level)');
-            }else{
-                if($mylevel===''){
-                    $display = 'display:none;';
-                }
+            if($mylevel===''){
+                $display = 'display:none;';
             }
             echo '<div class="row" style="'.$display.'">
                     <div class="label">'.$mylevel.'</div>

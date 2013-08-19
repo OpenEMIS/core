@@ -266,7 +266,7 @@ var jsForm = {
                     var myLabel = myselect.parent().parent().find('.label');
                     myLabel.show();
                     if(level=='&nbsp;&nbsp;'){
-                        myLabel.html('(Area Level)');
+                        myLabel.html(i18n.Areas.AreaLevelText);
                     }else{
                         myLabel.html(level);
                     }
@@ -298,7 +298,7 @@ var jsForm = {
                         }else{
                             nextrow.show();
                             nextLabel.removeClass('disabled');
-                            nextLabel.html('(Area Level)');
+                            nextLabel.html(i18n.Areas.AreaLevelText);
                             nextselect.find('option').remove();
                             nextselect.removeAttr('disabled');
                             nextselect.append(tpl);

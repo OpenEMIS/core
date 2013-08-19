@@ -26,7 +26,8 @@ var areas = {
     // properties
     parentAreaIds: [],
     area_levels: [],
-    currentAreaId: 0,
+    currentAreaId: 1,
+    addParent: 0,
     isEditable: false,
     baseURL: getRootURL() + 'Areas/',
 	extraParam : '',
@@ -94,7 +95,6 @@ var areas = {
                         $('.table_body').html('');
                         $('.table_foot .cell_value').html(0);
                     }else{
-                        alert('here');
                         $('.table_view').html('');
                         $('.table_foot .cell_value').html(0);
                     }
@@ -113,7 +113,7 @@ var areas = {
                             nextSelect.find('option').remove();
                             nextSelect = nextSelect.parent().parent().next().find('select');
                         }while(nextSelect.length>0)
-                        myLabel.html('(Area Level)');
+                        myLabel.html(i18n.Areas.AreaLevelText);
                     }
 
                     if( currentSelect === 0 && currentSelctedOptionValue === 0){
@@ -123,7 +123,6 @@ var areas = {
                         }
                         //$('.table_body').show();
                     }
-
                 });
             });
         }
@@ -149,19 +148,11 @@ var areas = {
         var saveBtn = $('.btn_save');
         // if object exist update with later value
         if(currentObject !== undefined){
-            selectedValue = $(currentObject).val();
+            //selectedValue = $(currentObject).val();
             parentAreaIds = areas.parentAreaIds[areas.parentAreaIds.length - 1 ];
         }
         var maskId;
-        var url =  areas.baseURL +'viewData/';
-
-        if(parseInt(selectedValue) > 0 ){
-            url += selectedValue;
-        }else{
-            if(typeof parentAreaIds !== "undefined" && parseInt(parentAreaIds) !== 0){
-                url += parentAreaIds;
-            }
-        }
+        var url =  areas.baseURL +'viewData/' + selectedValue;
 		var Model = ($('form').attr('model'));
 		areas.extraParam = Model;
         $.ajax({
@@ -212,7 +203,10 @@ var areas = {
                                     saveBtn.addClass('btn_disabled');
                                 }
                             }
-
+                           if(selectedValue==1){
+                               areas.addParent = 1;
+                               areas.addRow();
+                           }
 
                     };
                     $.unmask({ id: maskId,callback: callback});
@@ -537,8 +531,11 @@ var areas = {
             html += '<input type="hidden" name="data['+Model+']['+ i +'][order]" id="order" value="'+(i+1)/*element.order*/+'" />';
 
             html += '<input type="hidden" name="data['+Model+']['+ i +'][id]" id="id" value="'+element.id/*element.order*/+'" />';
-
-            html += '<div class="cell cell_visible">';
+                if(areas.addParent ==1){
+                    html += '<div class="cell cell_visible" style="width: 120px;">';
+                }else{
+                    html += '<div class="cell cell_visible">';
+                }
             html += '        <input type="hidden" name="data['+Model+']['+i+'][visible]" id="PostVisible_" value="0" />';
             html += '        <input type="checkbox" name="data['+Model+']['+i+'][visible]" value="1" id="PostVisible" '+((parseInt(element.visible) === 1)? 'checked="checked"':'') +'/>';
 
@@ -571,12 +568,13 @@ var areas = {
             html += '        <input name="data['+Model+']['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme">';
             html += '   </div>';
             html += '</div>';
-            
+                if(areas.addParent ==0){
             html += '<div class="cell cell_order">';
             html += '       <span class="icon_up" onclick="areas.reorder(this)"></span>';
             html += '       <span class="icon_down" onclick="areas.reorder(this)"></span>';
+                }
 
-                if(element.isNew !== undefined && element.isNew){
+                if(element.isNew !== undefined && element.isNew && areas.addParent ==0){
                     html += '                   <span class="icon_cross" onclick="areas.remove(this)"></span>';
                 }
             html += '</div>';

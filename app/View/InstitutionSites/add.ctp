@@ -55,36 +55,13 @@ echo $this->Html->script('institution', false);
 
 	</fieldset>
 	<fieldset class="section_break">
-		<legend><?php echo __('Area'); ?></legend>
-		<?php
-		$ctr = 0;
-		foreach($levels as $levelid => $levelName){
-			echo '<div class="row">
-					<div class="label">'.__("$levelName").'</div>
-					<div class="value">'. $this->Form->input('area_level_'.$ctr,array('class' => 'form-error default', 'default'=>@$arealevel[$ctr]['id'],'options'=>(isset($areadropdowns['area_level_'.$ctr]['options'])?$areadropdowns['area_level_'.$ctr]['options']:($ctr == 0?$highestLevel:array('0'=>'--'.__('Select').'--'))))).
-							($ctr == 0 ? $this->Form->input('area_id',array('type'=>'text','style'=>'display:none')):'').
-					'</div>
-				</div>';
-			$ctr++;
-		}
-		?>
-	</fieldset>
+        <legend id="area"><?php echo __('Area'); ?></legend>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id','', array()); ?>
+    </fieldset>
 	<fieldset class="section_break">
-		<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
-		<?php
-		$ctr = 0;
-		
-		foreach($adminlevels as $levelid => $levelName){
-			echo '<div class="row">
-					<div class="label">'.__("$levelName").'</div>
-					<div class="value">'. $this->Form->input('area_education_level_'.$ctr,array('class' => 'form-error default', 'default'=>@$adminarealevel[$ctr]['id'],'options'=>(isset($adminareadropdowns['area_education_level_'.$ctr]['options'])?$adminareadropdowns['area_education_level_'.$ctr]['options']:($ctr == 0?$highestAdminLevel:array('0'=>'--'.__('Select').'--'))))).
-							($ctr == 0 ? $this->Form->input('area_education_id',array('type'=>'text','style'=>'display:none')):''). 
-					'</div>
-				</div>';
-			$ctr++;
-		}
-		?>
-	</fieldset>
+        <legend id="education"><?php echo __('Area').' ('.__('Education').')'; ?></legend>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id','', array()); ?>
+    </fieldset>
 	
 	
 	<fieldset class="section_break">
