@@ -44,6 +44,8 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->script('jquery');
 		echo $this->Html->script('jquery.plugins');
 		echo $this->Html->script('app');
+		echo $this->Html->script('bootstrap');
+		
 		echo sprintf('<script type="text/javascript" src="%s%s"></script>', $this->webroot, 'Config/getI18n');
 		echo sprintf('<script type="text/javascript" src="%s%s"></script>', $this->webroot, 'Config/getJSConfig');
 		
