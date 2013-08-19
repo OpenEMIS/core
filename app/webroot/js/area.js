@@ -130,6 +130,7 @@ var areas = {
     fetchData: function(currentObject){
         // init values
         var selectedValue = areas.currentAreaId;
+        var hasOptions = 0;
         $('#area_section_group').each(function(index) {
             var nextrow = $(this).find('.row');
             var myselect = nextrow.find('select');
@@ -138,6 +139,7 @@ var areas = {
                     if(myselect.val()>0){
                         selectedValue = myselect.val();
                     }
+                    hasOptions = 1;
                 }
                 myselect = myselect.parent().parent().next().find('select');
                 nextrow = myselect.parent().parent();
@@ -203,10 +205,10 @@ var areas = {
                                     saveBtn.addClass('btn_disabled');
                                 }
                             }
-                           if(selectedValue==1){
+                            if(hasOptions==0){
                                areas.addParent = 1;
                                areas.addRow();
-                           }
+                            }
 
                     };
                     $.unmask({ id: maskId,callback: callback});
