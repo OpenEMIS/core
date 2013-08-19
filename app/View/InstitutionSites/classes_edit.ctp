@@ -47,7 +47,6 @@ echo $this->Html->script('institution_site_classes', false);
 			<div class="table_head">
 				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
 				<div class="table_cell"><?php echo __('Name'); ?></div>
-				<div class="table_cell" style="width: 150px;"><?php echo __('Subject'); ?></div>
 				<div class="table_cell cell_delete"></div>
 			</div>
 			<div class="table_body" url="InstitutionSites/classesTeacherAjax/<?php echo $classId; ?>">
@@ -55,11 +54,6 @@ echo $this->Html->script('institution_site_classes', false);
 				<div class="table_row" teacher-id="<?php echo $obj['Teacher']['id']; ?>" subject-id="<?php echo $obj['InstitutionSiteClassTeacher']['education_subject_id']; ?>">
 					<div class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></div>
 					<div class="table_cell"><?php echo $obj['Teacher']['first_name'] . ' ' . $obj['Teacher']['last_name']; ?></div>
-					<div class="table_cell">
-					<?php
-					echo $obj['InstitutionSiteClassTeacher']['education_subject_id']==0 ? __('No Subject') : $obj['EducationSubject']['name'];
-					?>
-					</div>
 					<div class="table_cell">
 						<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteTeacher(this)', 'onDelete' => false)); ?>
 					</div>
