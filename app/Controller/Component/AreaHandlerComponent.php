@@ -102,6 +102,16 @@ class AreaHandlerComponent extends Component {
         }
     }
 
+    public function checkAreaExist($id, $arrMap = array('Area','AreaLevel')){
+        $arr = array_keys($this->{$arrMap[0]}->find('list',array('conditions' => array('id' => $id))));
+        $myid = '';
+        if(is_array($arr)){
+            $myid = $arr[0];
+        }
+
+        return $myid;
+    }
+
     public function getTopArea($arrMap = array('Area','AreaLevel')){
         $arr = array_keys($this->{$arrMap[0]}->find('list',array('recursive'=>0, 'conditions' => array('parent_id' => '-1'))));
         $id = $arr[0];
