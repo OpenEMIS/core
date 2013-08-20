@@ -27,7 +27,7 @@
 #teachersAdd select.default, #staffAdd select.default { width: 212px; }
 #teachersAdd .icon_search, #staffAdd .icon_search { height: 22px; width: 24px; }
 #teachersAdd .section_break, #staffAdd .section_break { padding-top: 10px; }
-#teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 65px; line-height: 24px; }
+#teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 50px; line-height: 24px; }
 #teachersAttendance .myyear .label { line-height: 25px;}
 #teachersAttendanceEdit .myyear .label { line-height: 25px;}
 #teachersAttendance .school_days .default { width: 82px; }

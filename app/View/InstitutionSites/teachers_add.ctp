@@ -58,33 +58,48 @@ echo $this->Html->script('institution_site_teachers', false);
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'teachersSave')
 	));
-	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => 0, 'autocomplete' => 'off'));
+	$data = false;
+	if($this->Session->check('InstitutionSiteTeacherAdd.data')) {
+		$data = $this->Session->read('InstitutionSiteTeacherAdd.data');
+		unset($_SESSION['InstitutionSiteTeacherAdd']);
+	}
+	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => ($data ? $data['teacher_id'] : 0), 'autocomplete' => 'off'));
 	?>
 	
 	<div class="info">
 		<div class="row">
 			<div class="label"><?php echo __('Identification No'); ?></div>
-			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo', 'disabled' => 'disabled')); ?></div>
+			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo', 'value' => ($data ? $data['identification_no'] : ''), 'disabled' => 'disabled')); ?></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('first_name', array('class' => 'default', 'id' => 'FirstName', 'disabled' => 'disabled')); ?></div>
+			<div class="value"><?php echo $this->Form->input('first_name', array('class' => 'default', 'id' => 'FirstName', 'value' => ($data ? $data['first_name'] : ''), 'disabled' => 'disabled')); ?></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('last_name', array('class' => 'default', 'id' => 'LastName', 'disabled' => 'disabled')); ?></div>
+			<div class="value"><?php echo $this->Form->input('last_name', array('class' => 'default', 'id' => 'LastName', 'value' => ($data ? $data['last_name'] : ''), 'disabled' => 'disabled')); ?></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
-			<div class="value"><?php echo $this->Form->input('gender', array('class' => 'default', 'id' => 'Gender', 'disabled' => 'disabled')); ?></div>
+			<div class="value"><?php echo $this->Form->input('gender', array('class' => 'default', 'id' => 'Gender', 'value' => ($data ? $data['gender'] : ''), 'disabled' => 'disabled')); ?></div>
+		</div>
+		
+		<div class="row">
+			<div class="label"><?php echo __('Position Number'); ?></div>
+			<div class="value"><?php echo $this->Form->input('position_no', array('class' => 'default')); ?></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Position'); ?></div>
 			<div class="value"><?php echo $this->Form->input('teacher_category_id', array('class' => 'default', 'options' => $categoryOptions)); ?></div>
+		</div>
+		
+		<div class="row">
+			<div class="label"><?php echo __('No of Hours'); ?></div>
+			<div class="value"><?php echo $this->Form->input('no_of_hours', array('class' => 'default')); ?></div>
 		</div>
 		
 		<div class="row">
