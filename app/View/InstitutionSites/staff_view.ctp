@@ -33,7 +33,7 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 			<div class="label"><?php echo __('Identification No.'); ?></div>
 			<div class="value">
 				<?php
-				if($_view_details) {
+				if($_accessControl->check('Staff', 'view')) {
 					echo $this->Html->link($obj['identification_no'], array('controller' => 'Staff', 'action' => 'viewStaff', $obj['id']), array('class' => 'link_back'));
 				} else {
 					echo $obj['identification_no'];
@@ -64,15 +64,18 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 		<legend><?php echo __('Employment'); ?></legend>
 		<div class="table full_width" style="margin-top: 10px;">
 			<div class="table_head">
-				<div class="table_cell" style="width: 280px;"><?php echo __('Position'); ?></div>
-				<div class="table_cell"><?php echo __('From'); ?></div>
-				<div class="table_cell"><?php echo __('To'); ?></div>
-				<div class="table_cell"><?php echo __('Salary'); ?></div>
+				<div class="table_cell"><?php echo __('Position Number'); ?></div>
+				<div class="table_cell"><?php echo __('Position'); ?></div>
+				<div class="table_cell" style="width: 80px"><?php echo __('From'); ?></div>
+				<div class="table_cell" style="width: 80px"><?php echo __('To'); ?></div>
+				<div class="table_cell" style="width: 60px"><?php echo __('Hours'); ?></div>
+				<div class="table_cell" style="width: 70px"><?php echo __('Salary'); ?></div>
 			</div>
 			
 			<div class="table_body">
 				<?php foreach($positions as $obj) { ?>
 				<div class="table_row">
+					<div class="table_cell"><?php echo $obj['InstitutionSiteStaff']['position_no']; ?></div>
 					<div class="table_cell"><?php echo $obj['StaffCategory']['name']; ?></div>
 					<div class="table_cell center"><?php echo $this->Utility->formatDate($obj['InstitutionSiteStaff']['start_date']); ?></div>
 					<div class="table_cell center">
@@ -81,6 +84,7 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 						echo is_null($endDate) ? __('Current') : $this->Utility->formatDate($endDate);
 						?>
 					</div>
+					<div class="table_cell center"><?php echo $obj['InstitutionSiteStaff']['no_of_hours']; ?></div>
 					<div class="table_cell cell_number"><?php echo $obj['InstitutionSiteStaff']['salary']; ?></div>
 				</div>
 				<?php } ?>

@@ -40,10 +40,11 @@
 
 .table_head .table_cell {
 	min-width: 60px;
-	white-space: nowrap; 
+	/* white-space: nowrap; */
 	text-align: center;
 	font-weight: bold;
-	line-height:18px;
+	line-height: 18px;
+	vertical-align: middle;
 }
 
 .table_foot .table_cell { border: 0; }
