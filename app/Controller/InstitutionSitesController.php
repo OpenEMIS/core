@@ -29,6 +29,7 @@ class InstitutionSitesController extends AppController {
 		'BankBranch',
 		'EducationSubject',
 		'EducationGrade',
+        'EducationGradeSubject',
 		'EducationProgramme',
 		'EducationFieldOfStudy',
 		'EducationCertification',
@@ -42,6 +43,7 @@ class InstitutionSitesController extends AppController {
 		'Institution',
 		'InstitutionSiteClass',
 		'InstitutionSiteClassTeacher',
+        'InstitutionSiteClassSubject',
 		'InstitutionSiteClassGrade',
 		'InstitutionSiteClassGradeStudent',
 		'InstitutionSiteCustomField',
@@ -985,6 +987,9 @@ class InstitutionSitesController extends AppController {
 			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
 			$students = $this->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
 			$teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
+            $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
+            pr($subjects);
+            die;
 			
 			$this->set('classId', $classId);
 			$this->set('className', $className);
