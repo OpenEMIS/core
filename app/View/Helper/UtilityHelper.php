@@ -88,9 +88,7 @@ class UtilityHelper extends AppHelper {
         }
 
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-        if (!is_numeric($value) || !isset($value) || !($this->AreaHandler->checkAreaExist($value,$arrmap)>0)) {
-            $value=$this->AreaHandler->getTopArea($arrmap);
-        }
+		if (!is_numeric($value) || !isset($value) ) {$value=1;}
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 
@@ -121,9 +119,7 @@ class UtilityHelper extends AppHelper {
 
         $val = '';
         foreach($this->fieldLevels as $levelid => $levelName){
-            if (!is_numeric($orgValue) || !isset($orgValue) || !($this->AreaHandler->checkAreaExist($orgValue)>0)) {
-                $orgValue=$this->AreaHandler->getTopArea();
-            }
+            if (!is_numeric($orgValue) || !isset($orgValue) ) {$orgValue=0;}
             $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($orgValue));
             foreach($this->fieldAreaLevels as $arealevelid => $arrval){
                 if($arrval['level_id'] == $levelid) {
