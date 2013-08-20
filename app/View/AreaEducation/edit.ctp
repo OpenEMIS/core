@@ -20,6 +20,7 @@ echo $this->Html->script('area', false);
 			// }
 		?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	<?php echo $this->element('area_categories'); ?>
 	<?php
 	echo $this->Form->create('AreaEducation', array(
@@ -33,61 +34,38 @@ echo $this->Html->script('area', false);
 	);
 
 	?>
+
+    <?php if(isset($initAreaSelection['area_education_id'])){ ?>
 	<fieldset id="area_section_group" class="section_group">
-		<legend><?php echo __('Area'); ?></legend>
-		<?php
-            $ctr = 0;
-            if(isset($levels)){
-                $firstElement = reset($levels);
-                if(count($levels) > 1){
-	                $lastElement = array_pop($levels);
-                }
-                foreach($levels as $levelid => $levelName){
-                    
-                    echo '<div class="row input">
-                                <div class="label'. ((!isset($highestLevel[$ctr]))?' disabled':'') .'">'.$levelName.'</div>'.
-                                //'<div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
-                                '<div class="value">'. 
-	                                $this->Form->select(
-                						'area_level_'.$ctr,
-                						/*($ctr == 0)*/(isset($highestLevel[$ctr]))?$highestLevel[$ctr]:array(''=>__('--Select--')),
-                						array('class' => 'default', 'disabled' => (!isset($highestLevel[$ctr]))?true:false, 'empty' => (!isset($highestLevel[$ctr]))?true:false)
-                						//array('disabled' => ($levelName != $firstElement)?true:false), 'empty' => /*($levelName != $firstElement)?true:*/false)
-            						).
-                                '</div>
-                            </div>';
-                    $ctr++;
-                }
-            }
-        ?>
-
-
-		
-	</fieldset>
+        <legend id="education"><?php echo __('Area'); ?></legend>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id',$initAreaSelection['area_education_id'], array()); ?>
+    </fieldset>
+    <?php } ?>
 
 	<?php echo $this->Form->end(); ?>
 
 	<fieldset id="data_section_group" class="section_group edit">
 		<legend><?php echo __('Administrative Boundaries'); ?></legend>
+            <div class="table">
+                <div class="table_head">
+                    <div class="table_cell" style="min-width:38px;"><?php echo __('Visible'); ?></div>
+                    <div class="table_cell" style="width:99px;"><?php echo __('Level'); ?></div>
+                    <div class="table_cell" style="width:90px;"><?php echo __('Code'); ?></div>
+                    <div class="table_cell" style="width:280px;"><?php echo __('Name'); ?></div>
+                    <?php if($_add && isset($initAreaSelection['area_education_id'])) { ?>
+                    <div class="table_cell"><?php echo __('Order'); ?></div>
+                    <?php } ?>
+                </div>
+                <div class="table_body" style="display:none;">
+                </div>
+            </div>
 
-		<div class="table">
-			<div class="table_head">
-				<div class="table_cell" style="min-width:38px;"><?php echo __('Visible'); ?></div>
-				<div class="table_cell" style="width:99px;"><?php echo __('Level'); ?></div>
-				<div class="table_cell" style="width:90px;"><?php echo __('Code'); ?></div>
-				<div class="table_cell" style="width:280px;"><?php echo __('Name'); ?></div>
-				<div class="table_cell"><?php echo __('Order'); ?></div>
-			</div>
-			<div class="table_body" style="display:none;">
-			</div>
-		</div>
+            <ul class="quicksand table_view" style="margin-bottom:12px;"></ul>
 
-		<ul class="quicksand table_view" style="margin-bottom:12px;"></ul>
-		
-		<?php if($_add) { ?>
-		<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Area'); ?></a></div>
-		<?php } ?>
-			
+            <?php if($_add && isset($initAreaSelection['area_education_id'])) { ?>
+                <div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Area'); ?></a></div>
+            <?php } ?>
+
 		<div class="controls">
 			<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onClick="areas.save()" />
 			<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
@@ -110,11 +88,11 @@ $(document).ready(function(){
 
 	areas.isEditable = true;
 	$('#view, .btn_cancel').click(function(event){
-		event.preventDefault();
+		//event.preventDefault();
 		var form = $('form').attr('action', getRootURL() +'/Areas/AreaEducation/');
 		form.submit();
 	});
-	
+
 
 	<?php if(isset($initAreaSelection) && count($initAreaSelection) > 0){ ?>
 	areas.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
@@ -132,15 +110,15 @@ $(document).ready(function(){
 		//$('select[name*="['+key+']"]').find($('option[value="'+areas.initAreaSelection[key]+'"]')).attr('selected','selected').trigger('change');
 	}
 
-	currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).trigger('change');	
+	currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).trigger('change');
 	<?php }else{ ?>
 	areas.extraParam = 'Education';
 	areas.fetchData();
 	<?php } ?>
 
-	
+
 
 });
 
 </script>
-	
+
