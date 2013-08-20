@@ -38,7 +38,7 @@ class EducationSubject extends AppModel {
 		$this->formatResult = true;
 		$data = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('EducationGradeSubject.id', 'EducationSubject.code', 'EducationSubject.name', 'EducationGrade.name'),
+			'fields' => array('EducationGradeSubject.id', 'EducationSubject.code', 'EducationSubject.name', 'EducationGrade.name AS grade'),
 			'joins' => array(
 				array(
 					'table' => 'education_grades_subjects',
