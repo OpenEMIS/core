@@ -50,7 +50,7 @@ echo $this->Html->script('search', false);
     			<div class="table_body">
     				<?php foreach($subjects as $obj) { ?>
     				<div class="table_row">
-    					<div class="table_cell"><?php echo $obj['Subject']['education_subject'] . ' ' . $obj['Subject']['education_grade']; ?></div>
+    					<div class="table_cell"><?php echo $obj['EducationSubject']['code'] . ' - ' . $obj['EducationSubject']['name'] . ' - ' . $obj['EducationGrade']['name']; ?></div>
     				</div>
     				<?php } ?>
     			</div>

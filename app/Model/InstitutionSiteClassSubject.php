@@ -23,8 +23,8 @@ class InstitutionSiteClassSubject extends AppModel {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'EducationGradeSubject.id', 'EducationSubject.code', 'EducationSubject.name', 'EducationGrade.name',
-				'InstitutionSiteClassSubject.education_grade_subject_id'
+				'InstitutionSiteClassSubject.id', 'InstitutionSiteClassSubject.education_grade_subject_id',
+                'EducationSubject.code', 'EducationSubject.name', 'EducationGrade.name'
 			),
 			'joins' => array(
                 array(
