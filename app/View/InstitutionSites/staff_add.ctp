@@ -58,7 +58,12 @@ echo $this->Html->script('institution_site_staff', false);
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'staffSave')
 	));
-	echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'value' => 0, 'autocomplete' => 'off'));
+	$data = false;
+	if($this->Session->check('InstitutionSiteStaffAdd.data')) {
+		$data = $this->Session->read('InstitutionSiteStaffAdd.data');
+		unset($_SESSION['InstitutionSiteStaffAdd']);
+	}
+	echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'value' => ($data ? $data['staff_id'] : 0), 'autocomplete' => 'off'));
 	?>
 	
 	<div class="info">
@@ -83,8 +88,18 @@ echo $this->Html->script('institution_site_staff', false);
 		</div>
 		
 		<div class="row">
+			<div class="label"><?php echo __('Position Number'); ?></div>
+			<div class="value"><?php echo $this->Form->input('position_no', array('class' => 'default')); ?></div>
+		</div>
+		
+		<div class="row">
 			<div class="label"><?php echo __('Position'); ?></div>
 			<div class="value"><?php echo $this->Form->input('staff_category_id', array('class' => 'default', 'options' => $categoryOptions)); ?></div>
+		</div>
+		
+		<div class="row">
+			<div class="label"><?php echo __('No of Hours'); ?></div>
+			<div class="value"><?php echo $this->Form->input('no_of_hours', array('class' => 'default')); ?></div>
 		</div>
 		
 		<div class="row">

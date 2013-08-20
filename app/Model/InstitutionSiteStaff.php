@@ -19,14 +19,40 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteStaff extends AppModel {
 	public $useTable = 'institution_site_staff';
 	
-	public function checkEmployment($institutionSiteId, $staffId) {
-		$count = $this->find('count', array(
+	public function isPositionNumberExists($positionNo, $startDate) {
+		$this->formatResult = true;
+		$data = $this->find('first', array(
+			'fields' => array(
+				'Staff.first_name AS first_name', 'Staff.last_name AS last_name',
+				'Institution.name AS institution_name', 'InstitutionSite.name AS institution_site_name'
+			),
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('Staff.id = InstitutionSiteStaff.staff_id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array('InstitutionSite.id = InstitutionSiteStaff.institution_site_id')
+				),
+				array(
+					'table' => 'institutions',
+					'alias' => 'Institution',
+					'conditions' => array('Institution.id = InstitutionSite.institution_id')
+				)
+			),
 			'conditions' => array(
-				'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteStaff.staff_id' => $staffId
+				'InstitutionSiteStaff.position_no LIKE' => $positionNo,
+				'OR' => array(
+					'InstitutionSiteStaff.end_date >' => $startDate,
+					'InstitutionSiteStaff.end_date IS NULL'
+				)
 			)
 		));
-		return $count;
+		return $data;
 	}
 	
 	public function saveEmployment($data, $institutionSiteId, $staffId) {
@@ -48,7 +74,8 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function getPositions($staffId, $institutionSiteId=0) {
 		$fields = array(
-			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date',
+			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.position_no', 'InstitutionSiteStaff.no_of_hours',
+			'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date',
 			'InstitutionSiteStaff.salary', 'StaffCategory.name'
 		);
 		
