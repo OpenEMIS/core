@@ -131,10 +131,12 @@ var areas = {
         // init values
         var selectedValue = areas.currentAreaId;
         var hasOptions = 0;
+        var edutype = "education";
         $('#area_section_group').each(function(index) {
             var nextrow = $(this).find('.row');
             var myselect = nextrow.find('select');
             do{
+                lastOptionChosen = 0;
                 if(nextrow.is(":visible")){
                     if(myselect.val()>0){
                         selectedValue = myselect.val();
@@ -145,7 +147,6 @@ var areas = {
                 nextrow = myselect.parent().parent();
             }while(myselect.length>0)
         });
-
         var parentAreaIds = areas.parentAreaIds[areas.parentAreaIds.length - 1 ];
         var saveBtn = $('.btn_save');
         // if object exist update with later value
@@ -157,64 +158,79 @@ var areas = {
         var url =  areas.baseURL +'viewData/' + selectedValue;
 		var Model = ($('form').attr('model'));
 		areas.extraParam = Model;
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            url: url+'/'+areas.extraParam,
-            beforeSend: function (jqXHR) {
-                maskId = $.mask({parent: '#data_section_group'});
-            },
-            success: function (data, textStatus) {
-                var callback = function() {
-                    var tpl = '';
-                    var tableBody = $('.table .table_body');
-                    if((data !== 'false' && data !== false) /*&& data.length > 0 */){
-                        if(areas.isEditable === true){
-                            if('area_levels' in data){
-                                areas.area_levels =  data.area_levels;
-                            }
-
-                                    tableBody = $('.table_view');
-                                    // tableBody = $('#mainlist .table_view');
-                                    tpl += areas.renderRecordToHtmlTableRowForEdit(data.data);//'<option value="'+i+'">'+data[i]+'</option>';
-                                    // console.info(tpl);
-                                    //$.each(data,function(i,o){
-                                            //tpl += areas.renderRecordToHtmlTableRowForEdit(data[i], ((i+1)%2 === 0)? true:false);//'<option value="'+i+'">'+data[i]+'</option>';
-                                    //});
-                                    if(data.length > 0){
-                                        $('.btn_save').removeClass('btn_disabled');
-                                    }else{
-                                        $('.btn_save').addClass('btn_disabled');
-                                    }
+        if(areas.extraParam=="Area"){
+           edutype = "area";
+        }
+        $.when(
+            $.ajax({
+                type: "GET",
+                url: getRootURL() +'/Areas/checkLowestLevel/'+selectedValue+'/'+edutype,
+                success: function (data) {
+                    if(data=='true'){
+                        $('#data_section_group').hide();
+                    }else{
+                        $('#data_section_group').show();
+                    }
+                }
+            })
+        ).then(function() {
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: url+'/'+areas.extraParam,
+                beforeSend: function (jqXHR) {
+                    maskId = $.mask({parent: '#data_section_group'});
+                },
+                success: function (data, textStatus) {
+                    var callback = function() {
+                        var tpl = '';
+                        var tableBody = $('.table .table_body');
+                        if((data !== 'false' && data !== false) /*&& data.length > 0 */){
+                            if(areas.isEditable === true){
+                                if('area_levels' in data){
+                                    areas.area_levels =  data.area_levels;
+                                }
+                                tableBody = $('.table_view');
+                                // tableBody = $('#mainlist .table_view');
+                                tpl += areas.renderRecordToHtmlTableRowForEdit(data.data);//'<option value="'+i+'">'+data[i]+'</option>';
+                                // console.info(tpl);
+                                //$.each(data,function(i,o){
+                                //tpl += areas.renderRecordToHtmlTableRowForEdit(data[i], ((i+1)%2 === 0)? true:false);//'<option value="'+i+'">'+data[i]+'</option>';
+                                //});
+                                if(data.length > 0){
+                                    $('.btn_save').removeClass('btn_disabled');
                                 }else{
-                                    tpl += areas.renderRecordToHtmlTableRow(data.data);
+                                    $('.btn_save').addClass('btn_disabled');
                                 }
-                                tableBody.html(tpl);
-                                if(tableBody.is(':visible') === false){
-                                    tableBody.show();
-                                }
-                                if(saveBtn.hasClass('btn_disabled')){
-                                    saveBtn.removeClass('btn_disabled');
-                                }
-                                jsList.init('.table_view');
-
                             }else{
-                                tableBody.html('');
-                                tableBody.hide();
-                                if(!saveBtn.hasClass('btn_disabled')){
-                                    saveBtn.addClass('btn_disabled');
-                                }
+                                tpl += areas.renderRecordToHtmlTableRow(data.data);
                             }
-                            if(hasOptions==0){
-                               areas.addParent = 1;
-                               areas.addRow();
+                            tableBody.html(tpl);
+                            if(tableBody.is(':visible') === false){
+                                tableBody.show();
                             }
+                            if(saveBtn.hasClass('btn_disabled')){
+                                saveBtn.removeClass('btn_disabled');
+                            }
+                            jsList.init('.table_view');
+
+                        }else{
+                            tableBody.html('');
+                            tableBody.hide();
+                            if(!saveBtn.hasClass('btn_disabled')){
+                                saveBtn.addClass('btn_disabled');
+                            }
+                        }
+                        if(hasOptions==0){
+                            areas.addParent = 1;
+                            areas.addRow();
+                        }
 
                     };
                     $.unmask({ id: maskId,callback: callback});
-            }
+                }
+            });
         });
-
     },
 
     checkEdited: function() {
