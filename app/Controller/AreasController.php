@@ -181,6 +181,35 @@ class AreasController extends AppController {
         echo json_encode($value);
     }
 
+    public function checkLowestLevel($id,$arrMap = array('Area','AreaLevel')) {
+        if(!is_array($arrMap)){
+            $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
+        }
+
+        $this->autoRender = false;
+        $fkAreaLevel = Inflector::underscore($arrMap[1]);
+        $area_table_name = Inflector::tableize($arrMap[0]);;
+        $area_level_table_name = Inflector::tableize($arrMap[1]);;
+
+        $db = $this->{$arrMap[0]}->getDataSource();
+
+        $query = "SELECT `$area_table_name`.`".$fkAreaLevel."_id`
+                    FROM `$area_table_name`
+                    WHERE `$area_table_name`.`id` = ?
+                            AND `$area_table_name`.`".$fkAreaLevel."_id` = (
+                            SELECT MAX(`$area_level_table_name`.`level`) as `".$fkAreaLevel."_id`
+                                FROM `$area_level_table_name`
+                  )";
+
+        $listAreaLevels = $db->fetchAll($query, array($id));
+
+        if(count($listAreaLevels)<1){
+            echo 'false';
+        }else{
+            echo 'true';
+        }
+    }
+
     public function getAreaLevel($id,$arrMap = array('Area','AreaLevel')) {
         if(!is_array($arrMap)){
             $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
@@ -212,7 +241,6 @@ class AreasController extends AppController {
 	public function viewData($parentId = 1, $arrModels = array('Area','AreaLevel')) {
 		$request = @$this->request['pass'][0];
 		if($request == 'Education' || $request == 'AreaEducation'){
-			$parentId = 1;
 			$arrModels = 'Education';
 			
 		}
@@ -238,7 +266,7 @@ class AreasController extends AppController {
 
         $db = $this->{$arealevel}->getDataSource();
 		
-        $query = "SELECT DISTINCT `$area_level_table_name`.name, `$area_level_table_name`.`id`
+        $query = "SELECT DISTINCT `$area_level_table_name`.`name`, `$area_level_table_name`.`id`
                         FROM  `$area_level_table_name` 
                         WHERE `$area_level_table_name`.`id` > (
                             SELECT `$area_table_name`.`".$fkAreaLevel."_id`
@@ -246,9 +274,10 @@ class AreasController extends AppController {
                             WHERE `$area_table_name`.`id` = ?
                         )";
 		
-        $listAreaLevels = $db->fetchAll( $query, array($parentId));
+        $listAreaLevels = $db->fetchAll($query, array($parentId));
 
-        if(count($listAreaLevels)<1){
+
+        if(count($listAreaLevels)<1 && $parentId==1){
             $query = "SELECT DISTINCT `$area_level_table_name`.name, `$area_level_table_name`.`id`
                         FROM  `$area_level_table_name` order by id asc limit 1";
             $listAreaLevels = $db->fetchAll( $query, array($parentId));
@@ -406,11 +435,16 @@ class AreasController extends AppController {
 		if($this->AccessControl->check($this->params['controller'], 'levels')) {
 			$_view_levels = true;
 		}
+
+        if(isset($initAreaSelection['area_id'])){
+            pr($initAreaSelection['area_id']);
+        }
+
 		$this->set('_view_levels', $_view_levels);
 		// End Access Control
         $this->set('topArea', $topArea);
 		$this->set('levels', $levels);
-        $this->set('highestLevel',$areas);	
+        $this->set('highestLevel',$areas);
 		$this->render('/AreaEducation/index');
 	}
 
