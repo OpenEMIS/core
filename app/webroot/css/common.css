@@ -229,3 +229,44 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .footer_nav span{
 	margin:0 4px;
 }
+
+
+
+/*bootstrap*/
+
+.accordion-heading {
+  border-bottom: 0;
+}
+
+.accordion-heading .accordion-toggle {
+	display: block;
+	padding: 6px 15px 8px 15px;
+	color: #007CBE;
+	background-color:rgba(91,139,175,0.2);
+	border-bottom: 1px solid #ffffff;
+	background-image: url(../img/sub_nav_title_icon.png);
+	background-position: right 14px;
+	background-repeat: no-repeat;
+}
+.accordion-heading .accordion-toggle:hover{
+	background-color:#5B8BAF;
+	color:#ffffff;
+	background-position: right -76px;
+}
+
+.accordion-toggle {
+  cursor: pointer;
+}
+.collapse {
+  position: relative;
+  height: 0;
+  overflow: hidden;
+  -webkit-transition: height 0.35s ease;
+     -moz-transition: height 0.35s ease;
+       -o-transition: height 0.35s ease;
+          transition: height 0.35s ease;
+}
+
+.collapse.in {
+  height: auto;
+}
