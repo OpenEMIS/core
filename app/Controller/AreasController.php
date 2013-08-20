@@ -185,37 +185,28 @@ class AreasController extends AppController {
         if(!is_array($arrMap)){
             $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
         }
-        $AreaLevelfk = Inflector::underscore($arrMap[1]);
 
         $this->autoRender = false;
+        $fkAreaLevel = Inflector::underscore($arrMap[1]);
+        $area_table_name = Inflector::tableize($arrMap[0]);;
+        $area_level_table_name = Inflector::tableize($arrMap[1]);;
 
-        $levelname = $this->{$arrMap[0]}->find('all', array(
-            'contain' => array($arrMap[1]),
-            'conditions' => array(
-                $arrMap[0].'.id' => $id
-            ),
-            'fields' => array($arrMap[1].'.id')
-        ));
+        $db = $this->{$arrMap[0]}->getDataSource();
 
-        $maxlevel = $this->{$arrMap[1]}->find('first', array(
-            'fields' => array('MAX('.$arrMap[1].'.level) AS level')
-        ));
+        $query = "SELECT `$area_table_name`.`".$fkAreaLevel."_id`
+                    FROM `$area_table_name`
+                    WHERE `$area_table_name`.`id` = ?
+                            AND `$area_table_name`.`".$fkAreaLevel."_id` = (
+                            SELECT MAX(`$area_level_table_name`.`level`) as `".$fkAreaLevel."_id`
+                                FROM `$area_level_table_name`
+                  )";
 
-        if(is_array($maxlevel)){
-            $maxlevel = $maxlevel[0]['level'];
-        }else{
-            $maxlevel ='';
-        }
+        $listAreaLevels = $db->fetchAll($query, array($id));
 
-        if (array_key_exists(0, $levelname)) {
-            $levelname =  $levelname[0][$arrMap[1]]['id'];
-        }else{
-            $levelname = '';
-        }
-        if($maxlevel==$levelname){
-            echo 'true';
-        }else{
+        if(count($listAreaLevels)<1){
             echo 'false';
+        }else{
+            echo 'true';
         }
     }
 
@@ -444,11 +435,16 @@ class AreasController extends AppController {
 		if($this->AccessControl->check($this->params['controller'], 'levels')) {
 			$_view_levels = true;
 		}
+
+        if(isset($initAreaSelection['area_id'])){
+            pr($initAreaSelection['area_id']);
+        }
+
 		$this->set('_view_levels', $_view_levels);
 		// End Access Control
         $this->set('topArea', $topArea);
 		$this->set('levels', $levels);
-        $this->set('highestLevel',$areas);	
+        $this->set('highestLevel',$areas);
 		$this->render('/AreaEducation/index');
 	}
 
