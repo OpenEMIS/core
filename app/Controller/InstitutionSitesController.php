@@ -988,8 +988,6 @@ class InstitutionSitesController extends AppController {
 			$students = $this->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
 			$teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
             $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
-            pr($subjects);
-            die;
 			
 			$this->set('classId', $classId);
 			$this->set('className', $className);
@@ -997,6 +995,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('grades', $grades);
 			$this->set('students', $students);
 			$this->set('teachers', $teachers);
+            $this->set('subjects', $subjects);
 		} else {
 			$this->redirect(array('action' => 'classesList'));
 		}
@@ -1013,6 +1012,7 @@ class InstitutionSitesController extends AppController {
 			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
 			$students = $this->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
 			$teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
+            $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
 			
 			$this->set('classId', $classId);
 			$this->set('className', $className);
@@ -1020,6 +1020,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('grades', $grades);
 			$this->set('students', $students);
 			$this->set('teachers', $teachers);
+            $this->set('subjects', $subjects);
 		} else {
 			$this->redirect(array('action' => 'classesList'));
 		}
@@ -1123,6 +1124,61 @@ class InstitutionSitesController extends AppController {
 		}
 		return 'true';
 	}
+
+    public function classesAddSubjectRow() {
+        $this->layout = 'ajax';
+
+        if(sizeof($this->params['pass']) == 2) {
+            $year = $this->params['pass'][0];
+            $classId = $this->params['pass'][1];
+            $index = $this->params->query['index'];
+            $subjects = $this->EducationSubject->getSubjectByClassId($classId);
+
+            $this->set('index', $index);
+            $this->set('subjects', $subjects);
+        }
+    }
+
+    public function classesSubjectAjax() {
+        $this->autoRender = false;
+
+        if(sizeof($this->params['pass']) == 1) {
+            $classId = $this->params['pass'][0];
+            $subjectId = $this->params->query['subjectId'];
+            $gradeSubjectId = $this->params->query['gradeSubjectId'];
+            $action = $this->params->query['action'];
+
+            $result = false;
+            if($action === 'add') {
+                $data = array('institution_site_class_id' => $classId, 'education_grade_subject_id' => $gradeSubjectId);
+                $this->InstitutionSiteClassSubject->create();
+                $result = $this->InstitutionSiteClassSubject->save($data);
+            } else {
+                $result = $this->InstitutionSiteClassSubject->deleteAll(array(
+                    'InstitutionSiteClassSubject.id' => $subjectId,
+                    'InstitutionSiteClassSubject.institution_site_class_id' => $classId,
+                    'InstitutionSiteClassSubject.education_grade_subject_id' => $gradeSubjectId
+                ), false);
+            }
+
+            $return = array();
+            if($result) {
+                $this->Utility->setAjaxResult('success', $return);
+            } else {
+                $this->Utility->setAjaxResult('error', $return);
+                $return['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
+            }
+            return json_encode($return);
+        }
+    }
+
+    public function classesDeleteSubject() {
+        $id = $this->params['pass'][0];
+        $name = $this->InstitutionSiteClassSubject->field('name', array('InstitutionSiteClassSubject.id' => $id));
+        $this->InstitutionSiteClassSubject->delete($id);
+        $this->Utility->alert('Subject has been deleted successfully.');
+        $this->redirect(array('action' => 'classes'));
+    }
 	
 	public function classesAddTeacherRow() {
 		$this->layout = 'ajax';
