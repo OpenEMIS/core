@@ -1,6 +1,8 @@
 var i18n = {
 	Config : {
-		InvalidUser : '<?php echo T("You have entered an invalid username or password.", true); ?>'
+		InvalidUser : '<?php echo T("You have entered an invalid username or password.", true); ?>',
+		validLDAP : '<?php echo T("Connected Successfully!"); ?>',
+		invalidLDAP : '<?php echo T("Connection Fail."); ?>'
 	},
 	Education : {
 		textAddProgramme : '<?php echo T("Add Programme", true); ?>',

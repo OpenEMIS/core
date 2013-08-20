@@ -36,7 +36,7 @@ echo $this->Html->script('config', false);
 			foreach($items as $key => $element){ 
 				if(isset($element) && sizeof($element) > 0) { 
 		?>
-	<fieldset class="section_break">
+	<fieldset class="section_break <?php echo (strtolower($key) == 'ldap configuration'?'ldap':'')?>">
 		<legend><?php echo __(ucwords($key)); ?></legend>
 		<?php
 		if($key == 'custom validation'){
@@ -78,6 +78,8 @@ echo $this->Html->script('config', false);
 								'F d, Y' => date('F d, Y'), 
 								'dS F Y' => date('dS F Y')
 							),
+							'authentication_type' => array('Local'=>'Local', 'LDAP'=>'LDAP')
+							,
 							'language' =>array(
 								'ara' => 'العربية',
 								'chi' => '中文',
@@ -166,6 +168,9 @@ echo $this->Html->script('config', false);
 						}elseif(array_key_exists($item['name'], $arrOptions)){
 							$options = $arrOptions[$item['name']];
 							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));
+						} elseif($item['name'] == 'test_connection'){
+							echo $this->Form->button('Connect',array('div' => false, 'type'=>'button', 'onclick'=>'Config.checkLDAPconn()'));
+							
 						}else{
 							
 							if(strtolower($item['label']) == 'currency'){
