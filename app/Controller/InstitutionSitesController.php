@@ -1396,8 +1396,32 @@ class InstitutionSitesController extends AppController {
 			if(isset($data['teacher_id'])) {
 				$data['institution_site_id'] = $this->institutionSiteId;
 				$data['start_year'] = date('Y', strtotime($data['start_date']));
-				$this->InstitutionSiteTeacher->save($data);
-				$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				$insert = true;
+				if(!empty($data['position_no'])) {
+					$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
+					if(!$obj) {
+						$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
+					}
+					if($obj) {
+						$teacherObj = $this->Teacher->find('first', array(
+							'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
+							'conditions' => array('Teacher.id' => $data['teacher_id'])
+						));
+						$position = $data['position_no'];
+						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+						$msg .= '<br>' . __('Please choose another.');
+						$this->Utility->alert($msg, array('type' => 'warn'));
+						$insert = false;
+						$data = array_merge($data, $teacherObj['Teacher']);
+						$this->Session->write('InstitutionSiteTeacherAdd.data', $data);
+					}
+				}
+				if($insert) {
+					$this->InstitutionSiteTeacher->save($data);
+					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				}
 				$this->redirect(array('action' => 'teachersAdd'));
 			}
 		}
@@ -1413,8 +1437,6 @@ class InstitutionSitesController extends AppController {
 			$this->Navigation->addCrumb($name);
 			if(!empty($positions)) {
 				$classes = $this->InstitutionSiteClassTeacher->getClasses($teacherId, $this->institutionSiteId);
-				$_view_details = $this->AccessControl->check('Teachers', 'view');
-				$this->set('_view_details', $_view_details);
 				$this->set('data', $data);
 				$this->set('positions', $positions);
 				$this->set('classes', $classes);
@@ -1537,8 +1559,32 @@ class InstitutionSitesController extends AppController {
 			if(isset($data['staff_id'])) {
 				$data['institution_site_id'] = $this->institutionSiteId;
 				$data['start_year'] = date('Y', strtotime($data['start_date']));
-				$this->InstitutionSiteStaff->save($data);
-				$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				$insert = true;
+				if(!empty($data['position_no'])) {
+					$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
+					if(!$obj) {
+						$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
+					}
+					if($obj) {
+						$staffObj = $this->Staff->find('first', array(
+							'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
+							'conditions' => array('Staff.id' => $data['staff_id'])
+						));
+						$position = $data['position_no'];
+						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+						$msg .= '<br>' . __('Please choose another position number.');
+						$this->Utility->alert($msg, array('type' => 'warn'));
+						$insert = false;
+						$data = array_merge($data, $staffObj['Staff']);
+						$this->Session->write('InstitutionSiteStaffAdd.data', $data);
+					}
+				}
+				if($insert) {
+					$this->InstitutionSiteStaff->save($data);
+					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				}
 				$this->redirect(array('action' => 'staffAdd'));
 			}
 		}
@@ -1553,8 +1599,6 @@ class InstitutionSitesController extends AppController {
 			$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
 			$this->Navigation->addCrumb($name);
 			if(!empty($positions)) {
-				$_view_details = $this->AccessControl->check('Staff', 'view');
-				$this->set('_view_details', $_view_details);
 				$this->set('data', $data);
 				$this->set('positions', $positions);
 			} else {
