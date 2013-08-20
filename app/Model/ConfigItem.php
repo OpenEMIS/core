@@ -393,4 +393,19 @@ class ConfigItem extends AppModel {
 		return $newArr;
 	}
 	
+	
+	
+	public function getAllLDAPConfig(){
+		$tmp = array();
+		$data = $this->findAllByType('LDAP Configuration');
+
+		foreach($data as $k => $arrV){
+			foreach($arrV as $arrVal){
+				$tmp[$arrVal['name']] = ($arrVal['value'] != '')?$arrVal['value']:$arrVal['default_value'];
+			}
+		}
+		
+		return $tmp;
+	}
+
 }
