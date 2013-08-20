@@ -76,6 +76,35 @@ var Config = {
 		}
 		
 		return bool;
+	},
+	
+	checkLDAPconn : function(){
+		
+		var server = $('#ConfigItemLDAPConfiguration0Value').val();
+		var port = $('#ConfigItemLDAPConfiguration1Value').val();
+		var version = $('#ConfigItemLDAPConfiguration2Value').val();
+		var basedn = $('#ConfigItemLDAPConfiguration3Value').val();
+		var url = getRootURL()+'Config/checkLDAPConn';
+		var successCall = function (data,status){
+			var alertOpt = {
+						id: 'multi_alert',
+						parent: '.ldap',
+						type: (data == 'ok'?alertType.ok:alertType.error),
+						text: (data == 'ok'?i18n.Config.validLDAP:i18n.Config.invalidLDAP),
+						position: 'center'
+					};
+			$.unmask({id: maskId});
+			$.alert(alertOpt);
+		}
+		
+		$.ajax({
+			type: 'POST',
+			dataType: 'text',
+			url: url,
+			data: {server: server,port:port,version:version,basedn:basedn},
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.ldap',text:'connecting'}); },
+			success: successCall
+		});
 	}
 	
 }

@@ -30,11 +30,10 @@ class SecurityController extends AppController {
 		'SecurityFunction',
 		'SecurityRoleFunction',
 		'SecurityGroupArea',
-		'SecurityGroupInstitutionSite',
-		'SecurityUserAccess',
-		'Teachers.Teacher',
-		'Staff.Staff',
-		'Students.Student'
+		'SecurityGroupInstitutionSite'
+	);
+	public $components = array(
+		'LDAP'
 	);
 	
 	public function beforeFilter() {
@@ -74,11 +73,47 @@ class SecurityController extends AppController {
 	
     public function login() {
 		$this->autoLayout = false;
+		
 		if($this->request->is('post')) {
+			
+			/*
+			Requirement check for Auth Method if LDAP or LOCAL
+			if LDAP, 
+			1. check if LDAP server is up 
+			1.a If LDAP Server DOWN  use the LOCAL Authentication
+			1.b if LDAP Server UP -- Authenticate
+				1.b.1 if Failed Throw Error
+				1.b.2 if Success -- 
+						a. Fetch Username from OpenEMIS and force Login them
+			*/
+			
 			$username = $this->data['SecurityUser']['username'];
 			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
 			if(!$this->RequestHandler->isAjax()) {
-				if($this->Auth->login()) {
+				
+				if($this->ConfigItem->getValue('authentication_type') == 'LDAP'){
+					
+					$arrLdapConfig = $this->ConfigItem->getAllLDAPConfig();
+					$settings = array_merge($this->data['SecurityUser'],$arrLdapConfig);
+					$ldapverify = $this->LDAP->verifyUser($settings);
+					if($ldapverify === true){
+						$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.username' => $this->data['SecurityUser']['username'])));
+						if(count($data['SecurityUser'])>0)
+							$result = $this->Auth->login($data['SecurityUser']);
+						else{
+							$result = false;
+							$errMsg = __("LDAP user is not a valid openemis user");
+						}	
+					}else{
+						$result = false;
+						$errMsg = $ldapverify;
+					}
+				}else{
+					$result = $this->Auth->login();
+					//Error Message to be used if login false;
+					$errMsg = $this->Utility->getMessage("LOGIN_INVALID");
+				}
+				if($result) {
 					if($this->Auth->user('status') == 1) {
 						$this->log('[' . $username . '] Login successfully.', 'security');
 						$userId = AuthComponent::user('id');
@@ -91,11 +126,35 @@ class SecurityController extends AppController {
 						$this->Session->setFlash($this->Utility->getMessage("LOGIN_USER_INACTIVE"));
 					}
 				} else {
+					//$this->Session->setFlash($errMsg);
+					//Use Standard Message regardless Ldap or Local Auth accdg to Umai
 					$this->Session->setFlash($this->Utility->getMessage("LOGIN_INVALID"));
 				}
 			} else {
 				$this->autoRender = false;
-				$ajaxLoginResult = $this->Auth->login();
+				if($this->ConfigItem->getValue('authentication_type') == 'LDAP'){
+					
+					$arrLdapConfig = $this->ConfigItem->getAllLDAPConfig();
+					$settings = array_merge($this->data['SecurityUser'],$arrLdapConfig);
+					$ldapverify = $this->LDAP->verifyUser($settings);
+					if($ldapverify === true){
+						$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.username' => $this->data['SecurityUser']['username'])));
+						
+						if(count($data['SecurityUser'])>0)
+							$ajaxLoginResult = $this->Auth->login($data['SecurityUser']);
+						else{
+							$ajaxLoginResult = false;
+						}
+							
+					}else{
+						$ajaxLoginResult = false;
+					}
+					
+				}else{
+					$ajaxLoginResult = $this->Auth->login();
+					
+				}
+				//$ajaxLoginResult = $this->Auth->login();
 				if($ajaxLoginResult) {
 					$userId = AuthComponent::user('id');
 					$this->SecurityUser->updateLastLogin($userId);
@@ -204,19 +263,11 @@ class SecurityController extends AppController {
 		
 		if(isset($this->params['pass'][0])) {
 			$userId = $this->params['pass'][0];
-			$this->Session->write('SecurityUserId', $userId);
 			$this->SecurityUser->formatResult = true;
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
 			
-			$allowEdit = false;
-			if($this->Auth->user('super_admin')==1) {
-				// if the user himself is a super admin, then allow edit
-				$allowEdit = true;
-			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
-				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-			}
+			$allowEdit = $this->Auth->user('super_admin')==1 || $this->Auth->user('super_admin')==$data['super_admin'];
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
 			$this->Navigation->addCrumb($data['first_name'] . ' ' . $data['last_name']);
@@ -231,23 +282,25 @@ class SecurityController extends AppController {
 			$userId = $this->params['pass'][0];
 			$this->SecurityUser->formatResult = true;
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
 			$name = $data['first_name'] . ' ' . $data['last_name'];
-			$allowEdit = false;
-			if($this->Auth->user('super_admin')==1) {
-				$allowEdit = true;
-			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
-				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-			}
+			$allowEdit = $this->Auth->user('super_admin')==1 || $this->Auth->user('super_admin')==$data['super_admin'];
 			
 			if(!$allowEdit) {
 				$this->redirect(array('action' => 'users'));
 			} else {
 				if($this->request->is('post') || $this->request->is('put')) {
 					$postData = $this->data['SecurityUser'];
+					$postRoles = isset($this->data['SecurityRole']) ? $this->data['SecurityRole'] : array();
 					
 					if($this->SecurityUser->doValidate($postData)) {
+						/*
+						$this->SecurityUserRole->deleteAll(array('SecurityUserRole.security_user_id' => $userId));
+						$userRoles = array();
+						foreach($postRoles as $roleId => $value) {
+							$userRoles[] = array('security_user_id' => $userId, 'security_role_id' => $roleId);
+						}
+						$this->SecurityUserRole->saveMany($userRoles);
+						*/
 						$name = $postData['first_name'] . ' ' . $postData['last_name'];
 						$this->Utility->alert($name . ' has been updated successfully.');
 						$this->redirect(array('action' => 'usersView', $userId));
@@ -256,7 +309,7 @@ class SecurityController extends AppController {
 					}
 				}
 				$this->set('data', $data);
-				$this->set('statusOptions', $this->SecurityUser->getStatus());
+				$this->set('statusOptions', $this->SecurityUser->status);
 				$this->Navigation->addCrumb($name);
 			}
 		} else {
@@ -284,7 +337,6 @@ class SecurityController extends AppController {
 	public function usersSearch() {
 		$searchString = $this->params->query['searchString'];
 		$searchType = isset($this->params['pass'][0]) ? $this->params['pass'][0] : 0;
-		$params = array('limit' => 100);
 		
 		if($searchType==0) { // only search by identification no and display name
 			$this->autoRender = false;
@@ -299,70 +351,21 @@ class SecurityController extends AppController {
 				$result['name'] = $name;
 			}
 			return json_encode($result);
-		} else if($searchType==1) { // search by identification or name and display rows
+		} else { // search by identification or name and display rows
 			$this->layout = 'ajax';
 			$groupId = $this->params['pass'][1];
+			$params = array('limit' => 100);
 			$data = $this->SecurityUser->search($searchType, $searchString, $params);
 			if($data) {
 				foreach($data as &$user) {
 					$obj = $user['SecurityUser'];
 					$roleOptions = $this->SecurityRole->getRoleOptions($groupId, $obj['id'], true);
+					//pr($roleOptions);
 					$user['SecurityUser']['roles'] = $roleOptions;
 				}
 			}
 			$this->set('search', $searchString);
 			$this->set('data', $data);
-		} else {
-			$this->layout = 'ajax';
-			$module = $this->params->query['module'];
-			$data = $this->{$module}->search($searchString, $params);
-			$this->set('search', $searchString);
-			$this->set('module', $module);
-			$this->set('data', $data);
-		}
-		$this->set('type', $searchType);
-	}
-	
-	public function usersAccess() {
-		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
-		if($this->Session->check('SecurityUserId')) {
-			if($this->request->is('post') || $this->request->is('put')) {
-				$postData = $this->data['SecurityUserAccess'];
-				unset($postData['SearchField']);
-				if($postData['table_id'] != 0) {
-					if(!$this->SecurityUserAccess->isAccessExists($postData)) {
-						$this->SecurityUserAccess->save($postData);
-						$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_LINKED'));
-					} else {
-						$this->Utility->alert($this->Utility->getMessage('SECURITY_ACCESS_EXISTS'), array('type' => 'error'));
-					}
-				}
-			}
-			$userId = $this->Session->read('SecurityUserId');
-			$this->SecurityUser->formatResult = true;
-			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
-			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
-			$name = $data['first_name'] . ' ' . $data['last_name'];
-			$moduleOptions = array('Student' => __('Student'), 'Teacher' => __('Teacher'), 'Staff' => __('Staff'));
-			$this->set('data', $data);
-			$this->set('moduleOptions', $moduleOptions);
-			$this->Navigation->addCrumb($name);
-		} else {
-			$this->redirect(array('action' => 'users'));
-		}
-	}
-	
-	public function usersDeleteAccess() {
-		if($this->request->is('ajax')) {
-			$this->autoRender = false;
-			if(count($this->params['pass']) == 3) {
-				$conditions = array(
-					'security_user_id' => $this->params['pass'][0],
-					'table_id' => $this->params['pass'][1],
-					'table_name' => $this->params['pass'][2]
-				);
-				$this->SecurityUserAccess->deleteAll($conditions, false);
-			}
 		}
 	}
 	
