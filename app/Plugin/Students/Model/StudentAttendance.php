@@ -14,9 +14,9 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class StudentAttendance extends StudentsAppModel {
-	public $useTable = 'student_attendances';
-	
+App::uses('AppModel', 'Model');
+
+class StudentAttendance extends AppModel {
 	public function getAttendanceData($id,$yearId) {
 		$list = $this->find('all',array(
 										'conditions'=>array('StudentAttendance.student_id' => $id, 'StudentAttendance.school_year_id' => $yearId)));
