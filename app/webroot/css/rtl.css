@@ -25,12 +25,17 @@
 .header_nav_function{
 	float:right;
 }
+.header_nav_function_hover{
+	margin-left:0;
+	margin-right:-26px;
+}
 .header_nav_function_divi{
 	float:right;
 }
 .header_nav{
 	float:right;
-	margin:29px 82px 0 0;
+	margin-left:0;
+	margin-right:108px;
 }
 .header_logo{
 	margin-right:16px;
@@ -59,9 +64,8 @@
 	float:right;
 }
 .body_content_right{
-	float:right;
-	margin-left:0px;
-	margin-right:5px;
+	margin-left:10px;
+	margin-right:240px;
 }
 .left_nav_li{
 	background-position:12px 12px;
@@ -254,4 +258,12 @@ fieldset#general.section_break > .profile_image{
 #loading-box .loader{
 	float:right;
 	margin-left:8px;
+}
+
+/*2nd nav header*/
+.accordion-heading .accordion-toggle{
+	background-position:12px 14px;
+}
+.accordion-heading .accordion-toggle:hover{
+	background-position:12px -76px;
 }
