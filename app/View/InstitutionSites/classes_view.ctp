@@ -45,12 +45,16 @@ echo $this->Html->script('search', false);
     		<legend><?php echo __('Subjects'); ?></legend>
     		<div class="table">
     			<div class="table_head">
-    				<div class="table_cell"><?php echo __('Name'); ?></div>
+    				<div class="table_cell cell_year"><?php echo __('Code'); ?></div>
+                    <div class="table_cell"><?php echo __('Name'); ?></div>
+                    <div class="table_cell cell_category"><?php echo __('Grade'); ?></div>
     			</div>
     			<div class="table_body">
     				<?php foreach($subjects as $obj) { ?>
     				<div class="table_row">
-    					<div class="table_cell"><?php echo $obj['EducationSubject']['code'] . ' - ' . $obj['EducationSubject']['name'] . ' - ' . $obj['EducationGrade']['name']; ?></div>
+    					<div class="table_cell"><?php echo $obj['EducationSubject']['code']; ?></div>
+                        <div class="table_cell"><?php echo $obj['EducationSubject']['name']; ?></div>
+                        <div class="table_cell"><?php echo $obj['EducationGrade']['name']; ?></div>
     				</div>
     				<?php } ?>
     			</div>

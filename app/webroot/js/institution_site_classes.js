@@ -399,7 +399,11 @@ var InstitutionSiteClasses = {
                 var callback = function() {
                     if(data.type == ajaxType.success) {
                         row.attr('subject-id', subjectId);
-                        row.find('[attr="name"]').html(subjectSelect.find('> option:selected').attr('name'));
+                        var str = subjectSelect.find('> option:selected').attr('name');
+                        var arr = str.split(" - ");
+                        row.find('[attr="code"]').html(arr[0]);
+                        row.find('[attr="name"]').html(arr[1]);
+                        row.find('[attr="grade"]').html(arr[2]);
                     } else {
                         var alertOpt = {
                             id: 'subject_alert',
