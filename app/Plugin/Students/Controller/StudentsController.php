@@ -558,7 +558,7 @@ class StudentsController extends StudentsAppController {
      * @return [type] [description]
      */
     public function assessments() {
-		$this->Navigation->addCrumb('Assessment');
+		$this->Navigation->addCrumb('Assessments');
         if(is_null($this->studentId)){
             var_dump($this->name);
             $this->redirect(array('controller' => $this->name));
