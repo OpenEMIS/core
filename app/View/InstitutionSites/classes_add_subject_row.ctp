@@ -1,6 +1,7 @@
 <?php if(!empty($subjects)) { ?>
 
 <div class="table_row" subject-id="0">
+    <div class="table_cell" attr="code"></div>
 	<div class="table_cell" attr="name">
 		<select class="subject_select full_width" onchange="InstitutionSiteClasses.selectSubject(this)">
 			<option value="">-- <?php echo __('Select Subject'); ?> --</option>
@@ -10,6 +11,7 @@
 			} ?>
 		</select>
 	</div>
+	<div class="table_cell" attr="grade"></div>
 	<div class="table_cell">
 		<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteSubject(this)', 'onDelete' => false)); ?>
 	</div>
