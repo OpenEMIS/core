@@ -13,10 +13,8 @@
 #studentBehaviourAdd .label {width:120px; margin-top:2px;}
 #studentBehaviourEdit .label {width:120px; margin-top:2px;}
 #studentBehaviourView .label {width:120px; margin-top:2px;}
-#studentAttendance .myyear .label { line-height: 25px;}
-#studentAttendanceEdit .myyear .label { line-height: 25px;}
-#studentAttendance .school_days .default { width: 82px; }
-#studentAttendanceEdit .school_days .default { width: 82px; }
+#classesAttendance .myyear .label { width: 30px; line-height: 25px;}
+#classesAttendanceEdit .myyear .label { line-height: 25px;}
 #classes .label { width: 60px; }
 #classes #grade_list .icon_delete { margin-top: 4px; }
 #classes .table_cell_row { margin-top: 0; margin-bottom: 5px; }
