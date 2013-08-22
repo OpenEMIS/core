@@ -25,7 +25,6 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 	
 	<?php echo $this->element('alert'); ?>
 	
-	<?php if($this->Session->check('Search.SearchField') || $total > $limit) { ?>
 	<div class="row">
         <?php echo $this->Form->create('Institution', array('action'=>'search','id'=>false)); ?>
 		<div class="search_wrapper">
@@ -46,9 +45,9 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 			'before'=> "maskId = $.mask({parent: '.search', text:'".__("Searching...")."'});",
 			'success'=>'$.unmask({id: maskId, callback: function() { objSearch.callback(data); }});'));
 		?>
+		<span style="line-height: 25px"><?php echo $this->Html->link(__('Advanced Search'), array('action' => 'indexAdvanced'), array('class' => 'link_back')); ?></span>
 		<?php echo $this->Form->end(); ?>
 	</div>
-	<?php } ?>
 	
     <div id="mainlist">
 		<div class="row">
@@ -58,7 +57,7 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 				<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
 			</ul>
 		</div>
-		<?php if($total > 0) { ?>
+		
 		<div class="table allow_hover" action="Institutions/listSites/">
 			<div class="table_head" url="Institutions/index">
 				<div class="table_cell cell_code">
@@ -94,7 +93,6 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 			<?php endforeach; ?>
 			</div>
 		</div>
-		<?php } // end if total ?>
 		
 		<div class="row">
 			<ul id="pagination">
