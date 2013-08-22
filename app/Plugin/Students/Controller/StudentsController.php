@@ -27,6 +27,7 @@ class StudentsController extends StudentsAppController {
         'Institution',
 		'InstitutionSite',
 		'InstitutionSiteProgramme',
+        'InstitutionSiteClass',
 		'InstitutionSiteClassGradeStudent',
         'Students.Student',
         'Students.StudentHistory',
@@ -616,7 +617,15 @@ class StudentsController extends StudentsAppController {
         $yearId = $this->getAvailableYearId($yearList);
         $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 
-        $data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),isset($id)? $id:$yearId);
+        $data = $this->StudentAttendance->getAttendanceData($studentId,isset($id)? $id:$yearId);
+        foreach($data as $id=>$val){
+            $class = $this->InstitutionSiteClass->getClass($data[$id]['StudentAttendance']['institution_site_class_id'],$data[$id]['StudentAttendance']['institution_site_id']);
+            $data[$id]['StudentAttendance']['name'] = $class['InstitutionSiteClass']['name'];
+        }
+
+        if(empty($data)) {
+            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
 
         $this->set('selectedYear', $yearId);
         $this->set('years', $yearList);
