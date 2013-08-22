@@ -117,6 +117,8 @@ if(@$enabled === true){
                     <div class="table_cell col_action">
                         <!--div class="btn disable">Disable</div-->
                         <div class="btn edit">Edit</div>
+                        <!--div class="btn download" url="<?php echo $this->Html->url("Reports/CustomDownload/{$row['filename']}", true); ?>">Download</div-->
+                        <div class="btn download" url="<?php echo $this->Html->url("/Reports/CustomDownload/{$row['id']}", true); ?>">Download</div>
                     </div>
                     </div>
                 <?php } ?>
@@ -152,6 +154,11 @@ $(document).ready(function(){
 
     CustomReport.init(<?php echo $setting['maxFilesize']; ?>);
     $("#add_reports, #edit_report").hide();
+
+    $(".download").click(function(){
+        console.info($(this).attr('url'));
+        window.location = $(this).attr('url');
+    });
 
     <?php if(isset($status) && count($status) > 0){ ?>
         CustomReport.displayMessage('<?php echo $status['msg'] ?>', <?php echo $status['type'] ?>);
