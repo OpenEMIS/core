@@ -10,6 +10,7 @@ body{
 	min-width:1000px;
 	background-image:url(../img/body_bg.png);
 	word-wrap:break-word;
+	width:100%;
 }
 a{
 	text-decoration:none;
@@ -62,7 +63,9 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:980px;
 }
 .header_content{
-	width:980px;
+	width:90%;
+	min-width:980px;
+	max-width:1600px;
 	margin:0 auto;
 }
 .header_logo{
@@ -135,7 +138,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 .header_nav{
 	float: left;
-	margin:29px 0 0 82px;
+	margin:29px 0 0 98px;
 	padding:0;
 }
 .ie7 .header_nav{
@@ -158,9 +161,8 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 }
 .header_nav_function{
 	float:left;
-	width:148px;
 	text-align:center;
-	padding:6px 0;
+	padding:6px 26px;
 	font-size:14px;
 	line-height:14px;
 	font-weight:bold;
@@ -170,10 +172,10 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 }
 .header_nav_function_hover{
 	display:none;
-	position:absolute;
 	height:4px;
-	width:130px;
-	margin:8px 8px 0 8px;
+	width:100%;
+	padding:0 26px;
+	margin:8px 0 0 -26px;
 	box-shadow:0 0 2px #2CC1FD;
 }
 .ie7 .header_nav_function_hover {
@@ -195,7 +197,9 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 /*body cotent*/
 .container{
-	width:960px;
+	width:90%;
+	min-width:960px;
+	max-width:1600px;
 	margin:0 auto;
 	padding:104px 10px 0px 10px;
 	background-color:#ffffff;
