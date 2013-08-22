@@ -103,7 +103,6 @@ fieldset.custom_section_break { margin-top: 0px; padding-bottom: 0; }
     <script type="text/javascript">
         $(document).ready(function(){
             $('#InstitutionSchoolYearId,#InstitutionEducationGradeId').change(function(e){
-                console.info('qweqwe');
                 $(this).closest('form').submit();
             })
         });
