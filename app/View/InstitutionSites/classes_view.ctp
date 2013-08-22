@@ -18,7 +18,7 @@ echo $this->Html->script('search', false);
 			echo $this->Html->link(__('Delete'), array('action' => 'classesDelete', $classId), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 		}
 		if($_accessControl->check($this->params['controller'], 'studentsAttendance')) {
-            echo $this->Html->link(__('Attendance'), array('action' => 'classesAttendance', $classId), array('class' => 'divider'));
+            echo $this->Html->link(__('Attendance'), array('action' => 'classesAttendance'), array('class' => 'divider'));
         }
 		?>
     </h1>

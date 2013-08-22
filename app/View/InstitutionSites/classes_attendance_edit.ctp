@@ -64,15 +64,15 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                         }
                     ?>
                     <div class="table_row">
-                        <?php echo $this->Form->hidden('['.$cnt.'][id]', array('value' => empty($obj['StudentAttendance']['id']) ? 0 : $obj['StudentAttendance']['id'])); ?>
-                        <?php echo $this->Form->hidden('['.$cnt.'][student_id]', array('value' => empty($obj['Student']['id']) ? 0 : $obj['Student']['id'])); ?>
-                        <?php echo $this->Form->hidden('['.$cnt.'][institution_site_id]', array('value' => empty($obj['InstitutionSiteClass']['institution_site_id']) ? 0 : $obj['InstitutionSiteClass']['institution_site_id'])); ?>
+                        <?php echo $this->Form->hidden('Attendance.'.$cnt.'.id', array('value' => empty($obj['StudentAttendance']['id']) ? 0 : $obj['StudentAttendance']['id'])); ?>
+                        <?php echo $this->Form->hidden('Attendance.'.$cnt.'.student_id', array('value' => empty($obj['Student']['id']) ? 0 : $obj['Student']['id'])); ?>
+                        <?php echo $this->Form->hidden('Attendance.'.$cnt.'.institution_site_id', array('value' => empty($obj['InstitutionSiteClass']['institution_site_id']) ? 0 : $obj['InstitutionSiteClass']['institution_site_id'])); ?>
                         <div class="table_cell"><?php echo $obj['Student']['identification_no']; ?></div>
                         <div class="table_cell"><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></div>
                         <div class="table_cell cell_totals">
                             <div class="input_wrapper">
                             <?php
-                            echo $this->Form->input('['.$cnt.'][total_no_attend]', array(
+                            echo $this->Form->input('Attendance.'.$cnt.'.total_no_attend', array(
                                 'type' => 'text',
                                 'computeType' => 'computeTotal',
                                 'value' => empty($obj['StudentAttendance']['total_no_attend']) ? 0 : $obj['StudentAttendance']['total_no_attend'],
@@ -87,7 +87,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                         <div class="table_cell cell_totals">
                             <div class="input_wrapper">
                             <?php
-                            echo $this->Form->input('['.$cnt.'][total_no_absence]', array(
+                            echo $this->Form->input('Attendance.'.$cnt.'.total_no_absence', array(
                                 'type' => 'text',
                                 'computeType' => 'computeTotal',
                                 'value' => empty($obj['StudentAttendance']['total_no_absence']) ? 0 : $obj['StudentAttendance']['total_no_absence'],
