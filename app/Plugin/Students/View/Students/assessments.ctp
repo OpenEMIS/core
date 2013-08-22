@@ -2,13 +2,6 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 ?>
-<style>
-.myyear{ margin-bottom: 10px;}
-fieldset.section_group legend { font-weight:normal; }
-fieldset.custom_section_break { margin-top: 0px; padding-bottom: 0; }
-#InstitutionSchoolYearId  { width:70px; white-space: nowrap; overflow: hidden;}
-#InstitutionEducationGradeId  { width:300px; white-space: nowrap; overflow: hidden;}
-</style>
 
 <?php echo $this->element('breadcrumb'); ?>
 
