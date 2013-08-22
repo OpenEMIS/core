@@ -2078,7 +2078,11 @@ class InstitutionSitesController extends AppController {
             $className = $classObj['InstitutionSiteClass']['name'];
             $this->Navigation->addCrumb('Attendance');
             $yearList = $this->SchoolYear->getYearList();
-            $yearId = $this->getAvailableYearId($yearList);
+            if(isset($this->params['pass'][0])){
+                $yearId = $this->params['pass'][0];
+            }else{
+                $yearId = $this->getAvailableYearId($yearList);
+            }
             $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 
 
@@ -2122,27 +2126,21 @@ class InstitutionSitesController extends AppController {
                 $this->redirect(array('action' => 'classesList'));
             }
         } else {
-            pr($this->request->data);
-            die;
-            $totalNo = $this->request->data['StudentAttendance']['total_no_attend'] + $this->request->data['StudentAttendance']['total_no_absence'];
-            unset($this->request->data['schoolDays']);
-
-            $data = $this->request->data['StudentAttendance'];
-            $yearId = $data['school_year_id'];
-
-            if($schoolDayNo<$totalNo){
-                $this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
-                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendanceEdit', $yearId));
-            }else{
-                $thisId = $this->StudentAttendance->findID($this->Session->read('InstitutionSiteStudentId'),$yearId);
-                if($thisId!='')
-                {
-                    $data['id'] = $thisId;
+            $year = $this->request->data['ClassesAttendance']['school_year_id'];
+            $classId = $this->request->data['ClassesAttendance']['institution_site_class_id'];
+            if(isset($this->request->data['Attendance'])){
+                foreach($this->request->data['Attendance'] as $obj) {
+                    $data = $obj;
+                    if($obj['id']==0){
+                        unset($data['id']);
+                    }
+                    $data['school_year_id'] = $year;
+                    $data['institution_site_class_id'] = $classId;
+                    $this->StudentAttendance->save($data);
                 }
-                $this->StudentAttendance->save($data);
                 $this->Utility->alert($this->Utility->getMessage('SITE_STUDENT_ATTENDANCE_UPDATED'));
-                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendance', $yearId));
             }
+            $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'classesAttendance', $year));
         }
     }
     // END CLASS ATTENDANCE PART
