@@ -37,6 +37,7 @@ class StudentsController extends StudentsAppController {
         'Students.StudentBehaviour',
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
+        'Students.StudentAssessment',
         'SchoolYear',
 		'ConfigItem'
     );
@@ -557,7 +558,44 @@ class StudentsController extends StudentsAppController {
      * @return [type] [description]
      */
     public function assessments() {
-		$this->Navigation->addCrumb('Assessment Results');
+		$this->Navigation->addCrumb('Assessments');
+        if(is_null($this->studentId)){
+            var_dump($this->name);
+            $this->redirect(array('controller' => $this->name));
+        }
+
+        $years = $this->StudentAssessment->getYears($this->studentId);
+        $programmeGrades = $this->StudentAssessment->getProgrammeGrades($this->studentId);
+
+        reset($years);
+        reset($programmeGrades);
+
+        if($this->request->isPost()){
+            $selectedYearId = $this->request->data['year'];
+            if(!$this->Session->check('Student.assessment.year')){
+                $this->Session->write('Student.assessment.year', $selectedYearId);
+            }
+            $isYearChanged = $this->Session->read('Student.assessment.year') !== $this->request->data['year'];
+
+            $programmeGrades = $this->StudentAssessment->getProgrammeGrades($this->studentId, $selectedYearId);
+            $selectedProgrammeGrade = $isYearChanged?key($programmeGrades):$this->request->data['programmeGrade'];
+
+        }else{
+            $selectedYearId = key($years);
+            $selectedProgrammeGrade = key($programmeGrades);
+        }
+
+        $data = $this->StudentAssessment->getData($this->studentId, $selectedYearId, $selectedProgrammeGrade);
+
+        if(empty($data) && empty($years) && empty($programmeGrades)) {
+            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
+
+        $this->set('years', $years);
+        $this->set('selectedYear', $selectedYearId);
+        $this->set('programmeGrades', $programmeGrades);
+        $this->set('selectedProgrammeGrade', $selectedProgrammeGrade);
+        $this->set('data', $data);
     }
 
 	private function custFieldYrInits(){
