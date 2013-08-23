@@ -557,7 +557,7 @@ class DataProcessingController extends DataProcessingAppController {
             $userId = $this->Auth->user('id');
             $format = $this->data['DataProcessing']['export_format'];
             switch($format){
-                case 'Olap':
+                case 'Datawarehouse':
 
                     if($this->NumberOfOlapProcesses() > 0){
                         $this->Session->write('DataProcessing.olap.error', 'Unable to Export. Process exist.');
@@ -594,10 +594,23 @@ class DataProcessingController extends DataProcessingAppController {
             case 'devinfo7':
                 break;
             default:
-                $list = $this->BatchIndicator->find('all', array(
-                    'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.enabled'),
+                $listgroupRs = $this->BatchIndicator->find('all', array(
+                    'fields' => array('DISTINCT BatchIndicator.type'),
+                    'groupBy' => array('BatchIndicator.type'),
                     'order' => array('BatchIndicator.enabled DESC', 'BatchIndicator.id')
                 ));
+                $listgroup = array();
+                foreach($listgroupRs as $row){
+                    $listgroup[]= $row['BatchIndicator']['type'];
+                }
+                $list = array();
+                foreach($listgroup as $group){
+                    $list[$group] = $this->BatchIndicator->find('all', array(
+                        'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.enabled', 'BatchIndicator.type'),
+                        'order' => array('BatchIndicator.enabled DESC', 'BatchIndicator.id'),
+                        'conditions' => array('BatchIndicator.type' => $group)
+                    ));
+                }
 
                 $this->set('list', $list);
                 $viewFile = 'devinfo6';

@@ -26,15 +26,21 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			?>
 		</div>
 	</div>
-	
-	<div class="table full_width" style="margin: 20px 0 0 3px;">
-		<div class="table_head">
-			<div class="table_cell cell_checkbox"><!--input type="checkbox" onchange="jsForm.toggleSelect(this);" checked="checked" /--></div>
-			<div class="table_cell"><?php echo __('Indicator'); ?></div>
-		</div>
-		
-		<div class="table_body">
-			<?php foreach($list as $item) { $obj = $item['BatchIndicator']; ?>
+			<?php foreach($list as $key => $groupItems) { ?>
+
+
+    <fieldset class="section_group">
+        <legend><?php echo ucfirst($key); ?></legend>
+        <div class="table full_width">
+            <div class="table_head">
+                <div class="table_cell cell_checkbox"><!--input type="checkbox" onchange="jsForm.toggleSelect(this);" checked="checked" /--></div>
+                <div class="table_cell"><?php echo __('Indicator'); ?></div>
+            </div>
+
+            <div class="table_body">
+			<?php foreach($groupItems as $item) {
+			    $obj = $item['BatchIndicator']; ?>
+
 			<div class="table_row">
 				<div class="table_cell">
 					<?php $attr = $obj['enabled']==1 ? 'checked="checked"' : 'disabled="disabled"'; ?>
@@ -42,8 +48,10 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 				</div>
 				<div class="table_cell"><?php echo __($obj['name']); ?></div>
 			</div>
-			<?php } ?>
+			<?php   } ?>
 		</div>
+    </fieldset>
+			<?php } ?>
 	</div>
 	
 	<div class="controls">
