@@ -2,8 +2,7 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
 ?>
-<style>
-.delete_icon{ cursor: pointer }
+<style type="text/css">
 .col_action > a { margin-right: 7px;}
 .col_action > img { margin-left:0; margin-right: 5px;}
 </style>
@@ -16,7 +15,7 @@ if(@$enabled === true){
 ?>
     <div class="content_wrapper" id="report-list">
         <h1>
-            <span><?php echo __('Custom Reports'); ?></span>
+            <span><?php echo __('Custom Indicators'); ?></span>
             <?php
                 if($_edit) {
                     echo $this->Html->link(__('Add'), array('action' => 'CustomAdd'),	array('class' => 'divider'));
@@ -75,7 +74,7 @@ if(@$enabled === true){
                 <?php } ?>
                 </div>
             </div>
-            <div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null,'controller'=>'Home','action'=>'support'))?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on Custom Reports.'); ?></div>
+            <div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null,'controller'=>'Home','action'=>'support'))?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on Custom Indicators.'); ?></div>
     </div>
 <?php
 }else{ 
