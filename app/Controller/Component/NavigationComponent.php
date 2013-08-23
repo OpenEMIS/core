@@ -240,6 +240,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Finance', 'Finance', 'index', 'index$|edit$|financePerEducationLevel$')
 				),
 				'DATA PROCESSING' => array(
+					$this->createLink('Build', 'DataProcessing', 'build'),
 					$this->createLink('Generate', 'DataProcessing', 'genReports', '^gen'),
 					$this->createLink('Export', 'DataProcessing', 'export'),
 					$this->createLink('Processes', 'DataProcessing', 'processes')
