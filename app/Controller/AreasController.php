@@ -436,10 +436,6 @@ class AreasController extends AppController {
 			$_view_levels = true;
 		}
 
-        if(isset($initAreaSelection['area_id'])){
-            pr($initAreaSelection['area_id']);
-        }
-
 		$this->set('_view_levels', $_view_levels);
 		// End Access Control
         $this->set('topArea', $topArea);

@@ -61,7 +61,7 @@ echo $this->Html->script('area', false);
 		<ul class="quicksand table_view" style="margin-bottom:12px;"></ul>
 		
 		<?php if($_add && isset($initAreaSelection['area_id'])) { ?>
-		<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Area'); ?></a></div>
+		<div id="addarea" class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Area'); ?></a></div>
 		<?php } ?>
 			
 		<div class="controls">
