@@ -101,11 +101,17 @@ class StudentsController extends StudentsAppController {
         $fieldorderdir = ($this->Session->read('Search.sortdirStudent'))?$this->Session->read('Search.sortdirStudent'):'asc';
 		
 		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStudent'));
-		$conditions = array('SearchKey' => $searchKey);
+		/*$conditions = array('SearchKey' => $searchKey);
 		if($this->Auth->user('super_admin')==0) {
 			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
 			$conditions['UserId'] = $this->Auth->user('id');
-		}
+		}*/
+		$conditions = array(
+			'SearchKey' => $searchKey, 
+			'AdvancedSearch' => $this->Session->check('Student.AdvancedSearch') ? $this->Session->read('Student.AdvancedSearch') : null,
+			'isSuperAdmin' => $this->Auth->user('super_admin'),
+			'userId' => $this->Auth->user('id')
+		);
 		$order = array('order' => array($fieldordername => $fieldorderdir));
 		$limit = ($this->Session->read('Search.perpageStudent')) ? $this->Session->read('Search.perpageStudent') : 30;
         $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);

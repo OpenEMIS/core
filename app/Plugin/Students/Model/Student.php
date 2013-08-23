@@ -15,9 +15,8 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class Student extends StudentsAppModel {
-    private $debug = false;
 	public $actsAs = array(
-		'UserAccess',
+		'Search',
 		'TrackHistory' => array('historyTable' => 'Students.StudentHistory'),
 		'CascadeDelete' => array(
 			'cascade' => array(
@@ -27,7 +26,6 @@ class Student extends StudentsAppModel {
 		)
 	);
 	
-	public $sqlPaginateCount;
 	public $validate = array(
 		'first_name' => array(
 			'ruleRequired' => array(
@@ -90,35 +88,60 @@ class Student extends StudentsAppModel {
 		)
 	);
 	
-	// Used by InstitutionSiteController for searching
-	public function search($search, $params=array()) {
-		$model = $this->alias;
-		$search = '%' . $search . '%';
-		$limit = isset($params['limit']) ? $params['limit'] : false;
-		
-		$conditions = array(
-			'OR' => array(
-				$model . '.identification_no LIKE' => $search,
-				$model . '.first_name LIKE' => $search,
-				$model . '.last_name LIKE' => $search
-			)
+	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+		$isSuperAdmin = $conditions['isSuperAdmin'];
+		$fields = array(
+			'Student.id', 'Student.identification_no',
+			'Student.first_name', 'Student.last_name',
+			'Student.gender', 'Student.date_of_birth'
 		);
+		if(strlen($conditions['SearchKey']) != 0) {
+			$fields[] = 'StudentHistory.identification_no AS history_identification_no';
+			$fields[] = 'StudentHistory.first_name AS history_first_name';
+			$fields[] = 'StudentHistory.last_name AS history_last_name';
+		}
 		
-		$options = array(
-			'recursive' => -1,
-			'conditions' => $conditions,
-			'order' => array($model . '.first_name')
-		);
-		$count = $this->find('count', $options);
-		
-		$data = false;
-		if($limit === false || $count < $limit) {
-			$options['fields'] = array($model . '.*');
-			$data = $this->find('all', $options);
-		}		
+		$joins = array();
+		$data = array();
+		// if super admin
+		if($isSuperAdmin) {
+			$data = $this->find('all', array(
+				'recursive' => -1,
+				'fields' => $fields,
+				'joins' => $this->paginateJoins($joins, $conditions),
+				'conditions' => $this->paginateConditions($conditions),
+				'limit' => $limit,
+				'offset' => (($page-1)*$limit),
+				'group' => array('Student.id'),
+				'order' => $order
+			));
+		} else {
+			//$this->searchStart($conditions['userId']);
+			$data = $this->paginateQuery($conditions, $fields, $order, $limit, $page);
+		}
 		return $data;
 	}
 	
+	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
+		$isSuperAdmin = $conditions['isSuperAdmin'];
+		$joins = array();
+		$count = 0;
+		if($isSuperAdmin) {
+			$count = $this->find('count', array(
+				'recursive' => -1,
+				'joins' => $this->paginateJoins($joins, $conditions),
+				'conditions' => $this->paginateConditions($conditions),
+				'group' => array('Student.id')
+			));
+		} else {
+			$data = $this->paginateQuery($conditions);
+			$count = isset($data[0][0]['COUNT']) ? $data[0][0]['COUNT'] : 0;
+			//$this->searchEnd($conditions['userId']);
+		}
+		return $count;
+	}
+	
+	/*
 	public function paginateJoins($search, $institutionSiteId, $userId, $noSites=true) {
 		$joins = array();
 		
@@ -333,6 +356,11 @@ class Student extends StudentsAppModel {
 				'order' => $order
 			));
 		}
+		pr($this->getQueryWithoutSites(array('userId' => 2)));
+		pr($this->getQueryFromSecurityAreas(array('userId' => 2)));
+		pr($this->getQueryFromSecuritySites(array('userId' => 2)));
+		pr($this->getQueryFromAccess(array('userId' => 2)));
+		$this->paginateJoins2(array(), array());
 		return $data;
 	}
         
@@ -354,5 +382,6 @@ class Student extends StudentsAppModel {
 		}
 		return $count;
 	}
+	*/
 }
 ?>

@@ -48,7 +48,7 @@ class InstitutionsController extends AppController {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Institutions', array('controller' => 'Institutions', 'action' => 'index'));
 		
-		$actions = array('index', 'indexAdvanced', 'add', 'listSites');
+		$actions = array('index', 'advanced', 'add', 'listSites');
 		if(in_array($this->action, $actions)) {
 			$this->bodyTitle = 'Institutions';
 		} else {
@@ -124,7 +124,7 @@ class InstitutionsController extends AppController {
         }
     }
 	
-	public function indexAdvanced() {
+	public function advanced() {
 		$this->Area->recover('parent', '-1');
 		$key = 'Institution.AdvancedSearch';
 		if($this->request->is('get')) {

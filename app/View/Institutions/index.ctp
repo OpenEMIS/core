@@ -45,7 +45,7 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 			'before'=> "maskId = $.mask({parent: '.search', text:'".__("Searching...")."'});",
 			'success'=>'$.unmask({id: maskId, callback: function() { objSearch.callback(data); }});'));
 		?>
-		<span style="line-height: 25px"><?php echo $this->Html->link(__('Advanced Search'), array('action' => 'indexAdvanced'), array('class' => 'link_back')); ?></span>
+		<span style="line-height: 25px"><?php echo $this->Html->link(__('Advanced Search'), array('action' => 'advanced'), array('class' => 'link_back')); ?></span>
 		<?php echo $this->Form->end(); ?>
 	</div>
 	
