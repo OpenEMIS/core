@@ -138,7 +138,7 @@ class ReportsController extends ReportsAppController {
 //            $this->autoRender = false;
         App::uses('IndicatorReport', 'Lib/IndicatorReport');
 
-        $this->Navigation->addCrumb('Indicator Reports');
+//        $this->Navigation->addCrumb('Indicator Reports');
 
         $exportFormat = array(
             array(
