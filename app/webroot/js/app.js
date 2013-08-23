@@ -256,6 +256,9 @@ var jsForm = {
         var maskId;
         var url =  getRootURL() +'/Areas/viewAreaChildren/'+selected+'/'+edutype;
         var level = '&nbsp;&nbsp;';
+        var parentLegend = $('legend#parent_level');
+        var childrenLegend = $('legend#children_level');
+        childrenLegend.html(i18n.Areas.AreaLevelText);
         $.when(
             $.ajax({
                 type: "GET",
@@ -269,6 +272,7 @@ var jsForm = {
                         myLabel.html(i18n.Areas.AreaLevelText);
                     }else{
                         myLabel.html(level);
+                        parentLegend.html(level);
                     }
                 }
             })

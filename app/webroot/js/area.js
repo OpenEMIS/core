@@ -167,9 +167,9 @@ var areas = {
                 url: getRootURL() +'/Areas/checkLowestLevel/'+selectedValue+'/'+edutype,
                 success: function (data) {
                     if(data=='true'){
-                        $('#data_section_group').hide();
+                        $('#addarea').hide();
                     }else{
-                        $('#data_section_group').show();
+                        $('#addarea').show();
                     }
                 }
             })

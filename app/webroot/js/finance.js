@@ -389,9 +389,8 @@ var Finance = {
             parentLegendText = $('select[name=data\\[Finance\\]\\[area_level_'+parentSelect+'\\]]').parent().parent().find('.label').html();
             childrenLegendText = $('select[name=data\\[Finance\\]\\[area_level_'+childrenSelect+'\\]]').parent().parent().find('.label').html();
         }
-
         parentLegend.html(parentLegendText);
-        childrenLegend.html(childrenLegendText);
+        childrenLegend.html(i18n.Areas.AreaLevelText);
     },
     // Rending of htmls for view and edit
     renderRecordToHtmlTableRow: function (data){
