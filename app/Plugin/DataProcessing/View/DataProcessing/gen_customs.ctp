@@ -64,10 +64,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	
 		
 		<?php foreach($arrModules as $k => $arrv){ ?>
-		<fieldset class="section_group">
-			<legend><?php echo __($k); ?></legend>
 			
-			<div class="table">
+			<div class="table full_width">
 				<div class="table_head">
 					<?php if($_execute) { ?>
 					<div class="table_cell cell_checkbox"><input type="checkbox" value="1" onChange="toggleSelect(this)" /></div>
@@ -110,12 +108,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 					<?php } ?>
 				</div>
 			</div>
-		</fieldset>
 		<?php	
 		}
-		?>
-	
-	<?php	
 	}
 	?>
 	
