@@ -585,9 +585,9 @@ class DataProcessingController extends DataProcessingAppController {
 
         $viewFile = '';
         switch(strtolower($option)){
-            case 'olap':
+            case 'datawarehouse':
                 $this->set('olapList', $this->getOlapList());
-                $viewFile = 'olap';
+                $viewFile = 'datawarehouse';
                 break;
             case 'sdmx':
                 break;

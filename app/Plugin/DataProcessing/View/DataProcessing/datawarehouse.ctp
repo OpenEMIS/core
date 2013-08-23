@@ -22,7 +22,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			<?php
 			echo $this->Form->input('export_format', array(
 				'options' => $exportOptions,
-				'default' => 'Olap'
+				'default' => 'Datawarehouse'
 			));
 			?>
 		</div>
