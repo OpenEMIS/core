@@ -84,7 +84,7 @@ echo $this->Html->script('app', false);
     </div>
 
     <div class="clear" ></div>
-    <div class="controls">
+    <div class="controls view_controls">
         <button id="generate" type="button" class="btn  btn_disabled" disabled>Export</button>
     </div>
 </form>
