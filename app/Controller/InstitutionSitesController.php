@@ -863,6 +863,7 @@ class InstitutionSitesController extends AppController {
 	
 	public function classesView() {
 		$classId = $this->params['pass'][0];
+        $this->Session->write('InstitutionSiteClassId', $classId);
 		$classObj = $this->InstitutionSiteClass->getClass($classId);
 		
 		if(!empty($classObj)) {
@@ -1997,83 +1998,89 @@ class InstitutionSitesController extends AppController {
 		
 		return 'true';
 	}
-
     // END STUDENT BEHAVIOUR PART
-	
-	// STUDENT ATTENDANCE PART
-    public function studentsAttendance(){
-		if($this->Session->check('InstitutionSiteStudentId')){
-			$studentId = $this->Session->read('InstitutionSiteStudentId');
-			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
-			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $studentId));
-			$this->Navigation->addCrumb('Attendance');
-			
-			$id = @$this->request->params['pass'][0];
-			$yearList = $this->SchoolYear->getYearList();
-			$yearId = $this->getAvailableYearId($yearList);
-			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-			
-			$data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),isset($id)? $id:$yearId);							
-			
-			$this->set('selectedYear', $yearId);
-			$this->set('years', $yearList);
-			$this->set('data', $data);
-			$this->set('schoolDays', $schoolDays);
-            $this->set('id', $studentId);
-		}
+
+    // CLASS ATTENDANCE PART
+    public function classesAttendance(){
+        $classId = $this->Session->read('InstitutionSiteClassId');
+        $classObj = $this->InstitutionSiteClass->getClass($classId);
+
+        if(!empty($classObj)) {
+            $className = $classObj['InstitutionSiteClass']['name'];
+            $this->Navigation->addCrumb('Attendance');
+            $yearList = $this->SchoolYear->getYearList();
+            if(!empty($this->params['pass'][0])){
+                $yearId = $this->params['pass'][0];
+            }else{
+                $yearId = $this->getAvailableYearId($yearList);
+            }
+            $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+
+
+            $grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
+            $students = $this->InstitutionSiteClassGradeStudent->getStudentsAttendance($classId,array_keys($grades),$yearId);
+
+            $this->set('classId', $classId);
+            $this->set('selectedYear', $yearId);
+            $this->set('years', $yearList);
+            $this->set('grades', $grades);
+            $this->set('students', $students);
+            $this->set('schoolDays', $schoolDays);
+        } else {
+            $this->redirect(array('action' => 'classesList'));
+        }
     }
 
-    public function studentsAttendanceEdit() {
+    public function classesAttendanceEdit() {
         if($this->request->is('get')) {
-			if($this->Session->check('InstitutionSiteStudentId')){
-				$studentId = $this->Session->read('InstitutionSiteStudentId');
-				$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-				$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
-				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $studentId));
-				$this->Navigation->addCrumb('Edit Attendance');
-				
-				$yearList = $this->SchoolYear->getYearList();
-				$yearId = $this->getAvailableYearId($yearList);
-				$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-				
-				$data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),$yearId);				
-				
-				$this->set('studentid',$this->Session->read('InstitutionSiteStudentId'));
-				$this->set('institutionSiteId',$this->institutionSiteId);
-				$this->set('selectedYear', $yearId);
-				$this->set('years', $yearList);
-				$this->set('schoolDays', $schoolDays);
-				$this->set('data', $data);
-			}
-		} else {
-			$schoolDayNo = $this->request->data['schoolDays'];
-			$totalNo = $this->request->data['StudentAttendance']['total_no_attend'] + $this->request->data['StudentAttendance']['total_no_absence'];
-			unset($this->request->data['schoolDays']);
-			
-			$data = $this->request->data['StudentAttendance'];
-			$yearId = $data['school_year_id'];
-			
-			if($schoolDayNo<$totalNo){
-				$this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
-				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendanceEdit', $yearId));
-			}else{
-                $thisId = $this->StudentAttendance->findID($this->Session->read('InstitutionSiteStudentId'),$yearId);
-                if($thisId!='')
-                {
-                    $data['id'] = $thisId;
+            $classId = $this->Session->read('InstitutionSiteClassId');
+            $classObj = $this->InstitutionSiteClass->getClass($classId);
+
+            if(!empty($classObj)) {
+                $className = $classObj['InstitutionSiteClass']['name'];
+                $this->Navigation->addCrumb('Attendance');
+                $yearList = $this->SchoolYear->getYearList();
+                $yearId = $this->getAvailableYearId($yearList);
+                $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+
+
+                $grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
+                $students = $this->InstitutionSiteClassGradeStudent->getStudentsAttendance($classId,array_keys($grades),$yearId);
+
+                $this->set('classId', $classId);
+                $this->set('selectedYear', $yearId);
+                $this->set('years', $yearList);
+                $this->set('grades', $grades);
+                $this->set('students', $students);
+                $this->set('schoolDays', $schoolDays);
+            } else {
+                $this->redirect(array('action' => 'classesList'));
+            }
+        } else {
+            $yearId = $this->request->data['ClassesAttendance']['school_year_id'];
+            $classId = $this->request->data['ClassesAttendance']['institution_site_class_id'];
+            $myArr = array();
+            if(isset($this->request->data['Attendance'])){
+                foreach($this->request->data['Attendance'] as $obj) {
+                    $data = $obj;
+                    if($obj['id']==0){
+                        unset($data['id']);
+                    }
+                    $data['school_year_id'] = $yearId;
+                    $data['institution_site_class_id'] = $classId;
+                    $myArr[] = $data;
                 }
-				$this->StudentAttendance->save($data);
-				$this->Utility->alert($this->Utility->getMessage('SITE_STUDENT_ATTENDANCE_UPDATED'));
-				$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'studentsAttendance', $yearId));
-			}
-		}
+                $this->StudentAttendance->saveAll($myArr);
+                $this->Utility->alert($this->Utility->getMessage('SITE_STUDENT_ATTENDANCE_UPDATED'));
+            }
+            $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'classesAttendance', $yearId));
+        }
     }
-	// END STUDENT ATTENDANCE PART
+    // END CLASS ATTENDANCE PART
 	
 	// TEACHER ATTENDANCE PART
     public function teachersAttendance(){
-		if($this->Session->check('InstitutionSiteTeachersId')){
+		if($this->Session->check('InstitutionSƒiteTeachersId')){
 			$teacherId = $this->Session->read('InstitutionSiteTeachersId');
 			$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
 			$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);

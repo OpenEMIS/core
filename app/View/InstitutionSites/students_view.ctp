@@ -13,9 +13,6 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		if($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
 			echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
 		}
-		if($_accessControl->check($this->params['controller'], 'studentsAttendance')) {
-			echo $this->Html->link(__('Attendance'), array('action' => 'studentsAttendance'), array('class' => 'divider'));
-		}
 		if($_accessControl->check($this->params['controller'], 'studentsBehaviour')) {
 			echo $this->Html->link(__('Behaviour'), array('action' => 'studentsBehaviour', $obj['id']), array('class' => 'divider'));
 		}

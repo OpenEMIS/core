@@ -123,10 +123,10 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 			<?php } ?>
 		</div> 
         <?php } ?>
-		<?php if(sizeof($data)==0) { ?>
-        <div class="row center" style="color: red; width:700px;"><?php echo __('No Survey found.'); ?></div>
-        <?php } ?>
 	</div>
+	    <?php if(sizeof($data)==0) { ?>
+            <div class="row center" style="color: red;"><?php echo __('No Survey found.'); ?></div>
+        <?php } ?>
 		<?php
 			if(@$data){ 
 		?>
