@@ -41,6 +41,7 @@ Thumbs.db
 app/Config/database.php
 app/Backups/*
 app/webroot/reports/logs/*
+app/webroot/custom_indicators/*
 app/tmp/logs/*
 app/tmp/cache/*
 app/tmp/sessions/*
