@@ -11,7 +11,7 @@ echo $this->Html->script('jquery-ui.min', false);
 <script type="text/javascript">
 $(function() {
 	$("#area").autocomplete({
-		source: "indexAdvanced",
+		source: "advanced",
 		minLength: 2,
 		select: function(event, ui) {
 			$('#area').val(ui.item.label);
@@ -29,13 +29,16 @@ $session = $this->Session;
 <div id="institutions" class="content_wrapper search">
 	<h1>
 		<span><?php echo __('Advanced Search'); ?></span>
-		<?php echo $this->Html->link(__('Clear'), array('action' => 'indexAdvanced', 0), array('class' => 'divider')); ?>
+		<?php 
+		echo $this->Html->link(__('Back'), array('action' => 'index', 0), array('class' => 'divider'));
+		echo $this->Html->link(__('Clear'), array('action' => 'advanced', 0), array('class' => 'divider'));
+		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
 	<?php
 	echo $this->Form->create('Search', array(
-		'url' => array('controller' => 'Institutions', 'action' => 'indexAdvanced'),
+		'url' => array('controller' => 'Institutions', 'action' => 'advanced'),
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default')
 	));
 	echo $this->Form->hidden('area_id', array('id' => 'area_id', 'value' => $session->read('Institution.AdvancedSearch.area_id')));

@@ -18,6 +18,7 @@ class Staff extends StaffAppModel {
 	public $useTable = 'staff';
 
 	public $actsAs = array(
+		'Search',
 		'UserAccess',
 		'TrackHistory' => array('historyTable' => 'Staff.StaffHistory'),
 		'CascadeDelete' => array(
@@ -28,7 +29,6 @@ class Staff extends StaffAppModel {
 		)
 	);
 
-	public $sqlPaginateCount;
 	public $validate = array(
 		'first_name' => array(
 			'ruleRequired' => array(
@@ -358,6 +358,11 @@ class Staff extends StaffAppModel {
 				'order' => $order
 			));
 		}
+		pr($this->getQueryWithoutSites(array('userId' => 2)));
+		pr($this->getQueryFromSecurityAreas(array('userId' => 2)));
+		pr($this->getQueryFromSecuritySites(array('userId' => 2)));
+		pr($this->getQueryFromAccess(array('userId' => 2)));
+		$this->paginateJoins2(array(), array());
 		return $data;
 	}
         

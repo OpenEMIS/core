@@ -16,6 +16,21 @@ have received a copy of the GNU General Public License along with this program. 
 
 class Teacher extends TeachersAppModel {
 	public $actsAs = array(
+		'Search' => array(
+			'notExists' => 'SELECT teacher_id FROM institution_site_teachers WHERE teacher_id = Teacher.id',
+			'areaJoins' => array(
+				array(
+					'table' => 'institution_site_teachers',
+					'alias' => 'InstitutionSiteTeacher',
+					'conditions' => array('InstitutionSiteTeacher.teacher_id = Teacher.id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array('InstitutionSite.id = InstitutionSiteTeacher.institution_site_id')
+				)
+			)
+		),
 		'UserAccess',
 		'TrackHistory' => array('historyTable' => 'Teachers.TeacherHistory'),
 		'CascadeDelete' => array(
@@ -28,7 +43,6 @@ class Teacher extends TeachersAppModel {
 		)
 	);
 
-	public $sqlPaginateCount;
 	public $validate = array(
 		'first_name' => array(
 			'required' => array(
@@ -142,7 +156,6 @@ class Teacher extends TeachersAppModel {
 	
 	public function paginateJoins($search, $institutionSiteId, $userId, $noSites=true) {
 		$joins = array();
-		
 		if($search) {
 			$joins[] = array(
 				'table' => 'teacher_history',
@@ -349,6 +362,11 @@ class Teacher extends TeachersAppModel {
 				'order' => $order
 			));
 		}
+		pr($this->getQueryWithoutSites(array('userId' => 2)));
+		pr($this->getQueryFromSecurityAreas(array('userId' => 2)));
+		pr($this->getQueryFromSecuritySites(array('userId' => 2)));
+		pr($this->getQueryFromAccess(array('userId' => 2)));
+		$this->paginateJoins2(array(), array());
 		return $data;
 	}
         
