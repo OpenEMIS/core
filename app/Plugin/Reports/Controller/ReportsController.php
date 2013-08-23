@@ -102,12 +102,12 @@ class ReportsController extends ReportsAppController {
 //        echo Sanitize::escape("SELECT * FROM `batch_indicators` WHERE `type` = 'custom';");
 
         if($this->request->is('post')){
-            $name = Sanitize::escape($this->request->data['name']);
-            $description = Sanitize::escape($this->request->data['description']);
-            $file = $this->request->data['doc_file'];
 //            var_dump($this->request->data);die();
             switch (strtolower($this->request->data['mode'])){
                 case 'add':
+                    $name = Sanitize::escape($this->request->data['name']);
+                    $description = Sanitize::escape($this->request->data['description']);
+                    $file = $this->request->data['doc_file'];
                     if($this->validateFileFormat($file)){
                         $this->set('status', $this->customSave($name, $description, $file, $type, $datasource));
                     }else{
@@ -116,6 +116,9 @@ class ReportsController extends ReportsAppController {
                     break;
                 case 'edit':
                     $id = Sanitize::escape($this->request->data['id']);
+                    $name = Sanitize::escape($this->request->data['name']);
+                    $description = Sanitize::escape($this->request->data['description']);
+                    $file = $this->request->data['doc_file'];
 //                    var_dump($file);die();
                     if($file['size'] > 0){
                         if($this->validateFileFormat($file)){
@@ -126,6 +129,11 @@ class ReportsController extends ReportsAppController {
                     }else{
                         $this->set('status', $this->editCustomReport($id, $name, $description, $file, $datasource));
                     }
+                    break;
+                case 'delete':
+                    $id = Sanitize::escape($this->request->data['id']);
+                    $status = $this->deleteCustomReport($id, $datasource);
+                    $this->set('status', $status);
                     break;
             }
 
@@ -148,8 +156,121 @@ class ReportsController extends ReportsAppController {
         }
 
         $this->set('data', $data);
+        $this->set('controllerName', $this->name);
         $this->set('setting', array('maxFilesize' => Configure::read('xml.indicators.custom.size')));
 
+    }
+
+    public function CustomDelete(){
+        $this->autoRender = false;
+
+        if($this->request->is('post')) {
+            $datasource = ConnectionManager::getDataSource('default');
+            $result = array('alertOpt' => array());
+            $this->Utility->setAjaxResult('alert', $result);
+            $id = Sanitize::escape($this->params->data['id']);
+
+            $status = $this->deleteCustomReport($id, $datasource);
+
+            if($status['type'] !== 0) {
+                $result['alertOpt']['text'] = __('File was deleted successfully.');
+            } else {
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+            }
+
+            return json_encode($result);
+        }
+    }
+
+    public function CustomEdit($id=0){
+        $this->Navigation->addCrumb('Edit Custom Indicators');
+        if($id == 0){
+            $this->redirect(array('controller' => $this->name, 'action' => 'Custom'));
+        }
+
+        $path = Configure::read('xml.indicators.custom.path');
+//        $path = App::pluginPath($this->name) . 'webroot' . DS . 'reports';
+        $type = 'custom';
+        $data = array();
+        $datasource = ConnectionManager::getDataSource('default');
+        $resultSet = array();
+
+        if($this->request->is('post')){
+
+            $id = Sanitize::escape($this->request->data['id']);
+            $name = Sanitize::escape($this->request->data['name']);
+            $description = Sanitize::escape($this->request->data['description']);
+            $file = $this->request->data['doc_file'];
+            $status = array();
+            if($file['size'] > 0){
+                if($this->validateFileFormat($file)){
+                    $status = $this->editCustomReport($id, $name, $description, $file, $datasource);
+                }else{
+                    $status = array('msg' => __('Only XML file are allow.'), 'type' => 0);
+                }
+            }else{
+                $status = $this->editCustomReport($id, $name, $description, $file, $datasource);
+            }
+
+            if(isset($status['type']) && $status['type'] > 0){
+                $this->redirect(array('controller' => $this->name, 'action' => 'Custom'));
+            }
+
+            $this->set('status', $status);
+        }
+
+        try{
+            // Read 1st ten custom report
+            $sql = sprintf("SELECT `id`, `name`, `metadata`, `filename`, `enabled` FROM `batch_indicators` WHERE `type` = '%s' AND `id` = '%s' LIMIT 1;",
+                Sanitize::escape($type),
+                Sanitize::escape($id));
+            $resultSet = $datasource->query($sql);
+        }catch(Exception $e){
+            $this->redirect(array('controller' => $this->name, 'action' => 'Custom'));
+        }
+
+        if(count($resultSet) == 0 ){
+            $this->redirect(array('controller' => $this->name, 'action' => 'Custom'));
+        }
+
+        foreach($resultSet as $result) {
+            $tmp = array_pop($result);
+            $tmp['id'] = nl2br($tmp['id']);
+            $tmp['name'] = nl2br($tmp['name']);
+            $tmp['description'] = nl2br($tmp['metadata']);
+            array_push($data, $tmp);
+        }
+
+        $this->set('data', current($data));
+        $this->set('controllerName', $this->name);
+        $this->set('setting', array('maxFilesize' => Configure::read('xml.indicators.custom.size')));
+
+    }
+
+    public function CustomAdd(){
+        $this->Navigation->addCrumb('Add Custom Indicators');
+
+        $type = 'custom';
+        $data = array();
+        $datasource = ConnectionManager::getDataSource('default');
+        if($this->request->is('post')){
+
+            $name = Sanitize::escape($this->request->data['name']);
+            $description = Sanitize::escape($this->request->data['description']);
+            $file = $this->request->data['doc_file'];
+            if($this->validateFileFormat($file)){
+                $this->set('status', $this->customSave($name, $description, $file, $type, $datasource));
+            }else{
+                $this->set('status', array('msg' => __('Only XML file are allow.'), 'type' => 0));
+            }
+            $this->redirect(array('controller' => $this->name, 'action' => 'Custom'));
+
+        }
+        $this->set('setting', array('maxFilesize' => Configure::read('xml.indicators.custom.size')));
+//        $this->layout = 'ajax';
+//        $this->set('params', $this->params->query);
+//        $this->render('/Elements/custom/add');
     }
 
     private function customSave($name, $description, $file, $type, $datasource){
@@ -288,7 +409,7 @@ class ReportsController extends ReportsAppController {
         $path = Configure::read('xml.indicators.custom.path');
         $status = array('msg' => __('Upload Unsuccessful'), 'type' => 0);
 
-        $sql = sprintf("Select `filename` FROM `batch_indicators` WHERE `id` = %s;",
+        $sql = sprintf("Select `filename`, `report_id` FROM `batch_indicators` WHERE `id` = %s;",
             Sanitize::escape($id));
         $resultSet = $datasource->query($sql);
         $filename = '';
@@ -296,18 +417,19 @@ class ReportsController extends ReportsAppController {
         if(count($resultSet) > 0 && count($resultSet) < 2){
             $result = array_pop($resultSet);
             $filename = $result['batch_indicators']['filename'];
+            $reportId = $result['batch_indicators']['report_id'];
         }
 
 
         if(!empty($filename) && $this->removeFile($filename, $path)){
-            // add to batch_indicators table
-            $sql = sprintf("DELETE FROM `batch_indicators` WHERE `id` = %s;",
-                Sanitize::escape($id));
+            // add to reports table
+            $sql = sprintf("DELETE FROM `reports` WHERE `id` = %s;",
+                Sanitize::escape($reportId));
 //                    echo $sql;
             $datasource->query($sql);
 
-            // add to reports table
-            $sql = sprintf("DELETE FROM `reports` WHERE `id` = %s;",
+            // add to batch_indicators table
+            $sql = sprintf("DELETE FROM `batch_indicators` WHERE `id` = %s;",
                 Sanitize::escape($id));
 //                    echo $sql;
             $datasource->query($sql);
@@ -376,6 +498,7 @@ class ReportsController extends ReportsAppController {
         $filename = $resultSet[0]['batch_indicators']['filename'];
         $name = Sanitize::clean($resultSet[0]['batch_indicators']['name']);
         $name = str_ireplace(' ', '_', $name);
+        if(empty($name)) $name = 'download';
         $file = new File($path.$filename);
         if($file->exists()){
             $ext = $file->ext();

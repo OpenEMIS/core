@@ -39,71 +39,101 @@ var data = {
             if(parseInt(maxFilesize) !== NaN){
                 CustomReport.maxFilesize = maxFilesize;
             }
-            $("#add").click(function(){
-                var editElement = $('#edit_report');
-                $(this).hide();
 
-                if(editElement.is(':visible')){
-                    editElement.hide();
-                }
+//                if(editElement.is(':visible')){
+//                    editElement.hide();
+//                }
                 $("#add_reports").show();
-            });
 
-            $(".edit").click(function(){
-                var row = $(this).closest('.table_row'),
-                    name = "",
-                    desc = "",
-                    addElement = $('#add_reports'),
-                    editElement = $("#edit_report");
+            $('input[type="file"]').change(CustomReport.validate.rules.file);
 
-                if(addElement.is(':visible')){
-                    addElement.find('.cancel').trigger('click');
+            $('input[type="text"]#name').blur(CustomReport.validate.rules.name);
+
+        },
+        selectFile: function(obj) {
+            var parent = $(obj).closest('.file_input');
+            parent.find('input[type="file"]').click();
+        },
+
+        updateFile: function(obj) {
+            var parent = $(obj).closest('.file_input');
+            parent.find('.file input[type="text"]').val($(obj).val());
+        },
+        deleteFile: function(id) {
+            var dlgId = 'deleteDlg';
+            var btn = {
+                value: i18n.General.textDelete,
+                callback: function() {
+                    var maskId;
+                    var controller = $('#controller').text();
+                    var url = getRootURL() + controller + '/CustomDelete/';
+                    $.ajax({
+                        type: 'POST',
+                        dataType: 'json',
+                        url: url,
+                        data: {id: id},
+                        beforeSend: function (jqXHR) {
+                            maskId = $.mask({parent: '.content_wrapper', text: i18n.Attachments.textDeletingAttachment});
+                        },
+                        success: function (data, textStatus) {
+                            var callback = function() {
+                                var closeEvent = function() {
+                                    var successHandler = function() {
+                                        $('div[row-id=' + id + ']').fadeOut(600, function() {
+                                            $(this).remove();
+                                            CustomReport.renderTable();
+                                        });
+                                    };
+                                    jsAjax.result({data: data, callback: successHandler});
+                                };
+                                $.closeDialog({id: dlgId, onClose: closeEvent});
+                            };
+
+                            $.unmask({id: maskId, callback: callback});
+                        }
+                    });
                 }
+            };
 
-                name = row.find('.col_name').html().trim();
-                desc = row.find('.col_desc').html().trim();
-                id = CustomReport.getIdFromString(row.attr('id'));
+            var dlgOpt = {
+                id: dlgId,
+                title: i18n.Attachments.titleDeleteAttachment,
+                content: i18n.Attachments.contentDeleteAttachment,
+                buttons: [btn]
+            };
 
-                editElement.find('#name').attr('value', name);
-                editElement.find('#description').attr('value', desc);
-                editElement.find('#reportId').attr('value', id);
-                editElement.show();
-            });
+            $.dialog(dlgOpt);
+        },
+        addRow: function() {
+            var size = $('.table_row').length;
+            var maskId;
+            var controller = $('#controller').text();
+            var url = getRootURL() + controller + '/CustomAdd';
 
-            $(".cancel").click(function(){
-                var form = $(this).closest('form');
-
-                if(form.attr('id') !== 'EditReportCustomForm'){
-                    CustomReport.validate.reset(form);
-                    form.find('#add_reports').hide();
-                    $("#add").show();
-                }else{
-                    CustomReport.validate.reset(form);
-                    form.find('#edit_report').hide();
-                }
-                return false;
-            });
-
-            $('.disable').click(function(){
-                if(window.confirm('Do you want to disable this report?')){
-                    //$(this).closest('.table_row').hide('slow').remove();
-                    var reportElement = $(this).closest('.table_row');
-                    if(reportElement.attr('enabled') === '1'){
-                        reportElement.attr('enabled', '0');
-                        $(this).html('Enable');
-                    }else{
-                        reportElement.attr('enabled', '1');
-                        $(this).html('Disable');
-                    }
+            $.ajax({
+                type: 'GET',
+                dataType: 'text',
+                url: url,
+                data: {size: size},
+                beforeSend: function (jqXHR) {
+                    maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
+                },
+                success: function (data, textStatus) {
+                    var callback = function() {
+//                        $('.file_upload .table_body').append(data);
+                        $('.table_body').append(data);
+                    };
+                    $.unmask({id: maskId, callback: callback});
                 }
             });
-
-            $('button#update').click(CustomReport.validate.validateEdit);
-
-            $('input[type="file"]').bind('change', CustomReport.validate.rules.file);
-            $('input[type="text"]#name').bind('blur', CustomReport.validate.rules.name);
-            $("#save").click(CustomReport.validate.validateSave);
-
+        },
+        deleteRow: function(obj) {
+            $(obj).closest('.table_row').remove();
+            CustomReport.renderTable();
+        },
+        renderTable: function() {
+            $('.table_row.even').removeClass('even');
+            $('.table_row:odd').addClass('even');
         },
         validate: {
             isNameRequired:true, // required.
@@ -167,7 +197,6 @@ var data = {
                     var allowedType = CustomReport.allowedType;
                     var fileList = this.files;
                     if(!jQuery.browser.msie){
-                        //console.info(fileList[0]);
                         if(fileList !== undefined && fileList.length > 0){
                             if(allowedType.toLowerCase() !== fileList[0].type.toLowerCase()){
                                 data.validate.messages.push('Only XML file are allow.');
@@ -190,24 +219,23 @@ var data = {
                 }
 
             },
-            validateSave: function(){
-                if(!CustomReport.validate.isValid($(this).closest('#add_reports'), 'add')){
+            validateSave: function(e){
+                if(!CustomReport.validate.isValid($(this).closest('form'), 'add')){
+                    e.preventDefault();
                     CustomReport.displayMessage(CustomReport.validate.getMessage());
-                }else{
-                    CustomReport.closest('form').submit();
+                    return false;
                 }
 
-                return false;
+                return true;
             },
-            validateEdit: function(){
-                console.info(CustomReport.validate.isValid($(this).closest('#edit_report'), 'edit'));
-                if(!CustomReport.validate.isValid($(this).closest('#edit_report'), 'edit')){
+            validateEdit: function(e){
+                if(!CustomReport.validate.isValid($(this).closest('form'), 'edit')){
+                    e.preventDefault();
                     CustomReport.displayMessage(CustomReport.validate.getMessage());
-                }else{
-                    CustomReport.closest('form').submit();
+                    return false;
                 }
-                // CustomReport.validate.isValid();
-                return false;
+
+                return true;
             }
         },
         displayMessage: function(msg, type){
@@ -216,7 +244,6 @@ var data = {
             if(type !== undefined) opt.type = type;
             $.alert(opt);
             opt.type = alertType.error;
-            // alert(msg);
         },
         getIdFromString: function(elementId) {
             var id = '', words;
