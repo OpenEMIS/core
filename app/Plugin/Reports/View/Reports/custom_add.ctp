@@ -7,7 +7,6 @@ echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => fa
 
 <?php 
 $ctr = 0;
-if(@$enabled === true){
 ?>
     <div class="content_wrapper" id="report-list">
         <span id="controller" class="none"><?php echo $controllerName; ?></span>
@@ -68,11 +67,6 @@ if(@$enabled === true){
             <legend><?php echo __('Custom'); ?></legend>
             </fieldset>
     </div>
-<?php
-}else{ 
-    echo __('Report Feature disabled');
-
- } ?>
 
 <?php echo $this->Html->script('/Reports/js/customReport', false); ?>
 <script>
