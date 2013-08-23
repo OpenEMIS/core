@@ -33,7 +33,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         <legend><?php echo ucfirst($key); ?></legend>
         <div class="table full_width">
             <div class="table_head">
-                <div class="table_cell cell_checkbox"><!--input type="checkbox" onchange="jsForm.toggleSelect(this);" checked="checked" /--></div>
+                <div class="table_cell cell_checkbox"><input type="checkbox" value="1" onchange="toggleSelect(this)"><!--input type="checkbox" onchange="jsForm.toggleSelect(this);" checked="checked" /--></div>
                 <div class="table_cell"><?php echo __('Indicator'); ?></div>
             </div>
 
@@ -43,8 +43,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 			<div class="table_row">
 				<div class="table_cell">
-					<?php $attr = $obj['enabled']==1 ? 'checked="checked"' : 'disabled="disabled"'; ?>
-					<input type="checkbox" name="data[BatchIndicator][<?php echo $obj['id']; ?>]" <?php echo $attr ?> disabled="disabled" />
+					<?php //$attr = $obj['enabled']==1 ? 'checked="checked"' : ''; ?>
+					<input type="checkbox" name="data[BatchIndicator][<?php echo $obj['id']; ?>]" <?php echo ($obj['enabled']==1)?'': 'disabled="disabled"'?>  value="<?php echo $obj['id']; ?>" />
 				</div>
 				<div class="table_cell"><?php echo __($obj['name']); ?></div>
 			</div>
@@ -69,4 +69,18 @@ $(document).ready(function(){
         window.location.href = url+'/'+$(this).find('option:selected').val();
     });
 });
+
+	function toggleSelect(obj) {
+		var table = $(obj).closest('.table');
+		table.find('.table_body input[type="checkbox"]').each(function() {
+				if(obj.checked) {
+					if( $(this).attr('disabled') == undefined){
+						$(this).attr('checked','checked');
+					}
+				} else {
+					$(this).removeAttr('checked');
+				}
+		});
+	}
+
 </script>

@@ -556,6 +556,7 @@ class DataProcessingController extends DataProcessingAppController {
         if($this->request->is('post')) {
             $userId = $this->Auth->user('id');
             $format = $this->data['DataProcessing']['export_format'];
+            $indicatorIds = implode(',',$this->data['BatchIndicator']);
             switch($format){
                 case 'Datawarehouse':
 
@@ -576,7 +577,7 @@ class DataProcessingController extends DataProcessingAppController {
                 default:
                     $processName = 'Export Indicators (' . $this->BatchIndicator->exportOptions[$format] . ')';
                     $processId = $this->BatchProcess->createProcess($processName, $userId);
-                    $params = array('indicator', 'run', $processId, $format);
+                    $params = array('indicator', 'run', $processId, $format, $indicatorIds);
             }
 //            $indicatorIds = $this->data['BatchIndicator'];
             $this->runJob($params);
@@ -692,7 +693,7 @@ class DataProcessingController extends DataProcessingAppController {
         $this->autoRender = false;
 
         //APP."Console/cake.php -app ".APP." batch run";die;
-        if(stristr('olap', $params[1])){
+        if(stristr('Datawarehouse', $params[1])){
 //            $cmd = sprintf("%swebroot/olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
             $cmd = sprintf("%sLib/Olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
         }else{
@@ -712,7 +713,7 @@ class DataProcessingController extends DataProcessingAppController {
             //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
             //echo $r = shell_exec($cmd." > /dev/null &");
             //echo $PID = shell_exec("nohup $cmd > /dev/null & echo $!");
-            if(stristr('olap',$params[1] )){
+            if(stristr('Datawarehouse',$params[1] )){
                 $nohup = 'nohup php %s > %stmp/logs/processes.log &';
             }else{
                 $nohup = 'nohup %s > %stmp/logs/processes.log &';
