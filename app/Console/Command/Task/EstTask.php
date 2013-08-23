@@ -9,11 +9,154 @@ define("CENSUS_ESTIMATE", 40);
 class EstTask extends AppTask {
 	public $limit = 1000;
 	public $tasks = array('Common');
+	
+	//Population Estimates Starts -
+	private $arrMain = array();
+	private $firstIndex = 0;
+	private $firstNonZeroValue = 0;
+	private $lastIndex = 0;
+	private $lastNonZeroValue = 0;
+	private $growthRate = 0;
+	private $db;
+	private $popYear = array();
+	
+	public function setData($arr){
+		$this->arrMain = $arr;
+	}
+	
+	public function getByGroup($field,$where ='',$flip = false){
+		if($where != ''){
+			$where = ' WHERE '.$where;
+		}
+		
+		$sql = "SELECT $field FROM population $where GROUP BY ".$field;
+		$years =  $this->db->fetchAll($sql);
+		$tmp = array();
+		foreach ($years as $key => $value) {
+			$tmp[] = $value['population'][$field];
+		}
+		if($flip) $tmp = array_flip($tmp);
+		return $tmp;
+	}
+	
+	private  function getAgeForArea($area_id){
+		return $this->getByGroup('age',' area_id = '.$area_id);
+	}
+	
+	
+
+	public function populationEstimate(){
+		
+		$this->db = ConnectionManager::getDataSource('default');
+		$this->popYear = $this->getByGroup('year','',true);
+		$area_ids = $this->getByGroup('area_id');
+		
+		foreach($area_ids as $areaV){
+			$ages = $this->getAgeForArea($areaV);
+			foreach($ages as $ageV){
+				
+			}
+		}
+		echo "d2";
+	}
+	
+	public function process() {
+		$tmp = array();
+		$first = 0;
+		$last = 0;
+		$arrTmp = array();
+		for($i=0;$i < count($this->arrMain);$i++){
+			//FIRST
+			if($first == 0 && $this->arrMain[$i] != 0 && @$this->arrMain[($i + 1)] === 0) {
+				$this->firstNonZeroValue =  $first = $this->arrMain[$i]; 
+				$this->firstIndex = $i;
+			}elseif($this->arrMain[$i] != 0 && $this->arrMain[($i - 1)] === 0) { //LAST
+				$this->lastNonZeroValue = $last = $this->arrMain[$i]; 
+				$this->lastIndex = $i;
+				
+				$this->processMissingValue();
+					if($this->arrMain[$i] != 0 && $this->arrMain[($i + 1)] === 0) {
+						$first = $last;
+						$this->firstIndex = $i;
+						
+					} 
+			}elseif($first != 0 && $this->arrMain[$i] != 0 && @$this->arrMain[($i + 1)] === 0) { //insert
+				 $first =  $this->arrMain[$i];
+				$this->firstIndex = $i;
+			}
+		}
+		$this->firstIndex = 0;
+		$this->lastIndex = 0;
+		
+	}
+	public function displayArr(){
+		print '<pre>';
+		print_r($this->arrMain);
+		print'</pre>';
+	}
+	
+	public function processMissingValue(){
+		$diff = $this->arrMain[$this->lastIndex] - $this->arrMain[$this->firstIndex];
+		$total = ($this->lastIndex - $this->firstIndex + 1);
+		$intPerc = 1;
+		for($i = $this->firstIndex; $i <= $this->lastIndex; $i++ ){
+			if($i == $this->firstIndex || $i == $this->lastIndex) continue;
+			//echo '<br> ['.$i.'] ';
+			$this->arrMain[$i] = ($diff * ($intPerc/$total) ) + $this->arrMain[$this->firstIndex];
+			$intPerc++;
+		}
+	}
+	
+	private function getGrowthRate($array){
+		for($i = 1; $i < count($array); $i++) {
+		  $resultado[] = $array[$i] - @$array[$i - 1];
+		}
+		 $this->growthRate =  array_sum($resultado)/count($resultado);
+		 return $this->growthRate;
+	}
+	
+	public function processOutofBoundary(){
+		$p = $this->firstNonZeroValue;
+		$l = $this->lastNonZeroValue;
+		$array = $this->arrMain;
+		//Trim the LEFT and RIGHT Zero Elements;
+		$leftZeroItems = 0;
+		while (reset($this->arrMain) == '') { 
+			array_shift($this->arrMain);
+			$leftZeroItems++;
+		}
+		$rightZeroItems = 0;
+		while (end($this->arrMain) == ''){
+			array_pop($this->arrMain);
+			$rightZeroItems++;
+		}
+		
+		//Growth Rate
+		$gr = $this->getGrowthRate($this->arrMain);
+		
+		
+		
+		for($i = 0; $i <= count($leftZeroItems) ;$i++){
+			$p = $p - $gr ;
+			array_unshift($this->arrMain, $p);
+		}
+		
+		for($a = 0; $a <= count($rightZeroItems) ;$a++){
+			$l = $l + $gr ;
+			array_push($this->arrMain, $l);	
+		}
+		 
+		
+	}
+	
+	//Population Estimates Ends -
+	
+	
 	public function genEST($settings){
 		
 		$current_year = $this->getSchoolYearWithOffset();
 		$previous_year = $this->getSchoolYearWithOffset(1);
-	
+		
 		try{
 			eval($settings['sql']);
 			echo "finissshh";
@@ -43,7 +186,7 @@ class EstTask extends AppTask {
 					FROM (
 							SELECT count(a.student_id) as Male, 
 									a.institution_site_class_grade_id, 
-									b.education_grade_id, 
+									b.education_grade_id,
 									c.institution_site_id, 
 									c.school_year_id, 
 									d.gender, 
@@ -129,6 +272,7 @@ EOD;
 							(SELECT * FROM education_grades t1 
 								LEFT JOIN (
 										SELECT a.id as currGradeId,
+												a.name as currGradeName,
 												b.id as nextGradeId, 
 												b.name as nextGradeName, 
 												b.order as nextGradeOrder  
@@ -139,13 +283,7 @@ EOD;
 								WHERE t1.id NOT IN ( SELECT max(id) FROM education_grades GROUP BY education_programme_id )
 							)
 						  ) eg ON eg.currGradeId = cs.education_grade_id
-				WHERE education_grade_id IN ( 
-									SELECT id 
-									FROM education_grades 
-									WHERE id NOT IN (
-										SELECT max(id) FROM education_grades GROUP BY education_programme_id
-									) 
-				) 
+				WHERE 1
 				AND  school_year_id = ({prev_year})
 EOD;
 	
@@ -160,7 +298,7 @@ EOD;
 				SELECT COUNT( cs.id ) AS tot, AVG( cs.male ) as avg_male , AVG( cs.female ) as  avg_female, education_grade_id, institution_site_type_id, area_id, age
 				FROM  `census_students` cs
 				JOIN institution_sites ins ON ins.id = cs.institution_site_id
-				WHERE cs.school_year_id ={curr_year}
+				WHERE cs.school_year_id ={curr_year} 
 				GROUP BY institution_site_type_id, area_id, education_grade_id,age;
 				ALTER TABLE magic ADD INDEX (education_grade_id, institution_site_type_id,area_id,age);
 
