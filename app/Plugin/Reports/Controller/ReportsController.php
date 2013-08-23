@@ -40,7 +40,7 @@ class ReportsController extends ReportsAppController {
 		'Teacher'=>array('enable'=>true),
 		'Staff'=>array('enable'=>true),
 		'Consolidated'=>array('enable'=>true),
-//		'Indicator'=>array('enable'=>true),
+		'Indicator'=>array('enable'=>true),
 		'DataQuality'=>array('enable'=>true),
 		'Custom'=>array('enable'=>true)
     );
