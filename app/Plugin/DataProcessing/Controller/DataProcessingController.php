@@ -606,13 +606,13 @@ class DataProcessingController extends DataProcessingAppController {
                 }
                 $list = array();
                 foreach($listgroup as $group){
-                    $list[$group] = $this->BatchIndicator->find('all', array(
+                	$tmpKey = (strtolower($group) === 'system')? 'standard':$group;
+                    $list[$tmpKey] = $this->BatchIndicator->find('all', array(
                         'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.enabled', 'BatchIndicator.type'),
                         'order' => array('BatchIndicator.enabled DESC', 'BatchIndicator.id'),
                         'conditions' => array('BatchIndicator.type' => $group)
                     ));
                 }
-
                 $this->set('list', $list);
                 $viewFile = 'devinfo6';
         }

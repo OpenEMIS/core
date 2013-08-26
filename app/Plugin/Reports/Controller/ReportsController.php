@@ -194,6 +194,7 @@ class ReportsController extends ReportsAppController {
             $this->set('formats', $exportFormat);
             $this->set('areas', $data['areas']);
             $this->set('timeperiods', $data['timeperiods']);
+            $this->render('indicator');
 
         }
     }
@@ -797,9 +798,9 @@ class ReportsController extends ReportsAppController {
             $line .= implode(',',array_values($arrv));
             $line .= "\n";
             fputs ($this->fileFP, $line);
+
         }
 //        $line = pr($data);
-
 //        $line .= "\n";
 //        fputs ($this->fileFP, $line);
     }
