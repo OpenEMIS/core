@@ -138,7 +138,7 @@ class ReportsController extends ReportsAppController {
 //            $this->autoRender = false;
         App::uses('IndicatorReport', 'Lib/IndicatorReport');
 
-        $this->Navigation->addCrumb('Indicator Reports');
+//        $this->Navigation->addCrumb('Indicator Reports');
 
         $exportFormat = array(
             array(
@@ -389,7 +389,6 @@ class ReportsController extends ReportsAppController {
                     'table' => 'institution_site_localities',
                     'alias' => 'InstitutionSiteLocality',
                     'type' => 'LEFT',
-
                     'conditions' => array(
                         'InstitutionSiteLocality.id = InstitutionSite.institution_site_locality_id'
                     )
@@ -800,6 +799,7 @@ class ReportsController extends ReportsAppController {
             fputs ($this->fileFP, $line);
         }
 //        $line = pr($data);
+
 //        $line .= "\n";
 //        fputs ($this->fileFP, $line);
     }
@@ -927,7 +927,6 @@ class ReportsController extends ReportsAppController {
                 array_push($formattedArray,  __(Inflector::humanize(Inflector::underscore(implode(' ',$translatedArray)))));
             }
         }
-
 
         return implode(',',$formattedArray);
     }
