@@ -194,6 +194,7 @@ class ReportsController extends ReportsAppController {
             $this->set('formats', $exportFormat);
             $this->set('areas', $data['areas']);
             $this->set('timeperiods', $data['timeperiods']);
+            $this->render('indicator');
 
         }
     }
