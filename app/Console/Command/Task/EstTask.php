@@ -9,6 +9,7 @@ define("CENSUS_ESTIMATE", 40);
 class EstTask extends AppTask {
 	public $limit = 1000;
 	public $tasks = array('Common');
+	public $fileFP;
 	
 	//Population Estimates Starts -
 	private $arrMain = array();
@@ -40,26 +41,100 @@ class EstTask extends AppTask {
 	}
 	
 	private  function getAgeForArea($area_id){
-		return $this->getByGroup('age',' area_id = '.$area_id);
+		return $this->getByGroup('age',' data_source = 0 AND area_id = '.$area_id);
 	}
 	
 	
 
 	public function populationEstimate(){
-		
+		$path = $this->Common->getReportWebRootPath();
+		$this->fileFP = fopen($path.'/estimates/population_estimate', "w+");
+		$gender = array('male','female');
 		$this->db = ConnectionManager::getDataSource('default');
-		$this->popYear = $this->getByGroup('year','',true);
-		$area_ids = $this->getByGroup('area_id');
+		$this->popYear = $this->getByGroup('year',' data_source = 0 ',true);
+		$arrYears = $this->getByGroup('year');
+		$area_ids = $this->getByGroup('area_id',' data_source = 0 ');
 		
 		foreach($area_ids as $areaV){
 			$ages = $this->getAgeForArea($areaV);
 			foreach($ages as $ageV){
+				$garbage = array();
 				
+				$sql = "SELECT male,female,year FROM population WHERE data_source = 0 AND age = $ageV AND area_id = $areaV AND year in (".implode(",",array_keys($this->popYear)).")";
+				$res =  $this->db->fetchAll($sql);
+				
+				foreach ($res as $val){
+						$garbage['male'][$this->popYear[$val['population']['year']]] = $val['population']['male'];
+						$garbage['female'][$this->popYear[$val['population']['year']]] = $val['population']['female'];
+					
+				}
+				
+				
+				$max = end(array_values($this->popYear)); //Get the final key as max!
+				$fixMissing = array();
+				foreach($gender as $gend){
+					$missingKeys = array();
+					//Get Missing Keys and also Fill in the main garbage with 0
+					for($i = 0; $i < $max; $i++){
+						if(!isset($garbage[$gend][$i])){
+							$missingKeys[$gend][] = $i;
+							$garbage[$gend][$i] = 0;
+						}
+					}
+
+					//$this->cleanArray($garbage['male']);
+					$this->setData($garbage[$gend]);
+					$this->process();
+					//$this->processOutofBoundary();
+					$this->displayArr();
+					
+					
+					if(count($missingKeys)>0){
+						foreach ($missingKeys[$gend] as $key => $value) {
+							$fixMissing[$arrYears[$value]][$gend] = floor($this->arrMain[$value]);
+						}
+					}
+					
+				}
+				
+				$this->writeSQL($fixMissing,$areaV,$ageV); 
+				
+				//echo 'Age:['.$ageV.'] , Areas:'.$areaV;
+				//pr($garbage);
 			}
 		}
-		echo "d2";
+		//echo implode(array_keys($this->popYear));
+		 fclose ($this->fileFP);
 	}
 	
+	/*function cleanArray(&$array){
+		
+		$max = end(array_values($this->popYear)); //Get the final key as max!
+		for($i = 0; $i < $max; $i++)
+		{
+			if(!isset($array[$i]))
+			{
+				$array[$i] = 0;
+			}
+		}
+	}*/
+	private function writeSQL($arr,$area,$age){
+		$insertSQL = '';
+		foreach($arr as $year => $arrVal){
+			//echo "\n INSERT INTO population () VALUES ($age, $year, $area, ".$arrVal['male'].",".$arrVal['female'].")";
+			$query = array(
+				'table' => 'population',
+				'fields' => 'age,year,area_id,male,female,data_source,source',
+				'values' => implode(",",array($age,$year,$area,$arrVal['male'],$arrVal['female'],1,"'OpenEMIS Population Estimates'"))
+			);
+			$insertSQL .= "\n".$this->db->renderStatement('create', $query).";";
+		}
+		
+		
+		
+		fputs ($this->fileFP, $insertSQL);
+		
+	}
 	public function process() {
 		$tmp = array();
 		$first = 0;
@@ -70,12 +145,12 @@ class EstTask extends AppTask {
 			if($first == 0 && $this->arrMain[$i] != 0 && @$this->arrMain[($i + 1)] === 0) {
 				$this->firstNonZeroValue =  $first = $this->arrMain[$i]; 
 				$this->firstIndex = $i;
-			}elseif($this->arrMain[$i] != 0 && $this->arrMain[($i - 1)] === 0) { //LAST
+			}elseif($this->arrMain[$i] != 0 && @$this->arrMain[($i - 1)] === 0) { //LAST
 				$this->lastNonZeroValue = $last = $this->arrMain[$i]; 
 				$this->lastIndex = $i;
 				
 				$this->processMissingValue();
-					if($this->arrMain[$i] != 0 && $this->arrMain[($i + 1)] === 0) {
+					if($this->arrMain[$i] != 0 && @$this->arrMain[($i + 1)] === 0) {
 						$first = $last;
 						$this->firstIndex = $i;
 						
