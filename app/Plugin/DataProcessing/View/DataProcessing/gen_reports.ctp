@@ -58,10 +58,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<?php
 	foreach($data as $Nav => $arrModules){
 	?>
-	<fieldset class="section_group">
-		<legend><?php echo __($Nav); ?></legend>
 		<?php foreach($arrModules as $k => $arrv){ ?>
-		<fieldset class="section_break">
+		<fieldset class="section_group">
 			<legend><?php echo __($k); ?></legend>
 			
 			<div class="table">
@@ -110,9 +108,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		</fieldset>
 		<?php	
 		}
-		?>
-	</fieldset>
-	<?php	
 	}
 	?>
 	

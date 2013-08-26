@@ -64,8 +64,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	
 		
 		<?php foreach($arrModules as $k => $arrv){ ?>
-		<fieldset class="section_group">
-			<legend><?php echo __($k); ?></legend>
 			
 			<div class="table">
 				<div class="table_head">
@@ -110,7 +108,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 					<?php } ?>
 				</div>
 			</div>
-		</fieldset>
 		<?php	
 		}
 		?>

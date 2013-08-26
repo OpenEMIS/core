@@ -66,7 +66,7 @@ var data = {
                 callback: function() {
                     var maskId;
                     var controller = $('#controller').text();
-                    var url = getRootURL() + controller + '/CustomDelete/';
+                    var url = getRootURL() + controller + '/BuildDelete/';
                     $.ajax({
                         type: 'POST',
                         dataType: 'json',
