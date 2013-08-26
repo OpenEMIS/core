@@ -49,7 +49,8 @@ var i18n = {
 		textArea: '<?php echo T("Area"); ?>',
 		textProgrammeSelect: '<?php echo T("Please select a programme first.", true); ?>',
 		textClassSelectStudent: '<?php echo T("Please select a student first."); ?>',
-		textClassSelectTeacher: '<?php echo T("Please select a teacher first."); ?>'
+		textClassSelectTeacher: '<?php echo T("Please select a teacher first."); ?>',
+		textClassSelectSubject: '<?php echo T("Please select a subject first."); ?>'
 	},
 	Training : {
 		textArea: '<?php echo T("Category is required!"); ?>'
