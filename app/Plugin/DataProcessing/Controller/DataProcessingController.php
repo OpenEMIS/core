@@ -556,8 +556,9 @@ class DataProcessingController extends DataProcessingAppController {
         if($this->request->is('post')) {
             $userId = $this->Auth->user('id');
             $format = $this->data['DataProcessing']['export_format'];
+            $indicatorIds = implode(',',$this->data['BatchIndicator']);
             switch($format){
-                case 'Olap':
+                case 'Datawarehouse':
 
                     if($this->NumberOfOlapProcesses() > 0){
                         $this->Session->write('DataProcessing.olap.error', 'Unable to Export. Process exist.');
@@ -576,7 +577,7 @@ class DataProcessingController extends DataProcessingAppController {
                 default:
                     $processName = 'Export Indicators (' . $this->BatchIndicator->exportOptions[$format] . ')';
                     $processId = $this->BatchProcess->createProcess($processName, $userId);
-                    $params = array('indicator', 'run', $processId, $format);
+                    $params = array('indicator', 'run', $processId, $format, $indicatorIds);
             }
 //            $indicatorIds = $this->data['BatchIndicator'];
             $this->runJob($params);
@@ -594,10 +595,23 @@ class DataProcessingController extends DataProcessingAppController {
             case 'devinfo7':
                 break;
             default:
-                $list = $this->BatchIndicator->find('all', array(
-                    'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.enabled'),
+                $listgroupRs = $this->BatchIndicator->find('all', array(
+                    'fields' => array('DISTINCT BatchIndicator.type'),
+                    'groupBy' => array('BatchIndicator.type'),
                     'order' => array('BatchIndicator.enabled DESC', 'BatchIndicator.id')
                 ));
+                $listgroup = array();
+                foreach($listgroupRs as $row){
+                    $listgroup[]= $row['BatchIndicator']['type'];
+                }
+                $list = array();
+                foreach($listgroup as $group){
+                    $list[$group] = $this->BatchIndicator->find('all', array(
+                        'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.enabled', 'BatchIndicator.type'),
+                        'order' => array('BatchIndicator.enabled DESC', 'BatchIndicator.id'),
+                        'conditions' => array('BatchIndicator.type' => $group)
+                    ));
+                }
 
                 $this->set('list', $list);
                 $viewFile = 'devinfo6';
@@ -679,7 +693,7 @@ class DataProcessingController extends DataProcessingAppController {
         $this->autoRender = false;
 
         //APP."Console/cake.php -app ".APP." batch run";die;
-        if(stristr('olap', $params[1])){
+        if(stristr('Datawarehouse', $params[1])){
 //            $cmd = sprintf("%swebroot/olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
             $cmd = sprintf("%sLib/Olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
         }else{
@@ -699,7 +713,7 @@ class DataProcessingController extends DataProcessingAppController {
             //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
             //echo $r = shell_exec($cmd." > /dev/null &");
             //echo $PID = shell_exec("nohup $cmd > /dev/null & echo $!");
-            if(stristr('olap',$params[1] )){
+            if(stristr('Datawarehouse',$params[1] )){
                 $nohup = 'nohup php %s > %stmp/logs/processes.log &';
             }else{
                 $nohup = 'nohup %s > %stmp/logs/processes.log &';

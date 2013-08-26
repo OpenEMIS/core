@@ -105,6 +105,9 @@ class DevInfo6Component extends Component {
 	}
 	
 	public function export($settings=array()) {
+        $indicatorIdsString = $settings['indicatorIds'];
+        $indicatorIdsArr = explode(',', $indicatorIdsString);
+        unset($settings['indicatorIds']);
 		$_settings = array(
 			'onBeforeGenerate' => array('callback' => array(), 'params' => array()),
 			'onAfterGenerate' => array('callback' => array(), 'params' => array()),
@@ -114,7 +117,7 @@ class DevInfo6Component extends Component {
 		
 		$indicatorList = $this->BatchIndicator->find('all', array(
 			'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.unit', 'BatchIndicator.metadata'),
-			'conditions' => array('BatchIndicator.enabled' => 1)
+			'conditions' => array('BatchIndicator.enabled' => 1, 'BatchIndicator.id' => $indicatorIdsArr)
 		));
 		$areaList = $this->Area->find('list', array('conditions' => array('Area.visible' => 1)));
 	
