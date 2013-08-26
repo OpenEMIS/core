@@ -1,6 +1,6 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
+//echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
 ?>
 <style type="text/css">
 .col_action > a { margin-right: 7px;}
@@ -11,14 +11,15 @@ echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => fa
 
 <?php 
 $ctr = 0;
-if(@$enabled === true){
+//if(@$enabled === true){
+if(true){
 ?>
     <div class="content_wrapper" id="report-list">
         <h1>
             <span><?php echo __('Custom Indicators'); ?></span>
             <?php
                 if($_edit) {
-                    echo $this->Html->link(__('Add'), array('action' => 'CustomAdd'),	array('class' => 'divider'));
+                    echo $this->Html->link(__('Add'), array('action' => 'BuildAdd'),	array('class' => 'divider'));
                 }
             ?>
         </h1>
@@ -41,16 +42,15 @@ if(@$enabled === true){
                             <?php echo $row['metadata']; ?>
                         </div>
                         <div class="table_cell col_action">
-                            <?php //echo $this->Html->image('icons/edit.png', array("alt" => "Edit", "class" => "edit", "row-id" =>$row['id'])); ?>
                             <?php
                             echo $this->Html->link(
                                 $this->Html->image('icons/edit.png', array("alt" => "Edit")),
-                                "/{$controllerName}/CustomEdit/{$row['id']}",
+                                "/{$controllerName}/BuildEdit/{$row['id']}",
                                 array('escape' => false)
                             );
                             echo $this->Html->link(
                                 $this->Html->image('icons/download.png', array("alt" => "Download")),
-                                "/{$controllerName}/CustomDownload/{$row['id']}",
+                                "/{$controllerName}/BuildDownload/{$row['id']}",
                                 array('escape' => false)
                             );
                             echo $this->Html->link(
@@ -66,15 +66,10 @@ if(@$enabled === true){
                     <!--div class="table_row more">
                         <div class="col_full">More</div>
                     </div-->
-                <?php }else{ ?>
-                    <div class="table_row">
-                        <div class="col_full">No Custom Report</div>
-                    </div>
-
                 <?php } ?>
                 </div>
             </div>
-            <div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null,'controller'=>'Home','action'=>'support'))?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on Custom Indicators.'); ?></div>
+            <div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null,'controller'=>'Home','action'=>'support'))?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on building Custom Indicators.'); ?></div>
     </div>
 <?php
 }else{ 
@@ -82,7 +77,7 @@ if(@$enabled === true){
 
  } ?>
 
-<?php echo $this->Html->script('/Reports/js/customReport', false); ?>
+<?php echo $this->Html->script("/{$controllerName}/js/buildDataProcess", false); ?>
 <script>
 var maskId ;
 $(document).ready(function(){
@@ -96,8 +91,8 @@ $(document).ready(function(){
     $("#add_reports, #edit_report").hide();
 
     $('.edit_icon').click(function(){
-        var rowId = $(this).attr('row-id');
-        window.location = getRootURL() + $('#controller').text() + '/CustomEdit/'+rowId;
+        // var rowId = $(this).attr('row-id');
+        // window.location = getRootURL() + $('#controller').text() + '/CustomEdit/'+rowId;
     });
 
     $('a .delete_icon').click(function(e){

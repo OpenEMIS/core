@@ -21,7 +21,7 @@ class ReportsController extends ReportsAppController {
     public $bodyTitle = 'Reports';
     public $headerSelected = 'Reports';
     public $limit = 1000;
-    
+
 
     public $uses = array(
 		'BatchProcess',
@@ -42,7 +42,7 @@ class ReportsController extends ReportsAppController {
 		'Consolidated'=>array('enable'=>true),
 		'Indicator'=>array('enable'=>true),
 		'DataQuality'=>array('enable'=>true),
-		'Custom'=>array('enable'=>true)
+//		'Custom'=>array('enable'=>false)
     );
 
     public $customView = array( //exclude from Index view.
@@ -92,249 +92,6 @@ class ReportsController extends ReportsAppController {
 	public function ConsolidatedDownload(){}
 //	public function Indicator(){}
 //	public function IndicatorDownload(){}
-	public function Custom(){
-        $path = Configure::read('xml.indicators.custom.path');
-//        $path = App::pluginPath($this->name) . 'webroot' . DS . 'reports';
-        $type = 'custom';
-        $data = array();
-        $datasource = ConnectionManager::getDataSource('default');
-//        var_dump($resultSet);
-//        echo Sanitize::escape("SELECT * FROM `batch_indicators` WHERE `type` = 'custom';");
-
-        if($this->request->is('post')){
-            $name = Sanitize::escape($this->request->data['name']);
-            $description = Sanitize::escape($this->request->data['description']);
-            $file = $this->request->data['doc_file'];
-//            var_dump($this->request->data);die();
-            switch (strtolower($this->request->data['mode'])){
-                case 'add':
-                    if($this->validateFileFormat($file)){
-                        $this->set('status', $this->customSave($name, $description, $file, $type, $datasource));
-                    }else{
-                        $this->set('status', array('msg' => __('Only XML file are allow.'), 'type' => 0));
-                    }
-                    break;
-                case 'edit':
-                    $id = Sanitize::escape($this->request->data['id']);
-                    if($this->validateFileFormat($file)){
-                        $this->set('status', $this->editCustomReport($id, $name, $description, $file, $datasource));
-                    }else{
-                        $this->set('status', array('msg' => __('Only XML file are allow.'), 'type' => 0));
-                    }
-                    break;
-            }
-
-        }
-//        $this->set('msg', __('Post is disabled.'));
-
-        // Read 1st ten custom report
-        $sql = sprintf("SELECT `id`, `name`, `metadata`, `filename`, `enabled` FROM `batch_indicators` WHERE `type` = '%s';",
-            Sanitize::escape($type));
-        $resultSet = $datasource->query($sql);
-
-        foreach($resultSet as $result) {
-            $tmp = array_pop($result);
-            $tmp['name'] = nl2br($tmp['name']);
-//            $tmp['metadata'] = nl2br($tmp['metadata']);
-            array_push($data, $tmp);
-        }
-
-        $this->set('data', $data);
-        $this->set('setting', array('maxFilesize' => Configure::read('xml.indicators.custom.size')));
-
-    }
-
-    private function customSave($name, $description, $file, $type, $datasource){
-        $path = Configure::read('xml.indicators.custom.path');
-        $schemasPath = Configure::read('xml.schemas.path');
-        $status = array('msg' => __('Upload Unsuccessful'), 'type' => 0);
-        $newFile = $this->saveFile($file['tmp_name'], $path);
-
-        if($this->validateXml($file['tmp_name'], $schemasPath.'indicator.xsd')){
-
-            if($newFile && get_class($newFile) == 'File'){
-
-                // add to reports table
-                $sql = sprintf("INSERT INTO `reports` (`name`, `description`, `file_type`, `module`, `category`, `created_user_id`, `created`) VALUES ('%s', '%s', '%s', '%s', '%s', '%d', '%s');",
-                    Sanitize::escape($name),
-                    Sanitize::escape($description),
-                    Sanitize::escape('cus'),
-                    Sanitize::escape('Custom'),
-                    Sanitize::escape('Custom Reports'),
-                    $this->Auth->user('id'),
-                    $this->DateTime->dateAsSql(time()));
-    //                    echo $sql;
-                $datasource->query($sql);
-
-                // add to batch_indicators table
-                $sql = sprintf("INSERT INTO `batch_indicators` (`name`, `short_name`, `metadata`, `filename`, `type`, `report_id`, `created_user_id`, `created`) VALUES ('%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s');",
-                    Sanitize::escape($name),
-                    Sanitize::escape($name),
-                    Sanitize::escape($description),
-                    Sanitize::escape("{$newFile->name()}.{$newFile->ext()}"),
-                    Sanitize::escape($type),
-                    $datasource->lastInsertId(),
-                    $this->Auth->user('id'),
-                    $this->DateTime->dateAsSql(time()));
-    //                    echo $sql;
-                $datasource->query($sql);
-
-                $status['msg'] =__('Upload Successful.');
-                $status['type'] = 1;
-            }else{
-    //            $this->set('status', array('msg' => __('Upload Successful.'), 'type' => 1));
-            }
-        }else{
-            $status['msg'] =__('Invalid Xml Format.');
-            $status['type'] = 0;
-        }
-
-        return $status;
-    }
-
-    private function editCustomReport($id, $name, $description, $file, $datasource){
-        $path = Configure::read('xml.indicators.custom.path');
-        $status = array('msg' => __('Upload Unsuccessful'), 'type' => 0);
-
-        $sql = sprintf("Select `filename`, `report_id` FROM `batch_indicators` WHERE `id` = %s;",
-            Sanitize::escape($id));
-        $resultSet = $datasource->query($sql);
-        $filename = '';
-        $reportId = '';
-        $newFilename = '';
-
-        if(count($resultSet) > 0 && count($resultSet) < 2){
-            $result = array_pop($resultSet);
-            $filename = $result['batch_indicators']['filename'];
-            $reportId = $result['batch_indicators']['report_id'];
-        }
-
-        $tmpPathEmpty = empty($file['tmp_name']);
-        $validXml = false;
-
-        if(!$tmpPathEmpty){
-            $validXml = $this->validateXml($file['tmp_name'],WWW_ROOT.DS.'indicator.xsd');
-            $this->removeFile($filename, $path);
-
-            $newFile = $this->saveFile($file['tmp_name'], $path);
-            $newFilename = ($newFile)? "{$newFile->name()}.{$newFile->ext()}": '';
-
-        }
-
-        if(!$tmpPathEmpty && !$validXml){
-            $status['msg'] =__('Invalid Xml Format.');
-            $status['type'] = 0;
-
-        }else{
-            // add to batch_indicators table
-            $sql = sprintf("UPDATE `batch_indicators` SET `name`= '%s', `short_name` = '%s', `metadata` = '%s', `filename` = '%s', `modified_user_id` = '%s', `modified` = '%s' WHERE `id` = %s;",
-                Sanitize::escape($name),
-                Sanitize::escape($name),
-                Sanitize::escape($description),
-                Sanitize::escape(empty($newFilename)?$filename:$newFilename),
-                $this->Auth->user('id'),
-                $this->DateTime->dateAsSql(time()),
-                Sanitize::escape($id));
-//                    echo $sql;
-            $datasource->query($sql);
-
-            // add to reports table
-            $sql = sprintf("UPDATE `reports` SET `name` = '%s', `description` = '%s' , `modified_user_id` = '%s', `modified` = '%s' WHERE `id` = %s;",
-                Sanitize::escape($name),
-                Sanitize::escape($description),
-                $this->Auth->user('id'),
-                $this->DateTime->dateAsSql(time()),
-                Sanitize::escape($reportId));
-//                    echo $sql;
-            $datasource->query($sql);
-
-            $status['msg'] =__('Edit Successful.');
-            $status['type'] = 1;
-        }
-
-        return $status;
-
-    }
-
-    private function deleteCustomReport($id, $datasource){ // not tested
-        $path = Configure::read('xml.indicators.custom.path');
-        $status = array('msg' => __('Upload Unsuccessful'), 'type' => 0);
-
-        $sql = sprintf("Select `filename` FROM `batch_indicators` WHERE `id` = %s;",
-            Sanitize::escape($id));
-        $resultSet = $datasource->query($sql);
-        $filename = '';
-
-        if(count($resultSet) > 0 && count($resultSet) < 2){
-            $result = array_pop($resultSet);
-            $filename = $result['batch_indicators']['filename'];
-        }
-
-
-        if(!empty($filename) && $this->removeFile($filename, $path)){
-            // add to batch_indicators table
-            $sql = sprintf("DELETE FROM `batch_indicators` WHERE `id` = %s;",
-                Sanitize::escape($id));
-//                    echo $sql;
-            $datasource->query($sql);
-
-            // add to reports table
-            $sql = sprintf("DELETE FROM `reports` WHERE `id` = %s;",
-                Sanitize::escape($id));
-//                    echo $sql;
-            $datasource->query($sql);
-
-            $status['msg'] =__('Successful delete.');
-            $status['type'] = 1;
-        }else{
-            $status['msg'] =__('Unsuccessful deletion.');
-            $status['type'] = 0;
-        }
-        return $status;
-    }
-
-    private function validateCustomReport(){
-
-    }
-
-    private function validateFileFormat($file){
-
-        $isValid = false;
-        if($file['type'] == 'text/xml'){
-            $isValid = true;
-        }
-
-        return $isValid;
-    }
-
-    private function validateXml($filePath, $schemaPath){
-
-        $isValid = false;
-        $dom = new DOMDocument;
-
-        @$dom->Load($filePath);
-
-        if (@$dom->schemaValidate($schemaPath)) {
-            $isValid = true;
-        }
-
-        return $isValid;
-    }
-
-    private function saveFile($FilePath, $path){
-        $file = new File($FilePath);
-        $newFilename = 'user_'.time().'.xml';
-        $fullpath = $path.DS.$newFilename;
-
-        return (fileExistsInPath($FilePath) && $file->copy($fullpath))? new File($fullpath) :false;
-    }
-
-    private function removeFile($filename, $path){
-        $currentFile = new File($path.DS.$filename);
-        return $currentFile->delete();
-    }
-
-	public function CustomDownload(){}
 	public function DataQuality(){}
 	public function DataQualityDownload(){}
 	
@@ -632,6 +389,7 @@ class ReportsController extends ReportsAppController {
                     'table' => 'institution_site_localities',
                     'alias' => 'InstitutionSiteLocality',
                     'type' => 'LEFT',
+
                     'conditions' => array(
                         'InstitutionSiteLocality.id = InstitutionSite.institution_site_locality_id'
                     )
@@ -1169,6 +927,7 @@ class ReportsController extends ReportsAppController {
                 array_push($formattedArray,  __(Inflector::humanize(Inflector::underscore(implode(' ',$translatedArray)))));
             }
         }
+
 
         return implode(',',$formattedArray);
     }
