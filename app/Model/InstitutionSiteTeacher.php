@@ -156,7 +156,9 @@ class InstitutionSiteTeacher extends AppModel {
     }
 	
 	// Used by institution site classes
-	public function getTeacherSelectList($year, $institutionSiteId) {
+	public function getTeacherSelectList($year, $institutionSiteId, $classId) {
+        $InstitutionSiteClassTeacher = ClassRegistry::init('$InstitutionSiteClassTeacher');
+        $teachersExclude = $InstitutionSiteClassTeacher->getTeachers($classId);
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 
