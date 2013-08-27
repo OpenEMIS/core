@@ -101,7 +101,7 @@ class TeachersController extends TeachersAppController {
         $fieldordername = ($this->Session->read('Search.orderTeacher'))?$this->Session->read('Search.orderTeacher'):'Teacher.first_name';
         $fieldorderdir = ($this->Session->read('Search.sortdirTeacher'))?$this->Session->read('Search.sortdirTeacher'):'asc';
 		
-		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStudent'));
+		$searchKey = stripslashes($this->Session->read('Search.SearchFieldTeacher'));
 		$conditions = array(
 			'SearchKey' => $searchKey, 
 			'AdvancedSearch' => $this->Session->check('Teacher.AdvancedSearch') ? $this->Session->read('Teacher.AdvancedSearch') : null,
