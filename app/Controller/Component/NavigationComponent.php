@@ -170,7 +170,7 @@ class NavigationComponent extends Component {
 		$links = array(
 			array(
 				array(
-					$this->createLink('List of Institutions', 'Institutions', 'index', 'index$'),
+					$this->createLink('List of Institutions', 'Institutions', 'index', 'index$|advanced'),
 					$this->createLink('Add new Institution', 'Institutions', 'add', 'add$')
 				)
 			),

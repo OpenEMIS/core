@@ -26,7 +26,7 @@ class StudentsNavigationComponent extends Component {
 		$links = array(
 			array(
 				array(
-					$navigation->createLink('List of Students', $controller, 'index', 'index$'),
+					$navigation->createLink('List of Students', $controller, 'index', 'index$|advanced'),
 					$navigation->createLink('Add new Student', $controller, 'add', 'add$')
 				)
 			),
