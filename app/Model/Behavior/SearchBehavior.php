@@ -240,10 +240,10 @@ class SearchBehavior extends ModelBehavior {
 			$conditions['OR'] = array(
 				$class . '.first_name LIKE' => $search,
 				$class . '.last_name LIKE' => $search,
-				$class . '.code LIKE' => $search,
+				$class . '.identification_no LIKE' => $search,
 				$class . 'History.first_name LIKE' => $search,
 				$class . 'History.last_name LIKE' => $search,
-				$class . 'History.code LIKE' => $search
+				$class . 'History.identification_no LIKE' => $search
 			);
 		}
 		return $conditions;
