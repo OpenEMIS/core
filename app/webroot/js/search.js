@@ -39,18 +39,38 @@ var objSearch = {
 			$('[order]').attr('class','icon_sort_up')
 			if(sort == 'desc') $(this).attr('class', 'icon_sort_down');
 			else $(this).attr('class', 'icon_sort_up');
+			
+			var maskId;
 			$.ajax({ 
 				type: "post",
 				url: getRootURL() + $(this).closest('.table_head').attr('url'),
-				data: {order:order,sortdir : sort}, 
+				data: {order:order,sortdir : sort},
+				beforeSend: function (jqXHR) {
+					maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSorting});
+				},
 				success: function(data){
-					$('#mainlist').html(data).promise().done(function(){
-						objSearch.attachSortOrder();
-						jsTable.attachHoverOnClickEvent();
-					});
-					
+					var callback = function() {
+						$('#mainlist').html(data).promise().done(function(){
+							objSearch.attachSortOrder();
+							jsTable.attachHoverOnClickEvent();
+						});
+					};
+					$.unmask({id: maskId, callback: callback});
 				}
 			});
+		});
+	},
+	
+	attachAutoComplete: function() {
+		// advanced search
+		$("#area").autocomplete({
+			source: "advanced",
+			minLength: 2,
+			select: function(event, ui) {
+				$('#area').val(ui.item.label);
+				$('#area_id').val(ui.item.value);
+				return false;
+			}
 		});
 	},
 	
