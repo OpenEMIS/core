@@ -3,8 +3,9 @@
 }
 
 .body_content_right {
-	min-width: 700px;
-	margin:0 10px 0 230px;
+	float: left;
+	width: 700px;
+	margin-left: 5px;
 }
 
 .body_content_right h1 {
