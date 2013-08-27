@@ -14,12 +14,11 @@ echo $this->Html->script('area', false);
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'index'), array('class' => 'divider', 'id'=>'edit'));
 		}
-		/*if($_view_levels) {
-			echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
-		}*/
 		?>
 	</h1>
+	<?php echo $this->element('alert'); ?>
 	<?php echo $this->element('area_categories'); ?>
+    <?php if(count($topArea)>1){ ?>
 	<?php
 	echo $this->Form->create('Area', array(
 			'url' => array(
@@ -30,38 +29,12 @@ echo $this->Html->script('area', false);
             'inputDefaults' => array('label' => false, 'div' =>false)
 		)
 	);
-
 	?>
+	<input id="selectedArea" type="hidden" value="1" name="selectedArea"></input>
 	<fieldset id="area_section_group" class="section_group">
-		<legend><?php echo __('Area'); ?></legend>
-		<?php
-            $ctr = 0;
-            if(isset($levels)){
-                $firstElement = reset($levels);
-                $lastElement = array_pop($levels);
-                foreach($levels as $levelid => $levelName){
-                    
-                    echo '<div class="row input">
-                                <div class="label'. ((!isset($highestLevel[$ctr]))?' disabled':'') .'">'.$levelName.'</div>'.
-                                //'<div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
-                                '<div class="value">'. 
-	                                $this->Form->select(
-                						'area_level_'.$ctr,
-                						/*($ctr == 0)*/(isset($highestLevel[$ctr]))?$highestLevel[$ctr]:array(''=>__('--Select--')),
-                						array('class' => 'default', 'disabled' => (!isset($highestLevel[$ctr]))?true:false, 'empty' => (!isset($highestLevel[$ctr]))?true:false)
-                						//array('disabled' => ($levelName != $firstElement)?true:false), 'empty' => /*($levelName != $firstElement)?true:*/false)
-            						).
-                                '</div>
-                            </div>';
-                    $ctr++;
-                }
-            }
-        ?>
-
-
-		
+		<legend id="area"><?php echo __('Area'); ?></legend>
+		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
 	</fieldset>
-
 	<?php echo $this->Form->end(); ?>
 
 	<fieldset id="data_section_group" class="section_group">
@@ -80,35 +53,36 @@ echo $this->Html->script('area', false);
 			</div>
 		</div>
 	</fieldset>
+	<script type="text/javascript">
+    $(document).ready(function () {
+    	$('#edit').click(function(event){
+    		event.preventDefault();
+    		var form = $('form').attr('action', getRootURL() + 'Areas/edit');
+    		$('form').submit();
+    	});
+
+    	<?php if(isset($initAreaSelection) && count($initAreaSelection) > 0){ ?>
+    	areas.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
+    	var currentSelect;
+    	for(var key in areas.initAreaSelection){
+    		currentSelect = $('select[name*="['+key+']"]');
+    		areas.parentAreaIds.push(parseInt(areas.initAreaSelection[key]));
+    		currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).attr('selected','selected');
+    		//$('select[name*="['+key+']"]').find($('option[value="'+areas.initAreaSelection[key]+'"]')).attr('selected','selected').trigger('change');
+    	}
+
+    	currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).trigger('change');
+    	<?php }else{?>
+    	    areas.fetchData();
+    	<?php } ?>
+    });
+    </script>
+    <?php } ?>
 </div>
 
 
 
-<script type="text/javascript">
-$(document).ready(function () {
-	$('#edit').click(function(event){
-		event.preventDefault();
-		var form = $('form').attr('action', getRootURL() + 'Areas/edit');
-		$('form').submit();
-	});
 
-	<?php if(isset($initAreaSelection) && count($initAreaSelection) > 0){ ?>
-	areas.initAreaSelection = <?php echo json_encode($initAreaSelection); ?>;
-	var currentSelect;
-	for(var key in areas.initAreaSelection){
-		currentSelect = $('select[name*="['+key+']"]');
-		areas.parentAreaIds.push(parseInt(areas.initAreaSelection[key]));
-		currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).attr('selected','selected');
-		//$('select[name*="['+key+']"]').find($('option[value="'+areas.initAreaSelection[key]+'"]')).attr('selected','selected').trigger('change');
-	}
 
-	currentSelect.find($('option[value="'+areas.initAreaSelection[key]+'"]')).trigger('change');	
-	<?php }else{?>
-
-	areas.fetchData();
-	<?php } ?>
-});
-
-</script>
 	
 	

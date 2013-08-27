@@ -27,13 +27,15 @@ class IndicatorShell extends AppShell {
     public function _welcome() {}
 	
     public function run() {
-		if(sizeof($this->args) == 2) {
+		if(sizeof($this->args) == 3) {
 			$processId = $this->args[0];
 			$format = $this->args[1];
+            $indicators = $this->args[2];
 			
 			try {
 				$this->BatchProcess->start($processId);
 				$settings = array();
+                $settings['indicatorIds'] = $indicators;
 				$settings['onBeforeGenerate'] = array('callback' => array($this->BatchProcess, 'check'), 'params' => array($processId));
 				$settings['onError'] = array('callback' => array($this->BatchProcess, 'error'), 'params' => array($processId));
 				

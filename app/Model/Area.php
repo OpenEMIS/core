@@ -17,6 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class Area extends AppModel {
+	public $actsAs = array('Tree');
+	
 	public $validate = array(
 		'code' => array(
 			'notEmpty' => array(
@@ -39,6 +41,40 @@ class Area extends AppModel {
 	);
 	
 	public $belongsTo = array('AreaLevel');
+	
+	public function autocomplete($search) {
+		$search = sprintf('%%%s%%', $search);
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('Area.id', 'Area.code', 'Area.name', 'AreaLevel.name'),
+			'joins' => array(
+				array(
+					'table' => 'area_levels',
+					'alias' => 'AreaLevel',
+					'conditions' => array('AreaLevel.id = Area.area_level_id')
+				)
+			),
+			'conditions' => array(
+				'OR' => array(
+					'Area.name LIKE' => $search,
+					'Area.code LIKE' => $search,
+					'AreaLevel.name LIKE' => $search
+				)
+			),
+			'order' => array('AreaLevel.level', 'Area.order')
+		));
+		
+		$data = array();
+		foreach($list as $obj) {
+			$area = $obj['Area'];
+			$level = $obj['AreaLevel'];
+			$data[] = array(
+				'label' => sprintf('%s - %s (%s)', $level['name'], $area['name'], $area['code']),
+				'value' => $area['id']
+			);
+		}
+		return $data;
+	}
 
 	public function fetchSubLevelList($parentId) {
 

@@ -23,6 +23,7 @@ class TeachersController extends TeachersAppController {
     public $teacherObj;
 
     public $uses = array(
+		'Area',
         'Institution',
 		'InstitutionSite',
         'InstitutionSiteTeacher',
@@ -41,7 +42,7 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherAttendance',
         'SchoolYear',
 		'ConfigItem'
-        );
+	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -56,9 +57,10 @@ class TeachersController extends TeachersAppController {
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Teachers', array('controller' => 'Teachers', 'action' => 'index'));
-            
-        if($this->action==='index' || $this->action==='add' || $this->action==='viewTeacher') {
-            $this->bodyTitle = 'Teachers';
+        
+		$actions = array('index', 'advanced', 'add', 'viewTeacher');
+		if(in_array($this->action, $actions)) {
+			$this->bodyTitle = 'Teachers';
         } else {
             if($this->Session->check('TeacherId') && $this->action!=='Home') {
                 $this->teacherId = $this->Session->read('TeacherId');
@@ -99,22 +101,25 @@ class TeachersController extends TeachersAppController {
         $fieldordername = ($this->Session->read('Search.orderTeacher'))?$this->Session->read('Search.orderTeacher'):'Teacher.first_name';
         $fieldorderdir = ($this->Session->read('Search.sortdirTeacher'))?$this->Session->read('Search.sortdirTeacher'):'asc';
 		
-		$searchKey = stripslashes($this->Session->read('Search.SearchFieldTeacher'));
-		$conditions = array('SearchKey' => $searchKey);
-		if($this->Auth->user('super_admin')==0) {
-			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
-			$conditions['UserId'] = $this->Auth->user('id');
-		}
+		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStudent'));
+		$conditions = array(
+			'SearchKey' => $searchKey, 
+			'AdvancedSearch' => $this->Session->check('Teacher.AdvancedSearch') ? $this->Session->read('Teacher.AdvancedSearch') : null,
+			'isSuperAdmin' => $this->Auth->user('super_admin'),
+			'userId' => $this->Auth->user('id')
+		);
 		$order = array('order' => array($fieldordername => $fieldorderdir));
 		$limit = ($this->Session->read('Search.perpageTeacher')) ? $this->Session->read('Search.perpageTeacher') : 30;
         $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
 		
         $data = $this->paginate('Teacher', $conditions);
+		if(empty($searchKey) && !$this->Session->check('Teacher.AdvancedSearch')) {
+			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+				$this->redirect(array('action' => 'viewTeacher', $data[0]['Teacher']['id']));
+			}
+		}
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
-		}
-		if(empty($searchKey) && count($data)==1) {
-			$this->redirect(array('action' => 'viewTeacher', $data[0]['Teacher']['id']));
 		}
         $this->set('teachers', $data);
         $this->set('sortedcol', $fieldordername);
@@ -124,6 +129,34 @@ class TeachersController extends TeachersAppController {
             $this->render('index_records','ajax');
         }
     }
+	
+	public function advanced() {
+		$key = 'Teacher.AdvancedSearch';
+		if($this->request->is('get')) {
+			if($this->request->is('ajax')) {
+				$this->autoRender = false;
+				$search = $this->params->query['term'];
+				$result = $this->Area->autocomplete($search);
+				return json_encode($result);
+			} else {
+				$this->Navigation->addCrumb('List of Teachers', array('controller' => 'Teachers', 'action' => 'index'));
+				$this->Navigation->addCrumb('Advanced Search');
+				
+				if(isset($this->params->pass[0])) {
+					if(intval($this->params->pass[0])===0) {
+						$this->Session->delete($key);
+						$this->redirect(array('action' => 'index'));
+					}
+				}
+			}
+		} else {
+			$search = $this->data['Search'];
+			if(!empty($search)) {
+				$this->Session->write($key, $search);
+			}
+			$this->redirect(array('action' => 'index'));
+		}
+	}
 
     public function viewTeacher($id) {
         $this->Session->write('TeacherId', $id);

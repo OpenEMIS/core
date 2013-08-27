@@ -14,65 +14,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-	objInstitutionSite.addAreaSwitching();
+	objInstitutionSite.init();
 });
 
 var objInstitutionSite = {
-	onChangefunction : function(){
-		
-		
-	},
-    addAreaSwitching : function(){
-		var areatype = ['area_education','area']
-		for(p in areatype){
-			$('select[name*="['+areatype[p]+'_level_"]').each(function(l,obj){
-				$(obj).attr('areatype',areatype[p]);
-				$(obj).change(function(o){
-					var TotalAreaLevel = $('select[name*="['+$(this).attr('areatype')+'_level_"]').length;
-					var currentSelect = $(this).attr('name').replace('data[InstitutionSite]['+$(this).attr('areatype')+'_level_','');
-					currentSelect = currentSelect.replace(']','');
-					currentSelect = parseInt(currentSelect);
-					for(i=currentSelect+1;i<TotalAreaLevel;i++){
-						$('select[name=data\\[InstitutionSite\\]\\['+$(this).attr('areatype')+'_level_'+i+'\\]]').find('option').remove();
-					};
-					objInstitutionSite.fetchChildren(this);
-				});
-			});
-		}
+    init :function(){
+
     },
-	
-    fetchChildren :function (currentobj){
-        var selected = $(currentobj).val();
-        var maskId;
-        var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
-		atype=(edutype?'admin':'Area');
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+atype,
-            beforeSend: function (jqXHR) {
-				maskId = $.mask({text:i18n.General.textLoadAreas});
-            },
-            success: function (data, textStatus) {
-				//console.log(data)
-			
-				var callback = function(data) {
-						tpl = '';
-						$.each(data,function(i,o){
-							//console.log(o)
-							tpl += '<option value="'+i+'">'+data[i]+'</option>';
-						})
-						var nextselect = $(currentobj).parent().parent().next().find('select');
-						//console.log(nextselect)
-						nextselect.find('option').remove();
-						nextselect.append(tpl);
-						
-				};
-				$.unmask({ id: maskId,callback: callback(data)});
-            }
-        })
-    },
-	
 	getGradeList: function(obj) {
 		var programmeId = $(obj).val();
 		var exclude = [];
@@ -96,5 +44,19 @@ var objInstitutionSite = {
 			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper'}); },
 			success: ajaxSuccess
 		});
+	},
+	
+	positionFocusEvent: function(obj) {
+		var input = $(obj);
+		if(input.val() == input.attr('empty')) {
+			input.val('').removeClass('grey');
+		}
+	},
+	
+	positionBlurEvent: function(obj) {
+		var input = $(obj);
+		if(input.val().isEmpty()) {
+			input.val(input.attr('empty')).addClass('grey');
+		}
 	}
 }
