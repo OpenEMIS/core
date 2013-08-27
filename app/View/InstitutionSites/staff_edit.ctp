@@ -3,6 +3,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
+echo $this->Html->script('institution_site', false);
 echo $this->Html->script('institution_site_staff', false);
 ?>
 
@@ -83,6 +84,7 @@ echo $this->Html->script('institution_site_staff', false);
 					?>
 					<div class="table_cell">
 						<div class="table_cell_row"><?php echo $pos['StaffCategory']['name']; ?></div>
+						<div class="table_cell_row"><?php echo $pos['InstitutionSiteStaff']['position_no']; ?></div>
 					</div>
 					<div class="table_cell">
 						<div class="table_cell_row">
