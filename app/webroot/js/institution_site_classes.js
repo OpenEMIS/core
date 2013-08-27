@@ -24,6 +24,7 @@ var InstitutionSiteClasses = {
 		$('#classes.add .icon_plus').click(InstitutionSiteClasses.addGrade);
 		$('#classes.edit .icon_plus.students').click(InstitutionSiteClasses.addStudentRow);
 		$('#classes.edit .icon_plus.teachers').click(InstitutionSiteClasses.addTeacherRow);
+        $('#classes.edit .icon_plus.subjects').click(InstitutionSiteClasses.addSubjectRow);
 	},
 	
 	navigate: function() {
@@ -271,22 +272,18 @@ var InstitutionSiteClasses = {
 		var parent = row.closest('fieldset');
 		
 		var teacherSelect = row.find('.teacher_select');
-		var subjectSelect = row.find('.subject_select');
-		if(teacherSelect.val().isEmpty()==false && subjectSelect.val().isEmpty()==false) {
+		if(teacherSelect.val().isEmpty()==false) {
 			var teacherId = teacherSelect.val();
-			var subjectId = subjectSelect.val();
 			var teacherOption = teacherSelect.find('> option:selected');
 			
 			var maskId;
-			var ajaxParams = {teacherId: teacherId, subjectId: subjectId, action: 'add'};
+			var ajaxParams = {teacherId: teacherId, action: 'add'};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
 					if(data.type == ajaxType.success) {
 						row.attr('teacher-id', teacherId);
-						row.attr('subject-id', subjectId);
 						row.find('[attr="id"]').html(teacherOption.attr('id'));
 						row.find('[attr="name"]').html(teacherOption.attr('name'));
-						row.find('[attr="subject"]').html(subjectSelect.find('> option:selected').attr('name'));
 					} else {
 						var alertOpt = {
 							id: 'teacher_alert',
@@ -315,11 +312,9 @@ var InstitutionSiteClasses = {
 		var row = $(obj).closest('.table_row');
 		var parent = row.closest('fieldset');
 		var teacherId = row.attr('teacher-id');
-		var subjectId = row.attr('subject-id');
-		
 		if(teacherId!=0) {
 			var maskId;
-			var ajaxParams = {teacherId: teacherId, subjectId: subjectId, action: 'delete'};
+			var ajaxParams = {teacherId: teacherId, action: 'delete'};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
 					if(data.type != ajaxType.success) {
@@ -348,5 +343,125 @@ var InstitutionSiteClasses = {
 		} else {
 			jsTable.doRemove(obj);
 		}
-	}
+	},
+
+    addSubjectRow: function() {
+        var table = $(this).parent().siblings('.table').find('.table_body');
+        var parent = table.closest('fieldset');
+        var alertOpt = {
+            id: 'subject_alert',
+            parent: parent,
+            type: alertType.error,
+            position: 'center'
+        }
+
+        if($('.subject_select').length>0) {
+            alertOpt['text'] = i18n.InstitutionSites.textClassSelectTeacher;
+            $.alert(alertOpt);
+        } else {
+            var maskId;
+            var ajaxParams = {index: $('fieldset .table_row').length};
+            var ajaxSuccess = function(data, textStatus) {
+                var callback = function() {
+                    if(!$(data).hasClass('alert')) {
+                        table.append(data);
+                        jsTable.fixTable(table.parent());
+                    } else {
+                        alertOpt['type'] = $(data).attr('type');
+                        alertOpt['text'] = $(data).html();
+                        $.alert(alertOpt);
+                    }
+                };
+                $.unmask({id: maskId, callback: callback});
+            };
+            $.ajax({
+                type: 'GET',
+                dataType: 'text',
+                url: getRootURL() + $(this).attr('url'),
+                data: ajaxParams,
+                beforeSend: function (jqXHR) { maskId = $.mask({parent: parent}); },
+                success: ajaxSuccess
+            });
+        }
+    },
+
+    selectSubject: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var parent = row.closest('fieldset');
+
+        var subjectSelect = row.find('.subject_select');
+        if(subjectSelect.val().isEmpty()==false) {
+            var subjectId = subjectSelect.val();
+
+            var maskId;
+            var ajaxParams = {subjectId: subjectId, action: 'add'};
+            var ajaxSuccess = function(data, textStatus) {
+                var callback = function() {
+                    if(data.type == ajaxType.success) {
+                        row.attr('subject-id', subjectId);
+                        var str = subjectSelect.find('> option:selected').attr('name');
+                        var arr = str.split(" - ");
+                        row.find('[attr="code"]').html(arr[0]);
+                        row.find('[attr="name"]').html(arr[1]);
+                        row.find('[attr="grade"]').html(arr[2]);
+                    } else {
+                        var alertOpt = {
+                            id: 'subject_alert',
+                            parent: parent,
+                            type: alertType.error,
+                            text: data.msg,
+                            position: 'center'
+                        }
+                        $.alert(alertOpt);
+                    }
+                };
+                $.unmask({id: maskId, callback: callback});
+            };
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: getRootURL() + $(obj).closest('.table_body').attr('url'),
+                data: ajaxParams,
+                beforeSend: function (jqXHR) { maskId = $.mask({parent: parent}); },
+                success: ajaxSuccess
+            });
+        }
+    },
+
+    deleteSubject: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var parent = row.closest('fieldset');
+        var subjectId = row.attr('subject-id');
+        if(subjectId!=0) {
+            var maskId;
+            var ajaxParams = {subjectId: subjectId, action: 'delete'};
+            var ajaxSuccess = function(data, textStatus) {
+                var callback = function() {
+                    if(data.type != ajaxType.success) {
+                        var alertOpt = {
+                            id: 'subject_alert',
+                            parent: parent,
+                            type: alertType.error,
+                            text: data.msg,
+                            position: 'center'
+                        }
+                        $.alert(alertOpt);
+                    } else {
+                        jsTable.doRemove(obj);
+                    }
+                };
+                $.unmask({id: maskId, callback: callback});
+            };
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: getRootURL() + $(row).closest('.table_body').attr('url'),
+                data: ajaxParams,
+                beforeSend: function (jqXHR) { maskId = $.mask({parent: parent, text: i18n.General.textRemoving}); },
+                success: ajaxSuccess
+            });
+        } else {
+            jsTable.doRemove(obj);
+        }
+    }
 }

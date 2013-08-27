@@ -13,17 +13,6 @@
 			} ?>
 		</select>
 	</div>
-	<div class="table_cell" attr="subject">
-		<select class="subject_select full_width" onchange="InstitutionSiteClasses.selectTeacher(this)">
-			<option value="">-- <?php echo __('Select Subject'); ?> --</option>
-			<option value="0" name="<?php echo __('No Subject'); ?>">-- <?php echo __('No Subject'); ?> --</option>
-			<?php foreach($subjects as $obj) {
-			$subjectName = $obj['code'] . ' - ' . $obj['name'];
-			$option = '<option value="%d" name="%s">%s</option>';
-			echo sprintf($option, $obj['id'], $subjectName, $subjectName);
-			} ?>
-		</select>
-	</div>
 	<div class="table_cell">
 		<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteTeacher(this)', 'onDelete' => false)); ?>
 	</div>

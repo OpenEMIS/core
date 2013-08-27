@@ -108,7 +108,7 @@ class BatchShell extends AppShell {
 		}elseif($file_type == 'vcf'){
 			
 			 $this->Vcf->genVCF($settings);
-        }elseif($file_type == 'ind'){
+        }elseif($file_type == 'ind' || $file_type == 'cus'){
 
 			 $this->Ind->genIND($settings);
         }elseif($file_type == 'yearbook'){

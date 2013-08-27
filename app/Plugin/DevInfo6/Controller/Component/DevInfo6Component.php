@@ -105,6 +105,9 @@ class DevInfo6Component extends Component {
 	}
 	
 	public function export($settings=array()) {
+        $indicatorIdsString = $settings['indicatorIds'];
+        $indicatorIdsArr = explode(',', $indicatorIdsString);
+        unset($settings['indicatorIds']);
 		$_settings = array(
 			'onBeforeGenerate' => array('callback' => array(), 'params' => array()),
 			'onAfterGenerate' => array('callback' => array(), 'params' => array()),
@@ -113,8 +116,8 @@ class DevInfo6Component extends Component {
 		$_settings = array_merge($_settings, $settings);
 		
 		$indicatorList = $this->BatchIndicator->find('all', array(
-			'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.unit', 'BatchIndicator.metadata'),
-			'conditions' => array('BatchIndicator.enabled' => 1)
+			'fields' => array('BatchIndicator.id', 'BatchIndicator.name', 'BatchIndicator.unit', 'BatchIndicator.metadata', 'BatchIndicator.filename'),
+			'conditions' => array('BatchIndicator.enabled' => 1, 'BatchIndicator.id' => $indicatorIdsArr)
 		));
 		$areaList = $this->Area->find('list', array('conditions' => array('Area.visible' => 1)));
 	
@@ -138,13 +141,16 @@ class DevInfo6Component extends Component {
 						break;
 					}
 				}
-				$indicatorObj	= $indicator['BatchIndicator'];
-				$indicatorId 	= $indicatorObj['id'];
-				$indicatorName 	= $indicatorObj['name'];
-				$unitName 		= $indicatorObj['unit'];
-				$metadata 		= $indicatorObj['metadata'];
+				$indicatorObj		= $indicator['BatchIndicator'];
+				$indicatorId 		= $indicatorObj['id'];
+				$indicatorName 		= $indicatorObj['name'];
+				$indicatorFilename 	= $indicatorObj['filename'];
+				$unitName 			= $indicatorObj['unit'];
+				$metadata 			= $indicatorObj['metadata'];
 				
 				$subgroupTypes	= $this->BatchIndicatorSubgroup->getSubgroupTypes($indicatorId);
+
+				if(!isset($subgroupTypes) || empty($subgroupTypes)) $subgroupTypes = $this->getSubgroupTypefromXML($indicatorFilename);
 				$diIndicatorId 	= $this->Indicator->getPrimaryKey($indicatorName, $metadata);
 				$diUnitId 		= $this->Unit->getPrimaryKey($unitName);
 							
@@ -230,5 +236,22 @@ class DevInfo6Component extends Component {
 		
 		return $this->Logger->end();
 	}
+
+	private function getSubgroupTypefromXML($filename=""){
+		if(empty($filename)) return array(); 
+		$userIndicatorPath = Configure::read('xml.indicators.custom.path');
+		$userIndicatorPath .= $filename;
+
+		$indicatorsQueries = simplexml_load_file($userIndicatorPath);
+	    $subgroups = $indicatorsQueries->indicator->subgroups;
+	    $subgroupTypes = array();
+	    foreach ($subgroups->children() as $value) {
+	    	if(!isset($SubgroupTypes[(String)$value['type']]['order'])) $subgroupTypes[(String)$value['type']]['order'] = (String)$value['order'];
+	    	$subgroupTypes[(String)$value['type']][] = (String)$value['name'];
+	    }
+
+	    return $subgroupTypes;
+	}
+
 }
 ?>

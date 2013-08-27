@@ -73,10 +73,12 @@ class AccessControlComponent extends Component {
 	public function init($userId) {
 		$this->setUserPermissions($userId);
 		
+		/*
 		if($this->Auth->user('super_admin')==0) {
 			$this->loadAreas();
 			$this->loadInstitutions();
 		}
+		*/
 	}
 	
 	public function setUserPermissions($userId) {

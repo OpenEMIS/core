@@ -32,7 +32,8 @@ class ConfigController extends AppController {
 		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'ConfigAttachment'
-		)
+		),
+		'LDAP'
 	);
     private $imageConfig = array();
 	
@@ -556,5 +557,28 @@ class ConfigController extends AppController {
 		$this->autoRender = false;
 		$data = $this->ConfigItem->getAllCustomValidation();
 		echo json_encode($data);
+	}
+	
+	
+	public function checkLDAPconn(){
+		$this->layout = 'ajax';
+		$this->autoRender = false;
+		
+		//checkConn
+		if($this->RequestHandler->isAjax()){
+			if ($this->request->is('post')){
+				
+				$arrSettings = array(
+								'host'=>$this->data['server'],
+								'port'=>$this->data['port'],
+								'version'=>$this->data['version'],
+								'basedn'=>$this->data['basedn']
+							);
+				 echo  (($this->LDAP->checkConn($arrSettings))?'ok':'failed');
+				
+			}
+		}
+		die;
+		
 	}
 }

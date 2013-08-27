@@ -17,7 +17,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	<div class="row input" style="margin-left: 5px;">
-		<div class="label" style="width: 60px;"><?php echo __('Export To'); ?></div>
+		<div class="label" style="width: 60px;"><?php echo __('Format'); ?></div>
 		<div class="value">
 			<?php
 			echo $this->Form->input('export_format', array(
@@ -26,24 +26,32 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			?>
 		</div>
 	</div>
-	
-	<div class="table full_width" style="margin: 20px 0 0 3px;">
-		<div class="table_head">
-			<div class="table_cell cell_checkbox"><!--input type="checkbox" onchange="jsForm.toggleSelect(this);" checked="checked" /--></div>
-			<div class="table_cell"><?php echo __('Indicator'); ?></div>
-		</div>
-		
-		<div class="table_body">
-			<?php foreach($list as $item) { $obj = $item['BatchIndicator']; ?>
+			<?php foreach($list as $key => $groupItems) { ?>
+
+
+    <fieldset class="section_group">
+        <legend><?php echo ucfirst($key); ?></legend>
+        <div class="table full_width">
+            <div class="table_head">
+                <div class="table_cell cell_checkbox"><input type="checkbox" value="1" onchange="toggleSelect(this)"><!--input type="checkbox" onchange="jsForm.toggleSelect(this);" checked="checked" /--></div>
+                <div class="table_cell"><?php echo __('Indicator'); ?></div>
+            </div>
+
+            <div class="table_body">
+			<?php foreach($groupItems as $item) {
+			    $obj = $item['BatchIndicator']; ?>
+
 			<div class="table_row">
 				<div class="table_cell">
-					<?php $attr = $obj['enabled']==1 ? 'checked="checked"' : 'disabled="disabled"'; ?>
-					<input type="checkbox" name="data[BatchIndicator][<?php echo $obj['id']; ?>]" <?php echo $attr ?> disabled="disabled" />
+					<?php //$attr = $obj['enabled']==1 ? 'checked="checked"' : ''; ?>
+					<input type="checkbox" name="data[BatchIndicator][<?php echo $obj['id']; ?>]" <?php echo ($obj['enabled']==1)?'': 'disabled="disabled"'?>  value="<?php echo $obj['id']; ?>" />
 				</div>
 				<div class="table_cell"><?php echo __($obj['name']); ?></div>
 			</div>
-			<?php } ?>
+			<?php   } ?>
 		</div>
+    </fieldset>
+			<?php } ?>
 	</div>
 	
 	<div class="controls">
@@ -61,4 +69,18 @@ $(document).ready(function(){
         window.location.href = url+'/'+$(this).find('option:selected').val();
     });
 });
+
+	function toggleSelect(obj) {
+		var table = $(obj).closest('.table');
+		table.find('.table_body input[type="checkbox"]').each(function() {
+				if(obj.checked) {
+					if( $(this).attr('disabled') == undefined){
+						$(this).attr('checked','checked');
+					}
+				} else {
+					$(this).removeAttr('checked');
+				}
+		});
+	}
+
 </script>

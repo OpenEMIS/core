@@ -24,9 +24,11 @@ class StudentsController extends StudentsAppController {
     public $studentObj;
     private  $debug = false;
     public $uses = array(
+		'Area',
         'Institution',
 		'InstitutionSite',
 		'InstitutionSiteProgramme',
+        'InstitutionSiteClass',
 		'InstitutionSiteClassGradeStudent',
         'Students.Student',
         'Students.StudentHistory',
@@ -37,6 +39,7 @@ class StudentsController extends StudentsAppController {
         'Students.StudentBehaviour',
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
+        'Students.StudentAssessment',
         'SchoolYear',
 		'ConfigItem'
     );
@@ -56,10 +59,10 @@ class StudentsController extends StudentsAppController {
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Students', array('controller' => 'Students', 'action' => 'index'));
-		if($this->action==='index' || $this->action==='add' || $this->action==='viewStudent') {
+		$actions = array('index', 'advanced', 'add', 'viewStudent');
+		if(in_array($this->action, $actions)) {
 			$this->bodyTitle = 'Students';
 		} else {
-			
 			if($this->Session->check('StudentId') && $this->action!=='Home') {
 	            $this->studentId = $this->Session->read('StudentId');
 				$this->studentObj = $this->Session->read('StudentObj');
@@ -68,7 +71,6 @@ class StudentsController extends StudentsAppController {
 				$name = $studentFirstName ." ". $studentLastName;
 				$this->bodyTitle = $name;
 				$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
-				
 			} 
 		}
     }
@@ -101,21 +103,24 @@ class StudentsController extends StudentsAppController {
         $fieldorderdir = ($this->Session->read('Search.sortdirStudent'))?$this->Session->read('Search.sortdirStudent'):'asc';
 		
 		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStudent'));
-		$conditions = array('SearchKey' => $searchKey);
-		if($this->Auth->user('super_admin')==0) {
-			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
-			$conditions['UserId'] = $this->Auth->user('id');
-		}
+		$conditions = array(
+			'SearchKey' => $searchKey, 
+			'AdvancedSearch' => $this->Session->check('Student.AdvancedSearch') ? $this->Session->read('Student.AdvancedSearch') : null,
+			'isSuperAdmin' => $this->Auth->user('super_admin'),
+			'userId' => $this->Auth->user('id')
+		);
 		$order = array('order' => array($fieldordername => $fieldorderdir));
 		$limit = ($this->Session->read('Search.perpageStudent')) ? $this->Session->read('Search.perpageStudent') : 30;
         $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
 		
         $data = $this->paginate('Student', $conditions);
+		if(empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
+			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+				$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
+			}
+		}
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
-		}
-		if(empty($searchKey) && count($data)==1) {
-			$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
 		}
         $this->set('students', $data);
         $this->set('sortedcol', $fieldordername);
@@ -125,6 +130,34 @@ class StudentsController extends StudentsAppController {
             $this->render('index_records','ajax');
         }
     }
+	
+	public function advanced() {
+		$key = 'Student.AdvancedSearch';
+		if($this->request->is('get')) {
+			if($this->request->is('ajax')) {
+				$this->autoRender = false;
+				$search = $this->params->query['term'];
+				$result = $this->Area->autocomplete($search);
+				return json_encode($result);
+			} else {
+				$this->Navigation->addCrumb('List of Students', array('controller' => 'Students', 'action' => 'index'));
+				$this->Navigation->addCrumb('Advanced Search');
+				
+				if(isset($this->params->pass[0])) {
+					if(intval($this->params->pass[0])===0) {
+						$this->Session->delete($key);
+						$this->redirect(array('action' => 'index'));
+					}
+				}
+			}
+		} else {
+			$search = $this->data['Search'];
+			if(!empty($search)) {
+				$this->Session->write($key, $search);
+			}
+			$this->redirect(array('action' => 'index'));
+		}
+	}
 	
 	public function viewStudent($id) {
         $this->Session->write('StudentId', $id);
@@ -557,7 +590,44 @@ class StudentsController extends StudentsAppController {
      * @return [type] [description]
      */
     public function assessments() {
-		$this->Navigation->addCrumb('Assessment Results');
+		$this->Navigation->addCrumb('Assessments');
+        if(is_null($this->studentId)){
+            var_dump($this->name);
+            $this->redirect(array('controller' => $this->name));
+        }
+
+        $years = $this->StudentAssessment->getYears($this->studentId);
+        $programmeGrades = $this->StudentAssessment->getProgrammeGrades($this->studentId);
+
+        reset($years);
+        reset($programmeGrades);
+
+        if($this->request->isPost()){
+            $selectedYearId = $this->request->data['year'];
+            if(!$this->Session->check('Student.assessment.year')){
+                $this->Session->write('Student.assessment.year', $selectedYearId);
+            }
+            $isYearChanged = $this->Session->read('Student.assessment.year') !== $this->request->data['year'];
+
+            $programmeGrades = $this->StudentAssessment->getProgrammeGrades($this->studentId, $selectedYearId);
+            $selectedProgrammeGrade = $isYearChanged?key($programmeGrades):$this->request->data['programmeGrade'];
+
+        }else{
+            $selectedYearId = key($years);
+            $selectedProgrammeGrade = key($programmeGrades);
+        }
+
+        $data = $this->StudentAssessment->getData($this->studentId, $selectedYearId, $selectedProgrammeGrade);
+
+        if(empty($data) && empty($years) && empty($programmeGrades)) {
+            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
+
+        $this->set('years', $years);
+        $this->set('selectedYear', $selectedYearId);
+        $this->set('programmeGrades', $programmeGrades);
+        $this->set('selectedProgrammeGrade', $selectedProgrammeGrade);
+        $this->set('data', $data);
     }
 
 	private function custFieldYrInits(){
@@ -616,7 +686,15 @@ class StudentsController extends StudentsAppController {
         $yearId = $this->getAvailableYearId($yearList);
         $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 
-        $data = $this->StudentAttendance->getAttendanceData($this->Session->read('InstitutionSiteStudentId'),isset($id)? $id:$yearId);
+        $data = $this->StudentAttendance->getAttendanceData($studentId,isset($id)? $id:$yearId);
+        foreach($data as $id=>$val){
+            $class = $this->InstitutionSiteClass->getClass($data[$id]['StudentAttendance']['institution_site_class_id'],$data[$id]['StudentAttendance']['institution_site_id']);
+            $data[$id]['StudentAttendance']['name'] = $class['InstitutionSiteClass']['name'];
+        }
+
+        if(empty($data)) {
+            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
 
         $this->set('selectedYear', $yearId);
         $this->set('years', $yearList);

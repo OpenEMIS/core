@@ -48,5 +48,7 @@ fieldset.section_break#general > .profile_image {
 
 #behaviour .label {width:120px; margin-top:2px;}
 #behaviourView .label {width:120px; margin-top:2px;}
-#attendance .myyear .label { line-height: 25px;}
-#attendance .school_days .default { width: 82px; }
+#attendance .myyear .label { width:30px; line-height: 25px;}
+
+#InstitutionSchoolYearId  { width:70px; white-space: nowrap; overflow: hidden;}
+#InstitutionEducationGradeId  { width:300px; white-space: nowrap; overflow: hidden;}

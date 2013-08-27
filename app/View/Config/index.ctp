@@ -55,7 +55,8 @@ $arrOptions = array('date_format' => array(
 			<div class="table_body">
 		<?php 
 		foreach($element as $innerKey => $innerElement){ 
-				$item = $innerElement; 
+				$item = $innerElement;
+				if($item['name'] == 'test_connection') continue;
 		?>
 			<div class="table_row <?php echo ($key+1)%2==0? 'even':''; ?>">
 				<div class="table_cell cell_item_name"><?php echo __($item['label']); ?></div>
