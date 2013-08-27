@@ -310,7 +310,7 @@ class SearchBehavior extends ModelBehavior {
 		$data = array();
 		// if super admin
 		if($isSuperAdmin) {
-			$data = $this->find('all', array(
+			$data = $model->find('all', array(
 				'recursive' => -1,
 				'fields' => $fields,
 				'joins' => $this->paginateJoins($model, $joins, $conditions),
@@ -332,7 +332,7 @@ class SearchBehavior extends ModelBehavior {
 		$count = 0;
 		
 		if($isSuperAdmin) {
-			$count = $this->find('count', array(
+			$count = $model->find('count', array(
 				'recursive' => -1,
 				'joins' => $this->paginateJoins($model, $joins, $conditions),
 				'conditions' => $this->paginateConditions($model, $conditions)
