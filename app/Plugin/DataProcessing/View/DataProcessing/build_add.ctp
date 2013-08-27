@@ -1,6 +1,5 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-//echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -16,23 +15,22 @@ $ctr = 0;
             <?php echo $this->Html->link(__('View'), array('action' => 'build'), array('class' => 'divider')); ?>
         </h1>
         <?php echo $this->Form->create('Report', array('type' => 'file')); ?>
-        <!--fieldset class="section_break"-->
-            <div class="row">
-                <div class="label"><label for="name">Name</label></div>
-                <div class="value"><input id="name" class="default" name="data[name]" type="text" maxlength="150"/></div>
-            </div>
-            <div class="row">
-                <div class="label"><label for="description" >Description</label></div>
-                <div class="value"><textarea id="description" class="default" name="data[description]" cols="40" rows"7"></textarea></div>
-            </div>
-            <div class="row">
-                <div class="label"><label for="file" >File</label></div>
-                <div class="value"><input type="file" class="default" name="data[doc_file]" value="" id="doc_file"></div>
-            </div>
-        <!--/fieldset-->
+		<div class="row">
+			<div class="label"><label for="name">Name</label></div>
+			<div class="value"><input id="name" class="default" name="data[name]" type="text" maxlength="150"/></div>
+		</div>
+		<div class="row">
+			<div class="label"><label for="description" >Description</label></div>
+			<div class="value"><textarea id="description" class="default" name="data[description]" cols="40" rows"7"></textarea></div>
+		</div>
+		<div class="row">
+			<div class="label"><label for="file" >File</label></div>
+			<div class="value"><input type="file" class="default" name="data[doc_file]" value="" id="doc_file"></div>
+		</div>
         <div class="controls view_controls">
-        		<input type="submit" value="Save" class="btn_save btn_right">
-        		<a href="/demo_eugene/<?php echo $controllerName ?>/Build" class="btn_cancel btn_left">Cancel</a>	</div>
+			<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+			<?php echo $this->Html->link(__('Cancel'), array('action' => 'Build'), array('class' => 'btn_cancel btn_left')); ?>
+		</div>
         <?php echo $this->Form->end(); ?>
     </div>
 
