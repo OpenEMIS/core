@@ -238,9 +238,11 @@ class SearchBehavior extends ModelBehavior {
 		if(strlen($params['SearchKey']) != 0) {
 			$search = "%".$params['SearchKey']."%";
 			$conditions['OR'] = array(
-				$class . '.name LIKE' => $search,
+				$class . '.first_name LIKE' => $search,
+				$class . '.last_name LIKE' => $search,
 				$class . '.code LIKE' => $search,
-				$class . 'History.name LIKE' => $search,
+				$class . 'History.first_name LIKE' => $search,
+				$class . 'History.last_name LIKE' => $search,
 				$class . 'History.code LIKE' => $search
 			);
 		}
