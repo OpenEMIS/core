@@ -30,5 +30,6 @@
 span.highlight{ background-color: #fcefa1; color: #666666 !important; }
 .search_select { width: 270px; }
 .search .submit { float: left; }
-.ui-widget { font-size: 10px; }
 .advanced { line-height: 25px }
+.ui-widget { font-size: 10px; }
+.ui-menu { list-style:none; padding: 2px; margin: 0;display:block; max-height:200px; overflow:auto; }
