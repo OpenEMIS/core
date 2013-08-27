@@ -26,7 +26,7 @@ class StudentsNavigationComponent extends Component {
 		$links = array(
 			array(
 				array(
-					$navigation->createLink('List of Students', $controller, 'index', 'index$'),
+					$navigation->createLink('List of Students', $controller, 'index', 'index$|advanced'),
 					$navigation->createLink('Add new Student', $controller, 'add', 'add$')
 				)
 			),
@@ -41,8 +41,9 @@ class StudentsNavigationComponent extends Component {
 				'DETAILS' => array(
                     $navigation->createLink('Classes', $controller, 'classes'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
-                    $navigation->createLink('Behaviour', $controller, 'behaviour','behaviour|^behaviourView$')
-                )/*,
+                    $navigation->createLink('Behaviour', $controller, 'behaviour','behaviour|^behaviourView$'),
+                    $navigation->createLink('Assessments', $controller, 'assessments')
+                ),/*
 				'ASSESSMENT' => array(
 					'_controller' => $controller,
 					$this->Navigation->createLink('Assessment Results', 'assessments')

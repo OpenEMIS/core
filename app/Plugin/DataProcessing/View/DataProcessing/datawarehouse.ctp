@@ -17,12 +17,12 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	<div class="row input" style="margin-left: 5px;">
-		<div class="label" style="width: 60px;"><?php echo __('Export To'); ?></div>
+		<div class="label" style="width: 60px;"><?php echo __('Format'); ?></div>
 		<div class="value">
 			<?php
 			echo $this->Form->input('export_format', array(
 				'options' => $exportOptions,
-				'default' => 'Olap'
+				'default' => 'Datawarehouse'
 			));
 			?>
 		</div>

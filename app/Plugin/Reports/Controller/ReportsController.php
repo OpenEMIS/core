@@ -21,7 +21,7 @@ class ReportsController extends ReportsAppController {
     public $bodyTitle = 'Reports';
     public $headerSelected = 'Reports';
     public $limit = 1000;
-    
+
 
     public $uses = array(
 		'BatchProcess',
@@ -40,9 +40,15 @@ class ReportsController extends ReportsAppController {
 		'Teacher'=>array('enable'=>true),
 		'Staff'=>array('enable'=>true),
 		'Consolidated'=>array('enable'=>true),
-//		'Indicator'=>array('enable'=>true),
+		'Indicator'=>array('enable'=>true),
 		'DataQuality'=>array('enable'=>true),
-		'Custom'=>array('enable'=>true));
+//		'Custom'=>array('enable'=>false)
+    );
+
+    public $customView = array( //exclude from Index view.
+        'Indicator',
+        'Custom'
+    );
 	
     public $helpers = array('Paginator');
     public $components = array('Paginator','DateTime','Utility');
@@ -57,7 +63,7 @@ class ReportsController extends ReportsAppController {
 			if(isset($this->params['pass'][0])){
 				$this->reportList($this->params['pass'][0]);
 				$this->render('report_list');
-			}else{
+			}elseif(!in_array(ucfirst($this->action), $this->customView)){
 				$this->render('index');
 			}
 		} else if(strrpos($this->action, 'Download')!==false) {
@@ -86,8 +92,6 @@ class ReportsController extends ReportsAppController {
 	public function ConsolidatedDownload(){}
 //	public function Indicator(){}
 //	public function IndicatorDownload(){}
-	public function Custom(){}
-	public function CustomDownload(){}
 	public function DataQuality(){}
 	public function DataQualityDownload(){}
 	
@@ -134,7 +138,7 @@ class ReportsController extends ReportsAppController {
 //            $this->autoRender = false;
         App::uses('IndicatorReport', 'Lib/IndicatorReport');
 
-        $this->Navigation->addCrumb('Indicator Reports');
+//        $this->Navigation->addCrumb('Indicator Reports');
 
         $exportFormat = array(
             array(
@@ -190,6 +194,7 @@ class ReportsController extends ReportsAppController {
             $this->set('formats', $exportFormat);
             $this->set('areas', $data['areas']);
             $this->set('timeperiods', $data['timeperiods']);
+            $this->render('indicator');
 
         }
     }
@@ -793,6 +798,7 @@ class ReportsController extends ReportsAppController {
             $line .= implode(',',array_values($arrv));
             $line .= "\n";
             fputs ($this->fileFP, $line);
+
         }
 //        $line = pr($data);
 //        $line .= "\n";

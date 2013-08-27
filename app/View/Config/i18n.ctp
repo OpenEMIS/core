@@ -1,6 +1,8 @@
 var i18n = {
 	Config : {
-		InvalidUser : '<?php echo T("You have entered an invalid username or password.", true); ?>'
+		InvalidUser : '<?php echo T("You have entered an invalid username or password.", true); ?>',
+		validLDAP : '<?php echo T("Connected Successfully!"); ?>',
+		invalidLDAP : '<?php echo T("Connection Fail."); ?>'
 	},
 	Education : {
 		textAddProgramme : '<?php echo T("Add Programme", true); ?>',
@@ -14,7 +16,8 @@ var i18n = {
 		dlgOptErrorDialog : '<?php echo T("Unexpected Error"); ?>'
 	},
 	Areas : {
-		initAlertOptText : '<?php echo T("Unable to add Areas.<br/>Please create Area Level before adding Areas.", true); ?>'
+		initAlertOptText : '<?php echo T("Unable to add Areas.<br/>Please create Area Level before adding Areas.", true); ?>',
+		AreaLevelText : '<?php echo T("(Area Levels)"); ?>'
 	},
 	Attachments : {
 		maskDeleteAttachments : '<?php echo T("Deleting attachment...", true); ?>',
@@ -46,7 +49,8 @@ var i18n = {
 		textArea: '<?php echo T("Area"); ?>',
 		textProgrammeSelect: '<?php echo T("Please select a programme first.", true); ?>',
 		textClassSelectStudent: '<?php echo T("Please select a student first."); ?>',
-		textClassSelectTeacher: '<?php echo T("Please select a teacher first."); ?>'
+		textClassSelectTeacher: '<?php echo T("Please select a teacher first."); ?>',
+		textClassSelectSubject: '<?php echo T("Please select a subject first."); ?>'
 	},
 	Training : {
 		textArea: '<?php echo T("Category is required!"); ?>'
@@ -71,6 +75,7 @@ var i18n = {
 	},
 	Search: {
 		textSearching: '<?php echo T("Searching...", true); ?>',
+		textSorting: '<?php echo T("Sorting...", true); ?>',
 		textNoCriteria: '<?php echo T("Please enter a search criteria.", true); ?>',
 		textNoResult: '<?php echo T("Your search returns no result.", true); ?>'
 	},

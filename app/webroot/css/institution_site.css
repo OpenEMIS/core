@@ -13,10 +13,8 @@
 #studentBehaviourAdd .label {width:120px; margin-top:2px;}
 #studentBehaviourEdit .label {width:120px; margin-top:2px;}
 #studentBehaviourView .label {width:120px; margin-top:2px;}
-#studentAttendance .myyear .label { line-height: 25px;}
-#studentAttendanceEdit .myyear .label { line-height: 25px;}
-#studentAttendance .school_days .default { width: 82px; }
-#studentAttendanceEdit .school_days .default { width: 82px; }
+#classesAttendance .myyear .label { width: 30px; line-height: 25px;}
+#classesAttendanceEdit .myyear .label { width: 30px; line-height: 25px;}
 #classes .label { width: 60px; }
 #classes #grade_list .icon_delete { margin-top: 4px; }
 #classes .table_cell_row { margin-top: 0; margin-bottom: 5px; }
@@ -27,7 +25,7 @@
 #teachersAdd select.default, #staffAdd select.default { width: 212px; }
 #teachersAdd .icon_search, #staffAdd .icon_search { height: 22px; width: 24px; }
 #teachersAdd .section_break, #staffAdd .section_break { padding-top: 10px; }
-#teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 65px; line-height: 24px; }
+#teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 50px; line-height: 24px; }
 #teachersAttendance .myyear .label { line-height: 25px;}
 #teachersAttendanceEdit .myyear .label { line-height: 25px;}
 #teachersAttendance .school_days .default { width: 82px; }

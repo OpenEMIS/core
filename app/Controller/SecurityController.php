@@ -36,7 +36,9 @@ class SecurityController extends AppController {
 		'Staff.Staff',
 		'Students.Student'
 	);
-	
+	public $components = array(
+		'LDAP'
+	);
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->renderFooter();
@@ -78,7 +80,42 @@ class SecurityController extends AppController {
 			$username = $this->data['SecurityUser']['username'];
 			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
 			if(!$this->RequestHandler->isAjax()) {
-				if($this->Auth->login()) {
+			
+				/*
+					Requirement check for Auth Method if LDAP or LOCAL
+					if LDAP, 
+					1. check if LDAP server is up 
+					1.a If LDAP Server DOWN  use the LOCAL Authentication
+					1.b if LDAP Server UP -- Authenticate
+					1.b.1 if Failed Throw Error
+					1.b.2 if Success -- 
+						a. Fetch Username from OpenEMIS and force Login them
+				*/
+				
+				
+				if($this->ConfigItem->getValue('authentication_type') == 'LDAP'){
+					
+					$arrLdapConfig = $this->ConfigItem->getAllLDAPConfig();
+					$settings = array_merge($this->data['SecurityUser'],$arrLdapConfig);
+					$ldapverify = $this->LDAP->verifyUser($settings);
+					if($ldapverify === true){
+						$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.username' => $this->data['SecurityUser']['username'])));
+						if(count($data['SecurityUser'])>0)
+							$result = $this->Auth->login($data['SecurityUser']);
+						else{
+							$result = false;
+							$errMsg = __("LDAP user is not a valid openemis user");
+						}	
+					}else{
+						$result = false;
+						$errMsg = $ldapverify;
+					}
+				}else{
+					$result = $this->Auth->login();
+					//Error Message to be used if login false;
+					$errMsg = $this->Utility->getMessage("LOGIN_INVALID");
+				}
+				if($result) {
 					if($this->Auth->user('status') == 1) {
 						$this->log('[' . $username . '] Login successfully.', 'security');
 						$userId = AuthComponent::user('id');
@@ -91,11 +128,35 @@ class SecurityController extends AppController {
 						$this->Session->setFlash($this->Utility->getMessage("LOGIN_USER_INACTIVE"));
 					}
 				} else {
+					//$this->Session->setFlash($errMsg);
+					//Use Standard Message regardless Ldap or Local Auth accdg to Umai
 					$this->Session->setFlash($this->Utility->getMessage("LOGIN_INVALID"));
 				}
 			} else {
 				$this->autoRender = false;
-				$ajaxLoginResult = $this->Auth->login();
+				if($this->ConfigItem->getValue('authentication_type') == 'LDAP'){
+					
+					$arrLdapConfig = $this->ConfigItem->getAllLDAPConfig();
+					$settings = array_merge($this->data['SecurityUser'],$arrLdapConfig);
+					$ldapverify = $this->LDAP->verifyUser($settings);
+					if($ldapverify === true){
+						$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.username' => $this->data['SecurityUser']['username'])));
+						
+						if(count($data['SecurityUser'])>0)
+							$ajaxLoginResult = $this->Auth->login($data['SecurityUser']);
+						else{
+							$ajaxLoginResult = false;
+						}
+							
+					}else{
+						$ajaxLoginResult = false;
+					}
+					
+				}else{
+					$ajaxLoginResult = $this->Auth->login();
+					
+				}
+				//$ajaxLoginResult = $this->Auth->login();
 				if($ajaxLoginResult) {
 					$userId = AuthComponent::user('id');
 					$this->SecurityUser->updateLastLogin($userId);
@@ -108,28 +169,17 @@ class SecurityController extends AppController {
 			if(!$this->RequestHandler->isAjax()) { // normal login
 				if($this->Auth->user()) { // user already login
 					$this->redirect($this->Auth->redirect('home'));
-				}else{
-					// Check if theres a query lang then use that
-					$lang = (isset($this->request->query['lang'])) ? $this->request->query['lang'] : $this->ConfigItem->getValue('language');
-					
-					
-					// Assign the language to session and configuration
-					$this->Session->write('configItem.language', $lang);
 				}
 			} else { // ajax login
-				// Check if session still exist
-				if($this->Session->check('configItem.language')){
-					// Check if theres a query lang then use that
-					$lang = (isset($this->request->query['lang'])) ? $this->request->query['lang'] : $this->ConfigItem->getValue('language'); 
-					
-					// Assign the language to session and configuration
-					$this->Session->write('configItem.language', $lang);
-				}
-				
 				$this->set('message', $this->Utility->getMessage('LOGIN_TIMEOUT'));
 				$this->render('login_ajax');
 			}
 			// added cause need to overwrite AppController pre-assigned Session value
+            $lang = (isset($this->request->query['lang'])) ? $this->request->query['lang'] : $this->ConfigItem->getValue('language');
+
+            // Assign the language to session and configuration
+            $this->Session->write('configItem.language', $lang);
+
 			$l10n = new L10n();
 			$locale = $l10n->map($this->Session->read('configItem.language'));
 			$catalog = $l10n->catalog($locale);

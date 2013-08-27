@@ -22,7 +22,7 @@ class BatchIndicator extends DataProcessingAppModel {
 	public $exportOptions = array(
 		'DevInfo6' => 'DevInfo 6',
 		//'DevInfo7' => 'DevInfo 7',
-		'Olap' => 'OLAP'
+		'Datawarehouse' => 'Datawarehouse'
 		//'SDMX' => 'SDMX'
 	);
 	

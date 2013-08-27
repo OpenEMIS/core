@@ -26,7 +26,8 @@ var areas = {
     // properties
     parentAreaIds: [],
     area_levels: [],
-    currentAreaId: 0,
+    currentAreaId: 1,
+    addParent: 0,
     isEditable: false,
     baseURL: getRootURL() + 'Areas/',
 	extraParam : '',
@@ -39,25 +40,7 @@ var areas = {
 		this.addAreaSwitching();
 
         $('.link_add').click(function() {
-            if( $("#area_section_group .input").length < 1 ){
-                var alertOpt = {
-                    // id: 'alert-' + new Date().getTime(),
-                    parent: 'body',
-                    title: i18n.General.textDismiss,
-                    text: '<div style=\"text-align:center;\">' + i18n.Areas.initAlertOptText +'</div>',
-                    type: alertType.warn, // alertType.info or alertType.warn or alertType.error
-                    position: 'top',
-                    css: {}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
-                    autoFadeOut: true
-                };
-
-                $.alert(alertOpt);
-                
-            }else{
-                areas.addRow();
-                
-            }
-
+            areas.addRow();
         });
 
         $('.link_add_area_level').click(function(event) {
@@ -73,196 +56,181 @@ var areas = {
         $('#'+id).show();
     },
     addAreaSwitching : function(){
-		
         var saveBtn = $('.btn_save');
-        $('select[name*="[area_level_"]').each(function(i, obj){
-            $(obj).change(function (d, o){
-				
-                var TotalAreaLevel = $('select[name*="[area_level_"]').length;
-                var isAreaLevelForInput = $(this).parent().parent().parent().attr('id');
-                var currentSelctedOptionValue = parseInt($(this).find(':selected').val());
-                var currentSelctedOptionTitle = $(this).find(':selected').html();
-				var Model = $(this).closest('form').attr('model');
-				
-                var currentSelect = $(this).attr('name').replace('data['+Model+'][area_level_','');
+        var myAreaArr = ["area_level","area_education_level"];
+        for (var i = 0; i < myAreaArr.length; i++) {
+            $('select[name*="['+myAreaArr[i]+'_"]').each(function(i, obj){
+                $(obj).change(function (d, o){
+                    var TotalAreaLevel = $('select[name*="['+myAreaArr[i]+'_"]').length;
+                    var isAreaLevelForInput = $(this).parent().parent().parent().attr('id');
+                    var currentSelctedOptionValue = parseInt($(this).find(':selected').val());
+                    var currentSelctedOptionTitle = $(this).find(':selected').html();
+                    var Model = $(this).closest('form').attr('model');
 
-                currentSelect = currentSelect.replace(']','');
-                currentSelect = parseInt(currentSelect);
+                    var currentSelect = $(this).attr('name').replace('data['+Model+']['+myAreaArr[i]+'_','');
 
-                if(isAreaLevelForInput !== undefined && isAreaLevelForInput.match(/input/gi)){
-                    isAreaLevelForInput = true;
-                }else {
-                    isAreaLevelForInput = false;
-                }
-				
-                if(isAreaLevelForInput){
-                    for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
-                        //disable the select element
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
+                    currentSelect = currentSelect.replace(']','');
+                    currentSelect = parseInt(currentSelect);
 
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class=input_area_level_selector]').find('option').remove();
+                    if(isAreaLevelForInput !== undefined && isAreaLevelForInput.match(/input/gi)){
+                        isAreaLevelForInput = true;
+                    }else {
+                        isAreaLevelForInput = false;
                     }
-				}else {
-                    for (var i = currentSelect+1; i < TotalAreaLevel; i++) {
-                        //disable the select element
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').attr('disabled','disabled');
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').parent().parent().find('.label').addClass('disabled');
-                        $('select[name=data\\['+Model+'\\]\\[area_level_'+i+'\\]][class!=input_area_level_selector]').find('option').remove();
+
+                    if(currentSelctedOptionValue > 0 ){
+                        areas.parentAreaIds[currentSelect] = currentSelctedOptionValue;//areas.currentAreaId;
+                    }else{
+                        areas.parentAreaIds.splice(currentSelect, areas.parentAreaIds.length - currentSelect);
                     }
-				}
 
-                if(currentSelctedOptionValue > 0 ){
-                    areas.parentAreaIds[currentSelect] = currentSelctedOptionValue;//areas.currentAreaId;
-                }else{
-                    areas.parentAreaIds.splice(currentSelect, areas.parentAreaIds.length - currentSelect);
-                }
+                    areas.currentAreaId = currentSelctedOptionValue;
 
-                areas.currentAreaId = currentSelctedOptionValue;
+                    areas.renderLegendText($(this).find('option[value="'+currentSelctedOptionValue+'"]').html()); //render legend Label
 
-                areas.renderLegendText($(this).find('option[value="'+currentSelctedOptionValue+'"]').html()); //render legend Label
-                
-                if(currentSelctedOptionValue >= 0 && !isAreaLevelForInput && areas.parentAreaIds.length > 0 ) {
-                    areas.fetchData(this);
-                }else if(!isAreaLevelForInput){
-                    areas.fetchData();
-                    $('.table_body').html('');
-                    $('.table_foot .cell_value').html(0);
-                }else{
-                    $('.table_view').html('');
-                    $('.table_foot .cell_value').html(0);
-                }
-
-                if(((currentSelect === 0 && currentSelctedOptionValue > 0) || (currentSelect !== 0 && currentSelctedOptionValue > 1))){
-                    areas.fetchChildren(this);
-                }
-
-                if( currentSelect === 0 && currentSelctedOptionValue === 0){
-                    $('.table_view').hide();
-                    if(!saveBtn.hasClass('btn_disabled')){
-                        saveBtn.addClass('btn_disabled');
+                    if(currentSelctedOptionValue >= 0 && !isAreaLevelForInput && areas.parentAreaIds.length > 0 ) {
+                        areas.fetchData(this);
+                    }else if(!isAreaLevelForInput){
+                        areas.fetchData();
+                        $('.table_body').html('');
+                        $('.table_foot .cell_value').html(0);
+                    }else{
+                        $('.table_view').html('');
+                        $('.table_foot .cell_value').html(0);
                     }
-                    //$('.table_body').show();
-                }
 
+                    if(((currentSelect === 0 && currentSelctedOptionValue > 0) || (currentSelect !== 0 && currentSelctedOptionValue > 1))){
+                        jsForm.getAreaChildren(this);
+                    }else{
+                        var myselect = $(this).parent().parent().find('select');
+                        var myLabel = myselect.parent().parent().find('.label');
+                        myLabel.show();
+                        var nextSelect = myselect.parent().parent().next().find('select');
+                        //var nextRow = myselect.parent().parent().next('.row');
+
+                        do{
+                            nextSelect.parent().parent().hide();
+                            nextSelect.find('option').remove();
+                            nextSelect = nextSelect.parent().parent().next().find('select');
+                        }while(nextSelect.length>0)
+                        myLabel.html(i18n.Areas.AreaLevelText);
+                    }
+
+                    if( currentSelect === 0 && currentSelctedOptionValue === 0){
+                        $('.table_view').hide();
+                        if(!saveBtn.hasClass('btn_disabled')){
+                            saveBtn.addClass('btn_disabled');
+                        }
+                        //$('.table_body').show();
+                    }
+                });
             });
-        });
-    },
-    fetchChildren :function (currentobj){
-        
-        var selected = $(currentobj).val();
-        var maskId;
-        var url =  areas.baseURL +'viewAreaChildren/'+selected+'/'+areas.extraParam;
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            url: url,
-            beforeSend: function (jqXHR) {
-                    // maskId = $.mask({parent: '.content_wrapper'});
-                    maskId = $.mask({parent: '#area_section_group', text: i18n.General.textLoadAreas});
-            },
-            success: function (data, textStatus) {
-                
-                    var callback = function(data) {
-                            tpl = '';
-                            var nextselect = $(currentobj).parent().parent().next().find('select');
-                            var nextLabel = nextselect.parent().parent().find('.label');
-                            //data[1] += nextLabel.text().toUpperCase(); // Add "ALL <text>" option in the select element
-                            $.each(data,function(i,o){
-                                tpl += '<option value="'+i+'">'+o+'</option>';
-                            });
-                            nextLabel.removeClass('disabled');
-                            nextselect.find('option').remove();
-                            nextselect.removeAttr('disabled');
-                            nextselect.append(tpl);
-                            
-                    };
-                    $.unmask({ id: maskId,callback: callback(data)});
-            }
-
-        });
+        }
     },
     fetchData: function(currentObject){
         // init values
         var selectedValue = areas.currentAreaId;
+        var hasOptions = 0;
+        var edutype = "education";
+        $('#area_section_group').each(function(index) {
+            var nextrow = $(this).find('.row');
+            var myselect = nextrow.find('select');
+            do{
+                lastOptionChosen = 0;
+                if(nextrow.is(":visible")){
+                    if(myselect.val()>0){
+                        selectedValue = myselect.val();
+                    }
+                    hasOptions = 1;
+                }
+                myselect = myselect.parent().parent().next().find('select');
+                nextrow = myselect.parent().parent();
+            }while(myselect.length>0)
+        });
         var parentAreaIds = areas.parentAreaIds[areas.parentAreaIds.length - 1 ];
         var saveBtn = $('.btn_save');
         // if object exist update with later value
         if(currentObject !== undefined){
-            selectedValue = $(currentObject).val();
+            //selectedValue = $(currentObject).val();
             parentAreaIds = areas.parentAreaIds[areas.parentAreaIds.length - 1 ];
         }
-
         var maskId;
-        var url =  areas.baseURL +'viewData/';
-
-        if(parseInt(selectedValue) > 0 ){
-            url += selectedValue;
-        }else if(typeof parentAreaIds !== "undefined" && parseInt(parentAreaIds) !== 0){
-            url += parentAreaIds;
-        }
+        var url =  areas.baseURL +'viewData/' + selectedValue;
 		var Model = ($('form').attr('model'));
 		areas.extraParam = Model;
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            url: url+'/'+areas.extraParam,
-            beforeSend: function (jqXHR) {
-
-                maskId = $.mask({parent: '#data_section_group'});
-
-            },
-            success: function (data, textStatus) {
-                var callback = function() {
-                    var tpl = '';
-                    var tableBody = $('.table .table_body');
-
-                    if((data !== 'false' && data !== false) /*&& data.length > 0 */){
-
-                        if(areas.isEditable === true){
-
-                            if('area_levels' in data){
-                                areas.area_levels =  data.area_levels;
-                            }
-
-                                    tableBody = $('.table_view');
-                                    // tableBody = $('#mainlist .table_view');
-                                    tpl += areas.renderRecordToHtmlTableRowForEdit(data.data);//'<option value="'+i+'">'+data[i]+'</option>';
-                                    // console.info(tpl);
-                                    //$.each(data,function(i,o){
-                                            //tpl += areas.renderRecordToHtmlTableRowForEdit(data[i], ((i+1)%2 === 0)? true:false);//'<option value="'+i+'">'+data[i]+'</option>';
-                                    //});
-                                    if(data.length > 0){
-                                        $('.btn_save').removeClass('btn_disabled');
-                                    }else{
-                                        $('.btn_save').addClass('btn_disabled');
-                                    }
+        if(areas.extraParam=="Area"){
+           edutype = "area";
+        }
+        $.when(
+            $.ajax({
+                type: "GET",
+                url: getRootURL() +'/Areas/checkLowestLevel/'+selectedValue+'/'+edutype,
+                success: function (data) {
+                    if(data=='true'){
+                        $('#data_section_group').hide();
+                    }else{
+                        $('#data_section_group').show();
+                    }
+                }
+            })
+        ).then(function() {
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: url+'/'+areas.extraParam,
+                beforeSend: function (jqXHR) {
+                    maskId = $.mask({parent: '#data_section_group'});
+                },
+                success: function (data, textStatus) {
+                    var callback = function() {
+                        var tpl = '';
+                        var tableBody = $('.table .table_body');
+                        if((data !== 'false' && data !== false) /*&& data.length > 0 */){
+                            if(areas.isEditable === true){
+                                if('area_levels' in data){
+                                    areas.area_levels =  data.area_levels;
+                                }
+                                tableBody = $('.table_view');
+                                // tableBody = $('#mainlist .table_view');
+                                tpl += areas.renderRecordToHtmlTableRowForEdit(data.data);//'<option value="'+i+'">'+data[i]+'</option>';
+                                // console.info(tpl);
+                                //$.each(data,function(i,o){
+                                //tpl += areas.renderRecordToHtmlTableRowForEdit(data[i], ((i+1)%2 === 0)? true:false);//'<option value="'+i+'">'+data[i]+'</option>';
+                                //});
+                                if(data.length > 0){
+                                    $('.btn_save').removeClass('btn_disabled');
                                 }else{
-                                    tpl += areas.renderRecordToHtmlTableRow(data.data);
+                                    $('.btn_save').addClass('btn_disabled');
                                 }
-                                tableBody.html(tpl);
-                                if(tableBody.is(':visible') === false){
-                                    tableBody.show();
-                                }
-                                if(saveBtn.hasClass('btn_disabled')){
-                                    saveBtn.removeClass('btn_disabled');
-                                }
-                                jsList.init('.table_view');
-                                
                             }else{
-                                tableBody.html('');
-                                tableBody.hide();
-                                if(!saveBtn.hasClass('btn_disabled')){
-                                    saveBtn.addClass('btn_disabled');
-                                }
+                                tpl += areas.renderRecordToHtmlTableRow(data.data);
                             }
+                            tableBody.html(tpl);
+                            if(tableBody.is(':visible') === false){
+                                tableBody.show();
+                            }
+                            if(saveBtn.hasClass('btn_disabled')){
+                                saveBtn.removeClass('btn_disabled');
+                            }
+                            jsList.init('.table_view');
 
-                            
+                        }else{
+                            tableBody.html('');
+                            tableBody.hide();
+                            if(!saveBtn.hasClass('btn_disabled')){
+                                saveBtn.addClass('btn_disabled');
+                            }
+                        }
+                        if(hasOptions==0){
+                            areas.addParent = 1;
+                            areas.addRow();
+                        }
+
                     };
                     $.unmask({ id: maskId,callback: callback});
-            }
+                }
+            });
         });
-
     },
 
     checkEdited: function() {
@@ -501,6 +469,23 @@ var areas = {
     },
     // Render the legend of the data_section_group with selected options text
     renderLegendText: function (title) {
+        var parentId = new Array();
+        var $cnt = 0;
+        $('#area_section_group').each(function(index) {
+            var nextrow = $(this).find('.row');
+            var myselect = nextrow.find('select');
+            do{
+                if(nextrow.is(":visible")){
+                    if(myselect.val()>0){
+                        parentId[$cnt] = myselect.val();
+                        $cnt += 1;
+                    }
+                }
+                myselect = myselect.parent().parent().next().find('select');
+                nextrow = myselect.parent().parent();
+            }while(myselect.length>0)
+        });
+        areas.parentAreaIds = parentId;
     // renderLegendText: function (obj, selectedOptionId) {
         var legend = $('#data_section_group').find('legend');
         var selectedOptionId, selectedOptionTitle = '' , legendText = '';
@@ -564,8 +549,11 @@ var areas = {
             html += '<input type="hidden" name="data['+Model+']['+ i +'][order]" id="order" value="'+(i+1)/*element.order*/+'" />';
 
             html += '<input type="hidden" name="data['+Model+']['+ i +'][id]" id="id" value="'+element.id/*element.order*/+'" />';
-
-            html += '<div class="cell cell_visible">';
+                if(areas.addParent ==1){
+                    html += '<div class="cell cell_visible" style="width: 120px;">';
+                }else{
+                    html += '<div class="cell cell_visible">';
+                }
             html += '        <input type="hidden" name="data['+Model+']['+i+'][visible]" id="PostVisible_" value="0" />';
             html += '        <input type="checkbox" name="data['+Model+']['+i+'][visible]" value="1" id="PostVisible" '+((parseInt(element.visible) === 1)? 'checked="checked"':'') +'/>';
 
@@ -598,12 +586,13 @@ var areas = {
             html += '        <input name="data['+Model+']['+i+'][name]" value="'+element.name+'" type="text" id="AreaNAme">';
             html += '   </div>';
             html += '</div>';
-            
+                if(areas.addParent ==0){
             html += '<div class="cell cell_order">';
             html += '       <span class="icon_up" onclick="areas.reorder(this)"></span>';
             html += '       <span class="icon_down" onclick="areas.reorder(this)"></span>';
+                }
 
-                if(element.isNew !== undefined && element.isNew){
+                if(element.isNew !== undefined && element.isNew && areas.addParent ==0){
                     html += '                   <span class="icon_cross" onclick="areas.remove(this)"></span>';
                 }
             html += '</div>';

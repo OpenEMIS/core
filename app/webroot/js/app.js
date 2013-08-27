@@ -28,6 +28,9 @@ $(document).ready(function() {
 	jsForm.init();
 	jsTable.init();
 	jsList.init();
+    if($('html').attr('dir')=="rtl"){
+        jsForm.fixedBracket(); // This fix arabic translation brackets problem
+    }
 });
 
 var dataStorage = {};
@@ -230,54 +233,91 @@ var jsForm = {
 		var areaItemSelected=$(this);
 
 		var hiddenValue= $(this).parents().find('.areapicker_areaid').first();
-		
-		var areaItems = $(this).parent().parent().parent().find('select[name*="[area_level_"]');
-		
-		areaItems.reverse().each(function(index) {
-			if (areaItemSelected.is($(this))){
-				var tmpVal=$(this).val();
-				if (tmpVal != 0 && !!tmpVal) {
-					hiddenValue.val(tmpVal);
-				}
-				jsForm.getAreaChildren(this);
-				return false;
-			} else {
-				//for some reason , some options drop down have "--selected" and some not . flush all options and re-add
-				$(this).find('option').remove(); 
-				$(this).append($('<option>', {value: 0,text: '--Select--'}));
-			}
-		});
+		var myAreaArr = ["area_level","area_education_level"];
+        for (var i = 0; i < myAreaArr.length; i++) {
+            var areaItems = $(this).parent().parent().parent().find('select[name*="['+myAreaArr[i]+'_"]');
+            areaItems.reverse().each(function(index) {
+                if (areaItemSelected.is($(this))){
+                    var tmpVal=$(this).val();
+                    if (tmpVal != 0 && !!tmpVal) {
+                        hiddenValue.val(tmpVal);
+                    }
+                    jsForm.getAreaChildren(this);
+                    return false;
+                } else {
+                    //for some reason , some options drop down have "--selected" and some not . flush all options and re-add
+                    $(this).find('option').remove();
+                    $(this).append($('<option>', {value: 0,text: '--Select--'}));
+                }
+            });
+        }
 	},
 	
 	getAreaChildren :function (currentobj){
         var selected = $(currentobj).val();
-
         var edutype = $(currentobj).closest('fieldset').find('legend').attr('id');
-
-        atype=(edutype?'admin':'Area');
         var maskId;
-        $.ajax({
-            type: 'GET',
-            dataType: 'json',
-            url: getRootURL()+'/Areas/viewAreaChildren/'+selected+'/'+atype,
-            beforeSend: function (jqXHR) {
-                    maskId = $.mask({text:i18n.General.textLoadAreas});
-            },
-            success: function (data, textStatus) {
+        var url =  getRootURL() +'/Areas/viewAreaChildren/'+selected+'/'+edutype;
+        var level = '&nbsp;&nbsp;';
+        $.when(
+            $.ajax({
+                type: "GET",
+                url: getRootURL() +'/Areas/getAreaLevel/'+selected+'/'+edutype,
+                success: function (data) {
+                    level = data;
+                    var myselect = $(currentobj).parent().parent().find('select');
+                    var myLabel = myselect.parent().parent().find('.label');
+                    myLabel.show();
+                    if(level=='&nbsp;&nbsp;'){
+                        myLabel.html(i18n.Areas.AreaLevelText);
+                    }else{
+                        myLabel.html(level);
+                    }
+                }
+            })
+        ).then(function() {
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: url,
+                beforeSend: function (jqXHR) {
+                    // maskId = $.mask({parent: '.content_wrapper'});
+                    maskId = $.mask({parent: '#area_section_group', text: i18n.General.textLoadAreas});
+                },
+                success: function (data, textStatus) {
                     var callback = function(data) {
-                            tpl = '';
-                            $.each(data,function(i,o){
-                                tpl += '<option value="'+i+'">'+data[i]+'</option>';
-                            })
-                            var nextselect = $(currentobj).parent().parent().next().find('select');
+                        tpl = '';
+                        var nextselect = $(currentobj).parent().parent().next().find('select');
+                        var nextLabel = nextselect.parent().parent().find('.label');
+                        var nextrow = $(currentobj).parent().parent().next('.row');
+                        //data[1] += nextLabel.text().toUpperCase(); // Add "ALL <text>" option in the select element
+                        var counter = 0;
+                        $.each(data,function(i,o){
+                            tpl += '<option value="'+i+'">'+o+'</option>';
+                            counter +=1;
+                        });
+                        if(level=='&nbsp;&nbsp;' || counter <2){
+                            nextrow.hide();
+                        }else{
+                            nextrow.show();
+                            nextLabel.removeClass('disabled');
+                            nextLabel.html(i18n.Areas.AreaLevelText);
                             nextselect.find('option').remove();
+                            nextselect.removeAttr('disabled');
                             nextselect.append(tpl);
+                        }
+                        var myselect = nextselect.parent().parent().next().find('select');
+                        do{
+                            myselect.parent().parent().hide();
+                            myselect = myselect.parent().parent().next().find('select');
+                        }while(myselect.length>0)
                     };
                     $.unmask({ id: maskId,callback: callback(data)});
-            }
-        })
+                }
+            });
+        });
     },
-	
+
 	updateDatepickerValue: function(parent, date) {
 		var day = date.getDate();
 		var mth = date.getMonth()+1;
@@ -364,7 +404,12 @@ var jsForm = {
 	
 	isSubmitDisabled: function(form) {
 		return !$(form).find('input[type="submit"]').hasClass('btn_disabled');
-	}
+	},
+
+    fixedBracket: function(){
+        var replaced = $("body").html().replace(/\)/g,')&#x200E;');
+        $("body").html(replaced);
+    }
 };
 
 var jsTable = {
@@ -664,3 +709,5 @@ var utils = {
 		w.print();
 	}
 }
+
+

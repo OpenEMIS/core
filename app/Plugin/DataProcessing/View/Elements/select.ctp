@@ -2,7 +2,8 @@
 $arrMap = array(
 	'genReports'=>'Reports',
 	'genIndicators'=>'Indicators',
-	'genEstimates'=>'Estimates'
+	'genEstimates'=>'Estimates',
+	'genCustoms'=>'Custom'
 );
 ?>
 <div style="margin-bottom: 10px;">

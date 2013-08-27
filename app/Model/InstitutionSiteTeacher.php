@@ -17,14 +17,40 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteTeacher extends AppModel {
-	public function checkEmployment($institutionSiteId, $teacherId) {
-		$count = $this->find('count', array(
+	public function isPositionNumberExists($positionNo, $startDate) {
+		$this->formatResult = true;
+		$data = $this->find('first', array(
+			'fields' => array(
+				'Teacher.first_name AS first_name', 'Teacher.last_name AS last_name',
+				'Institution.name AS institution_name', 'InstitutionSite.name AS institution_site_name'
+			),
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'teachers',
+					'alias' => 'Teacher',
+					'conditions' => array('Teacher.id = InstitutionSiteTeacher.teacher_id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array('InstitutionSite.id = InstitutionSiteTeacher.institution_site_id')
+				),
+				array(
+					'table' => 'institutions',
+					'alias' => 'Institution',
+					'conditions' => array('Institution.id = InstitutionSite.institution_id')
+				)
+			),
 			'conditions' => array(
-				'InstitutionSiteTeacher.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteTeacher.teacher_id' => $teacherId
+				'InstitutionSiteTeacher.position_no LIKE' => $positionNo,
+				'OR' => array(
+					'InstitutionSiteTeacher.end_date >' => $startDate,
+					'InstitutionSiteTeacher.end_date IS NULL'
+				)
 			)
 		));
-		return $count;
+		return $data;
 	}
 	
 	public function saveEmployment($data, $institutionSiteId, $teacherId) {
@@ -46,7 +72,8 @@ class InstitutionSiteTeacher extends AppModel {
 	
 	public function getPositions($teacherId, $institutionSiteId=0) {
 		$fields = array(
-			'InstitutionSiteTeacher.id', 'InstitutionSiteTeacher.start_date', 'InstitutionSiteTeacher.end_date',
+			'InstitutionSiteTeacher.id', 'InstitutionSiteTeacher.position_no', 'InstitutionSiteTeacher.no_of_hours',
+			'InstitutionSiteTeacher.start_date', 'InstitutionSiteTeacher.end_date',
 			'InstitutionSiteTeacher.salary', 'TeacherCategory.name'
 		);
 		
@@ -129,7 +156,22 @@ class InstitutionSiteTeacher extends AppModel {
     }
 	
 	// Used by institution site classes
-	public function getTeacherSelectList($year, $institutionSiteId) {
+	public function getTeacherSelectList($year, $institutionSiteId, $classId) {
+        // Filtering section
+        $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
+        $teachersExclude = $InstitutionSiteClassTeacher->getTeachers($classId);
+        $ids = '';
+        foreach($teachersExclude as $obj){
+            $ids .= $obj['Teacher']['id'].',';
+        }
+        $ids = rtrim($ids,',');
+        if($ids!=''){
+            $conditions = 'Teacher.id NOT IN (' . $ids . ')';
+        }else{
+            $conditions = '';
+        }
+        // End filtering
+
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 
@@ -139,7 +181,7 @@ class InstitutionSiteTeacher extends AppModel {
 				array(
 					'table' => 'teachers',
 					'alias' => 'Teacher',
-					'conditions' => array('Teacher.id = InstitutionSiteTeacher.teacher_id')
+					'conditions' => array('Teacher.id = InstitutionSiteTeacher.teacher_id',$conditions)
 				)
 			),
 			'conditions' => array(
