@@ -1,9 +1,9 @@
 .category { margin-bottom: 20px; }
-.table_view .cell_name { margin-left: -1px; }
+.table_view .cell_name { width: 157px; margin-left: -1px; }
 .table_view .cell_name span { line-height: 25px; }
-.table_view .cell_national_code { margin-left: -1px; }
+.table_view .cell_national_code { width: 158px; margin-left: -1px; }
 .table_view .cell_national_code span { line-height: 25px; }
-.table_view .cell_international_code {margin-left: -1px; }
+.table_view .cell_international_code { width: 157px; margin-left: -1px; }
 .table_view .cell_international_code span { line-height: 25px; }
 .table { width: 99% !important; margin-left: 3px; }
 .edit .table { margin-bottom: 0; }

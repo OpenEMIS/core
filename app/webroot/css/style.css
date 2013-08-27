@@ -304,22 +304,22 @@ a.btn:hover { text-decoration: none; }
 }
 
 .table_view .cell {
-	display:table-cell;
+	float: left;
 	border: 1px solid #CCCCCC;
 	padding: 5px 8px;
-	table-layout:fixed;
+	height: 25px;
 }
 .li_even .cell { background-color: #F7F7F7; }
-.table_view { margin: -1px 0 10px 3px; width:99%; display:table; border-collapse: collapse;}
-.table_view li { margin: 0 0 0 0; display:table-row;}
+.table_view { margin-bottom: 10px; }
+.table_view li { margin: -1px 0 0 3px; }
 .table_view li.inactive input[type="text"],
 .table_view li.inactive select,
 .table_view li.inactive .cell { color: #CCCCCC !important; }
-.table_view .cell_visible { width: 40px; text-align: center;}
+.table_view .cell_visible { width: 40px; text-align: center; }
 .chrome .table_view .cell_visible{
 	width:39px;
 }
-.table_view .cell_visible input { margin: -18px auto 0 auto; display:block; text-align:center; }
+.table_view .cell_visible input { margin: 5px 0 0 0; }
 .table_view .cell_order { width: 60px; margin-left: -1px; }
 .table_view .cell_order span { margin-top: 4px; margin-right: 1px; }
 .table_view .cell_order .icon_up { margin-left: 12px; }
