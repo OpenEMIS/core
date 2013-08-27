@@ -15,11 +15,11 @@
     
     <div id="banner_image">
         <?php if(isset($image)){ ?>
-        <div style="overflow:hidden;min-width:<?php echo $image['width']; ?>px;width:100%;height:<?php echo $image['height']; ?>px;" >
+        <div style="overflow:hidden;width:<?php echo $image['width']; ?>px;height:<?php echo $image['height']; ?>px;" >
         <?php 
              // echo $this->Html->image($image['imagePath'], array(
              echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $image["id"]), array(
-                'style' => "width:100%;height:initial;position:relative;top:-{$image['y']}px;left:-{$image['x']}px;"
+                'style' => "width:initial;height:initial;position:relative;top:-{$image['y']}px;left:-{$image['x']}px;"
             ));
         ?>
         </div>
