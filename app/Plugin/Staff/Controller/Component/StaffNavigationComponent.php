@@ -27,7 +27,7 @@ class StaffNavigationComponent extends Component {
 		$links = array(
 			array(
 				array(
-					$navigation->createLink('List of Staff', $controller, 'index', 'index$'),
+					$navigation->createLink('List of Staff', $controller, 'index', 'index$|advanced'),
 					$navigation->createLink('Add new Staff', $controller, 'add', 'add$')
 				)
 			),

@@ -24,6 +24,7 @@ class StudentsController extends StudentsAppController {
     public $studentObj;
     private  $debug = false;
     public $uses = array(
+		'Area',
         'Institution',
 		'InstitutionSite',
 		'InstitutionSiteProgramme',
@@ -56,10 +57,10 @@ class StudentsController extends StudentsAppController {
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Students', array('controller' => 'Students', 'action' => 'index'));
-		if($this->action==='index' || $this->action==='add' || $this->action==='viewStudent') {
+		$actions = array('index', 'advanced', 'add', 'viewStudent');
+		if(in_array($this->action, $actions)) {
 			$this->bodyTitle = 'Students';
 		} else {
-			
 			if($this->Session->check('StudentId') && $this->action!=='Home') {
 	            $this->studentId = $this->Session->read('StudentId');
 				$this->studentObj = $this->Session->read('StudentObj');
@@ -68,7 +69,6 @@ class StudentsController extends StudentsAppController {
 				$name = $studentFirstName ." ". $studentLastName;
 				$this->bodyTitle = $name;
 				$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
-				
 			} 
 		}
     }
@@ -101,11 +101,6 @@ class StudentsController extends StudentsAppController {
         $fieldorderdir = ($this->Session->read('Search.sortdirStudent'))?$this->Session->read('Search.sortdirStudent'):'asc';
 		
 		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStudent'));
-		/*$conditions = array('SearchKey' => $searchKey);
-		if($this->Auth->user('super_admin')==0) {
-			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
-			$conditions['UserId'] = $this->Auth->user('id');
-		}*/
 		$conditions = array(
 			'SearchKey' => $searchKey, 
 			'AdvancedSearch' => $this->Session->check('Student.AdvancedSearch') ? $this->Session->read('Student.AdvancedSearch') : null,
@@ -117,11 +112,13 @@ class StudentsController extends StudentsAppController {
         $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
 		
         $data = $this->paginate('Student', $conditions);
+		if(empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
+			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+				$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
+			}
+		}
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
-		}
-		if(empty($searchKey) && count($data)==1) {
-			$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
 		}
         $this->set('students', $data);
         $this->set('sortedcol', $fieldordername);
@@ -131,6 +128,34 @@ class StudentsController extends StudentsAppController {
             $this->render('index_records','ajax');
         }
     }
+	
+	public function advanced() {
+		$key = 'Student.AdvancedSearch';
+		if($this->request->is('get')) {
+			if($this->request->is('ajax')) {
+				$this->autoRender = false;
+				$search = $this->params->query['term'];
+				$result = $this->Area->autocomplete($search);
+				return json_encode($result);
+			} else {
+				$this->Navigation->addCrumb('List of Students', array('controller' => 'Students', 'action' => 'index'));
+				$this->Navigation->addCrumb('Advanced Search');
+				
+				if(isset($this->params->pass[0])) {
+					if(intval($this->params->pass[0])===0) {
+						$this->Session->delete($key);
+						$this->redirect(array('action' => 'index'));
+					}
+				}
+			}
+		} else {
+			$search = $this->data['Search'];
+			if(!empty($search)) {
+				$this->Session->write($key, $search);
+			}
+			$this->redirect(array('action' => 'index'));
+		}
+	}
 	
 	public function viewStudent($id) {
         $this->Session->write('StudentId', $id);

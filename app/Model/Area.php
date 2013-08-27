@@ -54,7 +54,13 @@ class Area extends AppModel {
 					'conditions' => array('AreaLevel.id = Area.area_level_id')
 				)
 			),
-			'conditions' => array('Area.name LIKE' => $search),
+			'conditions' => array(
+				'OR' => array(
+					'Area.name LIKE' => $search,
+					'Area.code LIKE' => $search,
+					'AreaLevel.name LIKE' => $search
+				)
+			),
 			'order' => array('AreaLevel.level', 'Area.order')
 		));
 		
