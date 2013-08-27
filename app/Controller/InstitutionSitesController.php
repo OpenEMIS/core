@@ -2143,8 +2143,8 @@ class InstitutionSitesController extends AppController {
 			$yearList = $this->SchoolYear->getYearList();
 			$yearId = $this->getAvailableYearId($yearList);
 			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-			
-			$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'),isset($id)? $id:$yearId);	
+            
+			$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'),$yearId);
 			$this->set('selectedYear', $yearId);
 			$this->set('years', $yearList);
 			$this->set('data', $data);
@@ -2165,7 +2165,6 @@ class InstitutionSitesController extends AppController {
 				$yearList = $this->SchoolYear->getYearList();
 				$yearId = $this->getAvailableYearId($yearList);
 				$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-				
 				$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'),$yearId);				
 				
 				$this->set('teacherid',$this->Session->read('InstitutionSiteTeachersId'));
