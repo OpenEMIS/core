@@ -52,7 +52,7 @@ echo $this->Html->script('institution_site_classes', false);
             </div>
             <div class="table_body" url="InstitutionSites/classesSubjectAjax/<?php echo $classId; ?>">
                 <?php foreach($subjects as $obj) { ?>
-                <div class="table_row" subject-id="<?php echo $obj['InstitutionSiteClassSubject']['id']; ?>" grade-subject-id="<?php echo $obj['InstitutionSiteClassSubject']['education_grade_subject_id']; ?>">
+                <div class="table_row" subject-id="<?php echo $obj['InstitutionSiteClassSubject']['education_grade_subject_id']; ?>">
                     <div class="table_cell"><?php echo $obj['EducationSubject']['code']; ?></div>
                     <div class="table_cell"><?php echo $obj['EducationSubject']['name']; ?></div>
                     <div class="table_cell"><?php echo $obj['EducationGrade']['name']; ?></div>

@@ -35,6 +35,22 @@ class EducationSubject extends AppModel {
 	
 	// Used by InstitutionSiteController.classesAddTeacherRow
 	public function getSubjectByClassId($classId) {
+        // Filtering section
+        $InstitutionSiteClassSubject = ClassRegistry::init('InstitutionSiteClassSubject');
+        $subjectsExclude = $InstitutionSiteClassSubject->getSubjects($classId);
+        $ids = '';
+        foreach($subjectsExclude as $obj){
+            $ids .= $obj['InstitutionSiteClassSubject']['education_grade_subject_id'].',';
+        }
+        $ids = rtrim($ids,',');
+
+        if($ids!=''){
+            $conditions = 'EducationGradeSubject.id NOT IN (' . $ids . ')';
+        }else{
+            $conditions = '';
+        }
+        // End filtering
+
 		$this->formatResult = true;
 		$data = $this->find('all', array(
 			'recursive' => -1,
@@ -43,7 +59,7 @@ class EducationSubject extends AppModel {
 				array(
 					'table' => 'education_grades_subjects',
 					'alias' => 'EducationGradeSubject',
-					'conditions' => array('EducationGradeSubject.education_subject_id = EducationSubject.id')
+					'conditions' => array('EducationGradeSubject.education_subject_id = EducationSubject.id',$conditions)
 				),
 				array(
 					'table' => 'education_grades',

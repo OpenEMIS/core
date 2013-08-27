@@ -1070,8 +1070,8 @@ class InstitutionSitesController extends AppController {
 			$year = $this->params['pass'][0];
 			$classId = $this->params['pass'][1];
 			$index = $this->params->query['index'];
-			$data = $this->InstitutionSiteTeacher->getTeacherSelectList($year, $this->institutionSiteId);
-			
+			$data = $this->InstitutionSiteTeacher->getTeacherSelectList($year, $this->institutionSiteId, $classId);
+
 			$this->set('index', $index);
 			$this->set('data', $data);
 		}
