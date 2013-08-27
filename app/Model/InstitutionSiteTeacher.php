@@ -157,8 +157,21 @@ class InstitutionSiteTeacher extends AppModel {
 	
 	// Used by institution site classes
 	public function getTeacherSelectList($year, $institutionSiteId, $classId) {
-        $InstitutionSiteClassTeacher = ClassRegistry::init('$InstitutionSiteClassTeacher');
+        // Filtering section
+        $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
         $teachersExclude = $InstitutionSiteClassTeacher->getTeachers($classId);
+        $ids = '';
+        foreach($teachersExclude as $obj){
+            $ids .= $obj['Teacher']['id'].',';
+        }
+        $ids = rtrim($ids,',');
+        if($ids!=''){
+            $conditions = 'Teacher.id NOT IN (' . $ids . ')';
+        }else{
+            $conditions = '';
+        }
+        // End filtering
+
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 
@@ -168,7 +181,7 @@ class InstitutionSiteTeacher extends AppModel {
 				array(
 					'table' => 'teachers',
 					'alias' => 'Teacher',
-					'conditions' => array('Teacher.id = InstitutionSiteTeacher.teacher_id')
+					'conditions' => array('Teacher.id = InstitutionSiteTeacher.teacher_id',$conditions)
 				)
 			),
 			'conditions' => array(

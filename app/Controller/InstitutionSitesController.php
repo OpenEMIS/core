@@ -890,13 +890,6 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function classesEdit() {
-        $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
-        $teachersExclude = $InstitutionSiteClassTeacher->getTeachers('64');
-        $ids = '';
-        foreach($teachersExclude as $obj){
-            $ids .= $obj['Teacher']['id'].',';
-        }
-
 		$classId = $this->params['pass'][0];
 		$classObj = $this->InstitutionSiteClass->getClass($classId);
 		
