@@ -18,7 +18,7 @@ if(true){
         <h1>
             <span><?php echo __('Custom Indicators'); ?></span>
             <?php
-                if($_edit) {
+                if($_add) {
                     echo $this->Html->link(__('Add'), array('action' => 'BuildAdd'),	array('class' => 'divider'));
                 }
             ?>
@@ -43,21 +43,27 @@ if(true){
                         </div>
                         <div class="table_cell col_action">
                             <?php
-                            echo $this->Html->link(
-                                $this->Html->image('icons/edit.png', array("alt" => "Edit")),
-                                "/{$controllerName}/BuildEdit/{$row['id']}",
-                                array('escape' => false)
-                            );
-                            echo $this->Html->link(
-                                $this->Html->image('icons/download.png', array("alt" => "Download")),
-                                "/{$controllerName}/BuildDownload/{$row['id']}",
-                                array('escape' => false)
-                            );
-                            echo $this->Html->link(
-                                $this->Html->image('icons/delete.png', array("alt" => "Delete", "class" => "delete_icon", "row-id" =>$row['id'])),
-                                "#",
-                                array('escape' => false)
-                            );
+				if($_edit) {
+                    		     echo $this->Html->link(
+                                	$this->Html->image('icons/edit.png', array("alt" => "Edit")),
+                                	"/{$controllerName}/BuildEdit/{$row['id']}",
+                                	array('escape' => false)
+                            	     );
+				}
+				if($_execute) {
+                	            echo $this->Html->link(
+                     	        	$this->Html->image('icons/download.png', array("alt" => "Download")),
+               	        	        "/{$controllerName}/BuildDownload/{$row['id']}",
+        	       		        array('escape' => false)
+              		            );
+				}
+				if($_delete) {
+              		              echo $this->Html->link(
+                       		         $this->Html->image('icons/delete.png', array("alt" => "Delete", "class" => "delete_icon", "row-id" =>$row['id'])),
+                       		         "#",
+                        	        array('escape' => false)
+                           		 );
+				}
                             ?>
                             <?php //echo $this->Html->image('icons/delete.png', array("alt" => "Delete", "class" => "delete_icon", "row-id" =>$row['id']));?>
                         </div>
