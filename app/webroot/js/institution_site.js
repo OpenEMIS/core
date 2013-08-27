@@ -96,5 +96,19 @@ var objInstitutionSite = {
 			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper'}); },
 			success: ajaxSuccess
 		});
+	},
+	
+	positionFocusEvent: function(obj) {
+		var input = $(obj);
+		if(input.val() == input.attr('empty')) {
+			input.val('').removeClass('grey');
+		}
+	},
+	
+	positionBlurEvent: function(obj) {
+		var input = $(obj);
+		if(input.val().isEmpty()) {
+			input.val(input.attr('empty')).addClass('grey');
+		}
 	}
 }

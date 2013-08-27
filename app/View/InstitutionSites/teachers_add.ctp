@@ -89,7 +89,7 @@ echo $this->Html->script('institution_site_teachers', false);
 		
 		<div class="row">
 			<div class="label"><?php echo __('Position Number'); ?></div>
-			<div class="value"><?php echo $this->Form->input('position_no', array('class' => 'default')); ?></div>
+			<div class="value"><?php echo $this->Form->input('position_no', array('class' => 'default', 'maxlength' => 15)); ?></div>
 		</div>
 		
 		<div class="row">
@@ -98,8 +98,8 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('No of Hours'); ?></div>
-			<div class="value"><?php echo $this->Form->input('no_of_hours', array('class' => 'default')); ?></div>
+			<div class="label"><?php echo __('Salary'); ?></div>
+			<div class="value"><?php echo $this->Form->input('salary', array('class' => 'default', 'value' => 0)); ?></div>
 		</div>
 		
 		<div class="row">
@@ -108,8 +108,8 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('Salary'); ?></div>
-			<div class="value"><?php echo $this->Form->input('salary', array('class' => 'default', 'value' => 0)); ?></div>
+			<div class="label"><?php echo __('No of Hours'); ?></div>
+			<div class="value"><?php echo $this->Form->input('no_of_hours', array('class' => 'default', 'onkeypress' => 'return utility.integerCheck(event)', 'maxlength' => 3)); ?></div>
 		</div>
 	</div>
 	

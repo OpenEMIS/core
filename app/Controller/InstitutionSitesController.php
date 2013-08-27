@@ -1411,7 +1411,7 @@ class InstitutionSitesController extends AppController {
 						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
 						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
 						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
-						$msg .= '<br>' . __('Please choose another.');
+						$msg .= '<br>' . __('Please choose another position number.');
 						$this->Utility->alert($msg, array('type' => 'warn'));
 						$insert = false;
 						$data = array_merge($data, $teacherObj['Teacher']);
@@ -1475,6 +1475,28 @@ class InstitutionSitesController extends AppController {
 					$this->InstitutionSiteTeacher->deleteAll(array('InstitutionSiteTeacher.id' => $delete), false);
 				}
 				$data = $this->data['InstitutionSiteTeacher'];
+				// checking for existing position number
+				foreach($data as $i => $row) {
+					if(!array_key_exists('id', $row)) {
+						if($row['position_no'] === __('Position No')) {
+							$row['position_no'] = null;
+						} else {
+							$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($row['position_no'], $row['start_date']);
+							if(!$obj) {
+								$obj = $this->InstitutionSiteStaff->isPositionNumberExists($row['position_no'], $row['start_date']);
+							}
+							if($obj) {
+								$position = $row['position_no'];
+								$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+								$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+								$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+								$msg .= '<br>' . __('Please choose another position number.');
+								$this->Utility->alert($msg, array('type' => 'warn'));
+								unset($data[$i]);
+							}
+						}
+					}
+				}
 				$this->InstitutionSiteTeacher->saveEmployment($data, $this->institutionSiteId, $teacherId);
 				$this->redirect(array('action' => 'teachersView', $teacherId));
 			}
@@ -1633,6 +1655,28 @@ class InstitutionSitesController extends AppController {
 					$this->InstitutionSiteStaff->deleteAll(array('InstitutionSiteStaff.id' => $delete), false);
 				}
 				$data = $this->data['InstitutionSiteStaff'];
+				// checking for existing position number
+				foreach($data as $i => $row) {
+					if(!array_key_exists('id', $row)) {
+						if($row['position_no'] === __('Position No')) {
+							$row['position_no'] = null;
+						} else {
+							$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($row['position_no'], $row['start_date']);
+							if(!$obj) {
+								$obj = $this->InstitutionSiteStaff->isPositionNumberExists($row['position_no'], $row['start_date']);
+							}
+							if($obj) {
+								$position = $row['position_no'];
+								$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+								$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+								$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+								$msg .= '<br>' . __('Please choose another position number.');
+								$this->Utility->alert($msg, array('type' => 'warn'));
+								unset($data[$i]);
+							}
+						}
+					}
+				}
 				$this->InstitutionSiteStaff->saveEmployment($data, $this->institutionSiteId, $staffId);
 				$this->redirect(array('action' => 'staffView', $staffId));
 			}
