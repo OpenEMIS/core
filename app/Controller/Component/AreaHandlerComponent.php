@@ -81,6 +81,43 @@ class AreaHandlerComponent extends Component {
 		}
 	}
 
+    public function getAreaLevel($id,$arrMap = array('Area','AreaLevel')) {
+        if(!is_array($arrMap)){
+            $arrMap = ($arrMap == 'education')?  array('AreaEducation','AreaEducationLevel') : array('Area','AreaLevel');
+        }
+        $AreaLevelfk = Inflector::underscore($arrMap[1]);
+        $this->autoRender = false;
+
+        $levelname = $this->{$arrMap[0]}->find('all', array(
+            'contain' => array($arrMap[1]),
+            'conditions' => array(
+                $arrMap[0].'.id' => $id
+            ),
+            'fields' => array($arrMap[1].'.name')
+        ));
+        if (array_key_exists(0, $levelname)) {
+            return $levelname[0][$arrMap[1]]['name'];
+        }else{
+            return '';
+        }
+    }
+
+    public function checkAreaExist($id, $arrMap = array('Area','AreaLevel')){
+        $arr = array_keys($this->{$arrMap[0]}->find('list',array('conditions' => array('id' => $id))));
+        $myid = '';
+        if(is_array($arr)){
+            $myid = $arr[0];
+        }
+
+        return $myid;
+    }
+
+    public function getTopArea($arrMap = array('Area','AreaLevel')){
+        $arr = array_keys($this->{$arrMap[0]}->find('list',array('recursive'=>0, 'conditions' => array('parent_id' => '-1'))));
+        $id = $arr[0];
+        return $id;
+    }
+
 	public function getAreaList($arrMap = array('Area','AreaLevel')){
 		return $this->{$arrMap[1]}->find('list',array('recursive'=>0));
 	}
@@ -105,44 +142,33 @@ class AreaHandlerComponent extends Component {
                             'fields' => array($arrMap[0].'.id', $arrMap[0].'.name', $arrMap[0].'.parent_id', $arrMap[0].'.'.$AreaLevelfk.'_id',$arrMap[1].'.name', $arrMap[0].'.visible'),
                             'conditions' => array($arrMap[0].'.id' => $list[$arrMap[0]]['parent_id'])));
                         $arrVals[$list[$arrMap[0]][$AreaLevelfk.'_id']] = Array('visible'=>$list[$arrMap[0]]['visible'],'level_id'=>$list[$arrMap[0]][$AreaLevelfk.'_id'],'id'=>$list[$arrMap[0]]['id'],'name'=>$list[$arrMap[0]]['name'],'parent_id'=>$list[$arrMap[0]]['parent_id'],'AreaLevelName'=>$list[$arrMap[1]]['name']);
-                    } while ($list[$arrMap[0]][$AreaLevelfk.'_id'] != 1);
+
+                    } while ($list[$arrMap[0]][$AreaLevelfk.'_id'] != 1 && is_array($list));
                 }
             }
-
         }
-
         return $arrVals;
     }
 
     public function getAllSiteAreaToParent($siteId,$arrMap = array('Area','AreaLevel')) {
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
-
         $lowest =  $siteId;
 
         $areas = $this->getAreatoParent($lowest,$arrMap);
-
         $areas = array_reverse($areas);
 
-        /*foreach($areas as $index => &$arrVals){
-            $siblings = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => $arrVals['parent_id'])));
-            $this->Utility->unshiftArray($siblings,array('0'=>'--'.__('Select').'--'));
-            pr($siblings);
-            $colInfo['area_level_'.$index]['options'] = $siblings;
-        }*/
         $arrDisabledList = array();
         foreach($areas as $index => &$arrVals){
 
             $siblings = $this->{$arrMap[0]}->find('all',array('fields'=>Array($arrMap[0].'.id',$arrMap[0].'.name',$arrMap[0].'.parent_id',$arrMap[0].'.visible'),'conditions'=>array($arrMap[0].'.parent_id' => $arrVals['parent_id'])));
-            //echo "<br>";
 
-            $opt =  array('0'=>'--'.__('Select').'--');
+            ($arrVals['parent_id']!=-1)?  $opt =  array('0'=>'--'.__('Select').'--'): ''; // No select for top tier
+
             foreach($siblings as &$sibVal){
 
                 $arrDisabledList[$sibVal[$arrMap[0]]['id']] = array('parent_id'=>$sibVal[$arrMap[0]]['parent_id'],'id'=>$sibVal[$arrMap[0]]['id'],'name'=>$sibVal[$arrMap[0]]['name'],'visible'=>$sibVal[$arrMap[0]]['visible']);
 
                 if(isset($arrDisabledList[$sibVal[$arrMap[0]]['parent_id']])){
-
-                    //echo $sibVal['Area']['name']. ' '.$arrDisabledList[$sibVal['Area']['parent_id']]['visible'].' <br>';
                     if($arrDisabledList[$sibVal[$arrMap[0]]['parent_id']]['visible'] == 0){
                         $sibVal[$arrMap[0]]['visible'] = 0;
                         $arrDisabledList[$sibVal[$arrMap[0]]['id']]['visible'] = 0;
@@ -150,7 +176,6 @@ class AreaHandlerComponent extends Component {
 
                 }
             }
-            //pr($arrDisabledList);
             foreach($siblings as $sibVal2){
                 $o = array('name'=>$sibVal2[$arrMap[0]]['name'],'value'=>$sibVal2[$arrMap[0]]['id']);
 
@@ -160,11 +185,6 @@ class AreaHandlerComponent extends Component {
                 }
                 $opt[] = $o;
             }
-
-
-
-            //pr($opt);
-
             $colInfo[$AreaLevelfk.'_'.$index]['options'] = $opt;
         }
 

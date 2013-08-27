@@ -24,6 +24,7 @@ class StaffController extends StaffAppController {
     public $staffObj;
 
     public $uses = array(
+		'Area',
         'Institution',
 		'InstitutionSite',
         'InstitutionSiteStaff',
@@ -53,10 +54,10 @@ class StaffController extends StaffAppController {
         parent::beforeFilter();
 
         $this->Navigation->addCrumb('Staff', array('controller' => 'Staff', 'action' => 'index'));
-            
-        if($this->action==='index' || $this->action==='add' || $this->action==='viewStaff') {
-            $this->bodyTitle = 'Staff';
-        } else {
+        $actions = array('index', 'advanced', 'add', 'viewStaff');
+		if(in_array($this->action, $actions)) {
+			$this->bodyTitle = 'Staff';
+		} else {
             if($this->Session->check('StaffId') && $this->action!=='Home' ) {
                 $this->staffId = $this->Session->read('StaffId');
                 $this->staffObj = $this->Session->read('StaffObj');
@@ -96,21 +97,24 @@ class StaffController extends StaffAppController {
         $fieldorderdir = ($this->Session->read('Search.sortdirStaff'))?$this->Session->read('Search.sortdirStaff'):'asc';
 		
 		$searchKey = stripslashes($this->Session->read('Search.SearchFieldStaff'));
-		$conditions = array('SearchKey' => $searchKey);
-		if($this->Auth->user('super_admin')==0) {
-			$conditions['InstitutionSiteId'] = $this->AccessControl->getAccessibleSites();
-			$conditions['UserId'] = $this->Auth->user('id');
-		}
+		$conditions = array(
+			'SearchKey' => $searchKey, 
+			'AdvancedSearch' => $this->Session->check('Staff.AdvancedSearch') ? $this->Session->read('Staff.AdvancedSearch') : null,
+			'isSuperAdmin' => $this->Auth->user('super_admin'),
+			'userId' => $this->Auth->user('id')
+		);
 		$order = array('order' => array($fieldordername => $fieldorderdir));
 		$limit = ($this->Session->read('Search.perpageStaff')) ? $this->Session->read('Search.perpageStaff') : 30;
         $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
 		
         $data = $this->paginate('Staff', $conditions);
+		if(empty($searchKey) && !$this->Session->check('Staff.AdvancedSearch')) {
+			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+				$this->redirect(array('action' => 'viewStaff', $data[0]['Staff']['id']));
+			}
+		}
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
-		}
-		if(empty($searchKey) && count($data)==1) {
-			$this->redirect(array('action' => 'viewStaff', $data[0]['Staff']['id']));
 		}
         $this->set('staff', $data);
         $this->set('sortedcol', $fieldordername);
@@ -120,6 +124,34 @@ class StaffController extends StaffAppController {
             $this->render('index_records','ajax');
         }
     }
+	
+	public function advanced() {
+		$key = 'Staff.AdvancedSearch';
+		if($this->request->is('get')) {
+			if($this->request->is('ajax')) {
+				$this->autoRender = false;
+				$search = $this->params->query['term'];
+				$result = $this->Area->autocomplete($search);
+				return json_encode($result);
+			} else {
+				$this->Navigation->addCrumb('List of Staff', array('controller' => 'Staff', 'action' => 'index'));
+				$this->Navigation->addCrumb('Advanced Search');
+				
+				if(isset($this->params->pass[0])) {
+					if(intval($this->params->pass[0])===0) {
+						$this->Session->delete($key);
+						$this->redirect(array('action' => 'index'));
+					}
+				}
+			}
+		} else {
+			$search = $this->data['Search'];
+			if(!empty($search)) {
+				$this->Session->write($key, $search);
+			}
+			$this->redirect(array('action' => 'index'));
+		}
+	}
 
     public function viewStaff($id) {
         $this->Session->write('StaffId', $id);

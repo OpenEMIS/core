@@ -52,6 +52,47 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		}
 		return $list;
 	}
+
+    // Use in InstitutionSitesController classesAttendance
+    public function getStudentsAttendance($classID,$gradeIds,$yearID) {
+        $data = $this->find('all', array(
+            'fields' => array(
+                'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+                'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
+                'StudentCategory.name', 'StudentAttendance.id', 'StudentAttendance.total_no_attend', 'StudentAttendance.total_no_absence',
+                'InstitutionSiteClass.institution_site_id'
+            ),
+            'joins' => array(
+                array(
+                    'table' => 'students',
+                    'alias' => 'Student',
+                    'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+                ),
+                array(
+                    'table' => 'institution_site_classes',
+                    'alias' => 'InstitutionSiteClass',
+                    'conditions' => array('InstitutionSiteClass.id' => $classID)
+                ),
+                array(
+                    'table' => 'student_categories',
+                    'alias' => 'StudentCategory',
+                    'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+                ),
+                array(
+                    'table' => 'student_attendances',
+                    'alias' => 'StudentAttendance',
+                    'type' => 'left',
+                    'conditions' => array('StudentAttendance.institution_site_class_id' => $classID,
+                                          'StudentAttendance.school_year_id' => $yearID,
+                                          'StudentAttendance.student_id = Student.id',
+                                         )
+                )
+            ),
+            'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeIds),
+            'order' => array('Student.first_name')
+        ));
+        return $data;
+    }
 	
 	public function getListOfClassByStudent($studentId, $institutionSiteId=0) {
 		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name');

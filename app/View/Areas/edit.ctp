@@ -35,45 +35,8 @@ echo $this->Html->script('area', false);
 
 	?>
 	<fieldset id="area_section_group" class="section_group">
-		<legend><?php echo __('Area'); ?></legend>
-		<?php
-                
-                // pr($arealevel);
-                // pr($levels);
-            $ctr = 0;
-            if(isset($levels)){
-                $firstElement = reset($levels);
-                if(count($levels) > 1){
-	                $lastElement = array_pop($levels);
-                }
-                foreach($levels as $levelid => $levelName){
-                    
-                    echo '<div class="row input">
-                                <div class="label'. ((!isset($highestLevel[$ctr]))?' disabled':'') .'">'.$levelName.'</div>'.
-                                //'<div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
-                                '<div class="value">'. 
-	                                $this->Form->select(
-                						'area_level_'.$ctr,
-                						/*($ctr == 0)*/(isset($highestLevel[$ctr]))?$highestLevel[$ctr]:array(''=>__('--Select--')),
-                						array('class' => 'default', 'disabled' => (!isset($highestLevel[$ctr]))?true:false, 'empty' => (!isset($highestLevel[$ctr]))?true:false)
-                						//array('disabled' => ($levelName != $firstElement)?true:false), 'empty' => /*($levelName != $firstElement)?true:*/false)
-            						).
-                                '</div>
-                            </div>';
-                    /*
-                    echo '<div class="row">
-                                <div class="label'. (($levelName != $firstElement)?' disabled':'') .'">'.$levelName.'</div>
-                                <div class="value">'. $this->Form->select('area_level_'.$ctr,($ctr == 0)?$highestLevel:array(''=>'--Select--'), array('disabled' => 
-($levelName != $firstElement)?true:false, 'empty' => ($levelName != $firstElement)?true:false)).'</div>
-                            </div>';
-                    */
-                    $ctr++;
-                }
-            }
-        ?>
-
-
-		
+		<legend id="area"><?php echo __('Area'); ?></legend>
+		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
 	</fieldset>
 
 	<?php echo $this->Form->end(); ?>
@@ -87,7 +50,9 @@ echo $this->Html->script('area', false);
 				<div class="table_cell" style="width:99px;"><?php echo __('Level'); ?></div>
 				<div class="table_cell" style="width:90px;"><?php echo __('Code'); ?></div>
 				<div class="table_cell" style="width:280px;"><?php echo __('Name'); ?></div>
-				<div class="table_cell"><?php echo __('Order'); ?></div>
+				<?php if($_add && isset($initAreaSelection['area_id'])) { ?>
+                <div class="table_cell"><?php echo __('Order'); ?></div>
+                <?php } ?>
 			</div>
 			<div class="table_body" style="display:none;">
 			</div>
@@ -95,7 +60,7 @@ echo $this->Html->script('area', false);
 
 		<ul class="quicksand table_view" style="margin-bottom:12px;"></ul>
 		
-		<?php if($_add) { ?>
+		<?php if($_add && isset($initAreaSelection['area_id'])) { ?>
 		<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Area'); ?></a></div>
 		<?php } ?>
 			

@@ -48,7 +48,8 @@ class InstitutionsController extends AppController {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Institutions', array('controller' => 'Institutions', 'action' => 'index'));
 		
-		if($this->action==='index' || $this->action==='add' || $this->action==='listSites') {
+		$actions = array('index', 'advanced', 'add', 'listSites');
+		if(in_array($this->action, $actions)) {
 			$this->bodyTitle = 'Institutions';
 		} else {
 			if($this->Session->check('InstitutionId')) {
@@ -92,16 +93,19 @@ class InstitutionsController extends AppController {
 		$fieldorderdir = ($this->Session->read('Search.sortdir'))?$this->Session->read('Search.sortdir'):'asc';
 		
 		$searchKey = stripslashes($this->Session->read('Search.SearchField'));
-		$conditions = array('SearchKey' => $searchKey);
-		if($this->Auth->user('super_admin')==0) {
-			$conditions['Institution.id'] = $this->AccessControl->getAccessibleInstitutions();
-		}
+		$conditions = array(
+			'SearchKey' => $searchKey, 
+			'AdvancedSearch' => $this->Session->check('Institution.AdvancedSearch') ? $this->Session->read('Institution.AdvancedSearch') : null,
+			'isSuperAdmin' => $this->Auth->user('super_admin'),
+			'userId' => $this->Auth->user('id')
+		);
+		
 		$order = array('order' => array($fieldordername => $fieldorderdir));
         $limit = ($this->Session->read('Search.perpage')) ? $this->Session->read('Search.perpage') : 30;
         $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
 		
         $data = $this->paginate('Institution', $conditions);
-		if(!$this->Session->check('Search.SearchField')) {
+		if(!$this->Session->check('Search.SearchField') && !$this->Session->check('Institution.AdvancedSearch')) {
 			// if user do not have access to add institution and the records is 1, redirect to list of sites
 			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'listSites', $data[0]['Institution']['id']));
@@ -111,7 +115,6 @@ class InstitutionsController extends AppController {
 		if(empty($data) && !$this->request->is('ajax')) {
 			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
 		}
-		$this->set('limit', $limit);
         $this->set('institutions', $data);
 		$this->set('sortedcol', $fieldordername);
 		$this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
@@ -120,6 +123,34 @@ class InstitutionsController extends AppController {
 			$this->render('index_records','ajax');
         }
     }
+	
+	public function advanced() {
+		$key = 'Institution.AdvancedSearch';
+		if($this->request->is('get')) {
+			if($this->request->is('ajax')) {
+				$this->autoRender = false;
+				$search = $this->params->query['term'];
+				$result = $this->Area->autocomplete($search);
+				return json_encode($result);
+			} else {
+				$this->Navigation->addCrumb('List of Institutions', array('controller' => 'Institutions', 'action' => 'index'));
+				$this->Navigation->addCrumb('Advanced Search');
+				
+				if(isset($this->params->pass[0])) {
+					if(intval($this->params->pass[0])===0) {
+						$this->Session->delete($key);
+						$this->redirect(array('action' => 'index'));
+					}
+				}
+			}
+		} else {
+			$search = $this->data['Search'];
+			if(!empty($search)) {
+				$this->Session->write($key, $search);
+			}
+			$this->redirect(array('action' => 'index'));
+		}
+	}
 	
 	public function listSites() {
 		$id = 0;
