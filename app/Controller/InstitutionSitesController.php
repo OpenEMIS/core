@@ -890,6 +890,13 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	public function classesEdit() {
+        $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
+        $teachersExclude = $InstitutionSiteClassTeacher->getTeachers('64');
+        $ids = '';
+        foreach($teachersExclude as $obj){
+            $ids .= $obj['Teacher']['id'].',';
+        }
+
 		$classId = $this->params['pass'][0];
 		$classObj = $this->InstitutionSiteClass->getClass($classId);
 		
@@ -1070,8 +1077,8 @@ class InstitutionSitesController extends AppController {
 			$year = $this->params['pass'][0];
 			$classId = $this->params['pass'][1];
 			$index = $this->params->query['index'];
-			$data = $this->InstitutionSiteTeacher->getTeacherSelectList($year, $this->institutionSiteId);
-			
+			$data = $this->InstitutionSiteTeacher->getTeacherSelectList($year, $this->institutionSiteId, $classId);
+
 			$this->set('index', $index);
 			$this->set('data', $data);
 		}
