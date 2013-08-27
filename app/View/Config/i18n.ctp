@@ -71,6 +71,7 @@ var i18n = {
 	},
 	Search: {
 		textSearching: '<?php echo T("Searching...", true); ?>',
+		textSorting: '<?php echo T("Sorting...", true); ?>',
 		textNoCriteria: '<?php echo T("Please enter a search criteria.", true); ?>',
 		textNoResult: '<?php echo T("Your search returns no result.", true); ?>'
 	},

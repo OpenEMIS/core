@@ -18,7 +18,7 @@ $(document).ready(function() {
 });
 </script>
 
-<div id="institutions" class="content_wrapper search">
+<div id="students" class="content_wrapper search">
 	<h1>
 		<span><?php echo __('Advanced Search'); ?></span>
 		<?php 
@@ -30,14 +30,14 @@ $(document).ready(function() {
 	
 	<?php
 	echo $this->Form->create('Search', array(
-		'url' => array('controller' => 'Institutions', 'action' => 'advanced'),
+		'url' => array('controller' => 'Students', 'action' => 'advanced'),
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default')
 	));
-	echo $this->Form->hidden('area_id', array('id' => 'area_id', 'value' => $session->read('Institution.AdvancedSearch.area_id')));
+	echo $this->Form->hidden('area_id', array('id' => 'area_id', 'value' => $session->read('Student.AdvancedSearch.area_id')));
 	?>
 	<div class="row">
 		<div class="label"><?php echo __('Area'); ?></div>
-		<div class="value"><?php echo $this->Form->input('area', array('id' => 'area', 'type' => 'text', 'onfocus' => 'this.select()', 'value' => $session->read('Institution.AdvancedSearch.area'))); ?></div>
+		<div class="value"><?php echo $this->Form->input('area', array('id' => 'area', 'type' => 'text', 'onfocus' => 'this.select()', 'value' => $session->read('Student.AdvancedSearch.area'))); ?></div>
 	</div>
 	
 	<div class="controls view_controls">

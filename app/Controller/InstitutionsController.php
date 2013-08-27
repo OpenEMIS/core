@@ -105,7 +105,7 @@ class InstitutionsController extends AppController {
         $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
 		
         $data = $this->paginate('Institution', $conditions);
-		if(!$this->Session->check('Search.SearchField')) {
+		if(!$this->Session->check('Search.SearchField') && !$this->Session->check('Institution.AdvancedSearch')) {
 			// if user do not have access to add institution and the records is 1, redirect to list of sites
 			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'listSites', $data[0]['Institution']['id']));
@@ -125,7 +125,6 @@ class InstitutionsController extends AppController {
     }
 	
 	public function advanced() {
-		$this->Area->recover('parent', '-1');
 		$key = 'Institution.AdvancedSearch';
 		if($this->request->is('get')) {
 			if($this->request->is('ajax')) {

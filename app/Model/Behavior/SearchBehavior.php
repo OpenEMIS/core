@@ -42,20 +42,22 @@ class SearchBehavior extends ModelBehavior {
 		return $data;
 	}
 	
-	private function getQuery($model, $joins, $conditions, $order, $limit, $page) {
+	private function getQuery($model, $joins, $conditions=null) {
 		$class = $model->alias;
 		$dbo = $model->getDataSource();
 		$query = $dbo->buildStatement(array(
-			'fields' => array('NULL', $class.'.id'),
+			//'fields' => array('NULL', $class.'.id', $class.'.first_name', $class.'.last_name', $class.'.gender', $class.'.date_of_birth', $class.'.address_area_id'),
+			'fields' => array($class.'.id'),
 			'table' => $dbo->fullTableName($model),
 			'alias' => $class,
-			'limit' => $limit,
-			'offset' => (($page-1)*$limit),
+			'limit' => null,
+			'offset' => null,
 			'joins' => $joins,
 			'conditions' => $conditions,
-			'group' => array($class.'.id'),
-			'order' => $order
+			'group' => null,
+			'order' => null
 		), $model);
+		//return '('.$query.')';
 		return $query;
 	}
 	
@@ -108,39 +110,29 @@ class SearchBehavior extends ModelBehavior {
 	}
 	
 	// To get the query for fetching those records that are not linked to a site
-	public function getQueryWithoutSites(Model $model, $params, $order, $limit, $page) {
+	public function getQueryWithoutSites(Model $model, $params) {
 		$class = $model->alias;
-		$joins = array(
-			array(
-				'table' => 'security_group_users',
-				'alias' => 'CreatorGroup',
-				'conditions' => array('CreatorGroup.security_user_id = ' . $class . '.created_user_id')
-			),
-			array(
-				'table' => 'security_group_users',
-				'alias' => 'UserGroup',
-				'conditions' => array(
-					'UserGroup.security_group_id = CreatorGroup.security_group_id',
-					'UserGroup.security_user_id = ' . $params['userId']
-				)
-			)
-		);
+		$joins = array();
+		// if the creator of the students does not have a group anymore
+		$noGroup = 'NOT EXISTS (SELECT 1 FROM security_group_users AS CreatorGroup WHERE CreatorGroup.security_user_id = ' . $class . '.created_user_id)';
+		// or the creator and the user is in the same group
+		$sameGroup = 'EXISTS (
+			SELECT 1 FROM security_group_users AS CreatorGroup
+			JOIN security_group_users AS UserGroup
+				ON UserGroup.security_group_id = CreatorGroup.security_group_id
+				AND UserGroup.security_user_id = ' . $params['userId'] . '
+			WHERE CreatorGroup.security_user_id = ' . $class . '.created_user_id
+		)';
 		$conditions = array(
 			'NOT EXISTS (' . $this->getQueryNotExists($model) . ')',
-			'OR' => array(
-				'CreatorGroup.security_group_id IS NULL',
-				'AND' => array(
-					'CreatorGroup.security_group_id IS NOT NULL',
-					'UserGroup.security_group_id IS NOT NULL'
-				)
-			)
+			'AND' => array('OR' => array($noGroup, $sameGroup))
 		);
-		return $this->getQuery($model, $joins, $conditions, $order, $limit, $page);
+		return $this->getQuery($model, $joins, $conditions);
 	}
 	
 	// To get the query for fetching those records that are linked to the areas configured
 	// in SecurityGroupArea and all the child areas
-	public function getQueryFromSecurityAreas(Model $model, $params, $order, $limit, $page) {
+	public function getQueryFromSecurityAreas(Model $model, $params) {
 		$joins = array(
 			array(
 				'table' => 'areas',
@@ -167,12 +159,12 @@ class SearchBehavior extends ModelBehavior {
 			)
 		);
 		$joins = array_merge($this->getJoins($model), $joins);
-		return $this->getQuery($model, $joins, null, $order, $limit, $page);
+		return $this->getQuery($model, $joins);
 	}
 	
 	// To get the query for fetching those records that are linked to the sites configured
 	// in SecurityGroupInstitutionSite
-	public function getQueryFromSecuritySites(Model $model, $params, $order, $limit, $page) {
+	public function getQueryFromSecuritySites(Model $model, $params) {
 		$joins = array(
 			array(
 				'table' => 'security_group_institution_sites',
@@ -189,10 +181,10 @@ class SearchBehavior extends ModelBehavior {
 			)
 		);
 		$joins = array_merge($this->getJoins($model), $joins);
-		return $this->getQuery($model, $joins, null, $order, $limit, $page);
+		return $this->getQuery($model, $joins);
 	}
 	
-	public function getQueryFromAccess(Model $model, $params, $order, $limit, $page) {
+	public function getQueryFromAccess(Model $model, $params) {
 		$class = $model->alias;
 		$joins = array(
 			array(
@@ -205,7 +197,7 @@ class SearchBehavior extends ModelBehavior {
 				)
 			)
 		);
-		return $this->getQuery($model, $joins, null, $order, $limit, $page);
+		return $this->getQuery($model, $joins);
 	}
 	
 	public function paginateJoins(Model $model, $joins, $params) {
@@ -259,19 +251,11 @@ class SearchBehavior extends ModelBehavior {
 		$class = $model->alias;
 		$dbo = $model->getDataSource();
 		$queries = array(
-			$this->getQueryWithoutSites($model, $conditions, $order, $limit, $page),
-			//$this->getQueryFromSecurityAreas($model, $conditions, $order, $limit, $page),
-			//$this->getQueryFromSecuritySites($model, $conditions, $order, $limit, $page),
-			//$this->getQueryFromAccess($model, $conditions, $order, $limit, $page)
+			$this->getQueryWithoutSites($model, $conditions),
+			$this->getQueryFromSecurityAreas($model, $conditions),
+			$this->getQueryFromSecuritySites($model, $conditions),
+			$this->getQueryFromAccess($model, $conditions)
 		);
-		
-		/*
-		pr($queries[0]);
-		if(!is_null($fields)) {
-			$this->searchStart($model, $conditions['userId']);
-			$this->insert($model, $conditions['userId'], $queries[0]);
-		}
-		*/
 		
 		
 		$union = implode(' UNION ', $queries);
@@ -282,26 +266,82 @@ class SearchBehavior extends ModelBehavior {
 				'conditions' => array($class . 'Filter.id = ' . $class . '.id')
 			)
 		);
+		
 		$query = $dbo->buildStatement(array(
 			'fields' => !is_null($fields) ? $fields : array('COUNT(*) AS COUNT'),
 			'table' => $dbo->fullTableName($model),
 			'alias' => $class,
 			'limit' => $limit,
-			'offset' => !is_null($fields) ? (($page-1)*$limit) : null,
+			'offset' => (($page-1)*$limit),
 			'joins' => $this->paginateJoins($model, $joins, $conditions),
 			'conditions' => $this->paginateConditions($model, $conditions),
 			'group' => !is_null($fields) ? array($class . '.id') : null,
 			'order' => $order
 		), $model);
-		
-		
-		if(is_null($fields)) {
-			//$this->searchEnd($model, $conditions['userId']);
-		}
-		//$data = array();
 		$data = $dbo->fetchAll($query);
-		//pr($data);
+		
+		/*
+		$data = array();
+		if(!is_null($fields)) {
+			$this->searchStart($model, $conditions['userId']);
+			foreach($queries as $query) {
+				$this->insert($model, $conditions['userId'], $query);
+			}
+		}
+		*/
 		return $data;
+	}
+	
+	public function getPaginate(Model $model, $conditions, $fields, $order, $limit, $page, $recursive, $extra) {
+		$isSuperAdmin = $conditions['isSuperAdmin'];
+		$class = $model->alias;
+		$fields = array(
+			$class.'.id', $class.'.identification_no',
+			$class.'.first_name', $class.'.last_name',
+			$class.'.gender', $class.'.date_of_birth'
+		);
+		if(strlen($conditions['SearchKey']) != 0) {
+			$fields[] = $class.'History.identification_no AS history_identification_no';
+			$fields[] = $class.'History.first_name AS history_first_name';
+			$fields[] = $class.'History.last_name AS history_last_name';
+		}
+		
+		$joins = array();
+		$data = array();
+		// if super admin
+		if($isSuperAdmin) {
+			$data = $this->find('all', array(
+				'recursive' => -1,
+				'fields' => $fields,
+				'joins' => $this->paginateJoins($model, $joins, $conditions),
+				'conditions' => $this->paginateConditions($model, $conditions),
+				'limit' => $limit,
+				'offset' => (($page-1)*$limit),
+				'group' => array($class.'.id'),
+				'order' => $order
+			));
+		} else {
+			$data = $this->paginateQuery($model, $conditions, $fields, $order, $limit, $page);
+		}
+		return $data;
+	}
+	
+	public function getPaginateCount(Model $model, $conditions, $recursive, $extra) {
+		$isSuperAdmin = $conditions['isSuperAdmin'];
+		$joins = array();
+		$count = 0;
+		
+		if($isSuperAdmin) {
+			$count = $this->find('count', array(
+				'recursive' => -1,
+				'joins' => $this->paginateJoins($model, $joins, $conditions),
+				'conditions' => $this->paginateConditions($model, $conditions)
+			));
+		} else {
+			$data = $this->paginateQuery($model, $conditions);
+			$count = isset($data[0][0]['COUNT']) ? $data[0][0]['COUNT'] : 0;
+		}
+		return $count;
 	}
 	
 	public function searchStart(Model $model, $userId) {
@@ -310,8 +350,18 @@ class SearchBehavior extends ModelBehavior {
 		$create = "
 			CREATE TABLE IF NOT EXISTS " . $table . " (
 			  id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-			  table_id int(11) NOT NULL
-			) ENGINE=InnoDB  DEFAULT CHARSET=utf8
+			  table_id int(11) NOT NULL,
+			  first_name varchar(80),
+			  last_name varchar(80),
+			  gender char(1) NOT NULL,
+			  date_of_birth date NOT NULL,
+			  address_area_id int(11),
+			  KEY table_id (table_id),
+			  KEY first_name (first_name),
+			  KEY last_name (last_name),
+			  KEY address_area_id (address_area_id),
+			  KEY first_last_name (first_name, last_name)
+			) ENGINE=MyISAM DEFAULT CHARSET=utf8
 		";
 		$model->query($drop);
 		$model->query($create);
