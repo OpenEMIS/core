@@ -2132,30 +2132,24 @@ class InstitutionSitesController extends AppController {
 	
 	// TEACHER ATTENDANCE PART
     public function teachersAttendance(){
-		if($this->Session->check('InstitutionSƒiteTeachersId')){
+		if($this->Session->check('InstitutionSiteTeachersId')){
 			$teacherId = $this->Session->read('InstitutionSiteTeachersId');
 			$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
 			$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
 			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
 			$this->Navigation->addCrumb('Attendance');
 			
-			$id = @$this->request->params['pass'][0];
+			$id = $teacherId;
 			$yearList = $this->SchoolYear->getYearList();
 			$yearId = $this->getAvailableYearId($yearList);
 			$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 			
-			$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'),isset($id)? $id:$yearId);							
-
+			$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'),isset($id)? $id:$yearId);	
 			$this->set('selectedYear', $yearId);
 			$this->set('years', $yearList);
 			$this->set('data', $data);
 			$this->set('schoolDays', $schoolDays);
             $this->set('id', $teacherId);
-
-            $id = @$this->request->params['pass'][0];
-            $yearList = $this->SchoolYear->getYearList();
-            $yearId = $this->getAvailableYearId($yearList);
-            $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 		}
     }
 
