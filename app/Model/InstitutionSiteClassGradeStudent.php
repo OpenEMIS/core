@@ -158,12 +158,13 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		return $data;
 	}
 	
-	public function getStudentAssessmentResults($yearId, $institutionSiteId, $classId, $gradeId, $itemId) {
+	public function getStudentAssessmentResults($classId, $itemId) {
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
 				'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
-				'AssessmentResultType.name'
+				'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
+				'AssessmentItem.min', 'AssessmentItem.max'
 			),
 			'joins' => array(
 				array(
@@ -172,30 +173,40 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
 				),
 				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.id = InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
+						'InstitutionSiteClassGrade.institution_site_class_id = ' . $classId
+					)
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array('InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id')
+				),
+				array(
 					'table' => 'assessment_item_results',
 					'alias' => 'AssessmentItemResult',
 					'type' => 'LEFT',
 					'conditions' => array(
 						'AssessmentItemResult.student_id = Student.id',
-						'AssessmentItemResult.institution_site_id = ' . $institutionSiteId,
-						'AssessmentItemResult.school_year_id = ' . $yearId,
+						'AssessmentItemResult.institution_site_id = InstitutionSiteClass.institution_site_id',
+						'AssessmentItemResult.school_year_id = InstitutionSiteClass.school_year_id',
 						'AssessmentItemResult.assessment_item_id = ' . $itemId
 					)
+				),
+				array(
+					'table' => 'assessment_items',
+					'alias' => 'AssessmentItem',
+					'type' => 'LEFT',
+					'conditions' => array('AssessmentItem.id = AssessmentItemResult.assessment_item_id')
 				),
 				array(
 					'table' => 'assessment_result_types',
 					'alias' => 'AssessmentResultType',
 					'type' => 'LEFT',
 					'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
-				),
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = ' . $classId,
-						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId,
-						'InstitutionSiteClassGrade.id = InstitutionSiteClassGradeStudent.institution_site_class_grade_id'
-					)
 				)
 			),
 			'order' => array('Student.first_name')
