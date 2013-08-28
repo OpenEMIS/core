@@ -121,6 +121,66 @@ class AssessmentItemType extends AppModel {
 		return $data;
 	}
 	
+	public function getAssessmentsByClass($classId) {
+		$list = $this->find('all', array(
+			'fields' => array(
+				'AssessmentItemType.id', 'AssessmentItemType.code', 'AssessmentItemType.name',
+				'EducationCycle.name', 'EducationProgramme.id', 'EducationProgramme.name', 
+				'EducationGrade.name'
+			),
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
+						'InstitutionSiteClass.id = ' . $classId
+					)
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.id = AssessmentItemType.education_grade_id')
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				)
+			),
+			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+		));
+		
+		$data = array();
+		foreach($list as $obj) {
+			$programmeId = $obj['EducationProgramme']['id'];
+			$programmeName = $obj['EducationCycle']['name'] . ' - ' . $obj['EducationProgramme']['name'];
+			$assessment = $obj['AssessmentItemType'];
+			if(!array_key_exists($programmeId, $data)) {
+				$data[$programmeId] = array('name' => $programmeName, 'items' => array());
+			}
+			$data[$programmeId]['items'][] = array(
+				'id' => $assessment['id'],
+				'code' => $assessment['code'],
+				'name' => $assessment['name'],
+				'grade' => $obj['EducationGrade']['name']
+			);
+		}
+		//pr($data);die;
+		return $data;
+	}
+	
 	public function groupByGrades($list) {
 		$data = array();
 		foreach($list as $obj) {
