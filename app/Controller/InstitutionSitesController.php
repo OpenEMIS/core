@@ -1158,6 +1158,7 @@ class InstitutionSitesController extends AppController {
 			$classId = $this->params['pass'][0];
 			$assessmentId = $this->params['pass'][1];
 			$class = $this->InstitutionSiteClass->findById($classId);
+			$selectedItem = 0;
 			if($class) {
 				$class = $class['InstitutionSiteClass'];
 				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
@@ -1171,12 +1172,12 @@ class InstitutionSitesController extends AppController {
 					if(empty($data)) {
 						$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
 					}
-					$this->set('classId', $classId);
-					$this->set('assessmentId', $assessmentId);
-					$this->set('selectedItem', $selectedItem);
 					$this->set('itemOptions', $items);
 					$this->set('data', $data);
 				}
+				$this->set('classId', $classId);
+				$this->set('assessmentId', $assessmentId);
+				$this->set('selectedItem', $selectedItem);
 			} else {
 				$this->redirect(array('action' => 'classes'));
 			}
@@ -1190,6 +1191,7 @@ class InstitutionSitesController extends AppController {
 			$classId = $this->params['pass'][0];
 			$assessmentId = $this->params['pass'][1];
 			$class = $this->InstitutionSiteClass->findById($classId);
+			$selectedItem = 0;
 			if($class) {
 				$class = $class['InstitutionSiteClass'];
 				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
@@ -1226,6 +1228,9 @@ class InstitutionSitesController extends AppController {
 						$this->redirect(array('action' => 'classesResults', $classId, $assessmentId, $selectedItem));
 					}
 				}
+				$this->set('classId', $classId);
+				$this->set('assessmentId', $assessmentId);
+				$this->set('selectedItem', $selectedItem);
 			} else {
 				$this->redirect(array('action' => 'classes'));
 			}
