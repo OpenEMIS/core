@@ -23,6 +23,7 @@ $(document).ready(function() {
             population.fetchData();
             $("#input_year").val(population.year);
         }
+        alert('aa');
     });
 
     $('input[type="submit"]').click(function(event){
@@ -45,11 +46,16 @@ var population = {
     id: '#population',
     deletedRecords: [],
     ajaxUrl: 'populationAjax',
+    changeOption: 0,
     // methods
 	init: function() {
         this.isEditable = false;
 		this.addAreaSwitching();
-		this.year = $('#year_id').val();
+		this.year = $('#year_id').find(":selected").text();
+        if(population.changeOption<1){
+            $("#PopulationAreaLevel0").trigger("change");
+            this.addAreaSwitching();
+        }
 
         $('.link_add').click(function() {
             if(population.parentAreaIds.length>0){
@@ -82,7 +88,7 @@ var population = {
     addAreaSwitching : function(){
         $('select[name*="[area_level_"]').each(function(i, obj){
             $(obj).change(function (d, o){
-
+                population.changeOption = 1;
                 var TotalAreaLevel = $('select[name*="[area_level_"]').length;
                 var isAreaLevelForInput = $(this).parent().parent().parent().attr('id');
                 var currentSelctedOptionValue = parseInt($(this).find(':selected').val());
@@ -122,8 +128,8 @@ var population = {
                 population.currentAreaId = currentSelctedOptionValue;
 
                 population.renderLegendText($(this).find('option[value="'+currentSelctedOptionValue+'"]').html());
-                
-                
+
+
                 if(currentSelctedOptionValue >= 0 && !isAreaLevelForInput && population.parentAreaIds.length > 0 ) {
                     population.fetchData(this);
                 }else{
@@ -145,7 +151,6 @@ var population = {
         });
     },
     fetchChildren :function (currentobj){
-        
         var selected = $(currentobj).val();
         var maskId;
         var url =  population.base +'viewAreaChildren/'+selected;
@@ -158,7 +163,7 @@ var population = {
             },
             success: function (data, textStatus) {
                     //console.log(data)
-                
+
                     var callback = function(data) {
                             tpl = '';
                             var nextselect = $(currentobj).parent().parent().next().find('select');
@@ -195,8 +200,6 @@ var population = {
             selectedValue = $(currentObject).val();
             parentAreaIds = population.parentAreaIds[population.parentAreaIds.length - 1 ];
         }
-
-
         var maskId;
         var url =  population.base +'viewData/'+this.year;
 

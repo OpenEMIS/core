@@ -1,6 +1,6 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('population', 'stylesheet', array('inline' => false));	
+echo $this->Html->css('population', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('population', false);
 
@@ -60,7 +60,7 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 	
 	<fieldset id="area_section_group" class="section_group">
         <legend id="area"><?php echo __('Area'); ?></legend>
-        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id', $initAreaSelection['area_id'], array()); ?>
     </fieldset>
 
 	<?php echo $this->Form->end(); ?>
@@ -106,11 +106,10 @@ $(document).ready(function(){
 		population.year = $("#year_id option[value='"+ selectedYear +"']").attr('selected','selected').val();
 
 	}else{
-
 		//$("#year_id option[value='"+ new Date().getFullYear() +"']").attr('selected','selected').trigger('change');
 		population.year = $("#year_id option[value='"+ new Date().getFullYear() +"']").attr('selected','selected').val();
+
 	}
-	
 	$('#edit').click(function(event){
 		event.preventDefault();
 		var form = $('form').attr('action', getRootURL() + 'Population/edit');
@@ -130,9 +129,7 @@ $(document).ready(function(){
 	}
 	currentSelect.find($('option[value="'+population.initAreaSelection[key]+'"]')).trigger('change');
 
-
 	<?php } ?>
-
 });
 
 
