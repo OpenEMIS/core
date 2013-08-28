@@ -197,8 +197,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Students', 'InstitutionSites', 'students'),
 					$this->createLink('Teachers', 'InstitutionSites', 'teachers'),
 					$this->createLink('Staff', 'InstitutionSites', 'staff'),
-					$this->createLink('Classes', 'InstitutionSites', 'classes'),
-					$this->createLink('Results', 'InstitutionSites', 'results')
+					$this->createLink('Classes', 'InstitutionSites', 'classes')
 				),
 				'TOTALS' => array(
 					$this->createLink('Verifications', 'Census', 'verifications'),
@@ -208,6 +207,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Classes', 'Census', 'classes'),
 					$this->createLink('Graduates', 'Census', 'graduates'),
 					$this->createLink('Attendance', 'Census', 'attendance'),
+					$this->createLink('Assessment', 'Census', 'assessments'),
 					$this->createLink('Behaviour', 'Census', 'behaviour'),
 					$this->createLink('Textbooks', 'Census', 'textbooks'),
 					$this->createLink('Infrastructure', 'Census', 'infrastructure'),
@@ -232,8 +232,7 @@ class NavigationComponent extends Component {
 				'ACCOUNTS &amp; SECURITY' => array(
 					$this->createLink('Users', 'Security', 'users'),
 					$this->createLink('Groups', 'Security', 'groups', '^group'),
-					$this->createLink('Roles', 'Security', 'roles', '^role|^permissions')//,
-					//$this->createLink('Permissions', 'Security', 'permissions')
+					$this->createLink('Roles', 'Security', 'roles', '^role|^permissions')
 				),
 				'NATIONAL DENOMINATORS' => array(
 					$this->createLink('Population', 'Population', 'index', 'index$|edit$'),

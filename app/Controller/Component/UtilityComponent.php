@@ -79,7 +79,9 @@ class UtilityComponent extends Component {
 		
 		// Assessment Messages
 		$msgList['ASSESSMENT_NO_PROGRAMME'] = "There are no active programmes in the system.";
-		$msgList['ASSESSMENT_NO_ASSESSMENT'] = "There are no assessments on the selected programme.";
+		$msgList['ASSESSMENT_NO_ASSESSMENT'] = "There are no assessments.";
+		$msgList['ASSESSMENT_NO_ASSESSMENT_ITEM'] = "There are no assessment items.";
+		$msgList['ASSESSMENT_NO_STUDENTS'] = "There are no students.";
 		$msgList['ASSESSMENT_RESULT_INACTIVE'] = "You cannot edit the results because this assessment is not active.";
 		
 		// Access Control Messages
