@@ -52,6 +52,10 @@ class EstTask extends AppTask {
 		$gender = array('male','female');
 		$this->db = ConnectionManager::getDataSource('default');
 		$this->popYear = $this->getByGroup('year',' data_source = 0 ',true);
+                
+                //dont process if only one  year record or no record.
+                if (count($this->popYear) < 2) return;
+                
 		$arrYears = $this->getByGroup('year');
 		$area_ids = $this->getByGroup('area_id',' data_source = 0 ');
 		
@@ -60,7 +64,7 @@ class EstTask extends AppTask {
 			foreach($ages as $ageV){
 				$garbage = array();
 				
-				$sql = "SELECT male,female,year FROM population WHERE data_source = 0 AND age = $ageV AND area_id = $areaV AND year in (".implode(",",array_keys($this->popYear)).")";
+				$sql = "SELECT male,female,year FROM population WHERE age = $ageV AND area_id = $areaV AND year in (".implode(",",array_keys($this->popYear)).")";
 				$res =  $this->db->fetchAll($sql);
 				
 				foreach ($res as $val){
@@ -96,17 +100,22 @@ class EstTask extends AppTask {
 					}
 					
 				}
-				
 				$this->writeSQL($fixMissing,$areaV,$ageV); 
-				
 				//echo 'Age:['.$ageV.'] , Areas:'.$areaV;
 				//pr($garbage);
 			}
 		}
 		//echo implode(array_keys($this->popYear));
-		 fclose ($this->fileFP);
+		fclose ($this->fileFP);
+                 
 	}
 	
+        
+        private function executeSQL(){
+            $this->db->rawQuery(file_get_contents($path.'/estimates/population_estimate'));
+            echo "executed";
+        }
+        
 	/*function cleanArray(&$array){
 		
 		$max = end(array_values($this->popYear)); //Get the final key as max!
@@ -124,17 +133,21 @@ class EstTask extends AppTask {
 			//echo "\n INSERT INTO population () VALUES ($age, $year, $area, ".$arrVal['male'].",".$arrVal['female'].")";
 			$query = array(
 				'table' => 'population',
-				'fields' => 'age,year,area_id,male,female,data_source,source',
-				'values' => implode(",",array($age,$year,$area,$arrVal['male'],$arrVal['female'],1,"'OpenEMIS Population Estimates'"))
+				'fields' => 'age,year,area_id,male,female,data_source,source,created_user_id,created',
+				'values' => implode(",",array($age,$year,$area,$arrVal['male'],$arrVal['female'],1,"'OpenEMIS Population Estimates'",1,"NOW()"))
 			);
-			$insertSQL .= "\n".$this->db->renderStatement('create', $query).";";
+                        
+			echo "\n".$SQL = $this->db->renderStatement('create', $query).";";
+                        //$this->db->q($SQL);
+                        
+                        $this->db->rawQuery($SQL);
+                        $insertSQL .= $SQL;
 		}
-		
-		
-		
+                
+                
 		fputs ($this->fileFP, $insertSQL);
-		
 	}
+        
 	public function process() {
 		$tmp = array();
 		$first = 0;
@@ -238,8 +251,9 @@ class EstTask extends AppTask {
 		} catch (Exception $e) {
 			// Update the status for the Processed item to (-1) ERROR
 			$errLog = $e->getMessage();
+                        pr($errLog);
 			$this->Common->updateStatus($settings['batchProcessId'],'-1');
-			$this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
+			$this->Common->createLog($this->Common->getLogPath().'estimate.log',$errLog);
 		}
 	}
 	
