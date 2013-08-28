@@ -19,6 +19,9 @@ echo $this->Html->script('search', false);
 		if($_accessControl->check($this->params['controller'], 'studentsAttendance')) {
             echo $this->Html->link(__('Attendance'), array('action' => 'classesAttendance'), array('class' => 'divider'));
         }
+		if($_accessControl->check($this->params['controller'], 'classesAssessments')) {
+            echo $this->Html->link(__('Assessments'), array('action' => 'classesAssessments', $classId), array('class' => 'divider'));
+        }
 		?>
     </h1>
     <?php echo $this->element('alert'); ?>
