@@ -16,6 +16,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
+	<?php if(!empty($itemOptions) && !empty($data)) { ?>
 	<div class="row">
 		<div class="label"><?php echo __('Subject'); ?></div>
 		<div class="value">
@@ -62,5 +63,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			</div>
 			<?php } ?>
 		</div>
-		</div>
+	</div>
+	<?php } ?>
 </div>

@@ -7,8 +7,10 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 <div id="results" class="content_wrapper">
 	<h1>
 		<span><?php echo __('Assessment Results'); ?></span>
-		<?php echo $this->Html->link(__('Back'), array('action' => 'classesAssessments', $classId), array('class' => 'divider')); ?>
-		<?php echo $this->Html->link(__('View'), array('action' => 'classesResults', $classId, $assessmentId, $selectedItem), array('class' => 'divider')); ?>
+		<?php 
+		echo $this->Html->link(__('Back'), array('action' => 'classesAssessments', $classId), array('class' => 'divider'));
+		echo $this->Html->link(__('View'), array('action' => 'classesResults', $classId, $assessmentId, $selectedItem), array('class' => 'divider'));
+		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
@@ -18,6 +20,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'classesResultsEdit', $classId, $assessmentId, $selectedItem)
 	));
 	?>
+	
+	<?php if(!empty($itemOptions) && !empty($data)) { ?>
 	<div class="row">
 		<div class="label"><?php echo __('Subject'); ?></div>
 		<div class="value">
@@ -80,5 +84,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classesResults', $classId, $assessmentId, $selectedItem), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
+	<?php } ?>
 	<?php echo $this->Form->end(); ?>
 </div>
