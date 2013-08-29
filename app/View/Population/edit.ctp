@@ -41,6 +41,7 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 				'maxlength' => 30,
 				'desc' => true,
 				'label' => false,
+				'default' => $selectedYear,
 				'div' => false), true);
 		?>
 			<!-- <select name="data[year]" id="year_id" onSelect="">
