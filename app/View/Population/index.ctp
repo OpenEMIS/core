@@ -41,21 +41,10 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 				'maxlength' => 30,
 				'desc' => true,
 				'label' => false,
+				'default' => $selectedYear,
 				'div' => false), true);
 		?>
-		<!-- <select name="data[year]" id="year_id" onSelect="">
-			<option value="0">--select--</option>
-			<?php
-				// for ($i=$currentYear; $i >= 1970 ; $i--) { 
 
-				// 	if($i == $selectedYear){
-				// 		echo '<option value="'.$i.'" selected="selected">'.$i.'</option>';
-				// 	}else{
-				// 		echo '<option value="'.$i.'">'.$i.'</option>';
-				// 	} 
-				// }
-			?>
-		</select> -->
 	</div>
 	
 	<fieldset id="area_section_group" class="section_group">

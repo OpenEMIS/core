@@ -50,6 +50,7 @@ $currency = "({$this->Session->read('configItem.currency')})";
 				'maxlength' => 30,
 				'desc' => true,
 				'label' => false,
+				'default' => $selectedYear,
 				'div' => false), true);
 		?>
 	</div>
