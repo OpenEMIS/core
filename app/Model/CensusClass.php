@@ -19,8 +19,7 @@ App::uses('AppModel', 'Model');
 class CensusClass extends AppModel {
 	public $belongsTo = array(
 		'SchoolYear',
-		'EducationGrade',
-		'InstitutionSiteProgramme'
+		'EducationGrade'
 	);
 	
 	public function getClassId($institutionSiteId, $yearId) {

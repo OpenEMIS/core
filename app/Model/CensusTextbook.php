@@ -20,8 +20,7 @@ class CensusTextbook extends AppModel {
 	
 	public $belongsTo = array(
 		'SchoolYear',
-		'EducationGradeSubject',
-		'InstitutionSiteProgramme'
+		'EducationGradeSubject'
 	);
 	
 	public function getCensusData($siteId, $yearId) {

@@ -18,7 +18,6 @@ App::uses('AppModel', 'Model');
 
 class CensusTeacher extends AppModel {
 	public $belongsTo = array(
-		'InstitutionSiteProgramme',
 		'SchoolYear',
 		'EducationGrade'
 	);
