@@ -19,8 +19,7 @@ App::uses('AppModel', 'Model');
 class CensusAssessment extends AppModel {
 	public $belongsTo = array(
 		'SchoolYear',
-		'EducationGradeSubject',
-		'InstitutionSiteProgramme'
+		'InstitutionSite'
 	);
 	
 	public function getCensusData($siteId, $yearId) {
