@@ -638,7 +638,7 @@ class InstitutionSitesController extends AppController {
 	public function programmes() {
 		$this->Navigation->addCrumb('Programmes');
 		
-		$yearOptions = $this->SchoolYear->getYearList();
+		$yearOptions = $this->SchoolYear->getAvailableYears();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
 		$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		
@@ -651,7 +651,7 @@ class InstitutionSitesController extends AppController {
 		if($this->request->is('get')) {
 			$this->Navigation->addCrumb('Edit Programmes');
 			
-			$yearOptions = $this->SchoolYear->getYearList();
+			$yearOptions = $this->SchoolYear->getAvailableYears();
 			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
 			$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 			
