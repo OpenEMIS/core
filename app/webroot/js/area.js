@@ -213,7 +213,6 @@ var areas = {
                                 saveBtn.removeClass('btn_disabled');
                             }
                             jsList.init('.table_view');
-
                         }else{
                             tableBody.html('');
                             tableBody.hide();
@@ -563,7 +562,7 @@ var areas = {
             html += '   <select name="data['+Model+']['+i+']['+((Model=='AreaEducation')?'area_education_level_id':'area_level_id')+']" style="width:100px;">';
 
             $.each(areas.area_levels, function(i,o){
-                if(element.lowest_id > o.id || element.lowest_id == 'undefined' || element.lowest_id == null){
+                if(element.lowest_id > o.id || element.lowest_id==null){
                     html += '<option value="'+o.id+'" ';
                     if(parseInt(element.area_level_id) === parseInt(o.id)){
                         html += 'selected="selected"';

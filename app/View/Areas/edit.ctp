@@ -36,7 +36,7 @@ echo $this->Html->script('area', false);
 	?>
 	<fieldset id="area_section_group" class="section_group">
 		<legend id="area"><?php echo __('Area'); ?></legend>
-		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
+		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$areaId, array()); ?>
 	</fieldset>
 
 	<?php echo $this->Form->end(); ?>
