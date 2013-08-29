@@ -44,7 +44,7 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 				'default' => $selectedYear,
 				'div' => false), true);
 		?>
-
+                <?php echo $this->element('census_legend_population'); ?>
 	</div>
 	
 	<fieldset id="area_section_group" class="section_group">

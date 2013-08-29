@@ -49,6 +49,7 @@ class Population extends AppModel {
 			"`Population`.`id` AS `id`",
 			"`Population`.`age` AS `age`",
 			"`Population`.`year` AS `year`",
+                        "`Population`.`data_source` AS `data_source`",
 			"`Population`.`source` AS `source`",
 			"`Population`.`male` AS `male`",
 			"`Population`.`female` AS `female`",
