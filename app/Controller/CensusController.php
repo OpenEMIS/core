@@ -490,7 +490,11 @@ class CensusController extends AppController {
 			}
 		} else {
 			$yearId = $this->data['school_year_id'];
-			$data = $this->CensusClass->clean($this->data['CensusClass'], $yearId, $this->institutionSiteId);
+			$duplicate = false;
+			$data = $this->CensusClass->clean($this->data['CensusClass'], $yearId, $this->institutionSiteId, $duplicate);
+			if($duplicate) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
+			}
 			$this->CensusClass->saveCensusData($data);
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
 			$this->redirect(array('action' => 'classes', $yearId));
@@ -719,7 +723,11 @@ class CensusController extends AppController {
 			$teachers = $this->data['CensusTeacher'];
 			$this->CensusTeacherFte->saveCensusData($fte, $yearId, $this->institutionSiteId);
 			$this->CensusTeacherTraining->saveCensusData($training, $yearId, $this->institutionSiteId);
-			$data = $this->CensusTeacher->clean($teachers, $yearId, $this->institutionSiteId);
+			$duplicate = false;
+			$data = $this->CensusTeacher->clean($teachers, $yearId, $this->institutionSiteId, $duplicate);
+			if($duplicate) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
+			}
 			$this->CensusTeacher->saveCensusData($data);
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
 			$this->redirect(array('action' => 'teachers', $yearId));
