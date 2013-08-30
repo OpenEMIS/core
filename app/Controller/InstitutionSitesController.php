@@ -638,7 +638,7 @@ class InstitutionSitesController extends AppController {
 	public function programmes() {
 		$this->Navigation->addCrumb('Programmes');
 		
-		$yearOptions = $this->SchoolYear->getYearList();
+		$yearOptions = $this->SchoolYear->getAvailableYears();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
 		$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 		
@@ -651,7 +651,7 @@ class InstitutionSitesController extends AppController {
 		if($this->request->is('get')) {
 			$this->Navigation->addCrumb('Edit Programmes');
 			
-			$yearOptions = $this->SchoolYear->getYearList();
+			$yearOptions = $this->SchoolYear->getAvailableYears();
 			$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
 			$data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
 			
@@ -879,6 +879,7 @@ class InstitutionSitesController extends AppController {
 			
 			$this->set('classId', $classId);
 			$this->set('className', $className);
+			$this->set('yearId', $classObj['SchoolYear']['id']);
 			$this->set('year', $classObj['SchoolYear']['name']);
 			$this->set('grades', $grades);
 			$this->set('students', $students);
@@ -1916,7 +1917,6 @@ class InstitutionSitesController extends AppController {
 	//STAFF CUSTOM FIELD PER YEAR - ENDS -
 
     // STUDENT BEHAVIOUR PART
-
     public function studentsBehaviour(){
         extract($this->studentsCustFieldYrInits());
         $this->Navigation->addCrumb('List of Behaviour');
@@ -2055,25 +2055,17 @@ class InstitutionSitesController extends AppController {
 
         if(!empty($classObj)) {
             $className = $classObj['InstitutionSiteClass']['name'];
+            $this->Navigation->addCrumb($className, array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
             $this->Navigation->addCrumb('Attendance');
-            $yearList = $this->SchoolYear->getYearList();
-            if(!empty($this->params['pass'][0])){
-                $yearId = $this->params['pass'][0];
-            }else{
-                $yearId = $this->getAvailableYearId($yearList);
-            }
-            $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-
+            $yearId = $classObj['InstitutionSiteClass']['school_year_id'];
 
             $grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
             $students = $this->InstitutionSiteClassGradeStudent->getStudentsAttendance($classId,array_keys($grades),$yearId);
 
             $this->set('classId', $classId);
             $this->set('selectedYear', $yearId);
-            $this->set('years', $yearList);
             $this->set('grades', $grades);
             $this->set('students', $students);
-            $this->set('schoolDays', $schoolDays);
         } else {
             $this->redirect(array('action' => 'classesList'));
         }
@@ -2086,26 +2078,24 @@ class InstitutionSitesController extends AppController {
 
             if(!empty($classObj)) {
                 $className = $classObj['InstitutionSiteClass']['name'];
+                $this->Navigation->addCrumb($className, array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
                 $this->Navigation->addCrumb('Attendance');
-                $yearList = $this->SchoolYear->getYearList();
-                $yearId = $this->getAvailableYearId($yearList);
-                $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-
+                $yearId = $classObj['InstitutionSiteClass']['school_year_id'];
 
                 $grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
                 $students = $this->InstitutionSiteClassGradeStudent->getStudentsAttendance($classId,array_keys($grades),$yearId);
 
                 $this->set('classId', $classId);
                 $this->set('selectedYear', $yearId);
-                $this->set('years', $yearList);
                 $this->set('grades', $grades);
                 $this->set('students', $students);
-                $this->set('schoolDays', $schoolDays);
             } else {
                 $this->redirect(array('action' => 'classesList'));
             }
         } else {
-            $yearId = $this->request->data['ClassesAttendance']['school_year_id'];
+            $classId = $this->Session->read('InstitutionSiteClassId');
+            $classObj = $this->InstitutionSiteClass->getClass($classId);
+            $yearId = $classObj['InstitutionSiteClass']['school_year_id'];
             $classId = $this->request->data['ClassesAttendance']['institution_site_class_id'];
             $myArr = array();
             if(isset($this->request->data['Attendance'])){

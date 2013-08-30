@@ -36,7 +36,7 @@ echo $this->Html->script('area', false);
 	?>
 	<fieldset id="area_section_group" class="section_group">
 		<legend id="area"><?php echo __('Area'); ?></legend>
-		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
+		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$areaId, array()); ?>
 	</fieldset>
 
 	<?php echo $this->Form->end(); ?>
@@ -61,7 +61,7 @@ echo $this->Html->script('area', false);
 		<ul class="quicksand table_view" style="margin-bottom:12px;"></ul>
 		
 		<?php if($_add && isset($initAreaSelection['area_id'])) { ?>
-		<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Area'); ?></a></div>
+		<div id="addarea" class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Area'); ?></a></div>
 		<?php } ?>
 			
 		<div class="controls">

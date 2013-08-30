@@ -9,14 +9,14 @@ echo $this->Html->script('search', false);
     <h1>
         <span><?php echo $className; ?></span>
 		<?php
-		echo $this->Html->link(__('List'), array('action' => 'classes'), array('class' => 'divider'));
+		echo $this->Html->link(__('List'), array('action' => 'classes', $yearId), array('class' => 'divider'));
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'classesEdit', $classId), array('class' => 'divider'));
 		}
 		if($_delete) {
 			echo $this->Html->link(__('Delete'), array('action' => 'classesDelete', $classId), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 		}
-		if($_accessControl->check($this->params['controller'], 'studentsAttendance')) {
+		if($_accessControl->check($this->params['controller'], 'classesAttendance')) {
             echo $this->Html->link(__('Attendance'), array('action' => 'classesAttendance'), array('class' => 'divider'));
         }
 		if($_accessControl->check($this->params['controller'], 'classesAssessments')) {

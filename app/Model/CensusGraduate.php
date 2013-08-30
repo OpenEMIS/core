@@ -18,8 +18,7 @@ App::uses('AppModel', 'Model');
 
 class CensusGraduate extends AppModel {
 	public $belongsTo = array(
-		'SchoolYear' => array('foreignKey' => 'school_year_id'),
-		'InstitutionSiteProgramme' => array('foreignKey' => 'institution_site_programme_id')
+		'SchoolYear' => array('foreignKey' => 'school_year_id')
 	);
 	
 	public function getCensusData($siteId, $yearId) {

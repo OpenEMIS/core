@@ -19,8 +19,7 @@ App::uses('AppModel', 'Model');
 class CensusClass extends AppModel {
 	public $belongsTo = array(
 		'SchoolYear',
-		'EducationGrade',
-		'InstitutionSiteProgramme'
+		'InstitutionSite'
 	);
 	
 	public function getClassId($institutionSiteId, $yearId) {
@@ -196,7 +195,7 @@ class CensusClass extends AppModel {
 		return $data;
 	}
 	
-	public function clean($data, $yearId, $institutionSiteId) {
+	public function clean($data, $yearId, $institutionSiteId, &$duplicate) {
 		$clean = array();
 		$gradeList = array();
 		// get the current list of census class record ids from the database
@@ -225,6 +224,8 @@ class CensusClass extends AppModel {
 					'school_year_id' => $yearId,
 					'CensusClassGrade' => $grades
 				);
+			} else {
+				if(!$duplicate) $duplicate = true;
 			}
 		}
 		// Reset all values of classes and seats for the existing class ids

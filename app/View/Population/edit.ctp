@@ -41,6 +41,7 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 				'maxlength' => 30,
 				'desc' => true,
 				'label' => false,
+				'default' => $selectedYear,
 				'div' => false), true);
 		?>
 			<!-- <select name="data[year]" id="year_id" onSelect="">
@@ -58,6 +59,7 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 					
 				?>
 			<!-- </select> -->
+                        <?php echo $this->element('census_legend_population'); ?>
 		</div>
 	<fieldset id="area_section_group" class="section_group">
         <legend id="area"><?php echo __('Area'); ?></legend>

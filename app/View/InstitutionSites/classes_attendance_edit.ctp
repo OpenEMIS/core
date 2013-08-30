@@ -19,20 +19,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 		?>
     </h1>
     <?php echo $this->element('alert'); ?>
-    
-    <div class="row myyear">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
-			<?php
-			echo $this->Form->input('school_year_id', array(
-				'options' => $years,
-				'default' => $selectedYear,
-				'onchange' => 'jsForm.change(this)',
-				'url' => $this->params['controller'] . '/' . $this->action
-			));
-			?>
-		</div>
-	</div>
+
     <?php echo $this->Form->hidden('institution_site_class_id', array('value' => empty($classId) ? 0 : $classId)); ?>
 	<fieldset class="section_group">
         <legend><?php echo __('Students'); ?></legend>
@@ -54,6 +41,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                     <?php if(isset($students)) { ?>
                     <?php $cnt = 0; ?>
                     <?php foreach($students as $obj) { ?>
+                     <?php if($obj['InstitutionSiteClassGradeStudent']['institution_site_class_grade_id']==$id){ ?>
                     <?php
                         $total = 0;
                         if(!empty($obj['StudentAttendance']['total_no_attend'])){
@@ -101,6 +89,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                         </div>
                         <div class="table_cell cell_subtotal cell_number"><?php echo $total; ?></div>
                     </div>
+                    <?php } // end if ?>
                     <?php $cnt++; ?>
                     <?php } // end for ?>
                     <?php } // end if ?>
