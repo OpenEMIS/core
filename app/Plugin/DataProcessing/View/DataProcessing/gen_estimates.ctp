@@ -61,7 +61,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	?>
 		<?php foreach($arrModules as $k => $arrv){ ?>
 			
-			<div class="table">
+			<div class="table full_width">
 				<div class="table_head">
 					<?php if($_execute) { ?>
 					<div class="table_cell cell_checkbox"><input type="checkbox" value="1" onChange="toggleSelect(this)" /></div>
@@ -90,7 +90,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 													}
                                                 }
                                                 $beingProc = ($isBackupRunning) ? 1: $beingProc;
-                                                $arrExtra = array('hiddenField' => false,'type'=>'checkbox','name'=>'data[Reports][]','value'=>$chkval, 'disabled' => (($chkval == '2000' || $chkval == '2001')?'':'disabled'));
+                                                $arrExtra = array('hiddenField' => false,'type'=>'checkbox','name'=>'data[Reports][]','value'=>$chkval, 'disabled' => (($chkval == '2000' || $chkval == '2001'|| $chkval == '2011')?'':'disabled'));
                                                 $arrExtra = ($beingProc == 1)?  array_merge($arrExtra,array('disabled'=>'disabled')):$arrExtra;
 					?>
 					

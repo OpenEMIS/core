@@ -47,6 +47,7 @@ var Finance = {
     id: '#finance',
     ajaxUrl: 'financeAjax',
     numAreaSelectors: 0,
+    changeOption: 0,
 
 	// methods
     init: function() {
@@ -54,6 +55,10 @@ var Finance = {
         this.changeView();
         this.addAreaSwitching();
         this.year = $('#year_id').val();
+        if(Finance.changeOption<1){
+            $("#FinanceAreaLevel0").trigger("change");
+            this.addAreaSwitching();
+        }
         this.numAreaSelectors = $('fieldset#area_section_group div.row').length;
     },
 	show : function(id){
@@ -94,6 +99,7 @@ var Finance = {
 
     	$('select[name*="[area_level_"]').each(function(i, obj){
             $(obj).change(function (d, o){
+                Finance.changeOption = 1;
                 //console.info('trigger');
                 //console.info(parseInt($(this).find(':selected').val()));
 
@@ -389,9 +395,8 @@ var Finance = {
             parentLegendText = $('select[name=data\\[Finance\\]\\[area_level_'+parentSelect+'\\]]').parent().parent().find('.label').html();
             childrenLegendText = $('select[name=data\\[Finance\\]\\[area_level_'+childrenSelect+'\\]]').parent().parent().find('.label').html();
         }
-
         parentLegend.html(parentLegendText);
-        childrenLegend.html(childrenLegendText);
+        childrenLegend.html(i18n.Areas.AreaLevelText);
     },
     // Rending of htmls for view and edit
     renderRecordToHtmlTableRow: function (data){
