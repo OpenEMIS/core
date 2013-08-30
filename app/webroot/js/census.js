@@ -97,7 +97,7 @@ var Census = {
 			url: getRootURL() + $(this).attr('url'),
 			data: ajaxParams,
 			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.multi'}); },
-			success: ajaxSuccesss
+			success: ajaxSuccess
 		});
 	},
 	

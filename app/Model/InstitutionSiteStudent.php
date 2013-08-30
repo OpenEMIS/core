@@ -85,6 +85,7 @@ class InstitutionSiteStudent extends AppModel {
 				)
 			),
 			'conditions' => $conditions,
+			'group' => array('Student.id'),
 			'order' => array('Student.first_name')
 		));
 		return $data;
@@ -253,6 +254,7 @@ class InstitutionSiteStudent extends AppModel {
 			'conditions' => $conditions,
 			'limit' => $limit,
 			'offset' => (($page-1)*$limit),
+			'group' => array('Student.id', 'EducationProgramme.id'),
 			'order' => $order
 		));
 		return $data;
