@@ -1,6 +1,6 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('population', 'stylesheet', array('inline' => false));	
+echo $this->Html->css('population', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('population', false);
 
@@ -41,26 +41,15 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 				'maxlength' => 30,
 				'desc' => true,
 				'label' => false,
+				'default' => $selectedYear,
 				'div' => false), true);
 		?>
-		<!-- <select name="data[year]" id="year_id" onSelect="">
-			<option value="0">--select--</option>
-			<?php
-				// for ($i=$currentYear; $i >= 1970 ; $i--) { 
-
-				// 	if($i == $selectedYear){
-				// 		echo '<option value="'.$i.'" selected="selected">'.$i.'</option>';
-				// 	}else{
-				// 		echo '<option value="'.$i.'">'.$i.'</option>';
-				// 	} 
-				// }
-			?>
-		</select> -->
+                <?php echo $this->element('census_legend_population'); ?>
 	</div>
 	
 	<fieldset id="area_section_group" class="section_group">
         <legend id="area"><?php echo __('Area'); ?></legend>
-        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id', $initAreaSelection['area_id'], array()); ?>
     </fieldset>
 
 	<?php echo $this->Form->end(); ?>
@@ -106,11 +95,10 @@ $(document).ready(function(){
 		population.year = $("#year_id option[value='"+ selectedYear +"']").attr('selected','selected').val();
 
 	}else{
-
 		//$("#year_id option[value='"+ new Date().getFullYear() +"']").attr('selected','selected').trigger('change');
 		population.year = $("#year_id option[value='"+ new Date().getFullYear() +"']").attr('selected','selected').val();
+
 	}
-	
 	$('#edit').click(function(event){
 		event.preventDefault();
 		var form = $('form').attr('action', getRootURL() + 'Population/edit');
@@ -130,9 +118,7 @@ $(document).ready(function(){
 	}
 	currentSelect.find($('option[value="'+population.initAreaSelection[key]+'"]')).trigger('change');
 
-
 	<?php } ?>
-
 });
 
 

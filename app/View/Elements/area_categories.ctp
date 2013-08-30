@@ -2,7 +2,7 @@
 
 $arrMap = array(
 	''=>'Areas',
-	'levels'=>'Areas Levels',
+	'levels'=>'Area Levels',
 	'AreaEducation'=>'Areas (Education)',
 	'AreaEducationLevels'=>'Area Levels (Education)'
 );

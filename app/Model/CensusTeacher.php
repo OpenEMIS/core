@@ -18,9 +18,8 @@ App::uses('AppModel', 'Model');
 
 class CensusTeacher extends AppModel {
 	public $belongsTo = array(
-		'InstitutionSiteProgramme',
 		'SchoolYear',
-		'EducationGrade'
+		'InstitutionSite'
 	);
 	
 	public function getTeacherId($institutionSiteId, $yearId) {
@@ -211,7 +210,7 @@ class CensusTeacher extends AppModel {
 		return $data;
 	}
 	
-	public function clean($data, $yearId, $institutionSiteId) {
+	public function clean($data, $yearId, $institutionSiteId, &$duplicate) {
 		$clean = array();
 		$gradeList = array();
 		// get the current list of census teacher record ids from the database
@@ -244,6 +243,8 @@ class CensusTeacher extends AppModel {
 					'school_year_id' => $yearId,
 					'CensusTeacherGrade' => $grades
 				);
+			} else {
+				if(!$duplicate) $duplicate = true;
 			}
 		}
 		// Reset all values of male and female for the existing ids
