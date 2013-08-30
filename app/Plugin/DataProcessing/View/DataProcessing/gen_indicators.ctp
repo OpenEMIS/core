@@ -65,7 +65,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		
 		<?php foreach($arrModules as $k => $arrv){ ?>
 			
-			<div class="table">
+			<div class="table full_width">
 				<div class="table_head">
 					<?php if($_execute) { ?>
 					<div class="table_cell cell_checkbox"><input type="checkbox" value="1" onChange="toggleSelect(this)" /></div>
