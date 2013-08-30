@@ -607,7 +607,8 @@ var population = {
         var html = '';
 
         $.each(data,function(i,o){
-            html += '<div id="" class="table_row ' + (((i+1)%2 === 0)? 'even':'') + '">';
+            console.log(data[i].data_source);
+            html += '<div id="" class="table_row ' + (((i+1)%2 === 0)? 'even':'') + ' '+(data[i].data_source == 0?"":"green_text")+'" >';
             //html += '<div class="table_cell">'+data.area_level.toUpperCase()+'</div>';
             html += '<div class="table_cell">'+data[i].source+'</div>';
             html += '<div class="table_cell cell_number">'+data[i].age+'</div>';
