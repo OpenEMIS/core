@@ -83,6 +83,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
                     'alias' => 'StudentAttendance',
                     'type' => 'left',
                     'conditions' => array('StudentAttendance.institution_site_class_id' => $classID,
+                                          'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeIds,
                                           'StudentAttendance.school_year_id' => $yearID,
                                           'StudentAttendance.student_id = Student.id',
                                          )

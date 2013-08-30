@@ -2093,7 +2093,9 @@ class InstitutionSitesController extends AppController {
                 $this->redirect(array('action' => 'classesList'));
             }
         } else {
-            $yearId = $this->request->data['ClassesAttendance']['school_year_id'];
+            $classId = $this->Session->read('InstitutionSiteClassId');
+            $classObj = $this->InstitutionSiteClass->getClass($classId);
+            $yearId = $classObj['InstitutionSiteClass']['school_year_id'];
             $classId = $this->request->data['ClassesAttendance']['institution_site_class_id'];
             $myArr = array();
             if(isset($this->request->data['Attendance'])){
