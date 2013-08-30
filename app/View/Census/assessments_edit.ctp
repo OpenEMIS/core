@@ -32,8 +32,7 @@ echo $this->Html->script('census', false);
 			));
 			?>
 		</div>
-		
-	<?php echo $this->element('census_legend'); ?>
+		<?php echo $this->element('census_legend'); ?>
 	</div>
 	
 	<?php 
@@ -47,7 +46,7 @@ echo $this->Html->script('census', false);
 			<div class="table_head">
 				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
 				<div class="table_cell"><?php echo __('Subject'); ?></div>
-				<div class="table_cell"><?php echo __('Value'); ?></div>
+				<div class="table_cell"><?php echo __('Score'); ?></div>
 			</div>
 			
 			<div class="table_body">
