@@ -36,6 +36,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                 <div class="table_body">
                     <?php if(isset($students)) { ?>
                     <?php foreach($students as $obj) { ?>
+                    <?php if($obj['InstitutionSiteClassGradeStudent']['institution_site_class_grade_id']==$id){ ?>
                     <?php
                         $total = 0;
                         if(!empty($obj['StudentAttendance']['total_no_attend'])){
@@ -52,12 +53,12 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                         <div class="table_cell cell_totals"><?php echo empty($obj['StudentAttendance']['total_no_absence']) ? 0 : $obj['StudentAttendance']['total_no_absence'] ?></div>
                         <div class="table_cell cell_total cell_number"><?php echo $total; ?></div>
                     </div>
+                    <?php } // end if ?>
                     <?php } // end for ?>
                     <?php } // end if ?>
                 </div>
             </div>
         </fieldset>
-
         <?php } ?>
     </fieldset>
 </div>
