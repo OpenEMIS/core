@@ -879,6 +879,7 @@ class InstitutionSitesController extends AppController {
 			
 			$this->set('classId', $classId);
 			$this->set('className', $className);
+			$this->set('yearId', $classObj['SchoolYear']['id']);
 			$this->set('year', $classObj['SchoolYear']['name']);
 			$this->set('grades', $grades);
 			$this->set('students', $students);
