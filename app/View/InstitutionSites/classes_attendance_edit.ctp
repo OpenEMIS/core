@@ -41,6 +41,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                     <?php if(isset($students)) { ?>
                     <?php $cnt = 0; ?>
                     <?php foreach($students as $obj) { ?>
+                     <?php if($obj['InstitutionSiteClassGradeStudent']['institution_site_class_grade_id']==$id){ ?>
                     <?php
                         $total = 0;
                         if(!empty($obj['StudentAttendance']['total_no_attend'])){
@@ -88,6 +89,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                         </div>
                         <div class="table_cell cell_subtotal cell_number"><?php echo $total; ?></div>
                     </div>
+                    <?php } // end if ?>
                     <?php $cnt++; ?>
                     <?php } // end for ?>
                     <?php } // end if ?>
