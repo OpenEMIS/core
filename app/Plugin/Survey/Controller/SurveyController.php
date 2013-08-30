@@ -92,7 +92,7 @@ class SurveyController extends SurveyAppController {
 	}
 	/* Index Page to show the list of json files available to use */
 	public function index($page = 0,$pattern ='') {
-		$this->Navigation->addCrumb('New Surveys');
+        $this->Navigation->addCrumb('New Surveys');
 		
 		
 		$year = '';
@@ -339,7 +339,6 @@ class SurveyController extends SurveyAppController {
             );
             $this->set($params);
         }
-
 	}
 
 	private function convFileSize($bytes){
@@ -955,28 +954,25 @@ class SurveyController extends SurveyAppController {
 	    }
     }
 	
-	public function ws_download($file = ''){
-		$this->autoRender = false;
-		if ($this->Auth->login()) {
-			$this->getReportFilesPath();
-			$this->download($file);
-		} else {
-			echo "false";
-		}
+	public function ws_download($file = 'ABC.json'){
+		if ($this->request->is('post')) {
+            if ($this->Auth->login()) {
+                $this->getReportFilesPath();
+                $this->download($file);
+            } else {
+                echo "false";
+            }
+        }
 	}
 
 	public function ws_upload(){
 		$this->autoRender = false;
-		if($this->Auth->login()) {
-			$this->getReportFilesPath(TRUE);
-			if(isset($_FILES['myfile'])){
-				if ($_FILES['myfile']['error'] === UPLOAD_ERR_OK)
-				move_uploaded_file($_FILES['myfile']['tmp_name'], $this->pathFile.$_FILES['myfile']['name']);
-				echo "true";
-			}
-		}else{
-			echo "false";
-		}
+        $this->getReportFilesPath(TRUE);
+        if(isset($_FILES['myfile'])){
+            if ($_FILES['myfile']['error'] === UPLOAD_ERR_OK)
+                move_uploaded_file($_FILES['myfile']['tmp_name'], $this->pathFile.$_FILES['myfile']['name']);
+            echo "true";
+        }
 	}
 	
 	public function ws_logout(){
