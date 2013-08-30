@@ -23,7 +23,6 @@ $(document).ready(function() {
             population.fetchData();
             $("#input_year").val(population.year);
         }
-        alert('aa');
     });
 
     $('input[type="submit"]').click(function(event){
@@ -431,6 +430,7 @@ var population = {
                     data.push({
                         id: id,
                         source: source,
+                        data_source: 0,
                         age: age,
                         male: male,
                         female: female,
@@ -626,7 +626,7 @@ var population = {
         var html = '';
 
         $.each(data,function(i,o){
-            html += '<div id="" class="table_row ' + (((i+1)%2 === 0)?  'even':'') + '" record-id="'+data[i].id+'" area-id="'+data[i].area_id+'">';
+            html += '<div id="" class="table_row ' + (((i+1)%2 === 0)?  'even':'') + ' '+(data[i].data_source == 0?"":"green_text")+'" record-id="'+data[i].id+'" area-id="'+data[i].area_id+'">';
             //html += '<div class="table_cell">'+data.area_level.toUpperCase()+'</div>';
 
             html += '<div class="table_cell">';

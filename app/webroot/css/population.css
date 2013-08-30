@@ -17,9 +17,11 @@
 	color: #666666;
 }
 
-.green_text > div{
+.green_text > div,
+.green_text input {
     color:red;
 }
+
 /*.value .input label{ display: none; }*/
 
 /* legend styles */
