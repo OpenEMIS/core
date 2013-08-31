@@ -1023,123 +1023,189 @@ class SurveyCategoryComponent extends Component {
 	
 	
 	// Re-Order Elements function
-	private function sortOrder(&$arr, $tblName){
-
-		switch($tblName){
-            case 'Institution':
-                $arr['questions'] = array("name" => array_merge($arr['questions']["name"],array("box"=>0)),
-                    "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("box"=>0)),
-                    "student_category_id" => array_merge($arr['questions']["student_category_id"],array("box"=>0)),
-                    "age" => array_merge($arr['questions']["age"],array("box"=>1)),
-                    "male" => array_merge($arr['questions']["male"],array("box"=>1)),
-                    "female" => array_merge($arr['questions']["female"],array("box"=>1)));
-
-                pr($arr['questions']);
-                die;
+    private function sortOrder(&$arr, $tblName){
+        switch($tblName){
+            case 'Staff':
+                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'Identification No')),
+                    "first_name" => array_merge($arr['questions']["first_name"],array("label"=>'First Name')),
+                    "last_name" => array_merge($arr['questions']["last_name"],array("label"=>'Last Name')),
+                    "gender" => array_merge($arr['questions']["gender"],array("label"=>'Gender', "items"=>array('Male','Female'))),
+                    "date_of_birth" => array_merge($arr['questions']["date_of_birth"],array("label"=>'Date of Birth')),
+                    "address" => array_merge($arr['questions']["address"],array("label"=>'Address')),
+                    "postal_code" => array_merge($arr['questions']["postal_code"],array("label"=>'Postal Code')),
+                    "address_area_id" => array_merge($arr['questions']["address_area_id"],array("label"=>'Address Area')),
+                    "birthplace_area_id" => array_merge($arr['questions']["birthplace_area_id"],array("label"=>'Birth Place Area')),
+                    "telephone" => array_merge($arr['questions']["telephone"],array("label"=>'Telephone')),
+                    "email" => array_merge($arr['questions']["email"],array("label"=>'Email')));
                 break;
-			case 'CensusStudent':
-				$arr['type'] = 'Grid_Unlimited';
-				$arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("box"=>0)),
-							 "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("box"=>0)), 
-							 "student_category_id" => array_merge($arr['questions']["student_category_id"],array("box"=>0)), 
-							 "age" => array_merge($arr['questions']["age"],array("box"=>1)),
-							 "male" => array_merge($arr['questions']["male"],array("box"=>1)), 
-							 "female" => array_merge($arr['questions']["female"],array("box"=>1)));
-				break;
-			case 'CensusGraduate':
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("education_level_id" => array_merge($arr['questions']["education_level_id"],array("box"=>0)),
-							 "education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("box"=>1)),
-							 "education_certification_id" => array_merge($arr['questions']["education_certification_id"],array("box"=>1)), 
-							 "male" => array_merge($arr['questions']["male"],array("box"=>1)), 
-							 "female" => array_merge($arr['questions']["female"],array("box"=>1)));
-				break;
-			case 'CensusClass':
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("box"=>1)),
-							 "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("box"=>1)), 
-							 "classes" => array_merge($arr['questions']["classes"],array("box"=>1)), 
-							 "seats" => array_merge($arr['questions']["seats"],array("box"=>1)));
-				break;
-			case 'CensusTextbook':
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("box"=>0)),
-							 "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("box"=>1)), 
-							 "education_grade_subject_id" => array_merge($arr['questions']["education_grade_subject_id"],array("box"=>1)), 
-							 "value" => array_merge($arr['questions']["value"],array("box"=>1)));
-				break;
-			case 'CensusTeacher': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("box"=>0)),
-							 "education_level_id" => array_merge($arr['questions']["education_level_id"],array("box"=>1)), 
-							 "male" => array_merge($arr['questions']["male"],array("box"=>1)), 
-							 "female" => array_merge($arr['questions']["female"],array("box"=>1)));
-				break;
-			case 'CensusStaff': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("staff_category_id" => array_merge($arr['questions']["staff_category_id"],array("box"=>1)),
-							 "male" => array_merge($arr['questions']["male"],array("box"=>1)), 
-							 "female" => array_merge($arr['questions']["female"],array("box"=>1)));
-				break;
-			case 'CensusFinance': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("finance_nature_id" => array_merge($arr['questions']["finance_nature_id"],array("box"=>1)),
-				 			 "finance_type_id" => array_merge($arr['questions']["finance_type_id"],array("box"=>1)), 
-							 "finance_source_id" => array_merge($arr['questions']["finance_source_id"],array("box"=>1)), 
-							 "finance_category_id" => array_merge($arr['questions']["finance_category_id"],array("box"=>1)), 
-							 "description" => array_merge($arr['questions']["description"],array("box"=>1)),
-							 "amount" => array_merge($arr['questions']["amount"],array("box"=>1)));
-				break;
-			case 'CensusBuilding': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("infrastructure_material_id" => array_merge($arr['questions']["infrastructure_material_id"],array("box"=>0)),
-							 "infrastructure_building_id" => array_merge($arr['questions']["infrastructure_building_id"],array("box"=>1)), 
-							 "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("box"=>1)),
-							 "value" => array_merge($arr['questions']["value"],array("box"=>1)));
-				break;
-			case 'CensusResource': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("infrastructure_resource_id" => array_merge($arr['questions']["infrastructure_resource_id"],array("box"=>0)), 
-							 "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("box"=>1)),
-							 "value" => array_merge($arr['questions']["value"],array("box"=>1)));
-				break;
-			case 'CensusFurniture': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("infrastructure_furniture_id" => array_merge($arr['questions']["infrastructure_furniture_id"],array("box"=>1)), 
-							 "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("box"=>1)),
-							 "value" => array_merge($arr['questions']["value"],array("box"=>1)));
-				break;
-			case 'CensusEnergy': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("infrastructure_energy_id" => array_merge($arr['questions']["infrastructure_energy_id"],array("box"=>1)), 
-							 "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("box"=>1)),
-							 "value" => array_merge($arr['questions']["value"],array("box"=>1)));
-				break;
-			case 'CensusRoom': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("infrastructure_room_id" => array_merge($arr['questions']["infrastructure_room_id"],array("box"=>1)), 
-							 "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("box"=>1)),
-							 "value" => array_merge($arr['questions']["value"],array("box"=>1)));
-				break;
-			case 'CensusSanitation': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("infrastructure_material_id" => array_merge($arr['questions']["infrastructure_material_id"],array("box"=>0)), 
-							 "infrastructure_sanitation_id" => array_merge($arr['questions']["infrastructure_sanitation_id"],array("box"=>0)),
-							 "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("box"=>1)),
-							 "male" => array_merge($arr['questions']["male"],array("box"=>1)),
-							 "female" => array_merge($arr['questions']["female"],array("box"=>1)),
-							 "unisex" => array_merge($arr['questions']["unisex"],array("box"=>1)));
-				break;
-			case 'CensusWater': 
-				$arr['type'] = 'Grid_Fix';
-				$arr['questions'] = array("infrastructure_water_id" => array_merge($arr['questions']["infrastructure_water_id"],array("box"=>1)), 
-							 "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("box"=>1)),
-							 "value" => array_merge($arr['questions']["value"],array("box"=>1)));
-				break;
-			default: // Do Nothing for tables not needed to sort
-				break;
-		}
-	}
-	
+
+            case 'Teacher':
+                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'Identification No')),
+                    "first_name" => array_merge($arr['questions']["first_name"],array("label"=>'First Name')),
+                    "last_name" => array_merge($arr['questions']["last_name"],array("label"=>'Last Name')),
+                    "gender" => array_merge($arr['questions']["gender"],array("label"=>'Gender', "items"=>array('Male','Female'))),
+                    "date_of_birth" => array_merge($arr['questions']["date_of_birth"],array("label"=>'Date of Birth')),
+                    "address" => array_merge($arr['questions']["address"],array("label"=>'Address')),
+                    "postal_code" => array_merge($arr['questions']["postal_code"],array("label"=>'Postal Code')),
+                    "address_area_id" => array_merge($arr['questions']["address_area_id"],array("label"=>'Address Area')),
+                    "birthplace_area_id" => array_merge($arr['questions']["birthplace_area_id"],array("label"=>'Birth Place Area')),
+                    "telephone" => array_merge($arr['questions']["telephone"],array("label"=>'Telephone')),
+                    "email" => array_merge($arr['questions']["email"],array("label"=>'Email')));
+                break;
+
+            case 'Student':
+                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'Identification No')),
+                    "first_name" => array_merge($arr['questions']["first_name"],array("label"=>'First Name')),
+                    "last_name" => array_merge($arr['questions']["last_name"],array("label"=>'Last Name')),
+                    "gender" => array_merge($arr['questions']["gender"],array("label"=>'Gender', "items"=>array('Male','Female'))),
+                    "date_of_birth" => array_merge($arr['questions']["date_of_birth"],array("label"=>'Date of Birth')),
+                    "address" => array_merge($arr['questions']["address"],array("label"=>'Address')),
+                    "postal_code" => array_merge($arr['questions']["postal_code"],array("label"=>'Postal Code')),
+                    "address_area_id" => array_merge($arr['questions']["address_area_id"],array("label"=>'Address Area')),
+                    "birthplace_area_id" => array_merge($arr['questions']["birthplace_area_id"],array("label"=>'Birth Place Area')),
+                    "telephone" => array_merge($arr['questions']["telephone"],array("label"=>'Telephone')),
+                    "email" => array_merge($arr['questions']["email"],array("label"=>'Email')));
+                break;
+
+            case 'Institution':
+                $arr['questions'] = array("name" => array_merge($arr['questions']["name"],array("label"=>'Institution Name')),
+                    "code" => array_merge($arr['questions']["code"],array("label"=>'Institution Code')),
+                    "institution_sector_id" => array_merge($arr['questions']["institution_sector_id"],array("label"=>'Sector')),
+                    "institution_provider_id" => array_merge($arr['questions']["institution_provider_id"],array("label"=>'Provider')),
+                    "institution_status_id" => array_merge($arr['questions']["institution_status_id"],array("label"=>'Status')),
+                    "date_opened" => array_merge($arr['questions']["date_opened"],array("label"=>'Date Opened')),
+                    "date_closed" => array_merge($arr['questions']["date_closed"],array("label"=>'Date Closed')),
+                    "address" => array_merge($arr['questions']["address"],array("label"=>'Address')),
+                    "postal_code" => array_merge($arr['questions']["postal_code"],array("label"=>'Postal Code')),
+                    "contact_person" => array_merge($arr['questions']["contact_person"],array("label"=>'Contact Person')),
+                    "telephone" => array_merge($arr['questions']["telephone"],array("label"=>'Telephone')),
+                    "fax" => array_merge($arr['questions']["fax"],array("label"=>'Fax')),
+                    "email" => array_merge($arr['questions']["email"],array("label"=>'Email')),
+                    "website" => array_merge($arr['questions']["website"],array("label"=>'Website')));
+                break;
+            case 'InstitutionSite':
+                $arr['questions'] = array("name" => array_merge($arr['questions']["name"],array("label"=>'Site Name')),
+                    "code" => array_merge($arr['questions']["code"],array("label"=>'Site Code')),
+                    "institution_site_type_id" => array_merge($arr['questions']["institution_site_type_id"],array("label"=>'Type')),
+                    "institution_site_ownership_id" => array_merge($arr['questions']["institution_site_ownership_id"],array("label"=>'Ownership')),
+                    "institution_site_status_id" => array_merge($arr['questions']["institution_site_status_id"],array("label"=>'Status')),
+                    "date_opened" => array_merge($arr['questions']["date_opened"],array("label"=>'Date Opened')),
+                    "date_closed" => array_merge($arr['questions']["date_closed"],array("label"=>'Date Closed')),
+                    "area_id" => array_merge($arr['questions']["area_id"],array("label"=>'Area')),
+                    "area_education_id" => array_merge($arr['questions']["area_education_id"],array("label"=>'Area (Education)')),
+                    "address" => array_merge($arr['questions']["address"],array("label"=>'Address')),
+                    "postal_code" => array_merge($arr['questions']["postal_code"],array("label"=>'Postal Code')),
+                    "institution_site_locality_id" => array_merge($arr['questions']["institution_site_locality_id"],array("label"=>'Locality')),
+                    "latitude" => array_merge($arr['questions']["latitude"],array("label"=>'Latitude')),
+                    "longitude" => array_merge($arr['questions']["longitude"],array("label"=>'Longitude')),
+                    "contact_person" => array_merge($arr['questions']["contact_person"],array("label"=>'Contact Person')),
+                    "telephone" => array_merge($arr['questions']["telephone"],array("label"=>'Telephone')),
+                    "fax" => array_merge($arr['questions']["fax"],array("label"=>'Fax')),
+                    "email" => array_merge($arr['questions']["email"],array("label"=>'Email')),
+                    "website" => array_merge($arr['questions']["website"],array("label"=>'Website')));
+                break;
+            case 'CensusStudent':
+                $arr['type'] = 'Grid_Unlimited';
+                $arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("label"=>'Programme',"box"=>0)),
+                    "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("label"=>'Grade',"box"=>0)),
+                    "student_category_id" => array_merge($arr['questions']["student_category_id"],array("label"=>'Category',"box"=>0)),
+                    "age" => array_merge($arr['questions']["age"],array("label"=>'Age',"box"=>1)),
+                    "male" => array_merge($arr['questions']["male"],array("label"=>'Male',"box"=>1)),
+                    "female" => array_merge($arr['questions']["female"],array("label"=>'Female',"box"=>1)));
+                break;
+            case 'CensusGraduate':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("education_level_id" => array_merge($arr['questions']["education_level_id"],array("label"=>'Level',"box"=>0)),
+                    "education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("label"=>'Programme',"box"=>1)),
+                    "education_certification_id" => array_merge($arr['questions']["education_certification_id"],array("label"=>'Certification',"box"=>1)),
+                    "male" => array_merge($arr['questions']["male"],array("label"=>'Male',"box"=>1)),
+                    "female" => array_merge($arr['questions']["female"],array("label"=>'Female',"box"=>1)));
+                break;
+            case 'CensusClass':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("label"=>'Programme',"box"=>1)),
+                    "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("label"=>'Grade',"box"=>1)),
+                    "classes" => array_merge($arr['questions']["classes"],array("label"=>'Classes',"box"=>1)),
+                    "seats" => array_merge($arr['questions']["seats"],array("label"=>'Seats',"box"=>1)));
+                break;
+            case 'CensusTextbook':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("label"=>'Programme',"box"=>0)),
+                    "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("label"=>'Grade',"box"=>1)),
+                    "education_grade_subject_id" => array_merge($arr['questions']["education_grade_subject_id"],array("label"=>'Subject',"box"=>1)),
+                    "value" => array_merge($arr['questions']["value"],array("label"=>'Questions',"box"=>1)));
+                break;
+            case 'CensusTeacher':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("label"=>'Programme',"box"=>0)),
+                    "education_level_id" => array_merge($arr['questions']["education_level_id"],array("label"=>'Level',"box"=>1)),
+                    "male" => array_merge($arr['questions']["male"],array("label"=>'Male',"box"=>1)),
+                    "female" => array_merge($arr['questions']["female"],array("label"=>'Female',"box"=>1)));
+                break;
+            case 'CensusStaff':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("staff_category_id" => array_merge($arr['questions']["staff_category_id"],array("label"=>'Category',"box"=>1)),
+                    "male" => array_merge($arr['questions']["male"],array("label"=>'Male',"box"=>1)),
+                    "female" => array_merge($arr['questions']["female"],array("label"=>'Female',"box"=>1)));
+                break;
+            case 'CensusFinance':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("finance_nature_id" => array_merge($arr['questions']["finance_nature_id"],array("label"=>'Nature',"box"=>1)),
+                    "finance_type_id" => array_merge($arr['questions']["finance_type_id"],array("label"=>'Type',"box"=>1)),
+                    "finance_source_id" => array_merge($arr['questions']["finance_source_id"],array("label"=>'Source',"box"=>1)),
+                    "finance_category_id" => array_merge($arr['questions']["finance_category_id"],array("label"=>'Category',"box"=>1)),
+                    "description" => array_merge($arr['questions']["description"],array("label"=>'Description',"box"=>1)),
+                    "amount" => array_merge($arr['questions']["amount"],array("label"=>'Amount',"box"=>1)));
+                break;
+            case 'CensusBuilding':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("infrastructure_material_id" => array_merge($arr['questions']["infrastructure_material_id"],array("label"=>'Material',"box"=>0)),
+                    "infrastructure_building_id" => array_merge($arr['questions']["infrastructure_building_id"],array("label"=>'Building',"box"=>1)),
+                    "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("label"=>'Status',"box"=>1)),
+                    "value" => array_merge($arr['questions']["value"],array("label"=>'Total',"box"=>1)));
+                break;
+            case 'CensusResource':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("infrastructure_resource_id" => array_merge($arr['questions']["infrastructure_resource_id"],array("label"=>'Resource',"box"=>0)),
+                    "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("label"=>'Status',"box"=>1)),
+                    "value" => array_merge($arr['questions']["value"],array("label"=>'Total',"box"=>1)));
+                break;
+            case 'CensusFurniture':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("infrastructure_furniture_id" => array_merge($arr['questions']["infrastructure_furniture_id"],array("label"=>'Furniture',"box"=>1)),
+                    "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("label"=>'Status',"box"=>1)),
+                    "value" => array_merge($arr['questions']["value"],array("label"=>'Total',"box"=>1)));
+                break;
+            case 'CensusEnergy':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("infrastructure_energy_id" => array_merge($arr['questions']["infrastructure_energy_id"],array("label"=>'Energy',"box"=>1)),
+                    "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("label"=>'Status',"box"=>1)),
+                    "value" => array_merge($arr['questions']["value"],array("label"=>'Total',"box"=>1)));
+                break;
+            case 'CensusRoom':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("infrastructure_room_id" => array_merge($arr['questions']["infrastructure_room_id"],array("label"=>'Room',"box"=>1)),
+                    "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("label"=>'Status',"box"=>1)),
+                    "value" => array_merge($arr['questions']["value"],array("label"=>'Total',"box"=>1)));
+                break;
+            case 'CensusSanitation':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("infrastructure_material_id" => array_merge($arr['questions']["infrastructure_material_id"],array("label"=>'Material',"box"=>0)),
+                    "infrastructure_sanitation_id" => array_merge($arr['questions']["infrastructure_sanitation_id"],array("label"=>'Sanitation',"box"=>0)),
+                    "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("label"=>'Status',"box"=>1)),
+                    "male" => array_merge($arr['questions']["male"],array("label"=>'Male',"box"=>1)),
+                    "female" => array_merge($arr['questions']["female"],array("label"=>'Female',"box"=>1)),
+                    "unisex" => array_merge($arr['questions']["unisex"],array("label"=>'Unisex',"box"=>1)));
+                break;
+            case 'CensusWater':
+                $arr['type'] = 'Grid_Fix';
+                $arr['questions'] = array("infrastructure_water_id" => array_merge($arr['questions']["infrastructure_water_id"],array("label"=>'Water',"box"=>1)),
+                    "infrastructure_status_id" => array_merge($arr['questions']["infrastructure_status_id"],array("label"=>'Status',"box"=>1)),
+                    "value" => array_merge($arr['questions']["value"],array("label"=>'Total',"box"=>1)));
+                break;
+            default: // Do Nothing for tables not needed to sort
+                break;
+        }
+    }
 }
 ?>
