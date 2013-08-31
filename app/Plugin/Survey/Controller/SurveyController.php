@@ -8,6 +8,7 @@ class SurveyController extends SurveyAppController {
 
     public $uses = array(
 		'Area',
+        'AreaEducation',
 		'BatchProcess',
         'Reports.Report',
 		'Reports.BatchReport',
