@@ -5,6 +5,7 @@ class SurveyCategoryComponent extends Component {
 	private $controller;
 	public $uses = array(
 		'Area',
+        'AreaEducation',
 		'BatchProcess',
         'Reports.Report',
 		'Reports.BatchReport',
@@ -273,7 +274,7 @@ class SurveyCategoryComponent extends Component {
 		
 		// Declare the Database Tables to use for Survey
 		// ---- Institution Table
-		$tableInstitution =  array('Institution - INFORMATION'=>array('Institution'  =>array('InstitutionStatus','InstitutionProvider','InstitutionSector', 'Area')));
+		$tableInstitution =  array('Institution - INFORMATION'=>array('Institution'  =>array('InstitutionStatus','InstitutionProvider','InstitutionSector')));
 		$tableInstitutionNames = array('Institution'=>'General');
 		$tableInstitutionLinkField = array(); // No linkup needed
 		
@@ -313,7 +314,7 @@ class SurveyCategoryComponent extends Component {
 		// Declare the Database Tables to use for Survey
 		// ---- Institution Site Tables
 		$tableInstitutionSite =  array('Institution Site - INFORMATION'=>array('InstitutionSite'=>array('InstitutionSiteStatus','InstitutionSiteLocality','InstitutionSiteType',	
-																			'InstitutionSiteOwnership', 'Area', 'Institution')));
+																			'InstitutionSiteOwnership', 'Area', 'AreaEducation', 'Institution')));
 		$tableInstitutionSiteNames = array('InstitutionSite'=>'General');
 		$tableInstitutionSiteLinkField = array(); // No linkup needed
 		
@@ -712,6 +713,11 @@ class SurveyCategoryComponent extends Component {
 					$lowest_level = $lowest_level[key($lowest_level)];
 					$result = $this->{$fTablename}->find('list', array('conditions' => array("area_level_id" => $lowest_level,"visible" => "1")));
 					break;
+            case 'AreaEducation':
+                $lowest_level = Set::flatten($this->{$fTablename}->query('SELECT MAX(`level`) FROM `area_education_levels`'));
+                $lowest_level = $lowest_level[key($lowest_level)];
+                $result = $this->{$fTablename}->find('list', array('conditions' => array("area_education_level_id" => $lowest_level,"visible" => "1")));
+                break;
 			case 'EducationProgramme':
 					$result = $this->{$fTablename}->find('all', array(
 													    'recursive' => -1,
@@ -1018,8 +1024,19 @@ class SurveyCategoryComponent extends Component {
 	
 	// Re-Order Elements function
 	private function sortOrder(&$arr, $tblName){
-	
+
 		switch($tblName){
+            case 'Institution':
+                $arr['questions'] = array("name" => array_merge($arr['questions']["name"],array("box"=>0)),
+                    "education_grade_id" => array_merge($arr['questions']["education_grade_id"],array("box"=>0)),
+                    "student_category_id" => array_merge($arr['questions']["student_category_id"],array("box"=>0)),
+                    "age" => array_merge($arr['questions']["age"],array("box"=>1)),
+                    "male" => array_merge($arr['questions']["male"],array("box"=>1)),
+                    "female" => array_merge($arr['questions']["female"],array("box"=>1)));
+
+                pr($arr['questions']);
+                die;
+                break;
 			case 'CensusStudent':
 				$arr['type'] = 'Grid_Unlimited';
 				$arr['questions'] = array("education_programme_id" => array_merge($arr['questions']["education_programme_id"],array("box"=>0)),
