@@ -170,7 +170,7 @@ class UtilityHelper extends AppHelper {
         echo '</div></div></div></div>';
     }
 	
-	public function getAreaPicker($form,$id,$value,$settings=array()){
+	public function getAreaPicker($form,$id,$value,$settings=array(), $filter = array()){
         switch($id){
             case 'area_education_id':
                 $arrmap = array('AreaEducation','AreaEducationLevel');
@@ -183,17 +183,21 @@ class UtilityHelper extends AppHelper {
                 break;
         }
 
+
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 
 		if (!is_numeric($value) || !isset($value) || !($this->AreaHandler->checkAreaExist($value,$arrmap)>0)) {
             $value=$this->AreaHandler->getTopArea($arrmap);
         }
 
+
+
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
         $this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
 
 		$ctr = 0;
+
 		foreach($this->fieldLevels as $levelid => $levelName){
             $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
 
