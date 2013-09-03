@@ -190,7 +190,8 @@ class AreasController extends AppController {
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
 
         $this->autoRender = false;
-        $value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
+        $value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id, $arrMap[0].'.visible' => 1)
+                                         ));
         $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
         echo json_encode($value);
     }
