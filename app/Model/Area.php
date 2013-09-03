@@ -114,6 +114,11 @@ class Area extends AppModel {
 		$data = $this->findById($id);	
 		return $data['Area']['name'];
 	}
+
+    public function getAreaLevelId($id) {
+        $data = $this->findById($id);
+        return $data['Area']['area_level_id'];
+    }
 	
 	// Used by SecurityController
 	public function getGroupAccessList($exclude) {

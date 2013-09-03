@@ -190,8 +190,18 @@ class AreasController extends AppController {
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
 
         $this->autoRender = false;
-        $value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id, $arrMap[0].'.visible' => 1)
-                                         ));
+
+        // For filtering needs
+        $filterIds = $_SESSION['filterArr']["2"];
+        if($arrMap[0]=="Area" && $_SESSION['filterArr']!=""){
+            $levelId =$this->{$arrMap[0]}->getAreaLevelId($id);
+            //$filterIds = $_SESSION['filterArr'];
+            //$filterIds = $filterIds["Area"][$levelId];
+        }
+
+        $value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id, $arrMap[0].'.visible' => 1,
+                                            $arrMap[0].'.id' => 52
+                                        )));
         $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
         echo json_encode($value);
     }
@@ -203,7 +213,7 @@ class AreasController extends AppController {
 
         $this->autoRender = false;
         $fkAreaLevel = Inflector::underscore($arrMap[1]);
-        $area_table_name = Inflector::tableize($arrMap[0]);;
+        $area_table_name = Inflector::tableize($arrMap[0]);
         $area_level_table_name = Inflector::tableize($arrMap[1]);;
 
         $db = $this->{$arrMap[0]}->getDataSource();
