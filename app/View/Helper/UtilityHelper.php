@@ -190,7 +190,20 @@ class UtilityHelper extends AppHelper {
             $value=$this->AreaHandler->getTopArea($arrmap);
         }
 
+        // Get the filter if needed
+        $filterArr = array();
+        if (!empty($filter)) {
+            foreach($filter as $val){
+                foreach($this->AreaHandler->getAreaPaths($val["area_id"]) as $key => $innerArray) {
+                    if(!in_array($innerArray['Area']['id'], $filterArr["Area"][$innerArray['Area']['area_level_id']]['id'])){
+                        $filterArr["Area"][$innerArray['Area']['area_level_id']]['id'][] = $innerArray['Area']['id'];
+                    }
+                }
+            }
+        }
 
+        //$this->Session->write("filterArr", $filterArr);
+        $_SESSION['filterArr']= $filterArr;
 
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
