@@ -50,6 +50,11 @@ class AreaHandlerComponent extends Component {
 	
 	//called before Controller::redirect()
 	public function beforeRedirect(Controller $controller, $url, $status = null, $exit = true) {}
+
+    public function getAreaPaths($id){
+        $parents = $this->Area->getPath($id);
+        return $parents;
+    }
 	
 	public function getAreasByParent(&$areaList, $parentId, $list=true, $visible=true, $recursive=true) {
 		$options = array();
@@ -150,7 +155,7 @@ class AreaHandlerComponent extends Component {
         return $arrVals;
     }
 
-    public function getAllSiteAreaToParent($siteId,$arrMap = array('Area','AreaLevel')) {
+    public function getAllSiteAreaToParent($siteId,$arrMap = array('Area','AreaLevel'), $filterArr = array()) {
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
         $lowest =  $siteId;
 
@@ -173,7 +178,6 @@ class AreaHandlerComponent extends Component {
                         $sibVal[$arrMap[0]]['visible'] = 0;
                         $arrDisabledList[$sibVal[$arrMap[0]]['id']]['visible'] = 0;
                     }
-
                 }
             }
             foreach($siblings as $sibVal2){

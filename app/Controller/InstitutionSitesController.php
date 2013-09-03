@@ -75,7 +75,9 @@ class InstitutionSitesController extends AppController {
 		'Teachers.TeacherCategory',
 		'Staff.Staff',
 		'Staff.StaffAttendance',
-		'Staff.StaffCategory'
+		'Staff.StaffCategory',
+        'SecurityGroupUser',
+        'SecurityGroupArea'
 	);
 	
 	public $helpers = array('Paginator');
@@ -388,6 +390,10 @@ class InstitutionSitesController extends AppController {
 		$this->Utility->unshiftArray($topAdminArea, array('0'=>'--'.__('Select').'--'));
 		
 		$adminlevels = $this->AreaEducationLevel->find('list');
+
+        // Get security group area
+        $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
+        $filterArea = $this->SecurityGroupArea->getAreas($groupId);
 		
         $this->set('type_options',$type);
         $this->set('ownership_options',$ownership);
@@ -404,6 +410,7 @@ class InstitutionSitesController extends AppController {
 		$this->set('adminareadropdowns',$adminareadropdowns);
         $this->set('highestLevel',$topArea);
 		$this->set('highestAdminLevel',$topAdminArea);
+        $this->set('filterArea',$filterArea);
     }
 	
 	public function delete() {
