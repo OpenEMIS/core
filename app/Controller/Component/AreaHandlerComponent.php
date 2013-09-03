@@ -187,8 +187,12 @@ class AreaHandlerComponent extends Component {
             }
             $colInfo[$AreaLevelfk.'_'.$index]['options'] = $opt;
         }
+        if(count($areas)>0){
+            $maxAreaIndex = max(array_keys($areas));//starts with 0
+        }else{
+            $maxAreaIndex = 0;
+        }
 
-        $maxAreaIndex = max(array_keys($areas));//starts with 0
         $totalAreaLevel = $this->AreaLevel->find('count'); //starts with 1
         for($i = $maxAreaIndex; $i < $totalAreaLevel;$i++ ){
             $colInfo[$AreaLevelfk.'_'.($i+1)]['options'] = array('0'=>'--'.__('Select').'--');
