@@ -580,12 +580,13 @@ class SecurityController extends AppController {
 	
 	public function groupsView() {
 		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
-		
+
 		if(isset($this->params['pass'][0])) {
 			$groupId = $this->params['pass'][0];
 			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
 			if($data) {
 				$this->Navigation->addCrumb($data['SecurityGroup']['name']);
+
 				$areas = $this->SecurityGroupArea->getAreas($groupId);
 				$sites = $this->SecurityGroupInstitutionSite->getSites($groupId);
 				$systemRoles = $this->SecurityRole->getRoles(0);
