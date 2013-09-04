@@ -210,9 +210,8 @@ class AreasController extends AppController {
                         $value[$val["Area"]["code"]] = $val["Area"]["name"];
                     }
                 }else{
-                    //$value[$val["Area"]["code"]] = $val["Area"]["name"];
+                    $value[$val["Area"]["code"]] = $val["Area"]["name"];
                 }
-
             }
         }else{
             $value =$this->{$arrMap[0]}->find('list', array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
