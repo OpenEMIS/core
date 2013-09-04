@@ -81,7 +81,7 @@ echo $this->Html->script('config', false);
 	<?php if(isset($obj['area_id'])){ ?>
 	<fieldset class="section_break">
 		<legend id="area"><?php echo __('Area'); ?></legend>
-        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$obj['area_id'], array()); ?>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id','', array(), $filterArea); ?>
 	</fieldset>
 	<?php } ?>
 	<?php if(isset($obj['area_education_id'])){ ?>
