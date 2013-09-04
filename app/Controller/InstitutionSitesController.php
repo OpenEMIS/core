@@ -290,7 +290,12 @@ class InstitutionSitesController extends AppController {
 		$this->Utility->unshiftArray($ownership, array('0'=>'--'.__('Select').'--'));
 		$this->Utility->unshiftArray($locality, array('0'=>'--'.__('Select').'--'));
 		$this->Utility->unshiftArray($status, array('0'=>'--'.__('Select').'--'));
-		
+
+        // Get security group area
+        $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
+        $filterArea = $this->SecurityGroupArea->getAreas($groupId);
+
+        $this->set('filterArea',$filterArea);
 		$this->set('type_options',$type);
         $this->set('ownership_options',$ownership);
         $this->set('locality_options',$locality);
