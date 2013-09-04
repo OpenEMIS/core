@@ -24,6 +24,7 @@ class AccessControlComponent extends Component {
 	private $GroupUser;
 	private $GroupArea;
 	private $GroupInstitutionSite;
+	private $userId;
 	
 	public $ignoreList = array(
 		'HOME' => array('index', 'details', 'detailsEdit', 'password', 'support', 'systemInfo', 'license'),
@@ -72,17 +73,11 @@ class AccessControlComponent extends Component {
 	
 	public function init($userId) {
 		$this->setUserPermissions($userId);
-		
-		/*
-		if($this->Auth->user('super_admin')==0) {
-			$this->loadAreas();
-			$this->loadInstitutions();
-		}
-		*/
 	}
 	
 	public function setUserPermissions($userId) {
 		if($userId > 0) {
+			$this->userId = $userId;
 			$permissions = $this->getPermissions($userId);
 			$this->Session->write('permissions', $permissions);
 		} else {
@@ -277,101 +272,55 @@ class AccessControlComponent extends Component {
 		return $parent[$this->modelMap['Function']];
 	}
 	
-	public function loadAreas() {
-		$userId = $this->Auth->user('id');
-		if($userId > 0) {
-			$areaList = array();
-			$isSuperAdmin = $this->Auth->user('super_admin');
-	
-			if($isSuperAdmin == 0) {
-				$areas = $this->GroupArea->findAreasByUserId($userId);
-				foreach($areas as $key => $areaId) {
-					$areaList[$areaId] = 0;
-					$this->AreaHandler->getAreasByParent($areaList, $areaId);
-				}
-				$this->Session->write('AccessControl.areas', $areaList);
-			}
-		}
-	}
-	
-	public function loadInstitutions() {
-		$userId = $this->Auth->user('id');
-		$groupMaps = array();
-		if($userId > 0) {
-			// getting all accessible sites
-			$sites = $this->GroupInstitutionSite->findSitesByUserId($userId);
-			$siteOnly = array();
-			
-			foreach($sites as $key => $obj) {
-				$siteOnly = array_merge($siteOnly, $obj);
-			}
-			
-			// For institutions without a site, only display the institutions to 
-			// users in the same group as the creator of that institution
-			// if creator has no group anymore, the institution will be displayed to everyone
-			$Institution = ClassRegistry::init('Institution');
-			$institutionList = $Institution->getInstitutionsWithoutSites();
-			$userGroups = $this->GroupUser->getGroupIdsByUserId($userId);
-			
-			foreach($institutionList as $key => $obj) {
-				$creator = $obj['Institution']['created_user_id'];
-				$creatorGroups = array();
-				if(!array_key_exists($creator, $groupMaps)) {
-					$creatorGroups = $this->GroupUser->getGroupIdsByUserId($creator);
-					$groupMaps[$creator] = $creatorGroups;
-				} else {
-					$creatorGroups = $groupMaps[$creator];
-				}
-				if(!empty($creatorGroups)) {
-					$existsInGroup = array_intersect($creatorGroups, $userGroups);
-					if(empty($existsInGroup)) { // user and creator is in same group
-						unset($institutionList[$key]);
-					} else {
-						$sites[$obj['Institution']['id']] = array();
-					}
-				} else {
-					$sites[$obj['Institution']['id']] = array();
-				}
-			}
-			
-			$InstitutionSite = ClassRegistry::init('InstitutionSite');
-			$areas = $this->Session->read('AccessControl.areas');
-			if(!empty($areas)) {
-				// getting all sites from accessible areas
-				$list = $InstitutionSite->getInstitutionsByAreas(array_keys($areas));
-				foreach($list as $obj) {
-					$site = $obj['InstitutionSite'];
-					$institutionId = $site['institution_id'];
-					if(!isset($sites[$institutionId])) {
-						$sites[$institutionId] = array();
-					}
-					if(!in_array($site['id'], $sites[$institutionId])) {
-						$sites[$institutionId][] = $site['id'];
-						$siteOnly[] = $site['id'];
-					}
-				}
-			}
-			$this->Session->write('AccessControl.institutions', $sites);
-			$this->Session->write('AccessControl.sites', $siteOnly);
-		}
-	}
-	
-	public function getAccessibleAreas() {
-		return $this->Session->read('AccessControl.areas');
-	}
-	
-	public function getAccessibleInstitutions($includeSites=false) {
-		$institutions =  $this->Session->read('AccessControl.institutions');
-		if(!$includeSites) {
-			$institutions = array_keys($institutions);
-		}
-		return $institutions;
-	}
-
-	public function getAccessibleSites() {
-		$sites = $this->Session->read('AccessControl.sites');
+	public function isInstitutionSiteAccessible($institutionSiteId) {
+		$Site = ClassRegistry::init('InstitutionSite');
+		$groupAreas = $this->GroupArea->find('list', array(
+			'recursive' => -1,
+			'fields' => array('SecurityGroupArea.area_id', 'SecurityGroupArea.area_id'),
+			'joins' => array(
+				array(
+					'table' => 'security_group_users',
+					'alias' => 'SecurityGroupUser',
+					'conditions' => array(
+						'SecurityGroupUser.security_user_id = ' . $this->userId,
+						'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id'
+					)
+				)
+			)
+		));
+		$siteExists = $this->GroupInstitutionSite->find('all', array(
+			'recursive' => -1,
+			'fields' => array('SecurityGroupInstitutionSite.institution_site_id'),
+			'joins' => array(
+				array(
+					'table' => 'security_group_users',
+					'alias' => 'SecurityGroupUser',
+					'conditions' => array(
+						'SecurityGroupUser.security_user_id = ' . $this->userId,
+						'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id'
+					)
+				)
+			),
+			'conditions' => array('SecurityGroupInstitutionSite.institution_site_id' => $institutionSiteId)
+		));
 		
-		return $sites;
+		if(empty($groupAreas)) {
+			$groupAreas = array(0);
+		}
+		$exists = 'EXISTS (SELECT 1 FROM areas WHERE areas.lft < SiteArea.lft AND areas.rght > SiteArea.rght AND areas.id IN (' . implode(',', $groupAreas) . '))';
+		$areaExists = $Site->find('all', array(
+			'fields' => array('InstitutionSite.id'),
+			'recursive' => -1,
+			'joins' => array(
+				array(
+					'table' => 'areas',
+					'alias' => 'SiteArea',
+					'conditions' => array('SiteArea.id = InstitutionSite.area_id')
+				)
+			),
+			'conditions' => array('InstitutionSite.id' => $institutionSiteId, $exists)
+		));
+		return !empty($areaExists) || !empty($siteExists);
 	}
 }
 ?>

@@ -168,19 +168,23 @@ class InstitutionsController extends AppController {
 		if($data) {
             $sites = $data['InstitutionSite'];
             $this->Session->write('InstitutionId', $id);
-            $arrInstSiteIds = $this->AccessControl->getAccessibleInstitutions(true);
-            if(!empty($arrInstSiteIds)){
-                $allowedSites =array();
-                if(array_key_exists($id,$arrInstSiteIds)){
-                    $allowedSites = $arrInstSiteIds[$id];
-                }
-
-            }
-            foreach($sites as $k => &$arr){
-                if(!empty($arrInstSiteIds) and !in_array($arr['id'], $allowedSites)) { unset($sites[$k]);continue;}
-                $p = $this->InstitutionSite->find('first',array('conditions'=>array('InstitutionSite.id' => $arr['id'])));
-                $sites[$k] = $p;
-            }
+			
+			foreach($sites as $k => &$arr){
+				$found = false;
+				if($this->Auth->user('super_admin')==0) {
+					if($this->AccessControl->isInstitutionSiteAccessible($arr['id'])) {
+						$found = true;
+					} else {
+						unset($sites[$k]);
+					}
+				} else {
+					$found = true;
+				}
+				if($found) {
+					$p = $this->InstitutionSite->find('first',array('conditions'=>array('InstitutionSite.id' => $arr['id'])));
+					$sites[$k] = $p;
+				}
+			}
 
 			$this->bodyTitle = $data['Institution']['name'];
 			$this->Navigation->addCrumb($data['Institution']['name'], array('controller' => 'Institutions', 'action' => 'view'));
