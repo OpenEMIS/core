@@ -201,12 +201,22 @@ class UtilityHelper extends AppHelper {
                 }
             }
             $filterResult = $filterArr;
+            $lowestId = "";
+            foreach($filter as $val){
+                if($lowestId==""){
+                    $lowestId = $val["area_level_id"];
+                }
+                if($val["area_level_id"]<$lowestId){
+                    $lowestId = $val["area_level_id"];
+                }
+            }
         }else{
             $filterResult = "false";
         }
 
         if($arrmap[0]=="Area"){
             $_SESSION['filterArr'] = $filterResult;
+            $_SESSION['lowestFilter'] = $lowestId;
         }
 
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));

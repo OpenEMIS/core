@@ -196,7 +196,6 @@ class AreasController extends AppController {
         if(($arrMap[0]=="Area")){
             $filterIds = $_SESSION['filterArr'];
             if($_SESSION['filterArr']!="false"){
-                $levelId = $this->Area->getAreaLevelId($id);
                 $filterIds = $_SESSION['filterArr'];
             }
         }
@@ -204,15 +203,16 @@ class AreasController extends AppController {
         if($filterIds != "false"){
             $areas = $this->{$arrMap[0]}->find('all', array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
             $value = array();
+            $lowestLevel = $_SESSION['lowestFilter'];
+
             foreach($areas as $key=>$val){
-                if(isset($filterIds["Area"][$val["AreaLevel"]["id"]]["id"])){
+                if($val["AreaLevel"]["id"]<=$lowestLevel){
                     if(in_array($val["Area"]["code"], $filterIds["Area"][$val["AreaLevel"]["id"]]["id"])){
                         $value[$val["Area"]["code"]] = $val["Area"]["name"];
                     }
                 }else{
                     $value[$val["Area"]["code"]] = $val["Area"]["name"];
                 }
-
             }
         }else{
             $value =$this->{$arrMap[0]}->find('list', array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
