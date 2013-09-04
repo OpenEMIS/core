@@ -394,7 +394,8 @@ class InstitutionSitesController extends AppController {
         // Get security group area
         $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
         $filterArea = $this->SecurityGroupArea->getAreas($groupId);
-		
+
+        $this->set('filterArea',$filterArea);
         $this->set('type_options',$type);
         $this->set('ownership_options',$ownership);
         $this->set('locality_options',$locality);
@@ -410,7 +411,6 @@ class InstitutionSitesController extends AppController {
 		$this->set('adminareadropdowns',$adminareadropdowns);
         $this->set('highestLevel',$topArea);
 		$this->set('highestAdminLevel',$topAdminArea);
-        $this->set('filterArea',$filterArea);
     }
 	
 	public function delete() {

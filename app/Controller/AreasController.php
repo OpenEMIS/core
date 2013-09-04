@@ -191,17 +191,33 @@ class AreasController extends AppController {
 
         $this->autoRender = false;
 
-        // For filtering needs
-        $filterIds = $_SESSION['filterArr']["2"];
-        if($arrMap[0]=="Area" && $_SESSION['filterArr']!=""){
-            $levelId =$this->{$arrMap[0]}->getAreaLevelId($id);
-            //$filterIds = $_SESSION['filterArr'];
-            //$filterIds = $filterIds["Area"][$levelId];
+        // For filtering needs so far only applied to Areas not Education
+        $filterIds = "false";
+        if(($arrMap[0]=="Area")){
+            $filterIds = $_SESSION['filterArr'];
+            if($_SESSION['filterArr']!="false"){
+                $levelId = $this->Area->getAreaLevelId($id);
+                $filterIds = $_SESSION['filterArr'];
+            }
         }
 
-        $value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id, $arrMap[0].'.visible' => 1,
-                                            $arrMap[0].'.id' => 52
-                                        )));
+        if($filterIds != "false"){
+            $areas = $this->{$arrMap[0]}->find('all', array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
+            $value = array();
+            foreach($areas as $key=>$val){
+                if(isset($filterIds["Area"][$val["AreaLevel"]["id"]]["id"])){
+                    if(in_array($val["Area"]["code"], $filterIds["Area"][$val["AreaLevel"]["id"]]["id"])){
+                        $value[$val["Area"]["code"]] = $val["Area"]["name"];
+                    }
+                }else{
+                    $value[$val["Area"]["code"]] = $val["Area"]["name"];
+                }
+
+            }
+        }else{
+            $value =$this->{$arrMap[0]}->find('list', array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
+        }
+
         $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
         echo json_encode($value);
     }
