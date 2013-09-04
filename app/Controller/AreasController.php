@@ -210,7 +210,7 @@ class AreasController extends AppController {
                         $value[$val["Area"]["code"]] = $val["Area"]["name"];
                     }
                 }else{
-                    $value[$val["Area"]["code"]] = $val["Area"]["name"];
+                    //$value[$val["Area"]["code"]] = $val["Area"]["name"];
                 }
 
             }
