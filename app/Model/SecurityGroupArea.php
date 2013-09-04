@@ -38,7 +38,7 @@ class SecurityGroupArea extends AppModel {
 	public function getAreas($groupId) {
 		$this->formatResult = true;
 		$data = $this->find('all', array(
-			'fields' => array('AreaLevel.name AS area_level_name', 'Area.id AS area_id', 'Area.name AS area_name'),
+			'fields' => array('AreaLevel.name AS area_level_name', 'Area.id AS area_id', 'Area.area_level_id AS area_level_id', 'Area.name AS area_name'),
 			'joins' => array(
 				array(
 					'table' => 'areas',
