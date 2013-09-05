@@ -114,17 +114,24 @@ class UtilityHelper extends AppHelper {
 	}
 
     public function showAreaHistory($form,$id,$settings=array(),$orgValue,$arrRec){
+        $arrmap = array('Area','AreaLevel');
+        $arealevelfk = 'area_level';
+        if($id=='area_education_id'){
+            $arrmap = array('AreaEducation','AreaEducationLevel');
+            $arealevelfk = 'area_education_level';
+        }
+
         $this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-        $this->fieldLevels = $this->AreaHandler->getAreaList();
+        $this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 
         $ctr = 0;
 
         $val = '';
         foreach($this->fieldLevels as $levelid => $levelName){
-            if (!is_numeric($orgValue) || !isset($orgValue) || !($this->AreaHandler->checkAreaExist($orgValue)>0)) {
+            if (!is_numeric($orgValue) || !isset($orgValue) || !($this->AreaHandler->checkAreaExist($orgValue, $arrmap)>0)) {
                 $orgValue=$this->AreaHandler->getTopArea();
             }
-            $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($orgValue));
+            $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($orgValue, $arrmap));
             foreach($this->fieldAreaLevels as $arealevelid => $arrval){
                 if($arrval['level_id'] == $levelid) {
                     $areaVal = $arrval;
@@ -138,8 +145,8 @@ class UtilityHelper extends AppHelper {
 
         echo '<div class="row">
 					<div class="label">&nbsp;&nbsp;</div>
-					<div class="value"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
-        echo '<div class="table" style="width:500px;">
+					<div class="value" style="width:510px; float: right;"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
+        echo '<div class="table" style="width:510px; float: right;">
 							<div class="table_body">';
 		$myCompVal = str_replace(',',' &rarr; ',rtrim($val,','));
         foreach($arrRec as $value => $time){
@@ -147,7 +154,7 @@ class UtilityHelper extends AppHelper {
                 $myVal = '';
                 foreach($this->fieldLevels as $levelid => $levelName){
                     if (!is_numeric($value) || !isset($value) ) {$value=0;}
-                    $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
+                    $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value, $arrmap));
                     foreach($this->fieldAreaLevels as $arealevelid => $arrval){
                         if($arrval['level_id'] == $levelid) {
                             $areaVal = $arrval;
