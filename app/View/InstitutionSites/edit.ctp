@@ -78,18 +78,16 @@ echo $this->Html->script('config', false);
 			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_closed', array('desc' => true,'value' => $obj['date_closed'],'emptySelect'=>true));?></div>
 		</div>
 	</fieldset>
-	<?php if(isset($obj['area_id'])){ ?>
+
 	<fieldset class="section_break">
 		<legend id="area"><?php echo __('Area'); ?></legend>
         <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$obj['area_id'], array(), $filterArea); ?>
 	</fieldset>
-	<?php } ?>
-	<?php if(isset($obj['area_education_id'])){ ?>
+
 	<fieldset class="section_break">
 		<legend id="education"><?php echo __('Area').' ('.__('Education').')'; ?></legend>
 		<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id',$obj['area_education_id'], array()); ?>
 	</fieldset>
-	<?php } ?>
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>
 		<div class="row">
