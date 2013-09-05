@@ -129,12 +129,10 @@ var Survey = {
 	},
 	
 	activateQuestion: function(obj, opts) {
-		var n = $(obj).attr("id").split("Questions"); 
-		
+		var n = $(obj).attr("id").split("Questions");
 		
 		if(obj.checked){
 			document.getElementById(n[0]+"Checked").checked = true;
-			document.getElementById(n[0]+"_row").className = 'table_row';
 			var row = $(obj).closest('.table_row');
 			if(row.hasClass('inactive')) {
 				row.removeClass('inactive');
