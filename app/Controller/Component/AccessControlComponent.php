@@ -307,7 +307,7 @@ class AccessControlComponent extends Component {
 		if(empty($groupAreas)) {
 			$groupAreas = array(0);
 		}
-		$exists = 'EXISTS (SELECT 1 FROM areas WHERE areas.lft < SiteArea.lft AND areas.rght > SiteArea.rght AND areas.id IN (' . implode(',', $groupAreas) . '))';
+		$exists = 'EXISTS (SELECT 1 FROM areas WHERE areas.lft <= SiteArea.lft AND areas.rght >= SiteArea.rght AND areas.id IN (' . implode(',', $groupAreas) . '))';
 		$areaExists = $Site->find('all', array(
 			'fields' => array('InstitutionSite.id'),
 			'recursive' => -1,
