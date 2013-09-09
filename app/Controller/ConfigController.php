@@ -39,6 +39,7 @@ class ConfigController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
+                $this->Auth->allow('getJSConfig');
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
 		$this->bodyTitle = 'Settings';
 		$this->imageConfig = $this->ConfigItem->getImageConfItem();

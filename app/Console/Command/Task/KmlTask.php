@@ -48,7 +48,41 @@ class KmlTask extends AppTask {
        
 		
 	}
-	
+        
+        public function checkLongitudeLatitude($check,$type='long'){
+
+            $isValid = 0;
+            $check = trim($check);
+            if($type == 'long'){
+                if(is_numeric($check) && floatval($check) >= -180.00 && floatval($check <= 180.00)){
+                    $isValid = $check;
+                }
+            }else{
+                if(is_numeric($check) && floatval($check) >= -90.00 && floatval($check <= 90.00)){
+                    $isValid = $check;
+                }
+            }
+            
+            return $isValid;
+        }
+
+        public function checkLatitude($check){
+            $isValid = 0;
+            $latitude = trim($check);
+            return $isValid;
+        }
+
+
+	private function formatSchoolDescription($arrData){
+            $address = $this->Common->cleanContent($arrData['InstitutionSite']['address']);
+            $postal = $this->Common->cleanContent($arrData['InstitutionSite']['postal_code']);
+            $data  = '<table>
+                        <tr><td>Address:</td><td>'.$address.'</td></tr>
+                        <tr><td>Code:</td><td>'.$postal.'</td></tr>
+                        <tr><td>Details:</td><td><a href=http://www.education.gov.pg/School_Profile/wheres-my-school/6012.html>Click here</a></td></tr>
+                     </table>';
+            return $data; 
+        }
 	public function writeKML($data,$settings){
 		//$batch = $settings['batch'];
 		
@@ -56,9 +90,9 @@ class KmlTask extends AppTask {
 		
         foreach($data as $k => $arrv){
 			$line = str_replace('{InstitutionName}', $this->Common->cleanContent($arrv['Institution']['Name'].'-'.$arrv['InstitutionSite']['SiteName']), $tpl);
-			$line = str_replace('{Longitude}', $arrv['InstitutionSite']['Longitude'], $line);
-			$line = str_replace('{Latitude}', $arrv['InstitutionSite']['Latitude'], $line);
-			$line = str_replace('{school_description}', $this->Common->cleanContent($arrv['InstitutionSite']['Address']), $line);		
+			$line = str_replace('{Longitude}', $this->checkLongitudeLatitude($arrv['InstitutionSite']['Longitude']), $line);
+			$line = str_replace('{Latitude}', $this->checkLongitudeLatitude($arrv['InstitutionSite']['Latitude'], 'lat'), $line);
+			$line = str_replace('{school_description}', $this->formatSchooldescription($arrv), $line);		
 					
 			fputs ($this->fileFP, $line);
         }
