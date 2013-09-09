@@ -967,10 +967,16 @@ class SurveyController extends SurveyAppController {
 	}
 
 	public function ws_upload(){
-        $this->getReportFilesPath(TRUE);
-        if(isset($_FILES['myfile'])){
-            move_uploaded_file($_FILES['myfile']['tmp_name'], $this->pathFile.$_FILES['myfile']['name']);
-            echo "true";
+        if ($this->request->is('post')) {
+                if ($this->Auth->login()) {
+                    $this->getReportFilesPath(TRUE);
+                    if(isset($_FILES['myfile'])){
+                        move_uploaded_file($_FILES['myfile']['tmp_name'], $this->pathFile.$_FILES['myfile']['name']);
+                        echo "true";
+                    }
+                }else {
+                echo "false";
+            }
         }
 	}
 	
