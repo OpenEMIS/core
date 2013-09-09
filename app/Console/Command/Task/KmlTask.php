@@ -22,7 +22,9 @@ class KmlTask extends AppTask {
 	public $fileFP;
 	public $tasks = array('Common');
 	  
-	
+	public $uses = array(
+            'ConfigItem'
+        );
 	/****
 	 * KML Starts
 	 */
@@ -73,17 +75,14 @@ class KmlTask extends AppTask {
         }
 
 
-	private function formatSchoolDescription($arrData){
-            $address = $this->Common->cleanContent($arrData['InstitutionSite']['address']);
-            $postal = $this->Common->cleanContent($arrData['InstitutionSite']['postal_code']);
-            $data  = '<table>
-                        <tr><td>Address:</td><td>'.$address.'</td></tr>
-                        <tr><td>Code:</td><td>'.$postal.'</td></tr>
-                        <tr><td>Details:</td><td><a href=http://www.education.gov.pg/School_Profile/wheres-my-school/6012.html>Click here</a></td></tr>
-                     </table>';
+	private function formatSchoolDescription($arrData){ 
+            $address = $this->Common->cleanContent($arrData['InstitutionSite']['Address']);
+            $site_id  = $this->Common->cleanContent($arrData['InstitutionSite']['SiteId']);
+            $url = $this->ConfigItem->getValue('where_is_my_school_url');
+            $data  = '<div>'.$address.'</div><div><br>Institution Site Details: <a href='.$url.'/InstitutionSites/siteProfile/'.$site_id.'>Click here</a></div>';
             return $data; 
         }
-	public function writeKML($data,$settings){
+	public function writeKML($data,$settings){ 
 		//$batch = $settings['batch'];
 		
         $tpl = $settings['tpl'];
@@ -144,6 +143,7 @@ class KmlTask extends AppTask {
 				$offsetStr = $offset;
 				$offsetStr = (string)$offsetStr;
 				$cond = 'array("fields"=>array(
+                                        "InstitutionSite.id AS SiteId",
 					"InstitutionSite.name AS SiteName",
 					"InstitutionSite.longitude AS Longitude",
 					"InstitutionSite.latitude AS Latitude",
