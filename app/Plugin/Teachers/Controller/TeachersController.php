@@ -746,6 +746,7 @@ class TeachersController extends TeachersAppController {
 	}
 	
 	public function custFieldYrView(){
+        $this->Navigation->addCrumb("More", array('controller' => 'Teachers', 'action' => 'additional'));
 		extract($this->custFieldYrInits());
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();

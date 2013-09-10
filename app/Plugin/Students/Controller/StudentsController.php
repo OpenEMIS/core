@@ -582,8 +582,10 @@ class StudentsController extends StudentsAppController {
 	}
 	
 	public function custFieldYrView(){
+        $this->Navigation->addCrumb("More", array('controller' => 'Students', 'action' => 'additional'));
 		extract($this->custFieldYrInits());
 		$customfield = $this->Components->load('CustomField',$arrMap);
+
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
 		
