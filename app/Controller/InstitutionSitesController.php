@@ -93,6 +93,9 @@ class InstitutionSitesController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
+                
+                $this->Auth->allow('viewMap','siteProfile');
+                
 		if($this->Session->check('InstitutionId')) {
 			$institutionId = $this->Session->read('InstitutionId');
 			$institutionName = $this->Institution->field('name', array('Institution.id' => $institutionId));
@@ -113,7 +116,11 @@ class InstitutionSitesController extends AppController {
 				}
 			}
 		} else {
-			$this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+                        if($this->action == 'siteProfile' || $this->action == 'viewMap'){
+                            $this->layout = 'profile';
+                        }else{
+                            $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+                        }
 		}
 	}
 	
@@ -156,8 +163,10 @@ class InstitutionSitesController extends AppController {
 		
 	}
 	
-	public  function viewMap(){
+	public  function viewMap($id = false){
+            
 		$this->layout = false;
+                if($id) $this->institutionSiteId = $id;
 		$string = @file_get_contents('http://www.google.com');
 		if ($string){
 			$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
@@ -2280,5 +2289,30 @@ class InstitutionSitesController extends AppController {
 		}
 		return $yearId;
 	}
+        
+        public function getSiteProfile(){
+            
+        }
+        
+        
+        public function siteProfile($id){
+            
+            $levels = $this->AreaLevel->find('list',array('recursive'=>0));
+            $adminarealevels = $this->AreaEducationLevel->find('list',array('recursive'=>0));
+            $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $id)));
+
+            $areaLevel = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_id']);
+            $areaLevel = array_reverse($areaLevel);
+
+            $adminarea = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
+            $adminarea = array_reverse($adminarea);
+            
+            $this->set('data', $data);
+            $this->set('levels',$levels);
+            $this->set('adminarealevel',$adminarealevels);
+
+            $this->set('arealevel',$areaLevel);
+            $this->set('adminarea',$adminarea);
+        }
     
 }
