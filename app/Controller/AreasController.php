@@ -190,7 +190,34 @@ class AreasController extends AppController {
         $AreaLevelfk = Inflector::underscore($arrMap[1]);
 
         $this->autoRender = false;
-        $value =$this->{$arrMap[0]}->find('list',array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
+
+        // For filtering needs so far only applied to Areas not Education
+        $filterIds = "false";
+        if(($arrMap[0]=="Area")){
+            $filterIds = $_SESSION['filterArr'];
+            if($_SESSION['filterArr']!="false"){
+                $filterIds = $_SESSION['filterArr'];
+            }
+        }
+
+        if($filterIds != "false"){
+            $areas = $this->{$arrMap[0]}->find('all', array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
+            $value = array();
+            $lowestLevel = $_SESSION['lowestFilter'];
+
+            foreach($areas as $key=>$val){
+                if($val["AreaLevel"]["id"]<=$lowestLevel){
+                    if(in_array($val["Area"]["code"], $filterIds["Area"][$val["AreaLevel"]["id"]]["id"])){
+                        $value[$val["Area"]["code"]] = $val["Area"]["name"];
+                    }
+                }else{
+                    $value[$val["Area"]["code"]] = $val["Area"]["name"];
+                }
+            }
+        }else{
+            $value =$this->{$arrMap[0]}->find('list', array('conditions'=>array($arrMap[0].'.parent_id' => $id,$arrMap[0].'.visible' => 1)));
+        }
+
         $this->Utility->unshiftArray($value, array('0'=>'--'.__('Select').'--'));
         echo json_encode($value);
     }
@@ -202,7 +229,7 @@ class AreasController extends AppController {
 
         $this->autoRender = false;
         $fkAreaLevel = Inflector::underscore($arrMap[1]);
-        $area_table_name = Inflector::tableize($arrMap[0]);;
+        $area_table_name = Inflector::tableize($arrMap[0]);
         $area_level_table_name = Inflector::tableize($arrMap[1]);;
 
         $db = $this->{$arrMap[0]}->getDataSource();
@@ -430,6 +457,7 @@ class AreasController extends AppController {
         $topArea = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => '-1')));
         $this->unshift_array($topArea, array('0'=>__('--Select--')));
         $areas[] = $topArea;
+        $areaId = 0;
 
         if($this->request->is('post')) {
             if(isset($this->request->data['AreaEducation'])){
@@ -449,6 +477,12 @@ class AreasController extends AppController {
                 }
             }
             $this->set('initAreaSelection', (isset($this->request->data['AreaEducation']) && count($this->request->data['AreaEducation']) > 0)?$this->request->data['AreaEducation']: null);
+
+            foreach($this->request->data['AreaEducation'] as $id=>$val){
+                if($id!='area_education_id' && $val > 0){
+                    $areaId = $val;
+                }
+            }
         }
 
         if(count($topArea)<2)  $this->Utility->alert($this->Utility->getMessage('AREAS_NO_AREA_LEVEL'));
@@ -468,6 +502,7 @@ class AreasController extends AppController {
         $this->set('topArea', $topArea);
 		$this->set('levels', $levels);
         $this->set('highestLevel',$areas);
+        $this->set('areaId',$areaId);
 		$this->render('/AreaEducation/index');
 	}
 
@@ -502,11 +537,18 @@ class AreasController extends AppController {
                 array_pop($this->request->data['AreaEducation']);
             }
             $this->set('initAreaSelection', (isset($this->request->data['AreaEducation']))?$this->request->data['AreaEducation']: null);
+
+            foreach($this->request->data['AreaEducation'] as $id=>$val){
+
+                if($id!='area_education_id' && $val > 0){
+                    $areaId = $val;
+                }
+            }
         }
 
         $this->set('levels', $levels);
         $this->set('highestLevel',$areas);
-		$this->render('/AreaEducation/edit');
         $this->set('areaId',$areaId);
+		$this->render('/AreaEducation/edit');
     }
 }

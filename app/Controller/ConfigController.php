@@ -39,6 +39,7 @@ class ConfigController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
+                $this->Auth->allow('getJSConfig');
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
 		$this->bodyTitle = 'Settings';
 		$this->imageConfig = $this->ConfigItem->getImageConfItem();
@@ -49,9 +50,8 @@ class ConfigController extends AppController {
 		$this->autoLayout = false;
 		$this->RequestHandler->respondAs('text/javascript');
 		
-		$protocol = $_SERVER['SERVER_PROTOCOL'];
-		$host = $_SERVER['HTTP_HOST'];
-		$protocol = strtolower(substr($protocol, 0, strpos($protocol, '/'))) . '://';
+		$protocol = ($_SERVER['SERVER_PORT'] == '443'?'https://':'http://');
+                $host = $_SERVER['HTTP_HOST'];
 		
 		$url = $protocol . $host . $this->webroot;
 		
