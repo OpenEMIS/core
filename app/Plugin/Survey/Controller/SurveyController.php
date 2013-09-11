@@ -955,7 +955,7 @@ class SurveyController extends SurveyAppController {
 	    }
     }
 	
-	public function ws_download($file = 'ABC.json'){
+	public function ws_download($file = ''){
 		if ($this->request->is('post')) {
             if ($this->Auth->login()) {
                 $this->getReportFilesPath();

@@ -365,7 +365,7 @@ class SurveyCategoryComponent extends Component {
                 'CensusClass' => array('EducationGrade','EducationProgramme'),
                 'CensusGraduate' =>array('EducationProgramme','EducationCertification','EducationLevel'),
                 'CensusAttendance' =>array('EducationProgramme','EducationGrade'),
-                'CensusAssessment' =>array('EducationProgramme','EducationGrade'),
+                'CensusAssessment' =>array('EducationProgramme','EducationGrade','EducationGradeSubject'),
                 'CensusBehaviour' =>array('StudentBehaviourCategory'),
                 'CensusTextbook' =>array('EducationGrade','EducationProgramme','EducationGradeSubject')
             ));
