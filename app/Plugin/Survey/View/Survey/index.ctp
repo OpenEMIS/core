@@ -65,7 +65,7 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 			<div class="table_cell"><?php echo __('Name'); ?></div>
 			<div class="table_cell"><?php echo __('Date'); ?></div>
 			<div class="table_cell" style="width:60px;"><?php echo __('Filesize'); ?></div>
-			<div class="table_cell" style="width:40px;"><?php echo __('Action'); ?></div>
+			<div class="table_cell" style="width:60px;"><?php echo __('Action'); ?></div>
 		</div>
 		<?php
 			if(@$data){ 
