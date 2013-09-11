@@ -18,7 +18,7 @@ class BatchShell extends AppShell {
     
     public $uses = array('BatchProcess','Reports.Report','Reports.BatchReport');
 	
-	public $tasks = array('Common','Kml','Csv','Vcf','Ind','Est');
+	public $tasks = array('Common','Kml','Csv','Vcf','Ind','Est', 'Pdf');
     
     public function main(){
 

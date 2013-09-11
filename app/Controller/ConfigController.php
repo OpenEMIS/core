@@ -120,12 +120,7 @@ class ConfigController extends AppController {
 				$items[$key][$innerKey]['value'] = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
 			}
 		}
-
-		$schoolYearRaw = $this->SchoolYear->find('list', array('fields' => 'name', 'order' => 'name desc'));
-		$schoolYear = array();
-		foreach ($schoolYearRaw as $value) {
-			$schoolYear[$value] = $value;
-		}
+		$schoolYear = $this->SchoolYear->find('list', array('fields' => array('SchoolYear.id', 'SchoolYear.name'), 'order' => array('name desc')));
 
 		$sorted = $this->groupByType($this->Utility->formatResult($items));
 		$this->set('school_years', $schoolYear);
