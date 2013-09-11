@@ -40,6 +40,7 @@ class DataProcessingController extends DataProcessingAppController {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Settings';
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->controller, 'action' => 'reports'));
 	}
 	
 	public function index() {
@@ -555,7 +556,11 @@ class DataProcessingController extends DataProcessingAppController {
         if($this->request->is('post')) {
             $userId = $this->Auth->user('id');
             $format = $this->data['DataProcessing']['export_format'];
-            $indicatorIds = implode(',',$this->data['BatchIndicator']);
+
+            if(isset($this->data['BatchIndicator'])){
+                $indicatorIds = implode(',',$this->data['BatchIndicator']);
+            }
+
             switch($format){
                 case 'Datawarehouse':
 
@@ -693,45 +698,32 @@ class DataProcessingController extends DataProcessingAppController {
 
         //APP."Console/cake.php -app ".APP." batch run";die;
         if(stristr('Datawarehouse', $params[1])){
-//            $cmd = sprintf("%swebroot/olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
             $cmd = sprintf("%sLib/Olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
         }else{
             $cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
         }
-//       exit($cmd);
-
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            //$WshShell = new COM("WScript.Shell");
-            //$oExec = $WshShell->Run("C:\wamp\bin\php\phpVERSIONNUMBER\php-win.exe -f C:/wamp/www/path/to/backgroundProcess.php", 0, false);
             $handle = pclose(popen("start /B ". $cmd, "r"));
             if ($handle === FALSE) {
                 die("Unable to execute $cmd");
             }
             pclose($handle);
         } else {
-            //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
-            //echo $r = shell_exec($cmd." > /dev/null &");
-            //echo $PID = shell_exec("nohup $cmd > /dev/null & echo $!");
             if(stristr('Datawarehouse',$params[1] )){
-                $nohup = 'nohup php %s > %stmp/logs/processes.log &';
+                $nohup = 'nohup php %s < /dev/null & echo $! &';
             }else{
-                $nohup = 'nohup %s > %stmp/logs/processes.log &';
+                $nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
             }
             $shellCmd = sprintf($nohup, $cmd, APP);
-//			$shellCmd = sprintf($nohup, $cmd, APP);
+            //$shellCmd = sprintf($nohup, $cmd, APP);
             $this->log($shellCmd, 'debug');
-            //echo $shellCmd;die();
-			echo $PID = shell_exec($shellCmd);
-            //$PID = exec($shellCmd);
-			//$PID = exec('/Library/WebServer/Documents/openemis/app/Console/cake.php -app batch run eng');
-            //echo $PID; 
-			//die("<===");
+            $shellCmd = 'nohup php /var/www/html/openemis.org/tst/faizal/app/Lib/Olap/processing.php -i64 -pcensus_staff < /dev/null & echo $! &';
+
+            $PID = shell_exec($shellCmd);
+            //$command = 'ls';
+            //exec($shellCmd, $output);
+            print_r($PID);
         }
-        //*NUX
-        //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
-        //WINDOWS
-        //$WshShell = new COM("WScript.Shell");
-        //$oExec = $WshShell->Run("C:\wamp\bin\php\phpVERSIONNUMBER\php-win.exe -f C:/wamp/www/path/to/backgroundProcess.php", 0, false);
     }
 	
 	function is_running($PID){
