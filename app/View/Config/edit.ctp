@@ -89,8 +89,8 @@ echo $this->Html->script('config', false);
 								'spa' => 'español'
 							),
 							'yearbook_orientation' => array(
-								'0' => 'Portrait',
-								'1' => 'Landscape'
+								'' => 'Portrait',
+								'L' => 'Landscape'
 							),
 							'yearbook_school_year' => $school_years,
 							'school_year' => $school_years
