@@ -56,7 +56,7 @@ echo $this->Html->script('institution', false);
 	</fieldset>
 	<fieldset class="section_break">
         <legend id="area"><?php echo __('Area'); ?></legend>
-        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id','', array()); ?>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id','', array(), $filterArea); ?>
     </fieldset>
 	<fieldset class="section_break">
         <legend id="education"><?php echo __('Area').' ('.__('Education').')'; ?></legend>

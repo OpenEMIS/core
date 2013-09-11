@@ -63,7 +63,7 @@ class CommonTask extends AppTask {
             }
         }
         $replaceList = array("&"=> "&amp;",
-                             "'"=> "&#39",
+                             //"'"=> "&#39",
                              ","=> "&#44"
                             );
         if (isset($options['customReplaceList']) && is_array($options['customReplaceList'])){
