@@ -147,4 +147,51 @@ class EducationProgramme extends AppModel {
 		}
 		return $options;
 	}
+	
+	// Used by Yearbook
+	public function getEducationStructure() {
+		$list = $this->find('all', array(
+			'fields' => array(
+				'EducationSystem.id', 'EducationSystem.name', 'EducationLevel.name', 
+				'EducationCycle.name', 'EducationProgramme.id', 'EducationProgramme.name', 
+				'EducationFieldOfStudy.name', 'EducationProgrammeOrientation.name', 'EducationCertification.name'
+			),
+			'recursive' => -1,
+			'joins' => array(
+				array('table' => 'education_cycles', 'alias' => 'EducationCycle', 
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')),
+				array('table' => 'education_levels', 'alias' => 'EducationLevel', 
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')),
+				array('table' => 'education_systems', 'alias' => 'EducationSystem', 
+					'conditions' => array('EducationSystem.id = EducationLevel.education_system_id')),
+				array('table' => 'education_field_of_studies', 'alias' => 'EducationFieldOfStudy', 
+					'conditions' => array('EducationFieldOfStudy.id = EducationProgramme.education_field_of_study_id')),
+				array('table' => 'education_programme_orientations', 'alias' => 'EducationProgrammeOrientation', 
+					'conditions' => array('EducationProgrammeOrientation.id = EducationFieldOfStudy.education_programme_orientation_id')),
+				array('table' => 'education_certifications', 'alias' => 'EducationCertification', 
+					'conditions' => array('EducationCertification.id = EducationProgramme.education_certification_id'))
+			),
+			'order' => array('EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order')
+		));
+		$EducationGrade = ClassRegistry::init('EducationGrade');
+		$data = array();
+		foreach($list as $item) {
+			$system = $item['EducationSystem'];
+			if(!array_key_exists($system['id'], $data)) {
+				$data[$system['id']] = array();
+			}
+			$grades = $EducationGrade->getGradeOptions($item['EducationProgramme']['id'], null, true);
+			$data[$system['id']][] = array(
+				'system' => $system['name'],
+				'level' => $item['EducationLevel']['name'],
+				'cycle' => $item['EducationCycle']['name'],
+				'programme' => $item['EducationProgramme']['name'],
+				'field' => $item['EducationFieldOfStudy']['name'],
+				'orientation' => $item['EducationProgrammeOrientation']['name'],
+				'certification' => $item['EducationCertification']['name'],
+				'grades' => $grades
+			);
+		}
+		return $data;
+	}
 }
