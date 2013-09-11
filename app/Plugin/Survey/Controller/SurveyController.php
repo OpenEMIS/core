@@ -76,7 +76,7 @@ class SurveyController extends SurveyAppController {
 		$this->Auth->allow('ws_login','ws_download','ws_upload');
 		$this->bodyTitle = 'Settings';
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
-		$this->Navigation->addCrumb('Survey', array('controller' => $this->controller, 'action' => 'index'));
+		//$this->Navigation->addCrumb('Survey', array('controller' => $this->controller, 'action' => 'index'));
 	}
 	
 	private function getPageInfo($total,$curr_page){
@@ -94,7 +94,6 @@ class SurveyController extends SurveyAppController {
 	/* Index Page to show the list of json files available to use */
 	public function index($page = 0,$pattern ='') {
         $this->Navigation->addCrumb('New Surveys');
-		
 		
 		$year = '';
 		/*if (isset($this->data['Survey']['Category']) && isset($this->data['Survey']['Type']) && isset($this->data['Survey']['Year'])){
@@ -373,7 +372,7 @@ class SurveyController extends SurveyAppController {
 	}
 	
 	public function add() {
-		
+        $this->Navigation->addCrumb('New Surveys', array('controller' => 'Survey', 'action' => 'index'));
 		$this->Navigation->addCrumb('Add');
 		if ($this->request->is('post')) {
 			if (isset($_POST['CancelButton'])) {
