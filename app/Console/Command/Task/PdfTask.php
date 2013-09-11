@@ -24,7 +24,7 @@ class PdfTask extends AppTask {
 		$template = $item['template'];
 		if(!is_null($query)) {
 			eval($query);
-			if(isset($vars) {
+			if(isset($vars)) {
 				foreach($vars as $key => $value) {
 					$template = str_replace('[{'.$key.'}]', $value, $template);
 				}
@@ -33,26 +33,37 @@ class PdfTask extends AppTask {
 		return $template;
 	}
 	
-	$ConfigItem = ClassRegistry::init('ConfigItem');
-	$orientation = $ConfigItem->getValue('yearbook_orientation');
-	$this->Mpdf->init();
-	$this->Mpdf->AddPage($orientation);
-	
 	public function genPDF($settings){
-        $BatchReport = ClassRegistry::init('DataProcessing.BatchReport');
+		$BatchReport = ClassRegistry::init('DataProcessing.BatchReport');
+		$ConfigItem = ClassRegistry::init('ConfigItem');
 		$reportItems = $BatchReport->find('all', array(
+			'recursive' => -1,
 			'conditions' => array('BatchReport.report_id' => $settings['reportId']),
 			'order' => array('BatchReport.order')
 		));
 		
 		$module = str_replace(" ", "_", $settings['module']);
-        $category = str_replace(" ", "_", $settings['category']);
-        $filename = str_replace(" ", "_", $settings['name']);
-		$file = sprintf('%s/reports/%s/%s/%s.pdf', WWW_ROOT, $category, $module, $filename);
+		$category = str_replace(" ", "_", $settings['category']);
+		$filename = str_replace(" ", "_", $settings['name']);
+		$file = sprintf('%s/reports/%s/%s/%d_%d_%s.pdf', WWW_ROOT, $category, $module, $settings['reportId'], $settings['batchProcessId'], $filename);
+		$config = $ConfigItem->find('first', array(
+			'fields' => array('ConfigItem.value', 'ConfigItem.default_value'),
+			'conditions' => array(
+				'ConfigItem.type' => $settings['name'],
+				'ConfigItem.label' => 'Page Orientation'
+			)
+		));
 		
+		$orientation = '';
+		if($config) {
+			$orientation = !empty($config['ConfigItem']['value']) ? $config['ConfigItem']['value'] : $config['ConfigItem']['default_value'];
+		}
+		$this->Mpdf->init();
+        $this->Mpdf->AddPage($orientation);
 		foreach($reportItems as $item) {
-			$html = $this->renderPdf($item);
-			if($item['name'] === 'Styles') {
+			$report = $item['BatchReport'];
+			$html = $this->renderPdf($report);
+			if($report['name'] === 'Styles') {
 				$this->Mpdf->WriteHTML($html, 1);
 			} else {
 				$this->Mpdf->WriteHTML($html);
