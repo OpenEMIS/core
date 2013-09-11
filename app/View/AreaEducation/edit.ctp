@@ -38,7 +38,7 @@ echo $this->Html->script('area', false);
     <?php if(isset($initAreaSelection['area_education_id'])){ ?>
 	<fieldset id="area_section_group" class="section_group">
         <legend id="education"><?php echo __('Area'); ?></legend>
-        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id',$initAreaSelection['area_education_id'], array()); ?>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id',$areaId, array()); ?>
     </fieldset>
     <?php } ?>
 
@@ -88,8 +88,8 @@ $(document).ready(function(){
 
 	areas.isEditable = true;
 	$('#view, .btn_cancel').click(function(event){
-		//event.preventDefault();
-		var form = $('form').attr('action', getRootURL() +'/Areas/AreaEducation/');
+		event.preventDefault();
+		var form = $('form').attr('action', getRootURL() +'Areas/AreaEducation/');
 		form.submit();
 	});
 

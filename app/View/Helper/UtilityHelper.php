@@ -114,17 +114,24 @@ class UtilityHelper extends AppHelper {
 	}
 
     public function showAreaHistory($form,$id,$settings=array(),$orgValue,$arrRec){
+        $arrmap = array('Area','AreaLevel');
+        $arealevelfk = 'area_level';
+        if($id=='area_education_id'){
+            $arrmap = array('AreaEducation','AreaEducationLevel');
+            $arealevelfk = 'area_education_level';
+        }
+
         $this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
-        $this->fieldLevels = $this->AreaHandler->getAreaList();
+        $this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 
         $ctr = 0;
 
         $val = '';
         foreach($this->fieldLevels as $levelid => $levelName){
-            if (!is_numeric($orgValue) || !isset($orgValue) || !($this->AreaHandler->checkAreaExist($orgValue)>0)) {
+            if (!is_numeric($orgValue) || !isset($orgValue) || !($this->AreaHandler->checkAreaExist($orgValue, $arrmap)>0)) {
                 $orgValue=$this->AreaHandler->getTopArea();
             }
-            $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($orgValue));
+            $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($orgValue, $arrmap));
             foreach($this->fieldAreaLevels as $arealevelid => $arrval){
                 if($arrval['level_id'] == $levelid) {
                     $areaVal = $arrval;
@@ -138,8 +145,8 @@ class UtilityHelper extends AppHelper {
 
         echo '<div class="row">
 					<div class="label">&nbsp;&nbsp;</div>
-					<div class="value"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
-        echo '<div class="table" style="width:500px;">
+					<div class="value" style="width:510px; float: right;"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
+        echo '<div class="table" style="width:510px; float: right;">
 							<div class="table_body">';
 		$myCompVal = str_replace(',',' &rarr; ',rtrim($val,','));
         foreach($arrRec as $value => $time){
@@ -147,7 +154,7 @@ class UtilityHelper extends AppHelper {
                 $myVal = '';
                 foreach($this->fieldLevels as $levelid => $levelName){
                     if (!is_numeric($value) || !isset($value) ) {$value=0;}
-                    $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value));
+                    $this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value, $arrmap));
                     foreach($this->fieldAreaLevels as $arealevelid => $arrval){
                         if($arrval['level_id'] == $levelid) {
                             $areaVal = $arrval;
@@ -170,7 +177,7 @@ class UtilityHelper extends AppHelper {
         echo '</div></div></div></div>';
     }
 	
-	public function getAreaPicker($form,$id,$value,$settings=array()){
+	public function getAreaPicker($form,$id,$value,$settings=array(), $filter = array()){
         switch($id){
             case 'area_education_id':
                 $arrmap = array('AreaEducation','AreaEducationLevel');
@@ -183,10 +190,40 @@ class UtilityHelper extends AppHelper {
                 break;
         }
 
+
 		$this->AreaHandler = new AreaHandlerComponent(new ComponentCollection);
 
 		if (!is_numeric($value) || !isset($value) || !($this->AreaHandler->checkAreaExist($value,$arrmap)>0)) {
             $value=$this->AreaHandler->getTopArea($arrmap);
+        }
+
+        // Get the filter if needed
+        $filterArr = array();
+        if(count($filter)>0) {
+            foreach($filter as $val){
+                foreach($this->AreaHandler->getAreaPaths($val["area_id"]) as $key => $innerArray) {
+                    if(!in_array($innerArray['Area']['id'], $filterArr["Area"][$innerArray['Area']['area_level_id']]['id'])){
+                        $filterArr["Area"][$innerArray['Area']['area_level_id']]['id'][] = $innerArray['Area']['id'];
+                    }
+                }
+            }
+            $filterResult = $filterArr;
+            $lowestId = "";
+            foreach($filter as $val){
+                if($lowestId==""){
+                    $lowestId = $val["area_level_id"];
+                }
+                if($val["area_level_id"]<$lowestId){
+                    $lowestId = $val["area_level_id"];
+                }
+            }
+        }else{
+            $filterResult = "false";
+        }
+
+        if($arrmap[0]=="Area"){
+            $_SESSION['filterArr'] = $filterResult;
+            $_SESSION['lowestFilter'] = $lowestId;
         }
 
 		$this->fieldAreaLevels = array_reverse($this->AreaHandler->getAreatoParent($value,$arrmap));
@@ -194,6 +231,7 @@ class UtilityHelper extends AppHelper {
         $this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
 
 		$ctr = 0;
+
 		foreach($this->fieldLevels as $levelid => $levelName){
             $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
 

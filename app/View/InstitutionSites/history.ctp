@@ -152,34 +152,20 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
 			</div>
 		</div>
 	</fieldset>
-	
-    <?php if(@sizeof($data2['area_id'])>1){ ?>
+
+    <?php if(@count($data2['area_id'])>0){ ?>
 	<fieldset class="section_break">
 		<legend><?php echo __('Area'); ?></legend>
 		<?php echo @$this->Utility->showAreaHistory($this->Form, 'area_id', array(), $data['InstitutionSite']['area_id'],$data2['area_id']);  ?>
 	</fieldset>
 	<?php } ?>
-    
-	<fieldset class="section_break">
+
+	<?php if(@count($data2['area_education_id'])>0){ ?>
+    <fieldset class="section_break">
         <legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
-        <?php
-            echo '<div class="row">
-                    <div class="label">&nbsp;&nbsp;</div>
-                    <div class="value">'.$arrEducationVal.'</span>';
-            echo '<div class="table" style="width:500px;">
-                            <div class="table_body">';
-			$myVal = $arrEducationVal;
-            foreach($arrEducation as $id=>$val){
-				if($val['val']!=$myVal){
-					echo '<div class="table_row"><div class="table_cell cell_value">'.$val['val'].'</div>
-						  <div class="table_cell cell_datetime">'.$val['time'].'</div>
-						  </div>';
-					$myVal = $val['val'];
-				}
-            }
-            echo '</div></div></div></div>';
-        ?>
+        <?php echo @$this->Utility->showAreaHistory($this->Form, 'area_education_id', array(), $data['InstitutionSite']['area_education_id'],$data2['area_education_id']);  ?>
     </fieldset>
+    <?php } ?>
 
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>

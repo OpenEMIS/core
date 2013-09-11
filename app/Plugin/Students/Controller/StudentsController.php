@@ -509,83 +509,6 @@ class StudentsController extends StudentsAppController {
     }
 
     /**
-     * Institutions that the student has attended till date
-     * @return [type] [description]
-     */
-	 /* need to redo the logic
-    public function institutions() {
-        $this->Navigation->addCrumb('Institutions');
-        $data = $this->InstitutionSiteStudent->getData($this->studentId);
-        $this->UserSession->readStatusSession($this->request->action);
-        $this->set('records', $data);
-    }
-    
-    public function institutionsAdd() {
-        // $this->Navigation->addCrumb('Edit Institutions');
-        $this->layout = 'ajax';
-        $order = $this->params->query['order'] + 1;
-        $this->set('order', $order);
-		$sites = $this->AccessControl->getAccessibleSites();
-		$institutions = $this->InstitutionSiteStudent->getInstitutionSelectionValues($sites);
-        $this->set('institutions', $institutions);
-    }
-
-    public function institutionsEdit() {
-        $this->Navigation->addCrumb('Edit Institutions');
-
-        if($this->request->is('post')) { // save                    }
-            if (isset($this->data['InstitutionSiteStudent'])) {
-                $dataValues = $this->data['InstitutionSiteStudent'];
-				
-                for($i=1; $i <= count($dataValues); $i++) {
-                    $dataValues[$i]['student_id'] = $this->studentId;
-                }
-				
-                $result = $this->InstitutionSiteStudent->saveAll($dataValues);
-                if($result){
-                    $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'institutions');
-                    $this->redirect(array('controller' => $this->params['controller'], 'action' => 'institutions'));
-                    
-                }
-            }
-        }
-
-        $data = $this->InstitutionSiteStudent->getData($this->studentId);
-		$sites = $this->AccessControl->getAccessibleSites();
-		$institutions = $this->InstitutionSiteStudent->getInstitutionSelectionValues($sites);
-
-        $this->set('records', $data);
-        $this->set('institutions', $institutions);
-    }
-    public function institutionsDelete($id) {
-        $this->autoRender = false;
-        if($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            // $id = $this->params->data['id'];
-            
-            if($this->InstitutionSiteStudent->delete($id)) {
-                $result['alertOpt']['text'] = __('Records have been deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting record.');
-            }
-            
-            return json_encode($result);
-        }
-    }
-	*/
-
-    /**
-     * Programmes that the student has attended till date
-     * @return [type] [description]
-     */
-    public function programmes() {
-		$this->Navigation->addCrumb('Programmes');
-    }
-
-
-    /**
      * Assessments that the student has achieved till date
      * @return [type] [description]
      */
@@ -659,8 +582,10 @@ class StudentsController extends StudentsAppController {
 	}
 	
 	public function custFieldYrView(){
+        $this->Navigation->addCrumb("More", array('controller' => 'Students', 'action' => 'additional'));
 		extract($this->custFieldYrInits());
 		$customfield = $this->Components->load('CustomField',$arrMap);
+
 		$data = array();
 		if($id && $selectedYear && $siteid) $data = $customfield->getCustomFieldView($condParam);
 		
