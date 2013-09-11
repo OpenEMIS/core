@@ -541,6 +541,7 @@ class StaffController extends StaffAppController {
 	}
 	
 	public function custFieldYrView(){
+        $this->Navigation->addCrumb("More", array('controller' => 'Staff', 'action' => 'additional'));
 		extract($this->custFieldYrInits());
 		$customfield = $this->Components->load('CustomField',$arrMap);
 		$data = array();

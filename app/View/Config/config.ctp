@@ -55,6 +55,7 @@ function ajaxErrorHandler(jqXHR, textStatus, errorThrown) {
 					success: function (data, textStatus) {
 						if(data) {
 							$.closeDialog({id: dlgOpt.id});
+                                                        window.location.href = getRootURL() + 'Home';
 						} else {
 							$.alert({
 								parent: '#' + dlgOpt.id + ' .dialog-box',
