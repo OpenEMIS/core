@@ -59,7 +59,7 @@ class PdfTask extends AppTask {
 			$orientation = !empty($config['ConfigItem']['value']) ? $config['ConfigItem']['value'] : $config['ConfigItem']['default_value'];
 		}
 		$this->Mpdf->init();
-        $this->Mpdf->AddPage($orientation);
+        $this->Mpdf->AddPage($orientation==='L' ? $orientation : '');
 		foreach($reportItems as $item) {
 			$report = $item['BatchReport'];
 			$html = $this->renderPdf($report);
