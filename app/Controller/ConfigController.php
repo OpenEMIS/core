@@ -162,75 +162,72 @@ class ConfigController extends AppController {
 						$innerElement['value'] = $prefix.','.$enable;
 					}
 					
-					// if yearbook publication date, massage date value 
-					if ($key == 'Year Book Report' && $configItem['ConfigItem']['name'] == "yearbook_publication_date") {
-						$pubYear = $formData['ConfigItem']['Year Book Report'][$innerKey]['value']['year'];
-						$pubMonth = $formData['ConfigItem']['Year Book Report'][$innerKey]['value']['month'];
-						$pubDay = $formData['ConfigItem']['Year Book Report'][$innerKey]['value']['day'];
-						unset($innerElement[$innerKey]['value']['year']);
-						$innerElement['value'] = date('Y-m-d', mktime(0,0,0,$pubDay,$pubMonth,$pubYear));
-					}
-
-					// if yearbook logo, upload the image
-					if ($key == 'Year Book Report' && $configItem['ConfigItem']['name'] == "yearbook_logo") {
-						$imgValidate = new ImageValidate(800,800);
-						$data = array();
-						$reset_image = $formData['ConfigItem']['Year Book Report'][$innerKey]['reset_yearbook_logo'];
-
-						// pr ($data['ConfigItem']['Year Book Report'][$innerKey]);
-						if (isset($formData['ConfigItem']['Year Book Report'][$innerKey]['file_value']) && $formData['ConfigItem']['Year Book Report'][$innerKey]['file_value']['error'] != UPLOAD_ERR_NO_FILE) {
-				            
-							if (array_key_exists('reset_yearbook_logo', $formData['ConfigItem']['Year Book Report'][$innerKey])) {
-								if (!empty($formData['ConfigItem']['Year Book Report'][$innerKey]['file_value'])) {
-						            $img = new ImageMeta($formData['ConfigItem']['Year Book Report'][$innerKey]['file_value']);
-						            // unset($formData['ConfigItem']['Year Book Report'][$innerKey]['file_value']);
-
-						            if($reset_image == 0){
-						                $validated = $imgValidate->validateImage($img);
-
-						                if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
-											$yearbookLogo = $this->ConfigAttachment->find('first', array(
-												'conditions' => array('ConfigAttachment.type' => 'Year Book Report')
-											));
-											if($yearbookLogo) {
-												$data['id'] = $yearbookLogo['ConfigAttachment']['id'];
+					if($key === 'Year Book Report') {
+						$yearbook = $formData['ConfigItem']['Year Book Report'];
+						if($configItem['ConfigItem']['name'] === "yearbook_orientation") {
+							if(empty($innerElement['value'])) {
+								$innerElement['value'] = '';
+								$this->log($innerElement, 'debug');
+							}
+						} else if($configItem['ConfigItem']['name'] === "yearbook_logo") {
+							$imgValidate = new ImageValidate(800,800);
+							$data = array();
+							$reset_image = $yearbook[$innerKey]['reset_yearbook_logo'];
+	
+							if (isset($yearbook[$innerKey]['file_value']) && $yearbook[$innerKey]['file_value']['error'] != UPLOAD_ERR_NO_FILE) {
+								
+								if (array_key_exists('reset_yearbook_logo', $yearbook[$innerKey])) {
+									if (!empty($yearbook[$innerKey]['file_value'])) {
+										$img = new ImageMeta($yearbook[$innerKey]['file_value']);
+	
+										if($reset_image == 0){
+											$validated = $imgValidate->validateImage($img);
+	
+											if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
+												$yearbookLogo = $this->ConfigAttachment->find('first', array(
+													'conditions' => array('ConfigAttachment.type' => 'Year Book Report')
+												));
+												if($yearbookLogo) {
+													$data['id'] = $yearbookLogo['ConfigAttachment']['id'];
+												}
+												$data['file_content'] = $img->getContent();
+												$img->setName('yearbook_logo');
+												$data['file_name'] = $img->getFilename();
+												$data['type'] = 'Year Book Report';
+												$data['name'] = $yearbook[$innerKey]['file_value']['name'];
+												$data['description']="";
+												$data['order']="0";
 											}
-						                    $data['file_content'] = $img->getContent();
-						                    $img->setName('yearbook_logo');
-						                    $data['file_name'] = $img->getFilename();
-						                    $data['type'] = 'Year Book Report';
-						                    $data['name'] = $formData['ConfigItem']['Year Book Report'][$innerKey]['file_value']['name'];
-											$data['description']="";
-											$data['order']="0";
-						                }
-						                $rec = $this->ConfigAttachment->save($data);
-
-						                // check if yearbook logo is stored in attachment, and stored the id to config Item
-						                $innerElement['value'] = "";
-					            		if (!empty($rec) && $rec['ConfigAttachment']['id'] > 0) {
-					            			$innerElement['value'] = $rec['ConfigAttachment']['id'];
+											$rec = $this->ConfigAttachment->save($data);
+	
+											// check if yearbook logo is stored in attachment, and stored the id to config Item
+											$innerElement['value'] = "";
+											if (!empty($rec) && $rec['ConfigAttachment']['id'] > 0) {
+												$innerElement['value'] = $rec['ConfigAttachment']['id'];
+											}
+										}else{
+	
+											$data['ConfigAttachment']['file_content'] = '';
+											$data['ConfigAttachment']['file_name'] = '';
 										}
-						            }else{
-
-						                $data['ConfigAttachment']['file_content'] = '';
-						                $data['ConfigAttachment']['file_name'] = '';
-						            }
-						        }				            
-				            }
-							
-				        } else {
-				        	if ($reset_image == 1) {				            	
-								if ($formData['ConfigItem']['Year Book Report'][$innerKey]['value'] > 0 && $formData['ConfigItem']['Year Book Report'][$innerKey]['value'] != "" && !is_null($formData['ConfigItem']['Year Book Report'][$innerKey]['value'])) {
-									$data['ConfigAttachment']['id'] = $formData['ConfigItem']['Year Book Report'][$innerKey]['value'];
-									$data['ConfigAttachment']['file_content'] = "";
-									$data['ConfigAttachment']['file_name'] = "";					                    
-									$data['ConfigAttachment']['name'] = "";
+									}				            
 								}
-								$rec = $this->ConfigAttachment->save($data);
-					    	}
-				        }
-			        }
-
+								
+							} else {
+								if ($reset_image == 1) {				            	
+									if ($yearbook[$innerKey]['value'] > 0 && $yearbook[$innerKey]['value'] != "" && !is_null($yearbook[$innerKey]['value'])) {
+										$data['id'] = $yearbook[$innerKey]['value'];
+										$data['file_content'] = "";
+										$data['file_name'] = "";					                    
+										$data['name'] = "";
+									}
+									$rec = $this->ConfigAttachment->save($data);
+								}
+							}
+						}
+					}
+					
+					//$this->log($innerElement, 'debug');
 					if ($this->ConfigItem->save($innerElement)) {
 						$savedItems = true;
 						if($configItem['ConfigItem']['name'] == "date_format") {
@@ -240,7 +237,7 @@ class ConfigController extends AppController {
 	                    #echo 'false<br/>';
 	                }
 				}
-				// $this->ConfigItem->saveAll($element);
+				//$this->ConfigItem->saveAll($element);
 			}
 			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
 			$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));

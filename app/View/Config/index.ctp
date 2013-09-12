@@ -20,7 +20,7 @@ $arrOptions = array('date_format' => array(
 								'spa' => 'español'
 							),
 							'yearbook_orientation' => array(
-								'' => 'Portrait',
+								'P' => 'Portrait',
 								'L' => 'Landscape'
 							));
 ?>
