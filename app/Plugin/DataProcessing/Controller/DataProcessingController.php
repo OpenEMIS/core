@@ -563,7 +563,6 @@ class DataProcessingController extends DataProcessingAppController {
 
             switch($format){
                 case 'Datawarehouse':
-
                     if($this->NumberOfOlapProcesses() > 0){
                         $this->Session->write('DataProcessing.olap.error', 'Unable to Export. Process exist.');
                         $this->redirect(array('action'=>'exports', $format));
@@ -710,15 +709,14 @@ class DataProcessingController extends DataProcessingAppController {
             pclose($handle);
         } else {
             if(stristr('Datawarehouse',$params[1] )){
-                $nohup = 'nohup php %s < /dev/null & echo $! &';
+                //$nohup = 'nohup php %s < /dev/null & echo $! &';
+                $nohup = 'nohup php %s > %stmp/logs/processes.log & echo $!';
             }else{
                 $nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
             }
             $shellCmd = sprintf($nohup, $cmd, APP);
             //$shellCmd = sprintf($nohup, $cmd, APP);
             $this->log($shellCmd, 'debug');
-            $shellCmd = 'nohup php /var/www/html/openemis.org/tst/faizal/app/Lib/Olap/processing.php -i64 -pcensus_staff < /dev/null & echo $! &';
-
             $PID = shell_exec($shellCmd);
             //$command = 'ls';
             //exec($shellCmd, $output);
