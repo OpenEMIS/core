@@ -271,6 +271,7 @@
                 <![CDATA[
                     CREATE TABLE `education_grades` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(50) NOT NULL,
                       `name` varchar(150) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
@@ -282,8 +283,7 @@
                       PRIMARY KEY (`id`),
                       KEY `education_programme_id` (`education_programme_id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-                        ]]>
+               ]]>
             </SQL>
         </create>
         <drop type="destination" table="education_grades">
@@ -304,11 +304,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `education_grades` (
-                        `id`, `name`, `order`, `visible`, `education_programme_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `code`, `name`, `order`, `visible`, `education_programme_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :education_programme_id, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :code, :name, :order, :visible, :education_programme_id, :modified_user_id, :modified, :created_user_id, :created
                     );
-                        ]]>
+                ]]>
             </SQL>
         </insert>
         <select type="source" table="education_grades">
