@@ -21,7 +21,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		<div class="table_body">
 			<?php foreach($data as $id => $obj) { $i=0; ?>
 			<div class="table_row" row-id="<?php echo $obj['StudentBehaviour']['id']; ?>">
-				<div class="table_cell center"><?php echo $this->Utility->formatDate($obj['StudentBehaviour']['date_of_behaviour']); ?></div>
+				<div class="table_cell"><?php echo $this->Utility->formatDate($obj['StudentBehaviour']['date_of_behaviour']); ?></div>
                 <div class="table_cell"><?php echo $obj['StudentBehaviourCategory']['name']; ?></div>
                 <div class="table_cell"><?php echo $obj['StudentBehaviour']['title']; ?></div>
 			</div>
