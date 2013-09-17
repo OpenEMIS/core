@@ -89,14 +89,13 @@ $arrOptions = array('date_format' => array(
                     $val = str_replace(",","",substr($item['value'],0,-1));
 					//echo __($val==''? 'Enabled' : 'Enabled ('.$val.')');
 					echo '<div>';
-					echo '<div class="left">';
 					echo __('Enabled');
-					echo '</div>';
 					if($val!=''){
-						echo '<div class="left">&nbsp;';
+						echo ' ';
 						echo __('('.$val.')');
-						echo '</div></div>';
+						echo '';
 					}
+                                        echo "</div>";
                 }
                 ?>
                 </div>		

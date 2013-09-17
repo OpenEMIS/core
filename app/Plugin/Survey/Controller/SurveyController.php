@@ -8,6 +8,7 @@ class SurveyController extends SurveyAppController {
 
     public $uses = array(
 		'Area',
+        'AreaEducation',
 		'BatchProcess',
         'Reports.Report',
 		'Reports.BatchReport',
@@ -75,7 +76,7 @@ class SurveyController extends SurveyAppController {
 		$this->Auth->allow('ws_login','ws_download','ws_upload');
 		$this->bodyTitle = 'Settings';
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
-		$this->Navigation->addCrumb('Survey', array('controller' => $this->controller, 'action' => 'index'));
+		//$this->Navigation->addCrumb('Survey', array('controller' => $this->controller, 'action' => 'index'));
 	}
 	
 	private function getPageInfo($total,$curr_page){
@@ -92,8 +93,7 @@ class SurveyController extends SurveyAppController {
 	}
 	/* Index Page to show the list of json files available to use */
 	public function index($page = 0,$pattern ='') {
-		$this->Navigation->addCrumb('New Surveys');
-		
+        $this->Navigation->addCrumb('New Surveys');
 		
 		$year = '';
 		/*if (isset($this->data['Survey']['Category']) && isset($this->data['Survey']['Type']) && isset($this->data['Survey']['Year'])){
@@ -339,7 +339,6 @@ class SurveyController extends SurveyAppController {
             );
             $this->set($params);
         }
-
 	}
 
 	private function convFileSize($bytes){
@@ -373,7 +372,7 @@ class SurveyController extends SurveyAppController {
 	}
 	
 	public function add() {
-		
+        $this->Navigation->addCrumb('New Surveys', array('controller' => 'Survey', 'action' => 'index'));
 		$this->Navigation->addCrumb('Add');
 		if ($this->request->is('post')) {
 			if (isset($_POST['CancelButton'])) {
@@ -589,140 +588,140 @@ class SurveyController extends SurveyAppController {
 	//============================================================================================================================================
 	//========================================= PROCESS JSON FILE BACK TO DATABASE SECTION =======================================================
 	//============================================================================================================================================
-	public function formatsavetable($arr){
-		$secName = $arr['secName'];
-		$topicName = $arr['topicName'];
-		$code = $arr['code'];
-		$arrData = $arr['arrData'];
-		$objTable = ClassRegistry::init($secName);
-		$schema = $objTable->schema();
-		
-		$arrCond = array();
-		switch($secName){
-			case 'InstitutionCustomField':
-				$secName = 'InstitutionCustomValue';
-				$objTable = ClassRegistry::init($secName);
-				$schema = $objTable->schema();
-				$institution_id = Set::flatten($this->{'Institution'}->query('SELECT `id` FROM `institutions` where `code`=\''.$code.'\''));
-				$institution_id = $institution_id[key($institution_id)];
-				foreach($arrData[$topicName]['InstitutionCustomField']['questions'] as $qName => $qVal){
-					$institution_custom_field_id = Set::flatten($this->{'InstitutionCustomField'}->query('SELECT `id` FROM `institution_custom_fields` 
+    public function formatsavetable($arr){
+        $secName = $arr['secName'];
+        $topicName = $arr['topicName'];
+        $code = $arr['code'];
+        $arrData = $arr['arrData'];
+        $objTable = ClassRegistry::init($secName);
+        $schema = $objTable->schema();
+
+        $arrCond = array();
+        switch($secName){
+            case 'InstitutionCustomField':
+                $secName = 'InstitutionCustomValue';
+                $objTable = ClassRegistry::init($secName);
+                $schema = $objTable->schema();
+                $institution_id = Set::flatten($this->{'Institution'}->query('SELECT `id` FROM `institutions` where `code`=\''.$code.'\''));
+                $institution_id = $institution_id[key($institution_id)];
+                foreach($arrData[$topicName]['InstitutionCustomField']['questions'] as $qName => $qVal){
+                    $institution_custom_field_id = Set::flatten($this->{'InstitutionCustomField'}->query('SELECT `id` FROM `institution_custom_fields`
 																							 			  where `name` LIKE \''.$qName.'\''));
-					$institution_custom_field_id = $institution_custom_field_id[key($institution_custom_field_id)];
-					$answer = explode(',',$qVal['value']);
-					$arrExist = '';
-					foreach($answer as $val){
-						$arrExist = $this->$secName->find('first', array('fields' => array('id'),
-																	     'conditions' => array('value' => $val,
-																						  'institution_custom_field_id' => $institution_custom_field_id,
-																						  'institution_id' => $institution_id
-																						  )));
-						
-						if(!is_array($arrExist)){
-							$arr['InstitutionCustomValue'] = array('value'=>$val,
-							'institution_custom_field_id' => $institution_custom_field_id,
-							'institution_id' => $institution_id);
-							$objTable->saveAll($arr);
-						}
-					}
-				}
-				break;
-			
-			case 'InstitutionSiteCustomField':
-				$secName = 'InstitutionSiteCustomValue';
-				$objTable = ClassRegistry::init($secName);
-				$schema = $objTable->schema();
-				$institution_site_id = Set::flatten($this->{'InstitutionSite'}->query('SELECT `id` FROM `institution_sites` where `code`=\''.$code.'\''));
-				if(sizeof($institution_site_id)>0){
-					$institution_site_id = $institution_site_id[key($institution_site_id)];
-				}
-				foreach($arrData[$topicName]['InstitutionSiteCustomField']['questions'] as $qName => $qVal){
-					$institution_site_custom_field_id = Set::flatten($this->{'InstitutionSiteCustomField'}->query('SELECT `id` FROM `institution_site_custom_fields` 
+                    $institution_custom_field_id = $institution_custom_field_id[key($institution_custom_field_id)];
+                    $answer = explode(',',$qVal['value']);
+                    $arrExist = '';
+                    foreach($answer as $val){
+                        $arrExist = $this->$secName->find('first', array('fields' => array('id'),
+                            'conditions' => array('value' => $val,
+                                'institution_custom_field_id' => $institution_custom_field_id,
+                                'institution_id' => $institution_id
+                            )));
+
+                        if(!is_array($arrExist)){
+                            $arr['InstitutionCustomValue'] = array('value'=>$val,
+                                'institution_custom_field_id' => $institution_custom_field_id,
+                                'institution_id' => $institution_id);
+                            $objTable->saveAll($arr);
+                        }
+                    }
+                }
+                break;
+
+            case 'InstitutionSiteCustomField':
+                $secName = 'InstitutionSiteCustomValue';
+                $objTable = ClassRegistry::init($secName);
+                $schema = $objTable->schema();
+                $institution_site_id = Set::flatten($this->{'InstitutionSite'}->query('SELECT `id` FROM `institution_sites` where `code`=\''.$code.'\''));
+                if(sizeof($institution_site_id)>0){
+                    $institution_site_id = $institution_site_id[key($institution_site_id)];
+                }
+                foreach($arrData[$topicName]['InstitutionSiteCustomField']['questions'] as $qName => $qVal){
+                    $institution_site_custom_field_id = Set::flatten($this->{'InstitutionSiteCustomField'}->query('SELECT `id` FROM `institution_site_custom_fields`
 																							 			  where `name` LIKE \''.$qName.'\''));
-					if(count($institution_site_custom_field_id)>0){
-						$institution_site_custom_field_id = $institution_site_custom_field_id[key($institution_site_custom_field_id)];
-						$answer = explode(',',$qVal['value']);
-						$arrExist = '';
-						foreach($answer as $val){
-							$arrExist = $this->$secName->find('first', array('fields' => array('id'),
-																			 'conditions' => array('value' => $val,
-																							  'institution_site_custom_field_id' => $institution_site_custom_field_id,
-																							  'institution_site_id' => $institution_site_id
-																							  )));
-							
-							if(!is_array($arrExist)){
-								$arr['InstitutionSiteCustomValue'] = array('value'=>$val,
-								'institution_site_custom_field_id' => $institution_site_custom_field_id,
-								'institution_site_id' => $institution_site_id);
-								$objTable->saveAll($arr);
-							}
-						}
-					}
-				}
-				break;
-				
-			default:
-				foreach($schema as $colname => $arrProp){
-					if(isset($data[$topicName][$secName]['questions'][$colname]['items'])){
-						$arrCond[$colname] = array_search($arrData[$topicName][$secName]['questions'][$colname]['value'],$arrData[$topicName][$secName]['questions'][$colname]['items']);
-					}elseif(isset($arrData[$topicName][$secName]['questions'][$colname])){
-						$arrCond[$colname] = $arrData[$topicName][$secName]['questions'][$colname]['value'];
-					}else{
-						if(!$arrProp['null']){
-							if($arrProp['type'] =='integer')
-								$arrCond[$colname] = "1";
-							elseif($arrProp['type'] =='datetime')
-								$arrCond[$colname] = date("Y-m-d H:i:s");
-							elseif($arrProp['type'] =='date')
-								$arrCond[$colname] =  date("Y-m-d");
-							elseif($arrProp['type'] =='string' || $arrProp['type'] =='text')
-								$arrCond[$colname] = "_";
-						}
-					}
-				}
-				
-				if($secName == 'Institution'){
-					$institution_id = Set::flatten($this->{'Institution'}->query('SELECT `id` FROM `institutions` where `code`=\''.$code.'\''));
-					if(sizeof($institution_id)>0){
-						$institution_id = $institution_id[key($institution_id)];
-					}
-					$arrCond['code'] = $code;
-					if(isset($institution_id)){
-						$arrCond['id'] = $institution_id;
-						//unset($arrCond['code']);
-						$arrCond['code'] = $code;
-					}else{
-						$arrCond['code'] = $code;
-						unset($arrCond['id']);		
-					}	
-				}
-				
-				if($secName == 'InstitutionSite'){
-					$institution_site_id = Set::flatten($this->{'InstitutionSite'}->query('SELECT `id` FROM `institution_sites` where `code`=\''.$code.'\''));
-					if(sizeof($institution_site_id)>0){
-						$institution_site_id = $institution_site_id[key($institution_site_id)];
-					}
-					$arrCond['code'] = $code;
-					if(isset($institution_site_id)){
-						$arrCond['id'] = $institution_site_id;
-						//unset($arrCond['code']);
-						$arrCond['code'] = $code;
-					}else{
-						$arrCond['code'] = $code;
-						unset($arrCond['id']);		
-					}
-				}
-				
-				if(!$objTable->saveAll(array($secName =>$arrCond))){
-					// Validation Errors
-					//debug($objTable->validationErrors); 
-					//die;
-				}
-				break;
-		}
-	}
-	
-	public function responsefile(){
+                    if(count($institution_site_custom_field_id)>0){
+                        $institution_site_custom_field_id = $institution_site_custom_field_id[key($institution_site_custom_field_id)];
+                        $answer = explode(',',$qVal['value']);
+                        $arrExist = '';
+                        foreach($answer as $val){
+                            $arrExist = $this->$secName->find('first', array('fields' => array('id'),
+                                'conditions' => array('value' => $val,
+                                    'institution_site_custom_field_id' => $institution_site_custom_field_id,
+                                    'institution_site_id' => $institution_site_id
+                                )));
+
+                            if(!is_array($arrExist)){
+                                $arr['InstitutionSiteCustomValue'] = array('value'=>$val,
+                                    'institution_site_custom_field_id' => $institution_site_custom_field_id,
+                                    'institution_site_id' => $institution_site_id);
+                                $objTable->saveAll($arr);
+                            }
+                        }
+                    }
+                }
+                break;
+
+            default:
+                foreach($schema as $colname => $arrProp){
+                    if(isset($data[$topicName][$secName]['questions'][$colname]['items'])){
+                        $arrCond[$colname] = array_search($arrData[$topicName][$secName]['questions'][$colname]['value'],$arrData[$topicName][$secName]['questions'][$colname]['items']);
+                    }elseif(isset($arrData[$topicName][$secName]['questions'][$colname])){
+                        $arrCond[$colname] = $arrData[$topicName][$secName]['questions'][$colname]['value'];
+                    }else{
+                        if(!$arrProp['null']){
+                            if($arrProp['type'] =='integer')
+                                $arrCond[$colname] = "1";
+                            elseif($arrProp['type'] =='datetime')
+                                $arrCond[$colname] = date("Y-m-d H:i:s");
+                            elseif($arrProp['type'] =='date')
+                                $arrCond[$colname] =  date("Y-m-d");
+                            elseif($arrProp['type'] =='string' || $arrProp['type'] =='text')
+                                $arrCond[$colname] = "_";
+                        }
+                    }
+                }
+
+                if($secName == 'Institution'){
+                    $institution_id = Set::flatten($this->{'Institution'}->query('SELECT `id` FROM `institutions` where `code`=\''.$code.'\''));
+                    if(sizeof($institution_id)>0){
+                        $institution_id = $institution_id[key($institution_id)];
+                    }
+                    $arrCond['code'] = $code;
+                    if(isset($institution_id)){
+                        $arrCond['id'] = $institution_id;
+                        //unset($arrCond['code']);
+                        $arrCond['code'] = $code;
+                    }else{
+                        $arrCond['code'] = $code;
+                        unset($arrCond['id']);
+                    }
+                }
+
+                if($secName == 'InstitutionSite'){
+                    $institution_site_id = Set::flatten($this->{'InstitutionSite'}->query('SELECT `id` FROM `institution_sites` where `code`=\''.$code.'\''));
+                    if(sizeof($institution_site_id)>0){
+                        $institution_site_id = $institution_site_id[key($institution_site_id)];
+                    }
+                    $arrCond['code'] = $code;
+                    if(isset($institution_site_id)){
+                        $arrCond['id'] = $institution_site_id;
+                        //unset($arrCond['code']);
+                        $arrCond['code'] = $code;
+                    }else{
+                        $arrCond['code'] = $code;
+                        unset($arrCond['id']);
+                    }
+                }
+
+                if(!$objTable->saveAll(array($secName =>$arrCond))){
+                    // Validation Errors
+                    //debug($objTable->validationErrors);
+                    //die;
+                }
+                break;
+        }
+    }
+
+    public function responsefile(){
 		$filename = $_GET['file'];
 		$arrFiles = explode(',',$filename);
 		
@@ -956,27 +955,28 @@ class SurveyController extends SurveyAppController {
     }
 	
 	public function ws_download($file = ''){
-		$this->autoRender = false;
-		if ($this->Auth->login()) {
-			$this->getReportFilesPath();
-			$this->download($file);
-		} else {
-			echo "false";
-		}
+		if ($this->request->is('post')) {
+            if ($this->Auth->login()) {
+                $this->getReportFilesPath();
+                $this->download($file);
+            } else {
+                echo "false";
+            }
+        }
 	}
 
 	public function ws_upload(){
-		$this->autoRender = false;
-		if($this->Auth->login()) {
-			$this->getReportFilesPath(TRUE);
-			if(isset($_FILES['myfile'])){
-				if ($_FILES['myfile']['error'] === UPLOAD_ERR_OK)
-				move_uploaded_file($_FILES['myfile']['tmp_name'], $this->pathFile.$_FILES['myfile']['name']);
-				echo "true";
-			}
-		}else{
-			echo "false";
-		}
+        if ($this->request->is('post')) {
+                if ($this->Auth->login()) {
+                    $this->getReportFilesPath(TRUE);
+                    if(isset($_FILES['myfile'])){
+                        move_uploaded_file($_FILES['myfile']['tmp_name'], $this->pathFile.$_FILES['myfile']['name']);
+                        echo "true";
+                    }
+                }else {
+                echo "false";
+            }
+        }
 	}
 	
 	public function ws_logout(){
