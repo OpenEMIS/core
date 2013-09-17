@@ -165,8 +165,6 @@ class IndicatorComponent extends Component {
 		
 		if(strpos($query, '-- {LEVEL}') === false) { // query does not execute per area level
 			foreach($permutations as $pattern) {
-//                if($this->isMaxPermutations($permutationCounter)) break; #for debugging
-
 				$sql = $query;
 				$subgroups = array();
 				foreach($pattern as $s) {
@@ -191,8 +189,6 @@ class IndicatorComponent extends Component {
 		} else {
 			foreach($areaLevels as $levelId => $levelName) {
 				foreach($permutations as $pattern) {
-//                    if($this->isMaxPermutations($permutationCounter)) break; #for debugging
-
 					$sql = $query;
 					$subgroups = array();
 					foreach($pattern as $s) {
@@ -215,6 +211,13 @@ class IndicatorComponent extends Component {
 					
 					$result = $this->BatchIndicator->query($sql);
 				}
+			}
+			
+			$this->Logger->write(sprintf('(%s) Aggregate by Areas Start', $indicatorName));
+			foreach($areaLevels as $levelId => $levelName) {
+				$this->Logger->write(sprintf('(%s) Aggregate by level Id %d', $indicatorName, $levelId));
+				$data = $this->BatchIndicatorResult->aggregateByAreaLevel($id, $levelId);
+				$this->log($data, 'debug');
 			}
 		}
 	}
