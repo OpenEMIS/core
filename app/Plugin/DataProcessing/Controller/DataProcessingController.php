@@ -40,7 +40,6 @@ class DataProcessingController extends DataProcessingAppController {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Settings';
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
-		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->controller, 'action' => 'reports'));
 	}
 	
 	public function index() {
