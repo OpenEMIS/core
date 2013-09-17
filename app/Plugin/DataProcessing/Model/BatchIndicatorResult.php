@@ -58,13 +58,14 @@ class BatchIndicatorResult extends DataProcessingAppModel {
 			'fields' => array(
 				'BatchIndicatorResult.batch_indicator_id',
 				'BatchIndicatorResult.subgroups',
-				'Area.parent_id',
 				'BatchIndicatorResult.timeperiod',
-				'SUM(BatchIndicatorResult.numerator) AS numerator',
-				'SUM(BatchIndicatorResult.denominator) AS denominator'),
 				'BatchIndicatorResult.classification',
 				'BatchIndicatorResult.created_user_id',
-				'BatchIndicatorResult.created'
+				'BatchIndicatorResult.created',
+				'Area.parent_id',
+				'SUM(BatchIndicatorResult.numerator) AS numerator',
+				'SUM(BatchIndicatorResult.denominator) AS denominator'
+			),
 			'joins' => array(
 				array(
 					'table' => 'areas',
@@ -75,9 +76,48 @@ class BatchIndicatorResult extends DataProcessingAppModel {
 					)
 				)
 			),
-			'conditions' => array('BatchIndicatorResult.batch_indicator_id' => $indicatorId)
+			'conditions' => array('BatchIndicatorResult.batch_indicator_id' => $indicatorId),
 			'group' => array('Area.parent_id', 'BatchIndicatorResult.timeperiod', 'BatchIndicatorResult.classification', 'BatchIndicatorResult.subgroups')
 		));
 		return $data;
+	}
+	
+	public function aggregateSave($obj, $unit) {
+		$conditions = array();
+		$result = $obj['BatchIndicatorResult'];
+		$conditions['batch_indicator_id'] = $result['batch_indicator_id'];
+		$conditions['subgroups'] = $result['subgroups'];
+		$conditions['timeperiod'] = $result['timeperiod'];
+		$conditions['classification'] = $result['classification'];
+		$conditions['area_id'] = $obj['Area']['parent_id'];
+		
+		$data = $this->find('first', array('conditions' => $conditions));
+		$numerator = 0;
+		$denominator = 0;
+		$dataValue = 0;
+		
+		if($data) {
+			$numerator = $data['BatchIndicatorResult']['numerator'] + $result['numerator'];
+			$denominator = $data['BatchIndicatorResult']['denominator'];
+			if(!empty($denominator)) {
+				$denominator += $result['denominator'];
+			}
+			if($unit === 'Percent' || $unit === 'Rate') {
+				$dataValue = $numerator/$denominator*100; 
+			} else if($unit === 'Ratio') {
+				$dataValue = $numerator/$denominator;
+			} else {
+				$dataValue = $numerator;
+			}
+		} else {
+			$data = $conditions;
+			$data['created_user_id'] = $result['created_user_id'];
+			$data['created'] = $result['created'];
+			$this->create();
+		}
+		$data['numerator'] = $numerator;
+		$data['denominator'] = $denominator;
+		$data['dataValue'] = $dataValue;
+		return $this->save($data);
 	}
 }

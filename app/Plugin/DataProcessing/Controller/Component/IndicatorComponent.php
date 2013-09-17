@@ -217,7 +217,9 @@ class IndicatorComponent extends Component {
 			foreach($areaLevels as $levelId => $levelName) {
 				$this->Logger->write(sprintf('(%s) Aggregate by level Id %d', $indicatorName, $levelId));
 				$data = $this->BatchIndicatorResult->aggregateByAreaLevel($id, $levelId);
-				$this->log($data, 'debug');
+				foreach($data as $obj) {
+					$this->BatchIndicatorResult->aggregateSave($obj, $unitName);
+				}
 			}
 		}
 	}
