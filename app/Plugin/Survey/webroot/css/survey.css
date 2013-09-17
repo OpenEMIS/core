@@ -1,6 +1,8 @@
 .label{ width: 80px; }
 .table .cell_time { width: 180px; margin-top:3px; }
 .table .cell_filesize { width: 90px; }
+.table .cell_checkbox { width:30px; }
+.section_group { width:650px; }
 .mycell{ line-height:1.8em; }
 
 .action_pullright {
