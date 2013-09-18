@@ -383,7 +383,7 @@ class SurveyController extends SurveyAppController {
 				$this->fixData($this->request->data);
 				
 				$arr = $this->InstitutionSiteType->find('list',array('conditions'=>array('visible'=>1,'id'=>$details['siteTypes'])));
-				
+
 				if($details['filename']!=''){ // If user has own custom filename to use
 					$file = $details['filename'].'.json';
 				}else{ // Otherwise use default filename

@@ -49,6 +49,8 @@ class SurveyCategoryComponent extends Component {
         'CensusSanitation',
         'CensusWater',
         'CensusFinance',
+        'FinanceType',
+        'FinanceNature',
         'FinanceSource',
         'FinanceCategory',
         'InfrastructureBuilding',
@@ -362,12 +364,13 @@ class SurveyCategoryComponent extends Component {
         $tableCensus =  array('Institution Site - TOTALS'=>array('CensusStudent'  =>array('EducationGrade','StudentCategory','EducationProgramme'),
                 'CensusTeacher' =>array('EducationLevel','EducationProgramme'),
                 'CensusStaff' =>array('StaffCategory'),
-                'CensusClass' => array('EducationGrade','EducationProgramme'),
+                'CensusClass' =>array('EducationGrade','EducationProgramme'),
                 'CensusGraduate' =>array('EducationProgramme','EducationCertification','EducationLevel'),
                 'CensusAttendance' =>array('EducationProgramme','EducationGrade'),
                 'CensusAssessment' =>array('EducationProgramme','EducationGrade','EducationGradeSubject'),
                 'CensusBehaviour' =>array('StudentBehaviourCategory'),
-                'CensusTextbook' =>array('EducationGrade','EducationProgramme','EducationGradeSubject')
+                'CensusTextbook' =>array('EducationGrade','EducationProgramme','EducationGradeSubject'),
+                'CensusFinance' =>array('FinanceType', 'FinanceNature', 'FinanceSource', 'FinanceCategory')
             ));
 
         // ---- Add InfraStructure to Census Tables
