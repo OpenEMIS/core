@@ -540,6 +540,7 @@
                 <![CDATA[
                     CREATE TABLE `education_programmes` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(50) NOT NULL,
                       `name` varchar(150) NOT NULL,
                       `duration` int(3) NOT NULL COMMENT 'No of years',
                       `order` int(3) NOT NULL,
@@ -575,9 +576,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `education_programmes` (
-                        `id`, `name`, `duration`, `order`, `visible`, `education_field_of_study_id`, `education_cycle_id`, `education_certification_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `code`, `name`, `duration`, `order`, `visible`, `education_field_of_study_id`, `education_cycle_id`, `education_certification_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :duration, :order, :visible, :education_field_of_study_id, :education_cycle_id, :education_certification_id, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :code, :name, :duration, :order, :visible, :education_field_of_study_id, :education_cycle_id, :education_certification_id, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
