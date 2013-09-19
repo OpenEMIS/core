@@ -281,13 +281,34 @@ class StaffController extends StaffAppController {
 
     public function add() {
         $this->Navigation->addCrumb('Add new Staff');
+        $imgValidate = new ImageValidate();
+		$data = $this->data;
         if($this->request->is('post')) {
-            $this->Staff->set($this->data);
-            if($this->Staff->validates()) {
-                $newStaffRec =  $this->Staff->save($this->data);
+            $reset_image = $data['Staff']['reset_image'];
+
+            $img = new ImageMeta($data['Staff']['photo_content']);
+            unset($data['Staff']['photo_content']);
+
+            if($reset_image == 0 ) {
+                $validated = $imgValidate->validateImage($img);
+                if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
+                    $data['Staff']['photo_content'] = $img->getContent();
+                    $img->setContent('');
+    //                $data['Staff']['photo_name'] = serialize($img);
+                    $data['Staff']['photo_name'] = $img->getFilename();
+                }
+            }else{
+                $data['Staff']['photo_content'] = '';
+                $data['Staff']['photo_name'] = '';
+            }
+           $this->Staff->set($data);
+            if($this->Staff->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
+                unset($data['Staff']['rest_image']);
+                $newStaffRec =  $this->Staff->save($data);
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewStaff', $newStaffRec['Staff']['id']));
             }else{
+                                 $this->set('imageUploadError', __(array_shift($validated['message'])));
 				$errors = $this->Staff->validationErrors;
 				if($this->getUniqueID()!=''){ // If Auto id
 					if(isset($errors["identification_no"])){ // If its ID error
