@@ -42,6 +42,7 @@ class BatchIndicatorResult extends DataProcessingAppModel {
 		/*
 		select
 		`batch_indicator_results`.`timeperiod`,
+		`area_parent`.`id`,
 		`area_parent`.`name`,
 		SUM(`batch_indicator_results`.`numerator`),
 		SUM(`batch_indicator_results`.`denominator`)
@@ -72,7 +73,8 @@ class BatchIndicatorResult extends DataProcessingAppModel {
 					'alias' => 'Area',
 					'conditions' => array(
 						'Area.id = BatchIndicatorResult.area_id',
-						'Area.area_level_id = ' . $levelId
+						'Area.area_level_id = ' . $levelId,
+						'Area.parent_id <> -1'
 					)
 				)
 			),
@@ -93,31 +95,37 @@ class BatchIndicatorResult extends DataProcessingAppModel {
 		
 		$data = $this->find('first', array('conditions' => $conditions));
 		$numerator = 0;
-		$denominator = 0;
+		$denominator = null;
 		$dataValue = 0;
 		
 		if($data) {
-			$numerator = $data['BatchIndicatorResult']['numerator'] + $result['numerator'];
-			$denominator = $data['BatchIndicatorResult']['denominator'];
+			$data = $data['BatchIndicatorResult'];
+			$numerator = $data['numerator'] + $obj[0]['numerator'];
+			$denominator = $data['denominator'];
 			if(!empty($denominator)) {
-				$denominator += $result['denominator'];
-			}
-			if($unit === 'Percent' || $unit === 'Rate') {
-				$dataValue = $numerator/$denominator*100; 
-			} else if($unit === 'Ratio') {
-				$dataValue = $numerator/$denominator;
-			} else {
-				$dataValue = $numerator;
+				$denominator += $obj[0]['denominator'];
 			}
 		} else {
 			$data = $conditions;
 			$data['created_user_id'] = $result['created_user_id'];
 			$data['created'] = $result['created'];
+			$numerator = $obj[0]['numerator'];
+			if($obj[0]['denominator'] > 0) {
+				$denominator = $obj[0]['denominator'];
+			}
 			$this->create();
+		}
+		
+		if($unit === 'Percent' || $unit === 'Rate') {
+			$dataValue = $numerator/$denominator*100; 
+		} else if($unit === 'Ratio') {
+			$dataValue = $numerator/$denominator;
+		} else {
+			$dataValue = $numerator;
 		}
 		$data['numerator'] = $numerator;
 		$data['denominator'] = $denominator;
-		$data['dataValue'] = $dataValue;
+		$data['data_value'] = $dataValue;
 		return $this->save($data);
 	}
 }

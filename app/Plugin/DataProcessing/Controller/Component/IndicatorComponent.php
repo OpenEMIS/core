@@ -90,7 +90,6 @@ class IndicatorComponent extends Component {
 				}
 			}
 			try {
-				$this->BatchIndicatorResult->truncate($indicatorId);
 				$this->generateIndicator($indicatorId, $userId);
 			} catch(Exception $ex) {
 				$error = $ex->getMessage();
@@ -139,6 +138,7 @@ class IndicatorComponent extends Component {
 	}
 	
 	public function generateIndicator($id, $userId=0) {
+		$this->BatchIndicatorResult->truncate($id);
         $areaLevels = $this->AreaLevel->find('list', array('order' => 'level DESC'));
         $indicator = $this->BatchIndicator->find('first', array('conditions' => array('BatchIndicator.id' => $id)));
         $indicatorName = $indicator['BatchIndicator']['name'];
@@ -259,7 +259,7 @@ class IndicatorComponent extends Component {
                 $model = ClassRegistry::init((string)$obj['reference']);
 //                pr((string)$obj['reference']);
                 $list = $model->findListAsSubgroups();
-                pr($list);
+                //pr($list);
 
                 if($type==='Age') {
                     $ageList = $list;
