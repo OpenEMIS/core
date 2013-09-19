@@ -7,13 +7,14 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
 echo $this->Html->script('/Survey/js/jquery-ui', false);
 ?>
 <style>
+    .table .cell_section_group { min-width: 0 !important; width: 600px; }
 	.table .cell_section_name { min-width: 0 !important; width: 600px; }
 	.table .cell_section_option { text-align:center; }
 	.table_row { background-color:#FFF; }
 </style>
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="survey" class="content_wrapper">
+<div id="surveyadd" class="content_wrapper">
 	<?php
 	echo $this->Form->create('add', array(
 		'id' => 'submitForm',
@@ -64,7 +65,7 @@ echo $this->Html->script('/Survey/js/jquery-ui', false);
             <fieldset class="section_break">
                 <legend>
 					<?php echo $topic;?>
-                    
+
                     <?php echo $this->Form->input($topic.'.order', array( 'value' => $arrTopVal['order'], 'type' => 'hidden')); ?>
                 </legend>
                     <!-- Section Heading -->
