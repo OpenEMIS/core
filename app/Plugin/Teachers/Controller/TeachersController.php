@@ -280,14 +280,34 @@ class TeachersController extends TeachersAppController {
 
     public function add() {
         $this->Navigation->addCrumb('Add new Teacher');
-        if($this->request->is('post')) {
-            $this->Teacher->set($this->data);
-            if($this->Teacher->validates()) {
-                $newTeacherRec =  $this->Teacher->save($this->data);
+        $imgValidate = new ImageValidate();
+	$data = $this->data;
+        if($this->request->is('post')) {$reset_image = $data['Teacher']['reset_image'];
+
+            $img = new ImageMeta($data['Teacher']['photo_content']);
+            unset($data['Teacher']['photo_content']);
+
+            if($reset_image == 0 ) {
+                $validated = $imgValidate->validateImage($img);
+                if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
+                    $data['Teacher']['photo_content'] = $img->getContent();
+                    $img->setContent('');
+    //                $data['Teacher']['photo_name'] = serialize($img);
+                    $data['Teacher']['photo_name'] = $img->getFilename();
+                }
+            }else{
+                $data['Teacher']['photo_content'] = '';
+                $data['Teacher']['photo_name'] = '';
+            }
+
+            $this->Teacher->set($data);
+            if($this->Teacher->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
+                $newTeacherRec =  $this->Teacher->save($data);
                 // create the session for successfully adding of teacher
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
                 $this->redirect(array('action' => 'viewTeacher', $newTeacherRec['Teacher']['id']));
             }else{
+                    $this->set('imageUploadError', __(array_shift($validated['message'])));
 				$errors = $this->Teacher->validationErrors;
 				if($this->getUniqueID()!=''){ // If Auto id
 					if(isset($errors["identification_no"])){ // If its ID error
