@@ -555,7 +555,7 @@ class SurveyCategoryComponent extends Component {
                         'label'=> 'Classes',
                         'value' => 'Category',
                         'questions'=> array('SingleGradeClass'	=>$arrayQuestions['Institution Site - TOTALS']['CensusClass'],
-                            'MultiGradeClass'	=>$arrayQuestions['Institution Site - TOTALS']['CensusClass']
+                                            'MultiGradeClass'	=>  array()
                         ));
 
                     // Single Grade Options
@@ -566,6 +566,23 @@ class SurveyCategoryComponent extends Component {
                     $newArray[$name]['questions']['MultiGradeClass']['order']  = '2';
                     $newArray[$name]['questions']['MultiGradeClass']['label'] = 'Multi Grade Classes';
                     $newArray[$name]['questions']['MultiGradeClass']['type']  = 'Grid_Unlimited';
+                    $newArray[$name]['questions']['MultiGradeClass']['value']  = array();
+                    $newArray[$name]['questions']['MultiGradeClass']['questions'] = $arrayQuestions['Institution Site - TOTALS']['CensusClass']['questions'];
+
+                    // Multi Grade - Grades Options
+                    $newArray[$name]['questions']['MultiGradeClass']['questions']['Grades']['order']  = '1';
+                    $newArray[$name]['questions']['MultiGradeClass']['questions']['Grades']['label'] = 'Grades';
+                    $newArray[$name]['questions']['MultiGradeClass']['questions']['Grades']['type']  = 'Grid_Unlimited';
+                    $newArray[$name]['questions']['MultiGradeClass']['questions']['Grades']['box']  = '1';
+                    $newArray[$name]['questions']['MultiGradeClass']['questions']['Grades']['value']  = array();
+                    $newArray[$name]['questions']['MultiGradeClass']['questions']['Grades']['questions']  = $arrayQuestions['Institution Site - TOTALS']['CensusClass']['questions'];
+
+                    // Remove duplicated columns in Grades
+                    unset($newArray[$name]['questions']['MultiGradeClass']['questions']['Grades']['questions']['classes']);
+                    unset($newArray[$name]['questions']['MultiGradeClass']['questions']['Grades']['questions']['seats']);
+                    unset($newArray[$name]['questions']['MultiGradeClass']['questions']['education_programme_id']);
+                    unset($newArray[$name]['questions']['MultiGradeClass']['questions']['education_grade_id']);
+
                     // End Customise Census Class so that Survey can show two types ---------------------------------------------------------------------
                     break;
 

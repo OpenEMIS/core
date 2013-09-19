@@ -73,26 +73,29 @@
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.value', 
                                                                                 array( 'value' => '', 'type' => 'hidden'));
 														   	foreach($arrQuestionVal['questions'] as $subQuestion => $arrSubQuestionVal) {
-																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.order', 
-																					array( 'value' => $arrSubQuestionVal['order'], 'type' => 'hidden'));
-																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.type', 
-																					array( 'value' => $arrSubQuestionVal['type'], 'type' => 'hidden'));
-																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.label',
-																					array( 'value' => __($arrSubQuestionVal['label']), 'type' => 'hidden'));
-                                                                echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.null',
-                                                                                    array( 'value' => __($arrSubQuestionVal['null']), 'type' => 'hidden'));
-																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.box', 
-																					array( 'value' => __($arrSubQuestionVal['box']), 'type' => 'hidden'));
-																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.value', 
-																					array( 'value' =>'', 'type' => 'hidden'));
-																					
-																// Items Handle
-																if(isset($arrSubQuestionVal['items'])){
-																	if(count($arrSubQuestionVal['items'])>0){
-																		foreach($arrSubQuestionVal['items'] as $key=>$itemval){
-																			echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.items.'.$key, array( 'value' => __($itemval), 'type' => 'hidden'));
-																		}
-																	}
+																if(isset($arrQuestionVal['questions'])){
+																}else{
+                                                                    echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.order',
+                                                                                        array( 'value' => $arrSubQuestionVal['order'], 'type' => 'hidden'));
+                                                                    echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.type',
+                                                                                        array( 'value' => $arrSubQuestionVal['type'], 'type' => 'hidden'));
+                                                                    echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.label',
+                                                                                        array( 'value' => __($arrSubQuestionVal['label']), 'type' => 'hidden'));
+                                                                    echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.null',
+                                                                                        array( 'value' => __($arrSubQuestionVal['null']), 'type' => 'hidden'));
+                                                                    echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.box',
+                                                                                        array( 'value' => __($arrSubQuestionVal['box']), 'type' => 'hidden'));
+                                                                    echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.value',
+                                                                                        array( 'value' =>'', 'type' => 'hidden'));
+
+                                                                    // Items Handle
+                                                                    if(isset($arrSubQuestionVal['items'])){
+                                                                        if(count($arrSubQuestionVal['items'])>0){
+                                                                            foreach($arrSubQuestionVal['items'] as $key=>$itemval){
+                                                                                echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.items.'.$key, array( 'value' => __($itemval), 'type' => 'hidden'));
+                                                                            }
+                                                                        }
+                                                                    }
 																}
 															}
                                                         ?>
