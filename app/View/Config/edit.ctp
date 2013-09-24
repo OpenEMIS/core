@@ -15,14 +15,14 @@ echo $this->Html->script('config', false);
 	</h1>
 
 	<?php
-	echo $this->Form->create('save', array(
+	echo $this->Form->create('edit', array(
 		    'inputDefaults' => array(
 		        'label' => false,
 		        'div' => false
 		    ),
 			'url' => array(
 				'controller' => 'Config',
-				'action' => 'save'
+				'action' => 'edit'
 			),
 			'id' => 'ConfigurationSaveEdit',
 			'type' => 'file'
