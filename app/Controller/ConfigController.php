@@ -39,7 +39,7 @@ class ConfigController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-                $this->Auth->allow('getJSConfig');
+        $this->Auth->allow('getJSConfig');
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
 		$this->bodyTitle = 'Settings';
 		$this->imageConfig = $this->ConfigItem->getImageConfItem();
@@ -111,11 +111,24 @@ class ConfigController extends AppController {
 
 
 		if($this->request->is('post')){
-			$this->ConfigItem->set($this->request->data);
+			//pr($this->request->data);
+			$dataToBeSave = array();
+			foreach($this->request->data as $key => $element){
+				if(strtolower($key) == 'configitem'){
+					$dataToBeSave = $element;
+					break;
+				}
+			}
 
-			if($this->ConfigItem->validates()) {
+			$errorCustomMsg = $this->validateFields($dataToBeSave);
+
+
+			if(empty($errorCustomMsg)) {
 				$this->save();
 			}
+
+			
+			$this->set('errorCustomMsg', $errorCustomMsg);
 		}
 
 
@@ -136,6 +149,24 @@ class ConfigController extends AppController {
 		$this->set('items', $sorted);
 	}
 
+	private function validateFields($data){
+		$error = array();
+		foreach($data as $key => $element){
+			foreach($element as $innerKey => $innerElement){
+				if($key=='Data Outliers'){
+					if($innerElement['id']=='106'){
+						$value = $innerElement['value'];
+						if(!is_numeric($value) || $value < 1 || $value > 5){
+							$error[$innerElement['id']] = "Please enter numeric value between 1 to 5";
+						}
+					}
+				}
+			}
+		}
+
+		return $error;
+	}
+
 	public function save() {
 		//$this->autoRender = false;
 		if($this->request->is('post')){
@@ -149,6 +180,7 @@ class ConfigController extends AppController {
 					break;
 				}
 			}
+			//pr($dataToBeSave);'
 			foreach($dataToBeSave as $key => $element){
 				foreach($element as $innerKey => $innerElement){
 					$yearbookLogoElement = "";

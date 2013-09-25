@@ -31,6 +31,7 @@
 
 /* Table styles */
 .cell_classes, .cell_gender { width: 110px; }
+.cell_shifts { width: 50px; }
 .edit .multi .cell_classes, .edit .multi .cell_gender { width: 93px; }
 .multi .icon_plus { margin-left: 0; }
 .multi .icon_delete { margin-top: 8px; }
