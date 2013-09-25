@@ -184,6 +184,9 @@ echo $this->Html->script('config', false);
 					}else{
 						echo $item['value'];
 					}
+					if(isset($errorCustomMsg[$innerElement['id']])){
+						echo '<div class="error-message">' . $errorCustomMsg[$innerElement['id']] . '</div>';
+					}
 				?>
 				</div>
 			</div>
