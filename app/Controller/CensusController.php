@@ -1370,6 +1370,7 @@ class CensusController extends AppController {
 	}
 	
 	public function shiftsEdit() {
+
 		if($this->request->is('get')) {
 			$this->Navigation->addCrumb('Edit Shifts');
 			
@@ -1402,29 +1403,31 @@ class CensusController extends AppController {
 				$this->set('selectedYear', $selectedYear);
 				$this->set('years', $yearList);
 			}
-		} else {
-			$data = $this->data['CensusShift'];
-			$yearId = $this->data['school_year_id'];
+		}else{
+			if (!empty($this->request->data)) {
+				$data = $this->data['CensusShift'];
+				$yearId = $this->data['school_year_id'];
 
-			$saveData = array();
-			
-			foreach($data as $key=>$value){
-				if(is_array($value)){
-					foreach($value as $key2=>$value2){
-						if(isset($data[$key . '_shift_pk_' . str_replace("shift_value_", "", $key2)])){
-							$saveData[] = array('CensusShift' => array('id' => $data[$key . '_shift_pk_' . str_replace("shift_value_", "", $key2)], 'census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
-						}else{
-							$saveData[] = array('CensusShift' => array('census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+				$saveData = array();
+				$errorMsg = array();
+				foreach($data as $key=>$value){
+					if(is_array($value)){
+						foreach($value as $key2=>$value2){
+							if(isset($value['shift_pk_' . str_replace("shift_value_", "", $key2)])){
+								$saveData[] = array('CensusShift' => array('id' => $value['shift_pk_' . str_replace("shift_value_", "", $key2)], 'census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+							}else{
+								$saveData[] = array('CensusShift' => array('census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+							}
+							
 						}
-						
 					}
 				}
-			}
+				$this->CensusShift->saveAll($saveData);
 
-			$this->CensusShift->saveAll($saveData);
-
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
-			$this->redirect(array('action' => 'shifts', $yearId));
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
+				$this->redirect(array('action' => 'shifts', $yearId));
+			}	
 		}
+		
 	}
 }
