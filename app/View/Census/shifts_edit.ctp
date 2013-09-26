@@ -54,37 +54,48 @@ echo $this->Html->script('census_classes', false);
 			
 			<div class="table_body">
 			<?php 
-			$totalShift = array();
+			$totalShifts = array_fill(1, $no_of_shifts, 0);
 			$i = 0;
+
 			//pr($singleGradeData);
-			foreach($singleGradeData as $name => $programme) {
-				foreach($programme['education_grades'] as $gradeId => $grade) {
+			foreach($singleGradeData as $name => $value) {
 					//$totalShift[$grade['shift_id']] += $grade['value'];
 					$record_tag="";
 					foreach ($source_type as $k => $v) {
-						if ($grade['source']==$v) {
-							$record_tag = "row_" . $k;
+						if(isset($value['shift_source'])){
+							if ($value['shift_source']==$v) {
+								$record_tag = "row_" . $k;
+							}
 						}
+						
 					}
 			?>
 				<div class="table_row">
 					
-					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $name; ?></div>
-					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $grade['name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $value['education_programme_name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $value['education_grade_name']; ?></div>
 					<?php 
 					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
 						<?php 
-						$value = "";
-						if(isset($grade['shift_' . $s])){
-							$value = $grade['shift_' . $s];
+						$shift = null;
+						if(isset($value['shift_' . $s])){
+							$shift = $value['shift_' . $s];
+							$totalShifts[$s] += $shift;
 						}?>
 					 	<div class="table_cell">
 						<div class="input_wrapper">
-						<?php echo $this->Form->input($grade['class_id'] . '.' . $s . '.shift_value', array(
+						<?php 
+						if(isset($value['shift_pk_' . $s])){
+							echo $this->Form->hidden($value['id'] . '_shift_pk_' . $s, array(
+									'value' => $value['shift_pk_' . $s]
+								));
+						}
+						?>
+						<?php echo $this->Form->input($value['id']  . '.shift_value_' . $s, array(
 								'type' => 'text',
 								'class' => $record_tag,
 								'computeType' => 'total_shifts_' . $s,
-								'value' => $value,
+								'value' => $shift,
 								'maxlength' => 5,
 								'onkeypress' => 'return utility.integerCheck(event)',
 								'onkeyup' => 'jsTable.computeTotal(this)'
@@ -98,7 +109,6 @@ echo $this->Html->script('census_classes', false);
 				</div>
 				
 			<?php 
-				}
 			}
 			?>
 			</div>
@@ -108,7 +118,7 @@ echo $this->Html->script('census_classes', false);
 				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
 				<?php 
 					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
-						<div class="table_cell cell_value cell_number total_shifts_<?php echo $s;?>"><?php echo '0'; ?></div>
+						<div class="table_cell cell_value cell_number total_shifts_<?php echo $s;?>"><?php echo $totalShifts[$s]; ?></div>
 				<?php
 					}
 				?>
