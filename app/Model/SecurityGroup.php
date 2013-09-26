@@ -66,10 +66,8 @@ class SecurityGroup extends AppModel {
 			$joins[] = array(
 				'table' => 'security_group_users',
 				'alias' => 'SecurityGroupUser',
-				'conditions' => array(
-					'SecurityGroupUser.security_group_id = SecurityGroup.id',
-					'SecurityGroupUser.security_user_id = ' . $conditions['user_id']
-				)
+				'type' => 'LEFT',
+				'conditions' => array('SecurityGroupUser.security_group_id = SecurityGroup.id')
 			);
 		}
 		unset($conditions['super_admin']);
@@ -78,13 +76,19 @@ class SecurityGroup extends AppModel {
 	}
 	
 	public function paginateConditions(&$conditions) {
+		$or = array();
 		if(isset($conditions['search'])) {
 			if(!empty($conditions['search'])) {
 				$search = '%' . $conditions['search'] . '%';
-				$conditions['OR'] = array('SecurityGroup.name LIKE' => $search);
+				$or['SecurityGroup.name LIKE'] = $search;
 			}
 			unset($conditions['search']);
 		}
+		if($conditions['super_admin'] == false) {
+			$or['SecurityGroup.created_user_id'] = $conditions['user_id'];
+			$or['SecurityGroupUser.security_user_id'] = $conditions['user_id'];
+		}
+		$conditions['OR'] = $or;
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
