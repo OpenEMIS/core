@@ -5,9 +5,9 @@
                 <mysql>
                     <select>
                         <![CDATA[
-                            (`main_data`.`total` + IFNULL(`indicator_results`.`numerator`, 0)) / (`main_data_b`.`total` + IFNULL(`indicator_results`.`denominator`, 0)) * 100 AS `data_value`,
-`main_data`.`total` + IFNULL(`indicator_results`.`numerator`, 0) AS `numerator`,
-`main_data_b`.`total` + IFNULL(`indicator_results`.`denominator`, 0) AS `denominator`,
+						`main_data`.`total` / `main_data_b`.`total` * 100 AS `data_value`,
+						`main_data`.`total` AS `numerator`,
+						`main_data_b`.`total` AS `denominator`,
 					]]>
                     </select>
                 </mysql>
@@ -16,9 +16,9 @@
                 <mysql>
                     <select>
                         <![CDATA[
-                            (`main_data`.`male` + IFNULL(`indicator_results`.`numerator`, 0)) / (`main_data_b`.`male` + IFNULL(`indicator_results`.`denominator`, 0)) * 100 AS `data_value`,
-`main_data`.`male` + IFNULL(`indicator_results`.`numerator`, 0) AS `numerator`,
-`main_data_b`.`male` + IFNULL(`indicator_results`.`denominator`, 0) AS `denominator`,
+						`main_data`.`male` / `main_data_b`.`male` * 100 AS `data_value`,
+						`main_data`.`male` AS `numerator`,
+						`main_data_b`.`male` AS `denominator`,
 					]]>
                     </select>
                 </mysql>
@@ -27,9 +27,9 @@
                 <mysql>
                     <select>
                         <![CDATA[
-                            (`main_data`.`female` + IFNULL(`indicator_results`.`numerator`, 0)) / (`main_data_b`.`female` + IFNULL(`indicator_results`.`denominator`, 0)) * 100 AS `data_value`,
-`main_data`.`female` + IFNULL(`indicator_results`.`numerator`, 0) AS `numerator`,
-`main_data_b`.`female` + IFNULL(`indicator_results`.`denominator`, 0) AS `denominator`,
+						`main_data`.`female` / `main_data_b`.`female` * 100 AS `data_value`,
+						`main_data`.`female` AS `numerator`,
+						`main_data_b`.`female` AS `denominator`,
 					]]>
                     </select>
                 </mysql>
@@ -141,28 +141,6 @@
                             AND `main_data_b`.`area_id` = `main_data`.`area_id`
                             AND `main_data_b`.`education_level_id` = `main_data`.`education_level_id`
                             AND `main_data_b`.`education_cycle_order` = `main_data`.`education_cycle_order` - 1
-
-                        -- Aggregation by Area Start
-                        LEFT JOIN (
-                            SELECT
-                            `areas`.`parent_id` AS `area_parent_id`,
-                            `batch_indicator_results`.`timeperiod`,
-                            SUM(`batch_indicator_results`.`numerator`) AS `numerator`,
-                            SUM(`batch_indicator_results`.`denominator`) AS `denominator`,
-                            `batch_indicator_results`.`classification`
-                            FROM `batch_indicator_results`
-                            JOIN `areas` ON `areas`.`id` = `batch_indicator_results`.`area_id`
-                            WHERE `batch_indicator_results`.`batch_indicator_id` = -- {INDICATOR_ID}
-                            AND `batch_indicator_results`.`subgroups` = -- {SUBGROUPS}
-                            GROUP BY
-                            `areas`.`parent_id`,
-                            `batch_indicator_results`.`timeperiod`,
-                            `batch_indicator_results`.`classification`
-                        ) AS `indicator_results`
-                            ON `indicator_results`.`area_parent_id` = `main_data`.`area_id`
-                            AND `indicator_results`.`timeperiod` = `main_data`.`year`
-                            AND `indicator_results`.`classification` = `main_data`.`classification`
-                        -- Aggregation by Area End
 
                         GROUP BY
                         `main_data`.`year`,
