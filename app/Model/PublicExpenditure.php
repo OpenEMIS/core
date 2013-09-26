@@ -115,6 +115,24 @@ class PublicExpenditure extends AppModel {
 		}
 		return $list;
 	}
+	
+	public function getPublicExpenditureByYearAndArea($year, $listAreaId) {
+		$options = array(
+			'fields' => array(
+				"PublicExpenditure.id",
+				"PublicExpenditure.area_id",
+				"PublicExpenditure.year",
+				"PublicExpenditure.gross_national_product",
+				"PublicExpenditure.total_public_expenditure",
+				"PublicExpenditure.total_public_expenditure_education"
+			),
+			'conditions' => array(
+				"AND" => array("PublicExpenditure.year" => $year, "PublicExpenditure.area_id" => $listAreaId)
+			)
+		);
+		$result = $this->find('all', $options);
+		return $result;
+	}
 
 	public function getPublicExpenditureData($year, $areaId, $parentAreaId) {
 		$data = $this->getData($year, $areaId, $parentAreaId);
