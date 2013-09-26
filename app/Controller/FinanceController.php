@@ -32,9 +32,6 @@ class FinanceController extends AppController {
 	
 	public function index() {
 		$this->Navigation->addCrumb('Total Public Expenditure');
-		
-		$result = $this->PublicExpenditure->getPublicExpenditureByYearAndArea(2012, 1);
-		// pr($result);
 
 		$areas = array();
         $levels = $this->AreaLevel->find('list');
