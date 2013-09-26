@@ -90,7 +90,6 @@ class IndicatorComponent extends Component {
 				}
 			}
 			try {
-				$this->BatchIndicatorResult->truncate($indicatorId);
 				$this->generateIndicator($indicatorId, $userId);
 			} catch(Exception $ex) {
 				$error = $ex->getMessage();
@@ -139,6 +138,7 @@ class IndicatorComponent extends Component {
 	}
 	
 	public function generateIndicator($id, $userId=0) {
+		$this->BatchIndicatorResult->truncate($id);
         $areaLevels = $this->AreaLevel->find('list', array('order' => 'level DESC'));
         $indicator = $this->BatchIndicator->find('first', array('conditions' => array('BatchIndicator.id' => $id)));
         $indicatorName = $indicator['BatchIndicator']['name'];
@@ -165,8 +165,6 @@ class IndicatorComponent extends Component {
 		
 		if(strpos($query, '-- {LEVEL}') === false) { // query does not execute per area level
 			foreach($permutations as $pattern) {
-//                if($this->isMaxPermutations($permutationCounter)) break; #for debugging
-
 				$sql = $query;
 				$subgroups = array();
 				foreach($pattern as $s) {
@@ -191,8 +189,6 @@ class IndicatorComponent extends Component {
 		} else {
 			foreach($areaLevels as $levelId => $levelName) {
 				foreach($permutations as $pattern) {
-//                    if($this->isMaxPermutations($permutationCounter)) break; #for debugging
-
 					$sql = $query;
 					$subgroups = array();
 					foreach($pattern as $s) {
@@ -214,6 +210,15 @@ class IndicatorComponent extends Component {
 					// End Logging
 					
 					$result = $this->BatchIndicator->query($sql);
+				}
+			}
+			
+			$this->Logger->write(sprintf('(%s) Aggregate by Areas Start', $indicatorName));
+			foreach($areaLevels as $levelId => $levelName) {
+				$this->Logger->write(sprintf('(%s) Aggregate by level Id %d', $indicatorName, $levelId));
+				$data = $this->BatchIndicatorResult->aggregateByAreaLevel($id, $levelId);
+				foreach($data as $obj) {
+					$this->BatchIndicatorResult->aggregateSave($obj, $unitName);
 				}
 			}
 		}
@@ -254,7 +259,7 @@ class IndicatorComponent extends Component {
                 $model = ClassRegistry::init((string)$obj['reference']);
 //                pr((string)$obj['reference']);
                 $list = $model->findListAsSubgroups();
-                pr($list);
+                //pr($list);
 
                 if($type==='Age') {
                     $ageList = $list;
