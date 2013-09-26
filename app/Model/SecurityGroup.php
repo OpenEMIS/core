@@ -88,7 +88,9 @@ class SecurityGroup extends AppModel {
 			$or['SecurityGroup.created_user_id'] = $conditions['user_id'];
 			$or['SecurityGroupUser.security_user_id'] = $conditions['user_id'];
 		}
-		$conditions['OR'] = $or;
+		if(!empty($or)) {
+			$conditions['OR'] = $or;
+		}
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
