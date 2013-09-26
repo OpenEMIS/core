@@ -493,6 +493,7 @@ class CensusController extends AppController {
 			$yearId = $this->data['school_year_id'];
 			$duplicate = false;
 			$data = $this->CensusClass->clean($this->data['CensusClass'], $yearId, $this->institutionSiteId, $duplicate);
+
 			if($duplicate) {
 				$this->Utility->alert($this->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
 			}
@@ -1354,12 +1355,8 @@ class CensusController extends AppController {
 			$displayContent = false;
 		} else {
 			$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
-			$singleGradeData = $programmeGrades;
+			$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
 			$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
-
-			//$this->CensusShift->mergeSingleGradeData($programmeGrades, $singleGradeClasses);
-
-
 			$this->set('singleGradeData', $singleGradeData);
 		}
 
@@ -1388,30 +1385,12 @@ class CensusController extends AppController {
 					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 					$displayContent = false;
 				} else {
-					//$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear, false);
-				
-
 					$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
 					$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
 
 					$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
 
-					//var_dump($singleGradeData);
-					//var_dump($singleGradeData);
-					/*
-					$classData = $this->CensusClass->find('list', array(
-			        'fields' => array('CensusClass.*'),
-			        'conditions' => array('CensusClass.institution_site_id' => $this->institutionSiteId, 'CensusClass.school_year_id' => $selectedYear),
-			        'recursive' => 0
-		    		));
-
-					$singleGradeData = $programmeGrades;
-					$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);*/
-						//var_dump($singleGradeData);
-				
-					//$this->set('programmes', $programmes);
-					//$this->set('programmeGrades', $programmeGrades);
-					//$this->set('classData', $classData);
+			
 					$this->set('singleGradeData', $singleGradeData);
 				}
 
@@ -1424,19 +1403,26 @@ class CensusController extends AppController {
 				$this->set('years', $yearList);
 			}
 		} else {
-			$data = $this->data;
+			$data = $this->data['CensusShift'];
 			$yearId = $this->data['school_year_id'];
 
 			$saveData = array();
+			
 			foreach($data as $key=>$value){
-				$saveData[] = array('census_class_id' => '1', 'shift_id' => '1', 'value' => '5', 'created_user_id'=>'1', 'created' => time());
-
-
+				if(is_array($value)){
+					foreach($value as $key2=>$value2){
+						if(isset($data[$key . '_shift_pk_' . str_replace("shift_value_", "", $key2)])){
+							$saveData[] = array('CensusShift' => array('id' => $data[$key . '_shift_pk_' . str_replace("shift_value_", "", $key2)], 'census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+						}else{
+							$saveData[] = array('CensusShift' => array('census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+						}
+						
+					}
+				}
 			}
-			var_dump($saveData);
-			$this->CensusShift->saveCensusData($saveData);
 
-			exit;
+			$this->CensusShift->saveAll($saveData);
+
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
 			$this->redirect(array('action' => 'shifts', $yearId));
 		}

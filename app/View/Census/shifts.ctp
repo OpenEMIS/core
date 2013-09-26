@@ -52,34 +52,34 @@ echo $this->Html->script('census', false);
 			
 			<div class="table_body">
 			<?php 
-			$totalShifts = array();
-
-			foreach($singleGradeData as $name => $programme) { 
-				foreach($programme['education_grades'] as $gradeId => $grade) {
+			$totalShifts = array_fill(1, $no_of_shifts, 0);
+			foreach($singleGradeData as $name => $value) { 
 					//$totalShifts[$grade['shift_id']] += $grade['value'];
 					$record_tag="";
 					foreach ($source_type as $k => $v) {
-						if ($grade['source']==$v) {
+						if ($value['source']==$v) {
 							$record_tag = "row_" . $k;
 						}
 					}
 				?>
 				<div class="table_row">
-					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $name; ?></div>
-					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $grade['name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $value['education_programme_name']; ?></div>
+					<div class="table_cell <?php echo $record_tag; ?>"><?php echo $value['education_grade_name']; ?></div>
 					<?php 
 					for($s=1;$s<=intval($no_of_shifts);$s++){
-						$value = null;
-						if(isset($grade['shift_' . $s])){
-							$value = $grade['shift_' . $s];
+						$shift = null;
+					
+					
+						if(isset($value['shift_' . $s])){
+							$shift = $value['shift_' . $s];
+							$totalShifts[$s] += $shift;
 						}
-						echo '<div class="table_cell cell_number '. $record_tag . '">' . $value . '</div>';
+						echo '<div class="table_cell cell_number '. $record_tag . '">' . $shift . '</div>';
 					}?>
 					
 				</div>
 				
 			<?php 
-				}
 			}
 			?>
 			</div>
@@ -89,7 +89,7 @@ echo $this->Html->script('census', false);
 				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
 				<?php 
 					for($i=1;$i<=intval($no_of_shifts);$i++){
-						echo '<div class="table_cell cell_value cell_number">' .  '0</div>';
+						echo '<div class="table_cell cell_value cell_number">' . $totalShifts[$i] . '</div>';
 					}
 				?>
 			</div>
