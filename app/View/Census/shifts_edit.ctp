@@ -46,16 +46,16 @@ echo $this->Html->script('census_classes', false);
 			<div class="table_head">
 				<div class="table_cell"><?php echo __('Programme'); ?></div>
 				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
-				<div class="table_cell cell_shifts"><?php echo __('Classes'); ?></div>
+				<div class="table_cell"><?php echo __('Classes'); ?></div>
 				<?php 
 				for($i=1;$i<=intval($no_of_shifts);$i++){
 					echo '<div class="table_cell cell_shifts">' . __('Shift')  . ' ' . $i . '</div>';
 				}?>
+				<div class="table_cell"><?php echo __('Total'); ?></div>
 			</div>
 			
 			<div class="table_body">
 			<?php 
-			$totalShifts = array_fill(1, $no_of_shifts, 0);
 			$totalClasses = 0;
 			$i = 0;
 
@@ -77,12 +77,13 @@ echo $this->Html->script('census_classes', false);
 					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $value['classes']; ?></div>
 
 					<?php
+					$totalShifts = 0;
 					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
 						<?php 
 						$shift = null;
 						if(isset($value['shift_' . $s])){
 							$shift = $value['shift_' . $s];
-							$totalShifts[$s] += $shift;
+							$totalShifts += $shift;
 						}?>
 					 	<div class="table_cell">
 						<div class="input_wrapper">
@@ -96,11 +97,11 @@ echo $this->Html->script('census_classes', false);
 						<?php echo $this->Form->input($value['id']  . '.shift_value_' . $s, array(
 								'type' => 'text',
 								'class' => $record_tag,
-								'computeType' => 'total_shifts_' . $s,
+								'computeType' => 'cell_value',
 								'value' => $shift,
 								'maxlength' => 5,
 								'onkeypress' => 'return utility.integerCheck(event)',
-								'onkeyup' => 'jsTable.computeTotal(this)'
+								'onkeyup' => 'jsTable.computeSubtotal(this)'
 							)); 
 						?>
 						</div>
@@ -108,6 +109,7 @@ echo $this->Html->script('census_classes', false);
 					<?php
 						}
 					?>
+					<div class="table_cell cell_number cell_subtotal"><?php echo $totalShifts; ?></div>
 				</div>	
 			<?php 
 			}
@@ -117,12 +119,7 @@ echo $this->Html->script('census_classes', false);
 				<div class="table_cell"></div>
 				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
 				<div class="table_cell cell_value cell_number"><?php echo $totalClasses; ?></div>
-				<?php 
-					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
-						<div class="table_cell cell_value cell_number total_shifts_<?php echo $s;?>"><?php echo $totalShifts[$s]; ?></div>
-				<?php
-					}
-				?>
+				
 			</div>
 		</div>
 	</fieldset>
