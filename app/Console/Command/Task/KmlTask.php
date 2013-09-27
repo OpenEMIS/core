@@ -112,13 +112,13 @@ class KmlTask extends AppTask {
                 
 		$oneSite = $this->InstitutionSite->find('first',array('fields'=>array('InstitutionSite.longitude','InstitutionSite.latitude'),'conditions'=>array('InstitutionSite.longitude >' => '0','InstitutionSite.latitude >' => '0'),'limit'=>1));
                 
-                
+                $title = $this->ConfigItem->getValue('where_is_my_school_title');
                 $long = $this->ConfigItem->getValue('where_is_my_school_start_long');
                 $lat = $this->ConfigItem->getValue('where_is_my_school_start_lat');
                 $range = $this->ConfigItem->getValue('where_is_my_school_start_range');
                 
                 
-		$settings['header'] = str_replace('{description}', $countryInfo['Area']['AreaName'].' - Version 1.0',$settings['header']); 
+		$settings['header'] = str_replace('{description}', ($title != ''?$title:$countryInfo).' - '.date('Y-m-d'),$settings['header']); 
 		$settings['header'] = str_replace('{start_longitude}', ($long == 0?$oneSite['InstitutionSite']['longitude']:$long),$settings['header']); 
 		$settings['header'] = str_replace('{start_latitude}', ($lat == 0?$oneSite['InstitutionSite']['latitude']:$lat),$settings['header']); 
                 $settings['header'] = str_replace('{start_range}', ($range == 0?'2000000':$range),$settings['header']); 
