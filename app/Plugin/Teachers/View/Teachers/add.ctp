@@ -14,6 +14,7 @@ $obj = @$data['Teacher'];
 	<?php
 	echo $this->Form->create('Teacher', array(
 		'url' => array('controller' => 'Teachers', 'action' => 'add'),
+                'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default')
 	));
 	?>
@@ -51,6 +52,24 @@ $obj = @$data['Teacher'];
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_of_birth',array('desc' => true)); ?></div>
 		</div>
+                <div class="row">
+		    <div class="label"><?php echo __('Profile Image'); ?> </div>
+		    <div class="value">
+		        <?php echo $this->Form->input('photo_content', array('type' => 'file', 'class' => 'form-error'));?>
+		        <?php echo $this->Form->hidden('reset_image', array('value'=>'0')); ?>
+		        <span id="resetDefault" class="icon_delete"></span>
+		        <?php echo isset($imageUploadError) ? '<div class="error-message">'.$imageUploadError.'</div>' : ''; ?>
+		        <br/>
+		        <div id="image_upload_info">
+		            <em>
+		                <?php echo sprintf(__("Max Resolution: %s pixels"), '400 x 514'); ?>
+		                <br/>
+		                <?php echo __("Max File Size:"). ' 200 KB'; ?>
+		                <br/>
+		                <?php echo __("Format Supported:"). " .jpg, .jpeg, .png, .gif"; ?>
+		            </em>
+		        </div>
+		    </div>
 	</fieldset>
 	
 	<fieldset class="section_break">

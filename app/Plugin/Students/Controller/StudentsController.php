@@ -179,38 +179,38 @@ class StudentsController extends StudentsAppController {
 	
 	public function edit() {
 		$this->Navigation->addCrumb('Edit');
-        $this->Student->id = $this->Session->read('StudentId');
+                $this->Student->id = $this->Session->read('StudentId');
 
-        $imgValidate = new ImageValidate();
+                $imgValidate = new ImageValidate();
 		$data = $this->data;
 		
 		if($this->request->is('post')) {
-            $reset_image = $data['Student']['reset_image'];
+                        $reset_image = $data['Student']['reset_image'];
 
-            $img = new ImageMeta($this->data['Student']['photo_content']);
-            unset($data['Student']['photo_content']);
+                        $img = new ImageMeta($this->data['Student']['photo_content']);
+                        unset($data['Student']['photo_content']);
 
-            if($reset_image == 0){
-                $validated = $imgValidate->validateImage($img);
+                        if($reset_image == 0){
+                            $validated = $imgValidate->validateImage($img);
 
-                if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
-                    $data['Student']['photo_content'] = $img->getContent();
-                    $img->setContent('');
-                    $data['Student']['photo_name'] = $img->getFilename();
-                }
-            }else{
-                $data['Student']['photo_content'] = '';
-                $data['Student']['photo_name'] = '';
-            }
-            $this->Student->set($data);
-			if($this->Student->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
-                unset($data['Student']['reset_image']);
-                $rec = $this->Student->save($data);
-                $this->redirect(array('action' => 'view'));
-            }else{
-                // display message of validation error
-                $this->set('imageUploadError', __(array_shift($validated['message'])));
-            }
+                            if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
+                                $data['Student']['photo_content'] = $img->getContent();
+                                $img->setContent('');
+                                $data['Student']['photo_name'] = $img->getFilename();
+                            }
+                        }else{
+                            $data['Student']['photo_content'] = '';
+                            $data['Student']['photo_name'] = '';
+                        }
+                        $this->Student->set($data);
+                        if($this->Student->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
+                            unset($data['Student']['reset_image']);
+                            $rec = $this->Student->save($data);
+                            $this->redirect(array('action' => 'view'));
+                        }else{
+                            // display message of validation error
+                            $this->set('imageUploadError', __(array_shift($validated['message'])));
+                        }
 		} else {
 			$data = $this->Student->find('first',array('conditions'=>array('id'=>$this->Session->read('StudentId'))));
 		}
@@ -266,15 +266,38 @@ class StudentsController extends StudentsAppController {
 	
     public function add() {
 		$this->Navigation->addCrumb('Add new Student');
+                $imgValidate = new ImageValidate();
+                $data = $this->data;
 		if($this->request->is('post')) {
+                        $reset_image = $data['Student']['reset_image'];
+
+                        $img = new ImageMeta($this->data['Student']['photo_content']);
+                        unset($data['Student']['photo_content']);
+
+                        if($reset_image == 0){
+                            $validated = $imgValidate->validateImage($img);
+
+                            if($img->getFileUploadError() !== 4 && $validated['error'] < 1){
+                                $data['Student']['photo_content'] = $img->getContent();
+                                $img->setContent('');
+                                $data['Student']['photo_name'] = $img->getFilename();
+                            }
+                        }else{
+                            $data['Student']['photo_content'] = '';
+                            $data['Student']['photo_name'] = '';
+                        }
 			$this->Student->set($this->data);
-			if($this->Student->validates()) {
-				$newStudentRec =  $this->Student->save($this->data);
+			if($this->Student->validates()  && ($reset_image == 1 || $validated['error'] < 1)) {
+                             unset($data['Student']['reset_image']);
+                             
+				$newStudentRec =  $this->Student->save($data);
 				// create the session for successfully adding of student
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
 				$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
 			}else{
+                                $this->set('imageUploadError', __(array_shift($validated['message'])));
 				$errors = $this->Student->validationErrors;
+                                
 				if($this->getUniqueID()!=''){ // If Auto id
 					if(isset($errors["identification_no"])){ // If its ID error
 						if(sizeof($errors)<2){ // If only 1 faulty
