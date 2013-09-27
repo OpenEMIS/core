@@ -9,7 +9,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="survey" class="content_wrapper">
+<div id="surveyedit" class="content_wrapper">
 	<?php
 	echo $this->Form->create('add', array(
 		'id' => 'submitForm',
@@ -28,7 +28,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	<!-- No Database value for the moment -->
-	<fieldset class="section_group">
+	<fieldset class="section_title">
 		<legend>Survey Questions</legend>
         <?php
 			$tmp =array();	
