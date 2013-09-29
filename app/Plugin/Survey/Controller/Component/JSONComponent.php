@@ -60,12 +60,21 @@ class JSONComponent extends Component {
 		$content =  json_encode($array, JSON_FORCE_OBJECT);
 		$fileHandle->write($content);
 		$fileHandle->close(); // Be sure to close the file when you're done
+
+        $dir = new Folder($this->surveyPath.DS);
+        $files = $dir->find('.*\.json');
+        foreach ($files as $file) {
+            $file = new File($dir->pwd() . DS . $file);
+            $contents = $file->read();
+            if(!$file->size()>0){
+                $file->delete();
+            }
+            $file->close(); // Be sure to close the file when you're done
+        }
 	}
 	
 	public function getJSONFile($filename){
-	
 		$fileHandle = new File($this->surveyPath.DS.$filename, true, 0755);
-		
 		return $fileHandle->read();
 	}
 }

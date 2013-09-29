@@ -271,6 +271,7 @@
                 <![CDATA[
                     CREATE TABLE `education_grades` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(50) NOT NULL,
                       `name` varchar(150) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
@@ -282,8 +283,7 @@
                       PRIMARY KEY (`id`),
                       KEY `education_programme_id` (`education_programme_id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-                        ]]>
+               ]]>
             </SQL>
         </create>
         <drop type="destination" table="education_grades">
@@ -304,11 +304,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `education_grades` (
-                        `id`, `name`, `order`, `visible`, `education_programme_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `code`, `name`, `order`, `visible`, `education_programme_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :education_programme_id, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :code, :name, :order, :visible, :education_programme_id, :modified_user_id, :modified, :created_user_id, :created
                     );
-                        ]]>
+                ]]>
             </SQL>
         </insert>
         <select type="source" table="education_grades">
@@ -540,6 +540,7 @@
                 <![CDATA[
                     CREATE TABLE `education_programmes` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(50) NOT NULL,
                       `name` varchar(150) NOT NULL,
                       `duration` int(3) NOT NULL COMMENT 'No of years',
                       `order` int(3) NOT NULL,
@@ -575,9 +576,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `education_programmes` (
-                        `id`, `name`, `duration`, `order`, `visible`, `education_field_of_study_id`, `education_cycle_id`, `education_certification_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `code`, `name`, `duration`, `order`, `visible`, `education_field_of_study_id`, `education_cycle_id`, `education_certification_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :duration, :order, :visible, :education_field_of_study_id, :education_cycle_id, :education_certification_id, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :code, :name, :duration, :order, :visible, :education_field_of_study_id, :education_cycle_id, :education_certification_id, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -2525,8 +2526,8 @@
             <SQL dialect="mysql">
                 <![CDATA[
 					CREATE TABLE `fact_census_students` (
-						  `male` int(11) DEFAULT NULL,
-						  `female` int(11) DEFAULT NULL,
+						  `value` int(11) DEFAULT NULL,
+						  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
 						  `age` int(11) DEFAULT NULL,
 						  `student_categories_id` varchar(60) DEFAULT NULL,
 						  `education_grades_id` varchar(60) DEFAULT NULL,
@@ -2561,8 +2562,8 @@
             <SQL dialect="mysql">
                 <![CDATA[
 					INSERT INTO `fact_census_students` (
-						`male`,
-						`female`,
+						`value`,
+						`sex`,
 						`age` ,
 						`student_categories_id`,
 						`education_grades_id`,
@@ -2585,7 +2586,10 @@
 						`institution_statuses_id` ,
 						`school_years_id`
 					) VALUES (
-						:valueM, :valueF, :age, :student_categories_id, :education_grades_id, :education_programmes_id, :education_field_of_studies_id, :education_programme_orientations_id, :education_cycles_id, :education_certifications_id, :institution_site_programmes_id, :institution_sites_id, :institution_site_localities_id, :areas_id, :area_levels_id, :institution_site_types_id, :institution_site_ownership_id, :institution_site_statuses_id, :institutions_id, :institution_sectors_id, :institution_providers_id, :institution_statuses_id, :school_years_id
+						:valueM, :genderM, :age, :student_categories_id, :education_grades_id, :education_programmes_id, :education_field_of_studies_id, :education_programme_orientations_id, :education_cycles_id, :education_certifications_id, :institution_site_programmes_id, :institution_sites_id, :institution_site_localities_id, :areas_id, :area_levels_id, :institution_site_types_id, :institution_site_ownership_id, :institution_site_statuses_id, :institutions_id, :institution_sectors_id, :institution_providers_id, :institution_statuses_id, :school_years_id
+					),
+					(
+						:valueF, :genderF, :age, :student_categories_id, :education_grades_id, :education_programmes_id, :education_field_of_studies_id, :education_programme_orientations_id, :education_cycles_id, :education_certifications_id, :institution_site_programmes_id, :institution_sites_id, :institution_site_localities_id, :areas_id, :area_levels_id, :institution_site_types_id, :institution_site_ownership_id, :institution_site_statuses_id, :institutions_id, :institution_sectors_id, :institution_providers_id, :institution_statuses_id, :school_years_id
 					)
 				]]>
             </SQL>
@@ -2595,7 +2599,7 @@
                 <![CDATA[
 					SELECT
 						/* census table values + discrete variables like age */
-						census_students.male as valueM , census_students.female as valueF, census_students.age ,
+						census_students.male as valueM, census_students.female as valueF, 'M' AS `genderM`, 'F' AS `genderF`,  census_students.age ,
 						/* all foreign keys */
 						student_categories.id AS student_categories_id ,
 						education_grades.id AS education_grades_id,
@@ -3242,9 +3246,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     CREATE TABLE `fact_census_graduates` (
---                      `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+--                    `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `value` int(11) DEFAULT NULL,
+					  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `education_programme_id` int(11) DEFAULT NULL,
                       `education_field_of_study_id` int(11) DEFAULT NULL,
@@ -3282,7 +3286,7 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_graduates` (
-                        `male`, `female`, `source`, `education_programme_id`, `education_field_of_study_id`,
+                        `value`, `sex`, `source`, `education_programme_id`, `education_field_of_study_id`,
                         `education_programme_orientation_id`, `education_cycle_id`, `education_level_id`,
                         `education_system_id`, `education_level_isced_id`, `education_certification_id`,
                         `institution_site_programme_id`, `institution_site_id`, `institution_site_locality_id`,
@@ -3290,7 +3294,16 @@
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :male, :female, :source, :education_programme_id, :education_field_of_study_id,
+                        :male, :genderM, :source, :education_programme_id, :education_field_of_study_id,
+                        :education_programme_orientation_id, :education_cycle_id, :education_level_id,
+                        :education_system_id, :education_level_isced_id, :education_certification_id,
+                        :institution_site_programme_id, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :education_programme_id, :education_field_of_study_id,
                         :education_programme_orientation_id, :education_cycle_id, :education_level_id,
                         :education_system_id, :education_level_isced_id, :education_certification_id,
                         :institution_site_programme_id, :institution_site_id, :institution_site_locality_id,
@@ -3307,6 +3320,8 @@
                     SELECT
                         census_graduates.male AS male,
                         census_graduates.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_graduates.source AS source,
                         education_programmes.id AS education_programme_id,
                         education_field_of_studies.id AS education_field_of_study_id,
@@ -3601,8 +3616,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_sanitations` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT NULL,
-                      `female` int(11) DEFAULT NULL,
+                      `value` int(11) DEFAULT NULL,
+				      `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `unisex` int(11) DEFAULT NULL,
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `infrastructure_sanitation_id` int(11) DEFAULT NULL,
@@ -3636,12 +3651,18 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_sanitations` (
-                        `id`, `male`, `female`, `unisex`, `source`, `infrastructure_sanitation_id`, `infrastructure_material_id`,
+                        `value`, `sex`, `unisex`, `source`, `infrastructure_sanitation_id`, `infrastructure_material_id`,
                         `infrastructure_categories_id`, `infrastructure_status_id`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_status_id`, `area_id`, `area_level_id`,
                         `institution_id`, `institution_sector_id`, `institution_provider_id`, `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :unisex, :source, :infrastructure_sanitation_id, :infrastructure_material_id,
+                        :male, :genderM, :unisex, :source, :infrastructure_sanitation_id, :infrastructure_material_id,
+                        :infrastructure_categories_id, :infrastructure_status_id, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id, :area_id, :area_level_id,
+                        :institution_id, :institution_sector_id, :institution_provider_id, :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :unisex, :source, :infrastructure_sanitation_id, :infrastructure_material_id,
                         :infrastructure_categories_id, :infrastructure_status_id, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id, :area_id, :area_level_id,
                         :institution_id, :institution_sector_id, :institution_provider_id, :institution_status_id, :school_year_id
@@ -3657,6 +3678,8 @@
                         census_sanitations.id AS id,
                         census_sanitations.male AS male,
                         census_sanitations.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_sanitations.unisex AS unisex,
                         census_sanitations.source AS source,
                         infrastructure_sanitations.id AS infrastructure_sanitation_id,
@@ -3716,8 +3739,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_staff` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+                      `value` int(11) DEFAULT NULL,
+				      `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `staff_category_id` int(11) DEFAULT NULL,
                       `institution_site_id` int(11) DEFAULT NULL,
@@ -3747,17 +3770,22 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_staff` (
-                        `id`, `male`, `female`, `source`, `staff_category_id`, `institution_site_id`,
+                        `value`, `sex`, `source`, `staff_category_id`, `institution_site_id`,
                         `institution_site_locality_id`, `institution_site_type_id`, `institution_site_ownership_id`,
                         `institution_site_status_id`, `area_id`, `area_level_id`, `institution_id`,
                         `institution_sector_id`, `institution_provider_id`, `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :source, :staff_category_id, :institution_site_id,
+                        :male, :genderM, :source, :staff_category_id, :institution_site_id,
+                        :institution_site_locality_id, :institution_site_type_id, :institution_site_ownership_id,
+                        :institution_site_status_id, :area_id, :area_level_id, :institution_id,
+                        :institution_sector_id, :institution_provider_id, :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :staff_category_id, :institution_site_id,
                         :institution_site_locality_id, :institution_site_type_id, :institution_site_ownership_id,
                         :institution_site_status_id, :area_id, :area_level_id, :institution_id,
                         :institution_sector_id, :institution_provider_id, :institution_status_id, :school_year_id
                     );
-
                 ]]>
             </SQL>
         </insert>
@@ -3768,6 +3796,8 @@
                         census_staff.id AS id,
                         census_staff.male AS male,
                         census_staff.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_staff.source AS source,
                         staff_categories.id AS staff_category_id,
                         institution_sites.id AS institution_site_id,
@@ -3820,8 +3850,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_teacher_fte` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+                      `value` int(11) DEFAULT NULL,
+					  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `education_level_id` int(11) DEFAULT NULL,
                       `education_system_id` int(11) DEFAULT NULL,
@@ -3853,13 +3883,20 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_teacher_fte` (
-                        `id`, `male`, `female`, `source`, `education_level_id`, `education_system_id`,
+                        `value`, `sex`, `source`, `education_level_id`, `education_system_id`,
                         `education_level_isced_id`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_statuses_id`,
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :source, :education_level_id, :education_system_id,
+                        :male, :genderM, :source, :education_level_id, :education_system_id,
+                        :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_statuses_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :education_level_id, :education_system_id,
                         :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_statuses_id,
                         :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
@@ -3876,6 +3913,8 @@
                         census_teacher_fte.id AS id,
                         census_teacher_fte.male AS male,
                         census_teacher_fte.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_teacher_fte.source AS source,
                         education_levels.id AS education_level_id,
                         education_systems.id AS education_system_id,
@@ -3932,8 +3971,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_teacher_training` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+                      `value` int(11) DEFAULT NULL,
+					  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `education_level_id` int(11) DEFAULT NULL,
                       `education_system_id` int(11) DEFAULT NULL,
@@ -3965,13 +4004,20 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_teacher_training` (
-                        `id`, `male`, `female`, `source`, `education_level_id`, `education_system_id`,
+                        `value`, `sex`, `source`, `education_level_id`, `education_system_id`,
                         `education_level_isced_id`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_status_id`,
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :source, :education_level_id, :education_system_id,
+                        :male, :genderM, :source, :education_level_id, :education_system_id,
+                        :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :education_level_id, :education_system_id,
                         :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
                         :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
@@ -3987,6 +4033,8 @@
                         census_teacher_training.id AS id,
                         census_teacher_training.male AS male,
                         census_teacher_training.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_teacher_training.source AS source,
                         education_levels.id AS education_level_id,
                         education_systems.id AS education_system_id,
@@ -4043,8 +4091,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_teachers` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+                      `value` int(11) DEFAULT NULL,
+					  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `institution_site_id` int(11) DEFAULT NULL,
                       `institution_site_locality_id` int(11) DEFAULT NULL,
@@ -4082,14 +4130,22 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_teachers` (
-                        `male`, `female`, `source`, `institution_site_id`, `institution_site_locality_id`,
+                        `value`, `sex`, `source`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_status_id`,
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `education_grade_id`, `education_programme_id`, `education_field_of_study_id`,
                         `education_programme_orientation_id`, `education_cycle_id`, `education_level_id`, `education_system_id`,
                         `education_level_isced_id`, `education_certification_id`, `school_year_id`
                     ) VALUES (
-                        :male, :female, :source, :institution_site_id, :institution_site_locality_id,
+                        :male, :genderM, :source, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :institution_status_id, :education_grade_id, :education_programme_id, :education_field_of_study_id,
+                        :education_programme_orientation_id, :education_cycle_id, :education_level_id, :education_system_id,
+                        :education_level_isced_id, :education_certification_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
                         :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
                         :institution_status_id, :education_grade_id, :education_programme_id, :education_field_of_study_id,
@@ -4107,6 +4163,8 @@
 --                        census_teachers.id AS id,
                         census_teachers.male AS male,
                         census_teachers.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_teachers.source AS source,
                         institution_sites.id AS institution_site_id,
                         institution_site_localities.id AS institution_site_locality_id,
