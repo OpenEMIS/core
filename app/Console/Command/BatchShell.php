@@ -18,7 +18,7 @@ class BatchShell extends AppShell {
     
     public $uses = array('BatchProcess','Reports.Report','Reports.BatchReport');
 	
-	public $tasks = array('Common','Kml','Csv','Vcf','Ind','Est');
+	public $tasks = array('Common','Kml','Csv','Vcf','Ind','Est', 'Pdf');
     
     public function main(){
 
@@ -99,29 +99,17 @@ class BatchShell extends AppShell {
 		
 	
         if( $file_type == 'csv'){
-			
 			$this->Csv->genCSV($settings);
-				
         }elseif($file_type == 'kml'){
-			
-			 $this->Kml->genKML($settings);
+			$this->Kml->genKML($settings);
 		}elseif($file_type == 'vcf'){
-			
-			 $this->Vcf->genVCF($settings);
+			$this->Vcf->genVCF($settings);
         }elseif($file_type == 'ind' || $file_type == 'cus'){
-
-			 $this->Ind->genIND($settings);
-        }elseif($file_type == 'yearbook'){
-			echo "yearbook";
-			if(sizeof($this->args) == 1) {
-				$this->dispatchShell('yearbook',$this->args[0]);
-			} else {
-				$this->dispatchShell('yearbook');
-			}
-		
+			$this->Ind->genIND($settings);
+        }elseif($file_type == 'pdf'){
+			$this->Pdf->genPDF($settings);
         }elseif($file_type == 'est'){
-			
-			 $this->Est->genEST($settings);
+			$this->Est->genEST($settings);
         }
 		
     }

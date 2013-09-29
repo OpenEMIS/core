@@ -7,13 +7,14 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
 echo $this->Html->script('/Survey/js/jquery-ui', false);
 ?>
 <style>
+    .table .cell_section_group { min-width: 0 !important; width: 600px; }
 	.table .cell_section_name { min-width: 0 !important; width: 600px; }
 	.table .cell_section_option { text-align:center; }
 	.table_row { background-color:#FFF; }
 </style>
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="survey" class="content_wrapper">
+<div id="surveyadd" class="content_wrapper">
 	<?php
 	echo $this->Form->create('add', array(
 		'id' => 'submitForm',
@@ -64,7 +65,7 @@ echo $this->Html->script('/Survey/js/jquery-ui', false);
             <fieldset class="section_break">
                 <legend>
 					<?php echo $topic;?>
-                    
+
                     <?php echo $this->Form->input($topic.'.order', array( 'value' => $arrTopVal['order'], 'type' => 'hidden')); ?>
                 </legend>
                     <!-- Section Heading -->
@@ -94,6 +95,7 @@ echo $this->Html->script('/Survey/js/jquery-ui', false);
                                                         echo $this->Form->input($topic.'.'.$section.'.order', array( 'value' => $arrSecVal['order'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.type', array( 'value' => $arrSecVal['type'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.label', array( 'value' => __($arrSecVal['label']), 'type' => 'hidden'));
+                                                         echo $this->Form->input($topic.'.'.$section.'.null', array( 'value' => __($arrSecVal['null']), 'type' => 'hidden'));
                                                         if($arrSecVal['type']!='Single'){ 
                                                         echo $this->Form->input($topic.'.'.$section.'.value', array( 'value' => __($arrSecVal['value']), 'type' => 'hidden'));
                                                         }
@@ -121,12 +123,12 @@ echo $this->Html->script('/Survey/js/jquery-ui', false);
                                                                                 array( 'value' => $arrQuestionVal['order'], 'type' => 'hidden'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.type', 
                                                                                 array( 'value' => $arrQuestionVal['type'], 'type' => 'hidden'));
-                                                            echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.label', 
+                                                            echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.label',
                                                                                 array( 'value' => __($arrQuestionVal['label']), 'type' => 'hidden'));
+                                                            echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.null',
+                                                                                array( 'value' => $arrQuestionVal['null'], 'type' => 'hidden'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.value', 
                                                                                 array( 'value' => '', 'type' => 'hidden'));
-                                                      		echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.null', 
-                                                                                array( 'value' => $arrQuestionVal['null'], 'type' => 'hidden'));
 														   	foreach($arrQuestionVal['questions'] as $subQuestion => $arrSubQuestionVal) {
 																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.order', 
 																					array( 'value' => $arrSubQuestionVal['order'], 'type' => 'hidden'));
@@ -134,6 +136,8 @@ echo $this->Html->script('/Survey/js/jquery-ui', false);
 																					array( 'value' => $arrSubQuestionVal['type'], 'type' => 'hidden'));
 																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.label', 
 																					array( 'value' => __($arrSubQuestionVal['label']), 'type' => 'hidden'));
+															    echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.null',
+                                                                					array( 'value' => __($arrSubQuestionVal['null']), 'type' => 'hidden'));
 																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.box', 
 																					array( 'value' => __($arrSubQuestionVal['box']), 'type' => 'hidden'));
 																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.value', 
@@ -197,6 +201,7 @@ echo $this->Html->script('/Survey/js/jquery-ui', false);
                                                         echo $this->Form->input($topic.'.'.$section.'.order', array( 'value' => $arrSecVal['order'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.type', array( 'value' => $arrSecVal['type'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.label', array( 'value' => __($arrSecVal['label']), 'type' => 'hidden'));
+                                                        echo $this->Form->input($topic.'.'.$section.'.null', array( 'value' => __($arrSecVal['null']), 'type' => 'hidden'));
                                                         if($arrSecVal['type']!='Single'){ 
                                                         echo $this->Form->input($topic.'.'.$section.'.value', array( 'value' => __($arrSecVal['value']), 'type' => 'hidden'));
                                                         }
@@ -226,7 +231,8 @@ echo $this->Html->script('/Survey/js/jquery-ui', false);
                                                                                 array( 'value' => $arrQuestionVal['type'], 'type' => 'hidden'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.label', 
                                                                                 array( 'value' => __($arrQuestionVal['label']), 'type' => 'hidden'));
-															
+															echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.null',
+                                                                                array( 'value' => __($arrQuestionVal['null']), 'type' => 'hidden'));
                                                             if($arrSecVal['type']=='Single'){
                                                             	echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.value', 
                                                                                 	array( 'value' =>'', 'type' => 'hidden'));

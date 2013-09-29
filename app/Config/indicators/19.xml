@@ -32,9 +32,9 @@
                         -- {SUBGROUPS} AS `subgroups`,
                         `main_data`.`area_id`,
                         `main_data`.`year` AS `timeperiod`,
-                        (SUM(`main_data`.`female`) + IFNULL(`indicator_results`.`numerator`, 0)) / (SUM(`main_data`.`total`) + IFNULL(`indicator_results`.`denominator`, 0)) * 100 AS `data_value`,
-                        SUM(`main_data`.`female`) + IFNULL(`indicator_results`.`numerator`, 0) AS `numerator`,
-                        SUM(`main_data`.`total`) + IFNULL(`indicator_results`.`denominator`, 0) AS `denominator`,
+                        SUM(`main_data`.`female`) / SUM(`main_data`.`total`) * 100 AS `data_value`,
+                        SUM(`main_data`.`female`) AS `numerator`,
+                        SUM(`main_data`.`total`) AS `denominator`,
                         `main_data`.`classification`,
                         -- {USER_ID},
                         NOW()
@@ -63,28 +63,6 @@
                             `census_students`.`school_year_id`,
                             `education_levels`.`id`
                         ) AS `main_data`
-
-                        -- Aggregation by Area Start
-                        LEFT JOIN (
-                            SELECT
-                            `areas`.`parent_id` AS `area_parent_id`,
-                            `batch_indicator_results`.`timeperiod`,
-                            SUM(`batch_indicator_results`.`numerator`) AS `numerator`,
-                            SUM(`batch_indicator_results`.`denominator`) AS `denominator`,
-                            `batch_indicator_results`.`classification`
-                            FROM `batch_indicator_results`
-                            JOIN `areas` ON `areas`.`id` = `batch_indicator_results`.`area_id`
-                            WHERE `batch_indicator_results`.`batch_indicator_id` = -- {INDICATOR_ID}
-                            AND `batch_indicator_results`.`subgroups` = -- {SUBGROUPS}
-                            GROUP BY
-                            `areas`.`parent_id`,
-                            `batch_indicator_results`.`timeperiod`,
-                            `batch_indicator_results`.`classification`
-                        ) AS `indicator_results`
-                            ON `indicator_results`.`area_parent_id` = `main_data`.`area_id`
-                            AND `indicator_results`.`timeperiod` = `main_data`.`year`
-                            AND `indicator_results`.`classification` = `main_data`.`classification`
-                        -- Aggregation by Area End
 
                         GROUP BY
                         `main_data`.`year`,

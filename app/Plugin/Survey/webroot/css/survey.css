@@ -2,7 +2,9 @@
 .table .cell_time { width: 180px; margin-top:3px; }
 .table .cell_filesize { width: 90px; }
 .mycell{ line-height:1.8em; }
-
+#surveyadd .section_group{ width:650px; }
+#surveyedit .section_group{ width:500px; }
+#surveyedit .section_title{ overflow:visible; width:650px; border: 1px solid rgb(204, 204, 204); padding: 12px; margin: 5px 0px 20px; font-weight: bold; color: rgb(102, 102, 102); }
 .action_pullright {
 	text-align:right;
 	padding-right:10px;

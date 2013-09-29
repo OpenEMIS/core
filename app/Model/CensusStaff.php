@@ -24,22 +24,6 @@ class CensusStaff extends AppModel {
 	);
 	
 	public function getCensusData($siteId, $yearId) {
-		/* Actual SQL
-		SELECT
-			`staff_categories`.`id` AS `staff_category_id`,
-			`staff_categories`.`name` AS `staff_category_name`,
-			`staff_categories`.`visible` AS `staff_category_visible`,
-			`census_staff`.`id` AS `id`,
-			`census_staff`.`male` AS `male`,
-			`census_staff`.`female` AS `female`
-		FROM `staff_categories`
-		LEFT JOIN `census_staff`
-			ON `census_staff`.`staff_category_id` = `staff_categories`.`id`
-			AND `census_staff`.`institution_site_id` = %d
-			AND `census_staff`.`school_year_id` = %d
-		ORDER BY `staff_categories`.`order`
-		*/
-		
 		$StaffCategory = ClassRegistry::init('Staff.StaffCategory');
 		$StaffCategory->formatResult = true;
 		$list = $StaffCategory->find('all' , array(
@@ -89,37 +73,65 @@ class CensusStaff extends AppModel {
 			}
 		}
 	}
-
-	/**
-	 * calculate the total number of staff in a particular area, Required by Yearbook
-	 * @return int 	sum of staff
-	 */
-	public function calculateTotalStaffByAreaId($areaId, $schoolYearId) {
-
-		$this->unbindModel(array('belongsTo' => array('SchoolYear')));
-		$this->bindModel(
-			array('belongsTo' =>
+	
+	//Used by Yearbook
+	public function getCountByCycleId($yearId, $cycleId) {
+		$this->formatResult = true;
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array('SUM(CensusStaff.male) AS M', 'SUM(CensusStaff.female) AS F'),		
+			'joins' => array(
 				array(
-					'InstitutionSite',
-					'InstitutionSiteProgramme' => array(
-	                'joinTable'  => 'institution_sites',
-					'foreignKey' => false,
-	                'conditions' => array(' InstitutionSite.id = InstitutionSiteProgramme.institution_site_id '),
-			    ))
-			));
-
-		$options['fields'] = array(
-            'SUM(CensusStaff.male) as TotalMale',
-            'SUM(CensusStaff.female) as TotalFemale',
-            'SUM(CensusStaff.male + CensusStaff.female) as TotalStaff'
-        );
-
-		// $options['conditions'] = array('CensusStaff.school_year_id' => $schoolYearId);
-        $options['conditions'] = array('AND' => array('CensusStaff.school_year_id' => $schoolYearId, 'InstitutionSite.area_id' => $areaId, 'NOT' => array('InstitutionSite.area_id' => null)));
-		$values = $this->find('all', $options);
-		$values = $this->formatArray($values);
-
-		$data = ($values[0]['TotalStaff'] > 0) ? $values[0]['TotalStaff'] : 0;
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.institution_site_id = CensusStaff.institution_site_id',
+						'InstitutionSiteProgramme.school_year_id = CensusStaff.school_year_id'
+					)
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id',
+						'EducationProgramme.education_cycle_id = ' . $cycleId
+					)
+				)
+			),
+			'conditions' => array('CensusStaff.school_year_id' => $yearId),
+			'group' => array('EducationProgramme.education_cycle_id')
+		));
+		return $data;
+	}
+	
+	public function getCountByAreaId($yearId, $areaId) {
+		$this->formatResult = true;
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array('SUM(CensusStaff.male) AS M', 'SUM(CensusStaff.female) AS F'),
+			'joins' => array(
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array('InstitutionSite.id = CensusStaff.institution_site_id')
+				),
+				array(
+					'table' => 'areas',
+					'alias' => 'AreaSite',
+					'conditions' => array('AreaSite.id = InstitutionSite.area_id')
+				),
+				array(
+					'table' => 'areas',
+					'alias' => 'Area',
+					'conditions' => array(
+						'Area.id = ' . $areaId,
+						'Area.lft <= AreaSite.lft',
+						'Area.rght >= AreaSite.rght'
+					)
+				)
+			),
+			'conditions' => array('CensusStaff.school_year_id' => $yearId)
+		));
 		return $data;
 	}
 }
