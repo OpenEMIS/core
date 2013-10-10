@@ -28,9 +28,9 @@ $(document).ready(function() {
 	jsForm.init();
 	jsTable.init();
 	jsList.init();
-    if($('html').attr('dir')=="rtl"){
+    /*if($('html').attr('dir')=="rtl"){
         jsForm.fixedBracket(); // This fix arabic translation brackets problem
-    }
+    }*/
 });
 
 var dataStorage = {};
