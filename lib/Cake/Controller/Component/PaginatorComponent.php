@@ -337,6 +337,7 @@ class PaginatorComponent extends Component {
 			$field = key($options['order']);
 			if (!in_array($field, $whitelist)) {
 				$options['order'] = null;
+                                return $options;
 			}
 		}
 
@@ -350,7 +351,7 @@ class PaginatorComponent extends Component {
 				}
 
 				if ($object->hasField($field)) {
-					$order[$alias . '.' . $field] = $value;
+					$order[$object->alias . '.' . $field] = $value;
 				} elseif ($object->hasField($key, true)) {
 					$order[$field] = $value;
 				} elseif (isset($object->{$alias}) && $object->{$alias}->hasField($field, true)) {

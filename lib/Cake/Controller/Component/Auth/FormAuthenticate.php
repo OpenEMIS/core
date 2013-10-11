@@ -35,7 +35,26 @@ App::uses('BaseAuthenticate', 'Controller/Component/Auth');
  * @see AuthComponent::$authenticate
  */
 class FormAuthenticate extends BaseAuthenticate {
-
+/**
+ * Checks the fields to ensure they are supplied.
+ *
+ * @param CakeRequest $request The request that contains login information.
+ * @param string $model The model used for login verification.
+ * @param array $fields The fields to be checked.
+ * @return boolean False if the fields have not been supplied. True if they exist.
+ */
+	protected function _checkFields(CakeRequest $request, $model, $fields) {
+		if (empty($request->data[$model])) {
+			return false;
+		}
+		foreach (array($fields['username'], $fields['password']) as $field) {
+			$value = $request->data($model . '.' . $field);
+			if (empty($value) || !is_string($value)) {
+				return false;
+			}
+		}
+		return true;
+	}
 /**
  * Authenticates the identity contained in a request.  Will use the `settings.userModel`, and `settings.fields`
  * to find POST data that is used to find a matching record in the `settings.userModel`.  Will return false if
@@ -47,16 +66,10 @@ class FormAuthenticate extends BaseAuthenticate {
  */
 	public function authenticate(CakeRequest $request, CakeResponse $response) {
 		$userModel = $this->settings['userModel'];
-		list($plugin, $model) = pluginSplit($userModel);
+		list(, $model) = pluginSplit($userModel);
 
 		$fields = $this->settings['fields'];
-		if (empty($request->data[$model])) {
-			return false;
-		}
-		if (
-			empty($request->data[$model][$fields['username']]) ||
-			empty($request->data[$model][$fields['password']])
-		) {
+		if (!$this->_checkFields($request, $model, $fields)) {
 			return false;
 		}
 		return $this->_findUser(
