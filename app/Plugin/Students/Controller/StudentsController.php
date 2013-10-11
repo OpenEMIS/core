@@ -286,7 +286,7 @@ class StudentsController extends StudentsAppController {
                             $data['Student']['photo_content'] = '';
                             $data['Student']['photo_name'] = '';
                         }
-			$this->Student->set($this->data);
+			$this->Student->set($data);
 			if($this->Student->validates()  && ($reset_image == 1 || $validated['error'] < 1)) {
                              unset($data['Student']['reset_image']);
                              
