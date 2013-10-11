@@ -15,14 +15,14 @@ echo $this->Html->script('config', false);
 	</h1>
 
 	<?php
-	echo $this->Form->create('save', array(
+	echo $this->Form->create('edit', array(
 		    'inputDefaults' => array(
 		        'label' => false,
 		        'div' => false
 		    ),
 			'url' => array(
 				'controller' => 'Config',
-				'action' => 'save'
+				'action' => 'edit'
 			),
 			'id' => 'ConfigurationSaveEdit',
 			'type' => 'file'
@@ -183,6 +183,9 @@ echo $this->Html->script('config', false);
 
 					}else{
 						echo $item['value'];
+					}
+					if(isset($errorCustomMsg[$innerElement['id']])){
+						echo '<div class="error-message">' . $errorCustomMsg[$innerElement['id']] . '</div>';
 					}
 				?>
 				</div>
