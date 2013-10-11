@@ -39,7 +39,7 @@ class ConfigController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-                $this->Auth->allow('getJSConfig');
+        $this->Auth->allow('getJSConfig');
 		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
 		$this->bodyTitle = 'Settings';
 		$this->imageConfig = $this->ConfigItem->getImageConfItem();
@@ -109,6 +109,29 @@ class ConfigController extends AppController {
 	public function edit(){
 		$this->Navigation->addCrumb('Edit System Configurations');
 
+
+		if($this->request->is('post')){
+			//pr($this->request->data);
+			$dataToBeSave = array();
+			foreach($this->request->data as $key => $element){
+				if(strtolower($key) == 'configitem'){
+					$dataToBeSave = $element;
+					break;
+				}
+			}
+
+			$errorCustomMsg = $this->validateFields($dataToBeSave);
+
+
+			if(empty($errorCustomMsg)) {
+				$this->save();
+			}
+
+			
+			$this->set('errorCustomMsg', $errorCustomMsg);
+		}
+
+
 		$items = $this->ConfigItem->find('all',array(
 				'fields' => array('ConfigItem.id', 'ConfigItem.name', 'ConfigItem.label', 'ConfigItem.type', 'ConfigItem.value', 'ConfigItem.default_value', 'ConfigItem.visible'),
 				'recursive' => 0,
@@ -126,9 +149,28 @@ class ConfigController extends AppController {
 		$this->set('items', $sorted);
 	}
 
+	private function validateFields($data){
+		$error = array();
+		foreach($data as $key => $element){
+			foreach($element as $innerKey => $innerElement){
+				if($key=='Data Outliers'){
+					if($innerElement['id']=='106'){
+						$value = $innerElement['value'];
+						if(!is_numeric($value) || $value < 1 || $value > 5){
+							$error[$innerElement['id']] = "Please enter numeric value between 1 to 5";
+						}
+					}
+				}
+			}
+		}
+
+		return $error;
+	}
+
 	public function save() {
-		$this->autoRender = false;
+		//$this->autoRender = false;
 		if($this->request->is('post')){
+			$this->ConfigItem->set($this->request->data);
 			$savedItems = false;
 			$savedFeatures = false;
 			$dataToBeSave = array();
@@ -138,11 +180,13 @@ class ConfigController extends AppController {
 					break;
 				}
 			}
+			//pr($dataToBeSave);'
 			foreach($dataToBeSave as $key => $element){
 				foreach($element as $innerKey => $innerElement){
 					$yearbookLogoElement = "";
 					$configItem = $this->ConfigItem->findById($innerElement['id'], array('ConfigItem.name'));
 					$formData = $this->data;
+
 					
 					// if student/teacher/staff prefix
 					if($configItem['ConfigItem']['name'] == "student_prefix" || $configItem['ConfigItem']['name'] == "teacher_prefix" || $configItem['ConfigItem']['name'] == "staff_prefix") {
@@ -238,11 +282,13 @@ class ConfigController extends AppController {
 	                }
 				}
 				//$this->ConfigItem->saveAll($element);
+				
 			}
 			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
 			$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
 			$this->Session->write('configItem.yearbook_school_year', $this->ConfigItem->getValue('yearbook_school_year'));
 			$this->redirect('/Config');
+			
 		}
 	}
 
