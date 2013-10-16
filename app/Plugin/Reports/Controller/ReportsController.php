@@ -42,7 +42,7 @@ class ReportsController extends ReportsAppController {
 		'Consolidated'=>array('enable'=>true),
 		'Indicator'=>array('enable'=>true),
 		'DataQuality'=>array('enable'=>true),
-//		'Custom'=>array('enable'=>false)
+		'Custom'=>array('enable'=>true)
     );
 
     public $customView = array( //exclude from Index view.
@@ -128,10 +128,12 @@ class ReportsController extends ReportsAppController {
 			$val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
 			$tmp[$reportType.' Reports'][$module][$name] =  $val['Report']; 
         }
+
               
 		$msg = (isset($_GET['processing']))?'processing':'';
         $this->set('msg',$msg);
 		$this->set('data',$tmp);
+        $this->set('controllerName', $this->controller);
 	}
 
     public function Indicator($indicatorId = ''){
@@ -270,7 +272,7 @@ class ReportsController extends ReportsAppController {
             array_push($school_years, $value);
 
         }
-
+  
         $this->set('hideTableColumnsLabel', $this->hideOlapTableColumnsLabel);
 
         $this->set('data', $data);
@@ -514,7 +516,7 @@ class ReportsController extends ReportsAppController {
         return json_encode($csvSettings);
     }
 	
-	public function download($filename){
+	public function download($filename=null){
         if($filename == '' ){
             die();
         }else{
@@ -734,6 +736,8 @@ class ReportsController extends ReportsAppController {
         $sql ="";
         $returnData = array('processed_records' => $this->limit, 'batch'=> 0);
         $this->prepareCSV($settings);
+
+
         for($i=0;$i<$recusive;$i++){
             $offset = ($this->limit*$i);
             $settings['offset'] = $offset;
@@ -774,6 +778,7 @@ class ReportsController extends ReportsAppController {
         if (!is_dir($path)) {
             mkdir($path);
         }
+
         $path .= DS;
 
         $type = ($settings['batch'] == 0)?'w+':'a+';//if first run truncate the file to 0

@@ -92,11 +92,12 @@ select optgroup {
     <div class="allow-fields">
         <h3><?php echo __('Available Variables'); ?></h3>
         <select multiple>
-        <?php foreach($data as $key => $value){ ?>
+        <?php foreach($data as $key => $value){ pr($key);?>
             <!--optgroup label="<?php //echo __(Inflector::humanize(Inflector::underscore($key))); ?>"-->
             <?php foreach($value as $innerKey => $innerValue){ ?>
+
                 <option value="<?php echo $innerKey; ?>" data-model="<?php echo $key; ?>">
-                    <?php if(preg_match('/\b'.$key.'\b/',implode(' ',$hideTableColumnsLabel)) == 1) { ?>
+                    <?php if(is_array($hideTableColumnsLabel) && (preg_match('/\b'.$key.'\b/',implode(' ',$hideTableColumnsLabel)) == 1)) { ?>
                     <?php echo __(Inflector::humanize(Inflector::underscore($key))); ?>
                     <?php }else{ ?>
                     <?php echo __(Inflector::humanize(Inflector::underscore($key))) . ' ' . __($innerValue); ?>
