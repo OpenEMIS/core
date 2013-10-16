@@ -49,7 +49,7 @@ echo $this->Html->css('custom_fields', 'stylesheet', array('inline' => false));
 		echo $this->Form->input('institution_site_type_id',	array(
 			'id' => 'siteTypeId',
 			'class' => 'default',
-			'options' => $siteTypes,
+			'options' => array_merge(array('0'=>'All'),$siteTypes),
 			'default' => $sitetype,
 			'before' => '<div class="row">',
 			'after' => '</div>',

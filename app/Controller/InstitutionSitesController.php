@@ -495,7 +495,7 @@ class InstitutionSitesController extends AppController {
 	public function additional() {
 		$this->Navigation->addCrumb('More');
 		
-		$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id']),'order'=>'InstitutionSiteCustomField.order'));
+		$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>(array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'],0))),'order'=>array('InstitutionSiteCustomField.institution_site_type_id','InstitutionSiteCustomField.order')));
 		$this->InstitutionSiteCustomValue->unbindModel(
 			array('belongsTo' => array('InstitutionSite'))
 		);
@@ -505,7 +505,7 @@ class InstitutionSitesController extends AppController {
 			$tmp[$arrV['InstitutionSiteCustomField']['id']][] = $arrV['InstitutionSiteCustomValue'];
 		}
 		$datavalues = $tmp;
-		//pr($tmp);die;
+		//pr($datafields);die;
 		$this->set('datafields',$datafields);
 		$this->set('datavalues',$tmp);
 	}
@@ -565,7 +565,8 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		$this->institutionSiteObj['InstitutionSite'];
-		$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id'])));
+                $datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>(array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'],0))),'order'=>array('InstitutionSiteCustomField.institution_site_type_id','InstitutionSiteCustomField.order')));
+		//$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id'])));
 		$this->InstitutionSiteCustomValue->unbindModel(
 			array('belongsTo' => array('InstitutionSite'))
 		);
