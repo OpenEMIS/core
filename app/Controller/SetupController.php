@@ -554,8 +554,10 @@ class SetupController extends AppController {
 	public function customTables($category, $siteType = '') {
 		$siteTypes = $this->InstitutionSiteType->getSiteTypesList();
 
-        if(empty($siteType)) {
+        if(empty($siteType)  && $siteType != 0) {
             $siteType = key($siteTypes);
+        }elseif($siteType == 0 ) {
+            $siteType = 0;
         }
 		
 		$this->CensusGrid->unbindModel(array('belongsTo' => array('CensusGridXCategory','CensusGridYCategory')));
@@ -575,7 +577,7 @@ class SetupController extends AppController {
         $this->Navigation->addCrumb('Edit Custom Table');
 
         $siteTypes = $this->InstitutionSiteType->getSiteTypesList();
-        if(empty($sitetype)) {
+        if(empty($siteType) && $siteType != 0 ) {
             $sitetype = key($siteTypes);
         }
 		
@@ -602,7 +604,7 @@ class SetupController extends AppController {
 	}
 	
 	public function customTablesEditDetail($category, $siteType, $id = '') {
-		if(empty($category) || empty($siteType)) {
+		if(empty($category) || (empty($siteType) && $siteType != 0 )) {
 			$this->redirect(array('action' => 'setupVariables'));
 		}
 		$this->Navigation->addCrumb('Edit Field Options');
