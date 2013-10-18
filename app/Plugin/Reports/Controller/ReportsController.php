@@ -282,12 +282,19 @@ class ReportsController extends ReportsAppController {
 
     public function olapGetObservations(){
         $this->autoRender = false;
+        
+        /*$this->request->data['variables'] = array('Area.name', 'EducationProgramme.name');
+        $this->request->data['observationId']  = "1129";
+        $this->request->data['year']  = "2013";
+        $this->request->data['batch']  = 0;
+        $this->request->data['last']  = false;*/
+
         if($this->request->is('post')){
             $data = array('observations'=> array(), 'size' => 0);
             $fields = array();
             $models = array();
-            $selectedSchoolYear = (isset($this->data['schoolYear']) && !empty($this->data['schoolYear']))? $this->data['schoolYear']: 0000;
-            foreach($this->data['variables'] as $key => $value){
+            $selectedSchoolYear = (isset($this->request->data['schoolYear']) && !empty($this->request->data['schoolYear']))? $this->request->data['schoolYear']: 0000;
+            foreach($this->request->data['variables'] as $key => $value){
                 array_push($fields, $value);
             }
 
@@ -301,8 +308,8 @@ class ReportsController extends ReportsAppController {
                     )
                 ),
                 'group' => array('Institution.id'),
-                'conditions' => array('Institution.id IS NOT NULL'),
-                'limit' => 50 // for debugging
+                'conditions' => array('Institution.id IS NOT NULL AND institution.id = 16078'),
+                //'limit' => 50 // for debugging
             ));
             foreach($rawData as $key => $value){
                 array_push($data['observations'], $key);
@@ -311,7 +318,7 @@ class ReportsController extends ReportsAppController {
 
             $data['total'] = sizeof($data['observations']);
             return json_encode($data);
-        }
+     }
 
     }
 
@@ -324,126 +331,126 @@ class ReportsController extends ReportsAppController {
 
             $joins = array(
                 'census_students' => array(
-                    'table' => 'census_students',
-                    'alias' => 'CensusStudent',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'CensusStudent.school_year_id = SchoolYear.id'
-                    )
-                ),
-                'institution_site_programmes' => array(
-                    'table' => 'institution_site_programmes',
-                    'alias' => 'InstitutionSiteProgramme',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionSiteProgramme.id = CensusStudent.institution_site_programme_id'
-                    )
-                ),
-                'institution_sites' => array(
-                    'table' => 'institution_sites',
-                    'alias' => 'InstitutionSite',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionSite.id = InstitutionSiteProgramme.institution_site_id'
-                    )
-                ),
-                'institutions' => array(
-                    'table' => 'institutions',
-                    'alias' => 'Institution',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'Institution.id = InstitutionSite.institution_id'
-                    )
-                ),
-                'areas' => array(
-                    'table' => 'areas',
-                    'alias' => 'Area',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'Area.id = InstitutionSite.area_id',
-                        'Area.id = Institution.area_id'
-                    )
-                ),
-                'institution_sectors' => array(
-                    'table' => 'institution_sectors',
-                    'alias' => 'InstitutionSector',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionSector.id = Institution.institution_sector_id'
-                    )
-                ),
-                'institution_providers' => array(
-                    'table' => 'institution_providers',
-                    'alias' => 'InstitutionProvider',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionProvider.id = Institution.institution_provider_id'
-                    )
-                ),
-                'institution_statuses' => array(
-                    'table' => 'institution_statuses',
-                    'alias' => 'InstitutionStatus',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionStatus.id = Institution.institution_status_id'
-                    )
-                ),
-                'institution_site_localities' => array(
-                    'table' => 'institution_site_localities',
-                    'alias' => 'InstitutionSiteLocality',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionSiteLocality.id = InstitutionSite.institution_site_locality_id'
-                    )
-                ),
-                'institution_site_types' => array(
-                    'table' => 'institution_site_types',
-                    'alias' => 'InstitutionSiteType',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionSiteType.id = InstitutionSite.institution_site_type_id'
-                    )
-                ),
-                'institution_site_ownership' => array(
-                    'table' => 'institution_site_ownership',
-                    'alias' => 'InstitutionSiteOwnership',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id'
-                    )
-                ),
-                'institution_site_statuses' => array(
-                    'table' => 'institution_site_statuses',
-                    'alias' => 'InstitutionSiteStatus',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id'
-                    )
-                ),
-                'student_categories' => array(
-                    'table' => 'student_categories',
-                    'alias' => 'StudentCategory',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'StudentCategory.id = CensusStudent.student_category_id'
-                    )
-                ),
-                'education_grades' => array(
-                    'table' => 'education_grades',
-                    'alias' => 'EducationGrade',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'EducationGrade.id = CensusStudent.education_grade_id'
-                    )
-                ),
-                'education_programmes' => array(
-                    'table' => 'education_programmes',
-                    'alias' => 'EducationProgramme',
-                    'type' => 'LEFT',
-                    'conditions' => array(
-                        'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id'
-                    )
+                'table' => 'census_students',
+                'alias' => 'CensusStudent',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'CensusStudent.school_year_id = SchoolYear.id'
                 )
+            ),
+            'institution_sites' => array(
+                'table' => 'institution_sites',
+                'alias' => 'InstitutionSite',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSite.id = CensusStudent.institution_site_id'
+                )
+            ),
+            'institution_site_programmes' => array(
+                'table' => 'institution_site_programmes',
+                'alias' => 'InstitutionSiteProgramme',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSiteProgramme.institution_site_id = InstitutionSite.id'
+                )
+            ),
+            'institutions' => array(
+                'table' => 'institutions',
+                'alias' => 'Institution',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'Institution.id = InstitutionSite.institution_id'
+                )
+            ),
+            'areas' => array(
+                'table' => 'areas',
+                'alias' => 'Area',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'Area.id = InstitutionSite.area_id',
+                    'Area.id = Institution.area_id'
+                )
+            ),
+            'institution_sectors' => array(
+                'table' => 'institution_sectors',
+                'alias' => 'InstitutionSector',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSector.id = Institution.institution_sector_id'
+                )
+            ),
+            'institution_providers' => array(
+                'table' => 'institution_providers',
+                'alias' => 'InstitutionProvider',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionProvider.id = Institution.institution_provider_id'
+                )
+            ),
+            'institution_statuses' => array(
+                'table' => 'institution_statuses',
+                'alias' => 'InstitutionStatus',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionStatus.id = Institution.institution_status_id'
+                )
+            ),
+            'institution_site_localities' => array(
+                'table' => 'institution_site_localities',
+                'alias' => 'InstitutionSiteLocality',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSiteLocality.id = InstitutionSite.institution_site_locality_id'
+                )
+            ),
+            'institution_site_types' => array(
+                'table' => 'institution_site_types',
+                'alias' => 'InstitutionSiteType',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSiteType.id = InstitutionSite.institution_site_type_id'
+                )
+            ),
+            'institution_site_ownership' => array(
+                'table' => 'institution_site_ownership',
+                'alias' => 'InstitutionSiteOwnership',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id'
+                )
+            ),
+            'institution_site_statuses' => array(
+                'table' => 'institution_site_statuses',
+                'alias' => 'InstitutionSiteStatus',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id'
+                )
+            ),
+            'student_categories' => array(
+                'table' => 'student_categories',
+                'alias' => 'StudentCategory',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'StudentCategory.id = CensusStudent.student_category_id'
+                )
+            ),
+            'education_grades' => array(
+                'table' => 'education_grades',
+                'alias' => 'EducationGrade',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'EducationGrade.id = CensusStudent.education_grade_id'
+                )
+            ),
+            'education_programmes' => array(
+                'table' => 'education_programmes',
+                'alias' => 'EducationProgramme',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'EducationProgramme.id = InstitutionSiteProgramme.education_programme_id'
+                )
+            )
             );
 
             $selectedJoins = array();
@@ -458,7 +465,7 @@ class ReportsController extends ReportsAppController {
                 'limit' => null,
                 'offset' => 0,
                 'joins' => $selectedJoins,
-                'conditions' => array("Institution.id = {$observation} AND Institution.id IS NOT NULL AND SchoolYear.name = {$year} "),
+                'conditions' => array("Institution.id = {$observation} AND Institution.id IS NOT NULL AND SchoolYear.name = {$year}"),
                 'recursive' => 0,
                 'order' => null,
                 'group' => null
@@ -483,6 +490,14 @@ class ReportsController extends ReportsAppController {
     public function genOlapReport(/*$observationId=0, $batch=0, $year="0000"*/){
         $this->autoRender = false;
         $data= array();
+
+        
+        /*$this->request->data['variables'] = array('Area.name', 'EducationProgramme.name');
+        $this->request->data['observationId']  = "16078";
+        $this->request->data['year']  = "2013";
+        $this->request->data['batch']  = 0;
+        $this->request->data['last']  = false;*/
+
         if($this->request->is('post')){
             $selectedFields = array(
                 'EducationProgramme' => array('name'),
@@ -492,31 +507,31 @@ class ReportsController extends ReportsAppController {
                 'CensusStudent' => array('age', 'male', 'female'/*, 'institution_site_programme_id'*/),
             );
             $fields = array();
-            foreach($this->data['variables'] as $value){
+            foreach($this->request->data['variables'] as $value){
                 array_push($fields,$value);
             }
             foreach($selectedFields as $key => $value) {
                 foreach($value as $field){
                     array_push($fields, $key.".".$field);
-
                 }
             }
 
 			$csvSettings = array(
 				'tpl'=> implode(',',$fields),//'Indicator,SubGroup,AreaName,TimePeriod,DataValue,Classification',
-                'observationId' => $this->data['observationId'],
-                'year' => $this->data['year'],
-				'batch'=>$this->data['batch'],
-                'last_batch' => (isset($this->data['last']) && !is_null($this->data['last']))? $this->data['last']:false
+                'observationId' => $this->request->data['observationId'],
+                'year' => $this->request->data['year'],
+				'batch'=>$this->request->data['batch'],
+                'last_batch' => (isset($this->request->data['last']) && !is_null($this->request->data['last']))? $this->request->data['last']:false
             );
-            $data['batch'] = $this->data['batch']+1;
-            $data['processed_observations'] = $this->genCSV($csvSettings);
-        }
 
-        return json_encode($csvSettings);
+            $data['batch'] = $this->request->data['batch']+1;
+
+            $result = array_merge($csvSettings, $this->genCSV($csvSettings));
+        }
+        return json_encode($result);
     }
 	
-	public function download($filename=null){
+	public function download($filename, $olap =false){
         if($filename == '' ){
             die();
         }else{
@@ -532,14 +547,16 @@ class ReportsController extends ReportsAppController {
 				)
 			 * 
 			 */
+
+
 			$this->parseFilename($info);
 				
+
 			$resChck = $this->BatchProcess->find('all',array('conditions'=>array('id'=>$info['batchProcessId'],'status'=>array(1,2))));// filename that's currently being proessed
 			if($resChck){
                 $referrer = str_replace('?processing','',Controller::referer());
                 $this->redirect($referrer.'?processing');
             }
-			
 			$res = $this->Report->find('first',array('conditions'=>array('id'=>$info['reportId'])));// get the path
 		
             $module = $res['Report']['module'];
@@ -548,6 +565,9 @@ class ReportsController extends ReportsAppController {
             $res['Report']['file_type'] = ($res['Report']['file_type']=='ind'?'csv':$res['Report']['file_type']);
             $xt = $res['Report']['file_type'];
 			
+            if($olap){
+                $category = 'Olap_Reports';
+            }
             //$path =  WWW_ROOT.DS.$module.DS;
             //$path = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS;
 
@@ -559,8 +579,10 @@ class ReportsController extends ReportsAppController {
                 'download'  => true,
                 'extension' => $res['Report']['file_type'],
                 //'path'      => APP . 'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS
-                'path'		=> APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS
+                'path'		=> APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS ,
             );
+
+
             $this->set($params);
         }
 
@@ -583,20 +605,20 @@ class ReportsController extends ReportsAppController {
                     'CensusStudent.school_year_id = SchoolYear.id'
                 )
             ),
-            'institution_site_programmes' => array(
-                'table' => 'institution_site_programmes',
-                'alias' => 'InstitutionSiteProgramme',
-                'type' => 'LEFT',
-                'conditions' => array(
-                    'InstitutionSiteProgramme.id = CensusStudent.institution_site_programme_id'
-                )
-            ),
             'institution_sites' => array(
                 'table' => 'institution_sites',
                 'alias' => 'InstitutionSite',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'InstitutionSite.id = InstitutionSiteProgramme.institution_site_id'
+                    'InstitutionSite.id = CensusStudent.institution_site_id'
+                )
+            ),
+            'institution_site_programmes' => array(
+                'table' => 'institution_site_programmes',
+                'alias' => 'InstitutionSiteProgramme',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'InstitutionSiteProgramme.institution_site_id = InstitutionSite.id'
                 )
             ),
             'institutions' => array(
@@ -724,6 +746,7 @@ class ReportsController extends ReportsAppController {
             $params,
             $this->CensusStudent
         );
+
         return $query;
     }
 
@@ -731,17 +754,19 @@ class ReportsController extends ReportsAppController {
         $dbo = ConnectionManager::getDataSource('default'); 
         $tpl = $settings['tpl'];
 //        $procId = $settings['batchProcessId'];
+
         $arrCount = $this->olapGetNumberOfRecordsPerObservation(intval($settings['observationId']), $settings['year']);
         $recusive = ceil($arrCount['total'] / $this->limit);
         $sql ="";
         $returnData = array('processed_records' => $this->limit, 'batch'=> 0);
-        $this->prepareCSV($settings);
+        $filename = $this->prepareCSV($settings);
 
-
-        for($i=0;$i<$recusive;$i++){
+        for($i=0;$i<=$recusive;$i++){
             $offset = ($this->limit*$i);
             $settings['offset'] = $offset;
+
             $sql = $this->generateRawQuery($settings);//$settings['sql'];
+            $rawData = array();
             try{
                 $rawData = $dbo->query($sql);
             } catch (Exception $e) {
@@ -750,6 +775,8 @@ class ReportsController extends ReportsAppController {
 //                $this->Common->updateStatus($procId,'-1');
 //                $this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog); 
             }
+
+            //pr($rawData);
             $this->formatOlapData($rawData, $tpl);
             $this->writeCSV($rawData, $settings);
             $returnData['processed_records'] = $offset+$this->limit;
@@ -759,7 +786,13 @@ class ReportsController extends ReportsAppController {
         if(strtolower($settings['last_batch']) == 'true'){
             $this->closeCSV();
         }
-        return (isset($returnData))? $returnData: $errLog;
+
+        $data = array();
+        $data['processed_observations'] = (isset($returnData))? $returnData: $errLog;
+        $data['filename'] = (isset($returnData))? $filename: '';
+
+
+        return $data;
 
     }
 
@@ -787,10 +820,9 @@ class ReportsController extends ReportsAppController {
 
         if($settings['batch'] == 0){
             fputs ($this->fileFP, $tpl."\n");
-
         }
 
-
+        return $filename;
     }
 
     public function writeCSV($data,$settings){
@@ -837,10 +869,10 @@ class ReportsController extends ReportsAppController {
 	}
 
     private function formatOlapData(&$data, $order=''){
-
 		foreach($data as $k => &$arrv){
 			foreach ($arrv as $key => $value) {
 				if(is_array($value)){
+
                     foreach($value as $innerKey => $innerValue){
                         $arrv[$key."_".$innerKey] = $innerValue;
                     }
@@ -920,7 +952,7 @@ class ReportsController extends ReportsAppController {
         foreach($tmpArray as $key => $value){
             $translatedArray = explode('.', $value);
             $tbName = array_shift(explode('.', $value));
-            if(preg_match('/\b'.$tbName.'\b/i',implode(' ',$this->hideOlapTableColumnsLabel)) == 1){
+            if(isset($this->hideOlapTableColumnsLabel) && preg_match('/\b'.$tbName.'\b/i',implode(' ',$this->hideOlapTableColumnsLabel)) == 1){
                 foreach( $translatedArray as $innerKey => $innerValue){
                     $strValue = trim((preg_replace('/\bname|CensusStudent\b/i', '',$innerValue)));
                     $strValue = Inflector::humanize(Inflector::underscore($strValue));
