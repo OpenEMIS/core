@@ -308,7 +308,7 @@ class ReportsController extends ReportsAppController {
                     )
                 ),
                 'group' => array('Institution.id'),
-                'conditions' => array('Institution.id IS NOT NULL AND institution.id = 16078'),
+                'conditions' => array('Institution.id IS NOT NULL'),
                 //'limit' => 50 // for debugging
             ));
             foreach($rawData as $key => $value){
