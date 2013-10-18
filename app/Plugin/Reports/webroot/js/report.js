@@ -94,10 +94,10 @@ var olapReport = {
         $('div.date-selector select option').first().attr('selected', 'selected').trigger('change');
 
     },
-    progressComplete:function(){
+    progressComplete:function(filename){
         $("#progressbar").html('0%');
 
-        window.location = getRootURL()+'Reports/download/';
+        window.location = getRootURL()+'Reports/download/' + filename + "/1";
         $.closeDialog();
 
 
@@ -109,27 +109,29 @@ var olapReport = {
 //        for(var observationId in olapReport.observations){
 //            console.info("Observation "+observationId+ ": "+olapReport.observations[observationId]);
 //        }
-        var data = {
+        /*var data = {
             batch: batch,
             observationId: 0,
             year: olapReport.year
-        };
+        };*/
 
 //        for(var observationId in olapReport.observations){
 
-            data = {
+          var inputdata = {
                 batch: batch,
                 observationId: olapReport.observations.shift(),
                 year: olapReport.year,
                 last: (olapReport.observations.length<1)? true:false,
                 variables: olapReport.variables
             };
+
+            //console.info(data);
         // check if the batch is a numeric value.
         $.ajax({
             type: 'POST',
             dataType: "json",
             url: getRootURL()+"Reports/genOlapReport/",
-            data: data,
+            data: inputdata,
             beforeSend: function (jqXHR) {
 
             },
@@ -140,14 +142,14 @@ var olapReport = {
 //                    Report.progressComplete();
                 }else{
                     var percentage = Math.floor(100 * parseInt(olapReport.totalRecords) / parseInt(olapReport.totalObservations));
-                    olapReport.genReport(olapReport.totalRecords);
+                    var test = olapReport.genReport(olapReport.totalRecords);
 //                    Report.part = data.batch;
 //                    Report.genReport(Report.part);
                 }
                 //$("#uploadprogressbar").progressBar(percentage);
                 $("#progressbar").html(percentage+'%');
                 if(percentage >= 100){
-                    olapReport.progressComplete();
+                    olapReport.progressComplete(data['filename']);
                 }
 
             },
