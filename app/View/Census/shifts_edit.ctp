@@ -67,7 +67,6 @@ echo $this->Html->script('census_classes', false);
 								$record_tag = "row_" . $k;
 							}
 						}
-						
 					}
 					$totalClasses += $value['classes'];
 			?>
@@ -97,7 +96,7 @@ echo $this->Html->script('census_classes', false);
 						<?php echo $this->Form->input($value['id']  . '.shift_value_' . $s, array(
 								'type' => 'text',
 								'class' => $record_tag,
-								'computeType' => 'cell_value',
+								'computeType' => 'cell_subtotal',
 								'value' => $shift,
 								'maxlength' => 5,
 								'onkeypress' => 'return utility.integerCheck(event)',
