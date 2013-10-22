@@ -32,7 +32,8 @@ class InstitutionsController extends AppController {
 		'InstitutionSector',
 		'InstitutionStatus',
 		'InstitutionAttachment',
-		'InstitutionHistory'
+		'InstitutionHistory',
+                'InstitutionSiteType'
     );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -42,13 +43,14 @@ class InstitutionsController extends AppController {
 			'model' => 'InstitutionAttachment',
 			'foreignKey' => 'institution_id'
 		),'AccessControl'
+                
 	);
 
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Institutions', array('controller' => 'Institutions', 'action' => 'index'));
 		
-		$actions = array('index', 'advanced', 'add', 'listSites');
+		$actions = array('index', 'advanced', 'add', 'listSites','getCustomFieldsSearch');
 		if(in_array($this->action, $actions)) {
 			$this->bodyTitle = 'Institutions';
 		} else {
@@ -93,6 +95,7 @@ class InstitutionsController extends AppController {
 		$fieldorderdir = ($this->Session->read('Search.sortdir'))?$this->Session->read('Search.sortdir'):'asc';
 		
 		$searchKey = stripslashes($this->Session->read('Search.SearchField'));
+                
 		$conditions = array(
 			'SearchKey' => $searchKey, 
 			'AdvancedSearch' => $this->Session->check('Institution.AdvancedSearch') ? $this->Session->read('Institution.AdvancedSearch') : null,
@@ -144,13 +147,42 @@ class InstitutionsController extends AppController {
 				}
 			}
 		} else {
-			$search = $this->data['Search'];
+                   
+			//$search = $this->data['Search'];
+                        $search = $this->data;
 			if(!empty($search)) {
+                           //pr($this->data);die;
 				$this->Session->write($key, $search);
 			}
 			$this->redirect(array('action' => 'index'));
 		}
+                
+                
+                
 	}
+        
+        public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution'){
+             $this->layout = false;
+             $arrSettings = array(
+                                                            'CustomField'=>$customfields.'CustomField',
+                                                            'CustomFieldOption'=>$customfields.'CustomFieldOption',
+                                                            'CustomValue'=>$customfields.'CustomValue',
+                                                            'Year'=>''
+                                                        );
+             if($this->{$customfields}->hasField('institution_site_type_id')){
+                 $arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
+             }
+             $arrCustFields = array($customfields => $arrSettings);
+             
+            $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
+            $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+            $types = $this->InstitutionSiteType->findList(1);
+            $this->set("customfields",array($customfields));
+            $this->set('types',  $types);        
+            $this->set('typeSelected',  $sitetype);
+            $this->set('dataFields',  $dataFields);
+            $this->render('/Elements/customfields/search');
+        }
 	
 	public function listSites() {
 		$id = 0;
