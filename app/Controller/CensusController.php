@@ -1165,7 +1165,7 @@ class CensusController extends AppController {
 		$arrCensusInfra = array();
 		
 		$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
-		$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
+		$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
 			
 		//pr($data);
 		foreach($data as &$arrDataVal){
@@ -1186,8 +1186,8 @@ class CensusController extends AppController {
 		 * CustomFields
 		 */
 		$site = $this->InstitutionSite->findById($this->institutionSiteId); 
-		
-		$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id']), 'order'=>'CensusCustomField.order'));
+		$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>array($site['InstitutionSite']['institution_site_type_id'],0)), 'order'=>array('CensusCustomField.institution_site_type_id','CensusCustomField.order')));
+		//$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id']), 'order'=>'CensusCustomField.order'));
 		//pr($datafields); echo "d2";
 		$this->CensusCustomValue->unbindModel(
 			array('belongsTo' => array('InstitutionSite'))
@@ -1301,7 +1301,8 @@ class CensusController extends AppController {
 			$this->redirect(array('action' => 'otherforms', $selectedYear));
 		} else {
 			$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
-			$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
+                        $data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
+			//$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
 			
 			foreach($data as &$arrDataVal){
 				$dataAnswer = $this->CensusGridValue->find('all',array('conditions'=>array('CensusGridValue.institution_site_id'=>$this->institutionSiteId,'CensusGridValue.census_grid_id'=>$arrDataVal['CensusGrid']['id'],'CensusGridValue.school_year_id'=>$selectedYear)));
@@ -1319,8 +1320,9 @@ class CensusController extends AppController {
 			 * CustomFields
 			 */
 			$site = $this->InstitutionSite->findById($this->institutionSiteId); 
-			
-			$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
+			//$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
+			//$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
+                        $datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>array($site['InstitutionSite']['institution_site_type_id'],0)), 'order' => array('CensusCustomField.institution_site_type_id','CensusCustomField.order')));
 			//pr($datafields); echo "d2";
 			$this->CensusCustomValue->unbindModel(
 				array('belongsTo' => array('InstitutionSite'))

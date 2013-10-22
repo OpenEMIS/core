@@ -49,7 +49,7 @@ $actionLabel = Array(
 	if(count($siteTypes)>0) {
 		echo $this->Form->input('institution_site_type_id',	array(
 			'id' => 'siteTypeId',
-			'options' => $siteTypes,
+			'options' => array_merge(array('0'=>'All'),$siteTypes),
 			'default' => $sitetype,
 			'before' => '<div class="row">',
 			'after' => '</div>',
