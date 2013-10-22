@@ -29,6 +29,7 @@ class CustomFieldComponent extends Component {
 			$this->customFieldOption = ClassRegistry::init($settings['CustomFieldOption']);
 			$this->customValue = ClassRegistry::init($settings['CustomValue']);
 			$this->yr = ClassRegistry::init($settings['Year']);
+                        $this->institutionSiteTypeId = @$settings['institutionSiteTypeId'];
 			
 		} catch(MissingModelException $e) {
 			// Model not found!
@@ -45,7 +46,12 @@ class CustomFieldComponent extends Component {
 	
 	public function getCustomFields(){
 		$this->customField->bindModel(array('hasMany'=>array($this->settings['CustomFieldOption'] => array('order'=>'order'))));
-		$arr = $this->customField->find('all',array('conditions' => array('visible'=> '1'),'order'=>'order'));
+                $arrCond = array('visible'=> '1');
+                if($this->institutionSiteTypeId >= 0 && isset($this->institutionSiteTypeId)) {
+                    $arrCond = array_merge($arrCond,array($this->settings['CustomField'].'.institution_site_type_id' => $this->institutionSiteTypeId));
+                }
+                
+		$arr = $this->customField->find('all',array('conditions' => $arrCond,'order'=>'order'));
 		
 		return ($arr) ? $arr : array();
 	}
@@ -115,5 +121,11 @@ class CustomFieldComponent extends Component {
 			
 		}
 	}
+        
+        
+        public function Search(){
+            
+            
+        }
 }
 ?>

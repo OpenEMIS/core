@@ -24,20 +24,21 @@ class StaffController extends StaffAppController {
     public $staffObj;
 
     public $uses = array(
-		'Area',
-        'Institution',
-		'InstitutionSite',
-        'InstitutionSiteStaff',
-        'Staff.InstitutionSiteStaff',
-        'Staff.Staff',
-        'Staff.StaffHistory',
-        'Staff.StaffCustomField',
-        'Staff.StaffCustomFieldOption',
-        'Staff.StaffCustomValue',
-        'Staff.StaffAttachment',
-        'Staff.StaffAttendance',
-        'SchoolYear',
-		'ConfigItem'
+            'Area',
+            'Institution',
+            'InstitutionSite',
+            'InstitutionSiteType',
+            'InstitutionSiteStaff',
+            'Staff.InstitutionSiteStaff',
+            'Staff.Staff',
+            'Staff.StaffHistory',
+            'Staff.StaffCustomField',
+            'Staff.StaffCustomFieldOption',
+            'Staff.StaffCustomValue',
+            'Staff.StaffAttachment',
+            'Staff.StaffAttendance',
+            'SchoolYear',
+            'ConfigItem'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -145,13 +146,37 @@ class StaffController extends StaffAppController {
 				}
 			}
 		} else {
-			$search = $this->data['Search'];
+			//$search = $this->data['Search'];
+                         $search = $this->data;
 			if(!empty($search)) {
 				$this->Session->write($key, $search);
 			}
 			$this->redirect(array('action' => 'index'));
 		}
 	}
+        
+        public function getCustomFieldsSearch($sitetype = 0, $customfields = 'Staff'){
+             $this->layout = false;
+             $arrSettings = array(
+                                                            'CustomField'=>$customfields.'CustomField',
+                                                            'CustomFieldOption'=>$customfields.'CustomFieldOption',
+                                                            'CustomValue'=>$customfields.'CustomValue',
+                                                            'Year'=>''
+                                                        );
+             if($this->{$customfields}->hasField('institution_site_type_id')){
+                 $arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
+             }
+             $arrCustFields = array($customfields => $arrSettings);
+             
+            $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
+            $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+            $types = $this->InstitutionSiteType->findList(1);
+            $this->set("customfields",array($customfields));
+            $this->set('types',  $types);        
+            $this->set('typeSelected',  $sitetype);
+            $this->set('dataFields',  $dataFields);
+            $this->render('/Elements/customfields/search');
+        }
 
     public function viewStaff($id) {
         $this->Session->write('StaffId', $id);
