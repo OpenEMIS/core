@@ -399,7 +399,8 @@ AND
                                          $mainTable = str_replace("CustomValue","",$key);
                                         $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName)); //insitution_id
                                         $fkey2 = strtolower(str_replace("_values", "_field_id", $rawTableName)); //insitution_custom_field_id
-                                        $field = $key.'.'.$fkey;
+                                        //$field = $key.'.'.$fkey;
+                                        $field = 'InstitutionSite.institution_id';
                                         
                                         foreach($advanced as $arrIdVal){
                                             foreach ($arrIdVal as $id => $val) {
@@ -409,6 +410,12 @@ AND
 
                                         }
                                         
+                                        $joins[] = array(
+                                            'table' => 'institution_sites',
+                                            'alias' => 'InstitutionSite',
+                                            'type' => 'LEFT',
+                                            'conditions' => array($key.'.'.$fkey.' = '.$mainTable.'.id')
+                                        );
                                         
                                         if(!empty($arrCond)){
                                             $query = $dbo->buildStatement(array(
@@ -417,14 +424,17 @@ AND
                                                     'alias' => $key,
                                                     'limit' => null, 
                                                     'offset' => null,
-                                                    //'joins' => $joins,
+                                                    'joins' => $joins,
                                                     'conditions' => array('OR'=>$arrCond),
                                                     'group' => array($field),
                                                     'order' => null
                                             ), $this);
-                                            $conditions[] = 'Institution.id IN (SELECT institution_id FROM institution_sites AS InstitutionSite WHERE ('.$mainTable.'.id IN (' . $query . ')) GROUP BY institution_id)';
+                                            
+                                            $conditions[] = 'Institution.id IN (' . $query . ')';
                                            
                                         }
+                                        
+                                        
                                    }
                                    
                                 }
