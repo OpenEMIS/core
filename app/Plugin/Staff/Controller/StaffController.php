@@ -425,7 +425,7 @@ class StaffController extends StaffAppController {
                                     $this->StaffCustomValue->create();
                                     $arrV['staff_custom_field_id']  = $key;
                                     $arrV['value']  = $val['value'][$ctr];
-                                    $arrV['staff_id']  = $this->StaffId;
+                                    $arrV['staff_id']  = $this->staffId;
                                     $this->StaffCustomValue->save($arrV);
                                     unset($arrCustomValues[$ctr]);
                                 }
