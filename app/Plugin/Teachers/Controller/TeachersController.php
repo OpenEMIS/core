@@ -432,7 +432,7 @@ class TeachersController extends TeachersAppController {
                                     $this->TeacherCustomValue->create();
                                     $arrV['teacher_custom_field_id']  = $key;
                                     $arrV['value']  = $val['value'][$ctr];
-                                    $arrV['teacher_id']  = $this->TeacherId;
+                                    $arrV['teacher_id']  = $this->teacherId;
                                     $this->TeacherCustomValue->save($arrV);
                                     unset($arrCustomValues[$ctr]);
                                 }
