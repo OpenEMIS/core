@@ -423,7 +423,7 @@ class StudentsController extends StudentsAppController {
                                     $this->StudentCustomValue->create();
                                     $arrV['student_custom_field_id']  = $key;
                                     $arrV['value']  = $val['value'][$ctr];
-                                    $arrV['student_id']  = $this->StudentId;
+                                    $arrV['student_id']  = $this->studentId;
                                     $this->StudentCustomValue->save($arrV);
                                     unset($arrCustomValues[$ctr]);
                                 }
