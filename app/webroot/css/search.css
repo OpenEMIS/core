@@ -92,7 +92,7 @@ html ul.tabs li.active, html ul.tabs li.active a:hover  {
     -webkit-border-bottom-left-radius: 5px;
 }
 .tab_content {
-    padding: 10px;
+    padding: 10px 0px;
 }
 .tab_content h2 {
     font-weight: normal;
@@ -110,3 +110,12 @@ html ul.tabs li.active, html ul.tabs li.active a:hover  {
     padding: 5px;
 }
     /*Adrian Tab Custom Field Search  - Ends - */    
+    
+#CustomFieldDiv .custom_section_break > legend{     
+    margin-left: -10px;
+}
+
+#CustomFieldDiv .row {     
+    padding-left: 15px;
+}
+
