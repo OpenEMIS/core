@@ -40,7 +40,6 @@ class CensusShift extends AppModel {
 	
 	public function mergeSingleGradeData(&$class, $data) {
 		foreach($class as $key => &$obj) {
-			
 			$shift = array();
 			$source = 0;
 			$shift_pk = array();
@@ -54,7 +53,6 @@ class CensusShift extends AppModel {
 						$shift['shift_' . $shiftId] = $shiftValue;
 						$shift_pk['shift_pk_' . $shiftId] = $value['id'];
 					}
-				
 					$source = $value['source'];
 				}
 				
@@ -79,7 +77,6 @@ class CensusShift extends AppModel {
 						$shift['shift_' . $shiftId] = $shiftValue;
 						$shift_pk['shift_pk_' . $shiftId] = $value['id'];
 					}
-				
 					$source = $value['source'];
 				}
 				

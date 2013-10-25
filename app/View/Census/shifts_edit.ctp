@@ -77,27 +77,36 @@ echo $this->Html->script('census_classes', false);
 
 					<?php
 					$totalShifts = 0;
+					$pk = $value['id'];
+
+					
+
 					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
 						<?php 
 						$shift = null;
-						if(isset($value['shift_' . $s])){
-							$shift = $value['shift_' . $s];
-							$totalShifts += $shift;
+						if(isset($this->request->data['CensusShift'][$pk])){
+							$shift = $this->request->data['CensusShift'][$pk]['shift_value_' . $s];
+							$totalShifts += $this->request->data['CensusShift'][$pk]['shift_value_' . $s];
+						}else{
+							if(isset($value['shift_' . $s])){
+								$shift = $value['shift_' . $s];
+								$totalShifts += $shift;
+							}
 						}?>
 					 	<div class="table_cell">
 						<div class="input_wrapper">
 						<?php 
 						if(isset($value['shift_pk_' . $s])){
-							echo $this->Form->hidden($value['id'] . '_shift_pk_' . $s, array(
+							echo $this->Form->hidden($pk  . '_shift_pk_' . $s, array(
 									'value' => $value['shift_pk_' . $s]
 								));
 						}
 						?>
-						<?php echo $this->Form->input($value['id']  . '.shift_value_' . $s, array(
+						<?php echo $this->Form->input($pk  . '.shift_value_' . $s, array(
 								'type' => 'text',
 								'class' => $record_tag,
 								'computeType' => 'cell_subtotal',
-								'value' => $shift,
+								'default' => $shift,
 								'maxlength' => 5,
 								'onkeypress' => 'return utility.integerCheck(event)',
 								'onkeyup' => 'jsTable.computeSubtotal(this)'
@@ -107,6 +116,9 @@ echo $this->Html->script('census_classes', false);
 						</div>
 					<?php
 						}
+						echo $this->Form->hidden($pk . '.shift_class_total', array(
+							'value' => $value['classes']
+						));
 					?>
 					<div class="table_cell cell_number cell_subtotal"><?php echo $totalShifts; ?></div>
 				</div>	
@@ -169,27 +181,33 @@ echo $this->Html->script('census_classes', false);
 
 					<?php
 					$totalShifts = 0;
+					$pk = $name;
 					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
 						<?php 
 						$shift = null;
-						if(isset($value['shift_' . $s])){
-							$shift = $value['shift_' . $s];
-							$totalShifts += $shift;
+						if(isset($this->request->data['CensusShift'][$pk])){
+							$shift = $this->request->data['CensusShift'][$pk]['shift_value_' . $s];
+							$totalShifts += $this->request->data['CensusShift'][$pk]['shift_value_' . $s];
+						}else{
+							if(isset($value['shift_' . $s])){
+								$shift = $value['shift_' . $s];
+								$totalShifts += $shift;
+							}
 						}?>
 					 	<div class="table_cell">
 						<div class="input_wrapper">
 						<?php 
 						if(isset($value['shift_pk_' . $s])){
-							echo $this->Form->hidden($value['id'] . '_shift_pk_' . $s, array(
+							echo $this->Form->hidden($pk . '_shift_pk_' . $s, array(
 									'value' => $value['shift_pk_' . $s]
 								));
 						}
 						?>
-						<?php echo $this->Form->input($value['id']  . '.shift_value_' . $s, array(
+						<?php echo $this->Form->input($pk  . '.shift_value_' . $s, array(
 								'type' => 'text',
 								'class' => $record_tag,
 								'computeType' => 'cell_subtotal',
-								'value' => $shift,
+								'default' => $shift,
 								'maxlength' => 5,
 								'onkeypress' => 'return utility.integerCheck(event)',
 								'onkeyup' => 'jsTable.computeSubtotal(this)'
@@ -199,6 +217,9 @@ echo $this->Html->script('census_classes', false);
 						</div>
 					<?php
 						}
+						echo $this->Form->hidden($pk . '.shift_class_total', array(
+							'value' => $value['classes']
+						));
 					?>
 					<div class="table_cell cell_number cell_subtotal"><?php echo $totalShifts; ?></div>
 				</div>	
