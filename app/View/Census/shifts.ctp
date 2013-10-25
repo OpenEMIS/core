@@ -94,7 +94,66 @@ echo $this->Html->script('census', false);
 			</div>
 		</div>
 	</fieldset>
-
+	<fieldset class="section_group multi">
+		<legend><?php echo __('Multi Grade Classes'); ?></legend>
+		
+		<div class="table">
+			<div class="table_head">
+				<div class="table_cell"><?php echo __('Programme'); ?></div>
+				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
+				<div class="table_cell cell_classes"><?php echo __('Classes'); ?></div>
+				<?php 
+				for($i=1;$i<=intval($no_of_shifts);$i++){
+					echo '<div class="table_cell cell_shifts">' . __('Shift')  . ' ' . $i . '</div>';
+				}?>
+				<div class="table_cell"><?php echo __('Total'); ?></div>
+			</div>
+			
+			<?php 
+			$totalClasses = 0;
+			$totalSeats = 0;
+			if(!empty($multiGradeData)) {
+			?>
+			<div class="table_body">
+				<?php foreach($multiGradeData as $obj) { ?>
+				<div class="table_row">
+					<?php
+					$totalClasses += $obj['classes'];
+					$totalSeats += $obj['seats'];
+					$record_tag="";
+					foreach ($source_type as $k => $v) {
+						if ($obj['source']==$v) {
+							$record_tag = "row_" . $k;
+						}
+					}
+					?>
+					<div class="table_cell <?php echo $record_tag; ?>">
+						<?php foreach($obj['programmes'] as $programmeId => $programmeName) { ?>
+						<div class="table_cell_row"><?php echo $programmeName; ?></div>
+						<?php } ?>
+					</div>
+					
+					<div class="table_cell <?php echo $record_tag; ?>">
+						<?php foreach($obj['grades'] as $gradeId => $gradeName) { ?>
+						<div class="table_cell_row"><?php echo $gradeName; ?></div>
+						<?php } ?>
+					</div>
+					
+					<div class="table_cell cell_number"><?php echo $obj['classes']; ?></div>
+					<div class="table_cell cell_number"><?php echo $obj['seats']; ?></div>
+				</div>
+				<?php } // end for (multigrade) ?>
+			</div>
+			<?php } // end if empty(multigrade) ?>
+			
+			<div class="table_foot">
+				<div class="table_cell"></div>
+				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
+				<div class="table_cell cell_value cell_number"><?php echo $totalClasses; ?></div>
+				<div class="table_cell cell_value cell_number"><?php echo $totalSeats; ?></div>
+			</div>
+		</div>
+	</fieldset>
 	
 	<?php } ?>
 </div>
