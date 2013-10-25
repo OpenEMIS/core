@@ -123,6 +123,97 @@ echo $this->Html->script('census_classes', false);
 		</div>
 	</fieldset>
 	
+	<fieldset class="section_group">
+		<legend><?php echo __('Multi Grade Classes Only'); ?></legend>
+		<div class="table">
+			<div class="table_head">
+				<div class="table_cell"><?php echo __('Programme'); ?></div>
+				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
+				<div class="table_cell"><?php echo __('Classes'); ?></div>
+				<?php 
+				for($i=1;$i<=intval($no_of_shifts);$i++){
+					echo '<div class="table_cell cell_shifts">' . __('Shift')  . ' ' . $i . '</div>';
+				}?>
+				<div class="table_cell"><?php echo __('Total'); ?></div>
+			</div>
+			
+			<div class="table_body">
+			<?php 
+			$totalClasses = 0;
+			$i = 0;
+
+			foreach($multiGradeData as $name => $value) {
+					$record_tag="";
+					foreach ($source_type as $k => $v) {
+						if(isset($value['shift_source'])){
+							if ($value['shift_source']==$v) {
+								$record_tag = "row_" . $k;
+							}
+						}
+					}
+					$totalClasses += $value['classes'];
+			?>
+				<div class="table_row">
+					<div class="table_cell <?php echo $record_tag; ?>">
+						<?php foreach($value['programmes'] as $programmeId => $programmeName) { ?>
+						<div class="table_cell_row"><?php echo $programmeName; ?></div>
+						<?php } ?>
+					</div>
+					
+					<div class="table_cell <?php echo $record_tag; ?>">
+						<?php foreach($value['grades'] as $gradeId => $gradeName) { ?>
+						<div class="table_cell_row"><?php echo $gradeName; ?></div>
+						<?php } ?>
+					</div>
+					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $value['classes']; ?></div>
+
+					<?php
+					$totalShifts = 0;
+					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
+						<?php 
+						$shift = null;
+						if(isset($value['shift_' . $s])){
+							$shift = $value['shift_' . $s];
+							$totalShifts += $shift;
+						}?>
+					 	<div class="table_cell">
+						<div class="input_wrapper">
+						<?php 
+						if(isset($value['shift_pk_' . $s])){
+							echo $this->Form->hidden($value['id'] . '_shift_pk_' . $s, array(
+									'value' => $value['shift_pk_' . $s]
+								));
+						}
+						?>
+						<?php echo $this->Form->input($value['id']  . '.shift_value_' . $s, array(
+								'type' => 'text',
+								'class' => $record_tag,
+								'computeType' => 'cell_subtotal',
+								'value' => $shift,
+								'maxlength' => 5,
+								'onkeypress' => 'return utility.integerCheck(event)',
+								'onkeyup' => 'jsTable.computeSubtotal(this)'
+							)); 
+						?>
+						</div>
+						</div>
+					<?php
+						}
+					?>
+					<div class="table_cell cell_number cell_subtotal"><?php echo $totalShifts; ?></div>
+				</div>	
+			<?php 
+			}
+			?>
+			</div>
+			<div class="table_foot">
+				<div class="table_cell"></div>
+				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
+				<div class="table_cell cell_value cell_number"><?php echo $totalClasses; ?></div>
+				
+			</div>
+		</div>
+	</fieldset>
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
