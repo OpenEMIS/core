@@ -1352,13 +1352,16 @@ class CensusController extends AppController {
 		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
 		$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
 		$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+		$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
 
-		if(empty($singleGradeClasses)) {
+		if(empty($singleGradeClasses) && empty($multiGradeData)) {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_CLASS'), array('type' => 'warn', 'dismissOnClick' => false));
 			$displayContent = false;
 		} else {
 			$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+
 			$this->set('singleGradeData', $singleGradeData);
+			$this->set('multiGradeData', $multiGradeData);
 		}
 
 	 	$no_of_shifts = $this->ConfigItem->getValue('no_of_shifts');
