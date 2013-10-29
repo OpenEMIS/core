@@ -27,14 +27,17 @@ foreach ($customfields as $arrdataFieldsVal){
         }
         if(count(@$dataFields[$arrdataFieldsVal]) > 0){
                 foreach ($dataFields[$arrdataFieldsVal] as $arrVals){
+                    if($arrVals[$arrdataFieldsVal.'CustomField']['type'] == 1){//Label
+                                              echo '<fieldset class="custom_section_break">
+								<legend>'.__($arrVals[$arrdataFieldsVal.'CustomField']['name']).'</legend>
+						</fieldset>';
+                                       }else{
 ?>
                     <div class="row">
                             <div class="label"><?php echo __($arrVals[$arrdataFieldsVal.'CustomField']['name']); ?></div>
                             <div class="value">
                                 <?php 
-                                    if($arrVals[$arrdataFieldsVal.'CustomField']['type'] == 1){//Label
-                                              //ignore labels
-                                       }elseif($arrVals[$arrdataFieldsVal.'CustomField']['type'] == 2) {//Text
+                                    if($arrVals[$arrdataFieldsVal.'CustomField']['type'] == 2) {//Text
                                                 echo '<div class="">
                                                                                <div class="field_value">'; 
                                                 
@@ -110,6 +113,6 @@ foreach ($customfields as $arrdataFieldsVal){
                             </div>
                     </div>
             <?php
-                }
+                                       }}
             }
 }
