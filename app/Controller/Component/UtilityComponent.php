@@ -71,6 +71,7 @@ class UtilityComponent extends Component {
 		$msgList['CENSUS_VERIFY'] = "The data will not be editable once it has been verified." . "<br><br>" . "Are you sure you want to do this?";
 		$msgList['CENSUS_UNVERIFY'] = "The data will be editable when it is unverified." . "<br><br>" . " Are you sure you want to do this?";
 		$msgList['CENSUS_MULTI_DUPLICATE'] = "Duplicate data has been detected and is not saved.";
+		$msgList['CENSUS_NO_CLASS'] = "There are no classes associated with this institution site for the selected year.";
 		
 		// Education Messages
 		$msgList['EDUCATION_NO_LEVEL'] = "There is no active education level in this Education System.";
