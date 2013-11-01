@@ -37,7 +37,7 @@
 .multi .icon_delete { margin-top: 8px; }
 .multi .input_wrapper { margin-top: 5px; }
 .multi .table select { width: 100%; }
-.cell_grade { width: 110px; }
+.cell_grade { width: 70px; }
 .cell_category { width: 270px; }
 .cell_programme { width: 230px; }
 .cell_certificate { width: 140px; }

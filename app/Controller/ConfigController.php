@@ -127,7 +127,6 @@ class ConfigController extends AppController {
 				$this->save();
 			}
 
-			
 			$this->set('errorCustomMsg', $errorCustomMsg);
 		}
 
@@ -153,7 +152,7 @@ class ConfigController extends AppController {
 		$error = array();
 		foreach($data as $key => $element){
 			foreach($element as $innerKey => $innerElement){
-				if($key=='Data Outliers'){
+				if($key=='system'){
 					if($innerElement['id']=='106'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || $value < 1 || $value > 5){
