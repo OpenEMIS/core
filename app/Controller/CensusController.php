@@ -1352,12 +1352,13 @@ class CensusController extends AppController {
 		$displayContent = true;
 		
 		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
-		if(empty($programmeGrades)) {
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+		$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
+		$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+
+		if(empty($singleGradeClasses)) {
+			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_CLASS'), array('type' => 'warn', 'dismissOnClick' => false));
 			$displayContent = false;
 		} else {
-			$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
-			$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
 			$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
 			$this->set('singleGradeData', $singleGradeData);
 		}
