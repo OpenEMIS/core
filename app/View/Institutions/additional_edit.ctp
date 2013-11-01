@@ -94,7 +94,7 @@ echo $this->Html->script('institution_site', false);
 								<div class="field_value">';
 								$val = '';
 								if(isset($datavalues[$arrVals['InstitutionCustomField']['id']][0]['value'])){
-									$val = ($datavalues[$arrVals['InstitutionCustomField']['id']][0]['value']?$datavalues[$arrVals['InstitutionCustomField']['id']][0]['value']:""); 
+									$val = @($datavalues[$arrVals['InstitutionCustomField']['id']][0]['value']?$datavalues[$arrVals['InstitutionCustomField']['id']][0]['value']:""); 
 								}
 								
 								echo '<textarea name="data[InstitutionCustomValue][textarea]['.$arrVals["InstitutionCustomField"]["id"].'][value]">'.$val.'</textarea>';

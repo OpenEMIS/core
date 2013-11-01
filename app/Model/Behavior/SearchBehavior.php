@@ -214,9 +214,10 @@ class SearchBehavior extends ModelBehavior {
 				'conditions' => array(sprintf('%s.%s = %s.id', $alias, $id, $class))
 			);
 		}
+                
 		if(!is_null($params['AdvancedSearch'])) {
 			$advanced = $params['AdvancedSearch'];
-			if($advanced['area_id'] > 0) { // search by area and all its children
+			if($advanced['Search']['area_id'] > 0) { // search by area and all its children
 				$joins[] = array(
 					'table' => 'areas',
 					'alias' => 'Area',
@@ -225,7 +226,7 @@ class SearchBehavior extends ModelBehavior {
 				$joins[] = array(
 					'table' => 'areas',
 					'alias' => 'AreaAll',
-					'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $advanced['area_id'])
+					'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $advanced['Search']['area_id'])
 				);
 			}
 		}
@@ -245,6 +246,44 @@ class SearchBehavior extends ModelBehavior {
 				$class . 'History.last_name LIKE' => $search,
 				$class . 'History.identification_no LIKE' => $search
 			);
+		}
+                if(!is_null($params['AdvancedSearch'])) {
+			$arrAdvanced = $params['AdvancedSearch'];
+                        
+			if(count($arrAdvanced) > 0 ){
+                            foreach($arrAdvanced as $key => $advanced){
+                              
+                                if(strpos($key,'CustomValue') > 0){
+                                        $dbo = $model->getDataSource();
+                                        $rawTableName = Inflector::tableize($key);
+                                        $mainTable = str_replace("CustomValue","",$key);
+                                        $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName)); //insitution_id
+                                        $fkey2 = strtolower(str_replace("_values", "_field_id", $rawTableName)); //insitution_custom_field_id
+                                         $field = $key.'.'.$fkey;
+                                        
+                                        foreach($advanced as $arrIdVal){
+                                            foreach ($arrIdVal as $id => $val) {
+                                                if(!empty($val['value']))
+                                                $arrCond[] = array($key.'.'.$fkey2=>$id,$key.'.value'=>$val['value']);
+                                            }
+                                        }
+                                        if(!empty($arrCond)){
+                                            $query = $dbo->buildStatement(array(
+                                                    'fields' => array($field),
+                                                    'table' => $rawTableName,
+                                                    'alias' => $key,
+                                                    'limit' => null, 
+                                                    'offset' => null,
+                                                    //'joins' => $joins,
+                                                    'conditions' => array('OR'=>$arrCond),
+                                                    'group' => array($field),
+                                                    'order' => null
+                                            ), $model);
+                                            $conditions[] = ' '.$mainTable.'.id IN (' . $query . ')';
+                                        }
+                                }
+                            }
+                        }
 		}
 		return $conditions;
 	}
