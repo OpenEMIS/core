@@ -1354,13 +1354,18 @@ class CensusController extends AppController {
 		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
 		$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
 		$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+		$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
 
-		if(empty($singleGradeClasses)) {
+
+		if(empty($singleGradeData) && empty($multiGradeData)) {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_CLASS'), array('type' => 'warn', 'dismissOnClick' => false));
 			$displayContent = false;
 		} else {
 			$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
 			$this->set('singleGradeData', $singleGradeData);
+
+			$this->CensusShift->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+			$this->set('multiGradeData', $multiGradeData);
 		}
 
 	 	$no_of_shifts = $this->ConfigItem->getValue('no_of_shifts');
@@ -1374,63 +1379,95 @@ class CensusController extends AppController {
 	
 	public function shiftsEdit() {
 
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Shifts');
-			
-			$yearList = $this->SchoolYear->getAvailableYears();
-			$selectedYear = $this->getAvailableYearId($yearList);
-			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
-			if(!$editable) {
-				$this->redirect(array('action' => 'classes', $selectedYear));
-			} else {
-				$displayContent = true;
-				$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
-				if(empty($programmeGrades)) {
-					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-					$displayContent = false;
-				} else {
-					$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
-					$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
-
-					$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
-
-			
-					$this->set('singleGradeData', $singleGradeData);
-				}
-
-				$no_of_shifts = $this->ConfigItem->getValue('no_of_shifts');
-
-				$this->set('no_of_shifts', $no_of_shifts);
-
-				$this->set('displayContent', $displayContent);
-				$this->set('selectedYear', $selectedYear);
-				$this->set('years', $yearList);
-			}
-		}else{
+		if($this->request->is('post')) {
 			if (!empty($this->request->data)) {
 				$data = $this->data['CensusShift'];
 				$yearId = $this->data['school_year_id'];
 
 				$saveData = array();
 				$errorMsg = array();
+				$errorFlag = false;
+
 				foreach($data as $key=>$value){
 					if(is_array($value)){
+						$shiftTotal = 0;
+						$classTotal = 0;
 						foreach($value as $key2=>$value2){
-							if(isset($value['shift_pk_' . str_replace("shift_value_", "", $key2)])){
-								$saveData[] = array('CensusShift' => array('id' => $value['shift_pk_' . str_replace("shift_value_", "", $key2)], 'census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
-							}else{
-								$saveData[] = array('CensusShift' => array('census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+							if($key2!='shift_class_total' && $key2!='shift_total'){
+								$shiftTotal += $value2;
 							}
-							
+							$classTotal = $value['shift_class_total'];
+						}
+
+						if($shiftTotal != $classTotal){
+							$errorFlag = true; 
+							break;
 						}
 					}
 				}
-				$this->CensusShift->saveAll($saveData);
 
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
-				$this->redirect(array('action' => 'shifts', $yearId));
+				if(!$errorFlag){
+					foreach($data as $key=>$value){
+						if(is_array($value)){
+							foreach($value as $key2=>$value2){
+								if($key2!='shift_class_total' && $key2!='shift_total'){
+									if(isset($value['shift_pk_' . str_replace("shift_value_", "", $key2)])){
+										$saveData[] = array('CensusShift' => array('id' => $value['shift_pk_' . str_replace("shift_value_", "", $key2)], 'census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+									}else{
+										$saveData[] = array('CensusShift' => array('census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+									}
+								}
+								
+							}
+						}
+					}
+					$this->CensusShift->saveAll($saveData);
+
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
+					$this->redirect(array('action' => 'shifts', $yearId));
+				}else{
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_SHIFT_CLASS_MISMATCH'), array('type' => 'warn', 'dismissOnClick' => false));
+				}
 			}	
 		}
+
+		$this->Navigation->addCrumb('Edit Shifts');
+			
+		$yearList = $this->SchoolYear->getAvailableYears();
+		$selectedYear = $this->getAvailableYearId($yearList);
+		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
+		if(!$editable) {
+			$this->redirect(array('action' => 'classes', $selectedYear));
+		} else {
+			$displayContent = true;
+			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+			$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
+			$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+			$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
+
+			if(empty($singleGradeData) && empty($multiGradeData)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_CLASS'), array('type' => 'warn', 'dismissOnClick' => false));
+				$displayContent = false;
+			} else {
+				$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+				$this->set('singleGradeData', $singleGradeData);
+
+				$this->CensusShift->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+				$this->set('multiGradeData', $multiGradeData);
+			}
+
+			$no_of_shifts = $this->ConfigItem->getValue('no_of_shifts');
+
+			$this->set('no_of_shifts', $no_of_shifts);
+
+			$this->set('displayContent', $displayContent);
+			$this->set('selectedYear', $selectedYear);
+			$this->set('years', $yearList);
+		}
+	
 		
 	}
+
+
+
 }
