@@ -1425,6 +1425,7 @@ class CensusController extends AppController {
 					$this->redirect(array('action' => 'shifts', $yearId));
 				}else{
 					$this->Utility->alert($this->Utility->getMessage('CENSUS_SHIFT_CLASS_MISMATCH'), array('type' => 'warn', 'dismissOnClick' => false));
+					$this->redirect(array('action' => 'shiftsEdit', $yearId));
 				}
 			}	
 		}
@@ -1435,7 +1436,7 @@ class CensusController extends AppController {
 		$selectedYear = $this->getAvailableYearId($yearList);
 		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
 		if(!$editable) {
-			$this->redirect(array('action' => 'classes', $selectedYear));
+			$this->redirect(array('action' => 'shifts', $selectedYear));
 		} else {
 			$displayContent = true;
 			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
