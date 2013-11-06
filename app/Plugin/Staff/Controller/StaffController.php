@@ -37,6 +37,8 @@ class StaffController extends StaffAppController {
             'Staff.StaffCustomValue',
             'Staff.StaffAttachment',
             'Staff.StaffAttendance',
+			'Staff.StaffLeave',
+			'Staff.StaffLeaveType',
             'SchoolYear',
             'ConfigItem'
         );
@@ -658,4 +660,78 @@ class StaffController extends StaffAppController {
 		
 		return $generate_no;
     }
+	
+	public function leaves() {
+		$this->Navigation->addCrumb('Leaves');
+		$staffId = $this->Session->read('StaffId');
+		$data = $this->StaffLeave->find('all', array(
+			'recursive' => 0, 
+			'conditions' => array('StaffLeave.staff_id' => $staffId),
+			'order' => array('StaffLeave.date_from')
+		));
+		$this->set('data', $data);
+	}
+	
+	public function leavesAdd() {
+		$this->Navigation->addCrumb('Leaves');
+		$typeOptions = $this->StaffLeaveType->findList(true);
+		
+		if($this->request->is('post')) {
+			$data = $this->request->data;
+			$data['StaffLeave']['staff_id'] = $this->Session->read('StaffId');
+			$this->StaffLeave->set($data);
+			if($this->StaffLeave->validates()) {
+				$this->StaffLeave->create();
+				$obj = $this->StaffLeave->save($data);
+				if($obj) {
+					return $this->redirect(array('action' => 'leaves'));
+				}
+			}
+		}
+		$this->set('typeOptions', $typeOptions);
+	}
+	
+	public function leavesView($id=null) {
+		$this->Navigation->addCrumb('Leaves');
+		if(!is_null($id) && $this->StaffLeave->exists($id)) { 
+			$typeOptions = $this->StaffLeaveType->findList(true);
+			$data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
+			$this->set('typeOptions', $typeOptions);
+			$this->set('data', $data['StaffLeave']);
+		} else {
+			return $this->redirect(array('action' => 'leaves'));
+		}
+	}
+	
+	public function leavesEdit($id=null) {
+		$this->Navigation->addCrumb('Leaves');
+		if(!is_null($id) && $this->StaffLeave->exists($id)) {
+			if($this->request->is('post') || $this->request->is('put')) {
+				$data = $this->request->data;
+				$data['StaffLeave']['id'] = $id;
+				$data['StaffLeave']['staff_id'] = $this->Session->read('StaffId');
+				$this->StaffLeave->set($data);
+				if($this->StaffLeave->validates()) {
+					$obj = $this->StaffLeave->save($data);
+					if($obj) {
+						$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+						return $this->redirect(array('action' => 'leavesView', $obj['StaffLeave']['id']));
+					}
+				}
+			}
+			$typeOptions = $this->StaffLeaveType->findList(true);
+			$this->request->data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
+			$this->set('typeOptions', $typeOptions);
+		} else {
+			return $this->redirect(array('action' => 'leaves'));
+		}
+	}
+	
+	public function leavesDelete($id=null) {
+		if(!is_null($id) && $this->StaffLeave->exists($id) && $this->Session->check('StaffId')) {
+			$this->StaffLeave->delete($id);
+			$this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
+		}
+		return $this->redirect(array('action' => 'leaves'));
+	}
 }
