@@ -8,7 +8,7 @@ echo $this->Html->script('institution_site_results', false);
 
 <div id="assessment" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Assessments'); ?></span>
+		<span><?php echo __('Results'); ?></span>
 		<?php
 		if($_edit) {
 			echo $this->Html->link(__('Back'), array('action' => 'classesView', $classId), array('class' => 'divider'));
