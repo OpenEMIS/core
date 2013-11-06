@@ -9,7 +9,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	<?php
 	echo $this->Form->create('StaffAttendance', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'StaffAttendanceEdit')
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'staffAttendanceEdit')
 	));
 	?>
     <h1>
