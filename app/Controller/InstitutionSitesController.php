@@ -1160,7 +1160,7 @@ class InstitutionSitesController extends AppController {
 			if($class) {
 				$class = $class['InstitutionSiteClass'];
 				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Assessments');
+				$this->Navigation->addCrumb('Results');
 				$data = $this->AssessmentItemType->getAssessmentsByClass($classId);
 				
 				if(empty($data)) {
@@ -1185,7 +1185,7 @@ class InstitutionSitesController extends AppController {
 			if($class) {
 				$class = $class['InstitutionSiteClass'];
 				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Assessment Results');
+				$this->Navigation->addCrumb('Results');
 				$items = $this->AssessmentItem->getItemList($assessmentId);
 				if(empty($items)) {
 					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
@@ -1218,7 +1218,7 @@ class InstitutionSitesController extends AppController {
 			if($class) {
 				$class = $class['InstitutionSiteClass'];
 				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Assessment Results');
+				$this->Navigation->addCrumb('Results');
 				$items = $this->AssessmentItem->getItemList($assessmentId);
 				if(empty($items)) {
 					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
