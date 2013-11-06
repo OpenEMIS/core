@@ -208,7 +208,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Shifts', 'Census', 'shifts'),
 					$this->createLink('Graduates', 'Census', 'graduates'),
 					$this->createLink('Attendance', 'Census', 'attendance'),
-					$this->createLink('Assessment', 'Census', 'assessments'),
+					$this->createLink('Results', 'Census', 'assessments'),
 					$this->createLink('Behaviour', 'Census', 'behaviour'),
 					$this->createLink('Textbooks', 'Census', 'textbooks'),
 					$this->createLink('Infrastructure', 'Census', 'infrastructure'),

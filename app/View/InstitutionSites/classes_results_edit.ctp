@@ -6,7 +6,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 <div id="results" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Assessment Results'); ?></span>
+		<span><?php echo __('Results'); ?></span>
 		<?php 
 		echo $this->Html->link(__('Back'), array('action' => 'classesAssessments', $classId), array('class' => 'divider'));
 		echo $this->Html->link(__('View'), array('action' => 'classesResults', $classId, $assessmentId, $selectedItem), array('class' => 'divider'));
