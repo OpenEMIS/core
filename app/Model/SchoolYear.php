@@ -118,4 +118,12 @@ class SchoolYear extends AppModel {
 		$data = $this->findByName($year);	
 		return $data['SchoolYear']['id'];
 	}
+	
+	public function getYearRange() {
+		$data = $this->find('list', array(
+			'fields' => array('SchoolYear.id', 'SchoolYear.start_year'),
+			'order' => array('SchoolYear.start_year')
+		));
+		return $data;
+	}
 }
