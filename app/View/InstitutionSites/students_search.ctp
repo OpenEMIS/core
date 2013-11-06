@@ -6,7 +6,7 @@ if($data !== false) {
 	} else {
 		foreach($data as $obj) {
 			$id = $obj['Student']['id'];
-			$gender = $obj['Student']['gender'];
+			$gender = $this->Utility->formatGender($obj['Student']['gender']);
 			$id_no = $obj['Student']['identification_no'];
 			$firstName = $obj['Student']['first_name'];
 			$lastName = $obj['Student']['last_name'];

@@ -1345,6 +1345,7 @@ class InstitutionSitesController extends AppController {
 	public function studentsAdd() {
 		$this->Navigation->addCrumb('Add Student');
 		$yearOptions = $this->SchoolYear->getYearList();
+		$yearRange = $this->SchoolYear->getYearRange();
 		$programmeOptions = array();
 		$selectedYear = '';
 		if(!empty($yearOptions)) {
@@ -1352,29 +1353,37 @@ class InstitutionSitesController extends AppController {
 			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeForSelection($this->institutionSiteId, $selectedYear);
 		}
 		$this->set('yearOptions', $yearOptions);
+		$this->set('minYear', current($yearRange));
+		$this->set('maxYear', array_pop($yearRange));
 		$this->set('programmeOptions', $programmeOptions);
 	}
 	
 	public function studentsSave() {
-		if($this->request->is('post')) {
+		if($this->request->is('post')) {//pr($this->data);die;
 			$data = $this->data['InstitutionSiteStudent'];
 			if(isset($data['student_id'])) {
-				$data['start_year'] = date('Y', strtotime($data['start_date']));
-				$name = $data['first_name'] . ' ' . $data['last_name'];
-				$siteProgrammeId = $data['institution_site_programme_id'];
-				$exists = $this->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
-				
-				if(!$exists) {
-					$duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
-					$startDate = new DateTime(date('Y-m-d', strtotime($data['start_date'])));
-					$endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
-					$endYear = $endDate->format('Y');
-					$data['end_date'] = $endDate->format('Y-m-d');
-					$data['end_year'] = $endYear;
-					$this->InstitutionSiteStudent->save($data);
-					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				$date = $data['start_date'];
+				if(!empty($date['day'])) {
+					$data['start_year'] = $date['year'];
+					$student = $this->Student->find('first', array('conditions' => array('Student.id' => $data['student_id'])));
+					$name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
+					$siteProgrammeId = $data['institution_site_programme_id'];
+					$exists = $this->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
+					
+					if(!$exists) {
+						$duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
+						$startDate = new DateTime(sprintf('%s-%s-%s', $date['year'], $date['month'], $date['day']));
+						$endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
+						$endYear = $endDate->format('Y');
+						$data['end_date'] = $endDate->format('Y-m-d');
+						$data['end_year'] = $endYear;
+						$this->InstitutionSiteStudent->save($data);
+						$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+					} else {
+						$this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+					}
 				} else {
-					$this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
 				$this->redirect(array('action' => 'studentsAdd'));
 			}
@@ -1455,10 +1464,11 @@ class InstitutionSitesController extends AppController {
 	
 	public function teachersAdd() {
 		$this->Navigation->addCrumb('Add Teacher');
-		$yearOptions = $this->SchoolYear->getYearList('start_year');
+		$yearRange = $this->SchoolYear->getYearRange();
 		$categoryOptions = $this->TeacherCategory->findList(true);
 		
-		$this->set('yearOptions', $yearOptions);
+		$this->set('minYear', current($yearRange));
+		$this->set('maxYear', array_pop($yearRange));
 		$this->set('categoryOptions', $categoryOptions);
 	}
 	
@@ -1466,29 +1476,31 @@ class InstitutionSitesController extends AppController {
 		if($this->request->is('post')) {
 			$data = $this->data['InstitutionSiteTeacher'];
 			if(isset($data['teacher_id'])) {
-				$data['institution_site_id'] = $this->institutionSiteId;
-				$data['start_year'] = date('Y', strtotime($data['start_date']));
-				$insert = true;
-				if(!empty($data['position_no'])) {
-					$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
-					if(!$obj) {
-						$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
+				if(!empty($data['start_date']['day'])) {
+					$data['institution_site_id'] = $this->institutionSiteId;
+					$data['start_year'] = $data['start_date']['year'];
+					$insert = true;
+					if(!empty($data['position_no'])) {
+						$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
+						if(!$obj) {
+							$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
+						}
+						if($obj) {
+							$teacherObj = $this->Teacher->find('first', array(
+								'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
+								'conditions' => array('Teacher.id' => $data['teacher_id'])
+							));
+							$position = $data['position_no'];
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+							$msg .= '<br>' . __('Please choose another position number.');
+							$this->Utility->alert($msg, array('type' => 'warn'));
+							$insert = false;
+						}
 					}
-					if($obj) {
-						$teacherObj = $this->Teacher->find('first', array(
-							'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
-							'conditions' => array('Teacher.id' => $data['teacher_id'])
-						));
-						$position = $data['position_no'];
-						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
-						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
-						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
-						$msg .= '<br>' . __('Please choose another position number.');
-						$this->Utility->alert($msg, array('type' => 'warn'));
-						$insert = false;
-						$data = array_merge($data, $teacherObj['Teacher']);
-						$this->Session->write('InstitutionSiteTeacherAdd.data', $data);
-					}
+				} else {
+					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
 				if($insert) {
 					$this->InstitutionSiteTeacher->save($data);
@@ -1640,10 +1652,11 @@ class InstitutionSitesController extends AppController {
 	
 	public function staffAdd() {
 		$this->Navigation->addCrumb('Add Staff');
-		$yearOptions = $this->SchoolYear->getYearList('start_year');
+		$yearRange = $this->SchoolYear->getYearRange();
 		$categoryOptions = $this->StaffCategory->findList(true);
 		
-		$this->set('yearOptions', $yearOptions);
+		$this->set('minYear', current($yearRange));
+		$this->set('maxYear', array_pop($yearRange));
 		$this->set('categoryOptions', $categoryOptions);
 	}
 	
@@ -1651,29 +1664,31 @@ class InstitutionSitesController extends AppController {
 		if($this->request->is('post')) {
 			$data = $this->data['InstitutionSiteStaff'];
 			if(isset($data['staff_id'])) {
-				$data['institution_site_id'] = $this->institutionSiteId;
-				$data['start_year'] = date('Y', strtotime($data['start_date']));
-				$insert = true;
-				if(!empty($data['position_no'])) {
-					$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
-					if(!$obj) {
-						$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
+				if(!empty($data['start_date']['day'])) {
+					$data['institution_site_id'] = $this->institutionSiteId;
+					$data['start_year'] = $data['start_date']['year'];
+					$insert = true;
+					if(!empty($data['position_no'])) {
+						$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
+						if(!$obj) {
+							$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
+						}
+						if($obj) {
+							$staffObj = $this->Staff->find('first', array(
+								'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
+								'conditions' => array('Staff.id' => $data['staff_id'])
+							));
+							$position = $data['position_no'];
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+							$msg .= '<br>' . __('Please choose another position number.');
+							$this->Utility->alert($msg, array('type' => 'warn'));
+							$insert = false;
+						}
 					}
-					if($obj) {
-						$staffObj = $this->Staff->find('first', array(
-							'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
-							'conditions' => array('Staff.id' => $data['staff_id'])
-						));
-						$position = $data['position_no'];
-						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
-						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
-						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
-						$msg .= '<br>' . __('Please choose another position number.');
-						$this->Utility->alert($msg, array('type' => 'warn'));
-						$insert = false;
-						$data = array_merge($data, $staffObj['Staff']);
-						$this->Session->write('InstitutionSiteStaffAdd.data', $data);
-					}
+				} else {
+					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
 				if($insert) {
 					$this->InstitutionSiteStaff->save($data);
