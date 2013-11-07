@@ -24,7 +24,7 @@
 
 	<div class="row">
 		<div class="label"><?php echo __('To'); ?></div>
-		<div class="value"><?php echo $this->Form->input('date_to', array('type' => 'date', 'dateFormat' => 'DMY')); ?></div>
+		<div class="value"><?php echo $this->Form->input('date_to', array('type' => 'date', 'dateFormat' => 'DMY', 'selected' => date('Y-m-d', time()+86400))); ?></div>
 	</div>
 	
 	<div class="row">

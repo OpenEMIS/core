@@ -697,7 +697,7 @@ class StaffController extends StaffAppController {
 			$typeOptions = $this->StaffLeaveType->findList(true);
 			$data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
 			$this->set('typeOptions', $typeOptions);
-			$this->set('data', $data['StaffLeave']);
+			$this->set('data', $data);
 		} else {
 			return $this->redirect(array('action' => 'leaves'));
 		}

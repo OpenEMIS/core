@@ -15,6 +15,7 @@
 		'url' => array('controller' => 'Teachers', 'action' => 'leavesEdit', $this->request->data['TeacherLeave']['id']),
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off')
 	));
+	$data = $this->request->data;
 	?>
 	
 	<div class="row">
@@ -36,6 +37,26 @@
 		<div class="label"><?php echo __('Comments'); ?></div>
 		<div class="value"><?php echo $this->Form->input('comments', array('type' => 'textarea')); ?></div>
 	</div>
+	
+	<div class="row">
+        <div class="label"><?php echo __('Modified by'); ?></div>
+        <div class="value"><?php echo trim($data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']); ?></div>
+    </div>
+	
+	<div class="row">
+        <div class="label"><?php echo __('Modified on'); ?></div>
+        <div class="value"><?php echo $data['TeacherLeave']['modified']; ?></div>
+    </div>
+	
+	<div class="row">
+        <div class="label"><?php echo __('Created by'); ?></div>
+        <div class="value"><?php echo trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']); ?></div>
+    </div>
+	
+	<div class="row">
+        <div class="label"><?php echo __('Created on'); ?></div>
+        <div class="value"><?php echo $data['TeacherLeave']['created']; ?></div>
+    </div>
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
