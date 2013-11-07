@@ -40,6 +40,7 @@ class SetupController extends AppController {
 		'Teachers.TeacherQualificationCertificate',
 		'Teachers.TeacherQualificationInstitution',
 		'Teachers.TeacherTrainingCategory',
+		'Teachers.TeacherLeaveType',
 		'Staff.Staff',
 		'SchoolYear',
 		'Students.StudentCustomFieldOption',
@@ -48,6 +49,7 @@ class SetupController extends AppController {
 		'Teachers.TeacherCustomField',
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffCustomField',
+		'Staff.StaffLeaveType',
 		'Bank',
 		'BankBranch',
 		'FinanceNature',
@@ -263,7 +265,8 @@ class SetupController extends AppController {
 			'Qualification Categories' => $this->TeacherQualificationCategory,
 			'Qualification Certificates' => $this->TeacherQualificationCertificate,
 			'Qualification Institutions' => $this->TeacherQualificationInstitution,
-			'Training Categories' => $this->TeacherTrainingCategory
+			'Training Categories' => $this->TeacherTrainingCategory,
+			'Leave Types' => $this->TeacherLeaveType
 		);
 		
 		foreach($teacherOptions as $name => $model) {
@@ -280,11 +283,8 @@ class SetupController extends AppController {
 		// End Teacher
 		
 		// Staff
-		$lookup[] = array('Staff' => array(
-			'optgroup' => true,
-			'name' => 'Positions',
-			'items' => $this->Staff->getLookupVariables()
-		));
+		$lookup[] = array('Staff' => array('optgroup' => true, 'name' => 'Positions', 'items' => $this->Staff->getLookupVariables()));
+		$lookup[] = array('Staff' => array('optgroup' => true, 'name' => 'Leave Types', 'items' => $this->StaffLeaveType->getLookupVariables()));
 		$lookup[] = array('Staff' => array(
 			'viewMethod' => array('action' => 'customFields', 'StaffCustomField'),
 			'view' => 'customFields',
