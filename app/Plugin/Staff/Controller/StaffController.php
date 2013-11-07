@@ -39,6 +39,8 @@ class StaffController extends StaffAppController {
             'Staff.StaffAttendance',
 			'Staff.StaffLeave',
 			'Staff.StaffLeaveType',
+            'Staff.StaffBehaviour',
+            'Staff.StaffBehaviourCategory',
             'SchoolYear',
             'ConfigItem'
         );
@@ -734,4 +736,41 @@ class StaffController extends StaffAppController {
 		}
 		return $this->redirect(array('action' => 'leaves'));
 	}
+
+
+    // Staff behaviour part
+    public function behaviour(){
+        $this->Navigation->addCrumb('List of Behaviour');
+
+        $data = $this->StaffBehaviour->getBehaviourData($this->staffId);
+        if(empty($data)) {
+            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
+
+        $this->set('data', $data);
+    }
+
+    public function behaviourView() {
+        $staffBehaviourId = $this->params['pass'][0];
+        $staffBehaviourObj = $this->StaffBehaviour->find('all',array('conditions'=>array('StaffBehaviour.id' => $staffBehaviourId)));
+
+        if(!empty($staffBehaviourObj)) {
+            $staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
+            $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+            $this->Navigation->addCrumb('Behaviour Details');
+
+            $yearOptions = array();
+            $yearOptions = $this->SchoolYear->getYearList();
+            $categoryOptions = array();
+            $categoryOptions = $this->StaffBehaviourCategory->getCategory();
+
+            $this->Session->write('StaffBehaviourId', $staffBehaviourId);
+            $this->set('categoryOptions', $categoryOptions);
+            $this->set('yearOptions', $yearOptions);
+            $this->set('staffBehaviourObj', $staffBehaviourObj);
+        } else {
+            $this->redirect(array('action' => 'behaviour'));
+        }
+    }
+
 }

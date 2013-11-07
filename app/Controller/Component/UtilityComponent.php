@@ -118,10 +118,14 @@ class UtilityComponent extends Component {
 		// Teachers
 		$msgList['TEACHER_NOT_FOUND'] = "No Teacher found.";
 		$msgList['SITE_TEACHER_ATTENDANCE_UPDATED'] = "The Teacher attendance data has been updated successfully.";
+		$msgList['TEACHER_NO_BEHAVIOUR_DATA'] = "No behaviour found.";
+		$msgList['SITE_TEACHER_BEHAVIOUR_EMPTY_TITLE'] = "Please enter a valid title.";
 		
 		// Staff
 		$msgList['STAFF_NOT_FOUND'] = "No Staff found.";
 		$msgList['SITE_STAFF_ATTENDANCE_UPDATED'] = "The Staff attendance data has been updated successfully.";
+		$msgList['STAFF_NO_BEHAVIOUR_DATA'] = "No behaviour found.";
+		$msgList['SITE_STAFF_BEHAVIOUR_EMPTY_TITLE'] = "Please enter a valid title.";
 
         // Areas
         $msgList['AREAS_NO_AREA_LEVEL'] = "Please add an area level to this area.";

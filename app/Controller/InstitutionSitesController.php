@@ -73,9 +73,13 @@ class InstitutionSitesController extends AppController {
 		'Teachers.Teacher',
 		'Teachers.TeacherAttendance',
 		'Teachers.TeacherCategory',
+		'Teachers.TeacherBehaviour',
+		'Teachers.TeacherBehaviourCategory',
 		'Staff.Staff',
 		'Staff.StaffAttendance',
 		'Staff.StaffCategory',
+		'Staff.StaffBehaviour',
+		'Staff.StaffBehaviourCategory',
         'SecurityGroupUser',
         'SecurityGroupArea'
 	);
@@ -2221,6 +2225,134 @@ class InstitutionSitesController extends AppController {
 		}
     }
 	// END TEACHER ATTENDANCE PART
+
+
+	// TEACHER BEHAVIOUR PART
+	 public function teachersBehaviour(){
+        extract($this->teachersCustFieldYrInits());
+        $this->Navigation->addCrumb('List of Behaviour');
+
+        $data = $this->TeacherBehaviour->getBehaviourData($id);
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('TEACHER_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
+		}
+		
+        $this->set('id', $id);
+        $this->set('data', $data);
+    }
+
+    public function teachersBehaviourAdd() {
+        if($this->request->is('get')) {
+            $teacherId = $this->params['pass'][0];
+            $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+            $name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
+            $this->Navigation->addCrumb('Add Behaviour');
+            
+            $yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			
+			$categoryOptions = array();
+			$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+			$this->set('id',$teacherId);
+           	$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+        } else {
+            $teacherBehaviourData = $this->data['InstitutionSiteTeacherBehaviour'];
+			$teacherBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->TeacherBehaviour->create();
+			if(!$this->TeacherBehaviour->save($teacherBehaviourData)){
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+			
+            $this->redirect(array('action' => 'teachersBehaviour', $teacherBehaviourData['teacher_id']));
+        }
+    }
+
+    public function teachersBehaviourView() {
+		$teacherBehaviourId = $this->params['pass'][0];
+		$teacherBehaviourObj = $this->TeacherBehaviour->find('all',array('conditions'=>array('TeacherBehaviour.id' => $teacherBehaviourId)));
+		
+		if(!empty($teacherBehaviourObj)) {
+			$teacherId = $teacherBehaviourObj[0]['TeacherBehaviour']['teacher_id'];
+            $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+            $name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
+			$this->Navigation->addCrumb('Behaviour Details');
+			
+			$yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			$categoryOptions = array();
+			$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+			
+			$this->Session->write('TeacherBehaviourId', $teacherBehaviourId);
+			$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+			$this->set('teacherBehaviourObj', $teacherBehaviourObj);
+		} else {
+			//$this->redirect(array('action' => 'classesList'));
+		}
+    }
+	
+	public function teachersBehaviourEdit() {
+		if($this->request->is('get')) {
+			$teacherBehaviourId = $this->params['pass'][0];
+			$teacherBehaviourObj = $this->TeacherBehaviour->find('all',array('conditions'=>array('TeacherBehaviour.id' => $teacherBehaviourId)));
+			
+			if(!empty($teacherBehaviourObj)) {
+				$teacherId = $teacherBehaviourObj[0]['TeacherBehaviour']['teacher_id'];
+				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+				$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
+				$this->Navigation->addCrumb('Edit Behaviour Details');
+				
+				$categoryOptions = array();
+				$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+				
+				$this->set('categoryOptions', $categoryOptions);
+				$this->set('teacherBehaviourObj', $teacherBehaviourObj);
+			} else {
+				//$this->redirect(array('action' => 'studentsBehaviour'));
+			}
+		 } else {
+			$teacherBehaviourData = $this->data['InstitutionSiteTeacherBehaviour'];
+			$teacherBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->TeacherBehaviour->create();
+			if(!$this->TeacherBehaviour->save($teacherBehaviourData)){
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+            
+            $this->redirect(array('action' => 'teachersBehaviourView', $teacherBehaviourData['id']));
+		 }
+	}
+	
+	public function teachersBehaviourDelete() {
+		if($this->Session->check('InstitutionSiteTeachersId') && $this->Session->check('TeacherBehaviourId')) {
+			$id = $this->Session->read('TeacherBehaviourId');
+			$teacherId = $this->Session->read('InstitutionSiteTeachersId');
+			$name = $this->TeacherBehaviour->field('title', array('TeacherBehaviour.id' => $id));
+			$this->TeacherBehaviour->delete($id);
+			$this->Utility->alert($name . ' have been deleted successfully.');
+			$this->redirect(array('action' => 'teachersBehaviour', $teacherId));
+		}
+	}
+	
+	public function teachersBehaviourCheckName() {
+		$this->autoRender = false;
+		$title = trim($this->params->query['title']);
+		
+		if(strlen($title) == 0) {
+			return $this->Utility->getMessage('SITE_TEACHER_BEHAVIOUR_EMPTY_TITLE');
+		} 
+		
+		return 'true';
+	}
+    // END TEACHER BEHAVIOUR PART
+
 	
 	// STAFF ATTENDANCE PART
     public function staffAttendance(){
@@ -2292,6 +2424,132 @@ class InstitutionSitesController extends AppController {
 		}
     }
 	// END STAFF ATTENDANCE PART
+
+	// STAFF BEHAVIOUR PART
+	public function staffBehaviour(){
+        extract($this->staffCustFieldYrInits());
+        $this->Navigation->addCrumb('List of Behaviour');
+
+        $data = $this->StaffBehaviour->getBehaviourData($id);
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('TEACHER_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
+		}
+		
+        $this->set('id', $id);
+        $this->set('data', $data);
+    }
+
+    public function staffBehaviourAdd() {
+        if($this->request->is('get')) {
+            $staffId = $this->params['pass'][0];
+            $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+            $name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+            $this->Navigation->addCrumb('Add Behaviour');
+            
+            $yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			
+			$categoryOptions = array();
+			$categoryOptions = $this->StaffBehaviourCategory->getCategory();
+			$this->set('id',$staffId);
+           	$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+        } else {
+            $staffBehaviourData = $this->data['InstitutionSiteStaffBehaviour'];
+			$staffBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->StaffBehaviour->create();
+			if(!$this->StaffBehaviour->save($staffBehaviourData)){
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+			
+            $this->redirect(array('action' => 'staffBehaviour', $staffBehaviourData['staff_id']));
+        }
+    }
+
+    public function staffBehaviourView() {
+		$staffBehaviourId = $this->params['pass'][0];
+		$staffBehaviourObj = $this->StaffBehaviour->find('all',array('conditions'=>array('StaffBehaviour.id' => $staffBehaviourId)));
+		
+		if(!empty($staffBehaviourObj)) {
+			$staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
+            $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+            $name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+			$this->Navigation->addCrumb('Behaviour Details');
+			
+			$yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			$categoryOptions = array();
+			$categoryOptions = $this->StaffBehaviourCategory->getCategory();
+			
+			$this->Session->write('StaffBehaviourId', $staffBehaviourId);
+			$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+			$this->set('staffBehaviourObj', $staffBehaviourObj);
+		} else {
+			//$this->redirect(array('action' => 'classesList'));
+		}
+    }
+	
+	public function staffBehaviourEdit() {
+		if($this->request->is('get')) {
+			$staffBehaviourId = $this->params['pass'][0];
+			$staffBehaviourObj = $this->StaffBehaviour->find('all',array('conditions'=>array('StaffBehaviour.id' => $staffBehaviourId)));
+			
+			if(!empty($staffBehaviourObj)) {
+				$staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
+				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+				$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+				$this->Navigation->addCrumb('Edit Behaviour Details');
+				
+				$categoryOptions = array();
+				$categoryOptions = $this->StaffBehaviourCategory->getCategory();
+				
+				$this->set('categoryOptions', $categoryOptions);
+				$this->set('staffBehaviourObj', $staffBehaviourObj);
+			} else {
+				//$this->redirect(array('action' => 'studentsBehaviour'));
+			}
+		 } else {
+			$staffBehaviourData = $this->data['InstitutionSiteStaffBehaviour'];
+			$staffBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->StaffBehaviour->create();
+			if(!$this->StaffBehaviour->save($staffBehaviourData)){
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+            
+            $this->redirect(array('action' => 'staffBehaviourView', $staffBehaviourData['id']));
+		 }
+	}
+	
+	public function staffBehaviourDelete() {
+		if($this->Session->check('InstitutionSiteStaffId') && $this->Session->check('StaffBehaviourId')) {
+			$id = $this->Session->read('StaffBehaviourId');
+			$staffId = $this->Session->read('InstitutionSiteStaffId');
+			$name = $this->StaffBehaviour->field('title', array('StaffBehaviour.id' => $id));
+			$this->StaffBehaviour->delete($id);
+			$this->Utility->alert($name . ' have been deleted successfully.');
+			$this->redirect(array('action' => 'staffBehaviour', $staffId));
+		}
+	}
+	
+	public function staffBehaviourCheckName() {
+		$this->autoRender = false;
+		$title = trim($this->params->query['title']);
+		
+		if(strlen($title) == 0) {
+			return $this->Utility->getMessage('SITE_STUDENT_BEHAVIOUR_EMPTY_TITLE');
+		} 
+		
+		return 'true';
+	}
+    // END STAFF BEHAVIOUR PART
 	
 	private function getAvailableYearId($yearList) {
 		$yearId = 0;
