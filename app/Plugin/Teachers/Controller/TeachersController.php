@@ -41,6 +41,8 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherQualificationCertificate',
         'Teachers.TeacherQualificationInstitution',
         'Teachers.TeacherAttendance',
+		'Teachers.TeacherLeave',
+		'Teachers.TeacherLeaveType',
         'SchoolYear',
 		'ConfigItem'
 	);
@@ -871,4 +873,78 @@ class TeachersController extends TeachersAppController {
 		
 		return $generate_no;
     }
+	
+	public function leaves() {
+		$this->Navigation->addCrumb('Leaves');
+		$teacherId = $this->Session->read('TeacherId');
+		$data = $this->TeacherLeave->find('all', array(
+			'recursive' => 0, 
+			'conditions' => array('TeacherLeave.teacher_id' => $teacherId),
+			'order' => array('TeacherLeave.date_from')
+		));
+		$this->set('data', $data);
+	}
+	
+	public function leavesAdd() {
+		$this->Navigation->addCrumb('Leaves');
+		$typeOptions = $this->TeacherLeaveType->findList(true);
+		
+		if($this->request->is('post')) {
+			$data = $this->request->data;
+			$data['TeacherLeave']['teacher_id'] = $this->Session->read('TeacherId');
+			$this->TeacherLeave->set($data);
+			if($this->TeacherLeave->validates()) {
+				$this->TeacherLeave->create();
+				$obj = $this->TeacherLeave->save($data);
+				if($obj) {
+					return $this->redirect(array('action' => 'leaves'));
+				}
+			}
+		}
+		$this->set('typeOptions', $typeOptions);
+	}
+	
+	public function leavesView($id=null) {
+		$this->Navigation->addCrumb('Leaves');
+		if(!is_null($id) && $this->TeacherLeave->exists($id)) { 
+			$typeOptions = $this->TeacherLeaveType->findList(true);
+			$data = $this->TeacherLeave->find('first', array('recursive' => 0, 'conditions' => array('TeacherLeave.id' => $id)));
+			$this->set('typeOptions', $typeOptions);
+			$this->set('data', $data);
+		} else {
+			return $this->redirect(array('action' => 'leaves'));
+		}
+	}
+	
+	public function leavesEdit($id=null) {
+		$this->Navigation->addCrumb('Leaves');
+		if(!is_null($id) && $this->TeacherLeave->exists($id)) {
+			if($this->request->is('post') || $this->request->is('put')) {
+				$data = $this->request->data;
+				$data['TeacherLeave']['id'] = $id;
+				$data['TeacherLeave']['teacher_id'] = $this->Session->read('TeacherId');
+				$this->TeacherLeave->set($data);
+				if($this->TeacherLeave->validates()) {
+					$obj = $this->TeacherLeave->save($data);
+					if($obj) {
+						$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+						return $this->redirect(array('action' => 'leavesView', $obj['TeacherLeave']['id']));
+					}
+				}
+			}
+			$typeOptions = $this->TeacherLeaveType->findList(true);
+			$this->request->data = $this->TeacherLeave->find('first', array('recursive' => 0, 'conditions' => array('TeacherLeave.id' => $id)));
+			$this->set('typeOptions', $typeOptions);
+		} else {
+			return $this->redirect(array('action' => 'leaves'));
+		}
+	}
+	
+	public function leavesDelete($id=null) {
+		if(!is_null($id) && $this->TeacherLeave->exists($id) && $this->Session->check('TeacherId')) {
+			$this->TeacherLeave->delete($id);
+			$this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
+		}
+		return $this->redirect(array('action' => 'leaves'));
+	}
 }
