@@ -47,11 +47,19 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			<?php endforeach; ?>
 		</div>
 	</div>
-	<div class="summary" style="margin-left: 10px; font-size: 11px;">
-	<?php 
-	foreach($total as $name => $val) {
-		echo $name . ' = ' . $val . '<br>';
-	}
-	?>
+	
+	<div class="table" style="margin: 30px auto 0 auto;">
+		<div class="table_head">
+			<div class="table_cell"><?php echo __('Type'); ?></div>
+			<div class="table_cell"><?php echo __('Total Days'); ?></div>
+		</div>
+		<div class="table_body">
+			<?php foreach($total as $name => $val): ?>
+			<div class="table_row">
+				<div class="table_cell"><?php echo $name; ?></div>
+				<div class="table_cell cell_number"><?php echo $val; ?></div>
+			</div>
+			<?php endforeach; ?>
+		</div>
 	</div>
 </div>

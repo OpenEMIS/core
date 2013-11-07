@@ -15,7 +15,17 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TeacherLeave extends TeachersAppModel {
-	public $belongsTo = array('TeacherLeaveType');
+	public $belongsTo = array(
+		'TeacherLeaveType',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		)
+	);
 	
 	public $validate = array(
 		'date_from' => array(
@@ -38,24 +48,22 @@ class TeacherLeave extends TeachersAppModel {
 	
 	public function checkOverlapDates($field = array()) {
 		$data = $this->data[$this->name];
+		$startDate = $data['date_from'];
+		$endDate = $data['date_to'];
+		
+		$conditions = array(
+			'OR' => array(
+				array('date_from <=' => $startDate, 'date_to >=' => $startDate),
+				array('date_from <=' => $endDate, 'date_to >=' => $endDate),
+				array('date_from >=' => $startDate, 'date_from <=' => $endDate)
+			),
+			'TeacherLeave.teacher_id' => $data['teacher_id']
+		);
+		
 		if(isset($data['id'])) {
-			$startDate = $data['date_from'];
-			$endDate = $data['date_to'];
-			
-			$check = $this->find('all', array(
-				'recursive' => -1,
-				'conditions' => array(
-					'OR' => array(
-						array('date_from <=' => $startDate, 'date_to >=' => $startDate),
-						array('date_from <=' => $endDate, 'date_to >=' => $endDate),
-						array('date_from >=' => $startDate, 'date_from <=' => $endDate)
-					),
-					'TeacherLeave.id <>' => $data['id'],
-					'TeacherLeave.teacher_id' => $data['teacher_id']
-				)
-			));
-			return empty($check);
+			$conditions['TeacherLeave.id <>'] = $data['id'];
 		}
-		return true;
+		$check = $this->find('all', array('recursive' => -1, 'conditions' => $conditions));
+		return empty($check);
 	}
 }

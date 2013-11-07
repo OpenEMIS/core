@@ -910,7 +910,7 @@ class TeachersController extends TeachersAppController {
 			$typeOptions = $this->TeacherLeaveType->findList(true);
 			$data = $this->TeacherLeave->find('first', array('recursive' => 0, 'conditions' => array('TeacherLeave.id' => $id)));
 			$this->set('typeOptions', $typeOptions);
-			$this->set('data', $data['TeacherLeave']);
+			$this->set('data', $data);
 		} else {
 			return $this->redirect(array('action' => 'leaves'));
 		}
