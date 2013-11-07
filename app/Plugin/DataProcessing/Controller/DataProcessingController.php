@@ -204,12 +204,15 @@ class DataProcessingController extends DataProcessingAppController {
             $description = Sanitize::escape($this->request->data['description']);
             $file = $this->request->data['doc_file'];
             if($this->validateFileFormat($file)){
-                $this->set('status', $this->buildSave($name, $description, $file, $type, $datasource));
+                $status = $this->buildSave($name, $description, $file, $type, $datasource);
             }else{
-                $this->set('status', array('msg' => __('Only XML file are allow.'), 'type' => 0));
+                $status = array('msg' => __('Only XML file are allow.'), 'type' => 0);
             }
-            $this->redirect(array('controller' => $this->name, 'action' => 'Build'));
+            $this->set('status', $status);
 
+            if(isset($status['type']) && $status['type'] > 0){
+                $this->redirect(array('controller' => $this->name, 'action' => 'Build'));
+            }  
         }
         $this->set('setting', array('maxFilesize' => Configure::read('xml.indicators.custom.size')));
         $this->set('controllerName', $this->name);

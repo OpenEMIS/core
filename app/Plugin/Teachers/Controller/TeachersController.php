@@ -27,6 +27,7 @@ class TeachersController extends TeachersAppController {
         'Institution',
 		'InstitutionSite',
         'InstitutionSiteTeacher',
+        'InstitutionSiteType',
         'Teachers.Teacher',
         'Teachers.TeacherHistory',
         'Teachers.TeacherCustomField',
@@ -150,14 +151,38 @@ class TeachersController extends TeachersAppController {
 				}
 			}
 		} else {
-			$search = $this->data['Search'];
+			//$search = $this->data['Search'];
+                        $search = $this->data;
 			if(!empty($search)) {
 				$this->Session->write($key, $search);
 			}
 			$this->redirect(array('action' => 'index'));
 		}
 	}
-
+        
+        public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Teacher'){
+             $this->layout = false;
+             $arrSettings = array(
+                                                            'CustomField'=>$customfields.'CustomField',
+                                                            'CustomFieldOption'=>$customfields.'CustomFieldOption',
+                                                            'CustomValue'=>$customfields.'CustomValue',
+                                                            'Year'=>''
+                                                        );
+             if($this->{$customfields}->hasField('institution_site_type_id')){
+                 $arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
+             }
+             $arrCustFields = array($customfields => $arrSettings);
+             
+            $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
+            $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+            $types = $this->InstitutionSiteType->findList(1);
+            $this->set("customfields",array($customfields));
+            $this->set('types',  $types);        
+            $this->set('typeSelected',  $sitetype);
+            $this->set('dataFields',  $dataFields);
+            $this->render('/Elements/customfields/search');
+        }
+        
     public function viewTeacher($id) {
         $this->Session->write('TeacherId', $id);
         $obj = $this->Teacher->find('first',array('conditions'=>array('Teacher.id' => $id)));
@@ -407,7 +432,7 @@ class TeachersController extends TeachersAppController {
                                     $this->TeacherCustomValue->create();
                                     $arrV['teacher_custom_field_id']  = $key;
                                     $arrV['value']  = $val['value'][$ctr];
-                                    $arrV['teacher_id']  = $this->TeacherId;
+                                    $arrV['teacher_id']  = $this->teacherId;
                                     $this->TeacherCustomValue->save($arrV);
                                     unset($arrCustomValues[$ctr]);
                                 }
