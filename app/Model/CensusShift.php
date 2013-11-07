@@ -40,7 +40,6 @@ class CensusShift extends AppModel {
 	
 	public function mergeSingleGradeData(&$class, $data) {
 		foreach($class as $key => &$obj) {
-			
 			$shift = array();
 			$source = 0;
 			$shift_pk = array();
@@ -54,7 +53,6 @@ class CensusShift extends AppModel {
 						$shift['shift_' . $shiftId] = $shiftValue;
 						$shift_pk['shift_pk_' . $shiftId] = $value['id'];
 					}
-				
 					$source = $value['source'];
 				}
 				
@@ -62,6 +60,31 @@ class CensusShift extends AppModel {
 			}
 		}
 	}
+
+
+	public function mergeMultiGradeData(&$class, $data) {
+		foreach($class as $key => &$obj) {
+			
+			$shift = array();
+			$source = 0;
+			$shift_pk = array();
+			foreach($data as $value) {
+				if($value['census_class_id'] == $key) {
+					if(isset($value['shift_id'])){
+						$shiftId = $value['shift_id'];
+						$shiftValue = $value['value'];
+
+						$shift['shift_' . $shiftId] = $shiftValue;
+						$shift_pk['shift_pk_' . $shiftId] = $value['id'];
+					}
+					$source = $value['source'];
+				}
+				
+				$obj = array_merge($obj, array_merge($shift, $shift_pk, array('shift_source' => $source, 'id' => $key)));
+			}
+		}
+	}
+
 	
 	public function getData($institutionSiteId, $yearId) {
 		$this->formatResult = true;
