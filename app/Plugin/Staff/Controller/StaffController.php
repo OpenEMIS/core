@@ -29,6 +29,9 @@ class StaffController extends StaffAppController {
             'InstitutionSite',
             'InstitutionSiteType',
             'InstitutionSiteStaff',
+            'Bank',
+            'Staff.StaffBankAccount',
+            'BankBranch',
             'Staff.InstitutionSiteStaff',
             'Staff.Staff',
             'Staff.StaffHistory',
@@ -734,4 +737,69 @@ class StaffController extends StaffAppController {
 		}
 		return $this->redirect(array('action' => 'leaves'));
 	}
+        
+        
+         /***BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already**/
+        public function bankAccounts() {
+                $this->Navigation->addCrumb('Bank Accounts');
+
+                if($this->request->is('post')) {
+                        $this->StaffBankAccount->create();
+                        $this->request->data['StaffBankAccount']['staff_id'] = $this->staffId;
+                        $this->StaffBankAccount->save($this->request->data['StaffBankAccount']);
+                }
+
+                $data = $this->StaffBankAccount->find('all',array('conditions'=>array('StaffBankAccount.staff_id'=>$this->staffId)));
+                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+                $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+                $this->set('data',$data);
+                $this->set('bank',$bank);
+                $this->set('banklist',$banklist);
+        }
+
+        public function bankAccountsEdit() {
+                $this->Navigation->addCrumb('Edit Bank Accounts');
+                if($this->request->is('post')) { // save
+
+                        foreach($this->request->data['StaffBankAccount'] as &$arrVal){
+                                if($arrVal['id'] == $this->data['StaffBankAccount']['active']){
+                                        $arrVal['active'] = 1;
+                                        unset($this->request->data['StaffBankAccount']['active']);
+                                        break;
+                                }
+                        }
+                        $this->StaffBankAccount->saveAll($this->request->data['StaffBankAccount']);
+                        $this->redirect(array('controller' => 'Staff', 'action' => 'bankAccounts'));
+                }
+                $data = $this->StaffBankAccount->find('all',array('conditions'=>array('StaffBankAccount.staff_id'=>$this->staffId)));
+                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+
+                $this->set('data',$data);
+                $this->set('bank',$bank);
+        }
+
+        public function bankAccountsDelete($id) {
+                if ($this->request->is('get')) {
+                        throw new MethodNotAllowedException();
+                }
+                $this->StaffBankAccount->id = $id;
+                $info = $this->StaffBankAccount->read();
+                if ($this->StaffBankAccount->delete($id)) {
+                         $message = __('Record Deleted!', true);
+
+                }else{
+                         $message = __('Error Occured. Please, try again.', true);
+                }
+                if($this->RequestHandler->isAjax()){
+                        $this->autoRender = false;
+                        $this->layout = 'ajax';
+                        echo json_encode(compact('message'));
+                }
+        }
+
+        public function bankAccountsBankBranches() {
+                $this->autoRender = false;
+                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+                echo json_encode($bank);
+        }
 }
