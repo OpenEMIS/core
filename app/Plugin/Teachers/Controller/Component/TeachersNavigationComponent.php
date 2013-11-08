@@ -34,6 +34,7 @@ class TeachersNavigationComponent extends Component {
 				'GENERAL' => array(
 					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
+                                        $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
 				'DETAILS' => array(
