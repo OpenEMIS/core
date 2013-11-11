@@ -16,6 +16,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 			<div class="table_cell cell_behaviour_date"><?php echo __('Date'); ?></div>
             <div class="table_cell cell_behaviour_category"><?php echo __('Category'); ?></div>
             <div class="table_cell cell_behaviour_title"><?php echo __('Title'); ?></div>
+        	<div class="table_cell"><?php echo __('Insitution Site'); ?></div>
 		</div>
 
 		<div class="table_body">
@@ -24,6 +25,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 				<div class="table_cell"><?php echo $this->Utility->formatDate($obj['StaffBehaviour']['date_of_behaviour']); ?></div>
                 <div class="table_cell"><?php echo $obj['StaffBehaviourCategory']['name']; ?></div>
                 <div class="table_cell"><?php echo $obj['StaffBehaviour']['title']; ?></div>
+                <div class="table_cell"><?php echo $obj['InstitutionSite']['name']; ?></div>
 			</div>
 			<?php } ?>
 		</div>

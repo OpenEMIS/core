@@ -37,10 +37,18 @@ class TeacherBehaviour extends TeachersAppModel {
 						'conditions' => array(
 							'TeacherBehaviourCategory.id = TeacherBehaviour.teacher_behaviour_category_id'
 						)
+					),
+					array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'type' => 'INNER',
+						'conditions' => array(
+							'InstitutionSite.id = TeacherBehaviour.institution_site_id'
+						)
 					)
 				),
             'fields' =>array('TeacherBehaviour.id','TeacherBehaviour.title','TeacherBehaviour.date_of_behaviour',
-							 'TeacherBehaviourCategory.name'),
+							 'TeacherBehaviourCategory.name', 'InstitutionSite.name', 'InstitutionSite.id'),
             'conditions'=>array('TeacherBehaviour.teacher_id' => $teacherId)));
 		return $list;
 	}

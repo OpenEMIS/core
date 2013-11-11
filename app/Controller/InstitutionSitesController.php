@@ -1984,6 +1984,9 @@ class InstitutionSitesController extends AppController {
 			
 			$categoryOptions = array();
 			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
 			$this->set('id',$studentId);
            	$this->set('categoryOptions', $categoryOptions);
 		    $this->set('yearOptions', $yearOptions);
@@ -2019,9 +2022,13 @@ class InstitutionSitesController extends AppController {
 			$yearOptions = $this->SchoolYear->getYearList();
 			$categoryOptions = array();
 			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
-			
+
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+
+			$this->set('institution_site_id', $this->institutionSiteId);
 			$this->Session->write('StudentBehavourId', $studentBehaviourId);
 			$this->set('categoryOptions', $categoryOptions);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
 		    $this->set('yearOptions', $yearOptions);
 			$this->set('studentBehaviourObj', $studentBehaviourObj);
 		} else {
@@ -2036,6 +2043,11 @@ class InstitutionSitesController extends AppController {
 			
 			if(!empty($studentBehaviourObj)) {
 				$studentId = $studentBehaviourObj[0]['StudentBehaviour']['student_id'];
+
+				if($studentBehaviourObj[0]['StudentBehaviour']['institution_site_id']!=$this->institutionSiteId){
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+ 					$this->redirect(array('action' => 'studentsBehaviourView', $studentBehaviourId));
+				}
 				$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
 				$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $studentId));
@@ -2043,7 +2055,8 @@ class InstitutionSitesController extends AppController {
 				
 				$categoryOptions = array();
 				$categoryOptions = $this->StudentBehaviourCategory->getCategory();
-				
+				$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+				$this->set('institutionSiteOptions', $institutionSiteOptions);
 				$this->set('categoryOptions', $categoryOptions);
 				$this->set('studentBehaviourObj', $studentBehaviourObj);
 			} else {
@@ -2071,6 +2084,11 @@ class InstitutionSitesController extends AppController {
 			$id = $this->Session->read('StudentBehavourId');
 			$studentId = $this->Session->read('InstitutionSiteStudentId');
 			$name = $this->StudentBehaviour->field('title', array('StudentBehaviour.id' => $id));
+			$institution_site_id = $this->StudentBehaviour->field('institution_site_id', array('StudentBehaviour.id' => $id));
+			if($institution_site_id!=$this->institutionSiteId){
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+				$this->redirect(array('action' => 'studentsBehaviourView', $id));
+			}
 			$this->StudentBehaviour->delete($id);
 			$this->Utility->alert($name . ' have been deleted successfully.');
 			$this->redirect(array('action' => 'studentsBehaviour', $studentId));
@@ -2254,6 +2272,9 @@ class InstitutionSitesController extends AppController {
 			
 			$categoryOptions = array();
 			$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
 			$this->set('id',$teacherId);
            	$this->set('categoryOptions', $categoryOptions);
 		    $this->set('yearOptions', $yearOptions);
@@ -2286,6 +2307,9 @@ class InstitutionSitesController extends AppController {
 			$yearOptions = $this->SchoolYear->getYearList();
 			$categoryOptions = array();
 			$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
 			
 			$this->Session->write('TeacherBehaviourId', $teacherBehaviourId);
 			$this->set('categoryOptions', $categoryOptions);
@@ -2303,6 +2327,10 @@ class InstitutionSitesController extends AppController {
 			
 			if(!empty($teacherBehaviourObj)) {
 				$teacherId = $teacherBehaviourObj[0]['TeacherBehaviour']['teacher_id'];
+				if($teacherBehaviourObj[0]['TeacherBehaviour']['institution_site_id']!=$this->institutionSiteId){
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+ 					$this->redirect(array('action' => 'teachersBehaviourView', $teacherBehaviourId));
+				}
 				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
 				$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
@@ -2310,6 +2338,8 @@ class InstitutionSitesController extends AppController {
 				
 				$categoryOptions = array();
 				$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+				$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+				$this->set('institutionSiteOptions', $institutionSiteOptions);
 				
 				$this->set('categoryOptions', $categoryOptions);
 				$this->set('teacherBehaviourObj', $teacherBehaviourObj);
@@ -2335,6 +2365,11 @@ class InstitutionSitesController extends AppController {
 			$id = $this->Session->read('TeacherBehaviourId');
 			$teacherId = $this->Session->read('InstitutionSiteTeachersId');
 			$name = $this->TeacherBehaviour->field('title', array('TeacherBehaviour.id' => $id));
+			$institution_site_id = $this->TeacherBehaviour->field('institution_site_id', array('TeacherBehaviour.id' => $id));
+			if($institution_site_id!=$this->institutionSiteId){
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+				$this->redirect(array('action' => 'teachersBehaviourView', $id));
+			}
 			$this->TeacherBehaviour->delete($id);
 			$this->Utility->alert($name . ' have been deleted successfully.');
 			$this->redirect(array('action' => 'teachersBehaviour', $teacherId));
@@ -2452,6 +2487,9 @@ class InstitutionSitesController extends AppController {
 			
 			$categoryOptions = array();
 			$categoryOptions = $this->StaffBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
 			$this->set('id',$staffId);
            	$this->set('categoryOptions', $categoryOptions);
 		    $this->set('yearOptions', $yearOptions);
@@ -2479,12 +2517,14 @@ class InstitutionSitesController extends AppController {
             $name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
            	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
 			$this->Navigation->addCrumb('Behaviour Details');
-			
+		
 			$yearOptions = array();
 			$yearOptions = $this->SchoolYear->getYearList();
 			$categoryOptions = array();
 			$categoryOptions = $this->StaffBehaviourCategory->getCategory();
-			
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
 			$this->Session->write('StaffBehaviourId', $staffBehaviourId);
 			$this->set('categoryOptions', $categoryOptions);
 		    $this->set('yearOptions', $yearOptions);
@@ -2501,6 +2541,10 @@ class InstitutionSitesController extends AppController {
 			
 			if(!empty($staffBehaviourObj)) {
 				$staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
+				if($staffBehaviourObj[0]['StaffBehaviour']['institution_site_id']!=$this->institutionSiteId){
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+ 					$this->redirect(array('action' => 'staffBehaviourView', $staffBehaviourId));
+				}
 				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
 				$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
@@ -2508,7 +2552,9 @@ class InstitutionSitesController extends AppController {
 				
 				$categoryOptions = array();
 				$categoryOptions = $this->StaffBehaviourCategory->getCategory();
-				
+				$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			 	$this->set('institution_site_id', $this->institutionSiteId);
+			 	$this->set('institutionSiteOptions', $institutionSiteOptions);
 				$this->set('categoryOptions', $categoryOptions);
 				$this->set('staffBehaviourObj', $staffBehaviourObj);
 			} else {
@@ -2533,6 +2579,11 @@ class InstitutionSitesController extends AppController {
 			$id = $this->Session->read('StaffBehaviourId');
 			$staffId = $this->Session->read('InstitutionSiteStaffId');
 			$name = $this->StaffBehaviour->field('title', array('StaffBehaviour.id' => $id));
+			$institution_site_id = $this->StaffBehaviour->field('institution_site_id', array('StaffBehaviour.id' => $id));
+			if($institution_site_id!=$this->institutionSiteId){
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+				$this->redirect(array('action' => 'staffsBehaviourView', $id));
+			}
 			$this->StaffBehaviour->delete($id);
 			$this->Utility->alert($name . ' have been deleted successfully.');
 			$this->redirect(array('action' => 'staffBehaviour', $staffId));

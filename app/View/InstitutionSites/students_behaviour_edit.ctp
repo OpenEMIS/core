@@ -25,6 +25,12 @@ echo $this->Html->script('app.date', false);
 	echo $this->Form->hidden('id', array('value' => $data['id']));
 	echo $this->Form->hidden('student_id', array('value' => $data['student_id']));
 	?>
+	<div class="row edit">
+        <div class="label"><?php echo __('Institution Site'); ?></div>
+        <div class="value">
+        <?php echo $institutionSiteOptions[$data['institution_site_id']]; ?>
+        </div>
+    </div>
 	
     <div class="row edit">
 		<div class="label"><?php echo __('Category'); ?></div>
