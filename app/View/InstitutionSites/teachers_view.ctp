@@ -19,6 +19,9 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 		if($_accessControl->check($this->params['controller'], 'teachersAttendance')) {
 			echo $this->Html->link(__('Attendance'), array('action' => 'teachersAttendance'), array('class' => 'divider'));
 		}
+		if($_accessControl->check($this->params['controller'], 'teachersBehaviour')) {
+			echo $this->Html->link(__('Behaviour'), array('action' => 'teachersBehaviour', $obj['id']), array('class' => 'divider'));
+		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>

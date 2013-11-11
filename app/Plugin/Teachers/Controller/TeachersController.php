@@ -47,6 +47,8 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherAttendance',
 		'Teachers.TeacherLeave',
 		'Teachers.TeacherLeaveType',
+        'Teachers.TeacherBehaviour',
+        'Teachers.TeacherBehaviourCategory',
         'SchoolYear',
 		'ConfigItem'
 	);
@@ -1017,4 +1019,39 @@ class TeachersController extends TeachersAppController {
                 $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
                 echo json_encode($bank);
         }
+
+    // Staff behaviour part
+    public function behaviour(){
+        $this->Navigation->addCrumb('List of Behaviour');
+
+        $data = $this->TeacherBehaviour->getBehaviourData($this->teacherId);
+        if(empty($data)) {
+            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
+
+        $this->set('data', $data);
+    }
+
+    public function behaviourView() {
+        $teacherBehaviourId = $this->params['pass'][0];
+        $teacherBehaviourObj = $this->TeacherBehaviour->find('all',array('conditions'=>array('TeacherBehaviour.id' => $teacherBehaviourId)));
+
+        if(!empty($teacherBehaviourObj)) {
+            $teacherId = $teacherBehaviourObj[0]['TeacherBehaviour']['teacher_id'];
+            $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+            $this->Navigation->addCrumb('Behaviour Details');
+
+            $yearOptions = array();
+            $yearOptions = $this->SchoolYear->getYearList();
+            $categoryOptions = array();
+            $categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+
+            $this->Session->write('TeacherBehaviourId', $teacherBehaviourId);
+            $this->set('categoryOptions', $categoryOptions);
+            $this->set('yearOptions', $yearOptions);
+            $this->set('teacherBehaviourObj', $teacherBehaviourObj);
+        } else {
+            $this->redirect(array('action' => 'behaviour'));
+        }
+    }
 }
