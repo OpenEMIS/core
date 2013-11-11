@@ -41,6 +41,7 @@ class SetupController extends AppController {
 		'Teachers.TeacherQualificationInstitution',
 		'Teachers.TeacherTrainingCategory',
 		'Teachers.TeacherLeaveType',
+		'Teachers.TeacherBehaviourCategory',
 		'Staff.Staff',
 		'SchoolYear',
 		'Students.StudentCustomFieldOption',
@@ -50,6 +51,7 @@ class SetupController extends AppController {
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffCustomField',
 		'Staff.StaffLeaveType',
+		'Staff.StaffBehaviourCategory',
 		'Bank',
 		'BankBranch',
 		'FinanceNature',
@@ -280,6 +282,11 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Custom Fields'
 		));
+		$lookup[] = array('Teacher' => array(
+			'optgroup' => true,
+			'name' => 'Behaviour Category',
+			'items' => $this->TeacherBehaviourCategory->getLookupVariables()
+		));
 		// End Teacher
 		
 		// Staff
@@ -292,6 +299,11 @@ class SetupController extends AppController {
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
 			'name' => 'Custom Fields'
+		));
+		$lookup[] = array('Staff' => array(
+			'optgroup' => true,
+			'name' => 'Behaviour Category',
+			'items' => $this->StaffBehaviourCategory->getLookupVariables()
 		));
 		// End Staff
 		

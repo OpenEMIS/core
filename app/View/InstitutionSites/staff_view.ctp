@@ -19,6 +19,9 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 		if($_accessControl->check($this->params['controller'], 'staffAttendance')) {
 			echo $this->Html->link(__('Attendance'), array('action' => 'staffAttendance'), array('class' => 'divider'));
 		}
+		if($_accessControl->check($this->params['controller'], 'staffBehaviour')) {
+			echo $this->Html->link(__('Behaviour'), array('action' => 'staffBehaviour', $obj['id']), array('class' => 'divider'));
+		}
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
