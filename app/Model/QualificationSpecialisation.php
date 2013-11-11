@@ -14,22 +14,22 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class QualificationSpecialization extends AppModel {
-	public $useTable = "qualification_specializations";
+class QualificationSpecialisation extends AppModel {
+	public $useTable = "qualification_specialisations";
 	public $hasMany = array('TeacherQualification', 'StaffQualification');
 	
 	public function getLookupVariables() {
 		$lookup = array(
-			'Qualification Specializations' => array('model' => 'QualificationSpecialization')
+			'Qualification Specialisations' => array('model' => 'QualificationSpecialisation')
 		);
 		return $lookup;
 	}
 
 	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('QualificationSpecialization.order')));
+		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('QualificationSpecialisation.order')));
 		$list = array();
 		foreach($data as $obj){
-			$list[$obj['QualificationSpecialization']['id']] = $obj['QualificationSpecialization']['name'];
+			$list[$obj['QualificationSpecialisation']['id']] = $obj['QualificationSpecialisation']['name'];
 		}
 
 		return $list;

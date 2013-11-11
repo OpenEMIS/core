@@ -43,8 +43,8 @@ echo $this->Html->script('search', false);
     </div>
 
     <div class="row">
-        <div class="label"><?php echo __('Major/Specialization'); ?></div>
-        <div class="value"><?php echo $specializations[$data['qualification_specialization_id']]; ?></div>
+        <div class="label"><?php echo __('Major/Specialisation'); ?></div>
+        <div class="value"><?php echo $specializations[$data['qualification_specialisation_id']]; ?></div>
     </div>
 
     <div class="row">
