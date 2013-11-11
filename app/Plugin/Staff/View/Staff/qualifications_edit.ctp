@@ -1,19 +1,19 @@
 <?php echo $this->element('breadcrumb'); ?>
-<?php echo $this->Html->script('/Teachers/js/qualifications', false); ?>
+<?php echo $this->Html->script('/Staff/js/qualifications', false); ?>
 <?php echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false)); ?>
 <?php echo $this->Html->script('jquery-ui.min', false); ?>
 
-<div id="qualification" class="content_wrapper edit add" url="Teachers/ajax_find_institution/">
+<div id="qualification" class="content_wrapper edit add" url="Staff/ajax_find_institution/">
 	<?php
-	echo $this->Form->create('TeacherQualification', array(
-		'url' => array('controller' => 'Teachers', 'action' => 'qualificationsEdit'),
+	echo $this->Form->create('StaffQualification', array(
+		'url' => array('controller' => 'Staff', 'action' => 'qualificationsEdit'),
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default'),
         'type' => 'file'
 	));
 	?>
 	<fieldset class="section_break">
 		<legend><?php echo __('Information'); ?></legend>
-		<?php echo $this->Form->input('TeacherQualification.id');?>
+		<?php echo $this->Form->input('StaffQualification.id');?>
 		 <div class="row">
             <div class="label"><?php echo __('Level'); ?></div>
             <div class="value"><?php echo $this->Form->input('qualification_level_id', array('empty'=>'--Select--', 'options'=>$levels)); ?></div>
@@ -21,7 +21,7 @@
         <div class="row">
             <div class="label"><?php echo __('Institution'); ?></div>
             <div class="value">
-                <?php echo $this->Form->input('qualification_institution', array('id' => 'search', 'onkeyup'=>'objTeacherQualifications.clearValue()', 'class'=>'default qualification-institution-name', 'placeholder' => __('Institution Name')));?>
+                <?php echo $this->Form->input('qualification_institution', array('id' => 'search', 'onkeyup'=>'objStaffQualifications.clearValue()', 'class'=>'default qualification-institution-name', 'placeholder' => __('Institution Name')));?>
                 <?php echo $this->Form->hidden('qualification_institution_id', array('class' => 'qualification-institution-id')); ?>
             </div>
         </div>
@@ -53,9 +53,9 @@
             <div class="label"><?php echo __('Attachment'); ?></div>
             <div class="value file_input">
             <?php echo $this->Form->input('file_name', array('type'=>'hidden')); ?>     
-            <?php if(!empty($this->request->data['TeacherQualification']['file_name'])){ 
-                $link = $this->Html->link($this->request->data['TeacherQualification']['file_name'], array('action' => 'qualificationAttachmentsDownload', $this->request->data['TeacherQualification']['id']));
-                $deleteLink = $this->Html->link('Delete', array('action' => 'qualificationAttachmentsDelete', $this->request->data['TeacherQualification']['id']));
+            <?php if(!empty($this->request->data['StaffQualification']['file_name'])){ 
+                $link = $this->Html->link($this->request->data['StaffQualification']['file_name'], array('action' => 'qualificationAttachmentsDownload', $this->request->data['StaffQualification']['id']));
+                $deleteLink = $this->Html->link('Delete', array('action' => 'qualificationAttachmentsDelete', $this->request->data['StaffQualification']['id']));
                 echo $link . ' - ' . $deleteLink;
                 echo '<br />'; 
             } ?>

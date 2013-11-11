@@ -1,7 +1,7 @@
 <?php 
 echo $this->Html->css('jquery_ui', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => false));
+echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 //echo $this->Html->script('/Teachers/js/qualifications', false);
 ?>
@@ -20,8 +20,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	</h1>
 	<?php echo $this->element('alert'); ?>
 
-	<div class="table allow_hover" action="Teachers/qualificationsView/">
-		<div class="table_head" url="Teachers/qualifications/">
+	<div class="table allow_hover" action="Staff/qualificationsView/">
+		<div class="table_head" url="Staff/qualifications/">
 			<div class="table_cell"><?php echo __('Graduate Year'); ?></div>
 			<div class="table_cell"><?php echo __('Level'); ?></div>
 			<div class="table_cell"><?php echo __('Qualification Title'); ?></div>
@@ -41,5 +41,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			<?php endforeach; ?>
 		</div>
 	</div>
+
 
 </div>
