@@ -1,31 +1,68 @@
-<?php
-$index = $order;
-// $fieldName = sprintf('data[Training][%s][%%s]', $index);
-?>
+<?php echo $this->element('breadcrumb'); ?>
+<?php echo $this->Html->script('/Teachers/js/qualifications', false); ?>
+<?php echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false)); ?>
+<?php echo $this->Html->script('jquery-ui.min', false); ?>
 
-<div data-id="<?php echo $index; ?>" class="table_row new_row <?php echo $order%2==0 ? 'even' : ''; ?>">
-    <div class="table_cell">
-        <input type="hidden" value="0" name="data[TeacherQualification][<?php echo $index;?>][id]" />
-        <?php echo $this->Utility->getDatePicker($this->Form, 'issue_date', array('name' => "data[TeacherQualification][".$index."][issue_date]", 'desc' => true)); ?>
+<div id="qualification" class="content_wrapper edit add" url="Teachers/ajax_find_institution/">
+    <h1><?php echo __('Add New Qualification'); ?></h1>
+
+    <?php
+
+    echo $this->Form->create('TeacherQualification', array(
+        'url' => array('controller' => 'Teachers', 'action' => 'qualificationsAdd'),
+        'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default'),
+        'type' => 'file'
+    ));
+    ?>
+
+    <fieldset class="section_break">
+        <legend><?php echo __('Information'); ?></legend>
+        <div class="row">
+            <div class="label"><?php echo __('Level'); ?></div>
+            <div class="value"><?php echo $this->Form->input('qualification_level_id', array('empty'=>'--Select--', 'options'=>$levels)); ?></div>
+        </div>
+        <div class="row">
+            <div class="label"><?php echo __('Institution'); ?></div>
+            <div class="value">
+                <?php echo $this->Form->input('qualification_institution', array('id' => 'search', 'onkeyup'=>'objTeacherQualifications.clearValue()','class'=>'default qualification-institution-name', 'placeholder' => __('Institution Name')));?>
+                <?php echo $this->Form->hidden('qualification_institution_id', array('class' => 'qualification-institution-id')); ?>
+            </div>
+        </div>
+        <div class="row">
+            <div class="label"><?php echo __('Institution Country'); ?></div>
+            <div class="value"><?php echo $this->Form->input('qualification_institution_country'); ?></div>
+        </div>
+        <div class="row">
+            <div class="label"><?php echo __('Qualification Title'); ?></div>
+            <div class="value"><?php echo $this->Form->input('qualification_title'); ?></div>
+        </div>
+        <div class="row">
+            <div class="label"><?php echo __('Major/Specialization'); ?></div>
+            <div class="value"><?php echo $this->Form->input('qualification_specialization_id', array('empty'=>'--Select--', 'options'=>$specializations)); ?></div>
+        </div>
+        <div class="row">
+            <div class="label"><?php echo __('Graduation Year'); ?></div>
+            <div class="value"><?php echo $this->Form->input('graduate_year'); ?></div>
+        </div>
+        <div class="row">
+            <div class="label"><?php echo __('Document No'); ?></div>
+            <div class="value"><?php echo $this->Form->input('document_no'); ?></div>
+        </div>
+         <div class="row">
+            <div class="label"><?php echo __('Grade/Score'); ?></div>
+            <div class="value"><?php echo $this->Form->input('gpa'); ?></div>
+        </div>
+       <div class="row">
+            <div class="label"><?php echo __('Attachment'); ?></div>
+            <div class="value file_input">
+               <?php echo $this->Form->input('files', array('name'=>'files', 'type'=>'file', 'onchange'=>'attachments.updateFile(this)', 'onmouseout'=>'attachments.updateFile(this)')); ?>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="controls view_controls">
+        <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if(jsDate.checkValidDateClosed() && Config.checkValidate()){ return true; }else{ return false; }" />
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
     </div>
-    <div class="table_cell">
-        <select id="certificates" class="full_width" name="data[TeacherQualification][<?php echo $index;?>][teacher_qualification_certificate_id]">
-        <option value="0">--Select--</option> 
-        <?php foreach($certificates as $certificate): ?>
-            <option value="<?php echo $certificate['TeacherQualificationCertificate']['id']; ?>"><?php echo $certificate['TeacherQualificationCertificate']['name']; ?></option>
-        <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="table_cell"><div class="input_wrapper"><input type="text" name="data[TeacherQualification][<?php echo $index;?>][certificate_no]" value="" /></div></div>
-    <div class="table_cell">
-        <select class="full_width" name="data[TeacherQualification][<?php echo $index;?>][teacher_qualification_institution_id]">
-        <option value="0">--Select--</option> 
-        <?php foreach($institutes as $institute): ?>
-            <option value="<?php echo $institute['TeacherQualificationInstitution']['id']; ?>"><?php echo $institute['TeacherQualificationInstitution']['name']; ?></option>
-        <?php endforeach; ?>
-        </select>
-    </div>
-    <div class="table_cell">
-        <span class="icon_delete" title="<?php echo __("Delete"); ?>" onClick="objTeacherQualifications.removeRow(this)"></span>
-    </div>
+    <?php echo $this->Form->end(); ?>
 </div>
