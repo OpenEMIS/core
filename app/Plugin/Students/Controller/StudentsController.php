@@ -31,6 +31,9 @@ class StudentsController extends StudentsAppController {
         'InstitutionSiteClass',
         'InstitutionSiteType',
 	'InstitutionSiteClassGradeStudent',
+        'Bank',
+        'BankBranch',
+        'Students.StudentBankAccount',
         'Students.Student',
         'Students.StudentHistory',
         'Students.StudentCustomField',
@@ -746,5 +749,70 @@ class StudentsController extends StudentsAppController {
 		}
 		
 		return $generate_no;
+    }
+    /***BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already**/
+    public function bankAccounts() {
+            $this->Navigation->addCrumb('Bank Accounts');
+
+            if($this->request->is('post')) {
+                    $this->StudentBankAccount->create();
+                    $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
+                    $this->StudentBankAccount->save($this->request->data['StudentBankAccount']);
+            }
+
+            $data = $this->StudentBankAccount->find('all',array('conditions'=>array('StudentBankAccount.student_id'=>$this->studentId)));
+            $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+            $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+            $this->set('data',$data);
+            $this->set('bank',$bank);
+            $this->set('banklist',$banklist);
+    }
+
+    public function bankAccountsEdit() {
+            $this->Navigation->addCrumb('Edit Bank Accounts');
+            if($this->request->is('post')) { // save
+
+                    foreach($this->request->data['StudentBankAccount'] as &$arrVal){
+                            if($arrVal['id'] == $this->data['StudentBankAccount']['active']){
+                                    $arrVal['active'] = 1;
+                                    unset($this->request->data['StudentBankAccount']['active']);
+                                    break;
+                            }
+                    }
+                    //pr($this->request->data['InstitutionSiteBankAccount']);
+                    //die;
+                    $this->StudentBankAccount->saveAll($this->request->data['StudentBankAccount']);
+                    $this->redirect(array('controller' => 'Students', 'action' => 'bankAccounts'));
+            }
+            $data = $this->StudentBankAccount->find('all',array('conditions'=>array('StudentBankAccount.student_id'=>$this->studentId)));
+            $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+
+            $this->set('data',$data);
+            $this->set('bank',$bank);
+    }
+
+    public function bankAccountsDelete($id) {
+            if ($this->request->is('get')) {
+                    throw new MethodNotAllowedException();
+            }
+            $this->StudentBankAccount->id = $id;
+            $info = $this->StudentBankAccount->read();
+            if ($this->StudentBankAccount->delete($id)) {
+                     $message = __('Record Deleted!', true);
+
+            }else{
+                     $message = __('Error Occured. Please, try again.', true);
+            }
+            if($this->RequestHandler->isAjax()){
+                    $this->autoRender = false;
+                    $this->layout = 'ajax';
+                    echo json_encode(compact('message'));
+            }
+    }
+
+    public function bankAccountsBankBranches() {
+            $this->autoRender = false;
+            $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+            echo json_encode($bank);
     }
 }
