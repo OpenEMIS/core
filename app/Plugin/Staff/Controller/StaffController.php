@@ -764,6 +764,9 @@ class StaffController extends StaffAppController {
             $categoryOptions = array();
             $categoryOptions = $this->StaffBehaviourCategory->getCategory();
 
+            $institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+            $this->set('institution_site_id', $staffBehaviourObj[0]['StaffBehaviour']['institution_site_id']);
+            $this->set('institutionSiteOptions', $institutionSiteOptions);
             $this->Session->write('StaffBehaviourId', $staffBehaviourId);
             $this->set('categoryOptions', $categoryOptions);
             $this->set('yearOptions', $yearOptions);
