@@ -34,8 +34,8 @@
             <div class="value"><?php echo $this->Form->input('qualification_title'); ?></div>
         </div>
         <div class="row">
-            <div class="label"><?php echo __('Major/Specialization'); ?></div>
-            <div class="value"><?php echo $this->Form->input('qualification_specialization_id', array('empty'=>'--Select--', 'options'=>$specializations)); ?></div>
+            <div class="label"><?php echo __('Major/Specialisation'); ?></div>
+            <div class="value"><?php echo $this->Form->input('qualification_specialisation_id', array('empty'=>'--Select--', 'options'=>$specializations)); ?></div>
         </div>
         <div class="row">
             <div class="label"><?php echo __('Graduation Year'); ?></div>

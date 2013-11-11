@@ -39,7 +39,7 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherQualification',
         'QualificationLevel',
         'QualificationInstitution',
-        'QualificationSpecialization',
+        'QualificationSpecialisation',
         'Teachers.TeacherAttendance',
 		'Teachers.TeacherLeave',
 		'Teachers.TeacherLeaveType',
@@ -577,10 +577,7 @@ class TeachersController extends TeachersAppController {
         $this->set('data2',$data2);
     }
 
-    /**
-     * Qualifications that the teacher has attained till date
-     * @return [type] [description]
-     */
+
     /**
      * Qualifications that the teacher has attained till date
      * @return [type] [description]
@@ -638,7 +635,7 @@ class TeachersController extends TeachersAppController {
         }
 
         $levels = $this->QualificationLevel->getOptions();
-        $specializations = $this->QualificationSpecialization->getOptions();
+        $specializations = $this->QualificationSpecialisation->getOptions();
         $institutes = $this->QualificationInstitution->getOptions();
         
         $this->UserSession->readStatusSession($this->request->action);
@@ -655,7 +652,7 @@ class TeachersController extends TeachersAppController {
             $this->Navigation->addCrumb('Qualification Details');
             
             $levels = $this->QualificationLevel->getOptions();
-            $specializations = $this->QualificationSpecialization->getOptions();
+            $specializations = $this->QualificationSpecialisation->getOptions();
             $institutes = $this->QualificationInstitution->getOptions();
 
             $this->Session->write('TeacherQualificationId', $teacherQualificationId);
@@ -673,7 +670,7 @@ class TeachersController extends TeachersAppController {
     public function qualificationsEdit() {
         $levels = $this->QualificationLevel->getOptions();
         $institutes = $this->QualificationInstitution->getOptions();
-        $specializations = $this->QualificationSpecialization->getOptions();
+        $specializations = $this->QualificationSpecialisation->getOptions();
 
         $this->set('levels', $levels);
         $this->set('institutes', $institutes);

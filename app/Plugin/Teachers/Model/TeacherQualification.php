@@ -51,7 +51,7 @@ class TeacherQualification extends TeachersAppModel {
                 'message' => 'Please enter a valid Qualification Level'
             )
         ),
-        'qualification_specialization_id' => array(
+        'qualification_specialisation_id' => array(
             'required' => array(
                 'rule' => 'notEmpty',
                 'required' => true,
@@ -70,11 +70,11 @@ class TeacherQualification extends TeachersAppModel {
                     'QualificationInstitution.id = TeacherQualification.qualification_institution_id'
                 )
             ),
-            array('table' => 'qualification_specializations',
-                'alias' => 'QualificationSpecialization',
+            array('table' => 'qualification_specialisations',
+                'alias' => 'QualificationSpecialisation',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'QualificationSpecialization.id = TeacherQualification.qualification_specialization_id'
+                    'QualificationSpecialisation.id = TeacherQualification.qualification_specialisation_id'
                 )
             ),
             array('table' => 'qualification_levels',
@@ -97,8 +97,8 @@ class TeacherQualification extends TeachersAppModel {
             'QualificationInstitution.name as institute',
             'TeacherQualification.qualification_level_id as level_id',
             'QualificationLevel.name as level',
-            'TeacherQualification.qualification_specialization_id as specialization_id',
-            'QualificationSpecialization.name as specialization',
+            'TeacherQualification.qualification_specialisation_id as specialisation_id',
+            'QualificationSpecialisation.name as specialisation',
         );
 
         $options['conditions'] = array(
