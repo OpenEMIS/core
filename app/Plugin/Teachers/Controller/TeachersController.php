@@ -689,6 +689,7 @@ class TeachersController extends TeachersAppController {
                 $this->Navigation->addCrumb('Edit Qualification Details');
                 $teacherQualificationObj['TeacherQualification']['qualification_institution'] = $institutes[$teacherQualificationObj['TeacherQualification']['qualification_institution_id']];
                 $this->request->data = $teacherQualificationObj;
+                $this->set('id', $teacherQualificationId);
             } else {
                 //$this->redirect(array('action' => 'studentsBehaviour'));
             }

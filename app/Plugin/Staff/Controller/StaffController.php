@@ -852,9 +852,11 @@ class StaffController extends StaffAppController {
                 $this->Navigation->addCrumb('Edit Qualification Details');
                 $staffQualificationObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
                 $this->request->data = $staffQualificationObj;
+                $this->set('id', $staffQualificationId);
             } else {
                 //$this->redirect(array('action' => 'studentsBehaviour'));
             }
+
          } else {
             $staffQualificationData = $this->data['StaffQualification'];
             $staffQualificationData['staff_id'] = $this->staffId;
