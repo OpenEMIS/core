@@ -1,5 +1,6 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => false));
 ?>
 
@@ -66,28 +67,40 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 		<legend><?php echo __('Employment'); ?></legend>
 		<div class="table full_width" style="margin-top: 10px;">
 			<div class="table_head">
-				<div class="table_cell"><?php echo __('Position Number'); ?></div>
-				<div class="table_cell"><?php echo __('Position'); ?></div>
-				<div class="table_cell" style="width: 80px"><?php echo __('From'); ?></div>
-				<div class="table_cell" style="width: 80px"><?php echo __('To'); ?></div>
-				<div class="table_cell" style="width: 60px"><?php echo __('Hours'); ?></div>
-				<div class="table_cell" style="width: 70px"><?php echo __('Salary'); ?></div>
+				<div class="table_cell" style="width: 180px;"><?php echo __('Position'); ?></div>
+				<div class="table_cell" style="width: 220px;"><?php echo __('Details'); ?></div>
+				<div class="table_cell"><?php echo __('Salary'); ?></div>
+				<div class="table_cell"><?php echo __('Status'); ?></div>
 			</div>
 			
-			<div class="table_body">
+			<div class="table_body edit">
 				<?php foreach($positions as $obj) { ?>
 				<div class="table_row">
-					<div class="table_cell"><?php echo $obj['InstitutionSiteTeacher']['position_no']; ?></div>
-					<div class="table_cell"><?php echo $obj['TeacherCategory']['name']; ?></div>
-					<div class="table_cell center"><?php echo $this->Utility->formatDate($obj['InstitutionSiteTeacher']['start_date']); ?></div>
-					<div class="table_cell center">
-						<?php
-						$endDate = $obj['InstitutionSiteTeacher']['end_date'];
-						echo is_null($endDate) ? __('Current') : $this->Utility->formatDate($endDate);
-						?>
+					<div class="table_cell">
+						<div class="table_cell_row"><?php echo $obj['TeacherCategory']['name']; ?></div>
+						<div class="table_cell_row"><?php echo $obj['InstitutionSiteTeacher']['position_no']; ?></div>
 					</div>
-					<div class="table_cell center"><?php echo $obj['InstitutionSiteTeacher']['no_of_hours']; ?></div>
+					<div class="table_cell view">
+						<div class="table_cell_row">
+							<div class="label"><?php echo __('From'); ?></div>
+							<div class="left"><?php echo $this->Utility->formatDate($obj['InstitutionSiteTeacher']['start_date']); ?></div>
+						</div>
+						<div class="table_cell_row">
+							<div class="label"><?php echo __('To'); ?></div>
+							<div class="left">
+								<?php
+								$endDate = $obj['InstitutionSiteTeacher']['end_date'];
+								echo is_null($endDate) ? __('Current') : $this->Utility->formatDate($endDate);
+								?>
+							</div>
+						</div>
+						<div class="table_cell_row">
+							<div class="label"><?php echo __('Hours'); ?></div>
+							<div class="left"><?php echo $obj['InstitutionSiteTeacher']['no_of_hours']; ?></div>
+						</div>
+					</div>
 					<div class="table_cell cell_number"><?php echo $obj['InstitutionSiteTeacher']['salary']; ?></div>
+					<div class="table_cell"><?php echo $obj['TeacherStatus']['name']; ?></div>
 				</div>
 				<?php } ?>
 			</div>
