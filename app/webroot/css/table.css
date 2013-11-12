@@ -32,6 +32,8 @@
 	margin: 5px 0;
 }
 
+.view .table_cell_row { margin: 0; }
+
 .table_row.inactive .table_cell { color: #CCCCCC; }
 
 .table_cell a { color: #007CBE; }
