@@ -103,6 +103,11 @@ echo $this->Html->script('institution_site_students', false);
 		</div>
 		
 		<div class="row">
+			<div class="label"><?php echo __('Status'); ?></div>
+			<div class="value"><?php echo $this->Form->input('student_status_id', array('class' => 'default', 'options' => $statusOptions)); ?></div>
+		</div>
+		
+		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
 			<div class="value"><?php echo $this->Form->input('start_date', array('type' => 'date', 'dateFormat' => 'DMY', 'minYear' => $minYear, 'maxYear' => $maxYear, 'empty' => __('Select'))); ?></div>
 		</div>

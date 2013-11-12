@@ -1,24 +1,19 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
+
+echo $this->Html->script('app.date', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="student" class="content_wrapper">
+<div id="studentsEdit" class="content_wrapper edit">
 	<h1>
 		<span><?php echo __('Student Information'); ?></span>
 		<?php 
 		$obj = $data['Student'];
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'studentsEdit'), array('class' => 'divider'));
-		}
-		if($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
-			echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
-		}
-		if($_accessControl->check($this->params['controller'], 'studentsBehaviour')) {
-			echo $this->Html->link(__('Behaviour'), array('action' => 'studentsBehaviour', $obj['id']), array('class' => 'divider'));
-		}
+		echo $this->Html->link(__('Back'), array('action' => 'studentsView', $obj['id']), array('class' => 'divider'));
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
@@ -59,26 +54,62 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
 		</div>
 	</fieldset>
-	
+	<?php
+	echo $this->Form->create('InstitutionSiteStudent', array(
+		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'studentsEdit', $obj['id'])
+	));
+	$fieldName = 'data[InstitutionSiteStudent][%s][%s]';
+	?>
 	<fieldset class="section_break">
 		<legend><?php echo __('Programmes'); ?></legend>
 		<div class="table full_width" style="margin-top: 10px;">
 			<div class="table_head">
-				<div class="table_cell" style="width: 220px;"><?php echo __('Programme'); ?></div>
-				<div class="table_cell"><?php echo __('From'); ?></div>
-				<div class="table_cell"><?php echo __('To'); ?></div>
+				<div class="table_cell" style="width: 200px;"><?php echo __('Programme'); ?></div>
+				<div class="table_cell"><?php echo __('Period'); ?></div>
 				<div class="table_cell" style="width: 100px;"><?php echo __('Status'); ?></div>
 			</div>
 			
 			<div class="table_body">
-				<?php foreach($details as $detail) { ?>
+				<?php 
+				$i = 0;
+				$fieldName = 'data[InstitutionSiteStudent][%s][%s]';
+				foreach($details as $detail):
+					echo $this->Form->hidden($i.'.id', array('value' => $detail['InstitutionSiteStudent']['id']));
+				?>
 				<div class="table_row">
 					<div class="table_cell"><?php echo $detail['EducationProgramme']['name']; ?></div>
-					<div class="table_cell center"><?php echo $this->Utility->formatDate($detail['InstitutionSiteStudent']['start_date']); ?></div>
-					<div class="table_cell center"><?php echo $this->Utility->formatDate($detail['InstitutionSiteStudent']['end_date']); ?></div>
-					<div class="table_cell center"><?php echo $detail['StudentStatus']['name']; ?></div>
+					<div class="table_cell">
+						<div class="table_cell_row">
+							<div class="label"><?php echo __('From'); ?></div>
+							<?php 
+							echo $this->Utility->getDatePicker($this->Form, $i . 'start_date', 
+								array(
+									'name' => sprintf($fieldName, $i, 'start_date'),
+									'value' => $detail['InstitutionSiteStudent']['start_date'],
+									'endDateValidation' => $i . 'end_date'
+								));
+							?>
+						</div>
+						<div class="table_cell_row">
+							<div class="label"><?php echo __('To'); ?></div>
+							<?php 
+							echo $this->Utility->getDatePicker($this->Form, $i . 'end_date', 
+								array(
+									'name' => sprintf($fieldName, $i, 'end_date'),
+									'value' => $detail['InstitutionSiteStudent']['end_date'],
+									'endDateValidation' => $i . 'end_date',
+									'yearAdjust' => 1
+								));
+							?>
+						</div>
+					</div>
+					<div class="table_cell center"><?php echo $this->Form->input($i.'.student_status_id', array('options' => $statusOptions, 'value' => $detail['StudentStatus']['id'])); ?></div>
 				</div>
-				<?php } ?>
+				<?php 
+				$i++;
+				endforeach; 
+				?>
 			</div>
 		</div>
 	</fieldset>
@@ -108,10 +139,10 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 	
 	<fieldset class="section_break">
 		<legend><?php echo __('Assessments'); ?></legend>
-		<?php foreach($results as $gradeId => $result) { ?>
+		<?php foreach($results as $gradeId => $result) : ?>
 		<fieldset class="section_group" style="margin-top: 15px;">
 			<legend><?php echo $result['name']; ?></legend>
-			<?php foreach($result['assessments'] as $id => $assessment) { ?>
+			<?php foreach($result['assessments'] as $id => $assessment) : ?>
 			<fieldset class="section_break">
 				<legend><?php echo $assessment['name']; ?></legend>
 				<div class="table">
@@ -123,19 +154,26 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 					</div>
 					
 					<div class="table_body">
-						<?php foreach($assessment['subjects'] as $subject) { ?>
+						<?php foreach($assessment['subjects'] as $subject) : ?>
 						<div class="table_row">
 							<div class="table_cell"><?php echo $subject['code']; ?></div>
 							<div class="table_cell"><?php echo $subject['name']; ?></div>
 							<div class="table_cell"><?php echo $subject['marks']; ?></div>
 							<div class="table_cell"><?php echo $subject['grading']; ?></div>
 						</div>
-						<?php } ?>
+						<?php endforeach; ?>
 					</div>
 				</div>
 			</fieldset>
-			<?php } ?>
+			<?php endforeach; ?>
 		</fieldset>
-		<?php } ?>
+		<?php endforeach; ?>
 	</fieldset>
+	
+	<div class="controls">
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'studentsView', $obj['id']), array('class' => 'btn_cancel btn_left')); ?>
+	</div>
+	
+	<?php echo $this->Form->end(); ?>
 </div>
