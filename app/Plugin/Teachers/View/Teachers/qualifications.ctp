@@ -20,12 +20,11 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	</h1>
 	<?php echo $this->element('alert'); ?>
 
-	<div class="table allow_hover" action="Teachers/qualificationsView/">
+	<div class="table allow_hover full_width" action="Teachers/qualificationsView/">
 		<div class="table_head" url="Teachers/qualifications/">
 			<div class="table_cell"><?php echo __('Graduate Year'); ?></div>
 			<div class="table_cell"><?php echo __('Level'); ?></div>
 			<div class="table_cell"><?php echo __('Qualification Title'); ?></div>
-			<div class="table_cell"><?php echo __('Major/Specilisation'); ?></div>
 			<div class="table_cell"><?php echo __('Document No.'); ?></div>
 			<div class="table_cell"><?php echo __('Insituition'); ?></div>
 		</div>
@@ -36,7 +35,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 				<div class="table_cell"><?php echo $obj['graduate_year']; ?></div>
 				<div class="table_cell"><?php echo $obj['level']; ?></div>
 				<div class="table_cell"><?php echo $obj['qualification_title']; ?></div>
-				<div class="table_cell"><?php echo $obj['specialisation']; ?></div>
 				<div class="table_cell"><?php echo $obj['document_no']; ?></div>
 				<div class="table_cell"><?php echo $obj['institute']; ?></div>
 			</div>
