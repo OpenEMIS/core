@@ -8,7 +8,7 @@
         <span><?php echo __('Qualifications'); ?></span>
         <?php 
         if ($_edit) {
-            echo $this->Html->link(__('Back'), array('action' => 'qualifications_view', $id), array('class' => 'divider'));
+            echo $this->Html->link(__('Back'), array('action' => 'qualificationsView', $id), array('class' => 'divider'));
         }
         ?>
     </h1>
