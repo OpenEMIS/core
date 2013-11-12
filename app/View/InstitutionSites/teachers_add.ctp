@@ -94,6 +94,11 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 		
 		<div class="row">
+			<div class="label"><?php echo __('Status'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_status_id', array('class' => 'default', 'options' => $statusOptions)); ?></div>
+		</div>
+		
+		<div class="row">
 			<div class="label"><?php echo __('Salary'); ?></div>
 			<div class="value"><?php echo $this->Form->input('salary', array('class' => 'default', 'value' => 0)); ?></div>
 		</div>

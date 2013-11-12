@@ -9,7 +9,7 @@ echo $this->Html->script('institution_site_teachers', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="teachersEdit" class="content_wrapper">
+<div id="teachersEdit" class="content_wrapper edit">
 	<h1>
 		<span><?php echo __('Teacher Information'); ?></span>
 		<?php 
@@ -69,10 +69,9 @@ echo $this->Html->script('institution_site_teachers', false);
 		<legend><?php echo __('Employment'); ?></legend>
 		<div class="table full_width" style="margin-top: 10px;">
 			<div class="table_head">
-				<div class="table_cell" style="width: 150px;"><?php echo __('Position'); ?></div>
-				<div class="table_cell" style="width: 280px;"><?php echo __('Period'); ?></div>
-				<div class="table_cell"><?php echo __('Hours'); ?></div>
-				<div class="table_cell"><?php echo __('Salary'); ?></div>
+				<div class="table_cell" style="width: 180px;"><?php echo __('Position'); ?></div>
+				<div class="table_cell" style="width: 280px;"><?php echo __('Details'); ?></div>
+				<div class="table_cell"><?php echo __('Status'); ?></div>
 				<div class="table_cell cell_icon_action"></div>
 			</div>
 			
@@ -111,36 +110,47 @@ echo $this->Html->script('institution_site_teachers', false);
 								));
 							?>
 						</div>
-					</div>
-					<div class="table_cell">
-						<div class="table_cell_row input_wrapper">
-						<?php
-						echo $this->Form->input($i . '.no_of_hours', array(
-							'type' => 'text',
-							'label' => false,
-							'div' => false,
-							'maxlength' => 3,
-							'name' => sprintf($fieldName, $i, 'no_of_hours'),
-							'value' => $pos['InstitutionSiteTeacher']['no_of_hours'],
-							'onkeypress' => 'return utility.floatCheck(event)'
-						));
-						?>
+						<div class="table_cell_row">
+							<div class="label"><?php echo __('Hours'); ?></div>
+							<?php
+							echo $this->Form->input($i . '.no_of_hours', array(
+								'type' => 'text',
+								'label' => false,
+								'div' => false,
+								'class' => 'default input',
+								'maxlength' => 3,
+								'name' => sprintf($fieldName, $i, 'no_of_hours'),
+								'value' => $pos['InstitutionSiteTeacher']['no_of_hours'],
+								'onkeypress' => 'return utility.floatCheck(event)'
+							));
+							?>
+						</div>
+						<div class="table_cell_row">
+							<div class="label"><?php echo __('Salary'); ?></div>
+							<?php
+							echo $this->Form->input($i . '.salary', array(
+								'type' => 'text',
+								'label' => false,
+								'div' => false,
+								'class' => 'default input',
+								'maxlength' => 10,
+								'name' => sprintf($fieldName, $i, 'salary'),
+								'value' => $pos['InstitutionSiteTeacher']['salary'],
+								'onkeypress' => 'return utility.floatCheck(event)'
+							));
+							?>
 						</div>
 					</div>
 					<div class="table_cell">
-						<div class="table_cell_row input_wrapper">
 						<?php
-						echo $this->Form->input($i . '.salary', array(
-							'type' => 'text',
+						echo $this->Form->input($i . '.teacher_status_id', array(
 							'label' => false,
 							'div' => false,
-							'maxlength' => 10,
-							'name' => sprintf($fieldName, $i, 'salary'),
-							'value' => $pos['InstitutionSiteTeacher']['salary'],
-							'onkeypress' => 'return utility.floatCheck(event)'
+							'style' => 'width: 100%',
+							'options' => $statusOptions,
+							'value' => $pos['InstitutionSiteTeacher']['teacher_status_id']
 						));
 						?>
-						</div>
 					</div>
 					<div class="table_cell">
 						<div class="table_cell_row"><span class="icon_delete" onclick="InstitutionSiteTeachers.deletePosition(this);"></span></div>

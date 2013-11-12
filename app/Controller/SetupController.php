@@ -32,9 +32,11 @@ class SetupController extends AppController {
 		'CensusGridYCategory',
 		'InfrastructureCategory',
 		'Students.Student',
+		'Students.StudentStatus',
 		'Students.StudentCategory',
 		'Students.StudentBehaviourCategory',
 		'Teachers.Teacher',
+		'Teachers.TeacherStatus',
 		'Teachers.TeacherCategory',
 		'Teachers.TeacherQualificationCategory',
 		'Teachers.TeacherQualificationCertificate',
@@ -42,6 +44,7 @@ class SetupController extends AppController {
 		'Teachers.TeacherTrainingCategory',
 		'Teachers.TeacherLeaveType',
 		'Staff.Staff',
+		'Staff.StaffStatus',
 		'SchoolYear',
 		'Students.StudentCustomFieldOption',
 		'Students.StudentCustomField',
@@ -238,16 +241,9 @@ class SetupController extends AppController {
 		));
 		
 		// Student
-		$lookup[] = array('Student' => array(
-			'optgroup' => true,
-			'name' => 'Category',
-			'items' => $this->StudentCategory->getLookupVariables()
-		));
-		$lookup[] = array('Student' => array(
-			'optgroup' => true,
-			'name' => 'Behaviour Category',
-			'items' => $this->StudentBehaviourCategory->getLookupVariables()
-		));
+		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
+		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
+		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
 			'view' => 'customFields',
@@ -261,6 +257,7 @@ class SetupController extends AppController {
 		
 		// Teacher
 		$teacherOptions = array(
+			'Status' => $this->TeacherStatus,
 			'Positions' => $this->TeacherCategory,
 			'Qualification Categories' => $this->TeacherQualificationCategory,
 			'Qualification Certificates' => $this->TeacherQualificationCertificate,
@@ -283,6 +280,7 @@ class SetupController extends AppController {
 		// End Teacher
 		
 		// Staff
+		$lookup[] = array('Staff' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StaffStatus->getLookupVariables()));
 		$lookup[] = array('Staff' => array('optgroup' => true, 'name' => 'Positions', 'items' => $this->Staff->getLookupVariables()));
 		$lookup[] = array('Staff' => array('optgroup' => true, 'name' => 'Leave Types', 'items' => $this->StaffLeaveType->getLookupVariables()));
 		$lookup[] = array('Staff' => array(
