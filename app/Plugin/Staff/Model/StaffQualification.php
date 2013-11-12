@@ -16,8 +16,8 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('UtilityComponent', 'Component');
 
-class TeacherQualification extends TeachersAppModel {
-    public $useTable = "teacher_qualifications";
+class StaffQualification extends StaffAppModel {
+    public $useTable = "staff_qualifications";
     public $belongsTo = array(
         'ModifiedUser' => array(
             'className' => 'SecurityUser',
@@ -55,7 +55,7 @@ class TeacherQualification extends TeachersAppModel {
             'required' => array(
                 'rule' => 'notEmpty',
                 'required' => true,
-                'message' => 'Please enter a valid Major/Specialization'
+                'message' => 'Please enter a valid Major/Specialisation'
             )
         ),
     );
@@ -67,45 +67,45 @@ class TeacherQualification extends TeachersAppModel {
                 'alias' => 'QualificationInstitution',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'QualificationInstitution.id = TeacherQualification.qualification_institution_id'
+                    'QualificationInstitution.id = StaffQualification.qualification_institution_id'
                 )
             ),
             array('table' => 'qualification_specialisations',
                 'alias' => 'QualificationSpecialisation',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'QualificationSpecialisation.id = TeacherQualification.qualification_specialisation_id'
+                    'QualificationSpecialisation.id = StaffQualification.qualification_specialisation_id'
                 )
             ),
             array('table' => 'qualification_levels',
                 'alias' => 'QualificationLevel',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'QualificationLevel.id = TeacherQualification.qualification_level_id'
+                    'QualificationLevel.id = StaffQualification.qualification_level_id'
                 )
-            )
+            ),
         );
 
         $options['fields'] = array(
-            'TeacherQualification.id',
-            'TeacherQualification.document_no',
-            'TeacherQualification.graduate_year',
-            'TeacherQualification.gpa',
-            'TeacherQualification.qualification_title',
-            'TeacherQualification.qualification_institution_country',
-            'TeacherQualification.qualification_institution_id as institute_id',
+            'StaffQualification.id',
+            'StaffQualification.document_no',
+            'StaffQualification.graduate_year',
+            'StaffQualification.gpa',
+            'StaffQualification.qualification_title',
+            'StaffQualification.qualification_institution_country',
+            'StaffQualification.qualification_institution_id as institute_id',
             'QualificationInstitution.name as institute',
-            'TeacherQualification.qualification_level_id as level_id',
+            'StaffQualification.qualification_level_id as level_id',
             'QualificationLevel.name as level',
-            'TeacherQualification.qualification_specialisation_id as specialisation_id',
-            'QualificationSpecialisation.name as specialisation',
+            'StaffQualification.qualification_specialisation_id as specialisation_id',
+            'QualificationSpecialisation.name as specialisation'
         );
 
         $options['conditions'] = array(
-            'TeacherQualification.teacher_id' => $id,
+            'StaffQualification.staff_id' => $id,
         );
 
-        $options['order'] = array('TeacherQualification.graduate_year DESC');
+        $options['order'] = array('StaffQualification.graduate_year DESC');
 
         $list = $this->find('all', $options);
         $list = $utility->formatResult($list);
