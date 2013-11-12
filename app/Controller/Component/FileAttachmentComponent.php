@@ -18,6 +18,25 @@ class FileAttachmentComponent extends Component {
 	private $controller;
 	private $model;
 	private $foreignKey;
+
+
+	public function __construct(\ComponentCollection $collection, $settings = array()) {
+		//pr($settings);
+		parent::__construct($collection, $settings);
+
+		try {
+			$this->model = ClassRegistry::init($settings['model']);
+			if(isset($settings['foreignKey'])){
+				$this->foreignKey = $settings['foreignKey'];
+			}
+			
+		} catch(MissingModelException $e) {
+			// Model not found!
+			echo $e->getMessage();
+		}
+	}
+	
+	
 	
 	//called before Controller::beforeFilter()
 	public function initialize(Controller $controller) {
@@ -77,7 +96,9 @@ class FileAttachmentComponent extends Component {
 				if($status == UPLOAD_ERR_OK && is_uploaded_file($tmpName)) {
 					$name = pathinfo($fileArray['files']['name'][$i], PATHINFO_FILENAME);
 					$blob = file_get_contents($tmpName);
+ 
 					$data[$model][$i]['name']  = (!isset($data[$model][$i]['name']) || is_null($data[$model][$i]['name']) || strlen(trim($data[$model][$i]['name']))==0) ? $name : trim($data[$model][$i]['name']);
+					
 					if(!is_null($foreignKeyValue)) {
 						$data[$model][$i]['file_name'] = $fileArray['files']['name'][$i];
 						$data[$model][$i][$key] = $foreignKeyValue;
@@ -93,10 +114,40 @@ class FileAttachmentComponent extends Component {
 				}
 			}
 		}
-		
+
 		if(sizeof($errors) == 0) {
 			$this->model->saveAll($data[$model]);
 		}
+		
+		return $errors;
+	}
+
+	public function save($data, $file){
+		if(empty($file) && empty($data)) return array('error');
+		$errors = array();
+		$model = $this->model->alias;
+		if(isset($file['files'])) {
+			$status = $file['files']['error'];
+		
+			$tmpName = $file['files']['tmp_name'];
+			if($status == UPLOAD_ERR_OK && is_uploaded_file($tmpName)) {
+				$name = pathinfo($file['files']['name'], PATHINFO_FILENAME);
+				$blob = file_get_contents($tmpName);
+
+				$data['name']  = (!isset($data['name']) || is_null($data['name']) || strlen(trim($data['name']))==0) ? $name : trim($data[$i]['name']);
+				
+				$fileext = pathinfo($file['files']['name'], PATHINFO_EXTENSION);
+				$data['file_name'] = $file['files']['name'];
+				$data['file_content'] = $blob;
+			} else {
+				$errors[] = __('error'); // add some meaningful messages
+			}
+		}
+
+		if(sizeof($errors) == 0) {
+			$this->model->save($data);
+		}
+
 		
 		return $errors;
 	}
@@ -109,15 +160,18 @@ class FileAttachmentComponent extends Component {
 		
 		$this->controller->autoRender= false;
         $file = $this->model->findById($id);
+
         $fileext = pathinfo($file[$this->model->alias]['file_name'], PATHINFO_EXTENSION);
         $filename = pathinfo($file[$this->model->alias]['file_name'], PATHINFO_FILENAME);
-		$filenameOut = ($file[$this->model->alias]['name'] == '' ? $filename : $file[$this->model->alias]['name']);
+		$filenameOut = (!isset($file[$this->model->alias]['name']) ? $filename : $file[$this->model->alias]['name']);
+
         header('Content-type: application/octet-stream');
         header("Content-Transfer-Encoding: binary");
         //header('Content-length: ' . $file[$this->model->alias]['blobsize']);
 		//header('Content-length: ' . mb_strlen($file[$this->model->alias]['file_content']));//$file[$this->model->alias]['blobsize']);
         header('Content-Disposition: attachment;  filename='.str_replace(" ","_",$filenameOut).'.'.$fileext);
         echo $file[$this->model->alias]['file_content'];
+        exit;
 	}
 }
 ?>

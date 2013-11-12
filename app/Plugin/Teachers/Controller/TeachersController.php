@@ -26,10 +26,9 @@ class TeachersController extends TeachersAppController {
 		'Area',
         'Institution',
 		'InstitutionSite',
-        
         'Bank',
-        'Teachers.TeacherBankAccount',
         'BankBranch',
+		'Teachers.TeacherBankAccount',
         'InstitutionSiteTeacher',
         'InstitutionSiteType',
         'Teachers.Teacher',
@@ -41,9 +40,9 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherTraining',
         'Teachers.TeacherTrainingCategory',
         'Teachers.TeacherQualification',
-        'Teachers.TeacherQualificationCategory',
-        'Teachers.TeacherQualificationCertificate',
-        'Teachers.TeacherQualificationInstitution',
+        'QualificationLevel',
+        'QualificationInstitution',
+        'QualificationSpecialisation',
         'Teachers.TeacherAttendance',
 		'Teachers.TeacherLeave',
 		'Teachers.TeacherLeaveType',
@@ -56,11 +55,7 @@ class TeachersController extends TeachersAppController {
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
         'UserSession',
-        'Paginator',
-        'FileAttachment' => array(
-            'model' => 'Teachers.TeacherAttachment',
-            'foreignKey' => 'teacher_id'
-        )
+        'Paginator'
     );
 
     public function beforeFilter() {
@@ -491,7 +486,12 @@ class TeachersController extends TeachersAppController {
     public function attachments() {
         $this->Navigation->addCrumb('Attachments');
         $id = $this->Session->read('TeacherId');
-        $data = $this->FileAttachment->getList($id);
+
+        $arrMap = array('model'=>'Teachers.TeacherAttachment', 'foreignKey' => 'teacher_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+        $data = $FileAttachment->getList($id);
+        $this->set('_model', 'TeacherAttachment');
         $this->set('data', $data);
         $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
         $this->render('/Elements/attachment/view');
@@ -500,9 +500,11 @@ class TeachersController extends TeachersAppController {
     public function attachmentsEdit() {
         $this->Navigation->addCrumb('Edit Attachments');
         $id = $this->Session->read('TeacherId');
-        
+
+        $arrMap = array('model'=>'Teachers.TeacherAttachment', 'foreignKey' => 'teacher_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
         if($this->request->is('post')) { // save
-            $errors = $this->FileAttachment->saveAll($this->data, $_FILES, $id);
+            $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
             if(sizeof($errors) == 0) {
                 $this->Utility->alert(__('Files have been saved successfully.'));
                 $this->redirect(array('action' => 'attachments'));
@@ -511,7 +513,8 @@ class TeachersController extends TeachersAppController {
             }
         }
         
-        $data = $this->FileAttachment->getList($id);
+        $data = $FileAttachment->getList($id);
+        $this->set('_model', 'TeacherAttachment');
         $this->set('data',$data);
         $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
         $this->render('/Elements/attachment/edit');
@@ -520,6 +523,7 @@ class TeachersController extends TeachersAppController {
     public function attachmentsAdd() {
         $this->layout = 'ajax';
         $this->set('params', $this->params->query);
+        $this->set('_model', 'TeacherAttachment');
         $this->render('/Elements/attachment/add');
     }
        
@@ -529,8 +533,11 @@ class TeachersController extends TeachersAppController {
             $result = array('alertOpt' => array());
             $this->Utility->setAjaxResult('alert', $result);
             $id = $this->params->data['id'];
+
+            $arrMap = array('model'=>'Teachers.TeacherAttachment', 'foreignKey' => 'teacher_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
             
-            if($this->FileAttachment->delete($id)) {
+            if($FileAttachment->delete($id)) {
                 $result['alertOpt']['text'] = __('File is deleted successfully.');
             } else {
                 $result['alertType'] = $this->Utility->getAlertType('alert.error');
@@ -542,7 +549,9 @@ class TeachersController extends TeachersAppController {
     }
         
     public function attachmentsDownload($id) {
-        $this->FileAttachment->download($id);
+        $arrMap = array('model'=>'Teachers.TeacherAttachment', 'foreignKey' => 'teacher_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+        $FileAttachment->download($id);
     }
 
     public function history(){
@@ -573,10 +582,7 @@ class TeachersController extends TeachersAppController {
         $this->set('data2',$data2);
     }
 
-    /**
-     * Qualifications that the teacher has attained till date
-     * @return [type] [description]
-     */
+
     /**
      * Qualifications that the teacher has attained till date
      * @return [type] [description]
@@ -584,94 +590,192 @@ class TeachersController extends TeachersAppController {
     public function qualifications() {
         $this->Navigation->addCrumb('Qualifications');
 
+        $list = $this->TeacherQualification->getData($this->teacherId);
+
+        $this->UserSession->readStatusSession($this->request->action);
+        $this->set('list', $list);
+    }
+
+
+    public function qualificationsAdd() {
         if ($this->request->is('post')) {
             $this->TeacherQualification->create();
             $this->request->data['TeacherQualification']['teacher_id'] = $this->teacherId;
-            $this->TeacherQualification->save($this->request->data['TeacherQualification']);
+            
+            $teacherQualificationData = $this->data['TeacherQualification'];
+
+            $this->TeacherQualification->set($teacherQualificationData);
+
+
+            if ($this->TeacherQualification->validates()) {
+                if(empty($teacherQualificationData['qualification_institution_id'])){
+                    $data = array(
+                        'QualificationInstitution'=>
+                            array(
+                                'name' => $teacherQualificationData['qualification_institution'],
+                                'order' => 0,
+                                'visible' => 1,
+                                'created_user_id' => $this->Auth->user('id'),
+                                'created' => date('Y-m-d h:i:s')
+                            )
+                    );
+                    $this->QualificationInstitution->save($data);
+                    $qualificationInstitutionId = $this->QualificationInstitution->getInsertID();
+                    $teacherQualificationData['qualification_institution_id'] = $qualificationInstitutionId;
+                }
+               
+
+                $this->TeacherQualification->save($teacherQualificationData);
+    
+                $teacherQualificationId = $this->TeacherQualification->getInsertID();
+
+                $arrMap = array('model'=>'Teachers.TeacherQualification');
+                $Q = $this->Components->load('FileAttachment', $arrMap);
+                $teacherQualificationData['id'] = $teacherQualificationId;
+                $errors = $Q->save($teacherQualificationData, $_FILES);
+
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'qualifications'));
+            }
         }
 
-        $list = $this->TeacherQualification->getData($this->teacherId);
-        // $categories = $this->TeacherQualificationCategory->findAllByVisible(1);
-        $institutes = $this->TeacherQualificationInstitution->findAllByVisible(1);
-
+        $levels = $this->QualificationLevel->getOptions();
+        $specializations = $this->QualificationSpecialisation->getOptions();
+        $institutes = $this->QualificationInstitution->getOptions();
+        
         $this->UserSession->readStatusSession($this->request->action);
-        $this->set('list', $list);
-        // $this->set('categories', $categories);
+        $this->set('specializations', $specializations);
+        $this->set('levels', $levels);
         $this->set('institutes', $institutes);
     }
 
-    public function qualificationsAdd() {
-        $this->layout = 'ajax';
+     public function qualificationsView() {
+        $teacherQualificationId = $this->params['pass'][0];
+        $teacherQualificationObj = $this->TeacherQualification->find('all',array('conditions'=>array('TeacherQualification.id' => $teacherQualificationId)));
+        
+        if(!empty($teacherQualificationObj)) {
+            $this->Navigation->addCrumb('Qualification Details');
+            
+            $levels = $this->QualificationLevel->getOptions();
+            $specializations = $this->QualificationSpecialisation->getOptions();
+            $institutes = $this->QualificationInstitution->getOptions();
 
-        $order = $this->params->query['order'] + 1;
-        $this->set('order', $order);
+            $this->Session->write('TeacherQualificationId', $teacherQualificationId);
+            $this->set('levels', $levels);
+            $this->set('specializations', $specializations);
+            $this->set('institutes', $institutes);
+            $this->set('teacherQualificationObj', $teacherQualificationObj);
 
-        $visible = true;
-        // $categories = $this->TeacherTrainingCategory->findList($visible);
-        // array_unshift($categories, __('--Select--'));
-        $certificates = $this->TeacherQualificationCertificate->findAllByVisible(1);
-        $institutes = $this->TeacherQualificationInstitution->findAllByVisible(1);
-
-        $list = $this->TeacherTraining->getData($this->teacherId);
-        $this->UserSession->readStatusSession($this->request->action);
-        $this->set('data', $list);
-        $this->set('certificates', $certificates);
-        // $this->set('categories', $categories);
-        $this->set('institutes', $institutes);
+            $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
+        } else {
+            //$this->redirect(array('action' => 'classesList'));
+        }
     }
 
     public function qualificationsEdit() {
-        $this->Navigation->addCrumb('Qualifications');
-        if($this->request->is('post')) { // save                    }
+        $levels = $this->QualificationLevel->getOptions();
+        $institutes = $this->QualificationInstitution->getOptions();
+        $specializations = $this->QualificationSpecialisation->getOptions();
 
-            if (isset($this->data['TeacherQualification'])) {
-                $dataValues = $this->data['TeacherQualification'];
-                
-                for($i=1; $i <= count($dataValues); $i++) {
-                    $dataValues[$i]['teacher_id'] = $this->teacherId;
-                }
-                // pr($dataValues); die();
-
-                $result = $this->TeacherQualification->saveAll($dataValues);
-                if($result){
-                    $this->UserSession->writeStatusSession('ok', __('Records have been deleted successfully.'), 'qualifications');
-                    $this->redirect(array('controller' => $this->params['controller'], 'action' => 'qualifications'));
-                    //$this->Session->setFlash('Saved.');
-                }else{
-                    //$this->Session->setFlash('Error in Saving.');
-                }
-            }
-        }
-
-        $list = $this->TeacherQualification->getData($this->teacherId);
-        // $categories = $this->TeacherQualificationCategory->findAllByVisible(1);
-        $certificates = $this->TeacherQualificationCertificate->findAllByVisible(1);
-        $institutes = $this->TeacherQualificationInstitution->findAllByVisible(1);
-
-        $this->set('list', $list);
-        // $this->set('categories', $categories);
-        $this->set('certificates', $certificates);
+        $this->set('levels', $levels);
         $this->set('institutes', $institutes);
+        $this->set('specializations', $specializations);
 
+        if($this->request->is('get')) {
+            $teacherQualificationId = $this->params['pass'][0];
+            $teacherQualificationObj = $this->TeacherQualification->find('first',array('conditions'=>array('TeacherQualification.id' => $teacherQualificationId)));
+  
+            if(!empty($teacherQualificationObj)) {
+                $this->Navigation->addCrumb('Edit Qualification Details');
+                $teacherQualificationObj['TeacherQualification']['qualification_institution'] = $institutes[$teacherQualificationObj['TeacherQualification']['qualification_institution_id']];
+                $this->request->data = $teacherQualificationObj;
+            } else {
+                //$this->redirect(array('action' => 'studentsBehaviour'));
+            }
+         } else {
+            $teacherQualificationData = $this->data['TeacherQualification'];
+            $teacherQualificationData['teacher_id'] = $this->teacherId;
+            
+            $this->TeacherQualification->set($teacherQualificationData);
+
+            if ($this->TeacherQualification->validates()) {
+                if(empty($teacherQualificationData['qualification_institution_id'])){
+                    $data = array(
+                        'QualificationInstitution'=>
+                            array(
+                                'name' => $teacherQualificationData['qualification_institution'],
+                                'order' => 0,
+                                'visible' => 1,
+                                'created_user_id' => $this->Auth->user('id'),
+                                'created' => date('Y-m-d h:i:s')
+                            )
+                    );
+                    $this->QualificationInstitution->save($data);
+                    $qualificationInstitutionId = $this->QualificationInstitution->getInsertID();
+                    $teacherQualificationData['qualification_institution_id'] = $qualificationInstitutionId;
+                }
+                $this->TeacherQualification->save($teacherQualificationData);
+                $arrMap = array('model'=>'Teachers.TeacherQualification');
+                $Q = $this->Components->load('FileAttachment', $arrMap);
+
+                $errors = $Q->save($teacherQualificationData, $_FILES);
+
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'qualificationsView', $teacherQualificationData['id']));
+            }
+         }
+       
     }
 
     public function qualificationsDelete($id) {
-        $this->autoRender = false;
-        if($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            // $id = $this->params->data['id'];
-            
-            if($this->TeacherQualification->delete($id)) {
-                $result['alertOpt']['text'] = __('Records have been deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting record.');
-            }
-            
-            return json_encode($result);
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherQualificationId')) {
+            $id = $this->Session->read('TeacherQualificationId');
+            $teacherId = $this->Session->read('TeacherId');
+            $name = $this->TeacherQualification->field('qualification_title', array('TeacherQualification.id' => $id));
+            $this->TeacherQualification->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'qualifications', $teacherId));
         }
     }
+
+    public function qualificationAttachmentsDelete($id) {
+        $this->autoRender = false;
+       
+        $result = array('alertOpt' => array());
+        $this->Utility->setAjaxResult('alert', $result);
+
+        $teacherQualification = $this->TeacherQualification->findById($id);
+        $name = $teacherQualification['TeacherQualification']['qualification_title'];
+        $teacherQualification['TeacherQualification']['file_name'] = null;
+        $teacherQualification['TeacherQualification']['file_content'] = null;
+
+        if($this->TeacherQualification->save($teacherQualification)) {
+            //$this->Utility->alert($name . ' have been deleted successfully.');
+        } else {
+           //$this->Utility->alert('Error occurred while deleting file.');
+        }
+        
+        $this->redirect(array('action' => 'qualificationsEdit', $id));
+        
+    }
+        
+    public function qualificationAttachmentsDownload($id) {
+        $arrMap = array('model'=>'Teachers.TeacherQualification');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+        $FileAttachment->download($id);
+        exit;
+    }
+
+    public function ajax_find_institution() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->QualificationInstitution->autocomplete($search);
+ 
+            return json_encode($data);
+        }
+    }
+
 
     public function categoryCertificates() {
         $this->autoRender = false;
