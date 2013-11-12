@@ -8,7 +8,7 @@ echo $this->Html->script('search', false);
 
 <div id="qualificationView" class="content_wrapper">
     <h1>
-        <span><?php echo __('Qualification Details'); ?></span>
+        <span><?php echo __('Qualifications'); ?></span>
 		<?php
 		$data = $teacherQualificationObj[0]['TeacherQualification'];
 		echo $this->Html->link(__('List'), array('action' => 'qualifications', $data['teacher_id']), array('class' => 'divider'));
@@ -62,7 +62,20 @@ echo $this->Html->script('search', false);
         <div class="value"><?php echo $data['gpa']; ?></div>
     </div>
 
-   <div class="row">
+
+    <?php if(!empty($data['file_name'])){ ?>
+    <div class="row edit">
+        <div class="label"><?php echo __('Attachment'); ?></div>
+        <?php 
+        $fileext = strtolower(pathinfo($data['file_name'], PATHINFO_EXTENSION));
+        $ext = array_key_exists($fileext, $arrFileExtensions) ? $arrFileExtensions[$fileext] : $fileext;
+        $link = $this->Html->link($data['file_name'], array('action' => 'qualificationAttachmentsDownload', $data['id']));
+        ?>
+        <div class="value"><?php echo $link; ?></div>
+    </div>
+    <?php } ?>
+
+     <div class="row">
         <div class="label"><?php echo __('Modified by'); ?></div>
         <div class="value"><?php echo trim($teacherQualificationObj[0]['ModifiedUser']['first_name'] . ' ' . $teacherQualificationObj[0]['ModifiedUser']['last_name']); ?></div>
     </div>
@@ -82,16 +95,5 @@ echo $this->Html->script('search', false);
         <div class="value"><?php echo $data['created']; ?></div>
     </div>
 
-    <?php if(!empty($data['file_name'])){ ?>
-    <div class="row edit">
-        <div class="label"><?php echo __('Attachment'); ?></div>
-        <?php 
-        $fileext = strtolower(pathinfo($data['file_name'], PATHINFO_EXTENSION));
-        $ext = array_key_exists($fileext, $arrFileExtensions) ? $arrFileExtensions[$fileext] : $fileext;
-        $link = $this->Html->link($data['file_name'], array('action' => 'qualificationAttachmentsDownload', $data['id']));
-        ?>
-        <div class="value"><?php echo $link; ?></div>
-    </div>
-    <?php } ?>
     
 </div>
