@@ -71,7 +71,7 @@
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if(jsDate.checkValidDateClosed() && Config.checkValidate()){ return true; }else{ return false; }"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'qualificationsView', $id, , array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'qualificationsView', $id), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
