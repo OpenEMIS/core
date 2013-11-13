@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class TeacherLeave extends TeachersAppModel {
 	public $belongsTo = array(
 		'TeacherLeaveType',
+		'LeaveStatus',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -26,7 +27,7 @@ class TeacherLeave extends TeachersAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-	
+
 	public $validate = array(
 		'date_from' => array(
 			'ruleNotLater' => array(
