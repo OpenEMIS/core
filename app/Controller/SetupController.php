@@ -66,7 +66,8 @@ class SetupController extends AppController {
 		'StaffDetailsCustomFieldOption',
 		'QualificationLevel',
 		'QualificationInstitution',
-		'QualificationSpecialisation'
+		'QualificationSpecialisation',
+		'LeaveStatus'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -265,7 +266,8 @@ class SetupController extends AppController {
 			'Qualification Specialisation' => $this->QualificationSpecialisation,
 			'Qualification Institutions' => $this->QualificationInstitution,
 			'Training Categories' => $this->TeacherTrainingCategory,
-			'Leave Types' => $this->TeacherLeaveType
+			'Leave Types' => $this->TeacherLeaveType,
+			'Leave Statuses' => $this->LeaveStatus
 		);
 		
 		foreach($teacherOptions as $name => $model) {
@@ -293,7 +295,8 @@ class SetupController extends AppController {
 			'Qualification Levels' => $this->QualificationLevel,
 			'Qualification Specialisation' => $this->QualificationSpecialisation,
 			'Qualification Institutions' => $this->QualificationInstitution,
-			'Leave Types' => $this->StaffLeaveType
+			'Leave Types' => $this->StaffLeaveType,
+			'Leave Statuses' => $this->LeaveStatus
 		);
 		
 		foreach($staffOptions as $name => $model) {
