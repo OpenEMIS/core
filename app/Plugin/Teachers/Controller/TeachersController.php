@@ -49,7 +49,8 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherBehaviour',
         'Teachers.TeacherBehaviourCategory',
         'SchoolYear',
-		'ConfigItem'
+		'ConfigItem',
+        'LeaveStatus'
 	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -999,7 +1000,8 @@ class TeachersController extends TeachersAppController {
 	public function leavesAdd() {
 		$this->Navigation->addCrumb('Leaves');
 		$typeOptions = $this->TeacherLeaveType->findList(true);
-		
+		$statusOptions = $this->LeaveStatus->findList(true);
+
 		if($this->request->is('post')) {
 			$data = $this->request->data;
 			$data['TeacherLeave']['teacher_id'] = $this->Session->read('TeacherId');
@@ -1007,21 +1009,38 @@ class TeachersController extends TeachersAppController {
 			if($this->TeacherLeave->validates()) {
 				$this->TeacherLeave->create();
 				$obj = $this->TeacherLeave->save($data);
+                $id = $this->TeacherLeave->getInsertID();
+                $arrMap = array('model'=>'Teachers.TeacherLeaveAttachment', 'foreignKey' => 'teacher_leave_id');
+                $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+                
+                if(!empty($_FILES)){
+                    $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
+                }
 				if($obj) {
 					return $this->redirect(array('action' => 'leaves'));
 				}
 			}
 		}
+        $this->set('statusOptions', $statusOptions);
 		$this->set('typeOptions', $typeOptions);
+        $this->set('_model', 'TeacherLeaveAttachment');
 	}
 	
 	public function leavesView($id=null) {
 		$this->Navigation->addCrumb('Leaves');
 		if(!is_null($id) && $this->TeacherLeave->exists($id)) { 
 			$typeOptions = $this->TeacherLeaveType->findList(true);
+            $statusOptions = $this->LeaveStatus->findList(true);
 			$data = $this->TeacherLeave->find('first', array('recursive' => 0, 'conditions' => array('TeacherLeave.id' => $id)));
-			$this->set('typeOptions', $typeOptions);
+            $arrMap = array('model'=>'Teachers.TeacherLeaveAttachment', 'foreignKey' => 'teacher_leave_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+            $attachments = $FileAttachment->getList($id);
+			$this->set('statusOptions', $statusOptions);
+            $this->set('typeOptions', $typeOptions);
 			$this->set('data', $data);
+            $this->set('attachments', $attachments);
+            $this->set('_model', 'TeacherLeaveAttachment');
 		} else {
 			return $this->redirect(array('action' => 'leaves'));
 		}
@@ -1030,6 +1049,9 @@ class TeachersController extends TeachersAppController {
 	public function leavesEdit($id=null) {
 		$this->Navigation->addCrumb('Leaves');
 		if(!is_null($id) && $this->TeacherLeave->exists($id)) {
+            $arrMap = array('model'=>'Teachers.TeacherLeaveAttachment', 'foreignKey' => 'teacher_leave_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
 			if($this->request->is('post') || $this->request->is('put')) {
 				$data = $this->request->data;
 				$data['TeacherLeave']['id'] = $id;
@@ -1037,15 +1059,25 @@ class TeachersController extends TeachersAppController {
 				$this->TeacherLeave->set($data);
 				if($this->TeacherLeave->validates()) {
 					$obj = $this->TeacherLeave->save($data);
+                    if(!empty($_FILES)){
+                        $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
+                    }
 					if($obj) {
 						$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
 						return $this->redirect(array('action' => 'leavesView', $obj['TeacherLeave']['id']));
 					}
 				}
 			}
+
+            $attachments = $FileAttachment->getList($id);
+            $this->set('attachments',$attachments);
+            $this->set('_model','TeacherLeaveAttachment');
+
 			$typeOptions = $this->TeacherLeaveType->findList(true);
+            $statusOptions = $this->LeaveStatus->findList(true);
 			$this->request->data = $this->TeacherLeave->find('first', array('recursive' => 0, 'conditions' => array('TeacherLeave.id' => $id)));
-			$this->set('typeOptions', $typeOptions);
+			$this->set('statusOptions', $statusOptions);
+            $this->set('typeOptions', $typeOptions);
 		} else {
 			return $this->redirect(array('action' => 'leaves'));
 		}
@@ -1058,9 +1090,45 @@ class TeachersController extends TeachersAppController {
 		}
 		return $this->redirect(array('action' => 'leaves'));
 	}
+
+    public function attachmentsLeaveAdd() {
+        $this->layout = 'ajax';
+        $this->set('params', $this->params->query);
+        $this->set('_model', 'TeacherLeaveAttachment');
+        $this->render('/Elements/attachment/compact_add');
+    }
+
+    public function attachmentsLeaveDelete() {
+        $this->autoRender = false;
+        if($this->request->is('post')) {
+            $result = array('alertOpt' => array());
+            $this->Utility->setAjaxResult('alert', $result);
+            $id = $this->params->data['id'];
+
+            $arrMap = array('model'=>'Teacher.TeacherLeaveAttachment', 'foreignKey' => 'teacher_leave_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+            
+            if($FileAttachment->delete($id)) {
+                $result['alertOpt']['text'] = __('File is deleted successfully.');
+            } else {
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+            }
+            
+            return json_encode($result);
+        }
+    }
         
-        /***BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already**/
-        public function bankAccounts() {
+    public function attachmentsLeaveDownload($id) {
+        $arrMap = array('model'=>'Teacher.TeacherLeaveAttachment', 'foreignKey' => 'teacher_leave_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+        $FileAttachment->download($id);
+    }
+       
+        
+    /***BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already**/
+    public function bankAccounts() {
                 $this->Navigation->addCrumb('Bank Accounts');
 
                 if($this->request->is('post')) {

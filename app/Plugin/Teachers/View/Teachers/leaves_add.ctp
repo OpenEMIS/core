@@ -1,3 +1,10 @@
+<?php
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
+echo $this->Html->script('attachments', false);
+?>
+<?php echo $this->Html->script('/Teachers/js/leaves', false); ?>
+
 <?php echo $this->element('breadcrumb'); ?>
 <div id="leaves" class="content_wrapper edit">
 	<h1>
@@ -8,6 +15,7 @@
 	<?php
 	echo $this->Form->create('TeacherLeave', array(
 		'url' => array('controller' => 'Teachers', 'action' => 'leavesAdd'),
+		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off')
 	));
 	?>
@@ -18,18 +26,77 @@
 	</div>
 
 	<div class="row">
-		<div class="label"><?php echo __('From'); ?></div>
-		<div class="value"><?php echo $this->Form->input('date_from', array('type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>')); ?></div>
+		<div class="label"><?php echo __('Status'); ?></div>
+		<div class="value"><?php echo $this->Form->input('leave_status_id', array('options' => $statusOptions, 'class' => 'default')); ?></div>
 	</div>
 
 	<div class="row">
-		<div class="label"><?php echo __('To'); ?></div>
-		<div class="value"><?php echo $this->Form->input('date_to', array('type' => 'date', 'dateFormat' => 'DMY', 'selected' => date('Y-m-d', time()+86400))); ?></div>
+		<div class="label"><?php echo __('First Day'); ?></div>
+		<div class="value"><?php echo $this->Form->input('date_from', array('onchange'=>'objTeacherLeaves.compute_work_days()','type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>')); ?></div>
+	</div>
+
+	<div class="row">
+		<div class="label"><?php echo __('Last Day'); ?></div>
+		<div class="value"><?php echo $this->Form->input('date_to', array('onchange'=>'objTeacherLeaves.compute_work_days()','type' => 'date', 'dateFormat' => 'DMY', 'selected' => date('Y-m-d', time()+86400))); ?></div>
 	</div>
 	
 	<div class="row">
+		<div class="label"><?php echo __('Days'); ?></div>
+		<div class="value"><?php echo $this->Form->input('number_of_days', array('class'=>'compute_days')); ?></div>
+	</div>
+
+	<div class="row">
 		<div class="label"><?php echo __('Comments'); ?></div>
 		<div class="value"><?php echo $this->Form->input('comments', array('type' => 'textarea')); ?></div>
+	</div>
+
+	<span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
+
+	<div class="row">
+		<div class="label"><?php echo __('Attachments'); ?></div>
+		<div class="value">
+		<div class="table " style="margin-bottom: -1px;width:240px;">
+			<div class="table_head">
+				<div class="table_cell"><?php echo __('File'); ?></div>
+				<?php if($_delete) { ?>
+					<div class="table_cell cell_delete">&nbsp;</div>
+				<?php } ?>
+			</div>
+						
+			<div class="table_body">
+				<?php
+					$size =0; 
+					$fieldName = sprintf('data[%s][%s][%%s]', $_model, $size);
+				?>
+				
+				<div class="table_row <?php echo ($size+1)%2==0 ? 'even' : ''; ?>">
+					<?php echo $this->Form->input('name', array('type'=>'hidden','name' => sprintf($fieldName, 'name'))); ?>
+					<?php
+					echo $this->Form->input('description', array('type'=>'hidden',
+						'name' => sprintf($fieldName, 'description')
+					));
+					?>
+					<div class="table_cell">
+						<div class="file_input">
+							<input type="file" name="<?php echo 'files[' . $size . ']'; ?>" onchange="attachments.updateFile(this)" onmouseout="attachments.updateFile(this)" />
+							<div class="file">
+								<div class="input_wrapper"><input type="text" /></div>
+								<input type="button" class="btn" value="<?php echo __('Select File'); ?>" onclick="attachments.selectFile(this)" />
+							</div>
+						</div>
+					</div>
+					<div class="table_cell cell_delete">
+						<span class="icon_delete" title="<?php echo __("Delete"); ?>" onClick="attachments.deleteRow(this)"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="table file_upload" style="width:240px;">
+			<div class="table_body"></div>
+		</div>
+		<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
+		</div>
 	</div>
 	
 	<div class="controls view_controls">

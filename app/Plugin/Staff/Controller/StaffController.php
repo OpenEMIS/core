@@ -49,7 +49,9 @@ class StaffController extends StaffAppController {
             'QualificationInstitution',
             'QualificationSpecialisation',
             'SchoolYear',
-            'ConfigItem'
+            'ConfigItem',
+            'LeaveStatus',
+            'StaffLeaveAttachment'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -694,6 +696,7 @@ class StaffController extends StaffAppController {
 	public function leavesAdd() {
 		$this->Navigation->addCrumb('Leaves');
 		$typeOptions = $this->StaffLeaveType->findList(true);
+        $statusOptions = $this->LeaveStatus->findList(true);
 		
 		if($this->request->is('post')) {
 			$data = $this->request->data;
@@ -702,21 +705,39 @@ class StaffController extends StaffAppController {
 			if($this->StaffLeave->validates()) {
 				$this->StaffLeave->create();
 				$obj = $this->StaffLeave->save($data);
+                $id = $this->StaffLeave->getInsertID();
+
+                $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
+                $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+                
+                if(!empty($_FILES)){
+                    $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
+                }
 				if($obj) {
 					return $this->redirect(array('action' => 'leaves'));
 				}
 			}
 		}
+        $this->set('statusOptions', $statusOptions);
 		$this->set('typeOptions', $typeOptions);
+        $this->set('_model', 'StaffLeaveAttachment');
 	}
 	
 	public function leavesView($id=null) {
 		$this->Navigation->addCrumb('Leaves');
 		if(!is_null($id) && $this->StaffLeave->exists($id)) { 
 			$typeOptions = $this->StaffLeaveType->findList(true);
+            $statusOptions = $this->LeaveStatus->findList(true);
 			$data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
-			$this->set('typeOptions', $typeOptions);
+            $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+            $attachments = $FileAttachment->getList($id);
+            $this->set('typeOptions', $typeOptions);
+            $this->set('statusOptions', $statusOptions);
 			$this->set('data', $data);
+            $this->set('attachments', $attachments);
+            $this->set('_model', 'StaffLeaveAttachment');
 		} else {
 			return $this->redirect(array('action' => 'leaves'));
 		}
@@ -725,6 +746,9 @@ class StaffController extends StaffAppController {
 	public function leavesEdit($id=null) {
 		$this->Navigation->addCrumb('Leaves');
 		if(!is_null($id) && $this->StaffLeave->exists($id)) {
+            $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
 			if($this->request->is('post') || $this->request->is('put')) {
 				$data = $this->request->data;
 				$data['StaffLeave']['id'] = $id;
@@ -732,15 +756,26 @@ class StaffController extends StaffAppController {
 				$this->StaffLeave->set($data);
 				if($this->StaffLeave->validates()) {
 					$obj = $this->StaffLeave->save($data);
+                    if(!empty($_FILES)){
+                        $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
+                    }
 					if($obj) {
 						$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
 						return $this->redirect(array('action' => 'leavesView', $obj['StaffLeave']['id']));
 					}
 				}
 			}
+            
+            $attachments = $FileAttachment->getList($id);
+            $this->set('attachments',$attachments);
+            $this->set('_model','StaffLeaveAttachment');
+
 			$typeOptions = $this->StaffLeaveType->findList(true);
+            $statusOptions = $this->LeaveStatus->findList(true);
 			$this->request->data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
+            $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
 			$this->set('typeOptions', $typeOptions);
+            $this->set('statusOptions', $statusOptions);
 		} else {
 			return $this->redirect(array('action' => 'leaves'));
 		}
@@ -753,6 +788,42 @@ class StaffController extends StaffAppController {
 		}
 		return $this->redirect(array('action' => 'leaves'));
 	}
+
+    public function attachmentsLeaveAdd() {
+        $this->layout = 'ajax';
+        $this->set('params', $this->params->query);
+        $this->set('_model', 'StaffLeaveAttachment');
+        $this->render('/Elements/attachment/compact_add');
+    }
+
+    public function attachmentsLeaveDelete() {
+        $this->autoRender = false;
+        if($this->request->is('post')) {
+            $result = array('alertOpt' => array());
+            $this->Utility->setAjaxResult('alert', $result);
+            $id = $this->params->data['id'];
+
+            $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+            
+            if($FileAttachment->delete($id)) {
+                $result['alertOpt']['text'] = __('File is deleted successfully.');
+            } else {
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+            }
+            
+            return json_encode($result);
+        }
+    }
+        
+    public function attachmentsLeaveDownload($id) {
+        $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+        $FileAttachment->download($id);
+    }
+       
 
     public function qualifications() {
         $this->Navigation->addCrumb('Qualifications');
