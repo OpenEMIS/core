@@ -17,8 +17,9 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<div class="table full_width allow_hover" action="Teachers/leavesView/">
 		<div class="table_head">
 			<div class="table_cell"><?php echo __('Type'); ?></div>
-			<div class="table_cell"><?php echo __('From'); ?></div>
-			<div class="table_cell"><?php echo __('To'); ?></div>
+			<div class="table_cell"><?php echo __('Status'); ?></div>
+			<div class="table_cell"><?php echo __('First Day'); ?></div>
+			<div class="table_cell"><?php echo __('Last Day'); ?></div>
 			<div class="table_cell"><?php echo __('Comments'); ?></div>
 			<div class="table_cell"><?php echo __('No of Days'); ?></div>
 		</div>
@@ -29,8 +30,9 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			foreach($data as $obj): 
 				$startDate = new DateTime($obj['TeacherLeave']['date_from']);
 				$endDate = new DateTime($obj['TeacherLeave']['date_to']);
-				$days = $startDate->diff($endDate)->days;
+				$days = $obj['TeacherLeave']['number_of_days'];
 				$type = $obj['TeacherLeaveType']['name'];
+				$status = $obj['LeaveStatus']['name'];
 				if(!array_key_exists($obj['TeacherLeaveType']['name'], $total)) {
 					$total[$type] = $days;
 				} else {
@@ -39,6 +41,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			?>
 			<div class="table_row" row-id="<?php echo $obj['TeacherLeave']['id']; ?>">
 				<div class="table_cell"><?php echo $type; ?></div>
+				<div class="table_cell"><?php echo $status; ?></div>
 				<div class="table_cell"><?php echo $this->Utility->formatDate($obj['TeacherLeave']['date_from']); ?></div>
 				<div class="table_cell"><?php echo $this->Utility->formatDate($obj['TeacherLeave']['date_to']); ?></div>
 				<div class="table_cell"><?php echo $obj['TeacherLeave']['comments']; ?></div>
