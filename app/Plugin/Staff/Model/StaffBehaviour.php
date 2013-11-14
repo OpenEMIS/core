@@ -37,10 +37,18 @@ class StaffBehaviour extends StaffAppModel {
 							'conditions' => array(
 								'StaffBehaviourCategory.id = StaffBehaviour.staff_behaviour_category_id'
 							)
+						),
+						array(
+							'table' => 'institution_sites',
+							'alias' => 'InstitutionSite',
+							'type' => 'INNER',
+							'conditions' => array(
+								'InstitutionSite.id = StaffBehaviour.institution_site_id'
+							)
 						)
 					),
                 'fields' =>array('StaffBehaviour.id','StaffBehaviour.title','StaffBehaviour.date_of_behaviour',
-								 'StaffBehaviourCategory.name'),
+								 'StaffBehaviourCategory.name', 'InstitutionSite.name', 'InstitutionSite.id'),
                 'conditions'=>array('StaffBehaviour.staff_id' => $staffId)));
 		return $list;
 	}

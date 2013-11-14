@@ -16,6 +16,13 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
     <?php echo $this->element('alert'); ?>
 
     <div class="row edit">
+        <div class="label"><?php echo __('Institution Site'); ?></div>
+        <div class="value">
+        <?php echo $institutionSiteOptions[$institution_site_id]; ?>
+        </div>
+    </div>
+
+    <div class="row edit">
 		<div class="label"><?php echo __('Category'); ?></div>
 		<div class="value"><?php echo $categoryOptions[$data['teacher_behaviour_category_id']]; ?></div>
 	</div>
