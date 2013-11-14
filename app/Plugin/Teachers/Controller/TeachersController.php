@@ -1219,6 +1219,10 @@ class TeachersController extends TeachersAppController {
             $categoryOptions = array();
             $categoryOptions = $this->TeacherBehaviourCategory->getCategory();
 
+            $institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+            $this->set('institution_site_id', $teacherBehaviourObj[0]['TeacherBehaviour']['institution_site_id']);
+            $this->set('institutionSiteOptions', $institutionSiteOptions);
+
             $this->Session->write('TeacherBehaviourId', $teacherBehaviourId);
             $this->set('categoryOptions', $categoryOptions);
             $this->set('yearOptions', $yearOptions);

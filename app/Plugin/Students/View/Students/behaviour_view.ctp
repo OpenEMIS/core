@@ -16,6 +16,13 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
     <?php echo $this->element('alert'); ?>
 
     <div class="row edit">
+        <div class="label"><?php echo __('Institution Site'); ?></div>
+        <div class="value">
+        <?php echo $institutionSiteOptions[$institution_site_id]; ?>
+        </div>
+    </div>
+
+    <div class="row edit">
 		<div class="label"><?php echo __('Category'); ?></div>
 		<div class="value"><?php echo $categoryOptions[$data['student_behaviour_category_id']]; ?></div>
 	</div>
@@ -26,15 +33,15 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
     </div>
 
 	<div class="row edit">
-    		<div class="label"><?php echo __('Title'); ?></div>
-    		<div class="value">
-    		<?php echo $this->Form->input('title', array('id' => 'title',
-    		                                             'class' => 'default',
-    		                                             'label' => false,
-    		                                             'disabled' => true,
-    		                                             'default' => $data['title'])); ?>
-    		</div>
-    	</div>
+		<div class="label"><?php echo __('Title'); ?></div>
+		<div class="value">
+		<?php echo $this->Form->input('title', array('id' => 'title',
+		                                             'class' => 'default',
+		                                             'label' => false,
+		                                             'disabled' => true,
+		                                             'default' => $data['title'])); ?>
+		</div>
+	</div>
 
     	<div class="row edit">
     		<div class="label"><?php echo __('Description'); ?></div>

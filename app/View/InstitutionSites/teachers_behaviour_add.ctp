@@ -20,6 +20,13 @@ echo $this->Html->script('institution_site_student_behaviour', false);
 		'inputDefaults' => array('label' => false, 'div' => false)
 	));
 	?>
+
+	<div class="row edit">
+        <div class="label"><?php echo __('Institution Site'); ?></div>
+        <div class="value">
+        <?php echo $institutionSiteOptions[$institution_site_id]; ?>
+        </div>
+    </div>
     
     <div class="row edit">
 		<div class="label"><?php echo __('Category'); ?></div>

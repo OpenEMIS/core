@@ -12,16 +12,24 @@ echo $this->Html->script('search', false);
 		<?php
 		$data = $studentBehaviourObj[0]['StudentBehaviour'];
 		echo $this->Html->link(__('List'), array('action' => 'studentsBehaviour', $data['student_id']), array('class' => 'divider'));
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'studentsBehaviourEdit', $data['id']), array('class' => 'divider'));
-		}
-		if($_delete) {
-			echo $this->Html->link(__('Delete'), array('action' => 'studentsBehaviourDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
-		}
+        if($institution_site_id == $data['institution_site_id']){
+    		if($_edit) {
+    			echo $this->Html->link(__('Edit'), array('action' => 'studentsBehaviourEdit', $data['id']), array('class' => 'divider'));
+    		}
+    		if($_delete) {
+    			echo $this->Html->link(__('Delete'), array('action' => 'studentsBehaviourDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+    		}
+        }
 		?>
     </h1>
     <?php echo $this->element('alert'); ?>
-    
+    <div class="row edit">
+        <div class="label"><?php echo __('Institution Site'); ?></div>
+        <div class="value">
+         <?php echo $institutionSiteOptions[$data['institution_site_id']]; ?>                                           
+        </div>
+    </div>
+
     <div class="row edit">
 		<div class="label"><?php echo __('Category'); ?></div>
 		<div class="value"><?php echo $categoryOptions[$data['student_behaviour_category_id']]; ?></div>
@@ -42,6 +50,8 @@ echo $this->Html->script('search', false);
     		                                             'default' => $data['title'])); ?>
     		</div>
     	</div>
+
+     
 
     	<div class="row edit">
     		<div class="label"><?php echo __('Description'); ?></div>

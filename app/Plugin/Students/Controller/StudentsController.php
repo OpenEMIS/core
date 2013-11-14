@@ -704,6 +704,9 @@ class StudentsController extends StudentsAppController {
             $categoryOptions = array();
             $categoryOptions = $this->StudentBehaviourCategory->getCategory();
 
+            $institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+            $this->set('institution_site_id', $studentBehaviourObj[0]['StudentBehaviour']['institution_site_id']);
+            $this->set('institutionSiteOptions', $institutionSiteOptions);
             $this->Session->write('StudentBehavourId', $studentBehaviourId);
             $this->set('categoryOptions', $categoryOptions);
             $this->set('yearOptions', $yearOptions);
