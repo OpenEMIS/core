@@ -600,7 +600,7 @@ class CensusController extends AppController {
 	}
 	
 	public function assessments() {
-		$this->Navigation->addCrumb('Assessments');
+		$this->Navigation->addCrumb('Results');
 		
 		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
@@ -623,7 +623,7 @@ class CensusController extends AppController {
 	
 	public function assessmentsEdit() {
 		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Assessments');
+			$this->Navigation->addCrumb('Edit Results');
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);

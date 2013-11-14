@@ -32,8 +32,8 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
     <div class="table full_width" style="margin-top: 10px;">
         <div class="table_head">
             <div class="table_cell"><?php echo __('Classes'); ?></div>
-            <div class="table_cell"><?php echo __('Total no of days attended'); ?></div>
-            <div class="table_cell"><?php echo __('Total no of days absent'); ?></div>
+            <div class="table_cell"><?php echo __('Total days attended'); ?></div>
+            <div class="table_cell"><?php echo __('Total days absent'); ?></div>
             <div class="table_cell"><?php echo __('Total'); ?></div>
         </div>
         <?php foreach($data as $id=>$val) { ?>

@@ -17,6 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteTeacher extends AppModel {
+	public $belongsTo = array('TeacherStatus', 'TeacherCategory');
+	
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;
 		$data = $this->find('first', array(
@@ -73,18 +75,11 @@ class InstitutionSiteTeacher extends AppModel {
 	public function getPositions($teacherId, $institutionSiteId=0) {
 		$fields = array(
 			'InstitutionSiteTeacher.id', 'InstitutionSiteTeacher.position_no', 'InstitutionSiteTeacher.no_of_hours',
-			'InstitutionSiteTeacher.start_date', 'InstitutionSiteTeacher.end_date',
-			'InstitutionSiteTeacher.salary', 'TeacherCategory.name'
+			'InstitutionSiteTeacher.start_date', 'InstitutionSiteTeacher.end_date', 'InstitutionSiteTeacher.teacher_status_id',
+			'InstitutionSiteTeacher.salary', 'TeacherCategory.name', 'TeacherStatus.name'
 		);
 		
-		$joins = array(
-			array(
-				'table' => 'teacher_categories',
-				'alias' => 'TeacherCategory',
-				'conditions' => array('TeacherCategory.id = InstitutionSiteTeacher.teacher_category_id')
-			)
-		);
-		
+		$joins = array();
 		$conditions = array('InstitutionSiteTeacher.teacher_id' => $teacherId);
 		
 		if($institutionSiteId==0) {
@@ -205,11 +200,6 @@ class InstitutionSiteTeacher extends AppModel {
 				'table' => 'teachers',
 				'alias' => 'Teacher',
 				'conditions' => array('Teacher.id = InstitutionSiteTeacher.teacher_id')
-			),
-			array(
-				'table' => 'teacher_categories',
-				'alias' => 'TeacherCategory',
-				'conditions' => array('TeacherCategory.id = InstitutionSiteTeacher.teacher_category_id')
 			)
 		);
 		return $joins;

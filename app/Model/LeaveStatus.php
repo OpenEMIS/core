@@ -14,13 +14,10 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherQualificationCategory extends TeachersAppModel {
-	public $useTable = "teacher_qualification_categories";
-	public $hasMany = array('TeacherQualificationCertificate');
-	
+class LeaveStatus extends AppModel {
 	public function getLookupVariables() {
 		$lookup = array(
-			'Qualification Categories' => array('model' => 'Teachers.TeacherQualificationCategory')
+			'Leave Statuses' => array('model' => 'LeaveStatus')
 		);
 		return $lookup;
 	}

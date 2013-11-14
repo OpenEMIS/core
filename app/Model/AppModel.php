@@ -62,7 +62,7 @@ class AppModel extends Model {
 	}
 	
 	public function findList($options=array()) {
-		$class = get_class($this);
+		$class = $this->alias;
 		
 		if(is_bool($options) && $options) {
 			$options = array();
