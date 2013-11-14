@@ -10,7 +10,7 @@ echo $this->Html->script('institution_site_classes', false);
     <h1>
         <span><?php echo __('List of Behaviour'); ?></span>
 		<?php
-		echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites', 'action' => 'studentsView', $id), array('class' => 'divider'));
+		echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites', 'action' => 'TeachersView', $id), array('class' => 'divider'));
 		if($_add) {
 			echo $this->Html->link(__('Add'), array('action' => 'teachersBehaviourAdd', $id), array('class' => 'divider'));
 		}
