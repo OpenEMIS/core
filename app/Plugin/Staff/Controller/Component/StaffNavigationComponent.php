@@ -35,12 +35,16 @@ class StaffNavigationComponent extends Component {
 				'GENERAL' => array(
 					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
+                                        $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$'),
 					//$navigation->createLink('Institutions', $controller, 'institutions')
 				),
 				'DETAILS' => array(
+					$navigation->createLink('Qualifications', $controller, 'qualifications'),
 					$navigation->createLink('Employment', $controller, 'employment'),
-                    $navigation->createLink('Attendance', $controller, 'attendance')
+                    $navigation->createLink('Attendance', $controller, 'attendance'),
+					$navigation->createLink('Leave', $controller, 'leaves'),
+					$navigation->createLink('Behaviour', $controller, 'behaviour')
 				)
 			)
 		);

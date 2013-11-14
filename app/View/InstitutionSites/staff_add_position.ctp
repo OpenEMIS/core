@@ -57,33 +57,34 @@ $fieldName = 'data[InstitutionSiteStaff][' . $index . '][%s]';
 				));
 			?>
 		</div>
-	</div>
-	<div class="table_cell">
-		<div class="table_cell_row input_wrapper">
-		<?php
-		echo $this->Form->input($model . '.no_of_hours', array(
-			'type' => 'text',
-			'label' => false,
-			'div' => false,
-			'maxlength' => 3,
-			'name' => sprintf($fieldName, 'no_of_hours'),
-			'onkeypress' => 'return utility.floatCheck(event)'
-		));
-		?>
-		</div>
-	</div>
-	<div class="table_cell">
 		<div class="table_cell_row">
-			<div class="input_wrapper">
+			<div class="label"><?php echo __('Hours'); ?></div>
 			<?php
-			echo $this->Form->input($model . '.salary', array(
+			echo $this->Form->input($model . '.no_of_hours', array(
+				'type' => 'text',
 				'label' => false,
 				'div' => false,
-				'value' => '0.00'
+				'class' => 'default input',
+				'maxlength' => 3,
+				'name' => sprintf($fieldName, 'no_of_hours'),
+				'onkeypress' => 'return utility.floatCheck(event)'
 			));
 			?>
-			</div>
 		</div>
+		<div class="table_cell_row">
+			<div class="label"><?php echo __('Salary'); ?></div>
+			<?php echo $this->Form->input($model . '.salary', array('class' => 'default input', 'label' => false, 'div' => false, 'value' => '0.00')); ?>
+		</div>
+	</div>
+	<div class="table_cell">
+		<?php
+		echo $this->Form->input($model . '.staff_status_id', array(
+			'label' => false,
+			'div' => false,
+			'style' => 'width: 100%',
+			'options' => $statusOptions
+		));
+		?>
 	</div>
 	<div class="table_cell">
 		<div class="table_cell_row"><span class="icon_delete" onclick="jsTable.doRemove(this)"></span></div>

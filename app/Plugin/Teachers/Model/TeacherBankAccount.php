@@ -14,13 +14,13 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherQualificationInstitution extends TeachersAppModel {
-	public $useTable = "teacher_qualification_institutions";
+App::uses('AppModel', 'Model');
+
+class TeacherBankAccount extends AppModel {
+       public $belongsTo = array(
+		   'BankBranch'=> array('foreignKey' => 'bank_branch_id'),
+                   'Teacher' => array('foreignKey' => 'teacher_id')
+        );
 	
-	public function getLookupVariables() {
-		$lookup = array(
-			'Qualification Institutions' => array('model' => 'Teachers.TeacherQualificationInstitution')
-		);
-		return $lookup;
-	}
 }
+?>

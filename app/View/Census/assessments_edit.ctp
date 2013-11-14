@@ -15,7 +15,7 @@ echo $this->Html->script('census', false);
 	));
 	?>
 	<h1>
-		<span><?php echo __('Assessments'); ?></span>
+		<span><?php echo __('Results'); ?></span>
 		<?php echo $this->Html->link(__('View'), array('action' => 'assessments', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
