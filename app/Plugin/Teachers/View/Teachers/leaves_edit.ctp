@@ -100,6 +100,7 @@ echo $this->Html->script('attachments', false);
 		<div class="table file_upload" style="width:240px;">
 			<div class="table_body"></div>
 		</div>
+		<div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
 		<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
 		</div>
 	</div>
