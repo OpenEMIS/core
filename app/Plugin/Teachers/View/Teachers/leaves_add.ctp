@@ -77,8 +77,8 @@ echo $this->Html->script('attachments', false);
 					));
 					?>
 					<div class="table_cell">
-						<div class="file_input">
-							<input type="file" name="<?php echo 'files[' . $size . ']'; ?>" onchange="attachments.updateFile(this)" onmouseout="attachments.updateFile(this)" />
+						<div class="file_input file_index_<?php echo $size;?>">
+							<input type="file" name="<?php echo 'files[' . $size . ']'; ?>" index="<?php echo $size;?>" onchange="attachments.updateFile(this);objTeacherLeaves.validateFileSize(this);" onmouseout="attachments.updateFile(this)" />
 							<div class="file">
 								<div class="input_wrapper"><input type="text" /></div>
 								<input type="button" class="btn" value="<?php echo __('Select File'); ?>" onclick="attachments.selectFile(this)" />
@@ -100,7 +100,7 @@ echo $this->Html->script('attachments', false);
 	</div>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<input type="submit" value="<?php echo __('Save'); ?>"  onclick="js:if(objTeacherLeaves.errorFlag()){ return true; }else{ return false; }"  class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'leaves'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
