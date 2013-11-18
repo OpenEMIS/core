@@ -125,7 +125,7 @@ echo $this->Html->script('attachments', false);
     </div>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<input type="submit" value="<?php echo __('Save'); ?>" onclick="js:if(objTeacherLeaves.errorFlag()){ return true; }else{ return false; }"   class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'leaves'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 </div>
