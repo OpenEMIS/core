@@ -83,6 +83,7 @@ echo $this->Html->script('attachments', false);
 								<div class="input_wrapper"><input type="text" /></div>
 								<input type="button" class="btn" value="<?php echo __('Select File'); ?>" onclick="attachments.selectFile(this)" />
 							</div>
+						 	
 						</div>
 					</div>
 					<div class="table_cell cell_delete">
@@ -91,10 +92,10 @@ echo $this->Html->script('attachments', false);
 				</div>
 			</div>
 		</div>
-
 		<div class="table file_upload" style="width:240px;">
 			<div class="table_body"></div>
 		</div>
+		 <div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
 		<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
 		</div>
 	</div>
