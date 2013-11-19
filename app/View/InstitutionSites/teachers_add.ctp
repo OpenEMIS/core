@@ -27,7 +27,8 @@ echo $this->Html->script('institution_site_teachers', false);
 						'label' => false,
 						'div' => false,
 						'class' => 'default',
-						'placeholder' => __('Identification No, First Name or Last Name')
+						'placeholder' => __('Identification No, First Name or Last Name'),
+						'onkeypress' => 'return InstitutionSiteTeachers.search(this, event)'
 					));
 				?>
 				<span class="icon_clear" onClick="$('#SearchField').val('')">X</span>
@@ -58,33 +59,28 @@ echo $this->Html->script('institution_site_teachers', false);
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'teachersSave')
 	));
-	$data = false;
-	if($this->Session->check('InstitutionSiteTeacherAdd.data')) {
-		$data = $this->Session->read('InstitutionSiteTeacherAdd.data');
-		unset($_SESSION['InstitutionSiteTeacherAdd']);
-	}
-	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => ($data ? $data['teacher_id'] : 0), 'autocomplete' => 'off'));
+	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'autocomplete' => 'off'));
 	?>
 	
 	<div class="info">
 		<div class="row">
 			<div class="label"><?php echo __('Identification No'); ?></div>
-			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo', 'value' => ($data ? $data['identification_no'] : ''), 'disabled' => 'disabled')); ?></div>
+			<div class="value" id="IdentificationNo"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('first_name', array('class' => 'default', 'id' => 'FirstName', 'value' => ($data ? $data['first_name'] : ''), 'disabled' => 'disabled')); ?></div>
+			<div class="value" id="FirstName"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('last_name', array('class' => 'default', 'id' => 'LastName', 'value' => ($data ? $data['last_name'] : ''), 'disabled' => 'disabled')); ?></div>
+			<div class="value" id="LastName"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
-			<div class="value"><?php echo $this->Form->input('gender', array('class' => 'default', 'id' => 'Gender', 'value' => ($data ? $data['gender'] : ''), 'disabled' => 'disabled')); ?></div>
+			<div class="value" id="Gender"></div>
 		</div>
 		
 		<div class="row">
@@ -98,13 +94,18 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 		
 		<div class="row">
+			<div class="label"><?php echo __('Status'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_status_id', array('class' => 'default', 'options' => $statusOptions)); ?></div>
+		</div>
+		
+		<div class="row">
 			<div class="label"><?php echo __('Salary'); ?></div>
 			<div class="value"><?php echo $this->Form->input('salary', array('class' => 'default', 'value' => 0)); ?></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
-			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'start_date'); ?></div>
+			<div class="value"><?php echo $this->Form->input('start_date', array('type' => 'date', 'dateFormat' => 'DMY', 'minYear' => $minYear, 'maxYear' => $maxYear, 'empty' => __('Select'))); ?></div>
 		</div>
 		
 		<div class="row">

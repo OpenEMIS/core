@@ -35,6 +35,7 @@ class StudentsNavigationComponent extends Component {
 					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					//$navigation->createLink('Annual Info', $controller, 'custFieldYrView'),
+                                        $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 					//$navigation->createLink('Institutions', 'institutions')
 				),
@@ -42,7 +43,7 @@ class StudentsNavigationComponent extends Component {
                     $navigation->createLink('Classes', $controller, 'classes'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
                     $navigation->createLink('Behaviour', $controller, 'behaviour','behaviour|^behaviourView$'),
-                    $navigation->createLink('Assessments', $controller, 'assessments')
+                    $navigation->createLink('Results', $controller, 'assessments')
                 ),/*
 				'ASSESSMENT' => array(
 					'_controller' => $controller,

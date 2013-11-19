@@ -18,50 +18,94 @@ App::uses('UtilityComponent', 'Component');
 
 class TeacherQualification extends TeachersAppModel {
     public $useTable = "teacher_qualifications";
-    
+    public $belongsTo = array(
+        'ModifiedUser' => array(
+            'className' => 'SecurityUser',
+            'foreignKey' => 'modified_user_id'
+        ),
+        'CreatedUser' => array(
+            'className' => 'SecurityUser',
+            'foreignKey' => 'created_user_id'
+        )
+    );
+
+    public $validate = array(
+        'qualification_title' => array(
+            'required' => array(
+                'rule' => 'notEmpty',
+                'required' => true,
+                'message' => 'Please enter a valid Qualification Title'
+            )
+        ),
+        'graduate_year' => array(
+            'required' => array(
+                'rule' => 'numeric',
+                'required' => true,
+                'message' => 'Please enter a valid Graduate Year'
+            )
+        ),
+        'qualification_level_id' => array(
+            'required' => array(
+                'rule' => 'notEmpty',
+                'required' => true,
+                'message' => 'Please enter a valid Qualification Level'
+            )
+        ),
+        'qualification_specialisation_id' => array(
+            'required' => array(
+                'rule' => 'notEmpty',
+                'required' => true,
+                'message' => 'Please enter a valid Major/Specialization'
+            )
+        ),
+    );
+
     public function getData($id) {
         $utility = new UtilityComponent(new ComponentCollection);
         $options['joins'] = array(
-            array('table' => 'teacher_qualification_institutions',
-                'alias' => 'TeacherQualificationInstitution',
+            array('table' => 'qualification_institutions',
+                'alias' => 'QualificationInstitution',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'TeacherQualificationInstitution.id = TeacherQualification.teacher_qualification_institution_id'
+                    'QualificationInstitution.id = TeacherQualification.qualification_institution_id'
                 )
             ),
-            array('table' => 'teacher_qualification_certificates',
-                'alias' => 'TeacherQualificationCertificates',
+            array('table' => 'qualification_specialisations',
+                'alias' => 'QualificationSpecialisation',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'TeacherQualificationCertificates.id = TeacherQualification.teacher_qualification_certificate_id'
+                    'QualificationSpecialisation.id = TeacherQualification.qualification_specialisation_id'
                 )
             ),
-            array('table' => 'teacher_qualification_categories',
-                'alias' => 'TeacherQualificationCategories',
+            array('table' => 'qualification_levels',
+                'alias' => 'QualificationLevel',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'TeacherQualificationCategories.id = TeacherQualificationCertificates.teacher_qualification_category_id'
+                    'QualificationLevel.id = TeacherQualification.qualification_level_id'
                 )
-            ),
+            )
         );
 
         $options['fields'] = array(
             'TeacherQualification.id',
-            'TeacherQualification.certificate_no',
-            'TeacherQualification.issue_date',
-            'TeacherQualification.teacher_qualification_institution_id as institute_id',
-            'TeacherQualificationInstitution.name as institute',
-            'TeacherQualification.teacher_qualification_certificate_id as certificate_id',
-            'TeacherQualificationCertificates.name as certificate',
-            'TeacherQualificationCategories.id as category_id',
-            'TeacherQualificationCategories.name as category'
+            'TeacherQualification.document_no',
+            'TeacherQualification.graduate_year',
+            'TeacherQualification.gpa',
+            'TeacherQualification.qualification_title',
+            'TeacherQualification.qualification_institution_country',
+            'TeacherQualification.qualification_institution_id as institute_id',
+            'QualificationInstitution.name as institute',
+            'TeacherQualification.qualification_level_id as level_id',
+            'QualificationLevel.name as level',
+            'TeacherQualification.qualification_specialisation_id as specialisation_id',
+            'QualificationSpecialisation.name as specialisation',
         );
 
         $options['conditions'] = array(
             'TeacherQualification.teacher_id' => $id,
         );
 
-        $options['order'] = array('TeacherQualification.issue_date DESC');
+        $options['order'] = array('TeacherQualification.graduate_year DESC');
 
         $list = $this->find('all', $options);
         $list = $utility->formatResult($list);

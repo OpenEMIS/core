@@ -32,6 +32,8 @@
 	margin: 5px 0;
 }
 
+.view .table_cell_row { margin: 0; }
+
 .table_row.inactive .table_cell { color: #CCCCCC; }
 
 .table_cell a { color: #007CBE; }
@@ -86,7 +88,7 @@
 
 /* Scrollable table body */
 .table_scrollable .table_header { margin-bottom: -1px; }
-.table_scrollable.scroll_active .table_header {	width: 648px !important; }
+.table_scrollable.scroll_active .table_header {	width: 663px !important; }
 .ie8 .table_scrollable.scroll_active .table_header { width: 646px !important; }
 .chrome .table_scrollable.scroll_active .table_header { width: 656px !important; }
 .safari .table_scrollable.scroll_active .table_header { width: 655px !important; }

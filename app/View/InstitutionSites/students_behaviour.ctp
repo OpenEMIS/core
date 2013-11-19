@@ -30,6 +30,7 @@ echo $this->Html->script('institution_site_classes', false);
 			<div class="table_cell cell_behaviour_date"><?php echo __('Date'); ?></div>
             <div class="table_cell cell_behaviour_category"><?php echo __('Category'); ?></div>
             <div class="table_cell cell_behaviour_title"><?php echo __('Title'); ?></div>
+            <div class="table_cell"><?php echo __('Insitution Site'); ?></div>
 		</div>
 		
 		<div class="table_body">
@@ -38,6 +39,7 @@ echo $this->Html->script('institution_site_classes', false);
 				<div class="table_cell center"><?php echo $this->Utility->formatDate($obj['StudentBehaviour']['date_of_behaviour']); ?></div>
                 <div class="table_cell"><?php echo $obj['StudentBehaviourCategory']['name']; ?></div>
                 <div class="table_cell"><?php echo $obj['StudentBehaviour']['title']; ?></div>
+                <div class="table_cell"><?php echo $obj['InstitutionSite']['name']; ?></div>
 			</div>
 			<?php } ?>
 		</div>

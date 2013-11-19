@@ -14,21 +14,24 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherQualificationCertificate extends TeachersAppModel {
-	public $useTable = "teacher_qualification_certificates";
-	public $belongsTo = array('TeacherQualificationCategory');
+class QualificationSpecialisation extends AppModel {
+	public $useTable = "qualification_specialisations";
+	public $hasMany = array('TeacherQualification', 'StaffQualification');
 	
 	public function getLookupVariables() {
-		$parent = ClassRegistry::init('Teachers.TeacherQualificationCategory');
-		$list = $parent->findList();
-		$lookup = array();
-		
-		foreach($list as $id => $name) {
-			$lookup[$name] = array(
-				'model' => 'Teachers.TeacherQualificationCertificate',
-				'conditions' => array('teacher_qualification_category_id' => $id)
-			);
-		}
+		$lookup = array(
+			'Qualification Specialisations' => array('model' => 'QualificationSpecialisation')
+		);
 		return $lookup;
+	}
+
+	public function getOptions(){
+		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('QualificationSpecialisation.order')));
+		$list = array();
+		foreach($data as $obj){
+			$list[$obj['QualificationSpecialisation']['id']] = $obj['QualificationSpecialisation']['name'];
+		}
+
+		return $list;
 	}
 }

@@ -9,7 +9,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	<?php
 	echo $this->Form->create('StaffAttendance', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'StaffAttendanceEdit')
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'staffAttendanceEdit')
 	));
 	?>
     <h1>
@@ -44,8 +44,8 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
     
     <div class="table full_width">
 		<div class="table_head">
-			<div class="table_cell"><?php echo __('Total no of days attended'); ?></div>
-			<div class="table_cell"><?php echo __('Total no of days absent'); ?></div>
+			<div class="table_cell"><?php echo __('Total days attended'); ?></div>
+			<div class="table_cell"><?php echo __('Total days absent'); ?></div>
              <div class="table_cell"><?php echo __('Total'); ?></div>
 		</div>
 		

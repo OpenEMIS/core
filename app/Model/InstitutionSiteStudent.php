@@ -17,7 +17,33 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
-
+	public $belongsTo = array('StudentStatus');
+	
+	public function getDetails($studentId, $institutionSiteId) {
+		$data = $this->find('all', array(
+			'fields' => array('InstitutionSiteStudent.*', 'EducationProgramme.*', 'StudentStatus.*'),
+			'recursive' => 0,
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id'
+					)
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+				)
+			),
+			'conditions' => array('InstitutionSiteStudent.student_id' => $studentId),
+			'order' => array('InstitutionSiteStudent.start_date')
+		));
+		return $data;
+	}
+	
 	public function getGenderTotal($siteProgrammeId) {
 		$joins = array(
 			array('table' => 'students', 'alias' => 'Student')

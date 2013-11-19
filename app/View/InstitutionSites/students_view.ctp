@@ -10,6 +10,9 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		<span><?php echo __('Student Information'); ?></span>
 		<?php 
 		$obj = $data['Student'];
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'studentsEdit'), array('class' => 'divider'));
+		}
 		if($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
 			echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
 		}
@@ -19,8 +22,6 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
-	
-
 	
 	<fieldset class="section_break" id="general">
 		<legend><?php echo __('General'); ?></legend>
@@ -56,6 +57,29 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		<div class="row">
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
+		</div>
+	</fieldset>
+	
+	<fieldset class="section_break">
+		<legend><?php echo __('Programmes'); ?></legend>
+		<div class="table full_width" style="margin-top: 10px;">
+			<div class="table_head">
+				<div class="table_cell" style="width: 220px;"><?php echo __('Programme'); ?></div>
+				<div class="table_cell"><?php echo __('From'); ?></div>
+				<div class="table_cell"><?php echo __('To'); ?></div>
+				<div class="table_cell" style="width: 100px;"><?php echo __('Status'); ?></div>
+			</div>
+			
+			<div class="table_body">
+				<?php foreach($details as $detail) { ?>
+				<div class="table_row">
+					<div class="table_cell"><?php echo $detail['EducationProgramme']['name']; ?></div>
+					<div class="table_cell center"><?php echo $this->Utility->formatDate($detail['InstitutionSiteStudent']['start_date']); ?></div>
+					<div class="table_cell center"><?php echo $this->Utility->formatDate($detail['InstitutionSiteStudent']['end_date']); ?></div>
+					<div class="table_cell center"><?php echo $detail['StudentStatus']['name']; ?></div>
+				</div>
+				<?php } ?>
+			</div>
 		</div>
 	</fieldset>
 	
@@ -114,6 +138,4 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		</fieldset>
 		<?php } ?>
 	</fieldset>
-	
-	<?php echo $this->Form->end(); ?>
 </div>

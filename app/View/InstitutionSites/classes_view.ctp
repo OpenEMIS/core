@@ -20,7 +20,7 @@ echo $this->Html->script('search', false);
             echo $this->Html->link(__('Attendance'), array('action' => 'classesAttendance'), array('class' => 'divider'));
         }
 		if($_accessControl->check($this->params['controller'], 'classesAssessments')) {
-            echo $this->Html->link(__('Assessments'), array('action' => 'classesAssessments', $classId), array('class' => 'divider'));
+            echo $this->Html->link(__('Results'), array('action' => 'classesAssessments', $classId), array('class' => 'divider'));
         }
 		?>
     </h1>
