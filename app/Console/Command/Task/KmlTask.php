@@ -123,8 +123,11 @@ class KmlTask extends AppTask {
 		$settings['header'] = str_replace('{start_latitude}', ($lat == 0?$oneSite['InstitutionSite']['latitude']:$lat),$settings['header']); 
                 $settings['header'] = str_replace('{start_range}', ($range == 0?'2000000':$range),$settings['header']); 
 		$this->prepareKML($settings);
-		$res = $this->Area->find('all',array('fields'=>array('Area.name as AreaName','Area.id as AreaId'),'conditions'=>array('AreaLevel.level'=>2)));
-		
+		$countofLevel3 = $res = $this->Area->find('count',array('conditions'=>array('AreaLevel.level'=>3)));
+                $initlevel = ($countofLevel3 > 0)?2:1;
+                $res = $this->Area->find('all',array('fields'=>array('Area.name as AreaName','Area.id as AreaId'),'conditions'=>array('AreaLevel.level'=>$initlevel)));
+                //$res = $this->Area->find('all',array('fields'=>array('Area.name as AreaName','Area.id as AreaId'),'conditions'=>array('AreaLevel.level'=>2)));
+                   
 		$this->Common->formatData($res);
 		$ids = array();
 		foreach($res as $arr){
