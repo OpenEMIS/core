@@ -1129,69 +1129,91 @@ class TeachersController extends TeachersAppController {
         
     /***BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already**/
     public function bankAccounts() {
-                $this->Navigation->addCrumb('Bank Accounts');
+        $this->Navigation->addCrumb('Bank Accounts');
 
-                if($this->request->is('post')) {
-                        $this->TeacherBankAccount->create();
-                        $this->request->data['TeacherBankAccount']['teacher_id'] = $this->teacherId;
-                        $this->TeacherBankAccount->save($this->request->data['TeacherBankAccount']);
-                }
+        $data = $this->TeacherBankAccount->find('all',array('conditions'=>array('TeacherBankAccount.teacher_id'=>$this->teacherId)));
+        $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+        $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+        $this->set('data',$data);
+        $this->set('bank',$bank);
+        $this->set('banklist',$banklist);
+    }
 
-                $data = $this->TeacherBankAccount->find('all',array('conditions'=>array('TeacherBankAccount.teacher_id'=>$this->teacherId)));
-                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
-                $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
-                $this->set('data',$data);
-                $this->set('bank',$bank);
-                $this->set('banklist',$banklist);
+
+    public function bankAccountsView() {
+        $bankAccountId = $this->params['pass'][0];
+        $bankAccountObj = $this->TeacherBankAccount->find('all',array('conditions'=>array('TeacherBankAccount.id' => $bankAccountId)));
+        
+        if(!empty($bankAccountObj)) {
+            $this->Navigation->addCrumb('Bank Account Details');
+            
+            $this->Session->write('TeacherBankAccountId', $bankAccountId);
+            $this->set('bankAccountObj', $bankAccountObj);
         }
+        $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+        $this->set('banklist',$banklist);
 
-        public function bankAccountsEdit() {
-                $this->Navigation->addCrumb('Edit Bank Accounts');
-                if($this->request->is('post')) { // save
+    }
 
-                        foreach($this->request->data['TeacherBankAccount'] as &$arrVal){
-                                if($arrVal['id'] == $this->data['TeacherBankAccount']['active']){
-                                        $arrVal['active'] = 1;
-                                        unset($this->request->data['TeacherBankAccount']['active']);
-                                        break;
-                                }
-                        }
-                        //pr($this->request->data['InstitutionSiteBankAccount']);
-                        //die;
-                        $this->TeacherBankAccount->saveAll($this->request->data['TeacherBankAccount']);
-                        $this->redirect(array('controller' => 'Teachers', 'action' => 'bankAccounts'));
-                }
-                $data = $this->TeacherBankAccount->find('all',array('conditions'=>array('TeacherBankAccount.teacher_id'=>$this->teacherId)));
-                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
-
-                $this->set('data',$data);
-                $this->set('bank',$bank);
+    public function bankAccountsAdd() {
+        $this->Navigation->addCrumb('Add Bank Accounts');
+        if($this->request->is('post')) { // save
+            $this->TeacherBankAccount->create();
+            if($this->TeacherBankAccount->save($this->request->data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'bankAccounts'));
+            }
         }
+        $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
-        public function bankAccountsDelete($id) {
-                if ($this->request->is('get')) {
-                        throw new MethodNotAllowedException();
-                }
-                $this->TeacherBankAccount->id = $id;
-                $info = $this->TeacherBankAccount->read();
-                if ($this->TeacherBankAccount->delete($id)) {
-                         $message = __('Record Deleted!', true);
+        $this->set('teacher_id', $this->teacherId);
+        $this->set('bank',$bank);
+    }
 
-                }else{
-                         $message = __('Error Occured. Please, try again.', true);
-                }
-                if($this->RequestHandler->isAjax()){
-                        $this->autoRender = false;
-                        $this->layout = 'ajax';
-                        echo json_encode(compact('message'));
-                }
+    public function bankAccountsEdit() {
+        $bankBranch = array();
+        if($this->request->is('get')) {
+            $bankAccountId = $this->params['pass'][0];
+            $bankAccountObj = $this->TeacherBankAccount->find('first',array('conditions'=>array('TeacherBankAccount.id' => $bankAccountId)));
+  
+            if(!empty($bankAccountObj)) {
+                $this->Navigation->addCrumb('Edit Bank Account Details');
+                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
+                $this->request->data = $bankAccountObj;
+                $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
+
+                $this->set('id', $bankAccountId);
+            }
+         } else {
+            $this->request->data['TeacherBankAccount']['teacher_id'] = $this->teacherId;
+            if($this->TeacherBankAccount->save($this->request->data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));  
+                $this->redirect(array('action' => 'bankAccountsView', $this->request->data['TeacherBankAccount']['id']));
+            }
+         }
+        $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+        $this->set('bank',$bank);
+        $this->set('bankBranch', $bankBranch);
+    }
+
+   
+    public function bankAccountsDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherBankAccountId')) {
+            $id = $this->Session->read('TeacherBankAccountId');
+
+            $teacherId = $this->Session->read('TeacherId');
+            $name = $this->TeacherBankAccount->field('account_number', array('TeacherBankAccount.id' => $id));
+            $this->TeacherBankAccount->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'bankAccounts'));
         }
+    }
 
-        public function bankAccountsBankBranches() {
-                $this->autoRender = false;
-                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
-                echo json_encode($bank);
-        }
+    public function bankAccountsBankBranches() {
+            $this->autoRender = false;
+            $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+            echo json_encode($bank);
+    }
 
     // Staff behaviour part
     public function behaviour(){
