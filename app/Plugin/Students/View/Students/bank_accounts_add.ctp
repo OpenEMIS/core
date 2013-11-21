@@ -21,12 +21,12 @@ echo $this->Html->script('bankaccounts', false);
 	<?php echo $this->Form->input('student_id', array('type'=>'hidden', 'value'=>$student_id)); ?>
 	<div class="row edit">
         <div class="label"><?php echo __('Account Name'); ?></div>
-        <div class="value"><?php echo $this->Form->input('account_name', array('id' => 'account_name', 'class' => 'default', 'label'=>false)); ?></div>
+        <div class="value"><?php echo $this->Form->input('account_name', array('class' => 'default', 'label'=>false)); ?></div>
     </div>
     
     <div class="row edit">
 		<div class="label"><?php echo __('Account Number'); ?></div>
-		<div class="value"><?php echo $this->Form->input('account_number', array('id' => 'account_name', 'class' => 'default', 'label'=>false)); ?></div>
+		<div class="value"><?php echo $this->Form->input('account_number', array('class' => 'default', 'label'=>false)); ?></div>
 	</div>
 
 	<div class="row edit">
