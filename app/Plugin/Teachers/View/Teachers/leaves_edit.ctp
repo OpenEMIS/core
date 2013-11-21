@@ -48,7 +48,7 @@ echo $this->Html->script('attachments', false);
 
 	<div class="row">
 		<div class="label"><?php echo __('Days'); ?></div>
-		<div class="value"><?php echo $this->Form->input('number_of_days', array('class'=>'compute_days')); ?></div>
+		<div class="value"><?php echo $this->Form->input('number_of_days', array('class'=>'compute_days default')); ?></div>
 	</div>
 	
 	<div class="row">
