@@ -48,6 +48,7 @@ class TeachersController extends TeachersAppController {
 		'Teachers.TeacherLeaveType',
         'Teachers.TeacherBehaviour',
         'Teachers.TeacherBehaviourCategory',
+        'Teachers.TeacherComment',
         'SchoolYear',
 		'ConfigItem',
         'LeaveStatus'
@@ -1229,6 +1230,76 @@ class TeachersController extends TeachersAppController {
             $this->set('teacherBehaviourObj', $teacherBehaviourObj);
         } else {
             $this->redirect(array('action' => 'behaviour'));
+        }
+    }
+
+    public function comments(){
+        $this->Navigation->addCrumb('Comments');
+        $data = $this->TeacherComment->find('all',array('conditions'=>array('TeacherComment.teacher_id'=>$this->teacherId), 'recursive' => -1));
+
+        $this->set('list', $data);
+    }
+
+    public function commentsAdd() {
+        if ($this->request->is('post')) {
+            $this->TeacherComment->create();
+            $this->request->data['TeacherComment']['teacher_id'] = $this->teacherId;
+            
+            $data = $this->data['TeacherComment'];
+
+            if ($this->TeacherComment->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'comments'));
+            }
+        }
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function commentsView() {
+        $commentId = $this->params['pass'][0];
+        $commentObj = $this->TeacherComment->find('all',array('conditions'=>array('TeacherComment.id' => $commentId)));
+        
+        if(!empty($commentObj)) {
+            $this->Navigation->addCrumb('Comment Details');
+            
+            $this->Session->write('TeacherCommentId', $commentId);
+            $this->set('commentObj', $commentObj);
+        } 
+    }
+
+    public function commentsEdit() {
+        $commentId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $commentObj = $this->TeacherComment->find('first',array('conditions'=>array('TeacherComment.id' => $commentId)));
+  
+            if(!empty($commentObj)) {
+                $this->Navigation->addCrumb('Edit Comment Details');
+                $this->request->data = $commentObj;
+               
+            }
+         } else {
+            $commentData = $this->data['TeacherComment'];
+            $commentData['teacher_id'] = $this->teacherId;
+            
+            if ($this->TeacherComment->save($commentData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'commentsView', $commentData['id']));
+            }
+         }
+
+        $this->set('id', $commentId);
+       
+    }
+
+    public function commentsDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherCommentId')) {
+            $id = $this->Session->read('TeacherCommentId');
+            $teacherId = $this->Session->read('TeacherId');
+            $name = $this->TeacherComment->field('title', array('TeacherComment.id' => $id));
+            $this->TeacherComment->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'comments', $teacherId));
         }
     }
 }
