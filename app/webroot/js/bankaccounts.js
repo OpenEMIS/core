@@ -42,7 +42,6 @@ var BankAccounts = {
         var p = $(thisobj).val();
         var brnchs = null;
         $.each(BankAccounts.bankBranchData,function(i,o){
-            console.log(o.Bank.id);
             if(o.Bank.id == p){ 
                 brnchs = o.BankBranch ; 
                 return false;  //exit the each
@@ -82,7 +81,6 @@ var BankAccounts = {
             if(!bool){
                 return false;
             }
-            console.log($(o).val());
             if($(o).val() == "0" || $(o).val() ==""){
                 errorMessages.push(i18n.BankAccounts.validateAddBranch);
                 bool = false;

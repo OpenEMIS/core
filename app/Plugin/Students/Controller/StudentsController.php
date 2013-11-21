@@ -67,7 +67,7 @@ class StudentsController extends StudentsAppController {
 		if(in_array($this->action, $actions)) {
 			$this->bodyTitle = 'Students';
 		} else {
-			if($this->Session->check('StudentBankAccountId') && $this->action!=='Home') {
+			if($this->Session->check('StudentId') && $this->action!=='Home') {
 	            $this->studentId = $this->Session->read('StudentId');
 				$this->studentObj = $this->Session->read('StudentObj');
 				$studentFirstName = $this->Student->field('first_name', array('Student.id' => $this->studentId));
