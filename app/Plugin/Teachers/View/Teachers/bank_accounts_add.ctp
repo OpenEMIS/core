@@ -18,6 +18,7 @@ echo $this->Html->script('bankaccounts', false);
 			'url' => array('controller' => 'Teachers', 'action' => 'bankAccountsAdd')
 		));
 	?>
+	<div class="bankAccountForm">
 	<?php echo $this->Form->input('teacher_id', array('type'=>'hidden', 'value'=>$teacher_id)); ?>
 	<div class="row edit">
         <div class="label"><?php echo __('Account Name'); ?></div>
@@ -53,4 +54,5 @@ echo $this->Html->script('bankaccounts', false);
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
+	</div>
 </div>
