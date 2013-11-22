@@ -793,6 +793,7 @@ class StaffController extends StaffAppController {
         $this->layout = 'ajax';
         $this->set('params', $this->params->query);
         $this->set('_model', 'StaffLeaveAttachment');
+        $this->set('jsname', 'objStaffLeaves');
         $this->render('/Elements/attachment/compact_add');
     }
 
