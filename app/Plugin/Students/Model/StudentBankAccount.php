@@ -19,8 +19,27 @@ App::uses('AppModel', 'Model');
 class StudentBankAccount extends AppModel {
        public $belongsTo = array(
 		   'BankBranch'=> array('foreignKey' => 'bank_branch_id'),
-           'Student' => array('foreignKey' => 'student_id')
+           'Student' => array('foreignKey' => 'student_id'),
+           'ModifiedUser'=> array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
+           'CreatedUser'=> array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser'),
         );
+
+       public $validate = array(
+        'account_name' => array(
+          'ruleRequired' => array(
+            'rule' => 'notEmpty',
+            'required' => true,
+            'message' => 'Please enter an Account name'
+          )
+        ),
+        'account_number' => array(
+            'ruleRequired' => array(
+              'rule' => 'notEmpty',
+              'required' => true,
+              'message' => 'Please enter an Account number'
+            )
+        )
+    );
 	
 }
 ?>
