@@ -1,6 +1,5 @@
 <?php echo $this->element('breadcrumb'); ?>
-<?php echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false)); ?>
-<?php echo $this->Html->script('jquery-ui.min', false); ?>
+<?php echo $this->Html->script('app.date', false); ?>
 
 <div id="comment" class="content_wrapper edit add">
    <h1>
@@ -16,8 +15,7 @@
 
     echo $this->Form->create('StaffComment', array(
         'url' => array('controller' => 'Staff', 'action' => 'commentsAdd'),
-        'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default'),
-        'type' => 'file'
+        'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
     ));
     ?>
 
