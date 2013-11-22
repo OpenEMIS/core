@@ -11,10 +11,10 @@ echo $this->Html->script('bankaccounts', false);
         <span><?php echo __('Add Bank Account'); ?></span>
     </h1>
     <?php echo $this->element('alert'); ?>
-	
+	<div class="bankAccountForm">
 	<?php 
 	echo $this->Form->create('StaffBankAccount', array(
-			'id' => 'StaffBankAccount',
+			'id' => 'StaffBankAccount', 
 			'url' => array('controller' => 'Staff', 'action' => 'bankAccountsAdd')
 		));
 	?>
@@ -53,4 +53,5 @@ echo $this->Html->script('bankaccounts', false);
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
+	</div>
 </div>
