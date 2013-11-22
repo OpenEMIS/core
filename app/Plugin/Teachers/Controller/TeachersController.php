@@ -1095,6 +1095,7 @@ class TeachersController extends TeachersAppController {
         $this->layout = 'ajax';
         $this->set('params', $this->params->query);
         $this->set('_model', 'TeacherLeaveAttachment');
+        $this->set('jsname', 'objTeacherLeaves');
         $this->render('/Elements/attachment/compact_add');
     }
 
