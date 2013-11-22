@@ -31,7 +31,7 @@ var BankAccounts = {
         $.ajax({ 
             type: "post",
             dataType: "json",
-            url: getRootURL()+"InstitutionSites/bankAccountsBankBranches",
+            url: getRootURL()+"Teachers/bankAccountsBankBranches",
             success: function(data){
                 BankAccounts.bankBranchData = data;
             }
@@ -61,7 +61,7 @@ var BankAccounts = {
         var errorMessages = [];
         var alertOpt = {
             // id: 'alert-' + new Date().getTime(),
-            parent: '.content_wrapper',
+            parent: '.bankAccountForm',
             title: 'Click to dismiss',
             text: "Error have occurred.",
             type: alertType.error, // alertType.info or alertType.warn or alertType.error
@@ -77,7 +77,6 @@ var BankAccounts = {
         }*/
 
         $('select[name*="[bank_branch_id]"]').each(function(i,o){
-
             if(!bool){
                 return false;
             }

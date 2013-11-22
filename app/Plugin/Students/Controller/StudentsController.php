@@ -837,9 +837,9 @@ class StudentsController extends StudentsAppController {
     }
 
     public function bankAccountsBankBranches() {
-            $this->autoRender = false;
-            $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
-            echo json_encode($bank);
+        $this->autoRender = false;
+        $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+        echo json_encode($bank);
     }
 
     public function comments(){
