@@ -16,7 +16,7 @@ echo $this->Html->script('bankaccounts', false);
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
-	
+	<div class="bankAccountForm">
 	<?php 
 	echo $this->Form->create('TeacherBankAccount', array(
 			'id' => 'TeacherBankAccount',
@@ -58,4 +58,5 @@ echo $this->Html->script('bankaccounts', false);
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
+	</div>
 </div>

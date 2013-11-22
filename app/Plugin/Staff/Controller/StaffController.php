@@ -1094,7 +1094,6 @@ class StaffController extends StaffAppController {
         }
     }
 
-
     public function bankAccountsBankBranches() {
             $this->autoRender = false;
             $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
