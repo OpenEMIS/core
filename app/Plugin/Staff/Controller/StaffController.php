@@ -45,6 +45,7 @@ class StaffController extends StaffAppController {
 			'Staff.StaffBehaviour',
             'Staff.StaffBehaviourCategory',
             'Staff.StaffQualification',
+            'Staff.StaffComment',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -1012,69 +1013,93 @@ class StaffController extends StaffAppController {
         }
     }
         
-         /***BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already**/
-        public function bankAccounts() {
-                $this->Navigation->addCrumb('Bank Accounts');
+    /***BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already**/
+    public function bankAccounts() {
+        $this->Navigation->addCrumb('Bank Accounts');
 
-                if($this->request->is('post')) {
-                        $this->StaffBankAccount->create();
-                        $this->request->data['StaffBankAccount']['staff_id'] = $this->staffId;
-                        $this->StaffBankAccount->save($this->request->data['StaffBankAccount']);
-                }
+        $data = $this->StaffBankAccount->find('all',array('conditions'=>array('StaffBankAccount.staff_id'=>$this->staffId)));
+        $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+        $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+        $this->set('data',$data);
+        $this->set('bank',$bank);
+        $this->set('banklist',$banklist);
+    }
 
-                $data = $this->StaffBankAccount->find('all',array('conditions'=>array('StaffBankAccount.staff_id'=>$this->staffId)));
-                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
-                $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
-                $this->set('data',$data);
-                $this->set('bank',$bank);
-                $this->set('banklist',$banklist);
+
+    public function bankAccountsView() {
+        $bankAccountId = $this->params['pass'][0];
+        $bankAccountObj = $this->StaffBankAccount->find('all',array('conditions'=>array('StaffBankAccount.id' => $bankAccountId)));
+        
+        if(!empty($bankAccountObj)) {
+            $this->Navigation->addCrumb('Bank Account Details');
+            
+            $this->Session->write('StaffBankAccountId', $bankAccountId);
+            $this->set('bankAccountObj', $bankAccountObj);
         }
+        $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+        $this->set('banklist',$banklist);
 
-        public function bankAccountsEdit() {
-                $this->Navigation->addCrumb('Edit Bank Accounts');
-                if($this->request->is('post')) { // save
+    }
 
-                        foreach($this->request->data['StaffBankAccount'] as &$arrVal){
-                                if($arrVal['id'] == $this->data['StaffBankAccount']['active']){
-                                        $arrVal['active'] = 1;
-                                        unset($this->request->data['StaffBankAccount']['active']);
-                                        break;
-                                }
-                        }
-                        $this->StaffBankAccount->saveAll($this->request->data['StaffBankAccount']);
-                        $this->redirect(array('controller' => 'Staff', 'action' => 'bankAccounts'));
-                }
-                $data = $this->StaffBankAccount->find('all',array('conditions'=>array('StaffBankAccount.staff_id'=>$this->staffId)));
-                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
-
-                $this->set('data',$data);
-                $this->set('bank',$bank);
+    public function bankAccountsAdd() {
+        $this->Navigation->addCrumb('Add Bank Accounts');
+        if($this->request->is('post')) { // save
+            $this->StaffBankAccount->create();
+            if($this->StaffBankAccount->save($this->request->data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'bankAccounts'));
+            }
         }
+        $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
-        public function bankAccountsDelete($id) {
-                if ($this->request->is('get')) {
-                        throw new MethodNotAllowedException();
-                }
-                $this->StaffBankAccount->id = $id;
-                $info = $this->StaffBankAccount->read();
-                if ($this->StaffBankAccount->delete($id)) {
-                         $message = __('Record Deleted!', true);
+        $this->set('staff_id', $this->staffId);
+        $this->set('bank',$bank);
+    }
 
-                }else{
-                         $message = __('Error Occured. Please, try again.', true);
-                }
-                if($this->RequestHandler->isAjax()){
-                        $this->autoRender = false;
-                        $this->layout = 'ajax';
-                        echo json_encode(compact('message'));
-                }
+    public function bankAccountsEdit() {
+        $bankBranch = array();
+        if($this->request->is('get')) {
+            $bankAccountId = $this->params['pass'][0];
+            $bankAccountObj = $this->StaffBankAccount->find('first',array('conditions'=>array('StaffBankAccount.id' => $bankAccountId)));
+  
+            if(!empty($bankAccountObj)) {
+                $this->Navigation->addCrumb('Edit Bank Account Details');
+                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
+                $this->request->data = $bankAccountObj;
+                $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
+
+                $this->set('id', $bankAccountId);
+            }
+         } else {
+            $this->request->data['StaffBankAccount']['staff_id'] = $this->staffId;
+            if($this->StaffBankAccount->save($this->request->data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));  
+                $this->redirect(array('action' => 'bankAccountsView', $this->request->data['StaffBankAccount']['id']));
+            }
+         }
+        $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+        $this->set('bank',$bank);
+        $this->set('bankBranch', $bankBranch);
+    }
+
+   
+    public function bankAccountsDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffBankAccountId')) {
+            $id = $this->Session->read('StaffBankAccountId');
+
+            $staffId = $this->Session->read('StaffId');
+            $name = $this->StaffBankAccount->field('account_number', array('StaffBankAccount.id' => $id));
+            $this->StaffBankAccount->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'bankAccounts'));
         }
+    }
 
-        public function bankAccountsBankBranches() {
-                $this->autoRender = false;
-                $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
-                echo json_encode($bank);
-        }
+    public function bankAccountsBankBranches() {
+            $this->autoRender = false;
+            $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
+            echo json_encode($bank);
+    }
 
     // Staff behaviour part
     public function behaviour(){
@@ -1111,6 +1136,77 @@ class StaffController extends StaffAppController {
             $this->set('staffBehaviourObj', $staffBehaviourObj);
         } else {
             $this->redirect(array('action' => 'behaviour'));
+        }
+    }
+
+    public function comments(){
+        $this->Navigation->addCrumb('Comments');
+        $data = $this->StaffComment->find('all',array('conditions'=>array('StaffComment.staff_id'=>$this->staffId), 'recursive' => -1));
+
+        $this->set('list', $data);
+    }
+
+    public function commentsAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffComment->create();
+            $this->request->data['StaffComment']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffComment'];
+
+            if ($this->StaffComment->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'comments'));
+            }
+        }
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function commentsView() {
+        $commentId = $this->params['pass'][0];
+        $commentObj = $this->StaffComment->find('all',array('conditions'=>array('StaffComment.id' => $commentId)));
+        
+        if(!empty($commentObj)) {
+            $this->Navigation->addCrumb('Comment Details');
+            
+            $this->Session->write('StaffCommentId', $commentId);
+            $this->set('commentObj', $commentObj);
+        } 
+    }
+
+    public function commentsEdit() {
+        $commentId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $commentObj = $this->StaffComment->find('first',array('conditions'=>array('StaffComment.id' => $commentId)));
+  
+            if(!empty($commentObj)) {
+                $this->Navigation->addCrumb('Edit Comment Details');
+                $this->request->data = $commentObj;
+               
+            } 
+
+         } else {
+            $commentData = $this->data['StaffComment'];
+            $commentData['staff_id'] = $this->staffId;
+            
+            if ($this->StaffComment->save($commentData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'commentsView', $commentData['id']));
+            }
+         }
+
+        $this->set('id', $commentId);
+       
+    }
+
+    public function commentsDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffCommentId')) {
+            $id = $this->Session->read('StaffCommentId');
+            $staffId = $this->Session->read('StaffId');
+            $name = $this->StaffComment->field('title', array('StaffComment.id' => $id));
+            $this->StaffComment->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'comments', $staffId));
         }
     }
 }
