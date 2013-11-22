@@ -44,6 +44,7 @@ class StudentsController extends StudentsAppController {
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
+        'Students.StudentComment',
         'SchoolYear',
 	'ConfigItem'
     );
@@ -840,5 +841,74 @@ class StudentsController extends StudentsAppController {
         $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
         echo json_encode($bank);
     }
-    
+
+    public function comments(){
+        $this->Navigation->addCrumb('Comments');
+        $data = $this->StudentComment->find('all',array('conditions'=>array('StudentComment.student_id'=>$this->studentId), 'recursive' => -1));
+
+        $this->set('list', $data);
+    }
+
+    public function commentsAdd() {
+        if ($this->request->is('post')) {
+            $this->StudentComment->create();
+            $this->request->data['StudentComment']['student_id'] = $this->studentId;
+            
+            $data = $this->data['StudentComment'];
+
+            if ($this->StudentComment->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'comments'));
+            }
+        }
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function commentsView() {
+        $commentId = $this->params['pass'][0];
+        $commentObj = $this->StudentComment->find('all',array('conditions'=>array('StudentComment.id' => $commentId)));
+        
+        if(!empty($commentObj)) {
+            $this->Navigation->addCrumb('Comment Details');
+            
+            $this->Session->write('StudentCommentId', $commentId);
+            $this->set('commentObj', $commentObj);
+        } 
+    }
+
+    public function commentsEdit() {
+        $commentId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $commentObj = $this->StudentComment->find('first',array('conditions'=>array('StudentComment.id' => $commentId)));
+  
+            if(!empty($commentObj)) {
+                $this->Navigation->addCrumb('Edit Comment Details');
+                $this->request->data = $commentObj;
+               
+            }
+         } else {
+            $commentData = $this->data['StudentComment'];
+            $commentData['student_id'] = $this->studentId;
+            
+            if ($this->StudentComment->save($commentData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'commentsView', $commentData['id']));
+            }
+         }
+
+        $this->set('id', $commentId);
+       
+    }
+
+    public function commentsDelete($id) {
+        if($this->Session->check('StudentId') && $this->Session->check('StudentCommentId')) {
+            $id = $this->Session->read('StudentCommentId');
+            $studentId = $this->Session->read('StudentId');
+            $name = $this->StudentComment->field('title', array('StudentComment.id' => $id));
+            $this->StudentComment->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'comments', $studentId));
+        }
+    }
 }
