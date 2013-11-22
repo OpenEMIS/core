@@ -592,13 +592,6 @@ class InstitutionSitesController extends AppController {
 	public function bankAccounts() {
 		$this->Navigation->addCrumb('Bank Accounts');
                 
-		if($this->request->is('post')) {
-			//pr($this->data);
-			$this->InstitutionSiteAttachment->create();
-			$this->request->data['InstitutionSiteBankAccount']['institution_site_id'] = $this->institutionSiteId;
-			$this->InstitutionSiteBankAccount->save($this->request->data['InstitutionSiteBankAccount']);
-		}
-		
 		$data = $this->InstitutionSiteBankAccount->find('all',array('conditions'=>array('InstitutionSiteBankAccount.institution_site_id'=>$this->institutionSiteId)));
 		$bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
 		$banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
@@ -606,48 +599,74 @@ class InstitutionSitesController extends AppController {
 		$this->set('bank',$bank);
 		$this->set('banklist',$banklist);
 	}
-	
-	public function bankAccountsEdit() {
-		$this->Navigation->addCrumb('Edit Bank Accounts');
-		if($this->request->is('post')) { // save
-			
-			foreach($this->request->data['InstitutionSiteBankAccount'] as &$arrVal){
-				if($arrVal['id'] == $this->data['InstitutionSiteBankAccount']['active']){
-					$arrVal['active'] = 1;
-					unset($this->request->data['InstitutionSiteBankAccount']['active']);
-					break;
-				}
-			}
-			//pr($this->request->data['InstitutionSiteBankAccount']);
-			//die;
-			$this->InstitutionSiteBankAccount->saveAll($this->request->data['InstitutionSiteBankAccount']);
-			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'bankAccounts'));
-		}
-		$data = $this->InstitutionSiteBankAccount->find('all',array('conditions'=>array('InstitutionSiteBankAccount.institution_site_id'=>$this->institutionSiteId)));
-		$bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
 
-		$this->set('data',$data);
+	public function bankAccountsView() {
+        $bankAccountId = $this->params['pass'][0];
+        $bankAccountObj = $this->InstitutionSiteBankAccount->find('all',array('conditions'=>array('InstitutionSiteBankAccount.id' => $bankAccountId)));
+        
+        if(!empty($bankAccountObj)) {
+            $this->Navigation->addCrumb('Bank Account Details');
+            
+            $this->Session->write('InstitutionSiteBankAccountId', $bankAccountId);
+            $this->set('bankAccountObj', $bankAccountObj);
+        }
+        $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+		$this->set('banklist',$banklist);
+
+    }
+
+	public function bankAccountsAdd() {
+		$this->Navigation->addCrumb('Add Bank Accounts');
+		if($this->request->is('post')) { // save
+			$this->InstitutionSiteBankAccount->create();
+			if($this->InstitutionSiteBankAccount->save($this->request->data)){
+			 	$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+				$this->redirect(array('action' => 'bankAccounts'));
+			}
+		}
+		$bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+
+		$this->set('institution_site_id', $this->institutionSiteId);
 		$this->set('bank',$bank);
 	}
-    
-	public function bankAccountsDelete($id) {
-		if ($this->request->is('get')) {
-			throw new MethodNotAllowedException();
-		}
-		$this->InstitutionSiteBankAccount->id = $id;
-		$info = $this->InstitutionSiteBankAccount->read();
-		if ($this->InstitutionSiteBankAccount->delete($id)) {
-			 $message = __('Record Deleted!', true);
+	
+	public function bankAccountsEdit() {
+		$bankBranch = array();
+		if($this->request->is('get')) {
+            $bankAccountId = $this->params['pass'][0];
+            $bankAccountObj = $this->InstitutionSiteBankAccount->find('first',array('conditions'=>array('InstitutionSiteBankAccount.id' => $bankAccountId)));
+  
+            if(!empty($bankAccountObj)) {
+                $this->Navigation->addCrumb('Edit Bank Account Details');
+                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
+                $this->request->data = $bankAccountObj;
+                $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
 
-		}else{
-			 $message = __('Error Occured. Please, try again.', true);
-		}
-		if($this->RequestHandler->isAjax()){
-			$this->autoRender = false;
-			$this->layout = 'ajax';
-			echo json_encode(compact('message'));
-		}
+                $this->set('id', $bankAccountId);
+            }
+         } else {
+         	$this->request->data['InstitutionSiteBankAccount']['institution_site_id'] = $this->institutionSiteId;
+            if($this->InstitutionSiteBankAccount->save($this->request->data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));	
+                $this->redirect(array('action' => 'bankAccountsView', $this->request->data['InstitutionSiteBankAccount']['id']));
+            }
+         }
+     	$bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+		$this->set('bank',$bank);
+		$this->set('bankBranch', $bankBranch);
 	}
+
+
+	public function bankAccountsDelete($id) {
+        if($this->Session->check('InstitutionSiteId') && $this->Session->check('InstitutionSiteBankAccountId')) {
+            $id = $this->Session->read('InstitutionSiteBankAccountId');
+            $institutionSiteId = $this->Session->read('InstitutionSiteId');
+            $name = $this->InstitutionSiteBankAccount->field('account_number', array('InstitutionSiteBankAccount.id' => $id));
+            $this->InstitutionSiteBankAccount->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'bankAccounts'));
+        }
+    }
 	
 	public function bankAccountsBankBranches() {
 		$this->autoRender = false;
