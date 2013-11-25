@@ -1258,7 +1258,7 @@ class TeachersController extends TeachersAppController {
 
     public function comments(){
         $this->Navigation->addCrumb('Comments');
-        $data = $this->TeacherComment->find('all',array('conditions'=>array('TeacherComment.teacher_id'=>$this->teacherId), 'recursive' => -1));
+        $data = $this->TeacherComment->find('all',array('conditions'=>array('TeacherComment.teacher_id'=>$this->teacherId), 'recursive' => -1, 'order'=>'TeacherComment.comment_date'));
 
         $this->set('list', $data);
     }
