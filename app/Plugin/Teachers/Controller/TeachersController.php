@@ -1174,17 +1174,15 @@ class TeachersController extends TeachersAppController {
 
     public function bankAccountsEdit() {
         $bankBranch = array();
+
+        $bankAccountId = $this->params['pass'][0];
+        $this->Navigation->addCrumb('Edit Bank Account Details');
         if($this->request->is('get')) {
-            $bankAccountId = $this->params['pass'][0];
             $bankAccountObj = $this->TeacherBankAccount->find('first',array('conditions'=>array('TeacherBankAccount.id' => $bankAccountId)));
   
             if(!empty($bankAccountObj)) {
-                $this->Navigation->addCrumb('Edit Bank Account Details');
                 //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
                 $this->request->data = $bankAccountObj;
-                $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
-
-                $this->set('id', $bankAccountId);
             }
          } else {
             $this->request->data['TeacherBankAccount']['teacher_id'] = $this->teacherId;
@@ -1193,6 +1191,8 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['TeacherBankAccount']['id']));
             }
          }
+        $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
+        $this->set('id', $bankAccountId);
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
         $this->set('bank',$bank);
         $this->set('bankBranch', $bankBranch);
