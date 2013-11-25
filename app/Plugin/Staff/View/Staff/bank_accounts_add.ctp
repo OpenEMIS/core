@@ -15,7 +15,12 @@ echo $this->Html->script('bankaccounts', false);
 	<?php 
 	echo $this->Form->create('StaffBankAccount', array(
 			'id' => 'StaffBankAccount', 
-			'url' => array('controller' => 'Staff', 'action' => 'bankAccountsAdd')
+			'url' => array('controller' => 'Staff', 'action' => 'bankAccountsAdd'),
+			'inputDefaults' => array('error' => array(
+                'attributes' => array(
+                     'wrap' => 'label', 'class' => 'error-message', 'style' => 'margin:0px;width:225px;max-width:225px;'
+                 )
+           ))
 		));
 	?>
 	<?php echo $this->Form->input('staff_id', array('type'=>'hidden', 'value'=>$staff_id)); ?>
@@ -39,7 +44,7 @@ echo $this->Html->script('bankaccounts', false);
 	<div class="row edit">
         <div class="label"><?php echo __('Bank'); ?></div>
         <div class="value">
-        	<?php echo $this->Form->input('bank_id', array('class' => 'full_width', 'label'=>false, 'options'=>$bank, 'onchange'=>"BankAccounts.changeBranch(this)", 'empty' => __('--Select--'))); ?>
+        	<?php echo $this->Form->input('BankBranch.bank_id', array('class' => 'full_width', 'label'=>false, 'options'=>$bank, 'onchange'=>"BankAccounts.changeBranch(this)", 'empty' => __('--Select--'))); ?>
         </div>
     </div>
 	<div class="row edit">
