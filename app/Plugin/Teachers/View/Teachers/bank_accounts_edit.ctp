@@ -1,6 +1,6 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
+echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->script('bankaccounts', false);
 ?>
 
@@ -20,7 +20,12 @@ echo $this->Html->script('bankaccounts', false);
 	<?php 
 	echo $this->Form->create('TeacherBankAccount', array(
 			'id' => 'TeacherBankAccount',
-			'url' => array('controller' => 'Teachers', 'action' => 'bankAccountsEdit')
+			'url' => array('controller' => 'Teachers', 'action' => 'bankAccountsEdit'),
+			'inputDefaults' => array('error' => array(
+                'attributes' => array(
+                     'wrap' => 'label', 'class' => 'error-message', 'style' => 'margin:0px;width:225px;max-width:225px;'
+                 )
+           ))
 		));
 	?>
 	<?php echo $this->Form->input('TeacherBankAccount.id');?>
@@ -44,12 +49,12 @@ echo $this->Html->script('bankaccounts', false);
 	<div class="row edit">
         <div class="label"><?php echo __('Bank'); ?></div>
         <div class="value">
-        	<?php echo $this->Form->input('bank_id', array('class' => 'full_width', 'label'=>false, 'options'=>$bank, 'default'=>$this->request->data['BankBranch']['bank_id'], 'onchange'=>"BankAccounts.changeBranch(this)", 'empty' => __('--Select--'))); ?>
+        	<?php echo $this->Form->input('BankBranch.bank_id', array('class' => 'full_width', 'label'=>false, 'options'=>$bank, 'default'=>$this->request->data['BankBranch']['bank_id'], 'onchange'=>"BankAccounts.changeBranch(this)", 'empty' => __('--Select--'))); ?>
         </div>
     </div>
 	<div class="row edit">
 		<div class="label"><?php echo __('Branch'); ?></div>
-		<div class="value"><?php echo $this->Form->input('bank_branch_id', array('class' => 'full_width', $this->request->data['BankBranch']['id'], 'label'=>false, 'options'=>$bankBranch, 'empty' => __('--Select--'))); ?></div>
+		<div class="value"><?php echo $this->Form->input('bank_branch_id', array('class' => 'full_width', $this->request->data['TeacherBankAccount']['bank_branch_id'], 'label'=>false, 'options'=>$bankBranch, 'empty' => __('--Select--'))); ?></div>
 	</div>
 	
 	<div class="controls">

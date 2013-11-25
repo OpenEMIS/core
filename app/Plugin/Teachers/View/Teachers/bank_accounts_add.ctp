@@ -15,9 +15,15 @@ echo $this->Html->script('bankaccounts', false);
 	<?php 
 	echo $this->Form->create('TeacherBankAccount', array(
 			'id' => 'TeacherBankAccount',
-			'url' => array('controller' => 'Teachers', 'action' => 'bankAccountsAdd')
+			'url' => array('controller' => 'Teachers', 'action' => 'bankAccountsAdd'),
+			'inputDefaults' => array('error' => array(
+                'attributes' => array(
+                     'wrap' => 'label', 'class' => 'error-message', 'style' => 'margin:0px;width:225px;max-width:225px;'
+                 )
+           ) )
 		));
 	?>
+
 	<div class="bankAccountForm">
 	<?php echo $this->Form->input('teacher_id', array('type'=>'hidden', 'value'=>$teacher_id)); ?>
 	<div class="row edit">
