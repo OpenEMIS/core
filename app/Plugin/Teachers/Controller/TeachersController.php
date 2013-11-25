@@ -253,16 +253,17 @@ class TeachersController extends TeachersAppController {
 		$this->set('data', $data);
     }
 
-    public function employment() {
+    public function location() {
         $this->Navigation->addCrumb(ucfirst($this->action));
         $teacherId = $this->Session->read('TeacherId');
         $data = array();
 		
         $list = $this->InstitutionSiteTeacher->getPositions($teacherId);
+    
         foreach($list as $row) {
             $result = array();
             $dataKey = '';
-            foreach($row as $element){ // compact array
+            foreach($row as $key => $element){ // compact array
                 if(array_key_exists('institution', $element)){
                     $dataKey .= $element['institution'];
                     continue;
@@ -271,12 +272,13 @@ class TeachersController extends TeachersAppController {
                     $dataKey .= ' - '.$element['institution_site'];
                     continue;
                 }
-                $result = array_merge($result, $element);
+               
+                $result = array_merge($result, array($key => $element));
             }
             $data[$dataKey][] = $result;
         }
 		if(empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_EMPLOYMENT'), array('type' => 'info', 'dismissOnClick' => false));
+			$this->Utility->alert($this->Utility->getMessage('NO_LOCATION'), array('type' => 'info', 'dismissOnClick' => false));
 		}
         $this->set('data', $data);
     }
