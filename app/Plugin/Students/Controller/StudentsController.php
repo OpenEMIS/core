@@ -844,7 +844,7 @@ class StudentsController extends StudentsAppController {
 
     public function comments(){
         $this->Navigation->addCrumb('Comments');
-        $data = $this->StudentComment->find('all',array('conditions'=>array('StudentComment.student_id'=>$this->studentId), 'recursive' => -1));
+        $data = $this->StudentComment->find('all',array('conditions'=>array('StudentComment.student_id'=>$this->studentId), 'recursive' => -1, 'order'=>'StudentComment.comment_date'));
 
         $this->set('list', $data);
     }
