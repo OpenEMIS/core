@@ -243,12 +243,15 @@ class SetupController extends AppController {
 		$lookup[] = array('Assessment' => array(
 			'items' => array('Result Type' => array('model' => 'AssessmentResultType'))
 		));
+
+		$lookup[] = array('Identity Types' => array(
+			'items' => $this->IdentityType->getLookupVariables()
+		));
 		
 		// Student
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
-		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Identity Types', 'items' => $this->IdentityType->getLookupVariables()));
 
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
@@ -271,7 +274,6 @@ class SetupController extends AppController {
 			'Training Categories' => $this->TeacherTrainingCategory,
 			'Leave Types' => $this->TeacherLeaveType,
 			'Leave Statuses' => $this->LeaveStatus,
-			'Identity Types' => $this->IdentityType
 		);
 		
 		foreach($teacherOptions as $name => $model) {
@@ -301,7 +303,6 @@ class SetupController extends AppController {
 			'Qualification Institutions' => $this->QualificationInstitution,
 			'Leave Types' => $this->StaffLeaveType,
 			'Leave Statuses' => $this->LeaveStatus,
-			'Identity Types' => $this->IdentityType
 		);
 		
 		foreach($staffOptions as $name => $model) {

@@ -20,7 +20,7 @@
 	<?php echo $this->Form->input('TeacherIdentity.id');?>
 	 <div class="row">
         <div class="label"><?php echo __('Type'); ?></div>
-        <div class="value"><?php echo $this->Form->input('identity_type_id', array('options'=>$identityTypeOptions, 'default'=>$obj['identity_type_id'])); ?></div>
+        <div class="value"><?php echo $this->Form->input('identity_type_id', array('empty'=>__('--Select--'),'options'=>$identityTypeOptions, 'default'=>$obj['identity_type_id'])); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Number'); ?></div>
