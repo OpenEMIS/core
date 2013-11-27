@@ -20,7 +20,7 @@
 	<?php echo $this->Form->input('TeacherNationality.id');?>
 	 <div class="row">
         <div class="label"><?php echo __('Country'); ?></div>
-        <div class="value"><?php echo $this->Form->input('country_id', array('empty'=>'--Select--', 'options'=>$countryOptions, 'default'=> $obj['country_id'])); ?></div>
+        <div class="value"><?php echo $this->Form->input('country_id', array('empty'=>__('--Select--'), 'options'=>$countryOptions, 'default'=> $obj['country_id'])); ?></div>
     </div>
      <div class="row">
         <div class="label"><?php echo __('Comments'); ?></div>
