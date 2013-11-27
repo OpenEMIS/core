@@ -21,7 +21,7 @@
 
     <div class="row">
         <div class="label"><?php echo __('Country'); ?></div>
-        <div class="value"><?php echo $this->Form->input('country_id', array('empty'=>'--Select--', 'options'=>$countryOptions)); ?></div>
+        <div class="value"><?php echo $this->Form->input('country_id', array('empty'=>__('--Select--'), 'options'=>$countryOptions)); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Comments'); ?></div>
