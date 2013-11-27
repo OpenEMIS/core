@@ -49,7 +49,9 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherBehaviour',
         'Teachers.TeacherBehaviourCategory',
         'Teachers.TeacherComment',
+        'Teachers.TeacherNationality',
         'SchoolYear',
+        'Country',
 		'ConfigItem',
         'LeaveStatus'
 	);
@@ -1323,6 +1325,86 @@ class TeachersController extends TeachersAppController {
             $this->TeacherComment->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'comments', $teacherId));
+        }
+    }
+
+
+
+
+    public function nationalities(){
+        $this->Navigation->addCrumb('Nationalities');
+        $data = $this->TeacherNationality->find('all',array('conditions'=>array('TeacherNationality.teacher_id'=>$this->teacherId)));
+
+        $this->set('list', $data);
+    }
+
+    public function nationalitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->TeacherNationality->create();
+            $this->request->data['TeacherNationality']['teacher_id'] = $this->teacherId;
+            
+            $data = $this->data['TeacherNationality'];
+
+            if ($this->TeacherNationality->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalities'));
+            }
+        }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function nationalitiesView() {
+        $nationalityId = $this->params['pass'][0];
+        $nationalityObj = $this->TeacherNationality->find('all',array('conditions'=>array('TeacherNationality.id' => $nationalityId)));
+        
+        if(!empty($nationalityObj)) {
+            $this->Navigation->addCrumb('Nationality Details');
+            
+            $this->Session->write('TeacherNationalityId', $nationalityId);
+            $this->set('nationalityObj', $nationalityObj);
+        } 
+    }
+
+    public function nationalitiesEdit() {
+        $nationalityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $nationalityObj = $this->TeacherNationality->find('first',array('conditions'=>array('TeacherNationality.id' => $nationalityId)));
+  
+            if(!empty($nationalityObj)) {
+                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->request->data = $nationalityObj;
+               
+            }
+         } else {
+            $nationalityData = $this->data['TeacherNationality'];
+            $nationalityData['teacher_id'] = $this->teacherId;
+            
+            if ($this->TeacherNationality->save($nationalityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
+            }
+         }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+
+        $this->set('id', $nationalityId);
+       
+    }
+
+    public function nationalitiesDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherNationalityId')) {
+            $id = $this->Session->read('TeacherNationalityId');
+            $teacherId = $this->Session->read('TeacherId');
+            $countryId = $this->TeacherNationality->field('country_id', array('TeacherNationality.id' => $id));
+            $name = $this->Country->field('name', array('Country.id' => $countryId));
+            $this->TeacherNationality->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'nationalities', $teacherId));
         }
     }
 }
