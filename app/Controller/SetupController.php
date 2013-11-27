@@ -67,7 +67,8 @@ class SetupController extends AppController {
 		'QualificationLevel',
 		'QualificationInstitution',
 		'QualificationSpecialisation',
-		'LeaveStatus'
+		'LeaveStatus',
+		'Country'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -242,11 +243,16 @@ class SetupController extends AppController {
 		$lookup[] = array('Assessment' => array(
 			'items' => array('Result Type' => array('model' => 'AssessmentResultType'))
 		));
+
+		$lookup[] = array('Countries' => array(
+			'items' =>  $this->Country->getLookupVariables()
+		));
 		
 		// Student
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
+
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
 			'view' => 'customFields',
