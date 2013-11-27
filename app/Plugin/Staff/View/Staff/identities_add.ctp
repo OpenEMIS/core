@@ -20,7 +20,7 @@
     ?>
     <div class="row">
         <div class="label"><?php echo __('Type'); ?></div>
-        <div class="value"><?php echo $this->Form->input('identity_type_id', array('options'=>$identityTypeOptions)); ?></div>
+        <div class="value"><?php echo $this->Form->input('identity_type_id', array('empty'=>__('--Select--'),'options'=>$identityTypeOptions)); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Number'); ?></div>

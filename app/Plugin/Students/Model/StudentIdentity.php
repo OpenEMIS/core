@@ -29,6 +29,13 @@ class StudentIdentity extends StudentsAppModel {
 	);
 	
 	public $validate = array(
+		'identity_type_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a Type'
+			)
+		),
 		'number' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
