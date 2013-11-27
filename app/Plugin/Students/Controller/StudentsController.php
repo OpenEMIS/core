@@ -33,6 +33,7 @@ class StudentsController extends StudentsAppController {
 	'InstitutionSiteClassGradeStudent',
         'Bank',
         'BankBranch',
+        'IdentityType',
         'Students.StudentBankAccount',
         'Students.Student',
         'Students.StudentHistory',
@@ -45,6 +46,7 @@ class StudentsController extends StudentsAppController {
         'Students.StudentAttendance',
         'Students.StudentAssessment',
         'Students.StudentComment',
+        'Students.StudentIdentity',
         'SchoolYear',
 	'ConfigItem'
     );
@@ -909,6 +911,83 @@ class StudentsController extends StudentsAppController {
             $this->StudentComment->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'comments', $studentId));
+        }
+    }
+
+
+    public function identities(){
+        $this->Navigation->addCrumb('Identities');
+        $data = $this->StudentIdentity->find('all',array('conditions'=>array('StudentIdentity.student_id'=>$this->studentId)));
+
+        $this->set('list', $data);
+    }
+
+    public function identitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->StudentIdentity->create();
+            $this->request->data['StudentIdentity']['student_id'] = $this->studentId;
+            
+            $data = $this->data['StudentIdentity'];
+
+            if ($this->StudentIdentity->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identities'));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function identitiesView() {
+        $identityId = $this->params['pass'][0];
+        $identityObj = $this->StudentIdentity->find('all',array('conditions'=>array('StudentIdentity.id' => $identityId)));
+        
+        if(!empty($identityObj)) {
+            $this->Navigation->addCrumb('Identity Details');
+            
+            $this->Session->write('StudentIdentityId', $identityId);
+            $this->set('identityObj', $identityObj);
+        } 
+    }
+
+    public function identitiesEdit() {
+        $identityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $identityObj = $this->StudentIdentity->find('first',array('conditions'=>array('StudentIdentity.id' => $identityId)));
+  
+            if(!empty($identityObj)) {
+                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->request->data = $identityObj;
+               
+            }
+         } else {
+            $identityData = $this->data['StudentIdentity'];
+            $identityData['student_id'] = $this->studentId;
+            
+            if ($this->StudentIdentity->save($identityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
+            }
+         }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+
+        $this->set('id', $identityId);
+       
+    }
+
+    public function identitiesDelete($id) {
+        if($this->Session->check('StudentId') && $this->Session->check('StudentIdentityId')) {
+            $id = $this->Session->read('StudentIdentityId');
+            $studentId = $this->Session->read('StudentId');
+            $name = $this->StudentIdentity->field('number', array('StudentIdentity.id' => $id));
+            $this->StudentIdentity->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'identities', $studentId));
         }
     }
 }
