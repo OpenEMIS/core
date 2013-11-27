@@ -33,7 +33,7 @@ class StaffNationality extends StaffAppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please select a valid Country'
+				'message' => 'Please select a Country'
 			)
 		)
 	);
