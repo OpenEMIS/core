@@ -46,12 +46,14 @@ class StaffController extends StaffAppController {
             'Staff.StaffBehaviourCategory',
             'Staff.StaffQualification',
             'Staff.StaffComment',
+            'Staff.StaffNationality',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
             'SchoolYear',
             'ConfigItem',
             'LeaveStatus',
+            'Country',
             'StaffLeaveAttachment'
         );
 
@@ -1210,6 +1212,85 @@ class StaffController extends StaffAppController {
             $this->StaffComment->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'comments', $staffId));
+        }
+    }
+
+
+
+    public function nationalities(){
+        $this->Navigation->addCrumb('Nationalities');
+        $data = $this->StaffNationality->find('all',array('conditions'=>array('StaffNationality.staff_id'=>$this->staffId)));
+
+        $this->set('list', $data);
+    }
+
+    public function nationalitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffNationality->create();
+            $this->request->data['StaffNationality']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffNationality'];
+
+            if ($this->StaffNationality->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalities'));
+            }
+        }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function nationalitiesView() {
+        $nationalityId = $this->params['pass'][0];
+        $nationalityObj = $this->StaffNationality->find('all',array('conditions'=>array('StaffNationality.id' => $nationalityId)));
+        
+        if(!empty($nationalityObj)) {
+            $this->Navigation->addCrumb('Nationality Details');
+            
+            $this->Session->write('StaffNationalityId', $nationalityId);
+            $this->set('nationalityObj', $nationalityObj);
+        } 
+    }
+
+    public function nationalitiesEdit() {
+        $nationalityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $nationalityObj = $this->StaffNationality->find('first',array('conditions'=>array('StaffNationality.id' => $nationalityId)));
+  
+            if(!empty($nationalityObj)) {
+                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->request->data = $nationalityObj;
+               
+            }
+         } else {
+            $nationalityData = $this->data['StaffNationality'];
+            $nationalityData['staff_id'] = $this->staffId;
+            
+            if ($this->StaffNationality->save($nationalityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
+            }
+         }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+
+        $this->set('id', $nationalityId);
+       
+    }
+
+    public function nationalitiesDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffNationalityId')) {
+            $id = $this->Session->read('StaffNationalityId');
+            $staffId = $this->Session->read('StaffId');
+            $countryId = $this->StaffNationality->field('country_id', array('StaffNationality.id' => $id));
+            $name = $this->Country->field('name', array('Country.id' => $countryId));
+            $this->StaffNationality->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'nationalities', $staffId));
         }
     }
 }
