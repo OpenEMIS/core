@@ -68,7 +68,7 @@ class SetupController extends AppController {
 		'QualificationInstitution',
 		'QualificationSpecialisation',
 		'LeaveStatus',
-		'Country'
+		'Country',
 		'IdentityType'
 	);
 	
@@ -247,6 +247,8 @@ class SetupController extends AppController {
 
 		$lookup[] = array('Countries' => array(
 			'items' =>  $this->Country->getLookupVariables()
+		));
+
 		$lookup[] = array('Identity Types' => array(
 			'items' => $this->IdentityType->getLookupVariables()
 		));
