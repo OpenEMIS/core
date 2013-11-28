@@ -83,9 +83,9 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function getPositions($staffId, $institutionSiteId=0) {
 		$fields = array(
-			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.position_no', 'InstitutionSiteStaff.no_of_hours',
+			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.position_no', 'InstitutionSiteStaff.FTE',
 			'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date', 'InstitutionSiteStaff.staff_status_id',
-			'InstitutionSiteStaff.salary', 'StaffCategory.name', 'StaffStatus.name'
+			'StaffCategory.name', 'StaffStatus.name'
 		);
 		
 		$joins = array();
