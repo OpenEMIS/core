@@ -20,12 +20,12 @@
     ?>
 
     <div class="row">
-        <div class="label"><?php echo __('Title'); ?></div>
-        <div class="value"><?php echo $this->Form->input('title'); ?></div>
-    </div>
-    <div class="row">
         <div class="label"><?php echo __('Date'); ?></div>
        <div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'comment_date',array('desc' => true)); ?></div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Title'); ?></div>
+        <div class="value"><?php echo $this->Form->input('title'); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Comment'); ?></div>

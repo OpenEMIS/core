@@ -1148,7 +1148,7 @@ class StaffController extends StaffAppController {
 
     public function comments(){
         $this->Navigation->addCrumb('Comments');
-        $data = $this->StaffComment->find('all',array('conditions'=>array('StaffComment.staff_id'=>$this->staffId), 'recursive' => -1));
+        $data = $this->StaffComment->find('all',array('conditions'=>array('StaffComment.staff_id'=>$this->staffId), 'recursive' => -1, 'order'=>'StaffComment.comment_date'));
 
         $this->set('list', $data);
     }

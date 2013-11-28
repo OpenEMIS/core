@@ -19,16 +19,16 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 
 	<div class="table allow_hover full_width" action="Staff/commentsView/">
 		<div class="table_head">
-			<div class="table_cell"><?php echo __('Title'); ?></div>
 			<div class="table_cell"><?php echo __('Date'); ?></div>
+			<div class="table_cell"><?php echo __('Title'); ?></div>
 			<div class="table_cell"><?php echo __('Comment'); ?></div>
 		</div>
 		
 		<div class="table_body">
 			<?php foreach($list as $obj): ?>
 			<div class="table_row" row-id="<?php echo $obj['StaffComment']['id']; ?>">
-				<div class="table_cell"><?php echo $obj['StaffComment']['title']; ?></div>
 				<div class="table_cell"><?php echo $this->Utility->formatDate($obj['StaffComment']['comment_date']); ?></div>
+				<div class="table_cell"><?php echo $obj['StaffComment']['title']; ?></div>
 				<div class="table_cell"><?php echo $obj['StaffComment']['comment']; ?></div>
 			</div>
 			<?php endforeach; ?>
