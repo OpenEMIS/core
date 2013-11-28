@@ -32,7 +32,7 @@
     </div>
     <div class="row">
         <div class="label"><?php echo __('Expiry Date'); ?></div>
-         <div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'expiry_date', array('desc' => true, 'yearAdjust'=>5,'value' => $obj['expiry_date'])); ?></div>
+         <div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'expiry_date', array('desc' => true,'yearAdjust'=>5,'value' => $obj['expiry_date'])); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Issue Location'); ?></div>
