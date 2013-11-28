@@ -69,6 +69,7 @@ class SetupController extends AppController {
 		'QualificationSpecialisation',
 		'LeaveStatus',
 		'Country'
+		'IdentityType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -246,6 +247,8 @@ class SetupController extends AppController {
 
 		$lookup[] = array('Countries' => array(
 			'items' =>  $this->Country->getLookupVariables()
+		$lookup[] = array('Identity Types' => array(
+			'items' => $this->IdentityType->getLookupVariables()
 		));
 		
 		// Student
@@ -273,7 +276,7 @@ class SetupController extends AppController {
 			'Qualification Institutions' => $this->QualificationInstitution,
 			'Training Categories' => $this->TeacherTrainingCategory,
 			'Leave Types' => $this->TeacherLeaveType,
-			'Leave Statuses' => $this->LeaveStatus
+			'Leave Statuses' => $this->LeaveStatus,
 		);
 		
 		foreach($teacherOptions as $name => $model) {
@@ -302,7 +305,7 @@ class SetupController extends AppController {
 			'Qualification Specialisation' => $this->QualificationSpecialisation,
 			'Qualification Institutions' => $this->QualificationInstitution,
 			'Leave Types' => $this->StaffLeaveType,
-			'Leave Statuses' => $this->LeaveStatus
+			'Leave Statuses' => $this->LeaveStatus,
 		);
 		
 		foreach($staffOptions as $name => $model) {

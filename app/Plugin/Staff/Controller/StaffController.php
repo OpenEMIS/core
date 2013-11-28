@@ -47,6 +47,7 @@ class StaffController extends StaffAppController {
             'Staff.StaffQualification',
             'Staff.StaffComment',
             'Staff.StaffNationality',
+            'Staff.StaffIdentity',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -54,6 +55,7 @@ class StaffController extends StaffAppController {
             'ConfigItem',
             'LeaveStatus',
             'Country',
+            'IdentityType',
             'StaffLeaveAttachment'
         );
 
@@ -1215,16 +1217,13 @@ class StaffController extends StaffAppController {
         }
     }
 
-
-
     public function nationalities(){
         $this->Navigation->addCrumb('Nationalities');
         $data = $this->StaffNationality->find('all',array('conditions'=>array('StaffNationality.staff_id'=>$this->staffId)));
-
-        $this->set('list', $data);
-    }
-
-    public function nationalitiesAdd() {
+		$this->set('list', $data);
+	}
+	
+	public function nationalitiesAdd() {
         if ($this->request->is('post')) {
             $this->StaffNationality->create();
             $this->request->data['StaffNationality']['staff_id'] = $this->staffId;
@@ -1239,11 +1238,10 @@ class StaffController extends StaffAppController {
 
         $countryOptions = $this->Country->getOptions();
         $this->set('countryOptions', $countryOptions);
-
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function nationalitiesView() {
+		$this->UserSession->readStatusSession($this->request->action);
+	}
+	
+	public function nationalitiesView() {
         $nationalityId = $this->params['pass'][0];
         $nationalityObj = $this->StaffNationality->find('all',array('conditions'=>array('StaffNationality.id' => $nationalityId)));
         
@@ -1254,8 +1252,8 @@ class StaffController extends StaffAppController {
             $this->set('nationalityObj', $nationalityObj);
         } 
     }
-
-    public function nationalitiesEdit() {
+	
+	public function nationalitiesEdit() {
         $nationalityId = $this->params['pass'][0];
         if($this->request->is('get')) {
             $nationalityObj = $this->StaffNationality->find('first',array('conditions'=>array('StaffNationality.id' => $nationalityId)));
@@ -1281,8 +1279,8 @@ class StaffController extends StaffAppController {
         $this->set('id', $nationalityId);
        
     }
-
-    public function nationalitiesDelete($id) {
+	
+	public function nationalitiesDelete($id) {
         if($this->Session->check('StaffId') && $this->Session->check('StaffNationalityId')) {
             $id = $this->Session->read('StaffNationalityId');
             $staffId = $this->Session->read('StaffId');
@@ -1291,6 +1289,79 @@ class StaffController extends StaffAppController {
             $this->StaffNationality->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'nationalities', $staffId));
+		}
+	}
+	
+	public function identities(){
+        $this->Navigation->addCrumb('Identities');
+        $data = $this->StaffIdentity->find('all',array('conditions'=>array('StaffIdentity.staff_id'=>$this->staffId)));
+        $this->set('list', $data);
+    }
+	
+    public function identitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffIdentity->create();
+            $this->request->data['StaffIdentity']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffIdentity'];
+
+            if ($this->StaffIdentity->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identities'));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+	
+	public function identitiesView() {
+        $identityId = $this->params['pass'][0];
+        $identityObj = $this->StaffIdentity->find('all',array('conditions'=>array('StaffIdentity.id' => $identityId)));
+        
+        if(!empty($identityObj)) {
+            $this->Navigation->addCrumb('Identity Details');
+            
+            $this->Session->write('StaffIdentityId', $identityId);
+            $this->set('identityObj', $identityObj);
+        } 
+    }
+	
+	public function identitiesEdit() {
+        $identityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $identityObj = $this->StaffIdentity->find('first',array('conditions'=>array('StaffIdentity.id' => $identityId)));
+  
+            if(!empty($identityObj)) {
+                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->request->data = $identityObj;
+               
+            }
+         } else {
+            $identityData = $this->data['StaffIdentity'];
+            $identityData['staff_id'] = $this->staffId;
+            
+            if ($this->StaffIdentity->save($identityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
+            }
+         }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+
+        $this->set('id', $identityId);  
+    }
+
+	public function identitiesDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffIdentityId')) {
+            $id = $this->Session->read('StaffIdentityId');
+            $staffId = $this->Session->read('StaffId');
+            $name = $this->StaffIdentity->field('number', array('StaffIdentity.id' => $id));
+            $this->StaffIdentity->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'identities', $staffId));
         }
     }
 }
