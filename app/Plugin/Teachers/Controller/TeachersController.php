@@ -633,6 +633,7 @@ class TeachersController extends TeachersAppController {
                 }
                
 
+
                 $this->TeacherQualification->save($teacherQualificationData);
     
                 $teacherQualificationId = $this->TeacherQualification->getInsertID();
@@ -1092,6 +1093,7 @@ class TeachersController extends TeachersAppController {
 	
 	public function leavesDelete($id=null) {
 		if(!is_null($id) && $this->TeacherLeave->exists($id) && $this->Session->check('TeacherId')) {
+
 			$this->TeacherLeave->delete($id);
 			$this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
 		}
@@ -1264,7 +1266,7 @@ class TeachersController extends TeachersAppController {
 
     public function comments(){
         $this->Navigation->addCrumb('Comments');
-        $data = $this->TeacherComment->find('all',array('conditions'=>array('TeacherComment.teacher_id'=>$this->teacherId), 'recursive' => -1));
+        $data = $this->TeacherComment->find('all',array('conditions'=>array('TeacherComment.teacher_id'=>$this->teacherId), 'recursive' => -1, 'order'=>'TeacherComment.comment_date'));
 
         $this->set('list', $data);
     }
