@@ -99,18 +99,13 @@ echo $this->Html->script('institution_site_staff', false);
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('Salary'); ?></div>
-			<div class="value"><?php echo $this->Form->input('salary', array('class' => 'default', 'value' => 0)); ?></div>
-		</div>
-		
-		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
 			<div class="value"><?php echo $this->Form->input('start_date', array('type' => 'date', 'dateFormat' => 'DMY', 'minYear' => $minYear, 'maxYear' => $maxYear, 'empty' => __('Select'))); ?></div>
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('No of Hours'); ?></div>
-			<div class="value"><?php echo $this->Form->input('no_of_hours', array('class' => 'default', 'onkeypress' => 'return utility.integerCheck(event)', 'maxlength' => 3)); ?></div>
+			<div class="label"><?php echo __('FTE'); ?></div>
+			<div class="value"><?php echo $this->Form->input('FTE', array('class' => 'default', 'onkeypress' => 'return utility.integerCheck(event)', 'maxlength' => 3)); ?></div>
 		</div>
 	</div>
 	

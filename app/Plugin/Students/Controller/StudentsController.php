@@ -33,6 +33,7 @@ class StudentsController extends StudentsAppController {
 	'InstitutionSiteClassGradeStudent',
         'Bank',
         'BankBranch',
+        'IdentityType',
         'Students.StudentBankAccount',
         'Students.Student',
         'Students.StudentHistory',
@@ -45,7 +46,10 @@ class StudentsController extends StudentsAppController {
         'Students.StudentAttendance',
         'Students.StudentAssessment',
         'Students.StudentComment',
+        'Students.StudentNationality',
+        'Students.StudentIdentity',
         'SchoolYear',
+        'Country',
 	'ConfigItem'
     );
         
@@ -799,17 +803,15 @@ class StudentsController extends StudentsAppController {
 
     public function bankAccountsEdit() {
         $bankBranch = array();
+
+        $bankAccountId = $this->params['pass'][0];
+        $this->Navigation->addCrumb('Edit Bank Account Details');
         if($this->request->is('get')) {
-            $bankAccountId = $this->params['pass'][0];
             $bankAccountObj = $this->StudentBankAccount->find('first',array('conditions'=>array('StudentBankAccount.id' => $bankAccountId)));
   
             if(!empty($bankAccountObj)) {
-                $this->Navigation->addCrumb('Edit Bank Account Details');
                 //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
                 $this->request->data = $bankAccountObj;
-                $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
-
-                $this->set('id', $bankAccountId);
             }
          } else {
             $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
@@ -818,6 +820,8 @@ class StudentsController extends StudentsAppController {
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['StudentBankAccount']['id']));
             }
          }
+        $this->set('id', $bankAccountId);
+        $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
         $this->set('bank',$bank);
         $this->set('bankBranch', $bankBranch);
@@ -844,7 +848,7 @@ class StudentsController extends StudentsAppController {
 
     public function comments(){
         $this->Navigation->addCrumb('Comments');
-        $data = $this->StudentComment->find('all',array('conditions'=>array('StudentComment.student_id'=>$this->studentId), 'recursive' => -1));
+        $data = $this->StudentComment->find('all',array('conditions'=>array('StudentComment.student_id'=>$this->studentId), 'recursive' => -1, 'order'=>'StudentComment.comment_date'));
 
         $this->set('list', $data);
     }
@@ -897,6 +901,7 @@ class StudentsController extends StudentsAppController {
             }
          }
 
+
         $this->set('id', $commentId);
        
     }
@@ -909,6 +914,155 @@ class StudentsController extends StudentsAppController {
             $this->StudentComment->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'comments', $studentId));
+        }
+    }
+
+    public function nationalities(){
+        $this->Navigation->addCrumb('Nationalities');
+        $data = $this->StudentNationality->find('all',array('conditions'=>array('StudentNationality.student_id'=>$this->studentId)));
+		$this->set('list', $data);
+    }
+	
+	public function nationalitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->StudentNationality->create();
+            $this->request->data['StudentNationality']['student_id'] = $this->studentId;
+            
+            $data = $this->data['StudentNationality'];
+
+            if ($this->StudentNationality->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalities'));
+            }
+        }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+		$this->UserSession->readStatusSession($this->request->action);
+    }
+	
+	public function nationalitiesView() {
+        $nationalityId = $this->params['pass'][0];
+        $nationalityObj = $this->StudentNationality->find('all',array('conditions'=>array('StudentNationality.id' => $nationalityId)));
+        
+        if(!empty($nationalityObj)) {
+            $this->Navigation->addCrumb('Nationality Details');
+            
+            $this->Session->write('StudentNationalityId', $nationalityId);
+            $this->set('nationalityObj', $nationalityObj);
+        } 
+    }
+
+    public function nationalitiesEdit() {
+        $nationalityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $nationalityObj = $this->StudentNationality->find('first',array('conditions'=>array('StudentNationality.id' => $nationalityId)));
+  
+            if(!empty($nationalityObj)) {
+                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->request->data = $nationalityObj;
+               
+            }
+         } else {
+            $nationalityData = $this->data['StudentNationality'];
+            $nationalityData['student_id'] = $this->studentId;
+            
+            if ($this->StudentNationality->save($nationalityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
+            }
+         }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+
+        $this->set('id', $nationalityId);
+       
+    }
+	
+	public function nationalitiesDelete($id) {
+        if($this->Session->check('StudentId') && $this->Session->check('StudentNationalityId')) {
+            $id = $this->Session->read('StudentNationalityId');
+            $studentId = $this->Session->read('StudentId');
+            $countryId = $this->StudentNationality->field('country_id', array('StudentNationality.id' => $id));
+            $name = $this->Country->field('name', array('Country.id' => $countryId));
+            $this->StudentNationality->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'nationalities', $studentId));
+		}
+    }
+	
+    public function identities(){
+        $this->Navigation->addCrumb('Identities');
+        $data = $this->StudentIdentity->find('all',array('conditions'=>array('StudentIdentity.student_id'=>$this->studentId)));
+        $this->set('list', $data);
+    }
+	
+    public function identitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->StudentIdentity->create();
+            $this->request->data['StudentIdentity']['student_id'] = $this->studentId;
+            
+            $data = $this->data['StudentIdentity'];
+
+            if ($this->StudentIdentity->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identities'));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+	
+	public function identitiesView() {
+        $identityId = $this->params['pass'][0];
+        $identityObj = $this->StudentIdentity->find('all',array('conditions'=>array('StudentIdentity.id' => $identityId)));
+        
+        if(!empty($identityObj)) {
+            $this->Navigation->addCrumb('Identity Details');
+            
+            $this->Session->write('StudentIdentityId', $identityId);
+            $this->set('identityObj', $identityObj);
+        } 
+    }
+
+    public function identitiesEdit() {
+        $identityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $identityObj = $this->StudentIdentity->find('first',array('conditions'=>array('StudentIdentity.id' => $identityId)));
+  
+            if(!empty($identityObj)) {
+                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->request->data = $identityObj;
+               
+            }
+         } else {
+            $identityData = $this->data['StudentIdentity'];
+            $identityData['student_id'] = $this->studentId;
+            
+            if ($this->StudentIdentity->save($identityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
+            }
+         }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+
+        $this->set('id', $identityId);
+       
+    }
+
+    public function identitiesDelete($id) {
+        if($this->Session->check('StudentId') && $this->Session->check('StudentIdentityId')) {
+            $id = $this->Session->read('StudentIdentityId');
+            $studentId = $this->Session->read('StudentId');
+            $name = $this->StudentIdentity->field('number', array('StudentIdentity.id' => $id));
+            $this->StudentIdentity->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'identities', $studentId));
         }
     }
 }

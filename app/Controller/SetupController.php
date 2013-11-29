@@ -67,7 +67,9 @@ class SetupController extends AppController {
 		'QualificationLevel',
 		'QualificationInstitution',
 		'QualificationSpecialisation',
-		'LeaveStatus'
+		'LeaveStatus',
+		'Country',
+		'IdentityType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -242,11 +244,20 @@ class SetupController extends AppController {
 		$lookup[] = array('Assessment' => array(
 			'items' => array('Result Type' => array('model' => 'AssessmentResultType'))
 		));
+
+		$lookup[] = array('Countries' => array(
+			'items' =>  $this->Country->getLookupVariables()
+		));
+
+		$lookup[] = array('Identity Types' => array(
+			'items' => $this->IdentityType->getLookupVariables()
+		));
 		
 		// Student
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
+
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
 			'view' => 'customFields',
@@ -267,7 +278,7 @@ class SetupController extends AppController {
 			'Qualification Institutions' => $this->QualificationInstitution,
 			'Training Categories' => $this->TeacherTrainingCategory,
 			'Leave Types' => $this->TeacherLeaveType,
-			'Leave Statuses' => $this->LeaveStatus
+			'Leave Statuses' => $this->LeaveStatus,
 		);
 		
 		foreach($teacherOptions as $name => $model) {
@@ -296,7 +307,7 @@ class SetupController extends AppController {
 			'Qualification Specialisation' => $this->QualificationSpecialisation,
 			'Qualification Institutions' => $this->QualificationInstitution,
 			'Leave Types' => $this->StaffLeaveType,
-			'Leave Statuses' => $this->LeaveStatus
+			'Leave Statuses' => $this->LeaveStatus,
 		);
 		
 		foreach($staffOptions as $name => $model) {

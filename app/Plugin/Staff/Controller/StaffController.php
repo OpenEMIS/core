@@ -46,12 +46,16 @@ class StaffController extends StaffAppController {
             'Staff.StaffBehaviourCategory',
             'Staff.StaffQualification',
             'Staff.StaffComment',
+            'Staff.StaffNationality',
+            'Staff.StaffIdentity',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
             'SchoolYear',
             'ConfigItem',
             'LeaveStatus',
+            'Country',
+            'IdentityType',
             'StaffLeaveAttachment'
         );
 
@@ -251,7 +255,7 @@ class StaffController extends StaffAppController {
         $this->set('data', $data);
     }
 
-    public function employment() {
+    public function location() {
         $this->Navigation->addCrumb(ucfirst($this->action));
         $staffId = $this->Session->read('StaffId');
         $data = array();
@@ -260,7 +264,7 @@ class StaffController extends StaffAppController {
         foreach($list as $row) {
             $result = array();
             $dataKey = '';
-            foreach($row as $element){ // compact array
+            foreach($row as $key => $element){ // compact array
                 if(array_key_exists('institution', $element)){
                     $dataKey .= $element['institution'];
                     continue;
@@ -269,12 +273,13 @@ class StaffController extends StaffAppController {
                     $dataKey .= ' - '.$element['institution_site'];
                     continue;
                 }
-                $result = array_merge($result, $element);
+               
+                $result = array_merge($result, array($key => $element));
             }
             $data[$dataKey][] = $result;
         }
 		if(empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_EMPLOYMENT'), array('type' => 'info', 'dismissOnClick' => false));
+			$this->Utility->alert($this->Utility->getMessage('NO_LOCATION'), array('type' => 'info', 'dismissOnClick' => false));
 		}
         $this->set('data', $data);
     }
@@ -794,6 +799,7 @@ class StaffController extends StaffAppController {
         $this->layout = 'ajax';
         $this->set('params', $this->params->query);
         $this->set('_model', 'StaffLeaveAttachment');
+        $this->set('jsname', 'objStaffLeaves');
         $this->render('/Elements/attachment/compact_add');
     }
 
@@ -1058,17 +1064,14 @@ class StaffController extends StaffAppController {
 
     public function bankAccountsEdit() {
         $bankBranch = array();
+        $bankAccountId = $this->params['pass'][0];
+        $this->Navigation->addCrumb('Edit Bank Account Details');
         if($this->request->is('get')) {
-            $bankAccountId = $this->params['pass'][0];
             $bankAccountObj = $this->StaffBankAccount->find('first',array('conditions'=>array('StaffBankAccount.id' => $bankAccountId)));
-  
+            
             if(!empty($bankAccountObj)) {
-                $this->Navigation->addCrumb('Edit Bank Account Details');
                 //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
                 $this->request->data = $bankAccountObj;
-                $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
-
-                $this->set('id', $bankAccountId);
             }
          } else {
             $this->request->data['StaffBankAccount']['staff_id'] = $this->staffId;
@@ -1077,6 +1080,9 @@ class StaffController extends StaffAppController {
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['StaffBankAccount']['id']));
             }
          }
+
+        $this->set('id', $bankAccountId);
+        $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
         $this->set('bank',$bank);
         $this->set('bankBranch', $bankBranch);
@@ -1094,6 +1100,7 @@ class StaffController extends StaffAppController {
             $this->redirect(array('action' => 'bankAccounts'));
         }
     }
+
 
     public function bankAccountsBankBranches() {
             $this->autoRender = false;
@@ -1141,7 +1148,7 @@ class StaffController extends StaffAppController {
 
     public function comments(){
         $this->Navigation->addCrumb('Comments');
-        $data = $this->StaffComment->find('all',array('conditions'=>array('StaffComment.staff_id'=>$this->staffId), 'recursive' => -1));
+        $data = $this->StaffComment->find('all',array('conditions'=>array('StaffComment.staff_id'=>$this->staffId), 'recursive' => -1, 'order'=>'StaffComment.comment_date'));
 
         $this->set('list', $data);
     }
@@ -1207,6 +1214,154 @@ class StaffController extends StaffAppController {
             $this->StaffComment->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'comments', $staffId));
+        }
+    }
+
+    public function nationalities(){
+        $this->Navigation->addCrumb('Nationalities');
+        $data = $this->StaffNationality->find('all',array('conditions'=>array('StaffNationality.staff_id'=>$this->staffId)));
+		$this->set('list', $data);
+	}
+	
+	public function nationalitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffNationality->create();
+            $this->request->data['StaffNationality']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffNationality'];
+
+            if ($this->StaffNationality->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalities'));
+            }
+        }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+		$this->UserSession->readStatusSession($this->request->action);
+	}
+	
+	public function nationalitiesView() {
+        $nationalityId = $this->params['pass'][0];
+        $nationalityObj = $this->StaffNationality->find('all',array('conditions'=>array('StaffNationality.id' => $nationalityId)));
+        
+        if(!empty($nationalityObj)) {
+            $this->Navigation->addCrumb('Nationality Details');
+            
+            $this->Session->write('StaffNationalityId', $nationalityId);
+            $this->set('nationalityObj', $nationalityObj);
+        } 
+    }
+	
+	public function nationalitiesEdit() {
+        $nationalityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $nationalityObj = $this->StaffNationality->find('first',array('conditions'=>array('StaffNationality.id' => $nationalityId)));
+  
+            if(!empty($nationalityObj)) {
+                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->request->data = $nationalityObj;
+               
+            }
+         } else {
+            $nationalityData = $this->data['StaffNationality'];
+            $nationalityData['staff_id'] = $this->staffId;
+            
+            if ($this->StaffNationality->save($nationalityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
+            }
+         }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+
+        $this->set('id', $nationalityId);
+       
+    }
+	
+	public function nationalitiesDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffNationalityId')) {
+            $id = $this->Session->read('StaffNationalityId');
+            $staffId = $this->Session->read('StaffId');
+            $countryId = $this->StaffNationality->field('country_id', array('StaffNationality.id' => $id));
+            $name = $this->Country->field('name', array('Country.id' => $countryId));
+            $this->StaffNationality->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'nationalities', $staffId));
+		}
+	}
+	
+	public function identities(){
+        $this->Navigation->addCrumb('Identities');
+        $data = $this->StaffIdentity->find('all',array('conditions'=>array('StaffIdentity.staff_id'=>$this->staffId)));
+        $this->set('list', $data);
+    }
+	
+    public function identitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffIdentity->create();
+            $this->request->data['StaffIdentity']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffIdentity'];
+
+            if ($this->StaffIdentity->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identities'));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+	
+	public function identitiesView() {
+        $identityId = $this->params['pass'][0];
+        $identityObj = $this->StaffIdentity->find('all',array('conditions'=>array('StaffIdentity.id' => $identityId)));
+        
+        if(!empty($identityObj)) {
+            $this->Navigation->addCrumb('Identity Details');
+            
+            $this->Session->write('StaffIdentityId', $identityId);
+            $this->set('identityObj', $identityObj);
+        } 
+    }
+	
+	public function identitiesEdit() {
+        $identityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $identityObj = $this->StaffIdentity->find('first',array('conditions'=>array('StaffIdentity.id' => $identityId)));
+  
+            if(!empty($identityObj)) {
+                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->request->data = $identityObj;
+               
+            }
+         } else {
+            $identityData = $this->data['StaffIdentity'];
+            $identityData['staff_id'] = $this->staffId;
+            
+            if ($this->StaffIdentity->save($identityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
+            }
+         }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+
+        $this->set('id', $identityId);  
+    }
+
+	public function identitiesDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffIdentityId')) {
+            $id = $this->Session->read('StaffIdentityId');
+            $staffId = $this->Session->read('StaffId');
+            $name = $this->StaffIdentity->field('number', array('StaffIdentity.id' => $id));
+            $this->StaffIdentity->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'identities', $staffId));
         }
     }
 }
