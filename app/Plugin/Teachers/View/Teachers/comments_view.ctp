@@ -22,16 +22,17 @@ echo $this->Html->script('search', false);
     </h1>
     <?php echo $this->element('alert'); ?>
     
-    <div class="row">
-        <div class="label"><?php echo __('Title'); ?></div>
-        <div class="value"><?php echo $data['title']; ?></div>
-    </div>
     
     <div class="row">
         <div class="label"><?php echo __('Date'); ?></div>
         <div class="value"><?php echo $this->Utility->formatDate($data['comment_date']); ?></div>
     </div>
 
+    <div class="row">
+        <div class="label"><?php echo __('Title'); ?></div>
+        <div class="value"><?php echo $data['title']; ?></div>
+    </div>
+    
     <div class="row">
         <div class="label"><?php echo __('Comment'); ?></div>
         <div class="value"><?php echo $data['comment']; ?></div>

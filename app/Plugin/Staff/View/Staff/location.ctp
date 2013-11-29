@@ -12,7 +12,7 @@ echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 
 <div id="employment" class="content_wrapper">
     <h1>
-        <span><?php echo __('Employment'); ?></span>
+        <span><?php echo __('Location'); ?></span>
     </h1>
     <?php echo $this->element('alert'); ?>
 	
@@ -24,15 +24,18 @@ echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 				<div class="table_cell"><?php echo __('Position'); ?></div>
 				<div class="table_cell cell_year"><?php echo __('From'); ?></div>
 				<div class="table_cell cell_year"><?php echo __('To'); ?></div>
-				<div class="table_cell cell_salary"><?php echo __('Salary'); ?></div>
+				<div class="table_cell cell_salary"><?php echo __('Status'); ?></div>
 			</div>
 			<div class="table_body">
 				<?php foreach($classes as $class){ ?>
 				<div class="table_row">
-					<div class="table_cell"><?php echo $class['name']; ?></div>
-					<div class="table_cell center"><?php echo $class['start_date']; ?></div>
-					<div class="table_cell center"><?php echo (empty($class['end_date']))? 'Current':$class['end_date']; ?></div>
-					<div class="table_cell cell_number"><?php echo $class['salary']; ?></div>
+					<div class="table_cell">
+						<div class="table_cell_row"><?php echo $class['StaffCategory']['name']; ?></div>
+						<div class="table_cell_row"><?php echo $class['InstitutionSiteStaff']['position_no'];?></div>
+					</div>
+					<div class="table_cell center"><?php echo $class['InstitutionSiteStaff']['start_date']; ?></div>
+					<div class="table_cell center"><?php echo (empty($class['InstitutionSiteStaff']['end_date']))? 'Current':$class['InstitutionSiteStaff']['end_date']; ?></div>
+					<div class="table_cell center"><?php echo $class['StaffStatus']['name']; ?></div>
 				</div>
 				<?php } ?>
 			</div>

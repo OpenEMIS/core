@@ -1,4 +1,4 @@
-$(document).ready(function() {
+ $(document).ready(function() {
     objTeacherLeaves.init();
 });
 
@@ -10,6 +10,19 @@ var objTeacherLeaves = {
         $('.icon_plus').click(objTeacherLeaves.addRow);
     },
 
+    validateFileSize: function(obj) {
+      //this.files[0].size gets the size of your file.
+      var fileSize = obj.files[0].size;
+      var fileAttr = $(obj).attr('index');
+      if(fileSize/1024 > 2050){
+        $('.file_index_' + fileAttr).parent().append('<div id="fileinput_message_' + fileAttr + '" class="error-message custom-file-msg">Invalid File Size</div>');
+      }else{
+        $("#fileinput_message_" + fileAttr).remove();
+    
+      }
+    },
+
+    
     addRow: function() {
         var size = $('.table_row').length;
         var maskId;
@@ -102,6 +115,16 @@ var objTeacherLeaves = {
         }
 
         $('.compute_days').val(daycount);
+    },
+
+  
+    errorFlag: function() {
+        var errorMsg = $('.custom-file-msg').length;
+        if(errorMsg==0){
+            return true;
+        }else{
+            return false;
+        }
     }
 
 

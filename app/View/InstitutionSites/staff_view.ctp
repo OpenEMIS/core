@@ -65,12 +65,12 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 	</fieldset>
 	
 	<fieldset class="section_break">
-		<legend><?php echo __('Employment'); ?></legend>
+		<legend><?php echo __('Location'); ?></legend>
 		<div class="table full_width" style="margin-top: 10px;">
 			<div class="table_head">
-				<div class="table_cell" style="width: 180px;"><?php echo __('Position'); ?></div>
+				<div class="table_cell" style="width: 150px;"><?php echo __('Position'); ?></div>
 				<div class="table_cell" style="width: 220px;"><?php echo __('Details'); ?></div>
-				<div class="table_cell"><?php echo __('Salary'); ?></div>
+				<div class="table_cell"><?php echo __('FTE'); ?></div>
 				<div class="table_cell"><?php echo __('Status'); ?></div>
 			</div>
 			
@@ -95,12 +95,8 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 								?>
 							</div>
 						</div>
-						<div class="table_cell_row">
-							<div class="label"><?php echo __('Hours'); ?></div>
-							<div class="left"><?php echo $obj['InstitutionSiteStaff']['no_of_hours']; ?></div>
-						</div>
 					</div>
-					<div class="table_cell cell_number"><?php echo $obj['InstitutionSiteStaff']['salary']; ?></div>
+					<div class="table_cell"><?php echo $obj['InstitutionSiteStaff']['FTE']; ?></div>
 					<div class="table_cell"><?php echo $obj['StaffStatus']['name']; ?></div>
 				</div>
 				<?php } ?>

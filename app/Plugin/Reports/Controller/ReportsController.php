@@ -367,8 +367,7 @@ class ReportsController extends ReportsAppController {
                 'alias' => 'Area',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'Area.id = InstitutionSite.area_id',
-                    'Area.id = Institution.area_id'
+                    'Area.id = InstitutionSite.area_id'
                 )
             ),
             'institution_sectors' => array(
@@ -634,8 +633,7 @@ class ReportsController extends ReportsAppController {
                 'alias' => 'Area',
                 'type' => 'LEFT',
                 'conditions' => array(
-                    'Area.id = InstitutionSite.area_id',
-                    'Area.id = Institution.area_id'
+                    'Area.id = InstitutionSite.area_id'
                 )
             ),
             'institution_sectors' => array(
