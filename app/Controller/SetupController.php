@@ -252,6 +252,12 @@ class SetupController extends AppController {
 		$lookup[] = array('Identity Types' => array(
 			'items' => $this->IdentityType->getLookupVariables()
 		));
+
+		$lookup[] = array('Contact Types' => array(
+			'items' => $this->ContactType->getLookupVariables(),
+			'edit' => 'contact_types_edit',
+		));
+
 		
 		// Student
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
