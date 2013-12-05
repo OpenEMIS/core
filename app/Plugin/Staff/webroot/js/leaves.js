@@ -1,3 +1,4 @@
+
 $(document).ready(function() {
     objStaffLeaves.init();
 });
@@ -8,6 +9,19 @@ var objStaffLeaves = {
         objStaffLeaves.compute_work_days();
         $(".icon_plus").unbind( "click" );
         $('.icon_plus').click(objStaffLeaves.addRow);
+    },
+
+
+    validateFileSize: function(obj) {
+      //this.files[0].size gets the size of your file.
+      var fileSize = obj.files[0].size;
+      var fileAttr = $(obj).attr('index');
+      if(fileSize/1024 > 2050){
+        $('.file_index_' + fileAttr).parent().append('<div id="fileinput_message_' + fileAttr + '" class="error-message custom-file-msg">Invalid File Size</div>');
+      }else{
+        $("#fileinput_message_" + fileAttr).remove();
+    
+      }
     },
 
 
@@ -104,6 +118,15 @@ var objStaffLeaves = {
         }
 
         $('.compute_days').val(daycount);
+    },
+
+    errorFlag: function() {
+        var errorMsg = $('.custom-file-msg').length;
+        if(errorMsg==0){
+            return true;
+        }else{
+            return false;
+        }
     }
 
 
