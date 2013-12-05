@@ -19,7 +19,7 @@ App::uses('AreaHandlerComponent', 'Controller/Component');
 
 class InstitutionSitesController extends AppController {
 	public $institutionSiteId;
-    public $institutionSiteObj;
+        public $institutionSiteObj;
 	
 	public $uses = array(
 		'Area',
@@ -90,6 +90,7 @@ class InstitutionSitesController extends AppController {
 	public $helpers = array('Paginator');
 	
 	public $components = array(
+                'Mpdf',
 		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'InstitutionSiteAttachment',
@@ -2738,5 +2739,172 @@ class InstitutionSitesController extends AppController {
             $this->set('arealevel',$areaLevel);
             $this->set('adminarea',$adminarea);
         }
+        
+        private $reportMapping = array(
+                'Site Details' => 
+                    array('Model'=>'InstitutionSite',
+                        'fields'=>
+                            array('Institution'=>array('name'),
+                                  'InstitutionSite'=>array('name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','date_closed','longitude','latitude'),
+                                  'InstitutionSiteStatus'=>array('name'),
+                                  'InstitutionSiteType'=>array('name'),
+                                  'InstitutionSiteOwnership'=>array('name'),
+                                  'Area'=>array('name')
+                            )
+                        
+                    ),
+                 'Bank Accounts' => 
+                    array('Model'=>'InstitutionSiteBankAccount',
+                        'fields'=>
+                            array('BankBranch'=>array('name'),
+                                'InstitutionSiteBankAccount'=>array('account_name','account_number','active')
+                            )
+                        
+                    ),
+                 'Other Details' => 
+                    array('Model'=>'InstitutionSiteCustomValue',
+                        'fields'=>
+                            array('InstitutionSiteCustomValue'=>array('id')
+                            )
+                        
+                    )
+            );
+        private $ReportData = array(); //param 1 name ; param2 type
+        public function genReport($name,$type){ //$this->genReport('Site Details','CSV');
+            $this->autoRender = false;
+            $this->ReportData['name'] = $name;
+            $this->ReportData['type'] = $type;
+            
+            if(method_exists($this, 'gen'.$type)){ 
+                if($type == 'CSV'){
+                    $data =  $this->getReportData($this->ReportData['name']);
+                    $this->genCSV($data);
+                }elseif($type == 'PDF'){
+                    $data =  $this->genReportPDF($this->ReportData['name']);
+                    $data['name'] = $this->ReportData['name'];
+                    $this->genPDF($data);
+                }
+            }
+        }
+        
+        private function getHeaderData($name,$humanize = false){
+            if(array_key_exists($name, $this->reportMapping)){
+                $header = $this->reportMapping[$name]['fields'];
+            }
+            $new = array();
+            foreach($header as $model => &$arrcols){
+                foreach($arrcols as $col){
+                    $new[] = ($humanize == false)?$model.".".$col:  Inflector::humanize(Inflector::underscore($model)). ' '. Inflector::humanize($col);
+                }
+            }
+            return $new;
+        }
+        private function getReportData($name){
+           
+                if(array_key_exists($name, $this->reportMapping)){
+                    $whereKey = ($this->reportMapping[$name]['Model'] == 'InstitutionSite')? 'id' : 'institution_site_id';
+                    $cond =  array( $this->reportMapping[$name]['Model'].".".$whereKey => $this->institutionSiteId);
+                    
+                    
+                    
+                    $options = array(
+                                'fields' => $this->getHeaderData($name),
+                                'conditions'=>$cond);
+                            
+                    if($this->reportMapping[$name]['Model'] == 'InstitutionSiteCustomValue'){
+                        $options['joins'] = array(
+                            array('table' => 'census_custom_field_options',
+                                'alias' => 'InstitutionSiteCustomFieldOption',
+                                'type' => 'LEFT',
+                                'conditions' => array(
+                                    'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.channel_id'
+                                )
+                            )
+                        );
+                    }
+                    $data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
+                    pr($data);
+                    
+                }
+                return $data;   
+        }
+            
+        public function genCSV($arrData){
+            $this->autoRender =false;
+            ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
+            //create a file
+            $filename = "export_".date("Y.m.d").".csv";
+            $csv_file = fopen('php://output', 'w');
+            header('Content-type: application/csv');
+            header('Content-Disposition: attachment; filename="'.$filename.'"');
+            $header_row = $this->getHeaderData($this->ReportData['name']);
+            fputcsv($csv_file,$header_row,',','"');
+            // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
+            foreach($arrData as $arrSingleResult){
+                    foreach($arrSingleResult as $table => $arrFields){
+                        foreach($arrFields as $col){
+                            $row[] = $col;
+                        }
+                    }
+                    fputcsv($csv_file,$row,',','"');
+            }
+            fclose($csv_file);
+        }
+        
+        public function genReportPDF($name){
+            
+            if($name == 'Site Details'){
+                $profileurl = Router::url(array('controller'=>'InstitutionSites','action'=>'siteProfile',$this->institutionSiteId),true);
+                $html = file_get_contents($profileurl);
+                $html = str_replace('common.css','',$html);
+                $stylesheet = file_get_contents(WWW_ROOT.'css/mpdf.css');
+                $data = compact('html','stylesheet');
+            }
+            return $data;
+            
+        }
+        
+        public function genPDF($arrData){
+            // initializing mPDF
+            $this->Mpdf->init();
+            $this->Mpdf->showImageErrors = false; //for debugging
+            $this->Mpdf->WriteHTML($arrData['stylesheet'],1);
+            $this->Mpdf->WriteHTML($arrData['html']);
+            $this->Mpdf->Output($arrData['name'].'.pdf','I');
+             
+        }
+
+        public function reports($type = 'General'){
+            $this->Navigation->addCrumb($type);
+            $data['General'] = array('General'=>
+                        array(
+                            array(
+                                    'name'=>'Site Details',
+                                    'types'=>array(
+                                            'PDF',
+                                            'CSV'
+                                     )
+                             ),
+                            array(
+                                    'name'=>'Bank Accounts',
+                                    'types'=>array(
+                                            'CSV'
+                                     )
+                             ),
+                            array(
+                                    'name'=>'Other Details',
+                                    'types'=>array(
+                                            'CSV'
+                                     )
+                             )
+                         )
+                    );
+            $this->set('data', $data[$type]);
+            $this->render('Reports/'.$type);
+            
+        }
+        
+       
+
     
 }
