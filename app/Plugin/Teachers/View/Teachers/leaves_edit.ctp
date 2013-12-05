@@ -48,7 +48,7 @@ echo $this->Html->script('attachments', false);
 
 	<div class="row">
 		<div class="label"><?php echo __('Days'); ?></div>
-		<div class="value"><?php echo $this->Form->input('number_of_days', array('class'=>'compute_days')); ?></div>
+		<div class="value"><?php echo $this->Form->input('number_of_days', array('class'=>'compute_days default')); ?></div>
 	</div>
 	
 	<div class="row">
@@ -100,6 +100,7 @@ echo $this->Html->script('attachments', false);
 		<div class="table file_upload" style="width:240px;">
 			<div class="table_body"></div>
 		</div>
+		<div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
 		<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
 		</div>
 	</div>
@@ -125,7 +126,7 @@ echo $this->Html->script('attachments', false);
     </div>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<input type="submit" value="<?php echo __('Save'); ?>" onclick="js:if(objTeacherLeaves.errorFlag()){ return true; }else{ return false; }"   class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'leaves'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 </div>

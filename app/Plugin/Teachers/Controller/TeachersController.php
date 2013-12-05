@@ -49,6 +49,10 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherBehaviour',
         'Teachers.TeacherBehaviourCategory',
         'Teachers.TeacherComment',
+        'Teachers.TeacherNationality',
+		'Teachers.TeacherIdentity',
+        'Country',
+		'IdentityType',
         'SchoolYear',
 		'ConfigItem',
         'LeaveStatus'
@@ -253,16 +257,17 @@ class TeachersController extends TeachersAppController {
 		$this->set('data', $data);
     }
 
-    public function employment() {
+    public function location() {
         $this->Navigation->addCrumb(ucfirst($this->action));
         $teacherId = $this->Session->read('TeacherId');
         $data = array();
 		
         $list = $this->InstitutionSiteTeacher->getPositions($teacherId);
+    
         foreach($list as $row) {
             $result = array();
             $dataKey = '';
-            foreach($row as $element){ // compact array
+            foreach($row as $key => $element){ // compact array
                 if(array_key_exists('institution', $element)){
                     $dataKey .= $element['institution'];
                     continue;
@@ -271,12 +276,13 @@ class TeachersController extends TeachersAppController {
                     $dataKey .= ' - '.$element['institution_site'];
                     continue;
                 }
-                $result = array_merge($result, $element);
+               
+                $result = array_merge($result, array($key => $element));
             }
             $data[$dataKey][] = $result;
         }
 		if(empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_EMPLOYMENT'), array('type' => 'info', 'dismissOnClick' => false));
+			$this->Utility->alert($this->Utility->getMessage('NO_LOCATION'), array('type' => 'info', 'dismissOnClick' => false));
 		}
         $this->set('data', $data);
     }
@@ -626,6 +632,7 @@ class TeachersController extends TeachersAppController {
                     $teacherQualificationData['qualification_institution_id'] = $qualificationInstitutionId;
                 }
                
+
 
                 $this->TeacherQualification->save($teacherQualificationData);
     
@@ -1086,6 +1093,7 @@ class TeachersController extends TeachersAppController {
 	
 	public function leavesDelete($id=null) {
 		if(!is_null($id) && $this->TeacherLeave->exists($id) && $this->Session->check('TeacherId')) {
+
 			$this->TeacherLeave->delete($id);
 			$this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
 		}
@@ -1096,6 +1104,7 @@ class TeachersController extends TeachersAppController {
         $this->layout = 'ajax';
         $this->set('params', $this->params->query);
         $this->set('_model', 'TeacherLeaveAttachment');
+        $this->set('jsname', 'objTeacherLeaves');
         $this->render('/Elements/attachment/compact_add');
     }
 
@@ -1173,17 +1182,15 @@ class TeachersController extends TeachersAppController {
 
     public function bankAccountsEdit() {
         $bankBranch = array();
+
+        $bankAccountId = $this->params['pass'][0];
+        $this->Navigation->addCrumb('Edit Bank Account Details');
         if($this->request->is('get')) {
-            $bankAccountId = $this->params['pass'][0];
             $bankAccountObj = $this->TeacherBankAccount->find('first',array('conditions'=>array('TeacherBankAccount.id' => $bankAccountId)));
   
             if(!empty($bankAccountObj)) {
-                $this->Navigation->addCrumb('Edit Bank Account Details');
                 //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
                 $this->request->data = $bankAccountObj;
-                $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
-
-                $this->set('id', $bankAccountId);
             }
          } else {
             $this->request->data['TeacherBankAccount']['teacher_id'] = $this->teacherId;
@@ -1192,6 +1199,8 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['TeacherBankAccount']['id']));
             }
          }
+        $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
+        $this->set('id', $bankAccountId);
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
         $this->set('bank',$bank);
         $this->set('bankBranch', $bankBranch);
@@ -1257,7 +1266,7 @@ class TeachersController extends TeachersAppController {
 
     public function comments(){
         $this->Navigation->addCrumb('Comments');
-        $data = $this->TeacherComment->find('all',array('conditions'=>array('TeacherComment.teacher_id'=>$this->teacherId), 'recursive' => -1));
+        $data = $this->TeacherComment->find('all',array('conditions'=>array('TeacherComment.teacher_id'=>$this->teacherId), 'recursive' => -1, 'order'=>'TeacherComment.comment_date'));
 
         $this->set('list', $data);
     }
@@ -1322,6 +1331,155 @@ class TeachersController extends TeachersAppController {
             $this->TeacherComment->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'comments', $teacherId));
+        }
+    }
+
+    public function nationalities(){
+        $this->Navigation->addCrumb('Nationalities');
+        $data = $this->TeacherNationality->find('all',array('conditions'=>array('TeacherNationality.teacher_id'=>$this->teacherId)));
+		$this->set('list', $data);
+    }
+	
+	public function nationalitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->TeacherNationality->create();
+            $this->request->data['TeacherNationality']['teacher_id'] = $this->teacherId;
+            
+            $data = $this->data['TeacherNationality'];
+
+            if ($this->TeacherNationality->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalities'));
+            }
+        }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+		$this->UserSession->readStatusSession($this->request->action);
+    }
+	
+	public function nationalitiesView() {
+        $nationalityId = $this->params['pass'][0];
+        $nationalityObj = $this->TeacherNationality->find('all',array('conditions'=>array('TeacherNationality.id' => $nationalityId)));
+        
+        if(!empty($nationalityObj)) {
+            $this->Navigation->addCrumb('Nationality Details');
+            
+            $this->Session->write('TeacherNationalityId', $nationalityId);
+            $this->set('nationalityObj', $nationalityObj);
+        } 
+    }
+
+    public function nationalitiesEdit() {
+        $nationalityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $nationalityObj = $this->TeacherNationality->find('first',array('conditions'=>array('TeacherNationality.id' => $nationalityId)));
+  
+            if(!empty($nationalityObj)) {
+                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->request->data = $nationalityObj;
+               
+            }
+         } else {
+            $nationalityData = $this->data['TeacherNationality'];
+            $nationalityData['teacher_id'] = $this->teacherId;
+            
+            if ($this->TeacherNationality->save($nationalityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
+            }
+         }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+
+        $this->set('id', $nationalityId);
+       
+    }
+	
+	public function nationalitiesDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherNationalityId')) {
+            $id = $this->Session->read('TeacherNationalityId');
+            $teacherId = $this->Session->read('TeacherId');
+            $countryId = $this->TeacherNationality->field('country_id', array('TeacherNationality.id' => $id));
+            $name = $this->Country->field('name', array('Country.id' => $countryId));
+            $this->TeacherNationality->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'nationalities', $teacherId));
+		}
+    }
+	
+	public function identities(){
+        $this->Navigation->addCrumb('Identities');
+        $data = $this->TeacherIdentity->find('all',array('conditions'=>array('TeacherIdentity.teacher_id'=>$this->teacherId)));
+        $this->set('list', $data);
+    }
+	
+    public function identitiesAdd() {
+        if ($this->request->is('post')) {
+            $this->TeacherIdentity->create();
+            $this->request->data['TeacherIdentity']['teacher_id'] = $this->teacherId;
+            
+            $data = $this->data['TeacherIdentity'];
+
+            if ($this->TeacherIdentity->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identities'));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+	
+	public function identitiesView() {
+        $identityId = $this->params['pass'][0];
+        $identityObj = $this->TeacherIdentity->find('all',array('conditions'=>array('TeacherIdentity.id' => $identityId)));
+        
+        if(!empty($identityObj)) {
+            $this->Navigation->addCrumb('Identity Details');
+            
+            $this->Session->write('TeacherIdentityId', $identityId);
+            $this->set('identityObj', $identityObj);
+        } 
+    }
+
+    public function identitiesEdit() {
+        $identityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $identityObj = $this->TeacherIdentity->find('first',array('conditions'=>array('TeacherIdentity.id' => $identityId)));
+  
+            if(!empty($identityObj)) {
+                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->request->data = $identityObj;
+               
+            }
+         } else {
+            $identityData = $this->data['TeacherIdentity'];
+            $identityData['teacher_id'] = $this->teacherId;
+            
+            if ($this->TeacherIdentity->save($identityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
+            }
+         }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+
+        $this->set('id', $identityId);
+       
+    }
+	
+    public function identitiesDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherIdentityId')) {
+            $id = $this->Session->read('TeacherIdentityId');
+            $teacherId = $this->Session->read('TeacherId');
+            $name = $this->TeacherIdentity->field('number', array('TeacherIdentity.id' => $id));
+            $this->TeacherIdentity->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'identities', $teacherId));
         }
     }
 }

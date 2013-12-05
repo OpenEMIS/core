@@ -35,13 +35,15 @@ class TeachersNavigationComponent extends Component {
 					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
                     $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
-                    $navigation->createLink('Comments', $controller, 'comments'),         
+                    $navigation->createLink('Comments', $controller, 'comments'),  
+                    $navigation->createLink('identities', $controller, 'identities'),         
+		    $navigation->createLink('Nationalities', $controller, 'nationalities'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
 				'DETAILS' => array(
 					$navigation->createLink('Qualifications', $controller, 'qualifications'),
 					$navigation->createLink('Training', $controller, 'training'),
-					$navigation->createLink('Employment', $controller, 'employment'),
+					$navigation->createLink('Location', $controller, 'location'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
 					$navigation->createLink('Leave', $controller, 'leaves'),
 					$navigation->createLink('Behaviour', $controller, 'behaviour')

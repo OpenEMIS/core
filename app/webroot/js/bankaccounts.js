@@ -52,47 +52,8 @@ var BankAccounts = {
                 tpl += '<option value="'+o2.id+'">'+o2.name+'</option>';
             })
         }
-        var select = $(thisobj).parent().parent().parent().next().find('select');
-        select.find('option').remove();
-        select.append(tpl);
-    },
-    validateAdd : function(){
-        var bool = true;
-        var errorMessages = [];
-        var alertOpt = {
-            // id: 'alert-' + new Date().getTime(),
-            parent: '.bankAccountForm',
-            title: 'Click to dismiss',
-            text: "Error have occurred.",
-            type: alertType.error, // alertType.info or alertType.warn or alertType.error
-            position: 'center',
-            css: {}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
-            autoFadeOut: true
-        };
-        /*
-        if($('input[type="radio"][name*="[active]"]').length > 0 && $('input[type="radio"][name*="[active]"]:checked').length < 1){
-//            errorMessages.push(i18n.BankAccounts.validateAddActive);
-            errorMessages.push("Please select an account as active.");
-            bool = false;
-        }*/
-
-        $('select[name*="[bank_branch_id]"]').each(function(i,o){
-            if(!bool){
-                return false;
-            }
-            if($(o).val() == "0" || $(o).val() ==""){
-                errorMessages.push(i18n.BankAccounts.validateAddBranch);
-                bool = false;
-            }
-        });
-
-        if(bool){
-            $.mask({text: i18n.General.textSaving});
-        }else{
-            alertOpt.text = errorMessages.shift();
-            $.alert(alertOpt);
-        }
-        return bool;
+        var select = $('.branch').find('select');
+        select.html(tpl);
     },
     confirmDeletedlg : function(id){
         $.dialog({

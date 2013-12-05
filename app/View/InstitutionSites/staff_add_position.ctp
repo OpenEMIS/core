@@ -57,24 +57,20 @@ $fieldName = 'data[InstitutionSiteStaff][' . $index . '][%s]';
 				));
 			?>
 		</div>
-		<div class="table_cell_row">
-			<div class="label"><?php echo __('Hours'); ?></div>
-			<?php
-			echo $this->Form->input($model . '.no_of_hours', array(
+	</div>
+	<div class="table_cell">
+		<?php
+		echo $this->Form->input($model . '.FTE', array(
 				'type' => 'text',
 				'label' => false,
 				'div' => false,
-				'class' => 'default input',
+				'class' => 'default',
+				'style' => 'width: 90%;',
 				'maxlength' => 3,
-				'name' => sprintf($fieldName, 'no_of_hours'),
+				'name' => sprintf($fieldName, 'FTE'),
 				'onkeypress' => 'return utility.floatCheck(event)'
 			));
-			?>
-		</div>
-		<div class="table_cell_row">
-			<div class="label"><?php echo __('Salary'); ?></div>
-			<?php echo $this->Form->input($model . '.salary', array('class' => 'default input', 'label' => false, 'div' => false, 'value' => '0.00')); ?>
-		</div>
+		?>
 	</div>
 	<div class="table_cell">
 		<?php
