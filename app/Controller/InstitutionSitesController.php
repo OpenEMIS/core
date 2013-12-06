@@ -2764,7 +2764,8 @@ class InstitutionSitesController extends AppController {
                  'Other Details' => 
                     array('Model'=>'InstitutionSiteCustomValue',
                         'fields'=>
-                            array('InstitutionSiteCustomValue'=>array('id')
+                            array('InstitutionSiteCustomField'=>array('name'),
+                                'InstitutionSiteCustomValue'=>array('custom_value')
                             )
                         
                     )
@@ -2813,23 +2814,29 @@ class InstitutionSitesController extends AppController {
                             
                     if($this->reportMapping[$name]['Model'] == 'InstitutionSiteCustomValue'){
                         $options['joins'] = array(
-                            array('table' => 'census_custom_field_options',
+                            array('table' => 'institution_site_custom_field_options',
                                 'alias' => 'InstitutionSiteCustomFieldOption',
                                 'type' => 'LEFT',
                                 'conditions' => array(
-                                    'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.channel_id'
+                                    'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
                                 )
                             )
                         );
+                        
+                         $this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
+            'custom_value' => 'IF(InstitutionSiteCustomField.type = 3, InstitutionSiteCustomFieldOption.value, InstitutionSiteCustomValue.value)'
+        );
                     }
+                    
                     $data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
-                    pr($data);
+                   
                     
                 }
                 return $data;   
         }
             
         public function genCSV($arrData){
+           
             $this->autoRender =false;
             ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
             //create a file
@@ -2839,13 +2846,18 @@ class InstitutionSitesController extends AppController {
             header('Content-Disposition: attachment; filename="'.$filename.'"');
             $header_row = $this->getHeaderData($this->ReportData['name']);
             fputcsv($csv_file,$header_row,',','"');
+            
+             
             // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
             foreach($arrData as $arrSingleResult){
+                $row = array();
                     foreach($arrSingleResult as $table => $arrFields){
+                        
                         foreach($arrFields as $col){
                             $row[] = $col;
                         }
                     }
+                    
                     fputcsv($csv_file,$row,',','"');
             }
             fclose($csv_file);
