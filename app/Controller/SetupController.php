@@ -69,7 +69,8 @@ class SetupController extends AppController {
 		'QualificationSpecialisation',
 		'LeaveStatus',
 		'Country',
-		'IdentityType'
+		'IdentityType',
+		'ContactType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -254,6 +255,7 @@ class SetupController extends AppController {
 		));
 
 		$lookup[] = array('Contact Types' => array(
+			'view' => 'contact_types',
 			'items' => $this->ContactType->getLookupVariables(),
 			'edit' => 'contact_types_edit',
 		));
@@ -471,6 +473,16 @@ class SetupController extends AppController {
 	}
 	
 	public function setupVariablesAddBank() {
+		$this->layout = 'ajax';
+		$model = $this->params->query['model'];
+		$order = $this->params->query['order'] + 1;
+		$index = $this->params->query['index'];
+		$conditions = isset($this->params->query['conditions']) ? $this->params->query['conditions'] : array();
+		
+		$this->set('params', array($model, $order, $index, $conditions));
+	}
+
+	public function setupVariablesAddContactType() {
 		$this->layout = 'ajax';
 		$model = $this->params->query['model'];
 		$order = $this->params->query['order'] + 1;
