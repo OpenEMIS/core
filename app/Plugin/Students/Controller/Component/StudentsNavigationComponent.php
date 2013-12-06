@@ -38,7 +38,8 @@ class StudentsNavigationComponent extends Component {
                     $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
                     $navigation->createLink('Comments', $controller, 'comments'),
                     $navigation->createLink('Identities', $controller, 'identities'),
-		    $navigation->createLink('Nationalities', $controller, 'nationalities'),
+		    		$navigation->createLink('Nationalities', $controller, 'nationalities'),
+		    		$navigation->createLink('Contacts', $controller, 'contacts'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 					//$navigation->createLink('Institutions', 'institutions')
 				),

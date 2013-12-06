@@ -24,6 +24,7 @@ var setup = {
 		});
 		$('#school_year .icon_plus').click(setup.addYear);
 		$('#banks .icon_plus').click(function() { setup.addBank(this); });
+		$('#contact_types .icon_plus').click(function() { setup.addContactType(this); });
 		
 		$('.input_radio').parent().find('[type="hidden"]').val(0);
 		$('.btn_cancel').each(function() { $(this).click(setup.navigate); });
@@ -123,6 +124,43 @@ var setup = {
 		
 		var maskId;
 		var url = getRootURL() + 'Setup/setupVariablesAddBank';
+		
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: url,
+			data: {model: model, order: order, index: $('.quicksand li').length, conditions: conditions},
+			beforeSend: function (jqXHR) {
+				maskId = $.mask({id: maskId, parent: section, text: i18n.General.textAddingRow});
+			},
+			success: function (data, textStatus) {
+				var callback = function() {
+					list.append(data);
+				};
+				$.unmask({id: maskId, callback: callback});
+			}
+		});
+	},
+	
+	addContactType: function(obj) {
+		var section = $(obj).closest('.section_group');
+		if(section.length==0) { return; }
+		var list = section.find('.quicksand');
+		var lastRow = list.find('li:last');
+		var order = 0;
+		var model = section.find('#model').val();
+		
+		if(lastRow.length > 0) {
+			order = lastRow.find('#order').val();
+		}
+		
+		var conditions = {};
+		section.find('[conditionName]').each(function() {
+			conditions[$(this).attr('conditionName')] = $(this).val();
+		});
+		
+		var maskId;
+		var url = getRootURL() + 'Setup/setupVariablesAddContactType';
 		
 		$.ajax({
 			type: 'GET',

@@ -48,6 +48,7 @@ class StaffController extends StaffAppController {
             'Staff.StaffComment',
             'Staff.StaffNationality',
             'Staff.StaffIdentity',
+            'Staff.StaffContact',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -56,7 +57,9 @@ class StaffController extends StaffAppController {
             'LeaveStatus',
             'Country',
             'IdentityType',
-            'StaffLeaveAttachment'
+            'StaffLeaveAttachment',
+            'ContactOption',
+            'ContactType'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1362,6 +1365,121 @@ class StaffController extends StaffAppController {
             $this->StaffIdentity->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'identities', $staffId));
+        }
+    }
+
+
+     public function contacts(){
+        $this->Navigation->addCrumb('Contacts');
+        $data = $this->StaffContact->find('all',array('conditions'=>array('StaffContact.staff_id'=>$this->staffId), 'order'=>array('ContactType.order', 'StaffContact.preferred DESC')));
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $this->set('list', $data);
+    }
+    
+    public function contactsAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffContact->create();
+            $this->request->data['StaffContact']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffContact'];
+
+            $StaffContacts = $this->StaffContact->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$data['contact_option_id'])));
+            if($StaffContacts==0){
+                //$data['preferred'] = 1; 
+            }else{
+                if($data['preferred']=='1'){
+                    $this->StaffContact->updateAll(array('StaffContact.preferred' =>'0'), array('StaffContact.preferred' => '1', 'ContactType.contact_option_id'=>$data['contact_option_id']));
+                }
+            }
+
+
+            if ($this->StaffContact->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'contacts'));
+            }
+        }
+
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $contactOptionId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($contactOptions);
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions'=>array('contact_option_id'=>$contactOptionId, 'visible'=>1), 'recursive' => -1));
+        $this->set('contactTypeOptions', $contactTypeOptions);
+        $this->set('selectedContactOptions', $contactOptionId);
+       
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function contactsView() {
+        $contactId = $this->params['pass'][0];
+        $contactObj = $this->StaffContact->find('all',array('conditions'=>array('StaffContact.id' => $contactId)));
+        
+        if(!empty($contactObj)) {
+            $this->Navigation->addCrumb('Contact Details');
+            
+            $this->Session->write('StaffContactId', $contactId);
+            $this->set('contactObj', $contactObj);
+        } 
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+    }
+
+    public function contactsEdit() {
+        $contactId = $this->params['pass'][0];
+        $contactObj = array();
+        if($this->request->is('get')) {
+            $contactObj = $this->StaffContact->find('first',array('conditions'=>array('StaffContact.id' => $contactId)));
+  
+            if(!empty($contactObj)) {
+                $this->Navigation->addCrumb('Edit Contact Details');
+                $this->request->data = $contactObj;
+            }
+         } else {
+            $contactData = $this->data['StaffContact'];
+            $contactData['staff_id'] = $this->staffId;
+
+            $StaffContacts = $this->StaffContact->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT' => array('StaffContact.id' => array($contactId))))));
+            
+            if($StaffContacts==0){
+               //$contactData['preferred'] = 1; 
+            }else{
+                if($contactData['preferred']=='1'){
+                    $this->StaffContact->updateAll(array('StaffContact.preferred' =>'0'), array('StaffContact.preferred' => '1', 'ContactType.contact_option_id'=>$contactData['contact_option_id']));
+                }
+            }
+            
+            if ($this->StaffContact->save($contactData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'contactsView', $contactData['id']));
+            }
+         }
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $contactOptionId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $contactObj['ContactType']['contact_option_id'];
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions'=>array('contact_option_id'=>$contactOptionId, 'visible'=>1), 'recursive' => -1));
+        $this->set('contactTypeOptions', $contactTypeOptions);
+        $this->set('selectedContactOptions', $contactOptionId);
+
+        $this->set('id', $contactId);
+       
+    }
+
+    public function contactsDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffContactId')) {
+            $id = $this->Session->read('StaffContactId');
+            $staffId = $this->Session->read('StaffId');
+      
+            $name = $this->StaffContact->field('value', array('StaffContact.id' => $id));
+            $this->StaffContact->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'contacts', $staffId));
         }
     }
 }

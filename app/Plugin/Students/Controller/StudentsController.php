@@ -30,10 +30,12 @@ class StudentsController extends StudentsAppController {
 	'InstitutionSiteProgramme',
         'InstitutionSiteClass',
         'InstitutionSiteType',
-	'InstitutionSiteClassGradeStudent',
+	   'InstitutionSiteClassGradeStudent',
         'Bank',
         'BankBranch',
         'IdentityType',
+        'ContactOption',
+        'ContactType',
         'Students.StudentBankAccount',
         'Students.Student',
         'Students.StudentHistory',
@@ -48,9 +50,10 @@ class StudentsController extends StudentsAppController {
         'Students.StudentComment',
         'Students.StudentNationality',
         'Students.StudentIdentity',
+        'Students.StudentContact',
         'SchoolYear',
         'Country',
-	'ConfigItem'
+	    'ConfigItem'
     );
         
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1063,6 +1066,120 @@ class StudentsController extends StudentsAppController {
             $this->StudentIdentity->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'identities', $studentId));
+        }
+    }
+
+     public function contacts(){
+        $this->Navigation->addCrumb('Contacts');
+        $data = $this->StudentContact->find('all',array('conditions'=>array('StudentContact.student_id'=>$this->studentId), 'order'=>array('ContactType.order', 'StudentContact.preferred DESC')));
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $this->set('list', $data);
+    }
+    
+    public function contactsAdd() {
+        if ($this->request->is('post')) {
+            $this->StudentContact->create();
+            $this->request->data['StudentContact']['student_id'] = $this->studentId;
+            
+            $data = $this->data['StudentContact'];
+
+            $studentContacts = $this->StudentContact->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$data['contact_option_id'])));
+            if($studentContacts==0){
+               //$data['preferred'] = 1; 
+            }else{
+                if($data['preferred']=='1'){
+                    $this->StudentContact->updateAll(array('StudentContact.preferred' =>'0'), array('StudentContact.preferred' => '1', 'ContactType.contact_option_id'=>$data['contact_option_id']));
+                }
+            }
+
+
+            if ($this->StudentContact->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'contacts'));
+            }
+        }
+
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $contactOptionId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($contactOptions);
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions'=>array('contact_option_id'=>$contactOptionId, 'visible'=>1), 'recursive' => -1));
+        $this->set('contactTypeOptions', $contactTypeOptions);
+        $this->set('selectedContactOptions', $contactOptionId);
+       
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function contactsView() {
+        $contactId = $this->params['pass'][0];
+        $contactObj = $this->StudentContact->find('all',array('conditions'=>array('StudentContact.id' => $contactId)));
+        
+        if(!empty($contactObj)) {
+            $this->Navigation->addCrumb('Contact Details');
+            
+            $this->Session->write('StudentContactId', $contactId);
+            $this->set('contactObj', $contactObj);
+        } 
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+    }
+
+    public function contactsEdit() {
+        $contactId = $this->params['pass'][0];
+        $contactObj = array();
+        if($this->request->is('get')) {
+            $contactObj = $this->StudentContact->find('first',array('conditions'=>array('StudentContact.id' => $contactId)));
+  
+            if(!empty($contactObj)) {
+                $this->Navigation->addCrumb('Edit Contact Details');
+                $this->request->data = $contactObj;
+            }
+         } else {
+            $contactData = $this->data['StudentContact'];
+            $contactData['student_id'] = $this->studentId;
+
+            $studentContacts = $this->StudentContact->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($contactId))))));
+            
+            if($studentContacts==0){
+               //$contactData['preferred'] = 1; 
+            }else{
+                if($contactData['preferred']=='1'){
+                    $this->StudentContact->updateAll(array('StudentContact.preferred' =>'0'), array('StudentContact.preferred' => '1', 'ContactType.contact_option_id'=>$contactData['contact_option_id']));
+                }
+            }
+            
+            if ($this->StudentContact->save($contactData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'contactsView', $contactData['id']));
+            }
+         }
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $contactOptionId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $contactObj['ContactType']['contact_option_id'];
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions'=>array('contact_option_id'=>$contactOptionId, 'visible'=>1), 'recursive' => -1));
+        $this->set('contactTypeOptions', $contactTypeOptions);
+        $this->set('selectedContactOptions', $contactOptionId);
+
+        $this->set('id', $contactId);
+       
+    }
+
+    public function contactsDelete($id) {
+        if($this->Session->check('StudentId') && $this->Session->check('StudentContactId')) {
+            $id = $this->Session->read('StudentContactId');
+            $studentId = $this->Session->read('StudentId');
+           
+            $name = $this->StudentContact->field('value', array('StudentContact.id' => $id));
+            $this->StudentContact->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'contacts', $studentId));
         }
     }
 }
