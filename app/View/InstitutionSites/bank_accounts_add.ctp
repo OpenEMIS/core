@@ -15,7 +15,7 @@ echo $this->Html->script('bankaccounts', false);
 	<?php 
 	echo $this->Form->create('InstitutionSiteBankAccount', array(
 			'id' => 'InstitutionSiteBankAccount',
-			'url' => array('controller' => 'InstitutionSites', 'action' => 'bankAccountsAdd')
+			'url' => array('controller' => 'InstitutionSites', 'action' => 'bankAccountsAdd', $selectedBank)
 		));
 	?>
 	<?php echo $this->Form->input('institution_site_id', array('type'=>'hidden', 'value'=>$institution_site_id)); ?>
@@ -40,10 +40,34 @@ echo $this->Html->script('bankaccounts', false);
         <div class="label"><?php echo __('Bank'); ?></div>
         <div class="value">
         	<?php echo $this->Form->input('bank_id', array('class' => 'full_width', 'label'=>false, 'options'=>$bank, 'onchange'=>"BankAccounts.changeBranch(this)", 'empty' => __('--Select--'))); ?>
+
+    		<?php
+				echo $this->Form->input('bank_id', array(
+					'id' => 'EducationSystemId',
+					'class' => 'full_width',
+					'label' => false,
+					'options' => $bank,
+					'default' => $selectedBank,
+					'url' => 'Education/index',
+					'onchange' => 'jsForm.change(this)'
+				));
+			?>
+
         </div>
     </div>
 	<div class="row edit">
 		<div class="label"><?php echo __('Branch'); ?></div>
+
+
+			<?php
+				echo $this->Form->input('education_system_id', array(
+					'id' => 'EducationSystemId',
+					'options' => $systems,
+					'default' => $selectedSystem,
+					'url' => 'Education/index',
+					'onchange' => 'jsForm.change(this)'
+				));
+			?>
 		<div class="value"><?php echo $this->Form->input('bank_branch_id', array('class' => 'full_width', 'label'=>false, 'options'=>array(), 'empty' => __('--Select--'))); ?></div>
 	</div>
 
