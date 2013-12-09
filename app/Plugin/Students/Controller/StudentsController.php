@@ -1065,4 +1065,8 @@ class StudentsController extends StudentsAppController {
             $this->redirect(array('action' => 'identities', $studentId));
         }
     }
+	
+	public function extracurricular(){
+		$this->Navigation->addCrumb('Extracurricular');
+	}
 }
