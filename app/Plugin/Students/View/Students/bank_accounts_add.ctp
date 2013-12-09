@@ -48,6 +48,11 @@ echo $this->Html->script('bankaccounts', false);
 		<div class="label"><?php echo __('Branch'); ?></div>
 		<div class="value"><?php echo $this->Form->input('bank_branch_id', array('options'=>array(), 'empty' => __('--Select--'))); ?></div>
 	</div>
+
+	<div class="row edit">
+		<div class="label"><?php echo __('Remarks'); ?></div>
+		<div class="value"><?php echo $this->Form->input('remarks', array('type'=>'textarea', 'class' => 'default', 'label'=>false)); ?></div>
+	</div>
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
