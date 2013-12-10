@@ -20,7 +20,7 @@ echo $this->Html->script('bankaccounts', false);
 	<?php 
 	echo $this->Form->create('StudentBankAccount', array(
 			'id' => 'StudentBankAccount',
-			'url' => array('controller' => 'Students', 'action' => 'bankAccountsEdit'),
+			'url' => array('controller' => 'Students', 'action' => 'bankAccountsEdit', $id, $selectedBank),
 			'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 		));
 	?>
@@ -45,7 +45,16 @@ echo $this->Html->script('bankaccounts', false);
 	<div class="row edit">
         <div class="label"><?php echo __('Bank'); ?></div>
         <div class="value">
-        	<?php echo $this->Form->input('BankBranch.bank_id', array('options'=>$bank, 'default'=>$this->request->data['BankBranch']['bank_id'], 'onchange'=>"BankAccounts.changeBranch(this)", 'empty' => __('--Select--'))); ?>
+        	<?php
+                echo $this->Form->input('bank_id', array(
+                    'options' => $bank,
+                    'default' => $selectedBank,
+                    'label' => false,
+                    'empty' => __('--Select--'),
+                    'url' => sprintf('%s/%s/%s', $this->params['controller'], $this->params['action'], $id),
+                    'onchange' => 'jsForm.change(this)'
+                ));
+            ?>
         </div>
     </div>
 	<div class="row edit">

@@ -1176,6 +1176,11 @@ class TeachersController extends TeachersAppController {
         }
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
+        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
+        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranches', $bankBranches);
+        $this->set('selectedBank', $bankId);
+
         $this->set('teacher_id', $this->teacherId);
         $this->set('bank',$bank);
     }
@@ -1199,11 +1204,16 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['TeacherBankAccount']['id']));
             }
          }
-        $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
-        $this->set('id', $bankAccountId);
+        $bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+        $this->set('selectedBank', $bankId);
+
+        $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranch', $bankBranch);
+
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
         $this->set('bank',$bank);
-        $this->set('bankBranch', $bankBranch);
+
+        $this->set('id', $bankAccountId);
     }
 
    
