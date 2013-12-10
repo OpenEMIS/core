@@ -24,12 +24,12 @@ class SmsController extends SmsAppController {
         'ConfigItem'
     );
 
-	public function beforeFilter() {
-		parent::beforeFilter();
+    public function beforeFilter() {
+        parent::beforeFilter();
         $this->Auth->allow('receive');
-		$this->bodyTitle = 'Settings';
-		$this->Navigation->addCrumb('Settings', array('controller' => '../Setup', 'action' => 'index'));
-	}
+        $this->bodyTitle = 'Settings';
+        $this->Navigation->addCrumb('Settings', array('controller' => '../Setup', 'action' => 'index'));
+    }
 
     public function receive(){
         $provider = $this->request->params['pass'][0];
@@ -80,35 +80,39 @@ class SmsController extends SmsAppController {
             );
 
             $followingMessage = isset($messages[1]['SmsMessage']) ? $messages[1]['SmsMessage'] : null;
-           
+       
             if(!empty($followingMessage)){
-                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message']);
+                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message'], 'responseformat'=>'JSON');
                 $HttpSocket = new HttpSocket();
                 $results = $HttpSocket->post($providerUrl, $param);
+                $response = json_decode($HttpSocket->response, true);
+                if($response['result']['status'] == "OK"){
 
-                $data[] = array(
-                    'SmsResponse' => array(
-                        'message' => $followingMessage['message'],
-                        'sent' => date('Y-m-d h:i:s'),
-                        'number' => $number,
-                        'order' => $followingMessage['order']
-                    )
-                );
+                    $data[] = array(
+                        'SmsResponse' => array(
+                            'message' => $followingMessage['message'],
+                            'sent' => date('Y-m-d h:i:s'),
+                            'number' => $number,
+                            'order' => $followingMessage['order']
+                        )
+                    );
 
-                $logData[] = array(
-                    'SmsLog' => array(
-                        'send_receive' => 1,
-                        'created' => date('Y-m-d h:i:s'),
-                        'number' => $number,
-                        'message' => $followingMessage['message']
-                    )
-                );
+                    $logData[] = array(
+                        'SmsLog' => array(
+                            'send_receive' => 1,
+                            'created' => date('Y-m-d h:i:s'),
+                            'number' => $number,
+                            'message' => $followingMessage['message']
+                        )
+                    );
 
-                pr(__('Sent'));
+                    pr(__('Sent'));
+                }else{
+                    pr($response['result']['error']);
+                }
             }
             $this->SmsResponse->saveAll($data);
             $this->SmsLog->saveAll($logData);
-
         }else{
             $lastResponse = end($responses);
             $lastResponse = $lastResponse['SmsResponse'];
@@ -131,52 +135,55 @@ class SmsController extends SmsAppController {
 
             $followingMessage = isset($messages[$lastResponse['order']]['SmsMessage']) ? $messages[$lastResponse['order']]['SmsMessage'] : null;
             if(!empty($followingMessage)){
-                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message']);
+                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message'], 'responseformat'=>'JSON');
                 $HttpSocket = new HttpSocket();
                 $results = $HttpSocket->post($providerUrl, $param);
+                $response = json_decode($HttpSocket->response, true);
+                if($response['result']['status'] == "OK"){
+                    $data[] = array(
+                        'SmsResponse' => array(
+                            'message' => $followingMessage['message'],
+                            'sent' => date('Y-m-d h:i:s'),
+                            'number' => $number,
+                            'order' => $followingMessage['order']
+                        )
+                    );
 
-                $data[] = array(
-                    'SmsResponse' => array(
-                        'message' => $followingMessage['message'],
-                        'sent' => date('Y-m-d h:i:s'),
-                        'number' => $number,
-                        'order' => $followingMessage['order']
-                    )
-                );
-
-                 $logData[] = array(
-                    'SmsLog' => array(
-                        'send_receive' => 1,
-                        'created' => date('Y-m-d h:i:s'),
-                        'number' => $number,
-                        'message' => $followingMessage['message']
-                    )
-                );
-                pr(__('Sent'));
+                     $logData[] = array(
+                        'SmsLog' => array(
+                            'send_receive' => 1,
+                            'created' => date('Y-m-d h:i:s'),
+                            'number' => $number,
+                            'message' => $followingMessage['message']
+                        )
+                    );
+                    pr(__('Sent'));
+                }else{
+                    pr($response['result']['error']);
+                }
             }
             $this->SmsResponse->saveAll($data);
             $this->SmsLog->saveAll($logData);
-
         }
 
 
         $this->autoRender = false;
     }
 
-	public function index(){
-		return $this->redirect(array('action'=>'messages'));
-	}
+    public function index(){
+        return $this->redirect(array('action'=>'messages'));
+    }
     public function messages() {
-		$this->Navigation->addCrumb('Messages');
+        $this->Navigation->addCrumb('Messages');
 
-	 	$data = $this->SmsMessage->find('all', array('order'=>array('SmsMessage.order ASC')));
+        $data = $this->SmsMessage->find('all', array('order'=>array('SmsMessage.order ASC')));
         $this->set('data', $data);
     }
 
     public function messagesAdd(){
-    	$this->Navigation->addCrumb('Add Messages');
+        $this->Navigation->addCrumb('Add Messages');
         if($this->request->is('post')) { // save
-    	   $data = $this->data['SmsMessage'];
+           $data = $this->data['SmsMessage'];
             $this->SmsMessage->create();
             if($this->SmsMessage->save($data)){
                 if($data['original_order'] != $data['order']){
@@ -201,8 +208,8 @@ class SmsController extends SmsAppController {
         $this->set('orderOptions', $orderOptions);
 
     }
-	
-	public function messagesView() {
+    
+    public function messagesView() {
         $id = $this->params['pass'][0];
         $obj = $this->SmsMessage->find('all',array('conditions'=>array('SmsMessage.id' => $id)));
         
@@ -268,7 +275,7 @@ class SmsController extends SmsAppController {
     }
 
      public function logs($selectedType=null) {
-        $this->Navigation->addCrumb('Responses');
+        $this->Navigation->addCrumb('Logs');
 
         $conditions = array();
         if(!empty($selectedType)){
