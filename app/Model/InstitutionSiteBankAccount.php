@@ -47,6 +47,20 @@ class InstitutionSiteBankAccount extends AppModel {
               'required' => true,
               'message' => 'Please enter an Account number'
             )
+        ),
+        'bank_id' => array(
+            'ruleRequired' => array(
+              'rule' => 'notEmpty',
+              'required' => true,
+              'message' => 'Please select a Bank'
+            )
+        ),
+        'bank_branch_id' => array(
+            'ruleRequired' => array(
+              'rule' => 'notEmpty',
+              'required' => true,
+              'message' => 'Please select a Bank Branch'
+            )
         )
     );
 }
