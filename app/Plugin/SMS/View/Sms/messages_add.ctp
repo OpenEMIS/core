@@ -23,12 +23,12 @@ echo $this->Html->script('bankaccounts', false);
 	<?php echo $this->Form->input('original_order', array('type'=>'hidden', 'default'=>$defaultOrder)); ?>
 	<div class="row edit">
         <div class="label"><?php echo __('Message'); ?></div>
-        <div class="value"><?php echo $this->Form->input('message'); ?></div>
+        <div class="value"><?php echo $this->Form->input('message', array('type'=>'textarea', 'maxlength'=>"160")); ?></div>
     </div>
     
     <div class="row edit">
 		<div class="label"><?php echo __('Enabled'); ?></div>
-		<div class="value"><?php echo $this->Form->input('enabled', array('type'=>'checkbox', 'default'=>1)); ?></div>
+		<div class="value"><?php echo $this->Form->input('enabled', array('options'=>array('1'=>__('Yes'), '0'=>__('No')), 'default'=>1)); ?></div>
 	</div>
 	 <div class="row">
         <div class="label"><?php echo __('Order'); ?></div>

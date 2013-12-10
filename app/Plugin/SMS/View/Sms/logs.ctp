@@ -25,6 +25,7 @@ echo $this->Html->script('setup_variables', false);
 					'options' => $typeOptions,
 					'default' => $selectedType,
 					'empty' => __('All'),
+					'label' => false,
 					'url' => 'Sms/logs',
 					'onchange' => 'jsForm.change(this)'
 				));
