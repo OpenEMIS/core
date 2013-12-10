@@ -12,13 +12,26 @@ echo $this->Html->script('setup_variables', false);
 		<span><?php echo __('Logs'); ?></span>
 		<?php
 		if($_add) {
-			echo $this->Html->link(__('Clear All'), array('action' => 'logsAdd'), array('class' => 'divider'));
+			echo $this->Html->link(__('Clear All'), array('action' => 'logsDelete'), array('class' => 'divider'));
 		}
 		?>
 	</h1>
  	<?php echo $this->element('alert'); ?>
-		
-		
+
+	<div class="row select_row">
+		<div class="label">
+			<?php
+				echo $this->Form->input('type_id', array(
+					'options' => $typeOptions,
+					'default' => $selectedType,
+					'empty' => __('All'),
+					'url' => 'Sms/logs',
+					'onchange' => 'jsForm.change(this)'
+				));
+			?>
+		</div>
+	</div>
+
 	<div class="table full_width">
 		<div class="table_head">
 			<div class="table_cell"><?php echo __('Date/Time'); ?></div>
@@ -35,7 +48,7 @@ echo $this->Html->script('setup_variables', false);
 					<div class="table_cell"><?php echo $arrVal['SmsLog']['created']; ?></div>
 					<div class="table_cell"><?php echo $arrVal['SmsLog']['number'];?></div>
 					<div class="table_cell"><?php echo $arrVal['SmsLog']['message'];?></div>
-					<div class="table_cell"><?php echo $arrVal['SmsLog']['type'];?></div>
+					<div class="table_cell"><?php echo ($arrVal['SmsLog']['send_receive'])==1? __('Sent') : __('Recieved');?></div>
 					</div>
 			<?php	}
 			}
