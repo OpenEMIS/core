@@ -27,8 +27,8 @@ echo $this->Html->script('search', false);
 	</div>
 
     <div class="row">
-        <div class="label"><?php echo __('Active'); ?></div>
-        <div class="value"><?php echo $this->Utility->checkOrCrossMarker($data['active']==1); ?></div>
+        <div class="label"><?php echo __('Enabled'); ?></div>
+        <div class="value"><?php echo $this->Utility->checkOrCrossMarker($data['enabled']==1); ?></div>
     </div>
 
     <div class="row">

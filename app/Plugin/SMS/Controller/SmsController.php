@@ -50,7 +50,7 @@ class SmsController extends SmsAppController {
         $message = $this->request['url']['message'];
 
         $responses = $this->SmsResponse->find('all', array('conditions'=>array('number'=>$number)));
-        $messages = $this->SmsMessage->find('all', array('conditions'=>array('active'=>1), 'order'=>array('order'), 'recursive'=>-1));
+        $messages = $this->SmsMessage->find('all', array('conditions'=>array('enabled'=>1), 'order'=>array('order'), 'recursive'=>-1));
 
         $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
         $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));

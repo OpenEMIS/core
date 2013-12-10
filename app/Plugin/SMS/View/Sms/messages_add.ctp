@@ -27,8 +27,8 @@ echo $this->Html->script('bankaccounts', false);
     </div>
     
     <div class="row edit">
-		<div class="label"><?php echo __('Active'); ?></div>
-		<div class="value"><?php echo $this->Form->input('active', array('type'=>'checkbox', 'default'=>1)); ?></div>
+		<div class="label"><?php echo __('Enabled'); ?></div>
+		<div class="value"><?php echo $this->Form->input('enabled', array('type'=>'checkbox', 'default'=>1)); ?></div>
 	</div>
 	 <div class="row">
         <div class="label"><?php echo __('Order'); ?></div>

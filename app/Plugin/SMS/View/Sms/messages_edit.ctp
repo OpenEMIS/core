@@ -29,8 +29,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
     </div>
     
     <div class="row edit">
-		<div class="label"><?php echo __('Active'); ?></div>
-		<div class="value"><?php echo $this->Form->input('active', array('type'=>'checkbox', 'default'=>$this->request->data['SmsMessage']['active'])); ?></div>
+		<div class="label"><?php echo __('Enabled'); ?></div>
+		<div class="value"><?php echo $this->Form->input('enabled', array('type'=>'checkbox', 'default'=>$this->request->data['SmsMessage']['enabled'])); ?></div>
 	</div>
 
 	 <div class="row">
