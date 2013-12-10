@@ -32,7 +32,23 @@ class SmsMessage extends SmsAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a valid Message'
-			)
-		)
+			),
+            'lengthValidate' => array(
+            	'rule'=>array('lengthValidate', 160, 'message'), 
+            	'allowEmpty'=>true,
+            	'message' => 'Message exceeds 160 characters'
+            )
+        )
 	);
+
+
+	function lengthValidate($check1,$length, $field2) {
+        foreach($check1 as $key=>$value1) {
+            $value2 = $this->data[$this->alias][$field2];
+           if(strlen($value2)>$length)
+                return false;
+
+        }
+        return true;
+    }
 }

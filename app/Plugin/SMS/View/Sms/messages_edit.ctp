@@ -17,7 +17,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<div class="messageForm">
 	<?php 
 	echo $this->Form->create('SmsMessage', array(
-			'url' => array('controller' => 'Sms', 'action' => 'messagesEdit'),
+			'url' => array('controller' => 'sms', 'action' => 'messagesEdit'),
 			'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 		));
 	?>
@@ -25,12 +25,12 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<?php echo $this->Form->input('SmsMessage.id');?>
 	<div class="row edit">
         <div class="label"><?php echo __('Message'); ?></div>
-        <div class="value"><?php echo $this->Form->input('message'); ?></div>
+        <div class="value"><?php echo $this->Form->input('message', array('type'=>'textarea', 'maxlength'=>"160")); ?></div>
     </div>
     
     <div class="row edit">
 		<div class="label"><?php echo __('Enabled'); ?></div>
-		<div class="value"><?php echo $this->Form->input('enabled', array('type'=>'checkbox', 'default'=>$this->request->data['SmsMessage']['enabled'])); ?></div>
+		<div class="value"><?php echo $this->Form->input('enabled', array('options'=>array('1'=>__('Yes'), '0'=>__('No')), 'default'=>$this->request->data['SmsMessage']['enabled'])); ?></div>
 	</div>
 
 	 <div class="row">

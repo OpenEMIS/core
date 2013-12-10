@@ -31,7 +31,7 @@ echo $this->Html->script('setup_variables', false);
 			if(count($data) > 0){
 				foreach($data as $arrVal){ ?>
 				   <div class="table_row" row-id="<?php echo $arrVal['SmsMessage']['id'];?>">
-					<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($arrVal['SmsMessage']['active']==1); ?></div>
+					<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($arrVal['SmsMessage']['enabled']==1); ?></div>
 					<div class="table_cell"><?php echo $arrVal['SmsMessage']['message'];?></div>
 					<div class="table_cell"><?php echo $arrVal['SmsMessage']['order'];?></div>
 					</div>
