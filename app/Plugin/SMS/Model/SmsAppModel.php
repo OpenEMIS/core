@@ -15,4 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class SmsAppModel extends AppModel {
+
+    function truncate($table = null) { 
+            if (empty($table)) { 
+                    $table = $this->table; 
+            } 
+            $db = &ConnectionManager::getDataSource($this->useDbConfig); 
+            $res = $db->truncate($table); 
+            return $res; 
+    } 
 }
