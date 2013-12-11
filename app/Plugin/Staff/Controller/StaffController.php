@@ -1371,7 +1371,7 @@ class StaffController extends StaffAppController {
 
      public function contacts(){
         $this->Navigation->addCrumb('Contacts');
-        $data = $this->StaffContact->find('all',array('conditions'=>array('StaffContact.staff_id'=>$this->staffId), 'order'=>array('ContactType.order', 'StaffContact.preferred DESC')));
+        $data = $this->StaffContact->find('all',array('conditions'=>array('StaffContact.staff_id'=>$this->staffId), 'order'=>array('ContactType.contact_option_id', 'StaffContact.preferred DESC')));
 
         $contactOptions = $this->ContactOption->getOptions();
         $this->set('contactOptions', $contactOptions);
@@ -1384,19 +1384,12 @@ class StaffController extends StaffAppController {
             $this->StaffContact->create();
             $this->request->data['StaffContact']['staff_id'] = $this->staffId;
             
-            $data = $this->data['StaffContact'];
+            $contactData = $this->data['StaffContact'];
 
-            $StaffContacts = $this->StaffContact->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$data['contact_option_id'])));
-            if($StaffContacts==0){
-                //$data['preferred'] = 1; 
-            }else{
-                if($data['preferred']=='1'){
-                    $this->StaffContact->updateAll(array('StaffContact.preferred' =>'0'), array('StaffContact.preferred' => '1', 'ContactType.contact_option_id'=>$data['contact_option_id']));
+            if ($this->StaffContact->save($contactData)){
+                if($contactData['preferred']=='1'){
+                    $this->StaffContact->updateAll(array('StaffContact.preferred' =>'0'), array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT'=>array('StaffContact.id'=>array($this->StaffContact->getLastInsertId())))));
                 }
-            }
-
-
-            if ($this->StaffContact->save($data)){
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'contacts'));
             }
@@ -1443,17 +1436,10 @@ class StaffController extends StaffAppController {
             $contactData = $this->data['StaffContact'];
             $contactData['staff_id'] = $this->staffId;
 
-            $StaffContacts = $this->StaffContact->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT' => array('StaffContact.id' => array($contactId))))));
-            
-            if($StaffContacts==0){
-               //$contactData['preferred'] = 1; 
-            }else{
-                if($contactData['preferred']=='1'){
-                    $this->StaffContact->updateAll(array('StaffContact.preferred' =>'0'), array('StaffContact.preferred' => '1', 'ContactType.contact_option_id'=>$contactData['contact_option_id']));
-                }
-            }
-            
             if ($this->StaffContact->save($contactData)){
+                if($contactData['preferred']=='1'){
+                    $this->StaffContact->updateAll(array('StaffContact.preferred' =>'0'), array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT'=>array('StaffContact.id'=>array($contactId)))));
+                }
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'contactsView', $contactData['id']));
             }

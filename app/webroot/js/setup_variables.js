@@ -143,7 +143,7 @@ var setup = {
 	},
 	
 	addContactType: function(obj) {
-		var section = $(obj).closest('.section_group');
+		var section = $(obj).closest('.content_wrapper');
 		if(section.length==0) { return; }
 		var list = section.find('.quicksand');
 		var lastRow = list.find('li:last');
@@ -158,7 +158,6 @@ var setup = {
 		section.find('[conditionName]').each(function() {
 			conditions[$(this).attr('conditionName')] = $(this).val();
 		});
-		
 		var maskId;
 		var url = getRootURL() + 'Setup/setupVariablesAddContactType';
 		

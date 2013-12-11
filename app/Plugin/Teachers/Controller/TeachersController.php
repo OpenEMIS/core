@@ -1489,7 +1489,7 @@ class TeachersController extends TeachersAppController {
 
      public function contacts(){
         $this->Navigation->addCrumb('Contacts');
-        $data = $this->TeacherContact->find('all',array('conditions'=>array('TeacherContact.teacher_id'=>$this->teacherId), 'order'=>array('ContactType.order', 'TeacherContact.preferred DESC')));
+        $data = $this->TeacherContact->find('all',array('conditions'=>array('TeacherContact.teacher_id'=>$this->teacherId), 'order'=>array('ContactType.contact_option_id', 'TeacherContact.preferred DESC')));
 
         $contactOptions = $this->ContactOption->getOptions();
         $this->set('contactOptions', $contactOptions);
@@ -1502,18 +1502,12 @@ class TeachersController extends TeachersAppController {
             $this->TeacherContact->create();
             $this->request->data['TeacherContact']['teacher_id'] = $this->teacherId;
             
-            $data = $this->data['TeacherContact'];
+            $contactData = $this->data['TeacherContact'];
 
-            $TeacherContacts = $this->TeacherContact->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$data['contact_option_id'])));
-            if($TeacherContacts==0){
-               //$data['preferred'] = 1; 
-            }else{
-                if($data['preferred']=='1'){
-                    $this->TeacherContact->updateAll(array('TeacherContact.preferred' =>'0'), array('TeacherContact.preferred' => '1', 'ContactType.contact_option_id'=>$data['contact_option_id']));
+            if ($this->TeacherContact->save($contactData)){
+                if($contactData['preferred']=='1'){
+                    $this->TeacherContact->updateAll(array('TeacherContact.preferred' =>'0'), array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT'=>array('TeacherContact.id'=>array($this->TeacherContact->getLastInsertId())))));
                 }
-            }
-
-            if ($this->TeacherContact->save($data)){
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'contacts'));
             }
@@ -1560,17 +1554,10 @@ class TeachersController extends TeachersAppController {
             $contactData = $this->data['TeacherContact'];
             $contactData['student_id'] = $this->studentId;
 
-            $TeacherContacts = $this->TeacherContact->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT' => array('TeacherContact.id' => array($contactId))))));
-            
-            if($TeacherContacts==0){
-               //$contactData['preferred'] = 1; 
-            }else{
-                if($contactData['preferred']=='1'){
-                    $this->TeacherContact->updateAll(array('TeacherContact.preferred' =>'0'), array('TeacherContact.preferred' => '1', 'ContactType.contact_option_id'=>$contactData['contact_option_id']));
-                }
-            }
-            
             if ($this->TeacherContact->save($contactData)){
+                if($contactData['preferred']=='1'){
+                    $this->TeacherContact->updateAll(array('TeacherContact.preferred' =>'0'), array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT'=>array('TeacherContact.id'=>array($contactId)))));
+                }
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'contactsView', $contactData['id']));
             }

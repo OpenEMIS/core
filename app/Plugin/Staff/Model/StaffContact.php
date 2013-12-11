@@ -52,26 +52,16 @@ class StaffContact extends StaffAppModel {
 		),
 	);
 
-	 function validatePreferred($check1, $field2) {
+	function validatePreferred($check1, $field2) {
 	 	$flag = false;
         foreach($check1 as $key=>$value1) {
             $preferred = $this->data[$this->alias][$field2];
 			$contactOption = $this->data[$this->alias]['contact_option_id'];
 			if($preferred=="0"){
-				if(isset($this->data[$this->alias]['id'])){
-					$contactId = $this->data[$this->alias]['id'];
-		            $count = $this->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$contactOption, 'preferred'=>'1', array('NOT' => array('StudentContact.id' => array($contactId))))));
-		            if($count!=0){
-		            	$flag = true;
-		            	exit;
-		            }
-		        }else{
-		        	 $count = $this->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$contactOption, 'preferred'=>'1')));
-		            if($count!=0){
-						$flag = true;
-		            	exit;
-		            }
-		        }
+	            $count = $this->find('count', array('conditions'=>array('ContactType.contact_option_id'=>$contactOption)));
+	            if($count!=0){
+	            	$flag = true;
+	            }
             }else{
             	$flag = true;
             }

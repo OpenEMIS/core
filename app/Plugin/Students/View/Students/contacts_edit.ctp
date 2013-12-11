@@ -51,7 +51,7 @@
     </div>
     <div class="row">
         <div class="label"><?php echo __('Preferred'); ?></div>
-        <div class="value"><?php echo $this->Form->input('preferred', array('type'=>'checkbox')); ?></div>
+        <div class="value"><?php echo $this->Form->input('preferred', array('options'=>array('1'=>'Yes', '0'=>'No'))); ?></div>
     </div>
 
 	<div class="controls view_controls">
