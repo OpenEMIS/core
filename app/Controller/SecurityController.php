@@ -45,8 +45,8 @@ class SecurityController extends AppController {
 		$this->Auth->allow('login');
 		
 		if($this->action !== 'login' || $this->action !== 'logout') {
-			$this->bodyTitle = 'Settings';
-			$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
+			$this->bodyTitle = 'Administration';
+			$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		}
 	}
 	
