@@ -12,7 +12,7 @@
     </h1>
 	<?php
 	echo $this->Form->create('TeacherContact', array(
-		'url' => array('controller' => 'Teacher', 'action' => 'contactsEdit', $id, $selectedContactOptions),
+		'url' => array('controller' => 'Teachers', 'action' => 'contactsEdit', $id, $selectedContactOptions),
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
 	?>
@@ -51,7 +51,7 @@
     </div>
     <div class="row">
         <div class="label"><?php echo __('Preferred'); ?></div>
-        <div class="value"><?php echo $this->Form->input('preferred', array('type'=>'checkbox')); ?></div>
+        <div class="value"><?php echo $this->Form->input('preferred', array('options'=>array('1'=>'Yes', '0'=>'No'))); ?></div>
     </div>
 
 	<div class="controls view_controls">

@@ -51,7 +51,7 @@ echo $this->Html->script('setup_variables', false);
 			<div class="table">
 				<div class="table_head">
 					<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-					<div class="table_cell cell_name"><?php echo __('Description'); ?></div>
+					<div class="table_cell"><?php echo __('Option'); ?></div>
 					<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
 				</div>
 			</div>
