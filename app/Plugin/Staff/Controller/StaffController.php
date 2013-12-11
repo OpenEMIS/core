@@ -48,6 +48,7 @@ class StaffController extends StaffAppController {
             'Staff.StaffComment',
             'Staff.StaffNationality',
             'Staff.StaffIdentity',
+            'Staff.StaffLanguage',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -56,7 +57,8 @@ class StaffController extends StaffAppController {
             'LeaveStatus',
             'Country',
             'IdentityType',
-            'StaffLeaveAttachment'
+            'StaffLeaveAttachment',
+            'Language'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1058,6 +1060,11 @@ class StaffController extends StaffAppController {
         }
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
+        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
+        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranches', $bankBranches);
+        $this->set('selectedBank', $bankId);
+
         $this->set('staff_id', $this->staffId);
         $this->set('bank',$bank);
     }
@@ -1081,11 +1088,16 @@ class StaffController extends StaffAppController {
             }
          }
 
-        $this->set('id', $bankAccountId);
-        $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
+        $bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+        $this->set('selectedBank', $bankId);
+
+        $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranch', $bankBranch);
+
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
         $this->set('bank',$bank);
-        $this->set('bankBranch', $bankBranch);
+
+        $this->set('id', $bankAccountId);
     }
 
    
@@ -1364,4 +1376,81 @@ class StaffController extends StaffAppController {
             $this->redirect(array('action' => 'identities', $staffId));
         }
     }
+
+
+    public function languages(){
+        $this->Navigation->addCrumb('Languages');
+        $data = $this->StaffLanguage->find('all',array('conditions'=>array('StaffLanguage.staff_id'=>$this->staffId)));
+        $this->set('list', $data);
+    }
+    
+    public function languagesAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffLanguage->create();
+            $this->request->data['StaffLanguage']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffLanguage'];
+
+            if ($this->StaffLanguage->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'languages'));
+            }
+        }
+
+        $languageOptions = $this->Language->getOptions();
+        $this->set('languageOptions', $languageOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function languagesView() {
+        $languageId = $this->params['pass'][0];
+        $languageObj = $this->StaffLanguage->find('all',array('conditions'=>array('StaffLanguage.id' => $languageId)));
+        
+        if(!empty($languageObj)) {
+            $this->Navigation->addCrumb('Language Details');
+            
+            $this->Session->write('StaffLanguageId', $languageId);
+            $this->set('languageObj', $languageObj);
+        } 
+    }
+
+    public function languagesEdit() {
+        $languageId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $languageObj = $this->StaffLanguage->find('first',array('conditions'=>array('StaffLanguage.id' => $languageId)));
+  
+            if(!empty($languageObj)) {
+                $this->Navigation->addCrumb('Edit Language Details');
+                $this->request->data = $languageObj;
+               
+            }
+         } else {
+            $languageData = $this->data['StaffLanguage'];
+            $languageData['staff_id'] = $this->staffId;
+           
+            if ($this->StaffLanguage->save($languageData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'languagesView', $languageData['id']));
+            }
+         }
+
+        $languageOptions = $this->Language->getOptions();
+        $this->set('languageOptions', $languageOptions);
+
+        $this->set('id', $languageId);
+       
+    }
+
+    public function languagesDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffLanguageId')) {
+            $id = $this->Session->read('StaffLanguageId');
+            $staffId = $this->Session->read('StaffId');
+            $languageId = $this->StaffLanguage->field('language_id', array('StaffLanguage.id' => $id));
+            $name = $this->Language->field('name', array('Language.id' => $languageId));
+            $this->StaffLanguage->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'languages', $staffId));
+        }
+    }
 }
+
