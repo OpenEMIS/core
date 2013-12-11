@@ -17,7 +17,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<div class="messageForm">
 	<?php 
 	echo $this->Form->create('SmsMessage', array(
-			'url' => array('controller' => 'sms', 'action' => 'messagesEdit'),
+			'url' => array('controller' => 'Sms', 'action' => 'messagesEdit'),
 			'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 		));
 	?>
