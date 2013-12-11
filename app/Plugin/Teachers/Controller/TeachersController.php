@@ -51,11 +51,13 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherComment',
         'Teachers.TeacherNationality',
 		'Teachers.TeacherIdentity',
+		'Teachers.TeacherExtracurricular',
         'Country',
 		'IdentityType',
         'SchoolYear',
 		'ConfigItem',
-        'LeaveStatus'
+        'LeaveStatus',
+		'ExtracurricularType'
 	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1482,4 +1484,95 @@ class TeachersController extends TeachersAppController {
             $this->redirect(array('action' => 'identities', $teacherId));
         }
     }
+	
+	public function extracurricular(){
+        $this->Navigation->addCrumb('Extracurricular');
+		$data = $this->TeacherExtracurricular->getAllList('teacher_id',$this->teacherId);
+        $this->set('list', $data);
+    }
+	
+	public function extracurricularView() {
+        $id = $this->params['pass'][0];
+        $data = $this->TeacherExtracurricular->getAllList('id',$id);
+        if(!empty($data)) {
+            $this->Navigation->addCrumb('Extracurricular Details');
+            
+            $this->Session->write('TeacherExtracurricularId', $id);
+            $this->set('data', $data);
+        } 
+    }
+
+    public function extracurricularAdd(){
+        $this->Navigation->addCrumb('Add Extracurricular');
+		
+		$yearList = $this->SchoolYear->getYearList();
+		$yearId = $this->getAvailableYearId($yearList);
+		$typeList = $this->ExtracurricularType->getType();
+		
+		$this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+		$this->set('types', $typeList);
+		if($this->request->isPost()){
+			$data = $this->request->data;
+			$data['TeacherExtracurricular']['teacher_id'] = $this->teacherId;
+			
+			if ($this->TeacherExtracurricular->save($data)){
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+				$this->redirect(array('action' => 'extracurricular'));
+			}
+		}
+    }
+	
+	public function extracurricularEdit() {
+        $id = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $data = $this->TeacherExtracurricular->find('first',array('conditions'=>array('TeacherExtracurricular.id' => $id)));
+  
+            if(!empty($data)) {
+                $this->Navigation->addCrumb('Edit Extracurricular Details');
+                $this->request->data = $data;
+            }
+         } else {
+            $data = $this->data;
+			$data['TeacherExtracurricular']['teacher_id'] = $this->teacherId;
+			$data['TeacherExtracurricular']['id'] = $id;
+			if ($this->TeacherExtracurricular->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'extracurricularView', $data['TeacherExtracurricular']['id']));
+            }
+         }
+
+        $yearList = $this->SchoolYear->getYearList();
+		$yearId = $this->getAvailableYearId($yearList);
+		$typeList = $this->ExtracurricularType->getType();
+		
+		$this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+		$this->set('types', $typeList);
+
+        $this->set('id', $id);
+    }
+	
+	public function extracurricularDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherExtracurricularId')) {
+            $id = $this->Session->read('TeacherExtracurricularId');
+            $teacherId = $this->Session->read('TeacherId');
+            $name = $this->TeacherExtracurricular->field('name', array('TeacherExtracurricular.id' => $id));
+			
+            $this->TeacherExtracurricular->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'extracurricular'));
+        }
+    }
+	
+	public function searchAutoComplete(){
+		if($this->request->is('get')) {
+			if($this->request->is('ajax')) {
+				$this->autoRender = false;
+				$search = $this->params->query['term'];
+				$result = $this->TeacherExtracurricular->autocomplete($search);
+				return json_encode($result);
+			} 
+		}
+	}
 }
