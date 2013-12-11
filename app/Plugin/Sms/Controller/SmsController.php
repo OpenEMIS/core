@@ -282,7 +282,7 @@ class SmsController extends SmsAppController {
             $conditions['send_receive'] = $selectedType;
         }
 
-        $data = $this->SmsLog->find('all', array('order'=>array('SmsLog.created DESC'), 'conditions'=>$conditions));
+        $data = $this->SmsLog->find('all', array('order'=>array('SmsLog.id DESC'), 'conditions'=>$conditions));
         $this->set('data', $data);
 
         $typeOptions = array('1'=>__('Sent'), '2'=>__('Received'));
