@@ -82,7 +82,7 @@ class SmsController extends SmsAppController {
             $followingMessage = isset($messages[1]['SmsMessage']) ? $messages[1]['SmsMessage'] : null;
        
             if(!empty($followingMessage)){
-                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message'], 'responseformat'=>'JSON');
+                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message']);
                 $HttpSocket = new HttpSocket();
                 $results = $HttpSocket->post($providerUrl, $param);
                 $response = json_decode($HttpSocket->response, true);
@@ -135,7 +135,7 @@ class SmsController extends SmsAppController {
 
             $followingMessage = isset($messages[$lastResponse['order']]['SmsMessage']) ? $messages[$lastResponse['order']]['SmsMessage'] : null;
             if(!empty($followingMessage)){
-                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message'], 'responseformat'=>'JSON');
+                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message']);
                 $HttpSocket = new HttpSocket();
                 $results = $HttpSocket->post($providerUrl, $param);
                 $response = json_decode($HttpSocket->response, true);
