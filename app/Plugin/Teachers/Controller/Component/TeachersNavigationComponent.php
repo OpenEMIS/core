@@ -37,7 +37,8 @@ class TeachersNavigationComponent extends Component {
                     $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
                     $navigation->createLink('Comments', $controller, 'comments'),  
                     $navigation->createLink('identities', $controller, 'identities'),         
-		    $navigation->createLink('Nationalities', $controller, 'nationalities'),
+		    		$navigation->createLink('Nationalities', $controller, 'nationalities'),
+		    		$navigation->createLink('Languages', $controller, 'languages'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
 				'DETAILS' => array(
