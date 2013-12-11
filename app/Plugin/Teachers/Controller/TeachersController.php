@@ -51,9 +51,11 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherComment',
         'Teachers.TeacherNationality',
 		'Teachers.TeacherIdentity',
+        'Teachers.TeacherLanguage',
         'Country',
 		'IdentityType',
         'SchoolYear',
+        'Language',
 		'ConfigItem',
         'LeaveStatus'
 	);
@@ -1176,6 +1178,11 @@ class TeachersController extends TeachersAppController {
         }
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
+        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
+        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranches', $bankBranches);
+        $this->set('selectedBank', $bankId);
+
         $this->set('teacher_id', $this->teacherId);
         $this->set('bank',$bank);
     }
@@ -1199,11 +1206,16 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['TeacherBankAccount']['id']));
             }
          }
-        $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
-        $this->set('id', $bankAccountId);
+        $bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+        $this->set('selectedBank', $bankId);
+
+        $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranch', $bankBranch);
+
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
         $this->set('bank',$bank);
-        $this->set('bankBranch', $bankBranch);
+
+        $this->set('id', $bankAccountId);
     }
 
    
@@ -1480,6 +1492,82 @@ class TeachersController extends TeachersAppController {
             $this->TeacherIdentity->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'identities', $teacherId));
+        }
+    }
+
+
+    public function languages(){
+        $this->Navigation->addCrumb('Languages');
+        $data = $this->TeacherLanguage->find('all',array('conditions'=>array('TeacherLanguage.teacher_id'=>$this->teacherId)));
+        $this->set('list', $data);
+    }
+    
+    public function languagesAdd() {
+        if ($this->request->is('post')) {
+            $this->TeacherLanguage->create();
+            $this->request->data['TeacherLanguage']['teacher_id'] = $this->teacherId;
+            
+            $data = $this->data['TeacherLanguage'];
+
+            if ($this->TeacherLanguage->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'languages'));
+            }
+        }
+
+        $languageOptions = $this->Language->getOptions();
+        $this->set('languageOptions', $languageOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function languagesView() {
+        $languageId = $this->params['pass'][0];
+        $languageObj = $this->TeacherLanguage->find('all',array('conditions'=>array('TeacherLanguage.id' => $languageId)));
+        
+        if(!empty($languageObj)) {
+            $this->Navigation->addCrumb('Language Details');
+            
+            $this->Session->write('TeacherLanguageId', $languageId);
+            $this->set('languageObj', $languageObj);
+        } 
+    }
+
+    public function languagesEdit() {
+        $languageId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $languageObj = $this->TeacherLanguage->find('first',array('conditions'=>array('TeacherLanguage.id' => $languageId)));
+  
+            if(!empty($languageObj)) {
+                $this->Navigation->addCrumb('Edit Language Details');
+                $this->request->data = $languageObj;
+               
+            }
+         } else {
+            $languageData = $this->data['TeacherLanguage'];
+            $languageData['teacher_id'] = $this->teacherId;
+           
+            if ($this->TeacherLanguage->save($languageData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'languagesView', $languageData['id']));
+            }
+         }
+
+        $languageOptions = $this->Language->getOptions();
+        $this->set('languageOptions', $languageOptions);
+
+        $this->set('id', $languageId);
+       
+    }
+
+    public function languagesDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherLanguageId')) {
+            $id = $this->Session->read('TeacherLanguageId');
+            $teacherId = $this->Session->read('TeacherId');
+            $languageId = $this->TeacherLanguage->field('language_id', array('TeacherLanguage.id' => $id));
+            $name = $this->Language->field('name', array('Language.id' => $languageId));
+            $this->TeacherLanguage->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'languages', $teacherId));
         }
     }
 }
