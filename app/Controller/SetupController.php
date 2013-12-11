@@ -69,7 +69,8 @@ class SetupController extends AppController {
 		'QualificationSpecialisation',
 		'LeaveStatus',
 		'Country',
-		'IdentityType'
+		'IdentityType',
+		'Language'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -251,6 +252,10 @@ class SetupController extends AppController {
 
 		$lookup[] = array('Identity Types' => array(
 			'items' => $this->IdentityType->getLookupVariables()
+		));
+
+		$lookup[] = array('Languages' => array(
+			'items' => $this->Language->getLookupVariables()
 		));
 		
 		// Student
