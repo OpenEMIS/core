@@ -59,7 +59,7 @@ class StaffController extends StaffAppController {
             'Country',
             'IdentityType',
             'StaffLeaveAttachment',
-            'Language'
+            'Language',
             'ContactOption',
             'ContactType'
         );
