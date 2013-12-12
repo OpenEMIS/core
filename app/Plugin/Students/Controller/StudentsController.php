@@ -48,9 +48,11 @@ class StudentsController extends StudentsAppController {
         'Students.StudentComment',
         'Students.StudentNationality',
         'Students.StudentIdentity',
+        'Students.StudentLanguage',
         'SchoolYear',
         'Country',
-	'ConfigItem'
+        'Language',
+	    'ConfigItem',
     );
         
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -797,6 +799,11 @@ class StudentsController extends StudentsAppController {
         }
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
+        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
+        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranches', $bankBranches);
+        $this->set('selectedBank', $bankId);
+
         $this->set('student_id', $this->studentId);
         $this->set('bank',$bank);
     }
@@ -820,11 +827,17 @@ class StudentsController extends StudentsAppController {
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['StudentBankAccount']['id']));
             }
          }
-        $this->set('id', $bankAccountId);
-        $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
+        
+        $bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+        $this->set('selectedBank', $bankId);
+
+        $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranch', $bankBranch);
+
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
         $this->set('bank',$bank);
-        $this->set('bankBranch', $bankBranch);
+
+        $this->set('id', $bankAccountId);
     }
 
    
@@ -1065,4 +1078,81 @@ class StudentsController extends StudentsAppController {
             $this->redirect(array('action' => 'identities', $studentId));
         }
     }
+
+
+    public function languages(){
+        $this->Navigation->addCrumb('Languages');
+        $data = $this->StudentLanguage->find('all',array('conditions'=>array('StudentLanguage.student_id'=>$this->studentId)));
+        $this->set('list', $data);
+    }
+    
+    public function languagesAdd() {
+        if ($this->request->is('post')) {
+            $this->StudentLanguage->create();
+            $this->request->data['StudentLanguage']['student_id'] = $this->studentId;
+            
+            $data = $this->data['StudentLanguage'];
+
+            if ($this->StudentLanguage->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'languages'));
+            }
+        }
+
+        $languageOptions = $this->Language->getOptions();
+        $this->set('languageOptions', $languageOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function languagesView() {
+        $languageId = $this->params['pass'][0];
+        $languageObj = $this->StudentLanguage->find('all',array('conditions'=>array('StudentLanguage.id' => $languageId)));
+        
+        if(!empty($languageObj)) {
+            $this->Navigation->addCrumb('Language Details');
+            
+            $this->Session->write('StudentLanguageId', $languageId);
+            $this->set('languageObj', $languageObj);
+        } 
+    }
+
+    public function languagesEdit() {
+        $languageId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $languageObj = $this->StudentLanguage->find('first',array('conditions'=>array('StudentLanguage.id' => $languageId)));
+  
+            if(!empty($languageObj)) {
+                $this->Navigation->addCrumb('Edit Language Details');
+                $this->request->data = $languageObj;
+               
+            }
+         } else {
+            $languageData = $this->data['StudentLanguage'];
+            $languageData['student_id'] = $this->studentId;
+           
+            if ($this->StudentLanguage->save($languageData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'languagesView', $languageData['id']));
+            }
+         }
+
+        $languageOptions = $this->Language->getOptions();
+        $this->set('languageOptions', $languageOptions);
+
+        $this->set('id', $languageId);
+       
+    }
+
+    public function languagesDelete($id) {
+        if($this->Session->check('StudentId') && $this->Session->check('StudentLanguageId')) {
+            $id = $this->Session->read('StudentLanguageId');
+            $studentId = $this->Session->read('StudentId');
+            $languageId = $this->StudentLanguage->field('language_id', array('StudentLanguage.id' => $id));
+            $name = $this->Language->field('name', array('Language.id' => $languageId));
+            $this->StudentLanguage->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'languages', $studentId));
+        }
+    }
 }
+
