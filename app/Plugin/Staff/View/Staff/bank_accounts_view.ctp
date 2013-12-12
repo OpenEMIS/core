@@ -47,6 +47,11 @@ echo $this->Html->script('search', false);
         <div class="value"><?php echo (!isset($bankAccountObj[0]['BankBranch']['name'])?"":$bankAccountObj[0]['BankBranch']['name']); ?></div>
     </div>
 
+      <div class="row">
+        <div class="label"><?php echo __('Remarks'); ?></div>
+        <div class="value"><?php echo $data['remarks']; ?></div>
+    </div>
+
      <div class="row">
         <div class="label"><?php echo __('Modified by'); ?></div>
         <div class="value"><?php echo trim($bankAccountObj[0]['ModifiedUser']['first_name'] . ' ' . $bankAccountObj[0]['ModifiedUser']['last_name']); ?></div>
