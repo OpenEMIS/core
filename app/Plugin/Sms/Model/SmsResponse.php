@@ -37,7 +37,7 @@ class SmsResponse extends SmsAppModel {
 				array(
 					'table' => 'sms_responses',
 		            'alias' => 'SmsResponse'.$i,
-		            'type' => 'INNER',
+		            'type' => 'LEFT',
 		            'conditions' => array(
 		                'SmsResponse'.$i.'.order =' .$i
 		            )
