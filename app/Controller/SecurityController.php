@@ -215,7 +215,7 @@ class SecurityController extends AppController {
 	
 	public function users() {
 		App::uses('Sanitize', 'Utility');
-		$this->Navigation->addCrumb('List of Users');
+		$this->Navigation->addCrumb('Users');
 		
 		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
 		
@@ -435,7 +435,7 @@ class SecurityController extends AppController {
 	
 	public function groups() {
 		App::uses('Sanitize', 'Utility');
-		$this->Navigation->addCrumb('List of Groups');
+		$this->Navigation->addCrumb('Groups');
 		
 		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
 		
@@ -543,7 +543,8 @@ class SecurityController extends AppController {
 	}
 	
 	public function groupsAdd() {
-		$this->Navigation->addCrumb('Add Group');
+		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
+                $this->Navigation->addCrumb('Add Group');
 		
 		if($this->request->is('post')) {
 			$groupData = $this->data['SecurityGroup'];
@@ -614,7 +615,7 @@ class SecurityController extends AppController {
 	}
 	
 	public function groupsEdit() {
-		$this->Navigation->addCrumb('Edit Group Details');
+                $this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
 		
 		if(isset($this->params['pass'][0])) {
 			$groupId = $this->params['pass'][0];
@@ -631,7 +632,9 @@ class SecurityController extends AppController {
 			
 			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
 			if($data) {
-				$areas = $this->SecurityGroupArea->getAreas($groupId);
+                                $this->Navigation->addCrumb($data['SecurityGroup']['name']);
+				
+                                $areas = $this->SecurityGroupArea->getAreas($groupId);
 				$sites = $this->SecurityGroupInstitutionSite->getSites($groupId);
 				$systemRoles = $this->SecurityRole->getRoles(0);
 				$userRoles = $this->SecurityRole->getRoles($groupId);
@@ -701,13 +704,15 @@ class SecurityController extends AppController {
 	}
 	
 	public function groupsUsers() {
-		$this->Navigation->addCrumb('Group Users');
+		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
 		
 		if(isset($this->params['pass'][0])) {
 			$groupId = $this->params['pass'][0];
 			$group = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
 			if($group) {
-				$data = $this->SecurityGroupUser->getUsers($groupId);
+				$this->Navigation->addCrumb($group['SecurityGroup']['name']);
+                            
+                                $data = $this->SecurityGroupUser->getUsers($groupId);
 				$this->set('group', $group['SecurityGroup']);
 				$this->set('data', $data);
 				
@@ -748,7 +753,7 @@ class SecurityController extends AppController {
 	}
 	
 	public function rolesEdit() {
-		$this->Navigation->addCrumb('Edit Roles');
+		$this->Navigation->addCrumb('Roles');
 		
 		$systemRoles = $this->SecurityRole->getRoles(array(0, -1));
 		$isSuperUser = $this->Auth->user('super_admin')==1;
