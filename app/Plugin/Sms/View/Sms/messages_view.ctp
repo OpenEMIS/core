@@ -55,6 +55,8 @@ echo $this->Html->script('search', false);
         <div class="label"><?php echo __('Created on'); ?></div>
         <div class="value"><?php echo $data['created']; ?></div>
     </div>
-
+    <div class="controls">
+        <div style="text-align:left;padding-bottom:10px;color:#666666;font-size:10px;"><?php echo __('Note: Please clear the Responses page as existing responses may no longer match the updated Messages.');?></div>
+    </div>
     
 </div>

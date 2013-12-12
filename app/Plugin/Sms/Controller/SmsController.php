@@ -116,6 +116,7 @@ class SmsController extends SmsAppController {
         }else{
             $lastResponse = end($responses);
             $lastResponse = $lastResponse['SmsResponse'];
+
             $data[] = array(
                 'SmsResponse' => array(
                     'id' => $lastResponse['id'],
@@ -132,6 +133,8 @@ class SmsController extends SmsAppController {
                     'message' => rawurldecode($message)
                 )
             );
+
+            $this->SmsResponse->saveAll($data);
 
             $followingMessage = isset($messages[$lastResponse['order']]['SmsMessage']) ? $messages[$lastResponse['order']]['SmsMessage'] : null;
             if(!empty($followingMessage)){
@@ -301,16 +304,100 @@ class SmsController extends SmsAppController {
     public function responses() {
         $this->Navigation->addCrumb('Responses');
 
-        $data = $this->SmsResponse->find('all', array('order'=>array('SmsResponse.number, SmsResponse.order ASC')));
+        /*$maxMessages = $this->SmsResponse->find('first', array(
+        'fields' => array('MAX(SmsResponse.order) AS maxOrder')
+        ));*/
+        $maxMessages = $this->SmsMessage->find('first', array(
+        'fields' => array('MAX(SmsMessage.order) AS maxOrder'),
+        'conditions'=>array('enabled'=>1)
+        ));
+
+        $max = 1;
+        if(!empty($maxMessages)){
+            $max = $maxMessages[0]['maxOrder'];
+        }
+        $messages =  $this->SmsMessage->find('all', array(
+        'conditions'=>array('enabled'=>1),
+        'order'=>array('order'),
+        'recursive'=>-1
+        ));
+        $data = $this->SmsResponse->getColumnFormat($max);
+        $this->set('max', $max);
         $this->set('data', $data);
+        $this->set('messages', $messages);
     }
 
+    public function responsesDownload(){
+        $this->autoRender = false;
+        $maxMessages = $this->SmsMessage->find('first', array(
+        'fields' => array('MAX(SmsMessage.order) AS maxOrder'),
+        'conditions'=>array('enabled'=>1)
+        ));
+
+        $max = 1;
+        if(!empty($maxMessages)){
+            $max = $maxMessages[0]['maxOrder'];
+        }
+        $data = $this->SmsResponse->getColumnFormat($max);
+        $messages =  $this->SmsMessage->find('all', array(
+        'conditions'=>array('enabled'=>1),
+        'order'=>array('order'),
+        'recursive'=>-1
+        ));
+
+        $fieldName = null;
+        $result = null;
+
+        foreach($messages as $value){
+            $fieldName[] =  str_replace(',', ' ',$value['SmsMessage']['message']);
+        }
+       
+        if(!empty($fieldName)){
+             $fieldName[count($fieldName)-1] = end($fieldName) . "\n";
+        }
+        if(!empty($data)){
+
+           foreach($data as $obj){
+                foreach($obj as $key=>$value){
+                    if(isset($value['number'])){
+                        $result[] = $value['number'];
+                    }
+                   $result[] = str_replace(',', ' ',array_pop(array_values($value)));
+                }
+            }
+        }
+
+        echo $this->download_csv_results($result, $fieldName, 'sms_responses_' . date('Ymdhis'));
+        exit;
+    }
     
     public function responsesDelete() {
         $this->SmsResponse->truncate();
         $this->Utility->alert('All responses have been deleted successfully.');
         $this->redirect(array('action' => 'responses'));
-        
+    }
+
+    function download_csv_results($results, $fieldName=NULL, $name = NULL)
+    {
+        if( ! $name)
+        {
+            $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
+        }
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename='. $name);
+        header('Pragma: no-cache');
+        header("Expires: 0");
+
+        $outstream = fopen("php://output", "w");
+
+        /*foreach($results as $result)
+        {
+            fputcsv($outstream, $result);
+        }*/
+        fputcsv($outstream,$fieldName, ",");
+        fputcsv($outstream,$results, ",");
+        fclose($outstream);
     }
 
 }

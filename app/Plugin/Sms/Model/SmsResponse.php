@@ -16,5 +16,43 @@ have received a copy of the GNU General Public License along with this program. 
 
 class SmsResponse extends SmsAppModel {
 
+	public function getColumnFormat($maxOrder = 1){
+		$joins = array(
+			array(
+				'table' => 'sms_messages',
+	            'alias' => 'SmsMessage',
+	            'type' => 'INNER',
+	            'conditions' => array(
+	                'SmsResponse.order = SmsMessage.order',
+	                'SmsMessage.enabled = 1'
+	            )
+	        )
+        );
+		
+		$fields = array('SmsResponse.number', 'SmsResponse.response');
+		for($i=2;$i<=$maxOrder;$i++){
+			//$fields[] = 'SmsResponse'.$i.'.message';
+			$fields[] = 'SmsResponse'.$i.'.response';
+			$joins[] =
+				array(
+					'table' => 'sms_responses',
+		            'alias' => 'SmsResponse'.$i,
+		            'type' => 'INNER',
+		            'conditions' => array(
+		                'SmsResponse'.$i.'.order =' .$i
+		            )
+		        );
+			
+		}
+		//pr($joins);
+		$data = $this->find('all', array(
+			'fields' => $fields,
+		    'joins' => $joins,
+			'conditions'=>array('SmsResponse.order'=>1),
+			'order'=>array('SmsResponse.sent, SmsResponse.number')
+	    ));
+
+		return $data;
+	}
 	
 }
