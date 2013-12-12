@@ -345,6 +345,7 @@ class SmsController extends SmsAppController {
         'recursive'=>-1
         ));
 
+
         $fieldName = null;
         $result = null;
 
@@ -355,6 +356,7 @@ class SmsController extends SmsAppController {
         if(!empty($fieldName)){
              $fieldName[count($fieldName)-1] = end($fieldName) . "\n";
         }
+        
         if(!empty($data)){
 
            foreach($data as $obj){
@@ -395,8 +397,8 @@ class SmsController extends SmsAppController {
         {
             fputcsv($outstream, $result);
         }*/
-        fputcsv($outstream,$fieldName, ",");
-        fputcsv($outstream,$results, ",");
+        fputcsv($outstream,$fieldName);
+        fputcsv($outstream,$results);
         fclose($outstream);
     }
 
