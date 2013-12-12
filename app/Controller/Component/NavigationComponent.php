@@ -92,16 +92,16 @@ class NavigationComponent extends Component {
 							$linkList['display'] = true;
 							$attr['display'] = true;
 							
-							if($check === true || (isset($check['parent_id']) && $check['parent_id'] == -1) || in_array($module, array('Settings', 'Reports'))) { // to initialise top navigation menu
+							if($check === true || (isset($check['parent_id']) && $check['parent_id'] == -1) || in_array($module, array('Administration', 'Reports'))) { // to initialise top navigation menu
 								if(!array_key_exists($module, $this->topNavigations)) {
-									$objController = $module !== 'Settings' ?  : $_controller;
+									$objController = $module !== 'Administration' ?  : $_controller;
 									$this->topNavigations[$module] = array(
 										'controller' => $obj['controller'], 
 										'action' => isset($obj['action']) ? $obj['action'] : '',
 										'selected' => false
 									);
 								} else {
-									if($module !== 'Settings') {
+									if($module !== 'Administration') {
 										$this->topNavigations[$module]['controller'] = $obj['controller'];
 										$this->topNavigations[$module]['action'] = isset($obj['action']) ? $obj['action'] : '';
 									}
@@ -143,7 +143,7 @@ class NavigationComponent extends Component {
 		}
 		// End initialise
 		
-		$nav['Settings'] = array('controller' => 'Areas', 'links' => $this->getSettingsLinks());
+		$nav['Administration'] = array('controller' => 'Areas', 'links' => $this->getSettingsLinks());
 		return $nav;
 	}
 	
@@ -256,7 +256,7 @@ class NavigationComponent extends Component {
 				)
 			)
 		);
-		$this->ignoreLinks($links, 'Settings');
+		$this->ignoreLinks($links, 'Administration');
 		return $links;
 	}
 	

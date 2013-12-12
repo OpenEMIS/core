@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppController', 'Controller');
 
 class PopulationController extends AppController {
-    public $headerSelected = 'Settings';
+    public $headerSelected = 'Administration';
     
 	public $uses = Array(
         'Area',
@@ -27,8 +27,8 @@ class PopulationController extends AppController {
 
 	public function beforeFilter() {
         parent::beforeFilter();
-		$this->bodyTitle = "Settings";
-		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
+		$this->bodyTitle = "Administration";
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		
 	}
 	
