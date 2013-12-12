@@ -11,7 +11,7 @@ echo $this->Html->script('setup_variables', false);
 	<h1>
 		<span><?php echo __('Logs'); ?></span>
 		<?php
-		if($_add) {
+		if($_delete) {
 			echo $this->Html->link(__('Clear All'), array('action' => 'logsDelete'), array('class' => 'divider'));
 		}
 		?>

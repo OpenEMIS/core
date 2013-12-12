@@ -40,6 +40,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 	
 	<div class="controls">
+		<div style="text-align:left;padding-bottom:10px;color:#666666;font-size:10px;"><?php echo __('Note: Please clear the Responses page as existing responses may no longer match the updated Messages.');?></div>
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'messages'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
