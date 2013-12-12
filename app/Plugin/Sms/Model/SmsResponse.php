@@ -39,7 +39,8 @@ class SmsResponse extends SmsAppModel {
 		            'alias' => 'SmsResponse'.$i,
 		            'type' => 'LEFT',
 		            'conditions' => array(
-		                'SmsResponse'.$i.'.order =' .$i
+		                'SmsResponse'.$i.'.order =' .$i,
+		                'SmsResponse'.$i.'.number = SmsResponse.number',
 		            )
 		        );
 			
