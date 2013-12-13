@@ -30,7 +30,7 @@ class StudentsController extends StudentsAppController {
 	'InstitutionSiteProgramme',
         'InstitutionSiteClass',
         'InstitutionSiteType',
-	   'InstitutionSiteClassGradeStudent',
+	'InstitutionSiteClassGradeStudent',
         'Bank',
         'BankBranch',
         'IdentityType',
@@ -55,7 +55,9 @@ class StudentsController extends StudentsAppController {
         'SchoolYear',
         'Country',
         'Language',
-	'ConfigItem'
+	'ConfigItem',
+	'Students.StudentExtracurricular',
+	'ExtracurricularType'
     );
         
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -806,7 +808,6 @@ class StudentsController extends StudentsAppController {
         $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
         $this->set('bankBranches', $bankBranches);
         $this->set('selectedBank', $bankId);
-
         $this->set('student_id', $this->studentId);
         $this->set('bank',$bank);
     }
@@ -888,7 +889,6 @@ class StudentsController extends StudentsAppController {
     public function commentsView() {
         $commentId = $this->params['pass'][0];
         $commentObj = $this->StudentComment->find('all',array('conditions'=>array('StudentComment.id' => $commentId)));
-        
         if(!empty($commentObj)) {
             $this->Navigation->addCrumb('Comment Details');
             
@@ -1256,4 +1256,96 @@ class StudentsController extends StudentsAppController {
             $this->redirect(array('action' => 'contacts', $studentId));
         }
     }
+	
+    public function extracurricular(){
+        $this->Navigation->addCrumb('Extracurricular');
+		$data = $this->StudentExtracurricular->getAllList('student_id',$this->studentId);
+        $this->set('list', $data);
+    }
+	
+	public function extracurricularView() {
+        $id = $this->params['pass'][0];
+        $data = $this->StudentExtracurricular->getAllList('id',$id);
+        if(!empty($data)) {
+            $this->Navigation->addCrumb('Extracurricular Details');
+            
+            $this->Session->write('StudentExtracurricularId', $id);
+            $this->set('data', $data);
+        } 
+    }
+
+    public function extracurricularAdd(){
+        $this->Navigation->addCrumb('Add Extracurricular');
+		
+		$yearList = $this->SchoolYear->getYearList();
+		$yearId = $this->getAvailableYearId($yearList);
+		$typeList = $this->ExtracurricularType->findList(array('fields' =>array('id','name'), 'conditions'=>array('visible' => '1'), 'orderBy' => 'name'));
+		
+		
+		$this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+		$this->set('types', $typeList);
+		if($this->request->isPost()){
+			$data = $this->request->data;
+			$data['StudentExtracurricular']['student_id'] = $this->studentId;
+			if ($this->StudentExtracurricular->save($data)){
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+				$this->redirect(array('action' => 'extracurricular'));
+			}
+		}
+    }
+	
+	public function extracurricularEdit() {
+        $id = $this->params['pass'][0];
+		$this->Navigation->addCrumb('Edit Extracurricular Details');
+		 
+        if($this->request->is('get')) {
+            $data = $this->StudentExtracurricular->find('first',array('conditions'=>array('StudentExtracurricular.id' => $id)));
+  
+            if(!empty($data)) {
+                $this->request->data = $data;
+            }
+         } else {
+            $data = $this->data;
+			$data['StudentExtracurricular']['student_id'] = $this->studentId;
+			$data['StudentExtracurricular']['id'] = $id;
+			if ($this->StudentExtracurricular->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'extracurricularView', $data['StudentExtracurricular']['id']));
+            }
+         }
+
+        $yearList = $this->SchoolYear->getYearList();
+		$yearId = $this->getAvailableYearId($yearList);
+		$typeList =  $this->ExtracurricularType->findList(array('fields' =>array('id','name'), 'conditions'=>array('visible' => '1'), 'orderBy' => 'name'));
+		
+		$this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+		$this->set('types', $typeList);
+
+        $this->set('id', $id);
+    }
+	
+	public function extracurricularDelete($id) {
+        if($this->Session->check('StudentId') && $this->Session->check('StudentExtracurricularId')) {
+            $id = $this->Session->read('StudentExtracurricularId');
+            $studentId = $this->Session->read('StudentId');
+            $name = $this->StudentExtracurricular->field('name', array('StudentExtracurricular.id' => $id));
+			
+            $this->StudentExtracurricular->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'extracurricular'));
+        }
+    }
+	
+	public function searchAutoComplete(){
+		if($this->request->is('get')) {
+			if($this->request->is('ajax')) {
+				$this->autoRender = false;
+				$search = $this->params->query['term'];
+				$result = $this->StudentExtracurricular->autocomplete($search);
+				return json_encode($result);
+			} 
+		}
+	}
 }

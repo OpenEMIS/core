@@ -71,7 +71,8 @@ class SetupController extends AppController {
 		'Country',
 		'IdentityType',
 		'Language',
-		'ContactType'
+		'ContactType',
+		'ExtracurricularType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -264,10 +265,13 @@ class SetupController extends AppController {
 			'edit' => 'contact_types_edit',
 		));
 		
+		$lookup[] = array('Extracurricular Type' => array('items' => $this->ExtracurricularType->getLookupVariables()));
 		// Student
 		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
+		
+		
 
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
@@ -340,6 +344,7 @@ class SetupController extends AppController {
 		));
 		// End Staff
 		
+                
 		$categoryList = array();
 		
 		foreach($lookup as $i => &$category) {
