@@ -21,15 +21,4 @@ class ExtracurricularType extends AppModel {
 		return $lookup;
 	}
 	
-	
-	public function getType($type='name',  $order='ASC'){
-		$value = 'ExtracurricularType.' . $type;
-		
-		$list = $this->find('list',array(
-									'fields' =>array('ExtracurricularType.id',$value),
-									'conditions'=>array('ExtracurricularType.visible' => '1'),
-									'order' => array($value . ' ' . $order)
-									));
-		return $list;
-	}
 }
