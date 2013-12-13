@@ -143,7 +143,7 @@ var setup = {
 	},
 	
 	addContactType: function(obj) {
-		var section = $(obj).closest('.content_wrapper');
+		var section = $(obj).closest('.section_group');
 		if(section.length==0) { return; }
 		var list = section.find('.quicksand');
 		var lastRow = list.find('li:last');
