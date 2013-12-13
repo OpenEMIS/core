@@ -1507,7 +1507,7 @@ class TeachersController extends TeachersAppController {
 		
 		$yearList = $this->SchoolYear->getYearList();
 		$yearId = $this->getAvailableYearId($yearList);
-		$typeList = $this->ExtracurricularType->getType();
+		$typeList = $this->ExtracurricularType->findList(array('fields' =>array('id','name'), 'conditions'=>array('visible' => '1'), 'orderBy' => 'name'));
 		
 		$this->set('selectedYear', $yearId);
         $this->set('years', $yearList);
@@ -1525,11 +1525,12 @@ class TeachersController extends TeachersAppController {
 	
 	public function extracurricularEdit() {
         $id = $this->params['pass'][0];
+        $this->Navigation->addCrumb('Edit Extracurricular Details');
+		
         if($this->request->is('get')) {
             $data = $this->TeacherExtracurricular->find('first',array('conditions'=>array('TeacherExtracurricular.id' => $id)));
   
             if(!empty($data)) {
-                $this->Navigation->addCrumb('Edit Extracurricular Details');
                 $this->request->data = $data;
             }
          } else {
@@ -1544,7 +1545,7 @@ class TeachersController extends TeachersAppController {
 
         $yearList = $this->SchoolYear->getYearList();
 		$yearId = $this->getAvailableYearId($yearList);
-		$typeList = $this->ExtracurricularType->getType();
+		$typeList = $this->ExtracurricularType->findList(array('fields' =>array('id','name'), 'conditions'=>array('visible' => '1'), 'orderBy' => 'name'));
 		
 		$this->set('selectedYear', $yearId);
         $this->set('years', $yearList);

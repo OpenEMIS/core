@@ -25,7 +25,7 @@ echo $this->Html->script('extracurricular', false);
     <?php
 
     echo $this->Form->create('StaffExtracurricular', array(
-        'url' => array('controller' => 'Staff', 'action' => 'extracurricularEdit'),
+        'url' => array('controller' => 'Staff', 'action' => 'extracurricularEdit', $id),
         'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
     ));
     ?>
@@ -59,7 +59,7 @@ echo $this->Html->script('extracurricular', false);
     
     <div class="row">
         <div class="label"><?php echo __('Title'); ?></div>
-        <div class="value"><?php echo $this->Form->input('name', array('class'=> array('default', 'autoComplete'), 'url'=> '../searchAutoComplete')); ?></div>
+        <div class="value"><?php echo $this->Form->input('name', array('class'=> 'default autoComplete', 'url'=> '../searchAutoComplete')); ?></div>
     </div>
     
     <div class="row">

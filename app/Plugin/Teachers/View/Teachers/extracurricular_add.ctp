@@ -60,7 +60,7 @@ echo $this->Html->script('extracurricular', false);
     
     <div class="row">
         <div class="label"><?php echo __('Title'); ?></div>
-        <div class="value"><?php echo $this->Form->input('name', array('class'=> array('default', 'autoComplete'), 'url'=> 'searchAutoComplete')); ?></div>
+        <div class="value"><?php echo $this->Form->input('name', array('class'=> 'default autoComplete', 'url'=> 'searchAutoComplete')); ?></div>
     </div>
     
     <div class="row">
