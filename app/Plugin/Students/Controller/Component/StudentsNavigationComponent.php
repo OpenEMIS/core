@@ -48,7 +48,8 @@ class StudentsNavigationComponent extends Component {
                     $navigation->createLink('Classes', $controller, 'classes'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
                     $navigation->createLink('Behaviour', $controller, 'behaviour','behaviour|^behaviourView$'),
-                    $navigation->createLink('Results', $controller, 'assessments')
+                    $navigation->createLink('Results', $controller, 'assessments'),
+					$navigation->createLink('Extracurricular', $controller, 'extracurricular')
                 ),/*
 				'ASSESSMENT' => array(
 					'_controller' => $controller,
