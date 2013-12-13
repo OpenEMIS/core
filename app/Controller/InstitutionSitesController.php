@@ -2074,8 +2074,9 @@ class InstitutionSitesController extends AppController {
     public function studentsBehaviour(){
         extract($this->studentsCustFieldYrInits());
         $this->Navigation->addCrumb('List of Behaviour');
-
-        $data = $this->StudentBehaviour->getBehaviourData($id);
+        
+        $data = $this->StudentBehaviour->getBehaviourData($id, $this->institutionSiteId);
+        
 		if(empty($data)) {
 			$this->Utility->alert($this->Utility->getMessage('STUDENT_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
 		}
