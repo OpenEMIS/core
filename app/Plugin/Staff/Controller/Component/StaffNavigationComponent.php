@@ -38,8 +38,9 @@ class StaffNavigationComponent extends Component {
                     $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
                     $navigation->createLink('Comments', $controller, 'comments'),  
 		    		$navigation->createLink('Identities', $controller, 'identities'),
-                    $navigation->createLink('Nationalities', $controller, 'nationalities'), 
-                    $navigation->createLink('Contacts', $controller, 'contacts'),                         
+                    $navigation->createLink('Nationalities', $controller, 'nationalities'),   
+		    		$navigation->createLink('Languages', $controller, 'languages'),                   
+                    $navigation->createLink('Contacts', $controller, 'contacts'),                      
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$'),
 					//$navigation->createLink('Institutions', $controller, 'institutions')
 				),
@@ -48,8 +49,9 @@ class StaffNavigationComponent extends Component {
 					$navigation->createLink('Location', $controller, 'location'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
 					$navigation->createLink('Leave', $controller, 'leaves'),
-					$navigation->createLink('Behaviour', $controller, 'behaviour'),
-                    $navigation->createLink('Employments', $controller, 'employments'),    
+					$navigation->createLink('Behaviour', $controller, 'behaviour'),   
+					$navigation->createLink('Extracurricular', $controller, 'extracurricular'),
+                    $navigation->createLink('Employments', $controller, 'employments')
 				)
 			)
 		);
