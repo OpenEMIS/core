@@ -70,7 +70,8 @@ class SetupController extends AppController {
 		'LeaveStatus',
 		'Country',
 		'IdentityType',
-		'ContactType'
+		'ContactType',
+		'EmploymentType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -258,6 +259,10 @@ class SetupController extends AppController {
 			'view' => 'contact_types',
 			'items' => $this->ContactType->getLookupVariables(),
 			'edit' => 'contact_types_edit',
+		));
+
+		$lookup[] = array('Employment Types' => array(
+			'items' => $this->EmploymentType->getLookupVariables(),
 		));
 
 		
