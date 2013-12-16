@@ -10,8 +10,8 @@ echo $this->Html->script('search', false);
     <h1>
         <span><?php echo __('Employments'); ?></span>
         <?php
-        $data = $employmentObj[0]['StaffEmployment'];
-        echo $this->Html->link(__('List'), array('action' => 'employments', $data['staff_id']), array('class' => 'divider'));
+        $data = $employmentObj[0]['TeacherEmployment'];
+        echo $this->Html->link(__('List'), array('action' => 'employments', $data['teacher_id']), array('class' => 'divider'));
         if($_edit) {
             echo $this->Html->link(__('Edit'), array('action' => 'employmentsEdit', $data['id']), array('class' => 'divider'));
         }
