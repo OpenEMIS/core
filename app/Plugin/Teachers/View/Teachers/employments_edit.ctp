@@ -11,13 +11,13 @@
         ?>
     </h1>
 	<?php
-	echo $this->Form->create('StaffEmployment', array(
-		'url' => array('controller' => 'Staff', 'action' => 'employmentsEdit'),
+	echo $this->Form->create('TeacherEmployment', array(
+		'url' => array('controller' => 'Teachers', 'action' => 'employmentsEdit'),
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
 	?>
-    <?php $obj = @$this->request->data['StaffEmployment']; ?>
-	<?php echo $this->Form->input('StaffEmployment.id');?>
+    <?php $obj = @$this->request->data['TeacherEmployment']; ?>
+	<?php echo $this->Form->input('TeacherEmployment.id');?>
 	 <div class="row">
         <div class="label"><?php echo __('Type'); ?></div>
         <div class="value"><?php echo $this->Form->input('employment_type_id', array('empty'=>__('--Select--'),'options'=>$employmentTypeOptions, 'default'=>$obj['employment_type_id'])); ?></div>

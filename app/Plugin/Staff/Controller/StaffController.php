@@ -51,6 +51,7 @@ class StaffController extends StaffAppController {
             'Staff.StaffLanguage',
             'Staff.StaffContact',
 			'Staff.StaffExtracurricular',
+            'Staff.StaffEmployment',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -63,7 +64,8 @@ class StaffController extends StaffAppController {
             'Language',
             'ContactOption',
             'ContactType',
-			'ExtracurricularType'
+			'ExtracurricularType',
+            'EmploymentType'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1646,7 +1648,7 @@ class StaffController extends StaffAppController {
 		}
 	}
 
-    
+
 
     public function employments(){
         $this->Navigation->addCrumb('Employments');
@@ -1673,51 +1675,52 @@ class StaffController extends StaffAppController {
     }
     
     public function employmentsView() {
-        $identityId = $this->params['pass'][0];
-        $identityObj = $this->StaffIdentity->find('all',array('conditions'=>array('StaffIdentity.id' => $identityId)));
+        $employmentId = $this->params['pass'][0];
+        $employmentObj = $this->StaffEmployment->find('all',array('conditions'=>array('StaffEmployment.id' => $employmentId)));
         
-        if(!empty($identityObj)) {
-            $this->Navigation->addCrumb('Identity Details');
+        if(!empty($employmentObj)) {
+            $this->Navigation->addCrumb('Employment Details');
             
-            $this->Session->write('StaffIdentityId', $identityId);
-            $this->set('identityObj', $identityObj);
+            $this->Session->write('StaffEmploymentId', $employmentId);
+            $this->set('employmentObj', $employmentObj);
         } 
     }
     
     public function employmentsEdit() {
-        $identityId = $this->params['pass'][0];
+        $employmentId = $this->params['pass'][0];
         if($this->request->is('get')) {
-            $identityObj = $this->StaffIdentity->find('first',array('conditions'=>array('StaffIdentity.id' => $identityId)));
+            $employmentObj = $this->StaffEmployment->find('first',array('conditions'=>array('StaffEmployment.id' => $employmentId)));
   
-            if(!empty($identityObj)) {
-                $this->Navigation->addCrumb('Edit Identity Details');
-                $this->request->data = $identityObj;
+            if(!empty($employmentObj)) {
+                $this->Navigation->addCrumb('Edit Employment Details');
+                $this->request->data = $employmentObj;
                
             }
          } else {
-            $identityData = $this->data['StaffIdentity'];
-            $identityData['staff_id'] = $this->staffId;
+            $employmentData = $this->data['StaffEmployment'];
+            $employmentData['staff_id'] = $this->staffId;
             
-            if ($this->StaffIdentity->save($identityData)){
+            if ($this->StaffEmployment->save($employmentData)){
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
+                $this->redirect(array('action' => 'employmentsView', $employmentData['id']));
             }
          }
 
-        $identityTypeOptions = $this->IdentityType->getOptions();
-        $this->set('identityTypeOptions', $identityTypeOptions);
+        $employmentTypeOptions = $this->EmploymentType->getOptions();
+        $this->set('employmentTypeOptions', $employmentTypeOptions);
 
-        $this->set('id', $identityId);  
+        $this->set('id', $employmentId);  
     }
 
     public function employmentsDelete($id) {
-        if($this->Session->check('StaffId') && $this->Session->check('StaffIdentityId')) {
-            $id = $this->Session->read('StaffIdentityId');
+        if($this->Session->check('StaffId') && $this->Session->check('StaffEmploymentId')) {
+            $id = $this->Session->read('StaffEmploymentId');
             $staffId = $this->Session->read('StaffId');
-            $name = $this->StaffIdentity->field('number', array('StaffIdentity.id' => $id));
-            $this->StaffIdentity->delete($id);
+            $employmentTypeId = $this->StaffEmployment->field('employment_type_id', array('StaffEmployment.id' => $id));
+            $name = $this->EmploymentType->field('name', array('EmploymentType.id' => $employmentTypeId));
+            $this->StaffEmployment->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'identities', $staffId));
+            $this->redirect(array('action' => 'employments', $staffId));
         }
     }
 }
