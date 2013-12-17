@@ -626,23 +626,29 @@ class InstitutionSitesController extends AppController {
 		}
 		$bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
+        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
+        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranches', $bankBranches);
+        $this->set('selectedBank', $bankId);
+
 		$this->set('institution_site_id', $this->institutionSiteId);
 		$this->set('bank',$bank);
 	}
 	
 	public function bankAccountsEdit() {
 		$bankBranch = array();
+
+        $bankAccountId = $this->params['pass'][0];
+		        
 		if($this->request->is('get')) {
-            $bankAccountId = $this->params['pass'][0];
             $bankAccountObj = $this->InstitutionSiteBankAccount->find('first',array('conditions'=>array('InstitutionSiteBankAccount.id' => $bankAccountId)));
   
             if(!empty($bankAccountObj)) {
                 $this->Navigation->addCrumb('Edit Bank Account Details');
                 //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
                 $this->request->data = $bankAccountObj;
-                $bankBranch = $this->BankBranch->find('list',array('conditions'=>Array('BankBranch.bank_id' => $this->request->data['BankBranch']['bank_id'])));
-
-                $this->set('id', $bankAccountId);
+		      
+ 				
             }
          } else {
          	$this->request->data['InstitutionSiteBankAccount']['institution_site_id'] = $this->institutionSiteId;
@@ -650,10 +656,18 @@ class InstitutionSitesController extends AppController {
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));	
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['InstitutionSiteBankAccount']['id']));
             }
-         }
+     	}
+
+  	 	$bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+		$this->set('selectedBank', $bankId);
+
+        $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranch', $bankBranch);
+
      	$bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 		$this->set('bank',$bank);
-		$this->set('bankBranch', $bankBranch);
+
+        $this->set('id', $bankAccountId);
 	}
 
 
@@ -2060,8 +2074,9 @@ class InstitutionSitesController extends AppController {
     public function studentsBehaviour(){
         extract($this->studentsCustFieldYrInits());
         $this->Navigation->addCrumb('List of Behaviour');
-
-        $data = $this->StudentBehaviour->getBehaviourData($id);
+        
+        $data = $this->StudentBehaviour->getBehaviourData($id, $this->institutionSiteId);
+        
 		if(empty($data)) {
 			$this->Utility->alert($this->Utility->getMessage('STUDENT_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
 		}

@@ -38,7 +38,9 @@ class StudentsNavigationComponent extends Component {
                     $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
                     $navigation->createLink('Comments', $controller, 'comments'),
                     $navigation->createLink('Identities', $controller, 'identities'),
-		    $navigation->createLink('Nationalities', $controller, 'nationalities'),
+		    		$navigation->createLink('Nationalities', $controller, 'nationalities'),
+		    		$navigation->createLink('Languages', $controller, 'languages'),
+		    		$navigation->createLink('Contacts', $controller, 'contacts'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 					//$navigation->createLink('Institutions', 'institutions')
 				),
@@ -46,7 +48,8 @@ class StudentsNavigationComponent extends Component {
                     $navigation->createLink('Classes', $controller, 'classes'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
                     $navigation->createLink('Behaviour', $controller, 'behaviour','behaviour|^behaviourView$'),
-                    $navigation->createLink('Results', $controller, 'assessments')
+                    $navigation->createLink('Results', $controller, 'assessments'),
+					$navigation->createLink('Extracurricular', $controller, 'extracurricular')
                 ),/*
 				'ASSESSMENT' => array(
 					'_controller' => $controller,
