@@ -2886,9 +2886,9 @@ class InstitutionSitesController extends AppController {
              
         }
 
-        public function reports($type = 'General'){
+        public function reports($type = 'general'){
             $this->Navigation->addCrumb($type);
-            $data['General'] = array('General'=>
+            $data['general'] = array('General'=>
                         array(
                             array(
                                     'name'=>'Site Details',
