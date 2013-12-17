@@ -398,7 +398,9 @@ class SmsController extends SmsAppController {
             fputcsv($outstream, $result);
         }*/
         fputcsv($outstream,$fieldName);
-        fputcsv($outstream,$results);
+        if(!empty($results)){
+            fputcsv($outstream,$results);  
+        }
         fclose($outstream);
     }
 

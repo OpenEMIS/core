@@ -20,12 +20,31 @@ echo $this->Html->script('setup_variables', false);
 	</h1>
  	<?php echo $this->element('alert'); ?>
 		
-		
 	<div class="table full_width">
 		<div class="table_head">
 			<div class="table_cell"><?php echo __('Number'); ?></div>
 			<?php foreach($messages as $message){?>
-			<div class="table_cell"><?php echo __($message['SmsMessage']['message']);?></div>
+			<div class="table_cell">
+				<?php 
+				$content = $message['SmsMessage']['message'];
+				/*
+				if (strlen($content) >= 21){
+				    echo __(substr($content, 0, 20). "...");
+				 }else{
+				    echo __($content); 
+				}*/
+
+				$pos = strlen($content);
+				if(strlen($content)>20){
+					$pos=strpos($content, ' ', 20);
+					echo __(substr($content,0,$pos) . "..."); 
+				}else{
+					echo __($content);
+				}
+
+    		?>
+
+			</div>
 			<?php } ?>
 		</div>
 		
