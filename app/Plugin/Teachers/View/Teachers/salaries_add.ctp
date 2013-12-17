@@ -30,31 +30,52 @@
         
     <fieldset class="section_group">
     <legend><?php echo __('Additions');?></legend>
-    <div class="table_body">
-        <div class="delete deleteAddition" name="data[Delete][{index}][id]"></div>
-         <div class="row">
-            <div class="label"><?php echo __('Total Additions'); ?></div>
-            <div class="value"><?php echo $this->Form->input('additions'); ?></div>
-        </div>
-        
+     <div class="row">
+        <div class="label"><?php echo __('Total Additions'); ?></div>
+        <div class="value"><?php echo $this->Form->input('additions'); ?></div>
     </div>
-    <div class="row">
-    <a class="void icon_plus link_add" onclick="Salary.addAddition(this)"><?php echo __('Add') .' '. __('Addition'); ?></a>
+    <div class="table full_width">
+        <div class="delete deleteAddition" name="data[Delete][{index}][id]"></div>
+        <div class="table_head">
+            <div class="table_cell cell_title"><?php echo __('Type'); ?></div>
+            <div class="table_cell"><?php echo __('Amount'); ?></div>
+            <div class="table_cell cell_delete">&nbsp;</div>
+        </div>
+            
+        <div class="table_body additions">
+            
+        </div>
+        <br />
+        <div class="row">
+        <a class="void icon_plus link_add" onclick="Salary.addAddition(this)"><?php echo __('Add') .' '. __('Addition'); ?></a>
+        </div>
     </div>
     </fieldset>
 
     <fieldset class="section_group">
     <legend><?php echo __('Deductions');?></legend>
-    <div class="table_body">
-        <div class="delete deleteDeduction" name="data[Delete][{index}][id]"></div>
-        <div class="row">
-            <div class="label"><?php echo __('Total Deductions'); ?></div>
-            <div class="value"><?php echo $this->Form->input('deductions'); ?></div>
+    <div class="row">
+        <div class="label"><?php echo __('Total Deductions'); ?></div>
+        <div class="value"><?php echo $this->Form->input('deductions'); ?></div>
+    </div>
+    <div class="table full_width">
+        <div class="delete deleteAddition" name="data[Delete][{index}][id]"></div>
+        <div class="table_head">
+            <div class="table_cell cell_title"><?php echo __('Type'); ?></div>
+            <div class="table_cell"><?php echo __('Amount'); ?></div>
+            <div class="table_cell cell_delete">&nbsp;</div>
         </div>
+            
+        <div class="table_body deductions">
+            
+        </div>
+        <br />
         <div class="row">
-            <a class="void icon_plus link_add" onclick="Salary.addDeduction(this)"><?php echo __('Add') .' '. __('Deduction'); ?></a>
+        <a class="void icon_plus link_add" onclick="Salary.addAddition(this)"><?php echo __('Add') .' '. __('Deductions'); ?></a>
         </div>
     </div>
+
+    
     </fieldset>
 
 

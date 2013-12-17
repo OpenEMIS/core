@@ -15,7 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 
 var Salary = {
     addAddition: function(obj) {
-        alert('test');
         /*var table = $('.table-content');
         var index = table.find('tr').length + $('.delete input').length;
         var maskId;
@@ -37,7 +36,7 @@ var Salary = {
             success: success
         });*/
         var table = $('#salary');
-        var size = $('.table_body div.table_row').length + $('.deleteAddition input').length;
+        var size = $('.additions div.table_row').length + $('.deleteAddition input').length;
         var maskId;
         var url = getRootURL() + "Teachers/salaryAdditionAdd";
         alert(size);
@@ -52,8 +51,7 @@ var Salary = {
             },
             success: function (data, textStatus) {
                 var callback = function() {
-                    alert(data);
-                    $('.table_body').append(data);
+                    $('.additions').append(data);
 
                 };
                 $.unmask({id: maskId, callback: callback});
@@ -62,13 +60,14 @@ var Salary = {
     },
 
     deleteAddition: function(obj) {
-        var row = $(obj).closest('tr');
-        var id = row.attr('row-id');
+        var row = $(obj).closest('table_row');
+        var id = row.attr('data-id');
+        alert(row);
         if(id != undefined) {
-            var div = $('.delete');
+            var div = $('.deleteAddition');
             var index = div.find('input').length;
             var name = div.attr('name').replace('{index}', index);
-            var controlId = $('.control-id');
+            var controlId = $('.addition-control-id');
             var input = row.find(controlId).attr({type: 'hidden', name: name});
             div.append(input);
         }
