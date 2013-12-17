@@ -519,6 +519,10 @@ AND
 	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+                if(array_key_exists('order', $conditions)){
+                    $order = $conditions['order'];
+                }
+            
 		$isSuperAdmin = $conditions['isSuperAdmin'];
 		$fields = array(
 			'Institution.id',

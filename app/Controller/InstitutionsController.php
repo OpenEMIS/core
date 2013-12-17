@@ -100,7 +100,8 @@ class InstitutionsController extends AppController {
 			'SearchKey' => $searchKey, 
 			'AdvancedSearch' => $this->Session->check('Institution.AdvancedSearch') ? $this->Session->read('Institution.AdvancedSearch') : null,
 			'isSuperAdmin' => $this->Auth->user('super_admin'),
-			'userId' => $this->Auth->user('id')
+			'userId' => $this->Auth->user('id'),
+                        'order' => array($fieldordername => $fieldorderdir)
 		);
 		
 		$order = array('order' => array($fieldordername => $fieldorderdir));
