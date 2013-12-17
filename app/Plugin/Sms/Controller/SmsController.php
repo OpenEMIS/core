@@ -328,6 +328,7 @@ class SmsController extends SmsAppController {
         ));
         $fieldName = null;
         $result = null;
+         $fieldName[] = __('Number');
         foreach($messages as $value){
             $fieldName[] = str_replace(',', ' ', $value['SmsMessage']['message']);
           
