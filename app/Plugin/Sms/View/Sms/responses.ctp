@@ -1,8 +1,10 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('setup_variables', 'stylesheet', array('inline' => false));
+echo $this->Html->css('custom_fields', 'stylesheet', array('inline' => false));
+echo $this->Html->script('jquery.tools', false);
+echo $this->Html->script('jquery.quicksand', false);
 
-echo $this->Html->script('setup_variables', false);
+echo $this->Html->script('/Sms/js/sms', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -24,7 +26,6 @@ echo $this->Html->script('setup_variables', false);
 		<div class="table_head">
 			<div class="table_cell"><?php echo __('Number'); ?></div>
 			<?php foreach($messages as $message){?>
-			<div class="table_cell">
 				<?php 
 				$content = $message['SmsMessage']['message'];
 				/*
@@ -37,14 +38,17 @@ echo $this->Html->script('setup_variables', false);
 				$pos = strlen($content);
 				if(strlen($content)>20){
 					$pos=strpos($content, ' ', 20);
+
+					echo '<div class="table_cell" title="' . $message['SmsMessage']['message'] . '">';
 					echo __(substr($content,0,$pos) . "..."); 
+					echo '</div>';
 				}else{
+					echo '<div class="table_cell">';
 					echo __($content);
+					echo '</div>';
 				}
 
     		?>
-
-			</div>
 			<?php } ?>
 		</div>
 		
