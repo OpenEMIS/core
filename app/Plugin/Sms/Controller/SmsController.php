@@ -350,7 +350,7 @@ class SmsController extends SmsAppController {
         $result = null;
 
         foreach($messages as $value){
-            $fieldName[] =  str_replace(',', ' ',$value['SmsMessage']['message']);
+            $fieldName[] =  str_replace(',', ' ', $value['SmsMessage']['message']);
         }
        
         if(!empty($fieldName)){
@@ -379,6 +379,7 @@ class SmsController extends SmsAppController {
         $this->redirect(array('action' => 'responses'));
     }
 
+ 
     function download_csv_results($results, $fieldName=NULL, $name = NULL)
     {
         if( ! $name)
@@ -386,12 +387,21 @@ class SmsController extends SmsAppController {
             $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
         }
 
-        header('Content-Type: text/csv');
+        header('Expires: 0');
+        header('Content-Encoding: UTF-8');
+        header('Content-Description: File Transfer');
+        header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename='. $name);
-        header('Pragma: no-cache');
-        header("Expires: 0");
+        header('Content-Transfer-Encoding: binary'); 
 
         $outstream = fopen("php://output", "w");
+
+        //add BOM to fix UTF-8 in Excel
+        //fputs($outstream, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+        //fwrite($outstream, "xEFxBBxBF");
+        //fputs($outstream, "\xEF\xBB\xBF"); 
+
+        echo "\xEF\xBB\xBF";
 
         /*foreach($results as $result)
         {
