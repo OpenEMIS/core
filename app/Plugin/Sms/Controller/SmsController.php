@@ -27,8 +27,8 @@ class SmsController extends SmsAppController {
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Auth->allow('receive');
-        $this->bodyTitle = 'Settings';
-        $this->Navigation->addCrumb('Settings', array('controller' => '../Setup', 'action' => 'index'));
+        $this->bodyTitle = 'Administration';
+        $this->Navigation->addCrumb('Administration', array('controller' => '../Setup', 'action' => 'index'));
     }
 
     public function receive(){
