@@ -388,9 +388,9 @@ class SmsController extends SmsAppController {
         }
 
         header('Expires: 0');
-        header('Content-Encoding: UTF-16');
+        header('Content-Encoding: UTF-8');
         header('Content-Description: File Transfer');
-        header('Content-Type: text/csv; charset=UTF-16');
+        header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename='. $name);
         header('Content-Transfer-Encoding: binary'); 
 
