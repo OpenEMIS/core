@@ -1,21 +1,5 @@
 <?php
-/*
-@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
-
-OpenEMIS
-Open Education Management Information System
-
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
-it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
-that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
-<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
-*/
-
 App::uses('HttpSocket', 'Network/Http');
-
 class SmsController extends SmsAppController {
     public $uses = array(
         'Sms.SmsMessage',
@@ -23,7 +7,6 @@ class SmsController extends SmsAppController {
         'Sms.SmsResponse',
         'ConfigItem'
     );
-
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Auth->allow('receive');
@@ -333,7 +316,6 @@ class SmsController extends SmsAppController {
         'fields' => array('MAX(SmsMessage.order) AS maxOrder'),
         'conditions'=>array('enabled'=>1)
         ));
-
         $max = 1;
         if(!empty($maxMessages)){
             $max = $maxMessages[0]['maxOrder'];
@@ -344,21 +326,16 @@ class SmsController extends SmsAppController {
         'order'=>array('order'),
         'recursive'=>-1
         ));
-
-
         $fieldName = null;
         $result = null;
-
         foreach($messages as $value){
-            $fieldName[] =  str_replace(',', ' ', $value['SmsMessage']['message']);
+            $fieldName[] = str_replace(',', ' ', $value['SmsMessage']['message']);
+          
         }
-       
-        if(!empty($fieldName)){
+        /*if(!empty($fieldName)){
              $fieldName[count($fieldName)-1] = end($fieldName) . "\n";
-        }
-        
+        }*/
         if(!empty($data)){
-
            foreach($data as $obj){
                 foreach($obj as $key=>$value){
                     if(isset($value['number'])){
@@ -368,9 +345,11 @@ class SmsController extends SmsAppController {
                 }
             }
         }
-
-        echo $this->download_csv_results($result, $fieldName, 'sms_responses_' . date('Ymdhis') . '.csv');
-        exit;
+        echo $this->download_csv_results( 'sms_responses_' . date('Ymdhis') . '.csv');
+        //pr(implode($fieldName, ','));
+        //exit;
+        echo $this->array2csv($result, $fieldName);
+        die();
     }
     
     public function responsesDelete() {
@@ -379,39 +358,36 @@ class SmsController extends SmsAppController {
         $this->redirect(array('action' => 'responses'));
     }
 
- 
-    function download_csv_results($results, $fieldName=NULL, $name = NULL)
+    function array2csv($results=NULL, $fieldName=NULL)
+    {
+       ob_end_clean();
+       ob_start();
+       $df = fopen("php://output", 'w');
+       //fputs($df,$fieldName);
+       fputs($df, implode(",", $fieldName)."\n");
+
+        if(!empty($results)){
+            fputcsv($df,$results);  
+        }
+       fclose($df);
+       return ob_get_clean();
+    }
+
+    function download_csv_results($name = NULL)
     {
         if( ! $name)
         {
             $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
         }
-
         header('Expires: 0');
         header('Content-Encoding: UTF-8');
-        header('Content-Description: File Transfer');
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename='. $name);
-        header('Content-Transfer-Encoding: binary'); 
-
-        $outstream = fopen("php://output", "w");
-
-        //add BOM to fix UTF-8 in Excel
-        //fputs($outstream, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
-        //fwrite($outstream, "xEFxBBxBF");
-        //fputs($outstream, "\xEF\xBB\xBF"); 
-
-        //echo "\xEF\xBB\xBF";
-
-        /*foreach($results as $result)
-        {
-            fputcsv($outstream, $result);
-        }*/
-        fputcsv($outstream,$fieldName);
-        if(!empty($results)){
-            fputcsv($outstream,$results);  
-        }
-        fclose($outstream);
+        // force download  
+        header("Content-Type: application/force-download; charset=UTF-8'");
+        header("Content-Type: application/octet-stream; charset=UTF-8'");
+        header("Content-Type: application/download; charset=UTF-8'");
+        // disposition / encoding on response body
+        header("Content-Disposition: attachment;filename={$name}");
+        header("Content-Transfer-Encoding: binary");
     }
-
 }
+?>
