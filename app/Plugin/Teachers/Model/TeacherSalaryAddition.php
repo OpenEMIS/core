@@ -14,12 +14,16 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
-
-class InstitutionSector extends AppModel {
-	var $hasMany = array('Institution');
-	
-	public function findListAsSubgroups() {
-		return $this->findList(true);
-	}
+class TeacherSalaryAddition extends TeachersAppModel {
+		public $belongsTo = array(
+		'Teacher',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		)
+	);
 }

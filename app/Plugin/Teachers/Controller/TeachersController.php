@@ -23,12 +23,12 @@ class TeachersController extends TeachersAppController {
     public $teacherObj;
 
     public $uses = array(
-	'Area',
+	    'Area',
         'Institution',
-	'InstitutionSite',
+	    'InstitutionSite',
         'Bank',
         'BankBranch',
-	'Teachers.TeacherBankAccount',
+	    'Teachers.TeacherBankAccount',
         'InstitutionSiteTeacher',
         'InstitutionSiteType',
         'Teachers.Teacher',
@@ -44,25 +44,30 @@ class TeachersController extends TeachersAppController {
         'QualificationInstitution',
         'QualificationSpecialisation',
         'Teachers.TeacherAttendance',
-	'Teachers.TeacherLeave',
-	'Teachers.TeacherLeaveType',
+	    'Teachers.TeacherLeave',
+        'Teachers.TeacherLeaveType',
         'Teachers.TeacherBehaviour',
         'Teachers.TeacherBehaviourCategory',
         'Teachers.TeacherComment',
         'Teachers.TeacherNationality',
-	'Teachers.TeacherIdentity',
+	    'Teachers.TeacherIdentity',
         'Teachers.TeacherLanguage',
         'Teachers.TeacherContact',
+        'Teachers.TeacherSalary',
+        'Teachers.TeacherSalaryAddition',
+        'Teachers.TeacherSalaryDeduction',
         'Country',
-	'IdentityType',
+	    'IdentityType',
         'ContactType',
         'ContactOption',
         'SchoolYear',
         'Language',
-	'ConfigItem',
+	    'ConfigItem',
         'LeaveStatus',
-	'Teachers.TeacherExtracurricular',
-	'ExtracurricularType'
+    	'Teachers.TeacherExtracurricular',
+    	'ExtracurricularType',
+        'SalaryAdditionType',
+        'SalaryDeductionType'
 	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1764,5 +1769,94 @@ class TeachersController extends TeachersAppController {
 			} 
 		}
 	}
+
+
+    
+    public function salaries(){
+        $this->Navigation->addCrumb('Salaries');
+        $data = $this->TeacherSalary->find('all',array('conditions'=>array('TeacherSalary.teacher_id'=>$this->teacherId)));
+        $this->set('list', $data);
+    }
+    
+    public function salariesAdd() {
+        if ($this->request->is('post')) {
+            $this->TeacherSalary->create();
+            $this->request->data['TeacherSalary']['teacher_id'] = $this->teacherId;
+            
+            $data = $this->data['TeacherSalary'];
+
+            if ($this->TeacherSalary->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'salaries'));
+            }
+        }
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function salariesView() {
+        $identityId = $this->params['pass'][0];
+        $identityObj = $this->TeacherIdentity->find('all',array('conditions'=>array('TeacherIdentity.id' => $identityId)));
+        
+        if(!empty($identityObj)) {
+            $this->Navigation->addCrumb('Identity Details');
+            
+            $this->Session->write('TeacherIdentityId', $identityId);
+            $this->set('identityObj', $identityObj);
+        } 
+    }
+
+    public function salariesEdit() {
+        $identityId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $identityObj = $this->TeacherIdentity->find('first',array('conditions'=>array('TeacherIdentity.id' => $identityId)));
+  
+            if(!empty($identityObj)) {
+                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->request->data = $identityObj;
+               
+            }
+         } else {
+            $identityData = $this->data['TeacherIdentity'];
+            $identityData['teacher_id'] = $this->teacherId;
+            
+            if ($this->TeacherIdentity->save($identityData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
+            }
+         }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+
+        $this->set('id', $identityId);
+    }
+
+    public function salaryAdditionAdd(){
+        $this->layout = 'ajax';
+        $order = $this->params->query['order'] + 1;
+        $this->set('order', $order);
+     
+        $visible = true;
+        $categories = $this->SalaryAdditionType->findList($visible);
+        array_unshift($categories, __('--Select--'));
+
+        //$list = $this->TeacherSalaryAddition->getData($this->teacherId);
+        $this->UserSession->readStatusSession($this->request->action);
+        //$this->set('data', $list);
+        $this->set('categories', $categories);
+    }
+    
+    public function salariesDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherIdentityId')) {
+            $id = $this->Session->read('TeacherIdentityId');
+            $teacherId = $this->Session->read('TeacherId');
+            $name = $this->TeacherIdentity->field('number', array('TeacherIdentity.id' => $id));
+            $this->TeacherIdentity->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'identities', $teacherId));
+        }
+    }
+
 }
 

@@ -16,10 +16,24 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class InstitutionSector extends AppModel {
-	var $hasMany = array('Institution');
+class SalaryDeductionType extends AppModel {
+	public $hasMany = array('TeacherSalaryDeduction', 'StaffSalaryDeduction');
 	
-	public function findListAsSubgroups() {
-		return $this->findList(true);
+	public function getLookupVariables() {
+		$lookup = array(
+			'Salary Deduction Types' => array('model' => 'SalaryDeductionType')
+		);
+		return $lookup;
+	}
+
+
+	public function getOptions(){
+		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('SalaryDeductionType.order')));
+		$list = array();
+		foreach($data as $obj){
+			$list[$obj['SalaryDeductionType']['id']] = $obj['SalaryDeductionType']['name'];
+		}
+
+		return $list;
 	}
 }
