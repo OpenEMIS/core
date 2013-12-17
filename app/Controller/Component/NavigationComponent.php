@@ -216,7 +216,8 @@ class NavigationComponent extends Component {
 					$this->createLink('More', 'Census', 'otherforms')
 				),
 				'REPORTS' => array(
-					$this->createLink('General', 'InstitutionSites', 'reports'),
+					$this->createLink('General', 'InstitutionSites', 'reportsGeneral'),
+					$this->createLink('Details', 'InstitutionSites', 'reportsDetails')
 				)
 			)
 		);
