@@ -369,7 +369,7 @@ class SmsController extends SmsAppController {
             }
         }
 
-        echo $this->download_csv_results($result, $fieldName, 'sms_responses_' . date('Ymdhis'));
+        echo $this->download_csv_results($result, $fieldName, 'sms_responses_' . date('Ymdhis') . '.csv');
         exit;
     }
     
@@ -397,7 +397,7 @@ class SmsController extends SmsAppController {
         $outstream = fopen("php://output", "w");
 
         //add BOM to fix UTF-8 in Excel
-        fputs($outstream, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+        //fputs($outstream, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
         //fwrite($outstream, "xEFxBBxBF");
         //fputs($outstream, "\xEF\xBB\xBF"); 
 
