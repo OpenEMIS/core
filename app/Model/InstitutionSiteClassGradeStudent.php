@@ -159,15 +159,15 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		return $data;
 	}
 	
-	public function getStudentAssessmentResults($classId, $itemId) {
-		$data = $this->find('all', array(
-			'fields' => array(
+	public function getStudentAssessmentResults($classId, $itemId, $assessmentId=null) {
+                $options['fields'] = array(
 				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
 				'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
 				'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
 				'AssessmentItem.min', 'AssessmentItem.max'
-			),
-			'joins' => array(
+			);
+                
+                $options_joins = array(
 				array(
 					'table' => 'students',
 					'alias' => 'Student',
@@ -209,9 +209,29 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 					'type' => 'LEFT',
 					'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
 				)
-			),
-			'order' => array('Student.first_name')
-		));
+			);
+                
+                if(!empty($assessmentId)){
+                    $join_to_assessment_item_types = array(
+                                                        array(
+                                                            'table' => 'assessment_item_types',
+                                                            'alias' => 'AssessmentItemType',
+                                                            'conditions' => array(
+                                                                'AssessmentItemType.education_grade_id = InstitutionSiteClassGrade.education_grade_id',
+                                                                'AssessmentItemType.id = ' . $assessmentId
+                                                            )
+                                                        )
+                                                    );
+                    
+                    $options['joins'] = array_merge($options_joins, $join_to_assessment_item_types);
+                }else{
+                    $options['joins'] = $options_joins;
+                }
+                
+                $options['order'] = array('Student.first_name');
+                
+                $data = $this->find('all', $options);
+                
 		return $data;
 	}
 	
