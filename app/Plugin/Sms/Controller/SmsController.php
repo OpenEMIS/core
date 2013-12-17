@@ -388,20 +388,20 @@ class SmsController extends SmsAppController {
         }
 
         header('Expires: 0');
-        header('Content-Encoding: UTF-8');
+        header('Content-Encoding: UTF-16');
         header('Content-Description: File Transfer');
-        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Type: text/csv; charset=UTF-16');
         header('Content-Disposition: attachment; filename='. $name);
         header('Content-Transfer-Encoding: binary'); 
 
         $outstream = fopen("php://output", "w");
 
         //add BOM to fix UTF-8 in Excel
-        //fputs($outstream, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+        fputs($outstream, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
         //fwrite($outstream, "xEFxBBxBF");
         //fputs($outstream, "\xEF\xBB\xBF"); 
 
-        echo "\xEF\xBB\xBF";
+        //echo "\xEF\xBB\xBF";
 
         /*foreach($results as $result)
         {
