@@ -2784,9 +2784,10 @@ class InstitutionSitesController extends AppController {
 		'Classes - Students' => array(
 			'Model' => 'InstitutionSiteClass',
 			'fields' => array(
+				'SchoolYear' => array('name'),
 				'InstitutionSiteClass' => array('name'),
 				'EducationGrade' => array('name'),
-				'Student' => array('first_name', 'last_name'),
+				'Student' => array('identification_no', 'first_name', 'last_name'),
 				'StudentCategory' => array('name')
 			)
 		)
@@ -2869,8 +2870,14 @@ class InstitutionSitesController extends AppController {
 						'table' => 'student_categories',
 						'alias' => 'StudentCategory',
 						'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+					),
+					array(
+						'table' => 'school_years',
+						'alias' => 'SchoolYear',
+						'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
 					)
 				);
+				$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
 			}
 			$data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
 		}
