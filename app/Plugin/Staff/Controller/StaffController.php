@@ -49,6 +49,8 @@ class StaffController extends StaffAppController {
             'Staff.StaffNationality',
             'Staff.StaffIdentity',
             'Staff.StaffLanguage',
+            'Staff.StaffContact',
+			'Staff.StaffExtracurricular',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -58,7 +60,10 @@ class StaffController extends StaffAppController {
             'Country',
             'IdentityType',
             'StaffLeaveAttachment',
-            'Language'
+            'Language',
+            'ContactOption',
+            'ContactType',
+			'ExtracurricularType'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1064,7 +1069,6 @@ class StaffController extends StaffAppController {
         $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
         $this->set('bankBranches', $bankBranches);
         $this->set('selectedBank', $bankId);
-
         $this->set('staff_id', $this->staffId);
         $this->set('bank',$bank);
     }
@@ -1377,7 +1381,6 @@ class StaffController extends StaffAppController {
         }
     }
 
-
     public function languages(){
         $this->Navigation->addCrumb('Languages');
         $data = $this->StaffLanguage->find('all',array('conditions'=>array('StaffLanguage.staff_id'=>$this->staffId)));
@@ -1450,7 +1453,198 @@ class StaffController extends StaffAppController {
             $this->StaffLanguage->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'languages', $staffId));
+	}
+    }
+     
+    public function contacts(){
+        $this->Navigation->addCrumb('Contacts');
+        $data = $this->StaffContact->find('all',array('conditions'=>array('StaffContact.staff_id'=>$this->staffId), 'order'=>array('ContactType.contact_option_id', 'StaffContact.preferred DESC')));
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $this->set('list', $data);
+    }
+    
+    public function contactsAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffContact->create();
+            $this->request->data['StaffContact']['staff_id'] = $this->staffId;
+            
+            $contactData = $this->data['StaffContact'];
+
+            if ($this->StaffContact->save($contactData)){
+                if($contactData['preferred']=='1'){
+                    $this->StaffContact->updateAll(array('StaffContact.preferred' =>'0'), array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT'=>array('StaffContact.id'=>array($this->StaffContact->getLastInsertId())))));
+                }
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'contacts'));
+            }
+        }
+
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $contactOptionId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($contactOptions);
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions'=>array('contact_option_id'=>$contactOptionId, 'visible'=>1), 'recursive' => -1));
+        $this->set('contactTypeOptions', $contactTypeOptions);
+        $this->set('selectedContactOptions', $contactOptionId);
+       
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function contactsView() {
+        $contactId = $this->params['pass'][0];
+        $contactObj = $this->StaffContact->find('all',array('conditions'=>array('StaffContact.id' => $contactId)));
+        
+        if(!empty($contactObj)) {
+            $this->Navigation->addCrumb('Contact Details');
+            
+            $this->Session->write('StaffContactId', $contactId);
+            $this->set('contactObj', $contactObj);
+        } 
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+    }
+
+    public function contactsEdit() {
+        $contactId = $this->params['pass'][0];
+        $contactObj = array();
+        if($this->request->is('get')) {
+            $contactObj = $this->StaffContact->find('first',array('conditions'=>array('StaffContact.id' => $contactId)));
+  
+            if(!empty($contactObj)) {
+                $this->Navigation->addCrumb('Edit Contact Details');
+                $this->request->data = $contactObj;
+            }
+         } else {
+            $contactData = $this->data['StaffContact'];
+            $contactData['staff_id'] = $this->staffId;
+
+            if ($this->StaffContact->save($contactData)){
+                if($contactData['preferred']=='1'){
+                    $this->StaffContact->updateAll(array('StaffContact.preferred' =>'0'), array('ContactType.contact_option_id'=>$contactData['contact_option_id'], array('NOT'=>array('StaffContact.id'=>array($contactId)))));
+                }
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'contactsView', $contactData['id']));
+            }
+         }
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $contactOptionId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $contactObj['ContactType']['contact_option_id'];
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions'=>array('contact_option_id'=>$contactOptionId, 'visible'=>1), 'recursive' => -1));
+        $this->set('contactTypeOptions', $contactTypeOptions);
+        $this->set('selectedContactOptions', $contactOptionId);
+
+        $this->set('id', $contactId);
+       
+    }
+
+    public function contactsDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffContactId')) {
+            $id = $this->Session->read('StaffContactId');
+            $staffId = $this->Session->read('StaffId');
+      
+            $name = $this->StaffContact->field('value', array('StaffContact.id' => $id));
+            $this->StaffContact->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'contacts', $staffId));
         }
     }
+	
+    public function extracurricular(){
+        $this->Navigation->addCrumb('Extracurricular');
+		$data = $this->StaffExtracurricular->getAllList('staff_id',$this->staffId);
+        $this->set('list', $data);
+    }
+	
+    public function extracurricularView() {
+        $id = $this->params['pass'][0];
+        $data = $this->StaffExtracurricular->getAllList('id',$id);
+        if(!empty($data)) {
+            $this->Navigation->addCrumb('Extracurricular Details');
+            
+            $this->Session->write('StaffExtracurricularId', $id);
+            $this->set('data', $data);
+        } 
+    }
+
+    public function extracurricularAdd(){
+        $this->Navigation->addCrumb('Add Extracurricular');
+		
+		$yearList = $this->SchoolYear->getYearList();
+		$yearId = $this->getAvailableYearId($yearList);
+		$typeList = $this->ExtracurricularType->findList(array('fields' =>array('id','name'), 'conditions'=>array('visible' => '1'), 'orderBy' => 'name'));
+		
+		$this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+		$this->set('types', $typeList);
+		if($this->request->isPost()){
+			$data = $this->request->data;
+			$data['StaffExtracurricular']['staff_id'] = $this->staffId;
+			if ($this->StaffExtracurricular->save($data)){
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+				$this->redirect(array('action' => 'extracurricular'));
+			}
+		}
+    }
+	
+    public function extracurricularEdit() {
+        $id = $this->params['pass'][0];
+        $this->Navigation->addCrumb('Edit Extracurricular Details');
+        if($this->request->is('get')) {
+            $data = $this->StaffExtracurricular->find('first',array('conditions'=>array('StaffExtracurricular.id' => $id)));
+  
+            if(!empty($data)) {
+                $this->request->data = $data;
+            }
+         } else {
+            $data = $this->data;
+			$data['StaffExtracurricular']['staff_id'] = $this->staffId;
+			$data['StaffExtracurricular']['id'] = $id;
+			if ($this->StaffExtracurricular->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'extracurricularView', $data['StaffExtracurricular']['id']));
+            }
+         }
+
+        $yearList = $this->SchoolYear->getYearList();
+		$yearId = $this->getAvailableYearId($yearList);
+		$typeList = $this->ExtracurricularType->findList(array('fields' =>array('id','name'), 'conditions'=>array('visible' => '1'), 'orderBy' => 'name'));
+		
+		$this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+		$this->set('types', $typeList);
+
+        $this->set('id', $id);
+    }
+	
+    public function extracurricularDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffExtracurricularId')) {
+            $id = $this->Session->read('StaffExtracurricularId');
+            $staffId = $this->Session->read('StaffId');
+            $name = $this->StaffExtracurricular->field('name', array('StaffExtracurricular.id' => $id));
+			
+            $this->StaffExtracurricular->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'extracurricular'));
+        }
+    }
+	
+    public function searchAutoComplete(){
+		if($this->request->is('get')) {
+			if($this->request->is('ajax')) {
+				$this->autoRender = false;
+				$search = $this->params->query['term'];
+				$result = $this->StaffExtracurricular->autocomplete($search);
+				return json_encode($result);
+			} 
+		}
+	}
+>>>>>>> tst
 }
 
