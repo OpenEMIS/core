@@ -36,6 +36,7 @@ class SmsController extends SmsAppController {
         $responses = $this->SmsResponse->find('all', array('conditions'=>array('number'=>$number)));
         $messages = $this->SmsMessage->find('all', array('conditions'=>array('enabled'=>1), 'order'=>array('order'), 'recursive'=>-1));
 
+
         $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
         $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
         $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
@@ -118,8 +119,14 @@ class SmsController extends SmsAppController {
             );
 
             $this->SmsResponse->saveAll($data);
+            $followingMessage = null;
+            foreach($messages as $message){
+                if($message['SmsMessage']['order']== $lastResponse['order']+1){
+                    $followingMessage = $message['SmsMessage'];
+                    break;
+                }
+            }
 
-            $followingMessage = isset($messages[$lastResponse['order']]['SmsMessage']) ? $messages[$lastResponse['order']]['SmsMessage'] : null;
             if(!empty($followingMessage)){
                 $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message']);
                 $HttpSocket = new HttpSocket();
@@ -291,12 +298,14 @@ class SmsController extends SmsAppController {
         'fields' => array('MAX(SmsResponse.order) AS maxOrder')
         ));*/
         $maxMessages = $this->SmsMessage->find('first', array(
-        'fields' => array('MAX(SmsMessage.order) AS maxOrder'),
+        'fields' => array('MAX(SmsMessage.order) AS maxOrder,MIN(SmsMessage.order) AS minOrder'),
         'conditions'=>array('enabled'=>1)
         ));
 
         $max = 1;
+        $min = 1;
         if(!empty($maxMessages)){
+            $min = $maxMessages[0]['minOrder'];
             $max = $maxMessages[0]['maxOrder'];
         }
         $messages =  $this->SmsMessage->find('all', array(
@@ -304,7 +313,8 @@ class SmsController extends SmsAppController {
         'order'=>array('order'),
         'recursive'=>-1
         ));
-        $data = $this->SmsResponse->getColumnFormat($max);
+        $data = $this->SmsResponse->getColumnFormat($min, $max);
+        $this->set('min', $min);
         $this->set('max', $max);
         $this->set('data', $data);
         $this->set('messages', $messages);
@@ -313,14 +323,16 @@ class SmsController extends SmsAppController {
     public function responsesDownload(){
         $this->autoRender = false;
         $maxMessages = $this->SmsMessage->find('first', array(
-        'fields' => array('MAX(SmsMessage.order) AS maxOrder'),
+        'fields' => array('MAX(SmsMessage.order) AS maxOrder,MIN(SmsMessage.order) AS minOrder'),
         'conditions'=>array('enabled'=>1)
         ));
         $max = 1;
+        $min = 1;
         if(!empty($maxMessages)){
+            $min = $maxMessages[0]['minOrder'];
             $max = $maxMessages[0]['maxOrder'];
         }
-        $data = $this->SmsResponse->getColumnFormat($max);
+        $data = $this->SmsResponse->getColumnFormat($min, $max);
         $messages =  $this->SmsMessage->find('all', array(
         'conditions'=>array('enabled'=>1),
         'order'=>array('order'),
