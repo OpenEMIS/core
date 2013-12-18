@@ -66,9 +66,9 @@ $fieldName = 'data[InstitutionSiteTeacher][' . $index . '][%s]';
 				'div' => false,
 				'class' => 'default',
 				'style' => 'width: 90%;',
-				'maxlength' => 3,
+				'maxlength' => 4,
 				'name' => sprintf($fieldName, 'FTE'),
-				'onkeypress' => 'return utility.floatCheck(event)'
+				'onkeypress' => 'return utility.FTECheck(event)'
 			));
 		?>
 	</div>
