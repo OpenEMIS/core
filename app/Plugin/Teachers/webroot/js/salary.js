@@ -60,16 +60,22 @@ var Salary = {
     },
 
     deleteAddition: function(obj) {
-        var row = $(obj).closest('table_row');
+        var row = $(obj).closest('.table_row');
         var id = row.attr('data-id');
-        alert(row);
         if(id != undefined) {
             var div = $('.deleteAddition');
+
             var index = div.find('input').length;
             var name = div.attr('name').replace('{index}', index);
+
             var controlId = $('.addition-control-id');
+             alert(controlId.innerHTML());
             var input = row.find(controlId).attr({type: 'hidden', name: name});
+            alert(name);
+            
             div.append(input);
+
+            alert(id);
         }
         row.remove();
     },
