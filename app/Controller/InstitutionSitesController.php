@@ -2928,8 +2928,8 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Reports - General');
 		$data= array('Reports - General' => array(
 			array('name' => 'Overview', 'types' => array('CSV')),
-			array('name' => 'Bank Accounts', 'types' => array('CSV')),
-			array('name' => 'More', 'types' => array('CSV'))
+			array('name' => 'Bank Accounts', 'types' => array('CSV'))/*,
+			array('name' => 'More', 'types' => array('CSV'))*/
 		));
 		$this->set('data', $data);
 		$this->render('Reports/general');
