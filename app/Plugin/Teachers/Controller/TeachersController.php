@@ -1764,6 +1764,5 @@ class TeachersController extends TeachersAppController {
 			} 
 		}
 	}
->>>>>>> tst
 }
 
