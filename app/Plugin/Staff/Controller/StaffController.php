@@ -1645,6 +1645,5 @@ class StaffController extends StaffAppController {
 			} 
 		}
 	}
->>>>>>> tst
 }
 
