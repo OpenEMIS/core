@@ -58,9 +58,9 @@ echo $this->Html->script('/Sms/js/sms', false);
 				foreach($data as $arrVal){ ?>
 			   <div class="table_row">
 					<div class="table_cell"><?php echo $arrVal['SmsResponse']['number'];?></div>
-					<?php for($i=1;$i<=$max;$i++){ 
+					<?php for($i=$min;$i<=$max;$i++){ 
 						$response = '';
-						if($i==1){
+						if($i==$min){
 							$response = $arrVal['SmsResponse']['response'];
 						}else{
 							$response = $arrVal['SmsResponse'.$i]['response'];

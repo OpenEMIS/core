@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class SmsResponse extends SmsAppModel {
 
-	public function getColumnFormat($maxOrder = 1){
+	public function getColumnFormat($minOrder = 1, $maxOrder = 1){
 		$joins = array(
 			array(
 				'table' => 'sms_messages',
@@ -30,7 +30,7 @@ class SmsResponse extends SmsAppModel {
         );
 		
 		$fields = array('SmsResponse.number', 'SmsResponse.response');
-		for($i=2;$i<=$maxOrder;$i++){
+		for($i=$minOrder+1;$i<=$maxOrder;$i++){
 			//$fields[] = 'SmsResponse'.$i.'.message';
 			$fields[] = 'SmsResponse'.$i.'.response';
 			$joins[] =
@@ -49,7 +49,7 @@ class SmsResponse extends SmsAppModel {
 		$data = $this->find('all', array(
 			'fields' => $fields,
 		    'joins' => $joins,
-			'conditions'=>array('SmsResponse.order'=>1),
+			'conditions'=>array('SmsResponse.order'=>$minOrder),
 			'order'=>array('SmsResponse.sent, SmsResponse.number')
 	    ));
 
