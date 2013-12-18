@@ -2758,14 +2758,14 @@ class InstitutionSitesController extends AppController {
 				'BankBranch'=>array('name'),
 				'InstitutionSiteBankAccount'=>array('account_name','account_number','active')
 			)
-		),/*
+		),
 		'More' => array(
 			'Model' => 'InstitutionSiteCustomValue',
 			'fields' => array(
 				'InstitutionSiteCustomField'=>array('name'),
 				'InstitutionSiteCustomValue'=>array('custom_value')
 			)
-		),*/
+		),
 		'Classes - Students' => array(
 			'Model' => 'InstitutionSiteClass',
 			'fields' => array(
@@ -2913,8 +2913,8 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Reports - General');
 		$data= array('Reports - General' => array(
 			array('name' => 'Overview', 'types' => array('CSV')),
-			array('name' => 'Bank Accounts', 'types' => array('CSV')),
-			array('name' => 'More', 'types' => array('CSV'))
+			array('name' => 'Bank Accounts', 'types' => array('CSV'))/*,
+			array('name' => 'More', 'types' => array('CSV'))*/
 		));
 		$this->set('data', $data);
 		$this->render('Reports/general');
