@@ -70,7 +70,9 @@ class SetupController extends AppController {
 		'LeaveStatus',
 		'Country',
 		'IdentityType',
-		'Language'
+		'Language',
+		'ContactType',
+		'ExtracurricularType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -88,8 +90,8 @@ class SetupController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->bodyTitle = 'Settings';
-		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
+		$this->bodyTitle = 'Administration';
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 	}
 	
 	public function index() {
@@ -257,11 +259,19 @@ class SetupController extends AppController {
 		$lookup[] = array('Languages' => array(
 			'items' => $this->Language->getLookupVariables()
 		));
+		$lookup[] = array('Contact Types' => array(
+			'view' => 'contact_types',
+			'items' => $this->ContactType->getLookupVariables(),
+			'edit' => 'contact_types_edit',
+		));
 		
+		$lookup[] = array('Extracurricular Type' => array('items' => $this->ExtracurricularType->getLookupVariables()));
 		// Student
-		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
+		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
+		
+		
 
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
@@ -334,6 +344,7 @@ class SetupController extends AppController {
 		));
 		// End Staff
 		
+                
 		$categoryList = array();
 		
 		foreach($lookup as $i => &$category) {
@@ -470,6 +481,16 @@ class SetupController extends AppController {
 	}
 	
 	public function setupVariablesAddBank() {
+		$this->layout = 'ajax';
+		$model = $this->params->query['model'];
+		$order = $this->params->query['order'] + 1;
+		$index = $this->params->query['index'];
+		$conditions = isset($this->params->query['conditions']) ? $this->params->query['conditions'] : array();
+		
+		$this->set('params', array($model, $order, $index, $conditions));
+	}
+
+	public function setupVariablesAddContactType() {
 		$this->layout = 'ajax';
 		$model = $this->params->query['model'];
 		$order = $this->params->query['order'] + 1;
