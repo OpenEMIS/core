@@ -70,7 +70,7 @@ class MpdfComponent extends Component {
 		// mPDF class has many notices - suppress them
 		error_reporting(0);
 		// import mPDF
-		App::import('Vendor', 'mpdf/mpdf');
+		App::import('Vendor', 'MPDF54/mpdf');
 		if (!class_exists('mPDF'))
 			throw new CakeException('Vendor class mPDF not found!');
 		// override default values
