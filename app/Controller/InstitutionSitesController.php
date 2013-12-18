@@ -2758,14 +2758,14 @@ class InstitutionSitesController extends AppController {
 				'BankBranch'=>array('name'),
 				'InstitutionSiteBankAccount'=>array('account_name','account_number','active')
 			)
-		),
+		),/*
 		'More' => array(
 			'Model' => 'InstitutionSiteCustomValue',
 			'fields' => array(
 				'InstitutionSiteCustomField'=>array('name'),
 				'InstitutionSiteCustomValue'=>array('custom_value')
 			)
-		),
+		),*/
 		'Classes - Students' => array(
 			'Model' => 'InstitutionSiteClass',
 			'fields' => array(
