@@ -1,7 +1,7 @@
 <?php echo $this->element('breadcrumb'); ?>
 <?php echo $this->Html->css('table', 'stylesheet', array('inline' => false)); ?>
 <?php echo $this->Html->script('app.date', false); ?>
-<?php echo $this->Html->script('/Teachers/js/salary', false); ?>
+<?php echo $this->Html->script('/Teachers/js/salary'); ?>
 <div id="salary" class="content_wrapper edit add">
    <h1>
         <span><?php echo __('Salaries'); ?></span>
@@ -35,7 +35,7 @@
         <div class="value"><?php echo $this->Form->input('additions'); ?></div>
     </div>
     <div class="table full_width">
-        <div class="delete deleteAddition" name="data[Delete][{index}][id]"></div>
+        <div class="delete deleteAddition" name="data[DeleteAddition][{index}][id]"></div>
         <div class="table_head">
             <div class="table_cell cell_title"><?php echo __('Type'); ?></div>
             <div class="table_cell"><?php echo __('Amount'); ?></div>
@@ -59,7 +59,7 @@
         <div class="value"><?php echo $this->Form->input('deductions'); ?></div>
     </div>
     <div class="table full_width">
-        <div class="delete deleteAddition" name="data[Delete][{index}][id]"></div>
+        <div class="delete deleteDeduction" name="data[DeleteDeduction][{index}][id]"></div>
         <div class="table_head">
             <div class="table_cell cell_title"><?php echo __('Type'); ?></div>
             <div class="table_cell"><?php echo __('Amount'); ?></div>
