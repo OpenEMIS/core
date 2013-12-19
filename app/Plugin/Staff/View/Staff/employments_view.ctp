@@ -8,7 +8,7 @@ echo $this->Html->script('search', false);
 
 <div id="employmentView" class="content_wrapper">
     <h1>
-        <span><?php echo __('Employments'); ?></span>
+        <span><?php echo __('Employment'); ?></span>
         <?php
         $data = $employmentObj[0]['StaffEmployment'];
         echo $this->Html->link(__('List'), array('action' => 'employments', $data['staff_id']), array('class' => 'divider'));
