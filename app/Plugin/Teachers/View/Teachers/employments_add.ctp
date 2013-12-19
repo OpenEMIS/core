@@ -3,7 +3,7 @@
 
 <div id="employment" class="content_wrapper edit add">
    <h1>
-        <span><?php echo __('Employments'); ?></span>
+        <span><?php echo __('Employment'); ?></span>
         <?php 
         if ($_edit) {
             echo $this->Html->link(__('Back'), array('action' => 'employments'), array('class' => 'divider'));
