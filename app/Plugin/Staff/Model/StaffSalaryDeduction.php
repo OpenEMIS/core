@@ -14,12 +14,27 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppModel', 'Model');
+class StaffSalaryDeduction extends StaffAppModel {
+	public $belongsTo = array(
+		'SalaryDeductionType',
+		'StaffSalary'
+	);
 
-class InstitutionSector extends AppModel {
-	var $hasMany = array('Institution');
-	
-	public function findListAsSubgroups() {
-		return $this->findList(true);
-	}
+
+	public $validate = array(
+		'salary_deduction_type_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select an Deduction Type'
+			)
+		),
+		'deduction_amount' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Deduction Amount'
+			)
+		)
+	);
 }
