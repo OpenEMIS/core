@@ -87,7 +87,7 @@ var Salary = {
             },
             success: function (data, textStatus) {
                 var callback = function() {
-                    $('.additions').prepend(data);
+                    $('.additions').append(data);
 
                 };
                 $.unmask({id: maskId, callback: callback});
@@ -140,7 +140,7 @@ var Salary = {
             },
             success: function (data, textStatus) {
                 var callback = function() {
-                    $('.deductions').prepend(data);
+                    $('.deductions').append(data);
 
                 };
                 $.unmask({id: maskId, callback: callback});
