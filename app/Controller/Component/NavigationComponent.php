@@ -257,6 +257,12 @@ class NavigationComponent extends Component {
 					'_controller' => 'Survey',
 					$this->createLink('New', 'Survey', 'index', 'index$|^add$|^edit$'),
 					$this->createLink('Completed', 'Survey', 'import', 'import$|^synced$')
+				),
+				'SMS' => array(
+					'_controller' => 'Sms',
+					$this->createLink('Messages', 'Sms', 'messages'),
+					$this->createLink('Responses', 'Sms', 'responses'),
+					$this->createLink('Logs', 'Sms', 'logs')
 				)
 			)
 		);
