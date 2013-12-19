@@ -1602,12 +1602,23 @@ class InstitutionSitesController extends AppController {
 							$msg .= '<br>' . __('Please choose another position number.');
 							$this->Utility->alert($msg, array('type' => 'warn'));
 							$insert = false;
-						}
+                                                }else{
+                                                    if(isset($data['FTE']) && strlen($data['FTE']) > 0){
+                                                        $PTE = floatval($data['FTE']);
+                                                        
+                                                        if($PTE < 0.01 || $PTE > 1){
+                                                            $msg = 'FTE value should be from 0.01 to 1.00';
+                                                            $this->Utility->alert($msg, array('type' => 'warn'));
+                                                            $insert = false;
+                                                        }
+                                                    }
+                                                    
+                                                }
 					}
 				} else {
 					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
-				if($insert) {
+				if(isset($insert) && $insert == true) {
 					$this->InstitutionSiteTeacher->save($data);
 					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
 				}
@@ -1666,11 +1677,22 @@ class InstitutionSitesController extends AppController {
 					$this->InstitutionSiteTeacher->deleteAll(array('InstitutionSiteTeacher.id' => $delete), false);
 				}
 				$data = $this->data['InstitutionSiteTeacher'];
+                                
+                                $update_proceed = true;
+                                
 				// checking for existing position number
 				foreach($data as $i => $row) {
 					if(!array_key_exists('id', $row)) {
 						if($row['position_no'] === __('Position No')) {
 							$data[$i]['position_no'] = null;
+                                                        
+                                                        if(isset($row['FTE']) && strlen($row['FTE']) > 0){
+                                                            $PTE = floatval($row['FTE']);
+
+                                                            if($PTE < 0.01 || $PTE > 1){
+                                                                unset($data[$i]);
+                                                            }
+                                                        }
 						} else {
 							$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($row['position_no'], $row['start_date']);
 							if(!$obj) {
@@ -1684,12 +1706,35 @@ class InstitutionSitesController extends AppController {
 								$msg .= '<br>' . __('Please choose another position number.');
 								$this->Utility->alert($msg, array('type' => 'warn'));
 								unset($data[$i]);
-							}
+                                                        }else{
+                                                            if(isset($row['FTE']) && strlen($row['FTE']) > 0){
+                                                                $PTE = floatval($row['FTE']);
+
+                                                                if($PTE < 0.01 || $PTE > 1){
+                                                                    unset($data[$i]);
+                                                                }
+                                                            }
+                                                        }
 						}
-					}
+                                        }else{
+                                            if(isset($row['FTE']) && strlen($row['FTE']) > 0){
+                                                $PTE = floatval($row['FTE']);
+
+                                                if($PTE < 0.01 || $PTE > 1){
+                                                    $msg = 'FTE value should be from 0.01 to 1.00';
+                                                    $this->Utility->alert($msg, array('type' => 'warn'));
+                                                    $update_proceed = false;
+                                                }
+                                            }
+                                        }
 				}
-				$this->InstitutionSiteTeacher->saveEmployment($data, $this->institutionSiteId, $teacherId);
-				$this->redirect(array('action' => 'teachersView', $teacherId));
+                                if($update_proceed == true){
+                                    $this->InstitutionSiteTeacher->saveEmployment($data, $this->institutionSiteId, $teacherId);
+                                    $this->redirect(array('action' => 'teachersView', $teacherId));
+                                }else{
+                                    $this->redirect(array('action' => 'teachersEdit', $teacherId));
+                                }
+                                
 			}
 		} else {
 			$this->redirect(array('action' => 'teachers'));
