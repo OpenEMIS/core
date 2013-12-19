@@ -1792,13 +1792,15 @@ class TeachersController extends TeachersAppController {
                 $this->TeacherSalaryDeduction->saveAll($this->request->data['TeacherSalaryDeduction'], array('validate' => 'only'));
             }
 
-
             if (!$this->TeacherSalary->validationErrors && 
             !$this->TeacherSalaryAddition->validationErrors &&
             !$this->TeacherSalaryDeduction->validationErrors){
                 $this->TeacherSalary->saveAll($this->request->data);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'salaries'));
+            }else{
+                $this->Utility->alert($this->Utility->getMessage('ADD_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
+                pr('test');
             }
         }
 
@@ -1872,6 +1874,8 @@ class TeachersController extends TeachersAppController {
                 $this->TeacherSalary->saveAll($this->request->data);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'salariesView', $salaryId));
+            }else{
+                 $this->Utility->alert($this->Utility->getMessage('UPDATE_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
             }
          }
 

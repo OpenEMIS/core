@@ -32,6 +32,16 @@ echo $this->Html->script('search', false);
         <div class="value"><?php echo $data['gross_salary']; ?></div>
     </div>
     
+    <div class="row">
+        <div class="label"><?php echo __('Net Salary'); ?></div>
+        <div class="value"><?php echo $data['net_salary']; ?></div>
+    </div>
+
+      <div class="row">
+        <div class="label"><?php echo __('Comment'); ?></div>
+        <div class="value"><?php echo $data['comment']; ?></div>
+    </div>
+
   <fieldset class="section_group">
     <legend><?php echo __('Additions');?></legend>
     <div class="table full_width">
@@ -103,16 +113,6 @@ echo $this->Html->script('search', false);
         </div>
     </div>
     </fieldset>
-
-    <div class="row">
-        <div class="label"><?php echo __('Net Salary'); ?></div>
-        <div class="value"><?php echo $data['net_salary']; ?></div>
-    </div>
-
-      <div class="row">
-        <div class="label"><?php echo __('Comment'); ?></div>
-        <div class="value"><?php echo $data['comment']; ?></div>
-    </div>
 
     
    <div class="row">

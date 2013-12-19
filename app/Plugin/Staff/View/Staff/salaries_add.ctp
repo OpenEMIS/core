@@ -28,6 +28,16 @@
         <div class="label"><?php echo __('Gross Salary'); ?></div>
         <div class="value"><?php echo $this->Form->input('StaffSalary.gross_salary', array('class'=>'default total_gross_salary')); ?></div>
     </div>
+    <div class="row">
+        <div class="label"><?php echo __('Net Salary'); ?></div>
+        <div class="value"><?php echo $this->Form->input('StaffSalary.net_salary', array('class'=>'default total_net_salary')); ?></div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Comment'); ?></div>
+        <div class="value">
+            <?php echo $this->Form->input('StaffSalary.comment', array('type'=>'textarea')); ?>
+        </div>
+    </div>
         
     <fieldset class="section_group">
     <legend><?php echo __('Additions');?></legend>
@@ -41,6 +51,7 @@
         </div>
             
         <div class="table_body additions">
+        <?php echo $this->Form->input('StaffSalaryAdditionFiller', array('type'=>'hidden', 'label' => false, 'div'=>false)); ?>
         <?php
             $totalAdditions = 0;
             if(isset($this->request->data['StaffSalaryAddition']) && !empty($this->data['StaffSalaryAddition'])){ 
@@ -95,6 +106,7 @@
             <div class="table_cell cell_delete">&nbsp;</div>
         </div>
         <div class="table_body deductions">
+            <?php echo $this->Form->input('StaffSalaryDeductionFiller', array('type'=>'hidden', 'label' => false, 'div'=>false)); ?>
             <?php
             $totalDeductions = 0;
             if(isset($this->request->data['StaffSalaryDeduction']) && !empty($this->data['StaffSalaryDeduction'])){ 
@@ -142,16 +154,6 @@
     </fieldset>
 
 
-    <div class="row">
-        <div class="label"><?php echo __('Net Salary'); ?></div>
-        <div class="value"><?php echo $this->Form->input('StaffSalary.net_salary', array('class'=>'default total_net_salary')); ?></div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Comment'); ?></div>
-        <div class="value">
-            <?php echo $this->Form->input('StaffSalary.comment', array('type'=>'textarea')); ?>
-        </div>
-    </div>
     <div class="controls view_controls">
         <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'salaries'), array('class' => 'btn_cancel btn_left')); ?>
