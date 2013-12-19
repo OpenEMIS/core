@@ -49,8 +49,9 @@ class StaffNavigationComponent extends Component {
 					$navigation->createLink('Location', $controller, 'location'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
 					$navigation->createLink('Leave', $controller, 'leaves'),
-					$navigation->createLink('Behaviour', $controller, 'behaviour'),
-					$navigation->createLink('Extracurricular', $controller, 'extracurricular')
+					$navigation->createLink('Behaviour', $controller, 'behaviour'),   
+					$navigation->createLink('Extracurricular', $controller, 'extracurricular'),
+                    $navigation->createLink('Employment', $controller, 'employments')
 				)
 			)
 		);

@@ -51,6 +51,7 @@ class StaffController extends StaffAppController {
             'Staff.StaffLanguage',
             'Staff.StaffContact',
 			'Staff.StaffExtracurricular',
+            'Staff.StaffEmployment',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -63,7 +64,8 @@ class StaffController extends StaffAppController {
             'Language',
             'ContactOption',
             'ContactType',
-			'ExtracurricularType'
+			'ExtracurricularType',
+            'EmploymentType'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1645,5 +1647,82 @@ class StaffController extends StaffAppController {
 			} 
 		}
 	}
+
+
+
+    public function employments(){
+        $this->Navigation->addCrumb('Employments');
+        $data = $this->StaffEmployment->find('all',array('conditions'=>array('StaffEmployment.staff_id'=>$this->staffId)));
+        $this->set('list', $data);
+    }
+    
+    public function employmentsAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffEmployment->create();
+            $this->request->data['StaffEmployment']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffEmployment'];
+
+            if ($this->StaffEmployment->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'employments'));
+            }
+        }
+
+        $employmentTypeOptions = $this->EmploymentType->getOptions();
+        $this->set('employmentTypeOptions', $employmentTypeOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function employmentsView() {
+        $employmentId = $this->params['pass'][0];
+        $employmentObj = $this->StaffEmployment->find('all',array('conditions'=>array('StaffEmployment.id' => $employmentId)));
+        
+        if(!empty($employmentObj)) {
+            $this->Navigation->addCrumb('Employment Details');
+            
+            $this->Session->write('StaffEmploymentId', $employmentId);
+            $this->set('employmentObj', $employmentObj);
+        } 
+    }
+    
+    public function employmentsEdit() {
+        $employmentId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $employmentObj = $this->StaffEmployment->find('first',array('conditions'=>array('StaffEmployment.id' => $employmentId)));
+  
+            if(!empty($employmentObj)) {
+                $this->Navigation->addCrumb('Edit Employment Details');
+                $this->request->data = $employmentObj;
+               
+            }
+         } else {
+            $employmentData = $this->data['StaffEmployment'];
+            $employmentData['staff_id'] = $this->staffId;
+            
+            if ($this->StaffEmployment->save($employmentData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'employmentsView', $employmentData['id']));
+            }
+         }
+
+        $employmentTypeOptions = $this->EmploymentType->getOptions();
+        $this->set('employmentTypeOptions', $employmentTypeOptions);
+
+        $this->set('id', $employmentId);  
+    }
+
+    public function employmentsDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffEmploymentId')) {
+            $id = $this->Session->read('StaffEmploymentId');
+            $staffId = $this->Session->read('StaffId');
+            $employmentTypeId = $this->StaffEmployment->field('employment_type_id', array('StaffEmployment.id' => $id));
+            $name = $this->EmploymentType->field('name', array('EmploymentType.id' => $employmentTypeId));
+            $this->StaffEmployment->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'employments', $staffId));
+        }
+    }
 }
+
 

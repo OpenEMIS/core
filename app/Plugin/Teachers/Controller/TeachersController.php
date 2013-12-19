@@ -23,12 +23,12 @@ class TeachersController extends TeachersAppController {
     public $teacherObj;
 
     public $uses = array(
-	'Area',
+	    'Area',
         'Institution',
-	'InstitutionSite',
+	    'InstitutionSite',
         'Bank',
         'BankBranch',
-	'Teachers.TeacherBankAccount',
+	    'Teachers.TeacherBankAccount',
         'InstitutionSiteTeacher',
         'InstitutionSiteType',
         'Teachers.Teacher',
@@ -44,25 +44,27 @@ class TeachersController extends TeachersAppController {
         'QualificationInstitution',
         'QualificationSpecialisation',
         'Teachers.TeacherAttendance',
-	'Teachers.TeacherLeave',
-	'Teachers.TeacherLeaveType',
+	    'Teachers.TeacherLeave',
+	    'Teachers.TeacherLeaveType',
         'Teachers.TeacherBehaviour',
         'Teachers.TeacherBehaviourCategory',
         'Teachers.TeacherComment',
         'Teachers.TeacherNationality',
-	'Teachers.TeacherIdentity',
+	    'Teachers.TeacherIdentity',
         'Teachers.TeacherLanguage',
         'Teachers.TeacherContact',
+        'Teachers.TeacherEmployment',
         'Country',
-	'IdentityType',
+	    'IdentityType',
         'ContactType',
         'ContactOption',
         'SchoolYear',
         'Language',
-	'ConfigItem',
+	    'ConfigItem',
         'LeaveStatus',
-	'Teachers.TeacherExtracurricular',
-	'ExtracurricularType'
+	    'Teachers.TeacherExtracurricular',
+	    'ExtracurricularType',
+        'EmploymentType'
 	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1764,5 +1766,80 @@ class TeachersController extends TeachersAppController {
 			} 
 		}
 	}
+
+
+    public function employments(){
+        $this->Navigation->addCrumb('Employments');
+        $data = $this->TeacherEmployment->find('all',array('conditions'=>array('TeacherEmployment.teacher_id'=>$this->teacherId)));
+        $this->set('list', $data);
+    }
+    
+    public function employmentsAdd() {
+        if ($this->request->is('post')) {
+            $this->TeacherEmployment->create();
+            $this->request->data['TeacherEmployment']['teacher_id'] = $this->teacherId;
+            
+            $data = $this->data['TeacherEmployment'];
+
+            if ($this->TeacherEmployment->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'employments'));
+            }
+        }
+
+        $employmentTypeOptions = $this->EmploymentType->getOptions();
+        $this->set('employmentTypeOptions', $employmentTypeOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function employmentsView() {
+        $employmentId = $this->params['pass'][0];
+        $employmentObj = $this->TeacherEmployment->find('all',array('conditions'=>array('TeacherEmployment.id' => $employmentId)));
+        
+        if(!empty($employmentObj)) {
+            $this->Navigation->addCrumb('Employment Details');
+            
+            $this->Session->write('TeacherEmploymentId', $employmentId);
+            $this->set('employmentObj', $employmentObj);
+        } 
+    }
+    
+    public function employmentsEdit() {
+        $employmentId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $employmentObj = $this->TeacherEmployment->find('first',array('conditions'=>array('TeacherEmployment.id' => $employmentId)));
+  
+            if(!empty($employmentObj)) {
+                $this->Navigation->addCrumb('Edit Employment Details');
+                $this->request->data = $employmentObj;
+               
+            }
+         } else {
+            $employmentData = $this->data['TeacherEmployment'];
+            $employmentData['teacher_id'] = $this->teacherId;
+            
+            if ($this->TeacherEmployment->save($employmentData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'employmentsView', $employmentData['id']));
+            }
+         }
+
+        $employmentTypeOptions = $this->EmploymentType->getOptions();
+        $this->set('employmentTypeOptions', $employmentTypeOptions);
+
+        $this->set('id', $employmentId);  
+    }
+
+    public function employmentsDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherEmploymentId')) {
+            $id = $this->Session->read('TeacherEmploymentId');
+            $teacherId = $this->Session->read('TeacherId');
+            $employmentTypeId = $this->TeacherEmployment->field('employment_type_id', array('TeacherEmployment.id' => $id));
+            $name = $this->EmploymentType->field('name', array('EmploymentType.id' => $employmentTypeId));
+            $this->TeacherEmployment->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'employments', $teacherId));
+        }
+    }
 }
 

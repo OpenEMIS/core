@@ -72,7 +72,8 @@ class SetupController extends AppController {
 		'IdentityType',
 		'Language',
 		'ContactType',
-		'ExtracurricularType'
+		'ExtracurricularType',
+		'EmploymentType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -264,6 +265,12 @@ class SetupController extends AppController {
 			'items' => $this->ContactType->getLookupVariables(),
 			'edit' => 'contact_types_edit',
 		));
+
+
+		$lookup[] = array('Employment Types' => array(
+			'items' => $this->EmploymentType->getLookupVariables(),
+		));
+
 		
 		$lookup[] = array('Extracurricular Type' => array('items' => $this->ExtracurricularType->getLookupVariables()));
 		// Student
