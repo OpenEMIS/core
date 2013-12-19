@@ -15,15 +15,25 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TeacherSalaryAddition extends TeachersAppModel {
-		public $belongsTo = array(
-		'Teacher',
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'foreignKey' => 'modified_user_id'
+	public $belongsTo = array(
+		'SalaryAdditionType',
+		'TeacherSalary'
+	);
+
+	public $validate = array(
+		'salary_addition_type_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select an Addition Type'
+			)
 		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'foreignKey' => 'created_user_id'
+		'addition_amount' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Addition Amount'
+			)
 		)
 	);
 }

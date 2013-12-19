@@ -6,11 +6,11 @@ $index = $order;
 <div data-id="<?php echo $index; ?>" class="table_row new_row <?php echo $order%2==0 ? 'even' : ''; ?>">
 
     <div class="table_cell">
-         <?php echo $this->Form->input('TeacherSalaryAddition.'.$index.'.id', array('type'=>'hidden', 'class'=>'addition-control-id', 'label' => false, 'value'=>"")); ?>
-        <?php echo $this->Form->input('TeacherSalaryAddition.'.$index.'.salary_addition_type_id', array('class'=>'default', 'label' => false, 'options' => $categories, 'empty'=>__('--Select'))); ?>
+         <?php echo $this->Form->input('StaffSalaryAddition.'.$index.'.id', array('type'=>'hidden', 'class'=>'addition-control-id', 'label' => false, 'value'=>"")); ?>
+        <?php echo $this->Form->input('StaffSalaryAddition.'.$index.'.salary_addition_type_id', array('class'=>'default', 'label' => false, 'options' => $categories, 'empty'=>__('--Select'))); ?>
     </div>
     <div class="table_cell">
-        <?php echo $this->Form->input('TeacherSalaryAddition.'.$index.'.addition_amount', 
+        <?php echo $this->Form->input('StaffSalaryAddition.'.$index.'.addition_amount', 
             array(
                 'class'=>'default addition_amount', 
                 'label' => false,

@@ -14,9 +14,9 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherSalary extends TeachersAppModel {
+class StaffSalary extends StaffAppModel {
 	public $belongsTo = array(
-		'Teacher',
+		'Staff',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -33,14 +33,14 @@ class TeacherSalary extends TeachersAppModel {
  * @var array
  */
 	public $hasMany = array(
-		'TeacherSalaryAddition' => array(
-			'className' => 'TeacherSalaryAddition',
-			'foreignKey' => 'teacher_salary_id',
+		'StaffSalaryAddition' => array(
+			'className' => 'StaffSalaryAddition',
+			'foreignKey' => 'staff_salary_id',
 			'dependent' => true
 		),
-		'TeacherSalaryDeduction' => array(
-			'className' => 'TeacherSalaryDeduction',
-			'foreignKey' => 'teacher_salary_id',
+		'StaffSalaryDeduction' => array(
+			'className' => 'StaffSalaryDeduction',
+			'foreignKey' => 'staff_salary_id',
 			'dependent' => true
 		)
 	);
@@ -68,6 +68,7 @@ class TeacherSalary extends TeachersAppModel {
 			)
 		)
 	);
+
 
 
 }

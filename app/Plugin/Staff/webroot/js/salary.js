@@ -76,7 +76,7 @@ var Salary = {
         var table = $('#salary');
         var size = $('.additions div.table_row').length + $('.deleteAddition input').length;
         var maskId;
-        var url = getRootURL() + "Teachers/salaryAdditionAdd";
+        var url = getRootURL() + "Staff/salaryAdditionAdd";
         $.ajax({
             type: 'GET',
             dataType: 'text',
@@ -129,7 +129,7 @@ var Salary = {
         var table = $('#salary');
         var size = $('.deductions div.table_row').length + $('.deleteDeduction input').length;
         var maskId;
-        var url = getRootURL() + "Teachers/salaryDeductionAdd";
+        var url = getRootURL() + "Staff/salaryDeductionAdd";
         $.ajax({
             type: 'GET',
             dataType: 'text',

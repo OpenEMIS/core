@@ -10,8 +10,8 @@ echo $this->Html->script('search', false);
     <h1>
         <span><?php echo __('Salaries'); ?></span>
         <?php
-        $data = $salaryObj[0]['TeacherSalary'];
-        echo $this->Html->link(__('List'), array('action' => 'salaries', $data['teacher_id']), array('class' => 'divider'));
+        $data = $salaryObj[0]['StaffSalary'];
+        echo $this->Html->link(__('List'), array('action' => 'salaries', $data['staff_id']), array('class' => 'divider'));
         if($_edit) {
             echo $this->Html->link(__('Edit'), array('action' => 'salariesEdit', $data['id']), array('class' => 'divider'));
         }
@@ -42,8 +42,8 @@ echo $this->Html->script('search', false);
         <div class="table_body">
             <?php
             $totalAdditions = 0;
-            if(isset($salaryObj[0]['TeacherSalaryAddition']) && !empty($salaryObj[0]['TeacherSalaryAddition'])){ 
-            foreach($salaryObj[0]['TeacherSalaryAddition'] as $key=>$value){ ?>
+            if(isset($salaryObj[0]['StaffSalaryAddition']) && !empty($salaryObj[0]['StaffSalaryAddition'])){ 
+            foreach($salaryObj[0]['StaffSalaryAddition'] as $key=>$value){ ?>
                 <?php 
                 $index = $key;
                 $order = $index;
@@ -78,8 +78,8 @@ echo $this->Html->script('search', false);
         <div class="table_body">
             <?php
             $totalDeductions = 0;
-            if(isset($salaryObj[0]['TeacherSalaryDeduction']) && !empty($salaryObj[0]['TeacherSalaryDeduction'])){ 
-            foreach($salaryObj[0]['TeacherSalaryDeduction'] as $key=>$value){ ?>
+            if(isset($salaryObj[0]['StaffSalaryDeduction']) && !empty($salaryObj[0]['StaffSalaryDeduction'])){ 
+            foreach($salaryObj[0]['StaffSalaryDeduction'] as $key=>$value){ ?>
                 <?php 
                 $index = $key;
                 $order = $index;

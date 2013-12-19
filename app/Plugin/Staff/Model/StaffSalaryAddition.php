@@ -14,60 +14,26 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherSalary extends TeachersAppModel {
+class StaffSalaryAddition extends StaffAppModel {
 	public $belongsTo = array(
-		'Teacher',
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'foreignKey' => 'modified_user_id'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'foreignKey' => 'created_user_id'
-		)
+		'SalaryAdditionType',
+		'StaffSalary'
 	);
 
-/**
- * hasMany associations
- *
- * @var array
- */
-	public $hasMany = array(
-		'TeacherSalaryAddition' => array(
-			'className' => 'TeacherSalaryAddition',
-			'foreignKey' => 'teacher_salary_id',
-			'dependent' => true
-		),
-		'TeacherSalaryDeduction' => array(
-			'className' => 'TeacherSalaryDeduction',
-			'foreignKey' => 'teacher_salary_id',
-			'dependent' => true
-		)
-	);
-	
 	public $validate = array(
-		'salary_date' => array(
+		'salary_addition_type_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please select a Salary Date'
+				'message' => 'Please select an Addition Type'
 			)
 		),
-		'gross_salary' => array(
+		'addition_amount' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Gross Salary'
-			)
-		),
-		'net_salary' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Net Salary'
+				'message' => 'Please enter a valid Addition Amount'
 			)
 		)
 	);
-
-
 }
