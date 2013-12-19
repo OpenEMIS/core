@@ -1232,7 +1232,7 @@ class InstitutionSitesController extends AppController {
 					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
 				} else {
 					$selectedItem = isset($this->params['pass'][2]) ? $this->params['pass'][2] : key($items);
-					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem);
+					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem, $assessmentId);
 					if(empty($data)) {
 						$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
 					}
@@ -1265,7 +1265,7 @@ class InstitutionSitesController extends AppController {
 					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
 				} else {
 					$selectedItem = isset($this->params['pass'][2]) ? $this->params['pass'][2] : key($items);
-					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem);
+					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem, $assessmentId);
 					if($this->request->is('get')) {
 						if(empty($data)) {
 							$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
