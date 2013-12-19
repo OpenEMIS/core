@@ -947,6 +947,9 @@ class InstitutionSitesController extends AppController {
 			$this->set('grades', $grades);
 			$this->set('students', $students);
 			$this->set('teachers', $teachers);
+                        $this->set('no_of_seats', $classObj['InstitutionSiteClass']['no_of_seats']);
+                        $this->set('no_of_shifts', $classObj['InstitutionSiteClass']['no_of_shifts']);
+                        
             $this->set('subjects', $subjects);
 		} else {
 			$this->redirect(array('action' => 'classesList'));
@@ -972,6 +975,9 @@ class InstitutionSitesController extends AppController {
 			$this->set('grades', $grades);
 			$this->set('students', $students);
 			$this->set('teachers', $teachers);
+                        $this->set('no_of_seats', $classObj['InstitutionSiteClass']['no_of_seats']);
+                        $this->set('no_of_shifts', $classObj['InstitutionSiteClass']['no_of_shifts']);
+                        
             $this->set('subjects', $subjects);
 		} else {
 			$this->redirect(array('action' => 'classesList'));
