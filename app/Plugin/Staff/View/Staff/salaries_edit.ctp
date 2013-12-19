@@ -5,7 +5,7 @@
 
 <div id="identity" class="content_wrapper edit add">
      <h1>
-        <span><?php echo __('Salaries'); ?></span>
+        <span><?php echo __('Salary'); ?></span>
         <?php 
         if ($_edit) {
             echo $this->Html->link(__('Back'), array('action' => 'salariesView', $id), array('class' => 'divider'));
