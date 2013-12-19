@@ -45,7 +45,7 @@ class TeachersController extends TeachersAppController {
         'QualificationSpecialisation',
         'Teachers.TeacherAttendance',
 	    'Teachers.TeacherLeave',
-	    'Teachers.TeacherLeaveType',
+        'Teachers.TeacherLeaveType',
         'Teachers.TeacherBehaviour',
         'Teachers.TeacherBehaviourCategory',
         'Teachers.TeacherComment',
@@ -54,6 +54,9 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherLanguage',
         'Teachers.TeacherContact',
         'Teachers.TeacherEmployment',
+        'Teachers.TeacherSalary',
+        'Teachers.TeacherSalaryAddition',
+        'Teachers.TeacherSalaryDeduction',
         'Country',
 	    'IdentityType',
         'ContactType',
@@ -64,7 +67,9 @@ class TeachersController extends TeachersAppController {
         'LeaveStatus',
 	    'Teachers.TeacherExtracurricular',
 	    'ExtracurricularType',
-        'EmploymentType'
+        'EmploymentType',
+        'SalaryAdditionType',
+        'SalaryDeductionType'
 	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1767,7 +1772,6 @@ class TeachersController extends TeachersAppController {
 		}
 	}
 
-
     public function employments(){
         $this->Navigation->addCrumb('Employments');
         $data = $this->TeacherEmployment->find('all',array('conditions'=>array('TeacherEmployment.teacher_id'=>$this->teacherId)));
@@ -1839,6 +1843,153 @@ class TeachersController extends TeachersAppController {
             $this->TeacherEmployment->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'employments', $teacherId));
+        }
+    }
+    
+    public function salaries(){
+        $this->Navigation->addCrumb('Salaries');
+        $data = $this->TeacherSalary->find('all',array('conditions'=>array('TeacherSalary.teacher_id'=>$this->teacherId)));
+        $this->set('list', $data);
+    }
+    
+    public function salariesAdd() {
+        if ($this->request->is('post')) {
+            $this->request->data['TeacherSalary']['teacher_id'] = $this->teacherId;
+
+            $this->TeacherSalary->create(); 
+   
+            $this->TeacherSalary->saveAll($this->request->data['TeacherSalary'], array('validate' => 'only'));
+            if(isset($this->request->data['TeacherSalaryAddition'])){
+                $this->TeacherSalaryAddition->saveAll($this->request->data['TeacherSalaryAddition'], array('validate' => 'only'));
+            }
+            if(isset($this->request->data['TeacherSalaryDeduction'])){
+                $this->TeacherSalaryDeduction->saveAll($this->request->data['TeacherSalaryDeduction'], array('validate' => 'only'));
+            }
+
+
+            if (!$this->TeacherSalary->validationErrors && 
+            !$this->TeacherSalaryAddition->validationErrors &&
+            !$this->TeacherSalaryDeduction->validationErrors){
+                $this->TeacherSalary->saveAll($this->request->data);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'salaries'));
+            }
+        }
+
+        $visible = true;
+        $additionOptions = $this->SalaryAdditionType->findList($visible);
+        $this->set('additionOptions', $additionOptions);
+        $deductionOptions = $this->SalaryDeductionType->findList($visible);
+        $this->set('deductionOptions', $deductionOptions);
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function salariesView() {
+        $salaryId = $this->params['pass'][0];
+        $salaryObj = $this->TeacherSalary->find('all',array('conditions'=>array('TeacherSalary.id' => $salaryId)));
+        
+        if(!empty($salaryObj)) {
+            $this->Navigation->addCrumb('Salary Details');
+            
+            $this->Session->write('TeacherSalaryId', $salaryId);
+            $this->set('salaryObj', $salaryObj);
+            $visible = true;
+            $additionOptions = $this->SalaryAdditionType->findList($visible);
+            $this->set('additionOptions', $additionOptions);
+            $deductionOptions = $this->SalaryDeductionType->findList($visible);
+            $this->set('deductionOptions', $deductionOptions);
+        } 
+    }
+
+    public function salariesEdit() {
+        $salaryId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $salaryObj = $this->TeacherSalary->find('first',array('conditions'=>array('TeacherSalary.id' => $salaryId)));
+  
+            if(!empty($salaryObj)) {
+                $this->Navigation->addCrumb('Edit Salary Details');
+                $this->request->data = $salaryObj;
+               
+            }
+         } else {
+            if(isset($this->request->data['DeleteAddition'])){
+                $deletedId = array();
+                foreach($this->request->data['DeleteAddition'] as $key=>$value){
+                    $deletedId[] = $value['id'];
+                    pr('test');
+                    unset($this->request->data['TeacherSalaryAddition'][$key]);
+                }
+                $this->TeacherSalaryAddition->deleteAll(array('TeacherSalaryAddition.id' => $deletedId, 'TeacherSalaryAddition.teacher_salary_id'=> $salaryId), false);
+            }
+            if(isset($this->request->data['DeleteDeduction'])){
+                $deletedId = array();
+                foreach($this->request->data['DeleteDeduction'] as $key=>$value){
+                    $deletedId[] = $value['id'];
+                    unset($this->request->data['TeacherSalaryDeduction'][$key]);
+                }
+                $this->TeacherSalaryDeduction->deleteAll(array('TeacherSalaryDeduction.id' => $deletedId, 'TeacherSalaryDeduction.teacher_salary_id'=> $salaryId), false);
+            }
+            $this->request->data['TeacherSalary']['teacher_id'] = $this->teacherId;
+
+            $this->TeacherSalary->saveAll($this->request->data['TeacherSalary'], array('validate' => 'only'));
+            if(isset($this->request->data['TeacherSalaryAddition'])){
+                $this->TeacherSalaryAddition->saveAll($this->request->data['TeacherSalaryAddition'], array('validate' => 'only'));
+            }
+            if(isset($this->request->data['TeacherSalaryDeduction'])){
+                $this->TeacherSalaryDeduction->saveAll($this->request->data['TeacherSalaryDeduction'], array('validate' => 'only'));
+            }
+
+            if (!$this->TeacherSalary->validationErrors && 
+            !$this->TeacherSalaryAddition->validationErrors &&
+            !$this->TeacherSalaryDeduction->validationErrors){
+                $this->TeacherSalary->saveAll($this->request->data);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'salariesView', $salaryId));
+            }
+         }
+
+        $visible = true;
+        $additionOptions = $this->SalaryAdditionType->findList($visible);
+        $this->set('additionOptions', $additionOptions);
+        $deductionOptions = $this->SalaryDeductionType->findList($visible);
+        $this->set('deductionOptions', $deductionOptions);
+
+        $this->set('id', $salaryId);
+    }
+
+    public function salaryAdditionAdd(){
+        $this->layout = 'ajax';
+        $order = $this->params->query['order'];
+        $this->set('order', $order);
+     
+        $visible = true;
+        $categories = $this->SalaryAdditionType->findList($visible);
+
+        $this->UserSession->readStatusSession($this->request->action);
+        $this->set('categories', $categories);
+    }
+
+       public function salaryDeductionAdd(){
+        $this->layout = 'ajax';
+        $order = $this->params->query['order'];
+        $this->set('order', $order);
+     
+        $visible = true;
+        $categories = $this->SalaryDeductionType->findList($visible);
+
+        $this->UserSession->readStatusSession($this->request->action);
+        $this->set('categories', $categories);
+    }
+    
+    public function salariesDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('TeacherSalaryId')) {
+            $id = $this->Session->read('TeacherSalaryId');
+            $teacherId = $this->Session->read('TeacherId');
+            $name = $this->TeacherSalary->field('salary_date', array('TeacherSalary.id' => $id));
+            $this->TeacherSalary->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'salaries', $teacherId));
         }
     }
 }
