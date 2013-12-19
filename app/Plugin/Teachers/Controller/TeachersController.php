@@ -1773,7 +1773,7 @@ class TeachersController extends TeachersAppController {
 
     
     public function salaries(){
-        $this->Navigation->addCrumb('Salaries');
+        $this->Navigation->addCrumb('Salary');
         $data = $this->TeacherSalary->find('all',array('conditions'=>array('TeacherSalary.teacher_id'=>$this->teacherId)));
         $this->set('list', $data);
     }
