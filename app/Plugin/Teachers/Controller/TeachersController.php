@@ -1773,7 +1773,7 @@ class TeachersController extends TeachersAppController {
 	}
 
     public function employments(){
-        $this->Navigation->addCrumb('Employments');
+        $this->Navigation->addCrumb('Employment');
         $data = $this->TeacherEmployment->find('all',array('conditions'=>array('TeacherEmployment.teacher_id'=>$this->teacherId)));
         $this->set('list', $data);
     }
