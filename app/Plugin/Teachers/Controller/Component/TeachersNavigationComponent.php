@@ -45,7 +45,7 @@ class TeachersNavigationComponent extends Component {
 				'DETAILS' => array(
 					$navigation->createLink('Qualifications', $controller, 'qualifications'),
 					$navigation->createLink('Training', $controller, 'training'),
-					$navigation->createLink('Location', $controller, 'location'),
+					$navigation->createLink('Positions', $controller, 'positions'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
 					$navigation->createLink('Leave', $controller, 'leaves'),
 					$navigation->createLink('Behaviour', $controller, 'behaviour'),
