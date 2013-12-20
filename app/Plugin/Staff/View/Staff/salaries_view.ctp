@@ -8,7 +8,7 @@ echo $this->Html->script('search', false);
 
 <div id="salaryView" class="content_wrapper">
     <h1>
-        <span><?php echo __('Salaries'); ?></span>
+        <span><?php echo __('Salary'); ?></span>
         <?php
         $data = $salaryObj[0]['StaffSalary'];
         echo $this->Html->link(__('List'), array('action' => 'salaries', $data['staff_id']), array('class' => 'divider'));
@@ -31,6 +31,18 @@ echo $this->Html->script('search', false);
         <div class="label"><?php echo __('Gross Salary'); ?></div>
         <div class="value"><?php echo $data['gross_salary']; ?></div>
     </div>
+    
+    <div class="row">
+        <div class="label"><?php echo __('Net Salary'); ?></div>
+        <div class="value"><?php echo $data['net_salary']; ?></div>
+    </div>
+
+      <div class="row">
+        <div class="label"><?php echo __('Comment'); ?></div>
+        <div class="value"><?php echo $data['comment']; ?></div>
+    </div>
+
+    
     
   <fieldset class="section_group">
     <legend><?php echo __('Additions');?></legend>
@@ -104,17 +116,6 @@ echo $this->Html->script('search', false);
     </div>
     </fieldset>
 
-    <div class="row">
-        <div class="label"><?php echo __('Net Salary'); ?></div>
-        <div class="value"><?php echo $data['net_salary']; ?></div>
-    </div>
-
-      <div class="row">
-        <div class="label"><?php echo __('Comment'); ?></div>
-        <div class="value"><?php echo $data['comment']; ?></div>
-    </div>
-
-    
    <div class="row">
         <div class="label"><?php echo __('Modified by'); ?></div>
         <div class="value"><?php echo trim($salaryObj[0]['ModifiedUser']['first_name'] . ' ' . $salaryObj[0]['ModifiedUser']['last_name']); ?></div>

@@ -1847,7 +1847,7 @@ class TeachersController extends TeachersAppController {
     }
     
     public function salaries(){
-        $this->Navigation->addCrumb('Salaries');
+        $this->Navigation->addCrumb('Salary');
         $data = $this->TeacherSalary->find('all',array('conditions'=>array('TeacherSalary.teacher_id'=>$this->teacherId)));
         $this->set('list', $data);
     }
@@ -1866,13 +1866,15 @@ class TeachersController extends TeachersAppController {
                 $this->TeacherSalaryDeduction->saveAll($this->request->data['TeacherSalaryDeduction'], array('validate' => 'only'));
             }
 
-
             if (!$this->TeacherSalary->validationErrors && 
             !$this->TeacherSalaryAddition->validationErrors &&
             !$this->TeacherSalaryDeduction->validationErrors){
                 $this->TeacherSalary->saveAll($this->request->data);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'salaries'));
+            }else{
+                $this->Utility->alert($this->Utility->getMessage('ADD_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
+                pr('test');
             }
         }
 
@@ -1946,6 +1948,8 @@ class TeachersController extends TeachersAppController {
                 $this->TeacherSalary->saveAll($this->request->data);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'salariesView', $salaryId));
+            }else{
+                 $this->Utility->alert($this->Utility->getMessage('UPDATE_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
             }
          }
 

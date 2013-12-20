@@ -1728,7 +1728,7 @@ class StaffController extends StaffAppController {
     }
     
     public function salaries(){
-        $this->Navigation->addCrumb('Salaries');
+        $this->Navigation->addCrumb('Salary');
         $data = $this->StaffSalary->find('all',array('conditions'=>array('StaffSalary.staff_id'=>$this->staffId)));
         $this->set('list', $data);
     }
