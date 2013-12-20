@@ -68,6 +68,10 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
                     <span class="icon_sort_<?php echo ($sortedcol =='Staff.first_name')?$sorteddir:'up'; ?>" order="Staff.first_name"></span>
                 </div>
                 <div class="table_cell cell_name">
+                    <span class="left"><?php echo __('Middle Name'); ?></span>
+                    <span class="icon_sort_<?php echo ($sortedcol =='Staff.middle_name')?$sorteddir:'up'; ?>" order="Staff.middle_name"></span>
+                </div>
+                <div class="table_cell cell_name">
                     <span class="left"><?php echo __('Last Name'); ?></span>
                     <span class="icon_sort_<?php echo ($sortedcol =='Staff.last_name')?$sorteddir:'up'; ?>" order="Staff.last_name"></span>
                 </div>
@@ -87,6 +91,7 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 					$id = $arrItems['Staff']['id'];
 					$identificationNo = $this->Utility->highlight($searchField, $arrItems['Staff']['identification_no']);
 					$firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['first_name'].'</b>'.((isset($arrItems['Staff']['history_first_name']))?'<br>'.$arrItems['Staff']['history_first_name']:''));
+                                        $middleName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['middle_name'].'</b>'.((isset($arrItems['Staff']['history_middle_name']))?'<br>'.$arrItems['Staff']['history_middle_name']:''));
 					$lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Staff']['last_name'].'</b>'.((isset($arrItems['Staff']['history_last_name']))?'<br>'.$arrItems['Staff']['history_last_name']:''));
 					$gender = $arrItems['Staff']['gender'];
 					$birthday = $arrItems['Staff']['date_of_birth'];
@@ -95,6 +100,7 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
 				<div class="table_row" row-id="<?php echo $id ?>">
 					<div class="table_cell"><?php echo $identificationNo; ?></div>
 					<div class="table_cell"><?php echo $firstName; ?></div>
+                                        <div class="table_cell"><?php echo $middleName; ?></div>
 					<div class="table_cell"><?php echo $lastName; ?></div>
 					<div class="table_cell"><?php echo $gender; ?></div>
 					<div class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></div>

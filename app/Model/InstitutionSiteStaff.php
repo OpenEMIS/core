@@ -32,7 +32,7 @@ class InstitutionSiteStaff extends AppModel {
 		$date = sprintf('%d-%d-%d', $yr, $mth, $day);
 		$data = $this->find('first', array(
 			'fields' => array(
-				'Staff.first_name AS first_name', 'Staff.last_name AS last_name',
+				'Staff.first_name AS first_name', 'Staff.middle_name AS middle_name', 'Staff.last_name AS last_name',
 				'Institution.name AS institution_name', 'InstitutionSite.name AS institution_site_name'
 			),
 			'recursive' => -1,
@@ -191,7 +191,7 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$data = $this->find('all', array(
-			'fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'StaffCategory.name'),
+			'fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.preferred_name', 'StaffCategory.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $this->paginateConditions($conditions),
 			'limit' => $limit,

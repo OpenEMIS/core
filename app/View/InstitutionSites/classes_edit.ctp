@@ -117,7 +117,7 @@ echo $this->Html->script('institution_site_classes', false);
 					<?php foreach($students[$id] as $obj) { ?>
 					<div class="table_row" student-id="<?php echo $obj['id']; ?>">
 						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
-						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
+						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']; ?></div>
 						<div class="table_cell"><?php echo $obj['category']; ?></div>
 						<div class="table_cell">
 							<?php echo $this->Utility->getDeleteControl(array(

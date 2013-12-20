@@ -40,9 +40,17 @@ $obj = @$data['Teacher'];
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('first_name'); ?></div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('middle_name'); ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('last_name'); ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value"><?php echo $this->Form->input('preferred_name'); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
@@ -50,7 +58,11 @@ $obj = @$data['Teacher'];
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
-			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_of_birth',array('desc' => true)); ?></div>
+			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_of_birth',array('desc' => true, 'emptySelect' => true)); ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Date of Death'); ?></div>
+			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_of_death',array('desc' => true, 'emptySelect' => true)); ?></div>
 		</div>
                 <div class="row">
 		    <div class="label"><?php echo __('Profile Image'); ?> </div>

@@ -83,8 +83,9 @@ class TeachersController extends TeachersAppController {
                 $this->teacherId = $this->Session->read('TeacherId');
                 $this->teacherObj = $this->Session->read('TeacherObj');
                 $teacherFirstName = $this->Teacher->field('first_name', array('Teacher.id' => $this->teacherId));
+                $teacherMiddleName = $this->Teacher->field('middle_name', array('Teacher.id' => $this->teacherId));
                 $teacherLastName = $this->Teacher->field('last_name', array('Teacher.id' => $this->teacherId));
-                $name = $teacherFirstName ." ". $teacherLastName;
+                $name = $teacherFirstName ." ". $teacherMiddleName ." ". $teacherLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('action' => 'view'));
             }
