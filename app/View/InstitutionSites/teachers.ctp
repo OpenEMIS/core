@@ -64,6 +64,10 @@ echo $this->Html->script('institution_site_teachers', false);
 					<span class="left"><?php echo __('First Name'); ?></span>
 					<span class="icon_sort_<?php echo ($orderBy =='Teacher.first_name')?$orderSort:'up'; ?>" orderBy="Teacher.first_name"></span>
                 </div>
+                                <div class="table_cell">
+					<span class="left"><?php echo __('Middle Name'); ?></span>
+					<span class="icon_sort_<?php echo ($orderBy =='Teacher.middle_name')?$orderSort:'up'; ?>" orderBy="Teacher.middle_name"></span>
+                </div>
 				<div class="table_cell">
 					<span class="left"><?php echo __('Last Name'); ?></span>
 					<span class="icon_sort_<?php echo ($orderBy =='Teacher.last_name')?$orderSort:'up'; ?>" orderBy="Teacher.last_name"></span>
@@ -79,6 +83,7 @@ echo $this->Html->script('institution_site_teachers', false);
                 <div class="table_row" row-id="<?php echo $obj['Teacher']['id']; ?>">
 					<div class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></div>
 					<div class="table_cell"><?php echo $obj['Teacher']['first_name']; ?></div>
+                                        <div class="table_cell"><?php echo $obj['Teacher']['middle_name']; ?></div>
 					<div class="table_cell"><?php echo $obj['Teacher']['last_name']; ?></div>
 					<div class="table_cell"><?php echo $obj['TeacherCategory']['name']; ?></div>
 				</div>

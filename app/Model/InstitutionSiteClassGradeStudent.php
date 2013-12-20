@@ -22,7 +22,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 	public function getStudentsByGrade($gradeIds) {
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 				'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
 				'StudentCategory.name'
 			),
@@ -57,7 +57,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
     public function getStudentsAttendance($classID,$gradeIds,$yearID) {
         $data = $this->find('all', array(
             'fields' => array(
-                'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+                'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
                 'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
                 'StudentCategory.name', 'StudentAttendance.id', 'StudentAttendance.total_no_attend', 'StudentAttendance.total_no_absence',
                 'InstitutionSiteClass.institution_site_id'
@@ -161,7 +161,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 	
 	public function getStudentAssessmentResults($classId, $itemId, $assessmentId=null) {
                 $options['fields'] = array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 				'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
 				'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
 				'AssessmentItem.min', 'AssessmentItem.max'

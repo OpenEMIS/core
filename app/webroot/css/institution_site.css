@@ -71,3 +71,6 @@
 #student_group .list_wrapper { height: 242px; }
 .ie8 #search_group .list_wrapper { height: 111px; }
 .ie8 #student_group .list_wrapper { height: 243px; }
+#students_search .cell_name{
+    width: auto;
+}

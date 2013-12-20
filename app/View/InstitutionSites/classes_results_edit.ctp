@@ -54,7 +54,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 				echo $this->Form->hidden($i.'.school_year_id', array('value' => $obj['InstitutionSiteClass']['school_year_id']));
 				?>
 				<div class="table_cell middle"><?php echo $obj['Student']['identification_no']; ?></div>
-				<div class="table_cell middle"><?php echo sprintf('%s %s', $obj['Student']['first_name'], $obj['Student']['last_name']); ?></div>
+				<div class="table_cell middle"><?php echo sprintf('%s %s %s', $obj['Student']['first_name'], $obj['Student']['middle_name'], $obj['Student']['last_name']); ?></div>
 				<div class="table_cell">
 					<div class="input_wrapper">
 					<?php 

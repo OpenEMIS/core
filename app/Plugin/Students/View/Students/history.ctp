@@ -54,6 +54,26 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
 				<?php } ?>
 			</div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php //pr($data); ?>
+				<span><?php echo $data['Student']['middle_name']; ?></span>
+				<?php //pr($data2['first_name']);?>
+				<?php if(@sizeof($data2['middle_name'])>0){ //) { ?>
+				<div class="table">
+					<div class="table_body">
+						<?php $ctr = 1; foreach($data2['middle_name'] as $val => $time):?>
+						<?php if($ctr == 1 && $data['Student']['middle_name'] == $val) continue; ?>
+						<div class="table_row">
+							<div class="table_cell cell_value"><?php echo $val; ?></div>
+							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
+						</div>
+						<?php $ctr++; endforeach;?>
+					</div>
+				</div>
+				<?php } ?>
+			</div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value">
@@ -63,6 +83,26 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
 					<div class="table_body">
 						<?php $ctr = 1; foreach($data2['last_name'] as $val => $time):?>
 						<?php if($ctr == 1 && $data['Student']['last_name'] == $val) continue; ?>
+						<div class="table_row">
+							<div class="table_cell cell_value"><?php echo $val; ?></div>
+							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
+
+						</div>
+						<?php $ctr++; endforeach;?>
+					</div>
+				</div>
+				<?php } ?>
+			</div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value">
+				<span><?php echo $data['Student']['preferred_name']; ?></span>
+				<?php if(@sizeof($data2['preferred_name'])>0){ // && ( sizeof($data2['last_name']) != 1 && array_key_exists($data['Student']['last_name'], $data2['last_name']) ) ) { ?>
+				<div class="table">
+					<div class="table_body">
+						<?php $ctr = 1; foreach($data2['preferred_name'] as $val => $time):?>
+						<?php if($ctr == 1 && $data['Student']['preferred_name'] == $val) continue; ?>
 						<div class="table_row">
 							<div class="table_cell cell_value"><?php echo $val; ?></div>
 							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
