@@ -6,7 +6,7 @@ $index = $order;
 <div data-id="<?php echo $index; ?>" class="table_row new_row <?php echo $order%2==0 ? 'even' : ''; ?>">
     <div class="table_cell">
          <?php echo $this->Form->input('TeacherSalaryDeduction.'.$index.'.id', array('type'=>'hidden', 'class'=>'deduction-control-id', 'label' => false, 'value'=>"")); ?>
-        <?php echo $this->Form->input('TeacherSalaryDeduction.'.$index.'.salary_deduction_type_id', array('class'=>'default', 'label' => false, 'options' => $categories, 'empty'=>__('--Select'))); ?>
+        <?php echo $this->Form->input('TeacherSalaryDeduction.'.$index.'.salary_deduction_type_id', array('class'=>'default', 'label' => false, 'options' => $categories, 'empty'=>__('--Select'), 'error' => false)); ?>
     </div>
     <div class="table_cell">
         <?php echo $this->Form->input('TeacherSalaryDeduction.'.$index.'.deduction_amount', 
@@ -16,7 +16,8 @@ $index = $order;
                 'type'=>'text',
                 'computeType' => 'total_salary_deductions',
                 'onkeypress' => 'return utility.integerCheck(event)',
-                'onkeyup' => 'jsTable.computeTotal(this)'
+                'onkeyup' => 'jsTable.computeTotal(this)',
+                'error' => false
              )
 
         ); ?>

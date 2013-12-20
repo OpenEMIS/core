@@ -7,7 +7,7 @@ $index = $order;
 
     <div class="table_cell">
          <?php echo $this->Form->input('TeacherSalaryAddition.'.$index.'.id', array('type'=>'hidden', 'class'=>'addition-control-id', 'label' => false, 'value'=>"")); ?>
-        <?php echo $this->Form->input('TeacherSalaryAddition.'.$index.'.salary_addition_type_id', array('class'=>'default', 'label' => false, 'options' => $categories, 'empty'=>__('--Select'))); ?>
+        <?php echo $this->Form->input('TeacherSalaryAddition.'.$index.'.salary_addition_type_id', array('class'=>'default', 'label' => false, 'options' => $categories, 'empty'=>__('--Select'), 'error' => false)); ?>
     </div>
     <div class="table_cell">
         <?php echo $this->Form->input('TeacherSalaryAddition.'.$index.'.addition_amount', 
@@ -17,7 +17,8 @@ $index = $order;
                 'type'=>'text',
                 'computeType' => 'total_salary_additions',
                 'onkeypress' => 'return utility.integerCheck(event)',
-                'onkeyup' => 'jsTable.computeTotal(this)'
+                'onkeyup' => 'jsTable.computeTotal(this)',
+                'error' => false
              )
 
         ); ?>

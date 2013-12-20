@@ -7,7 +7,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 
 <div id="salary" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Salaries'); ?></span>
+		<span><?php echo __('Salary'); ?></span>
 		<?php
 		if($_add) {
 			echo $this->Html->link(__('Add'), array('action' => 'salariesAdd'), array('class' => 'divider'));
