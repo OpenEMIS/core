@@ -269,7 +269,7 @@ class StaffController extends StaffAppController {
         $this->set('data', $data);
     }
 
-    public function location() {
+    public function positions() {
         $this->Navigation->addCrumb(ucfirst($this->action));
         $staffId = $this->Session->read('StaffId');
         $data = array();
@@ -293,7 +293,7 @@ class StaffController extends StaffAppController {
             $data[$dataKey][] = $result;
         }
 		if(empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_LOCATION'), array('type' => 'info', 'dismissOnClick' => false));
+			$this->Utility->alert($this->Utility->getMessage('NO_POSITION'), array('type' => 'info', 'dismissOnClick' => false));
 		}
         $this->set('data', $data);
     }

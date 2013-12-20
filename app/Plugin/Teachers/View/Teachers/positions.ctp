@@ -12,7 +12,7 @@ echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 
 <div id="additional" class="content_wrapper">
     <h1>
-        <span><?php echo __('Location'); ?></span>
+        <span><?php echo __('Positions'); ?></span>
     </h1>
     <?php echo $this->element('alert'); ?>
 
