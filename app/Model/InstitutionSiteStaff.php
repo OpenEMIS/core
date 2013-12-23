@@ -18,7 +18,7 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStaff extends AppModel {
 	public $useTable = 'institution_site_staff';
-	public $belongsTo = array('StaffStatus', 'StaffCategory');
+	public $belongsTo = array('StaffStatus', 'StaffCategory', 'StaffPositionTitle', 'StaffPositionGrade', 'StaffPositionStep');
 	
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;
@@ -32,7 +32,7 @@ class InstitutionSiteStaff extends AppModel {
 		$date = sprintf('%d-%d-%d', $yr, $mth, $day);
 		$data = $this->find('first', array(
 			'fields' => array(
-				'Staff.first_name AS first_name', 'Staff.last_name AS last_name',
+				'Staff.first_name AS first_name', 'Staff.middle_name AS middle_name', 'Staff.last_name AS last_name',
 				'Institution.name AS institution_name', 'InstitutionSite.name AS institution_site_name'
 			),
 			'recursive' => -1,
@@ -85,7 +85,8 @@ class InstitutionSiteStaff extends AppModel {
 		$fields = array(
 			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.position_no', 'InstitutionSiteStaff.FTE',
 			'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date', 'InstitutionSiteStaff.staff_status_id',
-			'StaffCategory.name', 'StaffStatus.name'
+			'StaffCategory.name', 'StaffStatus.name', 
+                        'StaffPositionTitle.name', 'StaffPositionGrade.name', 'StaffPositionStep.name'
 		);
 		
 		$joins = array();

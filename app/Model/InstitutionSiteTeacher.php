@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteTeacher extends AppModel {
-	public $belongsTo = array('TeacherStatus', 'TeacherCategory');
+	public $belongsTo = array('TeacherStatus', 'TeacherCategory', 'TeacherPositionTitle', 'TeacherPositionGrade', 'TeacherPositionStep');
 	
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;
 		$data = $this->find('first', array(
 			'fields' => array(
-				'Teacher.first_name AS first_name', 'Teacher.last_name AS last_name',
+				'Teacher.first_name AS first_name', 'Teacher.middle_name AS middle_name', 'Teacher.last_name AS last_name',
 				'Institution.name AS institution_name', 'InstitutionSite.name AS institution_site_name'
 			),
 			'recursive' => -1,
@@ -76,7 +76,8 @@ class InstitutionSiteTeacher extends AppModel {
 		$fields = array(
 			'InstitutionSiteTeacher.id', 'InstitutionSiteTeacher.position_no', 'InstitutionSiteTeacher.FTE',
 			'InstitutionSiteTeacher.start_date', 'InstitutionSiteTeacher.end_date', 'InstitutionSiteTeacher.teacher_status_id',
-			'TeacherCategory.name', 'TeacherStatus.name'
+			'TeacherCategory.name', 'TeacherStatus.name', 
+                        'TeacherPositionTitle.name', 'TeacherPositionGrade.name', 'TeacherPositionStep.name'
 		);
 		
 		$joins = array();

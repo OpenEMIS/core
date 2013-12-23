@@ -77,8 +77,12 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 				<?php foreach($positions as $obj) { ?>
 				<div class="table_row">
 					<div class="table_cell">
-						<div class="table_cell_row"><?php echo $obj['TeacherCategory']['name']; ?></div>
-						<div class="table_cell_row"><?php echo $obj['InstitutionSiteTeacher']['position_no']; ?></div>
+						<div class="table_cell_row">Number: <?php echo $obj['InstitutionSiteTeacher']['position_no']; ?></div>
+                                                <div class="table_cell_row">Type: <?php echo $obj['TeacherCategory']['name']; ?></div>
+                                                <div class="table_cell_row">Title: <?php echo $obj['TeacherPositionTitle']['name']; ?></div>
+                                                <div class="table_cell_row">Grade: <?php echo $obj['TeacherPositionGrade']['name']; ?></div>
+                                                <div class="table_cell_row">Step: <?php echo $obj['TeacherPositionStep']['name']; ?></div>
+                                                
 					</div>
 					<div class="table_cell view">
 						<div class="table_cell_row">
