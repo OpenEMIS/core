@@ -7,17 +7,7 @@ $fieldName = 'data[InstitutionSiteTeacher][' . $index . '][%s]';
 
 <div class="table_row" row-id="<?php echo $index; ?>">
 	<div class="table_cell">
-		<div class="table_cell_row">
-		<?php
-		echo $this->Form->input($model . '.teacher_category_id', array(
-			'label' => false,
-			'div' => false,
-			'class' => 'full_width',
-			'options' => $categoryOptions
-		));
-		?>
-		</div>
-		<div class="table_cell_row input_wrapper">
+                <div class="table_cell_row input_wrapper">
 		<?php
 		echo $this->Form->input($model . '.position_no', array(
 			'type' => 'text',
@@ -33,6 +23,47 @@ $fieldName = 'data[InstitutionSiteTeacher][' . $index . '][%s]';
 		));
 		?>
 		</div>
+		<div class="table_cell_row">
+		<?php
+		echo $this->Form->input($model . '.teacher_category_id', array(
+			'label' => false,
+			'div' => false,
+			'class' => 'full_width',
+			'options' => $categoryOptions
+		));
+		?>
+		</div>
+                <div class="table_cell_row">
+		<?php
+		echo $this->Form->input($model . '.teacher_position_title_id', array(
+			'label' => false,
+			'div' => false,
+			'class' => 'full_width',
+			'options' => $positionTitleOptions
+		));
+		?>
+		</div>
+                <div class="table_cell_row">
+		<?php
+		echo $this->Form->input($model . '.teacher_position_grade_id', array(
+			'label' => false,
+			'div' => false,
+			'class' => 'full_width',
+			'options' => $positionGradeOptions
+		));
+		?>
+		</div>
+                <div class="table_cell_row">
+		<?php
+		echo $this->Form->input($model . '.teacher_position_step_id', array(
+			'label' => false,
+			'div' => false,
+			'class' => 'full_width',
+			'options' => $positionStepOptions
+		));
+		?>
+		</div>
+		
 	</div>
 	<div class="table_cell">
 		<div class="table_cell_row">

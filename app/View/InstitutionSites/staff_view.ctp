@@ -78,8 +78,11 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 				<?php foreach($positions as $obj) { ?>
 				<div class="table_row">
 					<div class="table_cell">
-						<div class="table_cell_row"><?php echo $obj['StaffCategory']['name']; ?></div>
-						<div class="table_cell_row"><?php echo $obj['InstitutionSiteStaff']['position_no']; ?></div>
+						<div class="table_cell_row">Number: <?php echo $obj['InstitutionSiteStaff']['position_no']; ?></div>
+                                                <div class="table_cell_row">Type: <?php echo $obj['StaffCategory']['name']; ?></div>
+                                                <div class="table_cell_row">Title: <?php echo $obj['StaffPositionTitle']['name']; ?></div>
+                                                <div class="table_cell_row">Grade: <?php echo $obj['StaffPositionGrade']['name']; ?></div>
+                                                <div class="table_cell_row">Step: <?php echo $obj['StaffPositionStep']['name']; ?></div>
 					</div>
 					<div class="table_cell view">
 						<div class="table_cell_row">

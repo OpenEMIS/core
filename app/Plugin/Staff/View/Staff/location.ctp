@@ -30,8 +30,11 @@ echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 				<?php foreach($classes as $class){ ?>
 				<div class="table_row">
 					<div class="table_cell">
-						<div class="table_cell_row"><?php echo $class['StaffCategory']['name']; ?></div>
-						<div class="table_cell_row"><?php echo $class['InstitutionSiteStaff']['position_no'];?></div>
+                                                <div class="table_cell_row">Number: <?php echo $class['InstitutionSiteStaff']['position_no'];?></div>
+						<div class="table_cell_row">Type: <?php echo $class['StaffCategory']['name']; ?></div>
+						<div class="table_cell_row">Title: <?php echo $class['StaffPositionTitle']['name']; ?></div>
+                                                <div class="table_cell_row">Grade: <?php echo $class['StaffPositionGrade']['name']; ?></div>
+                                                <div class="table_cell_row">Step: <?php echo $class['StaffPositionStep']['name']; ?></div>
 					</div>
 					<div class="table_cell center"><?php echo $class['InstitutionSiteStaff']['start_date']; ?></div>
 					<div class="table_cell center"><?php echo (empty($class['InstitutionSiteStaff']['end_date']))? 'Current':$class['InstitutionSiteStaff']['end_date']; ?></div>

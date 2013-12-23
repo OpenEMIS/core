@@ -75,12 +75,18 @@ class InstitutionSitesController extends AppController {
 		'Teachers.TeacherStatus',
 		'Teachers.TeacherAttendance',
 		'Teachers.TeacherCategory',
+                'Teachers.TeacherPositionTitle',
+                'Teachers.TeacherPositionGrade',
+                'Teachers.TeacherPositionStep',
 		'Teachers.TeacherBehaviour',
 		'Teachers.TeacherBehaviourCategory',
 		'Staff.Staff',
 		'Staff.StaffStatus',
 		'Staff.StaffAttendance',
 		'Staff.StaffCategory',
+                'Staff.StaffPositionTitle',
+                'Staff.StaffPositionGrade',
+                'Staff.StaffPositionStep',
 		'Staff.StaffBehaviour',
 		'Staff.StaffBehaviourCategory',
         'SecurityGroupUser',
@@ -1561,11 +1567,17 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Add Teacher');
 		$yearRange = $this->SchoolYear->getYearRange();
 		$categoryOptions = $this->TeacherCategory->findList(true);
+                $positionTitleptions = $this->TeacherPositionTitle->findList(true);
+                $positionGradeOptions = $this->TeacherPositionGrade->findList(true);
+                $positionStepOptions = $this->TeacherPositionStep->findList(true);
 		$statusOptions = $this->TeacherStatus->findList(true);
 		
 		$this->set('minYear', current($yearRange));
 		$this->set('maxYear', array_pop($yearRange));
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleptions', $positionTitleptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
 		$this->set('statusOptions', $statusOptions);
 	}
 	
@@ -1592,11 +1604,11 @@ class InstitutionSitesController extends AppController {
 						}
 						if($obj) {
 							$teacherObj = $this->Teacher->find('first', array(
-								'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
+								'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.middle_name', 'Teacher.last_name', 'Teacher.gender'),
 								'conditions' => array('Teacher.id' => $data['teacher_id'])
 							));
 							$position = $data['position_no'];
-							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
 							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
 							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
 							$msg .= '<br>' . __('Please choose another position number.');
@@ -1746,10 +1758,16 @@ class InstitutionSitesController extends AppController {
 		
 		$index = $this->params->query['index'] + 1;
 		$categoryOptions = $this->TeacherCategory->findList(true);
+                $positionTitleOptions = $this->TeacherPositionTitle->findList(true);
+                $positionGradeOptions = $this->TeacherPositionGrade->findList(true);
+                $positionStepOptions = $this->TeacherPositionStep->findList(true);
 		$statusOptions = $this->TeacherStatus->findList(true);
 		
 		$this->set('index', $index);
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleOptions', $positionTitleOptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
 		$this->set('statusOptions', $statusOptions);
 	}
 	
@@ -1808,11 +1826,17 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Add Staff');
 		$yearRange = $this->SchoolYear->getYearRange();
 		$categoryOptions = $this->StaffCategory->findList(true);
+                $positionTitleptions = $this->StaffPositionTitle->findList(true);
+                $positionGradeOptions = $this->StaffPositionGrade->findList(true);
+                $positionStepOptions = $this->StaffPositionStep->findList(true);
 		$statusOptions = $this->StaffStatus->findList(true);
 		
 		$this->set('minYear', current($yearRange));
 		$this->set('maxYear', array_pop($yearRange));
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleptions', $positionTitleptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
 		$this->set('statusOptions', $statusOptions);
 	}
 	
@@ -1840,11 +1864,11 @@ class InstitutionSitesController extends AppController {
 						}
 						if($obj) {
 							$staffObj = $this->Staff->find('first', array(
-								'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
+								'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.gender'),
 								'conditions' => array('Staff.id' => $data['staff_id'])
 							));
 							$position = $data['position_no'];
-							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
 							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
 							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
 							$msg .= '<br>' . __('Please choose another position number.');
@@ -1853,9 +1877,10 @@ class InstitutionSitesController extends AppController {
 						}
 					}
 				} else {
+                                        $insert = false;
 					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
-				if($insert) {
+				if(isset($insert) && $insert) {
 					$this->InstitutionSiteStaff->save($data);
 					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
 				}
@@ -1944,10 +1969,16 @@ class InstitutionSitesController extends AppController {
 		
 		$index = $this->params->query['index'] + 1;
 		$categoryOptions = $this->StaffCategory->findList(true);
+                $positionTitleOptions = $this->StaffPositionTitle->findList(true);
+                $positionGradeOptions = $this->StaffPositionGrade->findList(true);
+                $positionStepOptions = $this->StaffPositionStep->findList(true);
 		$statusOptions = $this->StaffStatus->findList(true);
 		
 		$this->set('index', $index);
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleOptions', $positionTitleOptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
 		$this->set('statusOptions', $statusOptions);
 	}
 	
