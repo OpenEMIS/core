@@ -1476,6 +1476,50 @@ class InstitutionSitesController extends AppController {
 			$this->redirect(array('action' => 'students'));
 		}
 	}
+        
+        public function studentsDelete(){
+                if($this->Session->check('InstitutionSiteStudentId') && $this->Session->check('InstitutionSiteId')) {
+                    $studentId = $this->Session->read('InstitutionSiteStudentId');
+                    $InstitutionSiteId = $this->Session->read('InstitutionSiteId');
+                    
+                    $SiteStudentRecordIds = $this->InstitutionSiteStudent->getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId);
+                    if(!empty($SiteStudentRecordIds)){
+                        $this->InstitutionSiteStudent->deleteAll(array('InstitutionSiteStudent.id' => $SiteStudentRecordIds), false);
+                    }
+                    
+                    $GradeStudentRecordIds = $this->InstitutionSiteClassGradeStudent->getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId);
+                    if(!empty($GradeStudentRecordIds)){
+                        $this->InstitutionSiteClassGradeStudent->deleteAll(array('InstitutionSiteClassGradeStudent.id' => $GradeStudentRecordIds), false);
+                    }
+                    
+                    $this->AssessmentItemResult->deleteAll(array(
+                                                            'AssessmentItemResult.student_id' => $studentId,
+                                                            'AssessmentItemResult.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $this->StudentBehaviour->deleteAll(array(
+                                                            'StudentBehaviour.student_id' => $studentId,
+                                                            'StudentBehaviour.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $this->StudentAttendance->deleteAll(array(
+                                                            'StudentAttendance.student_id' => $studentId,
+                                                            'StudentAttendance.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $StudentDetailsCustomValueObj = ClassRegistry::init('StudentDetailsCustomValue');
+                    $StudentDetailsCustomValueObj->deleteAll(array(
+                                                            'StudentDetailsCustomValue.student_id' => $studentId,
+                                                            'StudentDetailsCustomValue.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    
+                    $this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
+                    $this->redirect(array('action' => 'students'));
+                }else{
+                    $this->redirect(array('action' => 'students'));
+                }
+        }
 	
 	public function studentsEdit() {
 		if($this->Session->check('InstitutionSiteStudentId')) {
