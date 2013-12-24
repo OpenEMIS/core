@@ -258,4 +258,30 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		}
 		return $gender;
 	}
+        
+        public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSiteClassGradeStudent.id'),
+			'joins' => array(
+                                    array(
+                                            'table' => 'institution_site_class_grades',
+                                            'alias' => 'InstitutionSiteClassGrade',
+                                            'conditions' => array(
+                                                                'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id'
+                                                            )
+                                    ),
+                                    array(
+                                            'table' => 'institution_site_classes',
+                                            'alias' => 'InstitutionSiteClass',
+                                            'conditions' => array(
+                                                                'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+                                                                'InstitutionSiteClass.institution_site_id = ' . $InstitutionSiteId
+                                                            )
+                                    )
+			),
+                        'conditions' => array('InstitutionSiteClassGradeStudent.student_id = ' . $studentId)
+		));
+
+		return $data;
+	}
 }

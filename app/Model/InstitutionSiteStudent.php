@@ -295,4 +295,22 @@ class InstitutionSiteStudent extends AppModel {
 		));
 		return $count;
 	}
+        
+        public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSiteStudent.id'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+                                                            'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
+                                                            'InstitutionSiteProgramme.institution_site_id = ' . $InstitutionSiteId
+                                                        )
+				)
+			),
+                        'conditions' => array('InstitutionSiteStudent.student_id = ' . $studentId)
+		));
+		return $data;
+	}
 }
