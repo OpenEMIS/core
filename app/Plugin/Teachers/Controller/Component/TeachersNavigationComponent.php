@@ -49,7 +49,9 @@ class TeachersNavigationComponent extends Component {
                     $navigation->createLink('Attendance', $controller, 'attendance'),
 					$navigation->createLink('Leave', $controller, 'leaves'),
 					$navigation->createLink('Behaviour', $controller, 'behaviour'),
-					$navigation->createLink('Extracurricular', $controller, 'extracurricular')
+					$navigation->createLink('Extracurricular', $controller, 'extracurricular'),
+					$navigation->createLink('Employment', $controller, 'employments'),
+					$navigation->createLink('Salary', $controller, 'salaries')
 				)
 			)
 		);
