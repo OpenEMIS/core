@@ -75,7 +75,7 @@ echo $this->Html->script('search', false);
 		<legend><?php echo __('Teachers'); ?></legend>
 		<div class="table">
 			<div class="table_head">
-				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+				<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 				<div class="table_cell"><?php echo __('Name'); ?></div>
 			</div>
 			<div class="table_body">
@@ -98,7 +98,7 @@ echo $this->Html->script('search', false);
 			
 			<div class="table">
 				<div class="table_head">
-					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 					<div class="table_cell"><?php echo __('Name'); ?></div>
 					<div class="table_cell cell_category"><?php echo __('Category'); ?></div>
 				</div>

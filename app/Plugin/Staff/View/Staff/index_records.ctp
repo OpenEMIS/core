@@ -14,7 +14,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
     <div class="table_head" url="Staff/index">
 
         <div class="table_cell cell_id_no">
-                <span class="left"><?php echo __('Identification No.'); ?></span>
+                <span class="left"><?php echo __('OpenEMIS ID'); ?></span>
                 <span class="icon_sort_<?php echo ($sortedcol =='Staff.identification_no')?$sorteddir:'up'; ?>"  order="Staff.identification_no"></span>
         </div>
         <div class="table_cell cell_name">

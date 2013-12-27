@@ -25,7 +25,7 @@ echo $this->Html->script('app.date', false);
 		    echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
 		?>
 		<div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="value">
 				<?php
 				if($_view_details) {

@@ -27,7 +27,7 @@ echo $this->Html->script('institution_site_students', false);
 						'label' => false,
 						'div' => false,
 						'class' => 'default',
-						'placeholder' => __('Identification No, First Name or Last Name'),
+						'placeholder' => __('OpenEMIS ID, First Name or Last Name'),
 						'onkeypress' => 'return InstitutionSiteStudents.search(this, event)'
 					));
 				?>
@@ -39,7 +39,7 @@ echo $this->Html->script('institution_site_students', false);
 		<div class="table_scrollable">
 			<div class="table table_header">
 				<div class="table_head">
-					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 					<div class="table_cell"><?php echo __('First Name'); ?></div>
 					<div class="table_cell"><?php echo __('Last Name'); ?></div>
 				</div>
@@ -64,7 +64,7 @@ echo $this->Html->script('institution_site_students', false);
 	
 	<div class="info">
 		<div class="row">
-			<div class="label"><?php echo __('Identification No'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="value" id="IdentificationNo"></div>
 		</div>
 		
