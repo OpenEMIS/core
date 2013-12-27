@@ -51,6 +51,10 @@ class StaffController extends StaffAppController {
             'Staff.StaffLanguage',
             'Staff.StaffContact',
 			'Staff.StaffExtracurricular',
+            'Staff.StaffEmployment',
+            'Staff.StaffSalary',
+            'Staff.StaffSalaryAddition',
+            'Staff.StaffSalaryDeduction',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -63,7 +67,10 @@ class StaffController extends StaffAppController {
             'Language',
             'ContactOption',
             'ContactType',
-			'ExtracurricularType'
+			'ExtracurricularType',
+            'EmploymentType',
+            'SalaryAdditionType',
+            'SalaryDeductionType'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -1645,5 +1652,225 @@ class StaffController extends StaffAppController {
 			} 
 		}
 	}
+
+    public function employments(){
+        $this->Navigation->addCrumb('Employment');
+        $data = $this->StaffEmployment->find('all',array('conditions'=>array('StaffEmployment.staff_id'=>$this->staffId)));
+        $this->set('list', $data);
+    }
+    
+    public function employmentsAdd() {
+        if ($this->request->is('post')) {
+            $this->StaffEmployment->create();
+            $this->request->data['StaffEmployment']['staff_id'] = $this->staffId;
+            
+            $data = $this->data['StaffEmployment'];
+
+            if ($this->StaffEmployment->save($data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'employments'));
+            }
+        }
+
+        $employmentTypeOptions = $this->EmploymentType->getOptions();
+        $this->set('employmentTypeOptions', $employmentTypeOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function employmentsView() {
+        $employmentId = $this->params['pass'][0];
+        $employmentObj = $this->StaffEmployment->find('all',array('conditions'=>array('StaffEmployment.id' => $employmentId)));
+        
+        if(!empty($employmentObj)) {
+            $this->Navigation->addCrumb('Employment Details');
+            
+            $this->Session->write('StaffEmploymentId', $employmentId);
+            $this->set('employmentObj', $employmentObj);
+        } 
+    }
+    
+    public function employmentsEdit() {
+        $employmentId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $employmentObj = $this->StaffEmployment->find('first',array('conditions'=>array('StaffEmployment.id' => $employmentId)));
+  
+            if(!empty($employmentObj)) {
+                $this->Navigation->addCrumb('Edit Employment Details');
+                $this->request->data = $employmentObj;
+               
+            }
+         } else {
+            $employmentData = $this->data['StaffEmployment'];
+            $employmentData['staff_id'] = $this->staffId;
+            
+            if ($this->StaffEmployment->save($employmentData)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'employmentsView', $employmentData['id']));
+            }
+         }
+
+        $employmentTypeOptions = $this->EmploymentType->getOptions();
+        $this->set('employmentTypeOptions', $employmentTypeOptions);
+
+        $this->set('id', $employmentId);  
+    }
+
+    public function employmentsDelete($id) {
+        if($this->Session->check('StaffId') && $this->Session->check('StaffEmploymentId')) {
+            $id = $this->Session->read('StaffEmploymentId');
+            $staffId = $this->Session->read('StaffId');
+            $employmentTypeId = $this->StaffEmployment->field('employment_type_id', array('StaffEmployment.id' => $id));
+            $name = $this->EmploymentType->field('name', array('EmploymentType.id' => $employmentTypeId));
+            $this->StaffEmployment->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'employments', $staffId));
+        }
+    }
+    
+    public function salaries(){
+        $this->Navigation->addCrumb('Salary');
+        $data = $this->StaffSalary->find('all',array('conditions'=>array('StaffSalary.staff_id'=>$this->staffId)));
+        $this->set('list', $data);
+    }
+    
+    public function salariesAdd() {
+        if ($this->request->is('post')) {
+            $this->request->data['StaffSalary']['staff_id'] = $this->staffId;
+
+            $this->StaffSalary->create(); 
+   
+            $this->StaffSalary->saveAll($this->request->data['StaffSalary'], array('validate' => 'only'));
+            if(isset($this->request->data['StaffSalaryAddition'])){
+                $this->StaffSalaryAddition->saveAll($this->request->data['StaffSalaryAddition'], array('validate' => 'only'));
+            }
+            if(isset($this->request->data['StaffSalaryDeduction'])){
+                $this->StaffSalaryDeduction->saveAll($this->request->data['StaffSalaryDeduction'], array('validate' => 'only'));
+            }
+
+            if (!$this->StaffSalary->validationErrors && 
+            !$this->StaffSalaryAddition->validationErrors &&
+            !$this->StaffSalaryDeduction->validationErrors){
+                $this->StaffSalary->saveAll($this->request->data);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'salaries'));
+            }
+        }
+
+        $visible = true;
+        $additionOptions = $this->SalaryAdditionType->findList($visible);
+        $this->set('additionOptions', $additionOptions);
+        $deductionOptions = $this->SalaryDeductionType->findList($visible);
+        $this->set('deductionOptions', $deductionOptions);
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function salariesView() {
+        $salaryId = $this->params['pass'][0];
+        $salaryObj = $this->StaffSalary->find('all',array('conditions'=>array('StaffSalary.id' => $salaryId)));
+        
+        if(!empty($salaryObj)) {
+            $this->Navigation->addCrumb('Salary Details');
+            
+            $this->Session->write('StaffSalaryId', $salaryId);
+            $this->set('salaryObj', $salaryObj);
+            $visible = true;
+            $additionOptions = $this->SalaryAdditionType->findList($visible);
+            $this->set('additionOptions', $additionOptions);
+            $deductionOptions = $this->SalaryDeductionType->findList($visible);
+            $this->set('deductionOptions', $deductionOptions);
+        } 
+    }
+
+    public function salariesEdit() {
+        $salaryId = $this->params['pass'][0];
+        if($this->request->is('get')) {
+            $salaryObj = $this->StaffSalary->find('first',array('conditions'=>array('StaffSalary.id' => $salaryId)));
+  
+            if(!empty($salaryObj)) {
+                $this->Navigation->addCrumb('Edit Salary Details');
+                $this->request->data = $salaryObj;
+               
+            }
+         } else {
+            if(isset($this->request->data['DeleteAddition'])){
+                $deletedId = array();
+                foreach($this->request->data['DeleteAddition'] as $key=>$value){
+                    $deletedId[] = $value['id'];
+                    pr('test');
+                    unset($this->request->data['StaffSalaryAddition'][$key]);
+                }
+                $this->StaffSalaryAddition->deleteAll(array('StaffSalaryAddition.id' => $deletedId, 'StaffSalaryAddition.teacher_salary_id'=> $salaryId), false);
+            }
+            if(isset($this->request->data['DeleteDeduction'])){
+                $deletedId = array();
+                foreach($this->request->data['DeleteDeduction'] as $key=>$value){
+                    $deletedId[] = $value['id'];
+                    unset($this->request->data['StaffSalaryDeduction'][$key]);
+                }
+                $this->StaffSalaryDeduction->deleteAll(array('StaffSalaryDeduction.id' => $deletedId, 'StaffSalaryDeduction.teacher_salary_id'=> $salaryId), false);
+            }
+            $this->request->data['StaffSalary']['staff_id'] = $this->staffId;
+
+            $this->StaffSalary->saveAll($this->request->data['StaffSalary'], array('validate' => 'only'));
+            if(isset($this->request->data['StaffSalaryAddition'])){
+                $this->StaffSalaryAddition->saveAll($this->request->data['StaffSalaryAddition'], array('validate' => 'only'));
+            }
+            if(isset($this->request->data['StaffSalaryDeduction'])){
+                $this->StaffSalaryDeduction->saveAll($this->request->data['StaffSalaryDeduction'], array('validate' => 'only'));
+            }
+
+            if (!$this->StaffSalary->validationErrors && 
+            !$this->StaffSalaryAddition->validationErrors &&
+            !$this->StaffSalaryDeduction->validationErrors){
+                $this->StaffSalary->saveAll($this->request->data);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'salariesView', $salaryId));
+            }
+         }
+
+        $visible = true;
+        $additionOptions = $this->SalaryAdditionType->findList($visible);
+        $this->set('additionOptions', $additionOptions);
+        $deductionOptions = $this->SalaryDeductionType->findList($visible);
+        $this->set('deductionOptions', $deductionOptions);
+
+        $this->set('id', $salaryId);
+    }
+
+    public function salaryAdditionAdd(){
+        $this->layout = 'ajax';
+        $order = $this->params->query['order'];
+        $this->set('order', $order);
+     
+        $visible = true;
+        $categories = $this->SalaryAdditionType->findList($visible);
+
+        $this->UserSession->readStatusSession($this->request->action);
+        $this->set('categories', $categories);
+    }
+
+       public function salaryDeductionAdd(){
+        $this->layout = 'ajax';
+        $order = $this->params->query['order'];
+        $this->set('order', $order);
+     
+        $visible = true;
+        $categories = $this->SalaryDeductionType->findList($visible);
+
+        $this->UserSession->readStatusSession($this->request->action);
+        $this->set('categories', $categories);
+    }
+    
+    public function salariesDelete($id) {
+        if($this->Session->check('TeacherId') && $this->Session->check('StaffSalaryId')) {
+            $id = $this->Session->read('StaffSalaryId');
+            $teacherId = $this->Session->read('TeacherId');
+            $name = $this->StaffSalary->field('salary_date', array('StaffSalary.id' => $id));
+            $this->StaffSalary->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'salaries', $teacherId));
+        }
+    }
 }
 
