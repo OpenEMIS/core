@@ -29,7 +29,7 @@ echo $this->Html->script('/Teachers/js/teachers', false);
 		    echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
 		?>
 		<div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="value"><?php echo $obj['identification_no']; ?></div>
 		</div>
 		<div class="row">

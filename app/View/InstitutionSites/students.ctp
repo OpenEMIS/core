@@ -33,7 +33,7 @@ echo $this->Html->script('institution_site_students', false);
 					'id' => 'SearchField',
 					'value' => $searchField,
 					'class' => 'default',
-					'placeholder' => __('Student Identification No or Student Name')
+					'placeholder' => __('Student OpenEMIS ID or Student Name')
 				));
             ?>
             <span class="icon_clear">X</span>
@@ -85,7 +85,7 @@ echo $this->Html->script('institution_site_students', false);
         <div class="table allow_hover" action="InstitutionSites/studentsView/">
             <div class="table_head">
 				<div class="table_cell cell_id_no">
-					<span class="left"><?php echo __('Identification No.'); ?></span>
+					<span class="left"><?php echo __('OpenEMIS ID'); ?></span>
 					<span class="icon_sort_<?php echo ($orderBy =='Student.identification_no')?$orderSort:'up'; ?>" orderBy="Student.identification_no"></span>
                 </div>
 				<div class="table_cell cell_name">

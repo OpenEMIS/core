@@ -50,7 +50,7 @@ class UtilityComponent extends Component {
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
 		$msgList['DELETE_SUCCESS'] = "Record has been deleted.";
 		$msgList['SAVE_SUCCESS'] = "Your data has been saved successfully.";
-		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
+		$msgList['INVALID_ID_NO'] = "You have entered an invalid OpenEMIS ID.";
 		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
 		$msgList['NO_HISTORY'] = "No history found.";
 		$msgList['NO_RECORD'] = "There are no records.";

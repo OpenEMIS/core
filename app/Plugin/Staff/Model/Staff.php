@@ -48,12 +48,12 @@ class Staff extends StaffAppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Identification No'
+				'message' => 'Please enter a valid OpenEMIS ID'
 			),
 			'ruleUnique' => array(
         		'rule' => 'isUnique',
         		'required' => true,
-        		'message' => 'Please enter a unique Identification No'
+        		'message' => 'Please enter a unique OpenEMIS ID'
 		    )
 		),
 		'email' => array(
