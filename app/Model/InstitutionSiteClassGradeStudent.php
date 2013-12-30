@@ -24,7 +24,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 			'fields' => array(
 				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
 				'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
-				'StudentCategory.name'
+				'StudentCategory.name', 'StudentCategory.id'
 			),
 			'joins' => array(
 				array(
@@ -48,7 +48,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 			if(!isset($list[$gradeId])) {
 				$list[$gradeId] = array();
 			}
-			$list[$gradeId][] = array_merge($obj['Student'], array('category' => $obj['StudentCategory']['name']));
+			$list[$gradeId][] = array_merge($obj['Student'], array('category' => $obj['StudentCategory']['name'], 'category_id' => $obj['StudentCategory']['id']));
 		}
 		return $list;
 	}
