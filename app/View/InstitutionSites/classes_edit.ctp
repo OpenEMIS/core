@@ -122,7 +122,18 @@ echo $this->Html->script('institution_site_classes', false);
 					<div class="table_row" student-id="<?php echo $obj['id']; ?>">
 						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
 						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
-						<div class="table_cell"><?php echo $obj['category']; ?></div>
+						<div class="table_cell" attr="category">
+                                                    <?php
+                                                        echo $this->Form->input('student_category_id', array(
+                                                                'label' => false,
+                                                                'div' => false,
+                                                                'class' => 'full_width',
+                                                                'options' => $studentCategoryOptions,
+                                                                'onchange' => 'InstitutionSiteClasses.changeStudentCategory(this)',
+                                                                'default' => $obj['category_id']
+                                                        ));
+                                                        ?>
+                                                </div>
 						<div class="table_cell">
 							<?php echo $this->Utility->getDeleteControl(array(
 								'onclick' => 'InstitutionSiteClasses.deleteStudent(this)',

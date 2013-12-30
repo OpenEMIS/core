@@ -973,7 +973,8 @@ class InstitutionSitesController extends AppController {
 			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
 			$students = $this->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
 			$teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
-            $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
+                        $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
+                        $studentCategoryOptions = $this->StudentCategory->findList(true);
 			
 			$this->set('classId', $classId);
 			$this->set('className', $className);
@@ -983,6 +984,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('teachers', $teachers);
                         $this->set('no_of_seats', $classObj['InstitutionSiteClass']['no_of_seats']);
                         $this->set('no_of_shifts', $classObj['InstitutionSiteClass']['no_of_shifts']);
+                        $this->set('studentCategoryOptions', $studentCategoryOptions);
                         
             $this->set('subjects', $subjects);
 		} else {
@@ -1031,7 +1033,8 @@ class InstitutionSitesController extends AppController {
 			
 			$result = false;
 			if($action === 'add') {
-				$categoryId = $this->params->query['categoryId'];
+                                $categoryId = $this->params->query['categoryId'];
+                            
 				$data = array(
 					'student_id' => $studentId, 
 					'student_category_id' => $categoryId,
@@ -1039,7 +1042,16 @@ class InstitutionSitesController extends AppController {
 				);
 				$this->InstitutionSiteClassGradeStudent->create();
 				$result = $this->InstitutionSiteClassGradeStudent->save($data);
-			} else {
+                        } else if($action === 'change_category'){
+                                $categoryId = $this->params->query['categoryId'];
+                                
+                                $fieldsToBeUpdated = array('InstitutionSiteClassGradeStudent.student_category_id' => $categoryId);
+                                $updateConditions = array(
+                                                        'InstitutionSiteClassGradeStudent.student_id' => $studentId, 
+                                                        'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
+                                                    );
+                                $result = $this->InstitutionSiteClassGradeStudent->updateAll($fieldsToBeUpdated, $updateConditions);
+                        } else {
 				$result = $this->InstitutionSiteClassGradeStudent->deleteAll(array(
 					'InstitutionSiteClassGradeStudent.student_id' => $studentId,
 					'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
