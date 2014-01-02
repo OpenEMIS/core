@@ -1525,6 +1525,12 @@ class TeachersController extends TeachersAppController {
             }
         }
 
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
+
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
         $this->UserSession->readStatusSession($this->request->action);
@@ -1561,6 +1567,12 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'languagesView', $languageData['id']));
             }
          }
+
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
 
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
