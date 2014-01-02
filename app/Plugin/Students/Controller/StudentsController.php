@@ -83,8 +83,9 @@ class StudentsController extends StudentsAppController {
 	            $this->studentId = $this->Session->read('StudentId');
 				$this->studentObj = $this->Session->read('StudentObj');
 				$studentFirstName = $this->Student->field('first_name', array('Student.id' => $this->studentId));
+                                $studentMiddleName = $this->Student->field('middle_name', array('Student.id' => $this->studentId));
 				$studentLastName = $this->Student->field('last_name', array('Student.id' => $this->studentId));
-				$name = $studentFirstName ." ". $studentLastName;
+				$name = $studentFirstName ." ". $studentMiddleName ." ". $studentLastName;
 				$this->bodyTitle = $name;
 				$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
 			} 

@@ -170,7 +170,7 @@ class InstitutionSiteTeacher extends AppModel {
 
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 
+				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 'Teacher.middle_name', 
 				'Teacher.last_name', 'Teacher.gender'
 			),
 			'joins' => array(
@@ -226,7 +226,7 @@ class InstitutionSiteTeacher extends AppModel {
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$data = $this->find('all', array(
-			'fields' => array('Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 'TeacherCategory.name'),
+			'fields' => array('Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 'Teacher.middle_name', 'Teacher.last_name', 'Teacher.preferred_name', 'TeacherCategory.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $this->paginateConditions($conditions),
 			'limit' => $limit,
