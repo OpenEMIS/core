@@ -41,6 +41,7 @@ echo $this->Html->script('institution_site_students', false);
 				<div class="table_head">
 					<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 					<div class="table_cell"><?php echo __('First Name'); ?></div>
+                                        <div class="table_cell"><?php echo __('Middle Name'); ?></div>
 					<div class="table_cell"><?php echo __('Last Name'); ?></div>
 				</div>
 			</div>
@@ -72,10 +73,20 @@ echo $this->Html->script('institution_site_students', false);
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value" id="FirstName"></div>
 		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value" id="MiddleName"></div>
+		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value" id="LastName"></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value" id="PreferredName"></div>
 		</div>
 		
 		<div class="row">

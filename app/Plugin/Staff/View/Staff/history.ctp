@@ -54,6 +54,26 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
                             <?php } ?>
 			</div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php //pr($data); ?>
+                            <span style="margin-left: 8px;"><?php echo $data['Staff']['middle_name']; ?></span>
+                            <?php if(@sizeof($data2['middle_name'])>0){ ?>
+                            <div class="table" style="margin-top: 10px;">
+                                <div class="table_body">
+                                    <?php $ctr = 1; foreach($data2['middle_name'] as $val => $time):?>
+                                    <?php if($ctr == 1 && $data['Staff']['middle_name'] == $val) continue; ?>
+                                    <div class="table_row">
+                                        <div class="table_cell cell_value"><?php echo $val; ?></div>
+                                        <div class="table_cell"><?php echo $time; ?></div>
+
+                                    </div>
+                                    <?php $ctr++; endforeach;?>
+                                </div>
+                            </div>
+                            <?php } ?>
+			</div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value">
@@ -63,6 +83,26 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
                                 <div class="table_body">
                                     <?php $ctr = 1; foreach($data2['last_name'] as $val => $time):?>
                                     <?php if($ctr == 1 && $data['Staff']['last_name'] == $val) continue; ?>
+                                    <div class="table_row">
+                                        <div class="table_cell cell_value"><?php echo $val; ?></div>
+                                        <div class="table_cell"><?php echo $time; ?></div>
+
+                                    </div>
+                                    <?php $ctr++; endforeach;?>
+                                </div>
+                            </div>
+                            <?php } ?>
+			</div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value">
+                            <span style="margin-left: 8px;"><?php echo $data['Staff']['preferred_name']; ?></span>
+                            <?php if(@sizeof($data2['preferred_name'])>0){ ?>
+                            <div class="table" style="margin-top: 10px;">
+                                <div class="table_body">
+                                    <?php $ctr = 1; foreach($data2['preferred_name'] as $val => $time):?>
+                                    <?php if($ctr == 1 && $data['Staff']['preferred_name'] == $val) continue; ?>
                                     <div class="table_row">
                                         <div class="table_cell cell_value"><?php echo $val; ?></div>
                                         <div class="table_cell"><?php echo $time; ?></div>

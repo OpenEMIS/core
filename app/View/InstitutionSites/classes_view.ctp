@@ -108,7 +108,7 @@ echo $this->Html->script('search', false);
 					<?php foreach($students[$id] as $obj) { ?>
 					<div class="table_row">
 						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
-						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
+						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']; ?></div>
 						<div class="table_cell"><?php echo $obj['category']; ?></div>
 					</div>
 					<?php } // end for ?>

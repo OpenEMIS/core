@@ -192,7 +192,7 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$data = $this->find('all', array(
-			'fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'StaffCategory.name'),
+			'fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.preferred_name', 'StaffCategory.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $this->paginateConditions($conditions),
 			'limit' => $limit,

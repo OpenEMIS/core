@@ -91,8 +91,9 @@ class StaffController extends StaffAppController {
                 $this->staffId = $this->Session->read('StaffId');
                 $this->staffObj = $this->Session->read('StaffObj');
                 $staffFirstName = $this->Staff->field('first_name', array('Staff.id' => $this->staffId));
+                $staffMiddleName = $this->Staff->field('middle_name', array('Staff.id' => $this->staffId));
                 $staffLastName = $this->Staff->field('last_name', array('Staff.id' => $this->staffId));
-                $name = $staffFirstName ." ". $staffLastName;
+                $name = $staffFirstName ." ". $staffMiddleName ." ". $staffLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('action' => 'view'));
             }
