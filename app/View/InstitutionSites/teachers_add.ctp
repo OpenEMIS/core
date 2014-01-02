@@ -89,8 +89,23 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('Position'); ?></div>
+			<div class="label"><?php echo __('Position Type'); ?></div>
 			<div class="value"><?php echo $this->Form->input('teacher_category_id', array('class' => 'default', 'options' => $categoryOptions)); ?></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Position Title'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_position_title_id', array('class' => 'default', 'options' => $positionTitleptions)); ?></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Position Grade'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_position_grade_id', array('class' => 'default', 'options' => $positionGradeOptions)); ?></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Position Step'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_position_step_id', array('class' => 'default', 'options' => $positionStepOptions)); ?></div>
 		</div>
 		
 		<div class="row">

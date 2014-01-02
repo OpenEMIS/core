@@ -13,6 +13,9 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'studentsEdit'), array('class' => 'divider'));
 		}
+                if($_delete) {
+			echo $this->Html->link(__('Delete'), array('action' => 'studentsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+		}
 		if($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
 			echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
 		}

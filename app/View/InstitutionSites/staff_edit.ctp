@@ -83,8 +83,11 @@ echo $this->Html->script('institution_site_staff', false);
 					echo $this->Form->hidden($i.'.id', array('class' => 'key', 'value' => $pos['InstitutionSiteStaff']['id']));
 					?>
 					<div class="table_cell">
-						<div class="table_cell_row"><?php echo $pos['StaffCategory']['name']; ?></div>
-						<div class="table_cell_row"><?php echo $pos['InstitutionSiteStaff']['position_no']; ?></div>
+                                                <div class="table_cell_row">Number: <?php echo $pos['InstitutionSiteStaff']['position_no']; ?></div>
+						<div class="table_cell_row">Type: <?php echo $pos['StaffCategory']['name']; ?></div>
+                                                <div class="table_cell_row">Title: <?php echo $pos['StaffPositionTitle']['name']; ?></div>
+                                                <div class="table_cell_row">Grade: <?php echo $pos['StaffPositionGrade']['name']; ?></div>
+                                                <div class="table_cell_row">Step: <?php echo $pos['StaffPositionStep']['name']; ?></div>
 					</div>
 					<div class="table_cell">
 						<div class="table_cell_row">
