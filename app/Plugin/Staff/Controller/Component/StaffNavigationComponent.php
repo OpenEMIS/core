@@ -34,13 +34,13 @@ class StaffNavigationComponent extends Component {
 			array(
 				'GENERAL' => array(
 					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
+                                        $navigation->createLink('Contacts', $controller, 'contacts'),
+                                        $navigation->createLink('Identities', $controller, 'identities'),
+                                        $navigation->createLink('Nationalities', $controller, 'nationalities'),   
+                                        $navigation->createLink('Languages', $controller, 'languages'),       
+                                        $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
+                                        $navigation->createLink('Comments', $controller, 'comments'),  
 					$navigation->createLink('Attachments', $controller, 'attachments'),
-                    $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
-                    $navigation->createLink('Comments', $controller, 'comments'),  
-		    		$navigation->createLink('Identities', $controller, 'identities'),
-                    $navigation->createLink('Nationalities', $controller, 'nationalities'),   
-		    		$navigation->createLink('Languages', $controller, 'languages'),                   
-                    $navigation->createLink('Contacts', $controller, 'contacts'),                      
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$'),
 					//$navigation->createLink('Institutions', $controller, 'institutions')
 				),
