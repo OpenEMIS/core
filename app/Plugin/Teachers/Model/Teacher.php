@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class Teacher extends TeachersAppModel {
+
 	public $actsAs = array(
 		'Search' => array(
 			'notExists' => 'SELECT teacher_id FROM institution_site_teachers WHERE teacher_id = Teacher.id',

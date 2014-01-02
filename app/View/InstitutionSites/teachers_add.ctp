@@ -105,7 +105,7 @@ echo $this->Html->script('institution_site_teachers', false);
 		
 		<div class="row">
 			<div class="label"><?php echo __('FTE'); ?></div>
-			<div class="value"><?php echo $this->Form->input('FTE', array('class' => 'default', 'onkeypress' => 'return utility.integerCheck(event)', 'maxlength' => 3)); ?></div>
+			<div class="value"><?php echo $this->Form->input('FTE', array('class' => 'default', 'type' => 'text', 'onkeypress' => 'return utility.FTECheck(event)', 'maxlength' => 4)); ?></div>
 		</div>
 	</div>
 	
