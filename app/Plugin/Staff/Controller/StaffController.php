@@ -1407,6 +1407,12 @@ class StaffController extends StaffAppController {
             }
         }
 
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
+
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
         $this->UserSession->readStatusSession($this->request->action);
@@ -1442,7 +1448,13 @@ class StaffController extends StaffAppController {
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'languagesView', $languageData['id']));
             }
-         }
+        }
+
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
 
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
