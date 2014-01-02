@@ -189,8 +189,8 @@ class ConfigController extends AppController {
 					
 					// if student/teacher/staff prefix
 					if($configItem['ConfigItem']['name'] == "student_prefix" || $configItem['ConfigItem']['name'] == "teacher_prefix" || $configItem['ConfigItem']['name'] == "staff_prefix") {
-						$prefix = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['prefix'];
-						$enable = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['enable'];
+						$prefix = $formData['ConfigItem']['Auto Generated OpenEMIS ID'][$innerKey]['value']['prefix'];
+						$enable = $formData['ConfigItem']['Auto Generated OpenEMIS ID'][$innerKey]['value']['enable'];
 						unset($innerElement[$innerKey]['value']['prefix']);
 						unset($innerElement[$innerKey]['value']['enable']);
 						$innerElement['value'] = $prefix.','.$enable;
@@ -198,8 +198,8 @@ class ConfigController extends AppController {
 					
 					// if student/teacher/staff prefix
 					if($configItem['ConfigItem']['name'] == "student_prefix" || $configItem['ConfigItem']['name'] == "teacher_prefix" || $configItem['ConfigItem']['name'] == "staff_prefix") {
-						$prefix = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['prefix'];
-						$enable = $formData['ConfigItem']['Auto Generated Identification No'][$innerKey]['value']['enable'];
+						$prefix = $formData['ConfigItem']['Auto Generated OpenEMIS ID'][$innerKey]['value']['prefix'];
+						$enable = $formData['ConfigItem']['Auto Generated OpenEMIS ID'][$innerKey]['value']['enable'];
 						unset($innerElement[$innerKey]['value']['prefix']);
 						unset($innerElement[$innerKey]['value']['enable']);
 						$innerElement['value'] = $prefix.','.$enable;

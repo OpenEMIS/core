@@ -22,7 +22,7 @@ $obj = @$data['Staff'];
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
 		<div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?>
             <?php if($autoid!=''){ ?>
             <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid, 'error' => false)); ?>
             <?php } ?>

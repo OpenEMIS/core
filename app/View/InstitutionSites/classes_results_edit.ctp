@@ -39,7 +39,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	
 	<div class="table full_width" style="margin-top: 15px;">
 		<div class="table_head">
-			<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+			<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="table_cell"><?php echo __('Student Name'); ?></div>
 			<div class="table_cell cell_marks"><?php echo __('Marks'); ?></div>
 			<div class="table_cell cell_grading"><?php echo __('Grading'); ?></div>
