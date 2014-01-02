@@ -149,4 +149,5 @@ CakePlugin::load(array('Staff' => array('routes' => true)));
 CakePlugin::load(array('Reports' => array('routes' => true)));
 CakePlugin::load(array('Database' => array('routes' => true)));
 CakePlugin::load(array('Survey' => array('routes' => true)));
+CakePlugin::load(array('Sms' => array('routes' => true)));
 CakePlugin::load('DevInfo6');

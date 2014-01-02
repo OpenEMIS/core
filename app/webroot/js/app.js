@@ -56,6 +56,12 @@ var utility = {
 		var keynum = utility.getKeyPressed(evt);
 		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==46 || keynum==undefined);
 	},
+        
+        FTECheck: function(evt) {
+		var keynum = utility.getKeyPressed(evt);
+                
+		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==46 || keynum==190 || keynum==undefined);
+	},
 	
 	br2nl: function(str, newline) {
 		return str.replace(/(<br \/>)|(<br>)|(<br\/>)/g, newline ? '\n' : '');
