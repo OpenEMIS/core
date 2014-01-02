@@ -369,9 +369,14 @@ class StudentsController extends StudentsAppController {
     public function delete() {
         $id = $this->Session->read('StudentId');
         $name = $this->Student->field('first_name', array('Student.id' => $id));
-        $this->Student->delete($id);
-        // $this->Utility->alert($name . __(' have been deleted successfully.'));
-        $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        if($name !== false){
+            $this->Student->delete($id);
+            // $this->Utility->alert($name . __(' have been deleted successfully.'));
+            $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        }else{
+            $this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
+        }
+        
         $this->redirect(array('action' => 'index'));
     }
 
