@@ -15,7 +15,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
         <div class="row">
-            <div class="label"><?php echo __('Identification No.'); ?></div>
+            <div class="label"><?php echo __('OpenEMIS ID'); ?></div>
             <div class="value"><?php //pr($data); ?>
                             <span style="margin-left: 8px;"><?php echo $data['Teacher']['identification_no']; ?></span>
                             <?php if(@sizeof($data2['identification_no'])>0){ ?>

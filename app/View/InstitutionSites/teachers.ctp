@@ -57,7 +57,7 @@ echo $this->Html->script('institution_site_teachers', false);
         <div class="table full_width allow_hover" action="InstitutionSites/teachersView/">
             <div class="table_head">
 				<div class="table_cell cell_id_no">
-					<span class="left"><?php echo __('Identification No.'); ?></span>
+					<span class="left"><?php echo __('OpenEMIS ID'); ?></span>
 					<span class="icon_sort_<?php echo ($orderBy =='Teacher.identification_no')?$orderSort:'up'; ?>" orderBy="Teacher.identification_no"></span>
                 </div>
 				<div class="table_cell">

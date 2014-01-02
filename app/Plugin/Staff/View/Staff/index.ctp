@@ -30,7 +30,7 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
             <?php echo $this->Form->input('SearchField', array(
                 'id'=>'SearchField',
                 'value'=>$searchField,
-                'placeholder'=> __("Staff Identification No, First Name or Last Name"),
+                'placeholder'=> __("Staff OpenEMIS ID, First Name or Last Name"),
                 'class'=>'default',
                 'label'=>false,
                 'div'=>false)); 
@@ -60,7 +60,7 @@ if(strlen($this->Paginator->counter('{:count}')) > 0) {
         <div class="table allow_hover" action="Staff/viewStaff/">
             <div class="table_head" url="Staff/index">
                 <div class="table_cell cell_id_no">
-                    <span class="left"><?php echo __('Identification No.'); ?></span>
+                    <span class="left"><?php echo __('OpenEMIS ID'); ?></span>
                     <span class="icon_sort_<?php echo ($sortedcol =='Staff.identification_no')?$sorteddir:'up'; ?>"  order="Staff.identification_no"></span>
                 </div>
                 <div class="table_cell cell_name">

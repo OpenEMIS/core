@@ -28,7 +28,7 @@ $obj = @$data['Teacher'];
 	<fieldset class="section_break">
 		<legend><?php echo __('Information'); ?></legend>
         <div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
             <?php if($autoid==''){ ?>
             <div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'],
 														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_teacher_identification');")); ?>

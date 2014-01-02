@@ -165,7 +165,8 @@ var InstitutionSiteClasses = {
 						row.attr('student-id', studentId);
 						row.find('[attr="id"]').html(studentOption.attr('id'));
 						row.find('[attr="name"]').html(studentOption.attr('name'));
-						row.find('[attr="category"]').html(categoryOption.html());
+						//row.find('[attr="category"]').html(row.find("select"));
+                                                //row.find("select").val(categoryId);
 					} else {
 						var alertOpt = {
 							id: 'student_alert',
@@ -189,6 +190,48 @@ var InstitutionSiteClasses = {
 			});
 		}
 	},
+        
+        changeStudentCategory:function(obj){
+                var row = $(obj).closest('.table_row');
+		var categoryOption = $(row).find('[attr="category"] option:selected');
+		var studentId = row.attr('student-id');
+		var categoryId = $(categoryOption).val();
+                
+                //alert(categoryId);
+		
+		if(studentId != '' && categoryId != '') {
+			var maskId;
+			var ajaxParams = {studentId: studentId, action: 'change_category', categoryId: categoryId};
+			var ajaxSuccess = function(data, textStatus) {
+				var callback = function() {
+					if(data.type == ajaxType.success) {
+//						row.attr('student-id', studentId);
+//						row.find('[attr="id"]').html(studentOption.attr('id'));
+//						row.find('[attr="name"]').html(studentOption.attr('name'));
+//						row.find('[attr="category"]').html(categoryOption.html());
+					} else {
+						var alertOpt = {
+							id: 'student_alert',
+							parent: '.content_wrapper',
+							type: alertType.error,
+							text: data.msg,
+							position: 'center'
+						}
+						$.alert(alertOpt);
+					}
+				};
+				$.unmask({id: maskId, callback: callback});
+			};
+			$.ajax({
+				type: 'GET',
+				dataType: 'json',
+				url: getRootURL() + $(obj).closest('.table_body').attr('url'),
+				data: ajaxParams,
+				beforeSend: function (jqXHR) { maskId = $.mask({parent: $(obj).closest('fieldset')}); },
+				success: ajaxSuccess
+			});
+		}
+        },
 	
 	deleteStudent: function(obj) {
 		var row = $(obj).closest('.table_row');
