@@ -1682,7 +1682,17 @@ class InstitutionSitesController extends AppController {
                                                     }
                                                     
                                                 }
-					}
+                                        }else{
+                                            if(isset($data['FTE']) && strlen($data['FTE']) > 0){
+                                                $PTE = floatval($data['FTE']);
+                                                        
+                                                if($PTE < 0.01 || $PTE > 1){
+                                                    $msg = 'FTE value should be from 0.01 to 1.00';
+                                                    $this->Utility->alert($msg, array('type' => 'warn'));
+                                                    $insert = false;
+                                                }
+                                            }
+                                        }
 				} else {
 					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
