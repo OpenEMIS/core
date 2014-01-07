@@ -47,7 +47,7 @@ echo $this->Html->script('bankaccounts', false);
                     'label' => false,
                     'empty' => __('--Select--'),
                     'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
-                    'onchange' => 'jsForm.change(this)'
+                    'onchange' => 'BankAccounts.getBranchesAfterChangeBank(this)'
                 ));
             ?>
         </div>
