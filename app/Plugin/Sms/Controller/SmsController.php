@@ -349,13 +349,15 @@ class SmsController extends SmsAppController {
              $fieldName[count($fieldName)-1] = end($fieldName) . "\n";
         }*/
         if(!empty($data)){
-           foreach($data as $obj){
+            $i = 0;
+            foreach($data as $obj){
                 foreach($obj as $key=>$value){
                     if(isset($value['number'])){
-                        $result[] = $value['number'];
+                        $result[$i][] = $value['number'];
                     }
-                   $result[] = '"' . str_replace(',', ' ',array_pop(array_values($value))) . '"';
+                   $result[$i][] = '"' . str_replace(',', ' ',array_pop(array_values($value))) . '"';
                 }
+                $i++;
             }
         }
         echo $this->download_csv_results( 'sms_responses_' . date('Ymdhis') . '.csv');
@@ -380,7 +382,9 @@ class SmsController extends SmsAppController {
        fputs($df, implode(",", $fieldName)."\n");
 
         if(!empty($results)){
-            fputs($df, implode(",", $results));
+            foreach($results as $key=>$value){
+                fputs($df, implode(",", $value)."\n");
+            }
         }
        fclose($df);
        return ob_get_clean();
