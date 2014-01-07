@@ -153,6 +153,25 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
                 <?php } ?>
 			</div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Date of Death'); ?></div>
+			<div class="value">
+                <span><?php echo $this->Utility->formatDate($data['Student']['date_of_death']); ?></span>
+                <?php if(@sizeof($data2['date_of_death'])>0){ ?>
+                <div class="table">
+                    <div class="table_body"><?php //pr($data2);?>
+                        <?php $ctr = 1; foreach($data2['date_of_death'] as $val => $time):?>
+                        <?php if($ctr == 1 && $data['Student']['date_of_death'] == $val) continue; ?>
+                        <div class="table_row">
+							<div class="table_cell cell_value"><?php echo $this->Utility->formatDate($val); ?></div>
+                            <div class="table_cell cell_datetime"><?php echo $time; ?></div>
+                        </div>
+                        <?php $ctr++; endforeach;?>
+                    </div>
+                </div>
+                <?php } ?>
+			</div>
+		</div>
 	</fieldset>
 	<fieldset class="section_break">
 		<legend><?php echo __('Address'); ?></legend>
