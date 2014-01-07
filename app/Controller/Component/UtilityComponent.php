@@ -132,6 +132,10 @@ class UtilityComponent extends Component {
 
 		// Reports
 		$msgList['REPORT_NO_FILES'] = "There are no available files found for this report.";
+
+		$msgList['ADD_ERROR'] = 'Record is not added due to errors encountered.';
+		$msgList['UPDATE_ERROR'] = 'Record is not updated due to errors encountered.';
+		
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 
 
