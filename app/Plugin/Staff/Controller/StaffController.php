@@ -329,8 +329,13 @@ class StaffController extends StaffAppController {
     public function delete() {
         $id = $this->Session->read('StaffId');
         $name = $this->Staff->field('first_name', array('Staff.id' => $id));
-        $this->Staff->delete($id);
-        $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        if($name !== false){
+            $this->Staff->delete($id);
+            $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        }else{
+            $this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
+        }
+        
         $this->redirect(array('action' => 'index'));
     }
 
