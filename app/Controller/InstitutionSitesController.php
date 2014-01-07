@@ -633,8 +633,13 @@ class InstitutionSitesController extends AppController {
 		}
 		$bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
-        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
-        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $bankId = isset($this->request->data['InstitutionSiteBankAccount']['bank_id']) ? $this->request->data['InstitutionSiteBankAccount']['bank_id'] : "";
+        if(!empty($bankId)){
+            $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        }else{
+            $bankBranches = array();
+        }
+        
         $this->set('bankBranches', $bankBranches);
         $this->set('selectedBank', $bankId);
 
@@ -665,7 +670,7 @@ class InstitutionSitesController extends AppController {
             }
      	}
 
-  	 	$bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+  	 	$bankId = isset($this->request->data['InstitutionSiteBankAccount']['bank_id']) ? $this->request->data['InstitutionSiteBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
 		$this->set('selectedBank', $bankId);
 
         $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
