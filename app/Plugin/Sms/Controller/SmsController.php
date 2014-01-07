@@ -340,9 +340,9 @@ class SmsController extends SmsAppController {
         ));
         $fieldName = null;
         $result = null;
-         $fieldName[] = __('Number');
+         $fieldName[] = '"' . __('Number') . '"';
         foreach($messages as $value){
-            $fieldName[] = str_replace(',', ' ', $value['SmsMessage']['message']);
+            $fieldName[] = '"' . str_replace(',', ' ', $value['SmsMessage']['message']) . '"';
           
         }
         /*if(!empty($fieldName)){
@@ -354,7 +354,7 @@ class SmsController extends SmsAppController {
                     if(isset($value['number'])){
                         $result[] = $value['number'];
                     }
-                   $result[] = str_replace(',', ' ',array_pop(array_values($value)));
+                   $result[] = '"' . str_replace(',', ' ',array_pop(array_values($value))) . '"';
                 }
             }
         }
@@ -380,7 +380,7 @@ class SmsController extends SmsAppController {
        fputs($df, implode(",", $fieldName)."\n");
 
         if(!empty($results)){
-            fputcsv($df,$results);  
+            fputs($df, implode(",", $results));
         }
        fclose($df);
        return ob_get_clean();
