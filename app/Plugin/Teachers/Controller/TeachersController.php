@@ -389,8 +389,13 @@ class TeachersController extends TeachersAppController {
     public function delete() {
         $id = $this->Session->read('TeacherId');
         $name = $this->Teacher->field('first_name', array('Teacher.id' => $id));
-        $this->Teacher->delete($id);
-        $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        if($name !== false){
+            $this->Teacher->delete($id);
+            $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        }else{
+            $this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
+        }
+        
         $this->redirect(array('action' => 'index'));
     }
 
