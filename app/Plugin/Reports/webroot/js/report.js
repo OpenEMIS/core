@@ -154,7 +154,7 @@ var olapReport = {
 
             },
             error: function(data, textStatus) {
-
+                console.log(data);
                 $.closeDialog();
                 var alertOpt = {
                     // id: 'alert-' + new Date().getTime(),
