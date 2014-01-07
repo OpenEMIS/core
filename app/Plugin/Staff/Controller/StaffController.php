@@ -1771,6 +1771,8 @@ class StaffController extends StaffAppController {
                 $this->StaffSalary->saveAll($this->request->data);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'salaries'));
+            }else{
+                 $this->Utility->alert($this->Utility->getMessage('ADD_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
             }
         }
 
@@ -1844,6 +1846,8 @@ class StaffController extends StaffAppController {
                 $this->StaffSalary->saveAll($this->request->data);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'salariesView', $salaryId));
+            }else{
+                 $this->Utility->alert($this->Utility->getMessage('UPDATE_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
             }
          }
 

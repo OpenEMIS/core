@@ -1904,7 +1904,6 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'salaries'));
             }else{
                 $this->Utility->alert($this->Utility->getMessage('ADD_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
-                pr('test');
             }
         }
 
