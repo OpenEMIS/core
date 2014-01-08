@@ -283,13 +283,13 @@ class ReportsController extends ReportsAppController {
     public function olapGetObservations(){
         $this->autoRender = false;
         
-        $this->request->data['variables'] = array('Area.name','Institution.name','Institution.code','InstitutionSector.name','InstitutionProvider.name','InstitutionStatus.name','InstitutionSite.name','InstitutionSite.code','InstitutionSiteLocality.name','InstitutionSiteType.name','InstitutionSiteOwnership.name','InstitutionSiteStatus.name');
+        /*$this->request->data['variables'] = array('Area.name','Institution.name','Institution.code','InstitutionSector.name','InstitutionProvider.name','InstitutionStatus.name','InstitutionSite.name','InstitutionSite.code','InstitutionSiteLocality.name','InstitutionSiteType.name','InstitutionSiteOwnership.name','InstitutionSiteStatus.name');
         $this->request->data['observationId']  = "1508";
         $this->request->data['year']  = "2006";
         $this->request->data['batch']  = "258";
-        $this->request->data['last']  = false;
+        $this->request->data['last']  = false;*/
 
-        //if($this->request->is('post')){
+        if($this->request->is('post')){
             $data = array('observations'=> array(), 'size' => 0);
             $fields = array();
             $models = array();
@@ -318,7 +318,7 @@ class ReportsController extends ReportsAppController {
 
             $data['total'] = sizeof($data['observations']);
             return json_encode($data);
-     //}
+     }
 
     }
 
