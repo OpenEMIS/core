@@ -136,11 +136,56 @@ class ConfigController extends AppController {
 				'recursive' => 0,
 				'conditions' => array('ConfigItem.editable' => 1, 'ConfigItem.visible' => 1)
 			));
+                
+                if($this->request->is('post')){
+                    $requestData = $this->request->data;
+                    
+                    foreach ($requestData['ConfigItem']['Data Discrepancy'] as $key => $value){
+                        if($value['id'] == 17){
+                            $dataDiscrepancy = $value['value'];
+                            break;
+                        }
+                    }
+                    
+                    foreach ($requestData['ConfigItem']['Data Outliers'] as $key => $value){
+                        if($value['id'] == 18){
+                            $maxStudentAge = $value['value'];
+                            continue;
+                        }else if($value['id'] == 19){
+                            $minStudentAge = $value['value'];
+                            continue;
+                        }else if($value['id'] == 20){
+                            $maxStudentNumber = $value['value'];
+                            continue;
+                        }else if($value['id'] == 21){
+                            $minStudentNumber = $value['value'];
+                            continue;
+                        }
+                    }
+                }
+                
 		foreach ($items as $key => $value) {
 			foreach ($items[$key] as $innerKey => $innerValue) {
-				$items[$key][$innerKey]['value'] = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
+                            if($this->request->is('post') && ($innerValue['id'] == 17 || $innerValue['id'] == 18 || $innerValue['id'] == 19 || $innerValue['id'] == 20 || $innerValue['id'] == 21)){
+                                $backUpValue = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
+                                if($innerValue['id'] == 17){
+                                    $items[$key][$innerKey]['value'] = isset($dataDiscrepancy) ? $dataDiscrepancy : $backUpValue;
+                                }else if($innerValue['id'] == 18){
+                                    $items[$key][$innerKey]['value'] = isset($maxStudentAge) ? $maxStudentAge : $backUpValue;
+                                }else if($innerValue['id'] == 19){
+                                    $items[$key][$innerKey]['value'] = isset($minStudentAge) ? $minStudentAge : $backUpValue;
+                                }else if($innerValue['id'] == 20){
+                                    $items[$key][$innerKey]['value'] = isset($maxStudentNumber) ? $maxStudentNumber : $backUpValue;
+                                }else if($innerValue['id'] == 21){
+                                    $items[$key][$innerKey]['value'] = isset($minStudentNumber) ? $minStudentNumber : $backUpValue;
+                                }
+                            }else{
+                                $items[$key][$innerKey]['value'] = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
+                            }
+				
 			}
 		}
+                
 		$schoolYear = $this->SchoolYear->find('list', array('fields' => array('SchoolYear.id', 'SchoolYear.name'), 'order' => array('name desc')));
 
 		$sorted = $this->groupByType($this->Utility->formatResult($items));
@@ -160,6 +205,38 @@ class ConfigController extends AppController {
 						}
 					}
 				}
+                                
+                                if($key=='Data Discrepancy'){
+					if($innerElement['id']=='17'){
+						$value = $innerElement['value'];
+						if(!is_numeric($value) || $value < 0 || $value > 100){
+							$error[$innerElement['id']] = "Please enter a numeric value between 0 to 100";
+						}
+					}
+				}else if($key=='Data Outliers'){
+					if($innerElement['id']=='18'){
+						$value = $innerElement['value'];
+						if(!is_numeric($value) || $value < 0 || $value > 50){
+							$error[$innerElement['id']] = "Please enter an appropriate numeric value";
+						}
+					}else if($innerElement['id']=='19'){
+						$value = $innerElement['value'];
+						if(!is_numeric($value) || $value < 0 || $value > 50){
+							$error[$innerElement['id']] = "Please enter an appropriate numeric value";
+						}
+					}else if($innerElement['id']=='20'){
+						$value = $innerElement['value'];
+						if(!is_numeric($value) || !preg_match('/^\d*$/', $value)){
+							$error[$innerElement['id']] = "Please enter an appropriate numeric value";
+						}
+					}else if($innerElement['id']=='21'){
+						$value = $innerElement['value'];
+						if(!is_numeric($value) || !preg_match('/^\d*$/', $value)){
+							$error[$innerElement['id']] = "Please enter an appropriate numeric value";
+						}
+					}
+				}
+                                
 			}
 		}
 
@@ -179,7 +256,7 @@ class ConfigController extends AppController {
 					break;
 				}
 			}
-			//pr($dataToBeSave);'
+			
 			foreach($dataToBeSave as $key => $element){
 				foreach($element as $innerKey => $innerElement){
 					$yearbookLogoElement = "";
@@ -268,9 +345,13 @@ class ConfigController extends AppController {
 								}
 							}
 						}
-					}
-					
-					//$this->log($innerElement, 'debug');
+					}else if($key === 'Data Outliers') {
+                                            if($innerElement['id'] == 18 || $innerElement['id'] == 19 || $innerElement['id'] == 20 || $innerElement['id'] == 21){
+                                                $innerElement['value'] = intval($innerElement['value']);
+                                            }
+                                        }
+
+					$this->log($innerElement, 'debug');
 					if ($this->ConfigItem->save($innerElement)) {
 						$savedItems = true;
 						if($configItem['ConfigItem']['name'] == "date_format") {
