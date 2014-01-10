@@ -90,8 +90,9 @@ class TeachersController extends TeachersAppController {
                 $this->teacherId = $this->Session->read('TeacherId');
                 $this->teacherObj = $this->Session->read('TeacherObj');
                 $teacherFirstName = $this->Teacher->field('first_name', array('Teacher.id' => $this->teacherId));
+                $teacherMiddleName = $this->Teacher->field('middle_name', array('Teacher.id' => $this->teacherId));
                 $teacherLastName = $this->Teacher->field('last_name', array('Teacher.id' => $this->teacherId));
-                $name = $teacherFirstName ." ". $teacherLastName;
+                $name = $teacherFirstName ." ". $teacherMiddleName ." ". $teacherLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('action' => 'view'));
             }
@@ -271,7 +272,7 @@ class TeachersController extends TeachersAppController {
 		$this->set('data', $data);
     }
 
-    public function location() {
+    public function positions() {
         $this->Navigation->addCrumb(ucfirst($this->action));
         $teacherId = $this->Session->read('TeacherId');
         $data = array();
@@ -296,7 +297,7 @@ class TeachersController extends TeachersAppController {
             $data[$dataKey][] = $result;
         }
 		if(empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_LOCATION'), array('type' => 'info', 'dismissOnClick' => false));
+			$this->Utility->alert($this->Utility->getMessage('NO_POSITION'), array('type' => 'info', 'dismissOnClick' => false));
 		}
         $this->set('data', $data);
     }
@@ -388,8 +389,13 @@ class TeachersController extends TeachersAppController {
     public function delete() {
         $id = $this->Session->read('TeacherId');
         $name = $this->Teacher->field('first_name', array('Teacher.id' => $id));
-        $this->Teacher->delete($id);
-        $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        if($name !== false){
+            $this->Teacher->delete($id);
+            $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        }else{
+            $this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
+        }
+        
         $this->redirect(array('action' => 'index'));
     }
 
@@ -1190,8 +1196,14 @@ class TeachersController extends TeachersAppController {
         }
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
-        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
-        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $bankId = isset($this->request->data['TeacherBankAccount']['bank_id']) ? $this->request->data['TeacherBankAccount']['bank_id'] : "";
+        if(!empty($bankId)){
+            $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        }else{
+            $bankBranches = array();
+        }
+        
+        //pr($bankBranches);
         $this->set('bankBranches', $bankBranches);
         $this->set('selectedBank', $bankId);
         $this->set('teacher_id', $this->teacherId);
@@ -1217,7 +1229,7 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['TeacherBankAccount']['id']));
             }
          }
-        $bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+        $bankId = isset($this->request->data['TeacherBankAccount']['bank_id']) ? $this->request->data['TeacherBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
         $this->set('selectedBank', $bankId);
 
         $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
@@ -1246,6 +1258,17 @@ class TeachersController extends TeachersAppController {
             $this->autoRender = false;
             $bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
             echo json_encode($bank);
+    }
+    
+    public function getBranchesByBankId(){
+            $this->autoRender = false;
+
+            if(isset($this->params['pass'][0]) && !empty($this->params['pass'][0])) {
+                $bankId = $this->params['pass'][0];
+                $bankBranches = $this->BankBranch->find('all', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+                //pr($bankBranches);
+                echo json_encode($bankBranches);
+            }
     }
 
     // Staff behaviour part
@@ -1525,6 +1548,12 @@ class TeachersController extends TeachersAppController {
             }
         }
 
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
+
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
         $this->UserSession->readStatusSession($this->request->action);
@@ -1561,6 +1590,12 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'languagesView', $languageData['id']));
             }
          }
+
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
 
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
@@ -1874,7 +1909,6 @@ class TeachersController extends TeachersAppController {
                 $this->redirect(array('action' => 'salaries'));
             }else{
                 $this->Utility->alert($this->Utility->getMessage('ADD_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
-                pr('test');
             }
         }
 

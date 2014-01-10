@@ -7,7 +7,7 @@
 			<option value="">-- <?php echo __('Select Student'); ?> --</option>
 			<?php foreach($data as $student) {
 			$obj = $student['Student'];
-			$fullname = $obj['first_name'] . ' ' . $obj['last_name'];
+			$fullname = $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name'];
 			$option = '<option value="%d" id="%s" name="%s">%s - %s</option>';
 			echo sprintf($option, $obj['id'], $obj['identification_no'], $fullname, $obj['identification_no'], $fullname);
 			} ?>

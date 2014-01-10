@@ -39,7 +39,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	
 	<div class="table full_width" style="margin-top: 15px;">
 		<div class="table_head">
-			<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+			<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="table_cell"><?php echo __('Student Name'); ?></div>
 			<div class="table_cell cell_marks"><?php echo __('Marks'); ?></div>
 			<div class="table_cell cell_grading"><?php echo __('Grading'); ?></div>
@@ -54,7 +54,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 				echo $this->Form->hidden($i.'.school_year_id', array('value' => $obj['InstitutionSiteClass']['school_year_id']));
 				?>
 				<div class="table_cell middle"><?php echo $obj['Student']['identification_no']; ?></div>
-				<div class="table_cell middle"><?php echo sprintf('%s %s', $obj['Student']['first_name'], $obj['Student']['last_name']); ?></div>
+				<div class="table_cell middle"><?php echo sprintf('%s %s %s', $obj['Student']['first_name'], $obj['Student']['middle_name'], $obj['Student']['last_name']); ?></div>
 				<div class="table_cell">
 					<div class="input_wrapper">
 					<?php 

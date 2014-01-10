@@ -74,7 +74,7 @@ echo $this->Html->script('security', false);
 	
 	<div class="table full_width">
 		<div class="table_head">
-			<div class="table_cell" style="width: 200px;"><?php echo __('Identification No'); ?></div>
+			<div class="table_cell" style="width: 200px;"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="table_cell"><?php echo __('Name'); ?></div>
 			<div class="table_cell cell_module"><?php echo __('Module'); ?></div>
 			<div class="table_cell cell_icon_action"></div>

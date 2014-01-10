@@ -52,12 +52,12 @@ echo $this->Html->script('bankaccounts', false);
                     'label' => false,
                     'empty' => __('--Select--'),
                     'url' => sprintf('%s/%s/%s', $this->params['controller'], $this->params['action'], $id),
-                    'onchange' => 'jsForm.change(this)'
+                    'onchange' => 'BankAccounts.getBranchesAfterChangeBank(this)'
                 ));
             ?>
         </div>
     </div>
-	<div class="row edit">
+	<div class="row edit branch">
 		<div class="label"><?php echo __('Branch'); ?></div>
 		<div class="value"><?php echo $this->Form->input('bank_branch_id', array($this->request->data['InstitutionSiteBankAccount']['bank_branch_id'], 'label'=>false, 'options'=>$bankBranch, 'empty' => __('--Select--'))); ?></div>
 	</div>

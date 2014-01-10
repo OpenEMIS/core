@@ -75,12 +75,18 @@ class InstitutionSitesController extends AppController {
 		'Teachers.TeacherStatus',
 		'Teachers.TeacherAttendance',
 		'Teachers.TeacherCategory',
+                'Teachers.TeacherPositionTitle',
+                'Teachers.TeacherPositionGrade',
+                'Teachers.TeacherPositionStep',
 		'Teachers.TeacherBehaviour',
 		'Teachers.TeacherBehaviourCategory',
 		'Staff.Staff',
 		'Staff.StaffStatus',
 		'Staff.StaffAttendance',
 		'Staff.StaffCategory',
+                'Staff.StaffPositionTitle',
+                'Staff.StaffPositionGrade',
+                'Staff.StaffPositionStep',
 		'Staff.StaffBehaviour',
 		'Staff.StaffBehaviourCategory',
         'SecurityGroupUser',
@@ -627,8 +633,13 @@ class InstitutionSitesController extends AppController {
 		}
 		$bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
-        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
-        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $bankId = isset($this->request->data['InstitutionSiteBankAccount']['bank_id']) ? $this->request->data['InstitutionSiteBankAccount']['bank_id'] : "";
+        if(!empty($bankId)){
+            $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        }else{
+            $bankBranches = array();
+        }
+        
         $this->set('bankBranches', $bankBranches);
         $this->set('selectedBank', $bankId);
 
@@ -659,7 +670,7 @@ class InstitutionSitesController extends AppController {
             }
      	}
 
-  	 	$bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+  	 	$bankId = isset($this->request->data['InstitutionSiteBankAccount']['bank_id']) ? $this->request->data['InstitutionSiteBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
 		$this->set('selectedBank', $bankId);
 
         $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
@@ -967,7 +978,8 @@ class InstitutionSitesController extends AppController {
 			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
 			$students = $this->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
 			$teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
-            $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
+                        $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
+                        $studentCategoryOptions = $this->StudentCategory->findList(true);
 			
 			$this->set('classId', $classId);
 			$this->set('className', $className);
@@ -977,6 +989,7 @@ class InstitutionSitesController extends AppController {
 			$this->set('teachers', $teachers);
                         $this->set('no_of_seats', $classObj['InstitutionSiteClass']['no_of_seats']);
                         $this->set('no_of_shifts', $classObj['InstitutionSiteClass']['no_of_shifts']);
+                        $this->set('studentCategoryOptions', $studentCategoryOptions);
                         
             $this->set('subjects', $subjects);
 		} else {
@@ -1025,7 +1038,8 @@ class InstitutionSitesController extends AppController {
 			
 			$result = false;
 			if($action === 'add') {
-				$categoryId = $this->params->query['categoryId'];
+                                $categoryId = $this->params->query['categoryId'];
+                            
 				$data = array(
 					'student_id' => $studentId, 
 					'student_category_id' => $categoryId,
@@ -1033,7 +1047,16 @@ class InstitutionSitesController extends AppController {
 				);
 				$this->InstitutionSiteClassGradeStudent->create();
 				$result = $this->InstitutionSiteClassGradeStudent->save($data);
-			} else {
+                        } else if($action === 'change_category'){
+                                $categoryId = $this->params->query['categoryId'];
+                                
+                                $fieldsToBeUpdated = array('InstitutionSiteClassGradeStudent.student_category_id' => $categoryId);
+                                $updateConditions = array(
+                                                        'InstitutionSiteClassGradeStudent.student_id' => $studentId, 
+                                                        'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
+                                                    );
+                                $result = $this->InstitutionSiteClassGradeStudent->updateAll($fieldsToBeUpdated, $updateConditions);
+                        } else {
 				$result = $this->InstitutionSiteClassGradeStudent->deleteAll(array(
 					'InstitutionSiteClassGradeStudent.student_id' => $studentId,
 					'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
@@ -1453,7 +1476,7 @@ class InstitutionSitesController extends AppController {
 			$studentId = $this->params['pass'][0];
 			$this->Session->write('InstitutionSiteStudentId', $studentId);
 			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+			$name = sprintf('%s %s %s', $data['Student']['first_name'], $data['Student']['middle_name'], $data['Student']['last_name']);
 			$this->Navigation->addCrumb($name);
 			
 			$details = $this->InstitutionSiteStudent->getDetails($studentId, $this->institutionSiteId);
@@ -1470,6 +1493,50 @@ class InstitutionSitesController extends AppController {
 			$this->redirect(array('action' => 'students'));
 		}
 	}
+        
+        public function studentsDelete(){
+                if($this->Session->check('InstitutionSiteStudentId') && $this->Session->check('InstitutionSiteId')) {
+                    $studentId = $this->Session->read('InstitutionSiteStudentId');
+                    $InstitutionSiteId = $this->Session->read('InstitutionSiteId');
+                    
+                    $SiteStudentRecordIds = $this->InstitutionSiteStudent->getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId);
+                    if(!empty($SiteStudentRecordIds)){
+                        $this->InstitutionSiteStudent->deleteAll(array('InstitutionSiteStudent.id' => $SiteStudentRecordIds), false);
+                    }
+                    
+                    $GradeStudentRecordIds = $this->InstitutionSiteClassGradeStudent->getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId);
+                    if(!empty($GradeStudentRecordIds)){
+                        $this->InstitutionSiteClassGradeStudent->deleteAll(array('InstitutionSiteClassGradeStudent.id' => $GradeStudentRecordIds), false);
+                    }
+                    
+                    $this->AssessmentItemResult->deleteAll(array(
+                                                            'AssessmentItemResult.student_id' => $studentId,
+                                                            'AssessmentItemResult.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $this->StudentBehaviour->deleteAll(array(
+                                                            'StudentBehaviour.student_id' => $studentId,
+                                                            'StudentBehaviour.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $this->StudentAttendance->deleteAll(array(
+                                                            'StudentAttendance.student_id' => $studentId,
+                                                            'StudentAttendance.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $StudentDetailsCustomValueObj = ClassRegistry::init('StudentDetailsCustomValue');
+                    $StudentDetailsCustomValueObj->deleteAll(array(
+                                                            'StudentDetailsCustomValue.student_id' => $studentId,
+                                                            'StudentDetailsCustomValue.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    
+                    $this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
+                    $this->redirect(array('action' => 'students'));
+                }else{
+                    $this->redirect(array('action' => 'students'));
+                }
+        }
 	
 	public function studentsEdit() {
 		if($this->Session->check('InstitutionSiteStudentId')) {
@@ -1486,7 +1553,7 @@ class InstitutionSitesController extends AppController {
 			}
 			
 			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+			$name = sprintf('%s %s %s', $data['Student']['first_name'], $data['Student']['middle_name'], $data['Student']['last_name']);
 			$this->Navigation->addCrumb($name);
 			$statusOptions = $this->StudentStatus->findList(true);
 			
@@ -1561,11 +1628,17 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Add Teacher');
 		$yearRange = $this->SchoolYear->getYearRange();
 		$categoryOptions = $this->TeacherCategory->findList(true);
+                $positionTitleptions = $this->TeacherPositionTitle->findList(true);
+                $positionGradeOptions = $this->TeacherPositionGrade->findList(true);
+                $positionStepOptions = $this->TeacherPositionStep->findList(true);
 		$statusOptions = $this->TeacherStatus->findList(true);
 		
 		$this->set('minYear', current($yearRange));
 		$this->set('maxYear', array_pop($yearRange));
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleptions', $positionTitleptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
 		$this->set('statusOptions', $statusOptions);
 	}
 	
@@ -1592,11 +1665,11 @@ class InstitutionSitesController extends AppController {
 						}
 						if($obj) {
 							$teacherObj = $this->Teacher->find('first', array(
-								'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
+								'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.middle_name', 'Teacher.last_name', 'Teacher.gender'),
 								'conditions' => array('Teacher.id' => $data['teacher_id'])
 							));
 							$position = $data['position_no'];
-							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
 							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
 							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
 							$msg .= '<br>' . __('Please choose another position number.');
@@ -1614,7 +1687,17 @@ class InstitutionSitesController extends AppController {
                                                     }
                                                     
                                                 }
-					}
+                                        }else{
+                                            if(isset($data['FTE']) && strlen($data['FTE']) > 0){
+                                                $PTE = floatval($data['FTE']);
+                                                        
+                                                if($PTE < 0.01 || $PTE > 1){
+                                                    $msg = 'FTE value should be from 0.01 to 1.00';
+                                                    $this->Utility->alert($msg, array('type' => 'warn'));
+                                                    $insert = false;
+                                                }
+                                            }
+                                        }
 				} else {
 					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
@@ -1632,7 +1715,7 @@ class InstitutionSitesController extends AppController {
 			$teacherId = $this->params['pass'][0];
 			$this->Session->write('InstitutionSiteTeachersId', $teacherId);
 			$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-			$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+			$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 			$positions = $this->InstitutionSiteTeacher->getPositions($teacherId, $this->institutionSiteId);
 			$this->Navigation->addCrumb($name);
 			if(!empty($positions)) {
@@ -1654,7 +1737,7 @@ class InstitutionSitesController extends AppController {
 			
 			if($this->request->is('get')) {
 				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-				$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+				$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 				$positions = $this->InstitutionSiteTeacher->getPositions($teacherId, $this->institutionSiteId);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $data['Teacher']['id']));
 				$this->Navigation->addCrumb('Edit');
@@ -1746,10 +1829,16 @@ class InstitutionSitesController extends AppController {
 		
 		$index = $this->params->query['index'] + 1;
 		$categoryOptions = $this->TeacherCategory->findList(true);
+                $positionTitleOptions = $this->TeacherPositionTitle->findList(true);
+                $positionGradeOptions = $this->TeacherPositionGrade->findList(true);
+                $positionStepOptions = $this->TeacherPositionStep->findList(true);
 		$statusOptions = $this->TeacherStatus->findList(true);
 		
 		$this->set('index', $index);
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleOptions', $positionTitleOptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
 		$this->set('statusOptions', $statusOptions);
 	}
 	
@@ -1808,11 +1897,17 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Add Staff');
 		$yearRange = $this->SchoolYear->getYearRange();
 		$categoryOptions = $this->StaffCategory->findList(true);
+                $positionTitleptions = $this->StaffPositionTitle->findList(true);
+                $positionGradeOptions = $this->StaffPositionGrade->findList(true);
+                $positionStepOptions = $this->StaffPositionStep->findList(true);
 		$statusOptions = $this->StaffStatus->findList(true);
 		
 		$this->set('minYear', current($yearRange));
 		$this->set('maxYear', array_pop($yearRange));
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleptions', $positionTitleptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
 		$this->set('statusOptions', $statusOptions);
 	}
 	
@@ -1840,11 +1935,11 @@ class InstitutionSitesController extends AppController {
 						}
 						if($obj) {
 							$staffObj = $this->Staff->find('first', array(
-								'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
+								'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.gender'),
 								'conditions' => array('Staff.id' => $data['staff_id'])
 							));
 							$position = $data['position_no'];
-							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
 							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
 							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
 							$msg .= '<br>' . __('Please choose another position number.');
@@ -1853,9 +1948,10 @@ class InstitutionSitesController extends AppController {
 						}
 					}
 				} else {
+                                        $insert = false;
 					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
-				if($insert) {
+				if(isset($insert) && $insert) {
 					$this->InstitutionSiteStaff->save($data);
 					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
 				}
@@ -1869,7 +1965,7 @@ class InstitutionSitesController extends AppController {
 			$staffId = $this->params['pass'][0];
 			$this->Session->write('InstitutionSiteStaffId', $staffId);
 			$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-			$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+			$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 			$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
 			$this->Navigation->addCrumb($name);
 			if(!empty($positions)) {
@@ -1889,7 +1985,7 @@ class InstitutionSitesController extends AppController {
 			
 			if($this->request->is('get')) {
 				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-				$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+				$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 				$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $data['Staff']['id']));
 				$this->Navigation->addCrumb('Edit');
@@ -1944,10 +2040,16 @@ class InstitutionSitesController extends AppController {
 		
 		$index = $this->params->query['index'] + 1;
 		$categoryOptions = $this->StaffCategory->findList(true);
+                $positionTitleOptions = $this->StaffPositionTitle->findList(true);
+                $positionGradeOptions = $this->StaffPositionGrade->findList(true);
+                $positionStepOptions = $this->StaffPositionStep->findList(true);
 		$statusOptions = $this->StaffStatus->findList(true);
 		
 		$this->set('index', $index);
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleOptions', $positionTitleOptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
 		$this->set('statusOptions', $statusOptions);
 	}
 	
@@ -1965,7 +2067,7 @@ class InstitutionSitesController extends AppController {
 						'Year'=>'SchoolYear');
 		//BreadCrumb -- jeff logic
 		$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $id)));
-		$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+		$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 		$positions = $this->InstitutionSiteTeacher->getPositions($id, $this->institutionSiteId);
 		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $data['Teacher']['id']));
 		
@@ -2082,7 +2184,7 @@ class InstitutionSitesController extends AppController {
 		
 		$staffId = $this->params['pass'][0];
 		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-		$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+		$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $data['Staff']['id']));
 		return compact('action','siteid','id','years','selectedYear','condParam','arrMap');
 	}
@@ -2346,7 +2448,7 @@ class InstitutionSitesController extends AppController {
 		if($this->Session->check('InstitutionSiteTeachersId')){
 			$teacherId = $this->Session->read('InstitutionSiteTeachersId');
 			$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-			$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+			$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
 			$this->Navigation->addCrumb('Attendance');
 			
@@ -2369,7 +2471,7 @@ class InstitutionSitesController extends AppController {
 			if($this->Session->check('InstitutionSiteTeachersId')){
 				$teacherId = $this->Session->read('InstitutionSiteTeachersId');
 				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-				$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+				$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
 				$this->Navigation->addCrumb('Edit Attendance');
 				
@@ -2429,7 +2531,7 @@ class InstitutionSitesController extends AppController {
         if($this->request->is('get')) {
             $teacherId = $this->params['pass'][0];
             $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-            $name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+            $name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
            	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
             $this->Navigation->addCrumb('Add Behaviour');
             
@@ -2465,7 +2567,7 @@ class InstitutionSitesController extends AppController {
 		if(!empty($teacherBehaviourObj)) {
 			$teacherId = $teacherBehaviourObj[0]['TeacherBehaviour']['teacher_id'];
             $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-            $name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+            $name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
            	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
 			$this->Navigation->addCrumb('Behaviour Details');
 			
@@ -2498,7 +2600,7 @@ class InstitutionSitesController extends AppController {
  					$this->redirect(array('action' => 'teachersBehaviourView', $teacherBehaviourId));
 				}
 				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-				$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+				$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
 				$this->Navigation->addCrumb('Edit Behaviour Details');
 				
@@ -2560,7 +2662,7 @@ class InstitutionSitesController extends AppController {
 		if($this->Session->check('InstitutionSiteStaffId')){
 			$staffId = $this->Session->read('InstitutionSiteStaffId');
 			$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-			$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+			$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
 			$this->Navigation->addCrumb('Attendance');
 			
@@ -2584,7 +2686,7 @@ class InstitutionSitesController extends AppController {
 			if($this->Session->check('InstitutionSiteStaffId')){
 				$staffId = $this->Session->read('InstitutionSiteStaffId');
 				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-				$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+				$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
 				$this->Navigation->addCrumb('Edit Attendance');
 				
@@ -2644,7 +2746,7 @@ class InstitutionSitesController extends AppController {
         if($this->request->is('get')) {
             $staffId = $this->params['pass'][0];
             $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-            $name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+            $name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
            	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
             $this->Navigation->addCrumb('Add Behaviour');
             
@@ -2680,7 +2782,7 @@ class InstitutionSitesController extends AppController {
 		if(!empty($staffBehaviourObj)) {
 			$staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
             $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-            $name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+            $name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
            	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
 			$this->Navigation->addCrumb('Behaviour Details');
 		
@@ -2712,7 +2814,7 @@ class InstitutionSitesController extends AppController {
  					$this->redirect(array('action' => 'staffBehaviourView', $staffBehaviourId));
 				}
 				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-				$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+				$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
 				$this->Navigation->addCrumb('Edit Behaviour Details');
 				

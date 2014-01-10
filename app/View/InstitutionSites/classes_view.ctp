@@ -75,7 +75,7 @@ echo $this->Html->script('search', false);
 		<legend><?php echo __('Teachers'); ?></legend>
 		<div class="table">
 			<div class="table_head">
-				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+				<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 				<div class="table_cell"><?php echo __('Name'); ?></div>
 			</div>
 			<div class="table_body">
@@ -98,7 +98,7 @@ echo $this->Html->script('search', false);
 			
 			<div class="table">
 				<div class="table_head">
-					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 					<div class="table_cell"><?php echo __('Name'); ?></div>
 					<div class="table_cell cell_category"><?php echo __('Category'); ?></div>
 				</div>
@@ -108,7 +108,7 @@ echo $this->Html->script('search', false);
 					<?php foreach($students[$id] as $obj) { ?>
 					<div class="table_row">
 						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
-						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
+						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']; ?></div>
 						<div class="table_cell"><?php echo $obj['category']; ?></div>
 					</div>
 					<?php } // end for ?>
