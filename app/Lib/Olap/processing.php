@@ -14,7 +14,7 @@ use Monolog\Formatter\LineFormatter;
 # Register function for when script is shutdown.
 register_shutdown_function('shutdown');
 
-date_default_timezone_set('Asia/Singapore');
+date_default_timezone_set('Asia/Singapore'); 
 # ini_set('memory_limit','32M');
 
 # TYPE
@@ -105,13 +105,9 @@ try{
 	$sourceDS = createDataConnection($datasources, SOURCE);
     $destinationDS = createDataConnection($datasources, DESTINATION);
 
-
-
 	# Enable excaption modes
 	$sourceDS->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
 	$destinationDS->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-
-
 
 
     if(isAbort($sourceDS, $batchProcessId)){
@@ -338,7 +334,7 @@ function getQueryStatement(SimpleXMLElement $sql){
 }
 
 /**
- * Create database connection base on the datasource given
+ * Create database connection base on the datasource given gb
  *
  * @param  SimpleXMLElement $datasources Provide a list of datasources avaliable to connection.
  * @param  String           $type        The type of connection.
