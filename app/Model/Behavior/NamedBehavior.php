@@ -26,12 +26,13 @@ class NamedBehavior extends ModelBehavior {
 	}
 	*/
 	
-	public function removeUnnamed(Model $model, &$data) {
+	public function removeUnnamed(Model $model, $data) {
 		$list = $data[$model->alias];
 		foreach($list as $key => $obj) {
 			if(isset($obj['name']) && strlen(trim($obj['name'])) == 0) {
 				unset($data[$model->alias][$key]);
 			}
 		}
+		return $data;
 	}
 }

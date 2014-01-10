@@ -254,12 +254,10 @@ class NavigationComponent extends Component {
 					$this->createLink('Restore', 'Database', 'restore')
 				),
 				'SURVEY' => array(
-					'_controller' => 'Survey',
 					$this->createLink('New', 'Survey', 'index', 'index$|^add$|^edit$'),
 					$this->createLink('Completed', 'Survey', 'import', 'import$|^synced$')
 				),
 				'SMS' => array(
-					'_controller' => 'Sms',
 					$this->createLink('Messages', 'Sms', 'messages'),
 					$this->createLink('Responses', 'Sms', 'responses'),
 					$this->createLink('Logs', 'Sms', 'logs')
@@ -277,10 +275,12 @@ class NavigationComponent extends Component {
 		foreach($links as $i => $category) {
 			foreach($category as $j => $items) {
 				foreach($items as $k => $obj) {
-					$controller = $obj['controller'];
-					$action = $obj['action'];
-					$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
-					$this->AccessControl->ignore($controller, $action);
+					if(isset($obj['controller'])) {
+						$controller = $obj['controller'];
+						$action = $obj['action'];
+						$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
+						$this->AccessControl->ignore($controller, $action);
+					}
 				}
 			}
 		}
