@@ -774,7 +774,7 @@ class SecurityController extends AppController {
 		if($this->request->is('post')) {
 			$data = $this->data;
 			$groupId = $this->params['pass'][0];
-			$this->SecurityRole->removeUnnamed(&$data);
+			$data = $this->SecurityRole->removeUnnamed($data);
 			$this->SecurityRole->saveMany($data['SecurityRole']);
 			$this->redirect(array('action' => 'roles', $groupId));
 		}
