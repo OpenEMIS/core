@@ -12,7 +12,7 @@ echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 
 <div id="additional" class="content_wrapper">
     <h1>
-        <span><?php echo __('Location'); ?></span>
+        <span><?php echo __('Positions'); ?></span>
     </h1>
     <?php echo $this->element('alert'); ?>
 
@@ -30,8 +30,11 @@ echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 				<?php foreach($classes as $class){ ?>
 				<div class="table_row">
 					<div class="table_cell">
-						<div class="table_cell_row"><?php echo $class['TeacherCategory']['name']; ?></div>
-						<div class="table_cell_row"><?php echo $class['InstitutionSiteTeacher']['position_no'];?></div>
+                                                <div class="table_cell_row">Number: <?php echo $class['InstitutionSiteTeacher']['position_no'];?></div>
+						<div class="table_cell_row">Type: <?php echo $class['TeacherCategory']['name']; ?></div>
+						<div class="table_cell_row">Title: <?php echo $class['TeacherPositionTitle']['name']; ?></div>
+                                                <div class="table_cell_row">Grade: <?php echo $class['TeacherPositionGrade']['name']; ?></div>
+                                                <div class="table_cell_row">Step: <?php echo $class['TeacherPositionStep']['name']; ?></div>
 					</div>
 					<div class="table_cell center"><?php echo $class['InstitutionSiteTeacher']['start_date']; ?></div>
 					<div class="table_cell center"><?php echo (empty($class['InstitutionSiteTeacher']['end_date']))? 'Current':$class['InstitutionSiteTeacher']['end_date']; ?></div>

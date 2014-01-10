@@ -18,32 +18,36 @@
 	?>
     <?php $obj = @$this->request->data['TeacherLanguage']; ?>
 	<?php echo $this->Form->input('TeacherLanguage.id');?>
+     <div class="row">
+        <div class="label"><?php echo __('Evaluation Date'); ?></div>
+        <div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'evaluation_date',array('desc' => true, 'value' => $obj['evaluation_date'])); ?></div>
+    </div>
 	 <div class="row">
         <div class="label"><?php echo __('Language'); ?></div>
         <div class="value"><?php echo $this->Form->input('language_id', array('empty'=>__('--Select--'),'options'=>$languageOptions, 'default'=> $obj['language_id'])); ?></div>
     </div>
-    <div class="row">
+     <div class="row">
         <div class="label"><?php echo __('Listening'); ?></div>
         <div class="value">
-            <?php echo $this->Form->input('listening', array('onkeypress' => 'return utility.integerCheck(event)')); ?>
+            <?php echo $this->Form->input('listening', array('empty'=>'--Select--', 'options'=>$gradeOptions)); ?>
         </div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Speaking'); ?></div>
         <div class="value">
-            <?php echo $this->Form->input('speaking', array('onkeypress' => 'return utility.integerCheck(event)')); ?>
+            <?php echo $this->Form->input('speaking', array('empty'=>'--Select--', 'options'=>$gradeOptions)); ?>
         </div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Reading'); ?></div>
         <div class="value">
-            <?php echo $this->Form->input('reading', array('onkeypress' => 'return utility.integerCheck(event)')); ?>
+            <?php echo $this->Form->input('reading', array('empty'=>'--Select--', 'options'=>$gradeOptions)); ?>
         </div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Writing'); ?></div>
         <div class="value">
-            <?php echo $this->Form->input('writing', array('onkeypress' => 'return utility.integerCheck(event)')); ?>
+            <?php echo $this->Form->input('writing', array('empty'=>'--Select--', 'options'=>$gradeOptions)); ?>
         </div>
     </div>
 

@@ -28,7 +28,7 @@ echo $this->Html->script('institution_site_teachers', false);
 		    echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
 		?>
 		<div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="value">
 				<?php
 				if($_view_details) {
@@ -43,9 +43,17 @@ echo $this->Html->script('institution_site_teachers', false);
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $obj['first_name']; ?></div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php echo $obj['middle_name']; ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value"><?php echo $obj['last_name']; ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value"><?php echo $obj['preferred_name']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
@@ -83,8 +91,11 @@ echo $this->Html->script('institution_site_teachers', false);
 					echo $this->Form->hidden($i.'.id', array('class' => 'key', 'value' => $pos['InstitutionSiteTeacher']['id']));
 					?>
 					<div class="table_cell">
-						<div class="table_cell_row"><?php echo $pos['TeacherCategory']['name']; ?></div>
-						<div class="table_cell_row"><?php echo $pos['InstitutionSiteTeacher']['position_no']; ?></div>
+                                                <div class="table_cell_row">Number: <?php echo $pos['InstitutionSiteTeacher']['position_no']; ?></div>
+						<div class="table_cell_row">Type: <?php echo $pos['TeacherCategory']['name']; ?></div>
+						<div class="table_cell_row">Title: <?php echo $pos['TeacherPositionTitle']['name']; ?></div>
+                                                <div class="table_cell_row">Grade: <?php echo $pos['TeacherPositionGrade']['name']; ?></div>
+                                                <div class="table_cell_row">Step: <?php echo $pos['TeacherPositionStep']['name']; ?></div>
 					</div>
 					<div class="table_cell">
 						<div class="table_cell_row">

@@ -1,7 +1,7 @@
 #staff-list { min-height: 450px; }
 #staff-list .cell_id_no { width: 110px; }
 /*#staff-list .cell_name { width: 150px; }*/
-#staff-list .cell_name { width: 130px; }
+#staff-list .cell_name { width: 100px; }
 #staff-list .cell_gender { width: 60px; }
 #staff-list .cell_birthday { width: 90px; }
 #staff-list .table { margin-top: 10px; width: 99%; }
