@@ -719,6 +719,7 @@ class DataProcessingController extends DataProcessingAppController {
             $shellCmd = sprintf($nohup, $cmd, APP);
             //$shellCmd = sprintf($nohup, $cmd, APP);
             $this->log($shellCmd, 'debug');
+
             $PID = shell_exec($shellCmd);
             //$command = 'ls';
             //exec($shellCmd, $output);
