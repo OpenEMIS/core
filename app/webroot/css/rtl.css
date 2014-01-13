@@ -256,6 +256,12 @@ fieldset#general.section_break > .row{
 	margin-left:0;
 	margin-right:10px;
 }
+.dialog-box .field_name{
+    float: right;
+}
+.dialog-box .field_value{
+    float: right;
+}
 
 /*loading*/
 #loading-box .loader{
