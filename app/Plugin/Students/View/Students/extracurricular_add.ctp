@@ -25,7 +25,7 @@ echo $this->Html->script('extracurricular', false);
     <?php
 
     echo $this->Form->create('StudentExtracurricular', array(
-        'url' => array('controller' => 'Students', 'action' => 'extracurricularAdd'),
+        'url' => array('controller' => 'Students', 'action' => 'extracurricularAdd', 'plugin'=>'Students'),
         'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
     ));
     ?>
@@ -64,17 +64,16 @@ echo $this->Html->script('extracurricular', false);
     </div>
     
     <div class="row">
+    <?php //pr($this->data); ?>
         <div class="label"><?php echo __('Start Date'); ?></div>
-       
-        <div class="value"><?php echo $this->Form->input('start_date', array('type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>', 'class'=>false)); ?></div>
-       
-    </div>
- 
+        <div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'start_date'); ?></div>
+    </div> 
     
     <div class="row">
+    <?php //pr($this->data); ?>
         <div class="label"><?php echo __('End Date'); ?></div>
-        <div class="value"><?php echo $this->Form->input('end_date', array('type' => 'date', 'dateFormat' => 'DMY', 'class'=>false, 'selected' => date('Y-m-d', time()+86400))); ?></div>
-     </div>
+        <div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'end_date', array('value'=> date('Y-m-d', time()+86400))); ?></div>
+    </div> 
     
     <div class="row">
         <div class="label"><?php echo __('Hours'); ?></div>
