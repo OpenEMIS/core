@@ -77,4 +77,38 @@ class StudentContact extends StudentsAppModel {
         }
         return $flag;
     }
+
+     public function beforeValidate() {
+      	if (isset($this->data[$this->alias]['contact_option_id'])) {
+	      	$contactOption = $this->data[$this->alias]['contact_option_id'];
+	        switch ($contactOption) {
+			    case 1:
+       			case 2:
+       			case 3:
+					$this->validate['value'] = array('customVal' => array(
+				        'rule' => 'numeric',
+				        'required' => true,
+				        'message' => 'Please enter a valid Numeric value'
+				    )); 
+			        break;
+			    case 4:
+		         	$this->validate['value'] = array('customVal' => array(
+				        'rule' => 'email',
+				        'required' => true,
+				        'message' => 'Please enter a valid Email'
+				    )); 
+			        break;
+			    case 5:
+					$this->validate['value'] = array('customVal' => array(
+				        'rule' => 'notEmpty',
+				        'required' => true,
+				        'message' => 'Please enter a valid Value'
+				    )); 
+			        break;
+			    default:
+			    	break;
+			}
+      	}
+		return true; 
+  	}
 }

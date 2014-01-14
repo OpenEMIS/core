@@ -91,8 +91,9 @@ class StaffController extends StaffAppController {
                 $this->staffId = $this->Session->read('StaffId');
                 $this->staffObj = $this->Session->read('StaffObj');
                 $staffFirstName = $this->Staff->field('first_name', array('Staff.id' => $this->staffId));
+                $staffMiddleName = $this->Staff->field('middle_name', array('Staff.id' => $this->staffId));
                 $staffLastName = $this->Staff->field('last_name', array('Staff.id' => $this->staffId));
-                $name = $staffFirstName ." ". $staffLastName;
+                $name = $staffFirstName ." ". $staffMiddleName ." ". $staffLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('action' => 'view'));
             }
@@ -269,7 +270,7 @@ class StaffController extends StaffAppController {
         $this->set('data', $data);
     }
 
-    public function location() {
+    public function positions() {
         $this->Navigation->addCrumb(ucfirst($this->action));
         $staffId = $this->Session->read('StaffId');
         $data = array();
@@ -293,7 +294,7 @@ class StaffController extends StaffAppController {
             $data[$dataKey][] = $result;
         }
 		if(empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('NO_LOCATION'), array('type' => 'info', 'dismissOnClick' => false));
+			$this->Utility->alert($this->Utility->getMessage('NO_POSITION'), array('type' => 'info', 'dismissOnClick' => false));
 		}
         $this->set('data', $data);
     }
@@ -328,8 +329,13 @@ class StaffController extends StaffAppController {
     public function delete() {
         $id = $this->Session->read('StaffId');
         $name = $this->Staff->field('first_name', array('Staff.id' => $id));
-        $this->Staff->delete($id);
-        $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        if($name !== false){
+            $this->Staff->delete($id);
+            $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        }else{
+            $this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
+        }
+        
         $this->redirect(array('action' => 'index'));
     }
 
@@ -1072,8 +1078,13 @@ class StaffController extends StaffAppController {
         }
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
-        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
-        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $bankId = isset($this->request->data['StaffBankAccount']['bank_id']) ? $this->request->data['StaffBankAccount']['bank_id'] : "";
+        if(!empty($bankId)){
+            $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        }else{
+            $bankBranches = array();
+        }
+        
         $this->set('bankBranches', $bankBranches);
         $this->set('selectedBank', $bankId);
         $this->set('staff_id', $this->staffId);
@@ -1099,7 +1110,7 @@ class StaffController extends StaffAppController {
             }
          }
 
-        $bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+        $bankId = isset($this->request->data['StaffBankAccount']['bank_id']) ? $this->request->data['StaffBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
         $this->set('selectedBank', $bankId);
 
         $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
@@ -1407,6 +1418,12 @@ class StaffController extends StaffAppController {
             }
         }
 
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
+
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
         $this->UserSession->readStatusSession($this->request->action);
@@ -1442,7 +1459,13 @@ class StaffController extends StaffAppController {
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'languagesView', $languageData['id']));
             }
-         }
+        }
+
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
 
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
@@ -1753,6 +1776,8 @@ class StaffController extends StaffAppController {
                 $this->StaffSalary->saveAll($this->request->data);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'salaries'));
+            }else{
+                 $this->Utility->alert($this->Utility->getMessage('ADD_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
             }
         }
 
@@ -1826,6 +1851,8 @@ class StaffController extends StaffAppController {
                 $this->StaffSalary->saveAll($this->request->data);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'salariesView', $salaryId));
+            }else{
+                 $this->Utility->alert($this->Utility->getMessage('UPDATE_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
             }
          }
 

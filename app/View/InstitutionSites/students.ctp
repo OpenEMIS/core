@@ -33,7 +33,7 @@ echo $this->Html->script('institution_site_students', false);
 					'id' => 'SearchField',
 					'value' => $searchField,
 					'class' => 'default',
-					'placeholder' => __('Student Identification No or Student Name')
+					'placeholder' => __('Student OpenEMIS ID or Student Name')
 				));
             ?>
             <span class="icon_clear">X</span>
@@ -85,12 +85,16 @@ echo $this->Html->script('institution_site_students', false);
         <div class="table allow_hover" action="InstitutionSites/studentsView/">
             <div class="table_head">
 				<div class="table_cell cell_id_no">
-					<span class="left"><?php echo __('Identification No.'); ?></span>
+					<span class="left"><?php echo __('OpenEMIS ID'); ?></span>
 					<span class="icon_sort_<?php echo ($orderBy =='Student.identification_no')?$orderSort:'up'; ?>" orderBy="Student.identification_no"></span>
                 </div>
 				<div class="table_cell cell_name">
 					<span class="left"><?php echo __('First Name'); ?></span>
 					<span class="icon_sort_<?php echo ($orderBy =='Student.first_name')?$orderSort:'up'; ?>" orderBy="Student.first_name"></span>
+                </div>
+                                <div class="table_cell cell_name">
+					<span class="left"><?php echo __('Middle Name'); ?></span>
+					<span class="icon_sort_<?php echo ($orderBy =='Student.middle_name')?$orderSort:'up'; ?>" orderBy="Student.middle_name"></span>
                 </div>
 				<div class="table_cell cell_name">
 					<span class="left"><?php echo __('Last Name'); ?></span>
@@ -107,12 +111,14 @@ echo $this->Html->script('institution_site_students', false);
 				<?php
 				$idNo = $this->Utility->highlight($searchField, $obj['Student']['identification_no']);
 				$firstName = $this->Utility->highlight($searchField, $obj['Student']['first_name']);
+                                $middleName = $this->Utility->highlight($searchField, $obj['Student']['middle_name']);
 				$lastName = $this->Utility->highlight($searchField, $obj['Student']['last_name']);
 				?>
                 <div class="table_row" row-id="<?php echo $obj['Student']['id']; ?>">
 					<div class="table_cell"><?php echo $idNo; ?></div>
-					<div class="table_cell"><?php echo $firstName; ?></div>
-					<div class="table_cell"><?php echo $lastName; ?></div>
+					<div class="table_cell cell_name"><?php echo $firstName; ?></div>
+                                        <div class="table_cell cell_name"><?php echo $middleName; ?></div>
+					<div class="table_cell cell_name"><?php echo $lastName; ?></div>
 					<div class="table_cell"><?php echo $obj['EducationProgramme']['name']; ?></div>
 				</div>
 				<?php } ?>

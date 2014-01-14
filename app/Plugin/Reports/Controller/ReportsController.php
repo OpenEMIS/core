@@ -24,117 +24,117 @@ class ReportsController extends ReportsAppController {
 
 
     public $uses = array(
-		'BatchProcess',
+        'BatchProcess',
         'Reports.Report',
-		'Reports.BatchReport',
-		'Institution',
-		'InstitutionSite',
-		'InstitutionSiteCustomValue',
-		'InstitutionSiteProgramme',
+        'Reports.BatchReport',
+        'Institution',
+        'InstitutionSite',
+        'InstitutionSiteCustomValue',
+        'InstitutionSiteProgramme',
         'CensusStudent',
         'SchoolYear'
     );
-	public $standardReports = array( //parameter passed to Index
-		'Institution'=>array('enable'=>true),
-		'Student'=>array('enable'=>true),
-		'Teacher'=>array('enable'=>true),
-		'Staff'=>array('enable'=>true),
-		'Consolidated'=>array('enable'=>true),
-		'Indicator'=>array('enable'=>true),
-		'DataQuality'=>array('enable'=>true),
-		'Custom'=>array('enable'=>true)
+    public $standardReports = array( //parameter passed to Index
+        'Institution'=>array('enable'=>true),
+        'Student'=>array('enable'=>true),
+        'Teacher'=>array('enable'=>true),
+        'Staff'=>array('enable'=>true),
+        'Consolidated'=>array('enable'=>true),
+        'Indicator'=>array('enable'=>true),
+        'DataQuality'=>array('enable'=>true),
+        'Custom'=>array('enable'=>true)
     );
 
     public $customView = array( //exclude from Index view.
         'Indicator',
         'Custom'
     );
-	
+    
     public $helpers = array('Paginator');
     public $components = array('Paginator','DateTime','Utility');
-	private $pathFile = '';
+    private $pathFile = '';
     
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Reports', array('controller' => 'Reports', 'action' => 'index'));
-		
-		if(array_key_exists(ucfirst($this->action), $this->standardReports)) {
-			$this->renderReport(ucfirst($this->action));
-			if(isset($this->params['pass'][0])){
-				$this->reportList($this->params['pass'][0]);
-				$this->render('report_list');
-			}elseif(!in_array(ucfirst($this->action), $this->customView)){
-				$this->render('index');
-			}
-		} else if(strrpos($this->action, 'Download')!==false) {
-			if(isset($this->params['pass'][0])) {
-				$file = $this->params['pass'][0];
-				$this->download($file);
-			} else {
-				$this->redirect(array('action' => str_replace('Download', '', $this->action)));
-			}
-		}
+        
+        if(array_key_exists(ucfirst($this->action), $this->standardReports)) {
+            $this->renderReport(ucfirst($this->action));
+            if(isset($this->params['pass'][0])){
+                $this->reportList($this->params['pass'][0]);
+                $this->render('report_list');
+            }elseif(!in_array(ucfirst($this->action), $this->customView)){
+                $this->render('index');
+            }
+        } else if(strrpos($this->action, 'Download')!==false) {
+            if(isset($this->params['pass'][0])) {
+                $file = $this->params['pass'][0];
+                $this->download($file);
+            } else {
+                $this->redirect(array('action' => str_replace('Download', '', $this->action)));
+            }
+        }
     }
-	
-	public function index() {
-		$this->redirect(array('controller' => $this->params['controller'], 'action' => 'Institution'));
-	}
-	
-	public function Institution(){}
-	public function InstitutionDownload(){}
-	public function Student(){}
-	public function StudentDownload(){}
-	public function Staff(){}
-	public function StaffDownload(){}
-	public function Teacher(){}
-	public function TeacherDownload(){}
-	public function Consolidated(){}
-	public function ConsolidatedDownload(){}
-//	public function Indicator(){}
-//	public function IndicatorDownload(){}
-	public function DataQuality(){}
-	public function DataQualityDownload(){}
-	
-	public function renderReport($reportType = 'Institution') {
-		if(isset($this->params['pass'][0])){
-			$this->Navigation->addCrumb($reportType.' Reports', array('controller' => 'Reports', 'action' => $this->action));
-			$this->Navigation->addCrumb(' Generated Files');
-		}else{
-			$this->Navigation->addCrumb($reportType.' Reports');
-		}
+    
+    public function index() {
+        $this->redirect(array('controller' => $this->params['controller'], 'action' => 'Institution'));
+    }
+    
+    public function Institution(){}
+    public function InstitutionDownload(){}
+    public function Student(){}
+    public function StudentDownload(){}
+    public function Staff(){}
+    public function StaffDownload(){}
+    public function Teacher(){}
+    public function TeacherDownload(){}
+    public function Consolidated(){}
+    public function ConsolidatedDownload(){}
+//  public function Indicator(){}
+//  public function IndicatorDownload(){}
+    public function DataQuality(){}
+    public function DataQualityDownload(){}
+    
+    public function renderReport($reportType = 'Institution') {
+        if(isset($this->params['pass'][0])){
+            $this->Navigation->addCrumb($reportType.' Reports', array('controller' => 'Reports', 'action' => $this->action));
+            $this->Navigation->addCrumb(' Generated Files');
+        }else{
+            $this->Navigation->addCrumb($reportType.' Reports');
+        }
 
-		if(array_key_exists($reportType, $this->standardReports)){
-			if(!$this->standardReports[$reportType]['enable'] === false){
-				$this->set('enabled',true);
-			}else{
-				$this->set('enabled',false);
-			}
-		}
-		
-		//pr($this->InstitutionSiteProgramme->find('all',array('limit'=>2)));
-		$reportType = Inflector::underscore($reportType);
-		$reportType = str_replace('_',' ',$reportType);
-		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'category'=>$reportType.' Reports'), 'order' => array('Report.order')));
-		
+        if(array_key_exists($reportType, $this->standardReports)){
+            if(!$this->standardReports[$reportType]['enable'] === false){
+                $this->set('enabled',true);
+            }else{
+                $this->set('enabled',false);
+            }
+        }
+        
+        //pr($this->InstitutionSiteProgramme->find('all',array('limit'=>2)));
+        $reportType = Inflector::underscore($reportType);
+        $reportType = str_replace('_',' ',$reportType);
+        $data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'category'=>$reportType.' Reports'), 'order' => array('Report.order')));
+        
         $checkFileExist = array();
-		$tmp = array();
-		
-		//arrange and sort according to grounp
-		foreach($data as $k => $val){
-			//$pathFile = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$val['Report']['category']).DS.$val['Report']['module'].DS.str_replace(' ','_',$val['Report']['name']).'.'.$val['Report']['file_type'];
-			$module = $val['Report']['module'];
+        $tmp = array();
+        
+        //arrange and sort according to grounp
+        foreach($data as $k => $val){
+            //$pathFile = ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$val['Report']['category']).DS.$val['Report']['module'].DS.str_replace(' ','_',$val['Report']['name']).'.'.$val['Report']['file_type'];
+            $module = $val['Report']['module'];
             $category = $val['Report']['category'];
             $name = $val['Report']['name'];
-			$val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
-			$tmp[$reportType.' Reports'][$module][$name] =  $val['Report']; 
+            $val['Report']['file_type'] = ($val['Report']['file_type']=='ind'?'csv':$val['Report']['file_type']);
+            $tmp[$reportType.' Reports'][$module][$name] =  $val['Report']; 
         }
 
               
-		$msg = (isset($_GET['processing']))?'processing':'';
+        $msg = (isset($_GET['processing']))?'processing':'';
         $this->set('msg',$msg);
-		$this->set('data',$tmp);
+        $this->set('data',$tmp);
         $this->set('controllerName', $this->controller);
-	}
+    }
 
     public function Indicator($indicatorId = ''){
 //            $this->autoRender = false;
@@ -283,13 +283,13 @@ class ReportsController extends ReportsAppController {
     public function olapGetObservations(){
         $this->autoRender = false;
         
-        /*$this->request->data['variables'] = array('Area.name', 'EducationProgramme.name');
-        $this->request->data['observationId']  = "1129";
-        $this->request->data['year']  = "2013";
-        $this->request->data['batch']  = 0;
-        $this->request->data['last']  = false;*/
+        $this->request->data['variables'] = array('Area.name','Institution.name','Institution.code','InstitutionSector.name','InstitutionProvider.name','InstitutionStatus.name','InstitutionSite.name','InstitutionSite.code','InstitutionSiteLocality.name','InstitutionSiteType.name','InstitutionSiteOwnership.name','InstitutionSiteStatus.name');
+        $this->request->data['observationId']  = "1508";
+        $this->request->data['year']  = "2006";
+        $this->request->data['batch']  = "258";
+        $this->request->data['last']  = false;
 
-        if($this->request->is('post')){
+        //if($this->request->is('post')){
             $data = array('observations'=> array(), 'size' => 0);
             $fields = array();
             $models = array();
@@ -318,7 +318,7 @@ class ReportsController extends ReportsAppController {
 
             $data['total'] = sizeof($data['observations']);
             return json_encode($data);
-     }
+     //}
 
     }
 
@@ -470,7 +470,7 @@ class ReportsController extends ReportsAppController {
                 'group' => null
             );
 
-				// build sub-query
+                // build sub-query
             $query = $dbo->buildStatement(
                 $params,
                 $this->CensusStudent
@@ -515,11 +515,11 @@ class ReportsController extends ReportsAppController {
                 }
             }
 
-			$csvSettings = array(
-				'tpl'=> implode(',',$fields),//'Indicator,SubGroup,AreaName,TimePeriod,DataValue,Classification',
+            $csvSettings = array(
+                'tpl'=> implode(',',$fields),//'Indicator,SubGroup,AreaName,TimePeriod,DataValue,Classification',
                 'observationId' => $this->request->data['observationId'],
                 'year' => $this->request->data['year'],
-				'batch'=>$this->request->data['batch'],
+                'batch'=>$this->request->data['batch'],
                 'last_batch' => (isset($this->request->data['last']) && !is_null($this->request->data['last']))? $this->request->data['last']:false
             );
 
@@ -529,41 +529,41 @@ class ReportsController extends ReportsAppController {
         }
         return json_encode($result);
     }
-	
-	public function download($filename, $olap =false){
+    
+    public function download($filename, $olap =false){
         if($filename == '' ){
             die();
         }else{
-			
-			$info['basename'] = $filename;
-			/* Return array
-			 * Array
-				(
-					[basename] => 1_980_Institution_Report.csv
-					[reportId] => 1
-					[batchProcessId] => 980
-					[name] => Institution_Report.csv
-				)
-			 * 
-			 */
+            
+            $info['basename'] = $filename;
+            /* Return array
+             * Array
+                (
+                    [basename] => 1_980_Institution_Report.csv
+                    [reportId] => 1
+                    [batchProcessId] => 980
+                    [name] => Institution_Report.csv
+                )
+             * 
+             */
 
 
-			$this->parseFilename($info);
-				
+            $this->parseFilename($info);
+                
 
-			$resChck = $this->BatchProcess->find('all',array('conditions'=>array('id'=>$info['batchProcessId'],'status'=>array(1,2))));// filename that's currently being proessed
-			if($resChck){
+            $resChck = $this->BatchProcess->find('all',array('conditions'=>array('id'=>$info['batchProcessId'],'status'=>array(1,2))));// filename that's currently being proessed
+            if($resChck){
                 $referrer = str_replace('?processing','',Controller::referer());
                 $this->redirect($referrer.'?processing');
             }
-			$res = $this->Report->find('first',array('conditions'=>array('id'=>$info['reportId'])));// get the path
-		
+            $res = $this->Report->find('first',array('conditions'=>array('id'=>$info['reportId'])));// get the path
+        
             $module = $res['Report']['module'];
             $category = $res['Report']['category'];
             $name = $res['Report']['name'];
             $res['Report']['file_type'] = ($res['Report']['file_type']=='ind'?'csv':$res['Report']['file_type']);
             $xt = $res['Report']['file_type'];
-			
+            
             if($olap){
                 $category = 'Olap_Reports';
             }
@@ -578,17 +578,24 @@ class ReportsController extends ReportsAppController {
                 'download'  => true,
                 'extension' => $res['Report']['file_type'],
                 //'path'      => APP . 'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$category).DS.$module.DS
-                'path'		=> APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS ,
+                'path'      => APP.WEBROOT_DIR.DS.'reports'.DS.str_replace(' ','_',$category).DS.str_replace(' ','_',$module).DS ,
             );
 
 
             $this->set($params);
         }
 
-	}
+    }
 
     public function generateRawQuery($settings) {
+        $this->autoRender = false;
         $query = '';
+        /*$settings['tpl'] = 'Area.name,Institution.name,Institution.code,InstitutionSector.name,InstitutionProvider.name,InstitutionStatus.name,InstitutionSite.name,InstitutionSite.code,InstitutionSiteLocality.name,InstitutionSiteType.name,InstitutionSiteOwnership.name,InstitutionSiteStatus.name';
+        $settings['observationId']  = "1508";
+        $settings['year']  = "2006";
+        $settings['offset']  = "258";
+        $settings['last']  = false;*/
+
         $observation = $settings['observationId'];
         $year = $settings['year'];
         //$limit = $settings['limit'];
@@ -770,6 +777,7 @@ class ReportsController extends ReportsAppController {
             } catch (Exception $e) {
 //                // Update the status for the Processed item to (-1) ERROR
                 $errLog = $e->getMessage();
+                var_dump($errLog);
 //                $this->Common->updateStatus($procId,'-1');
 //                $this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog); 
             }
@@ -847,37 +855,37 @@ class ReportsController extends ReportsAppController {
         fclose ($this->fileFP);
     }
 
-	private function cleanContent($str){
-		$str = str_replace("'", "&#39", $str);
-		return $str = str_replace("'", "&#44", $str);
-	}
+    private function cleanContent($str){
+        $str = str_replace("'", "&#39", $str);
+        return $str = str_replace("'", "&#44", $str);
+    }
 
-	private function formatData(&$data){
-		
-		foreach($data as $k => &$arrv){
-			foreach ($arrv as $key => $value) {
-				if(is_array($value)){
+    private function formatData(&$data){
+        
+        foreach($data as $k => &$arrv){
+            foreach ($arrv as $key => $value) {
+                if(is_array($value)){
                     foreach($value as $innerKey => $innerValue){
                         $arrv[$key."_".$innerKey] = $innerValue;
                     }
-					unset($data[$k][$key]);
-				}
-			}
-		}
-	}
+                    unset($data[$k][$key]);
+                }
+            }
+        }
+    }
 
     private function formatOlapData(&$data, $order=''){
-		foreach($data as $k => &$arrv){
-			foreach ($arrv as $key => $value) {
-				if(is_array($value)){
+        foreach($data as $k => &$arrv){
+            foreach ($arrv as $key => $value) {
+                if(is_array($value)){
 
                     foreach($value as $innerKey => $innerValue){
                         $arrv[$key."_".$innerKey] = $innerValue;
                     }
-					unset($data[$k][$key]);
-				}
-			}
-		}
+                    unset($data[$k][$key]);
+                }
+            }
+        }
 
         if(!empty($order)){
             $tmpCopy = $data;
@@ -895,7 +903,7 @@ class ReportsController extends ReportsAppController {
             $data = $newOrderedData;
         }
 
-	}
+    }
 
     public function array_ikey_exists($key, $arr) {
         if(stristr(implode(',', array_keys($arr)),$key)){
@@ -903,29 +911,29 @@ class ReportsController extends ReportsAppController {
         }
         return false;
     }
-	
-	public function adhoc() {
-		$this->addCrumb('Ad Hoc Reports');
-		$this->Navigation->selected('reports', 'adhoc');
-		$sql = '';
-		$result = array();
-		if($this->request->is('post')) {
-			$model = new AppModel(false, false);
-			if(isset($this->data['query'])) {
-				$sql = $this->data['query'];
-				if(strlen($sql) > 0) {
-					try {
-						$result = $model->query($sql);
-						$result = $model->formatToTable($result);
-					} catch(Exception $ex) {
-						$sql = '' . $ex->getMessage() . "\n\n" . $sql;
-					}
-				}
-			}
-		}
-		$this->set('sql', $sql);
-		$this->set('result', $result);
-	}
+    
+    public function adhoc() {
+        $this->addCrumb('Ad Hoc Reports');
+        $this->Navigation->selected('reports', 'adhoc');
+        $sql = '';
+        $result = array();
+        if($this->request->is('post')) {
+            $model = new AppModel(false, false);
+            if(isset($this->data['query'])) {
+                $sql = $this->data['query'];
+                if(strlen($sql) > 0) {
+                    try {
+                        $result = $model->query($sql);
+                        $result = $model->formatToTable($result);
+                    } catch(Exception $ex) {
+                        $sql = '' . $ex->getMessage() . "\n\n" . $sql;
+                    }
+                }
+            }
+        }
+        $this->set('sql', $sql);
+        $this->set('result', $result);
+    }
 
     public function humanizeFields(&$selectedFields){
         $tmpArray = $selectedFields;
@@ -966,65 +974,65 @@ class ReportsController extends ReportsAppController {
 
         return implode(',',$formattedArray);
     }
-	
-	public function reportList($report_id){
-		$files = array();
-		$data = $this->Report->findById($report_id);
-		if(count($data) > 0){
-			$files = $this->getAllGenReports($data);
-		}
-		
-		if(count($files) == 0 ){
-			$this->Utility->alert($this->Utility->getMessage('REPORT_NO_FILES'), array('type' => 'info', 'dismissOnClick' => false));
-		}
-		$this->set('files',$files);
-	}
-	
-	private function getAllGenReports($data){
-		$files = array();
-		$this->getReportFilesPath($data);
-		$dir = new Folder($this->pathFile);
-		$name = str_replace(' ','_',$data['Report']['name']);
-		$files = $dir->find('.*'.$name.'.*');
-		$filesSet = array();
-		foreach($files as &$val){
-			$file = new File($dir->pwd().$val);
-			$info = $file->info();
-			$time = $file->lastChange();
-			$info['time'] = date($this->DateTime->getConfigDateFormat()." H:i:s",$time);
-			$info['size'] = $this->convFileSize($info['filesize']);
-			//pr($info);
-			
-			$this->parseFilename($info);
-			
-			$info['path'] = $this->pathFile;
-			$filesSet[$info['extension']][$time] = $info;	
-		}
-		//sort the files based on time gen DESC order
-		foreach($filesSet as $key => &$val){
-			krsort($filesSet[$key]);
-		}
-		
-		return $filesSet;
-	}
-	
-	private function parseFilename(&$info){
-		$arrFilename = explode("_",$info['basename'] );
-		//pr(array_shift($arrFilename));
-		$info['reportId'] = array_shift($arrFilename);
-		$info['batchProcessId'] = array_shift($arrFilename);
-		$info['name']  = implode("_",$arrFilename);
-	}
-	
-	private function getReportFilesPath($data){
-		$module = str_replace(' ','_',$data['Report']['module']);
-		$category = str_replace(' ','_',$data['Report']['category']);
-		$file_type = str_replace(' ','_',($data['Report']['file_type']=='ind'?'csv':$data['Report']['file_type']));
-		$this->pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.$category.DS.$module.DS;
-	}
-	
-	private function convFileSize($bytes){
-		if ($bytes >= 1073741824){
+    
+    public function reportList($report_id){
+        $files = array();
+        $data = $this->Report->findById($report_id);
+        if(count($data) > 0){
+            $files = $this->getAllGenReports($data);
+        }
+        
+        if(count($files) == 0 ){
+            $this->Utility->alert($this->Utility->getMessage('REPORT_NO_FILES'), array('type' => 'info', 'dismissOnClick' => false));
+        }
+        $this->set('files',$files);
+    }
+    
+    private function getAllGenReports($data){
+        $files = array();
+        $this->getReportFilesPath($data);
+        $dir = new Folder($this->pathFile);
+        $name = str_replace(' ','_',$data['Report']['name']);
+        $files = $dir->find('.*'.$name.'.*');
+        $filesSet = array();
+        foreach($files as &$val){
+            $file = new File($dir->pwd().$val);
+            $info = $file->info();
+            $time = $file->lastChange();
+            $info['time'] = date($this->DateTime->getConfigDateFormat()." H:i:s",$time);
+            $info['size'] = $this->convFileSize($info['filesize']);
+            //pr($info);
+            
+            $this->parseFilename($info);
+            
+            $info['path'] = $this->pathFile;
+            $filesSet[$info['extension']][$time] = $info;   
+        }
+        //sort the files based on time gen DESC order
+        foreach($filesSet as $key => &$val){
+            krsort($filesSet[$key]);
+        }
+        
+        return $filesSet;
+    }
+    
+    private function parseFilename(&$info){
+        $arrFilename = explode("_",$info['basename'] );
+        //pr(array_shift($arrFilename));
+        $info['reportId'] = array_shift($arrFilename);
+        $info['batchProcessId'] = array_shift($arrFilename);
+        $info['name']  = implode("_",$arrFilename);
+    }
+    
+    private function getReportFilesPath($data){
+        $module = str_replace(' ','_',$data['Report']['module']);
+        $category = str_replace(' ','_',$data['Report']['category']);
+        $file_type = str_replace(' ','_',($data['Report']['file_type']=='ind'?'csv':$data['Report']['file_type']));
+        $this->pathFile = APP.WEBROOT_DIR.DS.'reports'.DS.$category.DS.$module.DS;
+    }
+    
+    private function convFileSize($bytes){
+        if ($bytes >= 1073741824){
             $bytes = number_format($bytes / 1073741824, 2) . ' GB';
         }elseif ($bytes >= 1048576){
             $bytes = number_format($bytes / 1048576, 2) . ' MB';
@@ -1037,7 +1045,7 @@ class ReportsController extends ReportsAppController {
         }else{
             $bytes = '0 bytes';
         }
-		return $bytes;
-	}
-	
+        return $bytes;
+    }
+    
 }

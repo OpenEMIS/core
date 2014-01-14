@@ -75,6 +75,37 @@ var BankAccounts = {
                       }}],
             'closeBtnCaption':'No'
         })
+    },
+    getBranchesAfterChangeBank: function(obj){
+        var bankId = $(obj).val();
+        var branchSelect = $('.branch').find('select');
+        var emptyOption = '<option value="">--Select--</option>';
+        
+        if(bankId === ""){
+            branchSelect.html(emptyOption);
+        }else{
+            $.ajax({ 
+                type: "get",
+                dataType: "json",
+                url: getRootURL()+"Teachers/getBranchesByBankId/"+bankId,
+                success: function(data){
+                    var newBranchOptions = '';
+                    
+                    if(data == null){
+                        return;
+                    }
+                    
+                    $.each(data, function(i,v){
+                        var branch = v.BankBranch;
+                        newBranchOptions += '<option value="'+branch.id+'">'+branch.name+'</option>';
+                    });
+                    
+                    branchOptions = newBranchOptions.length > 0 ? emptyOption+newBranchOptions : emptyOption;
+                    
+                    branchSelect.html(branchOptions);
+                }
+            });
+        }
     }
 }
 

@@ -17,9 +17,11 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 		
 	<?php echo $this->element('alert'); ?>
 
+	<?php foreach($contactOptions as $key=>$ct){  ?>
+	<fieldset class="section_group">
+	<legend><?php echo __($ct);?></legend>
 	<div class="table allow_hover full_width" action="Students/contactsView/">
 		<div class="table_head">
-			<div class="table_cell"><?php echo __('Type'); ?></div>
 			<div class="table_cell"><?php echo __('Description'); ?></div>
 			<div class="table_cell"><?php echo __('Value'); ?></div>
 			<div class="table_cell"><?php echo __('Preferred'); ?></div>
@@ -27,13 +29,16 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 		
 		<div class="table_body">
 			<?php foreach($list as $obj): ?>
+			<?php if($obj['ContactType']['contact_option_id']==$key){?>
 			<div class="table_row" row-id="<?php echo $obj['StudentContact']['id']; ?>">
-				<div class="table_cell"><?php echo $contactOptions[$obj['ContactType']['contact_option_id']]; ?></div>
 				<div class="table_cell"><?php echo $obj['ContactType']['name']; ?></div>
 				<div class="table_cell"><?php echo $obj['StudentContact']['value']; ?></div>
 				<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['StudentContact']['preferred']==1); ?></div>
 			</div>
+			<?php } ?>
 			<?php endforeach; ?>
 		</div>
 	</div>
+	</fieldset>
+	<?php } ?>
 </div>

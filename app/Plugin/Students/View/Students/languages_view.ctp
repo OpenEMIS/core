@@ -22,6 +22,11 @@ echo $this->Html->script('search', false);
     </h1>
     <?php echo $this->element('alert'); ?>
     
+     <div class="row">
+        <div class="label"><?php echo __('Evaluation Date'); ?></div>
+        <div class="value"><?php echo $this->Utility->formatDate($data['evaluation_date']); ?></div>
+    </div>
+    
     <div class="row">
         <div class="label"><?php echo __('Language'); ?></div>
         <div class="value"><?php echo $languageObj[0]['Language']['name']; ?></div>
