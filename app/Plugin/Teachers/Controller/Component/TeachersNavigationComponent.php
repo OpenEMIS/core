@@ -32,7 +32,7 @@ class TeachersNavigationComponent extends Component {
 			),
 			array(
 				'GENERAL' => array(
-					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
+					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|\bhistory\b'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
                     $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
                     $navigation->createLink('Comments', $controller, 'comments'),  
@@ -50,7 +50,17 @@ class TeachersNavigationComponent extends Component {
 					$navigation->createLink('Leave', $controller, 'leaves'),
 					$navigation->createLink('Behaviour', $controller, 'behaviour'),
 					$navigation->createLink('Extracurricular', $controller, 'extracurricular')
-				)
+				),
+				'HEALTH' => array(
+                    $navigation->createLink('Overview', $controller, 'health_view', 'health_view|health_edit'),
+                    $navigation->createLink('History', $controller, 'health_history', '^health_history'),
+                    $navigation->createLink('Family', $controller, 'health_family', '^health_family'),
+                    $navigation->createLink('Immunizations', $controller, 'health_immunization', '^health_immunization'),
+					$navigation->createLink('Medications', $controller, 'health_medication', '^health_medication'),
+					$navigation->createLink('Allergies', $controller, 'health_allergy', '^health_allergy'),
+					$navigation->createLink('Tests', $controller, 'health_test', '^health_test'),
+					$navigation->createLink('Consultations', $controller, 'health_consultation', '^health_consultation'),
+                ),
 			)
 		);
 		return array('Teachers' => array('controller' => $controller, 'links' => $links));

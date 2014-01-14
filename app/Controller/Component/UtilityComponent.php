@@ -244,6 +244,7 @@ class UtilityComponent extends Component {
 		return ($value == 'F') ? __('Female') : __('Male');
 	}
 	
+	
 	public function unshiftArray(&$origArray, $newArray) {
 		$tmpArray = array();
         foreach($newArray as $key => $val){
