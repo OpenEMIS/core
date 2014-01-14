@@ -49,7 +49,7 @@ class UtilityComponent extends Component {
 		$msgList['CREATE_SUCCESS'] = "The record has been created successfully.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
 		$msgList['DELETE_SUCCESS'] = "Record has been deleted.";
-                $msgList['DELETED_ALREADY'] = "Record has already been deleted.";
+        $msgList['DELETED_ALREADY'] = "Record has already been deleted.";
 		$msgList['SAVE_SUCCESS'] = "Your data has been saved successfully.";
 		$msgList['INVALID_ID_NO'] = "You have entered an invalid OpenEMIS ID.";
 		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
@@ -288,4 +288,3 @@ class UtilityComponent extends Component {
 		return $permutations;
 	}
 }
-?>
