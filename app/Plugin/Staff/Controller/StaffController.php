@@ -79,6 +79,17 @@ class StaffController extends StaffAppController {
         'Paginator'
     );
 
+	public $modules = array(
+		'health_history' => 'Staff.StaffHealthHistory',
+		'health_family' => 'Staff.StaffHealthFamily',
+		'health_immunization' => 'Staff.StaffHealthImmunization',
+		'health_medication' => 'Staff.StaffHealthMedication',
+		'health_allergy' => 'Staff.StaffHealthAllergy',
+		'health_test' => 'Staff.StaffHealthTest',
+		'health_consultation' => 'Staff.StaffHealthConsultation',
+		'health' => 'Staff.StaffHealth'
+	); 
+	
     public function beforeFilter() {
         parent::beforeFilter();
 
