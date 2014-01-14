@@ -49,8 +49,9 @@ class UtilityComponent extends Component {
 		$msgList['CREATE_SUCCESS'] = "The record has been created successfully.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
 		$msgList['DELETE_SUCCESS'] = "Record has been deleted.";
+                $msgList['DELETED_ALREADY'] = "Record has already been deleted.";
 		$msgList['SAVE_SUCCESS'] = "Your data has been saved successfully.";
-		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
+		$msgList['INVALID_ID_NO'] = "You have entered an invalid OpenEMIS ID.";
 		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
 		$msgList['NO_HISTORY'] = "No history found.";
 		$msgList['NO_RECORD'] = "There are no records.";
@@ -105,7 +106,7 @@ class UtilityComponent extends Component {
 		$msgList['SITE_CLASS_NO_GRADES'] = "Please add a grade to this class.";
 		$msgList['SITE_CLASS_NO_CLASSES'] = "There are no classes for the selected year.";
 		
-		$msgList['NO_LOCATION'] = "No Location found.";
+		$msgList['NO_POSITION'] = "No position found.";
 		$msgList['NO_CLASSES'] = "No Classes found.";
 		
 		// Students
@@ -132,6 +133,10 @@ class UtilityComponent extends Component {
 
 		// Reports
 		$msgList['REPORT_NO_FILES'] = "There are no available files found for this report.";
+
+		$msgList['ADD_ERROR'] = 'Record is not added due to errors encountered.';
+		$msgList['UPDATE_ERROR'] = 'Record is not updated due to errors encountered.';
+		
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 
 

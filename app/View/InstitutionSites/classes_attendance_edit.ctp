@@ -30,7 +30,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 
             <div class="table">
                 <div class="table_head">
-                    <div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+                    <div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
                     <div class="table_cell"><?php echo __('Name'); ?></div>
                     <div class="table_cell cell_id_no"><?php echo __('Attended'); ?></div>
                     <div class="table_cell cell_id_no"><?php echo __('Absent'); ?></div>
@@ -56,7 +56,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                         <?php echo $this->Form->hidden('Attendance.'.$cnt.'.student_id', array('value' => empty($obj['Student']['id']) ? 0 : $obj['Student']['id'])); ?>
                         <?php echo $this->Form->hidden('Attendance.'.$cnt.'.institution_site_id', array('value' => empty($obj['InstitutionSiteClass']['institution_site_id']) ? 0 : $obj['InstitutionSiteClass']['institution_site_id'])); ?>
                         <div class="table_cell"><?php echo $obj['Student']['identification_no']; ?></div>
-                        <div class="table_cell"><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></div>
+                        <div class="table_cell"><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['middle_name'] . ' ' . $obj['Student']['last_name']; ?></div>
                         <div class="table_cell cell_totals">
                             <div class="input_wrapper">
                             <?php

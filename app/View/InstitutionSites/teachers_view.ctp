@@ -34,7 +34,7 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 		    echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
 		?>
 		<div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="value">
 				<?php
 				if($_accessControl->check('Teachers', 'view')) {
@@ -49,9 +49,17 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $obj['first_name']; ?></div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php echo $obj['middle_name']; ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value"><?php echo $obj['last_name']; ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value"><?php echo $obj['preferred_name']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
@@ -77,8 +85,12 @@ echo $this->Html->css('/Teachers/css/teachers', 'stylesheet', array('inline' => 
 				<?php foreach($positions as $obj) { ?>
 				<div class="table_row">
 					<div class="table_cell">
-						<div class="table_cell_row"><?php echo $obj['TeacherCategory']['name']; ?></div>
-						<div class="table_cell_row"><?php echo $obj['InstitutionSiteTeacher']['position_no']; ?></div>
+						<div class="table_cell_row">Number: <?php echo $obj['InstitutionSiteTeacher']['position_no']; ?></div>
+                                                <div class="table_cell_row">Type: <?php echo $obj['TeacherCategory']['name']; ?></div>
+                                                <div class="table_cell_row">Title: <?php echo $obj['TeacherPositionTitle']['name']; ?></div>
+                                                <div class="table_cell_row">Grade: <?php echo $obj['TeacherPositionGrade']['name']; ?></div>
+                                                <div class="table_cell_row">Step: <?php echo $obj['TeacherPositionStep']['name']; ?></div>
+                                                
 					</div>
 					<div class="table_cell view">
 						<div class="table_cell_row">

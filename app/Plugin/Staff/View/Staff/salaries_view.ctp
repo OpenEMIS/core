@@ -98,7 +98,7 @@ echo $this->Html->script('search', false);
                 ?>
                 <div data-id="<?php echo $index; ?>" class="table_row new_row <?php echo $order%2==0 ? 'even' : ''; ?>">
                     <div class="table_cell">
-                        <?php echo $additionOptions[$value['salary_deduction_type_id']]; ?>
+                        <?php echo $deductionOptions[$value['salary_deduction_type_id']]; ?>
                     </div>
                     <div class="table_cell">                        
                         <?php echo $value['deduction_amount'];?>

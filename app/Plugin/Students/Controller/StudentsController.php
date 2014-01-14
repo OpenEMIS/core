@@ -83,8 +83,9 @@ class StudentsController extends StudentsAppController {
 	            $this->studentId = $this->Session->read('StudentId');
 				$this->studentObj = $this->Session->read('StudentObj');
 				$studentFirstName = $this->Student->field('first_name', array('Student.id' => $this->studentId));
+                                $studentMiddleName = $this->Student->field('middle_name', array('Student.id' => $this->studentId));
 				$studentLastName = $this->Student->field('last_name', array('Student.id' => $this->studentId));
-				$name = $studentFirstName ." ". $studentLastName;
+				$name = $studentFirstName ." ". $studentMiddleName ." ". $studentLastName;
 				$this->bodyTitle = $name;
 				$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
 			} 
@@ -368,9 +369,14 @@ class StudentsController extends StudentsAppController {
     public function delete() {
         $id = $this->Session->read('StudentId');
         $name = $this->Student->field('first_name', array('Student.id' => $id));
-        $this->Student->delete($id);
-        // $this->Utility->alert($name . __(' have been deleted successfully.'));
-        $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        if($name !== false){
+            $this->Student->delete($id);
+            // $this->Utility->alert($name . __(' have been deleted successfully.'));
+            $this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
+        }else{
+            $this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
+        }
+        
         $this->redirect(array('action' => 'index'));
     }
 
@@ -804,8 +810,13 @@ class StudentsController extends StudentsAppController {
         }
         $bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
 
-        $bankId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : "";
-        $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $bankId = isset($this->request->data['StudentBankAccount']['bank_id']) ? $this->request->data['StudentBankAccount']['bank_id'] : "";
+        if(!empty($bankId)){
+            $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        }else{
+            $bankBranches = array();
+        }
+        
         $this->set('bankBranches', $bankBranches);
         $this->set('selectedBank', $bankId);
         $this->set('student_id', $this->studentId);
@@ -832,7 +843,7 @@ class StudentsController extends StudentsAppController {
             }
          }
         
-        $bankId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $bankAccountObj['BankBranch']['bank_id'];
+        $bankId = isset($this->request->data['StudentBankAccount']['bank_id']) ? $this->request->data['StudentBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
         $this->set('selectedBank', $bankId);
 
         $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
@@ -1101,6 +1112,12 @@ class StudentsController extends StudentsAppController {
             }
         }
 
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
+
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);
         $this->UserSession->readStatusSession($this->request->action);
@@ -1137,6 +1154,11 @@ class StudentsController extends StudentsAppController {
                 $this->redirect(array('action' => 'languagesView', $languageData['id']));
             }
          }
+        $gradeOptions = array();
+        for($i=0;$i<6;$i++){
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
 
         $languageOptions = $this->Language->getOptions();
         $this->set('languageOptions', $languageOptions);

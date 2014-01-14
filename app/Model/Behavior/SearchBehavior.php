@@ -25,7 +25,9 @@ class SearchBehavior extends ModelBehavior {
 			'OR' => array(
 				$class . '.identification_no LIKE' => $search,
 				$class . '.first_name LIKE' => $search,
-				$class . '.last_name LIKE' => $search
+                                $class . '.middle_name LIKE' => $search,
+				$class . '.last_name LIKE' => $search,
+                                $class . '.preferred_name LIKE' => $search
 			)
 		);
 		$options = array(
@@ -240,7 +242,9 @@ class SearchBehavior extends ModelBehavior {
 			$search = "%".$params['SearchKey']."%";
 			$conditions['OR'] = array(
 				$class . '.first_name LIKE' => $search,
+                                $class . '.middle_name LIKE' => $search,
 				$class . '.last_name LIKE' => $search,
+                                $class . '.preferred_name LIKE' => $search,
 				$class . '.identification_no LIKE' => $search,
 				$class . 'History.first_name LIKE' => $search,
 				$class . 'History.last_name LIKE' => $search,
@@ -338,9 +342,10 @@ class SearchBehavior extends ModelBehavior {
 		$class = $model->alias;
 		$fields = array(
 			$class.'.id', $class.'.identification_no',
-			$class.'.first_name', $class.'.last_name',
+			$class.'.first_name', $class.'.middle_name', $class.'.last_name', $class.'.preferred_name',
 			$class.'.gender', $class.'.date_of_birth'
 		);
+
 		if(strlen($conditions['SearchKey']) != 0) {
 			$fields[] = $class.'History.identification_no AS history_identification_no';
 			$fields[] = $class.'History.first_name AS history_first_name';

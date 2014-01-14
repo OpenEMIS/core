@@ -22,9 +22,9 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 	public function getStudentsByGrade($gradeIds) {
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 				'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
-				'StudentCategory.name'
+				'StudentCategory.name', 'StudentCategory.id'
 			),
 			'joins' => array(
 				array(
@@ -48,7 +48,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 			if(!isset($list[$gradeId])) {
 				$list[$gradeId] = array();
 			}
-			$list[$gradeId][] = array_merge($obj['Student'], array('category' => $obj['StudentCategory']['name']));
+			$list[$gradeId][] = array_merge($obj['Student'], array('category' => $obj['StudentCategory']['name'], 'category_id' => $obj['StudentCategory']['id']));
 		}
 		return $list;
 	}
@@ -57,7 +57,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
     public function getStudentsAttendance($classID,$gradeIds,$yearID) {
         $data = $this->find('all', array(
             'fields' => array(
-                'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+                'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
                 'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
                 'StudentCategory.name', 'StudentAttendance.id', 'StudentAttendance.total_no_attend', 'StudentAttendance.total_no_absence',
                 'InstitutionSiteClass.institution_site_id'
@@ -161,7 +161,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 	
 	public function getStudentAssessmentResults($classId, $itemId, $assessmentId=null) {
                 $options['fields'] = array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name',
+				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
 				'AssessmentItemResult.id', 'AssessmentItemResult.marks', 'AssessmentItemResult.assessment_result_type_id',
 				'AssessmentResultType.name', 'InstitutionSiteClass.school_year_id',
 				'AssessmentItem.min', 'AssessmentItem.max'
@@ -257,5 +257,31 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 			$gender[$i] = $this->find('count', array('joins' => $joins));
 		}
 		return $gender;
+	}
+        
+        public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSiteClassGradeStudent.id'),
+			'joins' => array(
+                                    array(
+                                            'table' => 'institution_site_class_grades',
+                                            'alias' => 'InstitutionSiteClassGrade',
+                                            'conditions' => array(
+                                                                'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id'
+                                                            )
+                                    ),
+                                    array(
+                                            'table' => 'institution_site_classes',
+                                            'alias' => 'InstitutionSiteClass',
+                                            'conditions' => array(
+                                                                'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+                                                                'InstitutionSiteClass.institution_site_id = ' . $InstitutionSiteId
+                                                            )
+                                    )
+			),
+                        'conditions' => array('InstitutionSiteClassGradeStudent.student_id = ' . $studentId)
+		));
+
+		return $data;
 	}
 }

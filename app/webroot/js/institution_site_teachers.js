@@ -102,13 +102,17 @@ var InstitutionSiteTeachers = {
 		var id = row.attr('row-id');
 		var idNo = row.attr('id-no');
 		var fName = row.attr('first-name');
+                var mName = row.attr('middle-name');
 		var lName = row.attr('last-name');
+                var pName = row.attr('preferred-name');
 		var gender = row.attr('gender');
 		
 		$('#TeacherId').val(id);
 		$('#IdentificationNo').html(idNo);
 		$('#FirstName').html(fName);
+                $('#MiddleName').html(mName);
 		$('#LastName').html(lName);
+                $('#PreferredName').html(pName);
 		$('#Gender').html(gender);
 	},
 	
