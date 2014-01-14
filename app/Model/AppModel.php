@@ -32,6 +32,7 @@ App::uses('Model', 'Model');
  */
 class AppModel extends Model {
 	public $formatResult = false;
+	public $render = true; // ControllerActionBehaviour variable
 
 	public function describe() {
 		$columns = $this->query('DESCRIBE ' . $this->useTable);

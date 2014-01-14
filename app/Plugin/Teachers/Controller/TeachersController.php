@@ -70,6 +70,17 @@ class TeachersController extends TeachersAppController {
         'UserSession',
         'Paginator'
     );
+	
+	public $modules = array(
+		'health_history' => 'Teachers.TeacherHealthHistory',
+		'health_family' => 'Teachers.TeacherHealthFamily',
+		'health_immunization' => 'Teachers.TeacherHealthImmunization',
+		'health_medication' => 'Teachers.TeacherHealthMedication',
+		'health_allergy' => 'Teachers.TeacherHealthAllergy',
+		'health_test' => 'Teachers.TeacherHealthTest',
+		'health_consultation' => 'Teachers.TeacherHealthConsultation',
+		'health' => 'Teachers.TeacherHealth'
+	); 
 
     public function beforeFilter() {
         parent::beforeFilter();

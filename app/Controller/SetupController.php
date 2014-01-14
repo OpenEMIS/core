@@ -72,7 +72,13 @@ class SetupController extends AppController {
 		'IdentityType',
 		'Language',
 		'ContactType',
-		'ExtracurricularType'
+		'ExtracurricularType',
+		'HealthCondition',
+		'HealthRelationship',
+		'HealthImmunization',
+		'HealthAllergyType',
+		'HealthConsultationType',
+		'HealthTestType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -266,6 +272,43 @@ class SetupController extends AppController {
 		));
 		
 		$lookup[] = array('Extracurricular Type' => array('items' => $this->ExtracurricularType->getLookupVariables()));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Relationships',
+			'items' => $this->HealthRelationship->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Conditions',
+			'items' => $this->HealthCondition->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Immunizations',
+			'items' => $this->HealthImmunization->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Allergy Types',
+			'items' => $this->HealthAllergyType->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Test Types',
+			'items' => $this->HealthTestType->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Consultation Types',
+			'items' => $this->HealthConsultationType->getLookupVariables()
+		));
+		
 		// Student
 		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
