@@ -62,19 +62,16 @@ echo $this->Html->script('extracurricular', false);
         <div class="value"><?php echo $this->Form->input('name', array('class'=> 'default autoComplete', 'url'=> '../searchAutoComplete')); ?></div>
     </div>
     
-    <div class="row">
+   	<div class="row">
+    <?php //pr($this->data); ?>
         <div class="label"><?php echo __('Start Date'); ?></div>
-       
-        <div class="value"><?php echo $this->Form->input('start_date', array('type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>', 'class'=>false)); ?></div>
-       
-    </div>
- 
-    
+        <div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'start_date', array('value'=> $this->data['StaffExtracurricular']['start_date'])); ?></div>
+    </div> 
     <div class="row">
+    <?php //pr($this->data); ?>
         <div class="label"><?php echo __('End Date'); ?></div>
-        <div class="value"><?php echo $this->Form->input('end_date', array('type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>','class'=>false)); ?></div>
-       
-    </div>
+        <div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'end_date', array('value'=> $this->data['StaffExtracurricular']['end_date'])); ?></div>
+    </div> 
     
     
     <div class="row">
