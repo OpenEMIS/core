@@ -37,6 +37,11 @@ class ConfigItem extends AppModel {
 	public function getVersion() {
 		return $this->getValue('version');
 	}
+	
+	public function getWebFooter(){
+		$systemYear = str_replace('year', date('Y'), $this->getValue('footer'));
+		return $systemYear.' | '.$this->getValue('version');
+	}
 
 	public function getTypes() {
 		$types = array();
