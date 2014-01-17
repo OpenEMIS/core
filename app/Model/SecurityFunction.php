@@ -93,19 +93,20 @@ class SecurityFunction extends AppModel {
 		));
 		return $this->arrange($list, $isSuperUser);
 	}
-	
-	public function getUserPermissions($userId, $arrange = false) {
+        
+        public function getUserPermissions($userId, $arrange = false) {
 		$list = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
 				'SecurityFunction.*',
 				'SecurityRole.visible',
+                                'SecurityRole.id',
 				'SecurityRoleFunction.id',
-				'BIT_OR(SecurityRoleFunction._view) AS _view',
-				'BIT_OR(SecurityRoleFunction._edit) AS _edit',
-				'BIT_OR(SecurityRoleFunction._add) AS _add',
-				'BIT_OR(SecurityRoleFunction._delete) AS _delete',
-				'BIT_OR(SecurityRoleFunction._execute) AS _execute'
+				'SecurityRoleFunction._view AS _view',
+				'SecurityRoleFunction._edit AS _edit',
+				'SecurityRoleFunction._add AS _add',
+				'SecurityRoleFunction._delete AS _delete',
+				'SecurityRoleFunction._execute AS _execute'
 			),
 			'joins' => array(
 				array(
@@ -127,7 +128,7 @@ class SecurityFunction extends AppModel {
 					)
 				)
 			),
-			'group' => array('SecurityFunction.id'),
+//			'group' => array('SecurityFunction.id'),
 			'order' => array('SecurityFunction.order')
 		));
 		return $arrange ? $this->arrange($list) : $list;

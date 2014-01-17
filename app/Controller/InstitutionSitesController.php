@@ -167,6 +167,23 @@ class InstitutionSitesController extends AppController {
 	
 		$adminarea = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
 		$adminarea = array_reverse($adminarea);
+                
+                $currentActionAccessible = $this->AccessControl->newCheck('InstitutionSites', 'view');
+                if(!$currentActionAccessible){
+                    $institutionsLinks = $this->Navigation->getInstitutionsLinks();
+                    $institutionSiteLeftNav = $institutionsLinks[2];
+                    //pr($institutionSiteLeftNav);
+                    foreach($institutionSiteLeftNav as $obj) {
+                        foreach($obj as $link) {
+                            $checkWithRoleId = $this->AccessControl->newCheck($link['controller'], $link['action']);
+                            if($checkWithRoleId){
+                                $this->redirect(array('controller' => $link['controller'], 'action' => $link['action']));
+                                break 2;
+                            }
+                        }
+                    }
+                    $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
+                }
 		
 		$this->set('data', $data);
 		$this->set('levels',$levels);
@@ -743,7 +760,7 @@ class InstitutionSitesController extends AppController {
 			$this->layout = 'ajax';
 			
 			$data = $this->EducationProgramme->getAvailableProgrammeOptions($this->institutionSiteId, $yearId);
-			$_delete_programme = $this->AccessControl->check('InstitutionSites', 'programmesDelete');
+			$_delete_programme = $this->AccessControl->newCheck('InstitutionSites', 'programmesDelete');
 			$this->set('data', $data);
 			$this->set('_delete_programme', $_delete_programme);
 		} else {
@@ -867,7 +884,7 @@ class InstitutionSitesController extends AppController {
 		$data = $this->InstitutionSiteClass->getListOfClasses($selectedYear, $this->institutionSiteId);
 		
 		// Checking if user has access to add
-		$_add_class = $this->AccessControl->check('InstitutionSites', 'classesAdd');
+		$_add_class = $this->AccessControl->newCheck('InstitutionSites', 'classesAdd');
 		$this->set('_add_class', $_add_class);
 		// End Access Control
 		
@@ -1388,7 +1405,7 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		// Checking if user has access to add
-		$_add_student = $this->AccessControl->check('InstitutionSites', 'studentsAdd');
+		$_add_student = $this->AccessControl->newCheck('InstitutionSites', 'studentsAdd');
 		$this->set('_add_student', $_add_student);
 		// End Access Control
 		
@@ -1483,7 +1500,7 @@ class InstitutionSitesController extends AppController {
 			$classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId, $this->institutionSiteId);
 			$results = $this->AssessmentItemResult->getResultsByStudent($studentId, $this->institutionSiteId);
 			$results = $this->AssessmentItemResult->groupItemResults($results);
-			$_view_details = $this->AccessControl->check('Students', 'view');
+			$_view_details = $this->AccessControl->newCheck('Students', 'view');
 			$this->set('_view_details', $_view_details);
 			$this->set('data', $data);
 			$this->set('classes', $classes);
@@ -1561,7 +1578,7 @@ class InstitutionSitesController extends AppController {
 			$classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId, $this->institutionSiteId);
 			$results = $this->AssessmentItemResult->getResultsByStudent($studentId, $this->institutionSiteId);
 			$results = $this->AssessmentItemResult->groupItemResults($results);
-			$_view_details = $this->AccessControl->check('Students', 'view');
+			$_view_details = $this->AccessControl->newCheck('Students', 'view');
 			$this->set('_view_details', $_view_details);
 			$this->set('data', $data);
 			$this->set('classes', $classes);
@@ -1603,7 +1620,7 @@ class InstitutionSitesController extends AppController {
 		$data = $this->paginate('InstitutionSiteTeacher', $conditions);
 		
 		// Checking if user has access to add
-		$_add_teacher = $this->AccessControl->check('InstitutionSites', 'teachersAdd');
+		$_add_teacher = $this->AccessControl->newCheck('InstitutionSites', 'teachersAdd');
 		$this->set('_add_teacher', $_add_teacher);
 		// End Access Control
 		
@@ -1745,7 +1762,7 @@ class InstitutionSitesController extends AppController {
 				if(!empty($positions)) {
 					$classes = $this->InstitutionSiteClassTeacher->getClasses($teacherId, $this->institutionSiteId);
 					$statusOptions = $this->TeacherStatus->findList(true);
-					$_view_details = $this->AccessControl->check('Teachers', 'view');
+					$_view_details = $this->AccessControl->newCheck('Teachers', 'view');
 					$this->set('_view_details', $_view_details);
 					$this->set('data', $data);
 					$this->set('positions', $positions);
@@ -1872,7 +1889,7 @@ class InstitutionSitesController extends AppController {
 		$data = $this->paginate('InstitutionSiteStaff', $conditions);
 		
 		// Checking if user has access to add
-		$_add_staff = $this->AccessControl->check('InstitutionSites', 'staffAdd');
+		$_add_staff = $this->AccessControl->newCheck('InstitutionSites', 'staffAdd');
 		$this->set('_add_staff', $_add_staff);
 		// End Access Control
 		
@@ -1991,7 +2008,7 @@ class InstitutionSitesController extends AppController {
 				$this->Navigation->addCrumb('Edit');
 				if(!empty($positions)) {
 					$statusOptions = $this->StaffStatus->findList(true);
-					$_view_details = $this->AccessControl->check('Staff', 'view');
+					$_view_details = $this->AccessControl->newCheck('Staff', 'view');
 					$this->set('_view_details', $_view_details);
 					$this->set('data', $data);
 					$this->set('positions', $positions);

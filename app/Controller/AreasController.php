@@ -75,7 +75,7 @@ class AreasController extends AppController {
 
 		// Checking if user has access to _view for area levels
 		$_view_levels = false;
-		if($this->AccessControl->check($this->params['controller'], 'levels')) {
+		if($this->AccessControl->newCheck($this->params['controller'], 'levels')) {
 			$_view_levels = true;
 		}
 		$this->set('_view_levels', $_view_levels);
@@ -489,7 +489,7 @@ class AreasController extends AppController {
 
 		// Checking if user has access to _view for area levels
 		$_view_levels = false;
-		if($this->AccessControl->check($this->params['controller'], 'levels')) {
+		if($this->AccessControl->newCheck($this->params['controller'], 'levels')) {
 			$_view_levels = true;
 		}
 

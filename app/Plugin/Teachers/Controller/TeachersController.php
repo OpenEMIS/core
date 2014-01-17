@@ -139,7 +139,7 @@ class TeachersController extends TeachersAppController {
 		
         $data = $this->paginate('Teacher', $conditions);
 		if(empty($searchKey) && !$this->Session->check('Teacher.AdvancedSearch')) {
-			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+			if(count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'viewTeacher', $data[0]['Teacher']['id']));
 			}
 		}
