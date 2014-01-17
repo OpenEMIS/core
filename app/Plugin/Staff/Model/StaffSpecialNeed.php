@@ -43,7 +43,7 @@ class StaffSpecialNeed extends StaffAppModel {
 	
 	public function special_need($controller, $params) {
 	//	pr('aas');
-		$controller->Navigation->addCrumb('Special Needs');
+		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
 		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
 		

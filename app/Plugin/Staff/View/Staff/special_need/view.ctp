@@ -1,6 +1,7 @@
 <?php 
-echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false));
-echo $this->Html->script('/Staff/js/staff', false);
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
+echo $this->Html->script('search', false);
 ?>
 <?php $obj = $data[$modelName]; ?>
 <?php echo $this->element('breadcrumb'); ?>
