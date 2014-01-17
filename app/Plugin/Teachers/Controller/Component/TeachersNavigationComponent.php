@@ -40,6 +40,7 @@ class TeachersNavigationComponent extends Component {
 					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
 					$navigation->createLink('Comments', $controller, 'comments'),
 					$navigation->createLink('Special Needs', $controller, 'special_need', '^special_need'),
+					$navigation->createLink('Awards', $controller, 'award', '^award'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
