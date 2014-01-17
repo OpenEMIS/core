@@ -24,12 +24,13 @@ class NavigationComponent extends Component {
 	public $ignoredLinks = array();
 	public $skip = false;
 	
-	public $components = array('Auth', 'AccessControl');
+	public $components = array('Auth', 'AccessControl', 'Session');
 	
 	public function initialize(Controller $controller) {
 		$this->controller =& $controller;
 		$this->navigations = $this->getLinks();
 		$this->topNavigations = array();
+                $this->SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
 	}
 	
 	//called after Controller::beforeFilter()
@@ -75,6 +76,7 @@ class NavigationComponent extends Component {
 	public function apply($controller, $action) {
 		$navigations = array();
 		$found = false;
+                //pr($this->navigations);
 		foreach($this->navigations as $module => $obj) {
 			foreach($obj['links'] as $links) {
 				foreach($links as $title => &$linkList) {
@@ -85,7 +87,7 @@ class NavigationComponent extends Component {
 						$pattern = $attr['pattern'];
 						
 						// Checking access control
-						$check = $this->AccessControl->check($_controller, $attr['action']);
+						$check = $this->AccessControl->newCheck($_controller, $attr['action']);
 						//pr($attr);
 						
 						if($check || $_controller === 'Home') {
@@ -116,6 +118,7 @@ class NavigationComponent extends Component {
 							$attr['selected'] = true;
 							$this->topNavigations[$module]['selected'] = true;
 						}
+                                                
 					}
 				}
 				if($found) {
@@ -123,6 +126,7 @@ class NavigationComponent extends Component {
 						$this->leftNavigations = $links;
 					}
 				}
+                                //pr($this->leftNavigations);
 			}
 		}//pr($this->navigations);
 	}
