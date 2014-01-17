@@ -80,7 +80,8 @@ class StudentsController extends StudentsAppController {
 		'health_allergy' => 'Students.StudentHealthAllergy',
 		'health_test' => 'Students.StudentHealthTest',
 		'health_consultation' => 'Students.StudentHealthConsultation',
-		'health' => 'Students.StudentHealth'
+		'health' => 'Students.StudentHealth',
+        'special_need' => 'Students.StudentSpecialNeed'
 	); 
 
     public function beforeFilter() {
