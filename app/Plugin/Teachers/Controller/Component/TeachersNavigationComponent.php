@@ -32,13 +32,13 @@ class TeachersNavigationComponent extends Component {
 			),
 			array(
 				'GENERAL' => array(
-					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
-                                        $navigation->createLink('Contacts', $controller, 'contacts'),
-                                        $navigation->createLink('identities', $controller, 'identities'),
-                                        $navigation->createLink('Nationalities', $controller, 'nationalities'),
-                                        $navigation->createLink('Languages', $controller, 'languages'),
-                                        $navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
-                                        $navigation->createLink('Comments', $controller, 'comments'),  
+					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|\bhistory\b'),
+					$navigation->createLink('Contacts', $controller, 'contacts'),
+					$navigation->createLink('identities', $controller, 'identities'),
+					$navigation->createLink('Nationalities', $controller, 'nationalities'),
+					$navigation->createLink('Languages', $controller, 'languages'),
+					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
+					$navigation->createLink('Comments', $controller, 'comments'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
@@ -52,7 +52,17 @@ class TeachersNavigationComponent extends Component {
 					$navigation->createLink('Extracurricular', $controller, 'extracurricular'),
 					$navigation->createLink('Employment', $controller, 'employments'),
 					$navigation->createLink('Salary', $controller, 'salaries')
-				)
+				),
+				'HEALTH' => array(
+                    $navigation->createLink('Overview', $controller, 'health_view', 'health_view|health_edit'),
+                    $navigation->createLink('History', $controller, 'health_history', '^health_history'),
+                    $navigation->createLink('Family', $controller, 'health_family', '^health_family'),
+                    $navigation->createLink('Immunizations', $controller, 'health_immunization', '^health_immunization'),
+					$navigation->createLink('Medications', $controller, 'health_medication', '^health_medication'),
+					$navigation->createLink('Allergies', $controller, 'health_allergy', '^health_allergy'),
+					$navigation->createLink('Tests', $controller, 'health_test', '^health_test'),
+					$navigation->createLink('Consultations', $controller, 'health_consultation', '^health_consultation'),
+                )
 			)
 		);
 		return array('Teachers' => array('controller' => $controller, 'links' => $links));
