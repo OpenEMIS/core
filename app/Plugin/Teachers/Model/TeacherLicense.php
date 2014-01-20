@@ -71,7 +71,7 @@ class TeacherLicense extends TeachersAppModel {
 		
 	}
 
-	public function license_view($controller, $params){
+	public function licenseView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -91,7 +91,7 @@ class TeacherLicense extends TeachersAppModel {
 		$controller->set('licenseTypeOptions', $licenseTypeOptions);
 	}
 	
-	public function license_delete($controller, $params) {
+	public function licenseDelete($controller, $params) {
         if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherLicenseId')) {
             $id = $controller->Session->read('TeacherLicenseId');
             $teacherId = $controller->Session->read('TeacherId');
@@ -110,12 +110,12 @@ class TeacherLicense extends TeachersAppModel {
         }
     }
 	
-	public function license_add($controller, $params) {
+	public function licenseAdd($controller, $params) {
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function license_edit($controller, $params) {
+	public function licenseEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);

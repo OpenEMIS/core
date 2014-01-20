@@ -61,7 +61,7 @@ class StaffAward extends StaffAppModel {
 		
 	}
 
-	public function award_view($controller, $params){
+	public function awardView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -78,7 +78,7 @@ class StaffAward extends StaffAppModel {
 		$controller->set('data', $data);
 	}
 	
-	public function award_delete($controller, $params) {
+	public function awardDelete($controller, $params) {
         if($controller->Session->check('StaffId') && $controller->Session->check('StaffAwardId')) {
             $id = $controller->Session->read('StaffAwardId');
             $staffId = $controller->Session->read('StaffId');
@@ -95,12 +95,12 @@ class StaffAward extends StaffAppModel {
         }
     }
 	
-	public function award_add($controller, $params) {
+	public function awardAdd($controller, $params) {
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function award_edit($controller, $params) {
+	public function awardEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
