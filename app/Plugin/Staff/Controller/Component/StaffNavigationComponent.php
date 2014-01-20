@@ -40,7 +40,7 @@ class StaffNavigationComponent extends Component {
 					$navigation->createLink('Languages', $controller, 'languages'),       
 					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
 					$navigation->createLink('Comments', $controller, 'comments'),
-					$navigation->createLink('Special Needs', $controller, 'special_need', '^special_need'),
+					$navigation->createLink('Special Needs', $controller, 'specialNeed', '^specialNeed'),
 					$navigation->createLink('Awards', $controller, 'award', '^award'),
 					$navigation->createLink('Memberships', $controller, 'membership', '^membership'),
 					$navigation->createLink('Licenses', $controller, 'license', '^license'),
