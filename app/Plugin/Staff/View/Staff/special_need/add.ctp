@@ -8,9 +8,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	<h1>
 		<span><?php echo __($subheader); ?></span>
 		<?php
-		if ($_edit) {
             echo $this->Html->link(__('Back'), array('action' => 'specialNeed'), array('class' => 'divider'));
-        }
 		?>
 	</h1>
 	</h1>

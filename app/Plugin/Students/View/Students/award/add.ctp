@@ -12,9 +12,8 @@ echo $this->Html->script('jquery-ui.min', false);
 	<h1>
 		<span><?php echo __($subheader); ?></span>
 		<?php
-		if ($_edit) {
             echo $this->Html->link(__('Back'), array('action' => 'award'), array('class' => 'divider'));
-        }
+        
 		?>
 	</h1>
 	</h1>

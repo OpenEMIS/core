@@ -9,7 +9,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
     <h1>
         <span><?php echo __($subheader); ?></span>
         <?php
-		if($_edit) {
+		if($_add) {
 			echo $this->Html->link(__('Add'), array('action' => 'awardAdd'), array('class' => 'divider'));
 		}
 		?>
