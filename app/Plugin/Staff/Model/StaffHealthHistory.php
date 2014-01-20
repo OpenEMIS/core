@@ -41,7 +41,7 @@ class StaffHealthHistory extends StaffAppModel {
 	);
 	public $booleanOptions = array('No', 'Yes');
 	
-	public function health_history($controller, $params) {
+	public function healthHistory($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb('History');
 		$controller->set('modelName', $this->name);
@@ -55,7 +55,7 @@ class StaffHealthHistory extends StaffAppModel {
 		
 	}
 	
-	public function health_history_view($controller, $params){
+	public function healthHistoryView($controller, $params){
 		$controller->Navigation->addCrumb('Health - View History');
 		$controller->set('subheader', 'Health - View History');
 		$controller->set('modelName', $this->name);
@@ -64,7 +64,7 @@ class StaffHealthHistory extends StaffAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'health_history'));
+			$controller->redirect(array('action'=>'healthHistory'));
 		}
 		
 		$controller->Session->write('StaffHealthHistoryId', $id);
@@ -75,7 +75,7 @@ class StaffHealthHistory extends StaffAppModel {
 		$controller->set('healthConditionsOptions', $healthConditionsOptions);
 	}
 	
-	public function health_history_delete($controller, $params) {
+	public function healthHistoryDelete($controller, $params) {
         if($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthHistoryId')) {
             $id = $controller->Session->read('StaffHealthHistoryId');
             $staffId = $controller->Session->read('StaffId');
@@ -90,17 +90,17 @@ class StaffHealthHistory extends StaffAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StaffHealthHistoryId');
-            $controller->redirect(array('action' => 'health_history'));
+            $controller->redirect(array('action' => 'healthHistory'));
         }
     }
 	
-	public function health_history_add($controller, $params) {
+	public function healthHistoryAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add History');
 		$controller->set('subheader', 'Health - Add History');
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function health_history_edit($controller, $params) {
+	public function healthHistoryEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit History');
 		$controller->set('subheader', 'Health - Edit History');
 		$this->setup_add_edit_form($controller, $params);
@@ -134,7 +134,7 @@ class StaffHealthHistory extends StaffAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_history'));
+				return $controller->redirect(array('action' => 'healthHistory'));
 			}
 		}
 	}

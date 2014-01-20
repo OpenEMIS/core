@@ -48,7 +48,7 @@ class TeacherHealthImmunization extends TeachersAppModel {
 	);
 	public $booleanOptions = array('No', 'Yes');
 	
-	public function health_immunization($controller, $params) {
+	public function healthImmunization($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb('Health - Immunizations');
 		$controller->set('modelName', $this->name);
@@ -64,7 +64,7 @@ class TeacherHealthImmunization extends TeachersAppModel {
 		
 	}
 
-	public function health_immunization_view($controller, $params){
+	public function healthImmunizationView($controller, $params){
 		$controller->Navigation->addCrumb('Health - View Immunization');
 		$controller->set('subheader', 'Health - View Immunization');
 		$controller->set('modelName', $this->name);
@@ -73,7 +73,7 @@ class TeacherHealthImmunization extends TeachersAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'health_immunization'));
+			$controller->redirect(array('action'=>'healthImmunization'));
 		}
 		
 		$controller->Session->write('TeacherHealthImmunizationId', $id);
@@ -84,7 +84,7 @@ class TeacherHealthImmunization extends TeachersAppModel {
 		$controller->set('healthImmunizationsOptions', $healthImmunizationsOptions);
 	}
 	
-	public function health_immunization_delete($controller, $params) {
+	public function healthImmunizationDelete($controller, $params) {
         if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherHealthImmunizationId')) {
             $id = $controller->Session->read('TeacherHealthImmunizationId');
             $teacherId = $controller->Session->read('TeacherId');
@@ -99,17 +99,17 @@ class TeacherHealthImmunization extends TeachersAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('TeacherHealthImmunizationId');
-            $controller->redirect(array('action' => 'health_immunization'));
+            $controller->redirect(array('action' => 'healthImmunization'));
         }
     }
 	
-	public function health_immunization_add($controller, $params) {
+	public function healthImmunizationAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add Immunization');
 		$controller->set('subheader', 'Health - Add Immunization');
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function health_immunization_edit($controller, $params) {
+	public function healthImmunizationEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Immunization');
 		$controller->set('subheader', 'Health - Edit Immunization');
 		$this->setup_add_edit_form($controller, $params);
@@ -142,7 +142,7 @@ class TeacherHealthImmunization extends TeachersAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_immunization'));
+				return $controller->redirect(array('action' => 'healthImmunization'));
 			}
 		}
 	}
