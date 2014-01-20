@@ -87,7 +87,8 @@ class StaffController extends StaffAppController {
 		'health_allergy' => 'Staff.StaffHealthAllergy',
 		'health_test' => 'Staff.StaffHealthTest',
 		'health_consultation' => 'Staff.StaffHealthConsultation',
-		'health' => 'Staff.StaffHealth'
+		'health' => 'Staff.StaffHealth',
+        'special_need' => 'Staff.StaffSpecialNeed'
 	); 
 	
     public function beforeFilter() {
