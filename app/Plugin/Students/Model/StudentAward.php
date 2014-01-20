@@ -14,7 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherAward extends TeachersAppModel {
+class StudentAward extends StudentsAppModel {
 	public $actsAs = array('ControllerAction');
 	
 	public $belongsTo = array(
@@ -54,7 +54,7 @@ class TeacherAward extends TeachersAppModel {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('teacher_id'=> $controller->teacherId)));
+		$data = $this->find('all', array('conditions'=> array('student_id'=> $controller->studentId)));
 		
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
@@ -73,24 +73,24 @@ class TeacherAward extends TeachersAppModel {
 			$controller->redirect(array('action'=>'award'));
 		}
 		
-		$controller->Session->write('TeacherAwardId', $id);
+		$controller->Session->write('StudentAwardId', $id);
 		
 		$controller->set('data', $data);
 	}
 	
 	public function award_delete($controller, $params) {
-        if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherAwardId')) {
-            $id = $controller->Session->read('TeacherAwardId');
-            $teacherId = $controller->Session->read('TeacherId');
+        if($controller->Session->check('StudentId') && $controller->Session->check('StudentAwardId')) {
+            $id = $controller->Session->read('StudentAwardId');
+            $studentId = $controller->Session->read('StudentId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 			
 			
-            $name = $data['TeacherAward']['issuer'] . ' - ' .$data['TeacherAward']['award'] ;
+            $name = $data['StudentAward']['issuer'] . ' - ' .$data['StudentAward']['award'] ;
 			
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('TeacherAwardId');
+			$controller->Session->delete('StudentAwardId');
             $controller->redirect(array('action' => 'award'));
         }
     }
@@ -120,7 +120,7 @@ class TeacherAward extends TeachersAppModel {
 			}
 		}
 		else{
-			$controller->request->data[$this->name]['teacher_id'] = $controller->teacherId;
+			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
 			if($this->save($controller->request->data)){
 				if(empty($controller->request->data[$this->name]['id'])){
 					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
@@ -141,20 +141,20 @@ class TeacherAward extends TeachersAppModel {
 		$search = sprintf('%%%s%%', $search);
 		$list = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('DISTINCT TeacherAward.' . $field),
-			'conditions' => array('TeacherAward.' . $field . ' LIKE' => $search
+			'fields' => array('DISTINCT StudentAward.' . $field),
+			'conditions' => array('StudentAward.' . $field . ' LIKE' => $search
 			),
-			'order' => array('TeacherAward.' . $field)
+			'order' => array('StudentAward.' . $field)
 		));
 		
 		$data = array();
 		
 		foreach($list as $obj) {
-			$teacherAwardField = $obj['TeacherAward'][$field];
+			$studentAwardField = $obj['StudentAward'][$field];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s', $teacherAwardField)),
-				'value' => array($field => $teacherAwardField)
+				'label' => trim(sprintf('%s', $studentAwardField)),
+				'value' => array($field => $studentAwardField)
 			);
 		}
 

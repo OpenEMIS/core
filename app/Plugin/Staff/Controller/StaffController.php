@@ -56,6 +56,8 @@ class StaffController extends StaffAppController {
             'Staff.StaffSalaryAddition',
             'Staff.StaffSalaryDeduction',
             'Staff.StaffAward',
+            'Staff.StaffMembership',
+            'Staff.StaffLicense',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -90,7 +92,9 @@ class StaffController extends StaffAppController {
 		'health_consultation' => 'Staff.StaffHealthConsultation',
 		'health' => 'Staff.StaffHealth',
         'special_need' => 'Staff.StaffSpecialNeed',
-        'award' => 'Staff.StaffAward'
+        'award' => 'Staff.StaffAward',
+        'membership' => 'Staff.StaffMembership',
+        'license' => 'Staff.StaffLicense'
 	); 
 	
     public function beforeFilter() {
@@ -1918,8 +1922,27 @@ class StaffController extends StaffAppController {
         if($this->request->is('ajax')) {
             $this->autoRender = false;
             $search = $this->params->query['term'];
-            //$search = 'test';
             $data = $this->StaffAward->autocomplete($search, $type);
+ 
+            return json_encode($data);
+        }
+    }
+
+    public function ajax_find_membership() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StaffMembership->autocomplete($search);
+ 
+            return json_encode($data);
+        }
+    }
+
+   public function ajax_find_license() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StaffLicense->autocomplete($search);
  
             return json_encode($data);
         }

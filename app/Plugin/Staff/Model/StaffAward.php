@@ -141,7 +141,7 @@ class StaffAward extends StaffAppModel {
 		$search = sprintf('%%%s%%', $search);
 		$list = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('StaffAward.' . $field),
+			'fields' => array('DISTINCT StaffAward.' . $field),
 			'conditions' => array('StaffAward.' . $field . ' LIKE' => $search
 			),
 			'order' => array('StaffAward.' . $field)
@@ -154,7 +154,7 @@ class StaffAward extends StaffAppModel {
 			
 			$data[] = array(
 				'label' => trim(sprintf('%s', $staffAwardField)),
-				'value' => array('award' => $staffAwardField)
+				'value' => array($field => $staffAwardField)
 			);
 		}
 
