@@ -30,7 +30,7 @@ class StaffHealth extends StaffAppModel {
 		)
 	);
 	
-	public $validate = array(
+	/*public $validate = array(
 		'doctor_name' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -45,7 +45,7 @@ class StaffHealth extends StaffAppModel {
 				'message' => 'Please enter a valid Contact Number.'
 			)
 		)
-	);
+	);*/
 	
 	public $bloodTypeOptions = array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-');
 	public $booleanOptions = array('No', 'Yes');
