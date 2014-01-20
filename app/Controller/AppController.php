@@ -104,7 +104,6 @@ class AppController extends Controller {
 	
 	public function processAction() {
 		$action = strtolower($this->action);
-		
 		if(!empty($this->modules)) { // for modules / plugin 
 		//search for exact match
 			foreach($this->modules as $name => $module) {
@@ -114,8 +113,7 @@ class AppController extends Controller {
 					$explode = explode('.', $module);
 					$plugin = count($explode) > 1 ? $explode[0] : null;
 					$module = $explode[count($explode)-1];
-					
-					return $this->{$module}->processAction($this, $this->action, $name, $plugin);
+					return $this->{$module}->processAction($this, $action, $name, $plugin);
 				}
 			}
 		//if nothing match, search by partial string
@@ -125,8 +123,7 @@ class AppController extends Controller {
 					$explode = explode('.', $module);
 					$plugin = count($explode) > 1 ? $explode[0] : null;
 					$module = $explode[count($explode)-1];
-					
-					return $this->{$module}->processAction($this, $this->action, $name, $plugin);
+					return $this->{$module}->processAction($this, $action, $name, $plugin);
 				}
 			}
 		}

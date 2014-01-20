@@ -12,10 +12,10 @@ echo $this->Html->script('search', false);
 		<?php
 			echo $this->Html->link(__('List'), array('action' => 'award' ), array('class' => 'divider'));
 			if($_edit) {
-				echo $this->Html->link(__('Edit'), array('action' => 'award_edit',$obj['id'] ), array('class' => 'divider'));
+				echo $this->Html->link(__('Edit'), array('action' => 'awardEdit',$obj['id'] ), array('class' => 'divider'));
 			}
 			if($_delete) {
-				echo $this->Html->link(__('Delete'), array('action' => 'award_delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+				echo $this->Html->link(__('Delete'), array('action' => 'awardDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 			}
 		?>
 	</h1>

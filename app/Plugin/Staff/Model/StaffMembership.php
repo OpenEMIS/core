@@ -54,7 +54,7 @@ class StaffMembership extends StaffAppModel {
 		
 	}
 
-	public function membership_view($controller, $params){
+	public function membershipView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -71,7 +71,7 @@ class StaffMembership extends StaffAppModel {
 		$controller->set('data', $data);
 	}
 	
-	public function membership_delete($controller, $params) {
+	public function membershipDelete($controller, $params) {
         if($controller->Session->check('StaffId') && $controller->Session->check('StaffMembershipId')) {
             $id = $controller->Session->read('StaffMembershipId');
             $staffId = $controller->Session->read('StaffId');
@@ -88,12 +88,12 @@ class StaffMembership extends StaffAppModel {
         }
     }
 	
-	public function membership_add($controller, $params) {
+	public function membershipAdd($controller, $params) {
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function membership_edit($controller, $params) {
+	public function membershipEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
