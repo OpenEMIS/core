@@ -71,6 +71,17 @@ class StudentsController extends StudentsAppController {
         ),
 		'AccessControl'
     );
+	
+	public $modules = array(
+		'health_history' => 'Students.StudentHealthHistory',
+		'health_family' => 'Students.StudentHealthFamily',
+		'health_immunization' => 'Students.StudentHealthImmunization',
+		'health_medication' => 'Students.StudentHealthMedication',
+		'health_allergy' => 'Students.StudentHealthAllergy',
+		'health_test' => 'Students.StudentHealthTest',
+		'health_consultation' => 'Students.StudentHealthConsultation',
+		'health' => 'Students.StudentHealth'
+	); 
 
     public function beforeFilter() {
         parent::beforeFilter();
