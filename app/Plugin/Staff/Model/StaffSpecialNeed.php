@@ -41,7 +41,7 @@ class StaffSpecialNeed extends StaffAppModel {
 
 	public $headerDefault = 'Special Needs';
 	
-	public function special_need($controller, $params) {
+	public function specialNeed($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -57,7 +57,7 @@ class StaffSpecialNeed extends StaffAppModel {
 		
 	}
 
-	public function special_need_view($controller, $params){
+	public function specialNeedView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -66,7 +66,7 @@ class StaffSpecialNeed extends StaffAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'special_need'));
+			$controller->redirect(array('action'=>'specialNeed'));
 		}
 		
 		$controller->Session->write('StaffSpecialNeedId', $id);
@@ -77,7 +77,7 @@ class StaffSpecialNeed extends StaffAppModel {
 		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
 	}
 	
-	public function special_need_delete($controller, $params) {
+	public function specialNeedDelete($controller, $params) {
         if($controller->Session->check('StaffId') && $controller->Session->check('StaffSpecialNeedId')) {
             $id = $controller->Session->read('StaffSpecialNeedId');
             $staffId = $controller->Session->read('StaffId');
@@ -92,16 +92,16 @@ class StaffSpecialNeed extends StaffAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StaffSpecialNeedId');
-            $controller->redirect(array('action' => 'special_need'));
+            $controller->redirect(array('action' => 'specialNeed'));
         }
     }
 	
-	public function special_need_add($controller, $params) {
+	public function specialNeedAdd($controller, $params) {
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function special_need_edit($controller, $params) {
+	public function specialNeedEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
@@ -133,7 +133,7 @@ class StaffSpecialNeed extends StaffAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'special_need'));
+				return $controller->redirect(array('action' => 'specialNeed'));
 			}
 		}
 	}

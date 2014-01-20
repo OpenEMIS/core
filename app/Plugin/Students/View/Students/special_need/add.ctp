@@ -18,7 +18,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	
 	<?php
 	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Students', 'action' => 'special_need_add', 'plugin'=>'Students'),
+		'url' => array('controller' => 'Students', 'action' => 'specialNeedAdd', 'plugin'=>'Students'),
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
