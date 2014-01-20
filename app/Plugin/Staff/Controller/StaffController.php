@@ -151,7 +151,7 @@ class StaffController extends StaffAppController {
 		
         $data = $this->paginate('Staff', $conditions);
 		if(empty($searchKey) && !$this->Session->check('Staff.AdvancedSearch')) {
-			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+			if(count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'viewStaff', $data[0]['Staff']['id']));
 			}
 		}
