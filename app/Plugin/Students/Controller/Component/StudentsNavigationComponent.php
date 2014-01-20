@@ -39,7 +39,7 @@ class StudentsNavigationComponent extends Component {
 					$navigation->createLink('Languages', $controller, 'languages'),
 					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
 					$navigation->createLink('Comments', $controller, 'comments'),
-					$navigation->createLink('Special Needs', $controller, 'special_need', '^special_need'),
+					$navigation->createLink('Special Needs', $controller, 'specialNeed', '^specialNeed'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
