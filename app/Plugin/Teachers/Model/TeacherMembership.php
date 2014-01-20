@@ -14,7 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherAward extends TeachersAppModel {
+class TeacherMembership extends TeachersAppModel {
 	public $actsAs = array('ControllerAction');
 	
 	public $belongsTo = array(
@@ -29,18 +29,11 @@ class TeacherAward extends TeachersAppModel {
 	);
 
 	public $validate = array(
-		'award' => array(
+		'membership' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Award.'
-			)
-		),
-		'issuer' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Issuer.'
+				'message' => 'Please enter a valid Membership.'
 			)
 		)
 	);
@@ -48,9 +41,9 @@ class TeacherAward extends TeachersAppModel {
 
 	public $booleanOptions = array('No', 'Yes');
 
-	public $headerDefault = 'Awards';
+	public $headerDefault = 'Memberships';
 	
-	public function award($controller, $params) {
+	public function membership($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -61,7 +54,7 @@ class TeacherAward extends TeachersAppModel {
 		
 	}
 
-	public function award_view($controller, $params){
+	public function membership_view($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -70,37 +63,37 @@ class TeacherAward extends TeachersAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'award'));
+			$controller->redirect(array('action'=>'membership'));
 		}
 		
-		$controller->Session->write('TeacherAwardId', $id);
+		$controller->Session->write('TeacherMembershipId', $id);
 		
 		$controller->set('data', $data);
 	}
 	
-	public function award_delete($controller, $params) {
-        if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherAwardId')) {
-            $id = $controller->Session->read('TeacherAwardId');
+	public function membership_delete($controller, $params) {
+        if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherMembershipId')) {
+            $id = $controller->Session->read('TeacherMembershipId');
             $teacherId = $controller->Session->read('TeacherId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 			
 			
-            $name = $data['TeacherAward']['issuer'] . ' - ' .$data['TeacherAward']['award'] ;
+            $name = $data['TeacherMembership']['membership'];
 			
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('TeacherAwardId');
-            $controller->redirect(array('action' => 'award'));
+			$controller->Session->delete('TeacherMembershipId');
+            $controller->redirect(array('action' => 'membership'));
         }
     }
 	
-	public function award_add($controller, $params) {
+	public function membership_add($controller, $params) {
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function award_edit($controller, $params) {
+	public function membership_edit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
@@ -128,33 +121,30 @@ class TeacherAward extends TeachersAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'award'));
+				return $controller->redirect(array('action' => 'membership'));
 			}
 		}
 	}
 
-	public function autocomplete($search, $type='1') {
-		$field = 'award';
-		if($type=='2'){
-			$field = 'issuer';
-		}
+	public function autocomplete($search) {
+		$field = 'membership';
 		$search = sprintf('%%%s%%', $search);
 		$list = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('DISTINCT TeacherAward.' . $field),
-			'conditions' => array('TeacherAward.' . $field . ' LIKE' => $search
+			'fields' => array('DISTINCT TeacherMembership.' . $field),
+			'conditions' => array('TeacherMembership.' . $field . ' LIKE' => $search
 			),
-			'order' => array('TeacherAward.' . $field)
+			'order' => array('TeacherMembership.' . $field)
 		));
 		
 		$data = array();
 		
 		foreach($list as $obj) {
-			$teacherAwardField = $obj['TeacherAward'][$field];
+			$teacherMembershipField = $obj['TeacherMembership'][$field];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s', $teacherAwardField)),
-				'value' => array($field => $teacherAwardField)
+				'label' => trim(sprintf('%s', $teacherMembershipField)),
+				'value' => array($field => $teacherMembershipField)
 			);
 		}
 

@@ -14,7 +14,7 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherAward extends TeachersAppModel {
+class TeacherLicense extends TeachersAppModel {
 	public $actsAs = array('ControllerAction');
 	
 	public $belongsTo = array(
@@ -27,13 +27,13 @@ class TeacherAward extends TeachersAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-
+	
 	public $validate = array(
-		'award' => array(
+		'license_type_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Award.'
+				'message' => 'Please select a valid License Type.'
 			)
 		),
 		'issuer' => array(
@@ -42,26 +42,36 @@ class TeacherAward extends TeachersAppModel {
 				'required' => true,
 				'message' => 'Please enter a valid Issuer.'
 			)
-		)
+		),
+		'license_number' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid License Number.'
+			)
+		),
 	);
-	
-
 	public $booleanOptions = array('No', 'Yes');
 
-	public $headerDefault = 'Awards';
+	public $headerDefault = 'Licenses';
 	
-	public function award($controller, $params) {
+	public function license($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
 		$data = $this->find('all', array('conditions'=> array('teacher_id'=> $controller->teacherId)));
 		
+		$licenseType = ClassRegistry::init('LicenseType');
+		$licenseTypeOptions = $licenseType->find('list', array('fields'=> array('id', 'name')));
+		
+		
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
+		$controller->set('licenseTypeOptions', $licenseTypeOptions);
 		
 	}
 
-	public function award_view($controller, $params){
+	public function license_view($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -70,37 +80,42 @@ class TeacherAward extends TeachersAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'award'));
+			$controller->redirect(array('action'=>'license'));
 		}
 		
-		$controller->Session->write('TeacherAwardId', $id);
+		$controller->Session->write('TeacherLicenseId', $id);
+		$licenseType = ClassRegistry::init('LicenseType');
+		$licenseTypeOptions = $licenseType->find('list', array('fields'=> array('id', 'name')));
 		
 		$controller->set('data', $data);
+		$controller->set('licenseTypeOptions', $licenseTypeOptions);
 	}
 	
-	public function award_delete($controller, $params) {
-        if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherAwardId')) {
-            $id = $controller->Session->read('TeacherAwardId');
+	public function license_delete($controller, $params) {
+        if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherLicenseId')) {
+            $id = $controller->Session->read('TeacherLicenseId');
             $teacherId = $controller->Session->read('TeacherId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 			
-			
-            $name = $data['TeacherAward']['issuer'] . ' - ' .$data['TeacherAward']['award'] ;
+			$licenseType = ClassRegistry::init('LicenseType');
+			$licenseTypeOptions = $licenseType->find('list', array('fields'=> array('id', 'name')));
+
+            $name = $licenseTypeOptions[$data['TeacherLicense']['license_type_id']] . ' - ' . $data['TeacherLicense']['license_number'];
 			
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('TeacherAwardId');
-            $controller->redirect(array('action' => 'award'));
+			$controller->Session->delete('TeacherLicenseId');
+            $controller->redirect(array('action' => 'license'));
         }
     }
 	
-	public function award_add($controller, $params) {
+	public function license_add($controller, $params) {
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function award_edit($controller, $params) {
+	public function license_edit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
@@ -111,6 +126,10 @@ class TeacherAward extends TeachersAppModel {
 	function setup_add_edit_form($controller, $params){
 		$controller->set('modelName', $this->name);
 		
+		$licenseType = ClassRegistry::init('LicenseType');
+		$licenseTypeOptions = $licenseType->find('list', array('fields'=> array('id', 'name')));
+		
+		$controller->set('licenseTypeOptions', $licenseTypeOptions);
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -128,33 +147,30 @@ class TeacherAward extends TeachersAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'award'));
+				return $controller->redirect(array('action' => 'license'));
 			}
 		}
 	}
 
-	public function autocomplete($search, $type='1') {
-		$field = 'award';
-		if($type=='2'){
-			$field = 'issuer';
-		}
+	public function autocomplete($search) {
+		$field = 'issuer';
 		$search = sprintf('%%%s%%', $search);
 		$list = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('DISTINCT TeacherAward.' . $field),
-			'conditions' => array('TeacherAward.' . $field . ' LIKE' => $search
+			'fields' => array('DISTINCT TeacherLicense.' . $field),
+			'conditions' => array('TeacherLicense.' . $field . ' LIKE' => $search
 			),
-			'order' => array('TeacherAward.' . $field)
+			'order' => array('TeacherLicense.' . $field)
 		));
 		
 		$data = array();
 		
 		foreach($list as $obj) {
-			$teacherAwardField = $obj['TeacherAward'][$field];
+			$teacherLicenseField = $obj['TeacherLicense'][$field];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s', $teacherAwardField)),
-				'value' => array($field => $teacherAwardField)
+				'label' => trim(sprintf('%s', $teacherLicenseField)),
+				'value' => array($field => $teacherLicenseField)
 			);
 		}
 

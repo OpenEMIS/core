@@ -8,7 +8,7 @@ echo $this->Html->script('jquery-ui.min', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="award" class="content_wrapper edit add" selectAwardUrl="Teachers/ajax_find_award/" >
+<div id="award" class="content_wrapper edit add" selectAwardUrl="Students/ajax_find_award/" >
 	<h1>
 		<span><?php echo __($subheader); ?></span>
 		<?php
@@ -21,7 +21,7 @@ echo $this->Html->script('jquery-ui.min', false);
 	
 	<?php
 	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Teachers', 'action' => 'award_add', 'plugin'=>'Teachers'),
+		'url' => array('controller' => 'Students', 'action' => 'award_add', 'plugin'=>'Students'),
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));

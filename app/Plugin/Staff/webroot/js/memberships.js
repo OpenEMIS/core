@@ -14,41 +14,24 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-    objStaffAwards.init();
+    objStaffMemberships.init();
 });
 
-var objStaffAwards = {
+var objStaffMemberships = {
 
     init: function() {
-        var elementAward = '#searchAward';
-        var elementIssuer = '#searchIssuer';
-        var table = $('#award');
-        var selectAwardUrl = getRootURL() + table.attr('selectAwardUrl');
-        objStaffAwards.attachAutoComplete(elementAward, selectAwardUrl + '1/', objStaffAwards.selectAwardField);
-        objStaffAwards.attachAutoComplete(elementIssuer, selectAwardUrl + '2/', objStaffAwards.selectIssuerField);
+        var element = '#searchMembership';
+        var table = $('#membership');
+        var url = getRootURL() + table.attr('url');
+        objStaffMemberships.attachAutoComplete(element, url, objStaffMemberships.selectField);
     },
 
-    selectAwardField: function(event, ui) {
+    selectField: function(event, ui) {
         var val = ui.item.value;
         var element;
         for(var i in val) {
             element = $('.' + i);
-            if(element.get(0).tagName.toUpperCase() === 'INPUT' && element.get(0).id == 'searchAward') {
-                element.val(val[i]);
-            } else {
-                element.html(val[i]);
-            }
-        }
-        return false;
-    },
-
-    selectIssuerField: function(event, ui) {
-        var val = ui.item.value;
-        var element;
-        for(var i in val) {
-            element = $('.' + i);
-            console.log(element.get(0));
-            if(element.get(0).tagName.toUpperCase() === 'INPUT' && element.get(0).id == 'searchIssuer') {
+            if(element.get(0).tagName.toUpperCase() === 'INPUT' && element.get(0).id == 'searchMembership') {
                 element.val(val[i]);
             } else {
                 element.html(val[i]);
