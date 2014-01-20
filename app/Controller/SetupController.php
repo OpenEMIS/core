@@ -88,7 +88,7 @@ class SetupController extends AppController {
 		'HealthAllergyType',
 		'HealthConsultationType',
 		'HealthTestType',
-		'SpecialNeedType',
+		'SpecialNeedType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -327,7 +327,6 @@ class SetupController extends AppController {
 			'name' => 'Consultation Types',
 			'items' => $this->HealthConsultationType->getLookupVariables()
 		));
-
 		
 		// Student
 		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
