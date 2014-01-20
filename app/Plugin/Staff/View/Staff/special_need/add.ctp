@@ -9,7 +9,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 		<span><?php echo __($subheader); ?></span>
 		<?php
 		if ($_edit) {
-            echo $this->Html->link(__('Back'), array('action' => 'special_need'), array('class' => 'divider'));
+            echo $this->Html->link(__('Back'), array('action' => 'specialNeed'), array('class' => 'divider'));
         }
 		?>
 	</h1>
@@ -17,7 +17,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	
 	<?php
 	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Staff', 'action' => 'special_need_add', 'plugin'=>'Staff'),
+		'url' => array('controller' => 'Staff', 'action' => 'specialNeedAdd', 'plugin'=>'Staff'),
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));

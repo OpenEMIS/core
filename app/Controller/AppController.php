@@ -103,7 +103,7 @@ class AppController extends Controller {
 	}
 	
 	public function processAction() {
-		$action = strtolower($this->action);
+		$action = Inflector::underscore($this->action);
 		if(!empty($this->modules)) { // for modules / plugin 
 		//search for exact match
 			foreach($this->modules as $name => $module) {
@@ -118,6 +118,7 @@ class AppController extends Controller {
 			}
 		//if nothing match, search by partial string
 			foreach($this->modules as $name => $module) {
+				//var_dump($action);
 				if(strpos($action, strtolower($name)) === 0) {
 					$this->loadModel($module);
 					$explode = explode('.', $module);
