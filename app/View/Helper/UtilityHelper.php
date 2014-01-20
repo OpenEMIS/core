@@ -395,6 +395,10 @@ class UtilityHelper extends AppHelper {
 		return ($value == 'F') ? __('Female') : __('Male');
 	}
 	
+	public function formatBoolean($value){
+		return ($value == 1) ? __('Yes'):__('No');	
+	}
+	
 	public function getListStart() {
 		echo '<ul class="quicksand table_view">';
 	}
