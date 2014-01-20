@@ -16,7 +16,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
     </h1>
     <?php echo $this->element('alert'); ?>
     <?php if(isset($data)) { ?>
-    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/healthTestView/">
+    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/health_testView/">
         <div class="table_head">
        		<div class="table_cell"><?php echo __('Date'); ?></div>
             <div class="table_cell"><?php echo __('Type'); ?></div>
