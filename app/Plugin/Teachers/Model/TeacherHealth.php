@@ -55,7 +55,7 @@ class TeacherHealth extends TeachersAppModel {
 		return $controller->redirect(array('action' =>'health_view'));
 	}
 	
-	public function health_view($controller, $params) {
+	public function healthView($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Overview');
         $data = $this->findByTeacherId($controller->teacherId);
 	
@@ -63,7 +63,7 @@ class TeacherHealth extends TeachersAppModel {
 		$controller->set('modelName', $this->name);
 	}
 	
-	public function health_edit($controller, $params){
+	public function healthEdit($controller, $params){
 		$controller->Navigation->addCrumb('Health - Edit Overview');
 		$controller->set('bloodTypeOptions', $this->bloodTypeOptions);
 		$controller->set('booleanOptions', $this->booleanOptions);
@@ -89,7 +89,7 @@ class TeacherHealth extends TeachersAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_view'));
+				return $controller->redirect(array('action' => 'healthView'));
 			}
 		}
 	}

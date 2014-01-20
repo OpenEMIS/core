@@ -32,7 +32,8 @@ class ControllerActionBehavior extends ModelBehavior {
 		$result = call_user_func_array(array($model, $action), array($controller, $controller->params));
 		$model->afterAction($controller, $action, $name);
 
-		$ctp = substr($action, strlen($name)+1);
+		$nameLen = Inflector::camelize($name);
+		$ctp = substr($action, strlen($nameLen));
 
 		if(empty($ctp)) {
 			$ctp = 'index';

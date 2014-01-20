@@ -48,7 +48,7 @@ class StaffHealthAllergy extends StaffAppModel {
 	);
 	public $booleanOptions = array('No', 'Yes');
 	
-	public function health_allergy($controller, $params) {
+	public function healthAllergy($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb('Health - Allergies');
 		$controller->set('modelName', $this->name);
@@ -64,7 +64,7 @@ class StaffHealthAllergy extends StaffAppModel {
 		
 	}
 
-	public function health_allergy_view($controller, $params){
+	public function healthAllergyView($controller, $params){
 		$controller->Navigation->addCrumb('Health - View Allergy');
 		$controller->set('subheader', 'Health - View Allergy');
 		$controller->set('modelName', $this->name);
@@ -73,7 +73,7 @@ class StaffHealthAllergy extends StaffAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'health_allergy'));
+			$controller->redirect(array('action'=>'healthAllergy'));
 		}
 		
 		$controller->Session->write('StaffHealthAllergyTypeId', $id);
@@ -85,7 +85,7 @@ class StaffHealthAllergy extends StaffAppModel {
 		$controller->set('booleanOptions', $this->booleanOptions);
 	}
 	
-	public function health_allergy_delete($controller, $params) {
+	public function healthAllergyDelete($controller, $params) {
         if($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthAllergyTypeId')) {
             $id = $controller->Session->read('StaffHealthAllergyTypeId');
             $staffId = $controller->Session->read('StaffId');
@@ -100,17 +100,17 @@ class StaffHealthAllergy extends StaffAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StaffHealthAllergyTypeId');
-            $controller->redirect(array('action' => 'health_allergy'));
+            $controller->redirect(array('action' => 'healthAllergy'));
         }
     }
 	
-	public function health_allergy_add($controller, $params) {
+	public function healthAllergyAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add Allergy');
 		$controller->set('subheader', 'Health - Add Allergy');
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function health_allergy_edit($controller, $params) {
+	public function healthAllergyEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Allergy');
 		$controller->set('subheader', 'Health - Edit Allergy');
 		$this->setup_add_edit_form($controller, $params);
@@ -144,7 +144,7 @@ class StaffHealthAllergy extends StaffAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_allergy'));
+				return $controller->redirect(array('action' => 'healthAllergy'));
 			}
 		}
 	}

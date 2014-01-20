@@ -113,18 +113,19 @@ class AppController extends Controller {
 					$explode = explode('.', $module);
 					$plugin = count($explode) > 1 ? $explode[0] : null;
 					$module = $explode[count($explode)-1];
-					return $this->{$module}->processAction($this, $action, $name, $plugin);
+					
+					return $this->{$module}->processAction($this, $this->action, $name, $plugin);
 				}
 			}
 		//if nothing match, search by partial string
 			foreach($this->modules as $name => $module) {
-				//var_dump($action);
 				if(strpos($action, strtolower($name)) === 0) {
 					$this->loadModel($module);
 					$explode = explode('.', $module);
 					$plugin = count($explode) > 1 ? $explode[0] : null;
 					$module = $explode[count($explode)-1];
-					return $this->{$module}->processAction($this, $action, $name, $plugin);
+					
+					return $this->{$module}->processAction($this, $this->action, $name, $plugin);
 				}
 			}
 		}
