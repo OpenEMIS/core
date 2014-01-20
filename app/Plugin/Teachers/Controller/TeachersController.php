@@ -86,7 +86,8 @@ class TeachersController extends TeachersAppController {
 		'health_allergy' => 'Teachers.TeacherHealthAllergy',
 		'health_test' => 'Teachers.TeacherHealthTest',
 		'health_consultation' => 'Teachers.TeacherHealthConsultation',
-		'health' => 'Teachers.TeacherHealth'
+		'health' => 'Teachers.TeacherHealth',
+        'special_need' => 'Teachers.TeacherSpecialNeed'
 	); 
 
     public function beforeFilter() {
