@@ -29,6 +29,7 @@ class AppComponent extends Component {
 			$name = $plugin . '/' . $name;
 		}
 		if($this->render === true) {
+			$action = strtolower($action);
 			$controller->render($name . '/' . $action);
 		} else {
 			if($this->render !== false) {

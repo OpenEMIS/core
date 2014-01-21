@@ -94,6 +94,48 @@ class SecurityGroupUser extends AppModel {
 		));
 		return $data;
 	}
+        
+        public function getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId) {
+		$data1 = $this->find('list', array(
+			'fields' => array('SecurityGroupUser.security_role_id', 'SecurityGroupUser.security_role_id'),
+			'joins' => array(
+				array(
+					'table' => 'security_group_institution_sites',
+					'alias' => 'SecurityGroupInstitutionSite',
+					'conditions' => array(
+                                            'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
+                                            'SecurityGroupInstitutionSite.institution_site_id' => $institutionSiteId
+                                         )
+				)
+			),
+			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
+		));
+                
+                $data2 = $this->find('list', array(
+			'fields' => array('SecurityGroupUser.security_role_id', 'SecurityGroupUser.security_role_id'),
+			'joins' => array(
+				array(
+					'table' => 'security_group_areas',
+					'alias' => 'SecurityGroupArea',
+					'conditions' => array(
+                                            'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id'
+                                         )
+				),
+                                array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+                                            'SecurityGroupArea.area_id = InstitutionSite.area_id',
+                                            'InstitutionSite.id = ' . $institutionSiteId
+                                         )
+				)
+			),
+			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
+		));
+                
+                
+		return array_merge($data1, $data2);
+	}
 	
 	public function isUserInSameGroup($userId, $targetUserId) {
 		$data = $this->find('first', array(

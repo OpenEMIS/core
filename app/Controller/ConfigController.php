@@ -95,7 +95,7 @@ class ConfigController extends AppController {
 		$sorted = $this->groupByType($this->ConfigItem->formatArray($items));
 		// Checking if user has access to _view for setup
 		$_view_dashboard = false;
-		if($this->AccessControl->check($this->params['controller'], 'dashboard')) {
+		if($this->AccessControl->newCheck($this->params['controller'], 'dashboard')) {
 			$_view_dashboard = true;
 		}
 		$this->set('_view_dashboard', $_view_dashboard);
@@ -210,29 +210,29 @@ class ConfigController extends AppController {
 					if($innerElement['id']=='17'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || $value < 0 || $value > 100){
-							$error[$innerElement['id']] = "Please enter a numeric value between 0 to 100";
+							$error[$innerElement['id']] = "Data Discrepancy Variation should be numeric value between 0 to 100";
 						}
 					}
 				}else if($key=='Data Outliers'){
 					if($innerElement['id']=='18'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || $value < 0 || $value > 50){
-							$error[$innerElement['id']] = "Please enter an appropriate numeric value";
+							$error[$innerElement['id']] = "You have entered an invalid value";
 						}
 					}else if($innerElement['id']=='19'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || $value < 0 || $value > 50){
-							$error[$innerElement['id']] = "Please enter an appropriate numeric value";
+							$error[$innerElement['id']] = "You have entered an invalid value";
 						}
 					}else if($innerElement['id']=='20'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || !preg_match('/^\d*$/', $value)){
-							$error[$innerElement['id']] = "Please enter an appropriate numeric value";
+							$error[$innerElement['id']] = "You have entered an invalid value";
 						}
 					}else if($innerElement['id']=='21'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || !preg_match('/^\d*$/', $value)){
-							$error[$innerElement['id']] = "Please enter an appropriate numeric value";
+							$error[$innerElement['id']] = "You have entered an invalid value";
 						}
 					}
 				}

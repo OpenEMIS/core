@@ -142,7 +142,7 @@ class EducationController extends AppController {
 		}
 		// Checking if user has access to _view for setup
 		$_view_setup = false;
-		if($this->AccessControl->check($this->params['controller'], 'setup')) {
+		if($this->AccessControl->newCheck($this->params['controller'], 'setup')) {
 			$_view_setup = true;
 		}
 		$this->set('_view_setup', $_view_setup);

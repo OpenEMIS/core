@@ -33,7 +33,8 @@ class InstitutionsController extends AppController {
 		'InstitutionStatus',
 		'InstitutionAttachment',
 		'InstitutionHistory',
-                'InstitutionSiteType'
+                'InstitutionSiteType',
+                'SecurityGroupUser'
     );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -111,7 +112,7 @@ class InstitutionsController extends AppController {
         $data = $this->paginate('Institution', $conditions);
 		if(!$this->Session->check('Search.SearchField') && !$this->Session->check('Institution.AdvancedSearch')) {
 			// if user do not have access to add institution and the records is 1, redirect to list of sites
-			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+			if(count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'listSites', $data[0]['Institution']['id']));
 			}
 		}
@@ -200,13 +201,44 @@ class InstitutionsController extends AppController {
 		$data = $this->Institution->find('first', array('conditions' => array('Institution.id' => $id)));
 		if($data) {
             $sites = $data['InstitutionSite'];
+            
             $this->Session->write('InstitutionId', $id);
 			
 			foreach($sites as $k => &$arr){
 				$found = false;
 				if($this->Auth->user('super_admin')==0) {
 					if($this->AccessControl->isInstitutionSiteAccessible($arr['id'])) {
-						$found = true;
+                                                if($this->Session->check('permissions')) {
+                                                    $permissions = $this->Session->read('permissions');
+                                                    $check = $permissions['check'];
+                                                    $anyActionAccessible = false;
+                                                    
+                                                    foreach($check['INSTITUTIONSITES'] AS $action => $value){
+                                                        $checkWithRoleId = $this->AccessControl->newCheck('INSTITUTIONSITES', $action, $arr['id']);
+                                                        if($checkWithRoleId){
+                                                            $anyActionAccessible = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    
+                                                    if(!$anyActionAccessible){
+                                                        foreach($check['CENSUS'] AS $action => $value){
+                                                            $checkWithRoleId = $this->AccessControl->newCheck('CENSUS', $action, $arr['id']);
+                                                            if($checkWithRoleId){
+                                                                $anyActionAccessible = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    if($anyActionAccessible){
+                                                        $found = true;
+                                                    }else{
+                                                        unset($sites[$k]);
+                                                    }
+                                                }else{
+                                                    unset($sites[$k]);
+                                                }
 					} else {
 						unset($sites[$k]);
 					}
@@ -217,7 +249,7 @@ class InstitutionsController extends AppController {
 					$p = $this->InstitutionSite->find('first',array('conditions'=>array('InstitutionSite.id' => $arr['id'])));
 					$sites[$k] = $p;
 				}
-			}
+			}//pr($sites);
 
 			$this->bodyTitle = $data['Institution']['name'];
 			$this->Navigation->addCrumb($data['Institution']['name'], array('controller' => 'Institutions', 'action' => 'view'));
@@ -230,9 +262,10 @@ class InstitutionsController extends AppController {
 			
 			// Checking if user has access to institution sites
 			$_view_sites = false;
-			if($this->AccessControl->check('InstitutionSites', 'view')) {
-				$_view_sites = true;
-			}
+//			if($this->AccessControl->newCheck('InstitutionSites', 'view')) {
+//				$_view_sites = true;
+//			}
+                        $_view_sites = true;
 			$this->set('_view_sites', $_view_sites);
 			// End Access Control
 		} else {
