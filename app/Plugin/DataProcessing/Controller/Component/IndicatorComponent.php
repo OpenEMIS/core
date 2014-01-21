@@ -291,15 +291,21 @@ class IndicatorComponent extends Component {
 
         $permutations = $this->permutate($permutationList);
 
-        // To add age permutations into the list
+     	// To add age permutations into the list
         if(sizeof($ageList) > 0) {
             $ageIndex = $subgroupTypes['Age'];
-            $gradeIndex = $subgroupTypes['Grade'];
+            $gradeIndex = null;
+            if(isset($subgroupTypes['Grade'])){
+            	$gradeIndex = $subgroupTypes['Grade'];
+            }
             foreach($permutations as $obj) {
                 foreach($ageList as $age => $attr) {
-                    $grade = $subgroups[key($obj[$gradeIndex])];
+                	$grade = array();
+                	if(!empty($gradeIndex)){
+	                    $grade = $subgroups[key($obj[$gradeIndex])];
+	                }
                     $newPermutation = $obj;
-                    if($grade['id'] == 0) {
+                    if(empty($grade) || $grade['id'] == 0) {
                         $newPermutation[$ageIndex] = array($attr['index'] => $subgroups[$attr['index']]['name']);
                         $permutations[] = $newPermutation;
                     } else {
