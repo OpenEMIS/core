@@ -40,7 +40,7 @@ class StudentHealthHistory extends StudentsAppModel {
 		)
 	);	public $booleanOptions = array('No', 'Yes');
 	
-	public function health_history($controller, $params) {
+	public function healthHistory($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb('History');
 		$controller->set('modelName', $this->name);
@@ -54,7 +54,7 @@ class StudentHealthHistory extends StudentsAppModel {
 		
 	}
 	
-	public function health_history_view($controller, $params){
+	public function healthHistoryView($controller, $params){
 		$controller->Navigation->addCrumb('Health - View History');
 		$controller->set('subheader', 'Health - View History');
 		$controller->set('modelName', $this->name);
@@ -63,7 +63,7 @@ class StudentHealthHistory extends StudentsAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'health_history'));
+			$controller->redirect(array('action'=>'healthHistory'));
 		}
 		
 		$controller->Session->write('StudentHealthHistoryId', $id);
@@ -74,7 +74,7 @@ class StudentHealthHistory extends StudentsAppModel {
 		$controller->set('healthConditionsOptions', $healthConditionsOptions);
 	}
 	
-	public function health_history_delete($controller, $params) {
+	public function healthHistoryDelete($controller, $params) {
         if($controller->Session->check('StudentId') && $controller->Session->check('StudentHealthHistoryId')) {
             $id = $controller->Session->read('StudentHealthHistoryId');
             $studentId = $controller->Session->read('StudentId');
@@ -89,17 +89,17 @@ class StudentHealthHistory extends StudentsAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StudentHealthHistoryId');
-            $controller->redirect(array('action' => 'health_history'));
+            $controller->redirect(array('action' => 'healthHistory'));
         }
     }
 	
-	public function health_history_add($controller, $params) {
+	public function healthHistoryAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add History');
 		$controller->set('subheader', 'Health - Add History');
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function health_history_edit($controller, $params) {
+	public function healthHistoryEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit History');
 		$controller->set('subheader', 'Health - Edit History');
 		$this->setup_add_edit_form($controller, $params);
@@ -133,7 +133,7 @@ class StudentHealthHistory extends StudentsAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_history'));
+				return $controller->redirect(array('action' => 'healthHistory'));
 			}
 		}
 	}

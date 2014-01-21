@@ -12,13 +12,13 @@ echo $this->Html->script('config', false);
 	<h1>
 		<span><?php echo __('Edit Overview'); ?></span>
 		<?php
-		echo $this->Html->link(__('View'), array('action' => 'health_view'), array('class' => 'divider'));
+		echo $this->Html->link(__('View'), array('action' => 'healthView'), array('class' => 'divider'));
 		?>
 	</h1>
 	
 	<?php
 	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Staff', 'action' => 'health_edit', 'plugin'=>'Staff'),
+		'url' => array('controller' => 'Staff', 'action' => 'healthEdit', 'plugin'=>'Staff'),
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
@@ -61,7 +61,7 @@ echo $this->Html->script('config', false);
     </div>
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'health_view'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'healthView'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
