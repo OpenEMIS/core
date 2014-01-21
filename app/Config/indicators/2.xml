@@ -5,8 +5,8 @@
                 <mysql>
                     <select>
                         <![CDATA[
-						IFNULL((SUM(`main_data`.`total`) + IFNULL(`indicator_results`.`numerator`, 0)), 'No Data') AS `data_value`,
-IFNULL((SUM(`main_data`.`total`) + IFNULL(`indicator_results`.`numerator`, 0)), 0) AS `numerator`,
+						SUM(`main_data`.`total`) AS `data_value`,
+						SUM(`main_data`.`total`) AS `numerator`,
 					]]>
                     </select>
                 </mysql>
@@ -15,8 +15,8 @@ IFNULL((SUM(`main_data`.`total`) + IFNULL(`indicator_results`.`numerator`, 0)), 
                 <mysql>
                     <select>
                         <![CDATA[
-						IFNULL((SUM(`main_data`.`male`) + IFNULL(`indicator_results`.`numerator`, 0)), 'No Data') AS `data_value`,
-IFNULL((SUM(`main_data`.`male`) + IFNULL(`indicator_results`.`numerator`, 0)), 0) AS `numerator`,
+						SUM(`main_data`.`male`) AS `data_value`,
+						SUM(`main_data`.`male`) AS `numerator`,
 					]]>
                     </select>
                 </mysql>
@@ -25,8 +25,8 @@ IFNULL((SUM(`main_data`.`male`) + IFNULL(`indicator_results`.`numerator`, 0)), 0
                 <mysql>
                     <select>
                         <![CDATA[
-						IFNULL((SUM(`main_data`.`female`) + IFNULL(`indicator_results`.`numerator`, 0)), 'No Data') AS `data_value`,
-IFNULL((SUM(`main_data`.`female`) + IFNULL(`indicator_results`.`numerator`, 0)), 0) AS `numerator`,
+						SUM(`main_data`.`female`) AS `data_value`,
+						SUM(`main_data`.`female`) AS `numerator`,
 					]]>
                     </select>
                 </mysql>
@@ -71,7 +71,7 @@ IFNULL((SUM(`main_data`.`female`) + IFNULL(`indicator_results`.`numerator`, 0)),
                         FROM (
                             SELECT
                                 `areas`.`id` AS `area_id`,
-                                CONCAT('Teachers - ', `education_level_isced`.`name`) AS `classification`,
+                                `education_level_isced`.`name` AS `classification`,
                                 `school_years`.`start_year` AS `year`,
                                 SUM(`census_teachers`.`male`) AS `male`,
                                 SUM(`census_teachers`.`female`) AS `female`,
@@ -84,9 +84,10 @@ IFNULL((SUM(`main_data`.`female`) + IFNULL(`indicator_results`.`numerator`, 0)),
                             JOIN `education_cycles` ON `education_cycles`.`id` = `education_programmes`.`education_cycle_id`
                             JOIN `education_levels` ON `education_levels`.`id` = `education_cycles`.`education_level_id`
                             JOIN `education_level_isced` ON `education_level_isced`.`id` = `education_levels`.`education_level_isced_id`
-                            JOIN `census_teachers`
-                                ON `census_teachers`.`institution_site_id` = `institution_sites`.`id`
---                                AND `census_teachers`.`education_grade_id` = `education_grades`.`id`
+                            JOIN `census_teachers` ON `census_teachers`.`institution_site_id` = `institution_sites`.`id`
+							JOIN `census_teacher_grades` 
+								ON `census_teacher_grades`.`census_teacher_id` = `census_teachers`.`id`
+								AND `census_teacher_grades`.`education_grade_id` = `education_grades`.`id`
                             JOIN `school_years` ON `school_years`.`id` = `census_teachers`.`school_year_id`
                             WHERE `areas`.`area_level_id` = -- {LEVEL}
                             -- {WHERE}
@@ -94,32 +95,10 @@ IFNULL((SUM(`main_data`.`female`) + IFNULL(`indicator_results`.`numerator`, 0)),
                             GROUP BY
                             -- {GROUP}
                             `areas`.`id`,
-                            `census_teachers`.`school_year_id`
---                            `census_teachers`.`education_grade_id`
+                            `school_years`.`id`,
+							`education_grades`.`id`
                         ) AS `main_data`
-
-                        -- Aggregation by Area Start
-                        LEFT JOIN (
-                            SELECT
-                            `areas`.`parent_id` AS `area_parent_id`,
-                            `batch_indicator_results`.`timeperiod`,
-                            SUM(`batch_indicator_results`.`numerator`) AS `numerator`,
-                            SUM(`batch_indicator_results`.`denominator`) AS `denominator`,
-                            `batch_indicator_results`.`classification`
-                            FROM `batch_indicator_results`
-                            JOIN `areas` ON `areas`.`id` = `batch_indicator_results`.`area_id`
-                            WHERE `batch_indicator_results`.`batch_indicator_id` = -- {INDICATOR_ID}
-                            AND `batch_indicator_results`.`subgroups` = -- {SUBGROUPS}
-                            GROUP BY
-                            `areas`.`parent_id`,
-                            `batch_indicator_results`.`timeperiod`,
-                            `batch_indicator_results`.`classification`
-                        ) AS `indicator_results`
-                            ON `indicator_results`.`area_parent_id` = `main_data`.`area_id`
-                            AND `indicator_results`.`timeperiod` = `main_data`.`year`
-                            AND `indicator_results`.`classification` = `main_data`.`classification`
-                        -- Aggregation by Area End
-
+						
                         GROUP BY
                         `main_data`.`year`,
                         `main_data`.`area_id`,

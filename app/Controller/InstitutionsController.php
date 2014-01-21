@@ -32,7 +32,9 @@ class InstitutionsController extends AppController {
 		'InstitutionSector',
 		'InstitutionStatus',
 		'InstitutionAttachment',
-		'InstitutionHistory'
+		'InstitutionHistory',
+                'InstitutionSiteType',
+                'SecurityGroupUser'
     );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -42,13 +44,14 @@ class InstitutionsController extends AppController {
 			'model' => 'InstitutionAttachment',
 			'foreignKey' => 'institution_id'
 		),'AccessControl'
+                
 	);
 
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Institutions', array('controller' => 'Institutions', 'action' => 'index'));
 		
-		$actions = array('index', 'advanced', 'add', 'listSites');
+		$actions = array('index', 'advanced', 'add', 'listSites','getCustomFieldsSearch');
 		if(in_array($this->action, $actions)) {
 			$this->bodyTitle = 'Institutions';
 		} else {
@@ -93,11 +96,13 @@ class InstitutionsController extends AppController {
 		$fieldorderdir = ($this->Session->read('Search.sortdir'))?$this->Session->read('Search.sortdir'):'asc';
 		
 		$searchKey = stripslashes($this->Session->read('Search.SearchField'));
+                
 		$conditions = array(
 			'SearchKey' => $searchKey, 
 			'AdvancedSearch' => $this->Session->check('Institution.AdvancedSearch') ? $this->Session->read('Institution.AdvancedSearch') : null,
 			'isSuperAdmin' => $this->Auth->user('super_admin'),
-			'userId' => $this->Auth->user('id')
+			'userId' => $this->Auth->user('id'),
+                        'order' => array($fieldordername => $fieldorderdir)
 		);
 		
 		$order = array('order' => array($fieldordername => $fieldorderdir));
@@ -107,7 +112,7 @@ class InstitutionsController extends AppController {
         $data = $this->paginate('Institution', $conditions);
 		if(!$this->Session->check('Search.SearchField') && !$this->Session->check('Institution.AdvancedSearch')) {
 			// if user do not have access to add institution and the records is 1, redirect to list of sites
-			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+			if(count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'listSites', $data[0]['Institution']['id']));
 			}
 		}
@@ -144,13 +149,42 @@ class InstitutionsController extends AppController {
 				}
 			}
 		} else {
-			$search = $this->data['Search'];
+                   
+			//$search = $this->data['Search'];
+                        $search = $this->data;
 			if(!empty($search)) {
+                           //pr($this->data);die;
 				$this->Session->write($key, $search);
 			}
 			$this->redirect(array('action' => 'index'));
 		}
+                
+                
+                
 	}
+        
+        public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution'){
+             $this->layout = false;
+             $arrSettings = array(
+                                                            'CustomField'=>$customfields.'CustomField',
+                                                            'CustomFieldOption'=>$customfields.'CustomFieldOption',
+                                                            'CustomValue'=>$customfields.'CustomValue',
+                                                            'Year'=>''
+                                                        );
+             if($this->{$customfields}->hasField('institution_site_type_id')){
+                 $arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
+             }
+             $arrCustFields = array($customfields => $arrSettings);
+             
+            $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
+            $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+            $types = $this->InstitutionSiteType->findList(1);
+            $this->set("customfields",array($customfields));
+            $this->set('types',  $types);        
+            $this->set('typeSelected',  $sitetype);
+            $this->set('dataFields',  $dataFields);
+            $this->render('/Elements/customfields/search');
+        }
 	
 	public function listSites() {
 		$id = 0;
@@ -167,20 +201,55 @@ class InstitutionsController extends AppController {
 		$data = $this->Institution->find('first', array('conditions' => array('Institution.id' => $id)));
 		if($data) {
             $sites = $data['InstitutionSite'];
+            
             $this->Session->write('InstitutionId', $id);
-            $arrInstSiteIds = $this->AccessControl->getAccessibleInstitutions(true);
-            if(!empty($arrInstSiteIds)){
-                $allowedSites =array();
-                if(array_key_exists($id,$arrInstSiteIds)){
-                    $allowedSites = $arrInstSiteIds[$id];
-                }
-
-            }
-            foreach($sites as $k => &$arr){
-                if(!empty($arrInstSiteIds) and !in_array($arr['id'], $allowedSites)) { unset($sites[$k]);continue;}
-                $p = $this->InstitutionSite->find('first',array('conditions'=>array('InstitutionSite.id' => $arr['id'])));
-                $sites[$k] = $p;
-            }
+			
+			foreach($sites as $k => &$arr){
+				$found = false;
+				if($this->Auth->user('super_admin')==0) {
+					if($this->AccessControl->isInstitutionSiteAccessible($arr['id'])) {
+                                                if($this->Session->check('permissions')) {
+                                                    $permissions = $this->Session->read('permissions');
+                                                    $check = $permissions['check'];
+                                                    $anyActionAccessible = false;
+                                                    
+                                                    foreach($check['INSTITUTIONSITES'] AS $action => $value){
+                                                        $checkWithRoleId = $this->AccessControl->newCheck('INSTITUTIONSITES', $action, $arr['id']);
+                                                        if($checkWithRoleId){
+                                                            $anyActionAccessible = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    
+                                                    if(!$anyActionAccessible){
+                                                        foreach($check['CENSUS'] AS $action => $value){
+                                                            $checkWithRoleId = $this->AccessControl->newCheck('CENSUS', $action, $arr['id']);
+                                                            if($checkWithRoleId){
+                                                                $anyActionAccessible = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    if($anyActionAccessible){
+                                                        $found = true;
+                                                    }else{
+                                                        unset($sites[$k]);
+                                                    }
+                                                }else{
+                                                    unset($sites[$k]);
+                                                }
+					} else {
+						unset($sites[$k]);
+					}
+				} else {
+					$found = true;
+				}
+				if($found) {
+					$p = $this->InstitutionSite->find('first',array('conditions'=>array('InstitutionSite.id' => $arr['id'])));
+					$sites[$k] = $p;
+				}
+			}//pr($sites);
 
 			$this->bodyTitle = $data['Institution']['name'];
 			$this->Navigation->addCrumb($data['Institution']['name'], array('controller' => 'Institutions', 'action' => 'view'));
@@ -193,9 +262,10 @@ class InstitutionsController extends AppController {
 			
 			// Checking if user has access to institution sites
 			$_view_sites = false;
-			if($this->AccessControl->check('InstitutionSites', 'view')) {
-				$_view_sites = true;
-			}
+//			if($this->AccessControl->newCheck('InstitutionSites', 'view')) {
+//				$_view_sites = true;
+//			}
+                        $_view_sites = true;
 			$this->set('_view_sites', $_view_sites);
 			// End Access Control
 		} else {

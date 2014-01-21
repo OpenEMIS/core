@@ -16,14 +16,16 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 			<div class="table_cell cell_behaviour_date"><?php echo __('Date'); ?></div>
             <div class="table_cell cell_behaviour_category"><?php echo __('Category'); ?></div>
             <div class="table_cell cell_behaviour_title"><?php echo __('Title'); ?></div>
+        	<div class="table_cell"><?php echo __('Insitution Site'); ?></div>
 		</div>
 
 		<div class="table_body">
 			<?php foreach($data as $id => $obj) { $i=0; ?>
 			<div class="table_row" row-id="<?php echo $obj['StudentBehaviour']['id']; ?>">
-				<div class="table_cell center"><?php echo $this->Utility->formatDate($obj['StudentBehaviour']['date_of_behaviour']); ?></div>
+				<div class="table_cell"><?php echo $this->Utility->formatDate($obj['StudentBehaviour']['date_of_behaviour']); ?></div>
                 <div class="table_cell"><?php echo $obj['StudentBehaviourCategory']['name']; ?></div>
                 <div class="table_cell"><?php echo $obj['StudentBehaviour']['title']; ?></div>
+                <div class="table_cell"><?php echo $obj['InstitutionSite']['name']; ?></div>
 			</div>
 			<?php } ?>
 		</div>

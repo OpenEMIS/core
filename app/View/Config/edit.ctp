@@ -12,18 +12,17 @@ echo $this->Html->script('config', false);
 		<span><?php echo __('System Configurations'); ?></span>
 		<?php echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'index') , array('class' => 'divider link_view')); ?>
 		<?php echo $this->Html->link(__('Dashboard Image'), array('controller' => 'Config', 'action' => 'dashboard'), array('class' => 'divider')); ?>
-		<!-- <a class="void link-view divider">View</a> -->
 	</h1>
 
 	<?php
-	echo $this->Form->create('save', array(
+	echo $this->Form->create('edit', array(
 		    'inputDefaults' => array(
 		        'label' => false,
 		        'div' => false
 		    ),
 			'url' => array(
 				'controller' => 'Config',
-				'action' => 'save'
+				'action' => 'edit'
 			),
 			'id' => 'ConfigurationSaveEdit',
 			'type' => 'file'
@@ -89,8 +88,8 @@ echo $this->Html->script('config', false);
 								'spa' => 'español'
 							),
 							'yearbook_orientation' => array(
-								'0' => 'Portrait',
-								'1' => 'Landscape'
+								'P' => 'Portrait',
+								'L' => 'Landscape'
 							),
 							'yearbook_school_year' => $school_years,
 							'school_year' => $school_years
@@ -117,7 +116,7 @@ echo $this->Html->script('config', false);
 						if(stristr($item['name'], 'dashboard_notice')){
 							echo $this->Form->textarea('ConfigItem.'. $key . '.' . $innerKey . '.value', $options);
 						}elseif (stristr($item['name'], 'publication_date')) {
-							echo $this->Utility->getDatePicker($this->Form, 'publication_date', array('name' => 'ConfigItem['.$key.']['.$innerKey.'][value]', 'order' => 'dmy', 'desc' => true, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));
+							echo $this->Utility->getDatePicker($this->Form, 'publication_date', array('name' => 'data[ConfigItem]['.$key.']['.$innerKey.'][value]', 'order' => 'dmy', 'desc' => true, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));
 						}elseif (stristr($item['name'], 'yearbook_publication_date')) {
 
 							$publicationDateOptions = $options = array(
@@ -184,6 +183,9 @@ echo $this->Html->script('config', false);
 
 					}else{
 						echo $item['value'];
+					}
+					if(isset($errorCustomMsg[$innerElement['id']])){
+						echo '<div class="error-message">' . $errorCustomMsg[$innerElement['id']] . '</div>';
 					}
 				?>
 				</div>

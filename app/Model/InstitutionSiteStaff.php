@@ -18,12 +18,21 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteStaff extends AppModel {
 	public $useTable = 'institution_site_staff';
+	public $belongsTo = array('StaffStatus', 'StaffCategory', 'StaffPositionTitle', 'StaffPositionGrade', 'StaffPositionStep');
 	
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;
+		$yr = $startDate['year'];
+		$mth = $startDate['month'];
+		$day = $startDate['day'];
+		
+		while(!checkdate($mth, $day, $yr)) {
+			$day--;
+		}
+		$date = sprintf('%d-%d-%d', $yr, $mth, $day);
 		$data = $this->find('first', array(
 			'fields' => array(
-				'Staff.first_name AS first_name', 'Staff.last_name AS last_name',
+				'Staff.first_name AS first_name', 'Staff.middle_name AS middle_name', 'Staff.last_name AS last_name',
 				'Institution.name AS institution_name', 'InstitutionSite.name AS institution_site_name'
 			),
 			'recursive' => -1,
@@ -47,7 +56,7 @@ class InstitutionSiteStaff extends AppModel {
 			'conditions' => array(
 				'InstitutionSiteStaff.position_no LIKE' => $positionNo,
 				'OR' => array(
-					'InstitutionSiteStaff.end_date >' => $startDate,
+					'InstitutionSiteStaff.end_date >' => $date,
 					'InstitutionSiteStaff.end_date IS NULL'
 				)
 			)
@@ -74,19 +83,13 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function getPositions($staffId, $institutionSiteId=0) {
 		$fields = array(
-			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.position_no', 'InstitutionSiteStaff.no_of_hours',
-			'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date',
-			'InstitutionSiteStaff.salary', 'StaffCategory.name'
+			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.position_no', 'InstitutionSiteStaff.FTE',
+			'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date', 'InstitutionSiteStaff.staff_status_id',
+			'StaffCategory.name', 'StaffStatus.name', 
+                        'StaffPositionTitle.name', 'StaffPositionGrade.name', 'StaffPositionStep.name'
 		);
 		
-		$joins = array(
-			array(
-				'table' => 'staff_categories',
-				'alias' => 'StaffCategory',
-				'conditions' => array('StaffCategory.id = InstitutionSiteStaff.staff_category_id')
-			)
-		);
-		
+		$joins = array();
 		$conditions = array('InstitutionSiteStaff.staff_id' => $staffId);
 		
 		if($institutionSiteId==0) {
@@ -164,11 +167,6 @@ class InstitutionSiteStaff extends AppModel {
 				'table' => 'staff',
 				'alias' => 'Staff',
 				'conditions' => array('Staff.id = InstitutionSiteStaff.staff_id')
-			),
-			array(
-				'table' => 'staff_categories',
-				'alias' => 'StaffCategory',
-				'conditions' => array('StaffCategory.id = InstitutionSiteStaff.staff_category_id')
 			)
 		);
 		return $joins;
@@ -194,7 +192,7 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$data = $this->find('all', array(
-			'fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'StaffCategory.name'),
+			'fields' => array('Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.preferred_name', 'StaffCategory.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $this->paginateConditions($conditions),
 			'limit' => $limit,

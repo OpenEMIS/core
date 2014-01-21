@@ -74,8 +74,8 @@ class SurveyController extends SurveyAppController {
     public function beforeFilter() {
 		parent::beforeFilter();
 		$this->Auth->allow('ws_login','ws_download','ws_upload');
-		$this->bodyTitle = 'Settings';
-		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
+		$this->bodyTitle = 'Administration';
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		//$this->Navigation->addCrumb('Survey', array('controller' => $this->controller, 'action' => 'index'));
 	}
 	

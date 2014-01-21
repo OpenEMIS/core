@@ -32,15 +32,23 @@ class SetupController extends AppController {
 		'CensusGridYCategory',
 		'InfrastructureCategory',
 		'Students.Student',
+		'Students.StudentStatus',
 		'Students.StudentCategory',
 		'Students.StudentBehaviourCategory',
 		'Teachers.Teacher',
+		'Teachers.TeacherStatus',
 		'Teachers.TeacherCategory',
-		'Teachers.TeacherQualificationCategory',
-		'Teachers.TeacherQualificationCertificate',
-		'Teachers.TeacherQualificationInstitution',
+                'Teachers.TeacherPositionTitle',
+                'Teachers.TeacherPositionGrade',
+                'Teachers.TeacherPositionStep',
 		'Teachers.TeacherTrainingCategory',
+		'Teachers.TeacherLeaveType',
+		'Teachers.TeacherBehaviourCategory',
 		'Staff.Staff',
+                'Staff.StaffPositionTitle',
+                'Staff.StaffPositionGrade',
+                'Staff.StaffPositionStep',
+		'Staff.StaffStatus',
 		'SchoolYear',
 		'Students.StudentCustomFieldOption',
 		'Students.StudentCustomField',
@@ -48,6 +56,8 @@ class SetupController extends AppController {
 		'Teachers.TeacherCustomField',
 		'Staff.StaffCustomFieldOption',
 		'Staff.StaffCustomField',
+		'Staff.StaffLeaveType',
+		'Staff.StaffBehaviourCategory',
 		'Bank',
 		'BankBranch',
 		'FinanceNature',
@@ -59,7 +69,27 @@ class SetupController extends AppController {
 		'TeacherDetailsCustomField',
 		'TeacherDetailsCustomFieldOption',
 		'StaffDetailsCustomField',
-		'StaffDetailsCustomFieldOption'
+		'StaffDetailsCustomFieldOption',
+		'QualificationLevel',
+		'QualificationInstitution',
+		'QualificationSpecialisation',
+		'LeaveStatus',
+		'Country',
+		'IdentityType',
+		'Language',
+		'ContactType',
+		'ExtracurricularType',
+		'EmploymentType',
+		'SalaryAdditionType',
+		'SalaryDeductionType',
+		'HealthCondition',
+		'HealthRelationship',
+		'HealthImmunization',
+		'HealthAllergyType',
+		'HealthConsultationType',
+		'HealthTestType',
+		'SpecialNeedType',
+		'LicenseType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -77,8 +107,8 @@ class SetupController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->bodyTitle = 'Settings';
-		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
+		$this->bodyTitle = 'Administration';
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 	}
 	
 	public function index() {
@@ -234,18 +264,79 @@ class SetupController extends AppController {
 		$lookup[] = array('Assessment' => array(
 			'items' => array('Result Type' => array('model' => 'AssessmentResultType'))
 		));
+
+		$lookup[] = array('Countries' => array(
+			'items' =>  $this->Country->getLookupVariables()
+		));
+
+		$lookup[] = array('Identity Types' => array(
+			'items' => $this->IdentityType->getLookupVariables()
+		));
+
+		$lookup[] = array('Languages' => array(
+			'items' => $this->Language->getLookupVariables()
+		));
+		$lookup[] = array('Contact Types' => array(
+			'view' => 'contact_types',
+			'items' => $this->ContactType->getLookupVariables(),
+			'edit' => 'contact_types_edit',
+		));
+
+
+		$lookup[] = array('Employment Types' => array(
+			'items' => $this->EmploymentType->getLookupVariables(),
+		));
+
 		
+		$lookup[] = array('Extracurricular Type' => array('items' => $this->ExtracurricularType->getLookupVariables()));
+		$lookup[] = array('Salary Addition Type' => array('items' => $this->SalaryAdditionType->getLookupVariables()));
+		$lookup[] = array('Salary Deduction Type' => array('items' => $this->SalaryDeductionType->getLookupVariables()));
+		$lookup[] = array('Special Need Type' => array('items' => $this->SpecialNeedType->getLookupVariables()));
+		$lookup[] = array('License Type' => array('items' => $this->LicenseType->getLookupVariables()));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Relationships',
+			'items' => $this->HealthRelationship->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Conditions',
+			'items' => $this->HealthCondition->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Immunizations',
+			'items' => $this->HealthImmunization->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Allergy Types',
+			'items' => $this->HealthAllergyType->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Test Types',
+			'items' => $this->HealthTestType->getLookupVariables()
+		));
+		
+		$lookup[] = array('Health' => array(
+			'optgroup' => true,
+			'name' => 'Consultation Types',
+			'items' => $this->HealthConsultationType->getLookupVariables()
+		));
+
 		// Student
-		$lookup[] = array('Student' => array(
-			'optgroup' => true,
-			'name' => 'Category',
-			'items' => $this->StudentCategory->getLookupVariables()
-		));
-		$lookup[] = array('Student' => array(
-			'optgroup' => true,
-			'name' => 'Behaviour Category',
-			'items' => $this->StudentBehaviourCategory->getLookupVariables()
-		));
+		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
+		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
+		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
+		
+		
+
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
 			'view' => 'customFields',
@@ -259,11 +350,17 @@ class SetupController extends AppController {
 		
 		// Teacher
 		$teacherOptions = array(
-			'Positions' => $this->TeacherCategory,
-			'Qualification Categories' => $this->TeacherQualificationCategory,
-			'Qualification Certificates' => $this->TeacherQualificationCertificate,
-			'Qualification Institutions' => $this->TeacherQualificationInstitution,
-			'Training Categories' => $this->TeacherTrainingCategory
+			'Status' => $this->TeacherStatus,
+			'Position Types' => $this->TeacherCategory,
+                        'Position Titles' => $this->TeacherPositionTitle,
+                        'Position Grades' => $this->TeacherPositionGrade,
+                        'Position Steps' => $this->TeacherPositionStep,
+			'Qualification Levels' => $this->QualificationLevel,
+			'Qualification Specialisation' => $this->QualificationSpecialisation,
+			'Qualification Institutions' => $this->QualificationInstitution,
+			'Training Categories' => $this->TeacherTrainingCategory,
+			'Leave Types' => $this->TeacherLeaveType,
+			'Leave Statuses' => $this->LeaveStatus,
 		);
 		
 		foreach($teacherOptions as $name => $model) {
@@ -277,14 +374,31 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Custom Fields'
 		));
+		$lookup[] = array('Teacher' => array(
+			'optgroup' => true,
+			'name' => 'Behaviour Category',
+			'items' => $this->TeacherBehaviourCategory->getLookupVariables()
+		));
 		// End Teacher
 		
 		// Staff
-		$lookup[] = array('Staff' => array(
-			'optgroup' => true,
-			'name' => 'Positions',
-			'items' => $this->Staff->getLookupVariables()
-		));
+		$staffOptions = array(
+			'Status' => $this->StaffStatus,
+			'Position Types' => $this->Staff,
+                        'Position Titles' => $this->StaffPositionTitle,
+                        'Position Grades' => $this->StaffPositionGrade,
+                        'Position Steps' => $this->StaffPositionStep,
+			'Qualification Levels' => $this->QualificationLevel,
+			'Qualification Specialisation' => $this->QualificationSpecialisation,
+			'Qualification Institutions' => $this->QualificationInstitution,
+			'Leave Types' => $this->StaffLeaveType,
+			'Leave Statuses' => $this->LeaveStatus,
+		);
+		
+		foreach($staffOptions as $name => $model) {
+			$lookup[] = array('Staff' => array('optgroup' => true, 'name' => $name, 'items' => $model->getLookupVariables()));
+		}
+
 		$lookup[] = array('Staff' => array(
 			'viewMethod' => array('action' => 'customFields', 'StaffCustomField'),
 			'view' => 'customFields',
@@ -293,8 +407,14 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Custom Fields'
 		));
+		$lookup[] = array('Staff' => array(
+			'optgroup' => true,
+			'name' => 'Behaviour Category',
+			'items' => $this->StaffBehaviourCategory->getLookupVariables()
+		));
 		// End Staff
 		
+                
 		$categoryList = array();
 		
 		foreach($lookup as $i => &$category) {
@@ -439,6 +559,16 @@ class SetupController extends AppController {
 		
 		$this->set('params', array($model, $order, $index, $conditions));
 	}
+
+	public function setupVariablesAddContactType() {
+		$this->layout = 'ajax';
+		$model = $this->params->query['model'];
+		$order = $this->params->query['order'] + 1;
+		$index = $this->params->query['index'];
+		$conditions = isset($this->params->query['conditions']) ? $this->params->query['conditions'] : array();
+		
+		$this->set('params', array($model, $order, $index, $conditions));
+	}
 	
 	private function getCustomFieldData($model,$sitetype){
 		$cond = ($sitetype != '')
@@ -554,8 +684,10 @@ class SetupController extends AppController {
 	public function customTables($category, $siteType = '') {
 		$siteTypes = $this->InstitutionSiteType->getSiteTypesList();
 
-        if(empty($siteType)) {
+        if(empty($siteType)  && $siteType != 0) {
             $siteType = key($siteTypes);
+        }elseif($siteType == 0 ) {
+            $siteType = 0;
         }
 		
 		$this->CensusGrid->unbindModel(array('belongsTo' => array('CensusGridXCategory','CensusGridYCategory')));
@@ -575,7 +707,7 @@ class SetupController extends AppController {
         $this->Navigation->addCrumb('Edit Custom Table');
 
         $siteTypes = $this->InstitutionSiteType->getSiteTypesList();
-        if(empty($sitetype)) {
+        if(empty($siteType) && $siteType != 0 ) {
             $sitetype = key($siteTypes);
         }
 		
@@ -602,7 +734,7 @@ class SetupController extends AppController {
 	}
 	
 	public function customTablesEditDetail($category, $siteType, $id = '') {
-		if(empty($category) || empty($siteType)) {
+		if(empty($category) || (empty($siteType) && $siteType != 0 )) {
 			$this->redirect(array('action' => 'setupVariables'));
 		}
 		$this->Navigation->addCrumb('Edit Field Options');

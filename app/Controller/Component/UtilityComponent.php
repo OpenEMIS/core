@@ -49,11 +49,13 @@ class UtilityComponent extends Component {
 		$msgList['CREATE_SUCCESS'] = "The record has been created successfully.";
 		$msgList['UPDATE_SUCCESS'] = "Records have been added/updated successfully.";
 		$msgList['DELETE_SUCCESS'] = "Record has been deleted.";
+        $msgList['DELETED_ALREADY'] = "Record has already been deleted.";
 		$msgList['SAVE_SUCCESS'] = "Your data has been saved successfully.";
-		$msgList['INVALID_ID_NO'] = "You have entered an invalid Identification No.";
+		$msgList['INVALID_ID_NO'] = "You have entered an invalid OpenEMIS ID.";
 		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
 		$msgList['NO_HISTORY'] = "No history found.";
 		$msgList['NO_RECORD'] = "There are no records.";
+		$msgList['INVALID_DATE'] = "You have entered an invalid date";
 		
 		// Login Messages
 		$msgList['LOGIN_TIMEOUT'] = "Your session is timed out. Please login again.";
@@ -71,6 +73,8 @@ class UtilityComponent extends Component {
 		$msgList['CENSUS_VERIFY'] = "The data will not be editable once it has been verified." . "<br><br>" . "Are you sure you want to do this?";
 		$msgList['CENSUS_UNVERIFY'] = "The data will be editable when it is unverified." . "<br><br>" . " Are you sure you want to do this?";
 		$msgList['CENSUS_MULTI_DUPLICATE'] = "Duplicate data has been detected and is not saved.";
+		$msgList['CENSUS_NO_CLASS'] = "There are no classes associated with this institution site for the selected year.";
+		$msgList['CENSUS_SHIFT_CLASS_MISMATCH'] = 'The total number of shift does not match the total number of classes.';
 		
 		// Education Messages
 		$msgList['EDUCATION_NO_LEVEL'] = "There is no active education level in this Education System.";
@@ -102,7 +106,7 @@ class UtilityComponent extends Component {
 		$msgList['SITE_CLASS_NO_GRADES'] = "Please add a grade to this class.";
 		$msgList['SITE_CLASS_NO_CLASSES'] = "There are no classes for the selected year.";
 		
-		$msgList['NO_EMPLOYMENT'] = "No Employment found.";
+		$msgList['NO_POSITION'] = "No position found.";
 		$msgList['NO_CLASSES'] = "No Classes found.";
 		
 		// Students
@@ -115,16 +119,24 @@ class UtilityComponent extends Component {
 		// Teachers
 		$msgList['TEACHER_NOT_FOUND'] = "No Teacher found.";
 		$msgList['SITE_TEACHER_ATTENDANCE_UPDATED'] = "The Teacher attendance data has been updated successfully.";
+		$msgList['TEACHER_NO_BEHAVIOUR_DATA'] = "No behaviour found.";
+		$msgList['SITE_TEACHER_BEHAVIOUR_EMPTY_TITLE'] = "Please enter a valid title.";
 		
 		// Staff
 		$msgList['STAFF_NOT_FOUND'] = "No Staff found.";
 		$msgList['SITE_STAFF_ATTENDANCE_UPDATED'] = "The Staff attendance data has been updated successfully.";
+		$msgList['STAFF_NO_BEHAVIOUR_DATA'] = "No behaviour found.";
+		$msgList['SITE_STAFF_BEHAVIOUR_EMPTY_TITLE'] = "Please enter a valid title.";
 
         // Areas
         $msgList['AREAS_NO_AREA_LEVEL'] = "Please add an area level to this area.";
 
 		// Reports
 		$msgList['REPORT_NO_FILES'] = "There are no available files found for this report.";
+
+		$msgList['ADD_ERROR'] = 'Record is not added due to errors encountered.';
+		$msgList['UPDATE_ERROR'] = 'Record is not updated due to errors encountered.';
+		
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 
 
@@ -276,4 +288,3 @@ class UtilityComponent extends Component {
 		return $permutations;
 	}
 }
-?>

@@ -15,7 +15,7 @@
 #studentBehaviourView .label {width:120px; margin-top:2px;}
 #classesAttendance .myyear .label { width: 30px; line-height: 25px;}
 #classesAttendanceEdit .myyear .label { width: 30px; line-height: 25px;}
-#classes .label { width: 60px; }
+#classes .label { /*width: 60px;*/ }
 #classes #grade_list .icon_delete { margin-top: 4px; }
 #classes .table_cell_row { margin-top: 0; margin-bottom: 5px; }
 #classes .table_cell_row.last { margin-bottom: 0; }
@@ -25,7 +25,9 @@
 #teachersAdd select.default, #staffAdd select.default { width: 212px; }
 #teachersAdd .icon_search, #staffAdd .icon_search { height: 22px; width: 24px; }
 #teachersAdd .section_break, #staffAdd .section_break { padding-top: 10px; }
-#teachersEdit .table_cell_row .label, #staffEdit .table_cell_row .label { width: 50px; line-height: 24px; }
+.edit .table_cell_row .label { width: 50px; line-height: 24px; }
+.view .table_cell_row .label { font-weight: bold; }
+.edit .table_cell_row .left, .view .table_cell_row .left { line-height: 25px; }
 #teachersAttendance .myyear .label { line-height: 25px;}
 #teachersAttendanceEdit .myyear .label { line-height: 25px;}
 #teachersAttendance .school_days .default { width: 82px; }
@@ -34,6 +36,7 @@
 #staffAttendanceEdit .myyear .label { line-height: 25px;}
 #staffAttendance .school_days .default { width: 82px; }
 #staffAttendanceEdit .school_days .default { width: 82px; }
+.input { width: 140px !important; }
 
 
 .cell_system { width: 200px; }
@@ -68,3 +71,6 @@
 #student_group .list_wrapper { height: 242px; }
 .ie8 #search_group .list_wrapper { height: 111px; }
 .ie8 #student_group .list_wrapper { height: 243px; }
+#students_search .cell_name{
+    width: auto;
+}

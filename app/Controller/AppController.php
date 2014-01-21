@@ -35,6 +35,7 @@ App::uses('L10n', 'I18n');
 
 class AppController extends Controller {
 	public $bodyTitle = '';
+	public $modules = array();
 	public $uses = array('ConfigItem');
 	public $helpers = array('Html', 'Form', 'Js', 'Session', 'Utility');
 	public $components = array(
@@ -73,5 +74,75 @@ class AppController extends Controller {
 		$this->AccessControl->apply($this->params['controller'], $this->params['action']);
 		$this->set('bodyTitle', $this->bodyTitle);
 		$this->set('_accessControl', $this->AccessControl);
+	}
+	
+	public function invokeAction(CakeRequest $request) {
+		try {
+			$action = $request->params['action'];
+			if(!method_exists($this, $action)) {
+				return $this->processAction();
+			}
+			$method = new ReflectionMethod($this, $request->params['action']);
+
+			if ($this->_isPrivateAction($method, $request)) {
+				throw new PrivateActionException(array(
+					'controller' => $this->name . "Controller",
+					'action' => $request->params['action']
+				));
+			}
+			return $method->invokeArgs($this, $request->params['pass']);
+		} catch (ReflectionException $e) {
+			if ($this->scaffold !== false) {
+				return $this->_getScaffold($request);
+			}
+			throw new MissingActionException(array(
+				'controller' => $this->name . "Controller",
+				'action' => $request->params['action']
+			));
+		}
+	}
+	
+	public function processAction() {
+		$action = Inflector::underscore($this->action);
+		if(!empty($this->modules)) { // for modules / plugin 
+		//search for exact match
+			foreach($this->modules as $name => $module) {
+				if($action == strtolower($name)) {
+					
+					$this->loadModel($module);
+					$explode = explode('.', $module);
+					$plugin = count($explode) > 1 ? $explode[0] : null;
+					$module = $explode[count($explode)-1];
+					
+					return $this->{$module}->processAction($this, $this->action, $name, $plugin);
+				}
+			}
+		//if nothing match, search by partial string
+			foreach($this->modules as $name => $module) {
+				if(strpos($action, strtolower($name)) === 0) {
+					$this->loadModel($module);
+					$explode = explode('.', $module);
+					$plugin = count($explode) > 1 ? $explode[0] : null;
+					$module = $explode[count($explode)-1];
+					
+					return $this->{$module}->processAction($this, $this->action, $name, $plugin);
+				}
+			}
+		}
+		if(!empty($this->components)) { // for components
+			$actionCamel = Inflector::camelize($action);
+			$name = '';
+			foreach($this->components as $component => $option) {
+				if(is_string($component) && strpos($actionCamel, $component) === 0) {
+					$name = $component;
+				} else if (is_string($option) && strpos($actionCamel, $option) === 0) {
+					$name = $option;
+				}
+				if(strlen($name) != 0) {
+					$action = substr($actionCamel, strlen($name));
+					return $this->{$name}->processAction($this, $action);
+				}
+			}
+		}
 	}
 }

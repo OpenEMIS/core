@@ -166,6 +166,19 @@ class ConfigAttachment extends AppModel {
 	   $exts = $exts[$n];
 	   return $exts;
 	}
-
+	
+	public function getBase64Encoding($id) {
+		$obj = $this->find('first', array('conditions' => array('id' => $id)));
+		$data = array();
+		if($obj) {
+			$ext = strtolower($this->findExtension($obj['ConfigAttachment']['name']));
+			if($ext === 'jpg') {
+				$ext = 'jpeg';
+			}
+			$data['type'] = $ext;
+			$data['content'] = base64_encode($obj['ConfigAttachment']['file_content']);
+		}
+		return $data;
+	}
 }
 ?>

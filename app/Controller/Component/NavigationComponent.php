@@ -24,12 +24,13 @@ class NavigationComponent extends Component {
 	public $ignoredLinks = array();
 	public $skip = false;
 	
-	public $components = array('Auth', 'AccessControl');
+	public $components = array('Auth', 'AccessControl', 'Session');
 	
 	public function initialize(Controller $controller) {
 		$this->controller =& $controller;
 		$this->navigations = $this->getLinks();
 		$this->topNavigations = array();
+                $this->SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
 	}
 	
 	//called after Controller::beforeFilter()
@@ -75,6 +76,7 @@ class NavigationComponent extends Component {
 	public function apply($controller, $action) {
 		$navigations = array();
 		$found = false;
+                //pr($this->navigations);
 		foreach($this->navigations as $module => $obj) {
 			foreach($obj['links'] as $links) {
 				foreach($links as $title => &$linkList) {
@@ -85,23 +87,23 @@ class NavigationComponent extends Component {
 						$pattern = $attr['pattern'];
 						
 						// Checking access control
-						$check = $this->AccessControl->check($_controller, $attr['action']);
+						$check = $this->AccessControl->newCheck($_controller, $attr['action']);
 						//pr($attr);
 						
 						if($check || $_controller === 'Home') {
 							$linkList['display'] = true;
 							$attr['display'] = true;
 							
-							if($check === true || (isset($check['parent_id']) && $check['parent_id'] == -1) || in_array($module, array('Settings', 'Reports'))) { // to initialise top navigation menu
+							if($check === true || (isset($check['parent_id']) && $check['parent_id'] == -1) || in_array($module, array('Administration', 'Reports'))) { // to initialise top navigation menu
 								if(!array_key_exists($module, $this->topNavigations)) {
-									$objController = $module !== 'Settings' ?  : $_controller;
+									$objController = $module !== 'Administration' ?  : $_controller;
 									$this->topNavigations[$module] = array(
 										'controller' => $obj['controller'], 
 										'action' => isset($obj['action']) ? $obj['action'] : '',
 										'selected' => false
 									);
 								} else {
-									if($module !== 'Settings') {
+									if($module !== 'Administration') {
 										$this->topNavigations[$module]['controller'] = $obj['controller'];
 										$this->topNavigations[$module]['action'] = isset($obj['action']) ? $obj['action'] : '';
 									}
@@ -116,6 +118,7 @@ class NavigationComponent extends Component {
 							$attr['selected'] = true;
 							$this->topNavigations[$module]['selected'] = true;
 						}
+                                                
 					}
 				}
 				if($found) {
@@ -123,6 +126,7 @@ class NavigationComponent extends Component {
 						$this->leftNavigations = $links;
 					}
 				}
+                                //pr($this->leftNavigations);
 			}
 		}//pr($this->navigations);
 	}
@@ -143,7 +147,7 @@ class NavigationComponent extends Component {
 		}
 		// End initialise
 		
-		$nav['Settings'] = array('controller' => 'Areas', 'links' => $this->getSettingsLinks());
+		$nav['Administration'] = array('controller' => 'Areas', 'links' => $this->getSettingsLinks());
 		return $nav;
 	}
 	
@@ -205,14 +209,19 @@ class NavigationComponent extends Component {
 					$this->createLink('Teachers', 'Census', 'teachers'),
 					$this->createLink('Staff', 'Census', 'staff'),
 					$this->createLink('Classes', 'Census', 'classes'),
+					$this->createLink('Shifts', 'Census', 'shifts'),
 					$this->createLink('Graduates', 'Census', 'graduates'),
 					$this->createLink('Attendance', 'Census', 'attendance'),
-					$this->createLink('Assessment', 'Census', 'assessments'),
+					$this->createLink('Results', 'Census', 'assessments'),
 					$this->createLink('Behaviour', 'Census', 'behaviour'),
 					$this->createLink('Textbooks', 'Census', 'textbooks'),
 					$this->createLink('Infrastructure', 'Census', 'infrastructure'),
 					$this->createLink('Finances', 'Census', 'finances'),
 					$this->createLink('More', 'Census', 'otherforms')
+				),
+				'REPORTS' => array(
+					$this->createLink('General', 'InstitutionSites', 'reportsGeneral'),
+					$this->createLink('Details', 'InstitutionSites', 'reportsDetails')
 				)
 			)
 		);
@@ -249,13 +258,17 @@ class NavigationComponent extends Component {
 					$this->createLink('Restore', 'Database', 'restore')
 				),
 				'SURVEY' => array(
-					'_controller' => 'Survey',
 					$this->createLink('New', 'Survey', 'index', 'index$|^add$|^edit$'),
 					$this->createLink('Completed', 'Survey', 'import', 'import$|^synced$')
+				),
+				'SMS' => array(
+					$this->createLink('Messages', 'Sms', 'messages'),
+					$this->createLink('Responses', 'Sms', 'responses'),
+					$this->createLink('Logs', 'Sms', 'logs')
 				)
 			)
 		);
-		$this->ignoreLinks($links, 'Settings');
+		$this->ignoreLinks($links, 'Administration');
 		return $links;
 	}
 	
@@ -266,10 +279,12 @@ class NavigationComponent extends Component {
 		foreach($links as $i => $category) {
 			foreach($category as $j => $items) {
 				foreach($items as $k => $obj) {
-					$controller = $obj['controller'];
-					$action = $obj['action'];
-					$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
-					$this->AccessControl->ignore($controller, $action);
+					if(isset($obj['controller'])) {
+						$controller = $obj['controller'];
+						$action = $obj['action'];
+						$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
+						$this->AccessControl->ignore($controller, $action);
+					}
 				}
 			}
 		}

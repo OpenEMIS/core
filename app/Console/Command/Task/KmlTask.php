@@ -22,7 +22,9 @@ class KmlTask extends AppTask {
 	public $fileFP;
 	public $tasks = array('Common');
 	  
-	
+	public $uses = array(
+            'ConfigItem'
+        );
 	/****
 	 * KML Starts
 	 */
@@ -48,17 +50,48 @@ class KmlTask extends AppTask {
        
 		
 	}
-	
-	public function writeKML($data,$settings){
+        
+        public function checkLongitudeLatitude($check,$type='long'){
+
+            $isValid = 0;
+            $check = trim($check);
+            if($type == 'long'){
+                if(is_numeric($check) && floatval($check) >= -180.00 && floatval($check <= 180.00)){
+                    $isValid = $check;
+                }
+            }else{
+                if(is_numeric($check) && floatval($check) >= -90.00 && floatval($check <= 90.00)){
+                    $isValid = $check;
+                }
+            }
+            
+            return $isValid;
+        }
+
+        public function checkLatitude($check){
+            $isValid = 0;
+            $latitude = trim($check);
+            return $isValid;
+        }
+
+
+	private function formatSchoolDescription($arrData){ 
+            $address = $this->Common->cleanContent($arrData['InstitutionSite']['Address']);
+            $site_id  = $this->Common->cleanContent($arrData['InstitutionSite']['SiteId']);
+            $url = $this->ConfigItem->getValue('where_is_my_school_url');
+            $data  = '<div>'.$address.'</div><div><br>Institution Site Details: <a href='.$url.'/InstitutionSites/siteProfile/'.$site_id.'>Click here</a></div>';
+            return $data; 
+        }
+	public function writeKML($data,$settings){ 
 		//$batch = $settings['batch'];
 		
         $tpl = $settings['tpl'];
 		
         foreach($data as $k => $arrv){
 			$line = str_replace('{InstitutionName}', $this->Common->cleanContent($arrv['Institution']['Name'].'-'.$arrv['InstitutionSite']['SiteName']), $tpl);
-			$line = str_replace('{Longitude}', $arrv['InstitutionSite']['Longitude'], $line);
-			$line = str_replace('{Latitude}', $arrv['InstitutionSite']['Latitude'], $line);
-			$line = str_replace('{school_description}', $this->Common->cleanContent($arrv['InstitutionSite']['Address']), $line);		
+			$line = str_replace('{Longitude}', $this->checkLongitudeLatitude($arrv['InstitutionSite']['Longitude']), $line);
+			$line = str_replace('{Latitude}', $this->checkLongitudeLatitude($arrv['InstitutionSite']['Latitude'], 'lat'), $line);
+			$line = str_replace('{school_description}', $this->formatSchooldescription($arrv), $line);		
 					
 			fputs ($this->fileFP, $line);
         }
@@ -76,13 +109,25 @@ class KmlTask extends AppTask {
 		$childrenIds = array();
 		
 		$countryInfo = $this->Area->find('first',array('fields'=>array('Area.name as AreaName','Area.id as AreaId'),'conditions'=>array('Area.parent_id'=>'-1')));
+                
 		$oneSite = $this->InstitutionSite->find('first',array('fields'=>array('InstitutionSite.longitude','InstitutionSite.latitude'),'conditions'=>array('InstitutionSite.longitude >' => '0','InstitutionSite.latitude >' => '0'),'limit'=>1));
-		$settings['header'] = str_replace('{description}', $countryInfo['Area']['AreaName'].' - Version 1.0',$settings['header']); 
-		$settings['header'] = str_replace('{start_longitude}', $oneSite['InstitutionSite']['longitude'],$settings['header']); 
-		$settings['header'] = str_replace('{start_latitude}', $oneSite['InstitutionSite']['latitude'],$settings['header']); 
+                
+                $title = $this->ConfigItem->getValue('where_is_my_school_title');
+                $long = $this->ConfigItem->getValue('where_is_my_school_start_long');
+                $lat = $this->ConfigItem->getValue('where_is_my_school_start_lat');
+                $range = $this->ConfigItem->getValue('where_is_my_school_start_range');
+                
+                
+		$settings['header'] = str_replace('{description}', ($title != ''?$title:$countryInfo).' - '.date('Y-m-d'),$settings['header']); 
+		$settings['header'] = str_replace('{start_longitude}', ($long == 0?$oneSite['InstitutionSite']['longitude']:$long),$settings['header']); 
+		$settings['header'] = str_replace('{start_latitude}', ($lat == 0?$oneSite['InstitutionSite']['latitude']:$lat),$settings['header']); 
+                $settings['header'] = str_replace('{start_range}', ($range == 0?'2000000':$range),$settings['header']); 
 		$this->prepareKML($settings);
-		$res = $this->Area->find('all',array('fields'=>array('Area.name as AreaName','Area.id as AreaId'),'conditions'=>array('AreaLevel.level'=>2)));
-		
+                $countofLevel3 = $res = $this->AreaLevel->find('count',array('conditions'=>array('AreaLevel.level >='=>3)));
+                $initlevel = ($countofLevel3 > 0)?2:1;
+                $res = $this->Area->find('all',array('fields'=>array('Area.name as AreaName','Area.id as AreaId'),'conditions'=>array('AreaLevel.level'=>$initlevel)));
+                //$res = $this->Area->find('all',array('fields'=>array('Area.name as AreaName','Area.id as AreaId'),'conditions'=>array('AreaLevel.level'=>2)));
+                   
 		$this->Common->formatData($res);
 		$ids = array();
 		foreach($res as $arr){
@@ -110,6 +155,7 @@ class KmlTask extends AppTask {
 				$offsetStr = $offset;
 				$offsetStr = (string)$offsetStr;
 				$cond = 'array("fields"=>array(
+                                        "InstitutionSite.id AS SiteId",
 					"InstitutionSite.name AS SiteName",
 					"InstitutionSite.longitude AS Longitude",
 					"InstitutionSite.latitude AS Latitude",

@@ -63,40 +63,58 @@ var InstitutionSiteStudents = {
 		});
 	},
 	
-	search: function(obj) {
+	search: function(obj, evt) {
 		var alertOpt = {
 			id: 'search_alert',
 			parent: '#search',
 			position: 'center'
 		}
-		var searchString = $(obj).siblings('.search_wrapper').find('input').val();
 		
-		if(!searchString.isEmpty()) {
-			var maskId;
-			var ajaxParams = {searchString: searchString};
-			var ajaxSuccess = function(data, textStatus) {
-				var callback = function() {
-					if(!$(data).hasClass('alert')) {
-						var parent = '#search';
-						$(parent).find('.table_body').empty();
-						jsTable.tableScrollableAdd(parent, data);
-					} else {
-						alertOpt['type'] = $(data).attr('type');
-						alertOpt['text'] = $(data).html();
-						$.alert(alertOpt);
-					}
+		var doSearch = false;
+		if(evt != undefined) {
+			if(utility.getKeyPressed(evt) == 13) { // enter key
+				doSearch = true;
+			}
+		} else {
+			doSearch = true;
+		}
+		
+		if(doSearch) {
+			var searchString = '';
+			var url = $('.icon_search').attr('url');
+			if(evt != undefined) {
+				searchString = $(obj).val();
+			} else {
+				searchString = $(obj).siblings('.search_wrapper').find('input').val();
+			}
+			
+			if(!searchString.isEmpty()) {
+				var maskId;
+				var ajaxParams = {searchString: searchString};
+				var ajaxSuccess = function(data, textStatus) {
+					var callback = function() {
+						if(!$(data).hasClass('alert')) {
+							var parent = '#search';
+							$(parent).find('.table_body').empty();
+							jsTable.tableScrollableAdd(parent, data);
+						} else {
+							alertOpt['type'] = $(data).attr('type');
+							alertOpt['text'] = $(data).html();
+							$.alert(alertOpt);
+						}
+					};
+					$.unmask({id: maskId, callback: callback});
 				};
-				$.unmask({id: maskId, callback: callback});
-			};
-			$('#StudentId').val(0);
-			$.ajax({
-				type: 'GET',
-				dataType: 'text',
-				url: getRootURL() + $(obj).attr('url'),
-				data: {searchString: searchString},
-				beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching}); },
-				success: ajaxSuccess
-			});
+				$('#StudentId').val(0);
+				$.ajax({
+					type: 'GET',
+					dataType: 'text',
+					url: getRootURL() + url,
+					data: {searchString: searchString},
+					beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching}); },
+					success: ajaxSuccess
+				});
+			}
 		}
 	},
 	
@@ -105,14 +123,18 @@ var InstitutionSiteStudents = {
 		var id = row.attr('row-id');
 		var idNo = row.attr('id-no');
 		var fName = row.attr('first-name');
+                var mName = row.attr('middle-name');
 		var lName = row.attr('last-name');
+                var pName = row.attr('preferred-name');
 		var gender = row.attr('gender');
 		
 		$('#StudentId').val(id);
-		$('#IdentificationNo').val(idNo);
-		$('#FirstName').val(fName);
-		$('#LastName').val(lName);
-		$('#Gender').val(gender);
+		$('#IdentificationNo').html(idNo);
+		$('#FirstName').html(fName);
+                $('#MiddleName').html(mName);
+		$('#LastName').html(lName);
+                $('#PreferredName').html(pName);
+		$('#Gender').html(gender);
 	},
 	
 	validateStudentAdd: function() {

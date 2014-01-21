@@ -14,12 +14,16 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
     <div class="table_head" url="Teachers/index">
 
         <div class="table_cell cell_id_no">
-                <span class="left"><?php echo __('Identification No.'); ?></span>
+                <span class="left"><?php echo __('OpenEMIS ID'); ?></span>
                 <span class="icon_sort_<?php echo ($sortedcol =='Teacher.identification_no')?$sorteddir:'up'; ?>"  order="Teacher.identification_no"></span>
         </div>
         <div class="table_cell cell_name">
             <span class="left"><?php echo __('First Name'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Teacher.first_name')?$sorteddir:'up'; ?>" order="Teacher.first_name"></span>
+        </div>
+        <div class="table_cell cell_name">
+            <span class="left"><?php echo __('Middle Name'); ?></span>
+            <span class="icon_sort_<?php echo ($sortedcol =='Teacher.middle_name')?$sorteddir:'up'; ?>" order="Teacher.middle_name"></span>
         </div>
         <div class="table_cell cell_name">
             <span class="left"><?php echo __('Last Name'); ?></span>
@@ -45,6 +49,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
             $id = $arrItems['Teacher']['id'];
             $identificationNo = $this->Utility->highlight($searchField, $arrItems['Teacher']['identification_no']);
             $firstName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['first_name'].'</b>'.((isset($arrItems['Teacher']['history_first_name']))?'<br>'.$arrItems['Teacher']['history_first_name']:''));
+            $middleName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['middle_name'].'</b>'.((isset($arrItems['Teacher']['history_middle_name']))?'<br>'.$arrItems['Teacher']['history_middle_name']:''));
             $lastName = $this->Utility->highlight($searchField, '<b>'.$arrItems['Teacher']['last_name'].'</b>'.((isset($arrItems['Teacher']['history_last_name']))?'<br>'.$arrItems['Teacher']['history_last_name']:''));
             $gender = $arrItems['Teacher']['gender'];
             $birthday = $arrItems['Teacher']['date_of_birth'];
@@ -52,6 +57,7 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
             <div row-id="<?php echo $id ?>" class="table_row table_row_selection <?php echo ((($ctr++%2) != 0)?'odd':'even');?>">
                 <div class="table_cell"><?php echo $identificationNo; ?></div>
                 <div class="table_cell"><?php echo $firstName; ?></div>
+                <div class="table_cell"><?php echo $middleName; ?></div>
                 <div class="table_cell"><?php echo $lastName; ?></div>
                 <div class="table_cell"><?php echo $gender; ?></div>
                 <div class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></div>

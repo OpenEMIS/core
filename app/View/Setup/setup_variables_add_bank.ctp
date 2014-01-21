@@ -2,7 +2,6 @@
 list($model, $order, $index, $conditions) = $params;
 $fieldName = sprintf('data[%s][%s][%%s]', $model, $index);
 ?>
-
 <li data-id="<?php echo ($index); ?>" class="new_row <?php echo $order%2==0 ? 'li_even' : ''; ?>">
 	<?php
 	echo $this->Form->hidden('id', array(

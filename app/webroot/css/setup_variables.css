@@ -22,6 +22,11 @@
 .banks .table_view .cell_code { width: 100px; margin-left: -1px; }
 .banks .table_view .cell_name { width: 389px; margin-left: -1px; }
 
+.contact_types .cell_name { width: 481px;  }
+.contact_types .table_view .cell_visible { width: 43px;  }
+.contact_types .table_view .cell_name { width: 500px; margin-left: -1px; }
+.contact_types .table_view .cell_order { width: 63px; margin-left: -1px; }
+
 .finance_categories .table_view .cell_name { width: 152px; margin-left: -1px; }
 .finance_categories .table_view .cell_national_code { width: 153px; margin-left: -1px; }
 .finance_categories .table_view .cell_international_code { width: 152px; margin-left: -1px; }

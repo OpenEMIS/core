@@ -33,15 +33,40 @@ class StaffNavigationComponent extends Component {
 			),
 			array(
 				'GENERAL' => array(
-					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|history$'),
+					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|\bhistory\b'),
+					$navigation->createLink('Contacts', $controller, 'contacts'),
+					$navigation->createLink('Identities', $controller, 'identities'),
+					$navigation->createLink('Nationalities', $controller, 'nationalities'),   
+					$navigation->createLink('Languages', $controller, 'languages'),       
+					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
+					$navigation->createLink('Comments', $controller, 'comments'),
+					$navigation->createLink('Special Needs', $controller, 'specialNeed', '^specialNeed'),
+					$navigation->createLink('Awards', $controller, 'award', '^award'),
+					$navigation->createLink('Memberships', $controller, 'membership', '^membership'),
+					$navigation->createLink('Licenses', $controller, 'license', '^license'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
-					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$'),
-					//$navigation->createLink('Institutions', $controller, 'institutions')
+					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
 				'DETAILS' => array(
-					$navigation->createLink('Employment', $controller, 'employment'),
-                    $navigation->createLink('Attendance', $controller, 'attendance')
-				)
+					$navigation->createLink('Qualifications', $controller, 'qualifications'),
+					$navigation->createLink('Positions', $controller, 'positions'),
+                    $navigation->createLink('Attendance', $controller, 'attendance'),
+					$navigation->createLink('Leave', $controller, 'leaves'),
+					$navigation->createLink('Behaviour', $controller, 'behaviour'),   
+					$navigation->createLink('Extracurricular', $controller, 'extracurricular'),
+                    $navigation->createLink('Employment', $controller, 'employments'),
+					$navigation->createLink('Salary', $controller, 'salaries')
+				),
+				'HEALTH' => array(
+                    $navigation->createLink('Overview', $controller, 'healthView', 'healthView|healthEdit'),
+                    $navigation->createLink('History', $controller, 'healthHistory', '^healthHistory'),
+                    $navigation->createLink('Family', $controller, 'healthFamily', '^healthFamily'),
+                    $navigation->createLink('Immunizations', $controller, 'healthImmunization', '^healthImmunization'),
+					$navigation->createLink('Medications', $controller, 'healthMedication', '^healthMedication'),
+					$navigation->createLink('Allergies', $controller, 'healthAllergy', '^healthAllergy'),
+					$navigation->createLink('Tests', $controller, 'healthTest', '^healthTest'),
+					$navigation->createLink('Consultations', $controller, 'healthConsultation', '^healthConsultation')
+                )
 			)
 		);
 		return array('Staff' => array('controller' => $controller, 'links' => $links));

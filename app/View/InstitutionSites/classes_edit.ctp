@@ -28,6 +28,8 @@ echo $this->Html->script('institution_site_classes', false);
 		<div class="table_head">
 			<div class="table_cell cell_year"><?php echo __('Year'); ?></div>
 			<div class="table_cell"><?php echo __('Grade'); ?></div>
+                        <div class="table_cell"><?php echo __('Number of Seats'); ?></div>
+                        <div class="table_cell"><?php echo __('Number of Shifts'); ?></div>
 		</div>
 		<div class="table_body">
 			<div class="table_row">
@@ -37,6 +39,8 @@ echo $this->Html->script('institution_site_classes', false);
 					<div class="table_cell_row <?php echo $i==sizeof($grades) ? 'last' : ''; ?>"><?php echo $name; ?></div>
 				<?php } ?>
 				</div>
+                                <div class="table_cell"><?php echo $no_of_seats; ?></div>
+                                <div class="table_cell"><?php echo $no_of_shifts; ?></div>
 			</div>
 		</div>
 	</div>
@@ -73,7 +77,7 @@ echo $this->Html->script('institution_site_classes', false);
 		<legend><?php echo __('Teachers'); ?></legend>
 		<div class="table">
 			<div class="table_head">
-				<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+				<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 				<div class="table_cell"><?php echo __('Name'); ?></div>
 				<div class="table_cell cell_delete"></div>
 			</div>
@@ -106,7 +110,7 @@ echo $this->Html->script('institution_site_classes', false);
 			
 			<div class="table">
 				<div class="table_head">
-					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 					<div class="table_cell"><?php echo __('Name'); ?></div>
 					<div class="table_cell cell_category"><?php echo __('Category'); ?></div>
 					<div class="table_cell cell_delete"></div>
@@ -117,8 +121,19 @@ echo $this->Html->script('institution_site_classes', false);
 					<?php foreach($students[$id] as $obj) { ?>
 					<div class="table_row" student-id="<?php echo $obj['id']; ?>">
 						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
-						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['last_name']; ?></div>
-						<div class="table_cell"><?php echo $obj['category']; ?></div>
+						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']; ?></div>
+						<div class="table_cell" attr="category">
+                                                    <?php
+                                                        echo $this->Form->input('student_category_id', array(
+                                                                'label' => false,
+                                                                'div' => false,
+                                                                'class' => 'full_width',
+                                                                'options' => $studentCategoryOptions,
+                                                                'onchange' => 'InstitutionSiteClasses.changeStudentCategory(this)',
+                                                                'default' => $obj['category_id']
+                                                        ));
+                                                        ?>
+                                                </div>
 						<div class="table_cell">
 							<?php echo $this->Utility->getDeleteControl(array(
 								'onclick' => 'InstitutionSiteClasses.deleteStudent(this)',

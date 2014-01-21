@@ -18,6 +18,41 @@ $(document).ready(function() {
 });
 
 var objTeacherQualifications = {
+
+    init: function() {
+        var element = '#search';
+        var table = $('#qualification');
+        var url = getRootURL() + table.attr('url');
+        objTeacherQualifications.attachAutoComplete(element, url, objTeacherQualifications.selectInstitution);
+    },
+
+    selectInstitution: function(event, ui) {
+        var val = ui.item.value;
+        var element;
+        for(var i in val) {
+            element = $('.' + i);
+            if(element.get(0).tagName.toUpperCase() === 'INPUT') {
+                element.val(val[i]);
+            } else {
+                element.html(val[i]);
+            }
+        }
+        return false;
+    },
+    
+    clearValue: function() {
+       $('.qualification-institution-id').val('');
+    },
+
+    attachAutoComplete: function(element, url, callback) {
+        $(element).autocomplete({
+            source: url,
+            minLength: 2,
+            select: callback
+        });
+    },
+
+    /*
     certificatesData : {},
     init : function(){
       this.getQualificationCertificates();
@@ -163,5 +198,6 @@ var objTeacherQualifications = {
         var table = row.closest('.table');
         var id = row.attr('data-id');
         row.remove();
-    },
+    },*/
+
 }

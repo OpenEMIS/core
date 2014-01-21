@@ -57,12 +57,16 @@ echo $this->Html->script('institution_site_staff', false);
         <div class="table full_width allow_hover" action="InstitutionSites/staffView/">
             <div class="table_head">
 				<div class="table_cell cell_id_no">
-					<span class="left"><?php echo __('Identification No.'); ?></span>
+					<span class="left"><?php echo __('OpenEMIS ID'); ?></span>
 					<span class="icon_sort_<?php echo ($orderBy =='Staff.identification_no')?$orderSort:'up'; ?>" orderBy="Staff.identification_no"></span>
                 </div>
 				<div class="table_cell">
 					<span class="left"><?php echo __('First Name'); ?></span>
 					<span class="icon_sort_<?php echo ($orderBy =='Staff.first_name')?$orderSort:'up'; ?>" orderBy="Staff.first_name"></span>
+                </div>
+                                <div class="table_cell">
+					<span class="left"><?php echo __('Middle Name'); ?></span>
+					<span class="icon_sort_<?php echo ($orderBy =='Staff.middle_name')?$orderSort:'up'; ?>" orderBy="Staff.middle_name"></span>
                 </div>
 				<div class="table_cell">
 					<span class="left"><?php echo __('Last Name'); ?></span>
@@ -79,6 +83,7 @@ echo $this->Html->script('institution_site_staff', false);
                 <div class="table_row" row-id="<?php echo $obj['Staff']['id']; ?>">
 					<div class="table_cell"><?php echo $obj['Staff']['identification_no']; ?></div>
 					<div class="table_cell"><?php echo $obj['Staff']['first_name']; ?></div>
+                                        <div class="table_cell"><?php echo $obj['Staff']['middle_name']; ?></div>
 					<div class="table_cell"><?php echo $obj['Staff']['last_name']; ?></div>
 					<div class="table_cell"><?php echo $obj['StaffCategory']['name']; ?></div>
 				</div>

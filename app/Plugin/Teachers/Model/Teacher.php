@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class Teacher extends TeachersAppModel {
+
 	public $actsAs = array(
 		'Search' => array(
 			'notExists' => 'SELECT teacher_id FROM institution_site_teachers WHERE teacher_id = Teacher.id',
@@ -62,12 +63,12 @@ class Teacher extends TeachersAppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Identification No'
+				'message' => 'Please enter a valid OpenEMIS ID'
 			),
 			'ruleUnique' => array(
         		'rule' => 'isUnique',
         		'required' => true,
-        		'message' => 'Please enter a unique Identification No'
+        		'message' => 'Please enter a unique OpenEMIS ID'
 		    )
 		),
 		'gender' => array(

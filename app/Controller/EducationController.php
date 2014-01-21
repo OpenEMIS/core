@@ -46,8 +46,8 @@ class EducationController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->bodyTitle = 'Settings';
-		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
+		$this->bodyTitle = 'Administration';
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		$this->Navigation->addCrumb('Education', array('controller' => 'Education', 'action' => 'index'));
 		
 		if($this->action === 'index') {
@@ -142,7 +142,7 @@ class EducationController extends AppController {
 		}
 		// Checking if user has access to _view for setup
 		$_view_setup = false;
-		if($this->AccessControl->check($this->params['controller'], 'setup')) {
+		if($this->AccessControl->newCheck($this->params['controller'], 'setup')) {
 			$_view_setup = true;
 		}
 		$this->set('_view_setup', $_view_setup);

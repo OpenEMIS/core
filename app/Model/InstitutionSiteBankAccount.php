@@ -19,16 +19,49 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteBankAccount extends AppModel {
        public $belongsTo = array(
 		   'BankBranch'=> array('foreignKey' => 'bank_branch_id'),
-           'InstitutionSite' => array('foreignKey' => 'institution_site_id'),
+       'InstitutionSite' => array('foreignKey' => 'institution_site_id'),
 		   'Institution' =>
             array(
                 'className'              => 'Institution',
                 'joinTable'              => 'institutions',
-				'foreignKey' => false,
-				'dependent'    => false,
-                'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
-            )
+        				'foreignKey' => false,
+        				'dependent'    => false,
+                        'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
+            ),
+        'ModifiedUser'=> array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
+        'CreatedUser'=> array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser'),
         );
 	
+
+      public $validate = array(
+        'account_name' => array(
+          'ruleRequired' => array(
+            'rule' => 'notEmpty',
+            'required' => true,
+            'message' => 'Please enter an Account name'
+          )
+        ),
+        'account_number' => array(
+            'ruleRequired' => array(
+              'rule' => 'notEmpty',
+              'required' => true,
+              'message' => 'Please enter an Account number'
+            )
+        ),
+        'bank_id' => array(
+            'ruleRequired' => array(
+              'rule' => 'notEmpty',
+              'required' => true,
+              'message' => 'Please select a Bank'
+            )
+        ),
+        'bank_branch_id' => array(
+            'ruleRequired' => array(
+              'rule' => 'notEmpty',
+              'required' => true,
+              'message' => 'Please select a Bank Branch'
+            )
+        )
+    );
 }
 ?>

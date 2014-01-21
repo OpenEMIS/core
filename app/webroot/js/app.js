@@ -28,9 +28,9 @@ $(document).ready(function() {
 	jsForm.init();
 	jsTable.init();
 	jsList.init();
-    if($('html').attr('dir')=="rtl"){
+    /*if($('html').attr('dir')=="rtl"){
         jsForm.fixedBracket(); // This fix arabic translation brackets problem
-    }
+    }*/
 });
 
 var dataStorage = {};
@@ -55,6 +55,12 @@ var utility = {
 	floatCheck: function(evt) {
 		var keynum = utility.getKeyPressed(evt);
 		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==46 || keynum==undefined);
+	},
+        
+        FTECheck: function(evt) {
+		var keynum = utility.getKeyPressed(evt);
+                
+		return ((keynum >= 48 && keynum <= 57) || keynum < 32 || keynum==46 || keynum==190 || keynum==undefined);
 	},
 	
 	br2nl: function(str, newline) {

@@ -37,7 +37,7 @@ function ajaxErrorHandler(jqXHR, textStatus, errorThrown) {
 		var maskId;
 		var loginBtn = {
 			id: 'ajax-login-btn',
-			value: 'Login',
+			value: '<?php echo __('Login'); ?>',
 			callback: function() {
 				var form = $('#ajax_login');
 				
@@ -55,6 +55,7 @@ function ajaxErrorHandler(jqXHR, textStatus, errorThrown) {
 					success: function (data, textStatus) {
 						if(data) {
 							$.closeDialog({id: dlgOpt.id});
+                                                        window.location.href = getRootURL() + 'Home';
 						} else {
 							$.alert({
 								parent: '#' + dlgOpt.id + ' .dialog-box',

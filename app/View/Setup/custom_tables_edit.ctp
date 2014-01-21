@@ -41,7 +41,7 @@ echo $this->Html->css('custom_fields', 'stylesheet', array('inline' => false));
 			'class' => 'default',
 			'label' => false,
 			'div'=> false,
-			'options' => $siteTypes,
+			'options' => array_merge(array('0'=>'All'),$siteTypes),
 			'default' => $siteType,
 			'url' => sprintf('Setup/setupVariables/%s/', $selectedCategory),
 			'onchange' => 'custom.changeSiteType(this)'
