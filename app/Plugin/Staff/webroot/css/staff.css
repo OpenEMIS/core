@@ -6,8 +6,7 @@
 #staff-list .cell_birthday { width: 90px; }
 #staff-list .table { margin-top: 10px; width: 99%; }
 #staff-list .icon_sort_up, #staff-list .icon_sort_down{
-	float:right; 
-	margin:0 0 0 8px;
+	float:right;
 	border:1px solid #BCE2FF;
 	border-radius:2px;
 	width:16px;
