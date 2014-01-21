@@ -34,7 +34,7 @@ class TeachersNavigationComponent extends Component {
 				'GENERAL' => array(
 					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|\bhistory\b'),
 					$navigation->createLink('Contacts', $controller, 'contacts'),
-					$navigation->createLink('identities', $controller, 'identities'),
+					$navigation->createLink('Identities', $controller, 'identities'),
 					$navigation->createLink('Nationalities', $controller, 'nationalities'),
 					$navigation->createLink('Languages', $controller, 'languages'),
 					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
