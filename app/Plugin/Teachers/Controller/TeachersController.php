@@ -57,6 +57,9 @@ class TeachersController extends TeachersAppController {
         'Teachers.TeacherSalary',
         'Teachers.TeacherSalaryAddition',
         'Teachers.TeacherSalaryDeduction',
+        'Teachers.TeacherAward',
+        'Teachers.TeacherMembership',
+        'Teachers.TeacherLicense',
         'Country',
 	    'IdentityType',
         'ContactType',
@@ -87,7 +90,10 @@ class TeachersController extends TeachersAppController {
 		'health_test' => 'Teachers.TeacherHealthTest',
 		'health_consultation' => 'Teachers.TeacherHealthConsultation',
 		'health' => 'Teachers.TeacherHealth',
-        'special_need' => 'Teachers.TeacherSpecialNeed'
+        'special_need' => 'Teachers.TeacherSpecialNeed',
+        'award' => 'Teachers.TeacherAward',
+        'membership' => 'Teachers.TeacherMembership',
+        'license' => 'Teachers.TeacherLicense'
 	); 
 
     public function beforeFilter() {
@@ -2040,6 +2046,36 @@ class TeachersController extends TeachersAppController {
             $this->TeacherSalary->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'salaries', $teacherId));
+        }
+    }
+
+    public function ajax_find_award($type) {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->TeacherAward->autocomplete($search, $type);
+ 
+            return json_encode($data);
+        }
+    }
+
+    public function ajax_find_membership() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->TeacherMembership->autocomplete($search);
+ 
+            return json_encode($data);
+        }
+    }
+
+    public function ajax_find_license() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->TeacherLicense->autocomplete($search);
+ 
+            return json_encode($data);
         }
     }
 }

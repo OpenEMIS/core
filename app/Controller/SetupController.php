@@ -88,7 +88,8 @@ class SetupController extends AppController {
 		'HealthAllergyType',
 		'HealthConsultationType',
 		'HealthTestType',
-		'SpecialNeedType'
+		'SpecialNeedType',
+		'LicenseType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -291,6 +292,7 @@ class SetupController extends AppController {
 		$lookup[] = array('Salary Addition Type' => array('items' => $this->SalaryAdditionType->getLookupVariables()));
 		$lookup[] = array('Salary Deduction Type' => array('items' => $this->SalaryDeductionType->getLookupVariables()));
 		$lookup[] = array('Special Need Type' => array('items' => $this->SpecialNeedType->getLookupVariables()));
+		$lookup[] = array('License Type' => array('items' => $this->LicenseType->getLookupVariables()));
 		
 		$lookup[] = array('Health' => array(
 			'optgroup' => true,
@@ -327,7 +329,7 @@ class SetupController extends AppController {
 			'name' => 'Consultation Types',
 			'items' => $this->HealthConsultationType->getLookupVariables()
 		));
-		
+
 		// Student
 		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
