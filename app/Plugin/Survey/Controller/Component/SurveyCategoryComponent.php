@@ -1082,7 +1082,7 @@ class SurveyCategoryComponent extends Component {
     private function sortOrder(&$arr, $tblName){
         switch($tblName){
             case 'Staff':
-                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'Identification No')),
+                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'OpenEMIS ID')),
                     "first_name" => array_merge($arr['questions']["first_name"],array("label"=>'First Name')),
                     "last_name" => array_merge($arr['questions']["last_name"],array("label"=>'Last Name')),
                     "gender" => array_merge($arr['questions']["gender"],array("label"=>'Gender', "items"=>array('Male','Female'))),
@@ -1096,7 +1096,7 @@ class SurveyCategoryComponent extends Component {
                 break;
 
             case 'Teacher':
-                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'Identification No')),
+                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'OpenEMIS ID')),
                     "first_name" => array_merge($arr['questions']["first_name"],array("label"=>'First Name')),
                     "last_name" => array_merge($arr['questions']["last_name"],array("label"=>'Last Name')),
                     "gender" => array_merge($arr['questions']["gender"],array("label"=>'Gender', "items"=>array('Male','Female'))),
@@ -1110,7 +1110,7 @@ class SurveyCategoryComponent extends Component {
                 break;
 
             case 'Student':
-                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'Identification No')),
+                $arr['questions'] = array("identification_no" => array_merge($arr['questions']["identification_no"],array("label"=>'OpenEMIS ID')),
                     "first_name" => array_merge($arr['questions']["first_name"],array("label"=>'First Name')),
                     "last_name" => array_merge($arr['questions']["last_name"],array("label"=>'Last Name')),
                     "gender" => array_merge($arr['questions']["gender"],array("label"=>'Gender', "items"=>array('Male','Female'))),

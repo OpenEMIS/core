@@ -31,16 +31,24 @@ echo $this->Html->script('/Staff/js/staff', false);
 		?>
 		<?php // echo $this->Html->image("/Staff/img/default_staff_profile.jpg", array('class' => 'profile_image', 'alt' => '90x115')); ?>
 		<div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="value"><?php echo $obj['identification_no']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $obj['first_name']; ?></div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php echo $obj['middle_name']; ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value"><?php echo $obj['last_name']; ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value"><?php echo $obj['preferred_name']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
@@ -50,6 +58,10 @@ echo $this->Html->script('/Staff/js/staff', false);
 		<div class="row">
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Date of Death'); ?></div>
+			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_death']); ?></div>
 		</div>
 	</fieldset>
 

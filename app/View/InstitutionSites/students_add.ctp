@@ -10,7 +10,7 @@ echo $this->Html->script('institution_site_students', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="teachersAdd" class="content_wrapper edit">
+<div id="studentsAdd" class="content_wrapper edit">
 	<h1>
 		<span><?php echo __('Add Student'); ?></span>
 	</h1>
@@ -27,7 +27,8 @@ echo $this->Html->script('institution_site_students', false);
 						'label' => false,
 						'div' => false,
 						'class' => 'default',
-						'placeholder' => __('Identification No, First Name or Last Name')
+						'placeholder' => __('OpenEMIS ID, First Name or Last Name'),
+						'onkeypress' => 'return InstitutionSiteStudents.search(this, event)'
 					));
 				?>
 				<span class="icon_clear" onClick="$('#SearchField').val('')">X</span>
@@ -38,8 +39,9 @@ echo $this->Html->script('institution_site_students', false);
 		<div class="table_scrollable">
 			<div class="table table_header">
 				<div class="table_head">
-					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 					<div class="table_cell"><?php echo __('First Name'); ?></div>
+                                        <div class="table_cell"><?php echo __('Middle Name'); ?></div>
 					<div class="table_cell"><?php echo __('Last Name'); ?></div>
 				</div>
 			</div>
@@ -63,23 +65,33 @@ echo $this->Html->script('institution_site_students', false);
 	
 	<div class="info">
 		<div class="row">
-			<div class="label"><?php echo __('Identification No'); ?></div>
-			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo', 'disabled' => 'disabled')); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
+			<div class="value" id="IdentificationNo"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('first_name', array('class' => 'default', 'id' => 'FirstName')); ?></div>
+			<div class="value" id="FirstName"></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value" id="MiddleName"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('last_name', array('class' => 'default', 'id' => 'LastName')); ?></div>
+			<div class="value" id="LastName"></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value" id="PreferredName"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
-			<div class="value"><?php echo $this->Form->input('gender', array('class' => 'default', 'id' => 'Gender', 'disabled' => 'disabled')); ?></div>
+			<div class="value" id="Gender"></div>
 		</div>
 		
 		<div class="row">
@@ -102,8 +114,13 @@ echo $this->Html->script('institution_site_students', false);
 		</div>
 		
 		<div class="row">
+			<div class="label"><?php echo __('Status'); ?></div>
+			<div class="value"><?php echo $this->Form->input('student_status_id', array('class' => 'default', 'options' => $statusOptions)); ?></div>
+		</div>
+		
+		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
-			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'start_date'); ?></div>
+			<div class="value"><?php echo $this->Form->input('start_date', array('type' => 'date', 'dateFormat' => 'DMY', 'minYear' => $minYear, 'maxYear' => $maxYear, 'empty' => __('Select'))); ?></div>
 		</div>
 	</div>
 	

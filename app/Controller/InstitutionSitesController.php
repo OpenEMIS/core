@@ -19,7 +19,7 @@ App::uses('AreaHandlerComponent', 'Controller/Component');
 
 class InstitutionSitesController extends AppController {
 	public $institutionSiteId;
-    public $institutionSiteObj;
+	public $institutionSiteObj;
 	
 	public $uses = array(
 		'Area',
@@ -66,21 +66,37 @@ class InstitutionSitesController extends AppController {
 		'CensusStudent',
 		'SchoolYear',
 		'Students.Student',
+		'Students.StudentStatus',
 		'Students.StudentCategory',
 		'Students.StudentBehaviour',
 		'Students.StudentBehaviourCategory',
 		'Students.StudentAttendance',
 		'Teachers.Teacher',
+		'Teachers.TeacherStatus',
 		'Teachers.TeacherAttendance',
 		'Teachers.TeacherCategory',
+                'Teachers.TeacherPositionTitle',
+                'Teachers.TeacherPositionGrade',
+                'Teachers.TeacherPositionStep',
+		'Teachers.TeacherBehaviour',
+		'Teachers.TeacherBehaviourCategory',
 		'Staff.Staff',
+		'Staff.StaffStatus',
 		'Staff.StaffAttendance',
-		'Staff.StaffCategory'
+		'Staff.StaffCategory',
+                'Staff.StaffPositionTitle',
+                'Staff.StaffPositionGrade',
+                'Staff.StaffPositionStep',
+		'Staff.StaffBehaviour',
+		'Staff.StaffBehaviourCategory',
+        'SecurityGroupUser',
+        'SecurityGroupArea'
 	);
 	
 	public $helpers = array('Paginator');
 	
 	public $components = array(
+                'Mpdf',
 		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'InstitutionSiteAttachment',
@@ -91,6 +107,9 @@ class InstitutionSitesController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
+                
+                $this->Auth->allow('viewMap','siteProfile');
+                
 		if($this->Session->check('InstitutionId')) {
 			$institutionId = $this->Session->read('InstitutionId');
 			$institutionName = $this->Institution->field('name', array('Institution.id' => $institutionId));
@@ -111,7 +130,11 @@ class InstitutionSitesController extends AppController {
 				}
 			}
 		} else {
-			$this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+                        if($this->action == 'siteProfile' || $this->action == 'viewMap'){
+                            $this->layout = 'profile';
+                        }else{
+                            $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+                        }
 		}
 	}
 	
@@ -144,6 +167,23 @@ class InstitutionSitesController extends AppController {
 	
 		$adminarea = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
 		$adminarea = array_reverse($adminarea);
+                
+                $currentActionAccessible = $this->AccessControl->newCheck('InstitutionSites', 'view');
+                if(!$currentActionAccessible){
+                    $institutionsLinks = $this->Navigation->getInstitutionsLinks();
+                    $institutionSiteLeftNav = $institutionsLinks[2];
+                    //pr($institutionSiteLeftNav);
+                    foreach($institutionSiteLeftNav as $obj) {
+                        foreach($obj as $link) {
+                            $checkWithRoleId = $this->AccessControl->newCheck($link['controller'], $link['action']);
+                            if($checkWithRoleId){
+                                $this->redirect(array('controller' => $link['controller'], 'action' => $link['action']));
+                                break 2;
+                            }
+                        }
+                    }
+                    $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
+                }
 		
 		$this->set('data', $data);
 		$this->set('levels',$levels);
@@ -154,8 +194,10 @@ class InstitutionSitesController extends AppController {
 		
 	}
 	
-	public  function viewMap(){
+	public  function viewMap($id = false){
+            
 		$this->layout = false;
+                if($id) $this->institutionSiteId = $id;
 		$string = @file_get_contents('http://www.google.com');
 		if ($string){
 			$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
@@ -288,7 +330,12 @@ class InstitutionSitesController extends AppController {
 		$this->Utility->unshiftArray($ownership, array('0'=>'--'.__('Select').'--'));
 		$this->Utility->unshiftArray($locality, array('0'=>'--'.__('Select').'--'));
 		$this->Utility->unshiftArray($status, array('0'=>'--'.__('Select').'--'));
-		
+
+        // Get security group area
+        $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
+        $filterArea = $this->SecurityGroupArea->getAreas($groupId);
+
+        $this->set('filterArea',$filterArea);
 		$this->set('type_options',$type);
         $this->set('ownership_options',$ownership);
         $this->set('locality_options',$locality);
@@ -388,7 +435,12 @@ class InstitutionSitesController extends AppController {
 		$this->Utility->unshiftArray($topAdminArea, array('0'=>'--'.__('Select').'--'));
 		
 		$adminlevels = $this->AreaEducationLevel->find('list');
-		
+
+        // Get security group area
+        $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
+        $filterArea = $this->SecurityGroupArea->getAreas($groupId);
+
+        $this->set('filterArea',$filterArea);
         $this->set('type_options',$type);
         $this->set('ownership_options',$ownership);
         $this->set('locality_options',$locality);
@@ -474,7 +526,7 @@ class InstitutionSitesController extends AppController {
 	public function additional() {
 		$this->Navigation->addCrumb('More');
 		
-		$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id']),'order'=>'InstitutionSiteCustomField.order'));
+		$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>(array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'],0))),'order'=>array('InstitutionSiteCustomField.institution_site_type_id','InstitutionSiteCustomField.order')));
 		$this->InstitutionSiteCustomValue->unbindModel(
 			array('belongsTo' => array('InstitutionSite'))
 		);
@@ -484,7 +536,7 @@ class InstitutionSitesController extends AppController {
 			$tmp[$arrV['InstitutionSiteCustomField']['id']][] = $arrV['InstitutionSiteCustomValue'];
 		}
 		$datavalues = $tmp;
-		//pr($tmp);die;
+		//pr($datafields);die;
 		$this->set('datafields',$datafields);
 		$this->set('datavalues',$tmp);
 	}
@@ -544,7 +596,8 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		$this->institutionSiteObj['InstitutionSite'];
-		$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id'])));
+                $datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>(array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'],0))),'order'=>array('InstitutionSiteCustomField.institution_site_type_id','InstitutionSiteCustomField.order')));
+		//$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id'])));
 		$this->InstitutionSiteCustomValue->unbindModel(
 			array('belongsTo' => array('InstitutionSite'))
 		);
@@ -563,13 +616,6 @@ class InstitutionSitesController extends AppController {
 	public function bankAccounts() {
 		$this->Navigation->addCrumb('Bank Accounts');
                 
-		if($this->request->is('post')) {
-			//pr($this->data);
-			$this->InstitutionSiteAttachment->create();
-			$this->request->data['InstitutionSiteBankAccount']['institution_site_id'] = $this->institutionSiteId;
-			$this->InstitutionSiteBankAccount->save($this->request->data['InstitutionSiteBankAccount']);
-		}
-		
 		$data = $this->InstitutionSiteBankAccount->find('all',array('conditions'=>array('InstitutionSiteBankAccount.institution_site_id'=>$this->institutionSiteId)));
 		$bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
 		$banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
@@ -577,48 +623,93 @@ class InstitutionSitesController extends AppController {
 		$this->set('bank',$bank);
 		$this->set('banklist',$banklist);
 	}
-	
-	public function bankAccountsEdit() {
-		$this->Navigation->addCrumb('Edit Bank Accounts');
-		if($this->request->is('post')) { // save
-			
-			foreach($this->request->data['InstitutionSiteBankAccount'] as &$arrVal){
-				if($arrVal['id'] == $this->data['InstitutionSiteBankAccount']['active']){
-					$arrVal['active'] = 1;
-					unset($this->request->data['InstitutionSiteBankAccount']['active']);
-					break;
-				}
-			}
-			//pr($this->request->data['InstitutionSiteBankAccount']);
-			//die;
-			$this->InstitutionSiteBankAccount->saveAll($this->request->data['InstitutionSiteBankAccount']);
-			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'bankAccounts'));
-		}
-		$data = $this->InstitutionSiteBankAccount->find('all',array('conditions'=>array('InstitutionSiteBankAccount.institution_site_id'=>$this->institutionSiteId)));
-		$bank = $this->Bank->find('all',array('conditions'=>Array('Bank.visible'=>1)));
 
-		$this->set('data',$data);
+	public function bankAccountsView() {
+        $bankAccountId = $this->params['pass'][0];
+        $bankAccountObj = $this->InstitutionSiteBankAccount->find('all',array('conditions'=>array('InstitutionSiteBankAccount.id' => $bankAccountId)));
+        
+        if(!empty($bankAccountObj)) {
+            $this->Navigation->addCrumb('Bank Account Details');
+            
+            $this->Session->write('InstitutionSiteBankAccountId', $bankAccountId);
+            $this->set('bankAccountObj', $bankAccountObj);
+        }
+        $banklist = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+		$this->set('banklist',$banklist);
+
+    }
+
+	public function bankAccountsAdd() {
+		$this->Navigation->addCrumb('Add Bank Accounts');
+		if($this->request->is('post')) { // save
+			$this->InstitutionSiteBankAccount->create();
+			if($this->InstitutionSiteBankAccount->save($this->request->data)){
+			 	$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+				$this->redirect(array('action' => 'bankAccounts'));
+			}
+		}
+		$bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+
+        $bankId = isset($this->request->data['InstitutionSiteBankAccount']['bank_id']) ? $this->request->data['InstitutionSiteBankAccount']['bank_id'] : "";
+        if(!empty($bankId)){
+            $bankBranches = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        }else{
+            $bankBranches = array();
+        }
+        
+        $this->set('bankBranches', $bankBranches);
+        $this->set('selectedBank', $bankId);
+
+		$this->set('institution_site_id', $this->institutionSiteId);
 		$this->set('bank',$bank);
 	}
-    
-	public function bankAccountsDelete($id) {
-		if ($this->request->is('get')) {
-			throw new MethodNotAllowedException();
-		}
-		$this->InstitutionSiteBankAccount->id = $id;
-		$info = $this->InstitutionSiteBankAccount->read();
-		if ($this->InstitutionSiteBankAccount->delete($id)) {
-			 $message = __('Record Deleted!', true);
+	
+	public function bankAccountsEdit() {
+		$bankBranch = array();
 
-		}else{
-			 $message = __('Error Occured. Please, try again.', true);
-		}
-		if($this->RequestHandler->isAjax()){
-			$this->autoRender = false;
-			$this->layout = 'ajax';
-			echo json_encode(compact('message'));
-		}
+        $bankAccountId = $this->params['pass'][0];
+		        
+		if($this->request->is('get')) {
+            $bankAccountObj = $this->InstitutionSiteBankAccount->find('first',array('conditions'=>array('InstitutionSiteBankAccount.id' => $bankAccountId)));
+  
+            if(!empty($bankAccountObj)) {
+                $this->Navigation->addCrumb('Edit Bank Account Details');
+                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
+                $this->request->data = $bankAccountObj;
+		      
+ 				
+            }
+         } else {
+         	$this->request->data['InstitutionSiteBankAccount']['institution_site_id'] = $this->institutionSiteId;
+            if($this->InstitutionSiteBankAccount->save($this->request->data)){
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));	
+                $this->redirect(array('action' => 'bankAccountsView', $this->request->data['InstitutionSiteBankAccount']['id']));
+            }
+     	}
+
+  	 	$bankId = isset($this->request->data['InstitutionSiteBankAccount']['bank_id']) ? $this->request->data['InstitutionSiteBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
+		$this->set('selectedBank', $bankId);
+
+        $bankBranch = $this->BankBranch->find('list', array('conditions'=>array('bank_id'=>$bankId, 'visible'=>1), 'recursive' => -1));
+        $this->set('bankBranch', $bankBranch);
+
+     	$bank = $this->Bank->find('list',array('conditions'=>Array('Bank.visible'=>1)));
+		$this->set('bank',$bank);
+
+        $this->set('id', $bankAccountId);
 	}
+
+
+	public function bankAccountsDelete($id) {
+        if($this->Session->check('InstitutionSiteId') && $this->Session->check('InstitutionSiteBankAccountId')) {
+            $id = $this->Session->read('InstitutionSiteBankAccountId');
+            $institutionSiteId = $this->Session->read('InstitutionSiteId');
+            $name = $this->InstitutionSiteBankAccount->field('account_number', array('InstitutionSiteBankAccount.id' => $id));
+            $this->InstitutionSiteBankAccount->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'bankAccounts'));
+        }
+    }
 	
 	public function bankAccountsBankBranches() {
 		$this->autoRender = false;
@@ -669,7 +760,7 @@ class InstitutionSitesController extends AppController {
 			$this->layout = 'ajax';
 			
 			$data = $this->EducationProgramme->getAvailableProgrammeOptions($this->institutionSiteId, $yearId);
-			$_delete_programme = $this->AccessControl->check('InstitutionSites', 'programmesDelete');
+			$_delete_programme = $this->AccessControl->newCheck('InstitutionSites', 'programmesDelete');
 			$this->set('data', $data);
 			$this->set('_delete_programme', $_delete_programme);
 		} else {
@@ -793,7 +884,7 @@ class InstitutionSitesController extends AppController {
 		$data = $this->InstitutionSiteClass->getListOfClasses($selectedYear, $this->institutionSiteId);
 		
 		// Checking if user has access to add
-		$_add_class = $this->AccessControl->check('InstitutionSites', 'classesAdd');
+		$_add_class = $this->AccessControl->newCheck('InstitutionSites', 'classesAdd');
 		$this->set('_add_class', $_add_class);
 		// End Access Control
 		
@@ -884,6 +975,9 @@ class InstitutionSitesController extends AppController {
 			$this->set('grades', $grades);
 			$this->set('students', $students);
 			$this->set('teachers', $teachers);
+                        $this->set('no_of_seats', $classObj['InstitutionSiteClass']['no_of_seats']);
+                        $this->set('no_of_shifts', $classObj['InstitutionSiteClass']['no_of_shifts']);
+                        
             $this->set('subjects', $subjects);
 		} else {
 			$this->redirect(array('action' => 'classesList'));
@@ -901,7 +995,8 @@ class InstitutionSitesController extends AppController {
 			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
 			$students = $this->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
 			$teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
-            $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
+                        $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
+                        $studentCategoryOptions = $this->StudentCategory->findList(true);
 			
 			$this->set('classId', $classId);
 			$this->set('className', $className);
@@ -909,6 +1004,10 @@ class InstitutionSitesController extends AppController {
 			$this->set('grades', $grades);
 			$this->set('students', $students);
 			$this->set('teachers', $teachers);
+                        $this->set('no_of_seats', $classObj['InstitutionSiteClass']['no_of_seats']);
+                        $this->set('no_of_shifts', $classObj['InstitutionSiteClass']['no_of_shifts']);
+                        $this->set('studentCategoryOptions', $studentCategoryOptions);
+                        
             $this->set('subjects', $subjects);
 		} else {
 			$this->redirect(array('action' => 'classesList'));
@@ -956,7 +1055,8 @@ class InstitutionSitesController extends AppController {
 			
 			$result = false;
 			if($action === 'add') {
-				$categoryId = $this->params->query['categoryId'];
+                                $categoryId = $this->params->query['categoryId'];
+                            
 				$data = array(
 					'student_id' => $studentId, 
 					'student_category_id' => $categoryId,
@@ -964,7 +1064,16 @@ class InstitutionSitesController extends AppController {
 				);
 				$this->InstitutionSiteClassGradeStudent->create();
 				$result = $this->InstitutionSiteClassGradeStudent->save($data);
-			} else {
+                        } else if($action === 'change_category'){
+                                $categoryId = $this->params->query['categoryId'];
+                                
+                                $fieldsToBeUpdated = array('InstitutionSiteClassGradeStudent.student_category_id' => $categoryId);
+                                $updateConditions = array(
+                                                        'InstitutionSiteClassGradeStudent.student_id' => $studentId, 
+                                                        'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
+                                                    );
+                                $result = $this->InstitutionSiteClassGradeStudent->updateAll($fieldsToBeUpdated, $updateConditions);
+                        } else {
 				$result = $this->InstitutionSiteClassGradeStudent->deleteAll(array(
 					'InstitutionSiteClassGradeStudent.student_id' => $studentId,
 					'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
@@ -1138,7 +1247,7 @@ class InstitutionSitesController extends AppController {
 			if($class) {
 				$class = $class['InstitutionSiteClass'];
 				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Assessments');
+				$this->Navigation->addCrumb('Results');
 				$data = $this->AssessmentItemType->getAssessmentsByClass($classId);
 				
 				if(empty($data)) {
@@ -1163,13 +1272,13 @@ class InstitutionSitesController extends AppController {
 			if($class) {
 				$class = $class['InstitutionSiteClass'];
 				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Assessment Results');
+				$this->Navigation->addCrumb('Results');
 				$items = $this->AssessmentItem->getItemList($assessmentId);
 				if(empty($items)) {
 					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
 				} else {
 					$selectedItem = isset($this->params['pass'][2]) ? $this->params['pass'][2] : key($items);
-					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem);
+					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem, $assessmentId);
 					if(empty($data)) {
 						$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
 					}
@@ -1196,13 +1305,13 @@ class InstitutionSitesController extends AppController {
 			if($class) {
 				$class = $class['InstitutionSiteClass'];
 				$this->Navigation->addCrumb($class['name'], array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
-				$this->Navigation->addCrumb('Assessment Results');
+				$this->Navigation->addCrumb('Results');
 				$items = $this->AssessmentItem->getItemList($assessmentId);
 				if(empty($items)) {
 					$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_ASSESSMENT_ITEM'), array('type' => 'info'));
 				} else {
 					$selectedItem = isset($this->params['pass'][2]) ? $this->params['pass'][2] : key($items);
-					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem);
+					$data = $this->InstitutionSiteClassGradeStudent->getStudentAssessmentResults($classId, $selectedItem, $assessmentId);
 					if($this->request->is('get')) {
 						if(empty($data)) {
 							$this->Utility->alert($this->Utility->getMessage('ASSESSMENT_NO_STUDENTS'), array('type' => 'info'));
@@ -1296,7 +1405,7 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		// Checking if user has access to add
-		$_add_student = $this->AccessControl->check('InstitutionSites', 'studentsAdd');
+		$_add_student = $this->AccessControl->newCheck('InstitutionSites', 'studentsAdd');
 		$this->set('_add_student', $_add_student);
 		// End Access Control
 		
@@ -1323,6 +1432,8 @@ class InstitutionSitesController extends AppController {
 	public function studentsAdd() {
 		$this->Navigation->addCrumb('Add Student');
 		$yearOptions = $this->SchoolYear->getYearList();
+		$yearRange = $this->SchoolYear->getYearRange();
+		$statusOptions = $this->StudentStatus->findList(true);
 		$programmeOptions = array();
 		$selectedYear = '';
 		if(!empty($yearOptions)) {
@@ -1330,29 +1441,47 @@ class InstitutionSitesController extends AppController {
 			$programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeForSelection($this->institutionSiteId, $selectedYear);
 		}
 		$this->set('yearOptions', $yearOptions);
+		$this->set('minYear', current($yearRange));
+		$this->set('maxYear', array_pop($yearRange));
 		$this->set('programmeOptions', $programmeOptions);
+		$this->set('statusOptions', $statusOptions);
 	}
 	
 	public function studentsSave() {
 		if($this->request->is('post')) {
 			$data = $this->data['InstitutionSiteStudent'];
 			if(isset($data['student_id'])) {
-				$data['start_year'] = date('Y', strtotime($data['start_date']));
-				$name = $data['first_name'] . ' ' . $data['last_name'];
-				$siteProgrammeId = $data['institution_site_programme_id'];
-				$exists = $this->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
-				
-				if(!$exists) {
-					$duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
-					$startDate = new DateTime(date('Y-m-d', strtotime($data['start_date'])));
-					$endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
-					$endYear = $endDate->format('Y');
-					$data['end_date'] = $endDate->format('Y-m-d');
-					$data['end_year'] = $endYear;
-					$this->InstitutionSiteStudent->save($data);
-					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+				$date = $data['start_date'];
+				if(!empty($date['day']) && !empty($date['month']) && !empty($date['year'])) {
+					$data['start_year'] = $date['year'];
+					$yr = $date['year'];
+					$mth = $date['month'];
+					$day = $date['day'];
+					
+					while(!checkdate($mth, $day, $yr)) {
+						$day--;
+					}
+					$data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
+					$date = $data['start_date'];
+					$student = $this->Student->find('first', array('conditions' => array('Student.id' => $data['student_id'])));
+					$name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
+					$siteProgrammeId = $data['institution_site_programme_id'];
+					$exists = $this->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
+					
+					if(!$exists) {
+						$duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
+						$startDate = new DateTime(sprintf('%s-%s-%s', $date['year'], $date['month'], $date['day']));
+						$endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
+						$endYear = $endDate->format('Y');
+						$data['end_date'] = $endDate->format('Y-m-d');
+						$data['end_year'] = $endYear;
+						$this->InstitutionSiteStudent->save($data);
+						$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
+					} else {
+						$this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+					}
 				} else {
-					$this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
 				$this->redirect(array('action' => 'studentsAdd'));
 			}
@@ -1364,17 +1493,98 @@ class InstitutionSitesController extends AppController {
 			$studentId = $this->params['pass'][0];
 			$this->Session->write('InstitutionSiteStudentId', $studentId);
 			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-			$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
+			$name = sprintf('%s %s %s', $data['Student']['first_name'], $data['Student']['middle_name'], $data['Student']['last_name']);
 			$this->Navigation->addCrumb($name);
 			
+			$details = $this->InstitutionSiteStudent->getDetails($studentId, $this->institutionSiteId);
 			$classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId, $this->institutionSiteId);
 			$results = $this->AssessmentItemResult->getResultsByStudent($studentId, $this->institutionSiteId);
 			$results = $this->AssessmentItemResult->groupItemResults($results);
-			$_view_details = $this->AccessControl->check('Students', 'view');
+			$_view_details = $this->AccessControl->newCheck('Students', 'view');
 			$this->set('_view_details', $_view_details);
 			$this->set('data', $data);
 			$this->set('classes', $classes);
 			$this->set('results', $results);
+			$this->set('details', $details);
+		} else {
+			$this->redirect(array('action' => 'students'));
+		}
+	}
+        
+        public function studentsDelete(){
+                if($this->Session->check('InstitutionSiteStudentId') && $this->Session->check('InstitutionSiteId')) {
+                    $studentId = $this->Session->read('InstitutionSiteStudentId');
+                    $InstitutionSiteId = $this->Session->read('InstitutionSiteId');
+                    
+                    $SiteStudentRecordIds = $this->InstitutionSiteStudent->getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId);
+                    if(!empty($SiteStudentRecordIds)){
+                        $this->InstitutionSiteStudent->deleteAll(array('InstitutionSiteStudent.id' => $SiteStudentRecordIds), false);
+                    }
+                    
+                    $GradeStudentRecordIds = $this->InstitutionSiteClassGradeStudent->getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId);
+                    if(!empty($GradeStudentRecordIds)){
+                        $this->InstitutionSiteClassGradeStudent->deleteAll(array('InstitutionSiteClassGradeStudent.id' => $GradeStudentRecordIds), false);
+                    }
+                    
+                    $this->AssessmentItemResult->deleteAll(array(
+                                                            'AssessmentItemResult.student_id' => $studentId,
+                                                            'AssessmentItemResult.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $this->StudentBehaviour->deleteAll(array(
+                                                            'StudentBehaviour.student_id' => $studentId,
+                                                            'StudentBehaviour.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $this->StudentAttendance->deleteAll(array(
+                                                            'StudentAttendance.student_id' => $studentId,
+                                                            'StudentAttendance.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    $StudentDetailsCustomValueObj = ClassRegistry::init('StudentDetailsCustomValue');
+                    $StudentDetailsCustomValueObj->deleteAll(array(
+                                                            'StudentDetailsCustomValue.student_id' => $studentId,
+                                                            'StudentDetailsCustomValue.institution_site_id' => $InstitutionSiteId
+                                                            ), false);
+                    
+                    
+                    $this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
+                    $this->redirect(array('action' => 'students'));
+                }else{
+                    $this->redirect(array('action' => 'students'));
+                }
+        }
+	
+	public function studentsEdit() {
+		if($this->Session->check('InstitutionSiteStudentId')) {
+			$studentId = $this->Session->read('InstitutionSiteStudentId');
+			if($this->request->is('post')) {
+				$postData = $this->request->data['InstitutionSiteStudent'];
+				foreach($postData as $i => $obj) {
+					$postData[$i]['start_year'] = date('Y', strtotime($obj['start_date']));
+					$postData[$i]['end_year'] = date('Y', strtotime($obj['end_date']));
+				}
+				$this->InstitutionSiteStudent->saveMany($postData);
+				$this->Utility->alert($this->Utility->getMessage('UPDATE_SUCCESS'));
+				return $this->redirect(array('action' => 'studentsView', $studentId));
+			}
+			
+			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+			$name = sprintf('%s %s %s', $data['Student']['first_name'], $data['Student']['middle_name'], $data['Student']['last_name']);
+			$this->Navigation->addCrumb($name);
+			$statusOptions = $this->StudentStatus->findList(true);
+			
+			$details = $this->InstitutionSiteStudent->getDetails($studentId, $this->institutionSiteId);
+			$classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId, $this->institutionSiteId);
+			$results = $this->AssessmentItemResult->getResultsByStudent($studentId, $this->institutionSiteId);
+			$results = $this->AssessmentItemResult->groupItemResults($results);
+			$_view_details = $this->AccessControl->newCheck('Students', 'view');
+			$this->set('_view_details', $_view_details);
+			$this->set('data', $data);
+			$this->set('classes', $classes);
+			$this->set('results', $results);
+			$this->set('details', $details);
+			$this->set('statusOptions', $statusOptions);
 		} else {
 			$this->redirect(array('action' => 'students'));
 		}
@@ -1410,7 +1620,7 @@ class InstitutionSitesController extends AppController {
 		$data = $this->paginate('InstitutionSiteTeacher', $conditions);
 		
 		// Checking if user has access to add
-		$_add_teacher = $this->AccessControl->check('InstitutionSites', 'teachersAdd');
+		$_add_teacher = $this->AccessControl->newCheck('InstitutionSites', 'teachersAdd');
 		$this->set('_add_teacher', $_add_teacher);
 		// End Access Control
 		
@@ -1433,42 +1643,82 @@ class InstitutionSitesController extends AppController {
 	
 	public function teachersAdd() {
 		$this->Navigation->addCrumb('Add Teacher');
-		$yearOptions = $this->SchoolYear->getYearList('start_year');
+		$yearRange = $this->SchoolYear->getYearRange();
 		$categoryOptions = $this->TeacherCategory->findList(true);
+                $positionTitleptions = $this->TeacherPositionTitle->findList(true);
+                $positionGradeOptions = $this->TeacherPositionGrade->findList(true);
+                $positionStepOptions = $this->TeacherPositionStep->findList(true);
+		$statusOptions = $this->TeacherStatus->findList(true);
 		
-		$this->set('yearOptions', $yearOptions);
+		$this->set('minYear', current($yearRange));
+		$this->set('maxYear', array_pop($yearRange));
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleptions', $positionTitleptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
+		$this->set('statusOptions', $statusOptions);
 	}
 	
 	public function teachersSave() {
 		if($this->request->is('post')) {
 			$data = $this->data['InstitutionSiteTeacher'];
 			if(isset($data['teacher_id'])) {
-				$data['institution_site_id'] = $this->institutionSiteId;
-				$data['start_year'] = date('Y', strtotime($data['start_date']));
-				$insert = true;
-				if(!empty($data['position_no'])) {
-					$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
-					if(!$obj) {
-						$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
+				if(!empty($data['start_date']['day']) && !empty($data['start_date']['month']) && !empty($data['start_date']['year'])) {
+					$data['institution_site_id'] = $this->institutionSiteId;
+					$data['start_year'] = $data['start_date']['year'];
+					$yr = $data['start_date']['year'];
+					$mth = $data['start_date']['month'];
+					$day = $data['start_date']['day'];
+					
+					while(!checkdate($mth, $day, $yr)) {
+						$day--;
 					}
-					if($obj) {
-						$teacherObj = $this->Teacher->find('first', array(
-							'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 'Teacher.gender'),
-							'conditions' => array('Teacher.id' => $data['teacher_id'])
-						));
-						$position = $data['position_no'];
-						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
-						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
-						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
-						$msg .= '<br>' . __('Please choose another position number.');
-						$this->Utility->alert($msg, array('type' => 'warn'));
-						$insert = false;
-						$data = array_merge($data, $teacherObj['Teacher']);
-						$this->Session->write('InstitutionSiteTeacherAdd.data', $data);
-					}
+					$data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
+					$insert = true;
+					if(!empty($data['position_no'])) {
+						$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
+						if(!$obj) {
+							$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
+						}
+						if($obj) {
+							$teacherObj = $this->Teacher->find('first', array(
+								'fields' => array('Teacher.identification_no', 'Teacher.first_name', 'Teacher.middle_name', 'Teacher.last_name', 'Teacher.gender'),
+								'conditions' => array('Teacher.id' => $data['teacher_id'])
+							));
+							$position = $data['position_no'];
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
+							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+							$msg .= '<br>' . __('Please choose another position number.');
+							$this->Utility->alert($msg, array('type' => 'warn'));
+							$insert = false;
+                                                }else{
+                                                    if(isset($data['FTE']) && strlen($data['FTE']) > 0){
+                                                        $PTE = floatval($data['FTE']);
+                                                        
+                                                        if($PTE < 0.01 || $PTE > 1){
+                                                            $msg = 'FTE value should be from 0.01 to 1.00';
+                                                            $this->Utility->alert($msg, array('type' => 'warn'));
+                                                            $insert = false;
+                                                        }
+                                                    }
+                                                    
+                                                }
+                                        }else{
+                                            if(isset($data['FTE']) && strlen($data['FTE']) > 0){
+                                                $PTE = floatval($data['FTE']);
+                                                        
+                                                if($PTE < 0.01 || $PTE > 1){
+                                                    $msg = 'FTE value should be from 0.01 to 1.00';
+                                                    $this->Utility->alert($msg, array('type' => 'warn'));
+                                                    $insert = false;
+                                                }
+                                            }
+                                        }
+				} else {
+					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
-				if($insert) {
+				if(isset($insert) && $insert == true) {
 					$this->InstitutionSiteTeacher->save($data);
 					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
 				}
@@ -1482,7 +1732,7 @@ class InstitutionSitesController extends AppController {
 			$teacherId = $this->params['pass'][0];
 			$this->Session->write('InstitutionSiteTeachersId', $teacherId);
 			$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-			$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+			$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 			$positions = $this->InstitutionSiteTeacher->getPositions($teacherId, $this->institutionSiteId);
 			$this->Navigation->addCrumb($name);
 			if(!empty($positions)) {
@@ -1504,18 +1754,20 @@ class InstitutionSitesController extends AppController {
 			
 			if($this->request->is('get')) {
 				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-				$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+				$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 				$positions = $this->InstitutionSiteTeacher->getPositions($teacherId, $this->institutionSiteId);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $data['Teacher']['id']));
 				$this->Navigation->addCrumb('Edit');
 				
 				if(!empty($positions)) {
 					$classes = $this->InstitutionSiteClassTeacher->getClasses($teacherId, $this->institutionSiteId);
-					$_view_details = $this->AccessControl->check('Teachers', 'view');
+					$statusOptions = $this->TeacherStatus->findList(true);
+					$_view_details = $this->AccessControl->newCheck('Teachers', 'view');
 					$this->set('_view_details', $_view_details);
 					$this->set('data', $data);
 					$this->set('positions', $positions);
 					$this->set('classes', $classes);
+					$this->set('statusOptions', $statusOptions);
 				} else {
 					$this->redirect(array('action' => 'teachers'));
 				}
@@ -1525,11 +1777,22 @@ class InstitutionSitesController extends AppController {
 					$this->InstitutionSiteTeacher->deleteAll(array('InstitutionSiteTeacher.id' => $delete), false);
 				}
 				$data = $this->data['InstitutionSiteTeacher'];
+                                
+                                $update_proceed = true;
+                                
 				// checking for existing position number
 				foreach($data as $i => $row) {
 					if(!array_key_exists('id', $row)) {
 						if($row['position_no'] === __('Position No')) {
-							$row['position_no'] = null;
+							$data[$i]['position_no'] = null;
+                                                        
+                                                        if(isset($row['FTE']) && strlen($row['FTE']) > 0){
+                                                            $PTE = floatval($row['FTE']);
+
+                                                            if($PTE < 0.01 || $PTE > 1){
+                                                                unset($data[$i]);
+                                                            }
+                                                        }
 						} else {
 							$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($row['position_no'], $row['start_date']);
 							if(!$obj) {
@@ -1543,12 +1806,35 @@ class InstitutionSitesController extends AppController {
 								$msg .= '<br>' . __('Please choose another position number.');
 								$this->Utility->alert($msg, array('type' => 'warn'));
 								unset($data[$i]);
-							}
+                                                        }else{
+                                                            if(isset($row['FTE']) && strlen($row['FTE']) > 0){
+                                                                $PTE = floatval($row['FTE']);
+
+                                                                if($PTE < 0.01 || $PTE > 1){
+                                                                    unset($data[$i]);
+                                                                }
+                                                            }
+                                                        }
 						}
-					}
+                                        }else{
+                                            if(isset($row['FTE']) && strlen($row['FTE']) > 0){
+                                                $PTE = floatval($row['FTE']);
+
+                                                if($PTE < 0.01 || $PTE > 1){
+                                                    $msg = 'FTE value should be from 0.01 to 1.00';
+                                                    $this->Utility->alert($msg, array('type' => 'warn'));
+                                                    $update_proceed = false;
+                                                }
+                                            }
+                                        }
 				}
-				$this->InstitutionSiteTeacher->saveEmployment($data, $this->institutionSiteId, $teacherId);
-				$this->redirect(array('action' => 'teachersView', $teacherId));
+                                if($update_proceed == true){
+                                    $this->InstitutionSiteTeacher->saveEmployment($data, $this->institutionSiteId, $teacherId);
+                                    $this->redirect(array('action' => 'teachersView', $teacherId));
+                                }else{
+                                    $this->redirect(array('action' => 'teachersEdit', $teacherId));
+                                }
+                                
 			}
 		} else {
 			$this->redirect(array('action' => 'teachers'));
@@ -1560,9 +1846,17 @@ class InstitutionSitesController extends AppController {
 		
 		$index = $this->params->query['index'] + 1;
 		$categoryOptions = $this->TeacherCategory->findList(true);
+                $positionTitleOptions = $this->TeacherPositionTitle->findList(true);
+                $positionGradeOptions = $this->TeacherPositionGrade->findList(true);
+                $positionStepOptions = $this->TeacherPositionStep->findList(true);
+		$statusOptions = $this->TeacherStatus->findList(true);
 		
 		$this->set('index', $index);
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleOptions', $positionTitleOptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
+		$this->set('statusOptions', $statusOptions);
 	}
 	
 	public function staff() {
@@ -1595,7 +1889,7 @@ class InstitutionSitesController extends AppController {
 		$data = $this->paginate('InstitutionSiteStaff', $conditions);
 		
 		// Checking if user has access to add
-		$_add_staff = $this->AccessControl->check('InstitutionSites', 'staffAdd');
+		$_add_staff = $this->AccessControl->newCheck('InstitutionSites', 'staffAdd');
 		$this->set('_add_staff', $_add_staff);
 		// End Access Control
 		
@@ -1618,42 +1912,63 @@ class InstitutionSitesController extends AppController {
 	
 	public function staffAdd() {
 		$this->Navigation->addCrumb('Add Staff');
-		$yearOptions = $this->SchoolYear->getYearList('start_year');
+		$yearRange = $this->SchoolYear->getYearRange();
 		$categoryOptions = $this->StaffCategory->findList(true);
+                $positionTitleptions = $this->StaffPositionTitle->findList(true);
+                $positionGradeOptions = $this->StaffPositionGrade->findList(true);
+                $positionStepOptions = $this->StaffPositionStep->findList(true);
+		$statusOptions = $this->StaffStatus->findList(true);
 		
-		$this->set('yearOptions', $yearOptions);
+		$this->set('minYear', current($yearRange));
+		$this->set('maxYear', array_pop($yearRange));
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleptions', $positionTitleptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
+		$this->set('statusOptions', $statusOptions);
 	}
 	
 	public function staffSave() {
 		if($this->request->is('post')) {
 			$data = $this->data['InstitutionSiteStaff'];
 			if(isset($data['staff_id'])) {
-				$data['institution_site_id'] = $this->institutionSiteId;
-				$data['start_year'] = date('Y', strtotime($data['start_date']));
-				$insert = true;
-				if(!empty($data['position_no'])) {
-					$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
-					if(!$obj) {
-						$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
+				if(!empty($data['start_date']['day']) && !empty($data['start_date']['month']) && !empty($data['start_date']['year'])) {
+					$data['institution_site_id'] = $this->institutionSiteId;
+					$data['start_year'] = $data['start_date']['year'];
+					$data['start_year'] = $data['start_date']['year'];
+					$yr = $data['start_date']['year'];
+					$mth = $data['start_date']['month'];
+					$day = $data['start_date']['day'];
+					
+					while(!checkdate($mth, $day, $yr)) {
+						$day--;
 					}
-					if($obj) {
-						$staffObj = $this->Staff->find('first', array(
-							'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name', 'Staff.gender'),
-							'conditions' => array('Staff.id' => $data['staff_id'])
-						));
-						$position = $data['position_no'];
-						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['last_name']) . '</b>';
-						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
-						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
-						$msg .= '<br>' . __('Please choose another position number.');
-						$this->Utility->alert($msg, array('type' => 'warn'));
-						$insert = false;
-						$data = array_merge($data, $staffObj['Staff']);
-						$this->Session->write('InstitutionSiteStaffAdd.data', $data);
+					$data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
+					$insert = true;
+					if(!empty($data['position_no'])) {
+						$obj = $this->InstitutionSiteStaff->isPositionNumberExists($data['position_no'], $data['start_date']);
+						if(!$obj) {
+							$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($data['position_no'], $data['start_date']);
+						}
+						if($obj) {
+							$staffObj = $this->Staff->find('first', array(
+								'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.gender'),
+								'conditions' => array('Staff.id' => $data['staff_id'])
+							));
+							$position = $data['position_no'];
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
+							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+							$msg .= '<br>' . __('Please choose another position number.');
+							$this->Utility->alert($msg, array('type' => 'warn'));
+							$insert = false;
+						}
 					}
+				} else {
+                                        $insert = false;
+					$this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
 				}
-				if($insert) {
+				if(isset($insert) && $insert) {
 					$this->InstitutionSiteStaff->save($data);
 					$this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
 				}
@@ -1667,7 +1982,7 @@ class InstitutionSitesController extends AppController {
 			$staffId = $this->params['pass'][0];
 			$this->Session->write('InstitutionSiteStaffId', $staffId);
 			$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-			$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+			$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 			$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
 			$this->Navigation->addCrumb($name);
 			if(!empty($positions)) {
@@ -1687,15 +2002,17 @@ class InstitutionSitesController extends AppController {
 			
 			if($this->request->is('get')) {
 				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-				$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+				$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 				$positions = $this->InstitutionSiteStaff->getPositions($staffId, $this->institutionSiteId);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $data['Staff']['id']));
 				$this->Navigation->addCrumb('Edit');
 				if(!empty($positions)) {
-					$_view_details = $this->AccessControl->check('Staff', 'view');
+					$statusOptions = $this->StaffStatus->findList(true);
+					$_view_details = $this->AccessControl->newCheck('Staff', 'view');
 					$this->set('_view_details', $_view_details);
 					$this->set('data', $data);
 					$this->set('positions', $positions);
+					$this->set('statusOptions', $statusOptions);
 				} else {
 					$this->redirect(array('action' => 'staff'));
 				}
@@ -1709,7 +2026,7 @@ class InstitutionSitesController extends AppController {
 				foreach($data as $i => $row) {
 					if(!array_key_exists('id', $row)) {
 						if($row['position_no'] === __('Position No')) {
-							$row['position_no'] = null;
+							$data[$i]['position_no'] = null;
 						} else {
 							$obj = $this->InstitutionSiteTeacher->isPositionNumberExists($row['position_no'], $row['start_date']);
 							if(!$obj) {
@@ -1740,9 +2057,17 @@ class InstitutionSitesController extends AppController {
 		
 		$index = $this->params->query['index'] + 1;
 		$categoryOptions = $this->StaffCategory->findList(true);
+                $positionTitleOptions = $this->StaffPositionTitle->findList(true);
+                $positionGradeOptions = $this->StaffPositionGrade->findList(true);
+                $positionStepOptions = $this->StaffPositionStep->findList(true);
+		$statusOptions = $this->StaffStatus->findList(true);
 		
 		$this->set('index', $index);
 		$this->set('categoryOptions', $categoryOptions);
+                $this->set('positionTitleOptions', $positionTitleOptions);
+                $this->set('positionGradeOptions', $positionGradeOptions);
+                $this->set('positionStepOptions', $positionStepOptions);
+		$this->set('statusOptions', $statusOptions);
 	}
 	
 	//TEACHER CUSTOM FIELD PER YEAR - STARTS - 
@@ -1759,7 +2084,7 @@ class InstitutionSitesController extends AppController {
 						'Year'=>'SchoolYear');
 		//BreadCrumb -- jeff logic
 		$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $id)));
-		$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+		$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 		$positions = $this->InstitutionSiteTeacher->getPositions($id, $this->institutionSiteId);
 		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $data['Teacher']['id']));
 		
@@ -1876,7 +2201,7 @@ class InstitutionSitesController extends AppController {
 		
 		$staffId = $this->params['pass'][0];
 		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-		$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+		$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 		$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $data['Staff']['id']));
 		return compact('action','siteid','id','years','selectedYear','condParam','arrMap');
 	}
@@ -1920,8 +2245,9 @@ class InstitutionSitesController extends AppController {
     public function studentsBehaviour(){
         extract($this->studentsCustFieldYrInits());
         $this->Navigation->addCrumb('List of Behaviour');
-
-        $data = $this->StudentBehaviour->getBehaviourData($id);
+        
+        $data = $this->StudentBehaviour->getBehaviourData($id, $this->institutionSiteId);
+        
 		if(empty($data)) {
 			$this->Utility->alert($this->Utility->getMessage('STUDENT_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
 		}
@@ -1943,6 +2269,9 @@ class InstitutionSitesController extends AppController {
 			
 			$categoryOptions = array();
 			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
 			$this->set('id',$studentId);
            	$this->set('categoryOptions', $categoryOptions);
 		    $this->set('yearOptions', $yearOptions);
@@ -1978,9 +2307,13 @@ class InstitutionSitesController extends AppController {
 			$yearOptions = $this->SchoolYear->getYearList();
 			$categoryOptions = array();
 			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
-			
+
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+
+			$this->set('institution_site_id', $this->institutionSiteId);
 			$this->Session->write('StudentBehavourId', $studentBehaviourId);
 			$this->set('categoryOptions', $categoryOptions);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
 		    $this->set('yearOptions', $yearOptions);
 			$this->set('studentBehaviourObj', $studentBehaviourObj);
 		} else {
@@ -1995,6 +2328,11 @@ class InstitutionSitesController extends AppController {
 			
 			if(!empty($studentBehaviourObj)) {
 				$studentId = $studentBehaviourObj[0]['StudentBehaviour']['student_id'];
+
+				if($studentBehaviourObj[0]['StudentBehaviour']['institution_site_id']!=$this->institutionSiteId){
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+ 					$this->redirect(array('action' => 'studentsBehaviourView', $studentBehaviourId));
+				}
 				$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
 				$name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $studentId));
@@ -2002,7 +2340,8 @@ class InstitutionSitesController extends AppController {
 				
 				$categoryOptions = array();
 				$categoryOptions = $this->StudentBehaviourCategory->getCategory();
-				
+				$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+				$this->set('institutionSiteOptions', $institutionSiteOptions);
 				$this->set('categoryOptions', $categoryOptions);
 				$this->set('studentBehaviourObj', $studentBehaviourObj);
 			} else {
@@ -2030,6 +2369,11 @@ class InstitutionSitesController extends AppController {
 			$id = $this->Session->read('StudentBehavourId');
 			$studentId = $this->Session->read('InstitutionSiteStudentId');
 			$name = $this->StudentBehaviour->field('title', array('StudentBehaviour.id' => $id));
+			$institution_site_id = $this->StudentBehaviour->field('institution_site_id', array('StudentBehaviour.id' => $id));
+			if($institution_site_id!=$this->institutionSiteId){
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+				$this->redirect(array('action' => 'studentsBehaviourView', $id));
+			}
 			$this->StudentBehaviour->delete($id);
 			$this->Utility->alert($name . ' have been deleted successfully.');
 			$this->redirect(array('action' => 'studentsBehaviour', $studentId));
@@ -2081,7 +2425,7 @@ class InstitutionSitesController extends AppController {
                 $this->Navigation->addCrumb($className, array('controller' => 'InstitutionSites', 'action' => 'classesView', $classId));
                 $this->Navigation->addCrumb('Attendance');
                 $yearId = $classObj['InstitutionSiteClass']['school_year_id'];
-
+				
                 $grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
                 $students = $this->InstitutionSiteClassGradeStudent->getStudentsAttendance($classId,array_keys($grades),$yearId);
 
@@ -2121,7 +2465,7 @@ class InstitutionSitesController extends AppController {
 		if($this->Session->check('InstitutionSiteTeachersId')){
 			$teacherId = $this->Session->read('InstitutionSiteTeachersId');
 			$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-			$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+			$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
 			$this->Navigation->addCrumb('Attendance');
 			
@@ -2144,7 +2488,7 @@ class InstitutionSitesController extends AppController {
 			if($this->Session->check('InstitutionSiteTeachersId')){
 				$teacherId = $this->Session->read('InstitutionSiteTeachersId');
 				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-				$name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+				$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
 				$this->Navigation->addCrumb('Edit Attendance');
 				
@@ -2184,13 +2528,158 @@ class InstitutionSitesController extends AppController {
 		}
     }
 	// END TEACHER ATTENDANCE PART
+
+
+	// TEACHER BEHAVIOUR PART
+	 public function teachersBehaviour(){
+        extract($this->teachersCustFieldYrInits());
+        $this->Navigation->addCrumb('List of Behaviour');
+
+        $data = $this->TeacherBehaviour->getBehaviourData($id);
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('TEACHER_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
+		}
+		
+        $this->set('id', $id);
+        $this->set('data', $data);
+    }
+
+    public function teachersBehaviourAdd() {
+        if($this->request->is('get')) {
+            $teacherId = $this->params['pass'][0];
+            $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+            $name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
+            $this->Navigation->addCrumb('Add Behaviour');
+            
+            $yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			
+			$categoryOptions = array();
+			$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
+			$this->set('id',$teacherId);
+           	$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+        } else {
+            $teacherBehaviourData = $this->data['InstitutionSiteTeacherBehaviour'];
+			$teacherBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->TeacherBehaviour->create();
+			if(!$this->TeacherBehaviour->save($teacherBehaviourData)){
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+			
+            $this->redirect(array('action' => 'teachersBehaviour', $teacherBehaviourData['teacher_id']));
+        }
+    }
+
+    public function teachersBehaviourView() {
+		$teacherBehaviourId = $this->params['pass'][0];
+		$teacherBehaviourObj = $this->TeacherBehaviour->find('all',array('conditions'=>array('TeacherBehaviour.id' => $teacherBehaviourId)));
+		
+		if(!empty($teacherBehaviourObj)) {
+			$teacherId = $teacherBehaviourObj[0]['TeacherBehaviour']['teacher_id'];
+            $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+            $name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
+			$this->Navigation->addCrumb('Behaviour Details');
+			
+			$yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			$categoryOptions = array();
+			$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
+			
+			$this->Session->write('TeacherBehaviourId', $teacherBehaviourId);
+			$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+			$this->set('teacherBehaviourObj', $teacherBehaviourObj);
+		} else {
+			//$this->redirect(array('action' => 'classesList'));
+		}
+    }
+	
+	public function teachersBehaviourEdit() {
+		if($this->request->is('get')) {
+			$teacherBehaviourId = $this->params['pass'][0];
+			$teacherBehaviourObj = $this->TeacherBehaviour->find('all',array('conditions'=>array('TeacherBehaviour.id' => $teacherBehaviourId)));
+			
+			if(!empty($teacherBehaviourObj)) {
+				$teacherId = $teacherBehaviourObj[0]['TeacherBehaviour']['teacher_id'];
+				if($teacherBehaviourObj[0]['TeacherBehaviour']['institution_site_id']!=$this->institutionSiteId){
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+ 					$this->redirect(array('action' => 'teachersBehaviourView', $teacherBehaviourId));
+				}
+				$data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+				$name = sprintf('%s %s %s', $data['Teacher']['first_name'], $data['Teacher']['middle_name'], $data['Teacher']['last_name']);
+				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
+				$this->Navigation->addCrumb('Edit Behaviour Details');
+				
+				$categoryOptions = array();
+				$categoryOptions = $this->TeacherBehaviourCategory->getCategory();
+				$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+				$this->set('institutionSiteOptions', $institutionSiteOptions);
+				
+				$this->set('categoryOptions', $categoryOptions);
+				$this->set('teacherBehaviourObj', $teacherBehaviourObj);
+			} else {
+				//$this->redirect(array('action' => 'studentsBehaviour'));
+			}
+		 } else {
+			$teacherBehaviourData = $this->data['InstitutionSiteTeacherBehaviour'];
+			$teacherBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->TeacherBehaviour->create();
+			if(!$this->TeacherBehaviour->save($teacherBehaviourData)){
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+            
+            $this->redirect(array('action' => 'teachersBehaviourView', $teacherBehaviourData['id']));
+		 }
+	}
+	
+	public function teachersBehaviourDelete() {
+		if($this->Session->check('InstitutionSiteTeachersId') && $this->Session->check('TeacherBehaviourId')) {
+			$id = $this->Session->read('TeacherBehaviourId');
+			$teacherId = $this->Session->read('InstitutionSiteTeachersId');
+			$name = $this->TeacherBehaviour->field('title', array('TeacherBehaviour.id' => $id));
+			$institution_site_id = $this->TeacherBehaviour->field('institution_site_id', array('TeacherBehaviour.id' => $id));
+			if($institution_site_id!=$this->institutionSiteId){
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+				$this->redirect(array('action' => 'teachersBehaviourView', $id));
+			}
+			$this->TeacherBehaviour->delete($id);
+			$this->Utility->alert($name . ' have been deleted successfully.');
+			$this->redirect(array('action' => 'teachersBehaviour', $teacherId));
+		}
+	}
+	
+	public function teachersBehaviourCheckName() {
+		$this->autoRender = false;
+		$title = trim($this->params->query['title']);
+		
+		if(strlen($title) == 0) {
+			return $this->Utility->getMessage('SITE_TEACHER_BEHAVIOUR_EMPTY_TITLE');
+		} 
+		
+		return 'true';
+	}
+    // END TEACHER BEHAVIOUR PART
+
 	
 	// STAFF ATTENDANCE PART
     public function staffAttendance(){
 		if($this->Session->check('InstitutionSiteStaffId')){
 			$staffId = $this->Session->read('InstitutionSiteStaffId');
 			$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-			$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+			$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 			$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
 			$this->Navigation->addCrumb('Attendance');
 			
@@ -2214,7 +2703,7 @@ class InstitutionSitesController extends AppController {
 			if($this->Session->check('InstitutionSiteStaffId')){
 				$staffId = $this->Session->read('InstitutionSiteStaffId');
 				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-				$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+				$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
 				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
 				$this->Navigation->addCrumb('Edit Attendance');
 				
@@ -2255,6 +2744,148 @@ class InstitutionSitesController extends AppController {
 		}
     }
 	// END STAFF ATTENDANCE PART
+
+	// STAFF BEHAVIOUR PART
+	public function staffBehaviour(){
+        extract($this->staffCustFieldYrInits());
+        $this->Navigation->addCrumb('List of Behaviour');
+
+        $data = $this->StaffBehaviour->getBehaviourData($id);
+		if(empty($data)) {
+			$this->Utility->alert($this->Utility->getMessage('TEACHER_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
+		}
+		
+        $this->set('id', $id);
+        $this->set('data', $data);
+    }
+
+    public function staffBehaviourAdd() {
+        if($this->request->is('get')) {
+            $staffId = $this->params['pass'][0];
+            $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+            $name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+            $this->Navigation->addCrumb('Add Behaviour');
+            
+            $yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			
+			$categoryOptions = array();
+			$categoryOptions = $this->StaffBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
+			$this->set('id',$staffId);
+           	$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+        } else {
+            $staffBehaviourData = $this->data['InstitutionSiteStaffBehaviour'];
+			$staffBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->StaffBehaviour->create();
+			if(!$this->StaffBehaviour->save($staffBehaviourData)){
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+			
+            $this->redirect(array('action' => 'staffBehaviour', $staffBehaviourData['staff_id']));
+        }
+    }
+
+    public function staffBehaviourView() {
+		$staffBehaviourId = $this->params['pass'][0];
+		$staffBehaviourObj = $this->StaffBehaviour->find('all',array('conditions'=>array('StaffBehaviour.id' => $staffBehaviourId)));
+		
+		if(!empty($staffBehaviourObj)) {
+			$staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
+            $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+            $name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
+           	$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+			$this->Navigation->addCrumb('Behaviour Details');
+		
+			$yearOptions = array();
+			$yearOptions = $this->SchoolYear->getYearList();
+			$categoryOptions = array();
+			$categoryOptions = $this->StaffBehaviourCategory->getCategory();
+			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			$this->set('institution_site_id', $this->institutionSiteId);
+			$this->set('institutionSiteOptions', $institutionSiteOptions);
+			$this->Session->write('StaffBehaviourId', $staffBehaviourId);
+			$this->set('categoryOptions', $categoryOptions);
+		    $this->set('yearOptions', $yearOptions);
+			$this->set('staffBehaviourObj', $staffBehaviourObj);
+		} else {
+			//$this->redirect(array('action' => 'classesList'));
+		}
+    }
+	
+	public function staffBehaviourEdit() {
+		if($this->request->is('get')) {
+			$staffBehaviourId = $this->params['pass'][0];
+			$staffBehaviourObj = $this->StaffBehaviour->find('all',array('conditions'=>array('StaffBehaviour.id' => $staffBehaviourId)));
+			
+			if(!empty($staffBehaviourObj)) {
+				$staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
+				if($staffBehaviourObj[0]['StaffBehaviour']['institution_site_id']!=$this->institutionSiteId){
+					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+ 					$this->redirect(array('action' => 'staffBehaviourView', $staffBehaviourId));
+				}
+				$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+				$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
+				$this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+				$this->Navigation->addCrumb('Edit Behaviour Details');
+				
+				$categoryOptions = array();
+				$categoryOptions = $this->StaffBehaviourCategory->getCategory();
+				$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive'=>-1));
+			 	$this->set('institution_site_id', $this->institutionSiteId);
+			 	$this->set('institutionSiteOptions', $institutionSiteOptions);
+				$this->set('categoryOptions', $categoryOptions);
+				$this->set('staffBehaviourObj', $staffBehaviourObj);
+			} else {
+				//$this->redirect(array('action' => 'studentsBehaviour'));
+			}
+		 } else {
+			$staffBehaviourData = $this->data['InstitutionSiteStaffBehaviour'];
+			$staffBehaviourData['institution_site_id'] = $this->institutionSiteId;
+			
+            $this->StaffBehaviour->create();
+			if(!$this->StaffBehaviour->save($staffBehaviourData)){
+			} else {
+				$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+			}
+            
+            $this->redirect(array('action' => 'staffBehaviourView', $staffBehaviourData['id']));
+		 }
+	}
+	
+	public function staffBehaviourDelete() {
+		if($this->Session->check('InstitutionSiteStaffId') && $this->Session->check('StaffBehaviourId')) {
+			$id = $this->Session->read('StaffBehaviourId');
+			$staffId = $this->Session->read('InstitutionSiteStaffId');
+			$name = $this->StaffBehaviour->field('title', array('StaffBehaviour.id' => $id));
+			$institution_site_id = $this->StaffBehaviour->field('institution_site_id', array('StaffBehaviour.id' => $id));
+			if($institution_site_id!=$this->institutionSiteId){
+				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
+				$this->redirect(array('action' => 'staffsBehaviourView', $id));
+			}
+			$this->StaffBehaviour->delete($id);
+			$this->Utility->alert($name . ' have been deleted successfully.');
+			$this->redirect(array('action' => 'staffBehaviour', $staffId));
+		}
+	}
+	
+	public function staffBehaviourCheckName() {
+		$this->autoRender = false;
+		$title = trim($this->params->query['title']);
+		
+		if(strlen($title) == 0) {
+			return $this->Utility->getMessage('SITE_STUDENT_BEHAVIOUR_EMPTY_TITLE');
+		} 
+		
+		return 'true';
+	}
+    // END STAFF BEHAVIOUR PART
 	
 	private function getAvailableYearId($yearList) {
 		$yearId = 0;
@@ -2268,5 +2899,225 @@ class InstitutionSitesController extends AppController {
 		}
 		return $yearId;
 	}
-    
+        
+	public function getSiteProfile(){
+		
+	}
+	
+	
+	public function siteProfile($id){
+		
+		$levels = $this->AreaLevel->find('list',array('recursive'=>0));
+		$adminarealevels = $this->AreaEducationLevel->find('list',array('recursive'=>0));
+		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $id)));
+
+		$areaLevel = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_id']);
+		$areaLevel = array_reverse($areaLevel);
+
+		$adminarea = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_education_id'],array('AreaEducation','AreaEducationLevel'));
+		$adminarea = array_reverse($adminarea);
+		
+		$this->set('data', $data);
+		$this->set('levels',$levels);
+		$this->set('adminarealevel',$adminarealevels);
+
+		$this->set('arealevel',$areaLevel);
+		$this->set('adminarea',$adminarea);
+	}
+	
+	private $reportMapping = array(
+		'Overview' => array(
+			'Model' => 'InstitutionSite',
+			'fields' => array(
+				'Institution'=>array('name'),
+				'InstitutionSite'=>array('name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','date_closed','longitude','latitude'),
+				'InstitutionSiteStatus'=>array('name'),
+				'InstitutionSiteType'=>array('name'),
+				'InstitutionSiteOwnership'=>array('name'),
+				'Area'=>array('name')
+			)
+		),
+		'Bank Accounts' => array(
+			'Model' => 'InstitutionSiteBankAccount',
+			'fields' => array(
+				'BankBranch'=>array('name'),
+				'InstitutionSiteBankAccount'=>array('account_name','account_number','active')
+			)
+		),
+		'More' => array(
+			'Model' => 'InstitutionSiteCustomValue',
+			'fields' => array(
+				'InstitutionSiteCustomField'=>array('name'),
+				'InstitutionSiteCustomValue'=>array('custom_value')
+			)
+		),
+		'Classes - Students' => array(
+			'Model' => 'InstitutionSiteClass',
+			'fields' => array(
+				'SchoolYear' => array('name'),
+				'InstitutionSiteClass' => array('name'),
+				'EducationGrade' => array('name'),
+				'Student' => array('identification_no', 'first_name', 'last_name'),
+				'StudentCategory' => array('name')
+			)
+		)
+	);
+	
+	private $ReportData = array(); //param 1 name ; param2 type
+	public function genReport($name,$type){ //$this->genReport('Site Details','CSV');
+		$this->autoRender = false;
+		$this->ReportData['name'] = $name;
+		$this->ReportData['type'] = $type;
+		
+		if(method_exists($this, 'gen'.$type)){ 
+			if($type == 'CSV'){
+				$data =  $this->getReportData($this->ReportData['name']);
+				$this->genCSV($data);
+			}elseif($type == 'PDF'){
+				$data =  $this->genReportPDF($this->ReportData['name']);
+				$data['name'] = $this->ReportData['name'];
+				$this->genPDF($data);
+			}
+		}
+	}
+	
+	private function getHeaderData($name,$humanize = false){
+		if(array_key_exists($name, $this->reportMapping)){
+			$header = $this->reportMapping[$name]['fields'];
+		}
+		$new = array();
+		foreach($header as $model => &$arrcols){
+			foreach($arrcols as $col){
+				$new[] = ($humanize == false)?$model.".".$col:  Inflector::humanize(Inflector::underscore($model)). ' '. Inflector::humanize($col);
+			}
+		}
+		return $new;
+	}
+	
+	private function getReportData($name){
+		if(array_key_exists($name, $this->reportMapping)){
+			$whereKey = ($this->reportMapping[$name]['Model'] == 'InstitutionSite')? 'id' : 'institution_site_id';
+			$cond =  array( $this->reportMapping[$name]['Model'].".".$whereKey => $this->institutionSiteId);
+			$options = array('fields' => $this->getHeaderData($name), 'conditions'=>$cond);
+					
+			if($this->reportMapping[$name]['Model'] == 'InstitutionSiteCustomValue'){
+				$options['joins'] = array(
+					array('table' => 'institution_site_custom_field_options',
+						'alias' => 'InstitutionSiteCustomFieldOption',
+						'type' => 'LEFT',
+						'conditions' => array(
+							'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
+						)
+					)
+				);
+				$this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
+					'custom_value' => 'IF(InstitutionSiteCustomField.type = 3, InstitutionSiteCustomFieldOption.value, InstitutionSiteCustomValue.value)'
+				);
+			} else if($this->reportMapping[$name]['Model'] == 'InstitutionSiteClass') {
+				$options['recursive'] = -1;
+				$options['joins'] = array(
+					array(
+						'table' => 'institution_site_class_grades',
+						'alias' => 'InstitutionSiteClassGrade',
+						'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+					),
+					array(
+						'table' => 'institution_site_class_grade_students',
+						'alias' => 'InstitutionSiteClassGradeStudent',
+						'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+					),
+					array(
+						'table' => 'education_grades',
+						'alias' => 'EducationGrade',
+						'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+					),
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+					),
+					array(
+						'table' => 'student_categories',
+						'alias' => 'StudentCategory',
+						'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+					),
+					array(
+						'table' => 'school_years',
+						'alias' => 'SchoolYear',
+						'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+					)
+				);
+				$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
+			}
+			$data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
+		}
+		return $data;   
+	}
+		
+	public function genCSV($arrData){
+		$this->autoRender =false;
+		ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
+		//create a file
+		$filename = "export_".date("Y.m.d").".csv";
+		$csv_file = fopen('php://output', 'w');
+		header('Content-type: application/csv');
+		header('Content-Disposition: attachment; filename="'.$filename.'"');
+		$header_row = $this->getHeaderData($this->ReportData['name']);
+		fputcsv($csv_file,$header_row,',','"');
+		
+		 
+		// Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
+		foreach($arrData as $arrSingleResult){
+			$row = array();
+				foreach($arrSingleResult as $table => $arrFields){
+					
+					foreach($arrFields as $col){
+						$row[] = $col;
+					}
+				}
+				
+				fputcsv($csv_file,$row,',','"');
+		}
+		fclose($csv_file);
+	}
+	
+	public function genReportPDF($name){
+		if($name == 'Overview'){
+			$profileurl = Router::url(array('controller'=>'InstitutionSites','action'=>'siteProfile',$this->institutionSiteId),true);
+			$html = file_get_contents($profileurl);
+			$html = str_replace('common.css','',$html);
+			$stylesheet = file_get_contents(WWW_ROOT.'css/mpdf.css');
+			$data = compact('html','stylesheet');
+		}
+		return $data;
+	}
+	
+	public function genPDF($arrData){
+		// initializing mPDF
+		$this->Mpdf->init();
+		$this->Mpdf->showImageErrors = false; //for debugging
+		$this->Mpdf->WriteHTML($arrData['stylesheet'],1);
+		$this->Mpdf->WriteHTML($arrData['html']);
+		$this->Mpdf->Output($arrData['name'].'.pdf','I');
+	}
+
+	public function reportsGeneral() {
+		$this->Navigation->addCrumb('Reports - General');
+		$data= array('Reports - General' => array(
+			array('name' => 'Overview', 'types' => array('CSV')),
+			array('name' => 'Bank Accounts', 'types' => array('CSV'))/*,
+			array('name' => 'More', 'types' => array('CSV'))*/
+		));
+		$this->set('data', $data);
+		$this->render('Reports/general');
+	}
+	
+	public function reportsDetails() {
+		$this->Navigation->addCrumb('Reports - Details');
+		$data = array('Reports - Details' => array(
+			array('name' => 'Classes - Students', 'types' => array('CSV'))
+		));
+		$this->set('data', $data);
+		$this->render('Reports/general');
+	}
 }

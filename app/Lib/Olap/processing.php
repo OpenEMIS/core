@@ -14,7 +14,7 @@ use Monolog\Formatter\LineFormatter;
 # Register function for when script is shutdown.
 register_shutdown_function('shutdown');
 
-date_default_timezone_set('Asia/Singapore');
+date_default_timezone_set('Asia/Singapore'); 
 # ini_set('memory_limit','32M');
 
 # TYPE
@@ -65,27 +65,27 @@ try{
 	);
 
 	$options = getopt($shortopts);
-	 if(isset($options['i']))
+
+    if(isset($options['i']))
 	 	$batchProcessId = $options['i'];
-	 else{
+	else{
          errorProcess('Batch Process Id require.');
-	 }
+	}
 
     $log = new Logger('olap');
     $logFilename = WEBROOT_PATH."logs/olap/{$batchProcessId}.log";
     $logStream = new StreamHandler(WEBROOT_PATH."logs/olap/{$batchProcessId}.log", Logger::INFO);
     $logStream->setFormatter($formatter);
     $log->pushHandler($logStream);
-//    var_dump($logStream);
 
-    $log->addInfo("========== OLAP Processing : START ==========");
-    echoLog("========== Processing : START ==========");
-	
-	 if(isset($options['p']))
+
+    //$log->addInfo("========== OLAP Processing : START ==========");
+
+    if(isset($options['p']))
 	 	$processes = explode(',', $options['p']);
-	 else{
+	else{
         errorProcess('Process Names require.',$logFilename);
-	 }
+	}
 
 	# check XMLDATASOURCE files exist.
 	if(file_exists(XMLDATASOURCE)){
@@ -103,18 +103,18 @@ try{
 
 	# Connection DataSource for source and destination.
 	$sourceDS = createDataConnection($datasources, SOURCE);
-	$destinationDS = createDataConnection($datasources, DESTINATION);
+    $destinationDS = createDataConnection($datasources, DESTINATION);
 
 	# Enable excaption modes
 	$sourceDS->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
 	$destinationDS->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+
 
     if(isAbort($sourceDS, $batchProcessId)){
         abortProcess();
     }else{
         startProcess($sourceDS, $batchProcessId);
     }
-
 
 	if(sizeof($processes)>0){
 		foreach ($processes as $value) {
@@ -334,7 +334,7 @@ function getQueryStatement(SimpleXMLElement $sql){
 }
 
 /**
- * Create database connection base on the datasource given
+ * Create database connection base on the datasource given gb
  *
  * @param  SimpleXMLElement $datasources Provide a list of datasources avaliable to connection.
  * @param  String           $type        The type of connection.

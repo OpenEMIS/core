@@ -38,9 +38,8 @@ class DataProcessingController extends DataProcessingAppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->bodyTitle = 'Settings';
-		$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
-		$this->Navigation->addCrumb('Data Processing', array('controller' => $this->controller, 'action' => 'reports'));
+		$this->bodyTitle = 'Administration';
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 	}
 	
 	public function index() {
@@ -205,12 +204,15 @@ class DataProcessingController extends DataProcessingAppController {
             $description = Sanitize::escape($this->request->data['description']);
             $file = $this->request->data['doc_file'];
             if($this->validateFileFormat($file)){
-                $this->set('status', $this->buildSave($name, $description, $file, $type, $datasource));
+                $status = $this->buildSave($name, $description, $file, $type, $datasource);
             }else{
-                $this->set('status', array('msg' => __('Only XML file are allow.'), 'type' => 0));
+                $status = array('msg' => __('Only XML file are allow.'), 'type' => 0);
             }
-            $this->redirect(array('controller' => $this->name, 'action' => 'Build'));
+            $this->set('status', $status);
 
+            if(isset($status['type']) && $status['type'] > 0){
+                $this->redirect(array('controller' => $this->name, 'action' => 'Build'));
+            }  
         }
         $this->set('setting', array('maxFilesize' => Configure::read('xml.indicators.custom.size')));
         $this->set('controllerName', $this->name);
@@ -556,10 +558,13 @@ class DataProcessingController extends DataProcessingAppController {
         if($this->request->is('post')) {
             $userId = $this->Auth->user('id');
             $format = $this->data['DataProcessing']['export_format'];
-            $indicatorIds = implode(',',$this->data['BatchIndicator']);
+
+            if(isset($this->data['BatchIndicator'])){
+                $indicatorIds = implode(',',$this->data['BatchIndicator']);
+            }
+
             switch($format){
                 case 'Datawarehouse':
-
                     if($this->NumberOfOlapProcesses() > 0){
                         $this->Session->write('DataProcessing.olap.error', 'Unable to Export. Process exist.');
                         $this->redirect(array('action'=>'exports', $format));
@@ -694,45 +699,32 @@ class DataProcessingController extends DataProcessingAppController {
 
         //APP."Console/cake.php -app ".APP." batch run";die;
         if(stristr('Datawarehouse', $params[1])){
-//            $cmd = sprintf("%swebroot/olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
             $cmd = sprintf("%sLib/Olap/processing.php -i%s -p%s", APP, $params[0], $params[2]);
         }else{
             $cmd = sprintf("%sConsole/cake.php -app %s %s", APP, APP, implode(' ', $params));
         }
-//       exit($cmd);
-
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            //$WshShell = new COM("WScript.Shell");
-            //$oExec = $WshShell->Run("C:\wamp\bin\php\phpVERSIONNUMBER\php-win.exe -f C:/wamp/www/path/to/backgroundProcess.php", 0, false);
             $handle = pclose(popen("start /B ". $cmd, "r"));
             if ($handle === FALSE) {
                 die("Unable to execute $cmd");
             }
             pclose($handle);
         } else {
-            //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
-            //echo $r = shell_exec($cmd." > /dev/null &");
-            //echo $PID = shell_exec("nohup $cmd > /dev/null & echo $!");
             if(stristr('Datawarehouse',$params[1] )){
-                $nohup = 'nohup php %s > %stmp/logs/processes.log &';
+                //$nohup = 'nohup php %s < /dev/null & echo $! &';
+                $nohup = 'nohup php %s > %stmp/logs/processes.log & echo $!';
             }else{
-                $nohup = 'nohup %s > %stmp/logs/processes.log &';
+                $nohup = 'nohup %s > %stmp/logs/processes.log & echo $!';
             }
             $shellCmd = sprintf($nohup, $cmd, APP);
-//			$shellCmd = sprintf($nohup, $cmd, APP);
+            //$shellCmd = sprintf($nohup, $cmd, APP);
             $this->log($shellCmd, 'debug');
-            //echo $shellCmd;die();
-			echo $PID = shell_exec($shellCmd);
-            //$PID = exec($shellCmd);
-			//$PID = exec('/Library/WebServer/Documents/openemis/app/Console/cake.php -app batch run eng');
-            //echo $PID; 
-			//die("<===");
+
+            $PID = shell_exec($shellCmd);
+            //$command = 'ls';
+            //exec($shellCmd, $output);
+            print_r($PID);
         }
-        //*NUX
-        //exec("/var/www/html/dev.openemis.org/demo/app/Console/cake.php -app /var/www/html/dev.openemis.org/demo/app/ batch run > /dev/null &");
-        //WINDOWS
-        //$WshShell = new COM("WScript.Shell");
-        //$oExec = $WshShell->Run("C:\wamp\bin\php\phpVERSIONNUMBER\php-win.exe -f C:/wamp/www/path/to/backgroundProcess.php", 0, false);
     }
 	
 	function is_running($PID){

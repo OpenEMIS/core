@@ -32,6 +32,7 @@ App::uses('Model', 'Model');
  */
 class AppModel extends Model {
 	public $formatResult = false;
+	public $render = true; // ControllerActionBehaviour variable
 
 	public function describe() {
 		$columns = $this->query('DESCRIBE ' . $this->useTable);
@@ -62,7 +63,7 @@ class AppModel extends Model {
 	}
 	
 	public function findList($options=array()) {
-		$class = get_class($this);
+		$class = $this->alias;
 		
 		if(is_bool($options) && $options) {
 			$options = array();
@@ -98,7 +99,7 @@ class AppModel extends Model {
 		return date('Y-m-d H:i:s');
 	}
 	
-	public function beforeSave() {
+	public function beforeSave($options = array()) {
 		$userId = session_id() !== '' ? CakeSession::read('Auth.User.id') : NULL;
 		
 		if(empty($this->data[$this->alias][$this->primaryKey])) {

@@ -17,11 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteTeacher extends AppModel {
+	public $belongsTo = array('TeacherStatus', 'TeacherCategory', 'TeacherPositionTitle', 'TeacherPositionGrade', 'TeacherPositionStep');
+	
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;
 		$data = $this->find('first', array(
 			'fields' => array(
-				'Teacher.first_name AS first_name', 'Teacher.last_name AS last_name',
+				'Teacher.first_name AS first_name', 'Teacher.middle_name AS middle_name', 'Teacher.last_name AS last_name',
 				'Institution.name AS institution_name', 'InstitutionSite.name AS institution_site_name'
 			),
 			'recursive' => -1,
@@ -72,19 +74,13 @@ class InstitutionSiteTeacher extends AppModel {
 	
 	public function getPositions($teacherId, $institutionSiteId=0) {
 		$fields = array(
-			'InstitutionSiteTeacher.id', 'InstitutionSiteTeacher.position_no', 'InstitutionSiteTeacher.no_of_hours',
-			'InstitutionSiteTeacher.start_date', 'InstitutionSiteTeacher.end_date',
-			'InstitutionSiteTeacher.salary', 'TeacherCategory.name'
+			'InstitutionSiteTeacher.id', 'InstitutionSiteTeacher.position_no', 'InstitutionSiteTeacher.FTE',
+			'InstitutionSiteTeacher.start_date', 'InstitutionSiteTeacher.end_date', 'InstitutionSiteTeacher.teacher_status_id',
+			'TeacherCategory.name', 'TeacherStatus.name', 
+                        'TeacherPositionTitle.name', 'TeacherPositionGrade.name', 'TeacherPositionStep.name'
 		);
 		
-		$joins = array(
-			array(
-				'table' => 'teacher_categories',
-				'alias' => 'TeacherCategory',
-				'conditions' => array('TeacherCategory.id = InstitutionSiteTeacher.teacher_category_id')
-			)
-		);
-		
+		$joins = array();
 		$conditions = array('InstitutionSiteTeacher.teacher_id' => $teacherId);
 		
 		if($institutionSiteId==0) {
@@ -174,7 +170,7 @@ class InstitutionSiteTeacher extends AppModel {
 
 		$data = $this->find('all', array(
 			'fields' => array(
-				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 
+				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 'Teacher.middle_name', 
 				'Teacher.last_name', 'Teacher.gender'
 			),
 			'joins' => array(
@@ -205,11 +201,6 @@ class InstitutionSiteTeacher extends AppModel {
 				'table' => 'teachers',
 				'alias' => 'Teacher',
 				'conditions' => array('Teacher.id = InstitutionSiteTeacher.teacher_id')
-			),
-			array(
-				'table' => 'teacher_categories',
-				'alias' => 'TeacherCategory',
-				'conditions' => array('TeacherCategory.id = InstitutionSiteTeacher.teacher_category_id')
 			)
 		);
 		return $joins;
@@ -235,7 +226,7 @@ class InstitutionSiteTeacher extends AppModel {
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		$data = $this->find('all', array(
-			'fields' => array('Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 'TeacherCategory.name'),
+			'fields' => array('Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 'Teacher.middle_name', 'Teacher.last_name', 'Teacher.preferred_name', 'TeacherCategory.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $this->paginateConditions($conditions),
 			'limit' => $limit,

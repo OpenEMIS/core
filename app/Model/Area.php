@@ -75,6 +75,23 @@ class Area extends AppModel {
 		}
 		return $data;
 	}
+	
+	// Used by Yearbook
+	public function getAreasByLevel($level) {
+		$AreaLevel = ClassRegistry::init('AreaLevel');
+		$levels = $AreaLevel->find('all', array('order' => array('AreaLevel.level')));
+		$areas = array();
+		if(count($levels) >= $level) {
+			$levelId = $levels[$level-1]['AreaLevel']['id'];
+			$this->formatResult = true;
+			$areas = $this->find('all', array(
+				'recursive' => -1,
+				'conditions' => array('Area.area_level_id' => $levelId),
+				'order' => array('Area.order')
+			));
+		}
+		return $areas;
+	}
 
 	public function fetchSubLevelList($parentId) {
 
@@ -114,6 +131,11 @@ class Area extends AppModel {
 		$data = $this->findById($id);	
 		return $data['Area']['name'];
 	}
+
+    public function getAreaLevelId($id) {
+        $data = $this->findById($id);
+        return $data['Area']['area_level_id'];
+    }
 	
 	// Used by SecurityController
 	public function getGroupAccessList($exclude) {

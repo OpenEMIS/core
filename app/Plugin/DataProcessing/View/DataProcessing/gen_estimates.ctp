@@ -1,6 +1,10 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
+$arrLabel = array(
+    'Totals from Individuals'=>'Generate Estimates from Individuals',
+    'Totals from previous years and same area'=>'Generate Estimates from Year and Area',
+    'Population'=>'Generate Estimates for Population'
+);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -60,7 +64,9 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	foreach($data as $Nav => $arrModules){
 	?>
 		<?php foreach($arrModules as $k => $arrv){ ?>
-			
+			<fieldset class="section_group">
+			<legend><?php echo __($arrLabel[$k]); ?></legend>
+                        
 			<div class="table full_width">
 				<div class="table_head">
 					<?php if($_execute) { ?>
@@ -104,6 +110,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 					<?php } ?>
 				</div>
 			</div>
+                        </fieldset>
 		<?php	
 		}
 	}

@@ -27,7 +27,8 @@ echo $this->Html->script('institution_site_teachers', false);
 						'label' => false,
 						'div' => false,
 						'class' => 'default',
-						'placeholder' => __('Identification No, First Name or Last Name')
+						'placeholder' => __('OpenEMIS ID, First Name or Last Name'),
+						'onkeypress' => 'return InstitutionSiteTeachers.search(this, event)'
 					));
 				?>
 				<span class="icon_clear" onClick="$('#SearchField').val('')">X</span>
@@ -38,8 +39,9 @@ echo $this->Html->script('institution_site_teachers', false);
 		<div class="table_scrollable">
 			<div class="table table_header">
 				<div class="table_head">
-					<div class="table_cell cell_id_no"><?php echo __('Identification No'); ?></div>
+					<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
 					<div class="table_cell"><?php echo __('First Name'); ?></div>
+                                        <div class="table_cell"><?php echo __('Middle Name'); ?></div>
 					<div class="table_cell"><?php echo __('Last Name'); ?></div>
 				</div>
 			</div>
@@ -58,33 +60,38 @@ echo $this->Html->script('institution_site_teachers', false);
 		'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'teachersSave')
 	));
-	$data = false;
-	if($this->Session->check('InstitutionSiteTeacherAdd.data')) {
-		$data = $this->Session->read('InstitutionSiteTeacherAdd.data');
-		unset($_SESSION['InstitutionSiteTeacherAdd']);
-	}
-	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'value' => ($data ? $data['teacher_id'] : 0), 'autocomplete' => 'off'));
+	echo $this->Form->hidden('teacher_id', array('id' => 'TeacherId', 'autocomplete' => 'off'));
 	?>
 	
 	<div class="info">
 		<div class="row">
-			<div class="label"><?php echo __('Identification No'); ?></div>
-			<div class="value"><?php echo $this->Form->input('identification_no', array('class' => 'default', 'id' => 'IdentificationNo', 'value' => ($data ? $data['identification_no'] : ''), 'disabled' => 'disabled')); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
+			<div class="value" id="IdentificationNo"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('first_name', array('class' => 'default', 'id' => 'FirstName', 'value' => ($data ? $data['first_name'] : ''), 'disabled' => 'disabled')); ?></div>
+			<div class="value" id="FirstName"></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value" id="MiddleName"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
-			<div class="value"><?php echo $this->Form->input('last_name', array('class' => 'default', 'id' => 'LastName', 'value' => ($data ? $data['last_name'] : ''), 'disabled' => 'disabled')); ?></div>
+			<div class="value" id="LastName"></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value" id="PreferredName"></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
-			<div class="value"><?php echo $this->Form->input('gender', array('class' => 'default', 'id' => 'Gender', 'value' => ($data ? $data['gender'] : ''), 'disabled' => 'disabled')); ?></div>
+			<div class="value" id="Gender"></div>
 		</div>
 		
 		<div class="row">
@@ -93,23 +100,38 @@ echo $this->Html->script('institution_site_teachers', false);
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('Position'); ?></div>
+			<div class="label"><?php echo __('Position Type'); ?></div>
 			<div class="value"><?php echo $this->Form->input('teacher_category_id', array('class' => 'default', 'options' => $categoryOptions)); ?></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Position Title'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_position_title_id', array('class' => 'default', 'options' => $positionTitleptions)); ?></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Position Grade'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_position_grade_id', array('class' => 'default', 'options' => $positionGradeOptions)); ?></div>
+		</div>
+            
+                <div class="row">
+			<div class="label"><?php echo __('Position Step'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_position_step_id', array('class' => 'default', 'options' => $positionStepOptions)); ?></div>
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('Salary'); ?></div>
-			<div class="value"><?php echo $this->Form->input('salary', array('class' => 'default', 'value' => 0)); ?></div>
+			<div class="label"><?php echo __('Status'); ?></div>
+			<div class="value"><?php echo $this->Form->input('teacher_status_id', array('class' => 'default', 'options' => $statusOptions)); ?></div>
 		</div>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
-			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'start_date'); ?></div>
+			<div class="value"><?php echo $this->Form->input('start_date', array('type' => 'date', 'dateFormat' => 'DMY', 'minYear' => $minYear, 'maxYear' => $maxYear, 'empty' => __('Select'))); ?></div>
 		</div>
 		
 		<div class="row">
-			<div class="label"><?php echo __('No of Hours'); ?></div>
-			<div class="value"><?php echo $this->Form->input('no_of_hours', array('class' => 'default', 'onkeypress' => 'return utility.integerCheck(event)', 'maxlength' => 3)); ?></div>
+			<div class="label"><?php echo __('FTE'); ?></div>
+			<div class="value"><?php echo $this->Form->input('FTE', array('class' => 'default', 'type' => 'text', 'onkeypress' => 'return utility.FTECheck(event)', 'maxlength' => 4)); ?></div>
 		</div>
 	</div>
 	

@@ -6,7 +6,6 @@ echo $this->Html->script('jquery.tools', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 echo $this->Html->script('custom_field', false);
-echo $this->Html->script('setup_variables', false);
 
 $actionLabel = Array(
     '1' => 'Section Break',
@@ -16,7 +15,6 @@ $actionLabel = Array(
     '5' => 'Multi Line Text',
 );
 ?>
-
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="custom" class="content_wrapper">
@@ -49,7 +47,7 @@ $actionLabel = Array(
 	if(count($siteTypes)>0) {
 		echo $this->Form->input('institution_site_type_id',	array(
 			'id' => 'siteTypeId',
-			'options' => $siteTypes,
+			'options' => array_merge(array('0'=>'All'),$siteTypes),
 			'default' => $sitetype,
 			'before' => '<div class="row">',
 			'after' => '</div>',

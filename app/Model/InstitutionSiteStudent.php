@@ -17,7 +17,33 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
-
+	public $belongsTo = array('StudentStatus');
+	
+	public function getDetails($studentId, $institutionSiteId) {
+		$data = $this->find('all', array(
+			'fields' => array('InstitutionSiteStudent.*', 'EducationProgramme.*', 'StudentStatus.*'),
+			'recursive' => 0,
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id'
+					)
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = InstitutionSiteProgramme.education_programme_id')
+				)
+			),
+			'conditions' => array('InstitutionSiteStudent.student_id' => $studentId),
+			'order' => array('InstitutionSiteStudent.start_date')
+		));
+		return $data;
+	}
+	
 	public function getGenderTotal($siteProgrammeId) {
 		$joins = array(
 			array('table' => 'students', 'alias' => 'Student')
@@ -54,7 +80,7 @@ class InstitutionSiteStudent extends AppModel {
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Student.id', 'Student.identification_no', 
-				'Student.first_name', 'Student.last_name'
+				'Student.first_name', 'Student.middle_name', 'Student.last_name'
 			),
 			'joins' => array(
 				array(
@@ -147,7 +173,7 @@ class InstitutionSiteStudent extends AppModel {
 				'InstitutionSiteStudent.id', 'SchoolYear.name AS year',
 				'InstitutionSiteStudent.start_date, InstitutionSiteStudent.end_date',
 				'Student.id AS student_id',	'Student.identification_no', 
-				'Student.first_name', 'Student.last_name'
+				'Student.first_name', 'Student.middle_name', 'Student.last_name'
 			),
 			'joins' => array(
 				array(
@@ -238,7 +264,9 @@ class InstitutionSiteStudent extends AppModel {
 			$conditions['OR'] = array(
 				'Student.identification_no LIKE' => $search,
 				'Student.first_name LIKE' => $search,
-				'Student.last_name LIKE' => $search
+                                'Student.middle_name LIKE' => $search,
+				'Student.last_name LIKE' => $search,
+                                'Student.preferred_name LIKE' => $search
 			);
 		}
 		unset($conditions['search']);
@@ -249,7 +277,7 @@ class InstitutionSiteStudent extends AppModel {
 		unset($conditions['order']);
 		$this->paginateConditions($conditions);
 		$data = $this->find('all', array(
-			'fields' => array('Student.id', 'Student.identification_no', 'Student.first_name', 'Student.last_name', 'EducationProgramme.name'),
+			'fields' => array('Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name', 'EducationProgramme.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $conditions,
 			'limit' => $limit,
@@ -268,5 +296,23 @@ class InstitutionSiteStudent extends AppModel {
 			'conditions' => $conditions
 		));
 		return $count;
+	}
+        
+        public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSiteStudent.id'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array(
+                                                            'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
+                                                            'InstitutionSiteProgramme.institution_site_id = ' . $InstitutionSiteId
+                                                        )
+				)
+			),
+                        'conditions' => array('InstitutionSiteStudent.student_id = ' . $studentId)
+		));
+		return $data;
 	}
 }

@@ -9,7 +9,7 @@ echo $this->Html->script('institution_site_staff', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="staffEdit" class="content_wrapper">
+<div id="staffEdit" class="content_wrapper edit">
 	<h1>
 		<span><?php echo __('Staff Information'); ?></span>
 		<?php 
@@ -28,7 +28,7 @@ echo $this->Html->script('institution_site_staff', false);
 		    echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
 		?>
 		<div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="value">
 				<?php
 				if($_view_details) {
@@ -43,9 +43,17 @@ echo $this->Html->script('institution_site_staff', false);
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $obj['first_name']; ?></div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php echo $obj['middle_name']; ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value"><?php echo $obj['last_name']; ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value"><?php echo $obj['preferred_name']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
@@ -66,13 +74,13 @@ echo $this->Html->script('institution_site_staff', false);
 	$fieldName = 'data[InstitutionSiteStaff][%s][%s]';
 	?>
 	<fieldset class="section_break" id="employment">
-		<legend><?php echo __('Employment'); ?></legend>
+		<legend><?php echo __('Location'); ?></legend>
 		<div class="table full_width" style="margin-top: 10px;">
 			<div class="table_head">
 				<div class="table_cell" style="width: 150px;"><?php echo __('Position'); ?></div>
-				<div class="table_cell" style="width: 280px;"><?php echo __('Period'); ?></div>
-				<div class="table_cell"><?php echo __('Hours'); ?></div>
-				<div class="table_cell"><?php echo __('Salary'); ?></div>
+				<div class="table_cell" style="width: 280px;"><?php echo __('Details'); ?></div>
+				<div class="table_cell"><?php echo __('FTE'); ?></div>
+				<div class="table_cell"><?php echo __('Status'); ?></div>
 				<div class="table_cell cell_icon_action"></div>
 			</div>
 			
@@ -83,8 +91,11 @@ echo $this->Html->script('institution_site_staff', false);
 					echo $this->Form->hidden($i.'.id', array('class' => 'key', 'value' => $pos['InstitutionSiteStaff']['id']));
 					?>
 					<div class="table_cell">
-						<div class="table_cell_row"><?php echo $pos['StaffCategory']['name']; ?></div>
-						<div class="table_cell_row"><?php echo $pos['InstitutionSiteStaff']['position_no']; ?></div>
+                                                <div class="table_cell_row">Number: <?php echo $pos['InstitutionSiteStaff']['position_no']; ?></div>
+						<div class="table_cell_row">Type: <?php echo $pos['StaffCategory']['name']; ?></div>
+                                                <div class="table_cell_row">Title: <?php echo $pos['StaffPositionTitle']['name']; ?></div>
+                                                <div class="table_cell_row">Grade: <?php echo $pos['StaffPositionGrade']['name']; ?></div>
+                                                <div class="table_cell_row">Step: <?php echo $pos['StaffPositionStep']['name']; ?></div>
 					</div>
 					<div class="table_cell">
 						<div class="table_cell_row">
@@ -113,32 +124,30 @@ echo $this->Html->script('institution_site_staff', false);
 						</div>
 					</div>
 					<div class="table_cell">
-						<div class="table_cell_row input_wrapper">
 						<?php
-						echo $this->Form->input($i . '.no_of_hours', array(
+						echo $this->Form->input($i . '.FTE', array(
 							'type' => 'text',
 							'label' => false,
 							'div' => false,
+							'class' => 'default',
+							'style' => 'width: 90%;',
 							'maxlength' => 3,
-							'name' => sprintf($fieldName, $i, 'no_of_hours'),
-							'value' => $pos['InstitutionSiteStaff']['no_of_hours'],
+							'name' => sprintf($fieldName, $i, 'FTE'),
+							'value' => $pos['InstitutionSiteStaff']['FTE'],
 							'onkeypress' => 'return utility.floatCheck(event)'
 						));
 						?>
-						</div>
 					</div>
 					<div class="table_cell">
-						<div class="table_cell_row input_wrapper">
 						<?php
-						echo $this->Form->input($i . '.salary', array(
+						echo $this->Form->input($i . '.staff_status_id', array(
 							'label' => false,
 							'div' => false,
-							'type' => 'text',
-							'name' => sprintf($fieldName, $i, 'salary'),
-							'value' => $pos['InstitutionSiteStaff']['salary']
+							'style' => 'width: 100%',
+							'options' => $statusOptions,
+							'value' => $pos['InstitutionSiteStaff']['staff_status_id']
 						));
 						?>
-						</div>
 					</div>
 					<div class="table_cell">
 						<div class="table_cell_row"><span class="icon_delete" onclick="InstitutionSiteStaff.deletePosition(this);"></span></div>

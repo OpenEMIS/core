@@ -113,6 +113,9 @@
 	margin-right:10px;
 	padding:0 10px 0 0;
 }
+.search .submit{
+	float:right;
+}
 
 /*table*/
 .left{
@@ -167,6 +170,10 @@ fieldset#general.section_break > .profile_image{
 	float:left;
 	margin-left:auto;
 	margin-right:20px;
+}
+fieldset#general.section_break > .row{
+    float: right;
+    margin-left:0;
 }
 .table_view .cell{
 	float:right;
@@ -248,6 +255,12 @@ fieldset#general.section_break > .profile_image{
 .error-message{
 	margin-left:0;
 	margin-right:10px;
+}
+.dialog-box .field_name{
+    float: right;
+}
+.dialog-box .field_value{
+    float: right;
 }
 
 /*loading*/

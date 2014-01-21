@@ -26,15 +26,12 @@ class FinanceController extends AppController {
 
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->bodyTitle = 'Settings';
+		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Finance', array('controller' => 'Finance', 'action' => 'index'));
 	}
 	
 	public function index() {
 		$this->Navigation->addCrumb('Total Public Expenditure');
-		
-		$result = $this->PublicExpenditure->getPublicExpenditureByYearAndArea(2012, 1);
-		// pr($result);
 
 		$areas = array();
         $levels = $this->AreaLevel->find('list');

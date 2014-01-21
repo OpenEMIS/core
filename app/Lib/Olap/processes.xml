@@ -271,6 +271,7 @@
                 <![CDATA[
                     CREATE TABLE `education_grades` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(50) NOT NULL,
                       `name` varchar(150) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
@@ -282,8 +283,7 @@
                       PRIMARY KEY (`id`),
                       KEY `education_programme_id` (`education_programme_id`)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-                        ]]>
+               ]]>
             </SQL>
         </create>
         <drop type="destination" table="education_grades">
@@ -304,11 +304,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `education_grades` (
-                        `id`, `name`, `order`, `visible`, `education_programme_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `code`, `name`, `order`, `visible`, `education_programme_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :education_programme_id, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :code, :name, :order, :visible, :education_programme_id, :modified_user_id, :modified, :created_user_id, :created
                     );
-                        ]]>
+                ]]>
             </SQL>
         </insert>
         <select type="source" table="education_grades">
@@ -540,6 +540,7 @@
                 <![CDATA[
                     CREATE TABLE `education_programmes` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `code` varchar(50) NOT NULL,
                       `name` varchar(150) NOT NULL,
                       `duration` int(3) NOT NULL COMMENT 'No of years',
                       `order` int(3) NOT NULL,
@@ -575,9 +576,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `education_programmes` (
-                        `id`, `name`, `duration`, `order`, `visible`, `education_field_of_study_id`, `education_cycle_id`, `education_certification_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `code`, `name`, `duration`, `order`, `visible`, `education_field_of_study_id`, `education_cycle_id`, `education_certification_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :duration, :order, :visible, :education_field_of_study_id, :education_cycle_id, :education_certification_id, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :code, :name, :duration, :order, :visible, :education_field_of_study_id, :education_cycle_id, :education_certification_id, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -706,6 +707,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -733,9 +736,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_providers` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -757,6 +760,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -785,9 +790,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_sectors` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -809,6 +814,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -836,9 +843,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_statuses` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -867,7 +874,9 @@
                       `email` varchar(100) DEFAULT NULL,
                       `website` varchar(100) DEFAULT NULL,
                       `date_opened` date NOT NULL,
+                      `year_opened` int(4) NOT NULL,
                       `date_closed` date DEFAULT NULL,
+                      `year_closed` int(4) DEFAULT NULL,
                       `area_id` int(11) NOT NULL,
                       `institution_sector_id` int(11) NOT NULL,
                       `institution_provider_id` int(11) NOT NULL DEFAULT '0',
@@ -900,12 +909,12 @@
                 <![CDATA[
                     INSERT INTO `institutions` (
                         `id`, `name`, `code`, `address`, `postal_code`, `contact_person`, `telephone`, `fax`, `email`,
-                        `website`, `date_opened`, `date_closed`, `area_id`, `institution_sector_id`,
+                        `website`, `date_opened`, `year_opened`, `date_closed`, `year_closed`, `area_id`, `institution_sector_id`,
                         `institution_provider_id`, `institution_status_id`, `modified_user_id`, `modified`,
                         `created_user_id`, `created`
                     ) VALUES (
                         :id, :name, :code, :address, :postal_code, :contact_person, :telephone, :fax, :email,
-                        :website, :date_opened, :date_closed, :area_id, :institution_sector_id,
+                        :website, :date_opened, :year_opened, :date_closed, :year_closed, :area_id, :institution_sector_id,
                         :institution_provider_id, :institution_status_id, :modified_user_id, :modified,
                         :created_user_id, :created
 
@@ -934,6 +943,7 @@
                       `active` int(1) NOT NULL DEFAULT '0' COMMENT '1 is active, 0 is inactive',
                       `institution_site_id` int(11) NOT NULL,
                       `bank_branch_id` int(11) NOT NULL,
+                      `remarks` text,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -961,10 +971,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_bank_accounts` (
-                        `id`, `account_name`, `account_number`, `active`, `institution_site_id`, `bank_branch_id`,
+                        `id`, `account_name`, `account_number`, `active`, `institution_site_id`, `bank_branch_id`, `remarks`,
                         `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :account_name, :account_number, :active, :institution_site_id, :bank_branch_id,
+                        :id, :account_name, :account_number, :active, :institution_site_id, :bank_branch_id, :remarks,
                         :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
@@ -985,6 +995,7 @@
                     CREATE TABLE `institution_site_class_grade_students` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `student_id` int(11) NOT NULL,
+                      `student_category_id` int(11) NOT NULL,
                       `institution_site_class_grade_id` int(11) NOT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
@@ -1015,10 +1026,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_class_grade_students` (
-                        `id`, `student_id`, `institution_site_class_grade_id`, `modified_user_id`, `modified`,
+                        `id`, `student_id`, `student_category_id`, `institution_site_class_grade_id`, `modified_user_id`, `modified`,
                         `created_user_id`, `created`
                     ) VALUES (
-                        :id, :student_id, :institution_site_class_grade_id, :modified_user_id, :modified,
+                        :id, :student_id, :student_category_id, :institution_site_class_grade_id, :modified_user_id, :modified,
                         :created_user_id, :created
                     );
                         ]]>
@@ -1147,6 +1158,8 @@
                     CREATE TABLE `institution_site_classes` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `name` varchar(100) DEFAULT NULL,
+                      `no_of_seats` int(3) DEFAULT NULL,
+                      `no_of_shifts` int(2) DEFAULT NULL,
                       `institution_site_id` int(11) NOT NULL,
                       `school_year_id` int(11) NOT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
@@ -1178,10 +1191,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_classes` (
-                        `id`, `name`, `institution_site_id`, `school_year_id`, `modified_user_id`, `modified`,
+                        `id`, `name`, `no_of_seats`, `no_of_shifts`, `institution_site_id`, `school_year_id`, `modified_user_id`, `modified`,
                         `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :institution_site_id, :school_year_id, :modified_user_id, :modified,
+                        :id, :name, :no_of_seats, :no_of_shifts, :institution_site_id, :school_year_id, :modified_user_id, :modified,
                         :created_user_id, :created
                     );
                         ]]>
@@ -1204,6 +1217,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -1231,9 +1246,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_localities` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -1255,6 +1270,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` date DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -1283,9 +1300,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_ownership` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -1358,14 +1375,19 @@
                 <![CDATA[
                     CREATE TABLE `institution_site_staff` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `position_no` varchar(20) DEFAULT NULL,
+                      `FTE` int(11) DEFAULT NULL,
                       `staff_id` int(11) NOT NULL,
+                      `staff_status_id` int(3) NOT NULL,
                       `staff_category_id` int(11) NOT NULL,
+                      `staff_position_title_id` int(11) NOT NULL,
+                      `staff_position_grade_id` int(11) NOT NULL,
+                      `staff_position_step_id` int(11) NOT NULL,
                       `institution_site_id` int(11) NOT NULL,
                       `start_date` date NOT NULL,
                       `start_year` int(4) NOT NULL,
                       `end_date` date DEFAULT NULL,
                       `end_year` int(4) DEFAULT NULL,
-                      `salary` float(11,2) NOT NULL DEFAULT '0.00',
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -1396,12 +1418,12 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_staff` (
-                        `id`, `staff_id`, `staff_category_id`, `institution_site_id`, `start_date`, `start_year`,
-                        `end_date`, `end_year`, `salary`, `modified_user_id`,
+                        `id`, `position_no`, `FTE`, `staff_id`, `staff_status_id`, `staff_category_id`, `staff_position_title_id`, `staff_position_grade_id`, `staff_position_step_id`, `institution_site_id`, `start_date`, `start_year`,
+                        `end_date`, `end_year`, `modified_user_id`,
                         `modified`, `created_user_id`, `created`
                     )VALUES (
-                        :id, :staff_id, :staff_category_id, :institution_site_id, :start_date, :start_year,
-                        :end_date, :end_year, :salary, :modified_user_id,
+                        :id, :position_no, :FTE, :staff_id, :staff_status_id, :staff_category_id, :staff_position_title_id, :staff_position_grade_id, :staff_position_step_id, :institution_site_id, :start_date, :start_year,
+                        :end_date, :end_year, :modified_user_id,
                         :modified, :created_user_id, :created
                     );
                         ]]>
@@ -1424,6 +1446,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -1444,9 +1468,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_statuses` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -1470,6 +1494,7 @@
                       `end_date` date DEFAULT NULL,
                       `end_year` int(4) DEFAULT NULL,
                       `student_id` int(11) NOT NULL,
+                      `student_status_id` int(3) NOT NULL,
                       `institution_site_programme_id` int(11) NOT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
@@ -1500,10 +1525,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_students` (
-                        `id`, `start_date`, `start_year`, `end_date`, `end_year`, `student_id`,
+                        `id`, `start_date`, `start_year`, `end_date`, `end_year`, `student_id`, `student_status_id`, 
                         `institution_site_programme_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :start_date, :start_year, :end_date, :end_year, :student_id,
+                        :id, :start_date, :start_year, :end_date, :end_year, :student_id, :student_status_id, 
                         :institution_site_programme_id, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
@@ -1523,14 +1548,19 @@
                 <![CDATA[
                     CREATE TABLE `institution_site_teachers` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `position_no` varchar(20) DEFAULT NULL,
+                      `FTE` float(4,2) DEFAULT NULL,
                       `teacher_id` int(11) NOT NULL,
+                      `teacher_status_id` int(3) NOT NULL,
                       `teacher_category_id` int(11) NOT NULL,
+                      `teacher_position_title_id` int(11) NOT NULL,
+                      `teacher_position_grade_id` int(11) NOT NULL,
+                      `teacher_position_step_id` int(11) NOT NULL,
                       `institution_site_id` int(11) NOT NULL,
                       `start_date` date NOT NULL,
                       `start_year` int(4) NOT NULL,
                       `end_date` date DEFAULT NULL,
                       `end_year` int(4) DEFAULT NULL,
-                      `salary` float(11,2) NOT NULL DEFAULT '0.00',
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -1562,11 +1592,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_teachers` (
-                        `id`, `teacher_id`, `teacher_category_id`, `institution_site_id`, `start_date`, `start_year`,
-                        `end_date`, `end_year`, `salary`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `position_no`, `FTE`, `teacher_id`, `teacher_status_id`, `teacher_category_id`, `teacher_position_title_id`, `teacher_position_grade_id`, `teacher_position_step_id`, `institution_site_id`, `start_date`, `start_year`,
+                        `end_date`, `end_year`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :teacher_id, :teacher_category_id, :institution_site_id, :start_date, :start_year,
-                        :end_date, :end_year, :salary, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :position_no, :FTE, :teacher_id, :teacher_status_id, :teacher_category_id, :teacher_position_title_id, :teacher_position_grade_id, :teacher_position_step_id, :institution_site_id, :start_date, :start_year,
+                        :end_date, :end_year, :modified_user_id, :modified, :created_user_id, :created
                     );
 
                         ]]>
@@ -1589,6 +1619,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -1617,9 +1649,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `institution_site_types` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     )VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -1649,10 +1681,13 @@
                       `email` varchar(100) DEFAULT NULL,
                       `website` varchar(100) DEFAULT NULL,
                       `date_opened` date NOT NULL,
+                      `year_opened` int(4) NOT NULL,
                       `date_closed` date DEFAULT NULL,
+                      `year_closed` int(4) DEFAULT NULL,
                       `longitude` varchar(15) DEFAULT NULL,
                       `latitude` varchar(15) DEFAULT NULL,
                       `area_id` int(11) NOT NULL,
+                      `area_education_id` int(11) DEFAULT NULL,
                       `institution_id` int(11) NOT NULL,
                       `institution_site_locality_id` int(11) NOT NULL,
                       `institution_site_type_id` int(11) NOT NULL,
@@ -1689,12 +1724,11 @@
                 <![CDATA[
                     INSERT INTO `institution_sites` (
                         `id`, `name`, `code`, `address`, `postal_code`, `contact_person`, `telephone`, `fax`, `email`,
-                        `website`, `date_opened`, `date_closed`, `longitude`, `latitude`, `area_id`, `institution_id`,
-                        `institution_site_locality_id`, `institution_site_type_id`, `institution_site_ownership_id`,
+                        `website`, `date_opened`, `year_opened`, `date_closed`, `year_closed`, `longitude`, `latitude`, `area_id`, `area_education_id`,`institution_id`, `institution_site_locality_id`, `institution_site_type_id`, `institution_site_ownership_id`,
                         `institution_site_status_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     )VALUES (
                         :id, :name, :code, :address, :postal_code, :contact_person, :telephone, :fax, :email,
-                        :website, :date_opened, :date_closed, :longitude, :latitude, :area_id, :institution_id,
+                        :website, :date_opened, :year_opened, :date_closed, :year_closed, :longitude, :latitude, :area_id, :area_education_id, :institution_id,
                         :institution_site_locality_id, :institution_site_type_id, :institution_site_ownership_id,
                         :institution_site_status_id, :modified_user_id, :modified, :created_user_id, :created
                     );
@@ -1723,6 +1757,7 @@
                       `start_year` int(4) NOT NULL,
                       `end_date` date DEFAULT NULL,
                       `end_year` int(4) DEFAULT NULL,
+                      `school_days` int(5) NOT NULL DEFAULT '0',
                       `current` char(1) NOT NULL,
                       `available` char(1) NOT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
@@ -1753,10 +1788,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `school_years` (
-                        `id`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `current`, `available`,
+                        `id`, `name`, `start_date`, `start_year`, `end_date`, `end_year`, `school_days`, `current`, `available`,
                         `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :start_date, :start_year, :end_date, :end_year, :current, :available,
+                        :id, :name, :start_date, :start_year, :end_date, :end_year, :school_days, :current, :available,
                         :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
@@ -1780,9 +1815,12 @@
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `identification_no` varchar(100) DEFAULT NULL,
                       `first_name` varchar(100) NOT NULL,
+                      `middle_name` varchar(100) DEFAULT NULL,
                       `last_name` varchar(100) NOT NULL,
+                      `preferred_name` varchar(100) DEFAULT NULL,
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `date_of_birth` date NOT NULL,
+                      `date_of_death` date DEFAULT NULL,
                       `address` text,
                       `address_area_id` int(11) DEFAULT '0',
                       `birthplace_area_id` int(11) DEFAULT '0',
@@ -1821,11 +1859,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `staff` (
-                        `id`, `identification_no`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`,
+                        `id`, `identification_no`, `first_name`, `middle_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
                         `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
                         `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :identification_no, :first_name, :last_name, :gender, :date_of_birth, :address,
+                        :id, :identification_no, :first_name, :middle_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
                         :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
                         :photo_content, :modified_user_id, :modified, :created_user_id, :created
                     );
@@ -1849,6 +1887,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -1876,9 +1916,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `staff_categories` (
-                      `id`,`name`,`order`,`visible`,`modified_user_id`,`modified`,`created_user_id`,`created`
+                      `id`,`name`,`order`,`visible`, `international_code`, `national_code`, `modified_user_id`,`modified`,`created_user_id`,`created`
                     ) VALUES (
-                        :id,:name,:order,:visible,:modified_user_id,:modified,:created_user_id,:created
+                        :id,:name,:order,:visible,:international_code,:national_code,:modified_user_id,:modified,:created_user_id,:created
                     );
                         ]]>
             </SQL>
@@ -1902,6 +1942,8 @@
                       `name` varchar(50) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -1929,7 +1971,11 @@
         <insert type="destination" table="student_categories">
             <SQL dialect="mysql">
                 <![CDATA[
-                    INSERT INTO `student_categories` () VALUES ();
+                     INSERT INTO `student_categories` (
+                      `id`,`name`,`order`,`visible`, `international_code`, `national_code`, `modified_user_id`,`modified`,`created_user_id`,`created`
+                    ) VALUES (
+                        :id,:name,:order,:visible,:international_code,:national_code,:modified_user_id,:modified,:created_user_id,:created
+                    );
                         ]]>
             </SQL>
         </insert>
@@ -1949,9 +1995,12 @@
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `identification_no` varchar(100) NOT NULL,
                       `first_name` varchar(100) NOT NULL,
+                      `middle_name` varchar(100) DEFAULT NULL,
                       `last_name` varchar(100) NOT NULL,
+                      `preferred_name` varchar(100) DEFAULT NULL,
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `date_of_birth` date NOT NULL,
+                      `date_of_death` date DEFAULT NULL,
                       `address` text,
                       `address_area_id` int(11) DEFAULT '0',
                       `birthplace_area_id` int(11) DEFAULT '0',
@@ -1990,11 +2039,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `students` (
-                        `id`, `identification_no`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`,
+                        `id`, `identification_no`, `first_name`, `middle_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
                         `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
                         `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :identification_no, :first_name, :last_name, :gender, :date_of_birth, :address,
+                        :id, :identification_no, :first_name, :middle_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
                         :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
                         :photo_content, :modified_user_id, :modified, :created_user_id, :created
                     );
@@ -2020,6 +2069,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -2048,9 +2099,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `teacher_categories` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`,`name`,`order`,`visible`, `international_code`, `national_code`, `modified_user_id`,`modified`,`created_user_id`,`created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id,:name,:order,:visible,:international_code,:national_code,:modified_user_id,:modified,:created_user_id,:created
                     );
                         ]]>
             </SQL>
@@ -2059,59 +2110,6 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     SELECT * FROM `teacher_categories`;
-                        ]]>
-            </SQL>
-        </select>
-    </process>
-    <process name="teacher_qualification_categories" type="lookup">
-        <create type="destination" table="teacher_qualification_categories">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    CREATE TABLE `teacher_qualification_categories` (
-                      `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `name` varchar(100) NOT NULL,
-                      `order` int(3) NOT NULL,
-                      `visible` int(1) NOT NULL DEFAULT '1',
-                      `modified_user_id` int(11) DEFAULT NULL,
-                      `modified` datetime DEFAULT NULL,
-                      `created_user_id` int(11) NOT NULL,
-                      `created` datetime NOT NULL,
-                      PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-                        ]]>
-            </SQL>
-        </create>
-        <drop type="destination" table="teacher_qualification_categories">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    DROP TABLE `teacher_qualification_categories`;
-                        ]]>
-            </SQL>
-        </drop>
-        <truncate type="destination" table="teacher_qualification_categories">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    TRUNCATE TABLE `teacher_qualification_categories`;
-                        ]]>
-            </SQL>
-        </truncate>
-        <insert type="destination" table="teacher_qualification_categories">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    INSERT INTO `teacher_qualification_categories` (
-                      `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
-                    ) VALUES (
-                      :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
-                    );
-                        ]]>
-            </SQL>
-        </insert>
-        <select type="source" table="teacher_qualification_categories">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    SELECT * FROM `teacher_qualification_categories`;
                         ]]>
             </SQL>
         </select>
@@ -2125,6 +2123,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `teacher_qualification_category_id` int(11) NOT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
@@ -2154,10 +2154,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `teacher_qualification_certificates` (
-                        `id`, `name`, `order`, `visible`, `teacher_qualification_category_id`, `modified_user_id`,
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `teacher_qualification_category_id`, `modified_user_id`,
                         `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :name, :order, :visible, :teacher_qualification_category_id, :modified_user_id,
+                        :id, :name, :order, :visible, :international_code, :national_code, :teacher_qualification_category_id, :modified_user_id,
                         :modified, :created_user_id, :created
                     );
                         ]]>
@@ -2171,69 +2171,23 @@
             </SQL>
         </select>
     </process>
-    <process name="teacher_qualification_institutions" type="lookup">
-        <create type="destination" table="teacher_qualification_institutions">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    CREATE TABLE `teacher_qualification_institutions` (
-                      `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `name` varchar(100) NOT NULL,
-                      `order` int(3) NOT NULL,
-                      `visible` int(1) NOT NULL DEFAULT '1',
-                      `modified_user_id` int(11) DEFAULT NULL,
-                      `modified` datetime DEFAULT NULL,
-                      `created_user_id` int(11) NOT NULL,
-                      `created` datetime NOT NULL,
-                      PRIMARY KEY (`id`)
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-                        ]]>
-            </SQL>
-        </create>
-        <drop type="destination" table="teacher_qualification_institutions">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    DROP TABLE `teacher_qualification_institutions`;
-                        ]]>
-            </SQL>
-        </drop>
-        <truncate type="destination" table="teacher_qualification_institutions">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    TRUNCATE TABLE `teacher_qualification_institutions`;
-                        ]]>
-            </SQL>
-        </truncate>
-        <insert type="destination" table="teacher_qualification_institutions">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    INSERT INTO `teacher_qualification_institutions` (
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
-                    ) VALUES (
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
-                    );
-                        ]]>
-            </SQL>
-        </insert>
-        <select type="source" table="teacher_qualification_institutions">
-            <SQL dialect="mysql">
-                <![CDATA[
-                    SELECT * FROM `teacher_qualification_institutions`;
-                        ]]>
-            </SQL>
-        </select>
-    </process>
     <process name="teacher_qualifications" type="lookup">
         <create type="destination" table="teacher_qualifications">
             <SQL dialect="mysql">
                 <![CDATA[
                     CREATE TABLE `teacher_qualifications` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `certificate_no` varchar(100) DEFAULT NULL,
-                      `issue_date` date DEFAULT NULL,
+                      `document_no` varchar(100) DEFAULT NULL,
+                      `graduate_year` int(4) NOT NULL,
                       `teacher_id` int(11) NOT NULL,
-                      `teacher_qualification_certificate_id` int(11) NOT NULL,
-                      `teacher_qualification_institution_id` int(11) NOT NULL,
+                      `qualification_level_id` int(11) NOT NULL,
+                      `qualification_title` varchar(100) NOT NULL,
+                      `qualification_specialisation_id` int(11) NOT NULL,
+                      `qualification_institution_id` int(11) NOT NULL,
+                      `qualification_institution_country` varchar(255) DEFAULT NULL,
+                      `file_name` varchar(250) DEFAULT NULL,
+                      `file_content` longblob,
+                      `gpa` varchar(5) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -2262,11 +2216,10 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `teacher_qualifications` (
-                        `id`, `certificate_no`, `issue_date`, `teacher_id`, `teacher_qualification_certificate_id`,
-                        `teacher_qualification_institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `document_no`, `graduate_year`, `teacher_id`, `qualification_level_id`, `qualification_title`, `qualification_specialisation_id`, `qualification_institution_id`, `qualification_institution_country`, `file_name`, `file_content`, `gpa`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :certificate_no, :issue_date, :teacher_id, :teacher_qualification_certificate_id,
-                        :teacher_qualification_institution_id, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :document_no, :graduate_year, :teacher_id, :qualification_level_id, :qualification_title, :qualification_specialisation_id,
+                        :qualification_institution_id, :qualification_institution_country, :file_name, :file_content, :gpa, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -2341,6 +2294,8 @@
                       `name` varchar(100) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -2368,9 +2323,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `teacher_training_categories`(
-                        `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                        `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES(
-                        :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                        :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                 ]]>
             </SQL>
@@ -2391,9 +2346,12 @@
                       `id` int(11) NOT NULL AUTO_INCREMENT,
                       `identification_no` varchar(100) NOT NULL,
                       `first_name` varchar(100) NOT NULL,
+                      `middle_name` varchar(100) DEFAULT NULL,
                       `last_name` varchar(100) NOT NULL,
+                      `preferred_name` varchar(100) DEFAULT NULL,
                       `gender` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `date_of_birth` date NOT NULL,
+                      `date_of_death` date DEFAULT NULL,
                       `address` text,
                       `address_area_id` int(11) DEFAULT '0',
                       `birthplace_area_id` int(11) DEFAULT '0',
@@ -2431,11 +2389,11 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `teachers` (
-                        `id`, `identification_no`, `first_name`, `last_name`, `gender`, `date_of_birth`, `address`,
+                        `id`, `identification_no`, `first_name`, `middle_name`, `last_name`, `preferred_name`, `gender`, `date_of_birth`, `date_of_death`, `address`,
                         `address_area_id`, `birthplace_area_id`, `postal_code`, `telephone`, `email`, `photo_name`,
                         `photo_content`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES (
-                        :id, :identification_no, :first_name, :last_name, :gender, :date_of_birth, :address,
+                        :id, :identification_no, :first_name, :middle_name, :last_name, :preferred_name, :gender, :date_of_birth, :date_of_death, :address,
                         :address_area_id, :birthplace_area_id, :postal_code, :telephone, :email, :photo_name,
                         :photo_content, :modified_user_id, :modified, :created_user_id, :created
                     );
@@ -2461,6 +2419,8 @@
                       `name` varchar(150) NOT NULL,
                       `order` int(3) NOT NULL,
                       `visible` int(1) NOT NULL DEFAULT '1',
+                      `international_code` varchar(10) DEFAULT NULL,
+                      `national_code` varchar(10) DEFAULT NULL,
                       `modified_user_id` int(11) DEFAULT NULL,
                       `modified` datetime DEFAULT NULL,
                       `created_user_id` int(11) NOT NULL,
@@ -2488,9 +2448,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `infrastructure_buildings` (
-                      `id`, `name`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`
+                      `id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`
                     ) VALUES(
-                      :id, :name, :order, :visible, :modified_user_id, :modified, :created_user_id, :created
+                      :id, :name, :order, :visible, :international_code, :national_code, :modified_user_id, :modified, :created_user_id, :created
                     );
                         ]]>
             </SQL>
@@ -2525,8 +2485,8 @@
             <SQL dialect="mysql">
                 <![CDATA[
 					CREATE TABLE `fact_census_students` (
-						  `male` int(11) DEFAULT NULL,
-						  `female` int(11) DEFAULT NULL,
+						  `value` int(11) DEFAULT NULL,
+						  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
 						  `age` int(11) DEFAULT NULL,
 						  `student_categories_id` varchar(60) DEFAULT NULL,
 						  `education_grades_id` varchar(60) DEFAULT NULL,
@@ -2561,8 +2521,8 @@
             <SQL dialect="mysql">
                 <![CDATA[
 					INSERT INTO `fact_census_students` (
-						`male`,
-						`female`,
+						`value`,
+						`sex`,
 						`age` ,
 						`student_categories_id`,
 						`education_grades_id`,
@@ -2585,7 +2545,10 @@
 						`institution_statuses_id` ,
 						`school_years_id`
 					) VALUES (
-						:valueM, :valueF, :age, :student_categories_id, :education_grades_id, :education_programmes_id, :education_field_of_studies_id, :education_programme_orientations_id, :education_cycles_id, :education_certifications_id, :institution_site_programmes_id, :institution_sites_id, :institution_site_localities_id, :areas_id, :area_levels_id, :institution_site_types_id, :institution_site_ownership_id, :institution_site_statuses_id, :institutions_id, :institution_sectors_id, :institution_providers_id, :institution_statuses_id, :school_years_id
+						:valueM, :genderM, :age, :student_categories_id, :education_grades_id, :education_programmes_id, :education_field_of_studies_id, :education_programme_orientations_id, :education_cycles_id, :education_certifications_id, :institution_site_programmes_id, :institution_sites_id, :institution_site_localities_id, :areas_id, :area_levels_id, :institution_site_types_id, :institution_site_ownership_id, :institution_site_statuses_id, :institutions_id, :institution_sectors_id, :institution_providers_id, :institution_statuses_id, :school_years_id
+					),
+					(
+						:valueF, :genderF, :age, :student_categories_id, :education_grades_id, :education_programmes_id, :education_field_of_studies_id, :education_programme_orientations_id, :education_cycles_id, :education_certifications_id, :institution_site_programmes_id, :institution_sites_id, :institution_site_localities_id, :areas_id, :area_levels_id, :institution_site_types_id, :institution_site_ownership_id, :institution_site_statuses_id, :institutions_id, :institution_sectors_id, :institution_providers_id, :institution_statuses_id, :school_years_id
 					)
 				]]>
             </SQL>
@@ -2595,7 +2558,7 @@
                 <![CDATA[
 					SELECT
 						/* census table values + discrete variables like age */
-						census_students.male as valueM , census_students.female as valueF, census_students.age ,
+						census_students.male as valueM, census_students.female as valueF, 'M' AS `genderM`, 'F' AS `genderF`,  census_students.age ,
 						/* all foreign keys */
 						student_categories.id AS student_categories_id ,
 						education_grades.id AS education_grades_id,
@@ -3092,7 +3055,7 @@
                         institution_statuses.id AS institution_status_id,
                         school_years.id AS school_year_id
                     FROM census_finances
-                    LEFT JOIN finance_sources ON census_finances.finance_source_id = finance_sources.id
+                    INNER JOIN finance_sources ON census_finances.finance_source_id = finance_sources.id
                     LEFT JOIN finance_categories ON census_finances.finance_category_id = finance_categories.id
                         LEFT JOIN finance_types ON finance_categories.finance_type_id = finance_types.id
                             LEFT JOIN finance_natures ON finance_types.finance_nature_id = finance_natures.id
@@ -3242,9 +3205,9 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     CREATE TABLE `fact_census_graduates` (
---                      `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+--                    `id` int(11) NOT NULL AUTO_INCREMENT,
+                      `value` int(11) DEFAULT NULL,
+					  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `education_programme_id` int(11) DEFAULT NULL,
                       `education_field_of_study_id` int(11) DEFAULT NULL,
@@ -3282,7 +3245,7 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_graduates` (
-                        `male`, `female`, `source`, `education_programme_id`, `education_field_of_study_id`,
+                        `value`, `sex`, `source`, `education_programme_id`, `education_field_of_study_id`,
                         `education_programme_orientation_id`, `education_cycle_id`, `education_level_id`,
                         `education_system_id`, `education_level_isced_id`, `education_certification_id`,
                         `institution_site_programme_id`, `institution_site_id`, `institution_site_locality_id`,
@@ -3290,7 +3253,16 @@
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :male, :female, :source, :education_programme_id, :education_field_of_study_id,
+                        :male, :genderM, :source, :education_programme_id, :education_field_of_study_id,
+                        :education_programme_orientation_id, :education_cycle_id, :education_level_id,
+                        :education_system_id, :education_level_isced_id, :education_certification_id,
+                        :institution_site_programme_id, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :education_programme_id, :education_field_of_study_id,
                         :education_programme_orientation_id, :education_cycle_id, :education_level_id,
                         :education_system_id, :education_level_isced_id, :education_certification_id,
                         :institution_site_programme_id, :institution_site_id, :institution_site_locality_id,
@@ -3307,6 +3279,8 @@
                     SELECT
                         census_graduates.male AS male,
                         census_graduates.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_graduates.source AS source,
                         education_programmes.id AS education_programme_id,
                         education_field_of_studies.id AS education_field_of_study_id,
@@ -3601,8 +3575,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_sanitations` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT NULL,
-                      `female` int(11) DEFAULT NULL,
+                      `value` int(11) DEFAULT NULL,
+				      `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `unisex` int(11) DEFAULT NULL,
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `infrastructure_sanitation_id` int(11) DEFAULT NULL,
@@ -3636,12 +3610,18 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_sanitations` (
-                        `id`, `male`, `female`, `unisex`, `source`, `infrastructure_sanitation_id`, `infrastructure_material_id`,
+                        `value`, `sex`, `unisex`, `source`, `infrastructure_sanitation_id`, `infrastructure_material_id`,
                         `infrastructure_categories_id`, `infrastructure_status_id`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_status_id`, `area_id`, `area_level_id`,
                         `institution_id`, `institution_sector_id`, `institution_provider_id`, `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :unisex, :source, :infrastructure_sanitation_id, :infrastructure_material_id,
+                        :male, :genderM, :unisex, :source, :infrastructure_sanitation_id, :infrastructure_material_id,
+                        :infrastructure_categories_id, :infrastructure_status_id, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id, :area_id, :area_level_id,
+                        :institution_id, :institution_sector_id, :institution_provider_id, :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :unisex, :source, :infrastructure_sanitation_id, :infrastructure_material_id,
                         :infrastructure_categories_id, :infrastructure_status_id, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id, :area_id, :area_level_id,
                         :institution_id, :institution_sector_id, :institution_provider_id, :institution_status_id, :school_year_id
@@ -3657,6 +3637,8 @@
                         census_sanitations.id AS id,
                         census_sanitations.male AS male,
                         census_sanitations.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_sanitations.unisex AS unisex,
                         census_sanitations.source AS source,
                         infrastructure_sanitations.id AS infrastructure_sanitation_id,
@@ -3716,8 +3698,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_staff` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+                      `value` int(11) DEFAULT NULL,
+				      `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `staff_category_id` int(11) DEFAULT NULL,
                       `institution_site_id` int(11) DEFAULT NULL,
@@ -3747,17 +3729,22 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_staff` (
-                        `id`, `male`, `female`, `source`, `staff_category_id`, `institution_site_id`,
+                        `value`, `sex`, `source`, `staff_category_id`, `institution_site_id`,
                         `institution_site_locality_id`, `institution_site_type_id`, `institution_site_ownership_id`,
                         `institution_site_status_id`, `area_id`, `area_level_id`, `institution_id`,
                         `institution_sector_id`, `institution_provider_id`, `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :source, :staff_category_id, :institution_site_id,
+                        :male, :genderM, :source, :staff_category_id, :institution_site_id,
+                        :institution_site_locality_id, :institution_site_type_id, :institution_site_ownership_id,
+                        :institution_site_status_id, :area_id, :area_level_id, :institution_id,
+                        :institution_sector_id, :institution_provider_id, :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :staff_category_id, :institution_site_id,
                         :institution_site_locality_id, :institution_site_type_id, :institution_site_ownership_id,
                         :institution_site_status_id, :area_id, :area_level_id, :institution_id,
                         :institution_sector_id, :institution_provider_id, :institution_status_id, :school_year_id
                     );
-
                 ]]>
             </SQL>
         </insert>
@@ -3768,6 +3755,8 @@
                         census_staff.id AS id,
                         census_staff.male AS male,
                         census_staff.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_staff.source AS source,
                         staff_categories.id AS staff_category_id,
                         institution_sites.id AS institution_site_id,
@@ -3820,8 +3809,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_teacher_fte` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+                      `value` int(11) DEFAULT NULL,
+					  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `education_level_id` int(11) DEFAULT NULL,
                       `education_system_id` int(11) DEFAULT NULL,
@@ -3853,13 +3842,20 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_teacher_fte` (
-                        `id`, `male`, `female`, `source`, `education_level_id`, `education_system_id`,
+                        `value`, `sex`, `source`, `education_level_id`, `education_system_id`,
                         `education_level_isced_id`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_statuses_id`,
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :source, :education_level_id, :education_system_id,
+                        :male, :genderM, :source, :education_level_id, :education_system_id,
+                        :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_statuses_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :education_level_id, :education_system_id,
                         :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_statuses_id,
                         :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
@@ -3876,6 +3872,8 @@
                         census_teacher_fte.id AS id,
                         census_teacher_fte.male AS male,
                         census_teacher_fte.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_teacher_fte.source AS source,
                         education_levels.id AS education_level_id,
                         education_systems.id AS education_system_id,
@@ -3932,8 +3930,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_teacher_training` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+                      `value` int(11) DEFAULT NULL,
+					  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `education_level_id` int(11) DEFAULT NULL,
                       `education_system_id` int(11) DEFAULT NULL,
@@ -3965,13 +3963,20 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_teacher_training` (
-                        `id`, `male`, `female`, `source`, `education_level_id`, `education_system_id`,
+                        `value`, `sex`, `source`, `education_level_id`, `education_system_id`,
                         `education_level_isced_id`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_status_id`,
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `school_year_id`
                     ) VALUES (
-                        :id, :male, :female, :source, :education_level_id, :education_system_id,
+                        :male, :genderM, :source, :education_level_id, :education_system_id,
+                        :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :institution_status_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :education_level_id, :education_system_id,
                         :education_level_isced_id, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
                         :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
@@ -3987,6 +3992,8 @@
                         census_teacher_training.id AS id,
                         census_teacher_training.male AS male,
                         census_teacher_training.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_teacher_training.source AS source,
                         education_levels.id AS education_level_id,
                         education_systems.id AS education_system_id,
@@ -4043,8 +4050,8 @@
                 <![CDATA[
                     CREATE TABLE `fact_census_teachers` (
                       `id` int(11) NOT NULL AUTO_INCREMENT,
-                      `male` int(11) DEFAULT '0',
-                      `female` int(11) DEFAULT '0',
+                      `value` int(11) DEFAULT NULL,
+					  `sex` char(1) NOT NULL COMMENT 'M for Male, F for Female',
                       `source` int(1) DEFAULT '0' COMMENT '0-dataentry,1-external,2-estimate',
                       `institution_site_id` int(11) DEFAULT NULL,
                       `institution_site_locality_id` int(11) DEFAULT NULL,
@@ -4082,14 +4089,22 @@
             <SQL dialect="mysql">
                 <![CDATA[
                     INSERT INTO `fact_census_teachers` (
-                        `male`, `female`, `source`, `institution_site_id`, `institution_site_locality_id`,
+                        `value`, `sex`, `source`, `institution_site_id`, `institution_site_locality_id`,
                         `institution_site_type_id`, `institution_site_ownership_id`, `institution_site_status_id`,
                         `area_id`, `area_level_id`, `institution_id`, `institution_sector_id`, `institution_provider_id`,
                         `institution_status_id`, `education_grade_id`, `education_programme_id`, `education_field_of_study_id`,
                         `education_programme_orientation_id`, `education_cycle_id`, `education_level_id`, `education_system_id`,
                         `education_level_isced_id`, `education_certification_id`, `school_year_id`
                     ) VALUES (
-                        :male, :female, :source, :institution_site_id, :institution_site_locality_id,
+                        :male, :genderM, :source, :institution_site_id, :institution_site_locality_id,
+                        :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
+                        :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
+                        :institution_status_id, :education_grade_id, :education_programme_id, :education_field_of_study_id,
+                        :education_programme_orientation_id, :education_cycle_id, :education_level_id, :education_system_id,
+                        :education_level_isced_id, :education_certification_id, :school_year_id
+                    ),
+                    (
+                        :female, :genderF, :source, :institution_site_id, :institution_site_locality_id,
                         :institution_site_type_id, :institution_site_ownership_id, :institution_site_status_id,
                         :area_id, :area_level_id, :institution_id, :institution_sector_id, :institution_provider_id,
                         :institution_status_id, :education_grade_id, :education_programme_id, :education_field_of_study_id,
@@ -4107,6 +4122,8 @@
 --                        census_teachers.id AS id,
                         census_teachers.male AS male,
                         census_teachers.female AS female,
+                        'M' AS `genderM`,
+                        'F' AS `genderF`,
                         census_teachers.source AS source,
                         institution_sites.id AS institution_site_id,
                         institution_site_localities.id AS institution_site_locality_id,

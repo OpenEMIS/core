@@ -9,7 +9,7 @@ echo $this->Html->script('census', false);
 
 <div id="assessments" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Assessments'); ?></span>
+		<span><?php echo __('Results'); ?></span>
 		<?php
 		if($_edit && $isEditable) {
 			echo $this->Html->link(__('Edit'), array('action' => 'assessmentsEdit', $selectedYear), array('class' => 'divider'));

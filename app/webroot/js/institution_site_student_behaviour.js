@@ -29,7 +29,7 @@ var InstitutionSiteStudentBehaviour = {
 						parent: '.content_wrapper',
 						type: alertType.error,
 						text: data,
-						css: {left: '400px', top: '65px'}
+						css: {left: '400px', top: '126px'}
 					}
 					$('.content_wrapper').css('position', 'relative');
 					$.alert(alertOpt);

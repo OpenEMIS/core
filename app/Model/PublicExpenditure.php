@@ -17,62 +17,42 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class PublicExpenditure extends AppModel {
-
 	public $useTable = 'public_expenditure';
-	// public $belongsTo = array('Area');
 
 	public function getAreas($areaId = 0, $parentAreaId = 0) {
-
 		$areaModel = ClassRegistry::init('Area');
-
-//		if (!$this->isWard($areaId)) {
-
-            $options = array(
-            	'fields' => array("Area.id", "Area.name", "Area.parent_id", "Area.area_level_id"),
-				'conditions' => array(
-			        "Area.visible" => 1,
-
-                    "OR" => array(
-                        "Area.id" => $areaId,
-                        "Area.parent_id" => $parentAreaId,
-                    )
-                )
-			);
-			$areas = $areaModel->find('all', $options);
-
-//		}
-
-
-		// pr($areas);
-		return $areas;
-	}
-
-	private function isWard($areaId)
-	{
-		$digits = strlen($areaId);
-
-		if ($digits >= 7) { return true; }
-		return false;
-	}
-	
-	public function getPublicExpenditureByYearAndArea($year, $listAreaId)
-	{
-
-        $options = array(
-        	'fields' => array(
-        		"PublicExpenditure.id",
-				"PublicExpenditure.area_id",
-				"PublicExpenditure.year",
-				"PublicExpenditure.gross_national_product",
-				"PublicExpenditure.total_public_expenditure",
-				"PublicExpenditure.total_public_expenditure_education"
-        	),
+		$options = array(
+			'fields' => array("Area.id", "Area.name", "Area.parent_id", "Area.area_level_id"),
 			'conditions' => array(
-				"AND" => array("PublicExpenditure.year" => $year, "PublicExpenditure.area_id" => $listAreaId)
+				"Area.visible" => 1,
+
+				"OR" => array(
+					"Area.id" => $areaId,
+					"Area.parent_id" => $parentAreaId,
+				)
 			)
 		);
-		$result = $this->find('all', $options);
-		return $result;
+		$areas = $areaModel->find('all', $options);
+		return $areas;
+	}
+	
+	// Used by Yearbook
+	public function geDataByYearAndArea($yearId, $areaId) {
+		$this->formatResult = true;
+		$data = $this->find('first', array(
+			'joins' => array(
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array(
+						'SchoolYear.start_year = PublicExpenditure.year',
+						'SchoolYear.id = ' . $yearId
+					)
+				)
+			),
+			'conditions' => array('PublicExpenditure.area_id' => $areaId)
+		));
+		return $data;
 	}
 
 	public function getData($year = 0, $areaId = 0, $parentAreaId = 0) {
@@ -134,6 +114,24 @@ class PublicExpenditure extends AppModel {
 
 		}
 		return $list;
+	}
+	
+	public function getPublicExpenditureByYearAndArea($year, $listAreaId) {
+		$options = array(
+			'fields' => array(
+				"PublicExpenditure.id",
+				"PublicExpenditure.area_id",
+				"PublicExpenditure.year",
+				"PublicExpenditure.gross_national_product",
+				"PublicExpenditure.total_public_expenditure",
+				"PublicExpenditure.total_public_expenditure_education"
+			),
+			'conditions' => array(
+				"AND" => array("PublicExpenditure.year" => $year, "PublicExpenditure.area_id" => $listAreaId)
+			)
+		);
+		$result = $this->find('all', $options);
+		return $result;
 	}
 
 	public function getPublicExpenditureData($year, $areaId, $parentAreaId) {

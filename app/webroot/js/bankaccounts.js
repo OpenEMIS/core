@@ -31,7 +31,7 @@ var BankAccounts = {
         $.ajax({ 
             type: "post",
             dataType: "json",
-            url: getRootURL()+"InstitutionSites/bankAccountsBankBranches",
+            url: getRootURL()+"Teachers/bankAccountsBankBranches",
             success: function(data){
                 BankAccounts.bankBranchData = data;
             }
@@ -52,47 +52,8 @@ var BankAccounts = {
                 tpl += '<option value="'+o2.id+'">'+o2.name+'</option>';
             })
         }
-        var select = $(thisobj).parent().next().find('select');
-        select.find('option').remove();
-        select.append(tpl);
-    },
-    validateAdd : function(){
-        var bool = true;
-        var errorMessages = [];
-        var alertOpt = {
-            // id: 'alert-' + new Date().getTime(),
-            parent: '.section_group',
-            title: 'Click to dismiss',
-            text: "Error have occurred.",
-            type: alertType.error, // alertType.info or alertType.warn or alertType.error
-            position: 'center',
-            css: {}, // positioning of your alert, or other css property like width, eg. {top: '-10px', left: '-20px'}
-            autoFadeOut: true
-        };
-
-        if($('input[type="radio"][name*="[active]"]').length > 0 && $('input[type="radio"][name*="[active]"]:checked').length < 1){
-//            errorMessages.push(i18n.BankAccounts.validateAddActive);
-            errorMessages.push("Please select an account as active.");
-            bool = false;
-        }
-
-        $('select[name*="[bank_branch_id]"]').each(function(i,o){
-            if(!bool){
-                return false;
-            }
-            if($(o).val() == "0"){
-                errorMessages.push(i18n.BankAccounts.validateAddBranch);
-                bool = false;
-            }
-        });
-
-        if(bool){
-            $.mask({text: i18n.General.textSaving});
-        }else{
-            alertOpt.text = errorMessages.shift();
-            $.alert(alertOpt);
-        }
-        return bool;
+        var select = $('.branch').find('select');
+        select.html(tpl);
     },
     confirmDeletedlg : function(id){
         $.dialog({
@@ -114,6 +75,37 @@ var BankAccounts = {
                       }}],
             'closeBtnCaption':'No'
         })
+    },
+    getBranchesAfterChangeBank: function(obj){
+        var bankId = $(obj).val();
+        var branchSelect = $('.branch').find('select');
+        var emptyOption = '<option value="">--Select--</option>';
+        
+        if(bankId === ""){
+            branchSelect.html(emptyOption);
+        }else{
+            $.ajax({ 
+                type: "get",
+                dataType: "json",
+                url: getRootURL()+"Teachers/getBranchesByBankId/"+bankId,
+                success: function(data){
+                    var newBranchOptions = '';
+                    
+                    if(data == null){
+                        return;
+                    }
+                    
+                    $.each(data, function(i,v){
+                        var branch = v.BankBranch;
+                        newBranchOptions += '<option value="'+branch.id+'">'+branch.name+'</option>';
+                    });
+                    
+                    branchOptions = newBranchOptions.length > 0 ? emptyOption+newBranchOptions : emptyOption;
+                    
+                    branchSelect.html(branchOptions);
+                }
+            });
+        }
     }
 }
 

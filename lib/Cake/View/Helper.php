@@ -310,8 +310,9 @@ class Helper extends Object {
 			if (isset($plugin)) {
 				$path = Inflector::underscore($plugin) . '/' . $path;
 			}
-			$path = h($this->assetTimestamp($this->webroot($path)));
-
+			//$path = h($this->assetTimestamp($this->webroot($path)));
+                        $path = $this->_encodeUrl($this->assetTimestamp($this->webroot($path)));
+                        
 			if (!empty($options['fullBase'])) {
 				$path = $this->url('/', true) . $path;
 			}
@@ -319,7 +320,19 @@ class Helper extends Object {
 
 		return $path;
 	}
-
+/**
+ * Encodes an URL for use in HTML attributes.
+ *
+ * @param string $url The url to encode.
+ * @return string The url encoded for both URL & HTML contexts.
+ */
+	protected function _encodeUrl($url) {
+		$path = parse_url($url, PHP_URL_PATH);
+		$parts = array_map('urldecode', explode('/', $path));
+		$parts = array_map('rawurlencode', $parts);
+		$encoded = implode('/', $parts);
+		return h(str_replace($path, $encoded, $url));
+	}
 /**
  * Adds a timestamp to a file based resource based on the value of `Asset.timestamp` in
  * Configure.  If Asset.timestamp is true and debug > 0, or Asset.timestamp == 'force'
@@ -332,7 +345,12 @@ class Helper extends Object {
 		$stamp = Configure::read('Asset.timestamp');
 		$timestampEnabled = $stamp === 'force' || ($stamp === true && Configure::read('debug') > 0);
 		if ($timestampEnabled && strpos($path, '?') === false) {
-			$filepath = preg_replace('/^' . preg_quote($this->request->webroot, '/') . '/', '', $path);
+			//$filepath = preg_replace('/^' . preg_quote($this->request->webroot, '/') . '/', '', $path);
+                        $filepath = preg_replace(
+				'/^' . preg_quote($this->request->webroot, '/') . '/',
+				'',
+				urldecode($path)
+			);
 			$webrootPath = WWW_ROOT . str_replace('/', DS, $filepath);
 			if (file_exists($webrootPath)) {
 				return $path . '?' . @filemtime($webrootPath);

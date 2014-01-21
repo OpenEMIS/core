@@ -10,6 +10,12 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		<span><?php echo __('Student Information'); ?></span>
 		<?php 
 		$obj = $data['Student'];
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'studentsEdit'), array('class' => 'divider'));
+		}
+                if($_delete) {
+			echo $this->Html->link(__('Delete'), array('action' => 'studentsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+		}
 		if($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
 			echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
 		}
@@ -20,8 +26,6 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
-
-	
 	<fieldset class="section_break" id="general">
 		<legend><?php echo __('General'); ?></legend>
 		<?php
@@ -29,7 +33,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		    echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
 		?>
 		<div class="row">
-			<div class="label"><?php echo __('Identification No.'); ?></div>
+			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<div class="value">
 				<?php
 				if($_view_details) {
@@ -44,9 +48,17 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $obj['first_name']; ?></div>
 		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php echo $obj['middle_name']; ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Last Name'); ?></div>
 			<div class="value"><?php echo $obj['last_name']; ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value"><?php echo $obj['preferred_name']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Gender'); ?></div>
@@ -56,6 +68,33 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		<div class="row">
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
+		</div>
+                <div class="row">
+			<div class="label"><?php echo __('Date of Death'); ?></div>
+			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_death']); ?></div>
+		</div>
+	</fieldset>
+	
+	<fieldset class="section_break">
+		<legend><?php echo __('Programmes'); ?></legend>
+		<div class="table full_width" style="margin-top: 10px;">
+			<div class="table_head">
+				<div class="table_cell" style="width: 220px;"><?php echo __('Programme'); ?></div>
+				<div class="table_cell"><?php echo __('From'); ?></div>
+				<div class="table_cell"><?php echo __('To'); ?></div>
+				<div class="table_cell" style="width: 100px;"><?php echo __('Status'); ?></div>
+			</div>
+			
+			<div class="table_body">
+				<?php foreach($details as $detail) { ?>
+				<div class="table_row">
+					<div class="table_cell"><?php echo $detail['EducationProgramme']['name']; ?></div>
+					<div class="table_cell center"><?php echo $this->Utility->formatDate($detail['InstitutionSiteStudent']['start_date']); ?></div>
+					<div class="table_cell center"><?php echo $this->Utility->formatDate($detail['InstitutionSiteStudent']['end_date']); ?></div>
+					<div class="table_cell center"><?php echo $detail['StudentStatus']['name']; ?></div>
+				</div>
+				<?php } ?>
+			</div>
 		</div>
 	</fieldset>
 	
@@ -114,6 +153,4 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 		</fieldset>
 		<?php } ?>
 	</fieldset>
-	
-	<?php echo $this->Form->end(); ?>
 </div>

@@ -7,7 +7,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 
 <div id="attendance" class="content_wrapper">
     <h1>
-        <span><?php echo __('Assessments'); ?></span>
+        <span><?php echo __('Results'); ?></span>
     </h1>
     <?php echo $this->element('alert'); ?>
     <?php if( count($years) != 0 && count($programmeGrades) != 0){

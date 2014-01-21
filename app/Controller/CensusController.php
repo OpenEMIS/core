@@ -6,7 +6,7 @@ OpenEMIS
 Open Education Management Information System
 
 Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
-it under the terms of the GNU General Public License as published by the Free Software Foundation
+it under the terms of the GNU General Public License as published by the Free Software Foundationclas
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
@@ -39,6 +39,7 @@ class CensusController extends AppController {
 		'CensusBehaviour',
 		'CensusGraduate',
 		'CensusClass',
+		'CensusShift',
 		'CensusTextbook',
 		'CensusStaff',
 		'CensusTeacher',
@@ -492,6 +493,7 @@ class CensusController extends AppController {
 			$yearId = $this->data['school_year_id'];
 			$duplicate = false;
 			$data = $this->CensusClass->clean($this->data['CensusClass'], $yearId, $this->institutionSiteId, $duplicate);
+
 			if($duplicate) {
 				$this->Utility->alert($this->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
 			}
@@ -598,7 +600,7 @@ class CensusController extends AppController {
 	}
 	
 	public function assessments() {
-		$this->Navigation->addCrumb('Assessments');
+		$this->Navigation->addCrumb('Results');
 		
 		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
@@ -621,7 +623,7 @@ class CensusController extends AppController {
 	
 	public function assessmentsEdit() {
 		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Assessments');
+			$this->Navigation->addCrumb('Edit Results');
 			
 			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $this->getAvailableYearId($yearList);
@@ -1163,7 +1165,7 @@ class CensusController extends AppController {
 		$arrCensusInfra = array();
 		
 		$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
-		$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
+		$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
 			
 		//pr($data);
 		foreach($data as &$arrDataVal){
@@ -1184,8 +1186,8 @@ class CensusController extends AppController {
 		 * CustomFields
 		 */
 		$site = $this->InstitutionSite->findById($this->institutionSiteId); 
-		
-		$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id']), 'order'=>'CensusCustomField.order'));
+		$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>array($site['InstitutionSite']['institution_site_type_id'],0)), 'order'=>array('CensusCustomField.institution_site_type_id','CensusCustomField.order')));
+		//$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id']), 'order'=>'CensusCustomField.order'));
 		//pr($datafields); echo "d2";
 		$this->CensusCustomValue->unbindModel(
 			array('belongsTo' => array('InstitutionSite'))
@@ -1299,7 +1301,8 @@ class CensusController extends AppController {
 			$this->redirect(array('action' => 'otherforms', $selectedYear));
 		} else {
 			$p = $this->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $this->institutionSiteId));
-			$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
+                        $data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
+			//$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
 			
 			foreach($data as &$arrDataVal){
 				$dataAnswer = $this->CensusGridValue->find('all',array('conditions'=>array('CensusGridValue.institution_site_id'=>$this->institutionSiteId,'CensusGridValue.census_grid_id'=>$arrDataVal['CensusGrid']['id'],'CensusGridValue.school_year_id'=>$selectedYear)));
@@ -1317,8 +1320,9 @@ class CensusController extends AppController {
 			 * CustomFields
 			 */
 			$site = $this->InstitutionSite->findById($this->institutionSiteId); 
-			
-			$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
+			//$data = $this->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
+			//$datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
+                        $datafields = $this->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>array($site['InstitutionSite']['institution_site_type_id'],0)), 'order' => array('CensusCustomField.institution_site_type_id','CensusCustomField.order')));
 			//pr($datafields); echo "d2";
 			$this->CensusCustomValue->unbindModel(
 				array('belongsTo' => array('InstitutionSite'))
@@ -1339,4 +1343,132 @@ class CensusController extends AppController {
 			$this->set('years', $yearList);
 		}
 	}
+
+	public function shifts() {
+		$this->Navigation->addCrumb('Shifts');
+		
+		$yearList = $this->SchoolYear->getYearList();
+		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
+		$displayContent = true;
+		
+		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+		$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
+		$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+		$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
+
+
+		if(empty($singleGradeData) && empty($multiGradeData)) {
+			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_CLASS'), array('type' => 'warn', 'dismissOnClick' => false));
+			$displayContent = false;
+		} else {
+			$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+			$this->set('singleGradeData', $singleGradeData);
+
+			$this->CensusShift->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+			$this->set('multiGradeData', $multiGradeData);
+		}
+
+	 	$no_of_shifts = $this->ConfigItem->getValue('no_of_shifts');
+
+		$this->set('no_of_shifts', $no_of_shifts);
+		$this->set('displayContent', $displayContent);
+		$this->set('selectedYear', $selectedYear);
+		$this->set('years', $yearList);
+		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
+	}
+	
+	public function shiftsEdit() {
+
+		if($this->request->is('post')) {
+			if (!empty($this->request->data)) {
+				$data = $this->data['CensusShift'];
+				$yearId = $this->data['school_year_id'];
+
+				$saveData = array();
+				$errorMsg = array();
+				$errorFlag = false;
+
+				foreach($data as $key=>$value){
+					if(is_array($value)){
+						$shiftTotal = 0;
+						$classTotal = 0;
+						foreach($value as $key2=>$value2){
+							if($key2!='shift_class_total' && $key2!='shift_total'){
+								$shiftTotal += $value2;
+							}
+							$classTotal = $value['shift_class_total'];
+						}
+
+						if($shiftTotal != $classTotal){
+							$errorFlag = true; 
+							break;
+						}
+					}
+				}
+
+				if(!$errorFlag){
+					foreach($data as $key=>$value){
+						if(is_array($value)){
+							foreach($value as $key2=>$value2){
+								if($key2!='shift_class_total' && $key2!='shift_total'){
+									if(isset($value['shift_pk_' . str_replace("shift_value_", "", $key2)])){
+										$saveData[] = array('CensusShift' => array('id' => $value['shift_pk_' . str_replace("shift_value_", "", $key2)], 'census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+									}else{
+										$saveData[] = array('CensusShift' => array('census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source'=>'0'));
+									}
+								}
+								
+							}
+						}
+					}
+					$this->CensusShift->saveAll($saveData);
+
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
+					$this->redirect(array('action' => 'shifts', $yearId));
+				}else{
+					$this->Utility->alert($this->Utility->getMessage('CENSUS_SHIFT_CLASS_MISMATCH'), array('type' => 'warn', 'dismissOnClick' => false));
+					$this->redirect(array('action' => 'shiftsEdit', $yearId));
+				}
+			}	
+		}
+
+		$this->Navigation->addCrumb('Edit Shifts');
+			
+		$yearList = $this->SchoolYear->getAvailableYears();
+		$selectedYear = $this->getAvailableYearId($yearList);
+		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
+		if(!$editable) {
+			$this->redirect(array('action' => 'shifts', $selectedYear));
+		} else {
+			$displayContent = true;
+			$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
+			$singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $selectedYear);
+			$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
+			$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
+
+			if(empty($singleGradeData) && empty($multiGradeData)) {
+				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_CLASS'), array('type' => 'warn', 'dismissOnClick' => false));
+				$displayContent = false;
+			} else {
+				$this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+				$this->set('singleGradeData', $singleGradeData);
+
+				$this->CensusShift->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+				$this->set('multiGradeData', $multiGradeData);
+			}
+
+			$no_of_shifts = $this->ConfigItem->getValue('no_of_shifts');
+
+			$this->set('no_of_shifts', $no_of_shifts);
+
+			$this->set('displayContent', $displayContent);
+			$this->set('selectedYear', $selectedYear);
+			$this->set('years', $yearList);
+		}
+	
+		
+	}
+
+
+
 }

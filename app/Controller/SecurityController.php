@@ -45,19 +45,19 @@ class SecurityController extends AppController {
 		$this->Auth->allow('login');
 		
 		if($this->action !== 'login' || $this->action !== 'logout') {
-			$this->bodyTitle = 'Settings';
-			$this->Navigation->addCrumb('Settings', array('controller' => 'Setup', 'action' => 'index'));
+			$this->bodyTitle = 'Administration';
+			$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		}
 	}
 	
 	private function renderFooter() {
 		if(!$this->Session->check('footer')){
-			$val = $this->ConfigItem->getValue('version');
-			
+			$this->Session->write('footer', $this->ConfigItem->getWebFooter());
+			/*
+			$val = $this->ConfigItem->getVersion();
 			$results = $this->ConfigItem->find('all', array(
 				'conditions' => array('name' => array('footer', 'version'))
 			));
-			
 			$values = array('footer' => '', 'version' => '0');
 			foreach ($results as $element) {
 				if($element['ConfigItem']['name'] === 'version'){
@@ -68,10 +68,8 @@ class SecurityController extends AppController {
 					$values['footer'] = $element['ConfigItem']['value'];
 				}
 			}
-			
-			$this->Session->write('footer', $values['footer'].' | '.$values['version']);
+			$this->Session->write('footer', $values['footer'].' | '.$values['version']);*/
 		}
-		
 	}
 	
     public function login() {
@@ -210,12 +208,12 @@ class SecurityController extends AppController {
 			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
 		}
 		$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
-		$this->Session->write('footer', $this->ConfigItem->getValue('footer').' | '.$this->ConfigItem->getValue('version'));
+		$this->Session->write('footer', $this->ConfigItem->getWebFooter());
 	}
 	
 	public function users() {
 		App::uses('Sanitize', 'Utility');
-		$this->Navigation->addCrumb('List of Users');
+		$this->Navigation->addCrumb('Users');
 		
 		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
 		
@@ -324,6 +322,7 @@ class SecurityController extends AppController {
 		}
 	}
 	
+
 	public function usersAdd() {
 		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
 		$this->Navigation->addCrumb('Add User');
@@ -435,7 +434,7 @@ class SecurityController extends AppController {
 	
 	public function groups() {
 		App::uses('Sanitize', 'Utility');
-		$this->Navigation->addCrumb('List of Groups');
+		$this->Navigation->addCrumb('Groups');
 		
 		$page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
 		
@@ -543,11 +542,13 @@ class SecurityController extends AppController {
 	}
 	
 	public function groupsAdd() {
-		$this->Navigation->addCrumb('Add Group');
+		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
+                $this->Navigation->addCrumb('Add Group');
 		
 		if($this->request->is('post')) {
 			$groupData = $this->data['SecurityGroup'];
 			$groupObj = $this->SecurityGroup->save($groupData);
+
 			if($groupObj) {
 				$groupId = $groupObj['SecurityGroup']['id'];
 				
@@ -580,12 +581,13 @@ class SecurityController extends AppController {
 	
 	public function groupsView() {
 		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
-		
+
 		if(isset($this->params['pass'][0])) {
 			$groupId = $this->params['pass'][0];
 			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
 			if($data) {
 				$this->Navigation->addCrumb($data['SecurityGroup']['name']);
+
 				$areas = $this->SecurityGroupArea->getAreas($groupId);
 				$sites = $this->SecurityGroupInstitutionSite->getSites($groupId);
 				$systemRoles = $this->SecurityRole->getRoles(0);
@@ -613,7 +615,7 @@ class SecurityController extends AppController {
 	}
 	
 	public function groupsEdit() {
-		$this->Navigation->addCrumb('Edit Group Details');
+                $this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
 		
 		if(isset($this->params['pass'][0])) {
 			$groupId = $this->params['pass'][0];
@@ -630,7 +632,9 @@ class SecurityController extends AppController {
 			
 			$data = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
 			if($data) {
-				$areas = $this->SecurityGroupArea->getAreas($groupId);
+                                $this->Navigation->addCrumb($data['SecurityGroup']['name']);
+				
+                                $areas = $this->SecurityGroupArea->getAreas($groupId);
 				$sites = $this->SecurityGroupInstitutionSite->getSites($groupId);
 				$systemRoles = $this->SecurityRole->getRoles(0);
 				$userRoles = $this->SecurityRole->getRoles($groupId);
@@ -700,13 +704,15 @@ class SecurityController extends AppController {
 	}
 	
 	public function groupsUsers() {
-		$this->Navigation->addCrumb('Group Users');
+		$this->Navigation->addCrumb('Groups', array('controller' => 'Security', 'action' => 'groups'));
 		
 		if(isset($this->params['pass'][0])) {
 			$groupId = $this->params['pass'][0];
 			$group = $this->SecurityGroup->find('first', array('conditions' => array('SecurityGroup.id' => $groupId)));
 			if($group) {
-				$data = $this->SecurityGroupUser->getUsers($groupId);
+				$this->Navigation->addCrumb($group['SecurityGroup']['name']);
+                            
+                                $data = $this->SecurityGroupUser->getUsers($groupId);
 				$this->set('group', $group['SecurityGroup']);
 				$this->set('data', $data);
 				
@@ -747,7 +753,7 @@ class SecurityController extends AppController {
 	}
 	
 	public function rolesEdit() {
-		$this->Navigation->addCrumb('Edit Roles');
+		$this->Navigation->addCrumb('Roles');
 		
 		$systemRoles = $this->SecurityRole->getRoles(array(0, -1));
 		$isSuperUser = $this->Auth->user('super_admin')==1;
@@ -768,7 +774,7 @@ class SecurityController extends AppController {
 		if($this->request->is('post')) {
 			$data = $this->data;
 			$groupId = $this->params['pass'][0];
-			$this->SecurityRole->removeUnnamed(&$data);
+			$data = $this->SecurityRole->removeUnnamed($data);
 			$this->SecurityRole->saveMany($data['SecurityRole']);
 			$this->redirect(array('action' => 'roles', $groupId));
 		}
