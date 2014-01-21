@@ -21,11 +21,11 @@ $status = array(
 </style>
 <script>
 function killallprocess(){
-	window.location = getRootURL()+'/DataProcessing/processes/kill';
+	window.location = getRootURL()+'DataProcessing/processes/kill';
 }
 function clearallprocess(){
 	$.ajax({
-		url: getRootURL()+'/DataProcessing/processes/clear',
+		url: getRootURL()+'DataProcessing/processes/clear',
 		success: function(data){
 			if(data == ''){
 				$('.table_body').html('');
