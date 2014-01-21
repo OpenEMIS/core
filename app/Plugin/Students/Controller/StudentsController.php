@@ -957,7 +957,7 @@ class StudentsController extends StudentsAppController {
     }
 
     public function nationalities(){
-        $this->Navigation->addCrumb('Nationalities');
+        $this->Navigation->addCrumb(__('Nationalities'));
         $data = $this->StudentNationality->find('all',array('conditions'=>array('StudentNationality.student_id'=>$this->studentId)));
 		$this->set('list', $data);
     }
@@ -985,7 +985,7 @@ class StudentsController extends StudentsAppController {
         $nationalityObj = $this->StudentNationality->find('all',array('conditions'=>array('StudentNationality.id' => $nationalityId)));
         
         if(!empty($nationalityObj)) {
-            $this->Navigation->addCrumb('Nationality Details');
+            $this->Navigation->addCrumb(__('Nationality Details'));
             
             $this->Session->write('StudentNationalityId', $nationalityId);
             $this->set('nationalityObj', $nationalityObj);
@@ -998,7 +998,7 @@ class StudentsController extends StudentsAppController {
             $nationalityObj = $this->StudentNationality->find('first',array('conditions'=>array('StudentNationality.id' => $nationalityId)));
   
             if(!empty($nationalityObj)) {
-                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->Navigation->addCrumb(__('Edit Nationality Details'));
                 $this->request->data = $nationalityObj;
                
             }
@@ -1026,13 +1026,13 @@ class StudentsController extends StudentsAppController {
             $countryId = $this->StudentNationality->field('country_id', array('StudentNationality.id' => $id));
             $name = $this->Country->field('name', array('Country.id' => $countryId));
             $this->StudentNationality->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
             $this->redirect(array('action' => 'nationalities', $studentId));
 		}
     }
 	
     public function identities(){
-        $this->Navigation->addCrumb('Identities');
+        $this->Navigation->addCrumb(__('Identities'));
         $data = $this->StudentIdentity->find('all',array('conditions'=>array('StudentIdentity.student_id'=>$this->studentId)));
         $this->set('list', $data);
     }
@@ -1060,7 +1060,7 @@ class StudentsController extends StudentsAppController {
         $identityObj = $this->StudentIdentity->find('all',array('conditions'=>array('StudentIdentity.id' => $identityId)));
         
         if(!empty($identityObj)) {
-            $this->Navigation->addCrumb('Identity Details');
+            $this->Navigation->addCrumb(__('Identity Details'));
             
             $this->Session->write('StudentIdentityId', $identityId);
             $this->set('identityObj', $identityObj);
@@ -1073,7 +1073,7 @@ class StudentsController extends StudentsAppController {
             $identityObj = $this->StudentIdentity->find('first',array('conditions'=>array('StudentIdentity.id' => $identityId)));
   
             if(!empty($identityObj)) {
-                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->Navigation->addCrumb(__('Edit Identity Details'));
                 $this->request->data = $identityObj;
                
             }
@@ -1100,7 +1100,7 @@ class StudentsController extends StudentsAppController {
             $studentId = $this->Session->read('StudentId');
             $name = $this->StudentIdentity->field('number', array('StudentIdentity.id' => $id));
             $this->StudentIdentity->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
             $this->redirect(array('action' => 'identities', $studentId));
         }
     }
