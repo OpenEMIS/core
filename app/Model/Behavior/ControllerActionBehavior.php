@@ -33,7 +33,7 @@ class ControllerActionBehavior extends ModelBehavior {
 		$model->afterAction($controller, $action, $name);
 
 		$nameLen = Inflector::camelize($name);
-		$ctp = substr($action, strlen($nameLen));
+		$ctp = strtolower(substr($action, strlen($nameLen)));
 
 		if(empty($ctp)) {
 			$ctp = 'index';
