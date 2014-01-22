@@ -125,9 +125,11 @@ class ConfigController extends AppController {
 
 			if(empty($errorCustomMsg)) {
 				$this->save();
-			}
+                        }else{
+                            $this->Utility->alertArray($errorCustomMsg, array('type' => 'error'));
+                        }
 
-			$this->set('errorCustomMsg', $errorCustomMsg);
+			//$this->set('errorCustomMsg', $errorCustomMsg);
 		}
 
 
@@ -191,6 +193,7 @@ class ConfigController extends AppController {
 		$sorted = $this->groupByType($this->Utility->formatResult($items));
 		$this->set('school_years', $schoolYear);
 		$this->set('items', $sorted);
+                
 	}
 
 	private function validateFields($data){
@@ -210,29 +213,29 @@ class ConfigController extends AppController {
 					if($innerElement['id']=='17'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || $value < 0 || $value > 100){
-							$error[$innerElement['id']] = "Data Discrepancy Variation should be numeric value between 0 to 100";
+							$error[$innerElement['id']] = "Data Discrepancy: Variation should be numeric value between 0 to 100";
 						}
 					}
 				}else if($key=='Data Outliers'){
 					if($innerElement['id']=='18'){
 						$value = $innerElement['value'];
-						if(!is_numeric($value) || $value < 0 || $value > 50){
-							$error[$innerElement['id']] = "You have entered an invalid value";
+						if(!is_numeric($value) || $value < 0 || $value > 100){
+							$error[$innerElement['id']] = "Data Outliers: Maximum Student Age should be numeric value between 0 to 100";
 						}
 					}else if($innerElement['id']=='19'){
 						$value = $innerElement['value'];
-						if(!is_numeric($value) || $value < 0 || $value > 50){
-							$error[$innerElement['id']] = "You have entered an invalid value";
+						if(!is_numeric($value) || $value < 0 || $value > 100){
+							$error[$innerElement['id']] = "Data Outliers: Minimum Student Age should be numeric value between 0 to 100";
 						}
 					}else if($innerElement['id']=='20'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || !preg_match('/^\d*$/', $value)){
-							$error[$innerElement['id']] = "You have entered an invalid value";
+							$error[$innerElement['id']] = "Data Outliers: Maximum Student Number should be numeric value";
 						}
 					}else if($innerElement['id']=='21'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || !preg_match('/^\d*$/', $value)){
-							$error[$innerElement['id']] = "You have entered an invalid value";
+							$error[$innerElement['id']] = "Data Outliers: Minimum Student Number should be numeric value";
 						}
 					}
 				}
