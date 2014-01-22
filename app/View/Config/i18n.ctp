@@ -13,6 +13,7 @@ var i18n = {
 	},
 	App : {
 		confirmDeleteContent : '<?php echo T("You are able to delete this record in the database. <br><br>All related information of this record will also be deleted.<br><br>Are you sure you want to do this?", true); ?>',
+		confirmClearAllContent : '<?php echo T("Do you wish to clear all records?", true); ?>',
 		dlgOptErrorDialog : '<?php echo T("Unexpected Error"); ?>'
 	},
 	Areas : {
@@ -105,6 +106,7 @@ var i18n = {
 		textConfirm : '<?php echo T("Confirm", true); ?>',
 		textConfirmation : '<?php echo T("Confirmation", true); ?>',
 		textDeleteConfirmation : '<?php echo T("Delete Confirmation", true); ?>',
+		textWarningConfirmation : '<?php echo T("Warning", true); ?>',
 		textDeleteConfirmationMessage : '<?php echo T("Do you wish to delete this record?", true); ?>',
 		textRecordUpdateSuccess : '<?php echo T("Records have been added/updated successfully.", true); ?>',
 		textFileRequired : '<?php echo T("File is required!", true); ?>',
