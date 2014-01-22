@@ -32,7 +32,7 @@ var Survey = {
 		var maskId;
 		var id = document.getElementById("siteTypes").value;
 		var catid = document.getElementById("category").value;
-		if(catid>1){
+		if(catid!=1){
 			document.getElementById("SiteTypeDDL").style.display = 'none';
 		}else{
 			document.getElementById("SiteTypeDDL").style.display = 'block';
@@ -129,10 +129,12 @@ var Survey = {
 	},
 	
 	activateQuestion: function(obj, opts) {
-		var n = $(obj).attr("id").split("Questions");
+		var n = $(obj).attr("id").split("Questions"); 
+		
 		
 		if(obj.checked){
 			document.getElementById(n[0]+"Checked").checked = true;
+			document.getElementById(n[0]+"_row").className = 'table_row';
 			var row = $(obj).closest('.table_row');
 			if(row.hasClass('inactive')) {
 				row.removeClass('inactive');
@@ -148,6 +150,7 @@ var Survey = {
 			});
 			if(flag){
 				document.getElementById(n[0]+"Checked").checked = false;
+				document.getElementById(n[0]+"_row").className = 'table_row inactive';
 			}
 			var row = $(obj).closest('.table_row');
 			if(!row.hasClass('inactive')) {
@@ -155,40 +158,93 @@ var Survey = {
 			}
 		}
 	},
-        massDelete:function(obj){
-    
-            var allVals = [];
-            $('#'+obj+' :checked').each(function(){
-               allVals.push($(this).val());
-            });
-            if(allVals.length > 0){
-                allVals = allVals.join(',');
-                location.href=getRootURL()+'Survey/delete/'+$('#'+obj).attr('cat')+'/?file='+allVals
-            }else{  
-                alert('Please Select a File');
-            }
-        },
-        toggleCheckbox : function(a){
-            var checkbox = $(a).find('input:checkbox:first')
-                checkbox.attr("checked", !checkbox.attr("checked"))
-        },
+	
+	massDelete:function(obj){
+
+		var allVals = [];
+		$('#'+obj+' :checked').each(function(){
+		   allVals.push($(this).val());
+		});
+		if(allVals.length > 0){
+			allVals = allVals.join(',');
+			location.href=getRootURL()+'Survey/delete/'+$('#'+obj).attr('cat')+'/?file='+allVals
+		}else{  
+			alert('Please Select a File');
+		}
+	},
+	
+	toggleCheckbox : function(a){
+		var checkbox = $(a).find('input:checkbox:first')
+			checkbox.attr("checked", !checkbox.attr("checked"))
+	},
+	
+	massUpdate:function(obj){
+		var allVals = [];
+		$('#'+obj+' :checked').each(function(){
+		   allVals.push($(this).val());
+		});
+		if(allVals.length > 0){
+			allVals = allVals.join(',');
+			location.href=getRootURL()+'Survey/responsefile/?file='+allVals
+		}else{  
+			alert('Please Select a File');
+		}
+	},
+	
+	toggleCheckbox : function(a){
+		var checkbox = $(a).find('input:checkbox:first')
+			checkbox.attr("checked", !checkbox.attr("checked"))
+	},
+	
+	checkDuplicate: function(){
+		var surveyName = document.getElementById('filename').value;
+		var category = document.getElementById('category').value;
+		var year = document.getElementById('year').value;
+		var catName = "Institution";
+		if(category==1){ catName = "InstitutionSite"; }
+		if(category==2){ catName = "Student"; }
+		if(category==3){ catName = "Teacher"; }
+		if(category==4){ catName = "Staff"; }
 		
-		massUpdate:function(obj){
-            var allVals = [];
-            $('#'+obj+' :checked').each(function(){
-               allVals.push($(this).val());
-            });
-            if(allVals.length > 0){
-                allVals = allVals.join(',');
-                location.href=getRootURL()+'Survey/responsefile/?file='+allVals
-            }else{  
-                alert('Please Select a File');
-            }
-        },
-        toggleCheckbox : function(a){
-            var checkbox = $(a).find('input:checkbox:first')
-                checkbox.attr("checked", !checkbox.attr("checked"))
-        }
+		if(surveyName==""){
+			if(category!=1){
+				surveyName = year+'_'+catName+'.json';
+			}else{
+				var siteType = document.getElementById("newSkill");
+				var selectedSiteType = siteType.options[siteType.selectedIndex].text;
+				surveyName = year+'_'+catName+'_'+selectedSiteType+'.json';
+			}
+		}else{
+			surveyName = surveyName + '.json';
+		}
+		$.ajax({
+			type: 'GET',
+			dataType: 'text',
+			url: getRootURL() + 'Survey/checksurvey/',
+			data: {surveyName: surveyName},
+			success: function(data){ 
+				if(data!="exist"){
+					$("form#submitForm").submit();
+				}else{
+					var btn = {
+						value: 'Overwrite',
+						callback: function() { $("form#submitForm").submit(); }
+					};
+					
+					var dlgOpt = {	
+						id: 'Duplicate-dialog',
+						title: 'Existing survey found',
+						content: 'Do you want to overwrite an existing Survey?',
+						buttons: [btn]
+					};
+					
+					$.dialog(dlgOpt);
+					return false;
+				}
+			}
+		});
+		return false;
+	}
 }
 
 /* For Sorting of Survey List */
@@ -198,16 +254,16 @@ $(function() {
         $( "#sort-topic" ).disableSelection();
     }catch(e){}
 });
+
 $(document).ready(function(){
-        //console.log($('#results').find('input:checkbox'));
-        $('#results .table_row').click(function(e){
-            if (e.target.type == "checkbox") {
-                // stop the bubbling to prevent firing the row's click event
-                e.stopPropagation();
-            } else {
-                var $checkbox = $(this).find(':checkbox');
-                $checkbox.attr('checked', !$checkbox.attr('checked'));
-            }
-        });
-         
-    });
+	//console.log($('#results').find('input:checkbox'));
+	$('#results .table_row').click(function(e){
+		if (e.target.type == "checkbox") {
+			// stop the bubbling to prevent firing the row's click event
+			e.stopPropagation();
+		} else {
+			var $checkbox = $(this).find(':checkbox');
+			$checkbox.attr('checked', !$checkbox.attr('checked'));
+		}
+	});
+});

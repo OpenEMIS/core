@@ -57,7 +57,7 @@
                                                 <ul id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
                                                 <?php $qCnt = 1; ?>
                                                 <?php foreach($arrSecVal['questions'] as $question => $arrQuestionVal) { ?>
-                                                    <div class="table_row inactive">
+                                                    <div class="table_row">
                                                         <div class="table_cell cell_checkbox">
                                                         <?php
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.checked', 
@@ -166,7 +166,7 @@
                                                 <ul id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
                                                 <?php $qCnt = 1; ?>
                                                 <?php foreach($arrSecVal['questions'] as $question => $arrQuestionVal) { ?>
-                                                    <div class="table_row inactive">
+                                                    <div class="table_row">
                                                         <div class="table_cell cell_checkbox">
                                                         <?php
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.checked', 
