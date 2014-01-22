@@ -111,8 +111,12 @@ var i18n = {
 		textRecordUpdateSuccess : '<?php echo T("Records have been added/updated successfully.", true); ?>',
 		textFileRequired : '<?php echo T("File is required!", true); ?>',
 		textStatusRequired : '<?php echo T("Status is required!", true); ?>',
+		textContinue : '<?php echo T("Continue", true); ?>',
 		iconMoveUp : '<?php echo T("Move Up", true); ?>',
 		iconMoveDown : '<?php echo T("Move Down", true); ?>',
 		iconToggleField : '<?php echo T("Toggle this field active/inactive", true); ?>',
+	},
+	SMS: {
+		confirmModifySmsMessageContent: '<?php echo T("Note: Please clear the Responses page as existing responses may no longer match the updated Messages.", true); ?>'
 	}
 }
