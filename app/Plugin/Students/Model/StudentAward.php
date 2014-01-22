@@ -61,7 +61,7 @@ class StudentAward extends StudentsAppModel {
 		
 	}
 
-	public function award_view($controller, $params){
+	public function awardView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', $this->name);
@@ -78,7 +78,7 @@ class StudentAward extends StudentsAppModel {
 		$controller->set('data', $data);
 	}
 	
-	public function award_delete($controller, $params) {
+	public function awardDelete($controller, $params) {
         if($controller->Session->check('StudentId') && $controller->Session->check('StudentAwardId')) {
             $id = $controller->Session->read('StudentAwardId');
             $studentId = $controller->Session->read('StudentId');
@@ -95,12 +95,12 @@ class StudentAward extends StudentsAppModel {
         }
     }
 	
-	public function award_add($controller, $params) {
+	public function awardAdd($controller, $params) {
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function award_edit($controller, $params) {
+	public function awardEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
