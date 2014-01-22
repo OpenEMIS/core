@@ -20,7 +20,7 @@ echo $this->Html->script('jquery-ui.min', false);
 	
 	<?php
 	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Students', 'action' => 'award_add', 'plugin'=>'Students'),
+		'url' => array('controller' => 'Students', 'action' => 'awardAdd', 'plugin'=>'Students'),
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));

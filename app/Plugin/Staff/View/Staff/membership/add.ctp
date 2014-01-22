@@ -46,7 +46,7 @@ echo $this->Html->script('jquery-ui.min', false);
         <div class="label"><?php echo __('Expiry Date'); ?></div>
         <div class="value">
     	<?php 
-			echo $this->Form->input('expiry_date', array('type' => 'date', 'empty'=>true, 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>','class'=>false)) 
+			echo $this->Form->input('expiry_date', array('type' => 'date', 'empty'=>'Select', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>','class'=>false)) 
 		?>
         </div>
     </div>
