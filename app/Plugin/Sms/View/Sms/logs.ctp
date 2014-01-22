@@ -12,7 +12,7 @@ echo $this->Html->script('setup_variables', false);
 		<span><?php echo __('Logs'); ?></span>
 		<?php
 		if($_delete) {
-			echo $this->Html->link(__('Clear All'), array('action' => 'logsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+			echo $this->Html->link(__('Clear All'), array('action' => 'logsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmClearAll(this)'));
 		}
 		?>
 	</h1>
