@@ -46,8 +46,8 @@ class SmsController extends SmsAppController {
             $data[] = array(
                 'SmsResponse' => array(
                     'message' => $firstMessage['message'],
-                    'sent' => date('Y-m-d h:i:s'),
-                    'received' => date('Y-m-d h:i:s'),
+                    'sent' => date('Y-m-d H:i:s'),
+                    'received' => date('Y-m-d H:i:s'),
                     'number' => $number,
                     'response' => rawurldecode($message),
                     'order' => $firstMessage['order']
@@ -57,7 +57,7 @@ class SmsController extends SmsAppController {
             $logData[] = array(
                 'SmsLog' => array(
                     'send_receive' => 2,
-                    'created' => date('Y-m-d h:i:s'),
+                    'created' => date('Y-m-d H:i:s'),
                     'number' => $number,
                     'message' => rawurldecode($message)
                 )
@@ -75,7 +75,7 @@ class SmsController extends SmsAppController {
                     $data[] = array(
                         'SmsResponse' => array(
                             'message' => $followingMessage['message'],
-                            'sent' => date('Y-m-d h:i:s'),
+                            'sent' => date('Y-m-d H:i:s'),
                             'number' => $number,
                             'order' => $followingMessage['order']
                         )
@@ -84,7 +84,7 @@ class SmsController extends SmsAppController {
                     $logData[] = array(
                         'SmsLog' => array(
                             'send_receive' => 1,
-                            'created' => date('Y-m-d h:i:s'),
+                            'created' => date('Y-m-d H:i:s'),
                             'number' => $number,
                             'message' => $followingMessage['message']
                         )
@@ -104,7 +104,7 @@ class SmsController extends SmsAppController {
             $data[] = array(
                 'SmsResponse' => array(
                     'id' => $lastResponse['id'],
-                    'received' => date('Y-m-d h:i:s'),
+                    'received' => date('Y-m-d H:i:s'),
                     'response' => rawurldecode($message)
                 )
             );
@@ -112,7 +112,7 @@ class SmsController extends SmsAppController {
             $logData[] = array(
                 'SmsLog' => array(
                     'send_receive' => 2,
-                    'created' => date('Y-m-d h:i:s'),
+                    'created' => date('Y-m-d H:i:s'),
                     'number' => $number,
                     'message' => rawurldecode($message)
                 )
@@ -136,7 +136,7 @@ class SmsController extends SmsAppController {
                     $data[] = array(
                         'SmsResponse' => array(
                             'message' => $followingMessage['message'],
-                            'sent' => date('Y-m-d h:i:s'),
+                            'sent' => date('Y-m-d H:i:s'),
                             'number' => $number,
                             'order' => $followingMessage['order']
                         )
@@ -145,7 +145,7 @@ class SmsController extends SmsAppController {
                      $logData[] = array(
                         'SmsLog' => array(
                             'send_receive' => 1,
-                            'created' => date('Y-m-d h:i:s'),
+                            'created' => date('Y-m-d H:i:s'),
                             'number' => $number,
                             'message' => $followingMessage['message']
                         )
@@ -366,6 +366,46 @@ class SmsController extends SmsAppController {
         echo $this->array2csv($result, $fieldName);
         die();
     }
+
+     public function logsDownload($selectedType=null){
+        $this->autoRender = false;
+       
+        $conditions = array();
+        if(!empty($selectedType)){
+            $conditions['send_receive'] = $selectedType;
+        }
+  
+        $data = $this->SmsLog->find('all', array('fields'=>array('created', 'number', 'message', 'send_receive'), 'order'=>array('SmsLog.id DESC'), 'conditions'=>$conditions));
+
+        $fieldName =  array('"' . __('Date/Time') . '"', '"' . __('Number') . '"','"' . __('Mesage') . '"','"' . __('Type') . '"');
+        $result = null;
+      
+        if(!empty($data)){
+            $i = 0;
+            foreach($data as $obj){
+                $obj = array_pop($obj);
+                foreach($obj as $key=>$value){
+                    if($key == 'send_receive'){
+                        if($value == '1'){
+                            $result[$i][] = __('Sent');
+                        }else{
+                            $result[$i][] = __('Recieved');
+                        }
+                    }else{
+                         $result[$i][] = '"' . str_replace(',', ' ', $value) . '"';
+                    }
+                  
+                }
+                $i++;
+            }
+        }
+        echo $this->download_csv_results( 'sms_logs_' . date('Ymdhis') . '.csv');
+        //pr(implode($fieldName, ','));
+        //exit;
+        echo $this->array2csv($result, $fieldName);
+        die();
+    }
+    
     
     public function responsesDelete() {
         $this->SmsResponse->truncate();
