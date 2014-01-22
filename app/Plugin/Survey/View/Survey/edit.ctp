@@ -1,12 +1,16 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('/Survey/css/survey', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Survey.survey', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Survey/js/survey', false);
 echo $this->Html->script('/Survey/js/jquery.quicksand', false);
 echo $this->Html->script('/Survey/js/jquery.sort', false);
+echo $this->Html->script('/Survey/js/jquery-ui', false);
 ?>
-
-
+<style>
+    .table .cell_section_name { min-width: 0 !important; width: 600px; font-weight: normal;}
+    .table .cell_section_option { text-align:center; }
+    .table_row { background-color:#FFF; }
+</style>
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="surveyedit" class="content_wrapper">
@@ -35,7 +39,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
 		?>
         <div id="questionOps">
         <!-- Topic Heading -->
-        <ul id="sort-topic" style="margin-left:-40px;">
+         <!--<ul id="sort-topic" style="margin-left:-40px;">-->
         	<?php $topicCnt = 1; ?>
 			<?php foreach($questions as $topic => $arrTopVal) { ?>
             <fieldset class="section_break">
@@ -90,7 +94,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
                                                 <ul id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
                                                 <?php $qCnt = 1; ?>
                                                 <?php foreach($arrSecVal['questions'] as $question => $arrQuestionVal) { ?>
-                                                    <div class="table_row inactive">
+                                                    <div class="table_row">
                                                         <div class="table_cell cell_checkbox">
                                                         <?php
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.checked', 
@@ -196,7 +200,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
                                                 <ul id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
                                                 <?php $qCnt = 1; ?>
                                                 <?php foreach($arrSecVal['questions'] as $question => $arrQuestionVal) { ?>
-                                                    <div class="table_row inactive">
+                                                    <div class="table_row">
                                                         <div class="table_cell cell_checkbox">
                                                         <?php
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.checked', 
@@ -275,7 +279,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
             </fieldset>
             <?php $topicCnt++; ?>
             <?php } ?>
-        </ul>
+        <!--</ul>-->
         <!-- End Topic Heading -->
         </div>
 	</fieldset>
