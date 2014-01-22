@@ -397,7 +397,7 @@ var jsForm = {
 		
 		var dlgOpt = {	
 			id: 'delete-dialog',
-			title: i18n.General.textClearAllConfirmation,
+			title: i18n.General.textWarningConfirmation,
 			content: i18n.App.confirmClearAllContent,
 			buttons: [btn]
 		};

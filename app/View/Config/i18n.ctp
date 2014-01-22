@@ -106,7 +106,7 @@ var i18n = {
 		textConfirm : '<?php echo T("Confirm", true); ?>',
 		textConfirmation : '<?php echo T("Confirmation", true); ?>',
 		textDeleteConfirmation : '<?php echo T("Delete Confirmation", true); ?>',
-		textClearAllConfirmation : '<?php echo T("Clear All Confirmation", true); ?>',
+		textWarningConfirmation : '<?php echo T("Warning", true); ?>',
 		textDeleteConfirmationMessage : '<?php echo T("Do you wish to delete this record?", true); ?>',
 		textRecordUpdateSuccess : '<?php echo T("Records have been added/updated successfully.", true); ?>',
 		textFileRequired : '<?php echo T("File is required!", true); ?>',
