@@ -1,5 +1,5 @@
 #student-list .cell_id_no { width: 110px; }
-#student-list .cell_name { width: 110px; }
+#student-list .cell_name { width: 100px; }
 #student-list .cell_gender { width: 60px; }
 #student-list .cell_birthday { width: 90px; }
 
