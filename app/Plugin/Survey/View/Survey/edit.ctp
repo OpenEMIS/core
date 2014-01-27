@@ -1,12 +1,16 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('/Survey/css/survey', 'stylesheet', array('inline' => false));
+echo $this->Html->css('Survey.survey', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Survey/js/survey', false);
 echo $this->Html->script('/Survey/js/jquery.quicksand', false);
 echo $this->Html->script('/Survey/js/jquery.sort', false);
+echo $this->Html->script('/Survey/js/jquery-ui', false);
 ?>
-
-
+<style>
+    .table .cell_section_name { min-width: 0 !important; width: 600px; font-weight: normal;}
+    .table .cell_section_option { text-align:center; }
+    .table_row { background-color:#FFF; }
+</style>
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="surveyedit" class="content_wrapper">
@@ -35,7 +39,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
 		?>
         <div id="questionOps">
         <!-- Topic Heading -->
-        <ul id="sort-topic" style="margin-left:-40px;">
+         <!--<ul id="sort-topic" style="margin-left:-40px;">-->
         	<?php $topicCnt = 1; ?>
 			<?php foreach($questions as $topic => $arrTopVal) { ?>
             <fieldset class="section_break">
@@ -72,7 +76,6 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
                                                         echo $this->Form->input($topic.'.'.$section.'.order', array( 'value' => $arrSecVal['order'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.type', array( 'value' => $arrSecVal['type'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.label', array( 'value' => __($arrSecVal['label']), 'type' => 'hidden'));
-                                                        echo $this->Form->input($topic.'.'.$section.'.null', array( 'value' => __($arrSecVal['null']), 'type' => 'hidden'));
                                                         if($arrSecVal['type']!='Single'){ 
                                                         echo $this->Form->input($topic.'.'.$section.'.value', array( 'value' => __($arrSecVal['value']), 'type' => 'hidden'));
                                                         }
@@ -91,7 +94,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
                                                 <ul id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
                                                 <?php $qCnt = 1; ?>
                                                 <?php foreach($arrSecVal['questions'] as $question => $arrQuestionVal) { ?>
-                                                    <div class="table_row inactive">
+                                                    <div class="table_row">
                                                         <div class="table_cell cell_checkbox">
                                                         <?php
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.checked', 
@@ -104,11 +107,9 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
                                                                                 array( 'value' => $arrQuestionVal['type'], 'type' => 'hidden'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.label', 
                                                                                 array( 'value' => __($arrQuestionVal['label']), 'type' => 'hidden'));
-                                                            echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.null',
-                                                                                array( 'value' => __($arrQuestionVal['null']), 'type' => 'hidden'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.value', 
                                                                                 array( 'value' => '', 'type' => 'hidden'));
-                                                      		echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.null',
+                                                      		echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.null', 
                                                                                 array( 'value' => $arrQuestionVal['null'], 'type' => 'hidden'));
 														   	foreach($arrQuestionVal['questions'] as $subQuestion => $arrSubQuestionVal) {
 																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.order', 
@@ -117,8 +118,6 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
 																					array( 'value' => $arrSubQuestionVal['type'], 'type' => 'hidden'));
 																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.label', 
 																					array( 'value' => __($arrSubQuestionVal['label']), 'type' => 'hidden'));
-															    echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.null',
-                                                                					array( 'value' => __($arrSubQuestionVal['null']), 'type' => 'hidden'));
 																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.box', 
 																					array( 'value' => __($arrSubQuestionVal['box']), 'type' => 'hidden'));
 																echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.questions.'.$subQuestion.'.value', 
@@ -183,7 +182,6 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
                                                         echo $this->Form->input($topic.'.'.$section.'.order', array( 'value' => $arrSecVal['order'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.type', array( 'value' => $arrSecVal['type'], 'type' => 'hidden'));
                                                         echo $this->Form->input($topic.'.'.$section.'.label', array( 'value' => __($arrSecVal['label']), 'type' => 'hidden'));
-                                                        echo $this->Form->input($topic.'.'.$section.'.null', array( 'value' => __($arrSecVal['null']), 'type' => 'hidden'));
                                                         if($arrSecVal['type']!='Single'){ 
                                                         echo $this->Form->input($topic.'.'.$section.'.value', array( 'value' => __($arrSecVal['value']), 'type' => 'hidden'));
                                                         }
@@ -202,7 +200,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
                                                 <ul id="sort-question<?php echo $topicCnt.$sectionCnt;?>" class="table_body">
                                                 <?php $qCnt = 1; ?>
                                                 <?php foreach($arrSecVal['questions'] as $question => $arrQuestionVal) { ?>
-                                                    <div class="table_row inactive">
+                                                    <div class="table_row">
                                                         <div class="table_cell cell_checkbox">
                                                         <?php
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.checked', 
@@ -215,8 +213,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
                                                                                 array( 'value' => $arrQuestionVal['type'], 'type' => 'hidden'));
                                                             echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.label', 
                                                                                 array( 'value' => __($arrQuestionVal['label']), 'type' => 'hidden'));
-															echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.null',
-                                                                                array( 'value' => __($arrQuestionVal['null']), 'type' => 'hidden'));
+															
                                                             if($arrSecVal['type']=='Single'){
                                                             	echo $this->Form->input($topic.'.'.$section.'.questions.'.$question.'.value', 
                                                                                 	array( 'value' =>'', 'type' => 'hidden'));
@@ -282,7 +279,7 @@ echo $this->Html->script('/Survey/js/jquery.sort', false);
             </fieldset>
             <?php $topicCnt++; ?>
             <?php } ?>
-        </ul>
+        <!--</ul>-->
         <!-- End Topic Heading -->
         </div>
 	</fieldset>

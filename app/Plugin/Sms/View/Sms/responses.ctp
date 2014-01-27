@@ -16,7 +16,7 @@ echo $this->Html->script('/Sms/js/sms', false);
 		echo $this->Html->link(__('Download'), array('action' => 'responsesDownload'), array('class' => 'divider'));
 		
 		if($_delete) {
-			echo $this->Html->link(__('Clear All'), array('action' => 'responsesDelete'), array('class' => 'divider'));
+			echo $this->Html->link(__('Clear All'), array('action' => 'responsesDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmClearAll(this)'));
 		}
 		?>
 	</h1>

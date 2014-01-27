@@ -11,8 +11,10 @@ echo $this->Html->script('setup_variables', false);
 	<h1>
 		<span><?php echo __('Logs'); ?></span>
 		<?php
+		echo $this->Html->link(__('Download'), array('action' => 'logsDownload', $selectedType), array('class' => 'divider'));
+		
 		if($_delete) {
-			echo $this->Html->link(__('Clear All'), array('action' => 'logsDelete'), array('class' => 'divider'));
+			echo $this->Html->link(__('Clear All'), array('action' => 'logsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmClearAll(this)'));
 		}
 		?>
 	</h1>
