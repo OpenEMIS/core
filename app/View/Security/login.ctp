@@ -61,11 +61,11 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 			
 			<p><?php echo __('Username'); ?></p>
 			<div class="login_input">
-				<?php echo $this->Form->input('username', array('label' => false, 'div' => false)); ?>
+				<?php echo $this->Form->input('username', array('label' => false, 'div' => false, 'value' => $username)); ?>
 			</div>
 			<p><?php echo __('Password'); ?></p>
 			<div class="login_input">
-				<?php echo $this->Form->input('password', array('label' => false, 'div' => false)); ?>
+				<?php echo $this->Form->input('password', array('label' => false, 'div' => false, 'value' => $password)); ?>
 			</div>
 			
 			<!--<div class="login_line"></div>-->
