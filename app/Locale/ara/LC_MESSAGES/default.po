@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-01-21 11:14+0800\n"
+"PO-Revision-Date: 2014-01-30 10:23+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ara\n"
@@ -2469,118 +2469,140 @@ msgid "age"
 msgstr "عمر"
 
 msgid "Back"
-msgstr "Back"
+msgstr "ظهر"
 
 msgid "Modified by"
-msgstr "Modified by"
+msgstr "تعديلها من قبل"
 
 msgid "Modified on"
-msgstr "Modified on"
+msgstr "تعديل ل"
 
 msgid "Created by"
-msgstr "Created by"
+msgstr "التي أنشأتها"
 
 msgid "Created on"
-msgstr "Created on"
+msgstr "تم إنشاؤها على"
 
 msgid "Identities"
-msgstr "Identities"
+msgstr "الهويات"
 
 msgid "Identity Details"
-msgstr "Identity Details"
+msgstr "تفاصيل الهوية"
 
 msgid "Edit Identity Details"
-msgstr "Edit Identity Details"
+msgstr "تحرير تفاصيل الهوية"
 
 msgid "Number"
-msgstr "Number"
+msgstr "عدد"
 
 msgid "Issued"
-msgstr "Issued"
+msgstr "صدر"
 
 msgid "Expiry"
-msgstr "Expiry"
+msgstr "انقضاء"
 
 msgid "Issue Date"
-msgstr "Issue Date"
+msgstr "تاريخ الاصدار"
 
 msgid "Expiry Date"
-msgstr "Expiry Date"
+msgstr "تاريخ انتهاء الصلاحية"
 
 msgid "Issue Location"
-msgstr "Issue Location"
+msgstr "القضية الموقع"
 
 msgid "Comments"
-msgstr "Comments"
+msgstr "تعليقات"
+
+msgid "Your data has been saved successfully."
+msgstr "تم حفظ البيانات بنجاح."
 
 msgid "Please select a Type"
-msgstr "Please select a Type"
+msgstr "يرجى تحديد نوع"
+
+msgid "Please enter a valid Message"
+msgstr "يرجى إدخال رسالة صالحة"
 
 msgid "Please enter a valid Number"
-msgstr "Please enter a valid Number"
+msgstr "يرجى إدخال رقم صالح"
 
 msgid "Please enter a valid Issue Location"
-msgstr "Please enter a valid Issue Location"
+msgstr "يرجى إدخال صالحة العدد الموقع"
 
 msgid "Expiry Date must be greater than Issue Date"
-msgstr "Expiry Date must be greater than Issue Date"
+msgstr "يجب أن يكون تاريخ انتهاء الصلاحية أكبر من تاريخ الاصدار"
 
 msgid "Nationalities"
-msgstr "Nationalities"
+msgstr "الجنسيات"
 
 msgid "Nationality Details"
-msgstr "Nationality Details"
+msgstr "تفاصيل جنسية"
 
 msgid "Edit Nationality Details"
-msgstr "Edit Nationality Details"
+msgstr "تفاصيل تحرير الجنسية"
 
 msgid "Please select a Country"
-msgstr "Please select a Country"
+msgstr "يرجى تحديد البلد"
 
 msgid "SMS"
-msgstr "SMS"
+msgstr "الرسائل القصيرة"
 
 msgid "Sms"
-msgstr "Sms"
+msgstr "الرسائل القصيرة"
 
 msgid "Messages"
-msgstr "Messages"
+msgstr "رسائل"
 
 msgid "Responses"
-msgstr "Responses"
+msgstr "ردود"
 
 msgid "Logs"
-msgstr "Logs"
+msgstr "سجلات"
 
 msgid "Enabled"
-msgstr "Enabled"
+msgstr "تمكين"
 
 msgid "Message"
-msgstr "Message"
+msgstr "رسالة"
 
 msgid "Add Message"
-msgstr "Add Message"
+msgstr "إضافة رسالة"
 
 msgid "Message Details"
-msgstr "Message Details"
+msgstr "تفاصيل الرسالة"
 
 msgid "Edit Message Details"
-msgstr "Edit Message Details"
+msgstr "تحرير تفاصيل الرسالة"
 
 msgid "All logs have been deleted successfully."
-msgstr "All logs have been deleted successfully."
+msgstr "تم حذف كافة السجلات بنجاح."
 
 msgid "All responses have been deleted successfully."
-msgstr "All responses have been deleted successfully."
+msgstr "تم حذف جميع الردود بنجاح."
 
 msgid "Download"
-msgstr "Download"
+msgstr "تحميل"
 
 msgid "All"
-msgstr "All"
+msgstr "كل"
 
 msgid "Sent"
-msgstr "Sent"
+msgstr "أرسلت"
 
 msgid "Received"
-msgstr "Received"
+msgstr "تلقى"
+
+msgid "Warning"
+msgstr "تحذير"
+
+msgid "Continue"
+msgstr "استمر"
+
+msgid ""
+"Note: Please clear the Responses page as existing responses may no longer "
+"match the updated Messages."
+msgstr ""
+"ملاحظة: يرجى مسح الصفحة الردود على أنها استجابات القائمة قد لا تتناسب مع "
+"الرسائل التي تم تحديثها."
+
+msgid "Do you wish to clear all records?"
+msgstr "هل ترغب في مسح كافة السجلات؟"
