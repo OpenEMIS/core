@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright ¬© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -3001,8 +3001,361 @@ class InstitutionSitesController extends AppController {
                                     )
 			),
                         'FileName' => 'Report_Details_Classes_Students'
+		),
+                'Programme List' => array(
+			'Model' => 'InstitutionSiteProgramme',
+			'fields' => array(
+				'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+				'EducationProgramme' => array(
+                                    'name' => 'Programme'
+                                    ),
+				'InstitutionSiteProgramme' => array(
+                                    'system_cycle' => 'System - Cycle'
+                                    )
+			),
+                        'FileName' => 'Report_Programme_List'
+		),
+                'Student List' => array(
+			'Model' => 'InstitutionSiteStudent',
+			'fields' => array(
+				'Student' => array(
+                                    'identification_no' => 'OpenEMIS ID',
+                                    'first_name' => 'First Name',
+                                    'middle_name' => 'Middle Name',
+                                    'last_name' => 'Last Name',
+                                    'preferred_name' => 'Preferred Name'
+                                    ),
+				'EducationProgramme' => array(
+                                    'name' => 'Programme'
+                                    ),
+				'StudentStatus' => array(
+                                    'name' => 'Status'
+                                    )
+			),
+                        'FileName' => 'Report_Student_List'
+		),
+                'Student Result' => array(
+			'Model' => 'InstitutionSiteClassGradeStudent',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+                                'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+                                'InstitutionSiteClass' => array(
+                                    'name' => 'Class'
+                                    ),
+                                'EducationGrade' => array(
+                                    'name' => 'Grade'
+                                    ),
+                                'AssessmentItemType' => array(
+                                    'name' => 'Assessment'
+                                    ),
+				'Student' => array(
+                                    'identification_no' => 'OpenEMIS ID',
+                                    'first_name' => '',
+                                    'middle_name' => '',
+                                    'last_name' => '',
+                                    'preferred_name' => ''
+                                    ),
+                                'EducationSubject' => array(
+                                    'Name' => 'Subject Name',
+                                    'code' => 'Subject Code'
+                                    ),
+				'AssessmentItemResult' => array(
+                                    'marks' => 'Marks'
+                                    ),
+				'AssessmentResultType' => array(
+                                    'name' => 'Grading'
+                                    )
+			),
+                        'FileName' => 'Report_Student_Result'
+		),
+                'Student Attendance' => array(
+			'Model' => 'InstitutionSiteClassGradeStudent',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+                                'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+                                'InstitutionSiteClass' => array(
+                                    'name' => 'Class'
+                                    ),
+                                'EducationGrade' => array(
+                                    'name' => 'Grade'
+                                    ),
+                                'AssessmentItemType' => array(
+                                    'name' => 'Assessment'
+                                    ),
+				'Student' => array(
+                                    'identification_no' => 'OpenEMIS ID',
+                                    'first_name' => '',
+                                    'middle_name' => '',
+                                    'last_name' => '',
+                                    'preferred_name' => ''
+                                    ),
+                                'EducationSubject' => array(
+                                    'Name' => 'Subject Name',
+                                    'code' => 'Subject Code'
+                                    ),
+				'AssessmentItemResult' => array(
+                                    'marks' => 'Marks'
+                                    ),
+				'AssessmentResultType' => array(
+                                    'name' => 'Grading'
+                                    )
+			),
+                        'FileName' => 'Report_Student_Attendance'
 		)
 	);
+        
+        private function getReportData($name){
+		if(array_key_exists($name, $this->reportMapping)){
+			$whereKey = ($this->reportMapping[$name]['Model'] == 'InstitutionSite')? 'id' : 'institution_site_id';
+                        $cond =  array( $this->reportMapping[$name]['Model'].".".$whereKey => $this->institutionSiteId);
+			$options = array('fields' => $this->getFields($name), 'conditions'=>$cond);
+                        
+			if($name == 'More'){
+				$options['joins'] = array(
+					array('table' => 'institution_site_custom_field_options',
+						'alias' => 'InstitutionSiteCustomFieldOption',
+						'type' => 'LEFT',
+						'conditions' => array(
+							'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
+						)
+					)
+				);
+                                
+                                $options['order'] = array('InstitutionSiteCustomField.institution_site_type_id','InstitutionSiteCustomField.order','InstitutionSiteCustomValue.id');
+                                
+				$this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
+					'custom_value' => 'IF((InstitutionSiteCustomField.type = 3) OR (InstitutionSiteCustomField.type = 4), InstitutionSiteCustomFieldOption.value, InstitutionSiteCustomValue.value)'
+				);
+			}else if($name == 'Classes - Students') {
+				$options['recursive'] = -1;
+				$options['joins'] = array(
+					array(
+						'table' => 'institution_site_class_grades',
+						'alias' => 'InstitutionSiteClassGrade',
+						'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+					),
+					array(
+						'table' => 'institution_site_class_grade_students',
+						'alias' => 'InstitutionSiteClassGradeStudent',
+						'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+					),
+					array(
+						'table' => 'education_grades',
+						'alias' => 'EducationGrade',
+						'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+					),
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+					),
+					array(
+						'table' => 'student_categories',
+						'alias' => 'StudentCategory',
+						'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+					),
+					array(
+						'table' => 'school_years',
+						'alias' => 'SchoolYear',
+						'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+					)
+				);
+				$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
+                        }else if($name == 'Bank Accounts'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'bank_branches',
+						'alias' => 'BankBranch',
+						'conditions' => array('InstitutionSiteBankAccount.bank_branch_id = BankBranch.id')
+					),
+                                        array(
+						'table' => 'banks',
+						'alias' => 'Bank',
+						'conditions' => array('BankBranch.bank_id = Bank.id')
+					)
+                            );
+                        }else if($name == 'Overview'){
+                                //$options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'area_educations',
+						'alias' => 'AreaEducation',
+						'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+					)
+                            );
+                        }else if($name == 'Programme List'){
+                                $options['recursive'] = -1;
+				$options['joins'] = array(
+                                        array(
+                                                'table' => 'school_years',
+						'alias' => 'SchoolYear',
+						'conditions' => array(
+							'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
+						)
+					),
+					array(
+                                                'table' => 'education_programmes',
+						'alias' => 'EducationProgramme',
+						'conditions' => array(
+							'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id'
+						)
+					),
+                                        array(
+                                                'table' => 'education_cycles',
+						'alias' => 'EducationCycle',
+						'conditions' => array(
+							'EducationProgramme.education_cycle_id = EducationCycle.id'
+						)
+					),
+                                        array(
+                                                'table' => 'education_levels',
+						'alias' => 'EducationLevel',
+						'conditions' => array(
+							'EducationCycle.education_level_id = EducationLevel.id'
+						)
+					),
+                                        array(
+                                                'table' => 'education_systems',
+						'alias' => 'EducationSystem',
+						'conditions' => array(
+							'EducationLevel.education_system_id = EducationSystem.id'
+						)
+					)
+				);
+                                
+                                $options['order'] = array('SchoolYear.name','EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order');
+                                
+				$this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
+					'system_cycle' => 'CONCAT(EducationSystem.name, " - ", EducationCycle.name)'
+				);
+			}else if($name == 'Student List'){
+                                $options['conditions'] = array();
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
+					),
+                                        array(
+						'table' => 'institution_site_programmes',
+						'alias' => 'InstitutionSiteProgramme',
+						'conditions' => array(
+                                                    'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
+                                                    'InstitutionSiteProgramme.institution_site_id = ' . $this->institutionSiteId
+                                                    )
+					),
+                                        array(
+						'table' => 'education_programmes',
+						'alias' => 'EducationProgramme',
+						'conditions' => array('InstitutionSiteProgramme.education_programme_id = EducationProgramme.id')
+					),
+                                        array(
+						'table' => 'student_statuses',
+						'alias' => 'StudentStatus',
+                                                'type' => 'left',
+						'conditions' => array('InstitutionSiteStudent.student_status_id = StudentStatus.id')
+					)
+                                );
+                                
+                                $options['order'] = array('Student.first_name');
+                        }else if($name == 'Student Result'){
+                                $options['conditions'] = array();
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'institution_site_class_grades',
+						'alias' => 'InstitutionSiteClassGrade',
+						'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+					),
+                                        array(
+						'table' => 'education_grades',
+						'alias' => 'EducationGrade',
+						'conditions' => array(
+                                                    'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
+                                                    )
+					),
+                                        array(
+						'table' => 'institution_site_classes',
+						'alias' => 'InstitutionSiteClass',
+						'conditions' => array(
+                                                    'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+                                                    'InstitutionSiteClass.institution_site_id = ' . $this->institutionSiteId
+                                                    )
+					),
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+                                                    'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
+                                                    )
+					),
+                                        array(
+                                                'table' => 'school_years',
+                                                'alias' => 'SchoolYear',
+                                                'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+                                        ),
+                                        array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
+					),
+                                        array(
+						'table' => 'assessment_item_types',
+						'alias' => 'AssessmentItemType',
+						'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+					),
+                                        array(
+                                                'table' => 'assessment_items',
+                                                'alias' => 'AssessmentItem',
+                                                'conditions' => array('AssessmentItem.assessment_item_type_id = AssessmentItemType.id')
+                                        ),
+                                        array(
+                                                'table' => 'education_grades_subjects',
+                                                'alias' => 'EducationGradeSubject',
+                                                'conditions' => array('AssessmentItem.education_grade_subject_id = EducationGradeSubject.id')
+                                        ),
+                                        array(
+                                                'table' => 'education_subjects',
+                                                'alias' => 'EducationSubject',
+                                                'conditions' => array('EducationGradeSubject.education_subject_id = EducationSubject.id')
+                                        ),
+                                        array(
+                                                'table' => 'assessment_item_results',
+                                                'alias' => 'AssessmentItemResult',
+                                                'type' => 'LEFT',
+                                                'conditions' => array(
+                                                        'AssessmentItemResult.student_id = Student.id',
+                                                        'AssessmentItemResult.institution_site_id = InstitutionSiteClass.institution_site_id',
+                                                        'AssessmentItemResult.school_year_id = InstitutionSiteClass.school_year_id',
+                                                        'AssessmentItemResult.assessment_item_id = AssessmentItem.id'
+                                                )
+                                        ),
+                                        array(
+                                                'table' => 'assessment_result_types',
+                                                'alias' => 'AssessmentResultType',
+                                                'type' => 'LEFT',
+                                                'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
+                                        )
+                                );
+                                
+                                $options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'EducationGrade.name', 'AssessmentItemType.name', 'EducationSubject.name', 'Student.identification_no');
+                        }
+			$data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
+		}
+		return $data;   
+	}
 	
 	private $ReportData = array(); //param 1 name ; param2 type
 	public function genReport($name,$type){ //$this->genReport('Site Details','CSV');
@@ -3013,6 +3366,7 @@ class InstitutionSitesController extends AppController {
 		if(method_exists($this, 'gen'.$type)){ 
 			if($type == 'CSV'){
 				$data =  $this->getReportData($this->ReportData['name']);
+                                //pr($data);
                                 $this->genCSV($data, $this->ReportData['name']);
 			}elseif($type == 'PDF'){
 				$data =  $this->genReportPDF($this->ReportData['name']);
@@ -3051,92 +3405,6 @@ class InstitutionSitesController extends AppController {
 		}
 		return $new;
         }
-	
-	private function getReportData($name){
-		if(array_key_exists($name, $this->reportMapping)){
-			$whereKey = ($this->reportMapping[$name]['Model'] == 'InstitutionSite')? 'id' : 'institution_site_id';
-			$cond =  array( $this->reportMapping[$name]['Model'].".".$whereKey => $this->institutionSiteId);
-			$options = array('fields' => $this->getFields($name), 'conditions'=>$cond);
-					
-			if($this->reportMapping[$name]['Model'] == 'InstitutionSiteCustomValue'){
-				$options['joins'] = array(
-					array('table' => 'institution_site_custom_field_options',
-						'alias' => 'InstitutionSiteCustomFieldOption',
-						'type' => 'LEFT',
-						'conditions' => array(
-							'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
-						)
-					)
-				);
-                                
-                                $options['order'] = array('InstitutionSiteCustomField.institution_site_type_id','InstitutionSiteCustomField.order','InstitutionSiteCustomValue.id');
-                                
-				$this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
-					'custom_value' => 'IF((InstitutionSiteCustomField.type = 3) OR (InstitutionSiteCustomField.type = 4), InstitutionSiteCustomFieldOption.value, InstitutionSiteCustomValue.value)'
-				);
-			} else if($this->reportMapping[$name]['Model'] == 'InstitutionSiteClass') {
-				$options['recursive'] = -1;
-				$options['joins'] = array(
-					array(
-						'table' => 'institution_site_class_grades',
-						'alias' => 'InstitutionSiteClassGrade',
-						'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-					),
-					array(
-						'table' => 'institution_site_class_grade_students',
-						'alias' => 'InstitutionSiteClassGradeStudent',
-						'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
-					),
-					array(
-						'table' => 'education_grades',
-						'alias' => 'EducationGrade',
-						'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
-					),
-					array(
-						'table' => 'students',
-						'alias' => 'Student',
-						'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
-					),
-					array(
-						'table' => 'student_categories',
-						'alias' => 'StudentCategory',
-						'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
-					),
-					array(
-						'table' => 'school_years',
-						'alias' => 'SchoolYear',
-						'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
-					)
-				);
-				$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
-                        }else if($this->reportMapping[$name]['Model'] == 'InstitutionSiteBankAccount'){
-                                $options['recursive'] = -1;
-                                $options['joins'] = array(
-					array(
-						'table' => 'bank_branches',
-						'alias' => 'BankBranch',
-						'conditions' => array('InstitutionSiteBankAccount.bank_branch_id = BankBranch.id')
-					),
-                                        array(
-						'table' => 'banks',
-						'alias' => 'Bank',
-						'conditions' => array('BankBranch.bank_id = Bank.id')
-					)
-                            );
-                        }else if($this->reportMapping[$name]['Model'] == 'InstitutionSite'){
-                                //$options['recursive'] = -1;
-                                $options['joins'] = array(
-					array(
-						'table' => 'area_educations',
-						'alias' => 'AreaEducation',
-						'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
-					)
-                            );
-                        }
-			$data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
-		}
-		return $data;   
-	}
         
         private function formatCSVData($data, $name){
             $newData = array();
@@ -3266,9 +3534,40 @@ class InstitutionSitesController extends AppController {
 	
 	public function reportsDetails() {
 		$this->Navigation->addCrumb('Reports - Details');
-		$data = array('Reports - Details' => array(
-			array('name' => 'Classes - Students', 'types' => array('CSV'))
-		));
+		$data = array(
+                    'Reports - Details' => array(
+                        array(
+                            'name' => 'Classes - Students', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Programme List', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Student List', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Student Result', 
+                            'types' => array('CSV')
+                        )
+                    )
+                );
+		$this->set('data', $data);
+		$this->render('Reports/general');
+	}
+        
+        public function reportsTotals() {
+		$this->Navigation->addCrumb('Reports - Totals');
+		$data = array(
+                    'Reports - Totals' => array(
+                        array(
+                            'name' => 'Students', 
+                            'types' => array('CSV')
+                        )
+                    )
+                );
 		$this->set('data', $data);
 		$this->render('Reports/general');
 	}
