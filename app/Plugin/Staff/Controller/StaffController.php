@@ -55,6 +55,9 @@ class StaffController extends StaffAppController {
             'Staff.StaffSalary',
             'Staff.StaffSalaryAddition',
             'Staff.StaffSalaryDeduction',
+            'Staff.StaffAward',
+            'Staff.StaffMembership',
+            'Staff.StaffLicense',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -88,7 +91,10 @@ class StaffController extends StaffAppController {
 		'health_test' => 'Staff.StaffHealthTest',
 		'health_consultation' => 'Staff.StaffHealthConsultation',
 		'health' => 'Staff.StaffHealth',
-        'special_need' => 'Staff.StaffSpecialNeed'
+        'special_need' => 'Staff.StaffSpecialNeed',
+        'award' => 'Staff.StaffAward',
+        'membership' => 'Staff.StaffMembership',
+        'license' => 'Staff.StaffLicense'
 	); 
 	
     public function beforeFilter() {
@@ -1909,6 +1915,36 @@ class StaffController extends StaffAppController {
             $this->StaffSalary->delete($id);
             $this->Utility->alert($name . ' have been deleted successfully.');
             $this->redirect(array('action' => 'salaries', $teacherId));
+        }
+    }
+
+    public function ajax_find_award($type) {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StaffAward->autocomplete($search, $type);
+ 
+            return json_encode($data);
+        }
+    }
+
+    public function ajax_find_membership() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StaffMembership->autocomplete($search);
+ 
+            return json_encode($data);
+        }
+    }
+
+   public function ajax_find_license() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StaffLicense->autocomplete($search);
+ 
+            return json_encode($data);
         }
     }
 }

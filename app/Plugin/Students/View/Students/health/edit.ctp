@@ -12,13 +12,13 @@ echo $this->Html->script('config', false);
 	<h1>
 		<span><?php echo __('Edit Overview'); ?></span>
 		<?php
-		echo $this->Html->link(__('View'), array('action' => 'health_view'), array('class' => 'divider'));
+		echo $this->Html->link(__('View'), array('action' => 'healthView'), array('class' => 'divider'));
 		?>
 	</h1>
 	
 	<?php
 	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Students', 'action' => 'health_edit', 'plugin'=>'Students'),
+		'url' => array('controller' => 'Students', 'action' => 'healthEdit', 'plugin'=>'Students'),
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));

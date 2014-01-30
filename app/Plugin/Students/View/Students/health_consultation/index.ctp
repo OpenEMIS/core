@@ -10,13 +10,13 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
         <span><?php echo __($subheader); ?></span>
         <?php
 		if($_edit) {
-			echo $this->Html->link(__('Add'), array('action' => 'health_consultation_add'), array('class' => 'divider'));
+			echo $this->Html->link(__('Add'), array('action' => 'healthConsultationAdd'), array('class' => 'divider'));
 		}
 		?>
     </h1>
     <?php echo $this->element('alert'); ?>
     <?php if(isset($data)) { ?>
-    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/health_consultation_view/">
+    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/healthConsultationView/">
         <div class="table_head">
        		<div class="table_cell"><?php echo __('Date'); ?></div>
             <div class="table_cell"><?php echo __('Type'); ?></div>

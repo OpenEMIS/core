@@ -29,7 +29,7 @@ class SmsShell extends AppShell {
     public function _welcome() {}
 	
     public function run() {
-        $this->out('Started - ' . date('Y-m-d h:i:s'));
+        $this->out('Started - ' . date('Y-m-d H:i:s'));
         $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
         $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
         $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
@@ -40,7 +40,7 @@ class SmsShell extends AppShell {
             'conditions'=>array(
                 'SmsResponse.sent_count <' => $retryTimes, 
                 'SmsResponse.received'=>null, 
-                'SmsResponse.sent <=' =>date('Y-m-d h:i:s', strtotime("-" . $retryWait . " seconds"))
+                'SmsResponse.sent <=' =>date('Y-m-d H:i:s', strtotime("-" . $retryWait . " seconds"))
                 )
             )
         );
@@ -58,7 +58,7 @@ class SmsShell extends AppShell {
                     $data[] = array(
                         'SmsResponse' => array(
                             'id' => $obj['SmsResponse']['id'],
-                            'sent' => date('Y-m-d h:i:s'),
+                            'sent' => date('Y-m-d H:i:s'),
                             'sent_count' => $obj['SmsResponse']['sent_count']+1
                         )
                     );
@@ -66,7 +66,7 @@ class SmsShell extends AppShell {
                     $logData[] = array(
                         'SmsLog' => array(
                             'send_receive' => 1,
-                            'created' => date('Y-m-d h:i:s'),
+                            'created' => date('Y-m-d H:i:s'),
                             'number' => $obj['SmsResponse']['number'],
                             'message' => $obj['SmsResponse']['message']
                         )
@@ -79,7 +79,7 @@ class SmsShell extends AppShell {
                 $this->SmsLog->saveAll($logData);
             }
         }
-        $this->out('Ended - ' . date('Y-m-d h:i:s'));
+        $this->out('Ended - ' . date('Y-m-d H:i:s'));
     }
 }
 

@@ -89,7 +89,7 @@
 								ON `census_teacher_grades`.`census_teacher_id` = `census_teachers`.`id`
 								AND `census_teacher_grades`.`education_grade_id` = `education_grades`.`id`
                             JOIN `school_years` ON `school_years`.`id` = `census_teachers`.`school_year_id`
-                            WHERE `areas`.`area_level_id` = 2 -- {LEVEL}
+                            WHERE `areas`.`area_level_id` = -- {LEVEL}
                             -- {WHERE}
 
                             GROUP BY

@@ -41,6 +41,7 @@ class TeacherSpecialNeed extends TeachersAppModel {
 
 	public $headerDefault = 'Special Needs';
 	
+
 	public function specialNeed($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
@@ -56,6 +57,7 @@ class TeacherSpecialNeed extends TeachersAppModel {
 		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
 		
 	}
+
 
 	public function specialNeedView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
@@ -77,6 +79,8 @@ class TeacherSpecialNeed extends TeachersAppModel {
 		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
 	}
 	
+
+
 	public function specialNeedDelete($controller, $params) {
         if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherSpecialNeedId')) {
             $id = $controller->Session->read('TeacherSpecialNeedId');
@@ -96,11 +100,14 @@ class TeacherSpecialNeed extends TeachersAppModel {
         }
     }
 	
+
 	public function specialNeedAdd($controller, $params) {
+
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
+
 	public function specialNeedEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);

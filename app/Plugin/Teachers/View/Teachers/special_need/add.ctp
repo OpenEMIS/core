@@ -9,9 +9,8 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	<h1>
 		<span><?php echo __($subheader); ?></span>
 		<?php
-		if ($_edit) {
-            echo $this->Html->link(__('Back'), array('action' => 'special_need'), array('class' => 'divider'));
-        }
+            echo $this->Html->link(__('Back'), array('action' => 'specialneed'), array('class' => 'divider'));
+        
 		?>
 	</h1>
 	</h1>
@@ -51,7 +50,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'special_need'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'specialneed'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

@@ -1,9 +1,9 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 $arrLabel = array(
-    'Totals from Individuals'=>'Totals from Details',
-    'Totals from previous years and same area'=>'Totals from Previous Year or Same Area',
-    'Population'=>'Population from other Years'
+    'Totals from Individuals'=>'Generate Estimates from Individuals',
+    'Totals from previous years and same area'=>'Generate Estimates from Year and Area',
+    'Population'=>'Generate Estimates for Population'
 );
 ?>
 
