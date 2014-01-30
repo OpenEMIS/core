@@ -40,6 +40,7 @@ class StudentsNavigationComponent extends Component {
 					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
 					$navigation->createLink('Comments', $controller, 'comments'),
 					$navigation->createLink('Special Needs', $controller, 'specialNeed', '^specialNeed'),
+					$navigation->createLink('Awards', $controller, 'award', '^award'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
@@ -51,14 +52,14 @@ class StudentsNavigationComponent extends Component {
 					$navigation->createLink('Extracurricular', $controller, 'extracurricular')
                 ),
 				'HEALTH' => array(
-                    $navigation->createLink('Overview', $controller, 'health_view', 'health_view|health_edit'),
-                    $navigation->createLink('History', $controller, 'health_history', '^health_history'),
-                    $navigation->createLink('Family', $controller, 'health_family', '^health_family'),
-                    $navigation->createLink('Immunizations', $controller, 'health_immunization', '^health_immunization'),
-					$navigation->createLink('Medications', $controller, 'health_medication', '^health_medication'),
-					$navigation->createLink('Allergies', $controller, 'health_allergy', '^health_allergy'),
-					$navigation->createLink('Tests', $controller, 'health_test', '^health_test'),
-					$navigation->createLink('Consultations', $controller, 'health_consultation', '^health_consultation')
+                    $navigation->createLink('Overview', $controller, 'healthView', 'healthView|healthEdit'),
+                    $navigation->createLink('History', $controller, 'healthHistory', '^healthHistory'),
+                    $navigation->createLink('Family', $controller, 'healthFamily', '^healthFamily'),
+                    $navigation->createLink('Immunizations', $controller, 'healthImmunization', '^healthImmunization'),
+					$navigation->createLink('Medications', $controller, 'healthMedication', '^healthMedication'),
+					$navigation->createLink('Allergies', $controller, 'healthAllergy', '^healthAllergy'),
+					$navigation->createLink('Tests', $controller, 'healthTest', '^healthTest'),
+					$navigation->createLink('Consultations', $controller, 'healthConsultation', '^healthConsultation')
                 )
 			)
 		);

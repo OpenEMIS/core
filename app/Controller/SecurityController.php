@@ -43,6 +43,7 @@ class SecurityController extends AppController {
 		parent::beforeFilter();
 		$this->renderFooter();
 		$this->Auth->allow('login');
+		$this->Auth->allow('login_remote');
 		
 		if($this->action !== 'login' || $this->action !== 'logout') {
 			$this->bodyTitle = 'Administration';
@@ -112,6 +113,7 @@ class SecurityController extends AppController {
 					$result = $this->Auth->login();
 					//Error Message to be used if login false;
 					$errMsg = $this->Utility->getMessage("LOGIN_INVALID");
+
 				}
 				if($result) {
 					if($this->Auth->user('status') == 1) {
@@ -186,6 +188,17 @@ class SecurityController extends AppController {
 					
 			Configure::write('Config.language', $this->Session->read('configItem.language')); 
 		}
+	$username = $this->Session->check('login.username') ? $this->Session->read('login.username') : '';
+	$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
+	$this->set('username', $username);
+	$this->set('password', $password);
+    }
+
+    public function login_remote() {
+        $this->autoRender = false;
+        $this->Session->write('login.username', $this->data['username']);
+        $this->Session->write('login.password', $this->data['password']);
+        return $this->redirect(array('action' => 'login'));
     }
 
     public function logout() {

@@ -10,7 +10,7 @@ echo $this->Html->script('/Students/js/students', false);
 		<span><?php echo __('Health - Overview'); ?></span>
 		<?php
 		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'health_edit'), array('class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'healthEdit'), array('class' => 'divider'));
 		}
 		?>
 	</h1>

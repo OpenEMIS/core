@@ -52,6 +52,7 @@ class StudentsController extends StudentsAppController {
         'Students.StudentIdentity',
         'Students.StudentLanguage',
 	'Students.StudentContact',
+        'Students.StudentAward',
         'SchoolYear',
         'Country',
         'Language',
@@ -81,7 +82,8 @@ class StudentsController extends StudentsAppController {
 		'health_test' => 'Students.StudentHealthTest',
 		'health_consultation' => 'Students.StudentHealthConsultation',
 		'health' => 'Students.StudentHealth',
-        'special_need' => 'Students.StudentSpecialNeed'
+        'special_need' => 'Students.StudentSpecialNeed',
+        'award' => 'Students.StudentAward'
 	); 
 
     public function beforeFilter() {
@@ -1382,5 +1384,15 @@ class StudentsController extends StudentsAppController {
 			} 
 		}
 	}
+
+    public function ajax_find_award($type) {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StudentAward->autocomplete($search, $type);
+ 
+            return json_encode($data);
+        }
+    }
 }
 

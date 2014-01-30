@@ -3,6 +3,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('setup_variables', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('setup_variables', false);
+echo $this->Html->script('/Sms/js/sms', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -12,7 +13,7 @@ echo $this->Html->script('setup_variables', false);
 		<span><?php echo __('Messages'); ?></span>
 		<?php
 		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'messagesAdd'), array('class' => 'divider'));
+			echo $this->Html->link(__('Add'), array('action' => 'messagesAdd'), array('class' => 'divider', 'onclick' => 'return sms.confirmModifySmsMessage(this)'));
 		}
 		?>
 	</h1>

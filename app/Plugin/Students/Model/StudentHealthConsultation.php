@@ -41,7 +41,7 @@ class StudentHealthConsultation extends StudentsAppModel {
 	);
 	public $booleanOptions = array('No', 'Yes');
 	
-	public function health_consultation($controller, $params) {
+	public function healthConsultation($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb('Health - Consultations');
 		$controller->set('modelName', $this->name);
@@ -57,7 +57,7 @@ class StudentHealthConsultation extends StudentsAppModel {
 		
 	}
 
-	public function health_consultation_view($controller, $params){
+	public function healthConsultationView($controller, $params){
 		$controller->Navigation->addCrumb('Health - View Consultation');
 		$controller->set('subheader', 'Health - View Consultation');
 		$controller->set('modelName', $this->name);
@@ -66,7 +66,7 @@ class StudentHealthConsultation extends StudentsAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'health_consultation'));
+			$controller->redirect(array('action'=>'healthConsultation'));
 		}
 		
 		$controller->Session->write('StudentHealthConsultationId', $id);
@@ -77,7 +77,7 @@ class StudentHealthConsultation extends StudentsAppModel {
 		$controller->set('healthConsultationsOptions', $healthConsultationsOptions);
 	}
 	
-	public function health_consultation_delete($controller, $params) {
+	public function healthConsultationDelete($controller, $params) {
         if($controller->Session->check('StudentId') && $controller->Session->check('StudentHealthConsultationId')) {
             $id = $controller->Session->read('StudentHealthConsultationId');
             $studentId = $controller->Session->read('StudentId');
@@ -92,17 +92,17 @@ class StudentHealthConsultation extends StudentsAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StudentHealthConsultationId');
-            $controller->redirect(array('action' => 'health_consultation'));
+            $controller->redirect(array('action' => 'healthConsultation'));
         }
     }
 	
-	public function health_consultation_add($controller, $params) {
+	public function healthConsultationAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add Consultation');
 		$controller->set('subheader', 'Health - Add Consultation');
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function health_consultation_edit($controller, $params) {
+	public function healthConsultationEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Consultation');
 		$controller->set('subheader', 'Health - Edit Consultation');
 		$this->setup_add_edit_form($controller, $params);
@@ -135,7 +135,7 @@ class StudentHealthConsultation extends StudentsAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_consultation'));
+				return $controller->redirect(array('action' => 'healthConsultation'));
 			}
 		}
 	}

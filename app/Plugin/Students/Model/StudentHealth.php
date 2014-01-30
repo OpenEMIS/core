@@ -52,10 +52,10 @@ class StudentHealth extends StudentsAppModel {
 	
 	public function health($controller, $params) {
 		$this->render = false;
-		return $controller->redirect(array('action' =>'health_view'));
+		return $controller->redirect(array('action' =>'healthView'));
 	}
 	
-	public function health_view($controller, $params) {
+	public function healthView($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Overview');
         $data = $this->findByStudentId($controller->studentId);
 	
@@ -63,7 +63,7 @@ class StudentHealth extends StudentsAppModel {
 		$controller->set('modelName', $this->name);
 	}
 	
-	public function health_edit($controller, $params){
+	public function healthEdit($controller, $params){
 		$controller->Navigation->addCrumb('Health - Edit Overview');
 		$controller->set('bloodTypeOptions', $this->bloodTypeOptions);
 		$controller->set('booleanOptions', $this->booleanOptions);
@@ -89,7 +89,7 @@ class StudentHealth extends StudentsAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_view'));
+				return $controller->redirect(array('action' => 'healthView'));
 			}
 		}
 	}

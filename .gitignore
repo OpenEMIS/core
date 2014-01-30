@@ -45,6 +45,7 @@ app/webroot/custom_indicators/*
 app/tmp/logs/*
 app/tmp/cache/*
 app/tmp/sessions/*
+app/Lib/Olap/datasources.xml
 lib/Cake/Console/Templates/skel/tmp/*
 app/webroot/img/.DS_Store
 app/webroot/logs/*
@@ -55,3 +56,4 @@ app/webroot/logs/*
 *.csv
 *.vcf
 *.pdf
+*.kml

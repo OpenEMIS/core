@@ -13,6 +13,7 @@ echo $this->Html->script('config', false);
 		<?php echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'index') , array('class' => 'divider link_view')); ?>
 		<?php echo $this->Html->link(__('Dashboard Image'), array('controller' => 'Config', 'action' => 'dashboard'), array('class' => 'divider')); ?>
 	</h1>
+        <?php echo $this->element('alert_array'); ?>
 
 	<?php
 	echo $this->Form->create('edit', array(

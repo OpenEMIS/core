@@ -111,8 +111,9 @@ class SecurityGroupUser extends AppModel {
 			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
 		));
                 
-                $data2 = $this->find('list', array(
-			'fields' => array('SecurityGroupUser.security_role_id', 'SecurityGroupUser.security_role_id'),
+                $roleAreas = $this->find('all', array(
+                        'recursive' => -1,
+			'fields' => array('SecurityGroupUser.security_role_id', 'Area.lft', 'Area.rght'),
 			'joins' => array(
 				array(
 					'table' => 'security_group_areas',
@@ -122,18 +123,42 @@ class SecurityGroupUser extends AppModel {
                                          )
 				),
                                 array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
+					'table' => 'areas',
+					'alias' => 'Area',
 					'conditions' => array(
-                                            'SecurityGroupArea.area_id = InstitutionSite.area_id',
-                                            'InstitutionSite.id = ' . $institutionSiteId
+                                            'SecurityGroupArea.area_id = Area.id'
                                          )
 				)
 			),
 			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
 		));
                 
+                $AreaModel = ClassRegistry::init('Area');
+                $siteArea = $AreaModel->find('first', array(
+                        'recursive' => -1,
+			'fields' => array('Area.lft', 'Area.rght'),
+			'joins' => array(
+                                array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+                                            'InstitutionSite.area_id = Area.id',
+                                            'InstitutionSite.id = ' . $institutionSiteId
+                                         )
+				)
+			)
+                ));
                 
+                $data2 = array();
+                if(count($siteArea) > 0){
+                    foreach($roleAreas AS $rowIndex => $row){
+                        if($siteArea['Area']['lft'] >= $row['Area']['lft'] && $siteArea['Area']['rght'] <= $row['Area']['rght']){
+                            if(!in_array($row['SecurityGroupUser']['security_role_id'], $data2)){
+                                $data2[] = $row['SecurityGroupUser']['security_role_id'];
+                            }
+                        }
+                    }
+                }
 		return array_merge($data1, $data2);
 	}
 	
