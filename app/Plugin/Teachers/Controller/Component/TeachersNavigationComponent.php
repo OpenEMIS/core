@@ -66,6 +66,11 @@ class TeachersNavigationComponent extends Component {
 					$navigation->createLink('Allergies', $controller, 'healthAllergy', '^healthAllergy'),
 					$navigation->createLink('Tests', $controller, 'healthTest', '^healthTest'),
 					$navigation->createLink('Consultations', $controller, 'healthConsultation', '^healthConsultation'),
+                ),
+				'TRAINING' => array(
+                    $navigation->createLink('Needs', $controller, 'trainingNeed', '^trainingNeed'),
+                    $navigation->createLink('Results', $controller, 'trainingResult', '^trainingResult'),
+                    $navigation->createLink('Self-Study', $controller, 'trainingSelfStudy', '^trainingSelfStudy')
                 )
 			)
 		);
