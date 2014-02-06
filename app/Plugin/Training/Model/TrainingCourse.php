@@ -52,8 +52,13 @@ class TrainingCourse extends TrainingAppModel {
 			'foreignKey' => 'training_course_id',
 			'dependent' => true
 		),
-		'TrainingNeed' => array(
-			'className' => 'TrainingNeed',
+		'TeacherTrainingNeed' => array(
+			'className' => 'TeacherTrainingNeed',
+			'foreignKey' => 'training_course_id',
+			'dependent' => true
+		),
+		'StaffTrainingNeed' => array(
+			'className' => 'StaffTrainingNeed',
 			'foreignKey' => 'training_course_id',
 			'dependent' => true
 		),
@@ -70,6 +75,12 @@ class TrainingCourse extends TrainingAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a valid Course Code.'
+			),
+			'ruleUnique' => array(
+				'rule' => 'isUnique',
+				'required' => true,
+			  	'on' => 'create',
+				'message' => 'Please enter a new Course Code.'
 			)
 			
 		),
@@ -163,6 +174,36 @@ class TrainingCourse extends TrainingAppModel {
 
 		return $data;
 	}
+
+
+
+	public function autocompletePosition($search, $index) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this->query(
+			"SELECT * FROM(
+			SELECT *, 'staff_position_titles' as position_table FROM staff_position_titles as StaffPositionTitle UNION Select *, 'teacher_position_titles' as position_table from teacher_position_titles as TeacherPositionTitle 
+			)as TrainingPosition
+			WHERE name LIKE '" . $search . "' and visible = 1
+			order by 'order';");
+		
+
+		
+		$data = array();
+		
+		foreach($list as $obj) {
+			$positionTitleId = $obj['TrainingPosition']['id'];
+			$positionTitleName = $obj['TrainingPosition']['name'];
+			$positionTitleTable= $obj['TrainingPosition']['position_table'];
+			
+			$data[] = array(
+				'label' => trim(sprintf('%s', $positionTitleName)),
+				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName, 'position-title-table-'.$index => $positionTitleTable)
+			);
+		}
+
+		return $data;
+	}
 	
 	public function course($controller, $params) {
 	//	pr('aas');
@@ -238,6 +279,8 @@ class TrainingCourse extends TrainingAppModel {
 		$teacherPositionTitle = ClassRegistry::init('TeacherPositionTitle');
 		$teacherPositionTitles = $teacherPositionTitle->find('list', array('fields'=>array('id', 'name')));
 		
+		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
+		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
 
 		$trainingCoursePrerequisite = ClassRegistry::init('TrainingCoursePrerequisite');
 		$trainingCoursePrerequisites = $trainingCoursePrerequisite->find('all',  
@@ -258,6 +301,7 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('data', $data);
 		$controller->set('trainingCourseTargetPopulations', $trainingCourseTargetPopulations);
 		$controller->set('teacherPositionTitles', $teacherPositionTitles);
+		$controller->set('staffPositionTitles', $staffPositionTitles);
 		$controller->set('trainingCoursePrerequisites', $trainingCoursePrerequisites);
 	}
 	
@@ -266,7 +310,7 @@ class TrainingCourse extends TrainingAppModel {
             $id = $controller->Session->read('TrainingCourseId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			if($data['TrainingSession']['training_status_id']=='1'){
+			if($data['TrainingCourse']['training_status_id']=='1'){
 	            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 				
 	            $this->delete($id);
@@ -282,7 +326,7 @@ class TrainingCourse extends TrainingAppModel {
             $id = $controller->Session->read('TrainingCourseId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			if($data['TrainingSession']['training_status_id']=='2'){
+			if($data['TrainingCourse']['training_status_id']=='2'){
 	            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 				
 	          
@@ -290,7 +334,7 @@ class TrainingCourse extends TrainingAppModel {
 	    			array('TrainingCourse.training_status_id' => 3),
 	    			array('TrainingCourse.id '=> $id)
 				);
-	            $controller->Utility->alert($name . ' have been activate successfully.');
+	            $controller->Utility->alert($name . ' have been activated successfully.');
 	        }
             $controller->redirect(array('action' => 'course'));
         }
@@ -351,6 +395,10 @@ class TrainingCourse extends TrainingAppModel {
 
 		$teacherPositionTitle = ClassRegistry::init('TeacherPositionTitle');
 		$teacherPositionTitles = $teacherPositionTitle->find('list', array('fields'=>array('id', 'name')));
+
+		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
+		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
+		
 		
 		$controller->set('trainingFieldStudyOptions', $trainingFieldStudyOptions);
 		$controller->set('trainingModeDeliveryOptions', $trainingModeDeliveryOptions);
@@ -359,6 +407,7 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('trainingLevelOptions', $trainingLevelOptions);
 		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 		$controller->set('teacherPositionTitles', $teacherPositionTitles);
+		$controller->set('staffPositionTitles', $staffPositionTitles);
 
 		$controller->set('modelName', $this->name);
 		
@@ -412,7 +461,7 @@ class TrainingCourse extends TrainingAppModel {
 			}
 		}
 		else{
-			if ($this->save($controller->request->data, array('validate' => 'only'))){
+			if ($this->saveAll($controller->request->data, array('validate' => 'only'))){
 				if (isset($controller->request->data['save'])) {
 				   	$controller->request->data['TrainingCourse']['training_status_id'] = 1; 
 				} else if (isset($controller->request->data['submitForApproval'])) {

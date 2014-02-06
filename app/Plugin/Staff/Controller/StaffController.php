@@ -94,7 +94,10 @@ class StaffController extends StaffAppController {
         'special_need' => 'Staff.StaffSpecialNeed',
         'award' => 'Staff.StaffAward',
         'membership' => 'Staff.StaffMembership',
-        'license' => 'Staff.StaffLicense'
+        'license' => 'Staff.StaffLicense',
+        'training_need' => 'Staff.StaffTrainingNeed',
+        'training_result' => 'Staff.StaffTrainingResult',
+        'training_self_study' => 'Staff.StaffTrainingSelfStudy'
 	); 
 	
     public function beforeFilter() {

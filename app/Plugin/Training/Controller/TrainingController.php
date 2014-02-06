@@ -40,7 +40,7 @@ class TrainingController extends TrainingAppController {
         if($this->request->is('ajax')) {
             $this->autoRender = false;
             $search = $this->params->query['term'];
-            $data = $this->TeacherPositionTitle->autocomplete($search,$index);
+            $data = $this->TrainingCourse->autocompletePosition($search,$index);
  
             return json_encode($data);
         }

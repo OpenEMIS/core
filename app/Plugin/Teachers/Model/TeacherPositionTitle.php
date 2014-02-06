@@ -24,32 +24,4 @@ class TeacherPositionTitle extends TeachersAppModel {
 		return $lookup;
 	}
 
-
-	public function autocomplete($search, $index) {
-		$search = sprintf('%%%s%%', $search);
-		$list = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('DISTINCT TeacherPositionTitle.name', 'TeacherPositionTitle.id'),
-			'conditions' => array(
-				'TeacherPositionTitle.name LIKE' => $search,
-				'TeacherPositionTitle.visible' => 1
-			),
-			'order' => array('TeacherPositionTitle.order')
-		));
-
-		
-		$data = array();
-		
-		foreach($list as $obj) {
-			$teacherPositionTitleId = $obj['TeacherPositionTitle']['id'];
-			$teacherPositionTitleName = $obj['TeacherPositionTitle']['name'];
-			
-			$data[] = array(
-				'label' => trim(sprintf('%s', $teacherPositionTitleName)),
-				'value' => array('teacher-position-title-id-'.$index => $teacherPositionTitleId, 'teacher-position-title-name-'.$index => $teacherPositionTitleName)
-			);
-		}
-
-		return $data;
-	}
 }

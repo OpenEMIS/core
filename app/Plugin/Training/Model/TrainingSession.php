@@ -224,7 +224,7 @@ class TrainingSession extends TrainingAppModel {
 				$data['training_status_id'] = '1';
 
 				$this->TrainingSessionResult->save($data);
-	            $controller->Utility->alert($name . ' have been activate successfully.');
+	            $controller->Utility->alert($name . ' have been activated successfully.');
 	        }
             $controller->redirect(array('action' => 'session'));
         }
