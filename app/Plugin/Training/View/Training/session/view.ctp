@@ -24,9 +24,9 @@ echo $this->Html->script('search', false);
 			if($_execute) {
 				if($obj['training_status_id'] == 2 || $obj['training_status_id']==3){
 					if($obj['training_status_id'] == 2){
-						echo $this->Html->link(__('Activate'), array('action' => 'sessionActivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+						echo $this->Html->link(__('Activate'), array('action' => 'sessionActivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmActivate(this)'));
 					}
-					echo $this->Html->link(__('Inactivate'), array('action' => 'sessionInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+					echo $this->Html->link(__('Inactivate'), array('action' => 'sessionInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmInactivate(this)'));
 				}
 			}
 		?>

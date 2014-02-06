@@ -80,10 +80,15 @@ echo $this->Html->script('jquery-ui.min', false);
 				<div class="table_row " row-id="<?php echo $i;?>">
 					<div class="table_cell cell_description">
 						<div class="input_wrapper">
-					 	<div class="teacher-position-title-name-<?php echo $i;?>">
-							<?php echo $teacherPositionTitles[$val['teacher_position_title_id']];?>
+					 	<div class="position-title-name-<?php echo $i;?>">
+							<?php 
+							if($val['position_title_table']=='teacher_position_titles'){
+								echo $teacherPositionTitles[$val['position_title_id']];
+							}else{
+								echo $staffPositionTitles[$val['position_title_id']];
+							}?>
 						</div>		
-						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.teacher_position_title_id', array('class' => 'teacher-position-title-id-'.$i, 'value'=>$val['teacher_position_title_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_id', array('class' => 'position-title-id-'.$i, 'value'=>$val['position_title_id'])); ?>
 						<?php if(isset($val['id'])){ ?>
 						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.id', array('value'=>$val['id'], 
 						'class' => 'control-id')); ?>

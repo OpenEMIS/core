@@ -169,8 +169,8 @@ class TeacherTrainingNeed extends TeachersAppModel {
 		 	$teacherData = $institutionSiteTeacher->find('all', array('recursive'=>-1,'conditions'=>array('teacher_id' => $teacherId)));
 		 	$teacherPositionTitleId = array();
 		 	foreach($teacherData as $val){
-		 		if(!empty($val['InstitutionSiteTeacher']['teacher_position_title_id'])){
-		 			$teacherPositionTitleId[] = $val['InstitutionSiteTeacher']['teacher_position_title_id'];
+		 		if(!empty($val['InstitutionSiteTeacher']['position_title_id'])){
+		 			$teacherPositionTitleId[] = $val['InstitutionSiteTeacher']['position_title_id'];
 		 		}
 		 	}
 			$trainingCourseOptions = $trainingCourse->find('list', 
@@ -183,9 +183,8 @@ class TeacherTrainingNeed extends TeachersAppModel {
 							'alias' => 'TrainingCourseTargetPopulation',
 							'conditions' => array(
 								'TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id',
-								'NOT' => array( // There's your problem! :)
-							      'TrainingCourseTargetPopulation.teacher_position_title_id' => $teacherPositionTitleId
-							    )
+							     'TrainingCourseTargetPopulation.position_title_id' => $teacherPositionTitleId,
+							     'TrainingCourseTargetPopulation.position_title_table' => 'teacher_position_titles'
 							)
 						)
 					)

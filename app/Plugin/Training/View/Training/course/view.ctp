@@ -24,9 +24,9 @@ echo $this->Html->script('search', false);
 			if($_execute) {
 				if($obj['training_status_id'] == 2 || $obj['training_status_id']==3){
 					if($obj['training_status_id'] == 2){
-						echo $this->Html->link(__('Activate'), array('action' => 'courseActivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+						echo $this->Html->link(__('Activate'), array('action' => 'courseActivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmActivate(this)'));
 					}
-					echo $this->Html->link(__('Inactivate'), array('action' => 'courseInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+					echo $this->Html->link(__('Inactivate'), array('action' => 'courseInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmInactivate(this)'));
 				}
 			}
 		?>
@@ -63,7 +63,11 @@ echo $this->Html->script('search', false);
 				<?php 
 				if (!empty($trainingCourseTargetPopulations)){ 
 					foreach($trainingCourseTargetPopulations as $val){
-						echo $teacherPositionTitles[$val['TrainingCourseTargetPopulation']['teacher_position_title_id']] . '<br />';
+						if($val['TrainingCourseTargetPopulation']['position_title_table']=='teacher_position_titles'){
+							echo $teacherPositionTitles[$val['TrainingCourseTargetPopulation']['position_title_id']] . '<br />';
+						}else{
+							echo $staffPositionTitles[$val['TrainingCourseTargetPopulation']['position_title_id']] . '<br />';
+						}
 					}
 				}else{
 					echo "-";

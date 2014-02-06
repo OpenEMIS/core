@@ -14,32 +14,55 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class TeacherTrainingResult extends TeachersAppModel {
-
-    public $useTable = 'TrainingSessionTrainee'; 
+class StaffTrainingNeed extends StaffAppModel {
 	public $actsAs = array('ControllerAction');
 
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		),
+		'TrainingCourse',
+		'TrainingPriority',
+		'TrainingStatus',
+	);
+	
+	public $validate = array(
+		'training_course_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid Course.'
+			)
+		),
+		'training_priority_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid Priority.'
+			)
+		)
+	);
 
-
-	public $headerDefault = 'Training Results';
+	public $headerDefault = 'Training Needs';
 		
 
-	public function trainingResult($controller, $params) {
+	public function trainingNeed($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
-		/*$controller->set('modelName', $this->name);
-		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
-		$data = $trainingSessionTrainee->find('all',
-			array(
-				'conditions'=> array(
-					'identification_id'=> $controller->teacherId,
-					'identification_table'=> 'teachers'
-				)
-			)
-		);
-
+		$controller->set('modelName', $this->name);
+		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
+		
+		$trainingCreditHour = ClassRegistry::init('TrainingCreditHour');
+		$trainingCreditHourOptions = $trainingCreditHour->find('list', array('fields'=> array('id', 'name')));
+		
 		$controller->set('subheader', $this->headerDefault);
-		$controller->set('data', $data);*/
+		$controller->set('data', $data);
+		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 		
 	}
 
@@ -56,16 +79,16 @@ class TeacherTrainingResult extends TeachersAppModel {
 			$controller->redirect(array('action'=>'trainingNeed'));
 		}
 		
-		$controller->Session->write('TeacherTrainingNeedId', $id);
+		$controller->Session->write('StaffTrainingNeedId', $id);
 		$controller->set('data', $data);
 	}
 	
 
 
 	public function trainingNeedDelete($controller, $params) {
-        if($controller->Session->check('TeacherId') && $controller->Session->check('TeacherTrainingNeedId')) {
-            $id = $controller->Session->read('TeacherTrainingNeedId');
-            $teacherId = $controller->Session->read('TeacherId');
+        if($controller->Session->check('StaffId') && $controller->Session->check('StaffTrainingNeedId')) {
+            $id = $controller->Session->read('StaffTrainingNeedId');
+            $staffId = $controller->Session->read('StaffId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 			
@@ -73,7 +96,7 @@ class TeacherTrainingResult extends TeachersAppModel {
 			
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('TeacherTrainingNeedId');
+			$controller->Session->delete('StaffTrainingNeedId');
             $controller->redirect(array('action' => 'trainingNeed'));
         }
     }
@@ -81,17 +104,17 @@ class TeacherTrainingResult extends TeachersAppModel {
 
 
     public function trainingNeedActivate($controller, $params) {
-        if($controller->Session->check('TeacherTrainingNeedId')) {
-            $id = $controller->Session->read('TeacherTrainingNeedId');
+        if($controller->Session->check('StaffTrainingNeedId')) {
+            $id = $controller->Session->read('StaffTrainingNeedId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			if($data['TeacherTrainingNeed']['training_status_id']=='2'){
+			if($data['StaffTrainingNeed']['training_status_id']=='2'){
 	            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 				
 	          
 	            $this->updateAll(
-	    			array('TeacherTrainingNeed.training_status_id' => 3),
-	    			array('TeacherTrainingNeed.id '=> $id)
+	    			array('StaffTrainingNeed.training_status_id' => 3),
+	    			array('StaffTrainingNeed.id '=> $id)
 				);
 	            $controller->Utility->alert($name . ' have been activate successfully.');
 	        }
@@ -100,8 +123,8 @@ class TeacherTrainingResult extends TeachersAppModel {
     }
 
     public function trainingNeedInactivate($controller, $params) {
-        if($controller->Session->check('TeacherTrainingNeedId')) {
-            $id = $controller->Session->read('TeacherTrainingNeedId');
+        if($controller->Session->check('StaffTrainingNeedId')) {
+            $id = $controller->Session->read('StaffTrainingNeedId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 
@@ -109,8 +132,8 @@ class TeacherTrainingResult extends TeachersAppModel {
             $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 			
               $this->updateAll(
-    			array('TeacherTrainingNeed.training_status_id' => 4),
-    			array('TeacherTrainingNeed.id '=> $id)
+    			array('StaffTrainingNeed.training_status_id' => 4),
+    			array('StaffTrainingNeed.id '=> $id)
 			);
             $controller->Utility->alert($name . ' have been inactivated successfully.');
             $controller->redirect(array('action' => 'trainingNeed'));
@@ -140,14 +163,14 @@ class TeacherTrainingResult extends TeachersAppModel {
 		$trainingPriorityOptions = $trainingPriority->find('list', array('fields'=> array('id', 'name')));
 		$trainingCourse = ClassRegistry::init('TrainingCourse');
 		$trainingCourseOptions = array();
-		if($controller->Session->check('TeacherId')){
-		 	$teacherId = $controller->Session->read('TeacherId');
-		 	$institutionSiteTeacher = ClassRegistry::init('InstitutionSiteTeacher');
-		 	$teacherData = $institutionSiteTeacher->find('all', array('recursive'=>-1,'conditions'=>array('teacher_id' => $teacherId)));
-		 	$teacherPositionTitleId = array();
-		 	foreach($teacherData as $val){
-		 		if(!empty($val['InstitutionSiteTeacher']['teacher_position_title_id'])){
-		 			$teacherPositionTitleId[] = $val['InstitutionSiteTeacher']['teacher_position_title_id'];
+		if($controller->Session->check('StaffId')){
+		 	$staffId = $controller->Session->read('StaffId');
+		 	$institutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+		 	$staffData = $institutionSiteStaff->find('all', array('recursive'=>-1,'conditions'=>array('staff_id' => $staffId)));
+		 	$staffPositionTitleId = array();
+		 	foreach($staffData as $val){
+		 		if(!empty($val['InstitutionSiteStaff']['position_title_id'])){
+		 			$staffPositionTitleId[] = $val['InstitutionSiteStaff']['position_title_id'];
 		 		}
 		 	}
 			$trainingCourseOptions = $trainingCourse->find('list', 
@@ -160,9 +183,8 @@ class TeacherTrainingResult extends TeachersAppModel {
 							'alias' => 'TrainingCourseTargetPopulation',
 							'conditions' => array(
 								'TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id',
-								'NOT' => array( // There's your problem! :)
-							      'TrainingCourseTargetPopulation.teacher_position_title_id' => $teacherPositionTitleId
-							    )
+							     'TrainingCourseTargetPopulation.position_title_id' => $staffPositionTitleId,
+							     'TrainingCourseTargetPopulation.position_title_table' => 'staff_position_titles'
 							)
 						)
 					)
@@ -180,12 +202,12 @@ class TeacherTrainingResult extends TeachersAppModel {
 			}
 		}
 		else{
-			$controller->request->data[$this->name]['teacher_id'] = $controller->teacherId;
+			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
 			if ($this->save($controller->request->data, array('validate' => 'only'))){
 				if (isset($controller->request->data['save'])) {
-				   	$controller->request->data['TeacherTrainingNeed']['training_status_id'] = 1; 
+				   	$controller->request->data['StaffTrainingNeed']['training_status_id'] = 1; 
 				} else if (isset($controller->request->data['submitForApproval'])) {
-			      	$controller->request->data['TeacherTrainingNeed']['training_status_id'] = 2; 
+			      	$controller->request->data['StaffTrainingNeed']['training_status_id'] = 2; 
 				}
 				if($this->save($controller->request->data)){
 					if(empty($controller->request->data[$this->name]['id'])){

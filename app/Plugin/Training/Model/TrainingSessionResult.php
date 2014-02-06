@@ -91,14 +91,18 @@ class TrainingSessionResult extends TrainingAppModel {
             $id = $controller->Session->read('TrainingResultId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			if($data['TrainingCourse']['training_status_id']=='1'){
-	            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
+			if($data['TrainingSessionResult']['training_status_id']=='2'){
+
+				$trainingCourse = ClassRegistry::init('TrainingCourse');
+				$trainingCourses = $trainingCourse->find('first', array('conditions'=> array('id' => $data['TrainingSession']['training_course_id'])));
+
+	            $name = $trainingCourses['TrainingCourse']['code'] . ' - ' . $trainingCourses['TrainingCourse']['title'];
 				
 	            $this->updateAll(
 	    			array('TrainingSessionResult.training_status_id' => 3),
 	    			array('TrainingSessionResult.id '=> $id)
 				);
-	            $controller->Utility->alert($name . ' have been activate successfully.');
+	            $controller->Utility->alert($name . ' have been activated successfully.');
 	        }
             $controller->redirect(array('action' => 'result'));
         }
@@ -110,9 +114,12 @@ class TrainingSessionResult extends TrainingAppModel {
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 
-            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
+            $trainingCourse = ClassRegistry::init('TrainingCourse');
+			$trainingCourses = $trainingCourse->find('first', array('conditions'=> array('id' => $data['TrainingSession']['training_course_id'])));
+
+            $name = $trainingCourses['TrainingCourse']['code'] . ' - ' . $trainingCourses['TrainingCourse']['title'];
 			
-              $this->updateAll(
+          	$this->updateAll(
     			array('TrainingSessionResult.training_status_id' => 4),
     			array('TrainingSessionResult.id '=> $id)
 			);
