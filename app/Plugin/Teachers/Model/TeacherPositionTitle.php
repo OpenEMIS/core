@@ -15,10 +15,41 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TeacherPositionTitle extends TeachersAppModel {
+
+	public $hasMany = array('Training.TrainingCourseTargetPopulation');
 	public function getLookupVariables() {
 		$lookup = array(
 			'Categories' => array('model' => 'Teachers.TeacherPositionTitle')
 		);
 		return $lookup;
+	}
+
+
+	public function autocomplete($search, $index) {
+		$search = sprintf('%%%s%%', $search);
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT TeacherPositionTitle.name', 'TeacherPositionTitle.id'),
+			'conditions' => array(
+				'TeacherPositionTitle.name LIKE' => $search,
+				'TeacherPositionTitle.visible' => 1
+			),
+			'order' => array('TeacherPositionTitle.order')
+		));
+
+		
+		$data = array();
+		
+		foreach($list as $obj) {
+			$teacherPositionTitleId = $obj['TeacherPositionTitle']['id'];
+			$teacherPositionTitleName = $obj['TeacherPositionTitle']['name'];
+			
+			$data[] = array(
+				'label' => trim(sprintf('%s', $teacherPositionTitleName)),
+				'value' => array('teacher-position-title-id-'.$index => $teacherPositionTitleId, 'teacher-position-title-name-'.$index => $teacherPositionTitleName)
+			);
+		}
+
+		return $data;
 	}
 }

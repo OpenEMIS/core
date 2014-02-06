@@ -1,0 +1,215 @@
+<?php
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->script('/Training/js/courses', false);
+echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
+echo $this->Html->script('jquery-ui.min', false);
+?>
+
+<?php echo $this->element('breadcrumb'); ?>
+
+<div id="training_course" class="content_wrapper edit add">
+	<h1>
+		<span><?php echo __($subheader); ?></span>
+		<?php
+            echo $this->Html->link(__('Back'), array('action' => 'course'), array('class' => 'divider'));
+        
+		?>
+	</h1>
+	
+	<?php
+	echo $this->Form->create($modelName, array(
+		'url' => array('controller' => 'Training', 'action' => 'courseAdd', 'plugin'=>'Training'),
+		'type' => 'file',
+		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
+	));
+	?>
+	
+	<span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
+	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
+	<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
+	<div class="row">
+        <div class="label"><?php echo __('Course Code'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('code'); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Course Title'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('title'); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Course Description'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('description', array('type'=>'textarea')); 
+		?>
+        </div>
+    </div>
+ 	<div class="row">
+        <div class="label"><?php echo __('Goal / Objectives'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('objective', array('type'=>'textarea')); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Category / Field of Study'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_field_study_id', array('options'=>$trainingFieldStudyOptions)); 
+		?>
+        </div>
+    </div>
+	 <div class="row">
+		<div class="label"><?php echo __('Target Population'); ?></div>
+		<div class="value">
+		<div class="table target_population" style="width:240px;" url="Training/ajax_find_target_population/">
+			<div class="delete-target-population" name="data[DeleteTargetPopulation][{index}][id]"></div>
+			<div class="table_body">
+			<?php if(isset($this->request->data['TrainingCourseTargetPopulation']) && !empty($this->request->data['TrainingCourseTargetPopulation'])){ ?>
+				<?php 
+				$i = 0;   
+				foreach($this->request->data['TrainingCourseTargetPopulation'] as $val){?>
+				<div class="table_row " row-id="<?php echo $i;?>">
+					<div class="table_cell cell_description">
+						<div class="input_wrapper">
+					 	<div class="teacher-position-title-name-<?php echo $i;?>">
+							<?php echo $teacherPositionTitles[$val['teacher_position_title_id']];?>
+						</div>		
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.teacher_position_title_id', array('class' => 'teacher-position-title-id-'.$i, 'value'=>$val['teacher_position_title_id'])); ?>
+						<?php if(isset($val['id'])){ ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.id', array('value'=>$val['id'], 
+						'class' => 'control-id')); ?>
+						<?php } ?>
+						</div>
+				    </div>
+				 
+					<div class="table_cell cell_delete">
+				    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteTargetPopulation(this)"></span>
+				    </div>
+				</div>
+			<?php 
+				$i++;
+			} ?>
+			<?php } ?>
+			</div>
+		</div>
+		<?php if($_add) { ?>
+			<div class="row"><a class="void icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
+		<?php } ?>
+		</div>
+	</div>
+    <div class="row">
+        <div class="label"><?php echo __('Credit Hours'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_credit_hour_id', array('options'=>$trainingCreditHourOptions)); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Duration'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('duration'); 
+		?>
+        </div>
+    </div>
+     <div class="row">
+        <div class="label"><?php echo __('Mode of Delivery'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_mode_delivery_id', array('options'=>$trainingModeDeliveryOptions)); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Training Provider'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_provider_id', array('options'=>$trainingProviderOptions)); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Training Requirement'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_requirement_id', array('options'=>$trainingRequirementOptions)); 
+		?>
+        </div>
+    </div>
+   	<div class="row">
+        <div class="label"><?php echo __('Training Level'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_level_id', array('options'=>$trainingLevelOptions)); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+		<div class="label"><?php echo __('Prerequisite'); ?></div>
+		<div class="value">
+		<div class="table prerequisite" style="width:240px;" url="Training/ajax_find_prerequisite/">
+			<div class="delete-prerequisite" name="data[DeletePrerequisite][{index}][id]"></div>
+			<div class="table_body">
+			<?php if(isset($this->request->data['TrainingCoursePrerequisite']) && !empty($this->request->data['TrainingCoursePrerequisite'])){ ?>
+				<?php 
+				$i = 0;   
+				foreach($this->request->data['TrainingCoursePrerequisite'] as $val){ ?>
+				<div class="table_row " row-id="<?php echo $i;?>">
+					<div class="table_cell cell_description">
+						<div class="input_wrapper">
+					 	<div class="training-course-title-<?php echo $i;?>">
+							<?php echo $val['code'] . ' - ' . $val['title'];?>
+						</div>		
+						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.training_prerequisite_course_id', array('class' => 'training-course-id-'.$i, 'value'=>$val['training_prerequisite_course_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.code', array('value'=>$val['code'])); ?>
+						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.title', array('value'=>$val['title'])); ?>
+						<?php if(isset($val['id'])){ ?>
+						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.id', array('value'=>$val['id'], 
+						'class' => 'control-id')); ?>
+						<?php } ?>
+						</div>
+				    </div>
+				 
+					<div class="table_cell cell_delete">
+				    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deletePrerequisite(this)"></span>
+				    </div>
+				</div>
+			<?php 
+				$i++;
+			} ?>
+			<?php } ?>
+			</div>
+		</div>
+		<?php if($_add) { ?>
+			<div class="row"><a class="void icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
+		<?php } ?>
+		</div>
+	</div>
+    <div class="row">
+        <div class="label"><?php echo __('Pass Result'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('pass_result'); 
+		?>
+        </div>
+    </div>
+	<div class="controls view_controls">
+		<?php if(!isset($this->request->data['TrainingCourse']['training_status_id']) || $this->request->data['TrainingCourse']['training_status_id']==1){ ?>
+		<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+		<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+		<?php } ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'course'), array('class' => 'btn_cancel btn_left')); ?>
+	</div>
+	
+	<?php echo $this->Form->end(); ?>
+</div>
