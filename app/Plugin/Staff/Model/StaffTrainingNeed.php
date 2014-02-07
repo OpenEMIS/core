@@ -175,7 +175,7 @@ class StaffTrainingNeed extends StaffAppModel {
 		 	}
 			$trainingCourseOptions = $trainingCourse->find('list', 
 				array(
-				'fields'=> array('TrainingCourse.id', 'TrainingCourse.title'),
+				'fields'=> array('TrainingCourse.id', 'TrainingCourse.code'),
 				'joins' => array(
 					array(
 							'type' => 'LEFT',
@@ -214,6 +214,11 @@ class StaffTrainingNeed extends StaffAppModel {
 		}
 		$controller->set('trainingPriorityOptions', $trainingPriorityOptions);
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
+
+
+        $trainingCourseId = isset($controller->request->data['StaffTrainingNeed']['training_course_id']) ? $controller->request->data['StaffTrainingNeed']['training_course_id'] : "";
+      	$controller->set('selectedCourse', $trainingCourseId);
+
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -221,6 +226,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			if(!empty($data)){
 				$controller->request->data = $data;
 			}
+
 		}
 		else{
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;

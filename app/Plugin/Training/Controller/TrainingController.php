@@ -127,4 +127,5 @@ class TrainingController extends TrainingAppController {
             return json_encode($data);
         }
     }
+
 }

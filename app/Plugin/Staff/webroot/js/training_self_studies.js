@@ -7,6 +7,59 @@ var objTrainingSelfStudies = {
     init: function() {
         $(".icon_plus").unbind( "click" );
         $('.icon_plus').click(objTrainingSelfStudies.addRow);
+        objTrainingSelfStudies.getDetailsAfterChangeCourse($("#StaffTrainingSelfStudyTrainingSessionId"));
+    },
+
+    getDetailsAfterChangeCourse: function(obj){
+        var trainingSessionId = $(obj).val();
+        var title = $('.training_course_title');
+        var description = $('.training_course_description');
+        var startDate = $('.training_session_start_date');
+        var endDate = $('.training_session_end_date');
+        var location = $('.training_session_location');
+        var trainer = $('.training_session_trainer');
+        if(trainingSessionId === ""){
+            title.val("");
+            description.val("");
+            startDate.val("");
+            endDate.val("");
+            location.val("");
+            trainer.val("");
+        }else{
+            $.ajax({ 
+                type: "get",
+                dataType: "json",
+                url: getRootURL()+"Staff/getTrainingCoursesById/"+trainingSessionId+"/2",
+                success: function(data){
+                    var newTitle = '';
+                    var newDescription = '';
+                    var newStartDate = '';
+                    var newEndDate = '';
+                    var newLocation= '';
+                    var newTrainer = '';
+                    
+                    if(data == null){
+                        return;
+                    }
+                    
+                    $.each(data, function(i,v){
+                        newTitle = v.TrainingCourse.title;
+                        newDescription = v.TrainingCourse.description;
+                        newStartDate = v.TrainingSession.start_date;
+                        newEndDate = v.TrainingSession.end_date;
+                        newLocation = v.TrainingSession.location;
+                        newTrainer = v.TrainingSession.trainer;
+                    });
+
+                    title.val(newTitle);
+                    description.val(newDescription);
+                    startDate.val(newStartDate);
+                    endDate.val(newEndDate);
+                    location.val(newLocation);
+                    trainer.val(newTrainer);
+                }
+            });
+        }
     },
 
     validateFileSize: function(obj) {

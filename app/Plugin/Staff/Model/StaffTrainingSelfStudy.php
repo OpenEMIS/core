@@ -331,13 +331,17 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 					for($i = $trainingCreditHours['TrainingCreditHour']['min']; $i <= $trainingCreditHours['TrainingCreditHour']['max']; $i++){
 						$trainingCreditHourOptions[$i] =  $i;
 					}
-					$trainingCourseOptions[] = array($val['TrainingSession']['id']=>$val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title']);
+					$trainingCourseOptions[] = array($val['TrainingSession']['id']=>$val['TrainingCourse']['code']);
 				}
 			}
 
 		}
 		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
+
+	  	$trainingCourseId = isset($controller->request->data['StaffTrainingSelfStudy']['training_session_id']) ? $controller->request->data['StaffTrainingSelfStudy']['training_session_id'] : "";
+    	$controller->set('selectedCourse', $trainingCourseId);
+
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
