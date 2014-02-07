@@ -177,7 +177,7 @@ class StaffTrainingNeed extends StaffAppModel {
 				array(
 				'fields'=> array('TrainingCourse.id', 'TrainingCourse.title'),
 				'joins' => array(
-						array(
+					array(
 							'type' => 'LEFT',
 							'table' => 'training_course_target_populations',
 							'alias' => 'TrainingCourseTargetPopulation',
@@ -186,9 +186,30 @@ class StaffTrainingNeed extends StaffAppModel {
 							     'TrainingCourseTargetPopulation.position_title_id' => $staffPositionTitleId,
 							     'TrainingCourseTargetPopulation.position_title_table' => 'staff_position_titles'
 							)
-						)
+					),
+					array(
+						'type' => 'LEFT',
+							'table' => 'training_sessions',
+							'alias' => 'TrainingSession',
+							'conditions' => array(
+								'TrainingCourse.id = TrainingSession.training_course_id'
+							)
+					),
+					array(
+						'type' => 'LEFT',
+							'table' => 'training_session_trainees',
+							'alias' => 'TrainingSessionTrainee',
+							'conditions' => array(
+								'TrainingSession.id = TrainingSessionTrainee.training_session_id',
+								'TrainingSessionTrainee.identification_id' => $staffId,
+								'TrainingSessionTrainee.identification_table' => 'staff',
+							)
 					)
-				)
+				),
+				'conditions' =>array(
+					'TrainingCourse.training_status_id' => 3,
+					'TrainingSessionTrainee.id' => null
+				))
 			);
 		}
 		$controller->set('trainingPriorityOptions', $trainingPriorityOptions);

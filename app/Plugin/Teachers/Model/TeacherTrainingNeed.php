@@ -165,18 +165,19 @@ class TeacherTrainingNeed extends TeachersAppModel {
 		$trainingCourseOptions = array();
 		if($controller->Session->check('TeacherId')){
 		 	$teacherId = $controller->Session->read('TeacherId');
+
 		 	$institutionSiteTeacher = ClassRegistry::init('InstitutionSiteTeacher');
-		 	$teacherData = $institutionSiteTeacher->find('all', array('recursive'=>-1,'conditions'=>array('teacher_id' => $teacherId)));
-		 	$teacherPositionTitleId = array();
-		 	foreach($teacherData as $val){
-		 		if(!empty($val['InstitutionSiteTeacher']['position_title_id'])){
-		 			$teacherPositionTitleId[] = $val['InstitutionSiteTeacher']['position_title_id'];
-		 		}
-		 	}
-			$trainingCourseOptions = $trainingCourse->find('list', 
-				array(
-				'fields'=> array('TrainingCourse.id', 'TrainingCourse.title'),
-				'joins' => array(
+			 	$teacherData = $institutionSiteTeacher->find('all', array('recursive'=>-1,'conditions'=>array('teacher_id' => $teacherId)));
+			 	$teacherPositionTitleId = array();
+			 	foreach($teacherData as $val){
+			 		if(!empty($val['InstitutionSiteTeacher']['position_title_id'])){
+			 			$teacherPositionTitleId[] = $val['InstitutionSiteTeacher']['position_title_id'];
+			 		}
+			 	}
+				$trainingCourseOptions = $trainingCourse->find('list', 
+					array(
+					'fields'=> array('TrainingCourse.id', 'TrainingCourse.title', 'TrainingSessionTrainee.id'),
+					'joins' => array(
 						array(
 							'type' => 'LEFT',
 							'table' => 'training_course_target_populations',
@@ -186,19 +187,46 @@ class TeacherTrainingNeed extends TeachersAppModel {
 							     'TrainingCourseTargetPopulation.position_title_id' => $teacherPositionTitleId,
 							     'TrainingCourseTargetPopulation.position_title_table' => 'teacher_position_titles'
 							)
+						),
+						array(
+							'type' => 'LEFT',
+							'table' => 'training_sessions',
+							'alias' => 'TrainingSession',
+							'conditions' => array(
+								'TrainingCourse.id = TrainingSession.training_course_id'
+							)
+						),
+						array(
+							'type' => 'LEFT',
+							'table' => 'training_session_trainees',
+							'alias' => 'TrainingSessionTrainee',
+							'conditions' => array(
+								'TrainingSession.id = TrainingSessionTrainee.training_session_id',
+								'TrainingSessionTrainee.identification_id' => $teacherId,
+								'TrainingSessionTrainee.identification_table' => 'teachers',
+							)
 						)
-					)
-				)
-			);
+					),
+					'conditions' =>array(
+						'TrainingCourse.training_status_id' => 3,
+						'TrainingSessionTrainee.id' => null
+					))
+				);
+
 		}
 		$controller->set('trainingPriorityOptions', $trainingPriorityOptions);
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
+		
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
 			$data = $this->findById($id);
 			if(!empty($data)){
 				$controller->request->data = $data;
+				if($data['TeacherTrainingNeed']['training_status_id']!=1){
+					return $controller->redirect(array('action' => 'trainingNeedView', $id));
+				}
+
 			}
 		}
 		else{

@@ -298,11 +298,18 @@ class TrainingCourse extends TrainingAppModel {
 					)
 				);
 
+		$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
+        $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
+
+        $attachments = $FileAttachment->getList($id);
+
 		$controller->set('data', $data);
 		$controller->set('trainingCourseTargetPopulations', $trainingCourseTargetPopulations);
 		$controller->set('teacherPositionTitles', $teacherPositionTitles);
 		$controller->set('staffPositionTitles', $staffPositionTitles);
 		$controller->set('trainingCoursePrerequisites', $trainingCoursePrerequisites);
+		$controller->set('attachments', $attachments);
+		$controller->set('_model','TrainingCourseAttachment');
 	}
 	
 	public function courseDelete($controller, $params) {
@@ -456,19 +463,46 @@ class TrainingCourse extends TrainingAppModel {
 					}
 				}
 
+			  	$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
+	            $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
+
+	            $attachments = $FileAttachment->getList($id);
+	            $controller->set('attachments',$attachments);
+	            $controller->set('_model','TrainingCourseAttachment');
+
+
 				$merge = array_merge(array('TrainingCourseTargetPopulation'=>$trainingCourseTargetPopulationsVal), array('TrainingCoursePrerequisite'=>$trainingCoursePrerequisitesVal));
 				$controller->request->data = array_merge($data, $merge);
 			}
 		}
 		else{
-			if ($this->saveAll($controller->request->data, array('validate' => 'only'))){
+			$saveData = $controller->request->data;
+			unset($saveData['TrainingCourseAttachment']);
+
+			if ($this->saveAll($saveData, array('validate' => 'only'))){
 				if (isset($controller->request->data['save'])) {
 				   	$controller->request->data['TrainingCourse']['training_status_id'] = 1; 
 				} else if (isset($controller->request->data['submitForApproval'])) {
 			      	$controller->request->data['TrainingCourse']['training_status_id'] = 2; 
 				}
 
-				if($this->saveAll($controller->request->data)){
+				if($this->saveAll($saveData)){
+					$id = null;
+					if(isset($saveData['TrainingCourse']['id'])){
+						$id = $saveData['TrainingCourse']['id'];
+					}
+					if(empty($id)){
+						$id = $this->getInsertID();
+					}
+					
+	                $arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
+	                $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
+	          
+	               	$fileData = $params['form'];
+	                if(!empty($fileData)){
+	                    $errors = $FileAttachment->saveAll($controller->request->data, $fileData, $id);
+	                }
+
 					if(isset($controller->request->data['DeleteTargetPopulation'])){
 						$deletedId = array();
 						foreach($controller->request->data['DeleteTargetPopulation'] as $key=>$value){
