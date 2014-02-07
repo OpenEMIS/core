@@ -72,7 +72,8 @@ class TeachersController extends TeachersAppController {
 	    'ExtracurricularType',
         'EmploymentType',
         'SalaryAdditionType',
-        'SalaryDeductionType'
+        'SalaryDeductionType',
+        'TrainingCourse'
 	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -2116,6 +2117,38 @@ class TeachersController extends TeachersAppController {
         $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
 
         $FileAttachment->download($id);
+    }
+
+    public function getTrainingCoursesById(){
+        $this->autoRender = false;
+
+        if(isset($this->params['pass'][0]) && !empty($this->params['pass'][0])) {
+            $id = $this->params['pass'][0];
+            $type = $this->params['pass'][1];
+            if($type == 1){
+                $courseData = $this->TrainingCourse->find('all', 
+                    array(
+                        'conditions'=>array('TrainingCourse.id'=>$id), 
+                        'recursive' => -1)
+                );
+            }else{
+                $courseData = $this->TrainingCourse->find('all', 
+                    array(
+                        'fields' => array('TrainingCourse.*', 'TrainingSession.*'),
+                        'joins' => array(
+                            array(
+                                'type' => 'INNER',
+                                'table' => 'training_sessions',
+                                'alias' => 'TrainingSession',
+                                'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+                            )
+                        ),
+                        'conditions'=>array('TrainingSession.id'=>$id), 
+                        'recursive' => -1)
+                );
+            }
+            echo json_encode($courseData);
+        }
     }
 }
 

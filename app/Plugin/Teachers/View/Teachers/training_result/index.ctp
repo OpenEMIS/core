@@ -21,7 +21,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
        
         <div class="table_body">
             <?php foreach($data as $id=>$val) { ?>
-            <div class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
+            <div class="table_row" row-id="<?php echo $val['TrainingSessionTrainee']['id']; ?>">
                  <div class="table_cell"><?php echo $val['TrainingCourse']['code'] ?></div>
                 <div class="table_cell"><?php echo $val['TrainingCourse']['title'] ?></div>
                 <div class="table_cell"><?php echo $val['TrainingCourse']['training_credit_hour_id']; ?></div>

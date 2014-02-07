@@ -29,13 +29,44 @@ echo $this->Html->script('/Teachers/js/training_self_studies', false);
 	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 	<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
 	<div class="row">
-		<div class="label"><?php echo __('Course'); ?></div>
+		<div class="label"><?php echo __('Course Code'); ?></div>
         <div class="value">
 		<?php 
-			echo $this->Form->input('training_session_id', array('options' => $trainingCourseOptions)); 
+			 echo $this->Form->input('training_session_id', array(
+                'options' => $trainingCourseOptions,
+                'default' => $selectedCourse,
+                'label' => false,
+                'empty' => __('--Select--'),
+                'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
+                'onchange' => 'objTrainingSelfStudies.getDetailsAfterChangeCourse(this)'
+            ));
 		?>
         </div>
     </div>
+   	<div class="row">
+		<div class="label"><?php echo __('Course Title'); ?></div>
+		<div class="value"><?php echo $this->Form->input('title', array('disabled' => 'disabled', 'class' => 'default training_course_title')); ;?></div>
+	</div>
+  	<div class="row">
+		<div class="label"><?php echo __('Start Date'); ?></div>
+		<div class="value"><?php echo $this->Form->input('start_date', array('disabled' => 'disabled', 'class' => 'default training_session_start_date')); ;?></div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('End Date'); ?></div>
+		<div class="value"><?php echo $this->Form->input('end_date', array('disabled' => 'disabled', 'class' => 'default training_session_end_date')); ;?></div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Course Description'); ?></div>
+		<div class="value"><?php echo $this->Form->input('description', array('disabled' => 'disabled', 'class' => 'default training_course_description', 'type'=>'textarea'));?></div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Location'); ?></div>
+		<div class="value"><?php echo $this->Form->input('location', array('disabled' => 'disabled', 'class' => 'default training_session_location')); ;?></div>
+	</div>
+	<div class="row">
+		<div class="label"><?php echo __('Trainer'); ?></div>
+		<div class="value"><?php echo $this->Form->input('trainer', array('disabled' => 'disabled', 'class' => 'default training_session_trainer')); ;?></div>
+	</div>
     <div class="row">
         <div class="label"><?php echo __('Credits'); ?></div>
         <div class="value">

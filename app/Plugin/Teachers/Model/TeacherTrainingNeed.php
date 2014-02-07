@@ -217,6 +217,9 @@ class TeacherTrainingNeed extends TeachersAppModel {
 		$controller->set('trainingPriorityOptions', $trainingPriorityOptions);
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
 		
+	  	$trainingCourseId = isset($controller->request->data['TeacherTrainingNeed']['training_course_id']) ? $controller->request->data['TeacherTrainingNeed']['training_course_id'] : "";
+    	$controller->set('selectedCourse', $trainingCourseId);
+
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;

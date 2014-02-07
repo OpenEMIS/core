@@ -335,6 +335,9 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
 		}
 		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
+
+		$trainingCourseId = isset($controller->request->data['TeacherTrainingSelfStudy']['training_session_id']) ? $controller->request->data['TeacherTrainingSelfStudy']['training_session_id'] : "";
+    	$controller->set('selectedCourse', $trainingCourseId);
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
