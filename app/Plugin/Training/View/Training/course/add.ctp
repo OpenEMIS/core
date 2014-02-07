@@ -1,5 +1,7 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
+echo $this->Html->script('attachments', false);
 echo $this->Html->script('/Training/js/courses', false);
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
@@ -208,6 +210,47 @@ echo $this->Html->script('jquery-ui.min', false);
 		?>
         </div>
     </div>
+    <span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
+
+	<div class="row">
+		<div class="label"><?php echo __('Attachments'); ?></div>
+		<div class="value">
+		<div class="table file_upload" style="width:240px;">
+			<div class="table_body">
+				<?php
+				if(isset($attachments) && !empty($attachments)){
+				foreach($attachments as $index => $value){
+					$obj = $value[$_model];
+					$fileext = strtolower(pathinfo($obj['file_name'], PATHINFO_EXTENSION));
+					$fieldName = sprintf('data[%s][%s][%%s]', $_model, $index);
+				?>
+				
+				<div class="table_row" file-id="<?php echo $obj['id']; ?>">
+					<?php echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']); ?>
+					<?php echo $this->Form->input('name', array('type'=>'hidden','name' => sprintf($fieldName, 'name'), 'value' => $obj['name'])); ?>
+					<?php
+					echo $this->Form->input('description', array('type'=>'hidden',
+						'name' => sprintf($fieldName, 'description'),
+						'value' => $obj['description']
+					));
+					?>
+					<div class="table_cell center"><?php echo $this->Html->link($obj['name'], array('action' => 'attachmentsCourseDownload', $obj['id']));?></div>
+					<?php if($_delete) { ?>
+					<div class="table_cell cell_delete">
+						<span class="icon_delete" title="<?php echo __("Delete"); ?>" onClick="objTrainingCourses.deleteFile(<?php echo $obj['id']; ?>)"></span>
+					</div>
+					<?php } ?>
+				</div>
+				<?php 	
+					}
+				}	
+				?>
+			</div>
+		</div>
+		 <div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
+		<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
+		</div>
+	</div>
 	<div class="controls view_controls">
 		<?php if(!isset($this->request->data['TrainingCourse']['training_status_id']) || $this->request->data['TrainingCourse']['training_status_id']==1){ ?>
 		<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="return Config.checkValidate();"/>

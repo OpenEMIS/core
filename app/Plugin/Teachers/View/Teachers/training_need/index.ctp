@@ -31,9 +31,8 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
                 <div class="table_cell"><?php echo $trainingCreditHourOptions[$val['TrainingCourse']['training_credit_hour_id']]; ?></div>
                 <div class="table_cell"><?php echo  $val['TrainingStatus']['name']; ?></div>
                 </div>
-             </div>
            <?php } ?>
+         </div>
         </div>
-    </div>
     <?php } ?>
 </div>

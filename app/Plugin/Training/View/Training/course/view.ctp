@@ -114,6 +114,19 @@ echo $this->Html->script('search', false);
 			<div class="label"><?php echo __('Pass Result'); ?></div>
 			<div class="value"><?php echo $obj['pass_result']; ?></div>
 		</div>
+		<div class="row">
+	        <div class="label"><?php echo __('Attachments'); ?></div>
+	        <div class="value">
+			<?php if(!empty($attachments)){?>
+	        <?php foreach($attachments as $key=>$value){ 
+		        $obj = $value[$_model];
+				$link = $this->Html->link($obj['name'], array('action' => 'attachmentsCourseDownload', $obj['id']));
+		        echo $link . '<br />'; 
+	        } ?>
+    		<?php }?>
+	    	</div>
+	    </div>
+
         <div class="row">
             <div class="label"><?php echo __('Modified by'); ?></div>
             <div class="value"><?php echo trim($data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']); ?></div>

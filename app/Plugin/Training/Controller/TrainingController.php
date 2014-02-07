@@ -7,7 +7,8 @@ class TrainingController extends TrainingAppController {
         'Training.TrainingCourse', 
         'Teachers.TeacherPositionTitle', 
         'Training.TrainingSession',
-        'Training.TrainingSessionTrainee'
+        'Training.TrainingSessionTrainee',
+        'Training.TrainingCourseAttachment',
      );
 
     public $modules = array(
@@ -60,6 +61,43 @@ class TrainingController extends TrainingAppController {
  
             return json_encode($data);
         }
+    }
+
+
+    public function attachmentsCourseAdd() {
+        $this->layout = 'ajax';
+        $this->set('params', $this->params->query);
+        $this->set('_model', 'TrainingCourseAttachment');
+        $this->set('jsname', 'objTrainingCourses');
+        $this->render('/Elements/attachment/compact_add');
+    }
+
+    public function attachmentsCourseDelete() {
+        $this->autoRender = false;
+        if($this->request->is('post')) {
+            $result = array('alertOpt' => array());
+            $this->Utility->setAjaxResult('alert', $result);
+            $id = $this->params->data['id'];
+
+            $arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+            
+            if($FileAttachment->delete($id)) {
+                $result['alertOpt']['text'] = __('File is deleted successfully.');
+            } else {
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+            }
+            
+            return json_encode($result);
+        }
+    }
+        
+    public function attachmentsCourseDownload($id) {
+        $arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+        $FileAttachment->download($id);
     }
 
     //----------------------------------------------------------------------------

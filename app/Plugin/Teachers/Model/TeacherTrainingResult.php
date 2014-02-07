@@ -35,7 +35,7 @@ class TeacherTrainingResult extends AppModel {
 						'table' => 'training_session_results',
 						'alias' => 'TrainingSessionResult',
 						'conditions' => array(
-							'TrainingSessionResult.training_session_id = TrainingSessionResult.training_session_id'
+							'TrainingSessionTrainee.training_session_id = TrainingSessionResult.training_session_id'
 						)
 					),
 					array(
@@ -102,7 +102,7 @@ class TeacherTrainingResult extends AppModel {
 						'table' => 'training_session_results',
 						'alias' => 'TrainingSessionResult',
 						'conditions' => array(
-							'TrainingSessionResult.training_session_id = TrainingSessionResult.training_session_id'
+							'TrainingSessionTrainee.training_session_id = TrainingSessionResult.training_session_id'
 						)
 					),
 					array(

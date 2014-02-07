@@ -412,7 +412,7 @@ var jsForm = {
 			href = getRootURL() + href;
 		}
 		var btn = {
-			value: i18n.General.textDelete,
+			value: i18n.General.textConfirm,
 			callback: function() { window.location.href = href; }
 		};
 		
@@ -433,7 +433,7 @@ var jsForm = {
 			href = getRootURL() + href;
 		}
 		var btn = {
-			value: i18n.General.textDelete,
+			value: i18n.General.textConfirm,
 			callback: function() { window.location.href = href; }
 		};
 		
