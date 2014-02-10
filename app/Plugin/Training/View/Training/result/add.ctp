@@ -95,7 +95,9 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 				    </div>
 				    <div class="table_cell cell_delete">
 				    	<?php 
-						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.pass', array('default'=>$val['pass'], 'empty'=>'' , 'options' => array('1'=>__('Pass'), '0' => 'Fail'), 'style'=>'width:60px;')); ?>
+				    	pr($val['pass']);
+						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.pass', array('default'=>$val['pass'], 'empty'=>array('3'=>''),
+						 'options' => array(1=>__('Pass'), 0 => __('Fail')), 'style'=>'width:60px;')); ?>
 				    </div>
 				</div>
 			<?php 

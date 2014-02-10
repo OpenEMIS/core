@@ -480,11 +480,12 @@ class TrainingCourse extends TrainingAppModel {
 			unset($saveData['TrainingCourseAttachment']);
 
 			if ($this->saveAll($saveData, array('validate' => 'only'))){
-				if (isset($controller->request->data['save'])) {
-				   	$controller->request->data['TrainingCourse']['training_status_id'] = 1; 
-				} else if (isset($controller->request->data['submitForApproval'])) {
-			      	$controller->request->data['TrainingCourse']['training_status_id'] = 2; 
+				if (isset($saveData['save'])) {
+				   	$saveData['TrainingCourse']['training_status_id'] = 1; 
+				} else if (isset($saveData['submitForApproval'])) {
+			      	$saveData['TrainingCourse']['training_status_id'] = 2; 
 				}
+
 
 				if($this->saveAll($saveData)){
 					$id = null;
