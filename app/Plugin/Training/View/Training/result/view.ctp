@@ -77,8 +77,10 @@ echo $this->Html->script('search', false);
 					                <div class="table_cell">
 					                <?php if(!isset($val['TrainingSessionTrainee']['pass'])){
 					                		echo '-';
-					                 }else if($val['TrainingSessionTrainee']['pass'] == 1){
+					                 }else if($val['TrainingSessionTrainee']['pass'] == '1'){
 					                 		echo __('Yes');
+					                 }else if($val['TrainingSessionTrainee']['pass'] == '3'){
+					                 		echo '-';
 					                 }else{
 					                 		echo __('No');
 					                 }

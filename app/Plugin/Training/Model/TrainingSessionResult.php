@@ -73,6 +73,9 @@ class TrainingSessionResult extends TrainingAppModel {
 			)
 		);
 
+
+		pr($trainingSessionTrainees);
+		
 		$trainingCourse = ClassRegistry::init('TrainingCourse');
 		$trainingCourses = $trainingCourse->find('first',  
 			array(
@@ -193,6 +196,7 @@ class TrainingSessionResult extends TrainingAppModel {
 			}
 		}
 		else{
+			
 			if ($this->save($controller->request->data, array('validate' => 'only'))){
 				if (isset($controller->request->data['save'])) {
 				   	$controller->request->data['TrainingSessionResult']['training_status_id'] = 1; 
