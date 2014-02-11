@@ -365,10 +365,10 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
 			$saveData = $controller->request->data;
 			unset($saveData['TeacherTrainingSelfStudyAttachment']);
 			if ($this->save($saveData, array('validate' => 'only'))){
-				if (isset($controller->request->data['save'])) {
-				   	$controller->request->data['TeacherTrainingSelfStudy']['training_status_id'] = 1; 
-				} else if (isset($controller->request->data['submitForApproval'])) {
-			      	$controller->request->data['TeacherTrainingSelfStudy']['training_status_id'] = 2; 
+				if (isset($saveData['save'])) {
+				   	$saveData['TeacherTrainingSelfStudy']['training_status_id'] = 1; 
+				} else if (isset($saveData['submitForApproval'])) {
+			      	$saveData['TeacherTrainingSelfStudy']['training_status_id'] = 2; 
 				}
 
 				if($this->save($saveData)){

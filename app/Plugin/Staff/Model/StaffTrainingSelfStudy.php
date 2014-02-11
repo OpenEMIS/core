@@ -370,10 +370,10 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			unset($saveData['StaffTrainingSelfStudyAttachment']);
 
 			if ($this->save($saveData, array('validate' => 'only'))){
-				if (isset($controller->request->data['save'])) {
-				   	$controller->request->data['StaffTrainingSelfStudy']['training_status_id'] = 1; 
-				} else if (isset($controller->request->data['submitForApproval'])) {
-			      	$controller->request->data['StaffTrainingSelfStudy']['training_status_id'] = 2; 
+				if (isset($saveData['save'])) {
+				   	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 1; 
+				} else if (isset($saveData['submitForApproval'])) {
+			      	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 2; 
 				}
 
 				if($this->save($saveData)){
