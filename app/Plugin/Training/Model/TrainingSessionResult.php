@@ -73,9 +73,6 @@ class TrainingSessionResult extends TrainingAppModel {
 			)
 		);
 
-
-		pr($trainingSessionTrainees);
-		
 		$trainingCourse = ClassRegistry::init('TrainingCourse');
 		$trainingCourses = $trainingCourse->find('first',  
 			array(

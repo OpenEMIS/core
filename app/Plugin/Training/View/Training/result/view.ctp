@@ -79,7 +79,7 @@ echo $this->Html->script('search', false);
 					                		echo '-';
 					                 }else if($val['TrainingSessionTrainee']['pass'] == '1'){
 					                 		echo __('Yes');
-					                 }else if($val['TrainingSessionTrainee']['pass'] == '3'){
+					                 }else if($val['TrainingSessionTrainee']['pass'] == '-1'){
 					                 		echo '-';
 					                 }else{
 					                 		echo __('No');

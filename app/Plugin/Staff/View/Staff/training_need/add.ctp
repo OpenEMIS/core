@@ -11,7 +11,7 @@ echo $this->Html->script('/Staff/js/training_needs', false);
 		<span><?php echo __($subheader); ?></span>
 		<?php
 		
-            echo $this->Html->link(__('Back'), array('action' => 'training_need'), array('class' => 'divider'));
+            echo $this->Html->link(__('Back'), array('action' => 'trainingNeed'), array('class' => 'divider'));
         
 		?>
 	</h1>
