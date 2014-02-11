@@ -1,3 +1,4 @@
+
 <?php
 /*
 @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
@@ -48,7 +49,7 @@ class TeachersNavigationComponent extends Component {
 				),
 				'DETAILS' => array(
 					$navigation->createLink('Qualifications', $controller, 'qualifications'),
-					$navigation->createLink('Training', $controller, 'training'),
+					$navigation->createLink('Training', $controller, 'training', 'training$|trainingAdd$|trainingEdit$'),
 					$navigation->createLink('Positions', $controller, 'positions'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
 					$navigation->createLink('Leave', $controller, 'leaves'),
@@ -66,6 +67,11 @@ class TeachersNavigationComponent extends Component {
 					$navigation->createLink('Allergies', $controller, 'healthAllergy', '^healthAllergy'),
 					$navigation->createLink('Tests', $controller, 'healthTest', '^healthTest'),
 					$navigation->createLink('Consultations', $controller, 'healthConsultation', '^healthConsultation'),
+                ),
+				'TRAINING' => array(
+                    $navigation->createLink('Needs', $controller, 'trainingNeed', '^trainingNeed'),
+                    $navigation->createLink('Results', $controller, 'trainingResult', '^trainingResult'),
+                    $navigation->createLink('Self-Study', $controller, 'trainingSelfStudy', '^trainingSelfStudy')
                 )
 			)
 		);
