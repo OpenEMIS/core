@@ -25,16 +25,14 @@ class SmsShell extends AppShell {
     );
     
     public function main() {}
-	
-    public function _welcome() {}
-	
-    public function run($provider) {
-        $this->out('Started test - ' . date('Y-m-d H:i:s'));
-        $this->out($provider);
-        $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
-        $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
-        $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
     
+    public function _welcome() {}
+    
+    public function run() {
+        $provider = $this->args[0];
+
+        $this->out('Started - ' . date('Y-m-d H:i:s'));
+        $this->out('Provider - ' . $provider);
         $retryTimes = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_retry_times'));
         $retryWait = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_retry_wait'));
         $retryResponses = $this->SmsResponse->find('all', array(
@@ -45,9 +43,9 @@ class SmsShell extends AppShell {
                 )
             )
         );
+
         $data = array();
         $logData = array();
-
         if(!empty($retryResponses)){
             foreach($retryResponses as $obj){
                $this->sent($provider, $obj);
@@ -58,6 +56,10 @@ class SmsShell extends AppShell {
 
 
     public function sent($provider, $obj){
+        $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
+        $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
+        $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
+
         $param = array($smsNumberField => $obj['SmsResponse']['number'], $smsContentField => $obj['SmsResponse']['message']);
         $HttpSocket = new HttpSocket();
         $results = $HttpSocket->post($providerUrl, $param);
@@ -83,9 +85,7 @@ class SmsShell extends AppShell {
                             'message' => $obj['SmsResponse']['message']
                         )
                     );
-                    $this->out(1);
                 }else{
-                    $this->out(0);
                     $this->log($response, 'sms');
                 }
                 break;
@@ -96,8 +96,7 @@ class SmsShell extends AppShell {
 
 
         if(!empty($data) && !empty($logData)){
-            $this->out($provider);
-            $this->out('Sent test     ' . count($data) . ' SMS');
+            $this->out('Sent ' . count($data) . ' SMS');
             $this->SmsResponse->saveAll($data);
             $this->SmsLog->saveAll($logData);
         }

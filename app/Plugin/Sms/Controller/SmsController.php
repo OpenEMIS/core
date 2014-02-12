@@ -55,12 +55,13 @@ class SmsController extends SmsAppController {
                 );
 
                 $followingMessage = isset($messages[1]['SmsMessage']) ? $messages[1]['SmsMessage'] : null;
-           
+
+                $this->SmsResponse->saveAll($data);
+                $this->SmsLog->saveAll($logData);
+                
                 if(!empty($followingMessage)){
                     $this->sent($provider, $number, $followingMessage);
                 }
-                $this->SmsResponse->saveAll($data);
-                $this->SmsLog->saveAll($logData);
             }else{
                 $lastResponse = end($responses);
                 $lastResponse = $lastResponse['SmsResponse'];
@@ -82,7 +83,6 @@ class SmsController extends SmsAppController {
                     )
                 );
 
-                $this->SmsResponse->saveAll($data);
                 $followingMessage = null;
                 foreach($messages as $message){
                     if($message['SmsMessage']['order']== $lastResponse['order']+1){
@@ -91,11 +91,12 @@ class SmsController extends SmsAppController {
                     }
                 }
 
+                $this->SmsResponse->saveAll($data);
+                $this->SmsLog->saveAll($logData);
+
                 if(!empty($followingMessage)){
                    $this->sent($provider, $number, $followingMessage);
                 }
-                $this->SmsResponse->saveAll($data);
-                $this->SmsLog->saveAll($logData);
             }
         }else{
             echo 0;
@@ -148,12 +149,10 @@ class SmsController extends SmsAppController {
             default:
                 echo "Incorrect provider";
                 break;
-
-
-            $this->SmsResponse->saveAll($data);
-            $this->SmsLog->saveAll($logData);
         }
 
+        $this->SmsResponse->saveAll($data);
+        $this->SmsLog->saveAll($logData);
       
     }
 
