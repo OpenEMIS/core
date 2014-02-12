@@ -28,8 +28,9 @@ class SmsShell extends AppShell {
 	
     public function _welcome() {}
 	
-    public function run() {
-        $this->out('Started - ' . date('Y-m-d H:i:s'));
+    public function run($provider) {
+        $this->out('Started test - ' . date('Y-m-d H:i:s'));
+        $this->out($provider);
         $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
         $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
         $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
@@ -49,13 +50,24 @@ class SmsShell extends AppShell {
 
         if(!empty($retryResponses)){
             foreach($retryResponses as $obj){
-                $param = array($smsNumberField => $obj['SmsResponse']['number'], $smsContentField => $obj['SmsResponse']['message']);
-                $HttpSocket = new HttpSocket();
-                $results = $HttpSocket->post($providerUrl, $param);
-                $response = json_decode($HttpSocket->response, true);
+               $this->sent($provider, $obj);
+            }
+        }
+        $this->out('Ended - ' . date('Y-m-d H:i:s'));
+    }
 
+
+    public function sent($provider, $obj){
+        $param = array($smsNumberField => $obj['SmsResponse']['number'], $smsContentField => $obj['SmsResponse']['message']);
+        $HttpSocket = new HttpSocket();
+        $results = $HttpSocket->post($providerUrl, $param);
+        $data = array();
+        $logData = array();
+        switch ($provider) {
+            case "smsdome":
+                $response = json_decode($HttpSocket->response, true);
                 if($response['result']['status'] == "OK"){
-                    $data[] = array(
+                    $data = array(
                         'SmsResponse' => array(
                             'id' => $obj['SmsResponse']['id'],
                             'sent' => date('Y-m-d H:i:s'),
@@ -63,7 +75,7 @@ class SmsShell extends AppShell {
                         )
                     );
 
-                    $logData[] = array(
+                    $logData = array(
                         'SmsLog' => array(
                             'send_receive' => 1,
                             'created' => date('Y-m-d H:i:s'),
@@ -71,15 +83,24 @@ class SmsShell extends AppShell {
                             'message' => $obj['SmsResponse']['message']
                         )
                     );
+                    $this->out(1);
+                }else{
+                    $this->out(0);
+                    $this->log($response, 'sms');
                 }
-            }
-            if(!empty($data) && !empty($logData)){
-                 $this->out('Sent ' . count($data) . ' SMS');
-                $this->SmsResponse->saveAll($data);
-                $this->SmsLog->saveAll($logData);
-            }
+                break;
+            default:
+                echo "Incorrect provider";
+                break;
         }
-        $this->out('Ended - ' . date('Y-m-d H:i:s'));
+
+
+        if(!empty($data) && !empty($logData)){
+            $this->out($provider);
+            $this->out('Sent test     ' . count($data) . ' SMS');
+            $this->SmsResponse->saveAll($data);
+            $this->SmsLog->saveAll($logData);
+        }
     }
 }
 

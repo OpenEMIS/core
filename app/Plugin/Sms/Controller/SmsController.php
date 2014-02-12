@@ -15,64 +15,112 @@ class SmsController extends SmsAppController {
     }
 
     public function receive(){
-        $provider = $this->request->params['pass'][0];
+        $provider = $this->request['url']['src'];
 
-        switch ($provider) {
-            case "smsdome":
-                $this->smsdome();
-                break;
-            default:
-                echo "Incorrect provider";
-                break;
+        $this->received($provider);
+
+        $this->autoRender = false;
+    }
+
+    public function received($provider){
+        $number = $this->request['url']['mobileno'];
+        $message = $this->request['url']['message'];
+        $key = $this->request['url']['key'];
+
+        $responses = $this->SmsResponse->find('all', array('conditions'=>array('number'=>$number)));
+        $messages = $this->SmsMessage->find('all', array('conditions'=>array('enabled'=>1), 'order'=>array('order'), 'recursive'=>-1));
+
+        $keyCompare = AuthComponent::password($provider);
+        if($key == $keyCompare){
+            if(empty($responses)){
+                $firstMessage = $messages[0]['SmsMessage'];
+                $data[] = array(
+                    'SmsResponse' => array(
+                        'message' => $firstMessage['message'],
+                        'sent' => date('Y-m-d H:i:s'),
+                        'received' => date('Y-m-d H:i:s'),
+                        'number' => $number,
+                        'response' => rawurldecode($message),
+                        'order' => $firstMessage['order']
+                    )
+                );
+
+                $logData[] = array(
+                    'SmsLog' => array(
+                        'send_receive' => 2,
+                        'created' => date('Y-m-d H:i:s'),
+                        'number' => $number,
+                        'message' => rawurldecode($message)
+                    )
+                );
+
+                $followingMessage = isset($messages[1]['SmsMessage']) ? $messages[1]['SmsMessage'] : null;
+           
+                if(!empty($followingMessage)){
+                    $this->sent($provider, $number, $followingMessage);
+                }
+                $this->SmsResponse->saveAll($data);
+                $this->SmsLog->saveAll($logData);
+            }else{
+                $lastResponse = end($responses);
+                $lastResponse = $lastResponse['SmsResponse'];
+
+                $data[] = array(
+                    'SmsResponse' => array(
+                        'id' => $lastResponse['id'],
+                        'received' => date('Y-m-d H:i:s'),
+                        'response' => rawurldecode($message)
+                    )
+                );
+
+                $logData[] = array(
+                    'SmsLog' => array(
+                        'send_receive' => 2,
+                        'created' => date('Y-m-d H:i:s'),
+                        'number' => $number,
+                        'message' => rawurldecode($message)
+                    )
+                );
+
+                $this->SmsResponse->saveAll($data);
+                $followingMessage = null;
+                foreach($messages as $message){
+                    if($message['SmsMessage']['order']== $lastResponse['order']+1){
+                        $followingMessage = $message['SmsMessage'];
+                        break;
+                    }
+                }
+
+                if(!empty($followingMessage)){
+                   $this->sent($provider, $number, $followingMessage);
+                }
+                $this->SmsResponse->saveAll($data);
+                $this->SmsLog->saveAll($logData);
+            }
+        }else{
+            echo 0;
         }
 
         $this->autoRender = false;
     }
 
-    public function smsdome(){
-        $number = $this->request['url']['mobileno'];
-        $message = $this->request['url']['message'];
-
-        $responses = $this->SmsResponse->find('all', array('conditions'=>array('number'=>$number)));
-        $messages = $this->SmsMessage->find('all', array('conditions'=>array('enabled'=>1), 'order'=>array('order'), 'recursive'=>-1));
-
-
+    public function sent($provider, $number, $followingMessage){
         $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
         $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
         $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
     
-        if(empty($responses)){
-            $firstMessage = $messages[0]['SmsMessage'];
-            $data[] = array(
-                'SmsResponse' => array(
-                    'message' => $firstMessage['message'],
-                    'sent' => date('Y-m-d H:i:s'),
-                    'received' => date('Y-m-d H:i:s'),
-                    'number' => $number,
-                    'response' => rawurldecode($message),
-                    'order' => $firstMessage['order']
-                )
-            );
+        $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message']);
+        $HttpSocket = new HttpSocket();
+        $results = $HttpSocket->post($providerUrl, $param);
 
-            $logData[] = array(
-                'SmsLog' => array(
-                    'send_receive' => 2,
-                    'created' => date('Y-m-d H:i:s'),
-                    'number' => $number,
-                    'message' => rawurldecode($message)
-                )
-            );
-
-            $followingMessage = isset($messages[1]['SmsMessage']) ? $messages[1]['SmsMessage'] : null;
-       
-            if(!empty($followingMessage)){
-                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message']);
-                $HttpSocket = new HttpSocket();
-                $results = $HttpSocket->post($providerUrl, $param);
+        $data = array();
+        $logData = array();
+        switch ($provider) {
+            case "smsdome":
                 $response = json_decode($HttpSocket->response, true);
                 if($response['result']['status'] == "OK"){
 
-                    $data[] = array(
+                    $data = array(
                         'SmsResponse' => array(
                             'message' => $followingMessage['message'],
                             'sent' => date('Y-m-d H:i:s'),
@@ -81,7 +129,7 @@ class SmsController extends SmsAppController {
                         )
                     );
 
-                    $logData[] = array(
+                    $logData = array(
                         'SmsLog' => array(
                             'send_receive' => 1,
                             'created' => date('Y-m-d H:i:s'),
@@ -90,77 +138,23 @@ class SmsController extends SmsAppController {
                         )
                     );
 
-                    pr(__('Sent'));
+
+                    echo 1;
                 }else{
-                    pr($response['result']['error']);
+                    $this->log($response, 'sms');
+                    echo 0;
                 }
-            }
-            $this->SmsResponse->saveAll($data);
-            $this->SmsLog->saveAll($logData);
-        }else{
-            $lastResponse = end($responses);
-            $lastResponse = $lastResponse['SmsResponse'];
+                break;
+            default:
+                echo "Incorrect provider";
+                break;
 
-            $data[] = array(
-                'SmsResponse' => array(
-                    'id' => $lastResponse['id'],
-                    'received' => date('Y-m-d H:i:s'),
-                    'response' => rawurldecode($message)
-                )
-            );
 
-            $logData[] = array(
-                'SmsLog' => array(
-                    'send_receive' => 2,
-                    'created' => date('Y-m-d H:i:s'),
-                    'number' => $number,
-                    'message' => rawurldecode($message)
-                )
-            );
-
-            $this->SmsResponse->saveAll($data);
-            $followingMessage = null;
-            foreach($messages as $message){
-                if($message['SmsMessage']['order']== $lastResponse['order']+1){
-                    $followingMessage = $message['SmsMessage'];
-                    break;
-                }
-            }
-
-            if(!empty($followingMessage)){
-                $param = array($smsNumberField => $number, $smsContentField => $followingMessage['message']);
-                $HttpSocket = new HttpSocket();
-                $results = $HttpSocket->post($providerUrl, $param);
-                $response = json_decode($HttpSocket->response, true);
-                if($response['result']['status'] == "OK"){
-                    $data[] = array(
-                        'SmsResponse' => array(
-                            'message' => $followingMessage['message'],
-                            'sent' => date('Y-m-d H:i:s'),
-                            'number' => $number,
-                            'order' => $followingMessage['order']
-                        )
-                    );
-
-                     $logData[] = array(
-                        'SmsLog' => array(
-                            'send_receive' => 1,
-                            'created' => date('Y-m-d H:i:s'),
-                            'number' => $number,
-                            'message' => $followingMessage['message']
-                        )
-                    );
-                    pr(__('Sent'));
-                }else{
-                    pr($response['result']['error']);
-                }
-            }
             $this->SmsResponse->saveAll($data);
             $this->SmsLog->saveAll($logData);
         }
 
-
-        $this->autoRender = false;
+      
     }
 
     public function index(){
