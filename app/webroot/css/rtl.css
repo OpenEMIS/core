@@ -58,6 +58,12 @@
 .left_nav{
 	float:right;
 }
+.accordion-heading .accordion-toggle{
+	background-position:10px 14px;
+}
+.accordion-heading .accordion-toggle:hover{
+	background-position:10px -76px;
+}
 .body_content_right{
 	float:right;
 	margin-left:0px;
