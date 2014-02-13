@@ -598,7 +598,8 @@ class InstitutionSitesController extends AppController {
 		$this->institutionSiteObj['InstitutionSite'];
                 $datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>(array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'],0))),'order'=>array('InstitutionSiteCustomField.institution_site_type_id','InstitutionSiteCustomField.order')));
 		//$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id'])));
-		$this->InstitutionSiteCustomValue->unbindModel(
+		
+                $this->InstitutionSiteCustomValue->unbindModel(
 			array('belongsTo' => array('InstitutionSite'))
 		);
 		$datavalues = $this->InstitutionSiteCustomValue->find('all',array('conditions'=>array('InstitutionSiteCustomValue.institution_site_id'=>$this->institutionSiteId)));
@@ -2924,42 +2925,99 @@ class InstitutionSitesController extends AppController {
 		$this->set('arealevel',$areaLevel);
 		$this->set('adminarea',$adminarea);
 	}
-	
-	private $reportMapping = array(
+        
+        private $reportMapping = array(
 		'Overview' => array(
 			'Model' => 'InstitutionSite',
 			'fields' => array(
-				'Institution'=>array('name'),
-				'InstitutionSite'=>array('name','code','address','postal_code','contact_person','telephone','fax','email','website','date_opened','date_closed','longitude','latitude'),
-				'InstitutionSiteStatus'=>array('name'),
-				'InstitutionSiteType'=>array('name'),
-				'InstitutionSiteOwnership'=>array('name'),
-				'Area'=>array('name')
-			)
+				'Institution'=>array(
+                                    'name' => ''
+                                    ),
+				'InstitutionSite'=>array(
+                                    'name' => '',
+                                    'code' => '',
+                                    'address' => '',
+                                    'postal_code' => '',
+                                    'contact_person' => '',
+                                    'telephone' => '',
+                                    'fax' => '',
+                                    'email' => '',
+                                    'website' => '',
+                                    'date_opened' => '',
+                                    'date_closed' => '',
+                                    'longitude' => '',
+                                    'latitude' => ''
+                                    ),
+				'InstitutionSiteStatus'=>array(
+                                    'name' => 'Institution Site Status'
+                                    ),
+				'InstitutionSiteType'=>array(
+                                    'name' => 'Institution Site Type'
+                                    ),
+				'InstitutionSiteOwnership'=>array(
+                                    'name' => 'Institution Site Ownership'
+                                    ),
+				'Area'=>array(
+                                    'name' => 'Area'
+                                    ),
+                                'AreaEducation' => array(
+                                    'name' => 'Area (Education)'
+                                )
+			),
+                        'FileName' => 'Report_General_Overview'
 		),
 		'Bank Accounts' => array(
 			'Model' => 'InstitutionSiteBankAccount',
 			'fields' => array(
-				'BankBranch'=>array('name'),
-				'InstitutionSiteBankAccount'=>array('account_name','account_number','active')
-			)
+                                'Bank'=>array(
+                                    'name' => ''
+                                    ),
+				'BankBranch'=>array(
+                                    'name' => 'Branch Name'
+                                    ),
+				'InstitutionSiteBankAccount'=>array(
+                                    'account_name' => 'Bank Account Name',
+                                    'account_number' => 'Bank Account Number',
+                                    'active' => 'Is Active'
+                                    )
+			),
+                        'FileName' => 'Report_General_Bank_Accounts'
 		),
 		'More' => array(
 			'Model' => 'InstitutionSiteCustomValue',
 			'fields' => array(
-				'InstitutionSiteCustomField'=>array('name'),
-				'InstitutionSiteCustomValue'=>array('custom_value')
-			)
+				'InstitutionSiteCustomField'=>array(
+                                    'name' => 'Custom Field Name'
+                                    ),
+				'InstitutionSiteCustomValue'=>array(
+                                    'custom_value' => 'Custom Field Value'
+                                    )
+			),
+                        'FileName' => 'Report_General_More'
 		),
 		'Classes - Students' => array(
 			'Model' => 'InstitutionSiteClass',
 			'fields' => array(
-				'SchoolYear' => array('name'),
-				'InstitutionSiteClass' => array('name'),
-				'EducationGrade' => array('name'),
-				'Student' => array('identification_no', 'first_name', 'last_name'),
-				'StudentCategory' => array('name')
-			)
+				'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+				'InstitutionSiteClass' => array(
+                                    'name' => 'Class Name'
+                                    ),
+				'EducationGrade' => array(
+                                    'name' => 'Grade'
+                                    ),
+				'Student' => array(
+                                    'identification_no' => 'OpenEMIS ID', 
+                                    'first_name' => 'First Name', 
+                                    'middle_name' => 'Middle Name', 
+                                    'last_name' => 'Last Name'
+                                    ),
+				'StudentCategory' => array(
+                                    'name' => 'Category'
+                                    )
+			),
+                        'FileName' => 'Report_Details_Classes_Students'
 		)
 	);
 	
@@ -2972,7 +3030,7 @@ class InstitutionSitesController extends AppController {
 		if(method_exists($this, 'gen'.$type)){ 
 			if($type == 'CSV'){
 				$data =  $this->getReportData($this->ReportData['name']);
-				$this->genCSV($data);
+                                $this->genCSV($data, $this->ReportData['name']);
 			}elseif($type == 'PDF'){
 				$data =  $this->genReportPDF($this->ReportData['name']);
 				$data['name'] = $this->ReportData['name'];
@@ -2980,25 +3038,42 @@ class InstitutionSitesController extends AppController {
 			}
 		}
 	}
-	
-	private function getHeaderData($name,$humanize = false){
+        
+        private function getFields($name){
 		if(array_key_exists($name, $this->reportMapping)){
 			$header = $this->reportMapping[$name]['fields'];
 		}
 		$new = array();
 		foreach($header as $model => &$arrcols){
-			foreach($arrcols as $col){
-				$new[] = ($humanize == false)?$model.".".$col:  Inflector::humanize(Inflector::underscore($model)). ' '. Inflector::humanize($col);
+			foreach($arrcols as $col => $value){
+				$new[] = $model.".".$col;
 			}
 		}
 		return $new;
 	}
+        
+        private function getHeader($name,$humanize = false){
+            if(array_key_exists($name, $this->reportMapping)){
+			$header = $this->reportMapping[$name]['fields'];
+		}
+		$new = array();
+		foreach($header as $model => &$arrcols){
+			foreach($arrcols as $col => $value){
+                            if(empty($value)){
+                                $new[] = Inflector::humanize(Inflector::underscore($model)). ' '. Inflector::humanize($col);
+                            }else{
+                                $new[] = $value;
+                            }
+			}
+		}
+		return $new;
+        }
 	
 	private function getReportData($name){
 		if(array_key_exists($name, $this->reportMapping)){
 			$whereKey = ($this->reportMapping[$name]['Model'] == 'InstitutionSite')? 'id' : 'institution_site_id';
 			$cond =  array( $this->reportMapping[$name]['Model'].".".$whereKey => $this->institutionSiteId);
-			$options = array('fields' => $this->getHeaderData($name), 'conditions'=>$cond);
+			$options = array('fields' => $this->getFields($name), 'conditions'=>$cond);
 					
 			if($this->reportMapping[$name]['Model'] == 'InstitutionSiteCustomValue'){
 				$options['joins'] = array(
@@ -3010,8 +3085,11 @@ class InstitutionSitesController extends AppController {
 						)
 					)
 				);
+                                
+                                $options['order'] = array('InstitutionSiteCustomField.institution_site_type_id','InstitutionSiteCustomField.order','InstitutionSiteCustomValue.id');
+                                
 				$this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
-					'custom_value' => 'IF(InstitutionSiteCustomField.type = 3, InstitutionSiteCustomFieldOption.value, InstitutionSiteCustomValue.value)'
+					'custom_value' => 'IF((InstitutionSiteCustomField.type = 3) OR (InstitutionSiteCustomField.type = 4), InstitutionSiteCustomFieldOption.value, InstitutionSiteCustomValue.value)'
 				);
 			} else if($this->reportMapping[$name]['Model'] == 'InstitutionSiteClass') {
 				$options['recursive'] = -1;
@@ -3048,38 +3126,129 @@ class InstitutionSitesController extends AppController {
 					)
 				);
 				$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
-			}
+                        }else if($this->reportMapping[$name]['Model'] == 'InstitutionSiteBankAccount'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'bank_branches',
+						'alias' => 'BankBranch',
+						'conditions' => array('InstitutionSiteBankAccount.bank_branch_id = BankBranch.id')
+					),
+                                        array(
+						'table' => 'banks',
+						'alias' => 'Bank',
+						'conditions' => array('BankBranch.bank_id = Bank.id')
+					)
+                            );
+                        }else if($this->reportMapping[$name]['Model'] == 'InstitutionSite'){
+                                //$options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'area_educations',
+						'alias' => 'AreaEducation',
+						'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+					)
+                            );
+                        }
 			$data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
 		}
 		return $data;   
 	}
-		
-	public function genCSV($arrData){
-		$this->autoRender =false;
-		ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
-		//create a file
-		$filename = "export_".date("Y.m.d").".csv";
-		$csv_file = fopen('php://output', 'w');
-		header('Content-type: application/csv');
-		header('Content-Disposition: attachment; filename="'.$filename.'"');
-		$header_row = $this->getHeaderData($this->ReportData['name']);
-		fputcsv($csv_file,$header_row,',','"');
+        
+        private function formatCSVData($data, $name){
+            $newData = array();
+            $dateFormat = 'd F, Y';
+            
+            if($name == 'Overview'){
+                foreach($data AS $row){
+                    if($row['InstitutionSite']['date_opened'] == '0000-00-00'){
+                        $row['InstitutionSite']['date_opened'] = '';
+                    }else{
+                        $originalDate = new DateTime($row['InstitutionSite']['date_opened']);
+                        $row['InstitutionSite']['date_opened'] = $originalDate->format($dateFormat);
+                    }
+                    
+                    if($row['InstitutionSite']['date_closed'] == '0000-00-00'){
+                        $row['InstitutionSite']['date_closed'] = '';
+                    }else{
+                        $originalDate = new DateTime($row['InstitutionSite']['date_closed']);
+                        $row['InstitutionSite']['date_closed'] = $originalDate->format($dateFormat);
+                    }
+                    
+                    $newData[] = $row;
+                }
+            }else if($name == 'Bank Accounts'){
+                foreach($data AS $row){
+                    $row['InstitutionSiteBankAccount']['active'] = $row['InstitutionSiteBankAccount']['active'] == 1 ? 'Yes' : 'No';
+                    $newData[] = $row;
+                }
+            }else if($name == 'More'){
+                $tempArray = array();
+                foreach($data AS $row){
+                    if(array_key_exists($row['InstitutionSiteCustomField']['name'], $tempArray)){
+                        if(empty($tempArray[$row['InstitutionSiteCustomField']['name']])){
+                            $tempArray[$row['InstitutionSiteCustomField']['name']] = $row['InstitutionSiteCustomValue']['custom_value'];
+                        }else{
+                            if(!empty($row['InstitutionSiteCustomValue']['custom_value'])){
+                                $tempArray[$row['InstitutionSiteCustomField']['name']] .= ' ,' . $row['InstitutionSiteCustomValue']['custom_value'];
+                            }
+                        }
+                    }else{
+                        $tempArray[$row['InstitutionSiteCustomField']['name']] = $row['InstitutionSiteCustomValue']['custom_value'];
+                    }
+                }
+                
+                foreach($tempArray AS $key => $value){
+                    $newData[] = array(
+                        'InstitutionSiteCustomField' => array('name' => $key),
+                        'InstitutionSiteCustomValue' => array('custom_value' => $value)
+                    );
+                }
+            }
+            
+            if(!empty($newData)){
+                return $newData;
+            }else{
+                return $data;
+            }
+        }
+        
+        public function genCSV($data, $name){
+            $this->autoRender =false;
+            
+            $arrData = $this->formatCSVData($data, $name);
+            
+            if(array_key_exists($name, $this->reportMapping)){
+		$fileName = array_key_exists('FileName', $this->reportMapping[$name]) ? $this->reportMapping[$name]['FileName'] : "export_".date("Y.m.d");
+            }else{
+                $fileName = "export_".date("Y.m.d");
+            }
+            $downloadedFile = $fileName . '.csv';
+            
+            ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
+            //create a file
+
+            $csv_file = fopen('php://output', 'w');
+            header('Content-type: application/csv');
+            header('Content-Disposition: attachment; filename="'.$downloadedFile.'"');
+            $header_row = $this->getHeader($this->ReportData['name']);
+            fputcsv($csv_file,$header_row,',','"');
 		
 		 
-		// Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
-		foreach($arrData as $arrSingleResult){
-			$row = array();
-				foreach($arrSingleResult as $table => $arrFields){
+            // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
+            foreach($arrData as $arrSingleResult){
+                $row = array();
+		foreach($arrSingleResult as $table => $arrFields){
 					
-					foreach($arrFields as $col){
-						$row[] = $col;
-					}
-				}
+                    foreach($arrFields as $col){
+			$row[] = $col;
+                    }
+                }
 				
-				fputcsv($csv_file,$row,',','"');
-		}
-		fclose($csv_file);
-	}
+                fputcsv($csv_file,$row,',','"');
+            }
+            fclose($csv_file);
+        }
 	
 	public function genReportPDF($name){
 		if($name == 'Overview'){
@@ -3105,8 +3274,8 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Reports - General');
 		$data= array('Reports - General' => array(
 			array('name' => 'Overview', 'types' => array('CSV')),
-			array('name' => 'Bank Accounts', 'types' => array('CSV'))/*,
-			array('name' => 'More', 'types' => array('CSV'))*/
+			array('name' => 'Bank Accounts', 'types' => array('CSV')),
+			array('name' => 'More', 'types' => array('CSV'))
 		));
 		$this->set('data', $data);
 		$this->render('Reports/general');
