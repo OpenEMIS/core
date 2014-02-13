@@ -15,7 +15,7 @@ class SmsController extends SmsAppController {
     }
 
     public function receive(){
-        $provider = $this->request['url']['src'];
+        $provider = $this->params['pass'][0];
 
         $this->received($provider);
 
