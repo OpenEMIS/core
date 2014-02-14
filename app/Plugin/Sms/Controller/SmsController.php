@@ -106,23 +106,23 @@ class SmsController extends SmsAppController {
     }
 
     public function testsend() {
-	$this->autoRender = false;
-	$providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
+		$this->autoRender = false;
+		$providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
         $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
         $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
 
-	$param = array($smsNumberField => '962799360680', $smsContentField => 'this is a test message');
+		$param = array($smsNumberField => '962799360680', $smsContentField => 'this is a test message');
         $HttpSocket = new HttpSocket();
         //$results = $HttpSocket->get($providerUrl, $param);
-	$msg = $this->SmsLog->findById(26);
-	//pr($msg);
-	$str = $msg['SmsLog']['message'];//mb_convert_encoding('ما هو اسمك؟', 'UCS-2');
-	$result = $HttpSocket->get($providerUrl . '&M=%2B962799360680&B='.$str);
+		$msg = $this->SmsLog->findById(26);
+		//pr($msg);
+		$str = $msg['SmsLog']['message'];//mb_convert_encoding('ما هو اسمك؟', 'UCS-2');
+		$result = $HttpSocket->get($providerUrl . '&M=%2B962799360680&B='.$str);
 
-	$this->log('test send', 'sms');
-	$this->log($providerUrl, 'sms');
-	$this->log($HttpSocket->response, 'sms');
-	$this->log('test send end', 'sms');
+		$this->log('test send', 'sms');
+		$this->log($providerUrl, 'sms');
+		$this->log($HttpSocket->response, 'sms');
+		$this->log('test send end', 'sms');
     }
 
     public function sent($provider, $number, $followingMessage){
@@ -134,74 +134,47 @@ class SmsController extends SmsAppController {
         $HttpSocket = new HttpSocket();
         $data = array();
         $logData = array();
+		$this->log(array_merge($providerURL, $param), 'sms');
+		$responseOK = false;
         switch ($provider) {
             case "smsdome":
-		$results = $HttpSocket->post($providerUrl, $param);
+				$results = $HttpSocket->post($providerUrl, $param);
                 $response = json_decode($HttpSocket->response, true);
-                if($response['result']['status'] == "OK"){
-
-                    $data = array(
-                        'SmsResponse' => array(
-                            'message' => $followingMessage['message'],
-                            'sent' => date('Y-m-d H:i:s'),
-                            'number' => $number,
-                            'order' => $followingMessage['order']
-                        )
-                    );
-
-                    $logData = array(
-                        'SmsLog' => array(
-                            'send_receive' => 1,
-                            'created' => date('Y-m-d H:i:s'),
-                            'number' => $number,
-                            'message' => $followingMessage['message']
-                        )
-                    );
-
-
-                    echo 1;
-                }else{
-                    $this->log($response, 'sms');
-                    echo 0;
-                }
+				$responseOK = $response['result']['status'] == "OK";
                 break;
-	    case "arabiacell":
-		$this->log(array_merge($providerURL, $param), 'sms');
-		$results = $HttpSocket->get($providerUrl, $param);
-		$this->log($HttpSocket->response, 'sms');
-                if($HttpSocket->response['body'] == "success"){
-                    $data = array(
-                        'SmsResponse' => array(
-                            'message' => $followingMessage['message'],
-                            'sent' => date('Y-m-d H:i:s'),
-                            'number' => $number,
-                            'order' => $followingMessage['order']
-                        )
-                    );
-
-                    $logData = array(
-                        'SmsLog' => array(
-                            'send_receive' => 1,
-                            'created' => date('Y-m-d H:i:s'),
-                            'number' => $number,
-                            'message' => $followingMessage['message']
-                        )
-                    );
-
-
-                    echo 1;
-                }else{
-                    echo 0;
-                }
+			case "arabiacell":
+				$results = $HttpSocket->get($providerUrl, $param);
+				$responseOK = $HttpSocket->response['body'] == "success";
                 break;
             default:
                 echo "Incorrect provider";
                 break;
         }
+		$this->log($HttpSocket->response, 'sms');
+		if($responseOK) {
+			$data = array(
+				'SmsResponse' => array(
+					'message' => $followingMessage['message'],
+					'sent' => date('Y-m-d H:i:s'),
+					'number' => $number,
+					'order' => $followingMessage['order']
+				)
+			);
 
-        $this->SmsResponse->saveAll($data);
-        $this->SmsLog->saveAll($logData);
-      
+			$logData = array(
+				'SmsLog' => array(
+					'send_receive' => 1,
+					'created' => date('Y-m-d H:i:s'),
+					'number' => $number,
+					'message' => $followingMessage['message']
+				)
+			);
+			$this->SmsResponse->saveAll($data);
+			$this->SmsLog->saveAll($logData);
+			echo 1;
+		} else {
+			echo 0;
+		}
     }
 
     public function index(){
