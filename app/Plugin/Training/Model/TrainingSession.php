@@ -61,7 +61,7 @@ class TrainingSession extends TrainingAppModel {
 		),
 		'end_date' => array(
             'comparison' => array(
-            	'rule'=>array('field_comparison', '>', 'start_date'), 
+            	'rule'=>array('field_comparison', '>=', 'start_date'), 
             	'allowEmpty'=>true,
             	'message' => 'End Date must be greater than Start Date'
             )

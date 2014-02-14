@@ -41,7 +41,7 @@ var objTrainingCourses = {
             },
             success: function (data, textStatus) {
                 var callback = function() {
-                    $('.file_upload .table_body').append(data);
+                     table.find('.table_body').append(data);
                 };
                 $.unmask({id: maskId, callback: callback});
             }

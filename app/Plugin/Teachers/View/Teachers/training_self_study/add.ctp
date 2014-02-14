@@ -76,11 +76,17 @@ echo $this->Html->script('/Teachers/js/training_self_studies', false);
      <div class="row">
         <div class="label"><?php echo __('Result'); ?></div>
         <div class="value">
-        	<?php echo $this->Form->input('result');?><br />
-        	<?php echo $this->Form->input('pass', array('options' => array('1'=>__('Pass'), '0' => 'Fail')));?>
+        	<?php echo $this->Form->input('result');?>
+        	
         </div>
     </div>
-        <span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
+	<div class="row">
+		<div class="label"><?php echo __('Completed'); ?></div>
+		<div class="value">
+			<?php echo $this->Form->input('pass', array('options' => array('1'=>__('Pass'), '0' => 'Fail')));?>
+		</div>
+	</div>
+    <span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
 
 	<div class="row">
 		<div class="label"><?php echo __('Attachments'); ?></div>
