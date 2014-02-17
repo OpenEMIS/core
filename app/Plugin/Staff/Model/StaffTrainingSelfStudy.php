@@ -278,14 +278,13 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		$controller->set('modelName', $this->name);
 
 		$trainingCourseOptions = array();
-		$trainingSessionTraineeData = array();
-		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$trainingCreditHour = ClassRegistry::init('TrainingCreditHour');
+		$trainingCourse = ClassRegistry::init('TrainingCourse');
 		$trainingCreditHourOptions = array();
 
 		if($controller->Session->check('StaffId')){
 		 	$staffId = $controller->Session->read('StaffId');
-		
+			/*
 			$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
 				array(
 					'recursive' => -1, 
@@ -315,11 +314,48 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 						
 					)
 				)
+			);*/
+
+		 	$institutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+		 	$staffData = $institutionSiteStaff->find('all', array('recursive'=>-1,'conditions'=>array('staff_id' => $staffId)));
+		 	$staffPositionTitleId = array();
+		 	foreach($staffData as $val){
+		 		if(!empty($val['InstitutionSiteStaff']['position_title_id'])){
+		 			$staffPositionTitleId[] = $val['InstitutionSiteStaff']['position_title_id'];
+		 		}
+		 	}
+		 	$trainingCourseOptions = array();
+			$trainingCourses= $trainingCourse->find('all', 
+				array(
+				'fields'=> array('TrainingCourse.id', 'TrainingCourse.code', 'TrainingCourse.training_credit_hour_id'),
+				'joins' => array(
+					array(
+							'type' => 'LEFT',
+							'table' => 'training_course_target_populations',
+							'alias' => 'TrainingCourseTargetPopulation',
+							'conditions' => array(
+								'TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id',
+							     'TrainingCourseTargetPopulation.position_title_id' => $staffPositionTitleId,
+							     'TrainingCourseTargetPopulation.position_title_table' => 'staff_position_titles'
+							)
+					),
+					array(
+						'type' => 'LEFT',
+							'table' => 'training_sessions',
+							'alias' => 'TrainingSession',
+							'conditions' => array(
+								'TrainingCourse.id = TrainingSession.training_course_id'
+							)
+					)
+				),
+				'conditions' =>array(
+					'TrainingCourse.training_status_id' => 3
+				))
 			);
 
-			if(!empty($trainingSessionTrainees)){
-				foreach($trainingSessionTrainees as $val){
-					$trainingSessionTraineeData = $val['TrainingSessionTrainee'];
+			if(!empty($trainingCourses)){
+				foreach($trainingCourses as $val){
+					$trainingCourseOptions[$val['TrainingCourse']['id']] = $val['TrainingCourse']['code'];
 					$trainingCreditHours = $trainingCreditHour->find('first', 
 						array(
 						'fields'=>array('min', 'max'), 
@@ -331,7 +367,6 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 					for($i = $trainingCreditHours['TrainingCreditHour']['min']; $i <= $trainingCreditHours['TrainingCreditHour']['max']; $i++){
 						$trainingCreditHourOptions[$i] =  $i;
 					}
-					$trainingCourseOptions[] = array($val['TrainingSession']['id']=>$val['TrainingCourse']['code']);
 				}
 			}
 
@@ -355,7 +390,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 				$data = array();
 			}
 
-			$controller->request->data = array_merge($data, array('TrainingSessionTrainee' => $trainingSessionTraineeData));
+			$controller->request->data = array_merge($data);
 
 		 	$arrMap = array('model'=>'Staff.StaffTrainingSelfStudyAttachment', 'foreignKey' => 'staff_training_self_study_id');
             $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
