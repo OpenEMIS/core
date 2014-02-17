@@ -670,7 +670,7 @@ var jsList = {
 		var data = app.clone();
 		var filteredData = data.find(rowTag);
 		var sortedData = filteredData.sorted({
-			by: function(v) {
+			by: function(v) {//console.log($(v).find(orderVal));
 				return $(v).find(orderVal).val().toInt();
 			}
 		});
