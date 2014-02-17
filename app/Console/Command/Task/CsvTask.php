@@ -40,6 +40,13 @@ class CsvTask extends AppTask {
 		
         $arrTpl = explode(',', $tpl);
         $this->Common->translateArrayValues($arrTpl, " ");
+        
+        foreach($arrTpl AS $key => $column){
+            if($column == 'Identification No'){
+                $arrTpl[$key] = 'OpenEMIS ID';
+                break;
+            }
+        }
 
         $line = '';
         $filename = $reportId."_".$batchReportId."_".str_replace(' ', '_', $name).'.csv'; 
