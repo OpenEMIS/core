@@ -3103,4 +3103,15 @@ class InstitutionSitesController extends AppController {
 		$this->set('data', $data);
 		$this->render('Reports/general');
 	}
+        
+        public function reportsQuality() {
+		$this->Navigation->addCrumb('Reports - Quality');
+		$data= array('Reports - Quality' => array(
+			array('name' => 'QA Report', 'types' => array('CSV')),
+			array('name' => 'Visit Report', 'types' => array('CSV'))/*,
+			array('name' => 'More', 'types' => array('CSV'))*/
+		));
+		$this->set('data', $data);
+		$this->render('Reports/general');
+	}
 }

@@ -87,7 +87,8 @@ class SetupController extends AppController {
 		'HealthImmunization',
 		'HealthAllergyType',
 		'HealthConsultationType',
-		'HealthTestType'
+		'HealthTestType',
+                'QualityVisitType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -169,6 +170,13 @@ class SetupController extends AppController {
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
 			'name' => 'Staff Custom Fields (Academic)'
+		));
+                
+                //Quality
+                $lookup[] = array('Quality' => array(
+			'optgroup' => true,
+			'name' => 'Visit Types',
+			'items' => $this->QualityVisitType->getLookupVariables()
 		));
 		
 		// Census

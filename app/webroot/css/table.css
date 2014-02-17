@@ -97,3 +97,16 @@
 .list_wrapper { margin-bottom: 10px; }
 .list_wrapper > .table { margin-bottom: 0; }
 .scroll_active .list_wrapper { overflow-y: scroll; padding-right: 1px; }
+
+.table { width: 100%; border-spacing: 0; }
+.table thead tr { background-color: #EFEFEF; }
+.table thead td {  font-weight: bold;  text-align: center; }
+.table.table-hover tbody tr:hover { background-color:#5b8baf; color: #FFFFFF; cursor: pointer; }
+.table td { font-size: 11px; padding: 5px 8px; border: 1px solid #CCCCCC; }
+.action { margin-left: 5px; }
+
+td.cell_order { width: 63px; margin-left: -1px; }
+
+.edit .table {
+    margin-bottom: 0;
+}
