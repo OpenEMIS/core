@@ -2950,17 +2950,17 @@ class InstitutionSitesController extends AppController {
                 'QA Report' => array(
                     'Model' => 'QualityInstitutionRubric',
                     'fields' => array(
-                        //'SchoolYear' => array('name'),
+                        'SchoolYear' => array('name'),
                         'InstitutionSite'=>array('id','name','code'),
-                        /*'InstitutionSiteClass' => array('name'),
-                        'EducationGrade' => array('name'),*/
-                        'RubricTemplate' => array('name'),
+                        'InstitutionSiteClass' => array('name AS className'),
+                        'EducationGrade' => array('name AS gradeName'),
+                        'RubricTemplate' => array('name AS templateName'),
                         'RubricTemplateHeader' => array('title AS header'),
-                        'RubricTemplateColumnInfo' => array('weighting'),
+                        'RubricTemplateColumnInfo' => array('SUM(weighting) AS totalWeighting'),
                         //'RubricTemplateSubheader' => array('title AS subheader'),
                        // 'RubricTemplateItem' => array('title AS question'),
                         //'RubricTemplateAnswer' => array('title AS Answer'),
-                        'QualityInstitutionRubricAnswer' => array('rubric_template_answer_id1 AS selectedAnswerID'),
+                       // 'QualityInstitutionRubricAnswer' => array('rubric_template_answer_id1 AS selectedAnswerID'),
                        // 
                        // 'QualityInstitutionRubricAnswer'  => array('1*')
                     )
@@ -2976,6 +2976,7 @@ class InstitutionSitesController extends AppController {
 		if(method_exists($this, 'gen'.$type)){ 
 			if($type == 'CSV'){
 				$data =  $this->getReportData($this->ReportData['name']);
+                                
 				$this->genCSV($data);
 			}elseif($type == 'PDF'){
 				$data =  $this->genReportPDF($this->ReportData['name']);
@@ -2992,7 +2993,12 @@ class InstitutionSitesController extends AppController {
 		$new = array();
 		foreach($header as $model => &$arrcols){
 			foreach($arrcols as $col){
-				$new[] = ($humanize == false)?$model.".".$col:  Inflector::humanize(Inflector::underscore($model)). ' '. Inflector::humanize($col);
+                            if(strpos(substr($col, 0, 4), 'SUM(') !== false){
+                                $new[] = substr($col, 0, 4).$model.".".substr($col, 4);
+                            }
+                            else{
+                                $new[] = ($humanize == false)?$model.".".$col:  Inflector::humanize(Inflector::underscore($model)). ' '. Inflector::humanize($col);
+                            }
 			}
 		}
 		return $new;
@@ -3058,6 +3064,35 @@ class InstitutionSitesController extends AppController {
                             $options['recursive'] = -1;
                             $options['joins'] = array(
                                 array(
+                                        'table' => 'school_years',
+                                        'alias' => 'SchoolYear',
+                                        'conditions' => array('QualityInstitutionRubric.school_year_id = SchoolYear.id')
+                                ),
+                                array(
+                                        'table' => 'institution_sites',
+                                        'alias' => 'InstitutionSite',
+                                        'conditions' => array('QualityInstitutionRubric.institution_site_id = InstitutionSite.id')
+                                ),
+                                 array(
+                                       'table' => 'institution_site_classes',
+                                        'alias' => 'InstitutionSiteClass',
+                                        'conditions' => array(
+                                            'InstitutionSite.id = InstitutionSiteClass.institution_site_id',
+                                        )
+                                ),
+                                 array(
+                                        'table' => 'institution_site_class_grades',
+                                        'alias' => 'InstitutionSiteClassGrade',
+                                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+                                ),
+                                array(
+                                        'table' => 'education_grades',
+                                        'alias' => 'EducationGrade',
+                                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+                                ),
+                                
+                                
+                                array(
                                         'table' => 'rubrics_templates',
                                         'alias' => 'RubricTemplate',
                                         'conditions' => array('RubricTemplate.id = QualityInstitutionRubric.rubric_template_id')
@@ -3092,6 +3127,7 @@ class InstitutionSitesController extends AppController {
                                             'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id' ,
                                             'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
                                             'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
+                                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_classes_id'
                                         )
                                 ),
                                 array(
@@ -3104,44 +3140,22 @@ class InstitutionSitesController extends AppController {
                                         ),
                                       //  'fields' => array('SUM(weighting)')
                                 ),
-                               array(
-                                        'table' => 'school_years',
-                                        'alias' => 'SchoolYear',
-                                        'conditions' => array('QualityInstitutionRubric.school_year_id = SchoolYear.id')
-                                ),
-                                array(
-                                        'table' => 'institution_sites',
-                                        'alias' => 'InstitutionSite',
-                                        'conditions' => array('QualityInstitutionRubric.institution_site_id = InstitutionSite.id')
-                                ),
-                            /*     array(
-                                        'table' => 'institution_site_classes',
-                                        'alias' => 'InstitutionSiteClass',
-                                        'conditions' => array('QualityInstitutionRubric.institution_site_id = InstitutionSiteClass.institution_site_id')
-                                ),
-                                array(
-                                        'table' => 'institution_site_class_grades',
-                                        'alias' => 'InstitutionSiteClassGrade',
-                                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-                                ),
-                                array(
-                                        'table' => 'education_grades',
-                                        'alias' => 'EducationGrade',
-                                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
-                                ),*/
+                               
+                               
                                 
                             );
-                            $options['order'] = array('InstitutionSite.id', 'RubricTemplateHeader.order', 'RubricTemplateSubheader.order', 'RubricTemplateItem.order');
-                            $options['group'] = array('InstitutionSite.id','RubricTemplateHeader.id');
+                            $options['order'] = array('InstitutionSite.id', 'InstitutionSiteClass.id', 'RubricTemplateHeader.order', 'RubricTemplateSubheader.order', 'RubricTemplateItem.order');
+                            $options['group'] = array('InstitutionSiteClass.id','RubricTemplate.id','RubricTemplateHeader.id');
                         }
 			$data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
                         
-                        pr($data); die;
+                        
 		}
 		return $data;   
 	}
 		
 	public function genCSV($arrData){
+         //  pr($arrData); die;
 		$this->autoRender =false;
 		ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
 		//create a file
@@ -3159,6 +3173,7 @@ class InstitutionSitesController extends AppController {
 				foreach($arrSingleResult as $table => $arrFields){
 					
 					foreach($arrFields as $col){
+                                            //pr($col);
 						$row[] = $col;
 					}
 				}
