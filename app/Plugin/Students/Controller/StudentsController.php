@@ -52,6 +52,7 @@ class StudentsController extends StudentsAppController {
         'Students.StudentIdentity',
         'Students.StudentLanguage',
 	'Students.StudentContact',
+        'Students.StudentAward',
         'SchoolYear',
         'Country',
         'Language',
@@ -80,7 +81,9 @@ class StudentsController extends StudentsAppController {
 		'health_allergy' => 'Students.StudentHealthAllergy',
 		'health_test' => 'Students.StudentHealthTest',
 		'health_consultation' => 'Students.StudentHealthConsultation',
-		'health' => 'Students.StudentHealth'
+		'health' => 'Students.StudentHealth',
+        'special_need' => 'Students.StudentSpecialNeed',
+        'award' => 'Students.StudentAward'
 	); 
 
     public function beforeFilter() {
@@ -143,7 +146,7 @@ class StudentsController extends StudentsAppController {
 		
         $data = $this->paginate('Student', $conditions);
 		if(empty($searchKey) && !$this->Session->check('Student.AdvancedSearch')) {
-			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+			if(count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'viewStudent', $data[0]['Student']['id']));
 			}
 		}
@@ -956,7 +959,7 @@ class StudentsController extends StudentsAppController {
     }
 
     public function nationalities(){
-        $this->Navigation->addCrumb('Nationalities');
+        $this->Navigation->addCrumb(__('Nationalities'));
         $data = $this->StudentNationality->find('all',array('conditions'=>array('StudentNationality.student_id'=>$this->studentId)));
 		$this->set('list', $data);
     }
@@ -984,7 +987,7 @@ class StudentsController extends StudentsAppController {
         $nationalityObj = $this->StudentNationality->find('all',array('conditions'=>array('StudentNationality.id' => $nationalityId)));
         
         if(!empty($nationalityObj)) {
-            $this->Navigation->addCrumb('Nationality Details');
+            $this->Navigation->addCrumb(__('Nationality Details'));
             
             $this->Session->write('StudentNationalityId', $nationalityId);
             $this->set('nationalityObj', $nationalityObj);
@@ -997,7 +1000,7 @@ class StudentsController extends StudentsAppController {
             $nationalityObj = $this->StudentNationality->find('first',array('conditions'=>array('StudentNationality.id' => $nationalityId)));
   
             if(!empty($nationalityObj)) {
-                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->Navigation->addCrumb(__('Edit Nationality Details'));
                 $this->request->data = $nationalityObj;
                
             }
@@ -1025,13 +1028,13 @@ class StudentsController extends StudentsAppController {
             $countryId = $this->StudentNationality->field('country_id', array('StudentNationality.id' => $id));
             $name = $this->Country->field('name', array('Country.id' => $countryId));
             $this->StudentNationality->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
             $this->redirect(array('action' => 'nationalities', $studentId));
 		}
     }
 	
     public function identities(){
-        $this->Navigation->addCrumb('Identities');
+        $this->Navigation->addCrumb(__('Identities'));
         $data = $this->StudentIdentity->find('all',array('conditions'=>array('StudentIdentity.student_id'=>$this->studentId)));
         $this->set('list', $data);
     }
@@ -1059,7 +1062,7 @@ class StudentsController extends StudentsAppController {
         $identityObj = $this->StudentIdentity->find('all',array('conditions'=>array('StudentIdentity.id' => $identityId)));
         
         if(!empty($identityObj)) {
-            $this->Navigation->addCrumb('Identity Details');
+            $this->Navigation->addCrumb(__('Identity Details'));
             
             $this->Session->write('StudentIdentityId', $identityId);
             $this->set('identityObj', $identityObj);
@@ -1072,7 +1075,7 @@ class StudentsController extends StudentsAppController {
             $identityObj = $this->StudentIdentity->find('first',array('conditions'=>array('StudentIdentity.id' => $identityId)));
   
             if(!empty($identityObj)) {
-                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->Navigation->addCrumb(__('Edit Identity Details'));
                 $this->request->data = $identityObj;
                
             }
@@ -1099,7 +1102,7 @@ class StudentsController extends StudentsAppController {
             $studentId = $this->Session->read('StudentId');
             $name = $this->StudentIdentity->field('number', array('StudentIdentity.id' => $id));
             $this->StudentIdentity->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
             $this->redirect(array('action' => 'identities', $studentId));
         }
     }
@@ -1381,5 +1384,15 @@ class StudentsController extends StudentsAppController {
 			} 
 		}
 	}
+
+    public function ajax_find_award($type) {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StudentAward->autocomplete($search, $type);
+ 
+            return json_encode($data);
+        }
+    }
 }
 

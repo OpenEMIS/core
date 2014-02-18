@@ -55,6 +55,9 @@ class StaffController extends StaffAppController {
             'Staff.StaffSalary',
             'Staff.StaffSalaryAddition',
             'Staff.StaffSalaryDeduction',
+            'Staff.StaffAward',
+            'Staff.StaffMembership',
+            'Staff.StaffLicense',
             'QualificationLevel',
             'QualificationInstitution',
             'QualificationSpecialisation',
@@ -70,7 +73,8 @@ class StaffController extends StaffAppController {
 			'ExtracurricularType',
             'EmploymentType',
             'SalaryAdditionType',
-            'SalaryDeductionType'
+            'SalaryDeductionType',
+            'TrainingCourse'
         );
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -87,7 +91,14 @@ class StaffController extends StaffAppController {
 		'health_allergy' => 'Staff.StaffHealthAllergy',
 		'health_test' => 'Staff.StaffHealthTest',
 		'health_consultation' => 'Staff.StaffHealthConsultation',
-		'health' => 'Staff.StaffHealth'
+		'health' => 'Staff.StaffHealth',
+        'special_need' => 'Staff.StaffSpecialNeed',
+        'award' => 'Staff.StaffAward',
+        'membership' => 'Staff.StaffMembership',
+        'license' => 'Staff.StaffLicense',
+        'training_need' => 'Staff.StaffTrainingNeed',
+        'training_result' => 'Staff.StaffTrainingResult',
+        'training_self_study' => 'Staff.StaffTrainingSelfStudy'
 	); 
 	
     public function beforeFilter() {
@@ -150,7 +161,7 @@ class StaffController extends StaffAppController {
 		
         $data = $this->paginate('Staff', $conditions);
 		if(empty($searchKey) && !$this->Session->check('Staff.AdvancedSearch')) {
-			if(count($data) == 1 && !$this->AccessControl->check($this->params['controller'], 'add')) {
+			if(count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
 				$this->redirect(array('action' => 'viewStaff', $data[0]['Staff']['id']));
 			}
 		}
@@ -1263,7 +1274,7 @@ class StaffController extends StaffAppController {
     }
 
     public function nationalities(){
-        $this->Navigation->addCrumb('Nationalities');
+        $this->Navigation->addCrumb(__('Nationalities'));
         $data = $this->StaffNationality->find('all',array('conditions'=>array('StaffNationality.staff_id'=>$this->staffId)));
 		$this->set('list', $data);
 	}
@@ -1291,7 +1302,7 @@ class StaffController extends StaffAppController {
         $nationalityObj = $this->StaffNationality->find('all',array('conditions'=>array('StaffNationality.id' => $nationalityId)));
         
         if(!empty($nationalityObj)) {
-            $this->Navigation->addCrumb('Nationality Details');
+            $this->Navigation->addCrumb(__('Nationality Details'));
             
             $this->Session->write('StaffNationalityId', $nationalityId);
             $this->set('nationalityObj', $nationalityObj);
@@ -1304,7 +1315,7 @@ class StaffController extends StaffAppController {
             $nationalityObj = $this->StaffNationality->find('first',array('conditions'=>array('StaffNationality.id' => $nationalityId)));
   
             if(!empty($nationalityObj)) {
-                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->Navigation->addCrumb(__('Edit Nationality Details'));
                 $this->request->data = $nationalityObj;
                
             }
@@ -1332,13 +1343,13 @@ class StaffController extends StaffAppController {
             $countryId = $this->StaffNationality->field('country_id', array('StaffNationality.id' => $id));
             $name = $this->Country->field('name', array('Country.id' => $countryId));
             $this->StaffNationality->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
             $this->redirect(array('action' => 'nationalities', $staffId));
 		}
 	}
 	
 	public function identities(){
-        $this->Navigation->addCrumb('Identities');
+        $this->Navigation->addCrumb(__('Identities'));
         $data = $this->StaffIdentity->find('all',array('conditions'=>array('StaffIdentity.staff_id'=>$this->staffId)));
         $this->set('list', $data);
     }
@@ -1366,7 +1377,7 @@ class StaffController extends StaffAppController {
         $identityObj = $this->StaffIdentity->find('all',array('conditions'=>array('StaffIdentity.id' => $identityId)));
         
         if(!empty($identityObj)) {
-            $this->Navigation->addCrumb('Identity Details');
+            $this->Navigation->addCrumb(__('Identity Details'));
             
             $this->Session->write('StaffIdentityId', $identityId);
             $this->set('identityObj', $identityObj);
@@ -1379,7 +1390,7 @@ class StaffController extends StaffAppController {
             $identityObj = $this->StaffIdentity->find('first',array('conditions'=>array('StaffIdentity.id' => $identityId)));
   
             if(!empty($identityObj)) {
-                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->Navigation->addCrumb(__('Edit Identity Details'));
                 $this->request->data = $identityObj;
                
             }
@@ -1405,7 +1416,7 @@ class StaffController extends StaffAppController {
             $staffId = $this->Session->read('StaffId');
             $name = $this->StaffIdentity->field('number', array('StaffIdentity.id' => $id));
             $this->StaffIdentity->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
             $this->redirect(array('action' => 'identities', $staffId));
         }
     }
@@ -1910,5 +1921,104 @@ class StaffController extends StaffAppController {
             $this->redirect(array('action' => 'salaries', $teacherId));
         }
     }
+
+    public function ajax_find_award($type) {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StaffAward->autocomplete($search, $type);
+ 
+            return json_encode($data);
+        }
+    }
+
+    public function ajax_find_membership() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StaffMembership->autocomplete($search);
+ 
+            return json_encode($data);
+        }
+    }
+
+   public function ajax_find_license() {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StaffLicense->autocomplete($search);
+ 
+            return json_encode($data);
+        }
+    }
+
+     public function attachmentsTrainingSelfStudyAdd() {
+        $this->layout = 'ajax';
+        $this->set('params', $this->params->query);
+        $this->set('_model', 'StaffTrainingSelfStudyAttachment');
+        $this->set('jsname', 'objTrainingSelfStudies');
+        $this->render('/Elements/attachment/compact_add');
+    }
+
+    public function attachmentsTrainingSelfStudyDelete() {
+        $this->autoRender = false;
+        if($this->request->is('post')) {
+            $result = array('alertOpt' => array());
+            $this->Utility->setAjaxResult('alert', $result);
+            $id = $this->params->data['id'];
+
+            $arrMap = array('model'=>'Staff.StaffTrainingSelfStudyAttachment', 'foreignKey' => 'staff_training_self_study_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+            
+            if($FileAttachment->delete($id)) {
+                $result['alertOpt']['text'] = __('File is deleted successfully.');
+            } else {
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+            }
+            
+            return json_encode($result);
+        }
+    }
+        
+    public function attachmentsTrainingSelfStudyDownload($id) {
+        $arrMap = array('model'=>'Staff.StaffTrainingSelfStudyAttachment', 'foreignKey' => 'staff_training_self_study_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+        $FileAttachment->download($id);
+    }
+
+    public function getTrainingCoursesById(){
+        $this->autoRender = false;
+
+        if(isset($this->params['pass'][0]) && !empty($this->params['pass'][0])) {
+            $id = $this->params['pass'][0];
+            $type = $this->params['pass'][1];
+            if($type == 1){
+                $courseData = $this->TrainingCourse->find('all', 
+                    array(
+                        'conditions'=>array('TrainingCourse.id'=>$id), 
+                        'recursive' => -1)
+                );
+            }else{
+                $courseData = $this->TrainingCourse->find('all', 
+                    array(
+                        'fields' => array('TrainingCourse.*', 'TrainingSession.*'),
+                        'joins' => array(
+                            array(
+                                'type' => 'INNER',
+                                'table' => 'training_sessions',
+                                'alias' => 'TrainingSession',
+                                'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+                            )
+                        ),
+                        'conditions'=>array('TrainingSession.id'=>$id), 
+                        'recursive' => -1)
+                );
+            }
+            echo json_encode($courseData);
+        }
+    }
+
 }
 

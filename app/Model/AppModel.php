@@ -99,7 +99,7 @@ class AppModel extends Model {
 		return date('Y-m-d H:i:s');
 	}
 	
-	public function beforeSave() {
+	public function beforeSave($options = array()) {
 		$userId = session_id() !== '' ? CakeSession::read('Auth.User.id') : NULL;
 		
 		if(empty($this->data[$this->alias][$this->primaryKey])) {

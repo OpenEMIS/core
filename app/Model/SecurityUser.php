@@ -90,7 +90,7 @@ class SecurityUser extends AppModel {
 		return $validate;
 	}
 	
-	public function beforeSave() {
+	public function beforeSave($options = array()) {
 		if (isset($this->data[$this->alias]['password'])) {
 			$this->data[$this->alias]['password'] = AuthComponent::password($this->data[$this->alias]['password']);
 		}

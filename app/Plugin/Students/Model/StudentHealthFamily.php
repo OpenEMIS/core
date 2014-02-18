@@ -48,7 +48,7 @@ class StudentHealthFamily extends StudentsAppModel {
 	);
 	public $booleanOptions = array('No', 'Yes');
 	
-	public function health_family($controller, $params) {
+	public function healthFamily($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb('Health - Family');
 		$controller->set('modelName', $this->name);
@@ -67,7 +67,7 @@ class StudentHealthFamily extends StudentsAppModel {
 		
 	}
 
-	public function health_family_view($controller, $params){
+	public function healthFamilyView($controller, $params){
 		$controller->Navigation->addCrumb('Health - View Family');
 		$controller->set('subheader', 'Health - View Family');
 		$controller->set('modelName', $this->name);
@@ -76,7 +76,7 @@ class StudentHealthFamily extends StudentsAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'health_family'));
+			$controller->redirect(array('action'=>'healthFamily'));
 		}
 		
 		$controller->Session->write('StudentHealthFamilyId', $id);
@@ -91,7 +91,7 @@ class StudentHealthFamily extends StudentsAppModel {
 		$controller->set('healthRelationshipsOptions', $healthRelationshipsOptions);
 	}
 	
-	public function health_family_delete($controller, $params) {
+	public function healthFamilyDelete($controller, $params) {
         if($controller->Session->check('StudentId') && $controller->Session->check('StudentHealthFamilyId')) {
             $id = $controller->Session->read('StudentHealthFamilyId');
             $studentId = $controller->Session->read('StudentId');
@@ -110,17 +110,17 @@ class StudentHealthFamily extends StudentsAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StudentHealthFamilyId');
-            $controller->redirect(array('action' => 'health_family'));
+            $controller->redirect(array('action' => 'healthFamily'));
         }
     }
 	
-	public function health_family_add($controller, $params) {
+	public function healthFamilyAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add Family');
 		$controller->set('subheader', 'Health - Add Family');
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function health_family_edit($controller, $params) {
+	public function healthFamilyEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Family');
 		$controller->set('subheader', 'Health - Edit Family');
 		$this->setup_add_edit_form($controller, $params);
@@ -159,7 +159,7 @@ class StudentHealthFamily extends StudentsAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_family'));
+				return $controller->redirect(array('action' => 'healthFamily'));
 			}
 		}
 	}

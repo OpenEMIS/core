@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SchoolYear extends AppModel {
-	public function beforeSave() {
+	public function beforeSave($options = array()) {
 		$attr = array('start_date' => 'start_year', 'end_date' => 'end_year');
 		foreach($attr as $date => $year) {
 			if(isset($this->data[$this->alias][$date])) {
@@ -25,7 +25,7 @@ class SchoolYear extends AppModel {
 				$this->data[$this->alias][$year] = date('Y', strtotime($dateValue));
 			}
 		}
-		parent::beforeSave();
+		parent::beforeSave($options);
 		return true;
 	}
 	

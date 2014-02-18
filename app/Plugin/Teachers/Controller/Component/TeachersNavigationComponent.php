@@ -34,17 +34,21 @@ class TeachersNavigationComponent extends Component {
 				'GENERAL' => array(
 					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|\bhistory\b'),
 					$navigation->createLink('Contacts', $controller, 'contacts'),
-					$navigation->createLink('identities', $controller, 'identities'),
+					$navigation->createLink('Identities', $controller, 'identities'),
 					$navigation->createLink('Nationalities', $controller, 'nationalities'),
 					$navigation->createLink('Languages', $controller, 'languages'),
 					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
-					$navigation->createLink('Comments', $controller, 'comments'),
+					$navigation->createLink('Comments', $controller, 'comments'), 
+					$navigation->createLink('Special Needs', $controller, 'specialNeed', '^specialNeed'),
+					$navigation->createLink('Awards', $controller, 'award', '^award'),
+					$navigation->createLink('Memberships', $controller, 'membership', '^membership'),
+					$navigation->createLink('Licenses', $controller, 'license', '^license'),
 					$navigation->createLink('Attachments', $controller, 'attachments'),
 					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
 				),
 				'DETAILS' => array(
 					$navigation->createLink('Qualifications', $controller, 'qualifications'),
-					$navigation->createLink('Training', $controller, 'training'),
+					$navigation->createLink('Training', $controller, 'training', 'training$|trainingAdd$|trainingEdit$'),
 					$navigation->createLink('Positions', $controller, 'positions'),
                     $navigation->createLink('Attendance', $controller, 'attendance'),
 					$navigation->createLink('Leave', $controller, 'leaves'),
@@ -54,14 +58,19 @@ class TeachersNavigationComponent extends Component {
 					$navigation->createLink('Salary', $controller, 'salaries')
 				),
 				'HEALTH' => array(
-                    $navigation->createLink('Overview', $controller, 'health_view', 'health_view|health_edit'),
-                    $navigation->createLink('History', $controller, 'health_history', '^health_history'),
-                    $navigation->createLink('Family', $controller, 'health_family', '^health_family'),
-                    $navigation->createLink('Immunizations', $controller, 'health_immunization', '^health_immunization'),
-					$navigation->createLink('Medications', $controller, 'health_medication', '^health_medication'),
-					$navigation->createLink('Allergies', $controller, 'health_allergy', '^health_allergy'),
-					$navigation->createLink('Tests', $controller, 'health_test', '^health_test'),
-					$navigation->createLink('Consultations', $controller, 'health_consultation', '^health_consultation'),
+                    $navigation->createLink('Overview', $controller, 'healthView', 'healthView|healthEdit'),
+                    $navigation->createLink('History', $controller, 'healthHistory', '^healthHistory'),
+                    $navigation->createLink('Family', $controller, 'healthFamily', '^healthFamily'),
+                    $navigation->createLink('Immunizations', $controller, 'healthImmunization', '^healthImmunization'),
+					$navigation->createLink('Medications', $controller, 'healthMedication', '^healthMedication'),
+					$navigation->createLink('Allergies', $controller, 'healthAllergy', '^healthAllergy'),
+					$navigation->createLink('Tests', $controller, 'healthTest', '^healthTest'),
+					$navigation->createLink('Consultations', $controller, 'healthConsultation', '^healthConsultation'),
+                ),
+				'TRAINING' => array(
+                    $navigation->createLink('Needs', $controller, 'trainingNeed', '^trainingNeed'),
+                    $navigation->createLink('Results', $controller, 'trainingResult', '^trainingResult'),
+                    $navigation->createLink('Self-Study', $controller, 'trainingSelfStudy', '^trainingSelfStudy')
                 )
 			)
 		);

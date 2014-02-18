@@ -41,7 +41,7 @@ class StaffHealthTest extends StaffAppModel {
 	);
 	public $booleanOptions = array('No', 'Yes');
 	
-	public function health_test($controller, $params) {
+	public function healthTest($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb('Health - Tests');
 		$controller->set('modelName', $this->name);
@@ -57,7 +57,7 @@ class StaffHealthTest extends StaffAppModel {
 		
 	}
 
-	public function health_test_view($controller, $params){
+	public function healthTestView($controller, $params){
 		$controller->Navigation->addCrumb('Health - View Test');
 		$controller->set('subheader', 'Health - View Test');
 		$controller->set('modelName', $this->name);
@@ -66,7 +66,7 @@ class StaffHealthTest extends StaffAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'health_test'));
+			$controller->redirect(array('action'=>'healthTest'));
 		}
 		
 		$controller->Session->write('StaffHealthTestId', $id);
@@ -77,7 +77,7 @@ class StaffHealthTest extends StaffAppModel {
 		$controller->set('healthTestsOptions', $healthTestsOptions);
 	}
 	
-	public function health_test_delete($controller, $params) {
+	public function healthTestDelete($controller, $params) {
         if($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthTestId')) {
             $id = $controller->Session->read('StaffHealthTestId');
             $staffId = $controller->Session->read('StaffId');
@@ -92,17 +92,17 @@ class StaffHealthTest extends StaffAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StaffHealthTestId');
-            $controller->redirect(array('action' => 'health_test'));
+            $controller->redirect(array('action' => 'healthTest'));
         }
     }
 	
-	public function health_test_add($controller, $params) {
+	public function healthTestAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add Test');
 		$controller->set('subheader', 'Health - Add Test');
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function health_test_edit($controller, $params) {
+	public function healthTestEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Test');
 		$controller->set('subheader', 'Health - Edit Test');
 		$this->setup_add_edit_form($controller, $params);
@@ -135,7 +135,7 @@ class StaffHealthTest extends StaffAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_test'));
+				return $controller->redirect(array('action' => 'healthTest'));
 			}
 		}
 	}

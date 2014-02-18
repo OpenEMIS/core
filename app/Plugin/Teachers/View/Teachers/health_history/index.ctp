@@ -9,13 +9,13 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         <span><?php echo __('Health - History'); ?></span>
         <?php
 		if($_edit) {
-			echo $this->Html->link(__('Add'), array('action' => 'health_history_add'), array('class' => 'divider'));
+			echo $this->Html->link(__('Add'), array('action' => 'healthHistoryAdd'), array('class' => 'divider'));
 		}
 		?>
     </h1>
     <?php echo $this->element('alert'); ?>
     <?php if(isset($data)) { ?>
-    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/health_history_view/">
+    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/healthHistoryView/">
         <div class="table_head">
             <div class="table_cell"><?php echo __('Conditions'); ?></div>
             <div class="table_cell"><?php echo __('Current'); ?></div>

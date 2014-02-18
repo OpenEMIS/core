@@ -59,7 +59,7 @@ class StudentHealthMedication extends StudentsAppModel {
 		return $endDate >= $startDate;
 	}
 	
-	public function health_medication($controller, $params) {
+	public function healthMedication($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb('Health - Medications');
 		$controller->set('modelName', $this->name);
@@ -71,7 +71,7 @@ class StudentHealthMedication extends StudentsAppModel {
 		
 	}
 
-	public function health_medication_view($controller, $params){
+	public function healthMedicationView($controller, $params){
 		$controller->Navigation->addCrumb('Health - View Medication');
 		$controller->set('subheader', 'Health - View Medication');
 		$controller->set('modelName', $this->name);
@@ -80,7 +80,7 @@ class StudentHealthMedication extends StudentsAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'health_medication'));
+			$controller->redirect(array('action'=>'healthMedication'));
 		}
 		
 		$controller->Session->write('StudentHealthMedicationId', $id);
@@ -88,7 +88,7 @@ class StudentHealthMedication extends StudentsAppModel {
 		$controller->set('data', $data);
 	}
 	
-	public function health_medication_delete($controller, $params) {
+	public function healthMedicationDelete($controller, $params) {
         if($controller->Session->check('StudentId') && $controller->Session->check('StudentHealthMedicationId')) {
             $id = $controller->Session->read('StudentHealthMedicationId');
             $studentId = $controller->Session->read('StudentId');
@@ -100,17 +100,17 @@ class StudentHealthMedication extends StudentsAppModel {
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StudentHealthMedicationId');
-            $controller->redirect(array('action' => 'health_medication'));
+            $controller->redirect(array('action' => 'healthMedication'));
         }
     }
 	
-	public function health_medication_add($controller, $params) {
+	public function healthMedicationAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Add Medication');
 		$controller->set('subheader', 'Health - Add Medication');
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
-	public function health_medication_edit($controller, $params) {
+	public function healthMedicationEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Edit Medication');
 		$controller->set('subheader', 'Health - Edit Medication');
 		$this->setup_add_edit_form($controller, $params);
@@ -139,7 +139,7 @@ class StudentHealthMedication extends StudentsAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_medication'));
+				return $controller->redirect(array('action' => 'healthMedication'));
 			}
 		}
 	}

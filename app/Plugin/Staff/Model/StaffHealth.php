@@ -30,7 +30,7 @@ class StaffHealth extends StaffAppModel {
 		)
 	);
 	
-	public $validate = array(
+	/*public $validate = array(
 		'doctor_name' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -45,7 +45,7 @@ class StaffHealth extends StaffAppModel {
 				'message' => 'Please enter a valid Contact Number.'
 			)
 		)
-	);
+	);*/
 	
 	public $bloodTypeOptions = array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-');
 	public $booleanOptions = array('No', 'Yes');
@@ -55,7 +55,7 @@ class StaffHealth extends StaffAppModel {
 		return $controller->redirect(array('action' =>'health_view'));
 	}
 	
-	public function health_view($controller, $params) {
+	public function healthView($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Overview');
         $data = $this->findByStaffId($controller->staffId);
 	
@@ -63,7 +63,7 @@ class StaffHealth extends StaffAppModel {
 		$controller->set('modelName', $this->name);
 	}
 	
-	public function health_edit($controller, $params){
+	public function healthEdit($controller, $params){
 		$controller->Navigation->addCrumb('Health - Edit Overview');
 		$controller->set('bloodTypeOptions', $this->bloodTypeOptions);
 		$controller->set('booleanOptions', $this->booleanOptions);
@@ -89,7 +89,7 @@ class StaffHealth extends StaffAppModel {
 				else{
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
-				return $controller->redirect(array('action' => 'health_view'));
+				return $controller->redirect(array('action' => 'healthView'));
 			}
 		}
 	}
