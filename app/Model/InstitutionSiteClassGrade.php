@@ -103,4 +103,47 @@ class InstitutionSiteClassGrade extends AppModel {
 		));
 		return $data;
 	}
+        
+        
+        public function getGradesByInstitutionSiteId($institutionSiteId) {
+		$data = $this->find('all', array(
+			'fields' => array('InstitutionSiteClassGrade.id', 'EducationCycle.name', 'EducationProgramme.name',  'EducationGrade.id', 'EducationGrade.name'),
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id'
+					)
+				),
+			),
+			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+		));
+		
+		$list = array();
+		foreach($data as $obj) {
+			$id = $obj['EducationGrade']['id'];
+			$cycleName = $obj['EducationCycle']['name'];
+			$programmeName = $obj['EducationProgramme']['name'];
+			$gradeName = $obj['EducationGrade']['name'];
+			$list[$id] = sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName);
+		}
+		return $list;
+	}
 }
