@@ -3008,6 +3008,9 @@ class InstitutionSitesController extends AppController {
         'QA Report' => array(
             'Model' => 'QualityInstitutionRubric',
             'fields' => array(
+                'QualityInstitutionRubric' => array(
+                    'id' => ''
+                ),
                 'SchoolYear' => array(
                     'name' => 'School Year'
                 ),
@@ -3029,7 +3032,8 @@ class InstitutionSitesController extends AppController {
                  ),
                 'RubricTemplateColumnInfo' => array(
                     'SUM(weighting)'=>'totalWeighting'
-                 ),
+                 )
+                
             //'RubricTemplateSubheader' => array('title AS subheader'),
             // 'RubricTemplateItem' => array('title AS question'),
             //'RubricTemplateAnswer' => array('title AS Answer'),
@@ -3313,8 +3317,24 @@ class InstitutionSitesController extends AppController {
                 );
             }
         }
-        else if($name == 'More'){
-            
+        else if($name == 'QA Report'){
+            $tempArray = array();
+            $qualityRubricId = '';
+            $rubricCounter = 0;
+            foreach ($data AS $row) {
+                pr($row);
+                $currentQualityRubricId = $row['QualityInstitutionRubric']['id'];
+                if(!empty($qualityRubricId) && $qualityRubricId == $currentQualityRubricId){
+                    
+                }
+                else {
+                    $qualityRubricId = $currentQualityRubricId;
+                    
+                    $rubricCounter++;
+                }
+                
+            }
+            die;
         }
 
         if (!empty($newData)) {
