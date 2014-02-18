@@ -3,7 +3,7 @@
 	$this->RubricsView->defaultNoOfColumns = $totalColumns;
 	
         
-        $displayEvenClass = (($lastId %2) == 0)? 'li_even': '';
+        $displayEvenClass = (($lastId %2) == 1)? 'li_even': '';
         echo sprintf('<li data-id="%s" class="%s">', $lastId, $displayEvenClass);
 	if($type == 'header'){
 		echo $this->RubricsView->insertRubricHeader($processItem, $lastId);

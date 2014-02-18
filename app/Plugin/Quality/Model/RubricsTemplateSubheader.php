@@ -144,8 +144,13 @@ class RubricsTemplateSubheader extends QualityAppModel {
             $optionsData = array();
 
 
-            $controllerData = $controller->request->data['RubricsTemplateDetail'];
-            
+           
+            if(empty($controller->request->data['RubricsTemplateDetail'])){
+                $controllerData = array();
+            }
+            else{
+                 $controllerData = $controller->request->data['RubricsTemplateDetail'];
+            }
             /*
               if (!empty($controllerData['RubricsTemplate'])) {
               unset($controllerData['RubricsTemplate']);
@@ -176,8 +181,11 @@ class RubricsTemplateSubheader extends QualityAppModel {
             $saveError = false;
 
             
-         //   pr($controllerData);die;
-            if ($this->saveAll($headerData, array('validate' => 'only')) &&
+        //   pr($controllerData);die;
+            if(empty($headerData)||empty($questionData)||empty($optionsData)){
+                $controller->Utility->alert('Please ensure both header and criteria are added.', array('type' => 'error'));
+            }
+            else if ($this->saveAll($headerData, array('validate' => 'only')) &&
                     $RubricsTemplateItem->saveAll($questionData, array('validate' => 'only')) &&
                     $RubricsTemplateAnswer->saveAll($optionsData, array('validate' => 'only'))) {
 
@@ -200,7 +208,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
                             if (!isset($obj['RubricsTemplateSubheader']['id'])) {
                                 $this->create();
                             }
-                            //pr($obj);
+                           // pr($obj);
                             if ($this->save($obj, false)) {
                                 $_tempHeaderId = $this->id;
                             } else {
@@ -213,6 +221,10 @@ class RubricsTemplateSubheader extends QualityAppModel {
                         } else {
                             if (array_key_exists('RubricsTemplateItem', $obj)) {
                                 //if (!array_key_exists('rubric_template_subheader_id', $obj['RubricsTemplateItem'])) {
+                                if(empty($_tempHeaderId)){
+                                    $saveError = true;
+                                    break;
+                                }
                                     $obj['RubricsTemplateItem']['rubric_template_subheader_id'] = $_tempHeaderId;
                                // }
 
@@ -292,7 +304,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
 
                 $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
                 $rubricTemplateData = $RubricsTemplateHeader->getRubricTemplate($rubricTemplateHeaderId);
-                $rubricTemplateId = $rubricTemplateData['RubricsTemplateHeader']['id'];
+                $rubricTemplateId = $rubricTemplateData['RubricsTemplateHeader']['rubric_template_id'];
                 $RubricsTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
                 if ($type == 'header') {
                     $processItem['RubricsTemplateSubheader'] = '';
