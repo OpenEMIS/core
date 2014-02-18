@@ -9,12 +9,12 @@ class QualityController extends QualityAppController {
     );
     public $helpers = array('Quality.RubricsView');
     public $modules = array(
-        'Status' => 'Quality.QualityStatus',
-        'RubricsTemplatesCriteria' => 'Quality.RubricsTemplateColumnInfo',
+        'status' => 'Quality.QualityStatus',
+        'rubricsTemplatesCriteria' => 'Quality.RubricsTemplateColumnInfo',
         'rubricsTemplatesHeader' => 'Quality.RubricsTemplateHeader',
         'rubricsTemplatesSubheader' => 'Quality.RubricsTemplateSubheader',
-        'RubricsTemplatesDetail' => 'Quality.RubricsTemplateDetail',
-        'RubricsTemplates' => 'Quality.RubricsTemplate',
+        'rubricsTemplatesDetail' => 'Quality.RubricsTemplateDetail',
+        'rubricsTemplates' => 'Quality.RubricsTemplate',
         'qualityVisit' => 'Quality.QualityInstitutionVisit',
         'qualityRubricAnswer' => 'Quality.QualityInstitutionRubricsAnswer',
         'qualityRubricHeader' => 'Quality.QualityInstitutionRubricHeader',
