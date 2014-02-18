@@ -20,7 +20,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 	<div class="table allow_hover full_width" action="Teachers/nationalitiesView/">
 		<div class="table_head">
 			<div class="table_cell"><?php echo __('Country'); ?></div>
-			<div class="table_cell"><?php echo __('Comment'); ?></div>
+			<div class="table_cell"><?php echo __('Comments'); ?></div>
 		</div>
 		
 		<div class="table_body">
