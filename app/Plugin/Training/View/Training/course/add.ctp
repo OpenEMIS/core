@@ -8,6 +8,14 @@ echo $this->Html->script('jquery-ui.min', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
+<style>
+a.custom_icon_plus {
+background: url("../img/icons/add.png") no-repeat scroll 0 0 transparent;
+color: #007CBE;
+font-size: 11px;
+padding: 3px 0 5px 20px;
+}
+</style>
 
 <div id="training_course" class="content_wrapper edit add">
 	<h1>
@@ -109,7 +117,7 @@ echo $this->Html->script('jquery-ui.min', false);
 			</div>
 		</div>
 		<?php if($_add) { ?>
-			<div class="row"><a class="void icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
+			<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
 		<?php } ?>
 		</div>
 	</div>
@@ -198,7 +206,7 @@ echo $this->Html->script('jquery-ui.min', false);
 			</div>
 		</div>
 		<?php if($_add) { ?>
-			<div class="row"><a class="void icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
+			<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
 		<?php } ?>
 		</div>
 	</div>
@@ -253,8 +261,8 @@ echo $this->Html->script('jquery-ui.min', false);
 	</div>
 	<div class="controls view_controls">
 		<?php if(!isset($this->request->data['TrainingCourse']['training_status_id']) || $this->request->data['TrainingCourse']['training_status_id']==1){ ?>
-		<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+		<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="js:if(objTrainingCourses.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
+		<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="js:if(objTrainingCourses.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
 		<?php } ?>
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'course'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
