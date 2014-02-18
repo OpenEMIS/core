@@ -32,8 +32,7 @@ class ReportsController extends ReportsAppController {
         'InstitutionSiteCustomValue',
         'InstitutionSiteProgramme',
         'CensusStudent',
-        'SchoolYear',
-        'Training.TrainingCourse'
+        'SchoolYear'
     );
     public $standardReports = array( //parameter passed to Index
         'Institution'=>array('enable'=>true),
@@ -57,22 +56,27 @@ class ReportsController extends ReportsAppController {
     private $pathFile = '';
 
     public function test(){
-        $this->autoRender = false;
-        //$this->TrainingCourse->formatResult = true;
-        $data = $this->TrainingCourse->find('all', 
+        //$this->autoRender = false;
+        $TrainingCourse = ClassRegistry::init('TrainingCourse');
+        $TrainingCourse->formatResult = true;
+        $data = $TrainingCourse->find('all', 
         array('fields' => array(
-            'TrainingCourse.code AS CourseCode','TrainingCourse.name AS CourseTitle',
-            'TrainingCreditHour.name AS Credit','TrainingStatus.name AS Status'
+            'TrainingCourse.code AS CourseCode','TrainingCourse.title AS CourseTitle',
+            'TrainingCreditHour.name AS Credit', 'SUM(TeacherTrainingNeed.id) as TotalNeeds'
         ),
         'joins' => array(
             array(
                 'table' => 'training_credit_hours','alias' => 'TrainingCreditHour','type' => 'LEFT',
                 'conditions' => array('TrainingCreditHour.id = TrainingCourse.training_credit_hour_id')
             ),
-            array('table' => 'training_statuses','alias' => 'TrainingStatus','type' => 'LEFT',
-                'conditions' => array('TrainingStatus.id = TrainingCourse.training_status_id')
-            )
-         )
+            array('table' => 'staff_training_needs','alias' => 'StaffTrainingNeed','type' => 'INNER',
+                'conditions' => array('TrainingCourse.id = StaffTrainingNeed.training_course_id' , 'StaffTrainingNeed.training_status_id' => 3)
+            ), 
+            array('table' => 'teacher_training_needs','alias' => 'TeacherTrainingNeed','type' => 'INNER',
+                'conditions' => array('TrainingCourse.id = TeacherTrainingNeed.training_course_id', 'TeacherTrainingNeed.training_status_id' => 3)
+            ),
+         ),
+         'order' => array('TrainingCourse.title')
         ));
 
         pr($data);
@@ -85,7 +89,9 @@ class ReportsController extends ReportsAppController {
         $data = $this->TrainingCourse->find('all', 
         array('fields' => array(
             'TrainingCourse.code AS CourseCode','TrainingCourse.name AS CourseTitle',
-            'TrainingCreditHour.name AS Credit','TrainingStatus.name AS Status'
+            'TrainingCreditHour.name AS Credit','TrainingStatus.name AS Status',
+            '((CASE WHEN StaffTrainingNeed.id = null THEN \'\' WHEN TrainingSessionTrainee.pass=1 THEN \'Passed\'
+                ELSE \'Failed\' END)) AS Completed'
         ),
         'joins' => array(
             array(
