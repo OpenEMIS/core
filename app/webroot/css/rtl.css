@@ -58,6 +58,12 @@
 .left_nav{
 	float:right;
 }
+.accordion-heading .accordion-toggle{
+	background-position:10px 14px;
+}
+.accordion-heading .accordion-toggle:hover{
+	background-position:10px -76px;
+}
 .body_content_right{
 	float:right;
 	margin-left:0px;
@@ -255,6 +261,12 @@ fieldset#general.section_break > .row{
 .error-message{
 	margin-left:0;
 	margin-right:10px;
+}
+.dialog-box .field_name{
+    float: right;
+}
+.dialog-box .field_value{
+    float: right;
 }
 
 /*loading*/

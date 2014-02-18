@@ -50,7 +50,7 @@ class SmsResponse extends SmsAppModel {
 			'fields' => $fields,
 		    'joins' => $joins,
 			'conditions'=>array('SmsResponse.order'=>$minOrder),
-			'order'=>array('SmsResponse.sent, SmsResponse.number')
+			'order'=>array('SmsResponse.number')
 	    ));
 
 		return $data;

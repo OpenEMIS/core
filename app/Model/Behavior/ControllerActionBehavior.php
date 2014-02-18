@@ -31,18 +31,18 @@ class ControllerActionBehavior extends ModelBehavior {
 		$model->beforeAction($controller, $action, $name);
 		$result = call_user_func_array(array($model, $action), array($controller, $controller->params));
 		$model->afterAction($controller, $action, $name);
-		
-		$ctp = substr($action, strlen($name));
-		if (strncmp($ctp, '_', 1) == 0)  {
-			$ctp = substr($ctp, 1, strlen($name));
-		}
-		
+
+
+		$nameLen = Inflector::camelize($name);
+		$ctp = strtolower(substr($action, strlen($nameLen)));
+
 		if(empty($ctp)) {
 			$ctp = 'index';
 		}
 		if(!is_null($plugin)) {
 			$name = $plugin . '/' . $name;
 		}
+
 		if($model->render === true) {
 			$controller->render($name . '/' . $ctp);
 		} else {

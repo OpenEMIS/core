@@ -94,6 +94,73 @@ class SecurityGroupUser extends AppModel {
 		));
 		return $data;
 	}
+        
+        public function getRoleIdsByUserIdAndSiteId($userId, $institutionSiteId) {
+		$data1 = $this->find('list', array(
+			'fields' => array('SecurityGroupUser.security_role_id', 'SecurityGroupUser.security_role_id'),
+			'joins' => array(
+				array(
+					'table' => 'security_group_institution_sites',
+					'alias' => 'SecurityGroupInstitutionSite',
+					'conditions' => array(
+                                            'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
+                                            'SecurityGroupInstitutionSite.institution_site_id' => $institutionSiteId
+                                         )
+				)
+			),
+			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
+		));
+                
+                $roleAreas = $this->find('all', array(
+                        'recursive' => -1,
+			'fields' => array('SecurityGroupUser.security_role_id', 'Area.lft', 'Area.rght'),
+			'joins' => array(
+				array(
+					'table' => 'security_group_areas',
+					'alias' => 'SecurityGroupArea',
+					'conditions' => array(
+                                            'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id'
+                                         )
+				),
+                                array(
+					'table' => 'areas',
+					'alias' => 'Area',
+					'conditions' => array(
+                                            'SecurityGroupArea.area_id = Area.id'
+                                         )
+				)
+			),
+			'conditions' => array('SecurityGroupUser.security_user_id' => $userId)
+		));
+                
+                $AreaModel = ClassRegistry::init('Area');
+                $siteArea = $AreaModel->find('first', array(
+                        'recursive' => -1,
+			'fields' => array('Area.lft', 'Area.rght'),
+			'joins' => array(
+                                array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+                                            'InstitutionSite.area_id = Area.id',
+                                            'InstitutionSite.id = ' . $institutionSiteId
+                                         )
+				)
+			)
+                ));
+                
+                $data2 = array();
+                if(count($siteArea) > 0){
+                    foreach($roleAreas AS $rowIndex => $row){
+                        if($siteArea['Area']['lft'] >= $row['Area']['lft'] && $siteArea['Area']['rght'] <= $row['Area']['rght']){
+                            if(!in_array($row['SecurityGroupUser']['security_role_id'], $data2)){
+                                $data2[] = $row['SecurityGroupUser']['security_role_id'];
+                            }
+                        }
+                    }
+                }
+		return array_merge($data1, $data2);
+	}
 	
 	public function isUserInSameGroup($userId, $targetUserId) {
 		$data = $this->find('first', array(

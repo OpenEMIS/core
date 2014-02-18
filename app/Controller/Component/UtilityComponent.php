@@ -36,6 +36,25 @@ class UtilityComponent extends Component {
 			$this->Session->write('_alert', $_settings);
 		}
 	}
+        
+        public function alertArray($messageArray, $settings=array()) {
+		$types = array('ok', 'error', 'info', 'warn');
+		$_settings = array(
+			'type' => 'ok',
+			'dismissOnClick' => true,
+		);
+		$_settings = array_merge($_settings, $settings);
+		if(!in_array($_settings['type'], $types)) {
+			$_settings['type'] =  $types[0];
+		}
+                foreach($messageArray AS $msg){
+                    $_settings['messageArray'][] =  __($msg);
+                }
+		
+		if(!$this->Session->check('_alertArray')) {
+			$this->Session->write('_alertArray', $_settings);
+		}
+	}
 	
 	public function getMessage($code) {
 		$msgList = array();
@@ -136,8 +155,6 @@ class UtilityComponent extends Component {
 
 		$msgList['ADD_ERROR'] = 'Record is not added due to errors encountered.';
 		$msgList['UPDATE_ERROR'] = 'Record is not updated due to errors encountered.';
-		
-		$msgList['ADD_UPDATE_ERROR'] = 'Record is not added/updated due to errors encountered.';
 		
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 

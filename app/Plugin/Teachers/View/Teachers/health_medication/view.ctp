@@ -9,12 +9,12 @@ echo $this->Html->script('/Teachers/js/teachers', false);
 	<h1>
 		<span><?php echo __($subheader); ?></span>
 		<?php
-			echo $this->Html->link(__('List'), array('action' => 'health_medication' ), array('class' => 'divider'));
+			echo $this->Html->link(__('List'), array('action' => 'healthMedication' ), array('class' => 'divider'));
 			if($_edit) {
-				echo $this->Html->link(__('Edit'), array('action' => 'health_medication_edit',$obj['id'] ), array('class' => 'divider'));
+				echo $this->Html->link(__('Edit'), array('action' => 'healthMedicationEdit',$obj['id'] ), array('class' => 'divider'));
 			}
 			if($_delete) {
-				echo $this->Html->link(__('Delete'), array('action' => 'health_medication_delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+				echo $this->Html->link(__('Delete'), array('action' => 'healthMedicationDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 			}
 		?>
 	</h1>

@@ -43,6 +43,7 @@ class SecurityController extends AppController {
 		parent::beforeFilter();
 		$this->renderFooter();
 		$this->Auth->allow('login');
+		$this->Auth->allow('login_remote');
 		
 		if($this->action !== 'login' || $this->action !== 'logout') {
 			$this->bodyTitle = 'Administration';
@@ -52,12 +53,12 @@ class SecurityController extends AppController {
 	
 	private function renderFooter() {
 		if(!$this->Session->check('footer')){
-			$val = $this->ConfigItem->getValue('version');
-			
+			$this->Session->write('footer', $this->ConfigItem->getWebFooter());
+			/*
+			$val = $this->ConfigItem->getVersion();
 			$results = $this->ConfigItem->find('all', array(
 				'conditions' => array('name' => array('footer', 'version'))
 			));
-			
 			$values = array('footer' => '', 'version' => '0');
 			foreach ($results as $element) {
 				if($element['ConfigItem']['name'] === 'version'){
@@ -68,10 +69,8 @@ class SecurityController extends AppController {
 					$values['footer'] = $element['ConfigItem']['value'];
 				}
 			}
-			
-			$this->Session->write('footer', $values['footer'].' | '.$values['version']);
+			$this->Session->write('footer', $values['footer'].' | '.$values['version']);*/
 		}
-		
 	}
 	
     public function login() {
@@ -114,6 +113,7 @@ class SecurityController extends AppController {
 					$result = $this->Auth->login();
 					//Error Message to be used if login false;
 					$errMsg = $this->Utility->getMessage("LOGIN_INVALID");
+
 				}
 				if($result) {
 					if($this->Auth->user('status') == 1) {
@@ -188,6 +188,17 @@ class SecurityController extends AppController {
 					
 			Configure::write('Config.language', $this->Session->read('configItem.language')); 
 		}
+	$username = $this->Session->check('login.username') ? $this->Session->read('login.username') : '';
+	$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
+	$this->set('username', $username);
+	$this->set('password', $password);
+    }
+
+    public function login_remote() {
+        $this->autoRender = false;
+        $this->Session->write('login.username', $this->data['username']);
+        $this->Session->write('login.password', $this->data['password']);
+        return $this->redirect(array('action' => 'login'));
     }
 
     public function logout() {
@@ -210,7 +221,7 @@ class SecurityController extends AppController {
 			$this->Session->write('configItem.language', $this->ConfigItem->getValue('language'));
 		}
 		$this->Session->write('configItem.currency', $this->ConfigItem->getValue('currency'));
-		$this->Session->write('footer', $this->ConfigItem->getValue('footer').' | '.$this->ConfigItem->getValue('version'));
+		$this->Session->write('footer', $this->ConfigItem->getWebFooter());
 	}
 	
 	public function users() {
@@ -324,6 +335,7 @@ class SecurityController extends AppController {
 		}
 	}
 	
+
 	public function usersAdd() {
 		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
 		$this->Navigation->addCrumb('Add User');
@@ -549,6 +561,7 @@ class SecurityController extends AppController {
 		if($this->request->is('post')) {
 			$groupData = $this->data['SecurityGroup'];
 			$groupObj = $this->SecurityGroup->save($groupData);
+
 			if($groupObj) {
 				$groupId = $groupObj['SecurityGroup']['id'];
 				
@@ -774,7 +787,7 @@ class SecurityController extends AppController {
 		if($this->request->is('post')) {
 			$data = $this->data;
 			$groupId = $this->params['pass'][0];
-			$this->SecurityRole->removeUnnamed(&$data);
+			$data = $this->SecurityRole->removeUnnamed($data);
 			$this->SecurityRole->saveMany($data['SecurityRole']);
 			$this->redirect(array('action' => 'roles', $groupId));
 		}

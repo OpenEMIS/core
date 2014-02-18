@@ -37,7 +37,7 @@ function ajaxErrorHandler(jqXHR, textStatus, errorThrown) {
 		var maskId;
 		var loginBtn = {
 			id: 'ajax-login-btn',
-			value: 'Login',
+			value: '<?php echo __('Login'); ?>',
 			callback: function() {
 				var form = $('#ajax_login');
 				

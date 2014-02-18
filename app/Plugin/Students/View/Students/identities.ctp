@@ -5,7 +5,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="bank_accounts" class="content_wrapper">
+<div id="identity" class="content_wrapper">
 	<h1>
 		<span><?php echo __('Identities'); ?></span>
 		<?php

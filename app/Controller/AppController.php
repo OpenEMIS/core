@@ -103,8 +103,7 @@ class AppController extends Controller {
 	}
 	
 	public function processAction() {
-		$action = strtolower($this->action);
-		
+		$action = Inflector::underscore($this->action);
 		if(!empty($this->modules)) { // for modules / plugin 
 		//search for exact match
 			foreach($this->modules as $name => $module) {

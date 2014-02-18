@@ -13,17 +13,17 @@ echo $this->Html->script('config', false);
 		<span><?php echo __($subheader); ?></span>
 		<?php
 		if(!empty($this->data[$modelName]['id'])){
-			echo $this->Html->link(__('View'), array('action' => 'health_allergy_view', $this->data[$modelName]['id']), array('class' => 'divider'));
+			echo $this->Html->link(__('View'), array('action' => 'healthAllergyView', $this->data[$modelName]['id']), array('class' => 'divider'));
 		}
 		else{
-			echo $this->Html->link(__('List'), array('action' => 'health_allergy'), array('class' => 'divider'));
+			echo $this->Html->link(__('List'), array('action' => 'healthAllergy'), array('class' => 'divider'));
 		}
 		?>
 	</h1>
 	
 	<?php
 	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Staff', 'action' => 'health_allergy_add', 'plugin'=>'Staff'),
+		'url' => array('controller' => 'Staff', 'action' => 'healthAllergyAdd', 'plugin'=>'Staff'),
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
@@ -64,7 +64,7 @@ echo $this->Html->script('config', false);
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'health_allergy'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'healthAllergy'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
