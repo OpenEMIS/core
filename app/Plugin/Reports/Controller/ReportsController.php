@@ -32,13 +32,15 @@ class ReportsController extends ReportsAppController {
         'InstitutionSiteCustomValue',
         'InstitutionSiteProgramme',
         'CensusStudent',
-        'SchoolYear'
+        'SchoolYear',
+        'Training.TrainingCourse'
     );
     public $standardReports = array( //parameter passed to Index
         'Institution'=>array('enable'=>true),
         'Student'=>array('enable'=>true),
         'Teacher'=>array('enable'=>true),
         'Staff'=>array('enable'=>true),
+        'Training'=>array('enable'=>true),
         'Consolidated'=>array('enable'=>true),
         'Indicator'=>array('enable'=>true),
         'DataQuality'=>array('enable'=>true),
@@ -53,6 +55,53 @@ class ReportsController extends ReportsAppController {
     public $helpers = array('Paginator');
     public $components = array('Paginator','DateTime','Utility');
     private $pathFile = '';
+
+    public function test(){
+        $this->autoRender = false;
+        //$this->TrainingCourse->formatResult = true;
+        $data = $this->TrainingCourse->find('all', 
+        array('fields' => array(
+            'TrainingCourse.code AS CourseCode','TrainingCourse.name AS CourseTitle',
+            'TrainingCreditHour.name AS Credit','TrainingStatus.name AS Status'
+        ),
+        'joins' => array(
+            array(
+                'table' => 'training_credit_hours','alias' => 'TrainingCreditHour','type' => 'LEFT',
+                'conditions' => array('TrainingCreditHour.id = TrainingCourse.training_credit_hour_id')
+            ),
+            array('table' => 'training_statuses','alias' => 'TrainingStatus','type' => 'LEFT',
+                'conditions' => array('TrainingStatus.id = TrainingCourse.training_status_id')
+            )
+         )
+        ));
+
+        pr($data);
+    }
+
+    /*
+    public function bu(){
+        $this->autoRender = false;
+        $this->TrainingCourse->formatResult = true;
+        $data = $this->TrainingCourse->find('all', 
+        array('fields' => array(
+            'TrainingCourse.code AS CourseCode','TrainingCourse.name AS CourseTitle',
+            'TrainingCreditHour.name AS Credit','TrainingStatus.name AS Status'
+        ),
+        'joins' => array(
+            array(
+                'table' => 'training_credit_hours','alias' => 'TrainingCreditHour','type' => 'LEFT',
+                'conditions' => array('TrainingCreditHour.id = TrainingCourse.training_credit_hour_id')
+            ),
+            array('table' => 'training_statuses','alias' => 'TrainingStatus','type' => 'LEFT',
+                'conditions' => array('TrainingStatus.id = TrainingCourse.training_status_id')
+            )
+         ),
+        'group' => array('Student.id'),
+        'conditions' => array('OR'=>array('not' => array('institutionSiteStudent.student_status_id' => '1'), 'institutionSiteStudent.student_id' => NULL))
+        ));
+
+        pr($data);
+    }*/
     
     public function beforeFilter() {
         parent::beforeFilter();
@@ -88,6 +137,8 @@ class ReportsController extends ReportsAppController {
     public function StaffDownload(){}
     public function Teacher(){}
     public function TeacherDownload(){}
+    public function Training(){}
+    public function TrainingDownload(){}
     public function Consolidated(){}
     public function ConsolidatedDownload(){}
 //  public function Indicator(){}
