@@ -100,4 +100,16 @@ class InstitutionSiteClass extends AppModel {
 		$data = $this->find('list', $options);
 		return $data;
 	}
+        
+        public function getClassListByInstitution($institutionSiteId){
+            $data = $this->find('list', array(
+                'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+                'conditions' => array(
+                    'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+                ),
+                'order' => array('InstitutionSiteClass.name')
+            ));
+            
+            return $data;
+        }
 }

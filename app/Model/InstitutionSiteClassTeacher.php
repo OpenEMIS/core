@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteClassTeacher extends AppModel {
 	
 	// used by InstitutionSite.classesEdit/classesView
-	public function getTeachers($classId) {
+	public function getTeachers($classId, $mode = 'all') {
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
@@ -42,7 +42,19 @@ class InstitutionSiteClassTeacher extends AppModel {
 			'conditions' => array('InstitutionSiteClassTeacher.institution_site_class_id' => $classId),
 			'order' => array('Teacher.first_name')
 		));
-		return $data;
+                
+                if($mode == 'list'){
+                    $list = array();
+                    foreach($data as $obj) {
+                            $id = $obj['Teacher']['id'];
+                            $teacherName = $obj['Teacher']['first_name'].' '.$obj['Teacher']['last_name'];
+                            $list[$id] = sprintf('%s %s', $obj['Teacher']['first_name'], $obj['Teacher']['last_name']);
+                    }
+                    return $list;
+                }
+                else{
+                    return $data;
+                }
 	}
 	
 	// used by InstitutionSite.teachersView/teachersEdit
@@ -92,5 +104,64 @@ class InstitutionSiteClassTeacher extends AppModel {
 			'order' => array('EducationLevel.order')
 		));
 		return $data;
+	}
+        
+        public function getTeachersByInstitutionSiteId($institutionSiteId) {
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name'
+			),
+			'joins' => array(
+                                array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId,
+						'InstitutionSiteClass.id = InstitutionSiteClassTeacher.institution_site_class_id'
+					)
+				),
+				array(
+					'table' => 'teachers',
+					'alias' => 'Teacher',
+					'conditions' => array('Teacher.id = InstitutionSiteClassTeacher.teacher_id')
+				),
+				
+			),
+			
+			'order' => array('Teacher.first_name')
+		));
+                
+                    $list = array();
+                    foreach($data as $obj) {
+                            $id = $obj['Teacher']['id'];
+                            $teacherName = $obj['Teacher']['first_name'].' '.$obj['Teacher']['last_name'];
+                            $list[$id] = sprintf('%s %s', $obj['Teacher']['first_name'], $obj['Teacher']['last_name']);
+                    }
+                    return $list;
+                
+	}
+        
+        public function getTeacher($teacherId) {
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array(
+				'Teacher.id', 'Teacher.identification_no', 'Teacher.first_name', 'Teacher.last_name', 
+		
+			),
+			'joins' => array(
+				array(
+					'table' => 'teachers',
+					'alias' => 'Teacher',
+					'conditions' => array('Teacher.id = InstitutionSiteClassTeacher.teacher_id')
+				)
+			),
+			'conditions' => array('Teacher.id' => $teacherId),
+			'order' => array('Teacher.first_name')
+		));
+                
+               
+                    return $data;
+                
 	}
 }
