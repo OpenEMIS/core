@@ -77,7 +77,7 @@ class RubricsViewHelper extends AppHelper {
 
         $width = 607 - 2;
         $singleColumnSize = (1 / $this->defaultNoOfColumns) * $width;
-        // pr($data);
+       
         $display = '';
        /* if (!empty($data['RubricsTemplateItem']['order'])) {
             $display .= $this->Form->hidden($this->wrapperName . '.' . $key . '.RubricsTemplateItem.' . 'order', array('id' => 'order', 'value' => $data['RubricsTemplateItem']['order']));

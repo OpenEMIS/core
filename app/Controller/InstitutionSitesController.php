@@ -90,7 +90,8 @@ class InstitutionSitesController extends AppController {
 		'Staff.StaffBehaviour',
 		'Staff.StaffBehaviourCategory',
         'SecurityGroupUser',
-        'SecurityGroupArea'
+        'SecurityGroupArea',
+            'Quality.QualityInstitutionRubric',
 	);
 	
 	public $helpers = array('Paginator');
@@ -105,6 +106,8 @@ class InstitutionSitesController extends AppController {
         'AreaHandler'
 	);
 	
+        
+        
 	public function beforeFilter() {
 		parent::beforeFilter();
                 
@@ -2943,7 +2946,25 @@ class InstitutionSitesController extends AppController {
 				'Student' => array('identification_no', 'first_name', 'last_name'),
 				'StudentCategory' => array('name')
 			)
-		)
+		),
+                'QA Report' => array(
+                    'Model' => 'QualityInstitutionRubric',
+                    'fields' => array(
+                        //'SchoolYear' => array('name'),
+                        'InstitutionSite'=>array('id','name','code'),
+                        /*'InstitutionSiteClass' => array('name'),
+                        'EducationGrade' => array('name'),*/
+                        'RubricTemplate' => array('name'),
+                        'RubricTemplateHeader' => array('title AS header'),
+                        'RubricTemplateColumnInfo' => array('weighting'),
+                        //'RubricTemplateSubheader' => array('title AS subheader'),
+                       // 'RubricTemplateItem' => array('title AS question'),
+                        //'RubricTemplateAnswer' => array('title AS Answer'),
+                        'QualityInstitutionRubricAnswer' => array('rubric_template_answer_id1 AS selectedAnswerID'),
+                       // 
+                       // 'QualityInstitutionRubricAnswer'  => array('1*')
+                    )
+                )
 	);
 	
 	private $ReportData = array(); //param 1 name ; param2 type
@@ -2978,6 +2999,7 @@ class InstitutionSitesController extends AppController {
 	}
 	
 	private function getReportData($name){
+            // pr($name);die;
 		if(array_key_exists($name, $this->reportMapping)){
 			$whereKey = ($this->reportMapping[$name]['Model'] == 'InstitutionSite')? 'id' : 'institution_site_id';
 			$cond =  array( $this->reportMapping[$name]['Model'].".".$whereKey => $this->institutionSiteId);
@@ -3032,7 +3054,89 @@ class InstitutionSitesController extends AppController {
 				);
 				$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
 			}
-			$data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
+                        else if($this->reportMapping[$name]['Model'] == 'QualityInstitutionRubric') {
+                            $options['recursive'] = -1;
+                            $options['joins'] = array(
+                                array(
+                                        'table' => 'rubrics_templates',
+                                        'alias' => 'RubricTemplate',
+                                        'conditions' => array('RubricTemplate.id = QualityInstitutionRubric.rubric_template_id')
+                                ),
+                                array(
+                                        'table' => 'rubrics_template_headers',
+                                        'alias' => 'RubricTemplateHeader',
+                                        'conditions' => array('RubricTemplate.id = RubricTemplateHeader.rubric_template_id')
+                                ),
+                                array(
+                                        'table' => 'rubrics_template_subheaders',
+                                        'alias' => 'RubricTemplateSubheader',
+                                        'conditions' => array('RubricTemplateSubheader.rubric_template_header_id = RubricTemplateHeader.id')
+                                ),
+                                array(
+                                        'table' => 'rubrics_template_items',
+                                        'alias' => 'RubricTemplateItem',
+                                        'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
+                                ),
+                                array(
+                                        'table' => 'rubrics_template_answers',
+                                        'alias' => 'RubricTemplateAnswer',
+                                        'conditions' => array('RubricTemplateAnswer.rubric_template_item_id = RubricTemplateItem.id')
+                                ),
+                                
+                                array(
+                                        'table' => 'quality_institution_rubrics_answers',
+                                        'alias' => 'QualityInstitutionRubricAnswer',
+                                        'type' => 'LEFT',
+                                        'conditions' => array(
+                                            'QualityInstitutionRubricAnswer.quality_institution_rubric_id = QualityInstitutionRubric.id',
+                                            'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id' ,
+                                            'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
+                                            'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
+                                        )
+                                ),
+                                array(
+                                        'table' => 'rubrics_template_column_infos',
+                                        'alias' => 'RubricTemplateColumnInfo',
+                                        'type' => 'LEFT',
+                                        'conditions' => array(
+                                            'RubricTemplateAnswer.rubrics_template_column_info_id = RubricTemplateColumnInfo.id',
+                                            'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
+                                        ),
+                                      //  'fields' => array('SUM(weighting)')
+                                ),
+                               array(
+                                        'table' => 'school_years',
+                                        'alias' => 'SchoolYear',
+                                        'conditions' => array('QualityInstitutionRubric.school_year_id = SchoolYear.id')
+                                ),
+                                array(
+                                        'table' => 'institution_sites',
+                                        'alias' => 'InstitutionSite',
+                                        'conditions' => array('QualityInstitutionRubric.institution_site_id = InstitutionSite.id')
+                                ),
+                            /*     array(
+                                        'table' => 'institution_site_classes',
+                                        'alias' => 'InstitutionSiteClass',
+                                        'conditions' => array('QualityInstitutionRubric.institution_site_id = InstitutionSiteClass.institution_site_id')
+                                ),
+                                array(
+                                        'table' => 'institution_site_class_grades',
+                                        'alias' => 'InstitutionSiteClassGrade',
+                                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+                                ),
+                                array(
+                                        'table' => 'education_grades',
+                                        'alias' => 'EducationGrade',
+                                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+                                ),*/
+                                
+                            );
+                            $options['order'] = array('InstitutionSite.id', 'RubricTemplateHeader.order', 'RubricTemplateSubheader.order', 'RubricTemplateItem.order');
+                            $options['group'] = array('InstitutionSite.id','RubricTemplateHeader.id');
+                        }
+			$data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
+                        
+                        pr($data); die;
 		}
 		return $data;   
 	}
