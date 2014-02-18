@@ -3008,20 +3008,40 @@ class InstitutionSitesController extends AppController {
         'QA Report' => array(
             'Model' => 'QualityInstitutionRubric',
             'fields' => array(
-                'SchoolYear' => array('name'),
-                'InstitutionSite' => array('id', 'name', 'code'),
-                'InstitutionSiteClass' => array('name AS className'),
-                'EducationGrade' => array('name AS gradeName'),
-                'RubricTemplate' => array('name AS templateName'),
-                'RubricTemplateHeader' => array('title AS header'),
-                'RubricTemplateColumnInfo' => array('SUM(weighting) AS totalWeighting'),
+                'QualityInstitutionRubric' => array(
+                    'id' => ''
+                ),
+                'SchoolYear' => array(
+                    'name' => 'School Year'
+                ),
+                'InstitutionSite' => array(
+                    'name' => '', 
+                    'code' => ''
+                 ),
+                'InstitutionSiteClass' => array(
+                    'name' => 'Class Name'
+                ),
+                'EducationGrade' => array(
+                    'name' => 'Grade'
+                ),
+                'RubricTemplate' => array(
+                    'name' => 'Rubric'
+                ),
+                'RubricTemplateHeader' => array(
+                    'title' => 'Header'
+                 ),
+                'RubricTemplateColumnInfo' => array(
+                    'SUM(weighting)'=>'totalWeighting'
+                 )
+                
             //'RubricTemplateSubheader' => array('title AS subheader'),
             // 'RubricTemplateItem' => array('title AS question'),
             //'RubricTemplateAnswer' => array('title AS Answer'),
             // 'QualityInstitutionRubricAnswer' => array('rubric_template_answer_id1 AS selectedAnswerID'),
             // 
             // 'QualityInstitutionRubricAnswer'  => array('1*')
-            )
+            ),
+            'FileName' => 'Report_Quality_Assurance'
         )
     );
     private $ReportData = array(); //param 1 name ; param2 type
@@ -3242,6 +3262,8 @@ class InstitutionSitesController extends AppController {
             }
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
+        
+       
         return $data;
     }
 
@@ -3294,6 +3316,25 @@ class InstitutionSitesController extends AppController {
                     'InstitutionSiteCustomValue' => array('custom_value' => $value)
                 );
             }
+        }
+        else if($name == 'QA Report'){
+            $tempArray = array();
+            $qualityRubricId = '';
+            $rubricCounter = 0;
+            foreach ($data AS $row) {
+                pr($row);
+                $currentQualityRubricId = $row['QualityInstitutionRubric']['id'];
+                if(!empty($qualityRubricId) && $qualityRubricId == $currentQualityRubricId){
+                    
+                }
+                else {
+                    $qualityRubricId = $currentQualityRubricId;
+                    
+                    $rubricCounter++;
+                }
+                
+            }
+            die;
         }
 
         if (!empty($newData)) {
