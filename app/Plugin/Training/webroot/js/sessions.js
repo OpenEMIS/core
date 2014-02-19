@@ -3,6 +3,28 @@ $(document).ready(function() {
     objTrainingSessions.init();
 });
 
+function in_array (needle, haystack, argStrict) {
+      var key = '',
+        strict = !! argStrict;
+
+      if (strict) {
+        for (key in haystack) {
+          if (haystack[key] === needle) {
+            return true;
+          }
+        }
+      } else {
+        for (key in haystack) {
+          if (haystack[key] == needle) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+}
+
+
 var objTrainingSessions = {
 
     init: function() {
@@ -43,6 +65,21 @@ var objTrainingSessions = {
         return false;
     },
 
+   validateTrainee: function() {
+          var val = new Array();
+          var c = 0;
+          $("#trainee_message").remove();
+          $('.validate-trainee').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.trainee').prepend('<div id="trainee_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Trainee</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
 
     addTrainee: function(obj) {
         var table = $('.trainee');
@@ -79,6 +116,7 @@ var objTrainingSessions = {
                 element.html(val[i]);
             }
         }
+        objTrainingSessions.validateTrainee();
         return false;
     },
     
@@ -95,6 +133,7 @@ var objTrainingSessions = {
             div.append(input);
         }
         row.remove();
+        objTrainingSessions.validateTrainee();
     },
 
     
@@ -105,6 +144,16 @@ var objTrainingSessions = {
             minLength: 2,
             select: callback
         });
+    },
+
+
+     errorFlag: function() {
+        var errorMsg = $('.custom-file-msg').length;
+        if(errorMsg==0){
+            return true;
+        }else{
+            return false;
+        }
     }
 
 }

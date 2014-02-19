@@ -77,7 +77,7 @@ padding: 3px 0 5px 20px;
 		?>
         </div>
     </div>
-	 <div class="row">
+	 <div class="row row_target_population" style="min-height:45px;">
 		<div class="label"><?php echo __('Target Population'); ?></div>
 		<div class="value">
 		<div class="table target_population" style="width:240px;" url="Training/ajax_find_target_population/">
@@ -98,11 +98,15 @@ padding: 3px 0 5px 20px;
 								echo $staffPositionTitles[$val['position_title_id']];
 							}?>
 						</div>		
-						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_id', array('class' => 'position-title-id-'.$i, 'value'=>$val['position_title_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_id', array('class' => 'position-title-id-'.$i . 
+						' validate-target-population', 'value'=>$val['position_title_id'])); ?>
 						<?php if(isset($val['id'])){ ?>
 						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.id', array('value'=>$val['id'], 
 						'class' => 'control-id')); ?>
 						<?php } ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_table', array('class' => 'position-title-table-'.$i, 
+						'value'=>$val['position_title_table'])); ?>
+					
 						</div>
 				    </div>
 				 
@@ -168,7 +172,7 @@ padding: 3px 0 5px 20px;
 		?>
         </div>
     </div>
-    <div class="row">
+    <div class="row row_prerequisite" style="min-height:45px;">
 		<div class="label"><?php echo __('Prerequisite'); ?></div>
 		<div class="value">
 		<div class="table prerequisite" style="width:240px;" url="Training/ajax_find_prerequisite/">
@@ -184,7 +188,7 @@ padding: 3px 0 5px 20px;
 					 	<div class="training-course-title-<?php echo $i;?>">
 							<?php echo $val['code'] . ' - ' . $val['title'];?>
 						</div>		
-						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.training_prerequisite_course_id', array('class' => 'training-course-id-'.$i, 'value'=>$val['training_prerequisite_course_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.training_prerequisite_course_id', array('class' => 'training-course-id-'.$i . ' validate-prerequisite', 'value'=>$val['training_prerequisite_course_id'])); ?>
 						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.code', array('value'=>$val['code'])); ?>
 						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.title', array('value'=>$val['title'])); ?>
 						<?php if(isset($val['id'])){ ?>
