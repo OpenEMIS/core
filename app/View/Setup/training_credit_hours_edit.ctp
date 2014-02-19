@@ -39,7 +39,7 @@ echo $this->Html->script('credit_hour', false);
 	foreach($category as $type) { ?>
 		<?php foreach($type['items'] as $typeName => $options) { ?>
 		<fieldset class="section_group">
-			<legend><?php echo $typeName ?></legend>
+			<legend><?php echo __('Credit Hours');?></legend>
 			<?php			
 			echo $this->Form->hidden('model', array('id' => 'model', 'value' => $options['model']));
 			
@@ -52,7 +52,7 @@ echo $this->Html->script('credit_hour', false);
 			<div class="table">
 				<div class="table_head">
 					<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-					<div class="table_cell"><?php echo __('Option'); ?></div>
+					<div class="table_cell"><?php echo __('Name'); ?></div>
 					<div class="table_cell cell cell_national_code"><?php echo __('Min'); ?></div>
 					<div class="table_cell cell_international_code"><?php echo __('Max'); ?></div>
 					<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
