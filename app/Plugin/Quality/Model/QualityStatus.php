@@ -114,7 +114,7 @@ class QualityStatus extends QualityAppModel {
 
     private function _setupStatusForm($controller, $params) {
         $controller->set('statusOptions', $this->statusOptions);
-        $institutionId = $controller->Session->read('InstitutionId');
+       // $institutionId = $controller->Session->read('InstitutionId');
         
         if ($controller->request->is('get')) {
             
@@ -133,12 +133,12 @@ class QualityStatus extends QualityAppModel {
                 $controller->set('selectedYear', $data[$this->name]['year']);
             }
             else{
-                $controller->request->data[$this->name]['institution_id'] = $institutionId;
+                //$controller->request->data[$this->name]['institution_id'] = $institutionId;
             
             }
         } else {
             // $controller->request->data[$this->name]['student_id'] = $controller->studentId;
-          
+         //pr($controller->request->data); die;
             if ($this->save($controller->request->data)) {
                 if (empty($controller->request->data[$this->name]['id'])) {
                     $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
