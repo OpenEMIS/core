@@ -116,9 +116,8 @@ padding: 3px 0 5px 20px;
 			<?php } ?>
 			</div>
 		</div>
-		<?php if($_add) { ?>
-			<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
-		<?php } ?>
+		<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
+	
 		</div>
 	</div>
     <div class="row">
@@ -205,9 +204,7 @@ padding: 3px 0 5px 20px;
 			<?php } ?>
 			</div>
 		</div>
-		<?php if($_add) { ?>
-			<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
-		<?php } ?>
+		<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
 		</div>
 	</div>
     <div class="row">
@@ -256,7 +253,7 @@ padding: 3px 0 5px 20px;
 			</div>
 		</div>
 		 <div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
-		<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
+		<?php echo $this->Utility->getAddRow('Attachment'); ?>
 		</div>
 	</div>
 	<div class="controls view_controls">
