@@ -3008,14 +3008,13 @@ class InstitutionSitesController extends AppController {
         'QA Report' => array(
             'Model' => 'QualityInstitutionRubric',
             'fields' => array(
-                
                 'SchoolYear' => array(
                     'name' => 'School Year'
                 ),
                 'InstitutionSite' => array(
-                    'name' => '', 
+                    'name' => '',
                     'code' => ''
-                 ),
+                ),
                 'InstitutionSiteClass' => array(
                     'name' => 'Class Name',
                     'id' => ''
@@ -3028,12 +3027,11 @@ class InstitutionSitesController extends AppController {
                 ),
                 'RubricTemplateHeader' => array(
                     'title' => 'Header'
-                 ),
+                ),
                 'RubricTemplateColumnInfo' => array(
-                    'SUM(weighting)'=>'Total Weighting'
-                 ),
-                
-                
+                    'SUM(weighting)' => 'Total Weighting'
+                // 'weighting1' => 'Total Weighting'
+                ),
             //'RubricTemplateSubheader' => array('title AS subheader'),
             // 'RubricTemplateItem' => array('title AS question'),
             //'RubricTemplateAnswer' => array('title AS Answer'),
@@ -3082,6 +3080,34 @@ class InstitutionSitesController extends AppController {
     }
 
     private function getHeader($name, $humanize = false) {
+        if ($name == 'QA Report') {
+            $header = array('School Year', 'Institution Site Name', 'Institution Site Code', 'Class', 'Grade');
+
+            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
+            $rubricOptions = $RubricsTemplate->getRubricOptions();
+            
+            if (!empty($rubricOptions)) {
+
+                foreach ($rubricOptions as $key => $item) {
+                    $headerOptions = $RubricsTemplateHeader->getRubricHeaders($key);
+pr($headerOptions);
+                    if (!empty($headerOptions)) {
+                        $headerOptions[] = 'Total Weighting';
+                        $header = array_merge($header, $headerOptions);
+                    }
+                }
+
+                $headerOptions = array();
+                $headerOptions[] = 'Grand Total Weighting';
+                $headerOptions[] = 'Pass/Fail';
+                $header = array_merge($header, $headerOptions);
+            }
+             // pr($header); die;
+
+            return $header;
+        }
+
         if (array_key_exists($name, $this->reportMapping)) {
             $header = $this->reportMapping[$name]['fields'];
         }
@@ -3095,7 +3121,7 @@ class InstitutionSitesController extends AppController {
                 }
             }
         }
-      //  pr($new);die;
+        //  pr($new);die;
         return $new;
     }
 
@@ -3223,16 +3249,19 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'rubrics_template_subheaders',
                         'alias' => 'RubricTemplateSubheader',
+                        'type' => 'LEFT',
                         'conditions' => array('RubricTemplateSubheader.rubric_template_header_id = RubricTemplateHeader.id')
                     ),
                     array(
                         'table' => 'rubrics_template_items',
                         'alias' => 'RubricTemplateItem',
+                        'type' => 'LEFT',
                         'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
                     ),
                     array(
                         'table' => 'rubrics_template_answers',
                         'alias' => 'RubricTemplateAnswer',
+                        'type' => 'LEFT',
                         'conditions' => array('RubricTemplateAnswer.rubric_template_item_id = RubricTemplateItem.id')
                     ),
                     array(
@@ -3255,7 +3284,6 @@ class InstitutionSitesController extends AppController {
                             'RubricTemplateAnswer.rubrics_template_column_info_id = RubricTemplateColumnInfo.id',
                             'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
                         ),
-                    //  'fields' => array('SUM(weighting)')
                     ),
                 );
                 $options['order'] = array('InstitutionSite.id', 'InstitutionSiteClass.id', 'RubricTemplateHeader.order', 'RubricTemplateSubheader.order', 'RubricTemplateItem.order');
@@ -3263,8 +3291,8 @@ class InstitutionSitesController extends AppController {
             }
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
-        
-       
+
+        //  pr($data); die;
         return $data;
     }
 
@@ -3317,30 +3345,80 @@ class InstitutionSitesController extends AppController {
                     'InstitutionSiteCustomValue' => array('custom_value' => $value)
                 );
             }
-        }
-       /* else if($name == 'QA Report'){
+        } else if ($name == 'QA Report') {
             $tempArray = array();
             $classId = '';
+            $rubricName = '';
             $rubricCounter = 0;
+            $rubricHeaderCounter = 0;
             foreach ($data AS $row) {
-             //   pr($row);
+               // pr($row);
                 $currentClassId = $row['InstitutionSiteClass']['id'];
-                if(!empty($classId) && $classId == $currentClassId){
-                    pr('not blank - '.$classId);
-                    
-                }
-                else {
+                $currentRubricName = $row['RubricTemplate']['name'];
+
+                if (!empty($classId) /*&& !empty($rubricName) */&& $classId == $currentClassId /*&& $rubricName == $currentRubricName*/) {
+                    foreach ($row as $key => $value) {
+                        if ($key == '0') {
+                            foreach ($value as $sumValue) {
+                                $tempArray[$rubricCounter - 1]['total_' . $rubricHeaderCounter]['value'] = empty($sumValue)? '-':$sumValue;
+                            }
+                        } else if ($key == 'RubricTemplateHeader') {
+                            $tempArray[$rubricCounter - 1][$key . '_' . $rubricHeaderCounter]['title'] = $value['title'];
+                        }
+                    }
+                } else {
                     $classId = $currentClassId;
-                    pr('blank - '.$classId);
-                    $tempArray[] = $row;
-                    $rubricCounter = count($tempArray);
+                    if ($rubricName != $currentRubricName) {
+                        
+                        if($rubricCounter != 0){
+                            $tempArray[$rubricCounter-1]['GrandTotal']['value'] = 100;
+                            $tempArray[$rubricCounter-1]['PassFail']['value'] = 'Pass'; 
+                        }
+                        $rubricName = $currentRubricName;
+                    }
+                        $rubricHeaderCounter = 0;
+
+                        foreach ($row as $key => $value) {
+                            if ($key == '0') {
+                                foreach ($value as $sumValue) {
+                                    $tempArray[$rubricCounter]['total_' . $rubricHeaderCounter]['value'] = empty($sumValue)? '-':$sumValue;
+                                }
+                            } else if ($key == 'InstitutionSiteClass') {
+                                // pr($value);
+                                $tempArray[$rubricCounter][$key]['name'] = $value['name'];
+                            } else if ($key == 'RubricTemplateHeader') {
+                                $tempArray[$rubricCounter][$key . '_' . $rubricHeaderCounter]['title'] = $value['title'];
+                            } 
+                            else if ($key == 'RubricTemplate') {
+                                $tempArray[$rubricCounter][$key . '_' . $rubricHeaderCounter] = $value;
+                            }else {
+                                $tempArray[$rubricCounter][$key] = $value;
+                            }
+                        }
+                        $rubricCounter = count($tempArray);
+                   /* } else {
+                        foreach ($row as $key => $value) {
+                            if ($key == '0') {
+                                foreach ($value as $sumValue) {
+                                    $tempArray[$rubricCounter - 1]['total_' . $rubricHeaderCounter]['value'] = empty($sumValue)? '-':$sumValue;
+                                }
+                            } else if ($key == 'RubricTemplateHeader') {
+                                $tempArray[$rubricCounter - 1][$key . '_' . $rubricHeaderCounter]['title'] = $value['title'];
+                            }
+                        }
+                    }*/
                 }
-                
+                $rubricHeaderCounter ++;
             }
             
+            //Insert to the last row
+           // $tempArray[$rubricCounter-1]['GrandTotal']['value'] = 100;
+           // $tempArray[$rubricCounter-1]['PassFail']['value'] = 'Pass'; 
+                            
+            $newData = $tempArray;
             pr($tempArray);
-            die;
-        }*/
+           die;
+        }
 
         if (!empty($newData)) {
             return $newData;
@@ -3364,30 +3442,25 @@ class InstitutionSitesController extends AppController {
         ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
         //create a file
 
-      /*  $csv_file = fopen('php://output', 'w');
-        header('Content-type: application/csv');
-        header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');*/
+          $csv_file = fopen('php://output', 'w');
+          header('Content-type: application/csv');
+          header('Content-Disposition: attachment; filename="' . $downloadedFile . '"'); 
         $header_row = $this->getHeader($this->ReportData['name']);
-     //   fputcsv($csv_file, $header_row, ',', '"');
-
-pr($header_row);
-
+           fputcsv($csv_file, $header_row, ',', '"');
         // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
         foreach ($arrData as $arrSingleResult) {
             $row = array();
             foreach ($arrSingleResult as $table => $arrFields) {
-                //pr($arrFields);
 
                 foreach ($arrFields as $col) {
                     $row[] = $col;
                 }
                 
             }
-           // pr($row);
-
-      //      fputcsv($csv_file, $row, ',', '"');
+            // pr($row);
+                  fputcsv($csv_file, $row, ',', '"');
         }
-      //  fclose($csv_file);
+          fclose($csv_file);
     }
 
     public function genReportPDF($name) {
