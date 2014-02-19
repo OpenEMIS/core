@@ -3356,14 +3356,16 @@ class InstitutionSitesController extends AppController {
             foreach ($data AS $row) {
                 $currentClassId = $row['InstitutionSiteClass']['id'];
                 $currentRubricName = $row['RubricTemplate']['name'];
-
+pr($rubricName. ' -- '.$currentRubricName);
                 if (!empty($classId) && !empty($rubricName) && $classId == $currentClassId /* && $rubricName == $currentRubricName */) {
+                  //  pr('not empty');
                     foreach ($row as $key => $value) {
                         if ($key == 'RubricTemplate') {
                             if ($rubricName != $currentRubricName) {
                                 $rubricName = $currentRubricName;
-                                $tempArray[$rubricCounter - 1][$key . '_' . $rubricHeaderCounter] = $value;
                                 $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = 100;
+                                $tempArray[$rubricCounter - 1][$key . '_' . $rubricHeaderCounter] = $value;
+                               // $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = 100;
                             }
                         }
 
@@ -3375,14 +3377,14 @@ class InstitutionSitesController extends AppController {
                             // $tempArray[$rubricCounter - 1][$key . '_' . $rubricHeaderCounter]['title'] = $value['title'];
                         }
                     }
+                    
                 } else {
+                 //    pr(' empty');
                     $classId = $currentClassId;
                     $rubricName = $currentRubricName;
                     $rubricHeaderCounter = 0;
 
-                    if ($rubricCounter != 0) {
-                        
-                    }
+            
                     foreach ($row as $key => $value) {
                         if ($key == '0') {
                             foreach ($value as $sumValue) {
@@ -3395,9 +3397,9 @@ class InstitutionSitesController extends AppController {
                             //  $tempArray[$rubricCounter][$key . '_' . $rubricHeaderCounter]['title'] = $value['title'];
                         } else if ($key == 'RubricTemplate') {
                             $tempArray[$rubricCounter][$key . '_' . $rubricHeaderCounter] = $value;
-                            $tempArray[$rubricCounter]['GrandTotal']['value'] = 100;
-                            $tempArray[$rubricCounter]['PassFail']['value'] = 'Pass';
-                            $tempArray[$rubricCounter]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = 100;
+                          //  $tempArray[$rubricCounter]['GrandTotal']['value'] = 100;
+                        //    $tempArray[$rubricCounter]['PassFail']['value'] = 'Pass';
+                          //  $tempArray[$rubricCounter]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = 100;
                         } else {
                             $tempArray[$rubricCounter][$key] = $value;
                         }
