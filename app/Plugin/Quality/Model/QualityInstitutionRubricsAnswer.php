@@ -76,20 +76,24 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
         $selectedAnswers = $this->getSelectedHeaderAnswers($selectedQualityRubricId, $rubricTemplateHeaderId);
 
         if ($controller->request->is('post')) {
-            $postData = $controller->request->data['SelectedAnswer'];
-
-            foreach ($postData as $key => $obj) {
-                $obj['QualityInstitutionRubricsAnswer']['quality_institution_rubric_id'] = $selectedQualityRubricId;
-                $obj['QualityInstitutionRubricsAnswer']['rubric_template_header_id'] = $rubricTemplateHeaderId;
-
-                $postData[$key] = $obj;
-            }
-
-            if ($this->saveAll($postData)) {
-                $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
-                $controller->redirect(array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId));
+            if (empty($controller->request->data)) {
+                $controller->Utility->alert($controller->Utility->getMessage('NO_RECORD_SAVED'), array('type' => 'warn'));
             } else {
-                $controller->Utility->alert($controller->Utility->getMessage('ADD_UPDATE_ERROR'), array('type' => 'error'));
+                $postData = $controller->request->data['SelectedAnswer'];
+
+                foreach ($postData as $key => $obj) {
+                    $obj['QualityInstitutionRubricsAnswer']['quality_institution_rubric_id'] = $selectedQualityRubricId;
+                    $obj['QualityInstitutionRubricsAnswer']['rubric_template_header_id'] = $rubricTemplateHeaderId;
+
+                    $postData[$key] = $obj;
+                }
+
+                if ($this->saveAll($postData)) {
+                    $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
+                    $controller->redirect(array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId));
+                } else {
+                    $controller->Utility->alert($controller->Utility->getMessage('ADD_UPDATE_ERROR'), array('type' => 'error'));
+                }
             }
         } else {
             if (empty($controller->request->data['SelectedAnswer'])) {

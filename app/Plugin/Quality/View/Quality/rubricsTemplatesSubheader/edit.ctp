@@ -14,9 +14,13 @@ echo $this->Html->script('jquery.sort', false);
         /* if($_edit) {
           echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesDetails', $id ), array('class' => 'divider'));
           } */
-        echo $this->Html->link(__('Add Heading'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
-        echo $this->Html->link(__('Add Criteria Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
-        echo $this->Html->link(__('Add Level Column'), array('action' => 'RubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
+        if ($_edit) {//pr($columnHeaderData);
+            if (!empty($columnHeaderData)) {
+                echo $this->Html->link(__('Add Heading'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
+                echo $this->Html->link(__('Add Criteria Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
+            }
+            echo $this->Html->link(__('Add Level Column'), array('action' => 'RubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
+        }
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
@@ -31,7 +35,7 @@ echo $this->Html->script('jquery.sort', false);
     ));
     ?>
     <?php
-     $lastId = 0;
+    $lastId = 0;
     if (!empty($this->data['RubricsTemplateDetail'])) {
         $lastId = count($this->data['RubricsTemplateDetail']);
     }
@@ -80,8 +84,8 @@ echo $this->Html->script('jquery.sort', false);
     -->
     <div class="controls">
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right"/>
-<?php echo $this->Html->link(__('Cancel'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'btn_cancel btn_left')); ?>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'btn_cancel btn_left')); ?>
     </div>
 
-<?php echo $this->Form->end(); ?>
+    <?php echo $this->Form->end(); ?>
 </div>

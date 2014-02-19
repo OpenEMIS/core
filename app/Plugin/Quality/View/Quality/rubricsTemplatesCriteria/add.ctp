@@ -51,7 +51,7 @@ echo $this->Html->script('config', false);
 			$redirectURL = array('action' => 'RubricsTemplatesCriteriaView',$id,$rubricTemplateHeaderId,$this->data['RubricsTemplateColumnInfo']['id'] );
 		}
 		else{
-			$redirectURL = array('action' => 'RubricsTemplatesCriteria',$id);
+			$redirectURL = array('action' => 'RubricsTemplatesCriteria',$id,$rubricTemplateHeaderId);
 		}
 		?>
         
