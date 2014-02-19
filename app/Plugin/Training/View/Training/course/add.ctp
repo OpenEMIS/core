@@ -77,7 +77,7 @@ padding: 3px 0 5px 20px;
 		?>
         </div>
     </div>
-	 <div class="row">
+	 <div class="row row_target_population" style="min-height:45px;">
 		<div class="label"><?php echo __('Target Population'); ?></div>
 		<div class="value">
 		<div class="table target_population" style="width:240px;" url="Training/ajax_find_target_population/">
@@ -98,11 +98,15 @@ padding: 3px 0 5px 20px;
 								echo $staffPositionTitles[$val['position_title_id']];
 							}?>
 						</div>		
-						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_id', array('class' => 'position-title-id-'.$i, 'value'=>$val['position_title_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_id', array('class' => 'position-title-id-'.$i . 
+						' validate-target-population', 'value'=>$val['position_title_id'])); ?>
 						<?php if(isset($val['id'])){ ?>
 						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.id', array('value'=>$val['id'], 
 						'class' => 'control-id')); ?>
 						<?php } ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_table', array('class' => 'position-title-table-'.$i, 
+						'value'=>$val['position_title_table'])); ?>
+					
 						</div>
 				    </div>
 				 
@@ -116,9 +120,8 @@ padding: 3px 0 5px 20px;
 			<?php } ?>
 			</div>
 		</div>
-		<?php if($_add) { ?>
-			<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
-		<?php } ?>
+		<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
+	
 		</div>
 	</div>
     <div class="row">
@@ -169,7 +172,7 @@ padding: 3px 0 5px 20px;
 		?>
         </div>
     </div>
-    <div class="row">
+    <div class="row row_prerequisite" style="min-height:45px;">
 		<div class="label"><?php echo __('Prerequisite'); ?></div>
 		<div class="value">
 		<div class="table prerequisite" style="width:240px;" url="Training/ajax_find_prerequisite/">
@@ -185,7 +188,7 @@ padding: 3px 0 5px 20px;
 					 	<div class="training-course-title-<?php echo $i;?>">
 							<?php echo $val['code'] . ' - ' . $val['title'];?>
 						</div>		
-						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.training_prerequisite_course_id', array('class' => 'training-course-id-'.$i, 'value'=>$val['training_prerequisite_course_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.training_prerequisite_course_id', array('class' => 'training-course-id-'.$i . ' validate-prerequisite', 'value'=>$val['training_prerequisite_course_id'])); ?>
 						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.code', array('value'=>$val['code'])); ?>
 						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.title', array('value'=>$val['title'])); ?>
 						<?php if(isset($val['id'])){ ?>
@@ -205,9 +208,7 @@ padding: 3px 0 5px 20px;
 			<?php } ?>
 			</div>
 		</div>
-		<?php if($_add) { ?>
-			<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
-		<?php } ?>
+		<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
 		</div>
 	</div>
     <div class="row">
@@ -256,7 +257,7 @@ padding: 3px 0 5px 20px;
 			</div>
 		</div>
 		 <div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
-		<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
+		<?php echo $this->Utility->getAddRow('Attachment'); ?>
 		</div>
 	</div>
 	<div class="controls view_controls">
