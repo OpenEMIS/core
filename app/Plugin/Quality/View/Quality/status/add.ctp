@@ -19,7 +19,7 @@ echo $this->Html->script('config', false);
     ));
     ?>
     <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
-    <?php echo $this->Form->input('institution_id', array('type'=> 'hidden'));  ?>
+    <?php //echo $this->Form->input('institution_id', array('type'=> 'hidden'));  ?>
     <div class="row">
         <div class="label"><?php echo __('Name'); ?></div>
         <div class="value"><?php echo $this->Form->input('rubric_template_id', array('options' => $rubricOptions)); ?> </div>
