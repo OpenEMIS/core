@@ -87,7 +87,8 @@ echo $this->Html->script('jquery-ui.min', false);
 						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.id', array('value'=>$val['id'], 
 						'class' => 'control-id')); ?>
 						<?php } ?>
-						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_id', array('value'=>$val['identification_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_id', array('class' => 'trainee-id-'.$i . ' validate-trainee',
+							'value'=>$val['identification_id'])); ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_first_name', array('value'=>$val['identification_first_name'])); ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_last_name', array('value'=>$val['identification_last_name'])); ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_table', array('value'=>$val['identification_table'])); ?>
@@ -104,15 +105,15 @@ echo $this->Html->script('jquery-ui.min', false);
 			<?php } ?>
 			</div>
 		</div>
-		<?php if($_add) { ?>
-			<div class="row"><a class="void icon_plus" onclick="objTrainingSessions.addTrainee(this)" url="Training/ajax_add_trainee"  href="javascript: void(0)"><?php echo __('Add Trainee');?></a></div>
-		<?php } ?>
+	
+		<div class="row"><a class="void icon_plus" onclick="objTrainingSessions.addTrainee(this)" url="Training/ajax_add_trainee"  href="javascript: void(0)"><?php echo __('Add Trainee');?></a></div>
+	
 		</div>
 	</div>
 	<div class="controls view_controls">
 		<?php if(!isset($this->request->data['TrainingSession']['training_status_id'])|| $this->request->data['TrainingSession']['training_status_id']==1){ ?>
-		<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+		<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="js:if(objTrainingSessions.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
+		<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="js:if(objTrainingSessions.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
 		<?php } ?>
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'session'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
