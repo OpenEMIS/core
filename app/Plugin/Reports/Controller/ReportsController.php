@@ -56,28 +56,23 @@ class ReportsController extends ReportsAppController {
     private $pathFile = '';
 
     public function test(){
-        //$this->autoRender = false;
+        $this->autoRender = false;
         $TrainingCourse = ClassRegistry::init('TrainingCourse');
         $TrainingCourse->formatResult = true;
-        $data = $TrainingCourse->find('all', 
-        array('fields' => array(
-            'TrainingCourse.code AS CourseCode','TrainingCourse.title AS CourseTitle',
-            'TrainingCreditHour.name AS Credit', 'SUM(TeacherTrainingNeed.id) as TotalNeeds'
-        ),
-        'joins' => array(
-            array(
-                'table' => 'training_credit_hours','alias' => 'TrainingCreditHour','type' => 'LEFT',
-                'conditions' => array('TrainingCreditHour.id = TrainingCourse.training_credit_hour_id')
-            ),
-            array('table' => 'staff_training_needs','alias' => 'StaffTrainingNeed','type' => 'INNER',
-                'conditions' => array('TrainingCourse.id = StaffTrainingNeed.training_course_id' , 'StaffTrainingNeed.training_status_id' => 3)
-            ), 
-            array('table' => 'teacher_training_needs','alias' => 'TeacherTrainingNeed','type' => 'INNER',
-                'conditions' => array('TrainingCourse.id = TeacherTrainingNeed.training_course_id', 'TeacherTrainingNeed.training_status_id' => 3)
-            ),
-         ),
-         'order' => array('TrainingCourse.title')
-        ));
+        $records = $TrainingCourse->query('
+        Select TrainingCourse.code as CourseCode, TrainingCourse.title as CourseTitle, TrainingCreditHour.name as Credit, first_name as FirstName, last_name as LastName, TrainingPriority.name as Priority, TrainingStatus.name as Status from(
+        SELECT training_priority_id, training_status_id, training_course_id, first_name, last_name FROM staff_training_needs as StaffTrainingNeed INNER JOIN staff as Staff on Staff.id = StaffTrainingNeed.staff_id
+        UNION Select training_priority_id, training_status_id, training_course_id, first_name, last_name from teacher_training_needs as TeacherTrainingNeed INNER JOIN teachers as Teacher on Teacher.id = TeacherTrainingNeed.teacher_id
+        )TrainingNeed 
+        INNER JOIN training_courses as TrainingCourse on TrainingCourse.id = TrainingNeed.training_course_id
+        INNER JOIN training_credit_hours as TrainingCreditHour on TrainingCreditHour.id = TrainingCourse.training_credit_hour_id
+        INNER JOIN training_priorities as TrainingPriority on TrainingPriority.id = TrainingNeed.training_priority_id
+        INNER JOIN training_statuses as TrainingStatus on TrainingStatus.id = TrainingNeed.training_status_id
+        ORDER BY TrainingCourse.title');
+        $data = array();
+        foreach($records as $val){
+            $data[] = array_merge($val['TrainingCourse'], $val['TrainingCreditHour'],$val['TrainingNeed'],$val['TrainingPriority'],$val['TrainingStatus']);  
+        }
 
         pr($data);
     }
@@ -86,25 +81,16 @@ class ReportsController extends ReportsAppController {
     public function bu(){
         $this->autoRender = false;
         $this->TrainingCourse->formatResult = true;
-        $data = $this->TrainingCourse->find('all', 
-        array('fields' => array(
-            'TrainingCourse.code AS CourseCode','TrainingCourse.name AS CourseTitle',
-            'TrainingCreditHour.name AS Credit','TrainingStatus.name AS Status',
-            '((CASE WHEN StaffTrainingNeed.id = null THEN \'\' WHEN TrainingSessionTrainee.pass=1 THEN \'Passed\'
-                ELSE \'Failed\' END)) AS Completed'
-        ),
-        'joins' => array(
-            array(
-                'table' => 'training_credit_hours','alias' => 'TrainingCreditHour','type' => 'LEFT',
-                'conditions' => array('TrainingCreditHour.id = TrainingCourse.training_credit_hour_id')
-            ),
-            array('table' => 'training_statuses','alias' => 'TrainingStatus','type' => 'LEFT',
-                'conditions' => array('TrainingStatus.id = TrainingCourse.training_status_id')
-            )
-         ),
-        'group' => array('Student.id'),
-        'conditions' => array('OR'=>array('not' => array('institutionSiteStudent.student_status_id' => '1'), 'institutionSiteStudent.student_id' => NULL))
-        ));
+         $records = $TrainingCourse->query('
+        Select TrainingCourse.code as CourseCode, TrainingCourse.title as CourseTitle, TrainingCreditHour.name as Credit, first_name as FirstName, last_name as LastName, TrainingPriority.name as Priority, TrainingStatus.name as Status from(
+        SELECT training_priority_id, training_status_id, training_course_id, first_name, last_name FROM staff_training_needs as StaffTrainingNeed INNER JOIN staff as Staff on Staff.id = StaffTrainingNeed.staff_id
+        UNION Select training_priority_id, training_status_id, training_course_id, first_name, last_name from teacher_training_needs as TeacherTrainingNeed INNER JOIN teachers as Teacher on Teacher.id = TeacherTrainingNeed.teacher_id
+        )TrainingNeed 
+        INNER JOIN training_courses as TrainingCourse on TrainingCourse.id = TrainingNeed.training_course_id
+        INNER JOIN training_credit_hours as TrainingCreditHour on TrainingCreditHour.id = TrainingCourse.training_credit_hour_id
+        INNER JOIN training_priorities as TrainingPriority on TrainingPriority.id = TrainingNeed.training_priority_id
+        INNER JOIN training_statuses as TrainingStatus on TrainingStatus.id = TrainingNeed.training_status_id
+        ORDER BY TrainingCourse.title');
 
         pr($data);
     }*/
