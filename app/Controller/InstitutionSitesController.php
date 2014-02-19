@@ -3008,9 +3008,7 @@ class InstitutionSitesController extends AppController {
         'QA Report' => array(
             'Model' => 'QualityInstitutionRubric',
             'fields' => array(
-                'QualityInstitutionRubric' => array(
-                    'id' => ''
-                ),
+                
                 'SchoolYear' => array(
                     'name' => 'School Year'
                 ),
@@ -3019,7 +3017,8 @@ class InstitutionSitesController extends AppController {
                     'code' => ''
                  ),
                 'InstitutionSiteClass' => array(
-                    'name' => 'Class Name'
+                    'name' => 'Class Name',
+                    'id' => ''
                 ),
                 'EducationGrade' => array(
                     'name' => 'Grade'
@@ -3031,8 +3030,9 @@ class InstitutionSitesController extends AppController {
                     'title' => 'Header'
                  ),
                 'RubricTemplateColumnInfo' => array(
-                    'SUM(weighting)'=>'totalWeighting'
-                 )
+                    'SUM(weighting)'=>'Total Weighting'
+                 ),
+                
                 
             //'RubricTemplateSubheader' => array('title AS subheader'),
             // 'RubricTemplateItem' => array('title AS question'),
@@ -3095,6 +3095,7 @@ class InstitutionSitesController extends AppController {
                 }
             }
         }
+      //  pr($new);die;
         return $new;
     }
 
@@ -3317,25 +3318,29 @@ class InstitutionSitesController extends AppController {
                 );
             }
         }
-        else if($name == 'QA Report'){
+       /* else if($name == 'QA Report'){
             $tempArray = array();
-            $qualityRubricId = '';
+            $classId = '';
             $rubricCounter = 0;
             foreach ($data AS $row) {
-                pr($row);
-                $currentQualityRubricId = $row['QualityInstitutionRubric']['id'];
-                if(!empty($qualityRubricId) && $qualityRubricId == $currentQualityRubricId){
+             //   pr($row);
+                $currentClassId = $row['InstitutionSiteClass']['id'];
+                if(!empty($classId) && $classId == $currentClassId){
+                    pr('not blank - '.$classId);
                     
                 }
                 else {
-                    $qualityRubricId = $currentQualityRubricId;
-                    
-                    $rubricCounter++;
+                    $classId = $currentClassId;
+                    pr('blank - '.$classId);
+                    $tempArray[] = $row;
+                    $rubricCounter = count($tempArray);
                 }
                 
             }
+            
+            pr($tempArray);
             die;
-        }
+        }*/
 
         if (!empty($newData)) {
             return $newData;
@@ -3359,28 +3364,30 @@ class InstitutionSitesController extends AppController {
         ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
         //create a file
 
-        $csv_file = fopen('php://output', 'w');
+      /*  $csv_file = fopen('php://output', 'w');
         header('Content-type: application/csv');
-        header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
+        header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');*/
         $header_row = $this->getHeader($this->ReportData['name']);
-        fputcsv($csv_file, $header_row, ',', '"');
+     //   fputcsv($csv_file, $header_row, ',', '"');
 
-
+pr($header_row);
 
         // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
         foreach ($arrData as $arrSingleResult) {
             $row = array();
             foreach ($arrSingleResult as $table => $arrFields) {
-
+                //pr($arrFields);
 
                 foreach ($arrFields as $col) {
                     $row[] = $col;
                 }
+                
             }
+           // pr($row);
 
-            fputcsv($csv_file, $row, ',', '"');
+      //      fputcsv($csv_file, $row, ',', '"');
         }
-        fclose($csv_file);
+      //  fclose($csv_file);
     }
 
     public function genReportPDF($name) {
