@@ -104,9 +104,9 @@ echo $this->Html->script('jquery-ui.min', false);
 			<?php } ?>
 			</div>
 		</div>
-		<?php if($_add) { ?>
-			<div class="row"><a class="void icon_plus" onclick="objTrainingSessions.addTrainee(this)" url="Training/ajax_add_trainee"  href="javascript: void(0)"><?php echo __('Add Trainee');?></a></div>
-		<?php } ?>
+	
+		<div class="row"><a class="void icon_plus" onclick="objTrainingSessions.addTrainee(this)" url="Training/ajax_add_trainee"  href="javascript: void(0)"><?php echo __('Add Trainee');?></a></div>
+	
 		</div>
 	</div>
 	<div class="controls view_controls">
