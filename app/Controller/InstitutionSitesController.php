@@ -93,6 +93,7 @@ class InstitutionSitesController extends AppController {
         'SecurityGroupUser',
         'SecurityGroupArea',
         'Quality.QualityInstitutionRubric',
+        'Quality.QualityInstitutionVisit',
     );
     public $helpers = array('Paginator');
     public $components = array(
@@ -3008,40 +3009,67 @@ class InstitutionSitesController extends AppController {
         'QA Report' => array(
             'Model' => 'QualityInstitutionRubric',
             'fields' => array(
-                
+                'SchoolYear' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => ''
+                ),
+                'InstitutionSiteClass' => array(
+                    'name' => '',
+                    'id' => ''
+                ),
+                'EducationGrade' => array(
+                    'name' => ''
+                ),
+                'RubricTemplate' => array(
+                    'name' => '',
+                    'id' => ''
+                ),
+                'RubricTemplateHeader' => array(
+                    'title' => ''
+                ),
+                'RubricTemplateColumnInfo' => array(
+                    'SUM(weighting)' => ''
+                ),
+            ),
+            'FileName' => 'Report_Quality_Assurance'
+        ),
+        'Visit Report' => array(
+            'Model' => 'QualityInstitutionVisit',
+            'fields' => array(
                 'SchoolYear' => array(
                     'name' => 'School Year'
                 ),
-                'InstitutionSite' => array(
-                    'name' => '', 
+               'InstitutionSite' => array(
+                    'name' => '',
                     'code' => ''
-                 ),
-                'InstitutionSiteClass' => array(
+                ),
+                 'InstitutionSiteClass' => array(
                     'name' => 'Class Name',
-                    'id' => ''
                 ),
                 'EducationGrade' => array(
                     'name' => 'Grade'
                 ),
-                'RubricTemplate' => array(
-                    'name' => 'Rubric'
+                'QualityVisitTypes'=> array(
+                    'name' => 'Quality Type'
                 ),
-                'RubricTemplateHeader' => array(
-                    'title' => 'Header'
-                 ),
-                'RubricTemplateColumnInfo' => array(
-                    'SUM(weighting)'=>'Total Weighting'
-                 ),
-                
-                
-            //'RubricTemplateSubheader' => array('title AS subheader'),
-            // 'RubricTemplateItem' => array('title AS question'),
-            //'RubricTemplateAnswer' => array('title AS Answer'),
-            // 'QualityInstitutionRubricAnswer' => array('rubric_template_answer_id1 AS selectedAnswerID'),
-            // 
-            // 'QualityInstitutionRubricAnswer'  => array('1*')
+                'QualityInstitutionVisit' => array(
+                    'date' => 'Visit Date',
+                    'comment' => 'Comment'
+                ),
+                  'Teacher' => array(
+                    'first_name' => 'Teacher First Name',
+                    'middle_name' => 'Teacher Middle Name',
+                    'last_name' => 'Teacher Last Name'
+                ),
+                'SecurityUser' => array(
+                    'first_name' => 'Supervisor First Name',
+                    'last_name' => 'Supervisor Last Name'
+                )
             ),
-            'FileName' => 'Report_Quality_Assurance'
+            'FileName' => 'Report_Quality_Vist'
         )
     );
     private $ReportData = array(); //param 1 name ; param2 type
@@ -3082,6 +3110,12 @@ class InstitutionSitesController extends AppController {
     }
 
     private function getHeader($name, $humanize = false) {
+        if ($name == 'QA Report') {
+            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            $header = $RubricsTemplate->getInstitutionQAReportHeader();
+            return $header;
+        }
+
         if (array_key_exists($name, $this->reportMapping)) {
             $header = $this->reportMapping[$name]['fields'];
         }
@@ -3095,7 +3129,7 @@ class InstitutionSitesController extends AppController {
                 }
             }
         }
-      //  pr($new);die;
+        //  pr($new);die;
         return $new;
     }
 
@@ -3223,16 +3257,19 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'rubrics_template_subheaders',
                         'alias' => 'RubricTemplateSubheader',
+                        'type' => 'LEFT',
                         'conditions' => array('RubricTemplateSubheader.rubric_template_header_id = RubricTemplateHeader.id')
                     ),
                     array(
                         'table' => 'rubrics_template_items',
                         'alias' => 'RubricTemplateItem',
+                        'type' => 'LEFT',
                         'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
                     ),
                     array(
                         'table' => 'rubrics_template_answers',
                         'alias' => 'RubricTemplateAnswer',
+                        'type' => 'LEFT',
                         'conditions' => array('RubricTemplateAnswer.rubric_template_item_id = RubricTemplateItem.id')
                     ),
                     array(
@@ -3255,16 +3292,64 @@ class InstitutionSitesController extends AppController {
                             'RubricTemplateAnswer.rubrics_template_column_info_id = RubricTemplateColumnInfo.id',
                             'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
                         ),
-                    //  'fields' => array('SUM(weighting)')
                     ),
                 );
-                $options['order'] = array('InstitutionSite.id', 'InstitutionSiteClass.id', 'RubricTemplateHeader.order', 'RubricTemplateSubheader.order', 'RubricTemplateItem.order');
+                $options['order'] = array('InstitutionSite.id', 'InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.order', 'RubricTemplateSubheader.order', 'RubricTemplateItem.order');
                 $options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
+            } else if($this->reportMapping[$name]['Model'] == 'QualityInstitutionVisit'){
+                 $options['recursive'] = -1;
+          
+                 $options['joins'] = array(
+                      array(
+                        'table' => 'school_years',
+                        'alias' => 'SchoolYear',
+                        'conditions' => array('QualityInstitutionVisit.school_year_id = SchoolYear.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite',
+                        'conditions' => array('QualityInstitutionVisit.institution_site_id = InstitutionSite.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_classes',
+                        'alias' => 'InstitutionSiteClass',
+                        'conditions' => array(
+                            'QualityInstitutionVisit.institution_site_classes_id = InstitutionSiteClass.id',
+                        )
+                    ),
+                     array(
+                        'table' => 'institution_site_class_grades',
+                        'alias' => 'InstitutionSiteClassGrade',
+                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+                    ),
+                    array(
+                        'table' => 'education_grades',
+                        'alias' => 'EducationGrade',
+                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+                    ),
+                   array(
+                        'table' => 'teachers',
+                        'alias' => 'Teacher',
+                        'conditions' => array('Teacher.id = QualityInstitutionVisit.teacher_id')
+                    ),
+                     array(
+                        'table' => 'security_users',
+                        'alias' => 'SecurityUser',
+                        'conditions' => array('SecurityUser.id = QualityInstitutionVisit.created_user_id')
+                    ),
+                     array(
+                        'table' => 'quality_visit_types',
+                        'alias' => 'QualityVisitTypes',
+                        'conditions' => array('QualityVisitTypes.id = QualityInstitutionVisit.quality_type_id')
+                    )
+                 );
+               /* $this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
+                    'custom_value' => 'IF((InstitutionSiteCustomField.type = 3) OR (InstitutionSiteCustomField.type = 4), InstitutionSiteCustomFieldOption.value, InstitutionSiteCustomValue.value)'
+                );*/
             }
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
-        
-       
+
         return $data;
     }
 
@@ -3317,30 +3402,10 @@ class InstitutionSitesController extends AppController {
                     'InstitutionSiteCustomValue' => array('custom_value' => $value)
                 );
             }
+        } else if ($name == 'QA Report') {
+            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            $newData = $RubricsTemplate->processDataToCSVFormat($data);
         }
-       /* else if($name == 'QA Report'){
-            $tempArray = array();
-            $classId = '';
-            $rubricCounter = 0;
-            foreach ($data AS $row) {
-             //   pr($row);
-                $currentClassId = $row['InstitutionSiteClass']['id'];
-                if(!empty($classId) && $classId == $currentClassId){
-                    pr('not blank - '.$classId);
-                    
-                }
-                else {
-                    $classId = $currentClassId;
-                    pr('blank - '.$classId);
-                    $tempArray[] = $row;
-                    $rubricCounter = count($tempArray);
-                }
-                
-            }
-            
-            pr($tempArray);
-            die;
-        }*/
 
         if (!empty($newData)) {
             return $newData;
@@ -3364,30 +3429,24 @@ class InstitutionSitesController extends AppController {
         ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
         //create a file
 
-      /*  $csv_file = fopen('php://output', 'w');
+        $csv_file = fopen('php://output', 'w');
         header('Content-type: application/csv');
-        header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');*/
+        header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
         $header_row = $this->getHeader($this->ReportData['name']);
-     //   fputcsv($csv_file, $header_row, ',', '"');
-
-pr($header_row);
-
+        fputcsv($csv_file, $header_row, ',', '"');
         // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
         foreach ($arrData as $arrSingleResult) {
             $row = array();
             foreach ($arrSingleResult as $table => $arrFields) {
-                //pr($arrFields);
 
                 foreach ($arrFields as $col) {
                     $row[] = $col;
                 }
-                
             }
-           // pr($row);
-
-      //      fputcsv($csv_file, $row, ',', '"');
+            // pr($row);
+            fputcsv($csv_file, $row, ',', '"');
         }
-      //  fclose($csv_file);
+        fclose($csv_file);
     }
 
     public function genReportPDF($name) {
