@@ -133,7 +133,7 @@ padding: 3px 0 5px 20px;
         <div class="label"><?php echo __('Credit Hours'); ?></div>
         <div class="value">
 		<?php 
-			echo $this->Form->input('training_credit_hour_id', array('options'=>$trainingCreditHourOptions)); 
+			echo $this->Form->input('credit_hours', array('options'=>$trainingCreditHourOptions)); 
 		?>
         </div>
     </div>
