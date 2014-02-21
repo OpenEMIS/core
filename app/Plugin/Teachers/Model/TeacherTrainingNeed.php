@@ -193,7 +193,8 @@ class TeacherTrainingNeed extends TeachersAppModel {
 							'table' => 'training_sessions',
 							'alias' => 'TrainingSession',
 							'conditions' => array(
-								'TrainingCourse.id = TrainingSession.training_course_id'
+								'TrainingCourse.id = TrainingSession.training_course_id',
+								'TrainingSession.training_status_id' => 3,
 							)
 						),
 						array(
