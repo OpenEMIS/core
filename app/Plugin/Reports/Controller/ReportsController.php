@@ -56,24 +56,42 @@ class ReportsController extends ReportsAppController {
     private $pathFile = '';
 
     public function test(){
-        $this->autoRender = false;
-        $TrainingCourse = ClassRegistry::init('TrainingCourse');
-        $TrainingCourse->formatResult = true;
-        $records = $TrainingCourse->query('
-        Select TrainingCourse.code as CourseCode, TrainingCourse.title as CourseTitle, TrainingCreditHour.name as Credit, first_name as FirstName, last_name as LastName, TrainingPriority.name as Priority, TrainingStatus.name as Status from(
-        SELECT training_priority_id, training_status_id, training_course_id, first_name, last_name FROM staff_training_needs as StaffTrainingNeed INNER JOIN staff as Staff on Staff.id = StaffTrainingNeed.staff_id
-        UNION Select training_priority_id, training_status_id, training_course_id, first_name, last_name from teacher_training_needs as TeacherTrainingNeed INNER JOIN teachers as Teacher on Teacher.id = TeacherTrainingNeed.teacher_id
-        )TrainingNeed 
-        INNER JOIN training_courses as TrainingCourse on TrainingCourse.id = TrainingNeed.training_course_id
-        INNER JOIN training_credit_hours as TrainingCreditHour on TrainingCreditHour.id = TrainingCourse.training_credit_hour_id
-        INNER JOIN training_priorities as TrainingPriority on TrainingPriority.id = TrainingNeed.training_priority_id
-        INNER JOIN training_statuses as TrainingStatus on TrainingStatus.id = TrainingNeed.training_status_id
-        ORDER BY TrainingCourse.title');
-        $data = array();
-        foreach($records as $val){
-            $data[] = array_merge($val['TrainingCourse'], $val['TrainingCreditHour'],$val['TrainingNeed'],$val['TrainingPriority'],$val['TrainingStatus']);  
-        }
-
+        //$this->autoRender = false;
+        $Teacher = ClassRegistry::init('Teacher');
+        $Teacher->formatResult = true;
+        $data = $Teacher->find('all', 
+        array('fields' => array(
+            'Teacher.first_name', 'Teacher.last_name', 'TeacherPositionTitle.name',
+            'TrainingCourse.code AS CourseCode','TrainingCourse.title AS CourseTitle',
+        ),
+        'joins' => array(
+            array(
+                'table' => 'institution_site_teachers','alias' => 'InsitutionSiteTeacher','type' => 'LEFT',
+                'conditions' => array('Teacher.id = InsitutionSiteTeacher.teacher_id')
+            ),
+            array(
+                'table' => 'teacher_position_titles','alias' => 'TeacherPositionTitle','type' => 'LEFT',
+                'conditions' => array('TeacherPositionTitle.id = InsitutionSiteTeacher.teacher_position_title_id')
+            ),
+            array(
+                'table' => 'training_course_target_populations','alias' => 'TrainingCourseTargetPopulation','type' => 'LEFT',
+                'conditions' => array('TeacherPositionTitle.id = TrainingCourseTargetPopulation.position_title_id')
+            ),
+            array(
+                'table' => 'training_courses','alias' => 'TrainingCourse','type' => 'LEFT',
+                'conditions' => array('TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id', 'TrainingCourse.training_status_id'=>3)
+            ),
+            array(
+                'table' => 'training_sessions','alias' => 'TrainingSession','type' => 'LEFT',
+                'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id', 'TrainingSession.training_status_id'=>3)
+            ),
+            array(
+                'table' => 'training_session_trainees','alias' => 'TrainingSessionTrainee','type' => 'LEFT',
+                'conditions' => array('TrainingSession.id = TrainingSessionTrainee.training_session_id', 'Teacher.id' => 'TrainingSessionTrainee.identification_id', 'TrainingSessionTrainee.identification_table'=>'teachers')
+            )
+         ),
+         'order' => array('TrainingCourse.title')
+        ));
         pr($data);
     }
 
