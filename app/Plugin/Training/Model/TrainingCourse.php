@@ -153,7 +153,8 @@ class TrainingCourse extends TrainingAppModel {
 				'OR' => array(
 					'TrainingCourse.code LIKE' => $search,
 					'TrainingCourse.title LIKE' => $search
-				)
+				),
+				'TrainingCourse.training_status_id' => 3
 			),
 			'order' => array('TrainingCourse.code', 'TrainingCourse.title')
 		));
@@ -198,7 +199,8 @@ class TrainingCourse extends TrainingAppModel {
 			
 			$data[] = array(
 				'label' => trim(sprintf('%s', $positionTitleName)),
-				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName, 'position-title-table-'.$index => $positionTitleTable)
+				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName, 'position-title-table-'.$index => $positionTitleTable,
+				'position-title-validate-'.$index => $positionTitleTable . '_' . $positionTitleId)
 			);
 		}
 

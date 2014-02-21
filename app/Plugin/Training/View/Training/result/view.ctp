@@ -62,7 +62,7 @@ echo $this->Html->script('search', false);
 				<?php 
 				if (!empty($trainingSessionTrainees)){ ?>
 
-						<div class="table">
+						<div class="table full_width">
 					        <div class="table_head">
 					       		<div class="table_cell"><?php echo __('Name'); ?></div>
 					            <div class="table_cell"><?php echo __('Result'); ?></div>
