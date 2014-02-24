@@ -406,7 +406,47 @@ var jsForm = {
 		return false;
 	},
 
+	confirmActivate: function(obj) {
+		var href = $(obj).attr('href');
+		if($(obj).prop('tagName') !== 'A') {
+			href = getRootURL() + href;
+		}
+		var btn = {
+			value: i18n.General.textConfirm,
+			callback: function() { window.location.href = href; }
+		};
+		
+		var dlgOpt = {	
+			id: 'delete-dialog',
+			title: i18n.General.textConfirmation,
+			content: i18n.Training.confirmActivateMessage,
+			buttons: [btn]
+		};
+		
+		$.dialog(dlgOpt);
+		return false;
+	},
 
+	confirmInactivate: function(obj) {
+		var href = $(obj).attr('href');
+		if($(obj).prop('tagName') !== 'A') {
+			href = getRootURL() + href;
+		}
+		var btn = {
+			value: i18n.General.textConfirm,
+			callback: function() { window.location.href = href; }
+		};
+		
+		var dlgOpt = {	
+			id: 'delete-dialog',
+			title: i18n.General.textConfirmation,
+			content: i18n.Training.confirmInactivateMessage,
+			buttons: [btn]
+		};
+		
+		$.dialog(dlgOpt);
+		return false;
+	},
 
 
     datepickerUpdateSelector: function() {
@@ -694,7 +734,7 @@ var jsList = {
 		var data = app.clone();
 		var filteredData = data.find(rowTag);
 		var sortedData = filteredData.sorted({
-			by: function(v) {
+			by: function(v) {//console.log($(v).find(orderVal));
 				return $(v).find(orderVal).val().toInt();
 			}
 		});

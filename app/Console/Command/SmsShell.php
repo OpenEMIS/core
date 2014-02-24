@@ -25,15 +25,14 @@ class SmsShell extends AppShell {
     );
     
     public function main() {}
-	
-    public function _welcome() {}
-	
-    public function run() {
-        $this->out('Started - ' . date('Y-m-d H:i:s'));
-        $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
-        $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
-        $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
     
+    public function _welcome() {}
+    
+    public function run() {
+        $provider = $this->args[0];
+
+        $this->out('Started - ' . date('Y-m-d H:i:s'));
+        $this->out('Provider - ' . $provider);
         $retryTimes = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_retry_times'));
         $retryWait = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_retry_wait'));
         $retryResponses = $this->SmsResponse->find('all', array(
@@ -44,42 +43,68 @@ class SmsShell extends AppShell {
                 )
             )
         );
+
         $data = array();
         $logData = array();
-
         if(!empty($retryResponses)){
             foreach($retryResponses as $obj){
-                $param = array($smsNumberField => $obj['SmsResponse']['number'], $smsContentField => $obj['SmsResponse']['message']);
-                $HttpSocket = new HttpSocket();
-                $results = $HttpSocket->post($providerUrl, $param);
-                $response = json_decode($HttpSocket->response, true);
-
-                if($response['result']['status'] == "OK"){
-                    $data[] = array(
-                        'SmsResponse' => array(
-                            'id' => $obj['SmsResponse']['id'],
-                            'sent' => date('Y-m-d H:i:s'),
-                            'sent_count' => $obj['SmsResponse']['sent_count']+1
-                        )
-                    );
-
-                    $logData[] = array(
-                        'SmsLog' => array(
-                            'send_receive' => 1,
-                            'created' => date('Y-m-d H:i:s'),
-                            'number' => $obj['SmsResponse']['number'],
-                            'message' => $obj['SmsResponse']['message']
-                        )
-                    );
-                }
-            }
-            if(!empty($data) && !empty($logData)){
-                 $this->out('Sent ' . count($data) . ' SMS');
-                $this->SmsResponse->saveAll($data);
-                $this->SmsLog->saveAll($logData);
+               $this->sent($provider, $obj);
             }
         }
         $this->out('Ended - ' . date('Y-m-d H:i:s'));
+    }
+
+
+    public function sent($provider, $obj){
+        $providerUrl = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_provider_url'));
+        $smsNumberField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_number'));
+        $smsContentField = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'sms_content'));
+
+        $param = array($smsNumberField => $obj['SmsResponse']['number'], $smsContentField => $obj['SmsResponse']['message']);
+		$HttpSocket = new HttpSocket();
+        $data = array();
+        $logData = array();
+		$this->log(array_merge($providerURL, $param), 'sms');
+		$responseOK = false;
+        switch ($provider) {
+            case "smsdome":
+                $results = $HttpSocket->post($providerUrl, $param);
+                $response = json_decode($HttpSocket->response, true);
+				$responseOK = $response['result']['status'] == "OK";
+                break;
+			case "arabiacell":
+				$results = $HttpSocket->get($providerUrl, $param);
+				$responseOK = $HttpSocket->response['body'] == "success";
+                break;
+            default:
+                echo "Incorrect provider";
+				break;
+        }
+		$this->log($HttpSocket->response, 'sms');
+		if($responseOK) {
+			$data = array(
+				'SmsResponse' => array(
+					'id' => $obj['SmsResponse']['id'],
+					'sent' => date('Y-m-d H:i:s'),
+					'sent_count' => $obj['SmsResponse']['sent_count']+1
+				)
+			);
+
+			$logData = array(
+				'SmsLog' => array(
+					'send_receive' => 1,
+					'created' => date('Y-m-d H:i:s'),
+					'number' => $obj['SmsResponse']['number'],
+					'message' => $obj['SmsResponse']['message']
+				)
+			);
+			$this->out('Sent ' . count($data) . ' SMS');
+            $this->SmsResponse->saveAll($data);
+            $this->SmsLog->saveAll($logData);
+			echo 1;
+		} else {
+			echo 0;
+		}
     }
 }
 
