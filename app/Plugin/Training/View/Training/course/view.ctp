@@ -76,7 +76,7 @@ echo $this->Html->script('search', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Credit Hours'); ?></div>
-			<div class="value"><?php echo $data['TrainingCreditHour']['name']; ?></div>
+			<div class="value"><?php echo $obj['credit_hours']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Duration'); ?></div>

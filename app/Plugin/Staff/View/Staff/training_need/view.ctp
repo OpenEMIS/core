@@ -49,6 +49,10 @@ echo $this->Html->script('search', false);
 			<div class="label"><?php echo __('Priority'); ?></div>
 			<div class="value"><?php echo $data['TrainingPriority']['name']; ?></div>
 		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Comments'); ?></div>
+			<div class="value"><?php echo $obj['comments']; ?></div>
+		</div>
         <div class="row">
 			<div class="label"><?php echo __('Status'); ?></div>
 			<div class="value"><?php echo $data['TrainingStatus']['name']; ?></div>

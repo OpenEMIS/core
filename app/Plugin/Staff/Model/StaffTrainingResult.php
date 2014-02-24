@@ -28,7 +28,7 @@ class StaffTrainingResult extends AppModel {
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$data = $trainingSessionTrainee->find('all',
 			array(
-				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingStatus.*', 'TrainingCreditHour.*'),
+				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingStatus.*'),
 				'joins' => array(
 					array(
 						'type' => 'INNER',
@@ -52,14 +52,6 @@ class StaffTrainingResult extends AppModel {
 						'alias' => 'TrainingCourse',
 						'conditions' => array(
 							'TrainingCourse.id = TrainingSession.training_course_id'
-						)
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_credit_hours',
-						'alias' => 'TrainingCreditHour',
-						'conditions' => array(
-							'TrainingCreditHour.id = TrainingCourse.training_credit_hour_id'
 						)
 					),
 					array(
@@ -93,7 +85,7 @@ class StaffTrainingResult extends AppModel {
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$data = $trainingSessionTrainee->find('first',
 			array(
-				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingCreditHour.*', 'TrainingSession.*', 'TrainingSessionStatus.*', 
+				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingSession.*', 'TrainingSessionStatus.*', 
 					'TrainingSessionResult.*', 'CreatedUser.*', 'ModifiedUser.*'
 					),
 				'joins' => array(
@@ -119,14 +111,6 @@ class StaffTrainingResult extends AppModel {
 						'alias' => 'TrainingCourse',
 						'conditions' => array(
 							'TrainingCourse.id = TrainingSession.training_course_id'
-						)
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_credit_hours',
-						'alias' => 'TrainingCreditHour',
-						'conditions' => array(
-							'TrainingCreditHour.id = TrainingCourse.training_credit_hour_id'
 						)
 					),
 					array(

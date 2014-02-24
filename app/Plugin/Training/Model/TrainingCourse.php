@@ -20,7 +20,6 @@ class TrainingCourse extends TrainingAppModel {
 	
 	public $belongsTo = array(
 		'TrainingFieldStudy',
-		'TrainingCreditHour',
 		'TrainingModeDelivery',
 		'TrainingProvider',
 		'TrainingRequirement',
@@ -98,11 +97,11 @@ class TrainingCourse extends TrainingAppModel {
 				'message' => 'Please select a valid Category / Field of Study.'
 			)
 		),
-		'training_credit_hour_id' => array(
+		'credit_hours' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please select a valid Credit Hours.'
+				'message' => 'Please enter a valid Credit Hours.'
 			)
 		),
 		'training_mode_delivery_id' => array(
@@ -153,7 +152,8 @@ class TrainingCourse extends TrainingAppModel {
 				'OR' => array(
 					'TrainingCourse.code LIKE' => $search,
 					'TrainingCourse.title LIKE' => $search
-				)
+				),
+				'TrainingCourse.training_status_id' => 3
 			),
 			'order' => array('TrainingCourse.code', 'TrainingCourse.title')
 		));
@@ -198,7 +198,8 @@ class TrainingCourse extends TrainingAppModel {
 			
 			$data[] = array(
 				'label' => trim(sprintf('%s', $positionTitleName)),
-				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName, 'position-title-table-'.$index => $positionTitleTable)
+				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName, 'position-title-table-'.$index => $positionTitleTable,
+				'position-title-validate-'.$index => $positionTitleTable . '_' . $positionTitleId)
 			);
 		}
 
@@ -397,22 +398,27 @@ class TrainingCourse extends TrainingAppModel {
 		$trainingLevel = ClassRegistry::init('TrainingLevel');
 		$trainingLevelOptions = $trainingLevel->find('list', array('fields'=> array('id', 'name')));
 
-		$trainingCreditHour = ClassRegistry::init('TrainingCreditHour');
-		$trainingCreditHourOptions = $trainingCreditHour->find('list', array('fields'=> array('id', 'name')));
 
 		$teacherPositionTitle = ClassRegistry::init('TeacherPositionTitle');
 		$teacherPositionTitles = $teacherPositionTitle->find('list', array('fields'=>array('id', 'name')));
 
 		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
 		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
-		
-		
+
+		$configItem = ClassRegistry::init('ConfigItem');
+	 	$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
+
+	 	$trainingCreditHourOptions = array();
+	 	for($i=0;$i<=$credit_hours;$i++){
+ 			$trainingCreditHourOptions[$i] = $i;
+	 	}
+
+		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 		$controller->set('trainingFieldStudyOptions', $trainingFieldStudyOptions);
 		$controller->set('trainingModeDeliveryOptions', $trainingModeDeliveryOptions);
 		$controller->set('trainingProviderOptions', $trainingProviderOptions);
 		$controller->set('trainingRequirementOptions', $trainingRequirementOptions);
 		$controller->set('trainingLevelOptions', $trainingLevelOptions);
-		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 		$controller->set('teacherPositionTitles', $teacherPositionTitles);
 		$controller->set('staffPositionTitles', $staffPositionTitles);
 
@@ -485,7 +491,6 @@ class TrainingCourse extends TrainingAppModel {
 				} else if (isset($saveData['submitForApproval'])) {
 			      	$saveData['TrainingCourse']['training_status_id'] = 2; 
 				}
-
 
 				if($this->saveAll($saveData)){
 					$id = null;
