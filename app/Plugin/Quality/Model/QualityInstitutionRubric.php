@@ -142,7 +142,7 @@ class QualityInstitutionRubric extends QualityAppModel {
                     //  pr($data); die;
                     if (!empty($data)) {
                         $controller->request->data = $data;
-                        $selectedTeacherId = $data[$this->name]['institution_site_teacher_id'];
+                        $selectedTeacherId = $data[$this->name]['teacher_id'];
                         $selectedRubricId = $data[$this->name]['rubric_template_id'];
                         $selectedYearId = $data[$this->name]['school_year_id'];
                         $selectedClassId = $data[$this->name]['institution_site_classes_id'];
@@ -200,7 +200,7 @@ class QualityInstitutionRubric extends QualityAppModel {
         $controller->request->data[$this->name]['institution_site_id'] = empty($controller->request->data[$this->name]['institution_site_id']) ? $institutionSiteId : $controller->request->data[$this->name]['institution_site_id'];
         $controller->request->data[$this->name]['rubric_template_id'] = empty($selectedRubricId) ? 0 : $selectedRubricId;
         $controller->request->data[$this->name]['institution_site_classes_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
-        $controller->request->data[$this->name]['institution_site_teacher_id'] = empty($selectedTeacherId) ? 0 : $selectedTeacherId;
+        $controller->request->data[$this->name]['teacher_id'] = empty($selectedTeacherId) ? 0 : $selectedTeacherId;
     }
 
     public function qualityRubricView($controller, $params) {
