@@ -337,6 +337,8 @@ class RubricsTemplate extends QualityAppModel {
 
             if ($num == $dataCount - 1) {
                 $passFail = 'Fail';
+                $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
+                
                 if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                     $rubricTotal = ($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100;
                 }
