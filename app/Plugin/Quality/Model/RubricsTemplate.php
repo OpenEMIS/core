@@ -156,8 +156,8 @@ class RubricsTemplate extends QualityAppModel {
       return $data;
       } */
 
-    public function getRubricOptions() {
-        $data = $this->find('list', array('order' => 'RubricsTemplate.name', 'recursive' => -1));
+    public function getRubricOptions($order = 'name') {
+        $data = $this->find('list', array('order' => 'RubricsTemplate.'.$order, 'recursive' => -1));
 
         return $data;
     }
@@ -211,12 +211,12 @@ class RubricsTemplate extends QualityAppModel {
         $header = array('School Year', 'Institution Site Name', 'Institution Site Code', 'Class', 'Grade');
 
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
-        $rubricOptions = $this->getRubricOptions();
-
+        $rubricOptions = $this->getRubricOptions('id');
+//pr($rubricOptions);
         if (!empty($rubricOptions)) {
             foreach ($rubricOptions as $key => $item) {
                 $headerOptions = $RubricsTemplateHeader->getRubricHeaders($key);
-
+//pr($headerOptions);
                 if (!empty($headerOptions)) {
                     array_unshift($headerOptions, 'Rubric Name');
                     $headerOptions[] = 'Total Weighting';
@@ -230,6 +230,7 @@ class RubricsTemplate extends QualityAppModel {
             //  $headerOptions[] = 'Pass/Fail';
             $header = array_merge($header, $headerOptions);
         }
+       // pr($header);
         return $header;
         
     }
@@ -261,7 +262,7 @@ class RubricsTemplate extends QualityAppModel {
                         if ($rubricName != $currentRubricName) {
                             $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
                             $passFail = 'Fail';
-
+                            
                             //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                             $rubricTotal = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
                             //}

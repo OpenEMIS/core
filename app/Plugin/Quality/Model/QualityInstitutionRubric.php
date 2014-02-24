@@ -21,9 +21,9 @@ class QualityInstitutionRubric extends QualityAppModel {
     public $actsAs = array('ControllerAction');
     public $belongsTo = array(
         //'Student',
-       /* 'RubricsTemplate' => array(
-            'foreignKey' => 'rubric_template_id'
-        ),*/
+        /* 'RubricsTemplate' => array(
+          'foreignKey' => 'rubric_template_id'
+          ), */
         'ModifiedUser' => array(
             'className' => 'SecurityUser',
             'foreignKey' => 'modified_user_id'
@@ -36,34 +36,27 @@ class QualityInstitutionRubric extends QualityAppModel {
     //public $hasMany = array('RubricsTemplateColumnInfo');
 
     public $validate = array(
-            /* 'education_grade_id' => array(
-              'ruleRequired' => array(
-              'rule' => 'checkDropdownData',
-              //  'required' => true,
-              'message' => 'Please select a valid Grade.'
-              )
-              ),
-              'institution_site_classes_id' => array(
-              'ruleRequired' => array(
-              'rule' => 'checkDropdownData',
-              //  'required' => true,
-              'message' => 'Please select a valid Class.'
-              )
-              ),
-              'institution_site_teacher_id' => array(
-              'ruleRequired' => array(
-              'rule' => 'checkDropdownData',
-              //   'required' => true,
-              'message' => 'Please select a valid Teacher.'
-              )
-              ),
-              'quality_type_id' => array(
-              'ruleRequired' => array(
-              'rule' => 'checkDropdownData',
-              // 'required' => true,
-              'message' => 'Please select a valid Type.'
-              )
-              ) */
+        'institution_site_classes_id' => array(
+            'ruleRequired' => array(
+                'rule' => 'checkDropdownData',
+                //  'required' => true,
+                'message' => 'Please select a valid Class.'
+            )
+        ),
+        'teacher_id' => array(
+            'ruleRequired' => array(
+                'rule' => 'checkDropdownData',
+                //   'required' => true,
+                'message' => 'Please select a valid Teacher.'
+            )
+        ),
+        'rubric_template_id' => array(
+            'ruleRequired' => array(
+                'rule' => 'checkDropdownData',
+                // 'required' => true,
+                'message' => 'Please select a valid Rubric.'
+            )
+        )
     );
 
 //    public $statusOptions = array('Disabled', 'Enabled');
@@ -127,7 +120,7 @@ class QualityInstitutionRubric extends QualityAppModel {
         if ($type == 'add') {
             $userData = $controller->Session->read('Auth.User');
             $supervisorName = $userData['first_name'] . ' ' . $userData['last_name'];
-            
+
             $paramsLocateCounter = 0;
         } else {
             $paramsLocateCounter = 1;
@@ -158,7 +151,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 
             if ($this->saveAll($controller->request->data)) {
                 // pr('save');
-                return $controller->redirect(array('action'=> 'qualityRubric'));
+                return $controller->redirect(array('action' => 'qualityRubric'));
             }
         }
         $SchoolYear = ClassRegistry::init('SchoolYear');
@@ -223,7 +216,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $rubric = $RubricsTemplate->findById($data[$this->name]['rubric_template_id']);
-        
+
         $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
         $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_classes_id']);
 
@@ -257,4 +250,5 @@ class QualityInstitutionRubric extends QualityAppModel {
             $controller->redirect(array('action' => 'qualityRubric'));
         }
     }
+
 }
