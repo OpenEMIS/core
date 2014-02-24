@@ -798,10 +798,83 @@ class DataProcessingController extends DataProcessingAppController {
         return empty($results)? 0 : sizeof($results); exit;
     }
 
-    public function customizedReport($id){
-        if($id == '1036'){
-            $this->autoRender = false;
-            $Teacher = ClassRegistry::init('Teacher');
+   public function customizedReport($id){
+        $this->autoRender = false;
+         if($id == '1036'){
+            $TrainingSession = ClassRegistry::init('TrainingSession');
+            $BatchReport = ClassRegistry::init('BatchReport');
+            $sessions = $TrainingSession->find('all', 
+            array('fields' => array(
+                'TrainingCourse.id AS CourseID', 'TrainingSession.id as SessionID', 'TrainingCourse.code AS CourseCode','TrainingCourse.title AS CourseTitle',
+            ),
+            'joins' => array(
+                 array(
+                    'table' => 'training_courses','alias' => 'TrainingCourse','type' => 'INNER',
+                    'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id', 'TrainingCourse.training_status_id' => 3)
+                )
+            ),
+            'conditions' =>  array('TrainingSession.training_status_id' => 3),
+            'order' => array('TrainingCourse.title')
+            ));
+            $subquery = '';
+            $i = 1;
+            $fields = "'Staff.first_name As FirstName', 'Staff.last_name As LastName', 'StaffPositionTitle.name As Position'";
+            $templateFields = 'FirstName,LastName,Position';
+            $joins = "
+                array(
+                    'table' => 'institution_site_staff','alias' => 'InsitutionSiteStaff','type' => 'LEFT',
+                    'conditions' => array('Staff.id = InsitutionSiteStaff.staff_id')
+                ),
+                array(
+                    'table' => 'staff_position_titles','alias' => 'StaffPositionTitle','type' => 'LEFT',
+                    'conditions' => array('StaffPositionTitle.id = InsitutionSiteStaff.staff_position_title_id')
+                ),
+                array(
+                    'table' => 'training_course_target_populations','alias' => 'TrainingCourseTargetPopulation','type' => 'LEFT',
+                    'conditions' => array('StaffPositionTitle.id = TrainingCourseTargetPopulation.position_title_id')
+                )";
+
+            foreach($sessions as $session){
+                $joins .= ",
+                array(
+                    'table' => 'training_courses','alias' => 'TrainingCourse".$i ."','type' => 'LEFT',
+                    'conditions' => array('TrainingCourse".$i.".id = TrainingCourseTargetPopulation.training_course_id', 'TrainingCourse".$i.".training_status_id'=>3)
+                )";
+                $joins .= ",
+                array(
+                    'table' => 'training_sessions','alias' => 'TrainingSession".$i ."','type' => 'LEFT',
+                    'conditions' => array('TrainingCourse".$i.".id = TrainingSession".$i.".training_course_id', 'TrainingSession".$i.".training_status_id'=>3)
+                )";
+                $joins .= ",
+                array(
+                    'table' => 'training_session_trainees','alias' => 'TrainingSessionTrainee".$i ."','type' => 'LEFT',
+                    'conditions' => array('TrainingSession".$i.".id = TrainingSessionTrainee".$i.".training_session_id', 'Staff.id' => 'TrainingSessionTrainee".$i.".identification_id', 'TrainingSessionTrainee".$i.".identification_table'=>'staff')
+                )";
+                $joins .= ",
+                array(
+                    'table' => 'training_session_results','alias' => 'TrainingSessionResult".$i ."','type' => 'LEFT',
+                    'conditions' => array('TrainingSession".$i.".id = TrainingSessionResult".$i.".training_session_id')
+                )";
+                $yes = '"Yes"';
+                $no = '"No"';
+                $courseTitle = '"' . $session['TrainingCourse']['CourseCode'] .  '-' . $session['TrainingCourse']['CourseTitle'] . '"';
+                $fields .= ",'((CASE WHEN TrainingSessionResult".$i.".training_status_id=3 THEN ".$yes." ELSE ".$no." END)) AS " .$courseTitle . "'";
+                $templateFields .= ',' .  $session['TrainingCourse']['CourseCode'] .  '-' . $session['TrainingCourse']['CourseTitle'];
+                $i++;
+            }
+
+            $query = '$this->autoRender = false;';
+            $query .= '$this->Staff->formatResult = true;';
+            $query .= '$data = $this->Staff->find(\'all\', 
+            array(\'fields\' => array(' . $fields . '),
+            \'joins\' => array(' . $joins. '),
+            \'order\' => array(\'Staff.first_name\')
+            ));';
+            $BatchReport->id = 1036;
+            $BatchReport->saveField('template', $templateFields);
+            $BatchReport->saveField('query', $query);
+
+        }else if($id == '1037'){
             $TrainingSession = ClassRegistry::init('TrainingSession');
             $BatchReport = ClassRegistry::init('BatchReport');
             $sessions = $TrainingSession->find('all', 
@@ -860,23 +933,20 @@ class DataProcessingController extends DataProcessingAppController {
                 $no = '"No"';
                 $courseTitle = '"' . $session['TrainingCourse']['CourseCode'] .  '-' . $session['TrainingCourse']['CourseTitle'] . '"';
                 $fields .= ",'((CASE WHEN TrainingSessionResult".$i.".training_status_id=3 THEN ".$yes." ELSE ".$no." END)) AS " .$courseTitle . "'";
-                $templateFields .= ',' . $courseTitle;
+                $templateFields .= ',' .  $session['TrainingCourse']['CourseCode'] .  '-' . $session['TrainingCourse']['CourseTitle'];
                 $i++;
             }
 
             $query = '$this->autoRender = false;';
-            $query .= '$Teacher = ClassRegistry::init(\'Teacher\');';
-            $query .= '$Teacher->formatResult = true;';
-            $query .= '$data = $Teacher->find(\'all\', 
+            $query .= '$this->Teacher->formatResult = true;';
+            $query .= '$data = $this->Teacher->find(\'all\', 
             array(\'fields\' => array(' . $fields . '),
             \'joins\' => array(' . $joins. '),
             \'order\' => array(\'Teacher.first_name\')
             ));';
-            $BatchReport->id = 1036;
+            $BatchReport->id = 1037;
             $BatchReport->saveField('template', $templateFields);
             $BatchReport->saveField('query', $query);
-
-            pr($query);
         }
     }
 
