@@ -123,7 +123,7 @@ echo $this->Html->script('/Staff/js/training_self_studies', false);
 			</div>
 		</div>
 		 <div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
-		<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
+		<?php echo $this->Utility->getAddRow('Attachment');?>
 		</div>
 	</div>
 	<div class="controls view_controls">

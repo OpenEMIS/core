@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-02-18 15:45+0800\n"
+"PO-Revision-Date: 2014-02-21 16:55+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ara\n"
@@ -654,7 +654,7 @@ msgid "Behaviour"
 msgstr "Behaviour"
 
 msgid "Results"
-msgstr "Results"
+msgstr "النتائج"
 
 msgid "TOTALS"
 msgstr " الإجمالي"
@@ -2468,6 +2468,7 @@ msgstr "تقارير البيانات التناقض"
 msgid "age"
 msgstr "عمر"
 
+
 msgid "Rubrics"
 msgstr "عناوين"
 
@@ -2654,8 +2655,153 @@ msgstr "تاريخ انتهاء الصلاحية"
 msgid "Issue Location"
 msgstr "القضية الموقع"
 
+msgid "TRAINING"
+msgstr "التدريب"
+
+msgid "Courses"
+msgstr "دورات"
+
+msgid "Sessions"
+msgstr "جلسات"
+
+msgid "All"
+msgstr "كل"
+
+msgid "New"
+msgstr "جديد"
+
+msgid "Pending for Approval"
+msgstr "في انتظار الموافقة ل"
+
+msgid "Back"
+msgstr "ظهر"
+
+msgid "Course Code"
+msgstr "رمز المقرر"
+
+msgid "Course Title"
+msgstr "عنوان الدورة"
+
+msgid "Course Description"
+msgstr "بالطبع الوصف"
+
+msgid "Goal / Objectives"
+msgstr "الهدف / الأهداف"
+
+msgid "Category / Field of Study"
+msgstr "الفئة / مجال الدراسة"
+
+msgid "Target Population"
+msgstr "الهدف السكان"
+
+msgid "Add Target Population"
+msgstr "إضافة الهدف السكان"
+
+msgid "Credit Hours"
+msgstr "الساعات المعتمدة"
+
+msgid "Mode of Delivery"
+msgstr "طريقة التسليم"
+
+msgid "Training Provider"
+msgstr "مقدم التدريب"
+
+msgid "Training Requirement"
+msgstr "متطلبات التدريب"
+
+msgid "Training Level"
+msgstr "مستوى التدريب"
+
+msgid "Prerequisite"
+msgstr "شرط أساسي"
+
+msgid "Add Prerequisite"
+msgstr "إضافة المتطلب"
+
+msgid "Pass Result"
+msgstr "تمرير نتائج"
+
+msgid "Submit for Approval"
+msgstr "يقدم للموافقة"
+
+msgid "Courses Details"
+msgstr "تفاصيل الدورات"
+
+msgid "Modified by"
+msgstr "تعديلها من قبل"
+
+msgid "Modified on"
+msgstr "تعديل ل"
+
+msgid "Created by"
+msgstr "التي أنشأتها"
+
+msgid "Created on"
+msgstr "تم إنشاؤها على"
+
+msgid "Sessions Details"
+msgstr "تفاصيل الجلسات"
+
+msgid "Inactivate"
+msgstr "تعطيل"
+
+msgid "Activate"
+msgstr "تفعيل"
+
+msgid "Trainer"
+msgstr "مدرب"
+
+msgid "Trainees"
+msgstr "المتدربين"
+
+msgid "Date"
+msgstr "تاريخ"
+
+msgid "Course"
+msgstr "مسار"
+
+msgid "Results Details"
+msgstr "تفاصيل النتائج"
+
+msgid "Needs"
+msgstr "الاحتياجات"
+
+msgid "Self-Study"
+msgstr "الدراسة الذاتية"
+
+msgid "Credit"
+msgstr "ائتمان"
+
+msgid "Training Needs"
+msgstr "الاحتياجات التدريبية"
+
+msgid "Training Needs Details"
+msgstr "الاحتياجات التدريبية تفاصيل"
+
+msgid "Priority"
+msgstr "أفضلية"
+
+msgid "Training Results"
+msgstr "نتائج التدريب"
+
+msgid "Training Results Details"
+msgstr "تفاصيل نتائج التدريب"
+
+msgid "Training Self Study"
+msgstr "تدريب الدراسة الذاتية"
+
+msgid "Training Self Study Details"
+msgstr "التدريب الذاتي تفاصيل دراسة"
+
+msgid "Result"
+msgstr "نتيجة"
+
+msgid "Credits"
+msgstr "ائتمانات"
+
 msgid "Comments"
 msgstr "تعليقات"
+
 
 msgid "Your data has been saved successfully."
 msgstr "تم حفظ البيانات بنجاح."
@@ -2753,3 +2899,45 @@ msgstr "هل ترغب في مسح كافة السجلات؟"
 
 msgid "Date/Time"
 msgstr "تاريخ / وقت"
+
+msgid "Confirmation"
+msgstr "تأكيد"
+
+msgid "Confirm"
+msgstr "أكد"
+
+msgid "Do you wish to inactivate this record?"
+msgstr "هل ترغب في تعطيل هذا السجل؟?"
+
+msgid "Do you wish to activate this record?"
+msgstr "هل ترغب في تفعيل هذا السجل؟?"
+
+msgid "Field of Studies"
+msgstr "مجال الدراسات"
+
+msgid "Levels"
+msgstr "مستويات"
+
+msgid "Mode of Deliveries"
+msgstr "هطريقة التسليم"
+
+msgid "Priorities"
+msgstr "الأولويات"
+
+msgid "Providers"
+msgstr "مقدمي"
+
+msgid "Requirements"
+msgstr "متطلبات"
+
+msgid "Statuses"
+msgstr "الأوضاع"
+
+msgid "Edit Field Options"
+msgstr "تحرير خيارات حقل"
+
+msgid "Add Trainee"
+msgstr "إضافة متدرب"
+
+msgid "Identification No, First Name or Last Name"
+msgstr "تحديد لا، الاسم الأول أو اسم العائلة"

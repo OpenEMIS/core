@@ -87,6 +87,7 @@ padding: 3px 0 5px 20px;
 				<?php 
 				$i = 0;   
 				foreach($this->request->data['TrainingCourseTargetPopulation'] as $val){?>
+				<?php if(!empty($val['position_title_table'])){ ?>
 				<div class="table_row " row-id="<?php echo $i;?>">
 					<div class="table_cell cell_description">
 						<div class="input_wrapper">
@@ -106,6 +107,9 @@ padding: 3px 0 5px 20px;
 						<?php } ?>
 						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_table', array('class' => 'position-title-table-'.$i, 
 						'value'=>$val['position_title_table'])); ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_validate', array('class' => 'position-title-validate-'. 
+							' validate-target-population', 
+						'value'=>$val['position_title_table'] . '_' . $val['position_title_id'])); ?>
 					
 						</div>
 				    </div>
@@ -114,6 +118,7 @@ padding: 3px 0 5px 20px;
 				    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteTargetPopulation(this)"></span>
 				    </div>
 				</div>
+				<?php } ?>
 			<?php 
 				$i++;
 			} ?>
@@ -128,7 +133,7 @@ padding: 3px 0 5px 20px;
         <div class="label"><?php echo __('Credit Hours'); ?></div>
         <div class="value">
 		<?php 
-			echo $this->Form->input('training_credit_hour_id', array('options'=>$trainingCreditHourOptions)); 
+			echo $this->Form->input('credit_hours', array('options'=>$trainingCreditHourOptions)); 
 		?>
         </div>
     </div>
@@ -182,6 +187,7 @@ padding: 3px 0 5px 20px;
 				<?php 
 				$i = 0;   
 				foreach($this->request->data['TrainingCoursePrerequisite'] as $val){ ?>
+				<?php if(!empty($val['code'])){ ?>
 				<div class="table_row " row-id="<?php echo $i;?>">
 					<div class="table_cell cell_description">
 						<div class="input_wrapper">
@@ -191,6 +197,7 @@ padding: 3px 0 5px 20px;
 						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.training_prerequisite_course_id', array('class' => 'training-course-id-'.$i . ' validate-prerequisite', 'value'=>$val['training_prerequisite_course_id'])); ?>
 						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.code', array('value'=>$val['code'])); ?>
 						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.title', array('value'=>$val['title'])); ?>
+
 						<?php if(isset($val['id'])){ ?>
 						<?php echo $this->Form->hidden('TrainingCoursePrerequisite.' . $i . '.id', array('value'=>$val['id'], 
 						'class' => 'control-id')); ?>
@@ -202,6 +209,7 @@ padding: 3px 0 5px 20px;
 				    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deletePrerequisite(this)"></span>
 				    </div>
 				</div>
+				<?php } ?>
 			<?php 
 				$i++;
 			} ?>

@@ -10,7 +10,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		<span><?php echo __($subheader); ?></span>
 		<?php
 		
-            echo $this->Html->link(__('Back'), array('action' => 'session'), array('class' => 'divider'));
+            echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider'));
         
 		?>
 	</h1>

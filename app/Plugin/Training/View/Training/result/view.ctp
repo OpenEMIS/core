@@ -41,7 +41,7 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $data['TrainingSession']['start_date'];?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('End_date'); ?></div>
+			<div class="label"><?php echo __('End Date'); ?></div>
 			<div class="value"><?php echo $data['TrainingSession']['end_date']; ?></div>
 		</div>
 		<div class="row">
@@ -57,12 +57,12 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $data['TrainingSession']['trainer']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Trainee'); ?></div>
+			<div class="label"><?php echo __('Trainees'); ?></div>
 			<div class="value">
 				<?php 
 				if (!empty($trainingSessionTrainees)){ ?>
 
-						<div class="table">
+						<div class="table full_width">
 					        <div class="table_head">
 					       		<div class="table_cell"><?php echo __('Name'); ?></div>
 					            <div class="table_cell"><?php echo __('Result'); ?></div>

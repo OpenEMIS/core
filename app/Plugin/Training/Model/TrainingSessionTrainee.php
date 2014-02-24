@@ -36,7 +36,9 @@ class TrainingSessionTrainee extends TrainingAppModel {
 					'trainee-table-'.$index => $table,
 					'trainee-first-name-'.$index => $firstName,
 					'trainee-last-name-'.$index => $lastName,
-					'trainee-name-'.$index => trim(sprintf('%s, %s', $firstName, $lastName)))
+					'trainee-name-'.$index => trim(sprintf('%s, %s', $firstName, $lastName)),
+					'trainee-validate-'.$index => $table . '_' . $id
+					)
 			);
 		}
 	
