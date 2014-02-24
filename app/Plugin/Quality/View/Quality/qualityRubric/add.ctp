@@ -47,7 +47,7 @@ echo $this->Html->script('Quality.quality.rubric', false);
     </div>
     <div class="row">
         <div class="label"><?php echo __('Teacher'); ?></div>
-        <div class="value"><?php echo $this->Form->input('institution_site_teacher_id', array('id' => 'institutionSiteTeacherId', 'options' => $teacherOptions, 'onChange' => 'QualityRubric.updateURL(this)')); ?></div>
+        <div class="value"><?php echo $this->Form->input('teacher_id', array('id' => 'institutionSiteTeacherId', 'options' => $teacherOptions, 'onChange' => 'QualityRubric.updateURL(this)')); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Supervisor'); ?></div>
