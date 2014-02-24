@@ -48,24 +48,28 @@ $obj = $data['TrainingSessionTrainee']; ?>
 
         <div class="row">
 			<div class="label"><?php echo __('Result'); ?></div>
-			<div class="value"><?php echo $data['TrainingResultStatus']['name']; ?></div>
+			<div class="value">
+			<?php echo $data['TrainingSessionTrainee']['result']; ?>
+			</div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Completed'); ?></div>
 			<div class="value">
-				<?php if(!isset($data['TrainingSessionTrainee']['pass'])){
+				 <?php if(!isset($data['TrainingSessionTrainee']['pass'])){
                 		echo '-';
-                 }else if($data['TrainingSessionTrainee']['pass'] == 1){
-                 		echo __('Pass');
+                 }else if($data['TrainingSessionTrainee']['pass'] == '1'){
+                 		echo __('Passed');
+                 }else if($data['TrainingSessionTrainee']['pass'] == '-1'){
+                 		echo '-';
                  }else{
-                 		echo __('Fail');
+                 		echo __('Failed');
                  }
                  ?>
 			</div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Status'); ?></div>
-			<div class="value"><?php echo $data['TrainingSessionStatus']['name']; ?></div>
+			<div class="value"><?php echo $data['TrainingResultStatus']['name']; ?></div>
 		</div>
         <div class="row">
             <div class="label"><?php echo __('Modified by'); ?></div>
