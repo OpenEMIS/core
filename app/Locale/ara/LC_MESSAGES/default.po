@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-02-21 16:55+0800\n"
+"PO-Revision-Date: 2014-02-24 12:46+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ara\n"
@@ -2487,16 +2487,16 @@ msgid "Pending for Approval"
 msgstr "في انتظار الموافقة ل"
 
 msgid "Back"
-msgstr "ظهر"
+msgstr "عودة"
 
 msgid "Course Code"
-msgstr "رمز المقرر"
+msgstr "رمز الدورة"
 
 msgid "Course Title"
 msgstr "عنوان الدورة"
 
 msgid "Course Description"
-msgstr "بالطبع الوصف"
+msgstr "وصف الدورة"
 
 msgid "Goal / Objectives"
 msgstr "الهدف / الأهداف"
@@ -2505,22 +2505,22 @@ msgid "Category / Field of Study"
 msgstr "الفئة / مجال الدراسة"
 
 msgid "Target Population"
-msgstr "الهدف السكان"
+msgstr "الفئة المستهدفة"
 
 msgid "Add Target Population"
-msgstr "إضافة الهدف السكان"
+msgstr "إضافة الفئة المستهدفة"
 
 msgid "Credit Hours"
 msgstr "الساعات المعتمدة"
 
 msgid "Mode of Delivery"
-msgstr "طريقة التسليم"
+msgstr "استراتيجية التدريب"
 
 msgid "Training Provider"
 msgstr "مقدم التدريب"
 
 msgid "Training Requirement"
-msgstr "متطلبات التدريب"
+msgstr "متطلبات سابقة"
 
 msgid "Training Level"
 msgstr "مستوى التدريب"
@@ -2532,7 +2532,7 @@ msgid "Add Prerequisite"
 msgstr "إضافة المتطلب"
 
 msgid "Pass Result"
-msgstr "تمرير نتائج"
+msgstr "علامة النجاح"
 
 msgid "Submit for Approval"
 msgstr "يقدم للموافقة"
@@ -2580,7 +2580,7 @@ msgid "Needs"
 msgstr "الاحتياجات"
 
 msgid "Self-Study"
-msgstr "الدراسة الذاتية"
+msgstr "ادراسة ذاتية"
 
 msgid "Credit"
 msgstr "ائتمان"
@@ -2592,7 +2592,7 @@ msgid "Training Needs Details"
 msgstr "الاحتياجات التدريبية تفاصيل"
 
 msgid "Priority"
-msgstr "أفضلية"
+msgstr "أولوية"
 
 msgid "Training Results"
 msgstr "نتائج التدريب"
@@ -2601,16 +2601,16 @@ msgid "Training Results Details"
 msgstr "تفاصيل نتائج التدريب"
 
 msgid "Training Self Study"
-msgstr "تدريب الدراسة الذاتية"
+msgstr "تدريب ادراسة ذاتية"
 
 msgid "Training Self Study Details"
-msgstr "التدريب الذاتي تفاصيل دراسة"
+msgstr "التدريب ادراسة ذاتية دراسة"
 
 msgid "Result"
-msgstr "نتيجة"
+msgstr "العلامة"
 
 msgid "Credits"
-msgstr "ائتمانات"
+msgstr "عدد الساعات المعتمدة"
 
 msgid "Comments"
 msgstr "تعليقات"
@@ -2637,7 +2637,7 @@ msgid "Mode of Deliveries"
 msgstr "هطريقة التسليم"
 
 msgid "Priorities"
-msgstr "الأولويات"
+msgstr "أولوية"
 
 msgid "Providers"
 msgstr "مقدمي"
@@ -2656,3 +2656,6 @@ msgstr "إضافة متدرب"
 
 msgid "Identification No, First Name or Last Name"
 msgstr "تحديد لا، الاسم الأول أو اسم العائلة"
+
+msgid "Pass"
+msgstr "النتيجة"
