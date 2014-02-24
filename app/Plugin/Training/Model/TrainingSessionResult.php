@@ -63,13 +63,13 @@ class TrainingSessionResult extends TrainingAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'course'));
+			$controller->redirect(array('action'=>'result'));
 		}
 		
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
 			array(
-				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)
+				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$data['TrainingSessionResult']['training_session_id'])
 			)
 		);
 
@@ -150,6 +150,7 @@ class TrainingSessionResult extends TrainingAppModel {
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
 			$data = $this->findById($id);
+		
 			if(!empty($data)){
 				if($data['TrainingSessionResult']['training_status_id']!=1){
 					return $controller->redirect(array('action' => 'resultView', $id));
@@ -159,7 +160,7 @@ class TrainingSessionResult extends TrainingAppModel {
 				$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
 					array(
 						'recursive' => -1, 
-						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)
+						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$data['TrainingSessionResult']['training_session_id'])
 					)
 				);
 
@@ -176,7 +177,7 @@ class TrainingSessionResult extends TrainingAppModel {
 								'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
 							)
 						),
-						'conditions'=>array('TrainingSession.id'=>$data['TrainingSessionResult']['id'])
+						'conditions'=>array('TrainingSession.id'=>$data['TrainingSessionResult']['training_session_id'])
 					)
 				);
 
@@ -186,7 +187,11 @@ class TrainingSessionResult extends TrainingAppModel {
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 					}
 				}
-				$merge = array_merge(array('TrainingSessionTrainee'=>$trainingSessionTraineesVal), $trainingCourses);
+				$merge = $trainingCourses;
+
+				if(!empty($trainingSessionTraineesVal)){
+					$merge = array_merge(array('TrainingSessionTrainee'=>$trainingSessionTraineesVal), $trainingCourses);
+				}
 				$controller->request->data = array_merge($data, $merge);
 			}else{
 				return $controller->redirect(array('action' => 'result'));

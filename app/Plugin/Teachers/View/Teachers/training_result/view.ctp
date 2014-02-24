@@ -15,7 +15,7 @@ $obj = $data['TrainingSessionTrainee']; ?>
 			
 		?>
 	</h1>
-	<?php echo $this->element('alert'); ?>
+	<?php echo $this->element('alert');?>
 		
 		<div class="row">
 			<div class="label"><?php echo __('Course Code'); ?></div>
@@ -45,23 +45,23 @@ $obj = $data['TrainingSessionTrainee']; ?>
 			<div class="label"><?php echo __('Trainer'); ?></div>
 			<div class="value"><?php echo $data['TrainingSession']['trainer']; ?></div>
 		</div>
-
         <div class="row">
 			<div class="label"><?php echo __('Result'); ?></div>
 			<div class="value">
-				<?php echo $data['TrainingResultStatus']['name']; ?><br />
-				<?php echo $data['TrainingSessionTrainee']['result']; ?>
+			<?php echo $data['TrainingSessionTrainee']['result']; ?>
 			</div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Completed'); ?></div>
 			<div class="value">
-				<?php if(!isset($data['TrainingSessionTrainee']['pass'])){
+				 <?php if(!isset($data['TrainingSessionTrainee']['pass'])){
                 		echo '-';
-                 }else if($data['TrainingSessionTrainee']['pass'] == 1){
-                 		echo __('Pass');
+                 }else if($data['TrainingSessionTrainee']['pass'] == '1'){
+                 		echo __('Passed');
+                 }else if($data['TrainingSessionTrainee']['pass'] == '-1'){
+                 		echo '-';
                  }else{
-                 		echo __('Fail');
+                 		echo __('Failed');
                  }
                  ?>
 			</div>
