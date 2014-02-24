@@ -39,7 +39,7 @@ echo $this->Html->script('setup_variables', false);
 	<?php foreach($category as $type) { ?>
 		<?php foreach($type['items'] as $typeName => $options) { ?>
 		<fieldset class="section_group">
-			<legend><?php echo __($typeName); ?></legend>
+				<legend><?php echo __('Credit Hours');?></legend>
 			
 			<div class="table">
 				<div class="table_head">

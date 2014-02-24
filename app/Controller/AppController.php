@@ -103,12 +103,21 @@ class AppController extends Controller {
 	}
 	
 	public function processAction() {
-		$action = Inflector::underscore($this->action);
+            if(strpos(strtolower(substr($this->action, 0,6)), 'health') !== false){
+                $action = Inflector::underscore($this->action);
+            }
+            else if(strpos(strtolower(substr($this->action, 0,8)), 'training') !== false){
+                $action = Inflector::underscore($this->action);
+            }
+            else{
+                $action = strtolower($this->action); 
+            }
+            
 		if(!empty($this->modules)) { // for modules / plugin 
 		//search for exact match
 			foreach($this->modules as $name => $module) {
 				if($action == strtolower($name)) {
-					
+                                    
 					$this->loadModel($module);
 					$explode = explode('.', $module);
 					$plugin = count($explode) > 1 ? $explode[0] : null;
@@ -118,7 +127,7 @@ class AppController extends Controller {
 				}
 			}
 		//if nothing match, search by partial string
-			foreach($this->modules as $name => $module) {
+			foreach($this->modules as $name => $module) { 
 				if(strpos($action, strtolower($name)) === 0) {
 					$this->loadModel($module);
 					$explode = explode('.', $module);

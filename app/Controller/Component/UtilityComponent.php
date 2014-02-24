@@ -74,6 +74,7 @@ class UtilityComponent extends Component {
 		$msgList['CONFIG_SAVED'] = "Your configurations have been saved.";
 		$msgList['NO_HISTORY'] = "No history found.";
 		$msgList['NO_RECORD'] = "There are no records.";
+                $msgList['NO_RECORD_SAVED'] = "There are no records to be save.";
 		$msgList['INVALID_DATE'] = "You have entered an invalid date";
 		
 		// Login Messages

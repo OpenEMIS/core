@@ -168,7 +168,7 @@ class TrainingCourse extends TrainingAppModel {
 			
 			$data[] = array(
 				'label' => trim(sprintf('%s - %s', $trainingCourseCode, $trainingCourseTitle)),
-				'value' => array('training-course-id-'.$index => $trainingCourseId, 'training-course-title-'.$index => trim(sprintf('%s - %s', $trainingCourseCode, $trainingCourseTitle)))
+				'value' => array('training-course-id-'.$index => $trainingCourseId, 'course-code-'.$index=>$trainingCourseCode,'course-title-'.$index=>$trainingCourseTitle,'training-course-title-'.$index => trim(sprintf('%s - %s', $trainingCourseCode, $trainingCourseTitle)))
 			);
 		}
 

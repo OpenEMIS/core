@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-01-30 10:23+0800\n"
+"PO-Revision-Date: 2014-02-18 15:45+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ara\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.6.3\n"
+"X-Generator: Poedit 1.6.4\n"
 
 msgid "Home"
 msgstr "الصفحة الرئيسية"
@@ -216,10 +216,10 @@ msgid "Static Fields"
 msgstr ""
 
 msgid "Field Options"
-msgstr ""
+msgstr "خيارات الحقل"
 
 msgid "National Assessments"
-msgstr ""
+msgstr "التقييمات الوطنية"
 
 msgid "ASSESSMENT"
 msgstr "التقييم"
@@ -2468,6 +2468,18 @@ msgstr "تقارير البيانات التناقض"
 msgid "age"
 msgstr "عمر"
 
+msgid "Rubrics"
+msgstr "عناوين"
+
+msgid "Quality - Rubrics"
+msgstr "عناوين"
+
+msgid "Weighthings"
+msgstr "وزن"
+
+msgid "Pass Mark"
+msgstr "تمرير كافة"
+
 msgid "Back"
 msgstr "ظهر"
 
@@ -2482,6 +2494,138 @@ msgstr "التي أنشأتها"
 
 msgid "Created on"
 msgstr "تم إنشاؤها على"
+
+msgid "View Rubric"
+msgstr "عرض الموضوع"
+
+msgid "Descriptions"
+msgstr "الوصف"
+
+msgid "Quality"
+msgstr "جودة"
+
+msgid "Rubric Details"
+msgstr "تفاصيل الموضوع"
+
+msgid "Quality - Rubric Details"
+msgstr "جودة - تفاصيل الموضوع"
+
+msgid "Quality - Edit Rubric Details"
+msgstr "جودة - تحرير تفاصيل الموضوع"
+
+msgid "Add Heading"
+msgstr "إضافة عنوان"
+
+msgid "Add Criteria Row"
+msgstr "إضافة صف معايير"
+
+msgid "Add Level Column"
+msgstr "إضافة عمود المستوى"
+
+msgid "Edit Rubric Details"
+msgstr "تحرير تفاصيل الموضوع"
+
+msgid "QUALITY"
+msgstr "جودة"
+
+msgid "Visits"
+msgstr "مرة"
+
+msgid "Quality - Rubric"
+msgstr "جودة - الموضوع"
+
+msgid "Supervisor"
+msgstr "مشرف"
+
+msgid "Quality - Rubric Detail"
+msgstr "جودة - الموضوع التفاصيل"
+
+msgid "Color"
+msgstr "لون"
+
+msgid "REPORTS"
+msgstr "تقارير"
+
+msgid "Quality - Visit"
+msgstr "جودة - زيارة"
+
+msgid "Date"
+msgstr "تاريخ"
+
+msgid "Comment"
+msgstr "تعليق"
+
+msgid "Visit Types"
+msgstr "زيارة أنواع"
+
+msgid "National Code"
+msgstr "كود الوطنية"
+
+msgid "International Code"
+msgstr "المدونة الدولية"
+
+msgid "Quality - Add Rubric"
+msgstr "جودة - إضافة الموضوع"
+
+msgid "Add Rubric"
+msgstr "إضافة الموضوع"
+
+msgid "Quality - Rubric Infomations"
+msgstr "جودة - الموضوع إينفوميشنز"
+
+msgid "Rubric Infomations"
+msgstr "الموضوع إينفوميشنز"
+
+msgid "Quality - Edit Rubric"
+msgstr "جودة - تحرير الموضوع"
+
+msgid "Edit Rubric"
+msgstr "تحرير الموضوع"
+
+msgid "Quality - Setup Rubric Criteria"
+msgstr "معايير إعداد الموضوع - جودة"
+
+msgid "Setup Rubric Criteria"
+msgstr "معايير الإعداد الموضوع"
+
+msgid "Quality - Add Rubric Criteria"
+msgstr "جودة - إضافة معايير الموضوع"
+
+msgid "Add Rubric Criteria"
+msgstr "إضافة معايير الموضوع"
+
+msgid "Quality - Edit Rubric Criteria"
+msgstr "معايير تحرير الموضوع - جودة"
+
+msgid "Edit Rubric Criteria"
+msgstr "معايير تحرير الموضوع"
+
+msgid "Quality - Rubric Criteria"
+msgstr "معايير الموضوع - جودة"
+
+msgid "Rubric Criteria"
+msgstr "معايير الموضوع"
+
+msgid "Quality - Status"
+msgstr "جودة - الحالة"
+
+msgid "Quality - Add Status"
+msgstr "جودة - حالة الإعلان"
+
+msgid "Quality - Edit Status"
+msgstr "جودة - الحالة تحرير"
+
+msgid "Quality - Add Rubrics"
+msgstr "جودة - إضافة نماذج التقييم"
+
+msgid "Quality - Edit Rubrics"
+msgstr "جودة - تحرير نماذج التقييم"
+
+msgid "Quality - Add Visit"
+msgstr "جودة - إضافة زيارة"
+
+msgid "Quality - Edit Visit"
+msgstr "جودة - تحرير زيارة"
 
 msgid "Identities"
 msgstr "الهويات"
@@ -2606,3 +2750,6 @@ msgstr ""
 
 msgid "Do you wish to clear all records?"
 msgstr "هل ترغب في مسح كافة السجلات؟"
+
+msgid "Date/Time"
+msgstr "تاريخ / وقت"
