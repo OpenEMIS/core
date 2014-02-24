@@ -49,11 +49,9 @@ class RubricsViewHelper extends AppHelper {
                 $display .= $this->Form->hidden($this->wrapperName . '.' . $key . '.' . $modalName . '.rubric_template_header_id');
             }
 
-          //  if (!empty($data[$modalName]['order'])) {
-                $display .= $this->Form->hidden($this->wrapperName . '.' . $key . '.' . $modalName . '.order', array('id' => 'order', 'value' => ($key+1)));
-           // }
-            
-           
+            //  if (!empty($data[$modalName]['order'])) {
+            $display .= $this->Form->hidden($this->wrapperName . '.' . $key . '.' . $modalName . '.order', array('id' => 'order', 'value' => ($key + 1)));
+            // }
         } else {
             $display .= '<div class="cell cell-rubric-order">' . $data[$modalName]['display_num'] . '</div>';
             $content = !empty($data[$modalName]['title']) ? $data[$modalName]['title'] : "";
@@ -77,13 +75,13 @@ class RubricsViewHelper extends AppHelper {
 
         $width = 607 - 2;
         $singleColumnSize = (1 / $this->defaultNoOfColumns) * $width;
-       
+
         $display = '';
-       /* if (!empty($data['RubricsTemplateItem']['order'])) {
-            $display .= $this->Form->hidden($this->wrapperName . '.' . $key . '.RubricsTemplateItem.' . 'order', array('id' => 'order', 'value' => $data['RubricsTemplateItem']['order']));
-        }
-        else{*/
-            $display .= $this->Form->hidden($this->wrapperName . '.' . $key . '.RubricsTemplateItem.' . 'order', array('id' => 'order', 'value' => ($key+1)));
+        /* if (!empty($data['RubricsTemplateItem']['order'])) {
+          $display .= $this->Form->hidden($this->wrapperName . '.' . $key . '.RubricsTemplateItem.' . 'order', array('id' => 'order', 'value' => $data['RubricsTemplateItem']['order']));
+          }
+          else{ */
+        $display .= $this->Form->hidden($this->wrapperName . '.' . $key . '.RubricsTemplateItem.' . 'order', array('id' => 'order', 'value' => ($key + 1)));
         //}
 
         $display .= '<div class="cell cell-rubric-row cell-rubric-row-custom cell-rubric-row-height ' . $isFirst . '">'; //minus 1 px due to margine-left : -1px;
@@ -280,7 +278,7 @@ class RubricsViewHelper extends AppHelper {
 
     function _setupRubricQuestionField($key, $data, $mode) {
         if ($mode == 'edit') {
-           
+
             $fieldName = $this->wrapperName . '.' . $key . '.RubricsTemplateItem.';
 
             $_fieldOptions = $this->fieldSetupOptions;
@@ -294,8 +292,6 @@ class RubricsViewHelper extends AppHelper {
             if (!empty($data['RubricsTemplateItem']['rubric_template_subheader_id'])) {
                 $criteriaQuestion .= $this->Form->hidden($fieldName . 'rubric_template_subheader_id');
             }
-            
-            
         } else {
             $criteriaQuestion = (!empty($data['RubricsTemplateItem']['title'])) ? $data['RubricsTemplateItem']['title'] : '';
         }
@@ -306,7 +302,7 @@ class RubricsViewHelper extends AppHelper {
     function _setupRubricAnswerField($key, $i, $criteriaId, $data, $mode) {
         if ($mode == 'edit') {
             $fieldName = $this->wrapperName . '.' . $key . '.RubricsTemplateAnswer.' . $i;
- //pr($data);
+            //pr($data);
             $_fieldOptions = $this->fieldSetupOptions;
             $_fieldOptions['placeholder'] = 'Criteria Level Description';
             $_fieldOptions['type'] = 'textarea';
@@ -315,9 +311,8 @@ class RubricsViewHelper extends AppHelper {
 
             if (!empty($data['RubricsTemplateAnswer'][$i]['rubric_template_item_id'])) {
                 $criteriaAnswer .= $this->Form->hidden($fieldName . '.rubric_template_item_id');
-            }
-            else if(!empty($data['RubricsTemplateItem']['id'])){
-                $criteriaAnswer .= $this->Form->hidden($fieldName . '.rubric_template_item_id', array('value'=> $data['RubricsTemplateItem']['id']));
+            } else if (!empty($data['RubricsTemplateItem']['id'])) {
+                $criteriaAnswer .= $this->Form->hidden($fieldName . '.rubric_template_item_id', array('value' => $data['RubricsTemplateItem']['id']));
             }
             if (!empty($data['RubricsTemplateAnswer'][$i]['id'])) {
                 $criteriaAnswer .= $this->Form->hidden($fieldName . '.id');
@@ -351,8 +346,10 @@ class RubricsViewHelper extends AppHelper {
         return $display;
     }
 
-    public function insertQualityRubricQuestionRow($data = NULL, $key = 0) {
+    public function insertQualityRubricTableQuestionRow($data = NULL, $key = 0) {
         $headerColumnData = $data['columnHeader'];
+
+        $editable = filter_var($data['editable'], FILTER_VALIDATE_BOOLEAN);
 
         $display = $this->_setupQuestionCriteriaHeaderField($headerColumnData, 'number', $data);
 
@@ -402,7 +399,12 @@ class RubricsViewHelper extends AppHelper {
                     break;
                 }
             }
-            $display .= '<td class="cell-text-align-left answer-options ' . $selectedColumn . '" ' . $highlighted . ' onmouseover="QualityRubric.overRubricAnswer(this, \'' . $color . '\')" onmouseout="QualityRubric.outRubricAnswer(this)" onclick="QualityRubric.selectRubricAnswer(this, ' . $answerId . ',\'' . $color . '\')"><div>' . $criteriaAnswer . '</div></td>';
+            if ($editable) {
+                $display .= '<td class="cell-text-align-left answer-options ' . $selectedColumn . '" ' . $highlighted . ' onmouseover="QualityRubric.overRubricAnswer(this, \'' . $color . '\')" onmouseout="QualityRubric.outRubricAnswer(this)" onclick="QualityRubric.selectRubricAnswer(this, ' . $answerId . ',\'' . $color . '\')"><div>' . $criteriaAnswer . '</div></td>';
+            }
+            else{
+                $display .= '<td class="cell-text-align-left' . $selectedColumn . '" ' . $highlighted . ' ><div>' . $criteriaAnswer . '</div></td>';
+            }
         }
 
         $display .= '</tr>';
