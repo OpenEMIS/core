@@ -15,10 +15,13 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TeacherPositionTitle extends TeachersAppModel {
+
+	public $hasMany = array('Training.TrainingCourseTargetPopulation');
 	public function getLookupVariables() {
 		$lookup = array(
 			'Categories' => array('model' => 'Teachers.TeacherPositionTitle')
 		);
 		return $lookup;
 	}
+
 }

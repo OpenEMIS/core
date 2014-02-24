@@ -72,7 +72,8 @@ class TeachersController extends TeachersAppController {
 	    'ExtracurricularType',
         'EmploymentType',
         'SalaryAdditionType',
-        'SalaryDeductionType'
+        'SalaryDeductionType',
+        'TrainingCourse'
 	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -93,7 +94,10 @@ class TeachersController extends TeachersAppController {
         'special_need' => 'Teachers.TeacherSpecialNeed',
         'award' => 'Teachers.TeacherAward',
         'membership' => 'Teachers.TeacherMembership',
-        'license' => 'Teachers.TeacherLicense'
+        'license' => 'Teachers.TeacherLicense',
+        'training_need' => 'Teachers.TeacherTrainingNeed',
+        'training_result' => 'Teachers.TeacherTrainingResult',
+        'training_self_study' => 'Teachers.TeacherTrainingSelfStudy'
 	); 
 
     public function beforeFilter() {
@@ -1399,7 +1403,7 @@ class TeachersController extends TeachersAppController {
     }
 
     public function nationalities(){
-        $this->Navigation->addCrumb('Nationalities');
+        $this->Navigation->addCrumb(__('Nationalities'));
         $data = $this->TeacherNationality->find('all',array('conditions'=>array('TeacherNationality.teacher_id'=>$this->teacherId)));
 		$this->set('list', $data);
     }
@@ -1427,7 +1431,7 @@ class TeachersController extends TeachersAppController {
         $nationalityObj = $this->TeacherNationality->find('all',array('conditions'=>array('TeacherNationality.id' => $nationalityId)));
         
         if(!empty($nationalityObj)) {
-            $this->Navigation->addCrumb('Nationality Details');
+            $this->Navigation->addCrumb(__('Nationality Details'));
             
             $this->Session->write('TeacherNationalityId', $nationalityId);
             $this->set('nationalityObj', $nationalityObj);
@@ -1440,7 +1444,7 @@ class TeachersController extends TeachersAppController {
             $nationalityObj = $this->TeacherNationality->find('first',array('conditions'=>array('TeacherNationality.id' => $nationalityId)));
   
             if(!empty($nationalityObj)) {
-                $this->Navigation->addCrumb('Edit Nationality Details');
+                $this->Navigation->addCrumb(__('Edit Nationality Details'));
                 $this->request->data = $nationalityObj;
                
             }
@@ -1468,13 +1472,13 @@ class TeachersController extends TeachersAppController {
             $countryId = $this->TeacherNationality->field('country_id', array('TeacherNationality.id' => $id));
             $name = $this->Country->field('name', array('Country.id' => $countryId));
             $this->TeacherNationality->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(" have been deleted successfully."));
             $this->redirect(array('action' => 'nationalities', $teacherId));
 		}
     }
 	
 	public function identities(){
-        $this->Navigation->addCrumb('Identities');
+        $this->Navigation->addCrumb(__('Identities'));
         $data = $this->TeacherIdentity->find('all',array('conditions'=>array('TeacherIdentity.teacher_id'=>$this->teacherId)));
         $this->set('list', $data);
     }
@@ -1502,7 +1506,7 @@ class TeachersController extends TeachersAppController {
         $identityObj = $this->TeacherIdentity->find('all',array('conditions'=>array('TeacherIdentity.id' => $identityId)));
         
         if(!empty($identityObj)) {
-            $this->Navigation->addCrumb('Identity Details');
+            $this->Navigation->addCrumb(__('Identity Details'));
             
             $this->Session->write('TeacherIdentityId', $identityId);
             $this->set('identityObj', $identityObj);
@@ -1515,7 +1519,7 @@ class TeachersController extends TeachersAppController {
             $identityObj = $this->TeacherIdentity->find('first',array('conditions'=>array('TeacherIdentity.id' => $identityId)));
   
             if(!empty($identityObj)) {
-                $this->Navigation->addCrumb('Edit Identity Details');
+                $this->Navigation->addCrumb(__('Edit Identity Details'));
                 $this->request->data = $identityObj;
                
             }
@@ -1542,7 +1546,7 @@ class TeachersController extends TeachersAppController {
             $teacherId = $this->Session->read('TeacherId');
             $name = $this->TeacherIdentity->field('number', array('TeacherIdentity.id' => $id));
             $this->TeacherIdentity->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(" have been deleted successfully."));
             $this->redirect(array('action' => 'identities', $teacherId));
         }
     }
@@ -2076,6 +2080,74 @@ class TeachersController extends TeachersAppController {
             $data = $this->TeacherLicense->autocomplete($search);
  
             return json_encode($data);
+        }
+    }
+
+    public function attachmentsTrainingSelfStudyAdd() {
+        $this->layout = 'ajax';
+        $this->set('params', $this->params->query);
+        $this->set('_model', 'TeacherTrainingSelfStudyAttachment');
+        $this->set('jsname', 'objTrainingSelfStudies');
+        $this->render('/Elements/attachment/compact_add');
+    }
+
+    public function attachmentsTrainingSelfStudyDelete() {
+        $this->autoRender = false;
+        if($this->request->is('post')) {
+            $result = array('alertOpt' => array());
+            $this->Utility->setAjaxResult('alert', $result);
+            $id = $this->params->data['id'];
+
+            $arrMap = array('model'=>'Teachers.TeacherTrainingSelfStudyAttachment', 'foreignKey' => 'teacher_training_self_study_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+            
+            if($FileAttachment->delete($id)) {
+                $result['alertOpt']['text'] = __('File is deleted successfully.');
+            } else {
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+            }
+            
+            return json_encode($result);
+        }
+    }
+        
+    public function attachmentsTrainingSelfStudyDownload($id) {
+        $arrMap = array('model'=>'Teachers.TeacherTrainingSelfStudyAttachment', 'foreignKey' => 'teacher_training_self_study_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+        $FileAttachment->download($id);
+    }
+
+    public function getTrainingCoursesById(){
+        $this->autoRender = false;
+
+        if(isset($this->params['pass'][0]) && !empty($this->params['pass'][0])) {
+            $id = $this->params['pass'][0];
+            $type = $this->params['pass'][1];
+            if($type == 1){
+                $courseData = $this->TrainingCourse->find('all', 
+                    array(
+                        'conditions'=>array('TrainingCourse.id'=>$id), 
+                        'recursive' => -1)
+                );
+            }else{
+                $courseData = $this->TrainingCourse->find('all', 
+                    array(
+                        'fields' => array('TrainingCourse.*', 'TrainingSession.*'),
+                        'joins' => array(
+                            array(
+                                'type' => 'INNER',
+                                'table' => 'training_sessions',
+                                'alias' => 'TrainingSession',
+                                'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+                            )
+                        ),
+                        'conditions'=>array('TrainingSession.id'=>$id), 
+                        'recursive' => -1)
+                );
+            }
+            echo json_encode($courseData);
         }
     }
 }
