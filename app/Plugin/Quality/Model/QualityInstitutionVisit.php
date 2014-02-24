@@ -151,14 +151,16 @@ class QualityInstitutionVisit extends QualityAppModel {
 
     private function _setupStatusForm($controller, $params, $type) {
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
-
+        $userData = $controller->Session->read('Auth.User');
+        $supervisorName = $userData['first_name'] . ' ' . $userData['last_name'];
+        
+        
         if ($type == 'add') {
-            $userData = $controller->Session->read('Auth.User');
-            $supervisorName = $userData['first_name'] . ' ' . $userData['last_name'];
             $paramsLocateCounter = 0;
         } else {
             $paramsLocateCounter = 1;
         }
+        
 
         if ($controller->request->is('get')) {
             if ($type == 'edit') {
@@ -177,6 +179,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
                         $selectedDate = $data[$this->name]['date'];
                         $supervisorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
+                       
                     }
                 } else {
                   //  return $controller->redirect(array('action' => 'index'));
