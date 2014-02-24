@@ -251,7 +251,7 @@ class RubricsViewHelper extends AppHelper {
         $display .= '<tr><td class="rubric-col-header">Level</td>';
         //for($i = 0; $i < count($headerColumnData); $i++){
         foreach ($headerColumnData as $column) {
-            $display .= '<td>' . $column['RubricsTemplateColumnInfo']['name'] . '</td>';
+            $display .= '<td class="answer-options-header">' . $column['RubricsTemplateColumnInfo']['name'] . '</td>';
         }
 
         $display .= '</tr>';
@@ -268,7 +268,7 @@ class RubricsViewHelper extends AppHelper {
         //-------------------5th row-------------------
         $display .= '<tr><td></td>';
         foreach ($headerColumnData as $column) {
-            $display .= '<td>' . $column['RubricsTemplateColumnInfo']['weighting'] . '</td>';
+            $display .= '<td class="answer-options-header">' . $column['RubricsTemplateColumnInfo']['weighting'] . '</td>';
         }
         $display .= '</tr>';
 
@@ -372,7 +372,7 @@ class RubricsViewHelper extends AppHelper {
         $inputField .= $this->Form->hidden($qualityInstitution . 'rubric_template_item_id', $options);
         $criteriaQuestion = (!empty($data['RubricsTemplateItem']['title'])) ? $data['RubricsTemplateItem']['title'] : '';
 
-        $display .= '<tr><td class="cell_align_left">' . $criteriaQuestion . $inputField . '</td>';
+        $display .= '<tr><td class="cell-text-align-left">' . $criteriaQuestion . $inputField . '</td>';
         foreach ($headerColumnData as $k => $column) {
             $color = $column['RubricsTemplateColumnInfo']['color'];
             $highlighted = ''; //endable the color of the selected column
@@ -402,7 +402,7 @@ class RubricsViewHelper extends AppHelper {
                     break;
                 }
             }
-            $display .= '<td class="cell_align_left answer-options ' . $selectedColumn . '" ' . $highlighted . ' onmouseover="QualityRubric.overRubricAnswer(this, \'' . $color . '\')" onmouseout="QualityRubric.outRubricAnswer(this)" onclick="QualityRubric.selectRubricAnswer(this, ' . $answerId . ',\'' . $color . '\')"><div>' . $criteriaAnswer . '</div></td>';
+            $display .= '<td class="cell-text-align-left answer-options ' . $selectedColumn . '" ' . $highlighted . ' onmouseover="QualityRubric.overRubricAnswer(this, \'' . $color . '\')" onmouseout="QualityRubric.outRubricAnswer(this)" onclick="QualityRubric.selectRubricAnswer(this, ' . $answerId . ',\'' . $color . '\')"><div>' . $criteriaAnswer . '</div></td>';
         }
 
         $display .= '</tr>';

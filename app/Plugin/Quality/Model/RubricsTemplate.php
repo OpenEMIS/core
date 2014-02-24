@@ -151,25 +151,228 @@ class RubricsTemplate extends QualityAppModel {
     }
 
     //SQL Function 
-    /*public function getRubricsTemplateList($id, $mode = 'list') {
-        $data = $this->find($mode, array('recursive' => -1, 'conditions' => array('institution_id' => $id)));
-        return $data;
-    }*/
+    /* public function getRubricsTemplateList($id, $mode = 'list') {
+      $data = $this->find($mode, array('recursive' => -1, 'conditions' => array('institution_id' => $id)));
+      return $data;
+      } */
 
-    public function getRubricOptions() {
-        $data = $this->find('list', array('order' => 'RubricsTemplate.name', 'recursive' => -1));
+    public function getRubricOptions($order = 'name') {
+        $data = $this->find('list', array('order' => 'RubricsTemplate.'.$order, 'recursive' => -1));
 
         return $data;
     }
-    
-    public function getRubric($id){
-        $data = $this->find('first', array('conditions'=> array('id'=>$id), 'recursive'=> -1));
+
+    public function getRubric($id) {
+        $data = $this->find('first', array('conditions' => array('id' => $id), 'recursive' => -1));
+
+        return $data;
+    }
+
+    public function getRubricTemplateWeightingInfo() {
+
+        $options['recursive'] = -1;
+        $options['joins'] = array(
+            array(
+                'table' => 'rubrics_template_headers',
+                'alias' => 'RubricTemplateHeader',
+                'conditions' => array('RubricsTemplate.id = RubricTemplateHeader.rubric_template_id')
+            ),
+            array(
+                'table' => 'rubrics_template_subheaders',
+                'alias' => 'RubricTemplateSubheader',
+                'type' => 'LEFT',
+                'conditions' => array('RubricTemplateSubheader.rubric_template_header_id = RubricTemplateHeader.id')
+            ),
+            array(
+                'table' => 'rubrics_template_items',
+                'alias' => 'RubricTemplateItem',
+                'type' => 'LEFT',
+                'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
+            )
+        );
+        $options['fields'] = array('RubricsTemplate.id', 'RubricsTemplate.weighthings', 'RubricsTemplate.pass_mark', 'Count(RubricTemplateItem.id) AS totalQuestion');
+        $options['group'] = array('RubricsTemplate.id');
+        $data = $this->find('all', $options);
+
+
+        $RubricTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
+        $weightings = $RubricTemplateColumnInfo->getMaxWeighting();
+
+        $list = array();
+        foreach ($data AS $obj) {
+            $list[$obj['RubricsTemplate']['id']]['WeightingType'] = ($obj['RubricsTemplate']['weighthings'] == 1) ? 'point' : 'percent';
+            $list[$obj['RubricsTemplate']['id']]['PassMark'] = $obj['RubricsTemplate']['pass_mark'];
+            $list[$obj['RubricsTemplate']['id']]['TotalWeighting'] = $weightings[$obj['RubricsTemplate']['id']] * $obj[0]['totalQuestion'];
+        }
+        return $list;
+    }
+
+    public function getInstitutionQAReportHeader() {
+        $header = array('School Year', 'Institution Site Name', 'Institution Site Code', 'Class', 'Grade');
+
+        $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
+        $rubricOptions = $this->getRubricOptions('id');
+//pr($rubricOptions);
+        if (!empty($rubricOptions)) {
+            foreach ($rubricOptions as $key => $item) {
+                $headerOptions = $RubricsTemplateHeader->getRubricHeaders($key);
+//pr($headerOptions);
+                if (!empty($headerOptions)) {
+                    array_unshift($headerOptions, 'Rubric Name');
+                    $headerOptions[] = 'Total Weighting';
+                    $headerOptions[] = 'Pass/Fail';
+                    $header = array_merge($header, $headerOptions);
+                }
+            }
+
+            $headerOptions = array();
+            $headerOptions[] = 'Grand Total Weighting';
+            //  $headerOptions[] = 'Pass/Fail';
+            $header = array_merge($header, $headerOptions);
+        }
+       // pr($header);
+        return $header;
         
-        return $data;
     }
-  
-    
-    
+
+    public function processDataToCSVFormat($data) {
+        $tempArray = array();
+        $classId = '';
+        $rubricName = '';
+        $rubricId = '';
+        $rubricCounter = 0;
+        $rubricHeaderCounter = 0;
+
+        $dataCount = count($data);
+
+        $rubricTotal = 0;
+        $rubricsGrandTotal = 0;
+
+        $rubricTemplateWeightingInfo = $this->getRubricTemplateWeightingInfo();
+
+        foreach ($data AS $num => $row) {
+            $currentClassId = $row['InstitutionSiteClass']['id'];
+            $currentRubricName = $row['RubricTemplate']['name'];
+            $currentRubricId = $row['RubricTemplate']['id'];
+
+            if (!empty($classId) && !empty($rubricName) && $classId == $currentClassId /* && $rubricName == $currentRubricName */) {
+
+                foreach ($row as $key => $value) {
+                    if ($key == 'RubricTemplate') {
+                        if ($rubricName != $currentRubricName) {
+                            $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
+                            $passFail = 'Fail';
+                            
+                            //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+                            $rubricTotal = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
+                            //}
+
+                            if ($rubricTotal >= $selectedWeightingInfo['PassMark']) {
+                                $passFail = 'Pass';
+                            }
+
+                            $rubricsGrandTotal += $rubricTotal;
+
+                            $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotal;
+                            $tempArray[$rubricCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = $passFail;
+                            $tempArray[$rubricCounter - 1][$key . '_' . $rubricHeaderCounter]['name'] = $value['name'];
+
+                            //   pr($rubricName . " || " . $currentRubricName);
+                            $rubricName = $currentRubricName;
+                            $rubricId = $currentRubricId;
+                            $rubricTotal = 0;
+                        }
+                    }
+
+                    if ($key == '0') {
+                        $this->calculateRubricScore($value, $rubricTemplateWeightingInfo, $rubricHeaderCounter, $rubricId, $rubricCounter - 1, $rubricTotal, $tempArray);
+                    }
+                }
+            } else {
+                $classId = $currentClassId;
+                $rubricHeaderCounter = 0; //Reset value
+
+                $rubricId = $currentRubricId;
+                foreach ($row as $key => $value) {
+                    if ($key == '0') {
+                        $this->calculateRubricScore($value, $rubricTemplateWeightingInfo, $rubricHeaderCounter, $rubricId, $rubricCounter, $rubricTotal, $tempArray);
+                    } else if ($key == 'InstitutionSiteClass') {
+                        $tempArray[$rubricCounter][$key]['name'] = $value['name'];
+                    } else if ($key == 'RubricTemplate') {
+                        if (!empty($rubricName) && $rubricName != $currentRubricName) {
+
+                            $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
+                            $passFail = 'Fail';
+                            //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+                            $rubricTotal = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
+                            // }
+                            if ($rubricTotal >= $selectedWeightingInfo['PassMark']) {
+                                $passFail = 'Pass';
+                            }
+                            $rubricsGrandTotal += $rubricTotal;
+
+                            //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+                            $rubricsGrandTotal = round($rubricsGrandTotal / count($rubricTemplateWeightingInfo), 2);
+                            //}
+
+                            $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotal;
+                            $tempArray[$rubricCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = $passFail;
+                            $tempArray[$rubricCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
+
+                            $rubricTotal = 0;
+                            $rubricsGrandTotal = 0;
+                        }
+                        $tempArray[$rubricCounter][$key . '_' . $rubricHeaderCounter]['name'] = $value['name'];
+                    } else if ($key == 'RubricTemplateHeader') {
+                        
+                    } else {
+                        $tempArray[$rubricCounter][$key] = $value;
+                    }
+                }
+                $rubricName = $currentRubricName;
+
+                $rubricCounter = count($tempArray);
+            }
+            $rubricHeaderCounter ++;
+
+            if ($num == $dataCount - 1) {
+                $passFail = 'Fail';
+                $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
+                
+                if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+                    $rubricTotal = ($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100;
+                }
+
+                if ($rubricTotal >= $selectedWeightingInfo['PassMark']) {
+                    $passFail = 'Pass';
+                }
+
+                $rubricsGrandTotal += $rubricTotal;
+                if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+                    $rubricsGrandTotal = round($rubricsGrandTotal / count($rubricTemplateWeightingInfo), 2);
+                }
+
+                $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotal;
+                $tempArray[$rubricCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = $passFail;
+                $tempArray[$rubricCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
+            }
+        }
+
+
+        return $tempArray;
+    }
+
+    private function calculateRubricScore($value, $rubricTemplateWeightingInfo, $rubricHeaderCounter, $rubricId, $rubricCounter, &$rubricTotal, &$tempArray) {
+        foreach ($value as $sumValue) {
+            $_sumValue = (empty($sumValue) ? 0 : $sumValue);
+            $rubricTotal += $_sumValue;
+            $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
+            // if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+            $_sumValue = round(($_sumValue / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
+            //}
+            $tempArray[$rubricCounter]['total_' . $rubricHeaderCounter]['value'] = $_sumValue;
+        }
+    }
 
     /*
       public function rubricsTemplatesDetailsView($controller, $params) {

@@ -5,18 +5,20 @@ table.rubric-table{
     border-spacing: 0px;
     border-collapse: collapse;
     width:100%;
+    table-layout : fixed;
 }
 
 table.rubric-table td {
     border:1px solid #CCC;	
     vertical-align:middle;
-    text-align:center;
-    padding:4px;
+    text-align: left;
+    padding:8px;
 }
 
 table.rubric-table td.rubric-left-col-nav {
-    background-color:#CCC;
+    background-color:#efefef;
     vertical-align:top;
+    text-align: left;
 }
 
 table.rubric-table td.rubric-row-header{
@@ -24,9 +26,12 @@ table.rubric-table td.rubric-row-header{
 }
 
 table.rubric-table td.rubric-col-header{
-    background-color:#CCC;
+    background-color:#efefef;
+    text-align: center;
 }
-
+table td.answer-options-header{
+    text-align: center;
+}
 table td.answer-options{
     // background-color:yellow;
     cursor: pointer;
@@ -45,7 +50,7 @@ table td.answer-options:hover{
 }
 
 .cell-text-align-left{
-    text-align: justify !important; 
+    text-align: left !important; 
     vertical-align: top !important;
 }
 
