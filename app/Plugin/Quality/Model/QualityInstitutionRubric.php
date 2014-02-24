@@ -228,7 +228,7 @@ class QualityInstitutionRubric extends QualityAppModel {
         $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_classes_id']);
 
         $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
-        $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['institution_site_teacher_id']);
+        $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['teacher_id']);
 
         $controller->set('rubric_template_id', $data[$this->name]['rubric_template_id']);
         $controller->set('schoolYear', $year['SchoolYear']['name']);
