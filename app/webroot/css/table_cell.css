@@ -1,5 +1,6 @@
 .cell_id_no { width: 110px; }
 .cell_user_count { width: 90px; }
+.cell_status { width: 100px; text-align:center;}
 
 /* security groups */
 .cell_group_role { width: 180px; }

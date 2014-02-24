@@ -51,7 +51,7 @@ echo $this->Html->script('setup_variables', false);
 					<div class="table_cell"><?php echo $arrVal['SmsLog']['created']; ?></div>
 					<div class="table_cell"><?php echo $arrVal['SmsLog']['number'];?></div>
 					<div class="table_cell"><?php echo $arrVal['SmsLog']['message'];?></div>
-					<div class="table_cell"><?php echo ($arrVal['SmsLog']['send_receive'])==1? __('Sent') : __('Recieved');?></div>
+					<div class="table_cell"><?php echo ($arrVal['SmsLog']['send_receive'])==1? __('Sent') : __('Received');?></div>
 					</div>
 			<?php	}
 			}
