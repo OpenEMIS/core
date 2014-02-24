@@ -327,7 +327,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		 	$trainingCourseOptions = array();
 			$trainingCourses= $trainingCourse->find('all', 
 				array(
-				'fields'=> array('TrainingCourse.id', 'TrainingCourse.code', 'TrainingCourse.training_credit_hour_id'),
+				'fields'=> array('TrainingCourse.id', 'TrainingCourse.code', 'TrainingCourse.credit_hours'),
 				'joins' => array(
 					array(
 							'type' => 'LEFT',
@@ -356,15 +356,10 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			if(!empty($trainingCourses)){
 				foreach($trainingCourses as $val){
 					$trainingCourseOptions[$val['TrainingCourse']['id']] = $val['TrainingCourse']['code'];
-					$trainingCreditHours = $trainingCreditHour->find('first', 
-						array(
-						'fields'=>array('min', 'max'), 
-						'recursive' => -1,
-						'conditions'=>array('TrainingCreditHour.id' => $val['TrainingCourse']['training_credit_hour_id'])
-						)
-					);
 					$i = 0;
-					for($i = $trainingCreditHours['TrainingCreditHour']['min']; $i <= $trainingCreditHours['TrainingCreditHour']['max']; $i++){
+					$configItem = ClassRegistry::init('ConfigItem');
+	 				$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
+					for($i = 0; $i <= $credit_hours; $i++){
 						$trainingCreditHourOptions[$i] =  $i;
 					}
 				}
