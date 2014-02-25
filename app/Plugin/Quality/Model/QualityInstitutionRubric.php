@@ -147,11 +147,18 @@ class QualityInstitutionRubric extends QualityAppModel {
                 }
             }
         } else {
-            //pr($controller->request->data);
+           // pr($controller->request->data); die;
 
             if ($this->saveAll($controller->request->data)) {
                 // pr('save');
-                return $controller->redirect(array('action' => 'qualityRubric'));
+                if($type == 'add'){
+                    $id = $this->id;
+                    
+                    return $controller->redirect(array('action' => 'qualityRubricHeader',$id, $controller->request->data['QualityInstitutionRubric']['rubric_template_id']));
+                }
+                else{
+                    return $controller->redirect(array('action' => 'qualityRubric'));
+                }
             }
         }
         $SchoolYear = ClassRegistry::init('SchoolYear');
