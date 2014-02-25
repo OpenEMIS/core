@@ -23,10 +23,10 @@ class TrainingLevel extends AppModel {
 	}
 
 	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('SpecialNeedType.order')));
+		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('TrainingLevel.order')));
 		$list = array();
 		foreach($data as $obj){
-			$list[$obj['SpecialNeedType']['id']] = $obj['SpecialNeedType']['name'];
+			$list[$obj['TrainingLevel']['id']] = $obj['TrainingLevel']['name'];
 		}
 
 		return $list;

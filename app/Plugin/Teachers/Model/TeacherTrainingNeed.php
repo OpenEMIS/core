@@ -56,13 +56,9 @@ class TeacherTrainingNeed extends TeachersAppModel {
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
 		$data = $this->find('all', array('conditions'=> array('teacher_id'=> $controller->teacherId)));
-		
-		$trainingCreditHour = ClassRegistry::init('TrainingCreditHour');
-		$trainingCreditHourOptions = $trainingCreditHour->find('list', array('fields'=> array('id', 'name')));
-		
+	
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
-		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 		
 	}
 
@@ -176,7 +172,7 @@ class TeacherTrainingNeed extends TeachersAppModel {
 			 	}
 				$trainingCourseOptions = $trainingCourse->find('list', 
 					array(
-					'fields'=> array('TrainingCourse.id', 'TrainingCourse.title', 'TrainingSessionTrainee.id'),
+					'fields'=> array('TrainingCourse.id', 'TrainingCourse.code', 'TrainingSessionTrainee.id'),
 					'joins' => array(
 						array(
 							'type' => 'LEFT',
