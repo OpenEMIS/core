@@ -37,11 +37,14 @@ echo $this->Html->script('search', false);
 			<div class="label"><?php echo __('Number'); ?></div>
 			<div class="value"><?php echo $obj['license_number']; ?></div>
 		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Expiry Date'); ?></div>
+			<div class="value"><?php echo $obj['expiry_date']; ?></div>
+		</div>
         <div class="row">
             <div class="label"><?php echo __('Modified by'); ?></div>
             <div class="value"><?php echo trim($data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']); ?></div>
         </div>
-        
         <div class="row">
             <div class="label"><?php echo __('Modified on'); ?></div>
             <div class="value"><?php echo $obj['modified']; ?></div>
