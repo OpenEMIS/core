@@ -219,9 +219,14 @@ class NavigationComponent extends Component {
 					$this->createLink('Finances', 'Census', 'finances'),
 					$this->createLink('More', 'Census', 'otherforms')
 				),
+                                'QUALITY' => array(
+                                        $this->createLink('Rubrics', 'Quality', 'qualityRubric'),
+                                        $this->createLink('Visits', 'Quality', 'qualityVisit'),
+                                ),
 				'REPORTS' => array(
 					$this->createLink('General', 'InstitutionSites', 'reportsGeneral'),
-					$this->createLink('Details', 'InstitutionSites', 'reportsDetails')
+					$this->createLink('Details', 'InstitutionSites', 'reportsDetails'),
+                                        $this->createLink('Quality', 'InstitutionSites', 'reportsQuality')
 				)
 			)
 		);
@@ -270,6 +275,11 @@ class NavigationComponent extends Component {
 					$this->createLink('Courses', 'Training', 'course'),
 					$this->createLink('Sessions', 'Training', 'session'),
 					$this->createLink('Results', 'Training', 'result')
+				),
+                                'QUALITY' => array(
+					'_controller' => 'Quality',
+					$this->createLink('Rubrics', 'Quality', 'rubricsTemplates'),
+					$this->createLink('Status', 'Quality', 'status')
 				)
 			)
 		);

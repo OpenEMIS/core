@@ -30,6 +30,8 @@ class ReportsNavigationComponent extends Component {
 					$navigation->createLink('Student Reports', $controller, 'Student'),
 					$navigation->createLink('Teacher Reports', $controller, 'Teacher'),
 					$navigation->createLink('Staff Reports', $controller, 'Staff'),
+					$navigation->createLink('Training Reports', $controller, 'Training'),
+					$navigation->createLink('Quality Assurance Reports', $controller, 'QualityAssurance'),
 					$navigation->createLink('Consolidated Reports', $controller, 'Consolidated'),
                     $navigation->createLink('Data Quality Reports', $controller, 'DataQuality'),
                     $navigation->createLink('Indicator Reports', $controller, 'Indicator'),
