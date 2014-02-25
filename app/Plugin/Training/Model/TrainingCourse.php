@@ -20,6 +20,7 @@ class TrainingCourse extends TrainingAppModel {
 	
 	public $belongsTo = array(
 		'TrainingFieldStudy',
+		'TrainingCourseType',
 		'TrainingModeDelivery',
 		'TrainingProvider',
 		'TrainingRequirement',
@@ -95,6 +96,13 @@ class TrainingCourse extends TrainingAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please select a valid Category / Field of Study.'
+			)
+		),
+		'training_course_type_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid Course Type.'
 			)
 		),
 		'credit_hours' => array(
@@ -405,6 +413,10 @@ class TrainingCourse extends TrainingAppModel {
 		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
 		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
 
+		$trainingCourseType = ClassRegistry::init('TrainingCourseType');
+		$trainingCourseTypeOptions = $trainingCourseType->find('list', array('fields'=> array('id', 'name')));
+	
+
 		$configItem = ClassRegistry::init('ConfigItem');
 	 	$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
 
@@ -421,6 +433,7 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('trainingLevelOptions', $trainingLevelOptions);
 		$controller->set('teacherPositionTitles', $teacherPositionTitles);
 		$controller->set('staffPositionTitles', $staffPositionTitles);
+		$controller->set('trainingCourseTypeOptions', $trainingCourseTypeOptions);
 
 		$controller->set('modelName', $this->name);
 		
