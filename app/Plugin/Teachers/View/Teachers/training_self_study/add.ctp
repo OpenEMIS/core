@@ -2,7 +2,6 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
 echo $this->Html->script('attachments', false);
-echo $this->Html->script('/Teachers/js/training_self_studies', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -60,12 +59,16 @@ echo $this->Html->script('/Teachers/js/training_self_studies', false);
 		?>
         </div>
     </div>
-    <div class="row">
-        <div class="label"><?php echo __('Course Type'); ?></div>
+     <div class="row">
+        <div class="label"><?php echo __('Location'); ?></div>
         <div class="value">
-		<?php 
-			echo $this->Form->input('training_course_type_id', array('options'=>$trainingCourseTypeOptions)); 
-		?>
+ 			<?php echo $this->Form->input('location');?>
+        </div>
+    </div>
+     <div class="row">
+        <div class="label"><?php echo __('Trainer'); ?></div>
+        <div class="value">
+        	<?php echo $this->Form->input('trainer');?>
         </div>
     </div>
     <div class="row">

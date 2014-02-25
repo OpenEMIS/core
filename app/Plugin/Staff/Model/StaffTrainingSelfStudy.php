@@ -26,7 +26,6 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
-		'TrainingCourseType',
 		'TrainingStatus',
 	);
 
@@ -232,13 +231,8 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			$trainingCreditHourOptions[$i] =  $i;
 		}
 
-		$trainingCourseType = ClassRegistry::init('TrainingCourseType');
-		$trainingCourseTypeOptions = $trainingCourseType->find('list', array('fields'=> array('id', 'name')));
-	
-		$controller->set('trainingCourseTypeOptions', $trainingCourseTypeOptions);
 		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 
-	 
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
