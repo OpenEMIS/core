@@ -77,6 +77,15 @@ padding: 3px 0 5px 20px;
 		?>
         </div>
     </div>
+    
+    <div class="row">
+        <div class="label"><?php echo __('Course Type'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_course_type_id', array('options'=>$trainingCourseTypeOptions)); 
+		?>
+        </div>
+    </div>
 	 <div class="row row_target_population" style="min-height:45px;">
 		<div class="label"><?php echo __('Target Population'); ?></div>
 		<div class="value">
