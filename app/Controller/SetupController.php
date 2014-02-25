@@ -90,6 +90,7 @@ class SetupController extends AppController {
 		'HealthTestType',
 		'SpecialNeedType',
 		'LicenseType',
+		'TrainingCourseType',
 		'TrainingFieldStudy',
 		'TrainingLevel',
 		'TrainingModeDelivery',
@@ -336,6 +337,13 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Consultation Types',
 			'items' => $this->HealthConsultationType->getLookupVariables()
+		));
+
+
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Course Types',
+			'items' => $this->TrainingCourseType->getLookupVariables()
 		));
 
 		$lookup[] = array('Training' => array(
