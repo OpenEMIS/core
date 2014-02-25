@@ -182,4 +182,13 @@ class QualityStatus extends QualityAppModel {
         return $data;
     }
 
+    public function getRubricStatus($year, $rubricId){
+        $data = $this->find('first', array('conditions'=>array('year'=>$year,'rubric_template_id'=> $rubricId), 'recurisve'=> -1));
+        $enabled = 0;
+        if(!empty($data)){
+            $enabled = $data[$this->name]['status'];
+        }
+        
+        return ($enabled == 1)? 'true' : 'false';
+    }
 }

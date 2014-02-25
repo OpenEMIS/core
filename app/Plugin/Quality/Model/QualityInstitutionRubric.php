@@ -166,7 +166,8 @@ class QualityInstitutionRubric extends QualityAppModel {
         $selectedYearId = !empty($params['pass'][0 + $paramsLocateCounter]) ? $params['pass'][0 + $paramsLocateCounter] : $selectedYearId;
 
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-        $rubricOptions = $RubricsTemplate->getRubricOptions();
+        $rubricOptions = $RubricsTemplate->getEnabledRubricsOptions($schoolYearOptions[$selectedYearId]);
+     //   pr($schoolYearOptions[$selectedYearId]); die;
         $selectedRubricId = !empty($selectedRubricId) ? $selectedRubricId : key($rubricOptions);
         $selectedRubricId = !empty($params['pass'][1 + $paramsLocateCounter]) ? $params['pass'][1 + $paramsLocateCounter] : $selectedRubricId;
 
@@ -223,6 +224,11 @@ class QualityInstitutionRubric extends QualityAppModel {
         $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
         $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['teacher_id']);
 
+        $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
+        $editiable = $QualityStatus->getRubricStatus($year['SchoolYear']['name'],$data[$this->name]['rubric_template_id']);
+      
+        $controller->Session->write('QualityRubric.editable', $editiable);
+        
         $controller->set('rubric_template_id', $data[$this->name]['rubric_template_id']);
         $controller->set('schoolYear', $year['SchoolYear']['name']);
         $controller->set('rubric', $rubric['RubricsTemplate']['name']);
