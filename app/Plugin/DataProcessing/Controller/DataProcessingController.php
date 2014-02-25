@@ -723,7 +723,7 @@ class DataProcessingController extends DataProcessingAppController {
             $PID = shell_exec($shellCmd);
             //$command = 'ls';
             //exec($shellCmd, $output);
-            print_r($PID);
+            //print_r($PID);
         }
     }
 	
