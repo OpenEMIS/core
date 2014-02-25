@@ -52,6 +52,22 @@ echo $this->Html->script('/Teachers/js/training_self_studies', false);
 		<div class="label"><?php echo __('Course Description'); ?></div>
 		<div class="value"><?php echo $this->Form->input('description', array('type'=>'textarea'));?></div>
 	</div>
+	<div class="row">
+        <div class="label"><?php echo __('Goal / Objectives'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('objective', array('type'=>'textarea')); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Course Type'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_course_type_id', array('options'=>$trainingCourseTypeOptions)); 
+		?>
+        </div>
+    </div>
     <div class="row">
         <div class="label"><?php echo __('Credits'); ?></div>
         <div class="value">

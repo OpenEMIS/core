@@ -26,6 +26,7 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
+		'TrainingCourseType',
 		'TrainingStatus',
 	);
 
@@ -219,71 +220,24 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
 	function setup_add_edit_form($controller, $params){
 		$controller->set('modelName', $this->name);
 
-		$trainingCourseOptions = array();
-		$trainingCourse = ClassRegistry::init('TrainingCourse');
-		$trainingCreditHour = ClassRegistry::init('TrainingCreditHour');
 		$trainingCreditHourOptions = array();
 
 		if($controller->Session->check('TeacherId')){
 		 	$teacherId = $controller->Session->read('TeacherId');
-		
-			
-			$institutionSiteTeacher = ClassRegistry::init('InstitutionSiteTeacher');
-		 	$teacherData = $institutionSiteTeacher->find('all', array('recursive'=>-1,'conditions'=>array('teacher_id' => $teacherId)));
-		 	$teacherPositionTitleId = array();
-		 	foreach($teacherData as $val){
-		 		if(!empty($val['InstitutionSiteTeacher']['position_title_id'])){
-		 			$teacherPositionTitleId[] = $val['InstitutionSiteTeacher']['position_title_id'];
-		 		}
-		 	}
-		 	$trainingCourseOptions = array();
-			$trainingCourses= $trainingCourse->find('all', 
-				array(
-				'fields'=> array('TrainingCourse.id', 'TrainingCourse.code', 'TrainingCourse.credit_hours'),
-				'joins' => array(
-					array(
-							'type' => 'LEFT',
-							'table' => 'training_course_target_populations',
-							'alias' => 'TrainingCourseTargetPopulation',
-							'conditions' => array(
-								'TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id',
-							     'TrainingCourseTargetPopulation.position_title_id' => $teacherPositionTitleId,
-							     'TrainingCourseTargetPopulation.position_title_table' => 'teacher_position_titles'
-							)
-					),
-					array(
-						'type' => 'INNER',
-							'table' => 'training_sessions',
-							'alias' => 'TrainingSession',
-							'conditions' => array(
-								'TrainingCourse.id = TrainingSession.training_course_id'
-							)
-					)
-				),
-				'conditions' =>array(
-					'TrainingCourse.training_status_id' => 3
-				))
-			);
-
-			if(!empty($trainingCourses)){
-				foreach($trainingCourses as $val){
-					$trainingCourseOptions[$val['TrainingCourse']['id']] = $val['TrainingCourse']['code'];
-					$i = 0;
-					$configItem = ClassRegistry::init('ConfigItem');
-	 				$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
-					for($i = 0; $i <= $credit_hours; $i++){
-						$trainingCreditHourOptions[$i] =  $i;
-					}
-				}
-			}
-
+		}
+		$i = 0;
+		$configItem = ClassRegistry::init('ConfigItem');
+		$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
+		for($i = 0; $i <= $credit_hours; $i++){
+			$trainingCreditHourOptions[$i] =  $i;
 		}
 
+		$trainingCourseType = ClassRegistry::init('TrainingCourseType');
+		$trainingCourseTypeOptions = $trainingCourseType->find('list', array('fields'=> array('id', 'name')));
+	
+		$controller->set('trainingCourseTypeOptions', $trainingCourseTypeOptions);
 		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
-		$controller->set('trainingCourseOptions', $trainingCourseOptions);
 
-		$trainingCourseId = isset($controller->request->data['TeacherTrainingSelfStudy']['training_session_id']) ? $controller->request->data['TeacherTrainingSelfStudy']['training_session_id'] : "";
-    	$controller->set('selectedCourse', $trainingCourseId);
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;

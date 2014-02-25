@@ -23,10 +23,10 @@ class TrainingPriority extends AppModel {
 	}
 
 	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('SpecialNeedType.order')));
+		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('TrainingPriority.order')));
 		$list = array();
 		foreach($data as $obj){
-			$list[$obj['SpecialNeedType']['id']] = $obj['SpecialNeedType']['name'];
+			$list[$obj['TrainingPriority']['id']] = $obj['TrainingPriority']['name'];
 		}
 
 		return $list;
