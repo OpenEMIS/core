@@ -118,5 +118,9 @@ var i18n = {
 	},
 	SMS: {
 		confirmModifySmsMessageContent: '<?php echo T("Note: Please clear the Responses page as existing responses may no longer match the updated Messages.", true); ?>'
+	},
+	Training: {
+		confirmActivateMessage: '<?php echo T("Do you wish to activate this record?", true); ?>',
+		confirmInactivateMessage: '<?php echo T("Do you wish to inactivate this record?", true); ?>'
 	}
 }

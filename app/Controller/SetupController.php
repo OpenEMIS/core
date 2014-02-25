@@ -89,8 +89,17 @@ class SetupController extends AppController {
 		'HealthConsultationType',
 		'HealthTestType',
 		'SpecialNeedType',
-		'LicenseType'
+		'LicenseType',
+		'TrainingCourseType',
+		'TrainingFieldStudy',
+		'TrainingLevel',
+		'TrainingModeDelivery',
+		'TrainingPriority',
+		'TrainingProvider',
+		'TrainingRequirement',
+		'TrainingStatus'
 	);
+
 	
 	private $CustomFieldModelLists = array(
 		'InstitutionCustomField' => array('hasSiteType' => false, 'label' => 'Institution Custom Fields'),
@@ -330,6 +339,58 @@ class SetupController extends AppController {
 			'items' => $this->HealthConsultationType->getLookupVariables()
 		));
 
+
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Course Types',
+			'items' => $this->TrainingCourseType->getLookupVariables()
+		));
+
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Field of Studies',
+			'items' => $this->TrainingFieldStudy->getLookupVariables()
+		));
+
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Levels',
+			'items' => $this->TrainingLevel->getLookupVariables()
+		));
+		
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Mode of Deliveries',
+			'items' => $this->TrainingModeDelivery->getLookupVariables()
+		));
+
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Priorities',
+			'items' => $this->TrainingPriority->getLookupVariables()
+		));
+
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Providers',
+			'items' => $this->TrainingProvider->getLookupVariables()
+		));
+		
+		
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Requirements',
+			'items' => $this->TrainingRequirement->getLookupVariables()
+		));
+
+		$lookup[] = array('Training' => array(
+			'optgroup' => true,
+			'name' => 'Statuses',
+			'items' => $this->TrainingStatus->getLookupVariables()
+		));
+		
+
+
 		// Student
 		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
@@ -561,6 +622,16 @@ class SetupController extends AppController {
 	}
 
 	public function setupVariablesAddContactType() {
+		$this->layout = 'ajax';
+		$model = $this->params->query['model'];
+		$order = $this->params->query['order'] + 1;
+		$index = $this->params->query['index'];
+		$conditions = isset($this->params->query['conditions']) ? $this->params->query['conditions'] : array();
+		
+		$this->set('params', array($model, $order, $index, $conditions));
+	}
+
+	public function setupVariablesAddTrainingCreditHour() {
 		$this->layout = 'ajax';
 		$model = $this->params->query['model'];
 		$order = $this->params->query['order'] + 1;

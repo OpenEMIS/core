@@ -265,6 +265,11 @@ class NavigationComponent extends Component {
 					$this->createLink('Messages', 'Sms', 'messages'),
 					$this->createLink('Responses', 'Sms', 'responses'),
 					$this->createLink('Logs', 'Sms', 'logs')
+				),
+				'TRAINING' => array(
+					$this->createLink('Courses', 'Training', 'course'),
+					$this->createLink('Sessions', 'Training', 'session'),
+					$this->createLink('Results', 'Training', 'result')
 				)
 			)
 		);
