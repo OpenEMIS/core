@@ -3,8 +3,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Training/js/sessions', false);
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
-
-
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>

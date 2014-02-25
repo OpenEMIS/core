@@ -55,8 +55,12 @@ $obj = $data[$modelName]; ?>
 			<div class="value"><?php echo $obj['objective']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Course Type'); ?></div>
-			<div class="value"><?php echo $data['TrainingCourseType']['name']; ?></div>
+			<div class="label"><?php echo __('Location'); ?></div>
+			<div class="value"><?php echo $obj['location']; ?></div>
+		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Trainer'); ?></div>
+			<div class="value"><?php echo $obj['trainer']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Credit Hours'); ?></div>

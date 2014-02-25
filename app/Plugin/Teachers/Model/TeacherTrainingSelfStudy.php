@@ -26,7 +26,6 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
-		'TrainingCourseType',
 		'TrainingStatus',
 	);
 
@@ -232,10 +231,6 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
 			$trainingCreditHourOptions[$i] =  $i;
 		}
 
-		$trainingCourseType = ClassRegistry::init('TrainingCourseType');
-		$trainingCourseTypeOptions = $trainingCourseType->find('list', array('fields'=> array('id', 'name')));
-	
-		$controller->set('trainingCourseTypeOptions', $trainingCourseTypeOptions);
 		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 
 		if($controller->request->is('get')){
