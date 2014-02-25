@@ -298,7 +298,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         $id = empty($params['pass'][0]) ? NULL : $params['pass'][0];
 
         if (!empty($id)) {
-            $controller->FileUplHoader->fileModel = $this->name;
+            $controller->FileUploader->fileModel = $this->name;
             $controller->FileUploader->dbPrefix = 'file';
             $controller->FileUploader->downloadFile($id);
         }
