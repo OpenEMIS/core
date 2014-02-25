@@ -88,6 +88,7 @@ class SetupController extends AppController {
 		'HealthAllergyType',
 		'HealthConsultationType',
 		'HealthTestType',
+                'QualityVisitType',
 		'SpecialNeedType',
 		'LicenseType',
 		'TrainingCourseType',
@@ -180,6 +181,13 @@ class SetupController extends AppController {
 			'edit' => 'customFieldsEdit',
 			'optgroup' => true,
 			'name' => 'Staff Custom Fields (Academic)'
+		));
+                
+                //Quality
+                $lookup[] = array('Quality' => array(
+			'optgroup' => true,
+			'name' => 'Visit Types',
+			'items' => $this->QualityVisitType->getLookupVariables()
 		));
 		
 		// Census
