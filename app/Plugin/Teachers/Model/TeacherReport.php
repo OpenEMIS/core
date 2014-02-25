@@ -25,7 +25,7 @@ class TeacherReport extends TeachersAppModel {
         'QA Report' => array(
             'Model' => 'QualityInstitutionRubric',
             'fields' => array(
-                'SchoolYear' => array(
+                'SchoolYear1' => array(
                     'name' => ''
                 ),
                 'InstitutionSite' => array(
@@ -50,12 +50,12 @@ class TeacherReport extends TeachersAppModel {
                     'SUM(weighting)' => ''
                 ),
             ),
-            'FileName' => 'Report_Quality_Assurance'
+            'FileName' => 'Report_Teacher_Quality_Assurance'
         ),
         'Visit Report' => array(
             'Model' => 'QualityInstitutionVisit',
             'fields' => array(
-               /* 'SchoolYear' => array(
+                'SchoolYear' => array(
                     'name' => 'School Year'
                 ),
                'InstitutionSite' => array(
@@ -83,14 +83,12 @@ class TeacherReport extends TeachersAppModel {
                 'SecurityUser' => array(
                     'first_name' => 'Supervisor First Name',
                     'last_name' => 'Supervisor Last Name'
-                )*/
+                )
             ),
-            'FileName' => 'Report_Quality_Vist'
+            'FileName' => 'Report_Teacher_Quality_Visit'
         )
     );
     public function report($controller, $params) {
-        $this->teacherId = $controller->Session->read('TeacherObj.Teacher.id');
-        
         $controller->Navigation->addCrumb('Reports - Quality');
         $data = array('Reports - Quality' => array(
                 array('name' => 'QA Report', 'types' => array('CSV')),
@@ -99,33 +97,39 @@ class TeacherReport extends TeachersAppModel {
         ));
         $controller->set('data', $data);
     }
-
-    public function reportGen($name, $type) { //$this->genReport('Site Details','CSV');
+   // public function reportGen($name, $type) { /
+    public function reportGen($controller, $params){ //$this->genReport('Site Details','CSV');
       //  $this->autoRender = false;
+        $this->teacherId = $controller->Session->read('TeacherObj.Teacher.id');
+        
+        $name = $params['pass'][0];
+        $type = $params['pass'][1];
         $this->render = false;
         $this->ReportData['name'] = $name;
         $this->ReportData['type'] = $type;
-pr($this);
-       /* if (method_exists($this, 'gen' . $type)) {
+
+     //  /* if (method_exists($this, 'gen' . $type)) {
             if ($type == 'CSV') {
                 $data = $this->getReportData($this->ReportData['name']);
                 $this->genCSV($data, $this->ReportData['name']);
             }
-        }*/
+       // }*/
     }
     
     private function getReportData($name) {
-        // pr($name);die;
         if (array_key_exists($name, $this->reportMapping)) {
+            $modal = ClassRegistry::init('Quality.'.$this->reportMapping[$name]['Model']);
+            
             $whereKey = ($this->reportMapping[$name]['Model'] == 'Teachers') ? 'id' : 'teacher_id';
-            $cond = array($this->reportMapping[$name]['Model'] . "." . $whereKey => $this->$teacherId);
-            $options = array('fields' => $this->getFields($name), 'conditions' => $cond);
+            $cond = array($this->reportMapping[$name]['Model'] . "." . $whereKey => $this->teacherId);
+            $options = array('fields' => $this->getFields($name)/*, 'conditions' => $cond*/);
 
             if($this->reportMapping[$name]['Model'] == 'QualityInstitutionVisit'){
-                 $options['recursive'] = -1;
+                 
+                $options['recursive'] = -1;
           
                  $options['joins'] = array(
-                    /*  array(
+                      array(
                         'table' => 'school_years',
                         'alias' => 'SchoolYear',
                         'conditions' => array('QualityInstitutionVisit.school_year_id = SchoolYear.id')
@@ -166,16 +170,102 @@ pr($this);
                         'table' => 'quality_visit_types',
                         'alias' => 'QualityVisitTypes',
                         'conditions' => array('QualityVisitTypes.id = QualityInstitutionVisit.quality_type_id')
-                    )*/
+                    )
                  );
-               /* $this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
-                    'custom_value' => 'IF((InstitutionSiteCustomField.type = 3) OR (InstitutionSiteCustomField.type = 4), InstitutionSiteCustomFieldOption.value, InstitutionSiteCustomValue.value)'
-                );*/
             }
-            $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
+            else if($this->reportMapping[$name]['Model'] == 'QualityInstitutionRubric'){
+                
+                 $options['recursive'] = -1;
+          
+                 $options['joins'] = array(
+                      array(
+                        'table' => 'school_years',
+                        'alias' => 'SchoolYear',
+                        'conditions' => array('QualityInstitutionRubric.school_year_id = SchoolYear.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite',
+                        'conditions' => array('QualityInstitutionRubric.institution_site_id = InstitutionSite.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_classes',
+                        'alias' => 'InstitutionSiteClass',
+                        'conditions' => array(
+                            'InstitutionSite.id = InstitutionSiteClass.institution_site_id',
+                        )
+                    ),
+                    array(
+                        'table' => 'institution_site_class_grades',
+                        'alias' => 'InstitutionSiteClassGrade',
+                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+                    ),
+                    array(
+                        'table' => 'education_grades',
+                        'alias' => 'EducationGrade',
+                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+                    ),
+                    array(
+                        'table' => 'rubrics_templates',
+                        'alias' => 'RubricTemplate',
+                        'conditions' => array('RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
+                            'QualityInstitutionRubric.teacher_id = .'.$this->teacherId)
+                    ),
+                    array(
+                        'table' => 'rubrics_template_headers',
+                        'alias' => 'RubricTemplateHeader',
+                        'type' => 'LEFT',
+                        'conditions' => array('RubricTemplate.id = RubricTemplateHeader.rubric_template_id')
+                    ),
+                    array(
+                        'table' => 'rubrics_template_subheaders',
+                        'alias' => 'RubricTemplateSubheader',
+                        'type' => 'LEFT',
+                        'conditions' => array('RubricTemplateSubheader.rubric_template_header_id = RubricTemplateHeader.id')
+                    ),
+                    array(
+                        'table' => 'rubrics_template_items',
+                        'alias' => 'RubricTemplateItem',
+                        'type' => 'LEFT',
+                        'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
+                    ),
+                    array(
+                        'table' => 'rubrics_template_answers',
+                        'alias' => 'RubricTemplateAnswer',
+                        'type' => 'LEFT',
+                        'conditions' => array('RubricTemplateAnswer.rubric_template_item_id = RubricTemplateItem.id')
+                    ),
+                    array(
+                        'table' => 'quality_institution_rubrics_answers',
+                        'alias' => 'QualityInstitutionRubricAnswer',
+                        'type' => 'LEFT',
+                        'conditions' => array(
+                            'QualityInstitutionRubricAnswer.quality_institution_rubric_id = QualityInstitutionRubric.id',
+                            'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id',
+                            'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
+                            'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
+                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_classes_id'
+                        )
+                    ),
+                    array(
+                        'table' => 'rubrics_template_column_infos',
+                        'alias' => 'RubricTemplateColumnInfo',
+                        'type' => 'LEFT',
+                        'conditions' => array(
+                            'RubricTemplateAnswer.rubrics_template_column_info_id = RubricTemplateColumnInfo.id',
+                            'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
+                        ),
+                    ),
+                 );
+               
+                 $options['order'] = array('InstitutionSite.id', 'InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.order', 'RubricTemplateSubheader.order', 'RubricTemplateItem.order');
+              //  $options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
+            }
+       //   pr($this->reportMapping[$name]['Model']); pr($options); die;
+            $data = $modal->find('all',$options);
         }
 
-            pr($data); die;
+    pr($data); die;
         return $data;
     }
 
@@ -196,7 +286,8 @@ pr($this);
     }
 
     public function genCSV($data, $name) {
-        $this->autoRender = false;
+      //  $this->autoRender = false;
+        $this->render = false;
 
         $arrData = $this->formatCSVData($data, $name);
 
@@ -214,6 +305,7 @@ pr($this);
         header('Content-type: application/csv');
         header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
         $header_row = $this->getHeader($this->ReportData['name']);
+        
         fputcsv($csv_file, $header_row, ',', '"');
         // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
         foreach ($arrData as $arrSingleResult) {
@@ -222,12 +314,57 @@ pr($this);
 
                 foreach ($arrFields as $col) {
                     $row[] = $col;
+                  //  pr($col);
                 }
             }
-            // pr($row);
+            // pr('---------');
             fputcsv($csv_file, $row, ',', '"');
         }
         fclose($csv_file);
     }
 
+    private function getFields($name) {
+        if (array_key_exists($name, $this->reportMapping)) {
+            $header = $this->reportMapping[$name]['fields'];
+        }
+        $new = array();
+        foreach ($header as $model => &$arrcols) {
+
+            foreach ($arrcols as $col => $value) {
+                if (strpos(substr($col, 0, 4), 'SUM(') !== false) {
+                    $new[] = substr($col, 0, 4) . $model . "." . substr($col, 4);
+                } else {
+                    $new[] = $model . "." . $col;
+                }
+            }
+        }
+        
+      //  pr($new);die;
+        return $new;
+    }
+    
+    private function getHeader($name, $humanize = false) {
+        
+        if ($name == 'QA Report') {
+            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            $header = $RubricsTemplate->getInstitutionQAReportHeader();
+            return $header;
+        }
+
+        if (array_key_exists($name, $this->reportMapping)) {
+            $header = $this->reportMapping[$name]['fields'];
+        }
+        $new = array();
+        foreach ($header as $model => &$arrcols) {
+            foreach ($arrcols as $col => $value) {
+                if (empty($value)) {
+                    $new[] = Inflector::humanize(Inflector::underscore($model)) . ' ' . Inflector::humanize($col);
+                } else {
+                    $new[] = $value;
+                }
+            }
+        }
+        //  pr($new);die;
+        return $new;
+    }
 }

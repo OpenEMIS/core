@@ -147,6 +147,7 @@ class FileUploaderComponent extends Component {
 	public function additionalFileType(){
 		$this->allowedTypes[] = 'text/rtf';
 		$this->allowedTypes[] = 'text/plain';
+                $this->allowedTypes[] = 'text/csv';
 		$this->allowedTypes[] = 'application/pdf';
 		$this->allowedTypes[] = 'application/vnd.ms-powerpoint';
 		$this->allowedTypes[] = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
