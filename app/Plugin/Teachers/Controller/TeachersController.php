@@ -72,7 +72,8 @@ class TeachersController extends TeachersAppController {
 	    'ExtracurricularType',
         'EmploymentType',
         'SalaryAdditionType',
-        'SalaryDeductionType'
+        'SalaryDeductionType',
+        'TrainingCourse'
 	);
 
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -93,7 +94,10 @@ class TeachersController extends TeachersAppController {
         'special_need' => 'Teachers.TeacherSpecialNeed',
         'award' => 'Teachers.TeacherAward',
         'membership' => 'Teachers.TeacherMembership',
-        'license' => 'Teachers.TeacherLicense'
+        'license' => 'Teachers.TeacherLicense',
+        'training_need' => 'Teachers.TeacherTrainingNeed',
+        'training_result' => 'Teachers.TeacherTrainingResult',
+        'training_self_study' => 'Teachers.TeacherTrainingSelfStudy'
 	); 
 
     public function beforeFilter() {
@@ -2076,6 +2080,74 @@ class TeachersController extends TeachersAppController {
             $data = $this->TeacherLicense->autocomplete($search);
  
             return json_encode($data);
+        }
+    }
+
+    public function attachmentsTrainingSelfStudyAdd() {
+        $this->layout = 'ajax';
+        $this->set('params', $this->params->query);
+        $this->set('_model', 'TeacherTrainingSelfStudyAttachment');
+        $this->set('jsname', 'objTrainingSelfStudies');
+        $this->render('/Elements/attachment/compact_add');
+    }
+
+    public function attachmentsTrainingSelfStudyDelete() {
+        $this->autoRender = false;
+        if($this->request->is('post')) {
+            $result = array('alertOpt' => array());
+            $this->Utility->setAjaxResult('alert', $result);
+            $id = $this->params->data['id'];
+
+            $arrMap = array('model'=>'Teachers.TeacherTrainingSelfStudyAttachment', 'foreignKey' => 'teacher_training_self_study_id');
+            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+            
+            if($FileAttachment->delete($id)) {
+                $result['alertOpt']['text'] = __('File is deleted successfully.');
+            } else {
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+            }
+            
+            return json_encode($result);
+        }
+    }
+        
+    public function attachmentsTrainingSelfStudyDownload($id) {
+        $arrMap = array('model'=>'Teachers.TeacherTrainingSelfStudyAttachment', 'foreignKey' => 'teacher_training_self_study_id');
+        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
+
+        $FileAttachment->download($id);
+    }
+
+    public function getTrainingCoursesById(){
+        $this->autoRender = false;
+
+        if(isset($this->params['pass'][0]) && !empty($this->params['pass'][0])) {
+            $id = $this->params['pass'][0];
+            $type = $this->params['pass'][1];
+            if($type == 1){
+                $courseData = $this->TrainingCourse->find('all', 
+                    array(
+                        'conditions'=>array('TrainingCourse.id'=>$id), 
+                        'recursive' => -1)
+                );
+            }else{
+                $courseData = $this->TrainingCourse->find('all', 
+                    array(
+                        'fields' => array('TrainingCourse.*', 'TrainingSession.*'),
+                        'joins' => array(
+                            array(
+                                'type' => 'INNER',
+                                'table' => 'training_sessions',
+                                'alias' => 'TrainingSession',
+                                'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+                            )
+                        ),
+                        'conditions'=>array('TrainingSession.id'=>$id), 
+                        'recursive' => -1)
+                );
+            }
+            echo json_encode($courseData);
         }
     }
 }
