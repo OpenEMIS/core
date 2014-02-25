@@ -35,32 +35,20 @@ $obj = $data[$modelName]; ?>
 	<?php echo $this->element('alert'); ?>
 		
 		<div class="row">
-			<div class="label"><?php echo __('Course Code'); ?></div>
-			<div class="value"><?php echo $data['TrainingCourse']['code']; ?></div>
-		</div>
-		<div class="row">
 			<div class="label"><?php echo __('Course Title'); ?></div>
-			<div class="value"><?php echo $data['TrainingCourse']['title'];?></div>
+			<div class="value"><?php echo $obj['title'];?></div>
 		</div>
 	  	<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
-			<div class="value"><?php echo $data['TrainingSession']['start_date']; ?></div>
+			<div class="value"><?php echo $obj['start_date']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('End Date'); ?></div>
-			<div class="value"><?php echo $data['TrainingSession']['end_date']; ?></div>
+			<div class="value"><?php echo $obj['end_date']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Course Description'); ?></div>
-			<div class="value"><?php echo $data['TrainingCourse']['description']; ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Location'); ?></div>
-			<div class="value"><?php echo $data['TrainingSession']['location']; ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Trainer'); ?></div>
-			<div class="value"><?php echo $data['TrainingSession']['trainer']; ?></div>
+			<div class="value"><?php echo $obj['description']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Credit Hours'); ?></div>

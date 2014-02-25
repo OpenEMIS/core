@@ -26,7 +26,6 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
-		'TrainingSession',
 		'TrainingStatus',
 	);
 
@@ -40,13 +39,27 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 	
 	
 	public $validate = array(
-		'training_session_id' => array(
+		'title' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please select a valid Course.'
+				'message' => 'Please enter a Course title.'
 			)
 		),
+		'start_date' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid Start Date.'
+			)
+		),
+		'end_date' => array(
+            'comparison' => array(
+            	'rule'=>array('field_comparison', '>=', 'start_date'), 
+            	'allowEmpty'=>true,
+            	'message' => 'End Date must be greater than Start Date'
+            )
+        ),
 		'credit_hours' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -70,6 +83,15 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		)
 	);
 
+	function field_comparison($check1, $operator, $field2) {
+        foreach($check1 as $key=>$value1) {
+            $value2 = $this->data[$this->alias][$field2];
+            if (!Validation::comparison($value1, $operator, $value2))
+                return false;
+        }
+        return true;
+    }
+
 	public $headerDefault = 'Training Self Study';
 		
 
@@ -77,35 +99,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
-		$data = $this->TrainingSession->find('all',
-			array(
-				'fields' => array('StaffTrainingSelfStudy.*', 'TrainingCourse.*', 'TrainingStatus.*'),
-				'joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'staff_training_self_studies',
-						'alias' => 'StaffTrainingSelfStudy',
-						'conditions' => array(
-							'TrainingSession.id = StaffTrainingSelfStudy.training_session_id'
-						)
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_courses',
-						'alias' => 'TrainingCourse',
-						'conditions' => array(
-							'TrainingCourse.id = TrainingSession.training_course_id'
-						)
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingStatus',
-						'conditions' => array(
-							'TrainingStatus.id = StaffTrainingSelfStudy.training_status_id'
-						)
-					)
-				),
+		$data = $this->find('all', array(
 				'conditions'=> array(
 					'StaffTrainingSelfStudy.staff_id'=> $controller->staffId,
 				)
@@ -125,51 +119,8 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 	
-		$data = $this->TrainingSession->find('first',
+		$data = $this->find('first',
 			array(
-				'fields' => array('StaffTrainingSelfStudy.*', 'TrainingCourse.*', 'TrainingSession.*', 'TrainingStatus.*', 'CreatedUser.*', 'ModifiedUser.*'),
-				'joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'staff_training_self_studies',
-						'alias' => 'StaffTrainingSelfStudy',
-						'conditions' => array(
-							'TrainingSession.id = StaffTrainingSelfStudy.training_session_id'
-						)
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_courses',
-						'alias' => 'TrainingCourse',
-						'conditions' => array(
-							'TrainingCourse.id = TrainingSession.training_course_id'
-						)
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingStatus',
-						'conditions' => array(
-							'TrainingStatus.id = StaffTrainingSelfStudy.training_status_id'
-						)
-					),
-					array(
-						'type' => 'LEFT',
-						'table' => 'security_users',
-						'alias' => 'CreatedUser',
-						'conditions' => array(
-							'CreatedUser.id = StaffTrainingSelfStudy.created_user_id'
-						)
-					),
-					array(
-						'type' => 'LEFT',
-						'table' => 'security_users',
-						'alias' => 'ModifiedUser',
-						'conditions' => array(
-							'ModifiedUser.id = StaffTrainingSelfStudy.modified_user_id'
-						)
-					)
-				),
 				'conditions'=> array(
 					'StaffTrainingSelfStudy.id'=> $id,
 				)
@@ -201,12 +152,8 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 			
-            $trainingCourse = ClassRegistry::init('TrainingCourse');
-			$trainingCourses = $trainingCourse->find('first', array('conditions'=> array('TrainingCourse.id' =>$data['TrainingSession']['training_course_id'])));
-		
-            $name = $trainingCourses['TrainingCourse']['code'] . ' - ' . $trainingCourses['TrainingCourse']['title'];
-			
-			
+            $name = $data['StaffTrainingSelfStudy']['title'];
+				
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StaffTrainingSelfStudyId');
@@ -226,7 +173,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 				$trainingCourse = ClassRegistry::init('TrainingCourse');
 				$trainingCourses = $trainingCourse->find('first', array('conditions'=> array('TrainingCourse.id' =>$data['TrainingSession']['training_course_id'])));
 			
-	            $name = $trainingCourses['TrainingCourse']['code'] . ' - ' . $trainingCourses['TrainingCourse']['title'];
+	            $name = $data['StaffTrainingSelfStudy']['title'];
 				
 	            $this->updateAll(
 	    			array('StaffTrainingSelfStudy.training_status_id' => 3),
@@ -244,11 +191,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 
-			$trainingCourse = ClassRegistry::init('TrainingCourse');
-			$trainingCourses = $trainingCourse->find('first', array('conditions'=> array('TrainingCourse.id' =>$data['TrainingSession']['training_course_id'])));
-		
-            $name = $trainingCourses['TrainingCourse']['code'] . ' - ' . $trainingCourses['TrainingCourse']['title'];
-			
+			$name = $data['StaffTrainingSelfStudy']['title'];
           	$this->updateAll(
     			array('StaffTrainingSelfStudy.training_status_id' => 4),
     			array('StaffTrainingSelfStudy.id '=> $id)
