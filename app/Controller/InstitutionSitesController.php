@@ -3069,7 +3069,7 @@ class InstitutionSitesController extends AppController {
                     'last_name' => 'Supervisor Last Name'
                 )
             ),
-            'FileName' => 'Report_Quality_Vist'
+            'FileName' => 'Report_Quality_Visit'
         )
     );
     private $ReportData = array(); //param 1 name ; param2 type
