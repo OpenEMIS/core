@@ -5,8 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-02-25 13:07+0800\n"
-"PO-Revision-Date: 2014-02-18 14:12+0800\n"
+"PO-Revision-Date: 2014-02-25 13:47+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: ara\n"
@@ -220,7 +219,7 @@ msgid "Field Options"
 msgstr "خيارات الحقل"
 
 msgid "National Assessments"
-msgstr ""
+msgstr "التقييمات الوطنية"
 
 msgid "ASSESSMENT"
 msgstr "التقييم"
@@ -2337,7 +2336,7 @@ msgid "Education Grade Name"
 msgstr " اسم الصفّ التعليمي"
 
 msgid "Class"
-msgstr " صفّ"
+msgstr "الشعبة"
 
 msgid "Education Subject Name"
 msgstr " اسم مادّة التعليم"
@@ -2469,6 +2468,192 @@ msgstr "تقارير البيانات التناقض"
 msgid "age"
 msgstr "عمر"
 
+msgid "Rubrics"
+msgstr "أدوات التدقيق"
+
+msgid "Quality - Rubrics"
+msgstr "عناوين"
+
+msgid "Weighthings"
+msgstr "وزن"
+
+msgid "Pass Mark"
+msgstr "علامة النجاح"
+
+msgid "Back"
+msgstr "ظهر"
+
+msgid "Modified by"
+msgstr "تعديلها من قبل"
+
+msgid "Modified on"
+msgstr "تعديل ل"
+
+msgid "Created by"
+msgstr "التي أنشأتها"
+
+msgid "Created on"
+msgstr "تم إنشاؤها على"
+
+msgid "View Rubric"
+msgstr "عرض الموضوع"
+
+msgid "Descriptions"
+msgstr "الوصف"
+
+msgid "Quality"
+msgstr "جودة"
+
+msgid "Rubric Details"
+msgstr "تفاصيل الموضوع"
+
+msgid "Quality - Rubric Details"
+msgstr "جودة - تفاصيل الموضوع"
+
+msgid "Quality - Edit Rubric Details"
+msgstr "جودة - تحرير تفاصيل الموضوع"
+
+msgid "Add Heading"
+msgstr "إضافة عنوان"
+
+msgid "Add Criteria Row"
+msgstr "إضافة صف معايير"
+
+msgid "Add Level Column"
+msgstr "إضافة عمود المستوى"
+
+msgid "Edit Rubric Details"
+msgstr "تحرير تفاصيل الموضوع"
+
+msgid "QUALITY"
+msgstr "جودة"
+
+msgid "Visits"
+msgstr "زيارات"
+
+msgid "Quality - Rubric"
+msgstr "جودة - الموضوع"
+
+msgid "Supervisor"
+msgstr "مشرف"
+
+msgid "Quality - Rubric Detail"
+msgstr "جودة - الموضوع التفاصيل"
+
+msgid "Color"
+msgstr "لون"
+
+msgid "REPORTS"
+msgstr "تقارير"
+
+msgid "Quality - Visit"
+msgstr "جودة - زيارة"
+
+msgid "Date"
+msgstr "تاريخ"
+
+msgid "Comment"
+msgstr "تعليق"
+
+msgid "Visit Types"
+msgstr "زيارة أنواع"
+
+msgid "National Code"
+msgstr "كود الوطنية"
+
+msgid "International Code"
+msgstr "المدونة الدولية"
+
+msgid "Quality - Add Rubric"
+msgstr "جودة - إضافة الموضوع"
+
+msgid "Add Rubric"
+msgstr "إضافة الموضوع"
+
+msgid "Quality - Rubric Infomations"
+msgstr "جودة - الموضوع إينفوميشنز"
+
+msgid "Rubric Infomations"
+msgstr "الموضوع إينفوميشنز"
+
+msgid "Quality - Edit Rubric"
+msgstr "جودة - تحرير الموضوع"
+
+msgid "Edit Rubric"
+msgstr "تحرير الموضوع"
+
+msgid "Quality - Setup Rubric Criteria"
+msgstr "معايير إعداد الموضوع - جودة"
+
+msgid "Setup Rubric Criteria"
+msgstr "معايير الإعداد الموضوع"
+
+msgid "Quality - Add Rubric Criteria"
+msgstr "جودة - إضافة معايير الموضوع"
+
+msgid "Add Rubric Criteria"
+msgstr "إضافة معايير الموضوع"
+
+msgid "Quality - Edit Rubric Criteria"
+msgstr "معايير تحرير الموضوع - جودة"
+
+msgid "Edit Rubric Criteria"
+msgstr "معايير تحرير الموضوع"
+
+msgid "Quality - Rubric Criteria"
+msgstr "معايير الموضوع - جودة"
+
+msgid "Rubric Criteria"
+msgstr "معايير الموضوع"
+
+msgid "Quality - Status"
+msgstr "جودة - الحالة"
+
+msgid "Quality - Add Status"
+msgstr "جودة - حالة الإعلان"
+
+msgid "Quality - Edit Status"
+msgstr "جودة - الحالة تحرير"
+
+msgid "Quality - Add Rubrics"
+msgstr "جودة - إضافة نماذج التقييم"
+
+msgid "Quality - Edit Rubrics"
+msgstr "جودة - تحرير نماذج التقييم"
+
+msgid "Quality - Add Visit"
+msgstr "جودة - إضافة زيارة"
+
+msgid "Quality - Edit Visit"
+msgstr "جودة - تحرير زيارة"
+
+msgid "Identities"
+msgstr "الهويات"
+
+msgid "Identity Details"
+msgstr "تفاصيل الهوية"
+
+msgid "Edit Identity Details"
+msgstr "تحرير تفاصيل الهوية"
+
+msgid "Number"
+msgstr "عدد"
+
+msgid "Issued"
+msgstr "صدر"
+
+msgid "Expiry"
+msgstr "انقضاء"
+
+msgid "Issue Date"
+msgstr "تاريخ الاصدار"
+
+msgid "Expiry Date"
+msgstr "تاريخ انتهاء الصلاحية"
+
+msgid "Issue Location"
+msgstr "القضية الموقع"
+
 msgid "TRAINING"
 msgstr "التدريب"
 
@@ -2486,9 +2671,6 @@ msgstr "جديد"
 
 msgid "Pending for Approval"
 msgstr "في انتظار الموافقة ل"
-
-msgid "Back"
-msgstr "عودة"
 
 msgid "Course Code"
 msgstr "رمز الدورة"
@@ -2541,18 +2723,6 @@ msgstr "يقدم للموافقة"
 msgid "Courses Details"
 msgstr "تفاصيل الدورات"
 
-msgid "Modified by"
-msgstr "تعديلها من قبل"
-
-msgid "Modified on"
-msgstr "تعديل ل"
-
-msgid "Created by"
-msgstr "التي أنشأتها"
-
-msgid "Created on"
-msgstr "تم إنشاؤها على"
-
 msgid "Sessions Details"
 msgstr "تفاصيل الجلسات"
 
@@ -2567,9 +2737,6 @@ msgstr "مدرب"
 
 msgid "Trainees"
 msgstr "المتدربين"
-
-msgid "Date"
-msgstr "تاريخ"
 
 msgid "Course"
 msgstr "مسار"
@@ -2615,78 +2782,6 @@ msgstr "عدد الساعات المعتمدة"
 
 msgid "Comments"
 msgstr "تعليقات"
-
-msgid "Confirmation"
-msgstr "تأكيد"
-
-msgid "Confirm"
-msgstr "أكد"
-
-msgid "Do you wish to inactivate this record?"
-msgstr "هل ترغب في تعطيل هذا السجل؟?"
-
-msgid "Do you wish to activate this record?"
-msgstr "هل ترغب في تفعيل هذا السجل؟?"
-
-msgid "Field of Studies"
-msgstr "مجال الدراسات"
-
-msgid "Levels"
-msgstr "مستويات"
-
-msgid "Mode of Deliveries"
-msgstr "هطريقة التسليم"
-
-msgid "Priorities"
-msgstr "أولوية"
-
-msgid "Providers"
-msgstr "مقدمي"
-
-msgid "Requirements"
-msgstr "متطلبات"
-
-msgid "Statuses"
-msgstr "الأوضاع"
-
-msgid "Edit Field Options"
-msgstr "تحرير خيارات حقل"
-
-msgid "Add Trainee"
-msgstr "إضافة متدرب"
-
-msgid "Identification No, First Name or Last Name"
-msgstr "تحديد لا، الاسم الأول أو اسم العائلة"
-
-msgid "Pass"
-msgstr "النتيجة"
-
-msgid "Identities"
-msgstr "الهويات"
-
-msgid "Identity Details"
-msgstr "تفاصيل الهوية"
-
-msgid "Edit Identity Details"
-msgstr "تحرير تفاصيل الهوية"
-
-msgid "Number"
-msgstr "عدد"
-
-msgid "Issued"
-msgstr "صدر"
-
-msgid "Expiry"
-msgstr "انقضاء"
-
-msgid "Issue Date"
-msgstr "تاريخ الاصدار"
-
-msgid "Expiry Date"
-msgstr "تاريخ انتهاء الصلاحية"
-
-msgid "Issue Location"
-msgstr "القضية الموقع"
 
 msgid "Your data has been saved successfully."
 msgstr "تم حفظ البيانات بنجاح."
@@ -2781,3 +2876,54 @@ msgstr "هل ترغب في مسح كافة السجلات؟"
 
 msgid "Date/Time"
 msgstr "تاريخ / وقت"
+
+msgid "Confirmation"
+msgstr "تأكيد"
+
+msgid "Confirm"
+msgstr "أكد"
+
+msgid "Do you wish to inactivate this record?"
+msgstr "هل ترغب في تعطيل هذا السجل؟?"
+
+msgid "Do you wish to activate this record?"
+msgstr "هل ترغب في تفعيل هذا السجل؟?"
+
+msgid "Field of Studies"
+msgstr "مجال الدراسات"
+
+msgid "Levels"
+msgstr "مستويات"
+
+msgid "Mode of Deliveries"
+msgstr "هطريقة التسليم"
+
+msgid "Priorities"
+msgstr "أولوية"
+
+msgid "Providers"
+msgstr "مقدمي"
+
+msgid "Requirements"
+msgstr "متطلبات"
+
+msgid "Statuses"
+msgstr "الأوضاع"
+
+msgid "Edit Field Options"
+msgstr "تحرير خيارات حقل"
+
+msgid "Add Trainee"
+msgstr "إضافة متدرب"
+
+msgid "Identification No, First Name or Last Name"
+msgstr "تحديد لا، الاسم الأول أو اسم العائلة"
+
+msgid "Pass"
+msgstr "النتيجة"
+
+msgid "Course Type"
+msgstr "بالطبع نوع"
+
+msgid "Course Types"
+msgstr "أنواع بالطبع"
