@@ -68,7 +68,7 @@ class Report extends ReportsAppModel {
 			$tmp = array(
 				'name'=>$v['Report']['name'],
 				//'file_name'=>  ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results'.DS.str_replace(' ','_',$v['Report']['category']).DS.$v['Report']['module'].DS.str_replace(' ', '_', $v['Report']['name']).'.'.$v['Report']['file_type'],
-				'start_date'=>date('Y-m-d h:i:s'),
+				'start_date'=>date('Y-m-d H:i:s'),
 				'finish_date'=>'0000-00-00 00:00:00',
 				'reference_id' => $v['Report']['id'],
 				'reference_table' => 'reports',
