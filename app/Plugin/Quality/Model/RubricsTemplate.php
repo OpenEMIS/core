@@ -156,12 +156,34 @@ class RubricsTemplate extends QualityAppModel {
       return $data;
       } */
 
-    public function getRubricOptions($order = 'name') {
-        $data = $this->find('list', array('order' => 'RubricsTemplate.'.$order, 'recursive' => -1));
+    public function getRubricOptions() {
+        $options['order'] = array('RubricsTemplate.name' );
+        $options['recursive'] = -1;
 
+        $data = $this->find('list', $options);
+//pr($data);die;
         return $data;
     }
 
+    public function getEnabledRubricsOptions($year){
+        $options['order'] = array('RubricsTemplate.name' );
+        $options['recursive'] = -1;
+        
+        $options['joins'] = array(
+            array(
+                'table' => 'quality_statuses',
+                'alias' => 'QualityStatus',
+                'conditions' => array('RubricsTemplate.id = QualityStatus.rubric_template_id')
+            ),
+        );
+
+        $options['conditions'] = array('QualityStatus.status' => 1, 'QualityStatus.year' => $year);
+        
+         $data = $this->find('list', $options);
+//pr($data);die;
+        return $data;
+    }
+    
     public function getRubric($id) {
         $data = $this->find('first', array('conditions' => array('id' => $id), 'recursive' => -1));
 
@@ -230,9 +252,8 @@ class RubricsTemplate extends QualityAppModel {
             //  $headerOptions[] = 'Pass/Fail';
             $header = array_merge($header, $headerOptions);
         }
-       // pr($header);
+        // pr($header);
         return $header;
-        
     }
 
     public function processDataToCSVFormat($data) {
@@ -262,7 +283,7 @@ class RubricsTemplate extends QualityAppModel {
                         if ($rubricName != $currentRubricName) {
                             $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
                             $passFail = 'Fail';
-                            
+
                             //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                             $rubricTotal = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
                             //}
