@@ -265,7 +265,7 @@ class TeacherReport extends TeachersAppModel {
             $data = $modal->find('all',$options);
         }
 
-    pr($data); die;
+    die;
         return $data;
     }
 
