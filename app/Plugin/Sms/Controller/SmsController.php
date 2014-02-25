@@ -11,7 +11,7 @@ class SmsController extends SmsAppController {
         parent::beforeFilter();
         $this->Auth->allow('receive');
         $this->bodyTitle = 'Administration';
-        $this->Navigation->addCrumb('Administration', array('controller' => '../Setup', 'action' => 'index'));
+        $this->Navigation->addCrumb(__('Administration'), array('controller' => '../Setup', 'action' => 'index'));
     }
 
     public function receive(){
@@ -167,14 +167,14 @@ class SmsController extends SmsAppController {
         return $this->redirect(array('action'=>'messages'));
     }
     public function messages() {
-        $this->Navigation->addCrumb('Messages');
+        $this->Navigation->addCrumb(__('Messages'));
 
         $data = $this->SmsMessage->find('all', array('order'=>array('SmsMessage.order ASC')));
         $this->set('data', $data);
     }
 
     public function messagesAdd(){
-        $this->Navigation->addCrumb('Add Messages');
+        $this->Navigation->addCrumb(__('Add Message'));
         if($this->request->is('post')) { // save
            $data = $this->data['SmsMessage'];
             $this->SmsMessage->create();
@@ -207,7 +207,7 @@ class SmsController extends SmsAppController {
         $obj = $this->SmsMessage->find('all',array('conditions'=>array('SmsMessage.id' => $id)));
         
         if(!empty($obj)) {
-            $this->Navigation->addCrumb('Message Details');
+            $this->Navigation->addCrumb(__('Message Details'));
             
             $this->Session->write('SmsMessageId', $id);
             $this->set('obj', $obj);
@@ -220,7 +220,7 @@ class SmsController extends SmsAppController {
             $obj = $this->SmsMessage->find('first',array('conditions'=>array('SmsMessage.id' => $id)));
   
             if(!empty($obj)) {
-                $this->Navigation->addCrumb('Edit Message Details');
+                $this->Navigation->addCrumb(__('Edit Message Details'));
                 $this->request->data = $obj;
                
             }
@@ -262,13 +262,13 @@ class SmsController extends SmsAppController {
               'SmsMessage.order' => 'SmsMessage.order-1'
             ), 
             array('SmsMessage.order >' => $order));
-            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
             $this->redirect(array('action' => 'messages'));
         }
     }
 
      public function logs($selectedType=null) {
-        $this->Navigation->addCrumb('Logs');
+        $this->Navigation->addCrumb(__('Logs'));
 
         $conditions = array();
         if(!empty($selectedType)){
@@ -286,13 +286,13 @@ class SmsController extends SmsAppController {
     
     public function logsDelete() {
         $this->SmsLog->truncate();
-        $this->Utility->alert('All logs have been deleted successfully.');
+        $this->Utility->alert(__('All logs have been deleted successfully.'));
         $this->redirect(array('action' => 'logs'));
         
     }
 
     public function responses() {
-        $this->Navigation->addCrumb('Responses');
+        $this->Navigation->addCrumb(__('Responses'));
 
         /*$maxMessages = $this->SmsResponse->find('first', array(
         'fields' => array('MAX(SmsResponse.order) AS maxOrder')
@@ -409,7 +409,7 @@ class SmsController extends SmsAppController {
     
     public function responsesDelete() {
         $this->SmsResponse->truncate();
-        $this->Utility->alert('All responses have been deleted successfully.');
+        $this->Utility->alert(__('All responses have been deleted successfully.'));
         $this->redirect(array('action' => 'responses'));
     }
 
