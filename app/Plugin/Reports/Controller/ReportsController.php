@@ -43,7 +43,8 @@ class ReportsController extends ReportsAppController {
         'Consolidated'=>array('enable'=>true),
         'Indicator'=>array('enable'=>true),
         'DataQuality'=>array('enable'=>true),
-        'Custom'=>array('enable'=>true)
+        'Custom'=>array('enable'=>true),
+        'Quality'=>array('enable'=>true)
     );
 
     public $customView = array( //exclude from Index view.
@@ -149,6 +150,8 @@ class ReportsController extends ReportsAppController {
     public function TeacherDownload(){}
     public function Training(){}
     public function TrainingDownload(){}
+    public function Quality(){}
+    public function QualityDownload(){}
     public function Consolidated(){}
     public function ConsolidatedDownload(){}
 //  public function Indicator(){}
