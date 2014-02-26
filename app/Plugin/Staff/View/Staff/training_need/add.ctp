@@ -42,10 +42,10 @@ echo $this->Html->script('/Staff/js/training_needs', false);
         </div>
     </div>
     <div class="row">
-		<div class="label"><?php echo __('Course Title'); ?></div>
+		<div class="label"><?php echo __('Course Code'); ?></div>
         <div class="value">
 		<?php 
-			echo $this->Form->input('title', array('disabled' => 'disabled', 'class' => 'default training_course_title')); 
+			echo $this->Form->input('code', array('disabled' => 'disabled', 'class' => 'default training_course_code')); 
 		?>
         </div>
     </div>
