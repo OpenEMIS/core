@@ -66,7 +66,7 @@ echo $this->Html->script('attachments', false);
         </div>
     </div>
      <div class="row">
-        <div class="label"><?php echo __('Trainer'); ?></div>
+        <div class="label"><?php echo __('Provider'); ?></div>
         <div class="value">
         	<?php echo $this->Form->input('trainer');?>
         </div>
