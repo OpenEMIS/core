@@ -170,7 +170,7 @@ class RubricsTemplateHeader extends QualityAppModel {
     //SQL Function
 
     public function getRubricHeaders($rubricTemplateId, $type = 'list') {
-        $data = $this->find($type, array('conditions' => array('rubric_template_id' => $rubricTemplateId), 'recursive' => -1, 'order' => array('order')));
+        $data = $this->find($type, array('conditions' => array('rubric_template_id' => $rubricTemplateId), 'recursive' => -1, 'order' => array('rubric_template_id','order')));
 
         return $data;
     }

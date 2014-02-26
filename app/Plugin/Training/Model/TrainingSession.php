@@ -175,7 +175,7 @@ class TrainingSession extends TrainingAppModel {
 		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'course'));
+			$controller->redirect(array('action'=>'session'));
 		}
 		
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');

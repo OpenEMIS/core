@@ -91,7 +91,7 @@ class SetupController extends AppController {
                 'QualityVisitType',
 		'SpecialNeedType',
 		'LicenseType',
-		'TrainingCreditHour',
+		'TrainingCourseType',
 		'TrainingFieldStudy',
 		'TrainingLevel',
 		'TrainingModeDelivery',
@@ -346,13 +346,12 @@ class SetupController extends AppController {
 			'name' => 'Consultation Types',
 			'items' => $this->HealthConsultationType->getLookupVariables()
 		));
-		
+
+
 		$lookup[] = array('Training' => array(
-			'view' => 'training_credit_hours',
-			'edit' => 'training_credit_hours_edit',
 			'optgroup' => true,
-			'name' => 'Credit Hours',
-			'items' => $this->TrainingCreditHour->getLookupVariables()
+			'name' => 'Course Types',
+			'items' => $this->TrainingCourseType->getLookupVariables()
 		));
 
 		$lookup[] = array('Training' => array(

@@ -207,5 +207,14 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
         $data = $this->find('all', array('conditions' => array('rubric_template_id' => $id), 'order' => 'order'));
         return $data;
     }
+    
+    public function getMaxWeighting(){
+        $data = $this->find('all', array('fields' => array('id','rubric_template_id','MAX(weighting) as maxWeight'), 'group'=> array('rubric_template_id')));
+        $list = array();
+        foreach($data as $obj){
+            $list[$obj['RubricsTemplateColumnInfo']['rubric_template_id']] = $obj[0]['maxWeight'];
+        }
+        return $list;
+    }
 
 }

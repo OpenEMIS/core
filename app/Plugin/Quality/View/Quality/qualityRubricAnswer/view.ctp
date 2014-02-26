@@ -42,11 +42,13 @@ echo $this->Html->script('/Quality/js/quality.rubric', false);
         //$options = array('columnHeader'=> $columnHeaderData);
         //pr($options);
         foreach ($this->data['RubricsTemplateDetail'] as $key => $item) {
+            $item['editable'] = $editable;
+            
             if (array_key_exists('RubricsTemplateSubheader', $item)) {
                 echo $this->RubricsView->insertRubricTableHeader($item, $key, NULL);
             } else {
                 $item['columnHeader'] = $columnHeaderData;
-                echo $this->RubricsView->insertQualityRubricQuestionRow($item, $key, NULL);
+                echo $this->RubricsView->insertQualityRubricTableQuestionRow($item, $key, NULL);
             }
         }
         ?>

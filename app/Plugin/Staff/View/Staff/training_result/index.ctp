@@ -23,7 +23,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
             <div class="table_row" row-id="<?php echo $val['TrainingSessionTrainee']['id']; ?>">
             	<div class="table_cell"><?php echo $val['TrainingCourse']['code'] ?></div>
                 <div class="table_cell"><?php echo $val['TrainingCourse']['title'] ?></div>
-                <div class="table_cell"><?php echo $val['TrainingCreditHour']['name']; ?></div>
+                <div class="table_cell"><?php echo $val['TrainingCourse']['credit_hours']; ?></div>
                 <div class="table_cell"><?php echo  $val['TrainingStatus']['name']; ?></div>
                 </div>
            <?php } ?>

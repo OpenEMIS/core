@@ -48,7 +48,8 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
         $controller->Navigation->addCrumb('Rubric Questions');
         $controller->set('subheader', 'Quality - Rubric Questions');
         $controller->set('modelName', $this->name);
-
+        
+        $controller->set('editable', $controller->Session->read('QualityRubric.editable'));
         $this->_SetupRubricsTemplateDetail($controller, $params);
     }
 
