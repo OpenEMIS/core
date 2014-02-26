@@ -60,6 +60,13 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
             	'message' => 'End Date must be greater than Start Date'
             )
         ),
+		'hours' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter the Hours.'
+			)
+		),
 		'credit_hours' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
