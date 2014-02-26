@@ -82,9 +82,9 @@ $obj = $data[$modelName]; ?>
 				<?php if(!isset($obj['pass'])){
                 		echo '-';
                  }else if($obj['pass'] == 1){
-                 		echo __('Pass');
+                 		echo __('Passed');
                  }else{
-                 		echo __('Fail');
+                 		echo __('Failed');
                  }
                  ?>
 			</div>
