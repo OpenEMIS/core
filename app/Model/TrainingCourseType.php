@@ -14,19 +14,19 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 App::uses('AppModel', 'Model');
-class TrainingCreditHour extends AppModel {
+class TrainingCourseType extends AppModel {
 	public $hasMany = array('TrainingCourse');
 	
 	public function getLookupVariables() {
-		$lookup = array('Conditions' => array('model' => 'TrainingCreditHour'));
+		$lookup = array('Conditions' => array('model' => 'TrainingCourseType'));
 		return $lookup;
 	}
 
 	public function getOptions(){
-		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('SpecialNeedType.order')));
+		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('TrainingCourseType.order')));
 		$list = array();
 		foreach($data as $obj){
-			$list[$obj['SpecialNeedType']['id']] = $obj['SpecialNeedType']['name'];
+			$list[$obj['TrainingCourseType']['id']] = $obj['TrainingCourseType']['name'];
 		}
 
 		return $list;

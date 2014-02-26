@@ -57,6 +57,10 @@ echo $this->Html->script('search', false);
 			<div class="label"><?php echo __('Category / Field of Study'); ?></div>
 			<div class="value"><?php echo $data['TrainingFieldStudy']['name']; ?></div>
 		</div>
+		 <div class="row">
+			<div class="label"><?php echo __('Course Type'); ?></div>
+			<div class="value"><?php echo $data['TrainingCourseType']['name']; ?></div>
+		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Target Population'); ?></div>
 			<div class="value">
@@ -76,7 +80,7 @@ echo $this->Html->script('search', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Credit Hours'); ?></div>
-			<div class="value"><?php echo $data['TrainingCreditHour']['name']; ?></div>
+			<div class="value"><?php echo $obj['credit_hours']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Duration'); ?></div>

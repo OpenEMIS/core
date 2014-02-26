@@ -57,12 +57,8 @@ class StaffTrainingNeed extends StaffAppModel {
 		$controller->set('modelName', $this->name);
 		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
 		
-		$trainingCreditHour = ClassRegistry::init('TrainingCreditHour');
-		$trainingCreditHourOptions = $trainingCreditHour->find('list', array('fields'=> array('id', 'name')));
-		
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);
-		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
 		
 	}
 
@@ -192,7 +188,8 @@ class StaffTrainingNeed extends StaffAppModel {
 							'table' => 'training_sessions',
 							'alias' => 'TrainingSession',
 							'conditions' => array(
-								'TrainingCourse.id = TrainingSession.training_course_id'
+								'TrainingCourse.id = TrainingSession.training_course_id',
+								'TrainingSession.training_status_id' => 3,
 							)
 					),
 					array(

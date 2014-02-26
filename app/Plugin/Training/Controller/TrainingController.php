@@ -8,7 +8,7 @@ class TrainingController extends TrainingAppController {
         'Teachers.TeacherPositionTitle', 
         'Training.TrainingSession',
         'Training.TrainingSessionTrainee',
-        'Training.TrainingCourseAttachment',
+        'Training.TrainingCourseAttachment'
      );
 
     public $modules = array(

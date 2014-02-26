@@ -3,8 +3,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Training/js/sessions', false);
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
-
-
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -66,7 +64,7 @@ echo $this->Html->script('jquery-ui.min', false);
         	<?php echo $this->Form->input('trainer', array('id' => 'searchTrainer', 'class'=>'default trainer', 'placeholder' => __('Identification No, First Name or Last Name')));?>
         </div>
     </div>
-	 <div class="row">
+	 <div class="row" style="min-height:45px;">
 		<div class="label"><?php echo __('Trainees'); ?></div>
 		<div class="value">
 		<div class="table trainee" style="width:240px;" url="Training/ajax_find_trainee/">
@@ -77,6 +75,7 @@ echo $this->Html->script('jquery-ui.min', false);
 				<?php 
 				$i = 0;  
 				foreach($this->request->data['TrainingSessionTrainee'] as $key=>$val){?>
+				<?php if(!empty($val['identification_id'])){ ?>
 				<div class="table_row " row-id="<?php echo $i;?>">
 					<div class="table_cell cell_description">
 						<div class="input_wrapper">
@@ -87,11 +86,12 @@ echo $this->Html->script('jquery-ui.min', false);
 						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.id', array('value'=>$val['id'], 
 						'class' => 'control-id')); ?>
 						<?php } ?>
-						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_id', array('class' => 'trainee-id-'.$i . ' validate-trainee',
+						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_id', array('class' => 'trainee-id-'.$i,
 							'value'=>$val['identification_id'])); ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_first_name', array('value'=>$val['identification_first_name'])); ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_last_name', array('value'=>$val['identification_last_name'])); ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_table', array('value'=>$val['identification_table'])); ?>
+							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_validate', array('class' => 'trainee-validate-'.$i . ' validate-trainee', 'value'=>$val['identification_table'] . '_' . $val['identification_id'])); ?>
 						</div>
 				    </div>
 				 
@@ -99,6 +99,7 @@ echo $this->Html->script('jquery-ui.min', false);
 				    	<span class="icon_delete" title="Delete" onclick="objTrainingSessions.deleteTrainee(this)"></span>
 				    </div>
 				</div>
+				<?php } ?>
 			<?php 
 				$i++;
 			} ?>
