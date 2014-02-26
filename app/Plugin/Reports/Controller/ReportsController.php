@@ -271,7 +271,7 @@ class ReportsController extends ReportsAppController {
         $this->humanizeFields($selectedFields);
         $data = $selectedFields;
 //        $data[get_class($this->Institution)] = $this->getTableCloumn($this->Institution, array_key_exists(get_class($this->Institution),$selectedFields)? $selectedFields[get_class($this->Institution)]: array());
-//        $data[get_class($this->InstitutionSite)] = $this->getTableCloumn($this->InstitutionSite, array_key_exists(get_class($this->InstitutionSite),$selectedFields)? $selectedFields[get_class($this->InstitutionSite)]: array());
+//        $data[get_class($this->InstitutionSite)] = $this->getTableCloumn($this->InstitutionSite, array_key_exists(g0et_class($this->InstitutionSite),$selectedFields)? $selectedFields[get_class($this->InstitutionSite)]: array());
         $raw_school_years = $this->SchoolYear->find('list', array('order'=>'SchoolYear.name asc'));
         $school_years = array();
         foreach($raw_school_years as $value){
