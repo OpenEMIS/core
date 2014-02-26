@@ -133,7 +133,7 @@ class TeacherReport extends TeachersAppModel {
             if ($this->reportMapping[$name]['Model'] == 'QualityInstitutionVisit') {
 
                 $options['recursive'] = -1;
-
+                $options['conditions'] = $cond;
                 $options['joins'] = array(
                     array(
                         'table' => 'school_years',
@@ -275,7 +275,7 @@ class TeacherReport extends TeachersAppModel {
             $data = $modal->find('all', $options);
         }
 //pr($data);
-        // die;
+    //     die;
         return $data;
     }
 
