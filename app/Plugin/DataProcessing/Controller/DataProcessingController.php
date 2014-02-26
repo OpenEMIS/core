@@ -828,32 +828,28 @@ class DataProcessingController extends DataProcessingAppController {
                 array(
                     'table' => 'staff_position_titles','alias' => 'StaffPositionTitle','type' => 'LEFT',
                     'conditions' => array('StaffPositionTitle.id = InsitutionSiteStaff.staff_position_title_id')
-                ),
-                array(
-                    'table' => 'training_course_target_populations','alias' => 'TrainingCourseTargetPopulation','type' => 'LEFT',
-                    'conditions' => array('StaffPositionTitle.id = TrainingCourseTargetPopulation.position_title_id')
                 )";
 
             foreach($sessions as $session){
                 $joins .= ",
                 array(
-                    'table' => 'training_courses','alias' => 'TrainingCourse".$i ."','type' => 'LEFT',
-                    'conditions' => array('TrainingCourse".$i.".id = TrainingCourseTargetPopulation.training_course_id', 'TrainingCourse".$i.".training_status_id'=>3)
-                )";
+                    'table' => 'training_session_trainees','alias' => 'TrainingSessionTrainee".$i ."','type' => 'LEFT',
+                    'conditions' => array('Staff.id = TrainingSessionTrainee".$i.".identification_id', 'TrainingSessionTrainee".$i.".identification_table'=>'staff')
+                )"; 
                 $joins .= ",
                 array(
                     'table' => 'training_sessions','alias' => 'TrainingSession".$i ."','type' => 'LEFT',
-                    'conditions' => array('TrainingCourse".$i.".id = TrainingSession".$i.".training_course_id', 'TrainingSession".$i.".training_status_id'=>3)
-                )";
-                $joins .= ",
-                array(
-                    'table' => 'training_session_trainees','alias' => 'TrainingSessionTrainee".$i ."','type' => 'LEFT',
-                    'conditions' => array('TrainingSession".$i.".id = TrainingSessionTrainee".$i.".training_session_id', 'Staff.id' => 'TrainingSessionTrainee".$i.".identification_id', 'TrainingSessionTrainee".$i.".identification_table'=>'staff')
+                    'conditions' => array('TrainingSession".$i.".id = TrainingSessionTrainee".$i.".training_session_id')
                 )";
                 $joins .= ",
                 array(
                     'table' => 'training_session_results','alias' => 'TrainingSessionResult".$i ."','type' => 'LEFT',
                     'conditions' => array('TrainingSession".$i.".id = TrainingSessionResult".$i.".training_session_id')
+                )";
+                $joins .= ",
+                array(
+                    'table' => 'training_courses','alias' => 'TrainingCourse".$i ."','type' => 'LEFT',
+                    'conditions' => array('TrainingCourse".$i.".id = TrainingSession".$i.".training_course_id')
                 )";
                 $yes = '"Yes"';
                 $no = '"No"';
@@ -862,19 +858,18 @@ class DataProcessingController extends DataProcessingAppController {
                 $templateFields .= ',' .  $session['TrainingCourse']['CourseCode'] .  '-' . $session['TrainingCourse']['CourseTitle'];
                 $i++;
             }
-
             $query = '$this->autoRender = false;';
             $query .= '$this->Staff->formatResult = true;';
             $query .= '$data = $this->Staff->find(\'all\', 
             array(\'fields\' => array(' . $fields . '),
             \'joins\' => array(' . $joins. '),
             \'order\' => array(\'Staff.first_name\'),
-             \'group\' => array(\'Staff.id\', \'InsitutionSiteStaff.staff_position_title_id\')
+             \'group\' => array(\'Staff.id\', \'InsitutionSiteStaff.staff_position_title_id\'),
+            {cond}
             ));';
             $BatchReport->id = 1036;
             $BatchReport->saveField('template', $templateFields);
             $BatchReport->saveField('query', $query);
-
         }else if($id == '1037'){
             $TrainingSession = ClassRegistry::init('TrainingSession');
             $BatchReport = ClassRegistry::init('BatchReport');
@@ -903,27 +898,24 @@ class DataProcessingController extends DataProcessingAppController {
                 array(
                     'table' => 'teacher_position_titles','alias' => 'TeacherPositionTitle','type' => 'LEFT',
                     'conditions' => array('TeacherPositionTitle.id = InsitutionSiteTeacher.teacher_position_title_id')
-                ),
-                array(
-                    'table' => 'training_course_target_populations','alias' => 'TrainingCourseTargetPopulation','type' => 'LEFT',
-                    'conditions' => array('TeacherPositionTitle.id = TrainingCourseTargetPopulation.position_title_id')
                 )";
 
             foreach($sessions as $session){
+               
                 $joins .= ",
                 array(
-                    'table' => 'training_courses','alias' => 'TrainingCourse".$i ."','type' => 'LEFT',
-                    'conditions' => array('TrainingCourse".$i.".id = TrainingCourseTargetPopulation.training_course_id', 'TrainingCourse".$i.".training_status_id'=>3)
+                    'table' => 'training_session_trainees','alias' => 'TrainingSessionTrainee".$i ."','type' => 'LEFT',
+                    'conditions' => array('Teacher.id = TrainingSessionTrainee".$i.".identification_id', 'TrainingSessionTrainee".$i.".identification_table'=>'teachers', 'TrainingSessionTrainee".$i.".training_session_id' => " . $session['TrainingSession']['SessionID'] . ")
                 )";
                 $joins .= ",
                 array(
                     'table' => 'training_sessions','alias' => 'TrainingSession".$i ."','type' => 'LEFT',
-                    'conditions' => array('TrainingCourse".$i.".id = TrainingSession".$i.".training_course_id', 'TrainingSession".$i.".training_status_id'=>3)
+                    'conditions' => array('TrainingSession".$i.".id = TrainingSessionTrainee".$i.".training_session_id')
                 )";
                 $joins .= ",
                 array(
-                    'table' => 'training_session_trainees','alias' => 'TrainingSessionTrainee".$i ."','type' => 'LEFT',
-                    'conditions' => array('TrainingSession".$i.".id = TrainingSessionTrainee".$i.".training_session_id', 'Teacher.id' => 'TrainingSessionTrainee".$i.".identification_id', 'TrainingSessionTrainee".$i.".identification_table'=>'teachers')
+                    'table' => 'training_courses','alias' => 'TrainingCourse".$i ."','type' => 'LEFT',
+                    'conditions' => array('TrainingCourse".$i.".id = TrainingSession".$i.".training_course_id')
                 )";
                 $joins .= ",
                 array(
@@ -937,14 +929,14 @@ class DataProcessingController extends DataProcessingAppController {
                 $templateFields .= ',' .  $session['TrainingCourse']['CourseCode'] .  '-' . $session['TrainingCourse']['CourseTitle'];
                 $i++;
             }
-
             $query = '$this->autoRender = false;';
             $query .= '$this->Teacher->formatResult = true;';
             $query .= '$data = $this->Teacher->find(\'all\', 
             array(\'fields\' => array(' . $fields . '),
             \'joins\' => array(' . $joins. '),
             \'order\' => array(\'Teacher.first_name\'),
-            \'group\' => array(\'Teacher.id\', \'InsitutionSiteTeacher.teacher_position_title_id\')
+            \'group\' => array(\'Teacher.id\', \'InsitutionSiteTeacher.teacher_position_title_id\'),
+            {cond}
             ));';
             $BatchReport->id = 1037;
             $BatchReport->saveField('template', $templateFields);
