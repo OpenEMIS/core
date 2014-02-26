@@ -172,7 +172,7 @@ class TeacherTrainingNeed extends TeachersAppModel {
 			 	}
 				$trainingCourseOptions = $trainingCourse->find('list', 
 					array(
-					'fields'=> array('TrainingCourse.id', 'TrainingCourse.code', 'TrainingSessionTrainee.id'),
+					'fields'=> array('TrainingCourse.id', 'TrainingCourse.title', 'TrainingSessionTrainee.id'),
 					'joins' => array(
 						array(
 							'type' => 'LEFT',
