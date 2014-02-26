@@ -66,7 +66,7 @@ echo $this->Html->script('search', false);
 					        <div class="table_head">
 					       		<div class="table_cell"><?php echo __('Name'); ?></div>
 					            <div class="table_cell"><?php echo __('Result'); ?></div>
-					            <div class="table_cell"><?php echo __('Pass'); ?></div>
+					            <div class="table_cell"><?php echo __('Completed'); ?></div>
 					        </div>
 					       
 					        <div class="table_body">
@@ -78,11 +78,11 @@ echo $this->Html->script('search', false);
 					                <?php if(!isset($val['TrainingSessionTrainee']['pass'])){
 					                		echo '-';
 					                 }else if($val['TrainingSessionTrainee']['pass'] == '1'){
-					                 		echo __('Yes');
+					                 		echo __('Passed');
 					                 }else if($val['TrainingSessionTrainee']['pass'] == '-1'){
 					                 		echo '-';
 					                 }else{
-					                 		echo __('No');
+					                 		echo __('Failed');
 					                 }
 					                 ?>
 					                </div>
