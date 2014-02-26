@@ -156,8 +156,8 @@ class RubricsTemplate extends QualityAppModel {
       return $data;
       } */
 
-    public function getRubricOptions() {
-        $options['order'] = array('RubricsTemplate.name' );
+    public function getRubricOptions($orderBy = 'name') {
+        $options['order'] = array('RubricsTemplate.'.$orderBy );
         $options['recursive'] = -1;
 
         $data = $this->find('list', $options);
@@ -234,21 +234,21 @@ class RubricsTemplate extends QualityAppModel {
 
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
         $rubricOptions = $this->getRubricOptions('id');
-//pr($rubricOptions);
+//pr($rubricOptions); die;
         if (!empty($rubricOptions)) {
             foreach ($rubricOptions as $key => $item) {
                 $headerOptions = $RubricsTemplateHeader->getRubricHeaders($key);
 //pr($headerOptions);
                 if (!empty($headerOptions)) {
                     array_unshift($headerOptions, 'Rubric Name');
-                    $headerOptions[] = 'Total Weighting';
+                    $headerOptions[] = 'Total Weighting(%)';
                     $headerOptions[] = 'Pass/Fail';
                     $header = array_merge($header, $headerOptions);
                 }
             }
 
             $headerOptions = array();
-            $headerOptions[] = 'Grand Total Weighting';
+            $headerOptions[] = 'Grand Total Weighting(%)';
             //  $headerOptions[] = 'Pass/Fail';
             $header = array_merge($header, $headerOptions);
         }
@@ -324,9 +324,9 @@ class RubricsTemplate extends QualityAppModel {
 
                             $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
                             $passFail = 'Fail';
-                            //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+                            if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                             $rubricTotal = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
-                            // }
+                             }
                             if ($rubricTotal >= $selectedWeightingInfo['PassMark']) {
                                 $passFail = 'Pass';
                             }
@@ -360,18 +360,18 @@ class RubricsTemplate extends QualityAppModel {
                 $passFail = 'Fail';
                 $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
                 
-                if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+               // if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                     $rubricTotal = ($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100;
-                }
+                //}
 
                 if ($rubricTotal >= $selectedWeightingInfo['PassMark']) {
                     $passFail = 'Pass';
                 }
 
                 $rubricsGrandTotal += $rubricTotal;
-                if ($selectedWeightingInfo['WeightingType'] == 'percent') {
+                //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                     $rubricsGrandTotal = round($rubricsGrandTotal / count($rubricTemplateWeightingInfo), 2);
-                }
+               // }
 
                 $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotal;
                 $tempArray[$rubricCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = $passFail;
