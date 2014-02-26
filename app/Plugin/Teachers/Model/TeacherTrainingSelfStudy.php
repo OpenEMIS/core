@@ -99,7 +99,7 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
         return true;
     }
 
-	public $headerDefault = 'Training Self Study';
+	public $headerDefault = 'Training Achievements';
 		
 
 	public function trainingSelfStudy($controller, $params) {

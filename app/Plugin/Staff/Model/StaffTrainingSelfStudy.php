@@ -99,7 +99,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
         return true;
     }
 
-	public $headerDefault = 'Training Self Study';
+	public $headerDefault = 'Training Achievements';
 		
 
 	public function trainingSelfStudy($controller, $params) {
