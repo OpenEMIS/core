@@ -34,12 +34,12 @@ echo $this->Html->script('search', false);
 	<?php echo $this->element('alert'); ?>
 		
 		<div class="row">
-			<div class="label"><?php echo __('Course Code'); ?></div>
-			<div class="value"><?php echo $data['TrainingCourse']['code']; ?></div>
-		</div>
-		<div class="row">
 			<div class="label"><?php echo __('Course Title'); ?></div>
 			<div class="value"><?php echo $data['TrainingCourse']['title'];?></div>
+		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Course Code'); ?></div>
+			<div class="value"><?php echo $data['TrainingCourse']['code']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Course Description'); ?></div>
