@@ -91,13 +91,12 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 				 
 					<div class="table_cell cell_delete">
 				    	<?php 
-						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('value'=>$val['result'], 'style'=>'width:40px;')); ?>
+						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('value'=>$val['result'], 'style'=>'width:30px;')); ?>
 				    </div>
-				    <div class="table_cell cell_delete">
+				    <div class="table_cell" style="padding:5px;">
 				    	<?php 
-				    	pr($val['pass']);
 						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.pass', array('default'=>$val['pass'], 'empty'=>array('-1'=>''),
-						 'options' => array(1=>__('Pass'), 0 => __('Fail')), 'style'=>'width:60px;')); ?>
+						 'options' => array(1=>__('Passed'), 0 => __('Failed')), 'style'=>'width:70px;padding:0')); ?>
 				    </div>
 				</div>
 			<?php 
