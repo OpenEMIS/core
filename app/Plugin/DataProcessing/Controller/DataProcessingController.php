@@ -868,7 +868,8 @@ class DataProcessingController extends DataProcessingAppController {
             $query .= '$data = $this->Staff->find(\'all\', 
             array(\'fields\' => array(' . $fields . '),
             \'joins\' => array(' . $joins. '),
-            \'order\' => array(\'Staff.first_name\')
+            \'order\' => array(\'Staff.first_name\'),
+             \'group\' => array(\'Staff.id\', \'InsitutionSiteStaff.staff_position_title_id\')
             ));';
             $BatchReport->id = 1036;
             $BatchReport->saveField('template', $templateFields);
@@ -942,7 +943,8 @@ class DataProcessingController extends DataProcessingAppController {
             $query .= '$data = $this->Teacher->find(\'all\', 
             array(\'fields\' => array(' . $fields . '),
             \'joins\' => array(' . $joins. '),
-            \'order\' => array(\'Teacher.first_name\')
+            \'order\' => array(\'Teacher.first_name\'),
+            \'group\' => array(\'Teacher.id\', \'InsitutionSiteTeacher.teacher_position_title_id\')
             ));';
             $BatchReport->id = 1037;
             $BatchReport->saveField('template', $templateFields);
