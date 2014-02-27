@@ -42,6 +42,10 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $data['TrainingCourse']['title']; ?></div>
 		</div>
 		<div class="row">
+			<div class="label"><?php echo __('Provider'); ?></div>
+			<div class="value"><?php echo $data['TrainingProvider']['name'];?></div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
 			<div class="value"><?php echo $obj['start_date'];?></div>
 		</div>
