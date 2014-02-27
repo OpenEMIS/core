@@ -71,6 +71,9 @@ class InstitutionSitesController extends AppController {
 		'Students.StudentBehaviour',
 		'Students.StudentBehaviourCategory',
 		'Students.StudentAttendance',
+                'Students.StudentDetailsCustomField',
+                'Students.StudentDetailsCustomFieldOption',
+                'Students.StudentDetailsCustomValue',
 		'Teachers.Teacher',
 		'Teachers.TeacherStatus',
 		'Teachers.TeacherAttendance',
@@ -80,6 +83,9 @@ class InstitutionSitesController extends AppController {
                 'Teachers.TeacherPositionStep',
 		'Teachers.TeacherBehaviour',
 		'Teachers.TeacherBehaviourCategory',
+                'Teachers.TeacherDetailsCustomField',
+                'Teachers.TeacherDetailsCustomFieldOption',
+                'Teachers.TeacherDetailsCustomValue',
 		'Staff.Staff',
 		'Staff.StaffStatus',
 		'Staff.StaffAttendance',
@@ -89,8 +95,44 @@ class InstitutionSitesController extends AppController {
                 'Staff.StaffPositionStep',
 		'Staff.StaffBehaviour',
 		'Staff.StaffBehaviourCategory',
+                'Staff.StaffDetailsCustomField',
+                'Staff.StaffDetailsCustomFieldOption',
+                'Staff.StaffDetailsCustomValue',
         'SecurityGroupUser',
-        'SecurityGroupArea'
+        'SecurityGroupArea',
+                'CensusStudent',
+                'CensusTeacher',
+                'CensusTeacherFte',
+                'CensusTeacherTraining',
+                'CensusStaff',
+                'CensusClass',
+                'CensusAttendance',
+                'CensusBehaviour',
+                'CensusFinance',
+                'CensusAssessment',
+                'CensusTextbook',
+                'CensusShift',
+                'CensusGraduate',
+                'InfrastructureCategory',
+                'InfrastructureSanitation',
+                'InfrastructureStatus',
+                'InfrastructureBuilding',
+                'InfrastructureRoom',
+                'InfrastructureWater',
+                'InfrastructureEnergy',
+                'InfrastructureFurniture',
+                'InfrastructureResource',
+                'CensusSanitation',
+                'CensusBuilding',
+                'CensusRoom',
+                'CensusResource',
+                'CensusEnergy',
+                'CensusFurniture',
+                'CensusWater',
+                'CensusGrid',
+                'CensusGridValue',
+                'CensusCustomField',
+                'CensusCustomValue'
 	);
 	
 	public $helpers = array('Paginator');
@@ -104,6 +146,467 @@ class InstitutionSitesController extends AppController {
 		),
         'AreaHandler'
 	);
+        
+        private $ReportData = array(); //param 1 name ; param2 type
+        
+        private $reportMapping = array(
+		'Overview' => array(
+			'Model' => 'InstitutionSite',
+			'fields' => array(
+				'Institution'=>array(
+                                    'name' => ''
+                                    ),
+				'InstitutionSite'=>array(
+                                    'name' => '',
+                                    'code' => '',
+                                    'address' => '',
+                                    'postal_code' => '',
+                                    'contact_person' => '',
+                                    'telephone' => '',
+                                    'fax' => '',
+                                    'email' => '',
+                                    'website' => '',
+                                    'date_opened' => '',
+                                    'date_closed' => '',
+                                    'longitude' => '',
+                                    'latitude' => ''
+                                    ),
+				'InstitutionSiteStatus'=>array(
+                                    'name' => 'Institution Site Status'
+                                    ),
+				'InstitutionSiteType'=>array(
+                                    'name' => 'Institution Site Type'
+                                    ),
+				'InstitutionSiteOwnership'=>array(
+                                    'name' => 'Institution Site Ownership'
+                                    ),
+				'Area'=>array(
+                                    'name' => 'Area'
+                                    ),
+                                'AreaEducation' => array(
+                                    'name' => 'Area (Education)'
+                                )
+			),
+                        'FileName' => 'Report_General_Overview'
+		),
+		'Bank Accounts' => array(
+			'Model' => 'InstitutionSiteBankAccount',
+			'fields' => array(
+                                'Bank'=>array(
+                                    'name' => ''
+                                    ),
+				'BankBranch'=>array(
+                                    'name' => 'Branch Name'
+                                    ),
+				'InstitutionSiteBankAccount'=>array(
+                                    'account_name' => 'Bank Account Name',
+                                    'account_number' => 'Bank Account Number',
+                                    'active' => 'Is Active'
+                                    )
+			),
+                        'FileName' => 'Report_General_Bank_Accounts'
+		),
+		'More' => array(
+			'Model' => 'InstitutionSiteCustomValue',
+			'fields' => array(
+				'InstitutionSiteCustomField'=>array(
+                                    'name' => 'Custom Field Name'
+                                    ),
+				'InstitutionSiteCustomValue'=>array(
+                                    'custom_value' => 'Custom Field Value'
+                                    )
+			),
+                        'FileName' => 'Report_General_More'
+		),
+		'Classes - Students' => array(
+			'Model' => 'InstitutionSiteClass',
+			'fields' => array(
+				'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+				'InstitutionSiteClass' => array(
+                                    'name' => 'Class Name'
+                                    ),
+				'EducationGrade' => array(
+                                    'name' => 'Grade'
+                                    ),
+				'Student' => array(
+                                    'identification_no' => 'OpenEMIS ID', 
+                                    'first_name' => 'First Name', 
+                                    'middle_name' => 'Middle Name', 
+                                    'last_name' => 'Last Name'
+                                    ),
+				'StudentCategory' => array(
+                                    'name' => 'Category'
+                                    )
+			),
+                        'FileName' => 'Report_Details_Classes_Students'
+		),
+                'Programme List' => array(
+			'Model' => 'InstitutionSiteProgramme',
+			'fields' => array(
+				'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+				'EducationProgramme' => array(
+                                    'name' => 'Programme'
+                                    ),
+				'InstitutionSiteProgramme' => array(
+                                    'system_cycle' => 'System - Cycle'
+                                    )
+			),
+                        'FileName' => 'Report_Programme_List'
+		),
+                'Student List' => array(
+			'Model' => 'InstitutionSiteStudent',
+			'fields' => array(
+				'Student' => array(
+                                    'identification_no' => 'OpenEMIS ID',
+                                    'first_name' => 'First Name',
+                                    'middle_name' => 'Middle Name',
+                                    'last_name' => 'Last Name',
+                                    'preferred_name' => 'Preferred Name'
+                                    ),
+				'EducationProgramme' => array(
+                                    'name' => 'Programme'
+                                    ),
+				'StudentStatus' => array(
+                                    'name' => 'Status'
+                                    )
+			),
+                        'FileName' => 'Report_Student_List'
+		),
+                'Student Result' => array(
+			'Model' => 'InstitutionSiteClassGradeStudent',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+                                'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+                                'InstitutionSiteClass' => array(
+                                    'name' => 'Class'
+                                    ),
+                                'EducationGrade' => array(
+                                    'name' => 'Grade'
+                                    ),
+                                'AssessmentItemType' => array(
+                                    'name' => 'Assessment'
+                                    ),
+				'Student' => array(
+                                    'identification_no' => 'Student OpenEMIS ID',
+                                    'first_name' => '',
+                                    'middle_name' => '',
+                                    'last_name' => '',
+                                    'preferred_name' => ''
+                                    ),
+                                'EducationSubject' => array(
+                                    'Name' => 'Subject Name',
+                                    'code' => 'Subject Code'
+                                    ),
+				'AssessmentItemResult' => array(
+                                    'marks' => 'Marks'
+                                    ),
+				'AssessmentResultType' => array(
+                                    'name' => 'Grading'
+                                    )
+			),
+                        'FileName' => 'Report_Student_Result'
+		),
+                'Student Attendance' => array(
+			'Model' => 'InstitutionSiteClassGradeStudent',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+                                'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+                                'InstitutionSiteClass' => array(
+                                    'name' => 'Class'
+                                    ),
+                                'EducationGrade' => array(
+                                    'name' => 'Grade'
+                                    ),
+				'Student' => array(
+                                    'identification_no' => 'Student OpenEMIS ID',
+                                    'first_name' => '',
+                                    'middle_name' => '',
+                                    'last_name' => '',
+                                    'preferred_name' => ''
+                                    ),
+                                'StudentAttendance' => array(
+                                    'total_no_attend' => 'Attended',
+                                    'total_no_absence' => 'Absent'
+                                    ),
+                                'InstitutionSiteClassGradeStudent' => array(
+                                    'total' => 'Total'
+                                    )
+			),
+                        'FileName' => 'Report_Student_Attendance'
+		),
+                'Student Behaviour' => array(
+			'Model' => 'StudentBehaviour',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+				'Student' => array(
+                                    'identification_no' => 'Student OpenEMIS ID',
+                                    'first_name' => '',
+                                    'middle_name' => '',
+                                    'last_name' => '',
+                                    'preferred_name' => ''
+                                    ),
+                                'StudentBehaviourCategory' => array(
+                                    'name' => 'Category'
+                                    ),
+                                'StudentBehaviour' => array(
+                                    'date_of_behaviour' => 'Date',
+                                    'title' => 'Title',
+                                    'description' => 'Description',
+                                    'action' => 'Action'
+                                    )
+			),
+                        'FileName' => 'Report_Student_Behaviour'
+		),
+                'Teacher List' => array(
+			'Model' => 'InstitutionSiteTeacher',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+				'Teacher' => array(
+                                    'identification_no' => 'OpenEMIS ID',
+                                    'first_name' => 'First Name',
+                                    'middle_name' => 'Middle Name',
+                                    'last_name' => 'Last Name',
+                                    'preferred_name' => 'Preferred Name',
+                                    'gender' => 'Gender',
+                                    'date_of_birth' => 'Date of Birth'
+                                    )
+			),
+                        'FileName' => 'Report_Teacher_List'
+		),
+                'Teacher Attendance' => array(
+			'Model' => 'TeacherAttendance',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+				'Teacher' => array(
+                                    'identification_no' => 'OpenEMIS ID',
+                                    'first_name' => 'First Name',
+                                    'middle_name' => 'Middle Name',
+                                    'last_name' => 'Last Name',
+                                    'preferred_name' => 'Preferred Name'
+                                    ),
+                                'SchoolYear' => array(
+                                    'name' => 'School Year',
+                                    'school_days' => 'School Days'
+                                    ),
+                                'TeacherAttendance' => array(
+                                    'total_no_attend' => 'Total Days Attended',
+                                    'total_no_absence' => 'Total Days Absent',
+                                    'total' => 'Total'
+                                    )
+			),
+                        'FileName' => 'Report_Teacher_Attendance'
+		),
+                'Teacher Behaviour' => array(
+			'Model' => 'TeacherBehaviour',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+				'Teacher' => array(
+                                    'identification_no' => 'Teacher OpenEMIS ID',
+                                    'first_name' => '',
+                                    'middle_name' => '',
+                                    'last_name' => '',
+                                    'preferred_name' => ''
+                                    ),
+                                'TeacherBehaviourCategory' => array(
+                                    'name' => 'Category'
+                                    ),
+                                'TeacherBehaviour' => array(
+                                    'date_of_behaviour' => 'Date',
+                                    'title' => 'Title',
+                                    'description' => 'Description',
+                                    'action' => 'Action'
+                                    )
+			),
+                        'FileName' => 'Report_Teacher_Behaviour'
+		),
+                'Staff List' => array(
+			'Model' => 'InstitutionSiteStaff',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+				'Staff' => array(
+                                    'identification_no' => 'OpenEMIS ID',
+                                    'first_name' => 'First Name',
+                                    'middle_name' => 'Middle Name',
+                                    'last_name' => 'Last Name',
+                                    'preferred_name' => 'Preferred Name',
+                                    'gender' => 'Gender',
+                                    'date_of_birth' => 'Date of Birth'
+                                    )
+			),
+                        'FileName' => 'Report_Staff_List'
+		),
+                'Staff Attendance' => array(
+			'Model' => 'StaffAttendance',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+				'Staff' => array(
+                                    'identification_no' => 'OpenEMIS ID',
+                                    'first_name' => 'First Name',
+                                    'middle_name' => 'Middle Name',
+                                    'last_name' => 'Last Name',
+                                    'preferred_name' => 'Preferred Name'
+                                    ),
+                                'SchoolYear' => array(
+                                    'name' => 'School Year',
+                                    'school_days' => 'School Days'
+                                    ),
+                                'StaffAttendance' => array(
+                                    'total_no_attend' => 'Total Days Attended',
+                                    'total_no_absence' => 'Total Days Absent',
+                                    'total' => 'Total'
+                                    )
+			),
+                        'FileName' => 'Report_Staff_Attendance'
+		),
+                'Staff Behaviour' => array(
+			'Model' => 'StaffBehaviour',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+				'Staff' => array(
+                                    'identification_no' => 'Staff OpenEMIS ID',
+                                    'first_name' => '',
+                                    'middle_name' => '',
+                                    'last_name' => '',
+                                    'preferred_name' => ''
+                                    ),
+                                'StaffBehaviourCategory' => array(
+                                    'name' => 'Category'
+                                    ),
+                                'StaffBehaviour' => array(
+                                    'date_of_behaviour' => 'Date',
+                                    'title' => 'Title',
+                                    'description' => 'Description',
+                                    'action' => 'Action'
+                                    )
+			),
+                        'FileName' => 'Report_Staff_Behaviour'
+		),
+                'Class List' => array(
+			'Model' => 'InstitutionSiteClass',
+			'fields' => array(
+                                'InstitutionSite' => array(
+                                    'name' => 'Institution Site'
+                                    ),
+				'SchoolYear' => array(
+                                    'name' => 'School Year'
+                                    ),
+                                'InstitutionSiteClass' => array(
+                                    'name' => 'Class Name',
+                                    'no_of_seats' => 'Number of Seats',
+                                    'no_of_shifts' => 'Number of Shifts'
+                                    )
+			),
+                        'FileName' => 'Report_Class_List'
+		)
+	);
+
+        private $reportMappingCensus = array(
+            'Students' => array(
+                'FileName' => 'Report_Totals_Studensts'
+            ),
+            'Teachers' => array(
+                'FileName' => 'Report_Totals_Teachers'
+            ),
+            'Staff' => array(
+                'FileName' => 'Report_Totals_Staff'
+            ),
+            'Classes' => array(
+                'FileName' => 'Report_Totals_Classes'
+            ),
+            'Shifts' => array(
+                'FileName' => 'Report_Totals_Shifts'
+            ),
+            'Graduates' => array(
+                'FileName' => 'Report_Totals_Graduates'
+            ),
+            'Attendance' => array(
+                'FileName' => 'Report_Totals_Attendance'
+            ),
+            'Results' => array(
+                'FileName' => 'Report_Totals_Results'
+            ),
+            'Behaviour' => array(
+                'FileName' => 'Report_Totals_Behaviour'
+            ),
+            'Textbooks' => array(
+                'FileName' => 'Report_Totals_Textbooks'
+            ),
+            'Infrastructure' => array(
+                'FileName' => 'Report_Totals_Infrastructure'
+            ),
+            'Finances' => array(
+                'FileName' => 'Report_Totals_Finances'
+            ),
+            'More' => array(
+                'FileName' => 'Report_Totals_More'
+            ),
+        );
+        
+        private $reportMappingAcademic = array(
+            'Student Academic' => array(
+                'FileName' => 'Report_Student_Academic'
+            ),
+            'Teacher Academic' => array(
+                'FileName' => 'Report_Teacher_Academic'
+            ),
+            'Staff Academic' => array(
+                'FileName' => 'Report_Staff_Academic'
+            )
+        );
+        
+        private $reportCensusInfraMapping = array(
+            'Rooms' => array(
+                'censusModel' => 'CensusRoom',
+                'typesModel' => 'InfrastructureRoom',
+                'typeForeignKey' => 'infrastructure_room_id'
+            ),
+            'Water' => array(
+                'censusModel' => 'CensusWater',
+                'typesModel' => 'InfrastructureWater',
+                'typeForeignKey' => 'infrastructure_water_id'
+            ),
+            'Resources' => array(
+                'censusModel' => 'CensusResource',
+                'typesModel' => 'InfrastructureResource',
+                'typeForeignKey' => 'infrastructure_resource_id'
+            ),
+            'Energy' => array(
+                'censusModel' => 'CensusEnergy',
+                'typesModel' => 'InfrastructureEnergy',
+                'typeForeignKey' => 'infrastructure_energy_id'
+            ),
+            'Furniture' => array(
+                'censusModel' => 'CensusFurniture',
+                'typesModel' => 'InfrastructureFurniture',
+                'typeForeignKey' => 'infrastructure_furniture_id'
+            )
+        );
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -2909,211 +3412,6 @@ class InstitutionSitesController extends AppController {
 		$this->set('adminarea',$adminarea);
 	}
         
-        private $reportMapping = array(
-		'Overview' => array(
-			'Model' => 'InstitutionSite',
-			'fields' => array(
-				'Institution'=>array(
-                                    'name' => ''
-                                    ),
-				'InstitutionSite'=>array(
-                                    'name' => '',
-                                    'code' => '',
-                                    'address' => '',
-                                    'postal_code' => '',
-                                    'contact_person' => '',
-                                    'telephone' => '',
-                                    'fax' => '',
-                                    'email' => '',
-                                    'website' => '',
-                                    'date_opened' => '',
-                                    'date_closed' => '',
-                                    'longitude' => '',
-                                    'latitude' => ''
-                                    ),
-				'InstitutionSiteStatus'=>array(
-                                    'name' => 'Institution Site Status'
-                                    ),
-				'InstitutionSiteType'=>array(
-                                    'name' => 'Institution Site Type'
-                                    ),
-				'InstitutionSiteOwnership'=>array(
-                                    'name' => 'Institution Site Ownership'
-                                    ),
-				'Area'=>array(
-                                    'name' => 'Area'
-                                    ),
-                                'AreaEducation' => array(
-                                    'name' => 'Area (Education)'
-                                )
-			),
-                        'FileName' => 'Report_General_Overview'
-		),
-		'Bank Accounts' => array(
-			'Model' => 'InstitutionSiteBankAccount',
-			'fields' => array(
-                                'Bank'=>array(
-                                    'name' => ''
-                                    ),
-				'BankBranch'=>array(
-                                    'name' => 'Branch Name'
-                                    ),
-				'InstitutionSiteBankAccount'=>array(
-                                    'account_name' => 'Bank Account Name',
-                                    'account_number' => 'Bank Account Number',
-                                    'active' => 'Is Active'
-                                    )
-			),
-                        'FileName' => 'Report_General_Bank_Accounts'
-		),
-		'More' => array(
-			'Model' => 'InstitutionSiteCustomValue',
-			'fields' => array(
-				'InstitutionSiteCustomField'=>array(
-                                    'name' => 'Custom Field Name'
-                                    ),
-				'InstitutionSiteCustomValue'=>array(
-                                    'custom_value' => 'Custom Field Value'
-                                    )
-			),
-                        'FileName' => 'Report_General_More'
-		),
-		'Classes - Students' => array(
-			'Model' => 'InstitutionSiteClass',
-			'fields' => array(
-				'SchoolYear' => array(
-                                    'name' => 'School Year'
-                                    ),
-				'InstitutionSiteClass' => array(
-                                    'name' => 'Class Name'
-                                    ),
-				'EducationGrade' => array(
-                                    'name' => 'Grade'
-                                    ),
-				'Student' => array(
-                                    'identification_no' => 'OpenEMIS ID', 
-                                    'first_name' => 'First Name', 
-                                    'middle_name' => 'Middle Name', 
-                                    'last_name' => 'Last Name'
-                                    ),
-				'StudentCategory' => array(
-                                    'name' => 'Category'
-                                    )
-			),
-                        'FileName' => 'Report_Details_Classes_Students'
-		),
-                'Programme List' => array(
-			'Model' => 'InstitutionSiteProgramme',
-			'fields' => array(
-				'SchoolYear' => array(
-                                    'name' => 'School Year'
-                                    ),
-				'EducationProgramme' => array(
-                                    'name' => 'Programme'
-                                    ),
-				'InstitutionSiteProgramme' => array(
-                                    'system_cycle' => 'System - Cycle'
-                                    )
-			),
-                        'FileName' => 'Report_Programme_List'
-		),
-                'Student List' => array(
-			'Model' => 'InstitutionSiteStudent',
-			'fields' => array(
-				'Student' => array(
-                                    'identification_no' => 'OpenEMIS ID',
-                                    'first_name' => 'First Name',
-                                    'middle_name' => 'Middle Name',
-                                    'last_name' => 'Last Name',
-                                    'preferred_name' => 'Preferred Name'
-                                    ),
-				'EducationProgramme' => array(
-                                    'name' => 'Programme'
-                                    ),
-				'StudentStatus' => array(
-                                    'name' => 'Status'
-                                    )
-			),
-                        'FileName' => 'Report_Student_List'
-		),
-                'Student Result' => array(
-			'Model' => 'InstitutionSiteClassGradeStudent',
-			'fields' => array(
-                                'InstitutionSite' => array(
-                                    'name' => 'Institution Site'
-                                    ),
-                                'SchoolYear' => array(
-                                    'name' => 'School Year'
-                                    ),
-                                'InstitutionSiteClass' => array(
-                                    'name' => 'Class'
-                                    ),
-                                'EducationGrade' => array(
-                                    'name' => 'Grade'
-                                    ),
-                                'AssessmentItemType' => array(
-                                    'name' => 'Assessment'
-                                    ),
-				'Student' => array(
-                                    'identification_no' => 'OpenEMIS ID',
-                                    'first_name' => '',
-                                    'middle_name' => '',
-                                    'last_name' => '',
-                                    'preferred_name' => ''
-                                    ),
-                                'EducationSubject' => array(
-                                    'Name' => 'Subject Name',
-                                    'code' => 'Subject Code'
-                                    ),
-				'AssessmentItemResult' => array(
-                                    'marks' => 'Marks'
-                                    ),
-				'AssessmentResultType' => array(
-                                    'name' => 'Grading'
-                                    )
-			),
-                        'FileName' => 'Report_Student_Result'
-		),
-                'Student Attendance' => array(
-			'Model' => 'InstitutionSiteClassGradeStudent',
-			'fields' => array(
-                                'InstitutionSite' => array(
-                                    'name' => 'Institution Site'
-                                    ),
-                                'SchoolYear' => array(
-                                    'name' => 'School Year'
-                                    ),
-                                'InstitutionSiteClass' => array(
-                                    'name' => 'Class'
-                                    ),
-                                'EducationGrade' => array(
-                                    'name' => 'Grade'
-                                    ),
-                                'AssessmentItemType' => array(
-                                    'name' => 'Assessment'
-                                    ),
-				'Student' => array(
-                                    'identification_no' => 'OpenEMIS ID',
-                                    'first_name' => '',
-                                    'middle_name' => '',
-                                    'last_name' => '',
-                                    'preferred_name' => ''
-                                    ),
-                                'EducationSubject' => array(
-                                    'Name' => 'Subject Name',
-                                    'code' => 'Subject Code'
-                                    ),
-				'AssessmentItemResult' => array(
-                                    'marks' => 'Marks'
-                                    ),
-				'AssessmentResultType' => array(
-                                    'name' => 'Grading'
-                                    )
-			),
-                        'FileName' => 'Report_Student_Attendance'
-		)
-	);
-        
         private function getReportData($name){
 		if(array_key_exists($name, $this->reportMapping)){
 			$whereKey = ($this->reportMapping[$name]['Model'] == 'InstitutionSite')? 'id' : 'institution_site_id';
@@ -3351,13 +3649,623 @@ class InstitutionSitesController extends AppController {
                                 );
                                 
                                 $options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'EducationGrade.name', 'AssessmentItemType.name', 'EducationSubject.name', 'Student.identification_no');
+                        }else if($name == 'Student Attendance'){
+                                $options['conditions'] = array();
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'institution_site_class_grades',
+						'alias' => 'InstitutionSiteClassGrade',
+						'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+					),
+                                        array(
+						'table' => 'education_grades',
+						'alias' => 'EducationGrade',
+						'conditions' => array(
+                                                    'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
+                                                    )
+					),
+                                        array(
+						'table' => 'institution_site_classes',
+						'alias' => 'InstitutionSiteClass',
+						'conditions' => array(
+                                                    'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+                                                    'InstitutionSiteClass.institution_site_id = ' . $this->institutionSiteId
+                                                    )
+					),
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+                                                    'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
+                                                    )
+					),
+                                        array(
+                                                'table' => 'school_years',
+                                                'alias' => 'SchoolYear',
+                                                'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+                                        ),
+                                        array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
+					),
+                                        array(
+                                                'table' => 'student_attendances',
+                                                'alias' => 'StudentAttendance',
+                                                'type' => 'LEFT',
+                                                'conditions' => array(
+                                                        'StudentAttendance.student_id = Student.id',
+                                                        'StudentAttendance.institution_site_class_id = InstitutionSiteClassGrade.institution_site_class_id',
+                                                        'StudentAttendance.school_year_id = InstitutionSiteClass.school_year_id'
+                                                )
+                                        )
+                                );
+                                
+                                $options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'EducationGrade.name', 'Student.identification_no');
+                                
+                                $this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
+					'total' => 'StudentAttendance.total_no_attend + StudentAttendance.total_no_absence'
+				);
+                        }else if($name == 'Student Behaviour'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+                                                    'StudentBehaviour.institution_site_id = InstitutionSite.id'
+                                                    )
+					),
+                                        array(
+                                                'table' => 'student_behaviour_categories',
+                                                'alias' => 'StudentBehaviourCategory',
+                                                'conditions' => array('StudentBehaviour.student_behaviour_category_id = StudentBehaviourCategory.id')
+                                        ),
+                                        array(
+						'table' => 'students',
+						'alias' => 'Student',
+						'conditions' => array('StudentBehaviour.student_id = Student.id')
+					)
+                                );
+                                
+                                $options['order'] = array('Student.identification_no', 'StudentBehaviour.date_of_behaviour', 'StudentBehaviour.id');
+                        }else if($name == 'Teacher List'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'teachers',
+						'alias' => 'Teacher',
+						'conditions' => array('InstitutionSiteTeacher.teacher_id = Teacher.id')
+					),
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array('InstitutionSiteTeacher.institution_site_id = InstitutionSite.id')
+					)
+                                );
+                                
+                                $options['group'] = array('Teacher.id');
+                                $options['order'] = array('Teacher.first_name');
+                        }else if($name == 'Teacher Attendance'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+                                                    'TeacherAttendance.institution_site_id = InstitutionSite.id'
+                                                    )
+					),
+                                        array(
+						'table' => 'teachers',
+						'alias' => 'Teacher',
+						'conditions' => array('TeacherAttendance.teacher_id = Teacher.id')
+					),
+                                        array(
+                                                'table' => 'school_years',
+                                                'alias' => 'SchoolYear',
+                                                'conditions' => array('TeacherAttendance.school_year_id = SchoolYear.id')
+                                        ),
+                                );
+                                
+                                $options['order'] = array('Teacher.identification_no', 'SchoolYear.name');
+                                
+                                $this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
+					'total' => 'TeacherAttendance.total_no_attend + TeacherAttendance.total_no_absence'
+				);
+                        }else if($name == 'Teacher Behaviour'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+                                                    'TeacherBehaviour.institution_site_id = InstitutionSite.id'
+                                                    )
+					),
+                                        array(
+                                                'table' => 'teacher_behaviour_categories',
+                                                'alias' => 'TeacherBehaviourCategory',
+                                                'conditions' => array('TeacherBehaviour.teacher_behaviour_category_id = TeacherBehaviourCategory.id')
+                                        ),
+                                        array(
+						'table' => 'teachers',
+						'alias' => 'Teacher',
+						'conditions' => array('TeacherBehaviour.teacher_id = Teacher.id')
+					)
+                                );
+                                
+                                $options['order'] = array('Teacher.identification_no', 'TeacherBehaviour.date_of_behaviour', 'TeacherBehaviour.id');
+                        }else if($name == 'Staff List'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+					array(
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
+					),
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array('InstitutionSiteStaff.institution_site_id = InstitutionSite.id')
+					)
+                                );
+                                
+                                $options['group'] = array('Staff.id');
+                                $options['order'] = array('Staff.first_name');
+                        }else if($name == 'Staff Attendance'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+                                                    'StaffAttendance.institution_site_id = InstitutionSite.id'
+                                                    )
+					),
+                                        array(
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'conditions' => array('StaffAttendance.staff_id = Staff.id')
+					),
+                                        array(
+                                                'table' => 'school_years',
+                                                'alias' => 'SchoolYear',
+                                                'conditions' => array('StaffAttendance.school_year_id = SchoolYear.id')
+                                        ),
+                                );
+                                
+                                $options['order'] = array('Staff.identification_no', 'SchoolYear.name');
+                                
+                                $this->{$this->reportMapping[$name]['Model']}->virtualFields = array(
+					'total' => 'StaffAttendance.total_no_attend + StaffAttendance.total_no_absence'
+				);
+                        }else if($name == 'Staff Behaviour'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+                                                    'StaffBehaviour.institution_site_id = InstitutionSite.id'
+                                                    )
+					),
+                                        array(
+                                                'table' => 'staff_behaviour_categories',
+                                                'alias' => 'StaffBehaviourCategory',
+                                                'conditions' => array('StaffBehaviour.staff_behaviour_category_id = StaffBehaviourCategory.id')
+                                        ),
+                                        array(
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'conditions' => array('StaffBehaviour.staff_id = Staff.id')
+					)
+                                );
+                                
+                                $options['order'] = array('Staff.identification_no', 'StaffBehaviour.date_of_behaviour', 'StaffBehaviour.id');
+                        }else if($name == 'Class List'){
+                                $options['recursive'] = -1;
+                                $options['joins'] = array(
+                                        array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+                                                    'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
+                                                    )
+					),
+                                        array(
+                                                'table' => 'school_years',
+                                                'alias' => 'SchoolYear',
+                                                'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+                                        )
+                                );
+                                
+                                $options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name');
                         }
 			$data = $this->{$this->reportMapping[$name]['Model']}->find('all',$options);
 		}
 		return $data;   
 	}
-	
-	private $ReportData = array(); //param 1 name ; param2 type
+        
+        private function getHeaderAcademic($name){
+            $commonFields = array(
+                    'institution_site' => 'Institution Site', 
+                    'openemis_id' => 'OpenEMIS ID', 
+                    'first_name' => 'First Name',  
+                    'middle_name' => 'Middle Name', 
+                    'last_name' => 'Last Name', 
+                    'preferred_name' => 'Preferred Name', 
+                    'year' => 'Year'
+            );
+            $customFields = array();
+            
+            if($name == 'Student Academic'){
+                $customFields = $this->StudentDetailsCustomField->find('list',
+                        array(
+                            'fields' => array('id', 'name'),
+                            'conditions' => array(
+                                'visible' => 1,
+                                'type > ' => 1
+                            ),
+                            'order' => array('order')
+                        )
+                );
+            }else if($name == 'Teacher Academic'){
+                $customFields = $this->TeacherDetailsCustomField->find('list',
+                        array(
+                            'fields' => array('id', 'name'),
+                            'conditions' => array(
+                                'visible' => 1,
+                                'type > ' => 1
+                            ),
+                            'order' => array('order')
+                        )
+                );
+            }else if($name == 'Staff Academic'){
+                $customFields = $this->StaffDetailsCustomField->find('list',
+                        array(
+                            'fields' => array('id', 'name'),
+                            'conditions' => array(
+                                'visible' => 1,
+                                'type > ' => 1
+                            ),
+                            'order' => array('order')
+                        )
+                );
+            }
+            
+            foreach($commonFields AS &$value){
+                $value = __($value);
+            }
+            
+            $resultFields = $commonFields;
+            
+            foreach($customFields AS $fieldId => $fieldName){
+                $resultFields[$fieldId] = $fieldName;
+            }
+            
+            //$resultFields = array_merge($commonFields, $customFields);
+            return $resultFields;
+        }
+        
+        private function getReportDataAcademic($name){
+            $header = $this->getHeaderAcademic($name);
+            $rowTpl = array();
+            foreach($header AS $key => $field){
+                $rowTpl[$key] = '';
+            }
+            //pr($rowTpl);
+            $data = array();
+            
+            if($name == 'Student Academic'){
+                $studentsYears = $this->StudentDetailsCustomValue->find('all',
+                        array(
+                            'recursive' => -1,
+                            'fields' => array(
+                                'StudentDetailsCustomValue.student_id', 
+                                'Student.identification_no',
+                                'Student.first_name',
+                                'Student.middle_name',
+                                'Student.last_name',
+                                'Student.preferred_name',
+                                'StudentDetailsCustomValue.school_year_id',
+                                'SchoolYear.name'
+                             ),
+                            'joins' => array(
+                                array(
+                                    'table' => 'students',
+                                     'alias' => 'Student',
+                                     'conditions' => array(
+                                        'StudentDetailsCustomValue.student_id = Student.id'
+                                     )
+                                ),
+                                array(
+                                    'table' => 'school_years',
+                                     'alias' => 'SchoolYear',
+                                     'conditions' => array(
+                                        'StudentDetailsCustomValue.school_year_id = SchoolYear.id'
+                                     )
+                                )
+                            ),
+                            'conditions' => array('StudentDetailsCustomValue.institution_site_id' => $this->institutionSiteId),
+                            'group' => array('StudentDetailsCustomValue.student_id', 'StudentDetailsCustomValue.school_year_id')
+                        )
+                );
+                
+                foreach($studentsYears AS $rowValue){
+                    $fieldValues = $this->StudentDetailsCustomValue->find('all',
+                            array(
+                                'recursive' => -1,
+                                'fields' => array(
+                                    'StudentDetailsCustomField.id',
+                                    'StudentDetailsCustomField.name',
+                                    'StudentDetailsCustomField.type',
+                                    'StudentDetailsCustomValue.value',
+                                    'StudentDetailsCustomFieldOption.value'
+                                ),
+                                'joins' => array(
+                                    array(
+                                        'table' => 'student_details_custom_fields',
+                                        'alias' => 'StudentDetailsCustomField',
+                                        'conditions' => array(
+                                            'StudentDetailsCustomValue.student_details_custom_field_id = StudentDetailsCustomField.id'
+                                        )
+                                    ),
+                                    array(
+                                        'table' => 'student_details_custom_field_options',
+                                        'alias' => 'StudentDetailsCustomFieldOption',
+                                        'type' => 'LEFT',
+                                        'conditions' => array(
+                                            'StudentDetailsCustomValue.value = StudentDetailsCustomFieldOption.id'
+                                        )
+                                    )
+                                ),
+                                'conditions' => array(
+                                    'StudentDetailsCustomValue.institution_site_id' => $this->institutionSiteId,
+                                    'StudentDetailsCustomValue.student_id' => $rowValue['StudentDetailsCustomValue']['student_id'],
+                                    'StudentDetailsCustomValue.school_year_id' => $rowValue['StudentDetailsCustomValue']['school_year_id']
+                                    
+                                )
+                            )
+                    );
+                    
+                    $row = $rowTpl;
+                    $row['institution_site'] = $this->institutionSiteObj['InstitutionSite']['name'];
+                    $row['openemis_id'] = $rowValue['Student']['identification_no'];
+                    $row['first_name'] = $rowValue['Student']['first_name'];
+                    $row['middle_name'] = $rowValue['Student']['middle_name'];
+                    $row['last_name'] = $rowValue['Student']['last_name'];
+                    $row['preferred_name'] = $rowValue['Student']['preferred_name'];
+                    $row['year'] = $rowValue['SchoolYear']['name'];
+                    
+                    foreach($fieldValues AS $fieldValueRow){
+                        $fieldId = $fieldValueRow['StudentDetailsCustomField']['id'];
+                        $fieldName = $fieldValueRow['StudentDetailsCustomField']['name'];
+                        $fieldType = $fieldValueRow['StudentDetailsCustomField']['type'];
+                        
+                        if($fieldType == 3){
+                            $row[$fieldId] = $fieldValueRow['StudentDetailsCustomFieldOption']['value'];
+                        }else if($fieldType == 4) {
+                            if(empty($row[$fieldId])){
+                                $row[$fieldId] = $fieldValueRow['StudentDetailsCustomFieldOption']['value'];
+                            }else{
+                                $row[$fieldId] .= ', ' . $fieldValueRow['StudentDetailsCustomFieldOption']['value'];
+                            }
+                        }else{
+                            $row[$fieldId] = $fieldValueRow['StudentDetailsCustomValue']['value'];
+                        }
+                    }
+                    //pr($row);
+                    $data[] = $row;
+                }
+            }else if($name == 'Teacher Academic'){
+                $teachersYears = $this->TeacherDetailsCustomValue->find('all',
+                        array(
+                            'recursive' => -1,
+                            'fields' => array(
+                                'TeacherDetailsCustomValue.teacher_id', 
+                                'Teacher.identification_no',
+                                'Teacher.first_name',
+                                'Teacher.middle_name',
+                                'Teacher.last_name',
+                                'Teacher.preferred_name',
+                                'TeacherDetailsCustomValue.school_year_id',
+                                'SchoolYear.name'
+                             ),
+                            'joins' => array(
+                                array(
+                                    'table' => 'teachers',
+                                     'alias' => 'Teacher',
+                                     'conditions' => array(
+                                        'TeacherDetailsCustomValue.teacher_id = Teacher.id'
+                                     )
+                                ),
+                                array(
+                                    'table' => 'school_years',
+                                     'alias' => 'SchoolYear',
+                                     'conditions' => array(
+                                        'TeacherDetailsCustomValue.school_year_id = SchoolYear.id'
+                                     )
+                                )
+                            ),
+                            'conditions' => array('TeacherDetailsCustomValue.institution_site_id' => $this->institutionSiteId),
+                            'group' => array('TeacherDetailsCustomValue.teacher_id', 'TeacherDetailsCustomValue.school_year_id')
+                        )
+                );
+                
+                foreach($teachersYears AS $rowValue){
+                    $fieldValues = $this->TeacherDetailsCustomValue->find('all',
+                            array(
+                                'recursive' => -1,
+                                'fields' => array(
+                                    'TeacherDetailsCustomField.id',
+                                    'TeacherDetailsCustomField.name',
+                                    'TeacherDetailsCustomField.type',
+                                    'TeacherDetailsCustomValue.value',
+                                    'TeacherDetailsCustomFieldOption.value'
+                                ),
+                                'joins' => array(
+                                    array(
+                                        'table' => 'teacher_details_custom_fields',
+                                        'alias' => 'TeacherDetailsCustomField',
+                                        'conditions' => array(
+                                            'TeacherDetailsCustomValue.teacher_details_custom_field_id = TeacherDetailsCustomField.id'
+                                        )
+                                    ),
+                                    array(
+                                        'table' => 'teacher_details_custom_field_options',
+                                        'alias' => 'TeacherDetailsCustomFieldOption',
+                                        'type' => 'LEFT',
+                                        'conditions' => array(
+                                            'TeacherDetailsCustomValue.value = TeacherDetailsCustomFieldOption.id'
+                                        )
+                                    )
+                                ),
+                                'conditions' => array(
+                                    'TeacherDetailsCustomValue.institution_site_id' => $this->institutionSiteId,
+                                    'TeacherDetailsCustomValue.teacher_id' => $rowValue['TeacherDetailsCustomValue']['teacher_id'],
+                                    'TeacherDetailsCustomValue.school_year_id' => $rowValue['TeacherDetailsCustomValue']['school_year_id']
+                                    
+                                )
+                            )
+                    );
+                    
+                    $row = $rowTpl;
+                    $row['institution_site'] = $this->institutionSiteObj['InstitutionSite']['name'];
+                    $row['openemis_id'] = $rowValue['Teacher']['identification_no'];
+                    $row['first_name'] = $rowValue['Teacher']['first_name'];
+                    $row['middle_name'] = $rowValue['Teacher']['middle_name'];
+                    $row['last_name'] = $rowValue['Teacher']['last_name'];
+                    $row['preferred_name'] = $rowValue['Teacher']['preferred_name'];
+                    $row['year'] = $rowValue['SchoolYear']['name'];
+                    
+                    foreach($fieldValues AS $fieldValueRow){
+                        $fieldId = $fieldValueRow['TeacherDetailsCustomField']['id'];
+                        $fieldName = $fieldValueRow['TeacherDetailsCustomField']['name'];
+                        $fieldType = $fieldValueRow['TeacherDetailsCustomField']['type'];
+                        
+                        if($fieldType == 3){
+                            $row[$fieldId] = $fieldValueRow['TeacherDetailsCustomFieldOption']['value'];
+                        }else if($fieldType == 4) {
+                            if(empty($row[$fieldId])){
+                                $row[$fieldId] = $fieldValueRow['TeacherDetailsCustomFieldOption']['value'];
+                            }else{
+                                $row[$fieldId] .= ', ' . $fieldValueRow['TeacherDetailsCustomFieldOption']['value'];
+                            }
+                        }else{
+                            $row[$fieldId] = $fieldValueRow['TeacherDetailsCustomValue']['value'];
+                        }
+                    }
+                    //pr($row);
+                    $data[] = $row;
+                }
+            }else if($name == 'Staff Academic'){
+                $staffYears = $this->StaffDetailsCustomValue->find('all',
+                        array(
+                            'recursive' => -1,
+                            'fields' => array(
+                                'StaffDetailsCustomValue.staff_id', 
+                                'Staff.identification_no',
+                                'Staff.first_name',
+                                'Staff.middle_name',
+                                'Staff.last_name',
+                                'Staff.preferred_name',
+                                'StaffDetailsCustomValue.school_year_id',
+                                'SchoolYear.name'
+                             ),
+                            'joins' => array(
+                                array(
+                                    'table' => 'staff',
+                                     'alias' => 'Staff',
+                                     'conditions' => array(
+                                        'StaffDetailsCustomValue.staff_id = Staff.id'
+                                     )
+                                ),
+                                array(
+                                    'table' => 'school_years',
+                                     'alias' => 'SchoolYear',
+                                     'conditions' => array(
+                                        'StaffDetailsCustomValue.school_year_id = SchoolYear.id'
+                                     )
+                                )
+                            ),
+                            'conditions' => array('StaffDetailsCustomValue.institution_site_id' => $this->institutionSiteId),
+                            'group' => array('StaffDetailsCustomValue.staff_id', 'StaffDetailsCustomValue.school_year_id')
+                        )
+                );
+                
+                foreach($staffYears AS $rowValue){
+                    $fieldValues = $this->StaffDetailsCustomValue->find('all',
+                            array(
+                                'recursive' => -1,
+                                'fields' => array(
+                                    'StaffDetailsCustomField.id',
+                                    'StaffDetailsCustomField.name',
+                                    'StaffDetailsCustomField.type',
+                                    'StaffDetailsCustomValue.value',
+                                    'StaffDetailsCustomFieldOption.value'
+                                ),
+                                'joins' => array(
+                                    array(
+                                        'table' => 'staff_details_custom_fields',
+                                        'alias' => 'StaffDetailsCustomField',
+                                        'conditions' => array(
+                                            'StaffDetailsCustomValue.staff_details_custom_field_id = StaffDetailsCustomField.id'
+                                        )
+                                    ),
+                                    array(
+                                        'table' => 'staff_details_custom_field_options',
+                                        'alias' => 'StaffDetailsCustomFieldOption',
+                                        'type' => 'LEFT',
+                                        'conditions' => array(
+                                            'StaffDetailsCustomValue.value = StaffDetailsCustomFieldOption.id'
+                                        )
+                                    )
+                                ),
+                                'conditions' => array(
+                                    'StaffDetailsCustomValue.institution_site_id' => $this->institutionSiteId,
+                                    'StaffDetailsCustomValue.staff_id' => $rowValue['StaffDetailsCustomValue']['staff_id'],
+                                    'StaffDetailsCustomValue.school_year_id' => $rowValue['StaffDetailsCustomValue']['school_year_id']
+                                    
+                                )
+                            )
+                    );
+                    
+                    $row = $rowTpl;
+                    $row['institution_site'] = $this->institutionSiteObj['InstitutionSite']['name'];
+                    $row['openemis_id'] = $rowValue['Staff']['identification_no'];
+                    $row['first_name'] = $rowValue['Staff']['first_name'];
+                    $row['middle_name'] = $rowValue['Staff']['middle_name'];
+                    $row['last_name'] = $rowValue['Staff']['last_name'];
+                    $row['preferred_name'] = $rowValue['Staff']['preferred_name'];
+                    $row['year'] = $rowValue['SchoolYear']['name'];
+                    
+                    foreach($fieldValues AS $fieldValueRow){
+                        $fieldId = $fieldValueRow['StaffDetailsCustomField']['id'];
+                        $fieldName = $fieldValueRow['StaffDetailsCustomField']['name'];
+                        $fieldType = $fieldValueRow['StaffDetailsCustomField']['type'];
+                        
+                        if($fieldType == 3){
+                            $row[$fieldId] = $fieldValueRow['StaffDetailsCustomFieldOption']['value'];
+                        }else if($fieldType == 4) {
+                            if(empty($row[$fieldId])){
+                                $row[$fieldId] = $fieldValueRow['StaffDetailsCustomFieldOption']['value'];
+                            }else{
+                                $row[$fieldId] .= ', ' . $fieldValueRow['StaffDetailsCustomFieldOption']['value'];
+                            }
+                        }else{
+                            $row[$fieldId] = $fieldValueRow['StaffDetailsCustomValue']['value'];
+                        }
+                    }
+                    //pr($row);
+                    $data[] = $row;
+                }
+            }
+            
+            return $data;
+        }
+
 	public function genReport($name,$type){ //$this->genReport('Site Details','CSV');
 		$this->autoRender = false;
 		$this->ReportData['name'] = $name;
@@ -3365,9 +4273,13 @@ class InstitutionSitesController extends AppController {
 		
 		if(method_exists($this, 'gen'.$type)){ 
 			if($type == 'CSV'){
-				$data =  $this->getReportData($this->ReportData['name']);
-                                //pr($data);
-                                $this->genCSV($data, $this->ReportData['name']);
+                                if(array_key_exists($name, $this->reportMappingAcademic)){
+                                    $data =  $this->getReportDataAcademic($name);
+                                    $this->genCSVAcademic($data, $name);
+                                }else{
+                                    $data =  $this->getReportData($name);
+                                    $this->genCSV($data, $this->ReportData['name']);
+                                }
 			}elseif($type == 'PDF'){
 				$data =  $this->genReportPDF($this->ReportData['name']);
 				$data['name'] = $this->ReportData['name'];
@@ -3376,7 +4288,1204 @@ class InstitutionSitesController extends AppController {
 		}
 	}
         
-        private function getFields($name){
+        public function genReportCensus($name,$type){
+		$this->autoRender = false;
+		
+		if(method_exists($this, 'gen'.$type)){ 
+			if($type == 'CSV'){
+                                switch($name){
+                                  case 'Students':
+                                      $data =  $this->getReportDataCensusStudents();
+                                      break;
+                                  case 'Teachers':
+                                      $data =  $this->getReportDataCensusTeachers();
+                                      break;
+                                  case 'Staff':
+                                      $data =  $this->getReportDataCensusStaff();
+                                      break;
+                                  case 'Classes':
+                                      $data =  $this->getReportDataCensusClasses();
+                                      break;
+                                  case 'Shifts':
+                                      $data =  $this->getReportDataCensusShifts();
+                                      break;
+                                  case 'Graduates':
+                                      $data =  $this->getReportDataCensusGraduates();
+                                      break;
+                                  case 'Attendance':
+                                      $data =  $this->getReportDataCensusAttendance();
+                                      break;
+                                  case 'Results':
+                                      $data =  $this->getReportDataCensusResults();
+                                      break;
+                                  case 'Behaviour':
+                                      $data =  $this->getReportDataCensusBehaviour();
+                                      break;
+                                  case 'Textbooks':
+                                      $data =  $this->getReportDataCensusTextbooks();
+                                      break;
+                                  case 'Infrastructure':
+                                      $data =  $this->getReportDataCensusInfrastructure();
+                                      break;
+                                  case 'Finances':
+                                      $data =  $this->getReportDataCensusFinances();
+                                      break;
+                                  case 'More':
+                                      $data =  $this->getReportDataCensusMore();
+                                      break;
+                                  default:
+                                      $data = array();
+                                }
+
+                                //pr($data);
+                                $this->genCSVCensus($data, $name);
+			}elseif($type == 'PDF'){
+				
+			}
+		}
+	}
+        
+        private function getReportDataCensusMore() {
+            $data = array();
+            $dataYears = $this->CensusGridValue->getYearsHaveValues($this->institutionSiteId);
+            $institutionSiteObj = $this->institutionSiteObj;
+            $institutionSiteTypeId = $institutionSiteObj['InstitutionSite']['institution_site_type_id'];
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                $dataGrid = $this->CensusGrid->find('all',array(
+                        'conditions'=>array(
+                            'CensusGrid.institution_site_type_id' => array($institutionSiteTypeId,0), 
+                            'CensusGrid.visible' => 1
+                        ), 
+                        'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')
+                    )
+                );
+                
+                foreach($dataGrid AS $rowGrid){
+                    $data[] = array(__($yearName));
+                    $data[] = array(__($rowGrid['CensusGrid']['name']));
+                    $data[] = array();
+                    $header = array('');
+                    foreach($rowGrid['CensusGridXCategory'] AS $rowX){
+                        $header[] = __($rowX['name']);
+                    }
+                    $data[] = $header;
+                    
+                    $dataGridValue = $this->CensusGridValue->find('all',array(
+                            'recursive' => -1,
+                            'conditions'=>array(
+                                'CensusGridValue.institution_site_id'=>$this->institutionSiteId,
+                                'CensusGridValue.census_grid_id'=>$rowGrid['CensusGrid']['id'],
+                                'CensusGridValue.school_year_id'=>$yearId
+                            )
+                        )
+                    );
+                    
+                    $valuesCheckSource = array();
+                    foreach($dataGridValue AS $rowGridValue){
+                        $census_grid_x_category_id = $rowGridValue['CensusGridValue']['census_grid_x_category_id'];
+                        $census_grid_y_category_id = $rowGridValue['CensusGridValue']['census_grid_y_category_id'];
+                        $valuesCheckSource[$census_grid_x_category_id][$census_grid_y_category_id] = $rowGridValue['CensusGridValue'];
+                    }
+                    
+                    foreach($rowGrid['CensusGridYCategory'] AS $rowY){
+                        $idY = $rowY['id'];
+                        $nameY = $rowY['name'];
+                        $rowCsv = array(__($nameY));
+                        //$totalRow = 0;
+                        foreach($rowGrid['CensusGridXCategory'] AS $rowX){
+                            $idX = $rowX['id'];
+                            //$nameX = $rowX['name'];
+                            if(isset($valuesCheckSource[$idX][$idY]['value'])){
+                                $valueCell = !empty($valuesCheckSource[$idX][$idY]['value']) ? $valuesCheckSource[$idX][$idY]['value'] : 0;
+                            }else{
+                                $valueCell = 0;
+                            }
+                            $rowCsv[] = $valueCell;
+                            //$totalRow += $valueCell;
+                        }
+                        //$rowCsv[] = $totalRow;
+                        $data[] = $rowCsv;
+                    }
+                    $data[] = array();
+                }
+                
+                $dataFields = $this->CensusCustomField->find('all', array(
+                        'recursive' => -1,
+                        'fields' => array(
+                            'CensusCustomField.id',
+                            'CensusCustomField.type',
+                            'CensusCustomField.name',
+                            'CensusCustomValue.value'
+                         ),
+                        'joins' => array(
+                            array(
+                                'table' => 'census_custom_values',
+                                'alias' => 'CensusCustomValue',
+                                'type' => 'LEFT',
+                                'conditions' => array(
+                                    'CensusCustomField.id = CensusCustomValue.census_custom_field_id'
+                                )
+                            )
+                        ),
+                        'conditions' => array(
+                            'CensusCustomField.institution_site_type_id' => array($institutionSiteTypeId,0),
+                            'CensusCustomField.visible' => 1,
+                            'CensusCustomValue.institution_site_id' => $this->institutionSiteId,
+                            'CensusCustomValue.school_year_id' => $yearId
+                        ), 
+                        'order' => array('CensusCustomField.institution_site_type_id','CensusCustomField.order'),
+                        'group' => array('CensusCustomField.id')
+                    )
+                );
+                
+                foreach($dataFields AS $rowFields){
+                    $fieldId = $rowFields['CensusCustomField']['id'];
+                    $fieldType = $rowFields['CensusCustomField']['type'];
+                    $fieldName = $rowFields['CensusCustomField']['name'];
+                    $fieldValue = $rowFields['CensusCustomValue']['value'];
+                    
+                    $data[] = array(__($yearName));
+                    $data[] = array($fieldName);
+                    $answer = '';
+                    if($fieldType == 3 || $fieldType == 4){
+                        $dataValue = $this->CensusCustomValue->find('all', array(
+                                'recursive' => -1,
+                                'fields' => array('CensusCustomFieldOption.value'),
+                                'joins' => array(
+                                        array(
+                                            'table' => 'census_custom_field_options',
+                                            'alias' => 'CensusCustomFieldOption',
+                                            'type' => 'LEFT',
+                                            'conditions' => array(
+                                                'CensusCustomValue.value = CensusCustomFieldOption.id'
+                                            )
+                                        )
+                                ),
+                                'conditions' => array(
+                                    'CensusCustomValue.census_custom_field_id' => $fieldId,
+                                    'CensusCustomValue.institution_site_id' => $this->institutionSiteId,
+                                    'CensusCustomValue.school_year_id' => $yearId
+                                )
+                            )
+                        );
+                        
+                        $countValue = 1;
+                        foreach($dataValue AS $rowValue){
+                            if($countValue == 1){
+                                $answer .= $rowValue['CensusCustomFieldOption']['value'];
+                            }else{
+                                $answer .= ', ';
+                                $answer .= $rowValue['CensusCustomFieldOption']['value'];
+                            }
+                            $countValue++;
+                        }
+                    }else{
+                        if(!is_null($fieldValue)){
+                            $answer = $fieldValue;
+                        }
+                    }
+                    
+                    $data[] = array($answer);
+                    $data[] = array();
+                }
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusInfrastructure() {
+            $data = array();
+            $headerCommon = array(__('Year'), __('Infrastructure Name'), __('Category'));
+            $yearList = $this->SchoolYear->getYearList();
+            foreach($yearList AS $yearId => $yearName){
+                $infraCategories = $this->InfrastructureCategory->find('list',array('conditions'=>array('InfrastructureCategory.visible'=>1),'order'=>'InfrastructureCategory.order'));
+                foreach($infraCategories AS $categoryId => $categoryName){
+                    $dataInfraStatuses = $this->InfrastructureStatus->find('list',array('conditions'=>array('InfrastructureStatus.infrastructure_category_id'=>$categoryId,'InfrastructureStatus.visible'=>1)));
+                    $countStatuses = count($dataInfraStatuses);
+                    if($categoryName == 'Sanitation'){
+                        $dataInfraTypes = $this->InfrastructureSanitation->find('list',array('conditions'=>array('InfrastructureSanitation.visible'=>1)));
+                        $dataSanitationMaterials = $this->CensusSanitation->find('all', array(
+                                'recursive' => -1,
+                                'fields' => array(
+                                    'CensusSanitation.infrastructure_material_id',
+                                    'InfrastructureMaterial.name'
+                                ),
+                                'joins' => array(
+                                        array(
+                                            'table' => 'infrastructure_materials',
+                                            'alias' => 'InfrastructureMaterial',
+                                            'conditions' => array(
+                                                'CensusSanitation.infrastructure_material_id = InfrastructureMaterial.id'
+                                            )
+                                        )
+                                ),
+                                'conditions' => array(
+                                    'CensusSanitation.institution_site_id' => $this->institutionSiteId,
+                                    'CensusSanitation.school_year_id' => $yearId
+                                ),
+                                'group' => array('CensusSanitation.infrastructure_material_id'),
+                                'order' => array('InfrastructureMaterial.order')
+                            )
+                        );
+                        
+                        if(count($dataSanitationMaterials) > 0){
+                            foreach($dataSanitationMaterials AS $RowSanitationMaterials){
+                                $sanitationMaterialId = $RowSanitationMaterials['CensusSanitation']['infrastructure_material_id'];
+                                $sanitationMaterialName = $RowSanitationMaterials['InfrastructureMaterial']['name'];
+                                $dataSanitationMaterialsById = $this->CensusSanitation->find('all', array(
+                                        'recursive' => -1,
+                                        'conditions' => array(
+                                            'CensusSanitation.institution_site_id' => $this->institutionSiteId,
+                                            'CensusSanitation.school_year_id' => $yearId,
+                                            'CensusSanitation.infrastructure_material_id' => $sanitationMaterialId
+                                        )
+                                    )
+                                );
+                                    
+                                $cellValueCheckSource = array();
+                                foreach($dataSanitationMaterialsById AS $rowSanitationMaterialsById){
+                                    $infrastructure_sanitation_id = $rowSanitationMaterialsById['CensusSanitation']['infrastructure_sanitation_id'];
+                                    $infrastructure_status_id = $rowSanitationMaterialsById['CensusSanitation']['infrastructure_status_id'];
+                                    $cellValueCheckSource[$infrastructure_sanitation_id][$infrastructure_status_id] = $rowSanitationMaterialsById['CensusSanitation'];
+                                }
+                                //pr($cellValueCheckSource);
+                                
+                                $arrayGender = array('Male', 'Female', 'Unisex');
+                                foreach($arrayGender AS $gender){
+                                    $genderLowerCase = strtolower($gender);
+                                    $countByGender = $this->CensusSanitation->find('count', array(
+                                            'conditions' => array(
+                                                'CensusSanitation.institution_site_id' => $this->institutionSiteId,
+                                                'CensusSanitation.school_year_id' => $yearId,
+                                                'CensusSanitation.infrastructure_material_id' => $sanitationMaterialId,
+                                                'CensusSanitation.' . $genderLowerCase . ' > ' => 0
+                                            )
+                                        )
+                                    );
+                                    
+                                    if($countByGender > 0){
+                                        $header = array(__('Year'), __('Infrastructure Name'), __('Infrastructure Type'), __('Gender'), __('Category'));
+                                        foreach($dataInfraStatuses AS $infraStatusName){
+                                           $header[] =  __($infraStatusName);
+                                        }
+                                        $header[] = __('Total');
+                                        $data[] = $header;
+
+                                        $totalAll = 0;
+                                        foreach($dataInfraTypes AS $infraTypeId => $infraTypeName){
+                                            $csvRow = array(__($yearName), __($categoryName), __($sanitationMaterialName), __($gender), __($infraTypeName));
+                                            $totalRow = 0;
+                                            foreach($dataInfraStatuses AS $infraStatusId => $infraStatusName){
+                                                if(isset($cellValueCheckSource[$infraTypeId][$infraStatusId][$genderLowerCase])){
+                                                    $cellValue = !empty($cellValueCheckSource[$infraTypeId][$infraStatusId][$genderLowerCase]) ? $cellValueCheckSource[$infraTypeId][$infraStatusId][$genderLowerCase] : 0;
+                                                }else{
+                                                    $cellValue = 0;
+                                                }
+                                                $csvRow[] = $cellValue;
+                                                $totalRow += $cellValue;
+                                            }
+                                            $csvRow[] = $totalRow;
+                                            $data[] = $csvRow;
+                                            $totalAll += $totalRow;
+                                        }
+                                        $emptyColumns = $countStatuses + 4;
+                                        $rowTotal = array();
+                                        for($i=0; $i<$emptyColumns; $i++){
+                                            $rowTotal[] = '';
+                                        }
+                                        $rowTotal[] = __('Total');
+                                        $rowTotal[] = $totalAll;
+                                        $data[] = $rowTotal;
+                                        $data[] = array();
+                                    }
+                                }
+                            }
+                        }
+                        
+                    }else if($categoryName == 'Buildings'){
+                        $dataInfraTypes = $this->InfrastructureBuilding->find('list',array('conditions'=>array('InfrastructureBuilding.visible'=>1)));
+                        $dataBuildingMaterials = $this->CensusBuilding->find('all', array(
+                                'recursive' => -1,
+                                'fields' => array(
+                                    'CensusBuilding.infrastructure_material_id',
+                                    'InfrastructureMaterial.name'
+                                ),
+                                'joins' => array(
+                                        array(
+                                            'table' => 'infrastructure_materials',
+                                            'alias' => 'InfrastructureMaterial',
+                                            'conditions' => array(
+                                                'CensusBuilding.infrastructure_material_id = InfrastructureMaterial.id'
+                                            )
+                                        )
+                                ),
+                                'conditions' => array(
+                                    'CensusBuilding.institution_site_id' => $this->institutionSiteId,
+                                    'CensusBuilding.school_year_id' => $yearId
+                                ),
+                                'group' => array('CensusBuilding.infrastructure_material_id'),
+                                'order' => array('InfrastructureMaterial.order')
+                            )
+                        );
+                        
+                        if(count($dataBuildingMaterials) > 0){
+                            foreach($dataBuildingMaterials AS $RowBuildingMaterials){
+                                $buildingMaterialId = $RowBuildingMaterials['CensusBuilding']['infrastructure_material_id'];
+                                $buildingMaterialName = $RowBuildingMaterials['InfrastructureMaterial']['name'];
+                                $dataBuildingMaterialsById = $this->CensusBuilding->find('all', array(
+                                        'recursive' => -1,
+                                        'conditions' => array(
+                                            'CensusBuilding.institution_site_id' => $this->institutionSiteId,
+                                            'CensusBuilding.school_year_id' => $yearId,
+                                            'CensusBuilding.infrastructure_material_id' => $buildingMaterialId
+                                        )
+                                    )
+                                );
+                                    
+                                $cellValueCheckSource = array();
+                                foreach($dataBuildingMaterialsById AS $rowBuildingMaterialsById){
+                                    $infrastructure_building_id = $rowBuildingMaterialsById['CensusBuilding']['infrastructure_building_id'];
+                                    $infrastructure_status_id = $rowBuildingMaterialsById['CensusBuilding']['infrastructure_status_id'];
+                                    $cellValueCheckSource[$infrastructure_building_id][$infrastructure_status_id] = $rowBuildingMaterialsById['CensusBuilding'];
+                                }
+                                //pr($buildingCheckSource);
+                                
+                                $header = array(__('Year'), __('Infrastructure Name'), __('Infrastructure Type'), __('Category'));
+                                foreach($dataInfraStatuses AS $infraStatusName){
+                                   $header[] =  __($infraStatusName);
+                                }
+                                $header[] = __('Total');
+                                $data[] = $header;
+
+                                $totalAll = 0;
+                                foreach($dataInfraTypes AS $infraTypeId => $infraTypeName){
+                                    $csvRow = array(__($yearName), __($categoryName), __($buildingMaterialName), __($infraTypeName));
+                                    $totalRow = 0;
+                                    foreach($dataInfraStatuses AS $infraStatusId => $infraStatusName){
+                                        if(isset($cellValueCheckSource[$infraTypeId][$infraStatusId]['value'])){
+                                            $cellValue = !empty($cellValueCheckSource[$infraTypeId][$infraStatusId]['value']) ? $cellValueCheckSource[$infraTypeId][$infraStatusId]['value'] : 0;
+                                        }else{
+                                            $cellValue = 0;
+                                        }
+                                        $csvRow[] = $cellValue;
+                                        $totalRow += $cellValue;
+                                    }
+                                    $csvRow[] = $totalRow;
+                                    $data[] = $csvRow;
+                                    $totalAll += $totalRow;
+                                }
+                                $emptyColumns = $countStatuses + 3;
+                                $rowTotal = array();
+                                for($i=0; $i<$emptyColumns; $i++){
+                                    $rowTotal[] = '';
+                                }
+                                $rowTotal[] = __('Total');
+                                $rowTotal[] = $totalAll;
+                                $data[] = $rowTotal;
+                                $data[] = array();
+                            }
+                        }
+                    }else{
+                        $censusModel = $this->reportCensusInfraMapping[$categoryName]['censusModel'];
+                        $typesModel = $this->reportCensusInfraMapping[$categoryName]['typesModel'];
+                        $typeForeignKey = $this->reportCensusInfraMapping[$categoryName]['typeForeignKey'];
+                        $dataInfraTypes = $this->{$typesModel}->find('list',array('conditions'=>array('visible'=>1)));
+                        $dataCensus = $this->{$censusModel}->find('all', array(
+                                'recursive' => -1,
+                                'conditions' => array(
+                                    'institution_site_id' => $this->institutionSiteId,
+                                    'school_year_id' => $yearId
+                                )
+                            )
+                        );
+                        
+                        if(count($dataCensus) > 0){
+                            $cellValueCheckSource = array();
+                            foreach($dataCensus AS $rowCensus){
+                                $infrastructure_type_id = $rowCensus[$censusModel][$typeForeignKey];
+                                $infrastructure_status_id = $rowCensus[$censusModel]['infrastructure_status_id'];
+                                $cellValueCheckSource[$infrastructure_type_id][$infrastructure_status_id] = $rowCensus[$censusModel];
+                            }
+                            //pr($cellValueCheckSource);
+                            
+                            $header = $headerCommon;
+                            foreach($dataInfraStatuses AS $infraStatusName){
+                               $header[] =  __($infraStatusName);
+                            }
+                            $header[] = __('Total');
+                            $data[] = $header;
+
+                            $totalAll = 0;
+                            foreach($dataInfraTypes AS $infraTypeId => $infraTypeName){
+                                $csvRow = array(__($yearName), __($categoryName), __($infraTypeName));
+                                $totalRow = 0;
+                                foreach($dataInfraStatuses AS $infraStatusId => $infraStatusName){
+                                    if(isset($cellValueCheckSource[$infraTypeId][$infraStatusId]['value'])){
+                                        $cellValue = !empty($cellValueCheckSource[$infraTypeId][$infraStatusId]['value']) ? $cellValueCheckSource[$infraTypeId][$infraStatusId]['value'] : 0;
+                                    }else{
+                                        $cellValue = 0;
+                                    }
+                                    $csvRow[] = $cellValue;
+                                    $totalRow += $cellValue;
+                                }
+                                $csvRow[] = $totalRow;
+                                $data[] = $csvRow;
+                                $totalAll += $totalRow;
+                            }
+                            $emptyColumns = $countStatuses + 2;
+                            $rowTotal = array();
+                            for($i=0; $i<$emptyColumns; $i++){
+                                $rowTotal[] = '';
+                            }
+                            $rowTotal[] = __('Total');
+                            $rowTotal[] = $totalAll;
+                            $data[] = $rowTotal;
+                            $data[] = array();
+                        }
+                    }
+                }
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusGraduates() {
+            $data = array();
+            $header = array(__('Year'), __('Education Level'), __('Education Programme'), __('Certification'), __('Male'), __('Female'), __('Total'));
+            
+            $dataYears = $this->InstitutionSiteProgramme->getYearsHaveProgrammes($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                $dataCensus = $this->CensusGraduate->getCensusData($this->institutionSiteId, $yearId);
+                
+                if(count($dataCensus) > 0){
+                    foreach($dataCensus AS $levelName => $dataByLevel){
+                        $data[] = $header;
+                        foreach($dataByLevel AS $rowCensus){
+                            $programme = $rowCensus['education_programme_name'];
+                            $certificationName = $rowCensus['education_certification_name'];
+                            $male = empty($rowCensus['male']) ? 0 : $rowCensus['male'];
+                            $female = empty($rowCensus['female']) ? 0 : $rowCensus['female'];
+                            $total = $male + $female;
+                            
+                            $data[] = array(
+                                $yearName,
+                                $levelName,
+                                $programme,
+                                $certificationName,
+                                $male,
+                                $female,
+                                $total
+                            );
+                        }
+                        $data[] = array();
+                    }
+                }
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusTextbooks() {
+            $data = array();
+            $header = array(__('Year'), __('Programme'), __('Grade'), __('Subject'), __('Total'));
+            
+            $dataYears = $this->InstitutionSiteProgramme->getYearsHaveProgrammes($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                $dataCensus = $this->CensusTextbook->getCensusData($this->institutionSiteId, $yearId);
+                
+                if(count($dataCensus) > 0){
+                    foreach($dataCensus AS $programmeName => $dataByProgramme){
+                        $data[] = $header;
+                        $totalByProgramme = 0;
+                        foreach($dataByProgramme AS $rowCensus){
+                            $gradeName = $rowCensus['education_grade_name'];
+                            $subjectName = $rowCensus['education_subject_name'];
+                            $total = $rowCensus['total'];
+                            
+                            $data[] = array(
+                                $yearName,
+                                $programmeName,
+                                $gradeName,
+                                $subjectName,
+                                $total
+                            );
+                            
+                            $totalByProgramme += $total;
+                        }
+                        $data[] = array('', '', '', __('Total'), $totalByProgramme);
+                        $data[] = array();
+                    }
+                }
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusResults() {
+            $data = array();
+            $header = array(__('Year'), __('Programme'), __('Grade'), __('Subject'), __('Score'));
+            
+            $dataYears = $this->InstitutionSiteProgramme->getYearsHaveProgrammes($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                $dataCensus = $this->CensusAssessment->getCensusData($this->institutionSiteId, $yearId);
+                
+                if(count($dataCensus) > 0){
+                    foreach($dataCensus AS $programmeName => $dataByProgramme){
+                        $data[] = $header;
+                        foreach($dataByProgramme AS $rowCensus){
+                            $gradeName = $rowCensus['education_grade_name'];
+                            $subjectName = $rowCensus['education_subject_name'];
+                            $score = $rowCensus['total'];
+                            
+                            $data[] = array(
+                                $yearName,
+                                $programmeName,
+                                $gradeName,
+                                $subjectName,
+                                $score
+                            );
+                        }
+                        $data[] = array();
+                    }
+                }
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusAttendance() {
+            $data = array();
+            $header = array(__('Year'), __('School Days'), __('Programme'), __('Grade'), __('Days Attended (Male)'), __('Days Attended (Female)'), __('Days Absent (Male)'), __('Days Absent (Female)'), __('Total'));
+            
+            $dataYears = $this->InstitutionSiteProgramme->getYearsHaveProgrammes($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                $programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $yearId);
+		$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+                
+                if(count($programmes) > 0){
+                    foreach($programmes as $obj) {
+                        $data[] = $header;
+                        $programmeId = $obj['education_programme_id'];
+                        $dataCensus = $this->CensusAttendance->getCensusData($this->institutionSiteId, $yearId, $programmeId);
+                        $programmeName = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
+                        $total = 0;
+                        foreach($dataCensus AS $rowCensus){
+                            $gradeName = $rowCensus['education_grade_name'];
+                            $attendedMale = empty($rowCensus['attended_male']) ? 0 : $rowCensus['attended_male'];
+                            $attendedFemale = empty($rowCensus['attended_female']) ? 0 : $rowCensus['attended_female'];
+                            $absentMale = empty($rowCensus['absent_male']) ? 0 : $rowCensus['absent_male'];
+                            $absentFemale = empty($rowCensus['absent_female']) ? 0 : $rowCensus['absent_female'];
+                            $totalRow = $attendedMale + $attendedFemale + $absentMale + $absentFemale;
+                            $data[] = array(
+                                $yearName,
+                                $schoolDays,
+                                $programmeName,
+                                $gradeName,
+                                $attendedMale,
+                                $attendedFemale,
+                                $absentMale,
+                                $absentFemale,
+                                $totalRow
+                            );
+
+                            $total += $totalRow;
+                        }
+                        $data[] = array('', '', '', '', '', '', '', __('Total'), $total);
+                        $data[] = array();
+                    }
+                }
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusBehaviour() {
+            $data = array();
+            
+            $header = array(__('Year'), __('Category'), __('Male'), __('Female'), __('Total'));
+            
+            $dataYears = $this->CensusBehaviour->getYearsHaveData($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                $dataBehaviour = $this->CensusBehaviour->getCensusData($this->institutionSiteId, $yearId);
+                
+                if(count($dataBehaviour) > 0){
+                    $data[] = $header;
+                    $total = 0;
+                    foreach($dataBehaviour AS $row){
+                        $male = empty($row['male']) ? 0 : $row['male'];
+                        $female = empty($row['female']) ? 0 : $row['female'];
+
+                        $data[] = array(
+                            $yearName,
+                            $row['name'],
+                            $male,
+                            $female,
+                            $male + $female
+                        );
+
+                        $total += $male;
+                        $total += $female;
+                    }
+
+                    $data[] = array('', '', '', __('Total'), $total);
+                    $data[] = array();
+                }
+            }
+            
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusFinances() {
+            $data = array();
+            
+            $header = array(__('Year'), __('Nature'), __('Type'), __('Source'), __('Category'), __('Description'), __('Amount (PM)'));
+            
+            $dataYears = $this->CensusFinance->getYearsHaveData($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                $dataFinances = $this->CensusFinance->find('all',array('recursive'=>3,'conditions'=>array('CensusFinance.institution_site_id'=>$this->institutionSiteId,'CensusFinance.school_year_id'=>$yearId)));
+                $newSort = array();
+                foreach($dataFinances as $k => $arrv){
+                    $newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
+                }
+                
+                if(count($newSort) > 0){
+                    foreach($newSort as $nature => $dataNature){
+                        foreach($dataNature as $type => $dataType){
+                            $totalByType = 0;
+                            $data[] = $header;
+                            foreach($dataType as $arrValues){
+                                $financeNature = $nature;
+                                $financeType = $type;
+                                $financeSource = $arrValues['FinanceSource']['name'];
+                                $financeCategory = $arrValues['FinanceCategory']['name'];
+                                $financeDescription = $arrValues['CensusFinance']['description'];
+                                $financeAmount = $arrValues['CensusFinance']['amount'];
+                                
+                                $data[] = array(
+                                    $yearName,
+                                    $financeNature,
+                                    $financeType,
+                                    $financeSource,
+                                    $financeCategory,
+                                    $financeDescription,
+                                    $financeAmount
+                                );
+                                
+                                $totalByType += $financeAmount;
+                            }
+                            $data[] = array('', '', '', '', '', __('Total'), $totalByType);
+                            $data[] = array();
+                        }
+                    }
+                }
+            }
+            
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusShifts() {
+            $data = array();
+            $header = array(__('Year'), __('Class Type'), __('Programme'), __('Grade'), __('Classes'));
+            $no_of_shifts = $this->ConfigItem->getValue('no_of_shifts');
+            for($i=1;$i<=intval($no_of_shifts);$i++){
+                $header[] = __('Shift') . $i;
+            }
+            
+            $header[] = __('Total');
+            
+            $dataYears = $this->InstitutionSiteProgramme->getYearsHaveProgrammes($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+
+                $singleGradeClasses = $this->CensusShift->getData($this->institutionSiteId, $yearId);
+		$singleGradeData = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $yearId);
+		$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $yearId);
+                
+                $this->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+                $this->CensusShift->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+                
+                // single grade classes data start
+                if(count($singleGradeData) > 0){
+                    $data[] = $header;
+                    $totalClasses = 0;
+                    foreach($singleGradeData AS $rowSingleGrade){
+                        $preDataRow = array(
+                            $yearName,
+                            __('Single Grade Classes Only'),
+                            $rowSingleGrade['education_programme_name'],
+                            $rowSingleGrade['education_grade_name'],
+                            $rowSingleGrade['classes']
+                        );
+
+                        $totalShifts = 0;
+                        for($i=1;$i<=intval($no_of_shifts);$i++){
+                            $shift = 0;
+                            if(isset($rowSingleGrade['shift_' . $i])){
+                                $shift = $rowSingleGrade['shift_' . $i];
+                                $totalShifts += $shift;
+                            }
+                            $preDataRow[] = $shift;
+                        }
+                        $preDataRow[] = $totalShifts;
+
+                        $data[] = $preDataRow;
+                        $totalClasses += $rowSingleGrade['classes'];
+                    }
+                    $data[] = array('', '', '', 'Total', $totalClasses);
+                    $data[] = array();
+                }
+                // single grade classes data end
+                
+                // multi grades classes data start
+                if(count($multiGradeData) > 0){
+                    $data[] = $header;
+                    $totalClasses = 0;
+                    foreach($multiGradeData AS $rowMultiGrade){
+                        $multiProgrammes = '';
+                        $multiProgrammeCount = 0;
+                        foreach($rowMultiGrade['programmes'] AS $multiProgramme){
+                            if($multiProgrammeCount > 0){
+                                $multiProgrammes .= "\n\r";
+                                $multiProgrammes .= $multiProgramme;
+                            }else{
+                                $multiProgrammes .= $multiProgramme;
+                            }
+                            $multiProgrammeCount ++;
+                        }
+                        
+                        $multiGrades = '';
+                        $multiGradeCount = 0;
+                        foreach($rowMultiGrade['grades'] AS $multiGrade){
+                            if($multiGradeCount > 0){
+                                $multiGrades .= "\n\r";
+                                $multiGrades .= $multiGrade;
+                            }else{
+                                $multiGrades .= $multiGrade;
+                            }
+                            $multiGradeCount ++;
+                        }
+                        
+                        $preDataRow = array(
+                            $yearName,
+                            __('Multi Grade Classes'),
+                            $multiProgrammes,
+                            $multiGrades,
+                            $rowMultiGrade['classes']
+                        );
+
+                        $totalShifts = 0;
+                        for($i=1;$i<=intval($no_of_shifts);$i++){
+                            $shift = 0;
+                            if(isset($rowMultiGrade['shift_' . $i])){
+                                $shift = $rowMultiGrade['shift_' . $i];
+                                $totalShifts += $shift;
+                            }
+                            $preDataRow[] = $shift;
+                        }
+                        $preDataRow[] = $totalShifts;
+
+                        $data[] = $preDataRow;
+                        $totalClasses += $rowMultiGrade['classes'];
+                    }
+                    $data[] = array('', '', '', __('Total'), $totalClasses);
+                    $data[] = array();
+                }
+                // multi grades classes data end
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusClasses() {
+            $data = array();
+            $header = array(__('Year'), __('Class Type'), __('Programme'), __('Grade'), __('Classes'), __('Seats'));
+            
+            $dataYears = $this->InstitutionSiteProgramme->getYearsHaveProgrammes($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                // single grade classes data start
+                $programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId);
+                $singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $yearId);
+		$singleGradeData = $programmeGrades;
+		$this->CensusClass->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+                
+                if(count($singleGradeData) > 0){
+                    $data[] = $header;
+                    $totalClassesSingleGrade = 0;
+                    $totalSeatsSingleGrade = 0;
+                    foreach($singleGradeData AS $programmeName => $programmeData){
+                        foreach($programmeData['education_grades'] AS $gradeId => $gradeData) {
+                            $classesSingleGrade = empty($gradeData['classes']) ? 0 : $gradeData['classes'];
+                            $seatsSingleGrade = empty($gradeData['seats']) ? 0 : $gradeData['seats'];
+                            
+                            $data[] = array(
+                                $yearName,
+                                __('Single Grade Classes Only'),
+                                $programmeName,
+                                $gradeData['name'],
+                                $gradeData['classes'],
+                                $gradeData['seats']
+                            );
+
+                            $totalClassesSingleGrade += $classesSingleGrade;
+                            $totalSeatsSingleGrade += $seatsSingleGrade;
+                        }   
+                    }
+
+                    $data[] = array('', '', '', 'Total', $totalClassesSingleGrade, $totalSeatsSingleGrade);
+                    $data[] = array();
+                }
+                // single grade classes data end
+                
+                // multi grades classes data start
+                $multiGradesData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $yearId);
+                
+                if(count($multiGradesData) > 0){
+                    $data[] = $header;
+                    $totalClassesMultiGrades = 0;
+                    $totalSeatsMultiGrades = 0;
+                    foreach($multiGradesData AS $rowMultiGrades){
+                        $classesMultiGrades = empty($rowMultiGrades['classes']) ? 0 : $rowMultiGrades['classes'];
+                        $seatsMultiGrades = empty($rowMultiGrades['seats']) ? 0 : $rowMultiGrades['seats'];
+                        $multiProgrammes = '';
+                        $multiProgrammeCount = 0;
+                        foreach($rowMultiGrades['programmes'] AS $multiProgramme){
+                            if($multiProgrammeCount > 0){
+                                $multiProgrammes .= "\n\r";
+                                $multiProgrammes .= $multiProgramme;
+                            }else{
+                                $multiProgrammes .= $multiProgramme;
+                            }
+                            $multiProgrammeCount ++;
+                        }
+                        
+                        $multiGrades = '';
+                        $multiGradeCount = 0;
+                        foreach($rowMultiGrades['grades'] AS $multiGrade){
+                            if($multiGradeCount > 0){
+                                $multiGrades .= "\n\r";
+                                $multiGrades .= $multiGrade;
+                            }else{
+                                $multiGrades .= $multiGrade;
+                            }
+                            $multiGradeCount ++;
+                        }
+
+                        $data[] = array(
+                            $yearName,
+                            __('Multi Grade Classes'),
+                            $multiProgrammes,
+                            $multiGrades,
+                            $classesMultiGrades,
+                            $seatsMultiGrades
+                        );
+
+                        $totalClassesMultiGrades += $classesMultiGrades;
+                        $totalSeatsMultiGrades += $seatsMultiGrades;
+                    }
+
+                    $data[] = array('', '', '', __('Total'), $totalClassesMultiGrades, $totalSeatsMultiGrades);
+                    $data[] = array();
+                }
+                // multi grades classes data end
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusStaff() {
+            $data = array();
+            
+            $header = array(__('Year'), __('Position Type'), __('Male'), __('Female'), __('Total'));
+            
+            $dataYears = $this->CensusStaff->getYearsHaveData($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                $censusData = $this->CensusStaff->getCensusData($this->institutionSiteId, $yearId);
+                if(count($censusData) > 0){
+                    $data[] = $header;
+                    $total = 0;
+                    foreach($censusData AS $row){
+                        if($row['staff_category_visible'] == 1){
+                            $male = empty($row['male']) ? 0 : $row['male'];
+                            $female = empty($row['female']) ? 0 : $row['female'];
+
+                            $data[] = array(
+                                $yearName,
+                                $row['staff_category_name'],
+                                $male,
+                                $female,
+                                $male + $female
+                            );
+
+                            $total += $male;
+                            $total += $female;
+                        }
+                    }
+
+                    $data[] = array('', '', '', __('Total'), $total);
+                    $data[] = array();
+                }
+                
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusTeachers() {
+            $data = array();
+            
+            $headerFTE = array(__('Year'), __('Teacher Type'), __('Education Level'), __('Male'), __('Female'), __('Total'));
+            $headerTraining = $headerFTE;
+            $headerSingleGrade = array(__('Year'), __('Teacher Type'), __('Programme'), __('Grade'), __('Male'), __('Female'));
+            $headerMultiGrade = $headerSingleGrade;
+            
+            $dataYears = $this->InstitutionSiteProgramme->getYearsHaveProgrammes($this->institutionSiteId);
+            
+            foreach($dataYears AS $rowYear){
+                $yearId = $rowYear['SchoolYear']['id'];
+                $yearName = $rowYear['SchoolYear']['name'];
+                
+                // FTE teachers data start
+                $dataFTE = $this->CensusTeacherFte->getCensusData($this->institutionSiteId, $yearId);
+                if(count($dataFTE) > 0){
+                    $data[] = $headerFTE;
+                    $totalFTE = 0;
+                    foreach($dataFTE AS $rowFTE){
+                        $maleFTE = empty($rowFTE['male']) ? 0 : $rowFTE['male'];
+                        $femaleFTE = empty($rowFTE['female']) ? 0 : $rowFTE['female'];
+
+                        $data[] = array(
+                            $yearName,
+                            'Full Time Equivalent Teachers',
+                            $rowFTE['education_level_name'],
+                            $maleFTE,
+                            $femaleFTE,
+                            $maleFTE + $femaleFTE
+                        );
+
+                        $totalFTE += $maleFTE;
+                        $totalFTE += $femaleFTE;
+                    }
+
+                    $data[] = array('', '', '', '', __('Total'), $totalFTE);
+                    $data[] = array();
+                }
+                // FTE teachers data end
+                
+                // trained teachers data start
+                $dataTraining = $this->CensusTeacherTraining->getCensusData($this->institutionSiteId, $yearId);
+                if(count($dataTraining) > 0){
+                    $data[] = $headerTraining;
+                    $totalTraining = 0;
+                    foreach($dataTraining AS $rowTraining){
+                        $maleTraining = empty($rowTraining['male']) ? 0 : $rowTraining['male'];
+                        $femaleTraining = empty($rowTraining['female']) ? 0 : $rowTraining['female'];
+
+                        $data[] = array(
+                            $yearName,
+                            'Trained Teachers',
+                            $rowTraining['education_level_name'],
+                            $maleTraining,
+                            $femaleTraining,
+                            $maleTraining + $femaleTraining
+                        );
+
+                        $totalTraining += $maleTraining;
+                        $totalTraining += $femaleTraining;
+                    }
+
+                    $data[] = array('', '', '', '', __('Total'), $totalTraining);
+                    $data[] = array();
+                }
+                // trained teachers data end
+                
+                // single grade teachers data start
+                $programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId);
+                $singleGradeData = $programmeGrades;
+                $singleGradeTeachers = $this->CensusTeacher->getSingleGradeData($this->institutionSiteId, $yearId);
+                $this->CensusTeacher->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
+                
+                if(count($singleGradeData) > 0){
+                    $data[] = $headerSingleGrade;
+                    $totalMaleSingleGrade = 0;
+                    $totalFemaleSingleGrade = 0;
+                    foreach($singleGradeData AS $programmeName => $programmeData){
+                        foreach($programmeData['education_grades'] AS $gradeId => $gradeData) {
+                            $maleSingleGrade = empty($gradeData['male']) ? 0 : $gradeData['male'];
+                            $femaleSingleGrade = empty($gradeData['female']) ? 0 : $gradeData['female'];
+                            
+                            $data[] = array(
+                                $yearName,
+                                'Single Grade Teachers Only',
+                                $programmeName,
+                                $gradeData['name'],
+                                $gradeData['male'],
+                                $gradeData['female']
+                            );
+
+                            $totalMaleSingleGrade += $maleSingleGrade;
+                            $totalFemaleSingleGrade += $femaleSingleGrade;
+                        }   
+                    }
+
+                    $data[] = array('', '', '', __('Total'), $totalMaleSingleGrade, $totalFemaleSingleGrade);
+                    $data[] = array();
+                }
+                // single grade teachers data end
+                
+                // multi grades teachers data start
+                $multiGradesData = $this->CensusTeacher->getMultiGradeData($this->institutionSiteId, $yearId);
+                
+                if(count($multiGradesData) > 0){
+                    $data[] = $headerMultiGrade;
+                    $totalMaleMultiGrades = 0;
+                    $totalFemaleMultiGrades = 0;
+                    foreach($multiGradesData AS $rowMultiGrades){
+                        $maleMultiGrades = empty($rowMultiGrades['male']) ? 0 : $rowMultiGrades['male'];
+                        $femaleMultiGrades = empty($rowMultiGrades['female']) ? 0 : $rowMultiGrades['female'];
+                        $multiProgrammes = '';
+                        $multiProgrammeCount = 0;
+                        foreach($rowMultiGrades['programmes'] AS $multiProgramme){
+                            if($multiProgrammeCount > 0){
+                                $multiProgrammes .= "\n\r";
+                                $multiProgrammes .= $multiProgramme;
+                            }else{
+                                $multiProgrammes .= $multiProgramme;
+                            }
+                            $multiProgrammeCount ++;
+                        }
+                        
+                        $multiGrades = '';
+                        $multiGradeCount = 0;
+                        foreach($rowMultiGrades['grades'] AS $multiGrade){
+                            if($multiGradeCount > 0){
+                                $multiGrades .= "\n\r";
+                                $multiGrades .= $multiGrade;
+                            }else{
+                                $multiGrades .= $multiGrade;
+                            }
+                            $multiGradeCount ++;
+                        }
+
+                        $data[] = array(
+                            $yearName,
+                            'Multi Grade Teachers',
+                            $multiProgrammes,
+                            $multiGrades,
+                            $maleMultiGrades,
+                            $femaleMultiGrades
+                        );
+
+                        $totalMaleMultiGrades += $maleMultiGrades;
+                        $totalFemaleMultiGrades += $femaleMultiGrades;
+                    }
+
+                    $data[] = array('', '', '', __('Total'), $totalMaleMultiGrades, $totalFemaleMultiGrades);
+                    $data[] = array();
+                }
+                // multi grades teachers data end
+            }
+            //pr($data);
+            return $data;
+        }
+        
+        private function getReportDataCensusStudents() {
+            $data = array();
+            //$header = array('Age', 'Male', 'Female', __('Total'));
+            $header = array(__('Year'), __('Programme'), __('Grade'), __('Category'), __('Age'), __('Male'), __('Female'), __('Total'));
+            
+            $baseData = $this->CensusStudent->groupByYearGradeCategory($this->institutionSiteId);
+            
+            foreach($baseData AS $row){
+                $year = $row['SchoolYear']['name'];
+                $educationCycle = $row['EducationCycle']['name'];
+                $educationProgramme = $row['EducationProgramme']['name'];
+                $educationGrade = $row['EducationGrade']['name'];
+                $studentCategory = $row['StudentCategory']['name'];
+                
+                $data[] = $header;
+                
+                $censusData = $this->CensusStudent->find('all', array(
+                        'recursive' => -1,
+                        'fields' => array(
+                            'CensusStudent.age',
+                            'CensusStudent.male',
+                            'CensusStudent.female'
+                        ),
+                        'conditions' => array(
+                            'CensusStudent.institution_site_id' => $this->institutionSiteId,
+                            'CensusStudent.school_year_id' => $row['CensusStudent']['school_year_id'],
+                            'CensusStudent.education_grade_id' => $row['CensusStudent']['education_grade_id'],
+                            'CensusStudent.student_category_id' => $row['CensusStudent']['student_category_id']
+                        ),
+                        'group' => array('CensusStudent.age')
+                    )
+                );
+                
+                $total = 0;
+                foreach($censusData AS $censusRow){
+                    $data[] = array(
+                        $year,
+                        $educationCycle . ' - ' . $educationProgramme,
+                        $educationGrade,
+                        $studentCategory,
+                        $censusRow['CensusStudent']['age'],
+                        $censusRow['CensusStudent']['male'],
+                        $censusRow['CensusStudent']['female'],
+                        $censusRow['CensusStudent']['male'] + $censusRow['CensusStudent']['female']
+                    );
+                    
+                    $total += $censusRow['CensusStudent']['male'];
+                    $total += $censusRow['CensusStudent']['female'];
+                }
+                
+                $data[] = array('', '', '', '', '', '', __('Total'), $total);
+                $data[] = array();
+            }
+            
+            return $data;
+        }
+
+    private function getFields($name){
 		if(array_key_exists($name, $this->reportMapping)){
 			$header = $this->reportMapping[$name]['fields'];
 		}
@@ -3397,9 +5506,9 @@ class InstitutionSitesController extends AppController {
 		foreach($header as $model => &$arrcols){
 			foreach($arrcols as $col => $value){
                             if(empty($value)){
-                                $new[] = Inflector::humanize(Inflector::underscore($model)). ' '. Inflector::humanize($col);
+                                $new[] = __(Inflector::humanize(Inflector::underscore($model))) . ' '. __(Inflector::humanize($col));
                             }else{
-                                $new[] = $value;
+                                $new[] = __($value);
                             }
 			}
 		}
@@ -3455,6 +5564,40 @@ class InstitutionSitesController extends AppController {
                         'InstitutionSiteCustomValue' => array('custom_value' => $value)
                     );
                 }
+            }else if($name == 'Student Attendance'){
+                foreach($data AS $row){
+                    $row['StudentAttendance']['total_no_attend'] = $row['StudentAttendance']['total_no_attend'] == NULL ? 0 : $row['StudentAttendance']['total_no_attend'];
+                    $row['StudentAttendance']['total_no_absence'] = $row['StudentAttendance']['total_no_absence'] == NULL ? 0 : $row['StudentAttendance']['total_no_absence'];
+                    $row['InstitutionSiteClassGradeStudent']['total'] = $row['InstitutionSiteClassGradeStudent']['total'] == NULL ? 0 : $row['InstitutionSiteClassGradeStudent']['total'];
+                    $newData[] = $row;
+                }
+            }else if($name == 'Student Behaviour'){
+                foreach($data AS $row){
+                    $row['StudentBehaviour']['date_of_behaviour'] = $this->DateTime->formatDateByConfig($row['StudentBehaviour']['date_of_behaviour']);
+                    $newData[] = $row;
+                }
+            }else if($name == 'Teacher List'){
+                foreach($data AS $row){
+                    $row['Teacher']['gender'] = $this->Utility->formatGender($row['Teacher']['gender']);
+                    $row['Teacher']['date_of_birth'] = $this->DateTime->formatDateByConfig($row['Teacher']['date_of_birth']);
+                    $newData[] = $row;
+                }
+            }else if($name == 'Teacher Behaviour'){
+                foreach($data AS $row){
+                    $row['TeacherBehaviour']['date_of_behaviour'] = $this->DateTime->formatDateByConfig($row['TeacherBehaviour']['date_of_behaviour']);
+                    $newData[] = $row;
+                }
+            }else if($name == 'Staff List'){
+                foreach($data AS $row){
+                    $row['Staff']['gender'] = $this->Utility->formatGender($row['Staff']['gender']);
+                    $row['Staff']['date_of_birth'] = $this->DateTime->formatDateByConfig($row['Staff']['date_of_birth']);
+                    $newData[] = $row;
+                }
+            }else if($name == 'Staff Behaviour'){
+                foreach($data AS $row){
+                    $row['StaffBehaviour']['date_of_behaviour'] = $this->DateTime->formatDateByConfig($row['StaffBehaviour']['date_of_behaviour']);
+                    $newData[] = $row;
+                }
             }
             
             if(!empty($newData)){
@@ -3468,6 +5611,7 @@ class InstitutionSitesController extends AppController {
             $this->autoRender =false;
             
             $arrData = $this->formatCSVData($data, $name);
+            //pr($arrData);
             
             if(array_key_exists($name, $this->reportMapping)){
 		$fileName = array_key_exists('FileName', $this->reportMapping[$name]) ? $this->reportMapping[$name]['FileName'] : "export_".date("Y.m.d");
@@ -3482,22 +5626,76 @@ class InstitutionSitesController extends AppController {
             $csv_file = fopen('php://output', 'w');
             header('Content-type: application/csv');
             header('Content-Disposition: attachment; filename="'.$downloadedFile.'"');
-            $header_row = $this->getHeader($this->ReportData['name']);
+            
+            $header_row = $this->getHeader($name);
             fputcsv($csv_file,$header_row,',','"');
-		
 		 
             // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
             foreach($arrData as $arrSingleResult){
                 $row = array();
-		foreach($arrSingleResult as $table => $arrFields){
-					
+                foreach($arrSingleResult as $table => $arrFields){
+
                     foreach($arrFields as $col){
-			$row[] = $col;
+                        $row[] = $col;
                     }
                 }
-				
+
                 fputcsv($csv_file,$row,',','"');
             }
+            
+            fclose($csv_file);
+        }
+        
+        private function genCSVAcademic($data, $name){
+            $this->autoRender =false;
+            
+            if(array_key_exists($name, $this->reportMappingAcademic)){
+		$fileName = array_key_exists('FileName', $this->reportMappingAcademic[$name]) ? $this->reportMappingAcademic[$name]['FileName'] : "export_".date("Y.m.d");
+            }else{
+                $fileName = "export_".date("Y.m.d");
+            }
+            $downloadedFile = $fileName . '.csv';
+            
+            ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
+            //create a file
+
+            $csv_file = fopen('php://output', 'w');
+            header('Content-type: application/csv');
+            header('Content-Disposition: attachment; filename="'.$downloadedFile.'"');
+            
+            $header_row = $this->getHeaderAcademic($name);
+            fputcsv($csv_file,$header_row,',','"');
+		 
+            // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
+            foreach($data as $row){
+                fputcsv($csv_file,$row,',','"');
+            }
+            
+            fclose($csv_file);
+        }
+        
+        private function genCSVCensus($data, $name){
+            $this->autoRender =false;
+            
+            if(array_key_exists($name, $this->reportMappingCensus)){
+		$fileName = array_key_exists('FileName', $this->reportMappingCensus[$name]) ? $this->reportMappingCensus[$name]['FileName'] : "export_".date("Y.m.d");
+            }else{
+                $fileName = "export_".date("Y.m.d");
+            }
+            $downloadedFile = $fileName . '.csv';
+            
+            ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
+            //create a file
+
+            $csv_file = fopen('php://output', 'w');
+            header('Content-type: application/csv');
+            header('Content-Disposition: attachment; filename="'.$downloadedFile.'"');
+
+            // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
+            foreach($data as $row){
+                fputcsv($csv_file,$row,',','"');
+            }
+            
             fclose($csv_file);
         }
 	
@@ -3529,6 +5727,7 @@ class InstitutionSitesController extends AppController {
 			array('name' => 'More', 'types' => array('CSV'))
 		));
 		$this->set('data', $data);
+                $this->set('actionName', 'genReport');
 		$this->render('Reports/general');
 	}
 	
@@ -3536,10 +5735,6 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Reports - Details');
 		$data = array(
                     'Reports - Details' => array(
-                        array(
-                            'name' => 'Classes - Students', 
-                            'types' => array('CSV')
-                        ),
                         array(
                             'name' => 'Programme List', 
                             'types' => array('CSV')
@@ -3551,10 +5746,63 @@ class InstitutionSitesController extends AppController {
                         array(
                             'name' => 'Student Result', 
                             'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Student Attendance', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Student Behaviour', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Student Academic', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Teacher List', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Teacher Attendance', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Teacher Behaviour', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Teacher Academic', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Staff List', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Staff Attendance', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Staff Behaviour', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Staff Academic', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Class List', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Classes - Students', 
+                            'types' => array('CSV')
                         )
                     )
                 );
 		$this->set('data', $data);
+                $this->set('actionName', 'genReport');
 		$this->render('Reports/general');
 	}
         
@@ -3565,10 +5813,59 @@ class InstitutionSitesController extends AppController {
                         array(
                             'name' => 'Students', 
                             'types' => array('CSV')
-                        )
+                        ),
+                        array(
+                            'name' => 'Teachers', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Staff', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Classes', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Shifts', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Graduates', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Attendance', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Results', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Behaviour', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Textbooks', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Infrastructure', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'Finances', 
+                            'types' => array('CSV')
+                        ),
+                        array(
+                            'name' => 'More', 
+                            'types' => array('CSV')
+                        ),
                     )
                 );
 		$this->set('data', $data);
+                $this->set('actionName', 'genReportCensus');
 		$this->render('Reports/general');
 	}
 }
