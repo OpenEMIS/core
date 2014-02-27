@@ -5,12 +5,13 @@ echo $this->Html->script('attachments', false);
 echo $this->Html->script('/Training/js/courses', false);
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
+
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
 <style>
 a.custom_icon_plus {
-background: url("../img/icons/add.png") no-repeat scroll 0 0 transparent;
+background: url("<?php echo $this->Html->url('/'); ?>/img/icons/add.png") no-repeat scroll 0 0 transparent;
 color: #007CBE;
 font-size: 11px;
 padding: 3px 0 5px 20px;
@@ -162,13 +163,40 @@ padding: 3px 0 5px 20px;
 		?>
         </div>
     </div>
-    <div class="row">
+    <div class="row row_provider" style="min-height:45px;">
         <div class="label"><?php echo __('Training Provider'); ?></div>
         <div class="value">
-		<?php 
-			echo $this->Form->input('training_provider_id', array('options'=>$trainingProviderOptions)); 
-		?>
-        </div>
+		<div class="table provider" style="width:240px;" url="Training/ajax_find_prerequisite/">
+			<div class="delete-provider" name="data[DeleteProvider][{index}][id]"></div>
+			<div class="table_body">
+			<?php if(isset($this->request->data['TrainingCourseProvider']) && !empty($this->request->data['TrainingCourseProvider'])){ ?>
+				<?php 
+				$i = 0;   
+				foreach($this->request->data['TrainingCourseProvider'] as $val){ ?>
+				<div class="table_row " row-id="<?php echo $i;?>">
+					<div class="table_cell cell_description">
+						<div class="input_wrapper">	
+						<?php echo $this->Form->input('TrainingCourseProvider.' . $i . '.training_provider_id', array(
+							'options'=>$trainingProviderOptions,'value'=>$val['training_provider_id'], 'label'=>false, 'div'=>false, 'class'=>false)); ?>
+						<?php if(isset($val['id'])){ ?>
+						<?php echo $this->Form->hidden('TrainingCourseProvider.' . $i . '.id', array('value'=>$val['id'], 
+						'class' => 'control-id')); ?>
+						<?php } ?>
+						</div>
+				    </div>
+				 
+					<div class="table_cell cell_delete">
+				    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteProvider(this)"></span>
+				    </div>
+				</div>
+			<?php 
+				$i++;
+			} ?>
+			<?php } ?>
+			</div>
+		</div>
+		<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addProvider(this)" url="Training/ajax_add_provider"  href="javascript: void(0)"><?php echo __('Add Provider');?></a></div>
+		</div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Training Requirement'); ?></div>

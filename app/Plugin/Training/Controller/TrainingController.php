@@ -8,7 +8,9 @@ class TrainingController extends TrainingAppController {
         'Teachers.TeacherPositionTitle', 
         'Training.TrainingSession',
         'Training.TrainingSessionTrainee',
-        'Training.TrainingCourseAttachment'
+        'Training.TrainingCourseAttachment',
+        'TrainingProvider',
+        'Training.TrainingCourseProvider'
      );
 
     public $modules = array(
@@ -126,6 +128,47 @@ class TrainingController extends TrainingAppController {
  
             return json_encode($data);
         }
+    }  
+
+    //----------------------------------------------------------------------------
+
+
+     public function ajax_add_provider() {
+        $this->layout = 'ajax';
+        $this->set('index', $this->params->query['index']);
+
+        $trainingProviderOptions = $this->TrainingProvider->find('list', array('fields'=> array('id', 'name')));
+        $this->set('trainingProviderOptions', $trainingProviderOptions);
+
+        $this->render('/Elements/provider');
     }
+
+
+    //----------------------------------------------------------------------------
+
+     public function getTrainingCoursesById(){
+        $this->autoRender = false;
+
+        if(isset($this->params['pass'][0]) && !empty($this->params['pass'][0])) {
+            $id = $this->params['pass'][0];
+            $courseData = $this->TrainingCourseProvider->find('all', 
+                array(
+                     'fields' => array('TrainingCourseProvider.*', 'TrainingProvider.*'),
+                    'joins' => array(
+                        array(
+                            'type' => 'INNER',
+                            'table' => 'training_providers',
+                            'alias' => 'TrainingProvider',
+                            'conditions' => array('TrainingProvider.id = TrainingCourseProvider.training_provider_id')
+                        )
+                     ),   
+                    'conditions'=>array('TrainingCourseProvider.training_course_id'=>$id), 
+                    'recursive' => -1)
+            );
+            
+            echo json_encode($courseData);
+        }
+    }
+
 
 }

@@ -4,9 +4,7 @@ echo $this->Html->script('/Training/js/sessions', false);
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
 ?>
-
 <?php echo $this->element('breadcrumb'); ?>
-
 
 <div id="training_session" class="content_wrapper edit add" url="Training/ajax_find_session/" >
 	<h1>
@@ -28,11 +26,30 @@ echo $this->Html->script('jquery-ui.min', false);
 
 	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 	<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
+
+	<?php echo $this->Form->input('course_id', array('type'=> 'hidden', 'default'=>$course, 'class'=>'course')); ?>
+	<?php echo $this->Form->input('provider_id', array('type'=> 'hidden', 'default'=>$provider, 'class'=>'provider')); ?>
 	<div class="row">
 		<div class="label"><?php echo __('Course'); ?></div>
         <div class="value">
 		<?php 
-			echo $this->Form->input('training_course_id', array('options' => $trainingCourseOptions)); 
+            echo $this->Form->input('training_course_id', array(
+                'options' => $trainingCourseOptions,
+                'label' => false,
+                'empty' => __('--Select--'),
+                'class' => 'default training_course',
+                'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
+                'onchange' => 'objTrainingSessions.getDetailsAfterChangeCourse(this)'
+            ));
+		?>
+        </div>
+    </div>
+    <div class="row">
+		<div class="label"><?php echo __('Provider'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_provider_id', array('options' => array(),
+				'class'=>'default training_provider')); 
 		?>
         </div>
     </div>
@@ -52,14 +69,14 @@ echo $this->Html->script('jquery-ui.min', false);
 		?>
         </div>
     </div>
-     <div class="row">
+ 	<div class="row">
         <div class="label"><?php echo __('Location'); ?></div>
         <div class="value">
  			<?php echo $this->Form->input('location', array('id' => 'searchLocation', 'class'=>'default location', 'placeholder' => __('Location')));?>
         </div>
     </div>
      <div class="row">
-        <div class="label"><?php echo __('Provider'); ?></div>
+        <div class="label"><?php echo __('Trainer'); ?></div>
         <div class="value">
         	<?php echo $this->Form->input('trainer', array('id' => 'searchTrainer', 'class'=>'default trainer', 'placeholder' => __('Identification No, First Name or Last Name')));?>
         </div>

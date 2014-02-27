@@ -92,7 +92,15 @@ echo $this->Html->script('search', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Training Provider'); ?></div>
-			<div class="value"><?php echo $data['TrainingProvider']['name']; ?></div>
+			<div class="value">
+				<?php if (!empty($trainingCourseProviders)){ 
+					foreach($trainingCourseProviders as $val){
+						echo $trainingProviders[$val['TrainingCourseProvider']['training_provider_id']] . '<br />';
+					}
+				}else{
+					echo "-";
+				} ?>
+			</div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Training Requirement'); ?></div>
