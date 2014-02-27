@@ -134,4 +134,29 @@ class CensusStaff extends AppModel {
 		));
 		return $data;
 	}
+        
+        public function getYearsHaveData($institutionSiteId){
+            $data = $this->find('all', array(
+                    'recursive' => -1,
+                    'fields' => array(
+                        'SchoolYear.id',
+                        'SchoolYear.name'
+                    ),
+                    'joins' => array(
+                            array(
+                                'table' => 'school_years',
+                                'alias' => 'SchoolYear',
+                                'conditions' => array(
+                                    'CensusStaff.school_year_id = SchoolYear.id'
+                                )
+                            )
+                    ),
+                    'conditions' => array('CensusStaff.institution_site_id' => $institutionSiteId),
+                    'group' => array('CensusStaff.school_year_id'),
+                    'order' => array('SchoolYear.name DESC')
+                )
+            );
+            
+            return $data;
+        }
 }

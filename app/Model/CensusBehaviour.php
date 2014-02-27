@@ -64,4 +64,29 @@ class CensusBehaviour extends AppModel {
 			$save = $this->save(array('CensusBehaviour' => $obj));
 		}
 	}
+        
+        public function getYearsHaveData($institutionSiteId){
+            $data = $this->find('all', array(
+                    'recursive' => -1,
+                    'fields' => array(
+                        'SchoolYear.id',
+                        'SchoolYear.name'
+                    ),
+                    'joins' => array(
+                            array(
+                                'table' => 'school_years',
+                                'alias' => 'SchoolYear',
+                                'conditions' => array(
+                                    'CensusBehaviour.school_year_id = SchoolYear.id'
+                                )
+                            )
+                    ),
+                    'conditions' => array('CensusBehaviour.institution_site_id' => $institutionSiteId),
+                    'group' => array('CensusBehaviour.school_year_id'),
+                    'order' => array('SchoolYear.name DESC')
+                )
+            ); 
+            
+            return $data;
+        }
 }
