@@ -59,6 +59,14 @@ echo $this->Html->script('/Teachers/js/training_needs', false);
         </div>
     </div>
     <div class="row">
+		<div class="label"><?php echo __('Coures Requirement'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('requirement', array('disabled' => 'disabled', 'class' => 'default training_course_requirement')); 
+		?>
+        </div>
+    </div>
+    <div class="row">
         <div class="label"><?php echo __('Priority'); ?></div>
         <div class="value">
         	<?php echo $this->Form->input('training_priority_id', array('options'=>$trainingPriorityOptions));?>

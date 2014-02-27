@@ -1997,6 +1997,15 @@ class StaffController extends StaffAppController {
             if($type == 1){
                 $courseData = $this->TrainingCourse->find('all', 
                     array(
+                         'fields' => array('TrainingCourse.*', 'TrainingRequirement.*'),
+                        'joins' => array(
+                            array(
+                                'type' => 'LEFT',
+                                'table' => 'training_requirements',
+                                'alias' => 'TrainingRequirement',
+                                'conditions' => array('TrainingRequirement.id = TrainingCourse.training_requirement_id')
+                            )
+                         ),   
                         'conditions'=>array('TrainingCourse.id'=>$id), 
                         'recursive' => -1)
                 );

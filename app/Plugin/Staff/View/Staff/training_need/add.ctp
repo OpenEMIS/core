@@ -27,7 +27,7 @@ echo $this->Html->script('/Staff/js/training_needs', false);
 	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 	<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
 	<div class="row">
-		<div class="label"><?php echo __('Course Code'); ?></div>
+		<div class="label"><?php echo __('Course Title'); ?></div>
         <div class="value">
 		<?php
             echo $this->Form->input('training_course_id', array(
@@ -54,6 +54,14 @@ echo $this->Html->script('/Staff/js/training_needs', false);
         <div class="value">
 		<?php 
 			echo $this->Form->input('description', array('disabled' => 'disabled', 'class' => 'default training_course_description', 'type'=>'textarea')); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+		<div class="label"><?php echo __('Course Requirement'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('requirement', array('disabled' => 'disabled', 'class' => 'default training_course_requirement')); 
 		?>
         </div>
     </div>
