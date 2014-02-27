@@ -269,14 +269,15 @@ class NavigationComponent extends Component {
 				'SMS' => array(
 					$this->createLink('Messages', 'Sms', 'messages'),
 					$this->createLink('Responses', 'Sms', 'responses'),
-					$this->createLink('Logs', 'Sms', 'logs')
+					$this->createLink('Logs', 'Sms', 'logs'),
+					$this->createLink('Reports', 'Sms', 'reports')
 				),
 				'TRAINING' => array(
 					$this->createLink('Courses', 'Training', 'course'),
 					$this->createLink('Sessions', 'Training', 'session'),
 					$this->createLink('Results', 'Training', 'result')
 				),
-                                'QUALITY' => array(
+                'QUALITY' => array(
 					'_controller' => 'Quality',
 					$this->createLink('Rubrics', 'Quality', 'rubricsTemplates'),
 					$this->createLink('Status', 'Quality', 'status')

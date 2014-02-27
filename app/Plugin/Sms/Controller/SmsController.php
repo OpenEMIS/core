@@ -427,6 +427,28 @@ class SmsController extends SmsAppController {
         $this->redirect(array('action' => 'responses'));
     }
 
+
+    public function reports(){
+        $this->Navigation->addCrumb('Reports');
+        $data = array('Reports' => array(
+                array('name' => 'SMS Report', 'types' => array('XLSX'))
+        ));
+        $this->set('data', $data);
+    }
+    public function genReport($name, $type) { //$this->genReport('Site Details','CSV');
+        $this->autoRender = false;
+        $this->ReportData['name'] = $name;
+        $this->ReportData['type'] = $type;
+
+        if (method_exists($this, 'gen' . $type)) {
+            if ($type == 'XLSX') {
+                pr('test');
+                //$data = $this->getReportData($this->ReportData['name']);
+                //$this->genCSV($data, $this->ReportData['name']);
+            }
+        }
+    }
+
     function array2csv($results=NULL, $fieldName=NULL)
     {
        ob_end_clean();
