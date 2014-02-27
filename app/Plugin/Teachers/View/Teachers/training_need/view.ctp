@@ -44,6 +44,10 @@ echo $this->Html->script('search', false);
 			<div class="label"><?php echo __('Course Description'); ?></div>
 			<div class="value"><?php echo $data['TrainingCourse']['description']; ?></div>
 		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Course Requirement'); ?></div>
+			<div class="value"><?php echo $trainingRequirementOptions[$data['TrainingCourse']['training_requirement_id']]; ?></div>
+		</div>
 	  	<div class="row">
 			<div class="label"><?php echo __('Priority'); ?></div>
 			<div class="value"><?php echo $data['TrainingPriority']['name']; ?></div>
