@@ -1,6 +1,6 @@
 
 <div class="table_row <?php echo ($index+1)%2==0 ? 'li_even' : ''; ?>" row-id="<?php echo $index;?>">
-	<div class="table_cell cell_description">
+	<div class="table_cell cell_description" style="width:90%">
 		<div class="input_wrapper">
 	 	<div class="trainee-name-<?php echo $index;?>">
 			<?php echo $this->Form->input('TrainingSessionTrainee.' . $index . '.trainee_name', array('type'=>'text', 'id' => 'searchTrainee'.$index, 'div' => false, 'maxlength'=>50, 'label' => false, 'placeholder' => __('Identification No, First Name or Last Name'))); ?>	

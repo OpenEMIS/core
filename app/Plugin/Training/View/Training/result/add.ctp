@@ -66,7 +66,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		<div class="value">
 		<div class="table trainee" style="width:240px;" url="Training/ajax_find_trainee/">
 			<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
-			<div class="table_body">
+			<div class="table_body" style="display:table;">
 			<?php 
 			if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->request->data['TrainingSessionTrainee'])){ ?>
 				<?php 
@@ -91,7 +91,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 				 
 					<div class="table_cell cell_delete">
 				    	<?php 
-						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('value'=>$val['result'], 'style'=>'width:30px;')); ?>
+						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('value'=>$val['result'], 'style'=>'width:25px;')); ?>
 				    </div>
 				    <div class="table_cell" style="padding:5px;">
 				    	<?php 
