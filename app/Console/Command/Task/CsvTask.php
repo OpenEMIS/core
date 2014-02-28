@@ -71,24 +71,43 @@ class CsvTask extends AppTask {
             };
         }
         
-	public function writeCSV($data,$settings){
-		//$batch = $settings['batch'];
+    public function writeCSV($data, $settings) {
+        //$batch = $settings['batch'];
         $tpl = $settings['tpl'];
-        $arrTpl = explode(',',$tpl);
+        $arrTpl = explode(',', $tpl);
         $preclean = $this->getPreCleanContentFunc();
-		//if ($batch == 0){ fputs ($this->fileFP, $tpl."\n"); }
-        foreach($data as $k => $arrv){
-			$line = '';
-			foreach($arrTpl as $column){
-                            $line .= $this->Common->cleanContent($arrv[$column],array('preclean'=>$preclean)).',';
-			}
-			$line .= "\n";
-			fputs ($this->fileFP, $line);
+        //if ($batch == 0){ fputs ($this->fileFP, $tpl."\n"); }
+        if (empty($settings['custom3LayerFormat']) || !$settings['custom3LayerFormat']) {
+            foreach ($data as $k => $arrv) {
+                $line = '';
+                foreach ($arrTpl as $column) {
+                    $line .= $this->Common->cleanContent($arrv[$column], array('preclean' => $preclean)) . ',';
+                }
+
+                $line .= "\n";
+                fputs($this->fileFP, $line);
+            }
         }
-	}
-	
-        
-	public function closeCSV(){
+        else{
+            foreach ($data as $arrSingleResult) {
+                $line = '';
+                foreach ($arrSingleResult as $table => $arrFields) {
+
+                    foreach ($arrFields as $col) {
+                        $line .= $this->Common->cleanContent($col, array('preclean' => $preclean)) . ',';
+                    }
+                    if(empty($arrSingleResult)){
+                        $line .= "\n";
+                    }
+                }
+                
+                $line .= "\n";
+                fputs($this->fileFP, $line);
+            }
+        }
+    }
+
+    public function closeCSV(){
         $line = "\n";
         $line .= "Report Generated: " . date("Y-m-d H:i:s");
         fputs ($this->fileFP, $line);
@@ -118,7 +137,10 @@ class CsvTask extends AppTask {
 				$this->Common->updateStatus($procId,'-1');
 				$this->Common->createLog($this->Common->getLogPath().$procId.'.log',$errLog);
 			}
-			$this->Common->formatData($data);
+                        
+                        if(empty($settings['custom3LayerFormat']) || !$settings['custom3LayerFormat']){
+                            $this->Common->formatData($data);//pr($data);
+                        }
 			$this->writeCSV($data, $settings);
 			echo json_encode(array('processed_records'=>($offset+$this->limit),'batch'=>($i+1)));
 		}

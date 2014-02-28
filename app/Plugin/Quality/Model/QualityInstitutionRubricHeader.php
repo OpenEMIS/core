@@ -60,7 +60,7 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
       //   pr($currentCompletedData);
         
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
-        $questionStatusData = $RubricsTemplateHeader->getAllQuestionsStatus($institutionSiteId, $rubricId);
+        $questionStatusData = $RubricsTemplateHeader->getAllQuestionsStatus($institutionSiteId, $rubricId, $id);
         
         $data = $RubricsTemplateHeader->getRubricHeaders($rubricId, 'all');
         

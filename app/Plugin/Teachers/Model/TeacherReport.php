@@ -20,38 +20,40 @@ class TeacherReport extends TeachersAppModel {
     public $useTable = false;
     public $actsAs = array('ControllerAction');
     public $teacherId = '';
+    public $institutionSiteId = '';
+    public $schoolYear = '';
     private $ReportData = array(); //param 1 name ; param2 type
     private $reportMapping = array(
         'QA Report' => array(
-            'Model' => 'QualityInstitutionRubric',
+            'Model' => 'InstitutionSite',
             'fields' => array(
-                /* '1QualityInstitutionRubric' => array(
-                  '*' => ''
-                  ), */
                 'SchoolYear' => array(
-                    'name' => 'School Year'
+                    'name' => ''
                 ),
                 'InstitutionSite' => array(
                     'name' => '',
-                    'code' => ''
-                ),
-                'InstitutionSiteClass' => array(
-                    'name' => 'Class Name',
+                    'code' => '',
                     'id' => ''
                 ),
+                'InstitutionSiteClass' => array(
+                    'name' => '',
+                    'id' => ''
+                ),
+                'InstitutionSiteClassTeacher' => array(
+                    'teacher_id' => ''
+                ),
                 'EducationGrade' => array(
-                    'name' => 'Grade'
+                    'name' => ''
                 ),
                 'RubricTemplate' => array(
-                    'name' => 'Rubric Name',
+                    'name' => '',
                     'id' => ''
                 ),
                 'RubricTemplateHeader' => array(
-                    'title' => 'Title'
+                    'title' => ''
                 ),
                 'RubricTemplateColumnInfo' => array(
-                    'COALESCE(SUM(weighting),0)' => 'Scores (%)'
-                // 'weighting' => ''
+                    'COALESCE(SUM(weighting),0)' => ''
                 ),
             ),
             'FileName' => 'Report_Teacher_Quality_Assurance'
@@ -126,8 +128,8 @@ class TeacherReport extends TeachersAppModel {
         if (array_key_exists($name, $this->reportMapping)) {
             $modal = ClassRegistry::init('Quality.' . $this->reportMapping[$name]['Model']);
 
-            $whereKey = ($this->reportMapping[$name]['Model'] == 'Teachers') ? 'id' : 'teacher_id';
-            $cond = array($this->reportMapping[$name]['Model'] . "." . $whereKey => $this->teacherId);
+        //    $whereKey = ($this->reportMapping[$name]['Model'] == 'Teachers') ? 'id' : 'teacher_id';
+         //   $cond = array($this->reportMapping[$name]['Model'] . "." . $whereKey => $this->teacherId);
             $options = array('fields' => $this->getFields($name)/* , 'conditions' => $cond */);
 
             if ($this->reportMapping[$name]['Model'] == 'QualityInstitutionVisit') {
@@ -165,7 +167,10 @@ class TeacherReport extends TeachersAppModel {
                     array(
                         'table' => 'teachers',
                         'alias' => 'Teacher',
-                        'conditions' => array('Teacher.id = QualityInstitutionVisit.teacher_id')
+                        'conditions' => array(
+                            'Teacher.id = QualityInstitutionVisit.teacher_id',
+                            'Teacher.id = '.$this->teacherId
+                            )
                     ),
                     array(
                         'table' => 'security_users',
@@ -178,28 +183,29 @@ class TeacherReport extends TeachersAppModel {
                         'conditions' => array('QualityVisitTypes.id = QualityInstitutionVisit.quality_type_id')
                     )
                 );
-            } else if ($this->reportMapping[$name]['Model'] == 'QualityInstitutionRubric') {
+            } else if ($this->reportMapping[$name]['Model'] == 'InstitutionSite') {
 
                 $options['recursive'] = -1;
 
                 $options['joins'] = array(
                     array(
+                        'table' => 'quality_institution_rubrics',
+                        'alias' => 'QualityInstitutionRubric',
+                        'conditions' => array(
+                            'QualityInstitutionRubric.institution_site_id = InstitutionSite.id',
+                            'QualityInstitutionRubric.teacher_id = '.$this->teacherId
+                        )
+                    ),
+                    array(
                         'table' => 'school_years',
                         'alias' => 'SchoolYear',
-                        'conditions' => array('QualityInstitutionRubric.school_year_id = SchoolYear.id')
+                      //  'type' => 'LEFT',
+                        'conditions' => array('SchoolYear.id = QualityInstitutionRubric.school_year_id',)
                     ),
-                    array(
-                        'table' => 'institution_sites',
-                        'alias' => 'InstitutionSite',
-                        'conditions' => array('QualityInstitutionRubric.institution_site_id = InstitutionSite.id')
-                    ),
-                    array(
+                   array(
                         'table' => 'institution_site_classes',
                         'alias' => 'InstitutionSiteClass',
-                        'conditions' => array(
-                            'InstitutionSite.id = InstitutionSiteClass.institution_site_id',
-                            'QualityInstitutionRubric.institution_site_classes_id = InstitutionSiteClass.id',
-                        )
+                        'conditions' => array('QualityInstitutionRubric.institution_site_classes_id = InstitutionSiteClass.id',)
                     ),
                     array(
                         'table' => 'institution_site_class_grades',
@@ -207,19 +213,31 @@ class TeacherReport extends TeachersAppModel {
                         'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
                     ),
                     array(
+                        'table' => 'institution_site_class_teachers',
+                        'alias' => 'InstitutionSiteClassTeacher',
+                        'conditions' => array(
+                            'InstitutionSiteClassTeacher.institution_site_class_id = InstitutionSiteClass.id',
+                            'InstitutionSiteClassTeacher.teacher_id = QualityInstitutionRubric.teacher_id',
+                            )
+                    ),
+                    
+                    array(
                         'table' => 'education_grades',
                         'alias' => 'EducationGrade',
                         'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
                     ),
+                    
                     array(
+                        'table' => 'quality_statuses',
+                        'alias' => 'QualityStatus',
+                        'conditions' => array('QualityStatus.year = SchoolYear.name')
+                    ),
+                    
+                     array(
                         'table' => 'rubrics_templates',
                         'alias' => 'RubricTemplate',
-                        'type' => 'RIGHT',
-                        //'conditions' => array('RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
-                        //     'QualityInstitutionRubric.teacher_id = .'.$this->teacherId)
-                        'conditions' => array('RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
-                            'QualityInstitutionRubric.teacher_id =' . $this->teacherId
-                        )
+                        'type' => 'LEFT',
+                        'conditions' => array('RubricTemplate.id = QualityStatus.rubric_template_id')
                     ),
                     array(
                         'table' => 'rubrics_template_headers',
@@ -265,17 +283,15 @@ class TeacherReport extends TeachersAppModel {
                             'RubricTemplateAnswer.rubrics_template_column_info_id = RubricTemplateColumnInfo.id',
                             'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
                         ),
-                    )
+                    ),
                 );
-
-                // $options['order'] = array('InstitutionSite.id', 'InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.order', 'RubricTemplateSubheader.order', 'RubricTemplateItem.order');
-                $options['group'] = array('QualityInstitutionRubric.teacher_id', 'QualityInstitutionRubric.institution_site_classes_id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
+                $options['order'] = array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
+                $options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
+                
             }
             //   pr($this->reportMapping[$name]['Model']); pr($options); die;
             $data = $modal->find('all', $options);
         }
-//pr($data);
-    //     die;
         return $data;
     }
 
@@ -284,8 +300,13 @@ class TeacherReport extends TeachersAppModel {
         $dateFormat = 'd F, Y';
 
         if ($name == 'QA Report') {
-            //$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-            $newData = $this->processQADataToCSVFormat($data);
+            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            $newData = $RubricsTemplate->processDataToCSVFormat($data);
+            
+            if(!empty($data)){
+                $this->institutionSiteId = $data[0]['InstitutionSite']['id'];
+                $this->schoolYear = $data[0]['SchoolYear']['name'];
+            }
         }
 
         if (!empty($newData)) {
@@ -362,8 +383,12 @@ class TeacherReport extends TeachersAppModel {
 
 
             if ($name == 'QA Report') {
-                unset($header['InstitutionSiteClass']['id']);
-                unset($header['RubricTemplate']['id']);
+                //unset($header['InstitutionSiteClass']['id']);
+                //unset($header['RubricTemplate']['id']);
+                pr($this->institutionSiteId);
+                pr($this->schoolYear);
+                $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+                $header = $RubricsTemplate->getInstitutionQAReportHeader($this->institutionSiteId,$this->schoolYear);
             }
             //     pr($header);
         }
@@ -382,7 +407,7 @@ class TeacherReport extends TeachersAppModel {
     }
 
     //FORMATING REPORTS
-    public function processQADataToCSVFormat($data) {
+    /*public function processQADataToCSVFormat($data) {
         
         //pr($data); die;
         $tempArray = array();
@@ -489,6 +514,6 @@ class TeacherReport extends TeachersAppModel {
         $tempArray[] = $this->addTeacherTotalCSVRow($dummyEmptyArrRowCounter, array('field' => 'Total', 'scores' => $_rubricTotalMarkPercent));
         $tempArray[] = $this->addTeacherTotalCSVRow($dummyEmptyArrRowCounter, array('field' => 'Pass / Fail', 'scores' => $passFail));
         $tempArray[] = array();
-    }
+    }*/
 
 }
