@@ -7,6 +7,9 @@ class SmsController extends SmsAppController {
         'Sms.SmsResponse',
         'ConfigItem'
     );
+
+    public $helpers = array('PhpExcel');  
+
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Auth->allow('receive');
@@ -437,15 +440,58 @@ class SmsController extends SmsAppController {
     }
     public function genReport($name, $type) { //$this->genReport('Site Details','CSV');
         $this->autoRender = false;
-        $this->ReportData['name'] = $name;
-        $this->ReportData['type'] = $type;
 
         if (method_exists($this, 'gen' . $type)) {
             if ($type == 'XLSX') {
-                pr('test');
-                //$data = $this->getReportData($this->ReportData['name']);
-                //$this->genCSV($data, $this->ReportData['name']);
+                pr('test 44');
+                $data = $this->getReportData($name);
+                $this->genXLSX($data, $name);
             }
+        }
+    }
+
+    public function getReportData($name){
+        $data = array();
+        switch ($name) {
+            case 'SMS Report':
+            $data = $this->SmsResponse->query("SELECT count(distinct number) as Number, 'NumberOfPaticipants' as countType, 1 as countId
+                    FROM `sms_responses` AS `SmsResponse`
+                    UNION
+                    SELECT sum(response) as Number, 'NumberOfSyrians' as countType, 2 as countId
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '2' and response = '1'
+                    UNION
+                    SELECT count(distinct number) as Number, 'NumberOfCompleted' as countType, 3 as countId
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '6'
+                    UNION
+                    SELECT count(distinct number) as Number, 'NumberOfPartial' as countType, 4 as countId
+                    FROM `sms_responses` AS `SmsResponse`
+                    group by number
+                    having max(`order`) < 6
+                    UNION
+                    SELECT sum(response) as Number, 'NumberOfAbove16' as countType, 5 as countId
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '3'
+                    UNION
+                    SELECT sum(response) as Number, 'NumberOfBetween6And16' as countType, 6 as countId 
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '4'
+                    UNION
+                    SELECT sum(response) as Number, 'NumberOfBetween6And16School' as countType, 7 as countId 
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '5'
+                    UNION
+                    SELECT sum(SmsResponse1.response)-sum(SmsResponse2.response) as Number, 'NumberOfBetween6And16NoSchool' as countType, 9 as countId 
+                    FROM `sms_responses` AS `SmsResponse1`
+                    LEFT JOIN `sms_responses` AS `SmsResponse2` on `SmsResponse2`.`order`= '5' and `SmsResponse2`.`number` = `SmsResponse1`.`number`
+                     where `SmsResponse1`.`order`= '4'");
+                break;
+        }
+        return $data;
+
+    }
+
+    public function genXLSX($data, $name){
+        switch ($name) {
+            case 'SMS Report':
+            
+                break;
         }
     }
 
