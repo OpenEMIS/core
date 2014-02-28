@@ -90,16 +90,16 @@ padding: 3px 0 5px 20px;
 	 <div class="row row_target_population" style="min-height:45px;">
 		<div class="label"><?php echo __('Target Population'); ?></div>
 		<div class="value">
-		<div class="table target_population" style="width:240px;" url="Training/ajax_find_target_population/">
+		<div class="table target_population" style="width:247px;" url="Training/ajax_find_target_population/">
 			<div class="delete-target-population" name="data[DeleteTargetPopulation][{index}][id]"></div>
-			<div class="table_body">
+			<div class="table_body" style="display:table;">
 			<?php if(isset($this->request->data['TrainingCourseTargetPopulation']) && !empty($this->request->data['TrainingCourseTargetPopulation'])){ ?>
 				<?php 
 				$i = 0;   
 				foreach($this->request->data['TrainingCourseTargetPopulation'] as $val){?>
 				<?php if(!empty($val['position_title_table'])){ ?>
 				<div class="table_row " row-id="<?php echo $i;?>">
-					<div class="table_cell cell_description">
+					<div class="table_cell cell_description" style="width:90%">
 						<div class="input_wrapper">
 					 	<div class="position-title-name-<?php echo $i;?>">
 							<?php 
@@ -166,15 +166,15 @@ padding: 3px 0 5px 20px;
     <div class="row row_provider" style="min-height:45px;">
         <div class="label"><?php echo __('Training Provider'); ?></div>
         <div class="value">
-		<div class="table provider" style="width:240px;" url="Training/ajax_find_prerequisite/">
+		<div class="table provider" style="width:247px;" url="Training/ajax_find_prerequisite/">
 			<div class="delete-provider" name="data[DeleteProvider][{index}][id]"></div>
-			<div class="table_body">
+			<div class="table_body" style="display:table;">
 			<?php if(isset($this->request->data['TrainingCourseProvider']) && !empty($this->request->data['TrainingCourseProvider'])){ ?>
 				<?php 
 				$i = 0;   
 				foreach($this->request->data['TrainingCourseProvider'] as $val){ ?>
 				<div class="table_row " row-id="<?php echo $i;?>">
-					<div class="table_cell cell_description">
+					<div class="table_cell cell_description" style="width:90%">
 						<div class="input_wrapper">	
 						<?php echo $this->Form->input('TrainingCourseProvider.' . $i . '.training_provider_id', array(
 							'options'=>$trainingProviderOptions,'value'=>$val['training_provider_id'], 'label'=>false, 'div'=>false, 'class'=>false)); ?>
@@ -217,16 +217,16 @@ padding: 3px 0 5px 20px;
     <div class="row row_prerequisite" style="min-height:45px;">
 		<div class="label"><?php echo __('Prerequisite'); ?></div>
 		<div class="value">
-		<div class="table prerequisite" style="width:240px;" url="Training/ajax_find_prerequisite/">
+		<div class="table prerequisite" style="width:247px;" url="Training/ajax_find_prerequisite/">
 			<div class="delete-prerequisite" name="data[DeletePrerequisite][{index}][id]"></div>
-			<div class="table_body">
+			<div class="table_body" style="display:table;">
 			<?php if(isset($this->request->data['TrainingCoursePrerequisite']) && !empty($this->request->data['TrainingCoursePrerequisite'])){ ?>
 				<?php 
 				$i = 0;   
 				foreach($this->request->data['TrainingCoursePrerequisite'] as $val){ ?>
 				<?php if(!empty($val['code'])){ ?>
 				<div class="table_row " row-id="<?php echo $i;?>">
-					<div class="table_cell cell_description">
+					<div class="table_cell cell_description" style="width:90%">
 						<div class="input_wrapper">
 					 	<div class="training-course-title-<?php echo $i;?>">
 							<?php echo $val['code'] . ' - ' . $val['title'];?>
