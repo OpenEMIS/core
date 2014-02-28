@@ -31,6 +31,18 @@ class DateTimeComponent extends Component {
 		}
 		return $format;
 	}
+        
+        public function formatDateByConfig($date) {
+		$format = $this->getConfigDateFormat();
+		$output = null;
+		if($date == '0000-00-00' || $date == ''){ 
+			$output = '';
+		}else{
+			$date = new DateTime($date);
+			$output = $date->format($format);
+		}
+		return $output;
+	}
 	
 	public static function getConfigLowestYear() {
 		$configItem = ClassRegistry::init('ConfigItem');

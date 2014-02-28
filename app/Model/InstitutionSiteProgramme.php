@@ -352,5 +352,30 @@ class InstitutionSiteProgramme extends AppModel {
 
 		return $values;
 	}
+        
+        public function getYearsHaveProgrammes($institutionSiteId){
+            $data = $this->find('all', array(
+                    'recursive' => -1,
+                    'fields' => array(
+                        'SchoolYear.id',
+                        'SchoolYear.name'
+                    ),
+                    'joins' => array(
+                            array(
+                                'table' => 'school_years',
+                                'alias' => 'SchoolYear',
+                                'conditions' => array(
+                                    'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
+                                )
+                            )
+                    ),
+                    'conditions' => array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId),
+                    'group' => array('InstitutionSiteProgramme.school_year_id'),
+                    'order' => array('SchoolYear.name DESC')
+                )
+            );
+            
+            return $data;
+        }
 
 }
