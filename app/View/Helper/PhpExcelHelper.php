@@ -298,6 +298,11 @@ class PhpExcelHelper extends AppHelper {
         return $data;
     }
 
+    function changeCell($value = null, $cell = null) 
+    { 
+        $this->sheet->setCellValue($cell, $value);    
+    } 
+
     /**
      * Get writer
      *

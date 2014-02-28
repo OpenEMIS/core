@@ -488,9 +488,43 @@ class SmsController extends SmsAppController {
     }
 
     public function genXLSX($data, $name){
+        $webroot = WWW_ROOT;
+        pr($webroot);
         switch ($name) {
             case 'SMS Report':
-            
+                $templatePath = $webroot . 'reports/Sms_Reports/sms_report_template.xlsx';
+                if (file_exists($templatePath)) {
+                     $this->PhpExcel->loadWorksheet($templatePath);
+                     $this->PhpExcel->setDefaultFont('Calibri', 12);
+                } 
+                $table = array( 
+                    array('label' => __('User'), 'width' => 'auto', 'filter' => true), 
+                    array('label' => __('Type'), 'width' => 'auto', 'filter' => true), 
+                    array('label' => __('Date'), 'width' => 'auto'), 
+                    array('label' => __('Description'), 'width' => 50, 'wrap' => true), 
+                    array('label' => __('Modified'), 'width' => 'auto') 
+                ); 
+
+                // heading 
+                $this->PhpExcel->addTableHeader($table, array('name' => 'Cambria', 'bold' => true)); 
+
+                // data 
+                $this->PhpExcel->addTableRow(array( 
+                    'Test 1', 
+                    'Test 2', 
+                    'Test 3', 
+                    'Test 4', 
+                    'Test 5' 
+                )); 
+                
+
+                $this->PhpExcel->addTableFooter(); 
+                $this->PhpExcel->output('sms_report_' . date('Ymdhis') . '.xlsx'); 
+                /*
+                $this->PhpExcel->loadWorksheet('')
+                $excel->loadFile('file.xls'); 
+            $excel->changeCell('some text', 'A1'); 
+            $excel->_output('newFilename'); */
                 break;
         }
     }
