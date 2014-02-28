@@ -53,7 +53,7 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $data['TrainingSession']['location']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Trainer'); ?></div>
+			<div class="label"><?php echo __('Provider'); ?></div>
 			<div class="value"><?php echo $data['TrainingSession']['trainer']; ?></div>
 		</div>
 		<div class="row">
