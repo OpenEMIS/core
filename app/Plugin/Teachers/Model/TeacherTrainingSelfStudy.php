@@ -61,13 +61,6 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
             	'message' => 'End Date must be greater than Start Date'
             )
         ),
-        'training_provider_id' => array(
-            'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a Course Provider.'
-			)
-        ),
 		'hours' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
