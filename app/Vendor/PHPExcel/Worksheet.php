@@ -2,7 +2,7 @@
 /**
  * PHPExcel
  *
- * Copyright (c) 2006 - 2013 PHPExcel
+ * Copyright (c) 2006 - 2014 PHPExcel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +20,9 @@
  *
  * @category   PHPExcel
  * @package    PHPExcel_Worksheet
- * @copyright  Copyright (c) 2006 - 2013 PHPExcel (http://www.codeplex.com/PHPExcel)
+ * @copyright  Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
  * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt    LGPL
- * @version    ##VERSION##, ##DATE##
+ * @version    1.8.0, 2014-03-02
  */
 
 
@@ -31,7 +31,7 @@
  *
  * @category   PHPExcel
  * @package    PHPExcel_Worksheet
- * @copyright  Copyright (c) 2006 - 2013 PHPExcel (http://www.codeplex.com/PHPExcel)
+ * @copyright  Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
  */
 class PHPExcel_Worksheet implements PHPExcel_IComparable
 {
@@ -794,14 +794,16 @@ class PHPExcel_Worksheet implements PHPExcel_IComparable
      * @return PHPExcel_Worksheet
      */
 	public function rebindParent(PHPExcel $parent) {
-        $namedRanges = $this->_parent->getNamedRanges();
-        foreach ($namedRanges as $namedRange) {
-            $parent->addNamedRange($namedRange);
-        }
+        if ($this->_parent !== null) {
+            $namedRanges = $this->_parent->getNamedRanges();
+            foreach ($namedRanges as $namedRange) {
+                $parent->addNamedRange($namedRange);
+            }
 
-        $this->_parent->removeSheetByIndex(
-            $this->_parent->getIndex($this)
-        );
+            $this->_parent->removeSheetByIndex(
+                $this->_parent->getIndex($this)
+            );
+        }
         $this->_parent = $parent;
 
         return $this;

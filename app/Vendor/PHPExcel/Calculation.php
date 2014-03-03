@@ -2,7 +2,7 @@
 /**
  * PHPExcel
  *
- * Copyright (c) 2006 - 2013 PHPExcel
+ * Copyright (c) 2006 - 2014 PHPExcel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +20,9 @@
  *
  * @category   PHPExcel
  * @package    PHPExcel_Calculation
- * @copyright  Copyright (c) 2006 - 2013 PHPExcel (http://www.codeplex.com/PHPExcel)
+ * @copyright  Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
  * @license	http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt	LGPL
- * @version	##VERSION##, ##DATE##
+ * @version	1.8.0, 2014-03-02
  */
 
 
@@ -57,7 +57,7 @@ if (!defined('CALCULATION_REGEXP_CELLREF')) {
  *
  * @category	PHPExcel
  * @package		PHPExcel_Calculation
- * @copyright	Copyright (c) 2006 - 2013 PHPExcel (http://www.codeplex.com/PHPExcel)
+ * @copyright	Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
  */
 class PHPExcel_Calculation {
 
@@ -3324,7 +3324,8 @@ class PHPExcel_Calculation {
 //							echo '$cellRef='.$cellRef.' in worksheet '.$matches[2].'<br />';
 							$this->_debugLog->writeDebugLog('Evaluating Cell ', $cellRef, ' in worksheet ', $matches[2]);
 							if ($pCellParent !== NULL) {
-								if ($this->_workbook->getSheetByName($matches[2])->cellExists($cellRef)) {
+								$cellSheet = $this->_workbook->getSheetByName($matches[2]);
+								if ($cellSheet && $cellSheet->cellExists($cellRef)) {
 									$cellValue = $this->extractCellRange($cellRef, $this->_workbook->getSheetByName($matches[2]), FALSE);
 									$pCell->attach($pCellParent);
 								} else {
@@ -3662,22 +3663,23 @@ class PHPExcel_Calculation {
 			}
 		} else {
 			if ((PHPExcel_Calculation_Functions::getCompatibilityMode() != PHPExcel_Calculation_Functions::COMPATIBILITY_OPENOFFICE) &&
-				((is_string($operand1) && !is_numeric($operand1)) || (is_string($operand2) && !is_numeric($operand2)))) {
+				((is_string($operand1) && !is_numeric($operand1) && strlen($operand1)>0) || 
+                 (is_string($operand2) && !is_numeric($operand2) && strlen($operand2)>0))) {
 				$result = PHPExcel_Calculation_Functions::VALUE();
 			} else {
 				//	If we're dealing with non-matrix operations, execute the necessary operation
 				switch ($operation) {
 					//	Addition
 					case '+':
-						$result = $operand1+$operand2;
+						$result = $operand1 + $operand2;
 						break;
 					//	Subtraction
 					case '-':
-						$result = $operand1-$operand2;
+						$result = $operand1 - $operand2;
 						break;
 					//	Multiplication
 					case '*':
-						$result = $operand1*$operand2;
+						$result = $operand1 * $operand2;
 						break;
 					//	Division
 					case '/':
@@ -3687,12 +3689,12 @@ class PHPExcel_Calculation {
 							$this->_debugLog->writeDebugLog('Evaluation Result is ', $this->_showTypeDetails('#DIV/0!'));
 							return FALSE;
 						} else {
-							$result = $operand1/$operand2;
+							$result = $operand1 / $operand2;
 						}
 						break;
 					//	Power
 					case '^':
-						$result = pow($operand1,$operand2);
+						$result = pow($operand1, $operand2);
 						break;
 				}
 			}

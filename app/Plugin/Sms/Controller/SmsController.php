@@ -8,7 +8,6 @@ class SmsController extends SmsAppController {
         'ConfigItem'
     );
 
-    public $helpers = array('PhpExcel');  
 
     public function beforeFilter() {
         parent::beforeFilter();
@@ -443,7 +442,6 @@ class SmsController extends SmsAppController {
 
         if (method_exists($this, 'gen' . $type)) {
             if ($type == 'XLSX') {
-                pr('test 44');
                 $data = $this->getReportData($name);
                 $this->genXLSX($data, $name);
             }
@@ -489,42 +487,26 @@ class SmsController extends SmsAppController {
 
     public function genXLSX($data, $name){
         $webroot = WWW_ROOT;
-        pr($webroot);
+        $view = new View($this);
+        $phpExcel = $view->loadHelper('PhpExcel');
         switch ($name) {
             case 'SMS Report':
-                $templatePath = $webroot . 'reports/Sms_Reports/sms_report_template.xlsx';
+                $templatePath = $webroot . 'reports/Sms_Reports/Sms/sms_report_template.xlsx';
                 if (file_exists($templatePath)) {
-                     $this->PhpExcel->loadWorksheet($templatePath);
-                     $this->PhpExcel->setDefaultFont('Calibri', 12);
+                     $phpExcel->loadWorksheet($templatePath);
+                     $phpExcel->setDefaultFont('Calibri', 12);
                 } 
-                $table = array( 
-                    array('label' => __('User'), 'width' => 'auto', 'filter' => true), 
-                    array('label' => __('Type'), 'width' => 'auto', 'filter' => true), 
-                    array('label' => __('Date'), 'width' => 'auto'), 
-                    array('label' => __('Description'), 'width' => 50, 'wrap' => true), 
-                    array('label' => __('Modified'), 'width' => 'auto') 
-                ); 
 
-                // heading 
-                $this->PhpExcel->addTableHeader($table, array('name' => 'Cambria', 'bold' => true)); 
 
-                // data 
-                $this->PhpExcel->addTableRow(array( 
-                    'Test 1', 
-                    'Test 2', 
-                    'Test 3', 
-                    'Test 4', 
-                    'Test 5' 
-                )); 
-                
+                $i = 4;
+                foreach($data as $key=>$val){
+                    $phpExcel->changeCell($val[0]['Number'],'B'.$i); 
+                    $i++;
+                }
+               
+                $phpExcel->createSmsPieChart();
 
-                $this->PhpExcel->addTableFooter(); 
-                $this->PhpExcel->output('sms_report_' . date('Ymdhis') . '.xlsx'); 
-                /*
-                $this->PhpExcel->loadWorksheet('')
-                $excel->loadFile('file.xls'); 
-            $excel->changeCell('some text', 'A1'); 
-            $excel->_output('newFilename'); */
+                $phpExcel->output('sms_report_' . date('Ymdhis') . '.xlsx'); 
                 break;
         }
     }

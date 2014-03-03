@@ -2,7 +2,7 @@
 /**
  * PHPExcel
  *
- * Copyright (c) 2006 - 2013 PHPExcel
+ * Copyright (c) 2006 - 2014 PHPExcel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +20,9 @@
  *
  * @category   PHPExcel
  * @package    PHPExcel_Reader_Excel5
- * @copyright  Copyright (c) 2006 - 2013 PHPExcel (http://www.codeplex.com/PHPExcel)
+ * @copyright  Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
  * @license    http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt        LGPL
- * @version    ##VERSION##, ##DATE##
+ * @version    1.8.0, 2014-03-02
  */
 
 
@@ -31,7 +31,7 @@
  *
  * @category        PHPExcel
  * @package                PHPExcel_Reader_Excel5
- * @copyright        Copyright (c) 2006 - 2013 PHPExcel (http://www.codeplex.com/PHPExcel)
+ * @copyright        Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
  */
 class PHPExcel_Reader_Excel5_MD5
 {
@@ -174,10 +174,10 @@ class PHPExcel_Reader_Excel5_MD5
         self::step($I, $C, $D, $A, $B, $words[2], 15, 0x2ad7d2bb);
         self::step($I, $B, $C, $D, $A, $words[9], 21, 0xeb86d391);
 
-        $this->a = ($this->a + $A);
-        $this->b = ($this->b + $B);
-        $this->c = ($this->c + $C);
-        $this->d = ($this->d + $D);
+        $this->a = ($this->a + $A) & 0xffffffff;
+        $this->b = ($this->b + $B) & 0xffffffff;
+        $this->c = ($this->c + $C) & 0xffffffff;
+        $this->d = ($this->d + $D) & 0xffffffff;
     }
 
 
@@ -207,9 +207,9 @@ class PHPExcel_Reader_Excel5_MD5
 
     private static function step($func, &$A, $B, $C, $D, $M, $s, $t)
     {
-        $A = ($A + call_user_func($func, $B, $C, $D) + $M + $t);
+        $A = ($A + call_user_func($func, $B, $C, $D) + $M + $t) & 0xffffffff;
         $A = self::rotate($A, $s);
-        $A = ($B + $A);
+        $A = ($B + $A) & 0xffffffff;
     }
 
 
