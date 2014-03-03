@@ -74,9 +74,13 @@ class TeacherTrainingNeed extends TeachersAppModel {
 		if(empty($data)){
 			$controller->redirect(array('action'=>'trainingNeed'));
 		}
+
+		$trainingRequirement = ClassRegistry::init('TrainingRequirement');
+		$trainingRequirementOptions = $trainingRequirement->find('list', array('fields'=> array('id', 'name')));
 		
 		$controller->Session->write('TeacherTrainingNeedId', $id);
 		$controller->set('data', $data);
+		$controller->set('trainingRequirementOptions', $trainingRequirementOptions);
 	}
 	
 

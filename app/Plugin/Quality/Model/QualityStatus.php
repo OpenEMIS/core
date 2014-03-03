@@ -42,7 +42,7 @@ class QualityStatus extends QualityAppModel {
             )
         ),
     );
-    public $statusOptions = array('Disabled', 'Enabled');
+    public $statusOptions = array('Date Disabled', 'Date Enabled');
     
     public function checkDropdownData($check) {
         $value = array_values($check);
@@ -176,6 +176,7 @@ class QualityStatus extends QualityAppModel {
                 'conditions' => array('RubricsTemplate.id = QualityStatus.rubric_template_id')
             )
         );
+        $options['order'] = array('RubricsTemplate.name','QualityStatus.year');
         $options['fields'] = array('QualityStatus.*', 'RubricsTemplate.*');
         $data = $this->find('all', $options);
         

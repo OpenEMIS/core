@@ -21,7 +21,7 @@ echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => fa
 						<?php foreach($arrTypVals['types'] as $val){?>
 						   <?php 
 						   echo $this->Html->link( __($val),
-								array('controller' => 'InstitutionSites', 'action' =>'genReport', $arrTypVals['name'], $val));
+								array('controller' => 'InstitutionSites', 'action' => $actionName, $arrTypVals['name'], $val));
 						   }?>
 					</div>
                 </div>
