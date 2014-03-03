@@ -66,7 +66,7 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
         
         $editable =  $controller->Session->read('QualityRubric.editable');
       
-        if(empty($editable)){pr('here');
+        if(empty($editable)){//pr('here');
             $QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
             $rubricHeaderData = $QualityInstitutionRubric->find('first', array('conditions' => array('QualityInstitutionRubric.id' => $id)));
 

@@ -119,7 +119,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 
         if ($type == 'add') {
             $userData = $controller->Session->read('Auth.User');
-            $supervisorName = $userData['first_name'] . ' ' . $userData['last_name'];
+            $evaluatorName = $userData['first_name'] . ' ' . $userData['last_name'];
 
             $paramsLocateCounter = 0;
         } else {
@@ -140,7 +140,7 @@ class QualityInstitutionRubric extends QualityAppModel {
                         $selectedYearId = $data[$this->name]['school_year_id'];
                         $selectedClassId = $data[$this->name]['institution_site_classes_id'];
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
-                        $supervisorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
+                        $evaluatorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
                     }
                 } else {
                     //  return $controller->redirect(array('action' => 'index'));
@@ -196,7 +196,7 @@ class QualityInstitutionRubric extends QualityAppModel {
         $controller->set('type', $type);
         $controller->set('modelName', $this->name);
 
-        $controller->request->data[$this->name]['supervisor'] = $supervisorName;
+        $controller->request->data[$this->name]['evaluator'] = $evaluatorName;
         $controller->request->data[$this->name]['school_year_id'] = $selectedYearId;
         $controller->request->data[$this->name]['institution_site_id'] = empty($controller->request->data[$this->name]['institution_site_id']) ? $institutionSiteId : $controller->request->data[$this->name]['institution_site_id'];
         $controller->request->data[$this->name]['rubric_template_id'] = empty($selectedRubricId) ? 0 : $selectedRubricId;
