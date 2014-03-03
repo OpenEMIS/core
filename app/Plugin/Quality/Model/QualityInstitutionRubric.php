@@ -232,9 +232,9 @@ class QualityInstitutionRubric extends QualityAppModel {
         $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['teacher_id']);
 
         $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
-        $editiable = $QualityStatus->getRubricStatus($year['SchoolYear']['name'],$data[$this->name]['rubric_template_id']);
-      
-        $controller->Session->write('QualityRubric.editable', $editiable);
+        $editable = $QualityStatus->getRubricStatus($year['SchoolYear']['name'],$data[$this->name]['rubric_template_id']);
+     // pr($editable);
+        $controller->Session->write('QualityRubric.editable', $editable);
         
         $controller->set('rubric_template_id', $data[$this->name]['rubric_template_id']);
         $controller->set('schoolYear', $year['SchoolYear']['name']);
