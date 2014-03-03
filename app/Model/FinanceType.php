@@ -19,6 +19,44 @@ App::uses('AppModel', 'Model');
 class FinanceType extends AppModel {
 	public $belongsTo = array('FinanceNature');
 	public $hasMany = array('FinanceCategory');
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
+	public function getSubOptions() {
+		$modelName = get_class($this);
+		$Nature = ClassRegistry::init('FinanceNature');
+		$list = $Nature->find('list', array('order' => array('order')));
+		$options = array();
+		foreach($list as $id => $name) {
+			$options[] = array('model' => $modelName, 'label' => $name, 'conditions' => array('finance_nature_id' => $id));
+		}
+		return $options;
+	}
+	
+	public function getOptionFields() {
+		$Nature = ClassRegistry::init('FinanceNature');
+		$options = $Nature->find('list', array('order' => array('order')));
+		
+		$fields = array(
+			'national_code' => array('label' => 'National Code', 'display' => true), 
+			'international_code' => array('label' => 'International Code', 'display' => true),
+			'finance_nature_id' => array(
+				'label' => 'Nature', 
+				'display' => false, 
+				'options' => $options
+			)
+		);
+		return $fields;
+	}
 	
 	public function getLookupVariables() {
 		$parent = ClassRegistry::init('FinanceNature');

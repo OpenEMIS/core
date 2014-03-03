@@ -17,5 +17,16 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStatus extends AppModel {
-	var $hasMany = array('InstitutionSite');//,'InstitutionsSite'
+	public $hasMany = array('InstitutionSite');
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
 }

@@ -1,3 +1,4 @@
+
 <?php
 /*
 @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
@@ -16,20 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class InfrastructureCategory extends AppModel {
-	public $actsAs = array('FieldOption');
+class SchoolPeriodType extends AppModel {
 	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Option'
-			)
-		)
-	);
-	
-	public function getLookupVariables() {
-		return array('Categories' => array('model' => 'InfrastructureCategory'));
-	}
 }

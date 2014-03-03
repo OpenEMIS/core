@@ -18,6 +18,57 @@ App::uses('AppModel', 'Model');
 
 class FinanceCategory extends AppModel {
 	public $belongsTo = array('FinanceType');
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
+	public function getSubOptions() {
+		$modelName = get_class($this);
+		$Nature = ClassRegistry::init('FinanceNature');
+		$Type = ClassRegistry::init('FinanceType');
+		$natureList = $Nature->find('list', array('order' => array('order')));
+		$options = array();
+		foreach($natureList as $natureId => $natureName) {
+			$typeList = $Type->find('list', array('conditions' => array('finance_nature_id' => $natureId)));
+			foreach($typeList as $typeId => $typeName) {
+				$options[] = array('parent' => $natureName, 'model' => $modelName, 'label' => $typeName, 'conditions' => array('finance_type_id' => $typeId));
+			}
+		}
+		return $options;
+	}
+	
+	public function getOptionFields() {
+		$Nature = ClassRegistry::init('FinanceNature');
+		$Type = ClassRegistry::init('FinanceType');
+		$natureList = $Nature->find('list', array('order' => array('order')));
+		$options = array();
+		foreach($natureList as $natureId => $natureName) {
+			$typeList = $Type->find('list', array('conditions' => array('finance_nature_id' => $natureId)));
+			$options[$natureName] = array();
+			foreach($typeList as $typeId => $typeName) {
+				$options[$natureName][$typeId] = $typeName;
+			}
+		}
+		
+		$fields = array(
+			'national_code' => array('label' => 'National Code', 'display' => true), 
+			'international_code' => array('label' => 'International Code', 'display' => true),
+			'finance_type_id' => array(
+				'label' => 'Type', 
+				'display' => false, 
+				'options' => $options
+			)
+		);
+		return $fields;
+	}
 	
 	public function getLookupVariables() {
 		$Nature = ClassRegistry::init('FinanceNature');
@@ -30,6 +81,7 @@ class FinanceCategory extends AppModel {
 		return $lookup;
 	}
 	
+	/*
 	public function findOptions($options=array()) {
 		$Type = ClassRegistry::init('FinanceType');
 		$items = array();
@@ -44,4 +96,5 @@ class FinanceCategory extends AppModel {
 		}
 		return $items;
 	}
+	*/
 }
