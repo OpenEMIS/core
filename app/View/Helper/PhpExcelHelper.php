@@ -60,7 +60,7 @@ class PhpExcelHelper extends AppHelper {
     public function loadWorksheet($file) {
         // load vendor classes
         App::import('Vendor', 'PhpExcel.PHPExcel');
-
+        App::import('Vendor', 'PHPExcel_IOFactory', array('file' => 'PHPExcel'.DS.'IOFactory.php'));
         $this->_xls = PHPExcel_IOFactory::load($file);
         $this->setActiveSheet(0);
         $this->_row = 1;
@@ -300,7 +300,7 @@ class PhpExcelHelper extends AppHelper {
 
     function changeCell($value = null, $cell = null) 
     { 
-        $this->sheet->setCellValue($cell, $value);    
+        $this->getActiveSheet()->setCellValue($cell, $value);    
     } 
 
     /**
@@ -343,8 +343,93 @@ class PhpExcelHelper extends AppHelper {
 
         // writer
         $objWriter = $this->getWriter($writer);
-        $objWriter->save('php://output');
+        $objWriter->setIncludeCharts(TRUE);
 
+        $objWriter->save('php://output');
         exit;
+    }
+
+    public function createSmsPieChart(){
+        $categories1 = array(
+            new PHPExcel_Chart_DataSeriesValues('String', 'Report!$A$8:$A$9', null, 2),
+        );
+
+        $values1 = array(
+            new PHPExcel_Chart_DataSeriesValues('Number', 'Report!$B$8:$B$9', null, 2),
+        );
+
+        $series1 = new PHPExcel_Chart_DataSeries(
+            PHPExcel_Chart_DataSeries::TYPE_PIECHART,       // plotType
+            null,  // plotGrouping
+            array(0),                                       // plotOrder
+            null,                                             // plotLabel
+            $categories1,                                    // plotCategory
+            $values1                                         // plotValues
+        );
+
+        $layout1 = new PHPExcel_Chart_Layout();
+        //$layout1->setShowVal(TRUE);      // Initializing the data labels with Values
+        $layout1->setShowPercent(TRUE);
+        //$layout1->setShowCatName(TRUE);
+        $title1 = new PHPExcel_Chart_Title('Age Range');
+        $plotarea1 = new PHPExcel_Chart_PlotArea($layout1, array($series1));
+        $legend1 = new PHPExcel_Chart_Legend(PHPExcel_Chart_Legend::POSITION_RIGHT, null, false);
+        $chart1 = new PHPExcel_Chart(
+                'chart1',                                       // name
+                $title1,                                           // title
+                $legend1,                                        // legend
+                $plotarea1,                                      // plotArea
+                true,                                           // plotVisibleOnly
+                0,                                              // displayBlanksAs
+                null,                                           // xAxisLabel
+                null                                            // yAxisLabel
+        );
+
+        $chart1->setTopLeftPosition('D2');
+        $chart1->setBottomRightPosition('G12');
+        $this->_xls->getActiveSheet()->addChart($chart1);
+        //--------------------------------------------------------------------------
+        $categories2 = array(
+            new PHPExcel_Chart_DataSeriesValues('String', 'Report!$A$10:$A$11', null, 2),
+        );
+
+        $values2 = array(
+            new PHPExcel_Chart_DataSeriesValues('Number', 'Report!$B$10:$B$11', null, 2),
+        );
+
+        $series2 = new PHPExcel_Chart_DataSeries(
+            PHPExcel_Chart_DataSeries::TYPE_PIECHART,       // plotType
+            null,  // plotGrouping
+            array(0),                                       // plotOrder
+            null,                                             // plotLabel
+            $categories2,                                    // plotCategory
+            $values2                                         // plotValues
+        );
+
+        $layout2 = new PHPExcel_Chart_Layout();
+        //$layout1->setShowVal(TRUE);      // Initializing the data labels with Values
+        $layout2->setShowPercent(TRUE);
+        //$layout1->setShowCatName(TRUE);
+        $title2 = new PHPExcel_Chart_Title('School Attendance');
+        $plotarea2 = new PHPExcel_Chart_PlotArea($layout2, array($series2));
+        $legend2 = new PHPExcel_Chart_Legend(PHPExcel_Chart_Legend::POSITION_RIGHT, null, false);
+        $chart2 = new PHPExcel_Chart(
+                'chart2',                                       // name
+                $title2,                                           // title
+                $legend2,                                        // legend
+                $plotarea2,                                      // plotArea
+                true,                                           // plotVisibleOnly
+                0,                                              // displayBlanksAs
+                null,                                           // xAxisLabel
+                null                                            // yAxisLabel
+        );
+
+        $chart2->setTopLeftPosition('G2');
+        $chart2->setBottomRightPosition('L12');
+        $this->_xls->getActiveSheet()->addChart($chart2);
+        
+
+
+        return $objWriter;
     }
 }

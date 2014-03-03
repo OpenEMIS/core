@@ -2,7 +2,7 @@
 /**
  * PHPExcel
  *
- * Copyright (c) 2006 - 2013 PHPExcel
+ * Copyright (c) 2006 - 2014 PHPExcel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +20,9 @@
  *
  * @category	PHPExcel
  * @package		PHPExcel_Calculation
- * @copyright	Copyright (c) 2006 - 2013 PHPExcel (http://www.codeplex.com/PHPExcel)
+ * @copyright	Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
  * @license		http://www.gnu.org/licenses/old-licenses/lgpl-2.1.txt	LGPL
- * @version		##VERSION##, ##DATE##
+ * @version		1.8.0, 2014-03-02
  */
 
 
@@ -54,7 +54,7 @@ define('PRECISION', 8.88E-016);
  *
  * @category	PHPExcel
  * @package		PHPExcel_Calculation
- * @copyright	Copyright (c) 2006 - 2013 PHPExcel (http://www.codeplex.com/PHPExcel)
+ * @copyright	Copyright (c) 2006 - 2014 PHPExcel (http://www.codeplex.com/PHPExcel)
  */
 class PHPExcel_Calculation_Functions {
 
@@ -316,7 +316,12 @@ class PHPExcel_Calculation_Functions {
 		} else {
 			preg_match('/([<>=]+)(.*)/',$condition,$matches);
 			list(,$operator,$operand) = $matches;
-			if (!is_numeric($operand)) { $operand = PHPExcel_Calculation::_wrapResult(strtoupper($operand)); }
+
+			if (!is_numeric($operand)) {
+				$operand = str_replace('"', '""', $operand);
+				$operand = PHPExcel_Calculation::_wrapResult(strtoupper($operand));
+			}
+
 			return $operator.$operand;
 		}
 	}	//	function _ifCondition()
@@ -491,7 +496,7 @@ class PHPExcel_Calculation_Functions {
 	 * @return	string	Version information
 	 */
 	public static function VERSION() {
-		return 'PHPExcel ##VERSION##, ##DATE##';
+		return 'PHPExcel 1.8.0, 2014-03-02';
 	}	//	function VERSION()
 
 
