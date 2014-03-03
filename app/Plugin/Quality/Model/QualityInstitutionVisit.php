@@ -61,6 +61,12 @@ class QualityInstitutionVisit extends QualityAppModel {
                 // 'required' => true,
                 'message' => 'Please select a valid Type.'
             )
+        ),
+        'comment' => array(
+            'ruleRequired' => array(
+                'rule' => array('maxLength', 200),
+                'message' => 'Maximum 200 character per comment.'
+            )
         )
     );
 
@@ -111,10 +117,10 @@ class QualityInstitutionVisit extends QualityAppModel {
 
         $controller->Session->write('QualityVisit.id', $id);
         $controller->set('data', $data);
-   
+
         $SchoolYear = ClassRegistry::init('SchoolYear');
         $year = $SchoolYear->findById($data[$this->name]['school_year_id']);
-        
+
         $EducationGrade = ClassRegistry::init('EducationGrade');
         $grade = $EducationGrade->find('first', array('recursive' => -1, 'contidions' => array('EducationGrade.id' => $data[$this->name]['education_grade_id'])));
 
@@ -137,14 +143,14 @@ class QualityInstitutionVisit extends QualityAppModel {
     public function qualityVisitAdd($controller, $params) {
         $controller->Navigation->addCrumb('Quality - Add Visit');
         $controller->set('subheader', 'Quality - Add Visit');
-        
+
         $this->_setupStatusForm($controller, $params, 'add');
     }
 
     public function qualityVisitEdit($controller, $params) {
         $controller->Navigation->addCrumb('Quality - Edit Visit');
         $controller->set('subheader', 'Quality - Edit Visit');
-        
+
         $this->_setupStatusForm($controller, $params, 'edit');
         $this->render = 'add';
     }
@@ -153,14 +159,14 @@ class QualityInstitutionVisit extends QualityAppModel {
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
         $userData = $controller->Session->read('Auth.User');
         $supervisorName = $userData['first_name'] . ' ' . $userData['last_name'];
-        
-        
+
+
         if ($type == 'add') {
             $paramsLocateCounter = 0;
         } else {
             $paramsLocateCounter = 1;
         }
-        
+
 
         if ($controller->request->is('get')) {
             if ($type == 'edit') {
@@ -168,8 +174,8 @@ class QualityInstitutionVisit extends QualityAppModel {
                     $selectedId = $params['pass'][0];
 
                     $data = $this->find('first', array('conditions' => array('QualityInstitutionVisit.id' => $selectedId)));
-                 
-                    if(!empty($data)){
+
+                    if (!empty($data)) {
                         $controller->request->data = $data;
                         $selectedTeacherId = $data[$this->name]['teacher_id'];
                         $selectedYearId = $data[$this->name]['school_year_id'];
@@ -179,16 +185,15 @@ class QualityInstitutionVisit extends QualityAppModel {
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
                         $selectedDate = $data[$this->name]['date'];
                         $supervisorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
-                       
                     }
                 } else {
-                  //  return $controller->redirect(array('action' => 'index'));
+                    //  return $controller->redirect(array('action' => 'index'));
                 }
             }
         } else {
             $postData = $controller->request->data;
             unset($postData[$this->name]['file']);
-            
+
             $this->set($postData);
             if ($this->validates()) {
                 if ($this->save($postData)) {
@@ -221,9 +226,9 @@ class QualityInstitutionVisit extends QualityAppModel {
                 }
             }
         }
-        $selectedDate = !empty($selectedDate)? $selectedDate : '';
+        $selectedDate = !empty($selectedDate) ? $selectedDate : '';
         $selectedDate = !empty($params['pass'][0 + $paramsLocateCounter]) ? $params['pass'][0 + $paramsLocateCounter] : $selectedDate;
-     
+
         $SchoolYear = ClassRegistry::init('SchoolYear');
         $schoolYearOptions = $SchoolYear->getYearList();
 
@@ -231,45 +236,45 @@ class QualityInstitutionVisit extends QualityAppModel {
             $controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'));
             return $controller->redirect(array('action' => 'qualityVisit'));
         }
-        $selectedYearId = !empty($selectedYearId)? $selectedYearId : key($schoolYearOptions);
+        $selectedYearId = !empty($selectedYearId) ? $selectedYearId : key($schoolYearOptions);
         $selectedYearId = !empty($params['pass'][1 + $paramsLocateCounter]) ? $params['pass'][1 + $paramsLocateCounter] : $selectedYearId;
 
         $gradesOptions = array();
         $InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
         $institutionProgramData = $InstitutionSiteProgramme->getProgrammeList($institutionSiteId, $selectedYearId);
-        
+
         foreach ($institutionProgramData as $itemData) {
             if (array_key_exists('education_grades', $itemData)) {
-               // $gradesOptions = $itemData['education_grades'];
+                // $gradesOptions = $itemData['education_grades'];
                 //pr($itemData['education_grades']);
-                foreach($itemData['education_grades'] as $key => $gradeName){
+                foreach ($itemData['education_grades'] as $key => $gradeName) {
                     $gradesOptions[$key] = $gradeName;
                 }
-                
+
                 //$gradesOptions = array_merge($gradesOptions, $itemData['education_grades']);
             }
         }
         $classOptions = array();
         if (!empty($gradesOptions)) {
-            $selectedGradeId = !empty($selectedGradeId)? $selectedGradeId : key($gradesOptions);
+            $selectedGradeId = !empty($selectedGradeId) ? $selectedGradeId : key($gradesOptions);
             $selectedGradeId = !empty($params['pass'][2 + $paramsLocateCounter]) ? $params['pass'][2 + $paramsLocateCounter] : $selectedGradeId;
             $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
             $classOptions = $InstitutionSiteClass->getClassOptions($selectedYearId, $institutionSiteId, $selectedGradeId);
         }
-        $selectedClassId = !empty($selectedClassId)? $selectedClassId : key($classOptions);
+        $selectedClassId = !empty($selectedClassId) ? $selectedClassId : key($classOptions);
         $selectedClassId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $selectedClassId;
-       
+
         $teacherOptions = array();
         if (!empty($classOptions)) {
             $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
             $teacherOptions = $InstitutionSiteClassTeacher->getTeachers($selectedClassId, 'list');
-            $selectedTeacherId = !empty($selectedTeacherId)? $selectedTeacherId : key($teacherOptions);
+            $selectedTeacherId = !empty($selectedTeacherId) ? $selectedTeacherId : key($teacherOptions);
             $selectedTeacherId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedTeacherId;
         }
 
         $QualityVisitType = ClassRegistry::init('QualityVisitType');
         $visitOptions = $QualityVisitType->find('list');
-        $selectedVisitTypeId = !empty($selectedVisitTypeId)? $selectedVisitTypeId : key($visitOptions);
+        $selectedVisitTypeId = !empty($selectedVisitTypeId) ? $selectedVisitTypeId : key($visitOptions);
         $selectedVisitTypeId = !empty($params['pass'][5 + $paramsLocateCounter]) ? $params['pass'][5 + $paramsLocateCounter] : $selectedVisitTypeId;
 
         $controller->set('schoolYearOptions', $schoolYearOptions);
@@ -279,7 +284,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         $controller->set('visitOptions', $this->checkArrayEmpty($visitOptions));
         $controller->set('type', $type);
         $controller->set('modelName', $this->name);
-        
+
         if (!empty($selectedDate)) {
             $controller->request->data[$this->name]['date'] = $selectedDate;
         }
