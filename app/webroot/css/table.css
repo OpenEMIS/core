@@ -98,6 +98,7 @@
 .list_wrapper > .table { margin-bottom: 0; }
 .scroll_active .list_wrapper { overflow-y: scroll; padding-right: 1px; }
 
+/* <table> styles starts here */
 .table { width: 100%; border-spacing: 0; }
 .table thead tr { background-color: #EFEFEF; }
 .table thead td {  font-weight: bold;  text-align: center; }

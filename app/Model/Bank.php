@@ -18,6 +18,21 @@ App::uses('AppModel', 'Model');
 
 class Bank extends AppModel {
 	public $hasMany = array('BankBranch');
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
+	public function getOptionFields() {
+		return array('code' => array('label' => 'Code', 'display' => true));
+	}
 	
 	public function getLookupVariables() {
 		$lookup = array('Banks' => array('model' => 'Bank'));

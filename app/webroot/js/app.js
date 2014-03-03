@@ -493,7 +493,7 @@ var jsTable = {
 	},
 	
 	attachHoverOnClickEvent: function() {
-		$('.table.allow_hover').each(function() {
+		$('.table.allow_hover, .table.table-hover').each(function() {
 			var table = $(this);
 			if(table.attr('action')!=undefined) {
 				table.find('.table_row').each(function() {
@@ -502,6 +502,17 @@ var jsTable = {
 						window.location.href = getRootURL() + table.attr('action') + rowId;
 					});
 				});
+			}
+			var tbody = table.find('tbody');
+			if(tbody.length!=0) {
+				if(tbody.attr('action')!=undefined) {
+					tbody.find('tr').each(function() {
+						var rowId = $(this).attr('row-id')!=undefined ? $(this).attr('row-id') : '';
+						$(this).click(function() {
+							window.location.href = getRootURL() + tbody.attr('action') + rowId;
+						});
+					});
+				}
 			}
 		});
 	},
@@ -522,6 +533,10 @@ var jsTable = {
 					$(this).find('.table_row.even').removeClass('even');
 					$(this).find('.table_row:visible:odd').addClass('even');
 				});
+				if(obj.hasClass('table-striped')) {
+					$(this).find('tr.odd').removeClass('even');
+					$(this).find('tr:visible:even').addClass('even');
+				}
 			}
 		});
 	},

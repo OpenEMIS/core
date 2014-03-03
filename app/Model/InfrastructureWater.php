@@ -18,6 +18,28 @@ App::uses('AppModel', 'Model');
 
 class InfrastructureWater extends AppModel {
 	public $useTable = 'infrastructure_water';
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
+	public function getSubOptions() {
+		$modelName = get_class($this);
+		$categoryModel = ClassRegistry::init('InfrastructureCategory');
+		$categoryId = $categoryModel->field('id', array('name' => 'Water'));
+		$options = array(
+			array('model' => $modelName, 'label' => 'Category'),
+			array('model' => 'InfrastructureStatus', 'label' => 'Status', 'conditions' => array('infrastructure_category_id' => $categoryId))
+		);
+		return $options;
+	}
 	
 	public function getLookupVariables() {
 		$modelName = get_class($this);

@@ -30,7 +30,7 @@ class NavigationComponent extends Component {
 		$this->controller =& $controller;
 		$this->navigations = $this->getLinks();
 		$this->topNavigations = array();
-                $this->SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
+		$this->SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
 	}
 	
 	//called after Controller::beforeFilter()
@@ -219,15 +219,15 @@ class NavigationComponent extends Component {
 					$this->createLink('Finances', 'Census', 'finances'),
 					$this->createLink('More', 'Census', 'otherforms')
 				),
-                                'QUALITY' => array(
-                                        $this->createLink('Rubrics', 'Quality', 'qualityRubric'),
-                                        $this->createLink('Visits', 'Quality', 'qualityVisit'),
-                                ),
+				'QUALITY' => array(
+				        $this->createLink('Rubrics', 'Quality', 'qualityRubric'),
+				        $this->createLink('Visits', 'Quality', 'qualityVisit'),
+				),
 				'REPORTS' => array(
 					$this->createLink('General', 'InstitutionSites', 'reportsGeneral'),
 					$this->createLink('Details', 'InstitutionSites', 'reportsDetails'),
-                                        $this->createLink('Totals', 'InstitutionSites', 'reportsTotals'),
-                                        $this->createLink('Quality', 'InstitutionSites', 'reportsQuality')
+					$this->createLink('Totals', 'InstitutionSites', 'reportsTotals'),
+					$this->createLink('Quality', 'InstitutionSites', 'reportsQuality')
 				)
 			)
 		);
@@ -241,7 +241,8 @@ class NavigationComponent extends Component {
 					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit|EducationArea|$'),
 					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup'),
 					$this->createLink('National Assessments', 'Assessment', 'index', '^index|assessment'),
-					$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
+					//$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
+					$this->createLink('Field Options', 'Setup', 'fieldOption', '^fieldOption|^custom'),
 					$this->createLink('System Configurations', 'Config', 'index', 'index$|edit$|^dashboard')
 				),
 				'ACCOUNTS &amp; SECURITY' => array(
@@ -277,7 +278,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Sessions', 'Training', 'session'),
 					$this->createLink('Results', 'Training', 'result')
 				),
-                                'QUALITY' => array(
+				'QUALITY' => array(
 					'_controller' => 'Quality',
 					$this->createLink('Rubrics', 'Quality', 'rubricsTemplates'),
 					$this->createLink('Status', 'Quality', 'status')

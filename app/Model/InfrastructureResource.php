@@ -16,7 +16,30 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppModel', 'Model');
 
-class InfrastructureResource extends AppModel {	
+class InfrastructureResource extends AppModel {
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
+	public function getSubOptions() {
+		$modelName = get_class($this);
+		$categoryModel = ClassRegistry::init('InfrastructureCategory');
+		$categoryId = $categoryModel->field('id', array('name' => 'Resources'));
+		$options = array(
+			array('model' => $modelName, 'label' => 'Category'),
+			array('model' => 'InfrastructureStatus', 'label' => 'Status', 'conditions' => array('infrastructure_category_id' => $categoryId))
+		);
+		return $options;
+	}
+	
 	public function getLookupVariables() {
 		$modelName = get_class($this);
 		$categoryModel = ClassRegistry::init('InfrastructureCategory');

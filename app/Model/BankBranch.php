@@ -18,6 +18,43 @@ App::uses('AppModel', 'Model');
 
 class BankBranch extends AppModel {
 	public $belongsTo = array('Bank');
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
+	public function getOptionFields() {
+		$Bank = ClassRegistry::init('Bank');
+		$options = $Bank->find('list', array('order' => array('order')));
+		
+		$fields = array(
+			'code' => array('label' => 'Code', 'display' => true),
+			'bank_id' => array(
+				'label' => 'Bank', 
+				'display' => false, 
+				'options' => $options
+			)
+		);
+		return $fields;
+	}
+	
+	public function getSubOptions() {
+		$modelName = get_class($this);
+		$Bank = ClassRegistry::init('Bank');
+		$list = $Bank->find('list', array('order' => array('order')));
+		$options = array();
+		foreach($list as $id => $name) {
+			$options[] = array('model' => $modelName, 'label' => $name, 'conditions' => array('bank_id' => $id));
+		}
+		return $options;
+	}
 	
 	public function getLookupVariables() {
 		$Bank = ClassRegistry::init('Bank');

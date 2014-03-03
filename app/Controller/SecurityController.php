@@ -113,7 +113,6 @@ class SecurityController extends AppController {
 					$result = $this->Auth->login();
 					//Error Message to be used if login false;
 					$errMsg = $this->Utility->getMessage("LOGIN_INVALID");
-
 				}
 				if($result) {
 					if($this->Auth->user('status') == 1) {
@@ -122,7 +121,7 @@ class SecurityController extends AppController {
 						$this->SecurityUser->updateLastLogin($userId);
 						$this->AccessControl->init($userId);
 						$this->registerSession();
-						$this->redirect($this->Auth->redirect('home'));
+						$this->redirect($this->Auth->redirect(array('controller' => 'Home')));
 					} else if ($this->Auth->user('status') == 0) {
 						$this->log('[' . $username . '] Account is not active.', 'security');
 						$this->Session->setFlash($this->Utility->getMessage("LOGIN_USER_INACTIVE"));
@@ -188,10 +187,10 @@ class SecurityController extends AppController {
 					
 			Configure::write('Config.language', $this->Session->read('configItem.language')); 
 		}
-	$username = $this->Session->check('login.username') ? $this->Session->read('login.username') : '';
-	$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
-	$this->set('username', $username);
-	$this->set('password', $password);
+		$username = $this->Session->check('login.username') ? $this->Session->read('login.username') : '';
+		$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
+		$this->set('username', $username);
+		$this->set('password', $password);
     }
 
     public function login_remote() {
@@ -335,7 +334,6 @@ class SecurityController extends AppController {
 		}
 	}
 	
-
 	public function usersAdd() {
 		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
 		$this->Navigation->addCrumb('Add User');
