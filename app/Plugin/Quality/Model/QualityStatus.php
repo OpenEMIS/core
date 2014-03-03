@@ -176,6 +176,7 @@ class QualityStatus extends QualityAppModel {
                 'conditions' => array('RubricsTemplate.id = QualityStatus.rubric_template_id')
             )
         );
+        $options['order'] = array('RubricsTemplate.name','QualityStatus.year');
         $options['fields'] = array('QualityStatus.*', 'RubricsTemplate.*');
         $data = $this->find('all', $options);
         
