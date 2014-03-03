@@ -22,4 +22,29 @@ class CensusFinance extends AppModel {
 		'FinanceCategory' => array('foreignKey' => 'finance_category_id'),
 		'SchoolYear' => array('foreignKey' => 'school_year_id')
 	);
+        
+        public function getYearsHaveData($institutionSiteId){
+            $data = $this->find('all', array(
+                    'recursive' => -1,
+                    'fields' => array(
+                        'SchoolYear.id',
+                        'SchoolYear.name'
+                    ),
+                    'joins' => array(
+                            array(
+                                'table' => 'school_years',
+                                'alias' => 'SchoolYear',
+                                'conditions' => array(
+                                    'CensusFinance.school_year_id = SchoolYear.id'
+                                )
+                            )
+                    ),
+                    'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId),
+                    'group' => array('CensusFinance.school_year_id'),
+                    'order' => array('SchoolYear.name DESC')
+                )
+            );
+            
+            return $data;
+        }
 }

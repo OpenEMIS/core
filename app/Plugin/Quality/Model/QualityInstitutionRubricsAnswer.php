@@ -142,13 +142,14 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
     }
 
     //SQL function 
-    public function getTotalCount($institutionSiteId, $rubricTemplateId) {
+    public function getTotalCount($institutionSiteId, $rubricTemplateId,$qualityInstitutionRubricsid) {
         $data = $this->find('all', array(
             'fields' => array('COUNT(QualityInstitutionRubricsAnswer.rubric_template_header_id) as total', 'QualityInstitutionRubricsAnswer.rubric_template_header_id'),
             'group' => array('QualityInstitutionRubricsAnswer.rubric_template_header_id'),
             'conditions' => array(
                 'QualityInstitutionRubric.institution_site_id' => $institutionSiteId,
                 'QualityInstitutionRubric.rubric_template_id' => $rubricTemplateId,
+                'QualityInstitutionRubricsAnswer.quality_institution_rubric_id' => $qualityInstitutionRubricsid
             )
         ));
 

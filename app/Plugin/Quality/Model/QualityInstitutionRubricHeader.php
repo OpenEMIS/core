@@ -60,9 +60,24 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
       //   pr($currentCompletedData);
         
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
-        $questionStatusData = $RubricsTemplateHeader->getAllQuestionsStatus($institutionSiteId, $rubricId);
+        $questionStatusData = $RubricsTemplateHeader->getAllQuestionsStatus($institutionSiteId, $rubricId, $id);
         
         $data = $RubricsTemplateHeader->getRubricHeaders($rubricId, 'all');
+        
+        $editable =  $controller->Session->read('QualityRubric.editable');
+      
+        if(empty($editable)){//pr('here');
+            $QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
+            $rubricHeaderData = $QualityInstitutionRubric->find('first', array('conditions' => array('QualityInstitutionRubric.id' => $id)));
+
+            $SchoolYear = ClassRegistry::init('SchoolYear');
+            $year = $SchoolYear->findById($rubricHeaderData['QualityInstitutionRubric']['school_year_id']);
+
+            $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
+            $editiable = $QualityStatus->getRubricStatus($year['SchoolYear']['name'],$rubricHeaderData['QualityInstitutionRubric']['rubric_template_id']);
+
+            $controller->Session->write('QualityRubric.editable', $editiable);
+        }
         
         $controller->set('subheader', 'Quality - Rubric Headers');
         $controller->set('rubricId', $rubricId);

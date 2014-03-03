@@ -59,8 +59,12 @@ $obj = $data[$modelName]; ?>
 			<div class="value"><?php echo $obj['location']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Trainer'); ?></div>
-			<div class="value"><?php echo $obj['trainer']; ?></div>
+			<div class="label"><?php echo __('Provicer'); ?></div>
+			<div class="value"><?php echo $data['TrainingProvider']['name']; ?></div>
+		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Hours'); ?></div>
+			<div class="value"><?php echo $obj['hours']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Credit Hours'); ?></div>
@@ -78,9 +82,9 @@ $obj = $data[$modelName]; ?>
 				<?php if(!isset($obj['pass'])){
                 		echo '-';
                  }else if($obj['pass'] == 1){
-                 		echo __('Pass');
+                 		echo __('Passed');
                  }else{
-                 		echo __('Fail');
+                 		echo __('Failed');
                  }
                  ?>
 			</div>

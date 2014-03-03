@@ -70,7 +70,7 @@ class StaffNavigationComponent extends Component {
 				'TRAINING' => array(
                     $navigation->createLink('Needs', $controller, 'trainingNeed', '^trainingNeed'),
                     $navigation->createLink('Results', $controller, 'trainingResult', '^trainingResult'),
-                    $navigation->createLink('Self-Study', $controller, 'trainingSelfStudy', '^trainingSelfStudy')
+                    $navigation->createLink('Achievements', $controller, 'trainingSelfStudy', '^trainingSelfStudy')
                 )
 			)
 		);

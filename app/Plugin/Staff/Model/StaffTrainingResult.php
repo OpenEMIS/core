@@ -85,7 +85,7 @@ class StaffTrainingResult extends AppModel {
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$data = $trainingSessionTrainee->find('first',
 			array(
-				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingSession.*', 'TrainingSessionStatus.*', 
+				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingSession.*', 'TrainingSessionStatus.*', 'TrainingProvider.*', 
 					'TrainingSessionResult.*', 'CreatedUser.*', 'ModifiedUser.*'
 					),
 				'joins' => array(
@@ -103,6 +103,14 @@ class StaffTrainingResult extends AppModel {
 						'alias' => 'TrainingSession',
 						'conditions' => array(
 							'TrainingSession.id = TrainingSessionTrainee.training_session_id'
+						)
+					),
+					array(
+						'type' => 'LEFT',
+						'table' => 'training_providers',
+						'alias' => 'TrainingProvider',
+						'conditions' => array(
+							'TrainingProvider.id = TrainingSession.training_provider_id'
 						)
 					),
 					array(
