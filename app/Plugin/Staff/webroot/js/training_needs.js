@@ -23,31 +23,36 @@ var objTrainingNeeds = {
     },
     getDetailsAfterChangeCourse: function(obj){
         var trainingCourseId = $(obj).val();
-        var title = $('.training_course_title');
+        var code = $('.training_course_code');
         var description = $('.training_course_description');
+        var requirement = $('.training_course_requirement');
         if(trainingCourseId === ""){
-            title.val("");
+            code.val("");
             description.val("");
+            requirement.val("");
         }else{
             $.ajax({ 
                 type: "get",
                 dataType: "json",
                 url: getRootURL()+"Staff/getTrainingCoursesById/"+trainingCourseId+"/1",
                 success: function(data){
-                    var newTitle = '';
+                    var newCode = '';
                     var newDescription = '';
+                    var newRequirement = '';
                     
                     if(data == null){
                         return;
                     }
                     
                     $.each(data, function(i,v){
-                        newTitle = v.TrainingCourse.title;
+                        newCode = v.TrainingCourse.code;
                         newDescription = v.TrainingCourse.description;
+                        newRequirement = v.TrainingRequirement.name;
                     });
 
-                    title.val(newTitle);
+                    code.val(newCode);
                     description.val(newDescription);
+                    requirement.val(newRequirement);
                 }
             });
         }

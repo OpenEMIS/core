@@ -26,6 +26,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
+		'TrainingProvider',
 		'TrainingStatus',
 	);
 
@@ -60,6 +61,20 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             	'message' => 'End Date must be greater than Start Date'
             )
         ),
+        'training_provider_id' => array(
+            'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a Course Provider.'
+			)
+        ),
+		'hours' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter the Hours.'
+			)
+		),
 		'credit_hours' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -92,7 +107,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
         return true;
     }
 
-	public $headerDefault = 'Training Self Study';
+	public $headerDefault = 'Training Achievements';
 		
 
 	public function trainingSelfStudy($controller, $params) {
@@ -231,7 +246,10 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			$trainingCreditHourOptions[$i] =  $i;
 		}
 
+		$trainingProvider = ClassRegistry::init('TrainingProvider');
+		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=>array('id', 'name')));
 		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
+		$controller->set('trainingProviderOptions', $trainingProviderOptions);
 
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];

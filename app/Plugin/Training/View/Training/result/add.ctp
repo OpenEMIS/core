@@ -34,6 +34,12 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         </div>
     </div>
     <div class="row">
+		<div class="label"><?php echo __('Provider'); ?></div>
+		<div class="value">
+			<?php echo $this->Form->input('TrainingSession.training_provider_id', array('options' => $trainingProviderOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingSession']['training_provider_id']));?>
+        </div>
+	</div>
+    <div class="row">
         <div class="label"><?php echo __('Start Date'); ?></div>
         <div class="value">
 		<?php 
@@ -56,7 +62,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         </div>
     </div>
      <div class="row">
-        <div class="label"><?php echo __('Trainer'); ?></div>
+        <div class="label"><?php echo __('Provider'); ?></div>
         <div class="value">
         	<?php echo $this->Form->input('TrainingSession.trainer', array('id' => 'searchTrainer', 'disabled' => 'disabled', 'class'=>'default trainer', 'placeholder' => __('Identification No, First Name or Last Name'), 'value'=>$this->request->data['TrainingSession']['trainer']));?>
         </div>
@@ -66,7 +72,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		<div class="value">
 		<div class="table trainee" style="width:240px;" url="Training/ajax_find_trainee/">
 			<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
-			<div class="table_body">
+			<div class="table_body" style="display:table;">
 			<?php 
 			if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->request->data['TrainingSessionTrainee'])){ ?>
 				<?php 
@@ -91,13 +97,12 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 				 
 					<div class="table_cell cell_delete">
 				    	<?php 
-						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('value'=>$val['result'], 'style'=>'width:40px;')); ?>
+						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('value'=>$val['result'], 'style'=>'width:25px;')); ?>
 				    </div>
-				    <div class="table_cell cell_delete">
+				    <div class="table_cell" style="padding:5px;">
 				    	<?php 
-				    	pr($val['pass']);
 						echo $this->Form->input('TrainingSessionTrainee.'. $i .'.pass', array('default'=>$val['pass'], 'empty'=>array('-1'=>''),
-						 'options' => array(1=>__('Pass'), 0 => __('Fail')), 'style'=>'width:60px;')); ?>
+						 'options' => array(1=>__('Passed'), 0 => __('Failed')), 'style'=>'width:70px;padding:0')); ?>
 				    </div>
 				</div>
 			<?php 

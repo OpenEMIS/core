@@ -18,4 +18,29 @@ App::uses('AppModel', 'Model');
 
 class CensusGridValue extends AppModel {
 	public $useTable = 'census_grid_values';
+        
+        public function getYearsHaveValues($institutionSiteId){
+            $data = $this->find('all', array(
+                    'recursive' => -1,
+                    'fields' => array(
+                        'SchoolYear.id',
+                        'SchoolYear.name'
+                    ),
+                    'joins' => array(
+                            array(
+                                'table' => 'school_years',
+                                'alias' => 'SchoolYear',
+                                'conditions' => array(
+                                    'CensusGridValue.school_year_id = SchoolYear.id'
+                                )
+                            )
+                    ),
+                    'conditions' => array('CensusGridValue.institution_site_id' => $institutionSiteId),
+                    'group' => array('CensusGridValue.school_year_id'),
+                    'order' => array('SchoolYear.name DESC')
+                )
+            );
+            
+            return $data;
+        }
 }

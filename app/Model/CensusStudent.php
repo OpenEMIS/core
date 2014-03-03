@@ -223,4 +223,70 @@ class CensusStudent extends AppModel {
 		return $data;
 	}
 	// End Yearbook
+        
+        public function groupByYearGradeCategory($institutionSiteId){
+            $data = $this->find('all', array(
+                    'recursive' => -1,
+                    'fields' => array(
+                        'SchoolYear.name',
+                        'StudentCategory.name',
+                        'EducationCycle.name',
+                        'EducationProgramme.name',
+                        'EducationGrade.name',
+                        'CensusStudent.school_year_id',
+                        'CensusStudent.education_grade_id',
+                        'CensusStudent.student_category_id'
+                    ),
+                    'joins' => array(
+                            array(
+                                'table' => 'school_years',
+                                'alias' => 'SchoolYear',
+                                'conditions' => array(
+                                    'CensusStudent.school_year_id = SchoolYear.id'
+                                )
+                            ),
+                            array(
+                                'table' => 'student_categories',
+                                'alias' => 'StudentCategory',
+                                'conditions' => array(
+                                    'CensusStudent.student_category_id = StudentCategory.id'
+                                )
+                            ),
+                            array(
+                                'table' => 'education_grades',
+                                'alias' => 'EducationGrade',
+                                'conditions' => array(
+                                    'CensusStudent.education_grade_id = EducationGrade.id'
+                                )
+                            ),
+                            array(
+                                'table' => 'education_programmes',
+                                'alias' => 'EducationProgramme',
+                                'conditions' => array(
+                                    'EducationGrade.education_programme_id = EducationProgramme.id'
+                                )
+                            ),
+                            array(
+                                'table' => 'education_cycles',
+                                'alias' => 'EducationCycle',
+                                'conditions' => array(
+                                    'EducationProgramme.education_cycle_id = EducationCycle.id'
+                                )
+                            ),
+                            array(
+                                'table' => 'education_levels',
+                                'alias' => 'EducationLevel',
+                                'conditions' => array(
+                                    'EducationCycle.education_level_id = EducationLevel.id'
+                                )
+                            )
+                    ),
+                    'conditions' => array('CensusStudent.institution_site_id' => $institutionSiteId),
+                    'group' => array('CensusStudent.school_year_id', 'CensusStudent.education_grade_id', 'CensusStudent.student_category_id'),
+                    'order' => array('SchoolYear.name DESC', 'EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order', 'StudentCategory.order')
+                )
+            );
+            
+            return $data;
+        }
 }

@@ -180,7 +180,7 @@ class RubricsTemplateHeader extends QualityAppModel {
         return $data;
     }
 
-    public function getAllQuestionsStatus($institutionSiteId, $rubricId) {
+    public function getAllQuestionsStatus($institutionSiteId, $rubricId, $qualityInstitutionRubricsid) {
         $data = $this->find('all', array(
             'recursive' => -1,
             'conditions' => array('RubricsTemplateHeader.rubric_template_id' => $rubricId),
@@ -207,7 +207,7 @@ class RubricsTemplateHeader extends QualityAppModel {
         ));
 
         $QualityInstitutionRubricsAnswer = ClassRegistry::init('Quality.QualityInstitutionRubricsAnswer');
-        $currentCompletedData = $QualityInstitutionRubricsAnswer->getTotalCount($institutionSiteId, $rubricId);
+        $currentCompletedData = $QualityInstitutionRubricsAnswer->getTotalCount($institutionSiteId, $rubricId,$qualityInstitutionRubricsid);
 
         $statusData = array();
         foreach ($data AS $obj) {

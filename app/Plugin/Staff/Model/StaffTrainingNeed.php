@@ -74,9 +74,13 @@ class StaffTrainingNeed extends StaffAppModel {
 		if(empty($data)){
 			$controller->redirect(array('action'=>'trainingNeed'));
 		}
+
+		$trainingRequirement = ClassRegistry::init('TrainingRequirement');
+		$trainingRequirementOptions = $trainingRequirement->find('list', array('fields'=> array('id', 'name')));
 		
 		$controller->Session->write('StaffTrainingNeedId', $id);
 		$controller->set('data', $data);
+		$controller->set('trainingRequirementOptions', $trainingRequirementOptions);
 	}
 	
 
@@ -171,7 +175,7 @@ class StaffTrainingNeed extends StaffAppModel {
 		 	}
 			$trainingCourseOptions = $trainingCourse->find('list', 
 				array(
-				'fields'=> array('TrainingCourse.id', 'TrainingCourse.code'),
+				'fields'=> array('TrainingCourse.id', 'TrainingCourse.title'),
 				'joins' => array(
 					array(
 							'type' => 'LEFT',

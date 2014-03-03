@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-02-24 09:35+0800\n"
+"PO-Revision-Date: 2014-02-28 15:49+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.6.4\n"
+"X-Generator: Poedit 1.6.3\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
@@ -28,9 +28,6 @@ msgstr "Aide"
 
 msgid "Logout"
 msgstr "Déconnexion"
-
-msgid "Institutions"
-msgstr "Institutions"
 
 msgid "Students"
 msgstr "Etudiants"
@@ -72,13 +69,10 @@ msgid "Female"
 msgstr "Femme"
 
 msgid "Unisex"
-msgstr "Unisex"
+msgstr "Unisexe"
 
 msgid "Select File"
 msgstr "Sélectionner un Fichier"
-
-msgid "Edit"
-msgstr "Editer"
 
 msgid "View"
 msgstr "Voir"
@@ -108,7 +102,7 @@ msgid "Statistics"
 msgstr "Statistiques"
 
 msgid "Institutions Sites"
-msgstr "Locations d'Institutions"
+msgstr "Locations des Etablissements"
 
 msgid "Activities"
 msgstr "Activités"
@@ -117,22 +111,19 @@ msgid "Student"
 msgstr "Etudiant"
 
 msgid "has been edited"
-msgstr "a été édité"
+msgstr "a été modifié"
 
 msgid "has been deleted"
 msgstr "a été supprimé"
 
 msgid "has been added to the List of"
-msgstr "a été ajouté à la Liste des"
+msgstr "a été ajouté à la Liste de/des"
 
 msgid "by"
 msgstr "par"
 
 msgid "Notice"
 msgstr "Avis"
-
-msgid "Note: Max upload file size is 2MB."
-msgstr "Remarque: Taille maximum du fichier de téléchargement est 2MB."
 
 msgid "Image"
 msgstr "Image"
@@ -168,7 +159,7 @@ msgid "Records have been deleted successfully."
 msgstr "Enregistrements supprimés avec succès."
 
 msgid "Error occurred while deleting record."
-msgstr "Erreur lors de la suppression de l'enregistrement."
+msgstr "Erreur lors de la suppression."
 
 msgid " have been deleted successfully."
 msgstr "ont été supprimés avec succès."
@@ -179,47 +170,23 @@ msgstr "Recherche ..."
 msgid "%s have been deleted successfully."
 msgstr "%s ont été supprimés avec succès."
 
-msgid "Please enter a unique Identification No"
-msgstr "S'il vous plaît entrer un numéro d'identification unique, Non"
-
-msgid "Please enter a unique Code"
-msgstr "S'il vous plaît entrer un code unique"
-
 msgid "List of Students"
 msgstr "Liste des Elèves"
 
 msgid "Add new Student"
-msgstr "Ajouter Nouvel Etudiant"
+msgstr "Ajouter un Nouvel Etudiant"
 
 msgid "Details"
 msgstr "Détails"
 
-msgid "DETAILS"
-msgstr "Détails"
-
 msgid "Attachments"
 msgstr "Pièces jointes"
-
-msgid "Overview"
-msgstr ""
-
-msgid "More"
-msgstr ""
 
 msgid "Additional Info"
 msgstr "Infos supplémentaires"
 
 msgid "STUDENT INFORMATION"
 msgstr "RENSEIGNEMENTS SUR L'ÉLÈVE"
-
-msgid "Static Fields"
-msgstr ""
-
-msgid "Field Options"
-msgstr ""
-
-msgid "National Assessments"
-msgstr ""
 
 msgid "ASSESSMENT"
 msgstr "EVALUATION"
@@ -241,15 +208,6 @@ msgstr "Pièce jointe"
 
 msgid "Student Identification No, First Name or Last Name"
 msgstr "Numéro d'identification de l'étudiant, Prénom ou Nom de Famille"
-
-msgid "Student Identification"
-msgstr "Student Identification"
-
-msgid "Teacher Identification"
-msgstr "Teacher Identification"
-
-msgid "Staff Identification"
-msgstr "Staff Identification"
 
 msgid "Identification No."
 msgstr "Numéro d'identification"
@@ -284,9 +242,6 @@ msgstr "Type de fichier"
 msgid "Uploaded On"
 msgstr "Posté le"
 
-msgid "Institution"
-msgstr "Institution"
-
 msgid "Start Date"
 msgstr "Date de Début"
 
@@ -296,14 +251,8 @@ msgstr "Date de Fin"
 msgid "Address"
 msgstr "Adresse"
 
-msgid "Address Area"
-msgstr "Adresse Secteur"
-
-msgid "Birth Place Area"
-msgstr "Birth Place Area"
-
 msgid "Postal Code"
-msgstr "Code postal"
+msgstr "Code Postal"
 
 msgid "Telephone"
 msgstr "Téléphone"
@@ -311,13 +260,7 @@ msgstr "Téléphone"
 msgid "Email"
 msgstr "Email"
 
-msgid "E-mail"
-msgstr "Email"
-
 msgid "General"
-msgstr "Général"
-
-msgid "GENERAL"
 msgstr "Général"
 
 msgid "Contact"
@@ -339,7 +282,7 @@ msgid "STAFF INFORMATION"
 msgstr "INFORMATION DU PERSONNEL"
 
 msgid "Staff Details"
-msgstr "Détails du personnel"
+msgstr "Détails du Personnel"
 
 msgid "No Staff found."
 msgstr "Personnel non trouvé."
@@ -381,7 +324,7 @@ msgid "Certificate No."
 msgstr "Certificat N°"
 
 msgid "Issued By"
-msgstr "Publié par"
+msgstr "Publié Par"
 
 msgid "Completed Date"
 msgstr "Date d'Achèvement"
@@ -399,16 +342,16 @@ msgid "Teacher"
 msgstr "Enseignant"
 
 msgid "Please enter a valid First Name"
-msgstr "Veuillez entrer un Prénom valide"
+msgstr "Veuillez entrer un prénom valide"
 
 msgid "Please enter a valid Last Name"
-msgstr "Veuillez entrer un Nom de Famille valide"
+msgstr "Veuillez entrer un nom de famille valide"
 
 msgid "Please enter a valid Identification No"
-msgstr "Veuillez entrer un numéro d'identification valide"
+msgstr "Veuillez entrer un numéro d’identification valide"
 
 msgid "Please select a Gender"
-msgstr "Veuillez sélectionner un Genre"
+msgstr "Veuillez sélectionner un genre"
 
 msgid "Please enter a valid Address"
 msgstr "Veuillez entrer une adresse valide"
@@ -417,16 +360,16 @@ msgid "Please enter a valid Postal Code"
 msgstr "Veuillez entrer un code postal valide"
 
 msgid "Please select a Date of Birth"
-msgstr "Veuillez sélectionner une Date de Naissance"
+msgstr "Veuillez sélectionner une date de naissance"
 
 msgid "Please enter a valid Email"
 msgstr "Veuillez entrer une adresse email valide"
 
 msgid "Please enter a valid username"
-msgstr "Veuillez entrer un nom d'identifiant valide"
+msgstr "Veuillez entrer un nom d’utilisateur valide"
 
 msgid "This username is already in use."
-msgstr "Ce nom d'utilisateur est déjà utilisé."
+msgstr "Ce nom d'utilisateur est déjà pris."
 
 msgid "Password must be at least 6 characters"
 msgstr "Le mot de passe doit comporter au moins 6 caractères"
@@ -438,7 +381,7 @@ msgid "You need to assign a role to the user"
 msgstr "Vous devez attribuer un rôle à l'utilisateur"
 
 msgid "No Institution Sites"
-msgstr "Pas de locations d'Institution"
+msgstr "Pas d’Etablissements"
 
 msgid "No Areas"
 msgstr "Pas de Zones"
@@ -483,7 +426,7 @@ msgid "Edit Programmes"
 msgstr "Modifier les Programmes"
 
 msgid "Add Institution"
-msgstr "Ajouter institution"
+msgstr "Ajouter Etablissement"
 
 msgid "Name"
 msgstr "Nom"
@@ -492,16 +435,16 @@ msgid "Area"
 msgstr "Zone"
 
 msgid "Site Type"
-msgstr "Type de location"
+msgstr "Type de Location"
 
 msgid "Site Code"
-msgstr "Code de la location"
+msgstr "Code de la Location"
 
 msgid "Code"
 msgstr "Code"
 
 msgid "Institution Name"
-msgstr "Nom de l'institution"
+msgstr "Nom de l’Etablissement"
 
 msgid "Sector"
 msgstr "Secteur"
@@ -510,7 +453,7 @@ msgid "Provider"
 msgstr "Fournisseur"
 
 msgid "Site Name"
-msgstr "Nom de la location"
+msgstr "Nom de la Location"
 
 msgid "Type"
 msgstr "Type"
@@ -524,26 +467,8 @@ msgstr "Pays"
 msgid "Province"
 msgstr "Province"
 
-msgid "District"
-msgstr "District"
-
-msgid "LLG"
-msgstr "LLG"
-
 msgid "Ward"
 msgstr "Quartier"
-
-msgid "Street"
-msgstr "Street"
-
-msgid "Block"
-msgstr "Block"
-
-msgid "Axis"
-msgstr "Axis"
-
-msgid "State"
-msgstr "State"
 
 msgid "Locality"
 msgstr "Localité"
@@ -555,13 +480,10 @@ msgid "Longitude"
 msgstr "Longitude"
 
 msgid "No Institution Sites."
-msgstr "Pas de locations d'Institution."
+msgstr "Pas de Locations d’Etablissements."
 
 msgid "Institution Site Details"
-msgstr "Informations sur la Location de l'Institution"
-
-msgid "Institution Site Code"
-msgstr "Informations sur la Location de l'Institution"
+msgstr "Informations sur la Location de l’Etablissement."
 
 msgid "Please enter a valid Name"
 msgstr "Veuillez entrer un nom valide"
@@ -623,14 +545,8 @@ msgstr "Actif"
 msgid "Account Name"
 msgstr "Nom du Compte"
 
-msgid "Account Number"
-msgstr "numéro de compte"
-
 msgid "Bank"
 msgstr "Banque"
-
-msgid "Branch"
-msgstr "Direction"
 
 msgid "Bank Details"
 msgstr "Détails de la Banque"
@@ -638,26 +554,11 @@ msgstr "Détails de la Banque"
 msgid "National Education System"
 msgstr "Le système d'éducation nationale"
 
-msgid "Grade"
-msgstr "classe"
-
 msgid "Seats"
 msgstr "Sièges"
 
 msgid "Age"
 msgstr "Age"
-
-msgid "Attendance"
-msgstr "Attendance"
-
-msgid "Behaviour"
-msgstr "Behaviour"
-
-msgid "Results"
-msgstr "Results"
-
-msgid "TOTALS"
-msgstr "TOTALS"
 
 msgid "Total"
 msgstr "Total"
@@ -672,10 +573,10 @@ msgid "Amount"
 msgstr "Montant"
 
 msgid "Edit Teachers"
-msgstr "Modifier les enseignants"
+msgstr "Modifier les Enseignants"
 
 msgid "Edit Training"
-msgstr "Modifier Formation"
+msgstr "Modifier la Formation"
 
 msgid "Edit Bank Accounts"
 msgstr "Modifier les Comptes Bancaires"
@@ -684,34 +585,28 @@ msgid "Edit Classes"
 msgstr "Modifier les Classes"
 
 msgid "Edit Finances"
-msgstr "Modifier Finances"
+msgstr "Modifier les Finances"
 
 msgid "Edit Other Forms"
-msgstr "Modifier d'autres formes"
+msgstr "Modifier d’Autres Formes"
 
 msgid "Edit Infrastructure"
 msgstr "Modifier Infrastructure"
 
-msgid "Trained Teachers"
-msgstr "enseignants formés"
-
 msgid "No Available Programmes"
-msgstr "Pas de programmes disponibles"
-
-msgid "Institution History"
-msgstr "Histoire des institutions"
+msgstr "Pas de Programmes Disponibles"
 
 msgid "Institution Site History"
-msgstr "Historique du site Institution"
+msgstr "Historique du Site des Etablissements"
 
 msgid "My Details"
-msgstr "Mes détails"
+msgstr "Mes Détails"
 
 msgid "has been updated successfully."
 msgstr "a été mis à jour avec succès."
 
 msgid "Change Password"
-msgstr "Changer Mot de Passe"
+msgstr "Changer le Mot de Passe"
 
 msgid "successfully updated."
 msgstr "mis à jour avec succès"
@@ -722,14 +617,11 @@ msgstr "Veuillez réessayer plus tard."
 msgid "Please enter your current password"
 msgstr "Veuillez entrer votre mot de passe actuel"
 
-msgid "Current password does not match."
-msgstr "Mot de passe actuel ne correspond pas."
-
 msgid "New password required."
 msgstr "Nouveau mot de passe requis."
 
 msgid "Please enter a min of 6 alpha numeric characters."
-msgstr "Veuillez entrer un min de caractères alpha numériques 6."
+msgstr "Veuillez entrer un minimum de 6 caractères alpha numériques."
 
 msgid "Please enter alpha numeric characters."
 msgstr "Veuillez entrez les caractères alphanumériques."
@@ -755,14 +647,11 @@ msgstr "Finance"
 msgid "Total Public Expenditure"
 msgstr "Dépenses Publiques Totales"
 
-msgid "National Denominators"
-msgstr "National dénominateurs"
-
 msgid "Select"
 msgstr "Sélectionner"
 
 msgid "Total Public Expenditure Per Education Level"
-msgstr "Total des dépenses publiques par niveau d'enseignement"
+msgstr "Total des Dépenses Publiques par Niveau d’Enseignement"
 
 msgid "System"
 msgstr "Système"
@@ -840,9 +729,6 @@ msgstr ""
 msgid "Host Unreachable"
 msgstr "Hôte Inaccessible"
 
-msgid "Host is unreachable, please check your internet connection."
-msgstr "Hôte est inaccessible, Veuillez vérifier votre connexion Internet."
-
 msgid "Session Timed Out"
 msgstr "Session Expirée"
 
@@ -859,7 +745,7 @@ msgid "An unexpected error has occurred."
 msgstr "Une erreur inattendue s'est produite."
 
 msgid "JSON parse failed"
-msgstr "JSON parse échoué"
+msgstr "JSON parse a échoué"
 
 msgid "Invalid JSON data."
 msgstr "Données JSON invalides."
@@ -877,7 +763,7 @@ msgid "Your request has been aborted."
 msgstr "Votre requête a été abandonnée."
 
 msgid "Unexpected Error"
-msgstr "Erreur inattendue"
+msgstr "Erreur Inattendue"
 
 msgid "Edit System Configurations"
 msgstr "Modifier les configurations du système"
@@ -916,19 +802,19 @@ msgid "log does not exists"
 msgstr "le log n'existe pas"
 
 msgid "Add new Institution"
-msgstr "Ajouter une nouvelle institution"
+msgstr "Ajouter un nouvel établissement"
 
 msgid "Institution Details"
-msgstr "Détails de l'Institution"
+msgstr "Détails de l’Etablissement"
 
 msgid "SITE INFORMATION"
 msgstr "INFORMATION SUR LA LOCATION"
 
 msgid "Add new Institution Site"
-msgstr "Ajouter une nouvelle location d'institution"
+msgstr "Ajouter une nouvelle location d’établissement"
 
 msgid "Add New Institution Site"
-msgstr "Ajouter une nouvelle location d'institution"
+msgstr "Ajouter une Nouvelle Location d’Etablissement"
 
 msgid "Bank Accounts"
 msgstr "Comptes Bancaires"
@@ -1027,16 +913,16 @@ msgid "Setup"
 msgstr "Configuration"
 
 msgid "The census data has been updated successfully."
-msgstr "Les données du recensement a été mis à jour avec succès."
+msgstr "Les données du recensement ont été mis à jour avec succès."
 
 msgid "Graduates not required."
-msgstr "Diplômés pas nécessaire."
+msgstr "Diplômés pas nécessaires."
 
 msgid "No Custom Census Table."
 msgstr "Pas de table personnalisées du recensement."
 
 msgid "Message Not Found."
-msgstr "Message introuvable."
+msgstr "Message Introuvable."
 
 msgid "Good"
 msgstr "Bon"
@@ -1075,10 +961,10 @@ msgid "Area Level"
 msgstr "Niveau Zone"
 
 msgid "Area Levels"
-msgstr "Niveaux de zone"
+msgstr "Niveaux des Zones"
 
 msgid "Edit Area Levels"
-msgstr "Modification des Niveaux de Zone"
+msgstr "Modification des Niveaux de Zones"
 
 msgid "Structure"
 msgstr "Structure"
@@ -1087,10 +973,10 @@ msgid "Education"
 msgstr "Education"
 
 msgid "Education Level"
-msgstr "Niveau d'instruction"
+msgstr "Niveau d’Education"
 
 msgid "Education System"
-msgstr "Le système d'éducation"
+msgstr "Système d’Education"
 
 msgid "Admission Age"
 msgstr "Âge d'Admission"
@@ -1116,20 +1002,11 @@ msgstr "Durée"
 msgid "Grades"
 msgstr "Notes"
 
-msgid "Grade Subject"
-msgstr "Classe de la Note"
-
 msgid "Back to Programmes"
 msgstr "Modifier les Programmes"
 
 msgid "Back to Grades"
-msgstr "Retour à la liste"
-
-msgid "Graduates"
-msgstr "diplômés"
-
-msgid "Please select a programme first."
-msgstr "S'il vous plaît sélectionner un premier programme."
+msgstr "Retour aux Notes"
 
 msgid "Option"
 msgstr "Option"
@@ -1177,7 +1054,7 @@ msgid "Banks"
 msgstr "Banques"
 
 msgid "Capital Income"
-msgstr "Revenus du Capital"
+msgstr "Revenu du Capital"
 
 msgid "Capital Expenditure"
 msgstr "Dépenses du Capital"
@@ -1207,7 +1084,7 @@ msgid "Qualification Categories"
 msgstr "Catégories de Qualification"
 
 msgid "Qualification Institutions"
-msgstr "Les Institutions de Qualification"
+msgstr "Les Etablissements de Qualification"
 
 msgid "Training Categories"
 msgstr "Catégories de Formation"
@@ -1240,13 +1117,10 @@ msgid "Checkboxes"
 msgstr "Cases à cocher"
 
 msgid "Institution Custom Fields"
-msgstr "Domaines personnalisés de l'Institution"
-
-msgid "Institution Site Custom Fields"
-msgstr "Les domaines personnalisés de la location de l'institution"
+msgstr "Domaines Personnalisés de l’Etablissement"
 
 msgid "Census Custom Fields"
-msgstr "Recensement des Domaines Personnalisés"
+msgstr "Domaines Personnalisés du Recensement"
 
 msgid "Student Custom Fields"
 msgstr "Domaines Personnalisés des Elèves"
@@ -1264,7 +1138,7 @@ msgid "Field Label"
 msgstr "Étiquette de Domaine"
 
 msgid "List of Custom Census Table"
-msgstr "Liste des tableaux de recensement personnalisée"
+msgstr "Liste personnalisée des tableaux de recensement"
 
 msgid "Filter by"
 msgstr "Filtrer par"
@@ -1300,7 +1174,7 @@ msgid "Back to List"
 msgstr "Retour à la liste"
 
 msgid "Reconnecting..."
-msgstr "Reconnexion …"
+msgstr "Reconnexion…"
 
 msgid "Password"
 msgstr "Mot de passe"
@@ -1315,10 +1189,10 @@ msgid "Function"
 msgstr "Fonction"
 
 msgid "Institution Site"
-msgstr "Location de l'Institution"
+msgstr "Location de l’Etablissement"
 
 msgid "INSTITUTION SITE"
-msgstr "Location de l'Institution"
+msgstr "LOCATION DE L’ETABLISSEMENT"
 
 msgid "Census"
 msgstr "Recensement"
@@ -1354,7 +1228,7 @@ msgid "Retype Password"
 msgstr "Confirmer mot de passe"
 
 msgid "User Details"
-msgstr "User Details"
+msgstr "Details de l’Utilisateur"
 
 msgid "Full access on all modules"
 msgstr "Accès complet à tous les modules"
@@ -1366,7 +1240,7 @@ msgid "Database"
 msgstr "Base de données"
 
 msgid "PHP Version"
-msgstr "Version de PHP"
+msgstr "Version PHP"
 
 msgid "Web Server"
 msgstr "Serveur Web"
@@ -1381,7 +1255,7 @@ msgid "The selected report is currently being processed."
 msgstr "Le rapport sélectionné est en cours de traitement."
 
 msgid "Institution Reports"
-msgstr "Rapports de l'Institution"
+msgstr "Rapports de l’Etablissement"
 
 msgid "Student Reports"
 msgstr "Rapports des Etudiants"
@@ -1402,10 +1276,10 @@ msgid "Data Quality Reports"
 msgstr "Rapports de Qualité des Données"
 
 msgid "DataQuality Reports"
-msgstr "Rapports DataQuality"
+msgstr "Rapports QualitéDonnées"
 
 msgid "Custom Reports"
-msgstr "Rapports personnalisés"
+msgstr "Rapports Personnalisés"
 
 msgid "Please contact"
 msgstr "Veuillez contacter"
@@ -1414,142 +1288,140 @@ msgid "support"
 msgstr "soutien"
 
 msgid "for more information on Custom Reports."
-msgstr "pour plus d'informations sur le Rapports Personnalisé."
+msgstr "pour plus d'informations sur les Rapports Personnalisés."
 
 msgid "Last Run"
-msgstr "Dernière exécution"
+msgstr "Dernière Exécution"
 
 msgid "Types"
 msgstr "Types"
 
 msgid "Institution Report"
-msgstr "Rapports de l'Institution"
+msgstr "Rapports de l’Etablissement"
 
 msgid "List of Institutions"
-msgstr "Liste des Institutions"
+msgstr "Liste des Etablissements"
 
 msgid "Institution Additional Info Report"
-msgstr "Liste d'Informations Supplémentaires sur les Etablissement"
+msgstr "Liste d'Informations Supplémentaires sur les Etablissements"
 
 msgid "List of Institutions with additional info"
-msgstr "Liste d'informations supplémentaires sur la location de l'Institution"
+msgstr ""
+"Liste d'informations supplémentaires sur la location des établissements"
 
 msgid "Institution Site Report"
-msgstr "Rapports de l'Institution"
+msgstr "Rapports de l’Etablissement"
 
 msgid "List of Institution Sites"
-msgstr "Liste des locations d'Institution"
+msgstr "Liste des locations des établissements"
 
 msgid "Institution Site Additional Info Report"
 msgstr ""
-"Liste d'Informations Supplémentaires sur les locations d'Etablissements"
+"Rapport d’informations supplémentaires sur les locations d’établissements"
 
 msgid "List of Institution Sites with additional info"
 msgstr ""
-"Rapport d'informations supplémentaires sur la location de l'institution"
-
-msgid "Institution Site Programme Report"
-msgstr "Programmes de l'Institution"
+"Liste d'informations supplémentaires sur les locations d’établissements"
 
 msgid "List of Institution Sites with Programmes"
-msgstr "Liste des Institutions avec leurs programmes offerts"
+msgstr "Liste des Etablissements avec Programmes"
 
 msgid "Institution Site Bank Account Report"
-msgstr "Comptes bancaires de l'institution"
+msgstr "Comptes bancaires de l’établissement"
 
 msgid "List of Institution Sites with Bank Accounts"
-msgstr "Liste des Institution avec leurs comptes bancaires"
+msgstr "Liste des Etablissements avec leurs Comptes Bancaires"
 
 msgid "Enrolment Report"
 msgstr "Rapport d'Inscription"
 
 msgid "Summary of enrolment from census"
-msgstr "Résumé de l'inscription à partir du recensement"
+msgstr "Résumé de l'inscription selon le recensement"
 
 msgid "Class Report"
 msgstr "Rapport de Classe"
 
 msgid "Summary of classes from census"
-msgstr "Résumé des cours du recensement"
+msgstr "Résumé des cours selon le recensement"
 
 msgid "Textbook Report"
 msgstr "Rapport des Manuels scolaires"
 
 msgid "Summary of textbooks from census"
-msgstr "Résumé des manuels de recensement"
+msgstr "Résumé des manuels selon le recensement"
 
 msgid "Teacher Report"
 msgstr "Rapport de l'Enseignant"
 
 msgid "Summary of teachers from census"
-msgstr "Résumé des enseignants de recensement"
+msgstr "Résumé sur les enseignants selon le recensement"
 
 msgid "Training Report"
 msgstr "Rapport sur la Formation"
 
 msgid "Summary of teacher training from census"
-msgstr "Résumé de la formation des enseignants de recensement"
+msgstr "Résumé sur la formation des enseignants selon le recensement"
 
 msgid "Staff Report"
 msgstr "Rapport du Personnel"
 
 msgid "Summary of staff from census"
-msgstr "Résumé du personnel de recensement"
+msgstr "Résumé du personnel selon le recensement"
 
 msgid "Census Additional Info Report"
-msgstr "Rapport de recensement Informations additionnelles à"
+msgstr "Rapport d’Informations Additionnelles du Recensement"
 
 msgid "Summary of additional info from census"
-msgstr "Résumé des informations supplémentaires à partir du recensement"
+msgstr "Résumé des informations supplémentaires selon le recensement"
 
 msgid "Census Tables"
 msgstr "Tableaux de recensement"
 
 msgid "Summary of additional info tables from census"
-msgstr ""
-"Résumé des tableaux d'information supplémentaires à partir du recensement"
+msgstr "Résumé des tableaux d'information supplémentaires selon le recensement"
 
 msgid "Income Report"
-msgstr "Rapport de revenus"
+msgstr "Rapport de Revenus"
 
 msgid "Summary of income from census"
-msgstr "Sommaire des revenus de recensement"
+msgstr "Sommaire des revenus selon le recensement"
 
 msgid "Expenditure Report"
-msgstr "Rapport sur les dépenses"
+msgstr "Rapport sur les Dépenses"
 
 msgid "Summary of expenditure from census"
-msgstr "Résumé des dépenses du recensement"
+msgstr "Résumé des dépenses selon le recensement"
 
 msgid "Building Report"
-msgstr "Rapport sur les bâtiment"
+msgstr "Rapport sur le(s) Bâtiment(s)"
 
 msgid "Summary of buildings and condition from census"
-msgstr "Sommaire des bâtiments et de l'état de recensement"
+msgstr "Sommaire des bâtiments et conditions selon le recensement"
 
 msgid "Rooms Report"
-msgstr "Rapport sur les chambres"
+msgstr "Rapport sur les Salles de Classe"
 
 msgid "Summary of rooms and condition from census"
-msgstr "Sommaire des chambres et de l'état du recensement"
+msgstr "Sommaire des chambres et conditions selon le recensement"
 
 msgid "Sanitation Report"
 msgstr "Rapport Sanitaire"
 
 msgid "Summary of sanitation, gender and condition from census"
-msgstr "Résumé de l'assainissement, le sexe et l'état de recensement"
+msgstr ""
+"Résumé de l'assainissement, du genre et des conditions selon le recensement"
 
 msgid "Furniture Report"
-msgstr "Rapport sur les fournitures"
+msgstr "Rapport sur les Fournitures"
 
 msgid "Summary of furniture and condition from census"
-msgstr "Résumé du mobilier et de l'état de recensement"
+msgstr "Résumé du mobilier et conditions selon le recensement"
 
 msgid "Resource Report"
 msgstr "Rapport sur les ressources"
 
 msgid "Summary of resources and condition from census"
-msgstr "Résumé des ressources et de l'état du recensement"
+msgstr "Résumé des ressources et conditions selon le recensement"
 
 msgid "Energy Report"
 msgstr "Rapport énergie"
@@ -1561,122 +1433,105 @@ msgid "Water Report"
 msgstr "Rapport sur l'Eau"
 
 msgid "Summary of water and condition from census"
-msgstr "Résumé de l'eau et de l'état de recensement"
+msgstr "Résumé sur l'eau et des conditions selon le recensement"
 
 msgid "Student Report"
-msgstr "Rapport des Etudiant"
+msgstr "Rapport Etudiant"
 
 msgid "Report on student"
-msgstr "Rapport sur les élèves"
+msgstr "Rapport sur l’élève"
 
 msgid "Students Additional Info Report"
-msgstr "Rapport élèves Informations additionnelles à"
+msgstr "Rapport d’informations supplémentaires sur les élèves"
 
 msgid "List of Students with additional info"
 msgstr "Liste des élèves ayant des informations supplémentaires"
 
 msgid "Teacher List"
-msgstr "Liste des enseignants"
+msgstr "Liste des Enseignants"
 
 msgid "Report on Teachers"
-msgstr "Rapport sur les enseignants"
-
-msgid "Teachers Additional Info Report"
-msgstr "Signaler enseignants Informations additionnelles à"
+msgstr "Rapport sur les Enseignants"
 
 msgid "List of Teachers with additional info"
-msgstr "Liste des Enseignants avec des infos supplémentaires"
+msgstr "Liste des Enseignants avec des informations supplémentaires"
 
 msgid "Staff List"
-msgstr "Liste du personnel"
+msgstr "Liste du Personnel"
 
 msgid "Report on Staff"
-msgstr "Rapport sur le personnel"
+msgstr "Rapport sur le Personnel"
 
 msgid "Staff Additional Info Report"
-msgstr "Info Report Personnel supplémentaire"
-
-msgid "List of Staff with additional info"
-msgstr "Liste du personnel avec des informations supplémentaires"
+msgstr "Rapport d’Informations Supplémentaires sur le Personnel"
 
 msgid "Wheres My School Report"
-msgstr "Où en sont vos Signaler école"
+msgstr "Où est mon rapport d’école"
 
 msgid ""
 "A Google Earth (KML) file containing all the location of all Institution "
 "Sites"
 msgstr ""
-"Un Google Earth (KML) fichier contenant tous les emplacements de tous les "
-"sites de l'Institution"
+"Un fichier Google Earth (KML) contenant tous les emplacements de tous les "
 
 msgid "Year Book Report"
 msgstr "Rapport Annuaire"
 
 msgid "Formatted summary of census data for a given year"
-msgstr "Résumé au format des données du recensement pour une année donnée"
-
-msgid "Return Rate"
-msgstr "Rendre Taux"
+msgstr "Résumé formatté des données du recensement pour une année donnée"
 
 msgid "Census Discrepancy"
-msgstr "Divergence de recensement"
-
-msgid "Backup files found."
-msgstr "Les fichiers de sauvegarde trouvé."
-
-msgid "Custom"
-msgstr "Coutume"
+msgstr "Divergence du Recensement"
 
 msgid "Consolidated"
 msgstr "Consolidé"
 
 msgid "Data Quality"
-msgstr "Qualité des données"
+msgstr "Qualité des Données"
 
 msgid "Summary of School's Census Data"
-msgstr "Résumé des données du recensement de l'école"
+msgstr "Résumé des Données du Recensement sur l’Ecole"
 
 msgid "Non-Responsive Schools Report"
-msgstr "Non-Responsive Signaler écoles"
+msgstr "Rapport sur les Ecoles Non-Réactives"
 
 msgid ""
 "List of Institution Sites that do not contain census data for a given year"
 msgstr ""
-"Liste des sites d'institutions qui ne contiennent pas de données du "
-"recensement pour une année donnée"
+"Liste des établissements qui ne contiennent pas de données du recensement "
+"pour une année donnée"
 
 msgid "Data Discrepancy Report"
-msgstr "Rapport d'anomalies de données"
+msgstr "Rapport d’Anomalies de Données"
 
 msgid ""
 "List of Institution Sites with questionable census data compared to the "
 "previous year"
 msgstr ""
-"Liste des sites de l'Institution avec les données de recensement douteuses "
-"par rapport à l'année précédente"
+"Liste des établissements avec des données de recensement douteuses par "
+"rapport à l'année précédente"
 
 msgid "Number of students (enrollment) by sex, age, locality and grade"
 msgstr ""
-"Nombre d'étudiants (inscription), selon le sexe, l'âge, la localité et la "
-"qualité"
+"Nombre d'étudiants (inscription), selon le sexe, l'âge, la localité et le "
 
 msgid "Number of teachers by sex, locality and grade"
-msgstr "Nombre d'enseignants par sexe, la localité et de qualité"
+msgstr "Nombre d'enseignants par sexe, localité et niveau scolaire"
 
 msgid "Number of staff by sex and locality"
 msgstr "Nombre d'employés par sexe et par localité"
 
 msgid "Institutions Report"
-msgstr "Rapport de l'Institutions"
+msgstr "Rapport des Etablissements"
 
 msgid "Number of institutions by provider and sector"
 msgstr "Nombre d'établissements selon le fournisseur et le secteur"
 
 msgid "Institution Sites Report"
-msgstr "Rapport de locations d'Institutions"
+msgstr "Rapport de Locations d’Etablissements"
 
 msgid "Number of institution sites by locality and type"
-msgstr "Nombre de sites par localité institution et le type"
+msgstr "Nombre d’établissements par localité et par type"
 
 msgid "Population Report"
 msgstr "Rapport de la Population"
@@ -1684,22 +1539,15 @@ msgstr "Rapport de la Population"
 msgid "Number of people by sex and age"
 msgstr "Nombre de personnes par sexe et âge"
 
-msgid "Net Enrolment Rate Report"
-msgstr "Net Report Taux de scolarisation"
-
 msgid ""
 "Divide the number of pupils (or students) enrolled who are of the official "
 "age group for a given level of education by the population for the same age "
 "group and multiply the result by 100. This indicator has dimension values of "
 "sex, locality and grade."
 msgstr ""
-"Diviser le nombre d'élèves (ou étudiants) inscrits qui sont du groupe d'âge "
-"officiellement à un niveau d'enseignement donné par la population de la même "
-"tranche d'âge et multiplier le résultat par 100. Cet indicateur a des "
-"valeurs dimension du sexe, de la localité et de qualité."
-
-msgid "Gross Enrolment Rate Report"
-msgstr "Taux de scolarisation brut Rapport"
+"Divisez le nombre d'élèves (ou étudiants) inscrits qui sont du groupe d'âge "
+"officiel à un niveau d'enseignement donné par la population de la même "
+"tranche d'âge, et multipliez le résultat par 100. Cet indicateur a des "
 
 msgid ""
 "Divide the number of pupils (or students) enrolled in a given level of "
@@ -1708,14 +1556,11 @@ msgid ""
 "result by 100. This indicator has dimension values of sex, locality and "
 "grade."
 msgstr ""
-"Diviser le nombre d'élèves (ou étudiants) inscrits dans un niveau "
-"d'enseignement donné, quel que soit l'âge de la population de la tranche "
-"d'âge qui correspond officiellement au niveau d'enseignement donné, et "
-"multiplier le résultat par 100. Cet indicateur a des valeurs dimension du "
-"sexe, de la localité et de qualité."
-
-msgid "Net Intake Rate Report"
-msgstr "Net Report Taux brut d'admission"
+"Divisez le nombre d'élèves (ou étudiants) inscrits dans un niveau "
+"d'enseignement donné, quel que soit l'âgequi correspond officiellement au "
+"niveau d'enseignement donné, et multipliez le résultat par 100. Cet "
+"indicateur a des valeurs de dimension par rapport ausexe, à la localité et "
+"au niveau scolaire."
 
 msgid ""
 "Divide the number of children of official primary school-entrance age who "
@@ -1723,23 +1568,20 @@ msgid ""
 "population of the same age, and multiply the result by 100. This indicator "
 "has dimension values of sex and locality."
 msgstr ""
-"Diviser le nombre d'enfants de l'école primaire officielle âge d'entrée qui "
+"Divisez le nombre d'enfants de l'école primaire d’âge officiel d'entrée qui "
 "entrent en première année de l'enseignement primaire pour la première fois "
-"par la population du même âge, et multiplier le résultat par 100. Cet "
-"indicateur a des valeurs de dimension du sexe et de la localité."
-
-msgid "Gross Intake Rate Report"
-msgstr "Signaler brut Taux brut d'admission"
+"par la population du même âge, et multipliez le résultat par 100. Cet "
+"indicateur a des valeurs de dimension par rapport au sexe et à la localité."
 
 msgid ""
 "Divide the number of new entrants in grade 1, irrespective of age, by the "
 "population of official school-entrance age, and multiply the result by 100. "
 "This indicator has dimension values of sex, locality and grade."
 msgstr ""
-"Diviser le nombre de nouveaux entrants en 1ère année, indépendamment de "
-"l'âge, par la population de l'école officielle d'entrée-âge, et multiplier "
-"le résultat par 100. Cet indicateur a des valeurs dimension du sexe, de la "
-"localité et de qualité."
+"Divisez le nombre de nouveaux entrants en 1ère année, indépendamment de leur "
+"âge, par la population de l'école en âge d'entrée officiel, et multipliez le "
+"résultat par 100. Cet indicateur a des valeurs de dimension par rapport au "
+"sexe, à la "
 
 msgid "Repetition Rate Report"
 msgstr "Rapport Taux de redoublement"
@@ -1750,26 +1592,25 @@ msgid ""
 "previous school year t . This indicator has dimension values of sex, "
 "locality, sector and grade."
 msgstr ""
-"Diviser le nombre de redoublants dans une classe donnée pour l'année "
+"Divisez le nombre de redoublants dans une classe donnée pour l'année "
 "scolaire t +1 par le nombre d'élèves de la même cohorte inscrits dans la "
-"même classe dans le t année scolaire précédente. Cet indicateur a des "
-"valeurs de dimension du sexe, localité, le secteur et la catégorie."
+"même classe durant l’année scolaire précédente. Cet indicateur a des "
 
 msgid "Completion Rate Report"
-msgstr "Rapport Taux d'Achèvement"
+msgstr "Rapport du Taux d'Achèvement"
 
 msgid ""
 "Divide the number of primary graduates, irrespective of age, by the "
 "population of theoretical primary graduation, and multiply the result by "
 "100. This indicator has dimension values of sex, locality and sector."
 msgstr ""
-"Diviser le nombre des diplômés du primaire, indépendamment de l'âge, par la "
-"population de l'obtention du diplôme primaire théorique, et multiplier le "
-"résultat par 100. Cet indicateur a des valeurs dimension du sexe, de la "
-"localité et secteur."
+"Divisez le nombre de diplômés du primaire, indépendamment de l'âge, par la "
+"population qui aurait théoriquement du obtenir le  diplôme primaire, et "
+"multipliez le résultat par 100. Cet indicateur a des valeurs de dimension "
+"par rapport au sexe, à la localité et au secteur."
 
 msgid "Survival Rate Report"
-msgstr "Rapport Taux de Survie"
+msgstr "Rapport sur le Taux de Survie"
 
 msgid ""
 "Divide the total number of pupils belonging to a school-cohort who reached "
@@ -1780,17 +1621,16 @@ msgid ""
 "uses data on enrolment and repeaters for two consecutive years. This "
 "indicator has dimension values of sex, locality and sector."
 msgstr ""
-"Diviser le nombre total d'élèves appartenant à une école de cohorte qui ont "
-"atteint chaque année d'études successive du niveau d'enseignement donné par "
-"le nombre d'élèves dans l'école-cohorte dire celles qui étaient initialement "
+"Divisez le nombre total d'élèves appartenant à une école-cohorte qui ont "
+"atteint chaque année d'études de manière successives donné par le nombre "
+"d'élèves dans l'école-cohorte, c’est-à-dire ceux qui étaient initialement "
 "inscrits en première année de l'enseignement primaire, et multiplier le "
-"résultat par 100. Le taux de survie est calculée sur la base de la méthode "
-"de la cohorte reconstituée, qui utilise des données sur les effectifs et les "
+"résultat par 100. Le taux de survie est calculé sur la base de la méthode de "
+"la cohorte reconstituée, qui utilise des données sur les effectifs et les "
 "redoublants pour deux années consécutives. Cet indicateur a des valeurs "
-"dimension du sexe, de la localité et secteur."
 
 msgid "Transition Rate Report"
-msgstr "Rapport Taux de Transition"
+msgstr "Rapport du Taux de Transition"
 
 msgid ""
 "Divide the number of new entrants in the first grade of the specified higher "
@@ -1799,38 +1639,32 @@ msgid ""
 "school year, and multiply by 100. This indicator has dimension values of "
 "sex, locality, sector and grade."
 msgstr ""
-"Diviser le nombre de nouveaux entrants en première année du cycle supérieur "
-"spécifié ou au niveau de l'éducation par le nombre d'élèves qui étaient "
-"inscrits en dernière année du cycle précédent ou le niveau d'éducation dans "
-"la précédente année scolaire, et multiplier par 100. Cet indicateur a des "
-"valeurs de dimension du sexe, localité, le secteur et la catégorie."
+"Divisez le nombre de nouveaux entrants en première année du cycle supérieur "
+"spécifié ou au niveau scolaire par le nombre d'élèves qui étaient inscrits "
+"en dernière année du cycle précédent ou au niveau scolaire de "
 
 msgid "Pupil Teacher Ratio Report"
-msgstr "Rapport sur les ratios élève Enseignant"
+msgstr "Rapport sur le Ratio Elèves-Enseignants"
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of teachers at the same level. This indicator has "
 "dimension values of locality, sector and level of education."
 msgstr ""
-"Diviser le nombre total d'élèves inscrits au niveau d'enseignement donné par "
-"le nombre d'enseignants au même niveau. Cet indicateur a valeurs "
-"dimensionnelles de la localité, le secteur et le niveau d'éducation."
+"Divisez le nombre total d'élèves inscrits au niveau d'enseignement donné par "
+"le nombre d'enseignants au même niveau. Cet indicateur a des valeurs "
+"dimensionnelles sur la localité, le secteur et le niveau d'éducation."
 
 msgid "Pupil Class Ratio Report"
-msgstr "Rapport sur les ratios élève de Classe"
+msgstr "Rapport sur le Ratio Elève-Classe"
 
 msgid ""
 "Divide the total number of pupils enrolled at the specified level of "
 "education by the number of classes at the same level. This indicator has "
 "dimension values of locality and sector."
 msgstr ""
-"Diviser le nombre total d'élèves inscrits au niveau d'enseignement donné par "
+"Divisez le nombre total d'élèves inscrits au niveau d'enseignement donné par "
 "le nombre de classes de même niveau. Cet indicateur a valeurs "
-"dimensionnelles de la localité et secteur."
-
-msgid "Trained Teachers Report"
-msgstr "Les enseignants formés Signaler"
 
 msgid ""
 "Divide the number of teachers of the specified level of education who have "
@@ -1839,26 +1673,20 @@ msgid ""
 "This indicator has dimension values of locality, sector and level of "
 "education."
 msgstr ""
-"Diviser le nombre d'enseignants du niveau spécifié de l'éducation qui ont "
-"reçu la formation des enseignants minimum requis par le nombre total "
-"d'enseignants au même niveau d'éducation, et multiplier le résultat par 100. "
-"Cet indicateur a valeurs dimensionnelles de la localité, le secteur et le "
+"Divisez le nombre d'enseignants du niveau spécifié d'éducation qui ont reçu "
+"la formation des enseignants minimum requis par le nombre total "
+"d'enseignants au même niveau d'éducation, et multipliez le résultat par 100. "
+"Cet indicateur a valeurs dimensionnelles sur la localité, le secteur et le "
 "niveau d'éducation."
-
-msgid "Gender Parity Index (Students) Report"
-msgstr "Indice de parité entre les sexes (étudiants) Rapport"
 
 msgid ""
 "Divide the number of female students by the number of male students. This "
 "indicator has dimension values of sex, locality, sector and level of "
 "education."
 msgstr ""
-"Diviser le nombre d'étudiantes par le nombre d'élèves de sexe masculin. Cet "
-"indicateur a des valeurs de dimension du sexe, localité, le secteur et le "
-"niveau d'éducation."
-
-msgid "Female Students Report"
-msgstr "Signaler étudiantes"
+"Divisez le nombre d'étudiantes par le nombre d'élèves de sexe masculin. Cet "
+"indicateur a des valeurs de dimension sur le sexe, la localité, le secteur "
+"et le niveau d'éducation."
 
 msgid ""
 "Divide the number of female tertiary students enrolled in a specified ISCED "
@@ -1866,14 +1694,11 @@ msgid ""
 "given academic-year, and multiply the result by 100. This indicator has "
 "dimension values of locality, sector and level of education."
 msgstr ""
-"Diviser le nombre d'étudiantes inscrits dans l'enseignement supérieur d'un "
+"Divisez le nombre d'étudiantes inscrits dans l'enseignement supérieur d'un "
 "niveau spécifié CITE par le nombre total d'étudiants (masculins plus "
-"féminin) à ce niveau dans un pays donné universitaire ans, et multiplier le "
-"résultat par 100. Cet indicateur a valeurs dimensionnelles de la localité, "
-"le secteur et le niveau d'éducation."
-
-msgid "Female Teachers Report"
-msgstr "Signaler Enseignantes"
+"féminins) à ce niveau dans une année universitaire donnée, et multipliez le "
+"résultat par 100. Cet indicateur a des valeurs dimensionnelles sur la "
+"localité, le secteur et le niveau d'éducation."
 
 msgid ""
 "Divide the total number of female teachers at a given level of education by "
@@ -1881,10 +1706,10 @@ msgid ""
 "school year, and multiply by 100. This indicator has dimension values of "
 "locality, sector and level of education."
 msgstr ""
-"Diviser le nombre total d'enseignantes à un niveau d'enseignement donné par "
+"Divisez le nombre total d'enseignantes à un niveau d'enseignement donné par "
 "le nombre total d'enseignants (hommes et femmes) au même niveau dans une "
-"année scolaire donnée, et multiplier par 100. Cet indicateur a valeurs "
-"dimensionnelles de la localité, le secteur et le niveau d'éducation."
+"année scolaire donnée, et multipliez par 100. Cet indicateur a des valeurs "
+"dimensionnelles sur la localité, le secteur et le niveau d'éducation."
 
 msgid "Private Enrolment Report"
 msgstr "Rapport des Inscriptions Privées"
@@ -1895,11 +1720,11 @@ msgid ""
 "private) at the same level of education, and multiply the result by 100. "
 "This indicator has dimension values of sex, locality and level of education."
 msgstr ""
-"Diviser le nombre d'élèves (ou étudiants) inscrits dans des établissements "
+"Divisez le nombre d'élèves (ou étudiants) inscrits dans des établissements "
 "d'enseignement privés dans un niveau d'enseignement donné par l'effectif "
-"total (public et privé) au même niveau d'éducation, et multiplier le "
-"résultat par 100. Cet indicateur a des valeurs dimension du sexe, de la "
-"localité et le niveau d'éducation."
+"total (public et privé) au même niveau d'éducation, et multipliez le "
+"résultat par 100. Cet indicateur a des valeurs dimensionnelles sur le sexe, "
+"la localité et le niveau d'éducation."
 
 msgid "Pupil Textbook Ratio Report"
 msgstr "Rapport sur les ratios élèves des Manuels Scolaires"
@@ -1909,79 +1734,58 @@ msgid ""
 "education by the number of textbooks at the same level. This indicator has "
 "dimension values of locality, and sector."
 msgstr ""
-"Diviser le nombre total d'élèves inscrits au niveau d'enseignement donné par "
-"le nombre de manuels scolaires au même niveau. Cet indicateur a valeurs "
-"dimensionnelles de la localité et du secteur privé."
-
-msgid "Water Sources Report"
-msgstr "Sources d'eau Rapport"
+"Divisez le nombre total d'élèves inscrits au niveau d'enseignement donné par "
+"le nombre de manuels scolaires au même niveau. Cet indicateur a des valeurs "
+"dimensionnelles sur la localité et le secteur privé."
 
 msgid ""
 "Number of water sources by type. This indicator has dimension values of "
 "locality, sector and condition."
 msgstr ""
-"Nombre de sources d'eau par type. Cet indicateur a valeurs dimensionnelles "
-"de la localité, du secteur et de l'état."
-
-msgid "Sanitation Facilities Report"
-msgstr "Installations Sanitaires Signaler"
+"Nombre de sources d'eau par type. Cet indicateur a des valeurs "
+"dimensionnelles "
 
 msgid ""
 "Number of sanitation facilities by type. This indicator has dimension values "
 "of locality, sector and condition."
 msgstr ""
-"Nombre d'installations sanitaires par type. Cet indicateur a valeurs "
-"dimensionnelles de la localité, du secteur et de l'état."
-
-msgid "Public Expenditure per Education Level Report"
-msgstr "Des dépenses publiques par rapport niveau de scolarité"
+"Nombre d'installations sanitaires par type. Cet indicateur a des valeurs "
 
 msgid ""
 "Divide total public expenditure for each level of education in a given "
 "financial year by the total public expenditure on education for the same "
 "financial year and multiply the result by 100. "
 msgstr ""
-"Diviser les dépenses publiques totales pour chaque niveau d'enseignement "
+"Divisez les dépenses publiques totales pour chaque niveau d'enseignement "
 "dans une année donnée financière par le total des dépenses publiques sur "
-"l'éducation pour le même exercice et multiplier le résultat par 100."
-
-msgid "Public Expenditure on Education Report"
-msgstr "Dépenses publiques d'éducation Rapport"
+"l'éducation pour la même année et multipliez le résultat par 100."
 
 msgid ""
 "Divide total public expenditure on education incurred by all government "
 "agencies/departments in a given financial year by the total government "
 "expenditure for the same financial year and multiply by 100."
 msgstr ""
-"Diviser le total des dépenses publiques d'éducation engagées par tous les "
+"Divisez le total des dépenses publiques d'éducation engagées par tous les "
 "organismes gouvernementaux / ministères dans une année financière par le "
-"total des dépenses publiques pour la même année financière et multiplier par "
+"total des dépenses publiques pour la même année financière et multipliez par "
 "100."
-
-msgid "Public Expenditure on Education by GNP Report"
-msgstr "Dépenses publiques d'éducation par rapport PNB"
 
 msgid ""
 "Divide total public expenditure on education in a given financial year by "
 "the Gross National Product (GNP) or Gross National Income (GNI) of the "
 "country for the corresponding year and multiply by 100."
 msgstr ""
-"Diviser le total des dépenses publiques d'éducation dans un pays donné "
-"exercice par le produit national brut (PNB) ou le revenu national brut (RNB) "
-"du pays pour l'année correspondante et multiplier par 100."
-
-msgid "Public Expenditure per Pupil Report"
-msgstr "Des dépenses publiques par rapport aux élèves"
+"Divisez le total des dépenses publiques d'éducation pour une année donnée "
 
 msgid ""
 "Divide per pupil public current expenditure on each level of education in a "
 "given year by the GNI per capita for the same year and multiply by 100. This "
 "indicator has dimension values of level of education."
 msgstr ""
-"Diviser par élève des dépenses publiques courantes sur chaque niveau "
-"d'enseignement dans une année donnée par le RNB par habitant pour la même "
-"année et multiplier par 100. Cet indicateur a des valeurs de dimension du "
-"niveau d'éducation."
+"Divisez les dépenses publiques courantes par élève sur chaque niveau "
+"d'enseignement pour une année donnée par le RNB par habitant pour la même "
+"année et multipliez par 100. Cet indicateur a des valeurs dimensionnelles "
+"sur le niveau d'éducation."
 
 msgid "Process"
 msgstr "Processus"
@@ -1995,11 +1799,8 @@ msgstr "Effacer tout"
 msgid "Started By"
 msgstr "Démarré par"
 
-msgid "Started Date"
-msgstr "date de début"
-
 msgid "Finished Date"
-msgstr "Date d'achèvement"
+msgstr "Date d’Achèvement"
 
 msgid "Log"
 msgstr "Connexion"
@@ -2017,22 +1818,19 @@ msgid "Completed"
 msgstr "Terminé"
 
 msgid "Export To"
-msgstr "Export Vers"
+msgstr "Exporter Vers"
 
 msgid "Export"
 msgstr "Exporter"
 
 msgid "No Data"
-msgstr "Aucune Données"
-
-msgid "GNP"
-msgstr "GNP"
+msgstr "Aucune Donnée"
 
 msgid "Total Public Expenditure For Education"
 msgstr "Dépenses Publiques Totales pour l'Education"
 
 msgid "No Available Finance Records"
-msgstr "Aucun Résultats de Finance Disponibles"
+msgstr "Aucun Résultat Financier Disponible"
 
 msgid "Gender Parity Index"
 msgstr "Indice de Parité entre les Sexes"
@@ -2048,7 +1846,7 @@ msgid "Security Users, Roles, and Functions"
 msgstr "Sécurité des Utilisateurs, Rôles, et Fonctions"
 
 msgid "System Configuration Values"
-msgstr "Valeurs de configuration du système"
+msgstr "Valeurs de Configuration du Système"
 
 msgid "Security"
 msgstr "Sécurité"
@@ -2093,7 +1891,7 @@ msgid "Files"
 msgstr "Fichiers"
 
 msgid "Format not support."
-msgstr "Le Format n'est pas soutenu."
+msgstr "Le format n'est pas soutenu."
 
 msgid "Image filesize too large."
 msgstr "Taille du fichier de l'image trop élevée."
@@ -2105,16 +1903,16 @@ msgid "File uploaded with success."
 msgstr "Fichier téléchargé avec succès."
 
 msgid "Image exceeds system max filesize."
-msgstr "L'image dépasse système de taille maximum du fichier."
+msgstr "L'image dépasse la taille maximum de fichier autorisée."
 
 msgid "Image exceeds max file size in the HTML form."
-msgstr "L'image dépasse la taille de fichier maximale dans le formulaire HTML."
+msgstr "L'image dépasse la taille de fichier maximum dans le formulaire HTML."
 
 msgid "Image was only partially uploaded."
-msgstr "L'image n'a été que partiellement envoyé."
+msgstr "L'image n'a été que partiellement envoyée."
 
 msgid "No image was uploaded."
-msgstr "Aucune image ne vous a été envoyé."
+msgstr "Aucune image ne vous a été envoyée."
 
 msgid "Missing a temporary folder."
 msgstr "Il manque un dossier temporaire."
@@ -2129,13 +1927,13 @@ msgid "Max Resolution:"
 msgstr "Résolution Maximum:"
 
 msgid "Max File Size:"
-msgstr "Taille maximale du fichier:"
+msgstr "Taille Maximum du Dichier:"
 
 msgid "Max Resolution: %s pixels"
-msgstr "Résolution maxi: %s des pixels"
+msgstr "Résolution Max: %s pixels"
 
 msgid "Format Supported:"
-msgstr "Format pris en charge:"
+msgstr "Format Pris en Charge:"
 
 msgid "Profile Image"
 msgstr "Image du Profil"
@@ -2156,7 +1954,7 @@ msgid "Please enter a name for the Field of Study."
 msgstr "Veuillez entrer un nom pour le domaine d'études."
 
 msgid "This Field of Study already exists in the system."
-msgstr "Ce domaine d'études est existe déjà dans le système."
+msgstr "Ce domaine d'études existe déjà dans le système."
 
 msgid "Please select the programme orientation."
 msgstr "Veuillez sélectionner l'orientation du programme."
@@ -2168,10 +1966,10 @@ msgid "This subject already exists in the system."
 msgstr "Ce sujet existe déjà dans le système."
 
 msgid "You have entered an invalid username or password."
-msgstr "Vous avez entré un nom d'utilisateur ou mot de passe invalide."
+msgstr "Vous avez entré un nom d'utilisateur ou un mot de passe invalide."
 
 msgid "Please enter a duration."
-msgstr "Veuillez Entrer une Durée."
+msgstr "Veuillez entrer une durée."
 
 msgid "Add Programme"
 msgstr "Ajouter Programme"
@@ -2227,7 +2025,7 @@ msgid "Certificate is required!"
 msgstr "Un certificat est nécessaire!"
 
 msgid "Institute is required!"
-msgstr "Un institut est nécessaire!"
+msgstr "Un établissement est nécessaire!"
 
 msgid "Please select a country before adding new records."
 msgstr ""
@@ -2276,10 +2074,10 @@ msgid "Status is required!"
 msgstr "Un statut est nécessaire!"
 
 msgid "Move Up"
-msgstr "Déplacez vers le haut"
+msgstr "Déplacer vers le haut"
 
 msgid "Move Down"
-msgstr "Déplacez vers le bas"
+msgstr "Déplacer vers le bas"
 
 msgid "Toggle this field active/inactive"
 msgstr "Nommez ce domaine actif/inactif"
@@ -2292,7 +2090,7 @@ msgstr "Cliquez pour Rejeter"
 
 msgid "Unable to add Areas.<br/>Please create Area Level before adding Areas."
 msgstr ""
-"Impossible d'ajouter les Zones.<br/>Veuillez créer au Niveau des Zones avant "
+"Impossible d'ajouter les Zones.<br/>Veuillez créer un Niveau des Zone avant "
 "d'ajouter les Zones."
 
 msgid "Saving please wait..."
@@ -2302,13 +2100,13 @@ msgid "Loading Areas"
 msgstr "Les zones de chargement"
 
 msgid "Batch executed successfully."
-msgstr "Lot exécutée avec succès."
+msgstr "Lot exécuté avec succès."
 
 msgid "Running batch..."
 msgstr "Exécution de lots ..."
 
 msgid "Adding Field..."
-msgstr "Ajout de Champ …"
+msgstr "Ajout de Champ…"
 
 msgid "Please select a valid Start Date"
 msgstr "Veuillez sélectionner une date de début valide"
@@ -2316,41 +2114,32 @@ msgstr "Veuillez sélectionner une date de début valide"
 msgid "Please select a valid End Date"
 msgstr "Veuillez sélectionner une date de fin valide"
 
-msgid "Please add a programme to this institution site."
-msgstr "S'il vous plaît ajouter un programme à ce site institution."
-
 msgid "Missing Coordinates Report"
 msgstr "Rapport de Coordonnées Manquantes"
 
 msgid ""
 "List of Institution Sites with latitude and/or longitude values of 0 or null"
 msgstr ""
-"Liste des sites de l'institution avec des valeurs de latitude et / ou "
-"longitude de 0 ou null"
+"Liste des établissements avec des valeurs de latitude et / ou longitude de 0 "
+"ou null"
 
 msgid "OLAP Report"
-msgstr "OLAP Rapports"
+msgstr "Rapports OLAP"
 
 msgid "Generated"
 msgstr "Généré"
 
 msgid "Generated Files"
-msgstr "Généré Fichiers"
+msgstr "Fichiers Générés"
 
 msgid "Generating OLAP Report..."
-msgstr "Génération de rapports OLAP…"
+msgstr "Génération de Rapports OLAP…"
 
 msgid "Indicator"
 msgstr "Indicateur"
 
-msgid "Sub Groups"
-msgstr "Sous-groupe"
-
 msgid "Time Period"
 msgstr "Période"
-
-msgid "Data Value"
-msgstr "Données de la valeur"
 
 msgid "Classification"
 msgstr "Classification"
@@ -2359,37 +2148,37 @@ msgid "Information"
 msgstr "Informations"
 
 msgid "Area Name"
-msgstr "Nom de la zone"
+msgstr "Nom de la Zone"
 
 msgid "Education Programme Name"
-msgstr "Nom de programme d'éducation"
+msgstr "Nom du Programme d’Education"
 
 msgid "Bank Account Name"
-msgstr "Nom de la direction de la Banque"
+msgstr "Nom du Compte Bancaire"
 
 msgid "Bank Account Number"
-msgstr "Numéro de compte bancaire"
+msgstr "Numéro de Compte Bancaire"
 
 msgid "Bank Account Active"
-msgstr "Compte bancaire actif"
+msgstr "Compte Bancaire Actif"
 
 msgid "Bank Branch Name"
-msgstr "Nom de la direction de la Banque"
+msgstr "Nom de l’Agence Bancaire"
 
 msgid "Academic Year"
-msgstr "Année académique"
+msgstr "Année Académique"
 
 msgid "Education Grade Name"
-msgstr "Nom de la catégorie Éducation"
+msgstr "Nom du Niveau"
 
 msgid "Class"
 msgstr "Classe"
 
 msgid "Education Subject Name"
-msgstr "Nom Sujet Education"
+msgstr "Nom de la Matière"
 
 msgid "No Of Textbooks"
-msgstr "Nombre de manuels"
+msgstr "Nombre de Manuels"
 
 msgid "Grid X Category"
 msgstr "Grille Catégorie X"
@@ -2403,62 +2192,47 @@ msgstr "Bâtiment"
 msgid "Material"
 msgstr "Matériel"
 
-msgid "Room"
-msgstr "Chambre"
-
 msgid "Resource"
 msgstr "Ressource"
 
 msgid "Student Name"
-msgstr "Nom de l'élève"
+msgstr "Nom de l’Elève"
 
 msgid "Teacher Name"
-msgstr "Nom de l'enseignant"
+msgstr "Nom de l’Enseignant"
 
 msgid "Staff Name"
-msgstr "Nom du personnel"
-
-msgid "Available Variables"
-msgstr "Les variables disponibles"
-
-msgid "Selected Variables"
-msgstr "Les variables sélectionnées"
+msgstr "Nom du Personnel"
 
 msgid "Institution Provider"
-msgstr "Fournisseur institution"
+msgstr "Fournisseur de l’Etablissement"
 
 msgid "Institution Status"
-msgstr "Statut établissement"
+msgstr "Statut de l’Etablissement"
 
 msgid "Institution Site Locality"
-msgstr "Localité site Institution"
+msgstr "Localité de l’Etablissement"
 
 msgid "Institution Site Type"
-msgstr "Type d'institution du site"
+msgstr "Type d’Etablissement"
 
 msgid "Institution Site Ownership"
-msgstr "Propriété du site Institution"
+msgstr "Propriété de l’Etablissement"
 
 msgid "Institution Site Status"
-msgstr "Site Status Institution"
+msgstr "Statut de la Location de l’Etablissement"
 
 msgid "Education Programme"
-msgstr "Programme d'éducation"
-
-msgid "Education Grade"
-msgstr "l'éducation de qualité"
+msgstr "Programme d’Education"
 
 msgid "Student Category"
-msgstr "Catégorie d'étudiant"
+msgstr "Catégorie d’Etudiant"
 
 msgid "No backup files found."
 msgstr "Pas de fichiers de sauvegarde trouvé."
 
-msgid "Yearbook"
-msgstr "Annuaire"
-
 msgid "Organization Name"
-msgstr "Nom de l'organisation"
+msgstr "Nom de l’Organisation"
 
 msgid "Publication Date"
 msgstr "Date de Publication"
@@ -2466,36 +2240,27 @@ msgstr "Date de Publication"
 msgid "Logo"
 msgstr "Logo"
 
-msgid "Data Outliers"
-msgstr "Les valeurs aberrantes données"
-
 msgid ""
 "Census Numbers that have age or total of male and female numbers beyond the "
 "specified range in settings."
 msgstr ""
-"Numéros de recensement qui ont l'âge ou le nombre total de mâles et femelles "
-"au-delà de la plage spécifiée dans les paramètres."
+"Numéros de recensement qui ont un âge ou un nombre total d’hommes et de "
+"femmes au-delà de la plage spécifiée dans les paramètres."
 
 msgid "Page Orientation"
 msgstr "Orientation de la Page"
 
-msgid "Yearbook Logo"
-msgstr "Annuaire Logo"
-
 msgid "Maximum Student Age"
-msgstr "Âge des élèves maximum"
+msgstr "Âge Maximum  des Elèves"
 
 msgid "Minimum Student Age"
-msgstr "Âge minimum des étudiants"
+msgstr "Âge Minimum des Etudiants"
 
 msgid "Maximum Student Number"
-msgstr "Numéro d'étudiant maximale"
+msgstr "Numéro d'étudiant Maximum"
 
 msgid "Minimum Student Number"
-msgstr "Nombre minimum d'étudiants"
-
-msgid "Data Discrepancy"
-msgstr "divergence de données"
+msgstr "Nombre Minimum d’Etudiants"
 
 msgid "Data Discrepancy Variation(%)"
 msgstr "Variation Écart de données (%)"
@@ -2504,13 +2269,13 @@ msgid "Previous Year"
 msgstr "Année précédente"
 
 msgid "Previous Year Male"
-msgstr "Homme Année précédente"
+msgstr "Homme Année Précédente"
 
 msgid "Previous Year Female"
-msgstr "Femme Année précédente"
+msgstr "Femme Année Précédente"
 
 msgid "Data Discrepancy Reports"
-msgstr "Rapports de litige de données"
+msgstr "Rapports de Divergence de Données"
 
 msgid "age"
 msgstr "âge"

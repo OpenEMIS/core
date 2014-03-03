@@ -32,18 +32,21 @@ echo $this->Html->script('search', false);
 		?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
-		
-		<div class="row">
-			<div class="label"><?php echo __('Course Code'); ?></div>
-			<div class="value"><?php echo $data['TrainingCourse']['code']; ?></div>
-		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Course Title'); ?></div>
 			<div class="value"><?php echo $data['TrainingCourse']['title'];?></div>
 		</div>
 		<div class="row">
+			<div class="label"><?php echo __('Course Code'); ?></div>
+			<div class="value"><?php echo $data['TrainingCourse']['code']; ?></div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('Course Description'); ?></div>
 			<div class="value"><?php echo $data['TrainingCourse']['description']; ?></div>
+		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Course Requirement'); ?></div>
+			<div class="value"><?php echo $trainingRequirementOptions[$data['TrainingCourse']['training_requirement_id']]; ?></div>
 		</div>
 	  	<div class="row">
 			<div class="label"><?php echo __('Priority'); ?></div>

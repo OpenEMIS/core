@@ -226,6 +226,7 @@ class NavigationComponent extends Component {
 				'REPORTS' => array(
 					$this->createLink('General', 'InstitutionSites', 'reportsGeneral'),
 					$this->createLink('Details', 'InstitutionSites', 'reportsDetails'),
+                                        $this->createLink('Totals', 'InstitutionSites', 'reportsTotals'),
                                         $this->createLink('Quality', 'InstitutionSites', 'reportsQuality')
 				)
 			)

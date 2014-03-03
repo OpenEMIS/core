@@ -3,7 +3,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false);
 ?>
-<?php $obj = $data[$modelName]; ?>
+<?php $obj = $data[$modelName]; 
+?>
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="training_course" class="content_wrapper">
@@ -37,6 +38,14 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $trainingCourses['TrainingCourse']['title']; ?></div>
 		</div>
 		<div class="row">
+			<div class="label"><?php echo __('Provider'); ?></div>
+			<div class="value">
+				<?php if(!empty($trainingProviders)){
+					echo $trainingProviders['TrainingProvider']['name'];
+				} ?>
+			</div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
 			<div class="value"><?php echo $data['TrainingSession']['start_date'];?></div>
 		</div>
@@ -66,7 +75,7 @@ echo $this->Html->script('search', false);
 					        <div class="table_head">
 					       		<div class="table_cell"><?php echo __('Name'); ?></div>
 					            <div class="table_cell"><?php echo __('Result'); ?></div>
-					            <div class="table_cell"><?php echo __('Pass'); ?></div>
+					            <div class="table_cell"><?php echo __('Completed'); ?></div>
 					        </div>
 					       
 					        <div class="table_body">
@@ -78,11 +87,11 @@ echo $this->Html->script('search', false);
 					                <?php if(!isset($val['TrainingSessionTrainee']['pass'])){
 					                		echo '-';
 					                 }else if($val['TrainingSessionTrainee']['pass'] == '1'){
-					                 		echo __('Yes');
+					                 		echo __('Passed');
 					                 }else if($val['TrainingSessionTrainee']['pass'] == '-1'){
 					                 		echo '-';
 					                 }else{
-					                 		echo __('No');
+					                 		echo __('Failed');
 					                 }
 					                 ?>
 					                </div>

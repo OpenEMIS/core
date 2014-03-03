@@ -22,7 +22,6 @@ class TrainingCourse extends TrainingAppModel {
 		'TrainingFieldStudy',
 		'TrainingCourseType',
 		'TrainingModeDelivery',
-		'TrainingProvider',
 		'TrainingRequirement',
 		'TrainingLevel',
 		'TrainingStatus',
@@ -49,6 +48,11 @@ class TrainingCourse extends TrainingAppModel {
 		),
 		'TrainingCourseTargetPopulation' => array(
 			'className' => 'TrainingCourseTargetPopulation',
+			'foreignKey' => 'training_course_id',
+			'dependent' => true
+		),
+		'TrainingCourseProvider' => array(
+			'className' => 'TrainingCourseProvider',
 			'foreignKey' => 'training_course_id',
 			'dependent' => true
 		),
@@ -117,13 +121,6 @@ class TrainingCourse extends TrainingAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please select a valid Mode of Delivery.'
-			)
-		),
-		'training_provider_id' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a valid Training Provider.'
 			)
 		),
 		'training_requirement_id' => array(
@@ -307,6 +304,12 @@ class TrainingCourse extends TrainingAppModel {
 					)
 				);
 
+		$trainingCourseProvider = ClassRegistry::init('TrainingCourseProvider');
+		$trainingCourseProviders = $trainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
+
+		$trainingProvider = ClassRegistry::init('TrainingProvider');
+		$trainingProviders = $trainingProvider->find('list', array('fields'=>array('id', 'name')));
+
 		$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
         $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
 
@@ -317,6 +320,8 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('teacherPositionTitles', $teacherPositionTitles);
 		$controller->set('staffPositionTitles', $staffPositionTitles);
 		$controller->set('trainingCoursePrerequisites', $trainingCoursePrerequisites);
+		$controller->set('trainingCourseProviders', $trainingCourseProviders);
+		$controller->set('trainingProviders', $trainingProviders);
 		$controller->set('attachments', $attachments);
 		$controller->set('_model','TrainingCourseAttachment');
 	}
@@ -482,6 +487,14 @@ class TrainingCourse extends TrainingAppModel {
 					}
 				}
 
+				$trainingCourseProviders = $this->TrainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
+				$trainingCourseProvidersVal = null;
+				if(!empty($trainingCourseProviders)){
+					foreach($trainingCourseProviders as $val){
+						$trainingCourseProvidersVal[] = $val['TrainingCourseProvider'];
+					}
+				}
+
 			  	$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
 	            $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
 
@@ -490,7 +503,8 @@ class TrainingCourse extends TrainingAppModel {
 	            $controller->set('_model','TrainingCourseAttachment');
 
 
-				$merge = array_merge(array('TrainingCourseTargetPopulation'=>$trainingCourseTargetPopulationsVal), array('TrainingCoursePrerequisite'=>$trainingCoursePrerequisitesVal));
+				$merge = array_merge(array('TrainingCourseTargetPopulation'=>$trainingCourseTargetPopulationsVal), array('TrainingCoursePrerequisite'=>$trainingCoursePrerequisitesVal)
+					, array('TrainingCourseProvider'=>$trainingCourseProvidersVal));
 				$controller->request->data = array_merge($data, $merge);
 			}
 		}
@@ -535,6 +549,13 @@ class TrainingCourse extends TrainingAppModel {
 							$deletedId[] = $value['id'];
 						}
 						$this->TrainingCoursePrerequisite->deleteAll(array('TrainingCoursePrerequisite.id' => $deletedId), false);
+					}
+					if(isset($controller->request->data['DeleteProvider'])){
+						$deletedId = array();
+						foreach($controller->request->data['DeleteProvider'] as $key=>$value){
+							$deletedId[] = $value['id'];
+						}
+						$this->TrainingCourseProvider->deleteAll(array('TrainingCourseProvider.id' => $deletedId), false);
 					}
 					if(empty($controller->request->data[$this->name]['id'])){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
