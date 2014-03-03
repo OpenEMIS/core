@@ -102,7 +102,7 @@ class FileUploaderComponent extends Component {
            // pr($this->data);die;
 		if(!empty($this->data)){
 			$this->uploadedFile = $this->_getUploadFileArr();
-		//	pr($this->_getUploadFileArr());
+		//	pr($this->uploadedFile);die;
 		//	pr($this->data);
 		//	$id = '';
 			if(!empty($this->data[$this->fileModel]['id'])){
@@ -234,6 +234,9 @@ class FileUploaderComponent extends Component {
 	}
 	
 	function _getUploadFileArr(){
+            /*pr($this->fileModel);
+            pr($this->fileVar);
+            pr($this->data[$this->fileModel][$this->fileVar]);*/
 		if(!empty($this->fileModel) && isset($this->data[$this->fileModel][$this->fileVar]) ){
 			if($this->fileVar == 'files'){
 				$fileArr = $this->data[$this->fileModel][$this->fileVar];

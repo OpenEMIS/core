@@ -17,11 +17,11 @@ echo $this->Html->script('Quality.quality.visit', false);
     $actionName = $this->action;
     $formOptions = array('controller' => 'Quality', 'action' => $actionName, 'plugin' => 'Quality');
     $formOptions = array_merge($formOptions, $this->params['pass']);
-    
-    $pathId = !empty($this->data[$modelName]['id'])? '/'.$this->data[$modelName]['id'] : '';
+
+    $pathId = !empty($this->data[$modelName]['id']) ? '/' . $this->data[$modelName]['id'] : '';
     echo $this->Form->create($modelName, array(
         'url' => $formOptions,
-        'link' => 'Quality/' . $this->action.$pathId,
+        'link' => 'Quality/' . $this->action . $pathId,
         'type' => 'file',
         'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
     ));
@@ -71,26 +71,24 @@ echo $this->Html->script('Quality.quality.visit', false);
                     <?php echo __("Maximum 200 characters per comment"); ?>
                 </em>
             </div>
-        
-        
         </div>
-        
     </div>
     <div class="row">
         <div class="label"><?php echo __('Attachment'); ?> </div>
         <div class="value">
-
-            <?php echo $this->Form->input('file', array('type' => 'file', 'class' => 'form-error')); ?>
+            <div id="attachmensWrapper">
+                <?php echo $this->Form->input('files.', array('type' => 'file','multiple', 'class' => 'form-error', 'name'=> 'data[QualityInstitutionVisitAttachment][files][]')); ?>
+            </div>
             <br/>
             <div id="image_upload_info">
-                <em>
-                    <!--  <?php echo sprintf(__("Max Resolution: %s pixels"), '400 x 514'); ?>
-                      <br/> -->
-                    <?php echo __("Max File Size:") . ' 2 MB'; ?>
-                    <!-- <br/>
-                    <?php echo __("Format Supported:") . " .jpg, .jpeg, .png, .gif"; ?> -->
-                </em>
+                <em><?php echo __("Max File Size:") . ' 2 MB'; ?></em>
             </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label">&nbsp</div>
+        <div class="value">
+            <a class="void icon_plus" onclick="QualityVisit.addExtraAttachment()" href="javascript: void(0)"><?php echo __('Add Attachment'); ?></a>
         </div>
     </div>
     <div class="controls view_controls">
@@ -104,5 +102,5 @@ echo $this->Html->script('Quality.quality.visit', false);
         ?>
     </div>
 
-<?php echo $this->Form->end(); ?>
+    <?php echo $this->Form->end(); ?>
 </div>

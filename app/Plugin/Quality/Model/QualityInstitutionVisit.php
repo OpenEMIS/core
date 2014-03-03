@@ -191,19 +191,46 @@ class QualityInstitutionVisit extends QualityAppModel {
                 }
             }
         } else {
-            $postData = $controller->request->data;
+            $postData = $controller->request->data;//pr($postData); die;
             unset($postData[$this->name]['file']);
 
             $this->set($postData);
             if ($this->validates()) {
                 if ($this->save($postData)) {
-                    $fileData = $controller->request->data[$this->name]['file'];
-
-                    $uploadComplete = false;
-                    if ($fileData['error'] != 4) {
+                    $_modelName = 'QualityInstitutionVisitAttachment';
+                    $filesData = $controller->request->data[$_modelName]['files'];
+                 //   pr($filesData); die;
+              //      $uploadComplete = false;
+                    
+                    if($this->_checkMultiAttachmentsExist($filesData)){
                         $controller->FileUploader->fileSizeLimit = 2 * 1024 * 1024;
-                        $controller->FileUploader->fileModel = $this->name;
+                        $controller->FileUploader->fileModel = $_modelName;//$this->name;
                         $controller->FileUploader->dbPrefix = 'file';
+                        $controller->FileUploader->fileVar = 'files';
+                        $controller->FileUploader->additionalFileType();
+                        $controller->FileUploader->uploadFile($this->id);
+                        
+                        if ($controller->FileUploader->success) {
+                            if (empty($controller->request->data[$this->name]['id'])) {
+                                $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                            } else {
+                                $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
+                            }
+                            return $controller->redirect(array('action' => 'qualityVisitView', $this->id));
+                        }
+                    }
+                    else{
+                        if (empty($controller->request->data[$this->name]['id'])) {
+                            $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                        } else {
+                            $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
+                        }
+                        return $controller->redirect(array('action' => 'qualityVisitView', $this->id));
+                    }
+                    /*if ($fileData['error'] != 4) {
+                        $controller->FileUploader->fileSizeLimit = 2 * 1024 * 1024;
+                        $controller->FileUploader->fileModel = 'QualityInstitutionVisitAttachment';//$this->name;
+                        $controller->FileUploader->dbPrefix = 'files';
                         $controller->FileUploader->additionalFileType();
                         $controller->FileUploader->uploadFile($this->id);
 
@@ -222,7 +249,16 @@ class QualityInstitutionVisit extends QualityAppModel {
                             $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
                         }
                         return $controller->redirect(array('action' => 'qualityVisitView', $this->id));
+                    }*/
+                }
+                else{
+                    if($type == 'add'){
+                        $controller->Utility->alert($controller->Utility->getMessage('ADD_ERROR'));
                     }
+                    else{
+                        $controller->Utility->alert($controller->Utility->getMessage('UPDATE_ERROR'));
+                    }
+                    
                 }
             }
         }
@@ -324,5 +360,23 @@ class QualityInstitutionVisit extends QualityAppModel {
             $controller->redirect(array('action' => 'qualityVisit'));
         }
     }
+    
+    private function _checkMultiAttachmentsExist($filesData){
+        $attachmentExisit = false;
+        
+        foreach($filesData as $file){
+            if(!empty($file['tmp_name'])){
+                $attachmentExisit = true;
+                break;
+            }
+        }
+        
+        return $attachmentExisit;
+    }
 
+    public function qualityVisitAjaxAddAttachment($controller, $params){
+        if ($controller->request->is('ajax')) {
+        
+        }
+    }
 }
