@@ -25,6 +25,10 @@ $obj = $data['TrainingSessionTrainee']; ?>
 			<div class="label"><?php echo __('Course Title'); ?></div>
 			<div class="value"><?php echo $data['TrainingCourse']['title'];?></div>
 		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Provider'); ?></div>
+			<div class="value"><?php echo $data['TrainingProvider']['name']; ?></div>
+		</div>
 	  	<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
 			<div class="value"><?php echo $data['TrainingSession']['start_date']; ?></div>
@@ -42,7 +46,7 @@ $obj = $data['TrainingSessionTrainee']; ?>
 			<div class="value"><?php echo $data['TrainingSession']['location']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Provider'); ?></div>
+			<div class="label"><?php echo __('Trainer'); ?></div>
 			<div class="value"><?php echo $data['TrainingSession']['trainer']; ?></div>
 		</div>
 

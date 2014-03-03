@@ -59,8 +59,8 @@ $obj = $data[$modelName]; ?>
 			<div class="value"><?php echo $obj['location']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Provider'); ?></div>
-			<div class="value"><?php echo $obj['trainer']; ?></div>
+			<div class="label"><?php echo __('Provicer'); ?></div>
+			<div class="value"><?php echo $data['TrainingProvider']['name']; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Hours'); ?></div>

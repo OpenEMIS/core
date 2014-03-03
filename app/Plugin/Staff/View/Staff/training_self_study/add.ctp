@@ -68,7 +68,7 @@ echo $this->Html->script('attachments', false);
      <div class="row">
         <div class="label"><?php echo __('Provider'); ?></div>
         <div class="value">
-        	<?php echo $this->Form->input('trainer');?>
+        	<?php echo $this->Form->input('training_provider_id', array('options'=>$trainingProviderOptions));?>
         </div>
     </div>
   	<div class="row">
