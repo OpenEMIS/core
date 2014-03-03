@@ -589,7 +589,6 @@ class InstitutionSitesController extends AppController {
             ),
             'FileName' => 'Report_Quality_Visit'
         )
-
     );
     private $reportMappingCensus = array(
         'Students' => array(
@@ -4027,9 +4026,9 @@ class InstitutionSitesController extends AppController {
 
                 $options['order'] = array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
                 $options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
-                
-              //  pr('in if statement');
-            } else if ($name== 'Visit Report') {
+
+                //  pr('in if statement');
+            } else if ($name == 'Visit Report') {
                 $options['recursive'] = -1;
 
                 $options['joins'] = array(
@@ -4077,11 +4076,11 @@ class InstitutionSitesController extends AppController {
                     )
                 );
             }
-            
+
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
-       // pr($this->reportMapping[$name]);
-      //  pr($data); die;
+        // pr($this->reportMapping[$name]);
+        //  pr($data); die;
         return $data;
     }
 
@@ -5668,10 +5667,10 @@ class InstitutionSitesController extends AppController {
             $header = $this->reportMapping[$name]['fields'];
         }
         $new = array();
-        
+
         foreach ($header as $model => &$arrcols) {
             foreach ($arrcols as $col => $value) {
-                 if (strpos(substr($col, 0, 4), 'SUM(') !== false) {
+                if (strpos(substr($col, 0, 4), 'SUM(') !== false) {
                     $new[] = substr($col, 0, 4) . $model . "." . substr($col, 4);
                 } else if (strpos(substr($col, 0, 13), 'COALESCE(SUM(') !== false) {
                     $new[] = substr($col, 0, 13) . $model . "." . substr($col, 13);
@@ -5679,7 +5678,6 @@ class InstitutionSitesController extends AppController {
                     $new[] = $model . "." . $col;
                 }
             }
-            
         }
         return $new;
     }
@@ -6069,6 +6067,5 @@ class InstitutionSitesController extends AppController {
         $this->set('actionName', 'genReport');
         $this->render('Reports/general');
     }
-
 
 }
