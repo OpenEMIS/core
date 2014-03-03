@@ -26,9 +26,9 @@ echo $this->Html->script('jquery-ui.min', false);
 
 	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 	<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
-
-	<?php echo $this->Form->input('course_id', array('type'=> 'hidden', 'default'=>$course, 'class'=>'course')); ?>
-	<?php echo $this->Form->input('provider_id', array('type'=> 'hidden', 'default'=>$provider, 'class'=>'provider')); ?>
+	<?php  echo $this->Form->input('provider', array('type'=> 'hidden', 'class'=>'provider', 'default'=>$provider)); ?>
+	<?php
+	?>
 	<div class="row">
 		<div class="label"><?php echo __('Course'); ?></div>
         <div class="value">
@@ -48,7 +48,9 @@ echo $this->Html->script('jquery-ui.min', false);
 		<div class="label"><?php echo __('Provider'); ?></div>
         <div class="value">
 		<?php 
-			echo $this->Form->input('training_provider_id', array('options' => array(),
+			echo $this->Form->input('training_provider_id', array(
+				'options' => array(),
+				'onchange' => 'objTrainingSessions.selectProvider(this)',
 				'class'=>'default training_provider')); 
 		?>
         </div>
