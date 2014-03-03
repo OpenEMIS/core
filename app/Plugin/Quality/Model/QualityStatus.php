@@ -42,7 +42,7 @@ class QualityStatus extends QualityAppModel {
             )
         ),
     );
-    public $statusOptions = array('Disabled', 'Enabled');
+    public $statusOptions = array('Date Disabled', 'Date Enabled');
     
     public function checkDropdownData($check) {
         $value = array_values($check);
