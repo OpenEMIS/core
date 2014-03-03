@@ -589,7 +589,6 @@ class InstitutionSitesController extends AppController {
             ),
             'FileName' => 'Report_Quality_Visit'
         )
-
     );
     private $reportMappingCensus = array(
         'Students' => array(
@@ -4027,9 +4026,9 @@ class InstitutionSitesController extends AppController {
 
                 $options['order'] = array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
                 $options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
-                
-              //  pr('in if statement');
-            } else if ($name== 'Visit Report') {
+
+                //  pr('in if statement');
+            } else if ($name == 'Visit Report') {
                 $options['recursive'] = -1;
 
                 $options['joins'] = array(
@@ -4077,11 +4076,11 @@ class InstitutionSitesController extends AppController {
                     )
                 );
             }
-            
+
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
-       // pr($this->reportMapping[$name]);
-      //  pr($data); die;
+        // pr($this->reportMapping[$name]);
+        //  pr($data); die;
         return $data;
     }
 
@@ -5668,10 +5667,10 @@ class InstitutionSitesController extends AppController {
             $header = $this->reportMapping[$name]['fields'];
         }
         $new = array();
-        
+
         foreach ($header as $model => &$arrcols) {
             foreach ($arrcols as $col => $value) {
-                 if (strpos(substr($col, 0, 4), 'SUM(') !== false) {
+                if (strpos(substr($col, 0, 4), 'SUM(') !== false) {
                     $new[] = substr($col, 0, 4) . $model . "." . substr($col, 4);
                 } else if (strpos(substr($col, 0, 13), 'COALESCE(SUM(') !== false) {
                     $new[] = substr($col, 0, 13) . $model . "." . substr($col, 13);
@@ -5679,14 +5678,19 @@ class InstitutionSitesController extends AppController {
                     $new[] = $model . "." . $col;
                 }
             }
-            
         }
         return $new;
     }
 
     private function getHeader($name, $humanize = false) {
         if (array_key_exists($name, $this->reportMapping)) {
-            $header = $this->reportMapping[$name]['fields'];
+            if ($name == 'QA Report') {
+                $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+                $header = $RubricsTemplate->getInstitutionQAReportHeader($this->institutionSiteId);
+                //   return $header;
+            } else {
+                $header = $this->reportMapping[$name]['fields'];
+            }
         }
         $new = array();
         foreach ($header as $model => &$arrcols) {
@@ -5812,27 +5816,28 @@ class InstitutionSitesController extends AppController {
         ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
         //create a file
 
-        $csv_file = fopen('php://output', 'w');
-        header('Content-type: application/csv');
-        header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
-
+         $csv_file = fopen('php://output', 'w');
+          header('Content-type: application/csv');
+          header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
+         
         $header_row = $this->getHeader($name);
-        fputcsv($csv_file, $header_row, ',', '"');
+      //  pr($header_row);
+           fputcsv($csv_file, $header_row, ',', '"');
 
-        // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
-        foreach ($arrData as $arrSingleResult) {
-            $row = array();
-            foreach ($arrSingleResult as $table => $arrFields) {
+          // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
+          foreach ($arrData as $arrSingleResult) {
+          $row = array();
+          foreach ($arrSingleResult as $table => $arrFields) {
 
-                foreach ($arrFields as $col) {
-                    $row[] = $col;
-                }
-            }
+          foreach ($arrFields as $col) {
+          $row[] = $col;
+          }
+          }
 
-            fputcsv($csv_file, $row, ',', '"');
-        }
+          fputcsv($csv_file, $row, ',', '"');
+          }
 
-        fclose($csv_file);
+          fclose($csv_file); 
     }
 
     private function genCSVAcademic($data, $name) {
@@ -6069,6 +6074,5 @@ class InstitutionSitesController extends AppController {
         $this->set('actionName', 'genReport');
         $this->render('Reports/general');
     }
-
 
 }
