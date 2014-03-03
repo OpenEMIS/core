@@ -80,9 +80,17 @@ class TrainingSessionResult extends TrainingAppModel {
 			)
 		);
 
+		$trainingProvider = ClassRegistry::init('TrainingProvider');
+		$trainingProviders = $trainingProvider->find('first',  
+			array(
+				'conditions'=>array('TrainingProvider.id'=>$data['TrainingSession']['training_provider_id'])
+			)
+		);
+
 		$controller->Session->write('TrainingResultId', $id);
 		$controller->set('trainingCourses', $trainingCourses);
 		$controller->set('trainingSessionTrainees', $trainingSessionTrainees);
+		$controller->set('trainingProviders', $trainingProviders);
 		$controller->set('data', $data);
 	}
 
@@ -142,7 +150,11 @@ class TrainingSessionResult extends TrainingAppModel {
 		$trainingCourse = ClassRegistry::init('TrainingCourse');
 		$trainingCourseOptions = $trainingCourse->find('list', array('fields'=> array('id', 'code'), 'conditions'=>array('training_status_id'=>3)));
 	
+		$trainingProvider = ClassRegistry::init('TrainingProvider');
+		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=> array('id', 'name')));
+	
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
+		$controller->set('trainingProviderOptions', $trainingProviderOptions);
 
 		$controller->set('modelName', $this->name);
 		
