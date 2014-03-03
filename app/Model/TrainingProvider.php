@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 App::uses('AppModel', 'Model');
 class TrainingProvider extends AppModel {
-	public $hasMany = array('TrainingCourse');
+	public $hasMany = array('TrainingCourseProvider', 'TrainingSession', 'TeacherTrainingSelfStudy', 'StaffTrainingSelfStudy');
 	
 	public function getLookupVariables() {
 		$lookup = array('Conditions' => array('model' => 'TrainingProvider'));

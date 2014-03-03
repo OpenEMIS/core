@@ -272,6 +272,45 @@ var objTrainingCourses = {
         objTrainingCourses.validatePrerequisite();
     },
 
+
+
+    addProvider: function(obj) {
+        var table = $('.provider');
+        var index = table.find('.table_row').length + $('.delete-provider input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body').append(data);
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: ".row_target_population"}); },
+            success: success
+        });
+    },
+
+    deleteProvider: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-provider');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
+        //objTrainingCourses.validateTargetPopulation();
+    },
+
     attachAutoComplete: function(element, url, callback) {
         $(element).autocomplete({
             source: url,

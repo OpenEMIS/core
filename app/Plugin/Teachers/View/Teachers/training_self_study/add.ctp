@@ -66,9 +66,9 @@ echo $this->Html->script('attachments', false);
         </div>
     </div>
      <div class="row">
-        <div class="label"><?php echo __('Trainer'); ?></div>
+        <div class="label"><?php echo __('Provider'); ?></div>
         <div class="value">
-        	<?php echo $this->Form->input('trainer');?>
+        	<?php echo $this->Form->input('training_provider_id', array('options'=>$trainingProviderOptions));?>
         </div>
     </div>
     <div class="row">
@@ -93,7 +93,7 @@ echo $this->Html->script('attachments', false);
 	<div class="row">
 		<div class="label"><?php echo __('Completed'); ?></div>
 		<div class="value">
-			<?php echo $this->Form->input('pass', array('options' => array('1'=>__('Pass'), '0' => 'Fail')));?>
+			<?php echo $this->Form->input('pass', array('options' => array('1'=>__('Passed'), '0' => 'Failed')));?>
 		</div>
 	</div>
     <span id="controller" class="none"><?php echo $this->params['controller']; ?></span>

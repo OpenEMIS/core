@@ -70,7 +70,7 @@ class TeachersNavigationComponent extends Component {
 				'TRAINING' => array(
                     $navigation->createLink('Needs', $controller, 'trainingNeed', '^trainingNeed'),
                     $navigation->createLink('Results', $controller, 'trainingResult', '^trainingResult'),
-                    $navigation->createLink('Self-Study', $controller, 'trainingSelfStudy', '^trainingSelfStudy')
+                    $navigation->createLink('Achievements', $controller, 'trainingSelfStudy', '^trainingSelfStudy')
                 ),
                             'REPORT' => array(
                     $navigation->createLink('Quality', $controller, 'report', 'report|reportGen')

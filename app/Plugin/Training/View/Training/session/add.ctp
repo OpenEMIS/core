@@ -4,9 +4,7 @@ echo $this->Html->script('/Training/js/sessions', false);
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
 ?>
-
 <?php echo $this->element('breadcrumb'); ?>
-
 
 <div id="training_session" class="content_wrapper edit add" url="Training/ajax_find_session/" >
 	<h1>
@@ -28,11 +26,30 @@ echo $this->Html->script('jquery-ui.min', false);
 
 	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 	<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
+
+	<?php echo $this->Form->input('course_id', array('type'=> 'hidden', 'default'=>$course, 'class'=>'course')); ?>
+	<?php echo $this->Form->input('provider_id', array('type'=> 'hidden', 'default'=>$provider, 'class'=>'provider')); ?>
 	<div class="row">
 		<div class="label"><?php echo __('Course'); ?></div>
         <div class="value">
 		<?php 
-			echo $this->Form->input('training_course_id', array('options' => $trainingCourseOptions)); 
+            echo $this->Form->input('training_course_id', array(
+                'options' => $trainingCourseOptions,
+                'label' => false,
+                'empty' => __('--Select--'),
+                'class' => 'default training_course',
+                'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
+                'onchange' => 'objTrainingSessions.getDetailsAfterChangeCourse(this)'
+            ));
+		?>
+        </div>
+    </div>
+    <div class="row">
+		<div class="label"><?php echo __('Provider'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_provider_id', array('options' => array(),
+				'class'=>'default training_provider')); 
 		?>
         </div>
     </div>
@@ -52,7 +69,7 @@ echo $this->Html->script('jquery-ui.min', false);
 		?>
         </div>
     </div>
-     <div class="row">
+ 	<div class="row">
         <div class="label"><?php echo __('Location'); ?></div>
         <div class="value">
  			<?php echo $this->Form->input('location', array('id' => 'searchLocation', 'class'=>'default location', 'placeholder' => __('Location')));?>
@@ -67,9 +84,9 @@ echo $this->Html->script('jquery-ui.min', false);
 	 <div class="row" style="min-height:45px;">
 		<div class="label"><?php echo __('Trainees'); ?></div>
 		<div class="value">
-		<div class="table trainee" style="width:240px;" url="Training/ajax_find_trainee/">
+		<div class="table trainee" style="width:247px;" url="Training/ajax_find_trainee/">
 			<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
-			<div class="table_body">
+			<div class="table_body" style="display:table;">
 			<?php 
 			if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->request->data['TrainingSessionTrainee'])){ ?>
 				<?php 
@@ -77,7 +94,7 @@ echo $this->Html->script('jquery-ui.min', false);
 				foreach($this->request->data['TrainingSessionTrainee'] as $key=>$val){?>
 				<?php if(!empty($val['identification_id'])){ ?>
 				<div class="table_row " row-id="<?php echo $i;?>">
-					<div class="table_cell cell_description">
+					<div class="table_cell cell_description" style="width:90%">
 						<div class="input_wrapper">
 					 	<div class="training-course-title-<?php echo $i;?>">
 							<?php echo $val['identification_first_name'] . ', ' . $val['identification_last_name'];?>
