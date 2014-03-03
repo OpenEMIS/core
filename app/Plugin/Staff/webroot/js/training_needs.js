@@ -23,7 +23,7 @@ var objTrainingNeeds = {
     },
     getDetailsAfterChangeCourse: function(obj){
         var trainingCourseId = $(obj).val();
-        var title = $('.training_course_title');
+        var code = $('.training_course_code');
         var description = $('.training_course_description');
         if(trainingCourseId === ""){
             title.val("");
@@ -42,11 +42,11 @@ var objTrainingNeeds = {
                     }
                     
                     $.each(data, function(i,v){
-                        newTitle = v.TrainingCourse.title;
+                        newCode = v.TrainingCourse.code;
                         newDescription = v.TrainingCourse.description;
                     });
 
-                    title.val(newTitle);
+                    code.val(newCode);
                     description.val(newDescription);
                 }
             });
