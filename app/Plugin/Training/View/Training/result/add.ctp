@@ -34,6 +34,12 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         </div>
     </div>
     <div class="row">
+		<div class="label"><?php echo __('Provider'); ?></div>
+		<div class="value">
+			<?php echo $this->Form->input('TrainingSession.training_provider_id', array('options' => $trainingProviderOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingSession']['training_provider_id']));?>
+        </div>
+	</div>
+    <div class="row">
         <div class="label"><?php echo __('Start Date'); ?></div>
         <div class="value">
 		<?php 
