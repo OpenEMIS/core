@@ -1,6 +1,6 @@
 <?php
 //echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-//2echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
+echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('config', false);
 echo $this->Html->script('Quality.quality.visit', false);
@@ -77,7 +77,7 @@ echo $this->Html->script('Quality.quality.visit', false);
         <div class="label"><?php echo __('Attachment'); ?> </div>
         <div class="value">
             <div id="attachmensWrapper">
-                <?php echo $this->Form->input('files.', array('type' => 'file','multiple', 'class' => 'form-error', 'name'=> 'data[QualityInstitutionVisitAttachment][files][]')); ?>
+                <?php echo $this->Form->input('files.', array('type' => 'file', 'multiple', 'class' => 'form-error', 'name' => 'data[QualityInstitutionVisitAttachment][files][]')); ?>
             </div>
             <br/>
             <div id="image_upload_info">
@@ -91,6 +91,18 @@ echo $this->Html->script('Quality.quality.visit', false);
             <a class="void icon_plus" onclick="QualityVisit.addExtraAttachment()" href="javascript: void(0)"><?php echo __('Add Attachment'); ?></a>
         </div>
     </div>
+    <?php if (!empty($attachments)) { ?>
+        <div class="row">
+            <div class="label">&nbsp</div>
+            <div class="value">
+                <?php
+                foreach($attachments as $file) {
+                    echo '<div><div class="form_attachment_name">'.$file['file_name'].'</div><div class="form_attachment_delete"><span class="icon_delete" id="'.$file['id'].'" onclick="QualityVisit.removeAttachment(this)" title="Delete"></span></div></div>';
+                }
+                ?>
+            </div>
+        </div>
+    <?php } ?>
     <div class="controls view_controls">
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
         <?php

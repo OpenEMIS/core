@@ -47,5 +47,20 @@ var QualityVisit = {
                 $('#attachmensWrapper').append(data);
             }
         });
+    },
+    removeAttachment : function (obj){
+      //  $(obj).parent().parent().hide();
+      
+  //    alert($(obj).attr('id'));
+      
+      
+        $.ajax({
+            type: "POST",
+            url: getRootURL() + 'Quality/qualityVisitAjaxRemoveAttachment/'+$(obj).attr('id'),
+           // data: {id: id, last_id: $('#last_id').val()},
+            success: function(data) {
+                $(obj).parent().parent().remove();
+            }
+        });
     }
 };
