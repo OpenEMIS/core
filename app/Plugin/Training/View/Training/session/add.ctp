@@ -84,9 +84,9 @@ echo $this->Html->script('jquery-ui.min', false);
 	 <div class="row" style="min-height:45px;">
 		<div class="label"><?php echo __('Trainees'); ?></div>
 		<div class="value">
-		<div class="table trainee" style="width:240px;" url="Training/ajax_find_trainee/">
+		<div class="table trainee" style="width:247px;" url="Training/ajax_find_trainee/">
 			<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
-			<div class="table_body">
+			<div class="table_body" style="display:table;">
 			<?php 
 			if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->request->data['TrainingSessionTrainee'])){ ?>
 				<?php 
@@ -94,7 +94,7 @@ echo $this->Html->script('jquery-ui.min', false);
 				foreach($this->request->data['TrainingSessionTrainee'] as $key=>$val){?>
 				<?php if(!empty($val['identification_id'])){ ?>
 				<div class="table_row " row-id="<?php echo $i;?>">
-					<div class="table_cell cell_description">
+					<div class="table_cell cell_description" style="width:90%">
 						<div class="input_wrapper">
 					 	<div class="training-course-title-<?php echo $i;?>">
 							<?php echo $val['identification_first_name'] . ', ' . $val['identification_last_name'];?>
