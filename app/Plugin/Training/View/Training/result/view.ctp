@@ -3,7 +3,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false);
 ?>
-<?php $obj = $data[$modelName]; ?>
+<?php $obj = $data[$modelName]; 
+?>
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="training_course" class="content_wrapper">
@@ -37,6 +38,14 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $trainingCourses['TrainingCourse']['title']; ?></div>
 		</div>
 		<div class="row">
+			<div class="label"><?php echo __('Provider'); ?></div>
+			<div class="value">
+				<?php if(!empty($trainingProviders)){
+					echo $trainingProviders['TrainingProvider']['name'];
+				} ?>
+			</div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
 			<div class="value"><?php echo $data['TrainingSession']['start_date'];?></div>
 		</div>
@@ -53,7 +62,7 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $data['TrainingSession']['location']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Provider'); ?></div>
+			<div class="label"><?php echo __('Trainer'); ?></div>
 			<div class="value"><?php echo $data['TrainingSession']['trainer']; ?></div>
 		</div>
 		<div class="row">
