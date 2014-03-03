@@ -63,7 +63,18 @@ echo $this->Html->script('Quality.quality.visit', false);
     </div>
     <div class="row">
         <div class="label"><?php echo __('Comment'); ?></div>
-        <div class="value"><?php echo $this->Form->input('comment', array('type' => 'textarea')); ?></div>
+        <div class="value">
+            <?php echo $this->Form->input('comment', array('type' => 'textarea')); ?>
+            <br/>
+            <div id="image_upload_info">
+                <em>
+                    <?php echo __("Maximum 200 characters per comment"); ?>
+                </em>
+            </div>
+        
+        
+        </div>
+        
     </div>
     <div class="row">
         <div class="label"><?php echo __('Attachment'); ?> </div>
