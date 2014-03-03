@@ -12,7 +12,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         if ($_add) {
             echo $this->Html->link(__('Add'), array('action' => 'RubricsTemplatesCriteriaAdd', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
         }
-        if ($_edit) {
+        if ($_edit && !empty($data)) {
             echo $this->Html->link(__('Edit'), array('action' => 'RubricsTemplatesCriteriaOrder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
         }
         ?>
