@@ -2008,8 +2008,15 @@ class InstitutionSitesController extends AppController {
                     $name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
                     $siteProgrammeId = $data['institution_site_programme_id'];
                     $exists = $this->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
+                    $checkCurrentSite = $this->InstitutionSiteStudent->checkWithinCurrentSite($data['student_id'], $data['start_year'], $this->institutionSiteId);
+                    $checkOtherSite = $this->InstitutionSiteStudent->checkWithinOtherSite($data['student_id'], $data['start_year'], $this->institutionSiteId);
 
-                    if (!$exists) {
+                    
+                    if (!$checkCurrentSite) {
+                        $this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+                    } else if(!$checkOtherSite){
+                        $this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_EXISTS_IN_OTHER_SITE'), array('type' => 'error'));
+                    }else {
                         $duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
                         $startDate = new DateTime(sprintf('%s-%s-%s', $date['year'], $date['month'], $date['day']));
                         $endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
@@ -2018,8 +2025,6 @@ class InstitutionSitesController extends AppController {
                         $data['end_year'] = $endYear;
                         $this->InstitutionSiteStudent->save($data);
                         $this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
-                    } else {
-                        $this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
                     }
                 } else {
                     $this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
