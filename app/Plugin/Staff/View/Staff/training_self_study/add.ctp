@@ -71,6 +71,12 @@ echo $this->Html->script('attachments', false);
         	<?php echo $this->Form->input('trainer');?>
         </div>
     </div>
+  	<div class="row">
+        <div class="label"><?php echo __('Hours'); ?></div>
+        <div class="value">
+        	<?php echo $this->Form->input('hours');?>
+        </div>
+    </div>
     <div class="row">
         <div class="label"><?php echo __('Credits'); ?></div>
         <div class="value">

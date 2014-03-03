@@ -171,7 +171,7 @@ class StaffTrainingNeed extends StaffAppModel {
 		 	}
 			$trainingCourseOptions = $trainingCourse->find('list', 
 				array(
-				'fields'=> array('TrainingCourse.id', 'TrainingCourse.code'),
+				'fields'=> array('TrainingCourse.id', 'TrainingCourse.title'),
 				'joins' => array(
 					array(
 							'type' => 'LEFT',

@@ -63,6 +63,10 @@ $obj = $data[$modelName]; ?>
 			<div class="value"><?php echo $obj['trainer']; ?></div>
 		</div>
 		<div class="row">
+			<div class="label"><?php echo __('Hours'); ?></div>
+			<div class="value"><?php echo $obj['hours']; ?></div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('Credit Hours'); ?></div>
 			<div class="value"><?php echo $obj['credit_hours']; ?></div>
 		</div>

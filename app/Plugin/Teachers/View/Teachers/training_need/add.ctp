@@ -26,10 +26,11 @@ echo $this->Html->script('/Teachers/js/training_needs', false);
 
 	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 	<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
-	<div class="row">
-		<div class="label"><?php echo __('Course Code'); ?></div>
+
+     <div class="row">
+		<div class="label"><?php echo __('Course Title'); ?></div>
         <div class="value">
-		<?php
+		<?php 
             echo $this->Form->input('training_course_id', array(
                 'options' => $trainingCourseOptions,
                 'default' => $selectedCourse,
@@ -38,15 +39,15 @@ echo $this->Html->script('/Teachers/js/training_needs', false);
                 'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
                 'onchange' => 'objTrainingNeeds.getDetailsAfterChangeCourse(this)'
             ));
-        ?>
+		?>
         </div>
     </div>
-     <div class="row">
-		<div class="label"><?php echo __('Course Title'); ?></div>
+    	<div class="row">
+		<div class="label"><?php echo __('Course Code'); ?></div>
         <div class="value">
-		<?php 
-			echo $this->Form->input('title', array('disabled' => 'disabled', 'class' => 'default training_course_title')); 
-		?>
+		<?php
+            echo $this->Form->input('code', array('disabled' => 'disabled', 'class' => 'default training_course_code')); 
+        ?>
         </div>
     </div>
     <div class="row">
