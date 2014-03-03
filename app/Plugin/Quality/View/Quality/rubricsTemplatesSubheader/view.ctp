@@ -9,7 +9,7 @@ echo $this->Html->script('/Quality/js/rubrics', false);
     <h1>
         <span><?php echo __($subheader); ?></span>
         <?php
-        echo $this->Html->link(__('View Header List'), array('action' => 'RubricsTemplatesHeader', $rubricTemplateId), array('class' => 'divider'));
+        echo $this->Html->link(__('View Header List'), array('action' => 'rubricsTemplatesHeader', $rubricTemplateId), array('class' => 'divider'));
         
         if ($_edit) {
             echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesSubheaderEdit', $rubricTemplateHeaderId), array('class' => 'divider'));

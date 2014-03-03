@@ -10,17 +10,13 @@ echo $this->Html->script('jquery.sort', false);
 <div id="student" class="content_wrapper">
     <h1>
         <span><?php echo __($subheader); ?></span>
-        <?php
-        /* if($_edit) {
-          echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesDetails', $id ), array('class' => 'divider'));
-          } */
-        if ($_edit) {//pr($columnHeaderData);
+        <?php 
             if (!empty($columnHeaderData)) {
                 echo $this->Html->link(__('Add Heading'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
                 echo $this->Html->link(__('Add Criteria Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
             }
-            echo $this->Html->link(__('Add Level Column'), array('action' => 'RubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
-        }
+            
+        echo $this->Html->link(__('Add Level Column'), array('action' => 'rubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
