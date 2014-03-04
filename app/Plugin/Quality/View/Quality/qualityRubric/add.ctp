@@ -42,8 +42,12 @@ echo $this->Html->script('Quality.quality.rubric', false);
         <div class="value"><?php echo $this->Form->input('rubric_template_id', array('id' => 'rubricsTemplateId', 'options' => $rubricOptions, 'onChange' => 'QualityRubric.updateURL(this)')); ?></div>
     </div>
     <div class="row">
+        <div class="label"><?php echo __('Grade'); ?></div>
+        <div class="value"><?php echo $this->Form->input('institution_site_class_grade_id', array('id' => 'institutionSiteClassGradeId', 'options' => $gradeOptions, 'onChange' => 'QualityRubric.updateURL(this)')); ?></div>
+    </div>
+    <div class="row">
         <div class="label"><?php echo __('Class'); ?></div>
-        <div class="value"><?php echo $this->Form->input('institution_site_classes_id', array('id' => 'institutionSiteClassesId', 'options' => $classOptions, 'onChange' => 'QualityRubric.updateURL(this)')); ?></div>
+        <div class="value"><?php echo $this->Form->input('institution_site_class_id', array('id' => 'institutionSiteClassId', 'options' => $classOptions, 'onChange' => 'QualityRubric.updateURL(this)')); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Teacher'); ?></div>
