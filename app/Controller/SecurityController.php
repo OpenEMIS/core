@@ -287,6 +287,9 @@ class SecurityController extends AppController {
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
 				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+                                if(!$allowEdit){
+                                    $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+                                }
 			}
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
@@ -310,6 +313,9 @@ class SecurityController extends AppController {
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
 				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+                                if(!$allowEdit){
+                                    $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+                                }
 			}
 			
 			if(!$allowEdit) {
