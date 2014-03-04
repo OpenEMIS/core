@@ -32,6 +32,10 @@
         <div class="value"><?php echo $rubric; ?></div>
     </div>
     <div class="row">
+        <div class="label"><?php echo __('Grade'); ?></div>
+        <div class="value"><?php echo $grade; ?></div>
+    </div>
+    <div class="row">
         <div class="label"><?php echo __('Class'); ?></div>
         <div class="value"><?php echo $class; ?></div>
     </div>

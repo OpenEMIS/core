@@ -3971,7 +3971,8 @@ class InstitutionSitesController extends AppController {
                         'alias' => 'QualityInstitutionRubric',
                         'type' => 'LEFT',
                         'conditions' => array(
-                            'QualityInstitutionRubric.institution_site_classes_id = InstitutionSiteClass.id',
+                            'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
+                            'QualityInstitutionRubric.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
                             'RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
                             'SchoolYear.id = QualityInstitutionRubric.school_year_id'
                         )
@@ -4009,7 +4010,7 @@ class InstitutionSitesController extends AppController {
                             'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id',
                             'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
                             'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
-                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_classes_id'
+                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id'
                         )
                     ),
                     array(
@@ -4046,7 +4047,7 @@ class InstitutionSitesController extends AppController {
                         'table' => 'institution_site_classes',
                         'alias' => 'InstitutionSiteClass',
                         'conditions' => array(
-                            'QualityInstitutionVisit.institution_site_classes_id = InstitutionSiteClass.id',
+                            'QualityInstitutionVisit.institution_site_class_id = InstitutionSiteClass.id',
                         )
                     ),
                     array(
