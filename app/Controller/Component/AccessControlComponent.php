@@ -263,6 +263,8 @@ class AccessControlComponent extends Component {
                                             }
 
                                             $access = $checkAllRoleIds;
+                                        }else{
+                                            $access = isset($check[$controller][$action]) ? $check[$controller][$action] : false;
                                         }
                                         
                                     }else{
