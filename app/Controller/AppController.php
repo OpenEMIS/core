@@ -103,10 +103,10 @@ class AppController extends Controller {
 	}
 	
 	public function processAction() {
-            if(strpos(strtolower(substr($this->action, 0,6)), 'health') !== false){
+           /* if(strpos(strtolower(substr($this->action, 0,6)), 'health') !== false){
                 $action = Inflector::underscore($this->action);
             }
-            else if(strpos(strtolower(substr($this->action, 0,8)), 'training') !== false){
+            else */if(strpos(strtolower(substr($this->action, 0,8)), 'training') !== false){
                 $action = Inflector::underscore($this->action);
             }
             else{
