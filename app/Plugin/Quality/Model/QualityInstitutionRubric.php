@@ -36,11 +36,18 @@ class QualityInstitutionRubric extends QualityAppModel {
     //public $hasMany = array('RubricsTemplateColumnInfo');
 
     public $validate = array(
-        'institution_site_classes_id' => array(
+        'institution_site_class_id' => array(
             'ruleRequired' => array(
                 'rule' => 'checkDropdownData',
                 //  'required' => true,
                 'message' => 'Please select a valid Class.'
+            )
+        ),
+        'institution_site_class_grade_id' => array(
+            'ruleRequired' => array(
+                'rule' => 'checkDropdownData',
+                //  'required' => true,
+                'message' => 'Please select a valid Grade.'
             )
         ),
         'teacher_id' => array(
@@ -138,7 +145,7 @@ class QualityInstitutionRubric extends QualityAppModel {
                         $selectedTeacherId = $data[$this->name]['teacher_id'];
                         $selectedRubricId = $data[$this->name]['rubric_template_id'];
                         $selectedYearId = $data[$this->name]['school_year_id'];
-                        $selectedClassId = $data[$this->name]['institution_site_classes_id'];
+                        $selectedClassId = $data[$this->name]['institution_site_class_id'];
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
                         $evaluatorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
                     }
@@ -147,7 +154,7 @@ class QualityInstitutionRubric extends QualityAppModel {
                 }
             }
         } else {
-           // pr($controller->request->data); die;
+         //   pr($controller->request->data); die;
 
             if ($this->saveAll($controller->request->data)) {
                 // pr('save');
@@ -178,20 +185,27 @@ class QualityInstitutionRubric extends QualityAppModel {
         $selectedRubricId = !empty($selectedRubricId) ? $selectedRubricId : key($rubricOptions);
         $selectedRubricId = !empty($params['pass'][1 + $paramsLocateCounter]) ? $params['pass'][1 + $paramsLocateCounter] : $selectedRubricId;
 
+        
+        $InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
+        $gradeOptions = $InstitutionSiteClassGrade->getGradesByInstitutionSiteId($institutionSiteId);
+        $selectedGradeId = !empty($selectedGradeId) ? $selectedGradeId : key($gradeOptions);
+        $selectedGradeId = !empty($params['pass'][2 + $paramsLocateCounter]) ? $params['pass'][2 + $paramsLocateCounter] : $selectedGradeId;
+        
+        
         $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
-        $classOptions = $InstitutionSiteClass->getClassOptions($selectedYearId, $institutionSiteId);
-
+        $classOptions = $InstitutionSiteClass->getClassOptions($selectedYearId, $institutionSiteId, $selectedGradeId);
         $selectedClassId = !empty($selectedClassId) ? $selectedClassId : key($classOptions);
-        $selectedClassId = !empty($params['pass'][2 + $paramsLocateCounter]) ? $params['pass'][2 + $paramsLocateCounter] : $selectedClassId;
-
+        $selectedClassId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $selectedClassId;
+        
         $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
         $teacherOptions = $InstitutionSiteClassTeacher->getTeachers($selectedClassId, 'list');
         $selectedTeacherId = !empty($selectedTeacherId) ? $selectedTeacherId : key($teacherOptions);
-        $selectedTeacherId = !empty($params['pass'][3 + $paramsLocateCounter]) ? $params['pass'][3 + $paramsLocateCounter] : $teacherOptions;
+        $selectedTeacherId = !empty($params['pass'][4 + $paramsLocateCounter]) ? $params['pass'][4 + $paramsLocateCounter] : $selectedTeacherId;
 
         $controller->set('schoolYearOptions', $schoolYearOptions);
         $controller->set('rubricOptions', $this->checkArrayEmpty($rubricOptions));
         $controller->set('classOptions', $this->checkArrayEmpty($classOptions));
+        $controller->set('gradeOptions', $this->checkArrayEmpty($gradeOptions));
         $controller->set('teacherOptions', $this->checkArrayEmpty($teacherOptions));
         $controller->set('type', $type);
         $controller->set('modelName', $this->name);
@@ -200,7 +214,8 @@ class QualityInstitutionRubric extends QualityAppModel {
         $controller->request->data[$this->name]['school_year_id'] = $selectedYearId;
         $controller->request->data[$this->name]['institution_site_id'] = empty($controller->request->data[$this->name]['institution_site_id']) ? $institutionSiteId : $controller->request->data[$this->name]['institution_site_id'];
         $controller->request->data[$this->name]['rubric_template_id'] = empty($selectedRubricId) ? 0 : $selectedRubricId;
-        $controller->request->data[$this->name]['institution_site_classes_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
+        $controller->request->data[$this->name]['institution_site_class_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
+        $controller->request->data[$this->name]['institution_site_class_grade_id'] = empty($selectedGradeId) ? 0 : $selectedGradeId;
         $controller->request->data[$this->name]['teacher_id'] = empty($selectedTeacherId) ? 0 : $selectedTeacherId;
     }
 
@@ -226,7 +241,11 @@ class QualityInstitutionRubric extends QualityAppModel {
         $rubric = $RubricsTemplate->findById($data[$this->name]['rubric_template_id']);
 
         $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
-        $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_classes_id']);
+        $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_class_id']);
+        
+        
+        $InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
+        $grade = $InstitutionSiteClassGrade->getGrade($data[$this->name]['institution_site_class_grade_id']);
 
         $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
         $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['teacher_id']);
@@ -240,6 +259,7 @@ class QualityInstitutionRubric extends QualityAppModel {
         $controller->set('schoolYear', $year['SchoolYear']['name']);
         $controller->set('rubric', $rubric['RubricsTemplate']['name']);
         $controller->set('class', $class['InstitutionSiteClass']['name']);
+        $controller->set('grade', $grade['InstitutionSiteClassGrade']['grade_name']);
         $controller->set('teacher', $teacher['Teacher']['first_name'] . " " . $teacher['Teacher']['last_name']);
     }
 
