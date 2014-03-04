@@ -72,6 +72,11 @@ var objSearch = {
 				return false;
 			}
 		});
+		$( "#area" ).change(function() {
+		  	if($('#area').val()==""){
+		  		$('#area_id').val("");
+		  	}
+		});
 	},
 	
 	callback: function(data) {

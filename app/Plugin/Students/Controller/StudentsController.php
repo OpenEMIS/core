@@ -184,9 +184,8 @@ class StudentsController extends StudentsAppController {
 		} else {
 			//$search = $this->data['Search'];
                         $search = $this->data;
-			if(!empty($search)) {
-				$this->Session->write($key, $search);
-			}
+			$this->Session->write($key, $search);
+
 			$this->redirect(array('action' => 'index'));
 		}
 	}
