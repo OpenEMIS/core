@@ -6,16 +6,17 @@ var QualityRubric = {
         
         var url = getRootURL() + link;
         
-        
+     //   alert('b4 = '+url);
         //var selectedDate = $('#dateYear').val()+ '-'+$('#dateMonth').val()+ '-'+$('#dateDay').val();
         var schoolYearId = $('#schoolYearId').val();
         var rubricsTemplateId = $('#rubricsTemplateId').val();
-        var institutionSiteClassesId = $('#institutionSiteClassesId').val();
+        var institutionSiteClassGradeId = $('#institutionSiteClassGradeId').val();
+        var institutionSiteClassId = $('#institutionSiteClassId').val();
         var institutionSiteTeacherId = $('#institutionSiteTeacherId').val();
         //var qualityTypeId = $('#qualityTypeId').val();
         
         //url += '/'+ selectedDate;
-        
+       
         switch($(obj).attr('id')){
            case 'schoolYearId':
                 url += '/'+ schoolYearId;
@@ -23,14 +24,19 @@ var QualityRubric = {
            case 'rubricsTemplateId':
                 url += '/'+ schoolYearId+'/'+ rubricsTemplateId;
                break;
-           case 'institutionSiteClassesId':
-                url += '/'+ schoolYearId+'/'+ rubricsTemplateId+'/'+ institutionSiteClassesId;
+           case 'institutionSiteClassGradeId':
+                url += '/'+ schoolYearId+'/'+ rubricsTemplateId+'/'+ institutionSiteClassGradeId;
+               break;
+           case 'institutionSiteClassId':
+                url += '/'+ schoolYearId+'/'+ rubricsTemplateId+'/'+ institutionSiteClassGradeId+'/'+ institutionSiteClassId;
                break;
            case 'institutionSiteTeacherId':
-                url += '/'+ schoolYearId+'/'+ rubricsTemplateId+'/'+ institutionSiteClassesId+'/'+ institutionSiteTeacherId;
+                url += '/'+ schoolYearId+'/'+ rubricsTemplateId+'/'+ institutionSiteClassGradeId+'/'+ institutionSiteClassId+'/'+ institutionSiteTeacherId;
                break;
            
         }
+        
+    //    alert('after = '+url);
         
         window.location = url;
     },

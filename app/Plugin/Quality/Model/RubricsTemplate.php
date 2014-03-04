@@ -280,15 +280,20 @@ class RubricsTemplate extends QualityAppModel {
         $options['group'] = array('RubricsTemplate.id');
         $data = $this->find('all', $options);
 
+        
 
         $RubricTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
         $weightings = $RubricTemplateColumnInfo->getMaxWeighting();
 
         $list = array();
         foreach ($data AS $obj) {
+            if(!empty($weightings[$obj['RubricsTemplate']['id']])){
+                $weighting = $weightings[$obj['RubricsTemplate']['id']];
+            }
+            
             $list[$obj['RubricsTemplate']['id']]['WeightingType'] = ($obj['RubricsTemplate']['weighthings'] == 1) ? 'point' : 'percent';
             $list[$obj['RubricsTemplate']['id']]['PassMark'] = $obj['RubricsTemplate']['pass_mark'];
-            $list[$obj['RubricsTemplate']['id']]['TotalWeighting'] = $weightings[$obj['RubricsTemplate']['id']] * $obj[0]['totalQuestion'];
+            $list[$obj['RubricsTemplate']['id']]['TotalWeighting'] = $weighting * $obj[0]['totalQuestion'];
         }
         return $list;
     }

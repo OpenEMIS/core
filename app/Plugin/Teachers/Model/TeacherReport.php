@@ -151,7 +151,7 @@ class TeacherReport extends TeachersAppModel {
                         'table' => 'institution_site_classes',
                         'alias' => 'InstitutionSiteClass',
                         'conditions' => array(
-                            'QualityInstitutionVisit.institution_site_classes_id = InstitutionSiteClass.id',
+                            'QualityInstitutionVisit.institution_site_class_id = InstitutionSiteClass.id',
                         )
                     ),
                     array(
@@ -205,12 +205,15 @@ class TeacherReport extends TeachersAppModel {
                    array(
                         'table' => 'institution_site_classes',
                         'alias' => 'InstitutionSiteClass',
-                        'conditions' => array('QualityInstitutionRubric.institution_site_classes_id = InstitutionSiteClass.id',)
+                        'conditions' => array('QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',)
                     ),
                     array(
                         'table' => 'institution_site_class_grades',
                         'alias' => 'InstitutionSiteClassGrade',
-                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+                        'conditions' => array(
+                            'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+                            'QualityInstitutionRubric.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+                        )
                     ),
                     array(
                         'table' => 'institution_site_class_teachers',
@@ -272,7 +275,7 @@ class TeacherReport extends TeachersAppModel {
                             'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id',
                             'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
                             'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
-                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_classes_id'
+                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id'
                         )
                     ),
                     array(
