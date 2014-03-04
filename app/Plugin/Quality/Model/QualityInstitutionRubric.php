@@ -104,9 +104,9 @@ class QualityInstitutionRubric extends QualityAppModel {
         $controller->set('rubricOptions', $rubricOptions);
         
         //Testing only
-        App::import('Model', 'Quality.QualityBatchReport');
+        /*App::import('Model', 'Quality.QualityBatchReport');
         $qbr = new QualityBatchReport();
-        $qbr->generateLocalSchool();
+        $qbr->generateLocalSchool();*/
     }
 
     public function qualityRubricAdd($controller, $params) {

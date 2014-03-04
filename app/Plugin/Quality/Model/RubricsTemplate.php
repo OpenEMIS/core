@@ -298,8 +298,13 @@ class RubricsTemplate extends QualityAppModel {
         return $list;
     }
 
-    public function getInstitutionQAReportHeader($institutionSiteId, $year = NULL) {
-        $header = array(array('School Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+    public function getInstitutionQAReportHeader($institutionSiteId, $year = NULL, $includeArea = NULL) {
+        if($includeArea === 'yes'){
+            $header = array(array('School Year'), array('Area Name'), array('Area Code'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+        }
+        else{
+            $header = array(array('School Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+        }
 
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
         if (empty($year)) {
@@ -338,7 +343,7 @@ class RubricsTemplate extends QualityAppModel {
         return $header;
     }
 
-    public function processDataToCSVFormat($data, $autoGenerateFirstHeader = 'no') {
+    public function processDataToCSVFormat($data, $autoGenerateFirstHeader = 'no', $includeArea = 'no') {
         $tempArray = array();
         $classId = '';
         $rubricName = '';
@@ -368,10 +373,7 @@ class RubricsTemplate extends QualityAppModel {
                             $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
                             $passFail = 'Fail';
 
-                            //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                             $rubricTotal = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
-                            //}
-
                             if ($rubricTotal >= $selectedWeightingInfo['PassMark']) {
                                 $passFail = 'Pass';
                             }
@@ -387,10 +389,7 @@ class RubricsTemplate extends QualityAppModel {
                             $rubricId = $currentRubricId;
                             $rubricTotal = 0;
                             //   pr('not the same name');
-                        } else {
-                            //  pr('same name');
-                        }
-                        //  pr($value);
+                        } 
                     }
 
                     if ($key == '0') {
@@ -413,26 +412,6 @@ class RubricsTemplate extends QualityAppModel {
                     } else if ($key == 'RubricTemplate') {
                         if (!empty($rubricName) && $rubricName != $currentRubricName) {
                             $insertPrevScores = true;
-                            /* $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
-                              $passFail = 'Fail';
-                              if ($selectedWeightingInfo['WeightingType'] == 'percent') {
-                              $rubricTotal = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
-                              }
-                              if ($rubricTotal >= $selectedWeightingInfo['PassMark']) {
-                              $passFail = 'Pass';
-                              }
-                              $rubricsGrandTotal += $rubricTotal;
-
-                              //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
-                              $rubricsGrandTotal = round($rubricsGrandTotal / count($rubricTemplateWeightingInfo), 2);
-                              //}
-
-                              $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotal;
-                              $tempArray[$rubricCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = $passFail;
-                              $tempArray[$rubricCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
-
-                              $rubricTotal = 0;
-                              $rubricsGrandTotal = 0; */
                         } else if (!empty($rubricName)) {
                             //pr('Brand New <<----');
                             $insertPrevScores = true;
@@ -458,10 +437,8 @@ class RubricsTemplate extends QualityAppModel {
                     }
                     $rubricsGrandTotal += $rubricTotal;
 
-                    //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
-                    $rubricsGrandTotal = round($rubricsGrandTotal / count($rubricTemplateWeightingInfo), 2);
-                    //}
-
+                    $rubricsGrandTotal = round($rubricsGrandTotal / count($rubricTemplateWeightingInfo), 2); 
+                    
                     $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $prevRubricHeaderCounter]['value'] = $rubricTotal;
                     $tempArray[$rubricCounter - 1]['PassFail' . '_' . $prevRubricHeaderCounter]['value'] = $passFail;
                     $tempArray[$rubricCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
@@ -482,30 +459,26 @@ class RubricsTemplate extends QualityAppModel {
                 $passFail = 'Fail';
                 $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
 
-                // if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                 $rubricTotal = ($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100;
-                //}
 
                 if ($rubricTotal >= $selectedWeightingInfo['PassMark']) {
                     $passFail = 'Pass';
                 }
 
                 $rubricsGrandTotal += $rubricTotal;
-                //if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                 $rubricsGrandTotal = round($rubricsGrandTotal / count($rubricTemplateWeightingInfo), 2);
-                // }
 
                 $tempArray[$rubricCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotal;
                 $tempArray[$rubricCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = $passFail;
                 $tempArray[$rubricCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
             }
         }
-        $tempArray = $this->breakReportByYear($tempArray, $autoGenerateFirstHeader); // pr($tempArray);die;
+        $tempArray = $this->breakReportByYear($tempArray, $autoGenerateFirstHeader, $includeArea); // pr($tempArray);die;
 
         return $tempArray;
     }
 
-    private function breakReportByYear($data, $autoGenerateFirstHeader) {
+    private function breakReportByYear($data, $autoGenerateFirstHeader, $includeArea) {
         $tempArray = array();
         // pr($autoGenerateFirstHeader);
         $selectedYear = '';
@@ -519,9 +492,9 @@ class RubricsTemplate extends QualityAppModel {
                     $tempArray[] = array();
                     $tempArray[] = array();
                     $tempArray[] = array();
-                    $tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['id'], $obj['SchoolYear']['name']);
+                    $tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['id'], $obj['SchoolYear']['name'], $includeArea);
                 } else if (empty($selectedYear) && $autoGenerateFirstHeader == 'yes') {
-                    $tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['id'], $obj['SchoolYear']['name']);
+                    $tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['id'], $obj['SchoolYear']['name'], $includeArea);
                 }
 
                 $selectedYear = $obj['SchoolYear']['name'];
@@ -544,230 +517,4 @@ class RubricsTemplate extends QualityAppModel {
             $tempArray[$rubricCounter]['total_' . $rubricHeaderCounter]['value'] = $_sumValue;
         }
     }
-
-    /*
-      public function rubricsTemplatesDetailsView($controller, $params) {
-      $controller->Navigation->addCrumb('Rubric Details');
-      $controller->set('subheader', 'Quality - Rubric Details');
-      $controller->set('modelName', $this->name);
-
-      $this->setupRubricsTemplateDetail($controller, $params);
-      }
-
-      public function rubricsTemplatesDetailsEdit($controller, $params) {
-      $controller->Navigation->addCrumb('Edit Rubric Details');
-      $controller->set('subheader', 'Quality - Edit Rubric Details');
-      $controller->set('modelName', $this->name);
-
-      $this->setupRubricsTemplateDetail($controller, $params);
-      }
-
-      private function setupRubricsTemplateDetail($controller, $params) {
-      $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-      $data = array();
-
-      $RubricsTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
-      $columnHeaderData = $RubricsTemplateColumnInfo->getColumnsData($id);
-      $count = 1 + count($columnHeaderData);
-      $controller->set('columnHeaderData', $columnHeaderData);
-
-      $controller->set('id', $id);
-      $controller->set('totalColumns', $count);
-      //$controller->set('totalRows', 6);
-
-      $headerData = $this->_processRubricsHeaderData($controller, $params);
-
-      $RubricsTemplateItem = ClassRegistry::init('Quality.RubricsTemplateItem');
-      $RubricsTemplateAnswer = ClassRegistry::init('Quality.RubricsTemplateAnswer');
-      $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
-
-      foreach ($headerData as  $rowHeader) {
-      //pr($rowHeader);
-      if (!empty($rowHeader)) {
-      array_push($data, $rowHeader);
-
-      //Retrive Questions
-      $questionsData = $RubricsTemplateItem->find('all', array('conditions' => array('rubric_template_header_id' => $rowHeader['RubricsTemplateHeader']['id']), 'recursive' => -1));
-
-      if (!empty($questionsData)) {
-      //pr($questionsData);
-      foreach ($questionsData as $question) {
-      $ansData = $RubricsTemplateAnswer->find('all', array('conditions' => array('rubric_template_item_id' => $question['RubricsTemplateItem']['id']), 'recursive' => -1));
-
-      //$_tempData = array();
-      $_tempData = $question;
-      foreach ($ansData as $ansObj) {
-      $_tempData['RubricsTemplateAnswer'][] = $ansObj['RubricsTemplateAnswer'];
-      }
-      //$question['options'] = $ansData;
-      array_push($data, $_tempData);
-      }
-      }
-      }
-      }
-
-      if ($controller->request->is('post')) {
-      $headerData = array();
-      $questionData = array();
-      $optionsData = array();
-
-      if (!empty($controller->request->data['RubricsTemplate'])) {
-      unset($controller->request->data['RubricsTemplate']);
-      }
-      //	pr($controller->request->data);
-      foreach ($controller->request->data as $obj) {
-      if (array_key_exists('RubricsTemplateHeader', $obj)) {
-      array_push($headerData, $obj);
-      } else {
-      if (array_key_exists('RubricsTemplateItem', $obj)) {
-      $questionData[]['RubricsTemplateItem'] = $obj['RubricsTemplateItem'];
-      }
-      if (array_key_exists('RubricsTemplateAnswer', $obj)) {
-      foreach ($obj['RubricsTemplateAnswer'] as $option) {
-      $optionsData[]['RubricsTemplateAnswer'] = $option;
-      }
-      }
-      }
-      }
-
-      $RubricsTemplateHeader->set($headerData);
-      $RubricsTemplateItem->set($questionData);
-      $RubricsTemplateAnswer->set($optionsData);
-
-      if ($RubricsTemplateHeader->saveAll($headerData, array('validate' => 'only')) &&
-      $RubricsTemplateItem->saveAll($questionData, array('validate' => 'only')) &&
-      $RubricsTemplateAnswer->saveAll($optionsData, array('validate' => 'only'))) {
-      //Save all
-      if (count($data) == count($controller->request->data)) {
-      $RubricsTemplateHeader->saveAll($headerData, array('validate' => false));
-      $RubricsTemplateItem->saveAll($questionData, array('validate' => false));
-      $RubricsTemplateAnswer->saveAll($optionsData, array('validate' => false));
-      return $controller->redirect(array('action' => 'rubricsTemplatesDetailsView', $id));
-      } else {
-      pr("New logic on saving");
-      //pr($controller->request->data);
-
-      //Half way donw on the saving
-      $_tempHeaderId = 0;
-      $_tempQuestionId = 0;
-      foreach ($controller->request->data as $obj) {
-      if (array_key_exists('RubricsTemplateHeader', $obj)) {
-      //array_push($headerData, $obj);
-      if (!array_key_exists('rubric_template_id', $obj['RubricsTemplateHeader'])) {
-      $obj['RubricsTemplateHeader']['rubric_template_id'] = $id;
-      }
-      if (!isset($obj['RubricsTemplateHeader']['id'])) {
-      $RubricsTemplateHeader->create();
-      }
-      $RubricsTemplateHeader->save($obj, false);
-      $_tempHeaderId = $RubricsTemplateHeader->id;
-      //							pr('-- Save Header --');
-      //							pr('Header id : '.$_tempHeaderId);
-      } else {
-      if (array_key_exists('RubricsTemplateItem', $obj)) {
-      if (!array_key_exists('rubric_template_header_id', $obj['RubricsTemplateItem'])) {
-      $obj['RubricsTemplateItem']['rubric_template_header_id'] = $_tempHeaderId;
-      }
-
-      if (!isset($obj['RubricsTemplateItem']['id'])) {
-      $RubricsTemplateItem->create();
-      }
-
-      $RubricsTemplateItem->save($obj, false);
-      $_tempQuestionId = $RubricsTemplateItem->id;
-      //								pr('-- Save Question --');
-      //								pr('Question id : '.$_tempQuestionId);
-      //pr($obj);
-      //$questionData[]['RubricsTemplateItem'] = $obj['RubricsTemplateItem'];
-      }
-      if (array_key_exists('RubricsTemplateAnswer', $obj)) {
-      foreach ($obj['RubricsTemplateAnswer'] as $option) {
-      if (!array_key_exists('rubric_template_item_id', $option)) {
-      $option['rubric_template_item_id'] = $_tempQuestionId;
-      }
-      if (!isset($option['id'])) {
-      $RubricsTemplateAnswer->create();
-      }
-
-      $RubricsTemplateAnswer->save($option, false);
-      //									pr('-- Save Answer --');
-      //	$optionsData[]['RubricsTemplateAnswer'] = $option;
-      }
-      }
-      }
-      }
-      }
-
-      // return $controller->redirect(array('action'=> 'rubricsTemplatesDetailsView', $id));
-      } else {
-      $controller->Utility->alert($controller->Utility->getMessage('ADD_UPDATE_ERROR'), array('type' => 'error'));
-      }
-      } else {
-      if (empty($controller->request->data)) {
-      $controller->request->data = $data;
-      }
-      }
-      }
-
-      public function rubricsTemplatesAjaxAddRow($controller, $params) {
-
-      if ($controller->request->is('ajax')) {
-      $rubricId = !empty($controller->data['rubric_id']) ? $controller->data['rubric_id'] : 0;
-      $lastId = !empty($controller->data['last_id']) ? $controller->data['last_id'] : 0;
-      if (!empty($params['pass']) && $params['pass'][0]) {
-      $type = $params['pass'][0];
-      $controller->set('type', $type);
-      $controller->set('lastId', $lastId);
-      //	$controller->set('rubricId', $rubricId);
-      $processItem = array();
-      $processItem['rubric_template_id'] = $rubricId;
-
-      $RubricsTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
-      if ($type == 'header') {
-      $totalColumns = $RubricsTemplateColumnInfo->getTotalCriteriaById($rubricId);
-      $controller->set('totalColumns', ($totalColumns + 1));
-      } else {
-      $columnHeaderData = $RubricsTemplateColumnInfo->getColumnsData($rubricId);
-      $processItem['columnHeader'] = $columnHeaderData;
-
-      $count = 1 + count($columnHeaderData);
-      //$controller->set('columnHeaderData', $columnHeaderData);
-      $controller->set('totalColumns', $count);
-      }
-      //pr($processItem);
-      $controller->set('processItem', $processItem);
-      }
-      }
-      }
-
-      private function _processRubricsHeaderData($controller, $params) {
-      $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-      $controller->paginate['page'] = empty($params['named']['page']) ? 1 : $params['named']['page'];
-      //pr($controller->paginate);
-      $controller->Paginator->settings = $controller->paginate;
-      $data = $controller->paginate($this->name, array('rubric_template_id' => $id));
-
-      return $data;
-      }
-
-      public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
-      //pr($conditions);
-      $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
-      $data = $RubricsTemplateHeader->find('all', array(
-      'recursive' => -1,
-      //'fields' => $fields,
-      'joins' => array(),
-      'conditions' => $conditions,
-      'limit' => $limit,
-      'offset' => (($page - 1) * $limit),
-      'group' => null,
-      'order' => $order
-      ));
-
-      return $data;
-      }
-
-      public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
-
-      } */
 }
