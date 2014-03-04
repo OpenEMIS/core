@@ -54,7 +54,9 @@ echo $this->Html->script('/Quality/js/quality.rubric', false);
         ?>
     </table>
     <div class="controls ">
+        <?php if($editable === 'true'){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+        <?php } ?>
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId), array('class' => 'btn_cancel btn_left')); ?>
     </div>
     <?php echo $this->Form->end(); ?>
