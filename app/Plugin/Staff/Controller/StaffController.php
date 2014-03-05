@@ -1292,8 +1292,10 @@ class StaffController extends StaffAppController {
             }
         }
 
+        $defaultCountryId = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
         $countryOptions = $this->Country->getOptions();
         $this->set('countryOptions', $countryOptions);
+        $this->set('defaultCountryId', $defaultCountryId);
 		$this->UserSession->readStatusSession($this->request->action);
 	}
 	

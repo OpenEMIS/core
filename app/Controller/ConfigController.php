@@ -25,7 +25,8 @@ class ConfigController extends AppController {
 	public $uses = array(
 		'ConfigItem',
 		'ConfigAttachment',
-		'SchoolYear'
+		'SchoolYear',
+		'Country'
 	);
 	public $helpers = array('Number', 'Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -102,6 +103,9 @@ class ConfigController extends AppController {
 		
 		$schoolYear = $this->SchoolYear->find('list', array('fields' => array('SchoolYear.id', 'SchoolYear.name'), 'order' => array('name desc')));
 		$this->set('school_years', $schoolYear);
+
+		$country = $this->Country->find('list', array('fields' => array('Country.id', 'Country.name'), 'order' => array('name asc')));
+		$this->set('countries', $country);
 		// End Access Control
 		$this->set('items', $sorted);
 	}
@@ -189,9 +193,11 @@ class ConfigController extends AppController {
 		}
                 
 		$schoolYear = $this->SchoolYear->find('list', array('fields' => array('SchoolYear.id', 'SchoolYear.name'), 'order' => array('name desc')));
-
+		$country = $this->Country->find('list', array('fields' => array('Country.id', 'Country.name'), 'order' => array('name asc')));
+	
 		$sorted = $this->groupByType($this->Utility->formatResult($items));
 		$this->set('school_years', $schoolYear);
+		$this->set('countries', $country);
 		$this->set('items', $sorted);
                 
 	}
