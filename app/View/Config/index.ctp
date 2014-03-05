@@ -99,6 +99,8 @@ $arrOptions = array('date_format' => array(
                 }
                 ?>
                 </div>		
+        <?php }elseif(stristr($item['name'], 'country_id')){ ?>
+				<div class="table_cell"><?php echo $countries[$item['value']]; ?></div>
         <?php }else{ ?>
 				<div class="table_cell"><?php echo $item['value']; ?></div>
 		<?php } ?>
