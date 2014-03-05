@@ -1014,9 +1014,11 @@ class StudentsController extends StudentsAppController {
             }
         }
 
+        $defaultCountryId = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
         $countryOptions = $this->Country->getOptions();
         $this->set('countryOptions', $countryOptions);
-        $this->UserSession->readStatusSession($this->request->action);
+        $this->set('defaultCountryId', $defaultCountryId);
+		$this->UserSession->readStatusSession($this->request->action);
     }
 
     public function nationalitiesView() {
