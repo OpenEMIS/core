@@ -100,6 +100,8 @@ class BatchShell extends AppShell {
 	
         if( $file_type == 'csv'){
 			$this->Csv->genCSV($settings);
+        }else if( $file_type == 'csv_custom'){
+			$this->Csv->genCSVCustom($settings);
         }elseif($file_type == 'kml'){
 			$this->Kml->genKML($settings);
 		}elseif($file_type == 'vcf'){
