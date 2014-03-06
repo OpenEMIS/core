@@ -18,20 +18,22 @@ echo $this->Html->css('home', 'stylesheet', array('inline' => false));
 					}
 				?>
 				<?php if($insertRow){?>
+				<?php if($i!=0){ ?>
+				</div>
+				<?php } ?>
 				<div class="table_row">
 				<?php } ?>
-					<div class="table_cell" style="text-align:left;">
+					<div class="table_cell" style="text-align:right;">
 					<?php
 						 echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $images[$i]["id"]), array(
-			                'style' => "width:initial;height:initial;align:center;padding:1px;"
+			                'style' => "width:initial;height:initial;padding:1px;"
 			            ));
 					?>
 					</div>
-				<?php if($insertRow){?>
-				</div>
-				<?php } 
+				<?php
 				}
 				?>
+				</div>
 			</div>
 		</div>
 </div>
