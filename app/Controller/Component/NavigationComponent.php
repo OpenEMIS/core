@@ -161,9 +161,10 @@ class NavigationComponent extends Component {
 			),
 			array(
 				array(
-					$this->createLink('Support', 'Home', 'support'),
+					$this->createLink('Contact', 'Home', 'support'),
 					$this->createLink('System Information', 'Home', 'systemInfo'),
-					$this->createLink('License', 'Home', 'license')
+					$this->createLink('License', 'Home', 'license'),
+					$this->createLink('Partner', 'Home', 'partner')
 				)
 			)
 		);
