@@ -1,0 +1,37 @@
+<?php 
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('home', 'stylesheet', array('inline' => false));
+?>
+
+<?php echo $this->element('breadcrumb'); ?>
+
+<div id="user_details" class="content_wrapper">
+	<h1><?php echo __($subTitle); ?></h1>
+		<div class="table help">
+			<div class="table_body">
+				<?php
+				$max = 2;
+				for($i=0;$i<count($images);$i++){
+					$insertRow = false;
+					if($i%$max==0){
+						$insertRow = true;
+					}
+				?>
+				<?php if($insertRow){?>
+				<div class="table_row">
+				<?php } ?>
+					<div class="table_cell" style="text-align:left;">
+					<?php
+						 echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $images[$i]["id"]), array(
+			                'style' => "width:initial;height:initial;align:center;padding:1px;"
+			            ));
+					?>
+					</div>
+				<?php if($insertRow){?>
+				</div>
+				<?php } 
+				}
+				?>
+			</div>
+		</div>
+</div>

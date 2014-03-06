@@ -189,7 +189,7 @@ class HomeController extends AppController {
 	
 	public function support() {
 		$this->bodyTitle = 'Help';
-		$title = 'Support';
+		$title = 'Contact';
 		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb($title);
 		$support = $this->ConfigItem->getSupport();
@@ -217,6 +217,26 @@ class HomeController extends AppController {
 		$this->bodyTitle = 'Help';
 		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb('License');
+		$this->render('Help/'.$this->action);
+	}
+
+	public function partner() {
+		$this->bodyTitle = 'Help';
+		$title = 'Partner';
+		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
+		$this->Navigation->addCrumb($title);
+		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name'), 'conditions' => array('ConfigAttachment.active' => 1, 'ConfigAttachment.type' => 'partner'), 'order'=>array('order')));
+
+		$imageData = array();
+		if(!empty($images)){
+			$i = 0;
+			foreach($images as $image){
+				$imageData[$i] = array_merge($image['ConfigAttachment']);
+				$i++;
+			}
+		}
+		$this->set('images', $imageData);
+		$this->set('subTitle', $title);
 		$this->render('Help/'.$this->action);
 	}
 
