@@ -271,8 +271,8 @@ class TrainingSession extends TrainingAppModel {
 
 		$controller->set('modelName', $this->name);
 		
+		$provider = '';
 		if($controller->request->is('get')){
-			$provider = '';
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
 			$data = $this->findById($id);
@@ -295,7 +295,6 @@ class TrainingSession extends TrainingAppModel {
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 					}
 				}
-				$controller->set('provider', $provider);
 				$controller->request->data = array_merge($data, array('TrainingSessionTrainee'=>$trainingSessionTraineesVal));
 			}
 		}
@@ -324,5 +323,6 @@ class TrainingSession extends TrainingAppModel {
 				}
 			}
 		}
+		$controller->set('provider', $provider);
 	}
 }
