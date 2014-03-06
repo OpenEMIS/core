@@ -189,34 +189,6 @@ class StudentsController extends StudentsAppController {
             $this->redirect(array('action' => 'index'));
         }
     }
-
-	public function advanced() {
-		$key = 'Student.AdvancedSearch';
-		if($this->request->is('get')) {
-			if($this->request->is('ajax')) {
-				$this->autoRender = false;
-				$search = $this->params->query['term'];
-				$result = $this->Area->autocomplete($search);
-				return json_encode($result);
-			} else {
-				$this->Navigation->addCrumb('List of Students', array('controller' => 'Students', 'action' => 'index'));
-				$this->Navigation->addCrumb('Advanced Search');
-				
-				if(isset($this->params->pass[0])) {
-					if(intval($this->params->pass[0])===0) {
-						$this->Session->delete($key);
-						$this->redirect(array('action' => 'index'));
-					}
-				}
-			}
-		} else {
-			//$search = $this->data['Search'];
-                        $search = $this->data;
-			$this->Session->write($key, $search);
-
-			$this->redirect(array('action' => 'index'));
-		}
-	}
         
         public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Student'){
              $this->layout = false;
