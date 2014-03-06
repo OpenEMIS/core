@@ -190,39 +190,28 @@ class StudentsController extends StudentsAppController {
         }
     }
         
-        public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Student'){
-             $this->layout = false;
-             $arrSettings = array(
-                                                            'CustomField'=>$customfields.'CustomField',
-                                                            'CustomFieldOption'=>$customfields.'CustomFieldOption',
-                                                            'CustomValue'=>$customfields.'CustomValue',
-                                                            'Year'=>''
-                                                        );
-             if($this->{$customfields}->hasField('institution_site_type_id')){
-                 $arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
-             }
-             $arrCustFields = array($customfields => $arrSettings);
-             
-            $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
-            $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
-            $types = $this->InstitutionSiteType->findList(1);
-            $this->set("customfields",array($customfields));
-            $this->set('types',  $types);        
-            $this->set('typeSelected',  $sitetype);
-            $this->set('dataFields',  $dataFields);
-            $this->render('/Elements/customfields/search');
-        }
-        $arrCustFields = array($customfields => $arrSettings);
-
-        $instituionSiteCustField = $this->Components->load('CustomField', $arrCustFields[$customfields]);
-        $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
-        $types = $this->InstitutionSiteType->findList(1);
-        $this->set("customfields", array($customfields));
-        $this->set('types', $types);
-        $this->set('typeSelected', $sitetype);
-        $this->set('dataFields', $dataFields);
-        $this->render('/Elements/customfields/search');
-    }
+	public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Student'){
+		$this->layout = false;
+		$arrSettings = array(
+			'CustomField'=>$customfields.'CustomField',
+			'CustomFieldOption'=>$customfields.'CustomFieldOption',
+			'CustomValue'=>$customfields.'CustomValue',
+			'Year'=>''
+		);
+		if($this->{$customfields}->hasField('institution_site_type_id')){
+			$arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
+		}
+		$arrCustFields = array($customfields => $arrSettings);
+		 
+		$instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
+		$dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+		$types = $this->InstitutionSiteType->findList(1);
+		$this->set("customfields",array($customfields));
+		$this->set('types',  $types);        
+		$this->set('typeSelected',  $sitetype);
+		$this->set('dataFields',  $dataFields);
+		$this->render('/Elements/customfields/search');
+	}
 
     public function viewStudent($id) {
         $this->Session->write('StudentId', $id);
