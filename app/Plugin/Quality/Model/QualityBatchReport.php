@@ -19,8 +19,6 @@ class QualityBatchReport extends QualityAppModel {
 
     public $useTable = false;
 
-    //   public $actsAs = array('ControllerAction');
-    //App::import('Model', 'Quality.QualityBatchReport');
     // SQL Statements that need to be made in the batch_reports
 
     public function generateLocalSchool() {
@@ -173,7 +171,6 @@ class QualityBatchReport extends QualityAppModel {
             'alias' => $InstitutionSite->alias,
             'limit' => null,
             'offset' => null,
-            //{cond},
             'joins' => $joins,
             'conditions' => null,
             'group' => array('InstitutionSiteClass.id', 'RubricTemplate.id'),
@@ -214,7 +211,63 @@ class QualityBatchReport extends QualityAppModel {
         $data = $qbr->generateQAResultReport($data);
     }
 
+    public function generateRubricNotCompleted() {
+        App::import('Model', 'InstitutionSite');
+        App::import('Model', 'Quality.QualityBatchReport');
+        $qbr = new QualityBatchReport();
+        $InstitutionSite = new InstitutionSite();
+
+        $fields = $qbr->getNotCompleteDisplayFieldTable('base');
+        $joins = $qbr->getNotCompleteJoinTableData();
+
+        $dbo = $InstitutionSite->getDataSource();
+        $query = $dbo->buildStatement(array(
+            'fields' => $fields,
+            'table' => $dbo->fullTableName($InstitutionSite),
+            'alias' => $InstitutionSite->alias,
+            'limit' => null,
+            'offset' => null,
+            //{cond},
+            'joins' => $joins,
+            'conditions' => null,
+            'group' => array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateSubheader.id'),
+            'order' => array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order')
+                ), $InstitutionSite);
+
+        $query = '(' . $query . ')';
+
+        $fields2 = $qbr->getNotCompleteDisplayFieldTable('search');
+
+        $queryFinal = $dbo->buildStatement(array(
+            'fields' => $fields2,
+            'table' => $query,
+            'alias' => $InstitutionSite->alias . 'Fliter',
+            'limit' => null,
+            'offset' => null,
+            'joins' => array(),
+            'conditions' => null,
+            'group' => array('ClassId', 'RubricId HAVING TotalQuestions != TotalAnswered'),
+            'order' => null
+                ), $InstitutionSite);
+
+
+        $queryCount = $dbo->buildStatement(array(
+            'fields' => array('COUNT(*) as TotalCount'),
+            'table' => '(' . $queryFinal . ')',
+            'alias' => $InstitutionSite->alias . 'Fliter',
+            'limit' => null,
+            'offset' => null,
+            'joins' => array(),
+            'conditions' => null,
+            'group' => null,
+            'order' => null
+                ), $InstitutionSite);
+
+        $data = $dbo->fetchAll($queryFinal);
+    }
+
     //QA Results Query Function
+
     public function getResultDisplayFieldTable($type) {
 
         if ($type == 'base') {
@@ -344,6 +397,126 @@ class QualityBatchReport extends QualityAppModel {
         );
 
         return $joins;
+    }
+
+    //QA Not Completed Functions
+
+    public function getNotCompleteJoinTableData() {
+        $joins = array(
+            array(
+                'table' => 'institutions',
+                'alias' => 'Institution',
+                'conditions' => array('InstitutionSite.institution_id = Institution.id')
+            ),
+            array(
+                'table' => 'institution_site_classes',
+                'alias' => 'InstitutionSiteClass',
+                'conditions' => array('InstitutionSiteClass.institution_site_id = InstitutionSite.id')
+            ),
+            array(
+                'table' => 'institution_site_class_grades',
+                'alias' => 'InstitutionSiteClassGrade',
+                'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+            ),
+            array(
+                'table' => 'education_grades',
+                'alias' => 'EducationGrade',
+                'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+            ),
+            array(
+                'table' => 'school_years',
+                'alias' => 'SchoolYear',
+                'type' => 'LEFT',
+                'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+            ),
+            array(
+                'table' => 'quality_statuses',
+                'alias' => 'QualityStatus',
+                'conditions' => array('QualityStatus.year = SchoolYear.name')
+            ),
+            array(
+                'table' => 'rubrics_templates',
+                'alias' => 'RubricTemplate',
+                'type' => 'LEFT',
+                'conditions' => array('RubricTemplate.id = QualityStatus.rubric_template_id')
+            ),
+            array(
+                'table' => 'quality_institution_rubrics',
+                'alias' => 'QualityInstitutionRubric',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
+                    'RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
+                    'SchoolYear.id = QualityInstitutionRubric.school_year_id'
+                )
+            ),
+            array(
+                'table' => 'rubrics_template_headers',
+                'alias' => 'RubricTemplateHeader',
+                'type' => 'LEFT',
+                'conditions' => array('RubricTemplate.id = RubricTemplateHeader.rubric_template_id')
+            ),
+            array(
+                'table' => 'rubrics_template_subheaders',
+                'alias' => 'RubricTemplateSubheader',
+                'type' => 'LEFT',
+                'conditions' => array('RubricTemplateSubheader.rubric_template_header_id = RubricTemplateHeader.id')
+            ),
+            array(
+                'table' => 'rubrics_template_items',
+                'alias' => 'RubricTemplateItem',
+                // 'type' => 'LEFT',
+                'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
+            ),
+            array(
+                'table' => 'rubrics_template_answers',
+                'alias' => 'RubricTemplateAnswer',
+                'type' => 'LEFT',
+                'conditions' => array('RubricTemplateAnswer.rubric_template_item_id = RubricTemplateItem.id')
+            ),
+            array(
+                'table' => 'quality_institution_rubrics_answers',
+                'alias' => 'QualityInstitutionRubricAnswer',
+                'type' => 'LEFT',
+                'conditions' => array(
+                    'QualityInstitutionRubricAnswer.quality_institution_rubric_id = QualityInstitutionRubric.id',
+                    'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id',
+                    'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
+                    'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
+                    'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id'
+                )
+            )
+        );
+
+        return $joins;
+    }
+
+    public function getNotCompleteDisplayFieldTable($type) {
+
+        if ($type == 'base') {
+            $fields = array(
+                'SchoolYear.name AS Year',
+                'Institution.name AS InstitutionName',
+                'InstitutionSite.name AS InstitutionSiteName',
+                'InstitutionSite.code AS InstitutionSiteCode',
+                'InstitutionSiteClass.name AS ClassName',
+                'InstitutionSiteClass.id AS ClassId',
+                'EducationGrade.name AS Grade',
+                'RubricTemplate.name AS RubricName',
+                'RubricTemplate.id AS RubricId',
+                'RubricTemplateHeader.title AS header',
+                'RubricTemplateSubheader.id AS subheader',
+                'RubricTemplateSubheader.id as subId',
+                'RubricTemplateItem.id AS ques',
+                'QualityInstitutionRubricAnswer.id AS selected'
+            );
+        } else {
+            $fields = array(
+                'Year', 'InstitutionName', 'InstitutionSiteName', 'ClassName', 'Grade', 'RubricName', 'COUNT(RubricName) AS TotalQuestions', 'COUNT(selected) AS TotalAnswered'
+            );
+        }
+
+        return $fields;
     }
 
     //Batch function methods
