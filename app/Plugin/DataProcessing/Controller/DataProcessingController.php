@@ -688,6 +688,9 @@ class DataProcessingController extends DataProcessingAppController {
 			}
 			$value['BatchProcess']['startedBy'] = $user['SecurityUser']['username'];
 
+                        if(array_key_exists('Report',$value) && $value['Report']['file_type'] == 'csv_custom'){
+                            $value['Report']['file_type'] = 'csv';
+                        }
 		}
 		//pr($data);
 		$this->set('data',$data);
