@@ -42,7 +42,7 @@
         <div class="value"><?php echo trim($teacher); ?></div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Supervisor'); ?></div>
+        <div class="label"><?php echo __('Evaluator'); ?></div>
         <div class="value"><?php echo trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']); ?></div>
     </div>
     <div class="row">
