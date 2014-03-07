@@ -22,6 +22,22 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->script('jquery');
 		echo $this->Html->script('css_browser_selector');
 	?>
+	<style>
+	.clear {
+	*zoom: 1;
+	clear: both;
+}
+
+.clear:before, .clear:after {
+	display: table;
+	line-height: 0;
+	content: "";
+}
+
+.clear:after {
+	clear: both;
+}
+</style>
 </head>
 
 <body onload="$('#SecurityUserUsername').focus()">
@@ -81,12 +97,21 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 	</div><!-- end login_container -->
 </div><!-- end container -->
 
-<div class="login_footer">
+<div class="login_footer" style="position:fixed;">
 <!-- footer -->
     <!-- (2)*****************************************-->
     <div class="footer">
         <div class="language" dir="ltr">
-        	<img src="img/UNESCO.gif" /><br />
+        	<div class="clear">
+        	<?php
+        		foreach($images as $image){
+					 echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $image["id"]), array(
+		                'height'=>"125px"
+		            	));
+				}
+			?>
+			</div>
+			<br />
             <?php 
 				if($this->Session->check('footer')){
 					echo $this->Session->read('footer');
