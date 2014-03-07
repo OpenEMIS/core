@@ -220,12 +220,12 @@ class HomeController extends AppController {
 		$this->render('Help/'.$this->action);
 	}
 
-	public function partner() {
+	public function partners() {
 		$this->bodyTitle = 'Help';
-		$title = 'Partner';
+		$title = 'Partners';
 		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb($title);
-		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name'), 'conditions' => array('ConfigAttachment.active' => 1, 'ConfigAttachment.type' => 'partner'), 'order'=>array('order')));
+		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.active' => 1, 'ConfigAttachment.type' => 'partner'), 'order'=>array('order')));
 
 		$imageData = array();
 		if(!empty($images)){

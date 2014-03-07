@@ -8,9 +8,9 @@ echo $this->Html->css('home', 'stylesheet', array('inline' => false));
 <div id="user_details" class="content_wrapper">
 	<h1><?php echo __($subTitle); ?></h1>
 		<div class="table help">
-			<div class="table_body">
+			<div class="table_body" style="display:table-cell;">
 				<?php
-				$max = 2;
+				$max = 1;
 				for($i=0;$i<count($images);$i++){
 					$insertRow = false;
 					if($i%$max==0){
@@ -23,10 +23,15 @@ echo $this->Html->css('home', 'stylesheet', array('inline' => false));
 				<?php } ?>
 				<div class="table_row">
 				<?php } ?>
-					<div class="table_cell" style="text-align:right;">
+					<div class="table_cell cell_name" style="text-align:left;">
+					<?php
+						 echo '<b>'.$images[$i]["name"].'</b>';
+					?>
+					</div>
+					<div class="table_cell" style="text-align:left;">
 					<?php
 						 echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $images[$i]["id"]), array(
-			                'style' => "width:initial;height:initial;padding:1px;"
+			                'style' => "height:186px;padding:1px;"
 			            ));
 					?>
 					</div>
