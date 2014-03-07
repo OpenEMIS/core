@@ -818,7 +818,7 @@ class DataProcessingController extends DataProcessingAppController {
             ));
             $subquery = '';
             $i = 1;
-            $fields = "'Staff.first_name As FirstName', 'Staff.last_name As LastName', 'StaffPositionTitle.name As Position'";
+            $fields = "'Staff.identification_no as OpenEmisID', 'Staff.first_name As FirstName', 'Staff.last_name As LastName', 'StaffPositionTitle.name As Position'";
             $templateFields = 'FirstName,LastName,Position';
             $joins = "
                 array(
