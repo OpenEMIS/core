@@ -106,7 +106,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
         	<?php
         		foreach($images as $image){
 					 echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $image["id"]), array(
-		                'height'=>"125px"
+		                'height'=>"90px", 'style'=>'padding:5px;'
 		            	));
 				}
 			?>
