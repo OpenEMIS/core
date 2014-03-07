@@ -171,120 +171,15 @@ class NavigationComponent extends Component {
 	}
 	
 	public function getInstitutionsLinks() {
-		$links = array(
-			array(
-				array(
-					$this->createLink('List of Institutions', 'Institutions', 'index', 'index$|advanced'),
-					$this->createLink('Add new Institution', 'Institutions', 'add', 'add$')
-				)
-			),
-			array(
-				'GENERAL' => array(
-					$this->createLink('Overview', 'Institutions', 'view', 'view$|^edit$|history$'),
-					$this->createLink('Attachments', 'Institutions', 'attachments'),
-					$this->createLink('More', 'Institutions', 'additional')
-				),
-				'INSTITUTION SITE' => array(
-					$this->createLink('List of Institution Sites', 'Institutions', 'listSites', 'listSites$'),
-					$this->createLink('Add new Institution Site', 'InstitutionSites', 'add', 'add$')
-				)
-			),
-			array(
-				'GENERAL' => array(
-					$this->createLink('Overview', 'InstitutionSites', 'view', 'view$|^edit$|history$'),
-					$this->createLink('Attachments', 'InstitutionSites', 'attachments'),
-					$this->createLink('Bank Accounts', 'InstitutionSites', 'bankAccounts'),
-					$this->createLink('More', 'InstitutionSites', 'additional')
-				),
-				'DETAILS' => array(
-					$this->createLink('Programmes', 'InstitutionSites', 'programmes'),
-					$this->createLink('Students', 'InstitutionSites', 'students'),
-					$this->createLink('Teachers', 'InstitutionSites', 'teachers'),
-					$this->createLink('Staff', 'InstitutionSites', 'staff'),
-					$this->createLink('Classes', 'InstitutionSites', 'classes')
-				),
-				'TOTALS' => array(
-					$this->createLink('Verifications', 'Census', 'verifications'),
-					$this->createLink('Students', 'Census', 'enrolment'),
-					$this->createLink('Teachers', 'Census', 'teachers'),
-					$this->createLink('Staff', 'Census', 'staff'),
-					$this->createLink('Classes', 'Census', 'classes'),
-					$this->createLink('Shifts', 'Census', 'shifts'),
-					$this->createLink('Graduates', 'Census', 'graduates'),
-					$this->createLink('Attendance', 'Census', 'attendance'),
-					$this->createLink('Results', 'Census', 'assessments'),
-					$this->createLink('Behaviour', 'Census', 'behaviour'),
-					$this->createLink('Textbooks', 'Census', 'textbooks'),
-					$this->createLink('Infrastructure', 'Census', 'infrastructure'),
-					$this->createLink('Finances', 'Census', 'finances'),
-					$this->createLink('More', 'Census', 'otherforms')
-				),
-                                'QUALITY' => array(
-                                        $this->createLink('Rubrics', 'Quality', 'qualityRubric'),
-                                        $this->createLink('Visits', 'Quality', 'qualityVisit'),
-                                ),
-				'REPORTS' => array(
-					$this->createLink('General', 'InstitutionSites', 'reportsGeneral'),
-					$this->createLink('Details', 'InstitutionSites', 'reportsDetails'),
-                                        $this->createLink('Totals', 'InstitutionSites', 'reportsTotals'),
-                                        $this->createLink('Quality', 'InstitutionSites', 'reportsQuality')
-				)
-			)
-		);
+		$navigation = ClassRegistry::init('Navigation');
+		$links = $navigation->getByModule('Institution', true);
+		
 		return $links;
 	}
 	
 	public function getSettingsLinks() {
-		$links = array(
-			array(
-				'SYSTEM SETUP' => array(
-					$this->createLink('Administrative Boundaries', 'Areas', 'index', 'index$|levels|edit|EducationArea|$'),
-					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup'),
-					$this->createLink('National Assessments', 'Assessment', 'index', '^index|assessment'),
-					$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
-					$this->createLink('System Configurations', 'Config', 'index', 'index$|edit$|^dashboard')
-				),
-				'ACCOUNTS &amp; SECURITY' => array(
-					$this->createLink('Users', 'Security', 'users'),
-					$this->createLink('Groups', 'Security', 'groups', '^group'),
-					$this->createLink('Roles', 'Security', 'roles', '^role|^permissions')
-				),
-				'NATIONAL DENOMINATORS' => array(
-					$this->createLink('Population', 'Population', 'index', 'index$|edit$'),
-					$this->createLink('Finance', 'Finance', 'index', 'index$|edit$|financePerEducationLevel$')
-				),
-				'DATA PROCESSING' => array(
-					$this->createLink('Build', 'DataProcessing', 'build'),
-					$this->createLink('Generate', 'DataProcessing', 'genReports', '^gen'),
-					$this->createLink('Export', 'DataProcessing', 'export'),
-					$this->createLink('Processes', 'DataProcessing', 'processes')
-				),
-				'DATABASE' => array(
-					$this->createLink('Backup', 'Database', 'backup'),
-					$this->createLink('Restore', 'Database', 'restore')
-				),
-				'SURVEY' => array(
-					$this->createLink('New', 'Survey', 'index', 'index$|^add$|^edit$'),
-					$this->createLink('Completed', 'Survey', 'import', 'import$|^synced$')
-				),
-				'SMS' => array(
-					$this->createLink('Messages', 'Sms', 'messages'),
-					$this->createLink('Responses', 'Sms', 'responses'),
-					$this->createLink('Logs', 'Sms', 'logs'),
-					$this->createLink('Reports', 'Sms', 'reports')
-				),
-				'TRAINING' => array(
-					$this->createLink('Courses', 'Training', 'course'),
-					$this->createLink('Sessions', 'Training', 'session'),
-					$this->createLink('Results', 'Training', 'result')
-				),
-                'QUALITY' => array(
-					'_controller' => 'Quality',
-					$this->createLink('Rubrics', 'Quality', 'rubricsTemplates'),
-					$this->createLink('Status', 'Quality', 'status')
-				)
-			)
-		);
+		$navigation = ClassRegistry::init('Navigation');
+		$links = $navigation->getByModule('Administration', true);
 		$this->ignoreLinks($links, 'Administration');
 		return $links;
 	}
