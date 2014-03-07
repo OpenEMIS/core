@@ -3,6 +3,7 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('/Students/js/students', false);
 echo $this->Html->script('config', false);
+echo $this->Html->script('wizard', false);
 $obj = @$data['Student'];
 ?>
 
@@ -139,7 +140,7 @@ $obj = @$data['Student'];
 
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
+		<input type="button" value="<?php echo __("Cancel"); ?>" class="btn_cancel btn_left" url="Students/view" onclick="jsForm.goto(this)"/>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

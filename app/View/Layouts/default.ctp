@@ -80,7 +80,7 @@ $lastName = AuthComponent::user('last_name');
 						echo $divider;
 						echo sprintf($link, 'Home/support', __('Help'));
 						echo $divider;
-						echo sprintf($link, 'Security/logout', __('Logout'));
+						echo sprintf('<a href="%s%s" class="logout">%s</a>', $this->webroot, 'Security/logout', __('Logout'));
 						?>
 					</div>
 				</div><!-- end header_side_nav -->
