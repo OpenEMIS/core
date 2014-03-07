@@ -66,9 +66,9 @@ echo $this->Html->script('Quality.quality.visit', false);
         <div class="value">
             <?php echo $this->Form->input('comment', array('type' => 'textarea')); ?>
             <br/>
-            <div id="image_upload_info">
+            <div id="image_upload_info" style="clear: both">
                 <em>
-                    <?php echo __("Maximum 200 characters per comment"); ?>
+                    <?php echo __("Maximum 150 words per comment"); ?>
                 </em>
             </div>
         
