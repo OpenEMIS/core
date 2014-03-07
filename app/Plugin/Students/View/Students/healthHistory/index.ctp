@@ -8,7 +8,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
     <h1>
         <span><?php echo __('Health - History'); ?></span>
         <?php
-		if($_edit) {
+		if($_add) {
 			echo $this->Html->link(__('Add'), array('action' => 'healthHistoryAdd'), array('class' => 'divider'));
 		}
 		?>
