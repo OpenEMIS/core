@@ -470,9 +470,9 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = array();
 		$q = array();
 		if($this->request->is('post')){
-            foreach($this->data['Reports'] as $reportId){
+            /*foreach($this->data['Reports'] as $reportId){
                 $this->customizedReport($reportId);
-            }
+            }*/
             $this->processGenerate($this->data['Reports']);
 		}
 		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est','cus'))), 'order' => array('Report.order')));
