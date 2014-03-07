@@ -64,8 +64,8 @@ class QualityInstitutionVisit extends QualityAppModel {
         ),
         'comment' => array(
             'ruleRequired' => array(
-                'rule' => array('maxLength', 200),
-                'message' => 'Maximum 200 character per comment.'
+                'rule' => 'checkCommentLength',//array('maxLength', 1),
+                'message' => 'Maximum 150 words per comment.'
             )
         )
     );
@@ -76,6 +76,14 @@ class QualityInstitutionVisit extends QualityAppModel {
         $value = $value[0];
 
         return !empty($value);
+    }
+    
+    public function checkCommentLength($data){
+        if(str_word_count($data['comment']) > 150) {
+            return false;
+        }
+        
+        return true;
     }
 
     public function qualityVisit($controller, $params) {
