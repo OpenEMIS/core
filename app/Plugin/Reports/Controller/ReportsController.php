@@ -77,66 +77,7 @@ class ReportsController extends ReportsAppController {
             }
         }
     }
-
-    public function test(){
-        
-       $this->autoRender = false;
-        $TrainingCourse = ClassRegistry::init('TrainingSessionTrainee');
-        $TrainingCourse->formatResult = true;
-        $data = $TrainingCourse->find('all', 
-        array('fields' => array(
-            'IFNULL(Staff.identification_no, Teacher.identification_no) as OpenEmisID', 'IFNULL(Staff.first_name, Teacher.first_name) as FirstName', 
-            'IFNULL(Staff.last_name, Teacher.last_name) as LastName', 'IFNULL(StaffPositionTitle.name, TeacherPositionTitle.name) as Position',
-            'TrainingCourse1.code AS CourseCode','TrainingCourse1.title AS CourseTitle',
-            'TrainingSession1.location as Location', 'TrainingSession1.start_date as StartDate', 
-            'TrainingSession1.end_date as EndDate'
-        ),
-        'joins' => array(
-            array(
-                'table' => 'training_sessions','alias' => 'TrainingSession1','type' => 'INNER',
-                'conditions' => array('TrainingSession1.id = TrainingSessionTrainee.training_session_id', 'TrainingSession1.training_status_id'=>3)
-            ),
-            array(
-                'table' => 'training_sessions','alias' => 'TrainingSession2','type' => 'INNER',
-                'conditions' => array('TrainingSession2.id = TrainingSessionTrainee.training_session_id', 'TrainingSession2.training_status_id'=>3)
-            ),
-             array(
-                'table' => 'training_courses','alias' => 'TrainingCourse1','type' => 'INNER',
-                'conditions' => array('TrainingCourse1.id = TrainingSession1.training_course_id', 'TrainingCourse1.training_status_id'=>3)
-            ), 
-             array(
-                'table' => 'training_courses','alias' => 'TrainingCourse2','type' => 'INNER',
-                'conditions' => array('TrainingCourse2.id = TrainingSession2.training_course_id', 'TrainingCourse2.training_status_id'=>3)
-            ), 
-            array('table' => 'staff','alias' => 'Staff','type' => 'LEFT',
-                'conditions' => array('Staff.id = TrainingSessionTrainee.identification_id', 'TrainingSessionTrainee.identification_table'=>'staff')
-            ), 
-            array('table' => 'teachers','alias' => 'Teacher','type' => 'LEFT',
-                'conditions' => array('Teacher.id = TrainingSessionTrainee.identification_id', 'TrainingSessionTrainee.identification_table'=>'teachers')
-            ), 
-            array('table' => 'institution_site_staff','alias' => 'InstitutionSiteStaff','type' => 'LEFT',
-                'conditions' => array('Staff.id = InstitutionSiteStaff.staff_id')
-            ), 
-            array('table' => 'staff_position_titles','alias' => 'StaffPositionTitle','type' => 'LEFT',
-                'conditions' => array('StaffPositionTitle.id = InstitutionSiteStaff.staff_position_title_id')
-            ), 
-            array('table' => 'institution_site_teachers','alias' => 'InstitutionSiteTeacher','type' => 'LEFT',
-                'conditions' => array('Teacher.id = InstitutionSiteTeacher.teacher_id')
-            ), 
-            array('table' => 'teacher_position_titles','alias' => 'TeacherPositionTitle','type' => 'LEFT',
-                'conditions' => array('TeacherPositionTitle.id = InstitutionSiteTeacher.teacher_position_title_id')
-            )
-         ),
-         'conditions' => 
-         array('TrainingSession1.start_date <= TrainingSession2.start_date', 
-            'TrainingSession1.end_date >= TrainingSession2.start_date'
-         ),
-         'group' => array('identification_table', 'identification_id HAVING COUNT(identification_id) > 1'),
-         'order' => array('TrainingCourse1.title')
-        ));
-//
-        pr($data);
-    }
+\
     
     public function index() {
         $this->redirect(array('controller' => $this->params['controller'], 'action' => 'Institution'));
