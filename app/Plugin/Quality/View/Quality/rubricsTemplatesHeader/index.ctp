@@ -9,7 +9,7 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
     <h1>
         <span><?php echo __($subheader); ?></span>
         <?php
-        /* echo $this->Html->link(__('View Rubric'), array('action' => 'RubricsTemplatesDetailEdit', $id), array('class' => 'divider')); */
+         echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesView', $id), array('class' => 'divider')); 
         if ($_add) {
             echo $this->Html->link(__('Add'), array('action' => 'rubricsTemplatesHeaderAdd', $id), array('class' => 'divider'));
         }
@@ -23,14 +23,14 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
     <table class="table allow_hover full_width" action="<?php echo $this->params['controller']; ?>/rubricsTemplatesHeaderView/<?php echo $id ?>/">
         <thead class="table_head">
             <tr>
-                <td class="cell_id_no"><?php echo __('No.') ?></td>
-                <td><?php echo __('Header') ?></td>
+               <!-- <td class="cell_id_no"><?php echo __('No.') ?></td> -->
+                <td><?php echo __('Section Header') ?></td>
             </tr>
         </thead>
         <tbody class="table_body">
             <?php foreach ($data as $key => $item) { ?>
                 <tr class="table_row"  row-id="<?php echo $item[$modelName]['id']; ?>">
-                    <td class="table_cell"><?php echo $key + 1; ?></td>
+                   <!-- <td class="table_cell"><?php echo $key + 1; ?></td> -->
                     <td class="table_cell"><?php echo $item[$modelName]['title']; ?></td>
                 </tr>
             <?php } ?>
