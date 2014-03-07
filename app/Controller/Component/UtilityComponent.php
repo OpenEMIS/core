@@ -157,7 +157,8 @@ class UtilityComponent extends Component {
 
 		$msgList['ADD_ERROR'] = 'Record is not added due to errors encountered.';
 		$msgList['UPDATE_ERROR'] = 'Record is not updated due to errors encountered.';
-		
+		$msgList['ADD_UPDATE_ERROR'] = 'Record is not added/updated due to errors encountered.';
+                
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 
 
