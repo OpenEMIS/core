@@ -69,8 +69,8 @@ class RubricsTemplate extends QualityAppModel {
     }
 
     public function rubricsTemplatesView($controller, $params) {
-        $controller->Navigation->addCrumb('Rubric Infomations');
-        $controller->set('subheader', 'Quality - Rubric Infomations');
+        $controller->Navigation->addCrumb('Rubric Details');
+        $controller->set('subheader', 'Quality - Rubric Details');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];

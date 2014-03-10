@@ -31,7 +31,8 @@ class RubricsViewHelper extends AppHelper {
 
     public function insertRubricHeader($data = NULL, $key = 0, $mode = 'edit') {
         $modalName = key($data);
-        $isFirst = ($key == 0 ) ? 'first' : "default";
+       // $isFirst = ($key == 0 ) ? 'first' : "default";
+        $isFirst = 'default';
         //  $display = '<tr>';
         // pr($data);
         $display = '';
@@ -71,7 +72,8 @@ class RubricsViewHelper extends AppHelper {
 
     public function insertRubricQuestionRow($data = NULL, $key = 0, $mode = 'edit') {
         $headerColumnData = $data['columnHeader'];
-        $isFirst = ($key == 0 ) ? 'first' : "default";
+        // $isFirst = ($key == 0 ) ? 'first' : "default";
+        $isFirst = 'default';
 
         $width = 607 - 2;
         $singleColumnSize = (1 / $this->defaultNoOfColumns) * $width;
@@ -135,7 +137,8 @@ class RubricsViewHelper extends AppHelper {
     }
 
     private function getOrderFormat($key, $expandHeight = false) {
-        $isFirst = ($key == 0 ) ? 'first' : "default";
+        // $isFirst = ($key == 0 ) ? 'first' : "default";
+        $isFirst = 'default';
         $height = ($expandHeight) ? 'cell-rubric-row-height' : "";
 
         $display = '<div class="cell ' . $height . ' cell-rubric-order  ' . $isFirst . '">
@@ -169,7 +172,8 @@ class RubricsViewHelper extends AppHelper {
 
     public function insertRubricTableHeader($data = NULL, $key = 0, $mode = 'edit') {
         $modalName = key($data);
-        $isFirst = ($key == 0 ) ? 'first' : "default";
+         $isFirst = ($key == 0 ) ? 'first' : "default";
+       // $isFirst = 'default';
         $display = '<tr>';
         // pr($data);
         $display = '';

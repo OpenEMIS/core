@@ -9,10 +9,16 @@ echo $this->Html->script('/Quality/js/rubrics', false);
     <h1>
         <span><?php echo __($subheader); ?></span>
         <?php
-        echo $this->Html->link(__('View Header List'), array('action' => 'RubricsTemplatesHeader', $rubricTemplateId), array('class' => 'divider'));
+        echo $this->Html->link(__('Back'), array('action' => 'RubricsTemplatesHeader', $rubricTemplateId), array('class' => 'divider'));
         
         if ($_edit) {
-            echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesSubheaderEdit', $rubricTemplateHeaderId), array('class' => 'divider'));
+            if(empty($this->data['RubricsTemplateDetail'])){
+                $linkName = 'Create Rubric Table';
+            }
+            else{
+                $linkName = 'Edit Rubric Table';
+            }
+            echo $this->Html->link(__($linkName), array('action' => 'rubricsTemplatesSubheaderEdit', $rubricTemplateHeaderId), array('class' => 'divider'));
         }
         
         ?>

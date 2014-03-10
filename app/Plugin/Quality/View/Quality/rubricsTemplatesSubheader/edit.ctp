@@ -15,11 +15,12 @@ echo $this->Html->script('jquery.sort', false);
           echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesDetails', $id ), array('class' => 'divider'));
           } */
         if ($_edit) {//pr($columnHeaderData);
+            echo $this->Html->link(__('Add Level / Column'), array('action' => 'RubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
             if (!empty($columnHeaderData)) {
-                echo $this->Html->link(__('Add Heading'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
-                echo $this->Html->link(__('Add Criteria Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
+                echo $this->Html->link(__('Add Header'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
+                echo $this->Html->link(__('Add Criteria / Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
             }
-            echo $this->Html->link(__('Add Level Column'), array('action' => 'RubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
+            
         }
         ?>
     </h1>
@@ -41,7 +42,7 @@ echo $this->Html->script('jquery.sort', false);
     }
     echo $this->Form->hidden('setting.last_id', array('value' => $lastId, 'id' => 'last_id'));
     ?>
-
+    
     <?php
     //$index = 0;
     echo $this->Utility->getListStart();
