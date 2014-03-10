@@ -78,7 +78,7 @@ $lastName = AuthComponent::user('last_name');
 						echo $divider;
 						echo sprintf($link, 'Home/details', __('Account'));
 						echo $divider;
-						echo sprintf($link, 'Home/support', __('Help'));
+						echo sprintf($link, 'Home/support', __('Support'));
 						echo $divider;
 						echo sprintf($link, 'Security/logout', __('Logout'));
 						?>
