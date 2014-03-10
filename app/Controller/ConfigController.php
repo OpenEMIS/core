@@ -40,6 +40,7 @@ class ConfigController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
+		 $this->Auth->allow('fetchImage');
         $this->Auth->allow('getJSConfig');
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		$this->bodyTitle = 'Administration';

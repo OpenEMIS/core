@@ -34,7 +34,8 @@ class SecurityController extends AppController {
 		'SecurityUserAccess',
 		'Teachers.Teacher',
 		'Staff.Staff',
-		'Students.Student'
+		'Students.Student',
+		'ConfigAttachment'
 	);
 	public $components = array(
 		'LDAP'
@@ -192,6 +193,18 @@ class SecurityController extends AppController {
 	$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
 	$this->set('username', $username);
 	$this->set('password', $password);
+
+	$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.type'=> array('login','partner'), 'ConfigAttachment.active' => 1), 'order'=>array('order')));
+	$imageData = array();
+	if(!empty($images)){
+		$i = 0;
+		foreach($images as $image){
+			$imageData[$i] = array_merge($image['ConfigAttachment']);
+			$i++;
+		}
+	}
+	$this->set('images', $imageData);
+
     }
 
     public function login_remote() {
