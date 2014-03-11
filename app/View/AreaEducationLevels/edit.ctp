@@ -32,9 +32,9 @@ echo $this->Html->script('area', false);
 
 		<div class="table full_width">
 			<div class="table_head">
-				<div class="table_cell " style="width:666px;"><?php echo __('Name'); ?></div>
+				<div class="table_cell " style="width:627px;"><?php echo __('Name'); ?></div>
 				<!-- <div class="table_cell ">Name</div> -->
-<!--				<div class="table_cell" style="min-width: 20px;"> <?php echo __('Order'); ?> </div>-->
+				<div class="table_cell" style="min-width: 20px;"> <?php echo __('Action'); ?> </div>
 			</div><!-- 
 			<div class="table_body">
 	            <div class="table_row even">
@@ -61,10 +61,10 @@ echo $this->Html->script('area', false);
 						<input type="text" name="data[AreaEducationLevel][<?php echo $i; ?>][name]" value="<?php echo $levels[$i]['name']; ?>">
 					</div>
 				</div>
-<!--				<div class="cell cell_order_area_level"> 
-					<span class="icon_up" onclick="areas.reorder(this)"></span>
-					<span class="icon_down" onclick="areas.reorder(this)"></span> 
-				</div>-->
+				<div class="cell cell_order_area_level"> 
+<!--					<span class="icon_up" onclick="areas.reorder(this)"></span>
+					<span class="icon_down" onclick="areas.reorder(this)"></span> -->
+				</div>
 			</li>
 		<?php } ?>
 		</ul>

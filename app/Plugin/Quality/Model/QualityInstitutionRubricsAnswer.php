@@ -83,12 +83,19 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
                 $postData = $controller->request->data['SelectedAnswer'];
 
                 foreach ($postData as $key => $obj) {
-                    $obj['QualityInstitutionRubricsAnswer']['quality_institution_rubric_id'] = $selectedQualityRubricId;
-                    $obj['QualityInstitutionRubricsAnswer']['rubric_template_header_id'] = $rubricTemplateHeaderId;
+                    
+                    if(!empty($obj['QualityInstitutionRubricsAnswer']['rubric_template_answer_id'])){
+                        $obj['QualityInstitutionRubricsAnswer']['quality_institution_rubric_id'] = $selectedQualityRubricId;
+                        $obj['QualityInstitutionRubricsAnswer']['rubric_template_header_id'] = $rubricTemplateHeaderId;
 
-                    $postData[$key] = $obj;
+                        $postData[$key] = $obj;
+                    }
+                    else{
+                        unset($postData[$key]);
+                    }
+                    
                 }
-
+                
                 if ($this->saveAll($postData)) {
                     $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
                     $controller->redirect(array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId));

@@ -583,8 +583,8 @@ class InstitutionSitesController extends AppController {
                     'last_name' => 'Teacher Last Name'
                 ),
                 'SecurityUser' => array(
-                    'first_name' => 'Supervisor First Name',
-                    'last_name' => 'Supervisor Last Name'
+                    'first_name' => 'Evaluator First Name',
+                    'last_name' => 'Evaluator Last Name'
                 )
             ),
             'FileName' => 'Report_Quality_Visit'

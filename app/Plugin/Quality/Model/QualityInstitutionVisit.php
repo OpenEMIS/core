@@ -63,8 +63,8 @@ class QualityInstitutionVisit extends QualityAppModel {
         ),
         'comment' => array(
             'ruleRequired' => array(
-                'rule' => array('maxLength', 200),
-                'message' => 'Maximum 200 character per comment.'
+                'rule' => 'checkCommentLength',//array('maxLength', 1),
+                'message' => 'Maximum 150 words per comment.'
             )
         )
     );
@@ -75,6 +75,14 @@ class QualityInstitutionVisit extends QualityAppModel {
         $value = $value[0];
 
         return !empty($value);
+    }
+    
+    public function checkCommentLength($data){
+        if(str_word_count($data['comment']) > 150) {
+            return false;
+        }
+        
+        return true;
     }
 
     public function qualityVisit($controller, $params) {
@@ -159,8 +167,10 @@ class QualityInstitutionVisit extends QualityAppModel {
     private function _setupStatusForm($controller, $params, $type) {
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
         $userData = $controller->Session->read('Auth.User');
-        $supervisorName = $userData['first_name'] . ' ' . $userData['last_name'];
 
+        $evaluatorName = $userData['first_name'] . ' ' . $userData['last_name'];
+        
+        
 
         if ($type == 'add') {
             $paramsLocateCounter = 0;
@@ -191,7 +201,10 @@ class QualityInstitutionVisit extends QualityAppModel {
                         $selectedVisitTypeId = $data[$this->name]['quality_type_id'];
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
                         $selectedDate = $data[$this->name]['date'];
-                        $supervisorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
+
+                        $evaluatorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
+                       
+
                     }
                 } else {
                     //  return $controller->redirect(array('action' => 'index'));
@@ -314,7 +327,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         $controller->request->data[$this->name]['institution_site_classes_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
         $controller->request->data[$this->name]['teacher_id'] = empty($selectedTeacherId) ? 0 : $selectedTeacherId;
         $controller->request->data[$this->name]['quality_type_id'] = empty($selectedVisitTypeId) ? 0 : $selectedVisitTypeId;
-        $controller->request->data[$this->name]['supervisor'] = $supervisorName;
+        $controller->request->data[$this->name]['evaluator'] = $evaluatorName;
     }
 
     public function qualityVisitAttachmentDownload($controller, $params) {
