@@ -540,7 +540,6 @@ class ReportsController extends ReportsAppController {
         if($filename == '' ){
             die();
         }else{
-            
             $info['basename'] = $filename;
             /* Return array
              * Array
@@ -568,6 +567,7 @@ class ReportsController extends ReportsAppController {
             $category = $res['Report']['category'];
             $name = $res['Report']['name'];
             $res['Report']['file_type'] = ($res['Report']['file_type']=='ind'?'csv':$res['Report']['file_type']);
+            $res['Report']['file_type'] = ($res['Report']['file_type']=='csv_custom'?'csv':$res['Report']['file_type']);
             $xt = $res['Report']['file_type'];
             
             if($olap){
