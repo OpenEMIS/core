@@ -40,7 +40,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                 'message' => 'Please select a valid Grade.'
             )
         ),
-        'institution_site_classes_id' => array(
+        'institution_site_class_id' => array(
             'ruleRequired' => array(
                 'rule' => 'checkDropdownData',
                 //  'required' => true,
@@ -132,7 +132,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         $grade = $EducationGrade->find('first', array('recursive' => -1, 'contidions' => array('EducationGrade.id' => $data[$this->name]['education_grade_id'])));
 
         $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
-        $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_classes_id']);
+        $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_class_id']);
 
         $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
         $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['teacher_id']);
@@ -197,7 +197,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                         $selectedTeacherId = $data[$this->name]['teacher_id'];
                         $selectedYearId = $data[$this->name]['school_year_id'];
                         $selectedGradeId = $data[$this->name]['education_grade_id'];
-                        $selectedClassId = $data[$this->name]['institution_site_classes_id'];
+                        $selectedClassId = $data[$this->name]['institution_site_class_id'];
                         $selectedVisitTypeId = $data[$this->name]['quality_type_id'];
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
                         $selectedDate = $data[$this->name]['date'];
@@ -324,7 +324,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         $controller->request->data[$this->name]['school_year_id'] = $selectedYearId;
         $controller->request->data[$this->name]['institution_site_id'] = empty($controller->request->data[$this->name]['institution_site_id']) ? $institutionSiteId : $controller->request->data[$this->name]['institution_site_id'];
         $controller->request->data[$this->name]['education_grade_id'] = empty($selectedGradeId) ? 0 : $selectedGradeId;
-        $controller->request->data[$this->name]['institution_site_classes_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
+        $controller->request->data[$this->name]['institution_site_class_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
         $controller->request->data[$this->name]['teacher_id'] = empty($selectedTeacherId) ? 0 : $selectedTeacherId;
         $controller->request->data[$this->name]['quality_type_id'] = empty($selectedVisitTypeId) ? 0 : $selectedVisitTypeId;
         $controller->request->data[$this->name]['evaluator'] = $evaluatorName;
