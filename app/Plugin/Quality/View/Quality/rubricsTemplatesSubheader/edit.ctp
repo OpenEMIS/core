@@ -20,7 +20,6 @@ echo $this->Html->script('jquery.sort', false);
                 echo $this->Html->link(__('Add Header'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
                 echo $this->Html->link(__('Add Criteria / Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
             }
-            
         }
         ?>
     </h1>
@@ -42,7 +41,7 @@ echo $this->Html->script('jquery.sort', false);
     }
     echo $this->Form->hidden('setting.last_id', array('value' => $lastId, 'id' => 'last_id'));
     ?>
-    
+
     <?php
     //$index = 0;
     echo $this->Utility->getListStart();
@@ -58,31 +57,10 @@ echo $this->Html->script('jquery.sort', false);
             }
             echo $this->Utility->getListRowEnd();
         }
-    }
+    } 
     echo $this->Utility->getListEnd();
     ?>
-    <!-- 
-    <table class='rubric-table'>
-    <?php
-    //pr(count($this->data));
-    //pr($this->data);
-    foreach ($this->data['RubricsTemplateDetail'] as $key => $item) {
-        //pr($item);
-        // $processItem = array();
-        ///   $processItem['modalName'] = $modelName;
-        if (array_key_exists('RubricsTemplateSubheader', $item)) {
-            /* if (!array_key_exists('rubric_template_id', $item['RubricsTemplateHeader'])) {
-              $processItem['RubricsTemplateHeader']['rubric_template_id'] = $id;
-              } */
-            echo $this->RubricsView->insertRubricHeader($item, $key);
-        } else {
-            $item['columnHeader'] = $columnHeaderData;
-            echo $this->RubricsView->insertRubricQuestionRow($item, $key);
-        }
-    }
-    ?>
-    </table>
-    -->
+
     <div class="controls">
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right"/>
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'btn_cancel btn_left')); ?>
@@ -90,3 +68,16 @@ echo $this->Html->script('jquery.sort', false);
 
     <?php echo $this->Form->end(); ?>
 </div>
+<?php
+//Addind auto insert function
+if ($_edit) {
+    if (!empty($columnHeaderData)) {
+?>
+<script type="text/javascript">
+    <?php echo 'rubricsTemplate.initHeader(' . $rubricTemplateHeaderId . ');'; ?>
+    <?php echo 'rubricsTemplate.initRow(' . $rubricTemplateHeaderId . ');'; ?>
+</script>
+<?php
+    }
+}
+?>

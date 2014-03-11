@@ -63,7 +63,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
         $controller->set('subheader', 'Quality - Rubric Table');
         $controller->set('modelName', $this->name);
 
-        $this->_setupRubricsTemplateDetail($controller, $params);
+        $this->_setupRubricsTemplateDetail($controller, $params, 'view');
     }
 
     public function rubricsTemplatesSubheaderEdit($controller, $params) {
@@ -71,10 +71,10 @@ class RubricsTemplateSubheader extends QualityAppModel {
         $controller->set('subheader', 'Quality - Edit Rubric Table');
         $controller->set('modelName', $this->name);
 
-        $this->_setupRubricsTemplateDetail($controller, $params);
+        $this->_setupRubricsTemplateDetail($controller, $params, 'edit');
     }
 
-    private function _setupRubricsTemplateDetail($controller, $params) {
+    private function _setupRubricsTemplateDetail($controller, $params, $type) {
         $rubricTemplateHeaderId = empty($params['pass'][0]) ? 0 : $params['pass'][0];
         $data = array();
 
@@ -281,7 +281,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
 
                 $controller->request->data['RubricsTemplateDetail'] = $data;
                 //pr($controller->request->data);
-                if (empty($controller->request->data['RubricsTemplateDetail'])) {
+                if (empty($controller->request->data['RubricsTemplateDetail']) && $type != 'edit') {
                     $controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
                 }
             }
