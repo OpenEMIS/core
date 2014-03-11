@@ -26,5 +26,29 @@ var rubricsTemplate = {
 				$('#last_id').val(parseInt($('#last_id').val())+1);
 			}
 		});
-	}
+	},
+        initHeader : function(id){
+            $.ajax({
+			type: "POST",
+			url: getRootURL() + 'Quality/rubricsTemplatesSubheaderAjaxAddRow/header',
+			data: {id:id, last_id:0},
+			success: function (data){
+                           // alert(data);
+				$('form .table_view').append(data);
+				$('#last_id').val(parseInt($('#last_id').val())+1);
+			}
+		});
+        },
+        initRow :function (id){
+            $.ajax({
+			type: "POST",
+			url: getRootURL() + 'Quality/rubricsTemplatesSubheaderAjaxAddRow/criteria',
+			data: {id:id, last_id:1},
+			success: function (data){
+                          //  alert(data);
+				$('form .table_view').append(data);
+				$('#last_id').val(parseInt($('#last_id').val())+1);
+			}
+		});
+        }
 };

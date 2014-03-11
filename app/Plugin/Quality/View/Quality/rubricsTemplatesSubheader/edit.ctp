@@ -10,13 +10,17 @@ echo $this->Html->script('jquery.sort', false);
 <div id="student" class="content_wrapper">
     <h1>
         <span><?php echo __($subheader); ?></span>
-        <?php 
+        <?php
+        /* if($_edit) {
+          echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesDetails', $id ), array('class' => 'divider'));
+          } */
+        if ($_edit) {//pr($columnHeaderData);
+            echo $this->Html->link(__('Add Level / Column'), array('action' => 'RubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
             if (!empty($columnHeaderData)) {
-                echo $this->Html->link(__('Add Heading'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
-                echo $this->Html->link(__('Add Criteria Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
+                echo $this->Html->link(__('Add Header'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
+                echo $this->Html->link(__('Add Criteria / Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
             }
-            
-        echo $this->Html->link(__('Add Level Column'), array('action' => 'rubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
+        }
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
@@ -53,31 +57,10 @@ echo $this->Html->script('jquery.sort', false);
             }
             echo $this->Utility->getListRowEnd();
         }
-    }
+    } 
     echo $this->Utility->getListEnd();
     ?>
-    <!-- 
-    <table class='rubric-table'>
-    <?php
-    //pr(count($this->data));
-    //pr($this->data);
-    foreach ($this->data['RubricsTemplateDetail'] as $key => $item) {
-        //pr($item);
-        // $processItem = array();
-        ///   $processItem['modalName'] = $modelName;
-        if (array_key_exists('RubricsTemplateSubheader', $item)) {
-            /* if (!array_key_exists('rubric_template_id', $item['RubricsTemplateHeader'])) {
-              $processItem['RubricsTemplateHeader']['rubric_template_id'] = $id;
-              } */
-            echo $this->RubricsView->insertRubricHeader($item, $key);
-        } else {
-            $item['columnHeader'] = $columnHeaderData;
-            echo $this->RubricsView->insertRubricQuestionRow($item, $key);
-        }
-    }
-    ?>
-    </table>
-    -->
+
     <div class="controls">
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right"/>
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'btn_cancel btn_left')); ?>
@@ -85,3 +68,16 @@ echo $this->Html->script('jquery.sort', false);
 
     <?php echo $this->Form->end(); ?>
 </div>
+<?php
+//Addind auto insert function
+if ($_edit) {
+    if (!empty($columnHeaderData) && empty($this->data['RubricsTemplateDetail'])) {
+?>
+<script type="text/javascript">
+    <?php echo 'rubricsTemplate.initHeader(' . $rubricTemplateHeaderId . ');'; ?>
+    <?php echo 'rubricsTemplate.initRow(' . $rubricTemplateHeaderId . ');'; ?>
+</script>
+<?php
+    }
+}
+?>

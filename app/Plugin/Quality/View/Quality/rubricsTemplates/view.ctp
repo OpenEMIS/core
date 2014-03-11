@@ -14,7 +14,7 @@
 				echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesEdit',$obj['id'] ), array('class' => 'divider'));
 			}
 			
-			echo $this->Html->link(__('View Rubric'), array('action' => 'rubricsTemplatesHeader',$obj['id'] ), array('class' => 'divider'));
+			echo $this->Html->link(__('Section Header'), array('action' => 'RubricsTemplatesHeader',$obj['id'] ), array('class' => 'divider'));
 			
 			if($_delete) {
 				echo $this->Html->link(__('Delete'), array('action' => 'rubricsTemplatesDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
