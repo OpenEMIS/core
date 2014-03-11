@@ -53,12 +53,26 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		
 		//echo $this->Js->writeBuffer(array('cache'=>FALSE));
 	?>
+ 
+	<SCRIPT type="text/javascript">
+		window.history.forward();
+		function disableBackButton()
+		{
+		window.history.forward();
+		}  
+	</script>
 </head>
 <?php 
 $firstName = AuthComponent::user('first_name');
 $lastName = AuthComponent::user('last_name');
 ?>
-<body>
+<?php 
+	$noBack = '';
+	if($this->Session->check('WizardMode') && $this->Session->read('WizardMode')==true){
+		$noBack = ' onload="disableBackButton();"';
+	}
+?>
+<body<?php echo $noBack;?>>
 	<div class="header">
     	<div class="header_content">
         	<div class="header_logo">

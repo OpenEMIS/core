@@ -201,5 +201,17 @@ class NavigationComponent extends Component {
 			}
 		}
 	}
+
+	public function getWizardLinks($module){
+		$navigation = ClassRegistry::init('Navigation');
+		$links = $navigation->getByModule($module, false);
+		$wizardLinks = array();
+		foreach($links as $link){
+			if($link['Navigation']['is_wizard']=='1'){
+				$wizardLinks[] = $link['Navigation'];
+			}
+		}
+		return $wizardLinks;
+	}
 }
 ?>

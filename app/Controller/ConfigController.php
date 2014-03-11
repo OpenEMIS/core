@@ -106,6 +106,9 @@ class ConfigController extends AppController {
 
 		$country = $this->Country->find('list', array('fields' => array('Country.id', 'Country.name'), 'order' => array('name asc')));
 		$this->set('countries', $country);
+
+		$wizardOptions = array('0'=>'Non-Mandatory', '1'=>'Mandatory');
+		$this->set('wizardOptions', $wizardOptions);
 		// End Access Control
 		$this->set('items', $sorted);
 	}
@@ -198,6 +201,8 @@ class ConfigController extends AppController {
 		$sorted = $this->groupByType($this->Utility->formatResult($items));
 		$this->set('school_years', $schoolYear);
 		$this->set('countries', $country);
+		$wizardOptions = array('0'=>'Non-Mandatory', '1'=>'Mandatory');
+		$this->set('wizardOptions', $wizardOptions);
 		$this->set('items', $sorted);
                 
 	}
