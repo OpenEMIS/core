@@ -204,12 +204,17 @@ class NavigationComponent extends Component {
 
 	public function getWizardLinks($module){
 		$navigation = ClassRegistry::init('Navigation');
-		$links = $navigation->getByModule($module, false);
+		$links = $navigation->getWizardByModule($module, false);
 		$wizardLinks = array();
 		foreach($links as $link){
-			if($link['Navigation']['is_wizard']=='1'){
-				$wizardLinks[] = $link['Navigation'];
+			$link['Navigation']['completed'] = '0';
+			if($link['Navigation']['action'] == 'view'){
+				$link['Navigation']['new_action'] = 'edit';
+				$link['Navigation']['completed'] = '-1';
+			}else{
+				$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Add';
 			}
+			$wizardLinks[] = $link['Navigation'];
 		}
 		return $wizardLinks;
 	}

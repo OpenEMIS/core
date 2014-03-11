@@ -3,7 +3,6 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('/Students/js/students', false);
 echo $this->Html->script('config', false);
-echo $this->Html->script('wizard', false);
 $obj = @$data['Student'];
 ?>
 
@@ -30,7 +29,7 @@ $obj = @$data['Student'];
 
 	<fieldset class="section_break">
 		<legend><?php echo __('Information'); ?></legend>
-		<?php if(!$WizardMode){ ?>
+		<?php if($this->Session->check('StudentId')){ ?>
         <div class="row">
 			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<?php if($autoid==''){ ?>
@@ -163,7 +162,9 @@ $obj = @$data['Student'];
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
 		<input type="button" value="<?php echo __("Cancel"); ?>" class="btn_cancel btn_left" url="Students/view" onclick="jsForm.goto(this)"/>
 		<?php }else{?>
+			<?php if(!$this->Session->check('StudentId')){ ?>
 			<input type="button" value="<?php echo __("Cancel"); ?>" class="btn_cancel btn_left" url="Students/view" onclick="jsForm.goto(this)"/>
+			<?php } ?>
 			<input type="submit" value="<?php echo __("Next"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
 		<?php } ?>
 	</div>

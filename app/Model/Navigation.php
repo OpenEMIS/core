@@ -26,6 +26,17 @@ class Navigation extends AppModel {
 		}
 		return $data;
 	}
+
+	public function getWizardByModule($module, $format = false){
+			$data = $this->find('all', array(
+			'conditions' => array('module' => $module, 'is_wizard'=>'1'),
+			'order' => array('order')
+		));
+		if($format) {
+			$data = $this->format($data);
+		}
+		return $data;
+	}
 	
 	public function format($data) {
 		$links = array();
