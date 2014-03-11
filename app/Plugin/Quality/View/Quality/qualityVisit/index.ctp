@@ -30,7 +30,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
                     <tr class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
                         <td class="table_cell"><?php echo $val[$modelName]['date']; ?></td>
                         <td class="table_cell"><?php echo $gradeOptions[$val[$modelName]['education_grade_id']]; ?></td>
-                        <td class="table_cell"><?php echo $classOptions[$val[$modelName]['institution_site_classes_id']]; ?></td>
+                        <td class="table_cell"><?php echo $classOptions[$val[$modelName]['institution_site_class_id']]; ?></td>
                         <td class="table_cell"><?php echo $teacherOptions[$val[$modelName]['teacher_id']]; ?></td>
                     </tr>
                 <?php } ?>
