@@ -51,7 +51,8 @@ class HomeController extends AppController {
 		'Teachers.TeacherHistory',
 		'Staff.StaffHistory',
 		'SecurityUser',
-		'SecurityRoleFunction'
+		'SecurityRoleFunction',
+		'SecurityGroupUser'
 	);
 	private function logtimer($str=''){
 			if($this->debug == true)
@@ -88,6 +89,8 @@ class HomeController extends AppController {
 		$userId = $this->Auth->user('id');
 		$this->SecurityUser->id = $userId;
 		$obj = $this->SecurityUser->read();
+
+		$obj['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
 		/*
 		$roleIds = $this->SecurityUserRole->find('list', array(
 			'fields' => array('SecurityUserRole.security_role_id'),
@@ -95,7 +98,7 @@ class HomeController extends AppController {
 		));
 		$obj['SecurityUser']['roles'] = $this->SecurityRoleFunction->getModules($roleIds);
 		*/
-		$this->set('obj', $obj['SecurityUser']);
+		$this->set('obj', $obj);
 	}
 	public function detailsEdit() {
 		$this->bodyTitle = 'Account';
@@ -105,6 +108,7 @@ class HomeController extends AppController {
 		$this->SecurityUser->formatResult = true;
 		$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 		
+		$data['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
 		if($this->request->is('post') || $this->request->is('put')) {
 			$postData = $this->data['SecurityUser'];
 			if($this->SecurityUser->doValidate($postData)) {

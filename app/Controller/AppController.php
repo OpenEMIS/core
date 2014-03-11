@@ -108,7 +108,12 @@ class AppController extends Controller {
             }
             else */if(strpos(strtolower(substr($this->action, 0,8)), 'training') !== false){
                 $action = Inflector::underscore($this->action);
+<<<<<<< HEAD
             }else if(strpos(strtolower(substr($this->action, 0,8)), 'specialNeed') !== false){
+=======
+            } 
+            else if(strpos(strtolower(substr($this->action, 0,8)), 'special') !== false){
+>>>>>>> origin/tst
                 $action = Inflector::underscore($this->action);
             }
             else{
