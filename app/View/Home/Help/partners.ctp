@@ -28,7 +28,7 @@ echo $this->Html->css('home', 'stylesheet', array('inline' => false));
 						 echo '<b>'.$images[$i]["name"].'</b>';
 					?>
 					</div>
-					<div class="table_cell" style="text-align:left;">
+					<div class="table_cell">
 					<?php
 						 echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $images[$i]["id"]), array(
 			                'style' => "height:186px;padding:1px;"
