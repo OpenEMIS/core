@@ -159,9 +159,10 @@ class UtilityComponent extends Component {
 		$msgList['UPDATE_ERROR'] = 'Record is not updated due to errors encountered.';
 		$msgList['ADD_UPDATE_ERROR'] = 'Record is not added/updated due to errors encountered.';
                 
-                
                 //Rubric
                $msgList['RUBRIC_FIRST_POS'] = 'Please ensure the header is at the 1st position.'; 
+
+                $msgList['DATA_EXIST'] = 'Please ensure no data duplication.';
                 
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 

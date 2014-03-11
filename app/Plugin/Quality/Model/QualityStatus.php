@@ -34,7 +34,7 @@ class QualityStatus extends QualityAppModel {
     //public $hasMany = array('RubricsTemplateColumnInfo');
 
     public $validate = array(
-       'rubric_template_id' => array(
+        'rubric_template_id' => array(
             'ruleRequired' => array(
                 'rule' => 'checkDropdownData',
                 //  'required' => true,
@@ -43,7 +43,7 @@ class QualityStatus extends QualityAppModel {
         ),
     );
     public $statusOptions = array('Date Disabled', 'Date Enabled');
-    
+
     public function checkDropdownData($check) {
         $value = array_values($check);
         $value = $value[0];
@@ -53,20 +53,20 @@ class QualityStatus extends QualityAppModel {
 
     public function status($controller, $params) {
         $institutionId = $controller->Session->read('InstitutionId');
-        
+
         $controller->Navigation->addCrumb('Quality - Status');
         $controller->set('subheader', 'Quality - Status');
         $controller->set('modelName', $this->name);
 
         $this->recursive = -1;
-        $data = $this->getQualityStatuses();//$this->find('all');
+        $data = $this->getQualityStatuses(); //$this->find('all');
 
         $controller->set('data', $data);
         $controller->set('statusOptions', $this->statusOptions);
-        
+
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $rubricOptions = $RubricsTemplate->getRubricOptions();
-        
+
         $controller->set('rubricOptions', $rubricOptions);
     }
 
@@ -85,7 +85,7 @@ class QualityStatus extends QualityAppModel {
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $RubricsTemplate->recursive = -1;
         $rubricTemplateInfo = $RubricsTemplate->findById($data[$this->name]['rubric_template_id']);
-            
+
         $rubricName = $rubricTemplateInfo['RubricsTemplate']['name'];
         $controller->Session->write('QualityStatus.id', $id);
         $controller->set('rubricName', $rubricName);
@@ -114,38 +114,48 @@ class QualityStatus extends QualityAppModel {
 
     private function _setupStatusForm($controller, $params) {
         $controller->set('statusOptions', $this->statusOptions);
-       // $institutionId = $controller->Session->read('InstitutionId');
-        
+        // $institutionId = $controller->Session->read('InstitutionId');
+
+        $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+        $rubricOptions = $RubricsTemplate->getRubricOptions();
+
+        $controller->set('rubricOptions', $rubricOptions);
+
         if ($controller->request->is('get')) {
-            
+
             $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-            
+
             $this->recursive = -1;
             $data = $this->findById($id);
-               
-            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-            $rubricOptions = $RubricsTemplate->getRubricOptions();
+
             
-            $controller->set('rubricOptions', $rubricOptions);
-           
+
             if (!empty($data)) {
                 $controller->request->data = $data;
                 $controller->set('selectedYear', $data[$this->name]['year']);
-            }
-            else{
+            } else {
                 //$controller->request->data[$this->name]['institution_id'] = $institutionId;
-            
             }
         } else {
             // $controller->request->data[$this->name]['student_id'] = $controller->studentId;
-         //pr($controller->request->data); die;
-            if ($this->save($controller->request->data)) {
-                if (empty($controller->request->data[$this->name]['id'])) {
-                    $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-                } else {
-                    $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
+           // pr($controller->request->data);
+           // die;
+            $conditions = array(
+                'QualityStatus.rubric_template_id' => $controller->request->data['QualityStatus']['rubric_template_id'],
+                'QualityStatus.year' => $controller->request->data['QualityStatus']['year']
+            );
+            if (!$this->hasAny($conditions)) {
+                //do something
+                if ($this->save($controller->request->data)) {
+                    if (empty($controller->request->data[$this->name]['id'])) {
+                        $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                    } else {
+                        $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
+                    }
+                    return $controller->redirect(array('action' => 'status'));
                 }
-                return $controller->redirect(array('action' => 'status'));
+            } else {
+                $controller->Utility->alert($controller->Utility->getMessage('DATA_EXIST'), array('type' => 'error'));
             }
         }
     }
@@ -176,20 +186,21 @@ class QualityStatus extends QualityAppModel {
                 'conditions' => array('RubricsTemplate.id = QualityStatus.rubric_template_id')
             )
         );
-        $options['order'] = array('RubricsTemplate.name','QualityStatus.year');
+        $options['order'] = array('RubricsTemplate.name', 'QualityStatus.year');
         $options['fields'] = array('QualityStatus.*', 'RubricsTemplate.*');
         $data = $this->find('all', $options);
-        
+
         return $data;
     }
 
-    public function getRubricStatus($year, $rubricId){
-        $data = $this->find('first', array('conditions'=>array('year'=>$year,'rubric_template_id'=> $rubricId), 'recurisve'=> -1));
+    public function getRubricStatus($year, $rubricId) {
+        $data = $this->find('first', array('conditions' => array('year' => $year, 'rubric_template_id' => $rubricId), 'recurisve' => -1));
         $enabled = 0;
-        if(!empty($data)){
+        if (!empty($data)) {
             $enabled = $data[$this->name]['status'];
         }
-        
-        return ($enabled == 1)? 'true' : 'false';
+
+        return ($enabled == 1) ? 'true' : 'false';
     }
+
 }
