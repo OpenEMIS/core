@@ -89,8 +89,20 @@ class StudentsController extends StudentsAppController {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Students', array('controller' => 'Students', 'action' => 'index'));
         $actions = array('index', 'advanced', 'add', 'viewStudent');
+        $this->set('WizardMode', false);
+        if($this->Session->check('WizardMode') && $this->Session->read('WizardMode')==true){
+            $this->set('WizardMode', true);
+        }
         if (in_array($this->action, $actions)) {
             $this->bodyTitle = 'Students';
+            if($this->action=='add'){
+                $this->Session->delete('StudentId');
+                $this->Session->write('WizardMode', true);
+
+                $wizardLink = $this->Navigation->getWizardLinks('Student');
+                $this->Session->write('WizardLink', $wizardLink);
+                $this->redirect(array('action'=>'edit'));
+            }
         } else {
             if ($this->Session->check('StudentId') && $this->action !== 'Home') {
                 $this->studentId = $this->Session->read('StudentId');
@@ -101,6 +113,9 @@ class StudentsController extends StudentsAppController {
                 $name = $studentFirstName . " " . $studentMiddleName . " " . $studentLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
+            }else if (!$this->Session->check('StudentId') && $this->action !== 'Home') {
+                $name = __('New Student');
+                $this->bodyTitle = $name;
             }
         }
     }
@@ -232,9 +247,13 @@ class StudentsController extends StudentsAppController {
     }
 
     public function edit() {
-        $this->Navigation->addCrumb('Edit');
-        $this->Student->id = $this->Session->read('StudentId');
-
+        $this->Student->id = null;
+        if($this->Session->check('StudentId')){
+            $this->Student->id = $this->Session->read('StudentId');
+            $this->Navigation->addCrumb('Edit');
+        }else{
+             $this->Navigation->addCrumb('Add');
+        }
         $imgValidate = new ImageValidate();
         $data = $this->data;
 
@@ -375,6 +394,7 @@ class StudentsController extends StudentsAppController {
         $this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
         $this->set('data', $this->data);
+        $this->render('edit');
     }
 
     public function delete() {
@@ -1387,5 +1407,6 @@ class StudentsController extends StudentsAppController {
             return json_encode($data);
         }
     }
+
 
 }

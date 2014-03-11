@@ -1,5 +1,7 @@
 $(document).ready(function() {
-	wizard.blockLinks();
+	if(wizardRun){
+		wizard.blockLinks();
+	}
 });
 
 var wizard = {

@@ -63,3 +63,13 @@
 	echo $html;
 	?>
 </div>
+<?php 
+$wizardRun = false;
+if($this->Session->check('WizardMode') && $this->Session->read('WizardMode')==true){
+	$wizardRun = $this->Session->read('WizardMode');
+}
+?>
+
+<script type="text/javascript">
+   var wizardRun = "<?php echo $wizardRun; ?>";
+</script>
