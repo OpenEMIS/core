@@ -58,7 +58,7 @@ class RubricsTemplateHeader extends QualityAppModel {
     }
 
     public function rubricsTemplatesHeader($controller, $params) {
-        $controller->Navigation->addCrumb('Headers');
+        $controller->Navigation->addCrumb('Section Header');
         $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
 
         if (empty($id)) {
@@ -67,7 +67,7 @@ class RubricsTemplateHeader extends QualityAppModel {
 
         $data = $this->getRubricHeaders($id, 'all');
         $controller->Session->write('RubricsHeader.order', count($data));
-        $controller->set('subheader', 'Quality - Rubric Headers');
+        $controller->set('subheader', 'Quality - Section Header');
         $controller->set('id', $id);
         $controller->set('data', $data);
     }
@@ -114,8 +114,8 @@ class RubricsTemplateHeader extends QualityAppModel {
     }
 
     public function rubricsTemplatesHeaderView($controller, $params) {
-        $controller->Navigation->addCrumb('Rubric Header Details');
-        $controller->set('subheader', 'Quality - Rubric Header Details');
+        $controller->Navigation->addCrumb('Section Header Details');
+        $controller->set('subheader', 'Quality - Section Header Details');
 
         if (count($params['pass']) < 2) {
             return $controller->redirect(array('action' => 'rubricsTemplates'));

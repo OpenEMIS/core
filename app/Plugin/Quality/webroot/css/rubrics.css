@@ -134,3 +134,7 @@ table td.answer-options:hover{
 .cell-rubric-order .icon_down{
     margin-top: 4px !important;
 }
+
+ul.table_view li:first-child .cell{
+    border-top:1px solid #CCC !important;
+}

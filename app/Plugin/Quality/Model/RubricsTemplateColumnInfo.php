@@ -107,8 +107,8 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
     }
 
     public function rubricsTemplatesCriteriaView($controller, $params) {
-        $controller->Navigation->addCrumb('Rubric Criteria');
-        $controller->set('subheader', 'Quality - Rubric Criteria');
+        $controller->Navigation->addCrumb('Rubric Criteria Details');
+        $controller->set('subheader', 'Quality - Rubric Criteria Details');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0]; //rubrics template id
