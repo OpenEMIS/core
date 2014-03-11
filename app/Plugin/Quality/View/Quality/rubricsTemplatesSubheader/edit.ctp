@@ -71,7 +71,7 @@ echo $this->Html->script('jquery.sort', false);
 <?php
 //Addind auto insert function
 if ($_edit) {
-    if (!empty($columnHeaderData)) {
+    if (!empty($columnHeaderData) && empty($this->data['RubricsTemplateDetail'])) {
 ?>
 <script type="text/javascript">
     <?php echo 'rubricsTemplate.initHeader(' . $rubricTemplateHeaderId . ');'; ?>
