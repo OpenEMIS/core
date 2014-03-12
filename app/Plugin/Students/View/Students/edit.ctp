@@ -160,13 +160,13 @@ $obj = @$data['Student'];
 	<div class="controls view_controls">
 		<?php if(!$WizardMode){ ?>
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<input type="button" value="<?php echo __("Cancel"); ?>" class="btn_cancel btn_left" url="Students/view" onclick="jsForm.goto(this)"/>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
 		<?php }else{?>
-			<?php if(!$this->Session->check('StudentId')){ ?>
-			<input type="button" value="<?php echo __("Cancel"); ?>" class="btn_cancel btn_left" url="Students/view" onclick="jsForm.goto(this)"/>
-			<?php } ?>
-			<input type="submit" value="<?php echo __("Next"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php } ?>
+			<?php if(!$this->Session->check('StudentId')){ 
+			   echo $this->Form->submit('Cancel', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_left"));
+			 }
+			 echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+		}?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

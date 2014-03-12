@@ -229,6 +229,10 @@ class NavigationComponent extends Component {
     }
 
     public function getWizard($action){
+		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
+
         $newAction = '';
         $configItemName = str_replace('Add', '', $this->controller->action);
         $configItemName = str_replace('Edit', '', $configItemName);
@@ -295,6 +299,9 @@ class NavigationComponent extends Component {
     }
 
     private function getWizardLink($action, $full=false){
+    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
         $action = str_replace("Add", "", $action);
         $action = str_replace("Edit", "", $action);
 
@@ -314,6 +321,9 @@ class NavigationComponent extends Component {
     }
 
     public function skipWizardLink($action,$nextLink){
+    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
         $linkIndex = $this->getWizardLink($action);
         $wizardLink = $this->Session->read('WizardLink');
         $wizardLink[$linkIndex]['completed'] = '1';
@@ -328,46 +338,52 @@ class NavigationComponent extends Component {
         $this->controller->redirect(array('action'=>$nextLink));
     }
 
+    public function exitWizard(){
+	 	$this->Session->delete('WizardMode');
+        $this->Session->delete('WizardLink');
+        $this->Session->delete($this->controller->className.'Id');
+
+        $this->controller->redirect(array('action'=>'index'));
+    }
+
     public function updateWizard($action, $id){
+    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
         $i = 0;
         $wizardLink = $this->Session->read('WizardLink');
         $action = str_replace("Add", "", $action);
         $action = str_replace("Edit", "", $action);
 
-        if(!empty($wizardLink)){
-	        foreach($wizardLink as $link){
-	            if($link['action']==$action){
-	                $wizardLink[$i]['completed'] = '1';
-	                if($link['new_action']!='edit'){
-	                    $wizardLink[$i]['new_action'] = $link['action'] . "Edit";
-	                    $wizardLink[$i]['new_id'] = $id; 
-	                }else{
-	                    $this->Session->write($this->controller->className.'Id',$id);
-	                }
-	                break;
-	            }
-	            $i++;
-	        }
+        foreach($wizardLink as $link){
+            if($link['action']==$action){
+                $wizardLink[$i]['completed'] = '1';
+                if($link['new_action']!='edit'){
+                    $wizardLink[$i]['new_action'] = $link['action'] . "Edit";
+                    $wizardLink[$i]['new_id'] = $id; 
+                }else{
+                    $this->Session->write($this->controller->className.'Id',$id);
+                }
+                break;
+            }
+            $i++;
+        }
 
 
-	        if($i+1 >= count($wizardLink)){
-	            $this->Session->delete('WizardMode');
-	            $this->Session->delete('WizardLink');
-
-	            $this->controller->redirect(array('action'=>'index'));
-	        }else{
-	            $currentLinkIndex = $this->getLastWizardStep(true);
-	            if(($i+1)>=$currentLinkIndex){
-	                $wizardLink[$i+1]['completed'] = '-1';
-	            }
-	            $this->Session->write('WizardLink', $wizardLink);
-	            if(isset($wizardLink[$i+1]['new_id'])){
-	                $this->controller->redirect(array('action'=>$wizardLink[$i+1]['new_action'], $wizardLink[$i+1]['new_id']));
-	            }else{
-	                $this->controller->redirect(array('action'=>$wizardLink[$i+1]['new_action']));
-	            }
-	        }
-	    }
+        if($i+1 >= count($wizardLink)){
+            $this->exitWizard();
+        }else{
+            $currentLinkIndex = $this->getLastWizardStep(true);
+            if(($i+1)>=$currentLinkIndex){
+                $wizardLink[$i+1]['completed'] = '-1';
+            }
+            $this->Session->write('WizardLink', $wizardLink);
+            if(isset($wizardLink[$i+1]['new_id'])){
+                $this->controller->redirect(array('action'=>$wizardLink[$i+1]['new_action'], $wizardLink[$i+1]['new_id']));
+            }else{
+                $this->controller->redirect(array('action'=>$wizardLink[$i+1]['new_action']));
+            }
+        }
     }
 
 }

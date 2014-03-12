@@ -100,14 +100,28 @@ class TeachersController extends TeachersAppController {
         'report' => 'Teachers.TeacherReport'
     );
 
+    public $className = 'Teacher';
+
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Navigation->addCrumb('Teachers', array('controller' => 'Teachers', 'action' => 'index'));
 
         $actions = array('index', 'advanced', 'add', 'viewTeacher');
+        $this->set('WizardMode', false);
         if (in_array($this->action, $actions)) {
             $this->bodyTitle = 'Teachers';
+             if($this->action=='add'){
+                $this->Session->delete('TeacherId');
+                $this->Session->write('WizardMode', true);
+                $wizardLink = $this->Navigation->getWizardLinks('Teacher');
+                $this->Session->write('WizardLink', $wizardLink);
+                $this->redirect(array('action'=>'edit'));
+            }
         } else {
+             if($this->Session->check('WizardMode') && $this->Session->read('WizardMode')==true){
+                $this->set('WizardMode', true);
+                $this->Navigation->getWizard($this->action);
+            }
             if ($this->Session->check('TeacherId') && $this->action !== 'Home') {
                 $this->teacherId = $this->Session->read('TeacherId');
                 $this->teacherObj = $this->Session->read('TeacherObj');
@@ -117,6 +131,9 @@ class TeachersController extends TeachersAppController {
                 $name = $teacherFirstName . " " . $teacherMiddleName . " " . $teacherLastName;
                 $this->bodyTitle = $name;
                 $this->Navigation->addCrumb($name, array('action' => 'view'));
+            }else if (!$this->Session->check('TeacherId') && $this->action !== 'Home') {
+                $name = __('New Teacher');
+                $this->bodyTitle = $name;
             }
         }
     }
@@ -247,13 +264,19 @@ class TeachersController extends TeachersAppController {
     }
 
     public function edit() {
-        $this->Navigation->addCrumb('Edit');
-        $this->Teacher->id = $this->Session->read('TeacherId');
-
+        $this->Teacher->id = null;
+        if($this->Session->check('TeacherId')){
+            $this->Teacher->id = $this->Session->read('TeacherId');
+            $this->Navigation->addCrumb('Edit');
+        }else{
+             $this->Navigation->addCrumb('Add');
+        }
         $imgValidate = new ImageValidate();
         $data = $this->data;
         if ($this->request->is('post')) {
-
+            if(isset($this->data['submit']) && $this->data['submit']=='Cancel'){
+                $this->Navigation->exitWizard();
+            }
             $reset_image = $data['Teacher']['reset_image'];
 
             $img = new ImageMeta($data['Teacher']['photo_content']);
@@ -277,6 +300,12 @@ class TeachersController extends TeachersAppController {
                 unset($data['Teacher']['reset_image']);
                 $this->Teacher->set($data);
                 $this->Teacher->save();
+                if(!$this->Session->check('TeacherId')){
+                    $id = $this->Teacher->getLastInsertId();
+                }else{
+                    $id = $this->Session->read('TeacherId');
+                }
+                $this->Navigation->updateWizard('view', $id);
                 $this->UserSession->writeStatusSession('ok', 'Successfully Updated', 'view');
                 $this->redirect(array('action' => 'view'));
             } else {
@@ -500,6 +529,7 @@ class TeachersController extends TeachersAppController {
                         $arrV['value'] = $val['value'];
                         $arrV['teacher_id'] = $this->teacherId;
                         $this->TeacherCustomValue->save($arrV);
+                        $this->Navigation->updateWizard($this->action, null);
                     }
                 }
             }
@@ -554,10 +584,19 @@ class TeachersController extends TeachersAppController {
         $arrMap = array('model' => 'Teachers.TeacherAttachment', 'foreignKey' => 'teacher_id');
         $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
         if ($this->request->is('post')) { // save
-            $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
-            if (sizeof($errors) == 0) {
-                $this->Utility->alert(__('Files have been saved successfully.'));
-                $this->redirect(array('action' => 'attachments'));
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $this->data['Teachers']['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
+            if(!empty($_FILES)){
+                $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
+                if (sizeof($errors) == 0) {
+                    $this->Navigation->updateWizard($this->action, null);
+                    $this->Utility->alert(__('Files have been saved successfully.'));
+                    $this->redirect(array('action' => 'attachments'));
+                } else {
+                    $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
+                }
             } else {
                 $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
             }
@@ -1204,8 +1243,15 @@ class TeachersController extends TeachersAppController {
     public function bankAccountsAdd() {
         $this->Navigation->addCrumb('Add Bank Accounts');
         if ($this->request->is('post')) { // save
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $this->request->data['TeacherBankAccount']['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
+            
             $this->TeacherBankAccount->create();
             if ($this->TeacherBankAccount->save($this->request->data)) {
+                $id = $this->TeacherBankAccount->getLastInsertId();
+                $this->Navigation->updateWizard($this->action,$id);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'bankAccounts'));
             }
@@ -1239,8 +1285,13 @@ class TeachersController extends TeachersAppController {
                 $this->request->data = $bankAccountObj;
             }
         } else {
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $this->request->data['TeacherBankAccount']['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
             $this->request->data['TeacherBankAccount']['teacher_id'] = $this->teacherId;
             if ($this->TeacherBankAccount->save($this->request->data)) {
+                $this->Navigation->updateWizard($this->action,$bankAccountId);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'bankAccountsView', $this->request->data['TeacherBankAccount']['id']));
             }
@@ -1333,13 +1384,19 @@ class TeachersController extends TeachersAppController {
     }
 
     public function commentsAdd() {
+        $this->Navigation->addCrumb('Add Comments');
         if ($this->request->is('post')) {
-            $this->TeacherComment->create();
-            $this->request->data['TeacherComment']['teacher_id'] = $this->teacherId;
-
             $data = $this->data['TeacherComment'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $data['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
+            $this->TeacherComment->create();
+            $data['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherComment->save($data)) {
+                $id = $this->TeacherComment->getLastInsertId();
+                $this->Navigation->updateWizard($this->action,$id);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'comments'));
             }
@@ -1371,9 +1428,14 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $commentData = $this->data['TeacherComment'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $commentData['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
             $commentData['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherComment->save($commentData)) {
+                $this->Navigation->updateWizard($this->action,$commentId);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'commentsView', $commentData['id']));
             }
@@ -1400,13 +1462,20 @@ class TeachersController extends TeachersAppController {
     }
 
     public function nationalitiesAdd() {
+        $this->Navigation->addCrumb(__('Add Nationalities'));
         if ($this->request->is('post')) {
-            $this->TeacherNationality->create();
-            $this->request->data['TeacherNationality']['teacher_id'] = $this->teacherId;
-
             $data = $this->data['TeacherNationality'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $data['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
+            
+            $this->TeacherNationality->create();
+            $data['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherNationality->save($data)) {
+                $id = $this->TeacherNationality->getLastInsertId();
+                $this->Navigation->updateWizard($this->action,$id);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'nationalities'));
             }
@@ -1443,9 +1512,14 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $nationalityData = $this->data['TeacherNationality'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $nationalityData['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
             $nationalityData['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherNationality->save($nationalityData)) {
+                $this->Navigation->updateWizard($this->action,$nationalityId);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
             }
@@ -1476,13 +1550,20 @@ class TeachersController extends TeachersAppController {
     }
 
     public function identitiesAdd() {
+         $this->Navigation->addCrumb(__('Add Identities'));
         if ($this->request->is('post')) {
-            $this->TeacherIdentity->create();
-            $this->request->data['TeacherIdentity']['teacher_id'] = $this->teacherId;
-
             $data = $this->data['TeacherIdentity'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $data['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
+
+            $this->TeacherIdentity->create();
+            $data['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherIdentity->save($data)) {
+                $id = $this->TeacherIdentity->getLastInsertId();
+                $this->Navigation->updateWizard($this->action,$id);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'identities'));
             }
@@ -1516,9 +1597,15 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $identityData = $this->data['TeacherIdentity'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $identityData['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
+
             $identityData['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherIdentity->save($identityData)) {
+                $this->Navigation->updateWizard($this->action,$identityId);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'identitiesView', $identityData['id']));
             }
@@ -1548,13 +1635,19 @@ class TeachersController extends TeachersAppController {
     }
 
     public function languagesAdd() {
+        $this->Navigation->addCrumb(__('Add Languages'));
         if ($this->request->is('post')) {
-            $this->TeacherLanguage->create();
-            $this->request->data['TeacherLanguage']['teacher_id'] = $this->teacherId;
-
             $data = $this->data['TeacherLanguage'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $data['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
+            $this->TeacherLanguage->create();
+            $data['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherLanguage->save($data)) {
+                $id = $this->TeacherLanguage->getLastInsertId();
+                $this->Navigation->updateWizard($this->action,$id);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'languages'));
             }
@@ -1594,9 +1687,14 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $languageData = $this->data['TeacherLanguage'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $languageData['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
             $languageData['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherLanguage->save($languageData)) {
+                $this->Navigation->updateWizard($this->action,$languageId);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'languagesView', $languageData['id']));
             }
@@ -1637,16 +1735,23 @@ class TeachersController extends TeachersAppController {
     }
 
     public function contactsAdd() {
+        $this->Navigation->addCrumb(__('Add Contacts'));
         if ($this->request->is('post')) {
-            $this->TeacherContact->create();
-            $this->request->data['TeacherContact']['teacher_id'] = $this->teacherId;
-
             $contactData = $this->data['TeacherContact'];
+            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $contactData['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
+
+            $this->TeacherContact->create();
+            $contactData['teacher_id'] = $this->teacherId;
 
             if ($this->TeacherContact->save($contactData)) {
                 if ($contactData['preferred'] == '1') {
                     $this->TeacherContact->updateAll(array('TeacherContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('TeacherContact.id' => array($this->TeacherContact->getLastInsertId())))));
                 }
+                $id = $this->TeacherContact->getLastInsertId();
+                $this->Navigation->updateWizard($this->action,$id);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'contacts'));
             }
@@ -1691,12 +1796,17 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $contactData = $this->data['TeacherContact'];
+           if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+                $nextLink = $contactData['nextLink'];
+                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            }
             $contactData['student_id'] = $this->studentId;
 
             if ($this->TeacherContact->save($contactData)) {
                 if ($contactData['preferred'] == '1') {
                     $this->TeacherContact->updateAll(array('TeacherContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('TeacherContact.id' => array($contactId)))));
                 }
+                $this->Navigation->updateWizard($this->action,$contactId);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'contactsView', $contactData['id']));
             }

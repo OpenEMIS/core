@@ -96,6 +96,7 @@ class StaffAward extends StaffAppModel {
     }
 	
 	public function awardAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
@@ -120,12 +121,19 @@ class StaffAward extends StaffAppModel {
 			}
 		}
 		else{
+			if(isset($controller->data['submit']) && $controller->data['submit']=='Skip'){
+               $nextLink = $controller->data[$this->name]['nextLink'];
+                $controller->Navigation->skipWizardLink($controller->action, $nextLink);
+            }
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
 			if($this->save($controller->request->data)){
 				if(empty($controller->request->data[$this->name]['id'])){
+					$id = $this->getLastInsertId();
+                	$controller->Navigation->updateWizard($controller->action,$id);
 					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
 				}
 				else{
+                	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
 				return $controller->redirect(array('action' => 'award'));

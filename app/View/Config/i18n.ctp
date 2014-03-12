@@ -125,6 +125,6 @@ var i18n = {
 	},
 	Wizard: {
 		title: '<?php echo T("Wizard", true); ?>',
-		uncomplete: '<?php echo T("content", true); ?>'
+		uncomplete: '<?php echo T("Unable to proceed until wizard is completed", true); ?>'
 	}
 }
