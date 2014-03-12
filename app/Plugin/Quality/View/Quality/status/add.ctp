@@ -11,31 +11,42 @@ echo $this->Html->script('config', false);
         <span><?php echo __($subheader); ?></span>
     </h1>
     <?php echo $this->element('alert'); ?>
+    <?php $action = ($displayType == 'add')?'statusAdd':'statusEdit'; ?>
+    
     <?php
     echo $this->Form->create($modelName, array(
-        'url' => array('controller' => 'Quality', 'action' => 'statusAdd', 'plugin' => 'Quality'),
+        'url' => array('controller' => 'Quality', 'action' => $action, 'plugin' => 'Quality'),
         'type' => 'file',
         'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
     ));
     ?>
     <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
     <?php //echo $this->Form->input('institution_id', array('type'=> 'hidden'));  ?>
+    
+    <?php 
+        if($displayType == 'add'){
+            $nameField = $this->Form->input('rubric_template_id', array('options' => $rubricOptions));
+            $yearField  = $this->Utility->getYearList($this->Form, 'data[year]', array(
+                        'name' => "data[".$modelName."][year]",
+                        'id' => "year_id",
+                        'maxlength' => 30,
+                        'desc' => true,
+                        'label' => false,
+                        'default' => $selectedYear,
+                        'div' => false), true);
+        }
+        else{
+            $nameField = $rubricOptions[$this->data['QualityStatus']['rubric_template_id']];
+            $yearField = $this->data['QualityStatus']['year'];
+        }
+    ?>
     <div class="row">
         <div class="label"><?php echo __('Name'); ?></div>
-        <div class="value"><?php echo $this->Form->input('rubric_template_id', array('options' => $rubricOptions)); ?> </div>
+        <div class="value"><?php echo $nameField;//$this->Form->input('rubric_template_id', array('options' => $rubricOptions)); ?> </div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Year'); ?></div>
-        <div class="value"><?php
-    echo $this->Utility->getYearList($this->Form, 'data[year]', array(
-        'name' => "data[".$modelName."][year]",
-        'id' => "year_id",
-        'maxlength' => 30,
-        'desc' => true,
-        'label' => false,
-        'default' => $selectedYear,
-        'div' => false), true);
-    ?> </div>
+        <div class="value"><?php echo $yearField; ?> </div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Status'); ?></div>
