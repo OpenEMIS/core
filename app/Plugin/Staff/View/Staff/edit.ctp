@@ -12,8 +12,10 @@ $obj = @$data['Staff'];
 	<h1>
 		<span><?php echo __('Overview'); ?></span>
 		<?php
-		echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
-		echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
+		if(!$WizardMode){
+			echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
+			echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
+		}
 		?>
 	</h1>
 	
@@ -27,6 +29,7 @@ $obj = @$data['Staff'];
 
 	<fieldset class="section_break">
 		<legend><?php echo __('Information'); ?></legend>
+		<?php if($this->Session->check('StaffId')){ ?>Ωå
         <div class="row">
 			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<?php if($autoid==''){ ?>
@@ -39,6 +42,24 @@ $obj = @$data['Staff'];
             </div>
             <?php } ?>
 		</div>
+		<?php }else{ ?>
+        <div class="row">
+			<div class="label"><?php echo __('OpenEMIS ID'); ?>
+            <?php if($autoid!=''){ ?>
+            <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid, 'error' => false)); ?>
+            <?php } ?>
+            </div>
+            <div class="value">
+            <?php if($autoid!=''){ ?>
+            	 <?php echo $autoid; ?>
+            <?php }else{ ?>
+                <?php echo $this->Form->input('identification_no', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_identification');")) ?>
+            	<input type="hidden" name="validate_staff_identification" id="validate_staff_identification"/>
+            <?php } ?>
+            </div>
+		</div>
+		<?php } ?>
+
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('first_name', array('value' => $obj['first_name'])); ?></div>
@@ -138,8 +159,15 @@ $obj = @$data['Staff'];
 	</fieldset>
 
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php if(!$WizardMode){ ?>
+		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php }else{?>
+			<?php if(!$this->Session->check('StaffId')){ 
+			   echo $this->Form->submit('Cancel', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_left"));
+			 }
+			 echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+		}?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

@@ -30,7 +30,7 @@
 	<div class="controls view_controls">
 		 <?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-        <input type="button" value="<?php echo __("Cancel"); ?>" class="btn_cancel btn_left" url="Students/nationalities" onclick="jsForm.goto(this)"/>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'nationalitiesView',$id), array('class' => 'btn_cancel btn_left')); ?>
         <?php }else{?>
             <?php 
                 if(!$mandatory){

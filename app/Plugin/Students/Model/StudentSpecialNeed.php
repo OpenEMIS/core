@@ -97,7 +97,7 @@ class StudentSpecialNeed extends StudentsAppModel {
     }
 	
 	public function specialNeedAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Add ' . $this->headerDefault );
+		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
@@ -126,8 +126,8 @@ class StudentSpecialNeed extends StudentsAppModel {
 			}
 		}
 		else{
-			if($controller->data['submit']=='Skip'){
-               $nextLink = $controller->data['StudentSpecialNeed']['nextLink'];
+			if(isset($controller->data['submit']) && $controller->data['submit']=='Skip'){
+               $nextLink = $controller->data[$this->name]['nextLink'];
                 $controller->Navigation->skipWizardLink($controller->action, $nextLink);
             }
 			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
@@ -138,7 +138,7 @@ class StudentSpecialNeed extends StudentsAppModel {
 					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
 				}
 				else{
-               		$controller->Navigation->updateWizard($controller->action,$id);
+               		$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
 				return $controller->redirect(array('action' => 'specialNeed'));

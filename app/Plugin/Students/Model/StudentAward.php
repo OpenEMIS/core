@@ -96,6 +96,7 @@ class StudentAward extends StudentsAppModel {
     }
 	
 	public function awardAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
 		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
@@ -119,7 +120,7 @@ class StudentAward extends StudentsAppModel {
 			}
 		}
 		else{
-			if($controller->data['submit']=='Skip'){
+			if(isset($controller->data['submit']) && $controller->data['submit']=='Skip'){
                 $nextLink = $controller->data['StudentAward']['nextLink'];
                 $controller->Navigation->skipWizardLink($controller->action, $nextLink);
             }
@@ -131,7 +132,7 @@ class StudentAward extends StudentsAppModel {
 					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
 				}
 				else{
-                	$controller->Navigation->updateWizard($controller->action,$id);
+                	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
 				return $controller->redirect(array('action' => 'award'));

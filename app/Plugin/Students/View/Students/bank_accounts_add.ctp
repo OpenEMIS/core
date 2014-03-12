@@ -11,7 +11,7 @@ echo $this->Html->script('bankaccounts', false);
         <span><?php echo __('Bank Account'); ?></span>
          <?php 
         if ($_edit && !$WizardMode) {
-            echo $this->Html->link(__('Back'), array('action' => 'bankAccountsView', $id), array('class' => 'divider'));
+            echo $this->Html->link(__('Back'), array('action' => 'bankAccounts'), array('class' => 'divider'));
         }
         ?>
     </h1>
@@ -71,7 +71,7 @@ echo $this->Html->script('bankaccounts', false);
 	<div class="controls">
 		 <?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-        <input type="button" value="<?php echo __("Cancel"); ?>" class="btn_cancel btn_left" url="Students/bankAccounts" onclick="jsForm.goto(this)"/>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'bankAccounts'), array('class' => 'btn_cancel btn_left')); ?>
         <?php }else{?>
             <?php 
                 if(!$mandatory){
