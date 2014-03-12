@@ -152,22 +152,6 @@ class NavigationComponent extends Component {
 	}
 	
 	public function getHomeLinks() {
-		$links = array(
-			array(
-				array(
-					$this->createLink('My Details', 'Home', 'details'),
-					$this->createLink('Change Password', 'Home', 'password')
-				)
-			),
-			array(
-				array(
-					$this->createLink('Support', 'Home', 'support'),
-					$this->createLink('System Information', 'Home', 'systemInfo'),
-					$this->createLink('License', 'Home', 'license')
-				)
-			)
-		);
-
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Home', true);
 
