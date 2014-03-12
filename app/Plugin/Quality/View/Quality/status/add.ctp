@@ -26,14 +26,15 @@ echo $this->Html->script('config', false);
     <?php 
         if($displayType == 'add'){
             $nameField = $this->Form->input('rubric_template_id', array('options' => $rubricOptions));
-            $yearField  = $this->Utility->getYearList($this->Form, 'data[year]', array(
+            $yearField = $this->Form->input('year', array('options' => $yearOptions));
+           /* $yearField  = $this->Utility->getYearList($this->Form, 'data[year]', array(
                         'name' => "data[".$modelName."][year]",
                         'id' => "year_id",
                         'maxlength' => 30,
                         'desc' => true,
                         'label' => false,
                         'default' => $selectedYear,
-                        'div' => false), true);
+                        'div' => false), true);*/
         }
         else{
             $nameField = $rubricOptions[$this->data['QualityStatus']['rubric_template_id']];
