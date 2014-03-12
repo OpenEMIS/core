@@ -5,7 +5,7 @@
      <h1>
         <span><?php echo __('Contacts'); ?></span>
         <?php 
-        if ($_edit) {
+        if ($_edit && !$WizardMode) {
             echo $this->Html->link(__('Back'), array('action' => 'contactsView', $id), array('class' => 'divider'));
         }
         ?>

@@ -8,7 +8,12 @@ echo $this->Html->script('bankaccounts', false);
 
 <div id="bankAccountAdd" class="content_wrapper add">
     <h1>
-        <span><?php echo __('Add Bank Account'); ?></span>
+        <span><?php echo __('Bank Account'); ?></span>
+         <?php 
+        if ($_edit && !$WizardMode) {
+            echo $this->Html->link(__('Back'), array('action' => 'bankAccountsView', $id), array('class' => 'divider'));
+        }
+        ?>
     </h1>
     <?php echo $this->element('alert'); ?>
 	

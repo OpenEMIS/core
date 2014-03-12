@@ -10,7 +10,7 @@ echo $this->Html->script('bankaccounts', false);
    <h1>
         <span><?php echo __('Bank Accounts'); ?></span>
         <?php 
-        if ($_edit) {
+        if ($_edit && !$WizardMode) {
             echo $this->Html->link(__('Back'), array('action' => 'bankAccountsView', $id), array('class' => 'divider'));
         }
         ?>

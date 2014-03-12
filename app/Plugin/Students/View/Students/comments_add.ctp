@@ -5,9 +5,9 @@
    <h1>
         <span><?php echo __('Comments'); ?></span>
         <?php 
-        if ($_edit) {
-            echo $this->Html->link(__('Back'), array('action' => 'comments'), array('class' => 'divider'));
-        }
+            if ($_edit && !$WizardMode) {
+                 echo $this->Html->link(__('Back'), array('action' => 'comments'), array('class' => 'divider'));
+            }
         ?>
     </h1>
 
