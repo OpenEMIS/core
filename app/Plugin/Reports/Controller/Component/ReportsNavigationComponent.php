@@ -22,6 +22,12 @@ class ReportsNavigationComponent extends Component {
 	}
 	
 	public function getLinks($navigation) {
+		$navigation = ClassRegistry::init('Navigation');
+		$links = $navigation->getByModule('Report', true);
+		return array('Reports' => array('controller' => 'Reports', 'links' => $links));
+	}
+	/*
+	public function getLinks($navigation) {
 		$controller = 'Reports';
 		$links = array(
 			array(
@@ -44,6 +50,6 @@ class ReportsNavigationComponent extends Component {
 		);
 		$navigation->ignoreLinks($links, 'Reports');
 		return array('Reports' => array('controller' => $controller, 'action' => 'Institution', 'links' => $links));
-	}
+	}*/
 }
 ?>

@@ -167,6 +167,10 @@ class NavigationComponent extends Component {
 				)
 			)
 		);
+
+		$navigation = ClassRegistry::init('Navigation');
+		$links = $navigation->getByModule('Home', true);
+
 		return $links;
 	}
 	
