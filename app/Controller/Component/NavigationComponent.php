@@ -212,11 +212,175 @@ class NavigationComponent extends Component {
 				$link['Navigation']['new_action'] = 'edit';
 				$link['Navigation']['completed'] = '-1';
 			}else{
-				$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Add';
+				if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
+					$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Edit';
+				}else{
+					$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Add';
+				}
 			}
 			$wizardLinks[] = $link['Navigation'];
 		}
 		return $wizardLinks;
 	}
+
+
+    private function getLastWizardStep($step=false){
+         $wizardLink = $this->Session->read('WizardLink');
+         $i = 0;
+         foreach($wizardLink as $link){
+            if($link['completed']=='-1'){
+                if($step){
+                    return $i;
+                }else{
+                    return $link;
+                }
+                break;
+            }
+            $i++;
+        }
+    }
+
+    public function getWizard($action){
+        $newAction = '';
+        $configItemName = str_replace('Add', '', $this->controller->action);
+        $configItemName = str_replace('Edit', '', $configItemName);
+
+        $actionConcat = str_replace("Add", "", $action);
+        $actionConcat = str_replace("Edit", "", $actionConcat);
+
+        $ConfigItem = ClassRegistry::init('ConfigItem');
+       
+        $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => $configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+
+        $this->controller->set('mandatory', $mandatory);
+        $linkCurrent = $this->getLastWizardStep(false);
+        $wizardLink = $this->Session->read('WizardLink');
+        $nextLink = '';
+        $wizardEnd = '0';
+       
+        //pr($wizardLink);
+        if($action == 'view'){
+            $newAction = 'edit';
+            $this->controller->redirect(array('action'=>$newAction));
+        }else if($this->action!='edit'){
+            $i = 0;
+            foreach($wizardLink as $link){
+                if($link['action']==$actionConcat){
+                    if($i+1 < count($wizardLink)){
+                        $nextLink = $wizardLink[$i+1]['new_action'];
+                        if(isset($wizardLink[$i+1]['new_id'])){
+                             $nextLink .= '/' . $wizardLink[$i+1]['new_id'];
+                        }
+                    }
+                }
+                if($link['action']==$action){
+                    if($link['completed']=='0'){
+                        if(isset($linkCurrent['new_id'])){
+                            $this->controller->redirect(array('action'=>$linkCurrent['new_action'], $linkCurrent['new_id']));
+                        }else{
+                            $this->controller->redirect(array('action'=>$linkCurrent['new_action']));
+                        }
+                    }else if($link['completed']=='1'){
+                        if(isset($link['new_id'])){
+                           $this->controller->redirect(array('action'=>$link['new_action'], $link['new_id']));
+                        }else{
+                            $this->controller->redirect(array('action'=>$link['new_action']));
+                        }
+                    }else{
+                         $newAction = $link['action'] . 'Add';
+                    	 if(substr($link['new_action'], -3) != 'Add'){
+                         	$newAction = $link['action'] . 'Edit';
+                    	 }
+                         $this->controller->redirect(array('action'=>$newAction));
+                    }
+                    break;
+                }
+                $i++;
+            }
+        }
+        if($i=count($wizardLink)){
+        	$wizardEnd = '1';
+        }
+        $this->controller->set('wizardEnd', $wizardEnd);
+        $this->controller->set('nextLink', $nextLink);
+        
+    }
+
+    private function getWizardLink($action, $full=false){
+        $action = str_replace("Add", "", $action);
+        $action = str_replace("Edit", "", $action);
+
+        $wizardLink = $this->Session->read('WizardLink');
+        $i=0;
+        foreach($wizardLink as $link){
+            if($link['action']==$action){
+                if($full){
+                    return $link;
+                }else{
+                    return $i;
+                }
+                break;
+            }
+            $i++;
+        }
+    }
+
+    public function skipWizardLink($action,$nextLink){
+        $linkIndex = $this->getWizardLink($action);
+        $wizardLink = $this->Session->read('WizardLink');
+        $wizardLink[$linkIndex]['completed'] = '1';
+        $currentLinkIndex = $this->getLastWizardStep(true);
+        if($linkIndex+1 < count($wizardLink)){
+            if(($linkIndex+1)>=$currentLinkIndex){
+                $wizardLink[$linkIndex+1]['completed'] = '-1';
+            }
+        }
+
+        $this->Session->write('WizardLink', $wizardLink);
+        $this->controller->redirect(array('action'=>$nextLink));
+    }
+
+    public function updateWizard($action, $id){
+        $i = 0;
+        $wizardLink = $this->Session->read('WizardLink');
+        $action = str_replace("Add", "", $action);
+        $action = str_replace("Edit", "", $action);
+
+        if(!empty($wizardLink)){
+	        foreach($wizardLink as $link){
+	            if($link['action']==$action){
+	                $wizardLink[$i]['completed'] = '1';
+	                if($link['new_action']!='edit'){
+	                    $wizardLink[$i]['new_action'] = $link['action'] . "Edit";
+	                    $wizardLink[$i]['new_id'] = $id; 
+	                }else{
+	                    $this->Session->write($this->controller->className.'Id',$id);
+	                }
+	                break;
+	            }
+	            $i++;
+	        }
+
+
+	        if($i+1 >= count($wizardLink)){
+	            $this->Session->delete('WizardMode');
+	            $this->Session->delete('WizardLink');
+
+	            $this->controller->redirect(array('action'=>'index'));
+	        }else{
+	            $currentLinkIndex = $this->getLastWizardStep(true);
+	            if(($i+1)>=$currentLinkIndex){
+	                $wizardLink[$i+1]['completed'] = '-1';
+	            }
+	            $this->Session->write('WizardLink', $wizardLink);
+	            if(isset($wizardLink[$i+1]['new_id'])){
+	                $this->controller->redirect(array('action'=>$wizardLink[$i+1]['new_action'], $wizardLink[$i+1]['new_id']));
+	            }else{
+	                $this->controller->redirect(array('action'=>$wizardLink[$i+1]['new_action']));
+	            }
+	        }
+	    }
+    }
+
 }
 ?>

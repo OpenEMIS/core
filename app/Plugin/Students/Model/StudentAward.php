@@ -110,7 +110,6 @@ class StudentAward extends StudentsAppModel {
 	
 	function setup_add_edit_form($controller, $params){
 		$controller->set('modelName', $this->name);
-		
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -120,12 +119,19 @@ class StudentAward extends StudentsAppModel {
 			}
 		}
 		else{
+			if($controller->data['submit']=='Skip'){
+                $nextLink = $controller->data['StudentAward']['nextLink'];
+                $controller->Navigation->skipWizardLink($controller->action, $nextLink);
+            }
 			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
 			if($this->save($controller->request->data)){
 				if(empty($controller->request->data[$this->name]['id'])){
+					$id = $this->getLastInsertId();
+                	$controller->Navigation->updateWizard($controller->action,$id);
 					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
 				}
 				else{
+                	$controller->Navigation->updateWizard($controller->action,$id);
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
 				return $controller->redirect(array('action' => 'award'));

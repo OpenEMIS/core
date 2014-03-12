@@ -5,8 +5,10 @@
      <h1>
         <span><?php echo __('Comments'); ?></span>
         <?php 
-        if ($_edit) {
-            echo $this->Html->link(__('Back'), array('action' => 'commentsView', $id), array('class' => 'divider'));
+           if(!$WizardMode){ 
+            if ($_edit && !$WizardMode) {
+                echo $this->Html->link(__('Back'), array('action' => 'commentsView', $id), array('class' => 'divider'));
+            }
         }
         ?>
     </h1>

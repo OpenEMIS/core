@@ -5,7 +5,7 @@
      <h1>
         <span><?php echo __('Nationalities'); ?></span>
         <?php 
-        if ($_edit) {
+        if ($_edit && !$WizardMode) {
             echo $this->Html->link(__('Back'), array('action' => 'nationalitiesView', $id), array('class' => 'divider'));
         }
         ?>

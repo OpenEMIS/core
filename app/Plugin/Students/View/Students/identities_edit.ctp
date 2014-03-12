@@ -5,7 +5,7 @@
      <h1>
         <span><?php echo __('Identities'); ?></span>
         <?php 
-        if ($_edit) {
+        if ($_edit && !$WizardMode) {
             echo $this->Html->link(__('Back'), array('action' => 'identitiesView', $id), array('class' => 'divider'));
         }
         ?>
