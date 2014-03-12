@@ -192,8 +192,8 @@ class HomeController extends AppController {
 	}
 	
 	public function support() {
-		$this->bodyTitle = 'Help';
-		$title = 'Support';
+		$this->bodyTitle = 'Support';
+		$title = 'Contact';
 		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb($title);
 		$support = $this->ConfigItem->getSupport();
@@ -203,7 +203,7 @@ class HomeController extends AppController {
 	}
 	
 	public function systemInfo() {
-		$this->bodyTitle = 'Help';
+		$this->bodyTitle = 'Support';
 		$title = 'System Information';
 		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb($title);
@@ -218,9 +218,29 @@ class HomeController extends AppController {
 	}
 	
 	public function license() {
-		$this->bodyTitle = 'Help';
+		$this->bodyTitle = 'Support';
 		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
 		$this->Navigation->addCrumb('License');
+		$this->render('Help/'.$this->action);
+	}
+
+	public function partners() {
+		$this->bodyTitle = 'Support';
+		$title = 'Partners';
+		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
+		$this->Navigation->addCrumb($title);
+		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.active' => 1, 'ConfigAttachment.type' => 'partner'), 'order'=>array('order')));
+
+		$imageData = array();
+		if(!empty($images)){
+			$i = 0;
+			foreach($images as $image){
+				$imageData[$i] = array_merge($image['ConfigAttachment']);
+				$i++;
+			}
+		}
+		$this->set('images', $imageData);
+		$this->set('subTitle', $title);
 		$this->render('Help/'.$this->action);
 	}
 

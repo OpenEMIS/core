@@ -93,7 +93,7 @@ $lastName = AuthComponent::user('last_name');
 						echo $divider;
 						echo sprintf($link, 'Home/details', __('Account'));
 						echo $divider;
-						echo sprintf($link, 'Home/support', __('Help'));
+						echo sprintf($link, 'Home/support', __('Support'));
 						echo $divider;
 						echo sprintf('<a href="%s%s" class="logout">%s</a>', $this->webroot, 'Security/logout', __('Logout'));
 						?>
@@ -154,5 +154,3 @@ $lastName = AuthComponent::user('last_name');
 </body>
 
 </html>
-
-
