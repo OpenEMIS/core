@@ -12,10 +12,14 @@ echo $this->Html->script('jquery-ui.min', false);
 	<h1>
 		<span><?php echo __($subheader); ?></span>
 		<?php
-            echo $this->Html->link(__('Back'), array('action' => 'award'), array('class' => 'divider'));
-        
+			if (!$WizardMode) {
+	            if(!empty($this->data[$modelName]['id'])){
+     			 	echo $this->Html->link(__('Back'), array('action' => 'awardView',$this->data[$modelName]['id']), array('class' => 'divider'));
+		       	}else{
+	        	 	echo $this->Html->link(__('Back'), array('action' => 'award'), array('class' => 'divider'));
+		        }
+	        }
 		?>
-	</h1>
 	</h1>
 	
 	<?php
@@ -53,8 +57,21 @@ echo $this->Html->script('jquery-ui.min', false);
     </div>
 	
 	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'award'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php if(!$WizardMode){ ?>
+        <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+       	 	<?php if(!empty($this->data[$modelName]['id'])){?>
+	        <?php echo $this->Html->link(__('Cancel'), array('action' => 'awardView',$this->data[$modelName]['id']), array('class' => 'btn_cancel btn_left')); ?>
+	        <?php }else{ ?>
+	         <?php echo $this->Html->link(__('Cancel'), array('action' => 'award'), array('class' => 'btn_cancel btn_left')); ?>
+	        <?php } ?>
+        <?php }else{?>
+            <?php 
+            	if(!$mandatory){
+	                echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
+	                echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
+                } 
+	            echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+	      } ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
