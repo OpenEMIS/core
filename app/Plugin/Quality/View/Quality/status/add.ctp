@@ -13,7 +13,7 @@ echo $this->Html->script('config', false);
     <?php echo $this->element('alert'); ?>
     <?php
     echo $this->Form->create($modelName, array(
-        'url' => array('controller' => 'Quality', 'action' => 'statusAdd', 'plugin' => 'Quality'),
+        'url' => array('controller' => 'Quality', 'action' => $this->action, 'plugin' => 'Quality'),
         'type' => 'file',
         'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
     ));
