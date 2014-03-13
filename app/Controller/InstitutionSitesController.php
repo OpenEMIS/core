@@ -149,7 +149,7 @@ class InstitutionSitesController extends AppController {
     );
     private $ReportData = array(); //param 1 name ; param2 type
     private $reportMapping = array(
-        'Overview' => array(
+        'Overview and More' => array(
             'Model' => 'InstitutionSite',
             'fields' => array(
                 'Institution' => array(
@@ -184,6 +184,12 @@ class InstitutionSitesController extends AppController {
                 ),
                 'AreaEducation' => array(
                     'name' => 'Area (Education)'
+                ),
+                'InstitutionSiteCustomField' => array(
+                    'name' => 'Institution Site Custom Field Name'
+                ),
+                'InstitutionSiteCustomValue' => array(
+                    'value' => 'Institution Site Custom Field Value'
                 )
             ),
             'FileName' => 'Report_General_Overview'
@@ -266,12 +272,67 @@ class InstitutionSitesController extends AppController {
                     'last_name' => 'Last Name',
                     'preferred_name' => 'Preferred Name'
                 ),
+                'StudentCustomField' => array(
+                    'name' => 'Student Custom Field Name'
+                ),
+                'StudentCustomValue' => array(
+                    'value' => 'Student Custom Field Value'
+                ),
                 'EducationProgramme' => array(
                     'name' => 'Programme'
+                ),  
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => '',
+                    'address' => '',
+                    'postal_code' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => '',
+                    'date_opened' => '',
+                    'date_closed' => '',
+                    'longitude' => '',
+                    'latitude' => ''
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSiteCustomField' => array(
+                    'name' => 'Institution Site Custom Field Name'
+                ),
+                'InstitutionSiteCustomValue' => array(
+                    'value' => 'Institution Site Custom Field Value'
+                ),
+                'StudentContact' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StudentContact.value))' => 'Contacts'
+                ),
+                'StudentIdentity' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(IdentityType.name, "-", StudentIdentity.number))' => 'Identities'
+                ),
+                'StudentNationality' => array(
+                    'GROUP_CONCAT(DISTINCT Country.name)' => 'Nationality'
                 ),
                 'StudentStatus' => array(
                     'name' => 'Status'
                 )
+
             ),
             'FileName' => 'Report_Student_List'
         ),
@@ -373,9 +434,6 @@ class InstitutionSitesController extends AppController {
         'Teacher List' => array(
             'Model' => 'InstitutionSiteTeacher',
             'fields' => array(
-                'InstitutionSite' => array(
-                    'name' => 'Institution Site'
-                ),
                 'Teacher' => array(
                     'identification_no' => 'OpenEMIS ID',
                     'first_name' => 'First Name',
@@ -384,6 +442,63 @@ class InstitutionSitesController extends AppController {
                     'preferred_name' => 'Preferred Name',
                     'gender' => 'Gender',
                     'date_of_birth' => 'Date of Birth'
+                ),
+                'TeacherCustomField' => array(
+                    'name' => 'Teacher Custom Field Name'
+                ),
+                'TeacherCustomValue' => array(
+                    'value' => 'Teacher Custom Field Value'
+                ),
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => '',
+                    'address' => '',
+                    'postal_code' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => '',
+                    'date_opened' => '',
+                    'date_closed' => '',
+                    'longitude' => '',
+                    'latitude' => ''
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSiteCustomField' => array(
+                    'name' => 'Institution Site Custom Field Name'
+                ),
+                'InstitutionSiteCustomValue' => array(
+                    'value' => 'Institution Site Custom Field Value'
+                ),
+                'TeacherContact' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", TeacherContact.value))' => 'Contacts'
+                ),
+                'TeacherIdentity' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(IdentityType.name, "-", TeacherIdentity.number))' => 'Identities'
+                ),
+                'TeacherNationality' => array(
+                    'GROUP_CONCAT(DISTINCT Country.name)' => 'Nationality'
+                ),
+                'TeacherStatus' => array(
+                    'name' => 'Status'
                 )
             ),
             'FileName' => 'Report_Teacher_List'
@@ -441,9 +556,6 @@ class InstitutionSitesController extends AppController {
         'Staff List' => array(
             'Model' => 'InstitutionSiteStaff',
             'fields' => array(
-                'InstitutionSite' => array(
-                    'name' => 'Institution Site'
-                ),
                 'Staff' => array(
                     'identification_no' => 'OpenEMIS ID',
                     'first_name' => 'First Name',
@@ -452,6 +564,63 @@ class InstitutionSitesController extends AppController {
                     'preferred_name' => 'Preferred Name',
                     'gender' => 'Gender',
                     'date_of_birth' => 'Date of Birth'
+                ),
+                'StaffCustomField' => array(
+                    'name' => 'Staff Custom Field Name'
+                ),
+                'StaffCustomValue' => array(
+                    'value' => 'Staff Custom Field Value'
+                ),
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => '',
+                    'address' => '',
+                    'postal_code' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => '',
+                    'date_opened' => '',
+                    'date_closed' => '',
+                    'longitude' => '',
+                    'latitude' => ''
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSiteCustomField' => array(
+                    'name' => 'Institution Site Custom Field Name'
+                ),
+                'InstitutionSiteCustomValue' => array(
+                    'value' => 'Institution Site Custom Field Value'
+                ),
+                'StaffContact' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StaffContact.value))' => 'Contacts'
+                ),
+                'StaffIdentity' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(IdentityType.name, "-", StaffIdentity.number))' => 'Identities'
+                ),
+                'StaffNationality' => array(
+                    'GROUP_CONCAT(DISTINCT Country.name)' => 'Nationality'
+                ),
+                'StaffStatus' => array(
+                    'name' => 'Status'
                 )
             ),
             'FileName' => 'Report_Staff_List'
@@ -3536,13 +3705,25 @@ class InstitutionSitesController extends AppController {
                         'conditions' => array('BankBranch.bank_id = Bank.id')
                     )
                 );
-            } else if ($name == 'Overview') {
+            } else if ($name == 'Overview and More') {
                 //$options['recursive'] = -1;
                 $options['joins'] = array(
                     array(
                         'table' => 'area_educations',
                         'alias' => 'AreaEducation',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_custom_values',
+                        'alias' => 'InstitutionSiteCustomValue',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSite.id = InstitutionSiteCustomValue.institution_site_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_custom_fields',
+                        'alias' => 'InstitutionSiteCustomField',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id')
                     )
                 );
             } else if ($name == 'Programme List') {
@@ -3608,9 +3789,104 @@ class InstitutionSitesController extends AppController {
                         )
                     ),
                     array(
+                        'table' => 'student_custom_values',
+                        'alias' => 'StudentCustomValue',
+                        'type' => 'left',
+                        'conditions' => array('Student.id = StudentCustomValue.student_id')
+                    ),
+                    array(
+                        'table' => 'student_custom_fields',
+                        'alias' => 'StudentCustomField',
+                        'type' => 'left',
+                        'conditions' => array('StudentCustomField.id = StudentCustomValue.student_custom_field_id')
+                    ),
+                    array(
                         'table' => 'education_programmes',
                         'alias' => 'EducationProgramme',
                         'conditions' => array('InstitutionSiteProgramme.education_programme_id = EducationProgramme.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite',
+                        'conditions' => array('InstitutionSite.id = InstitutionSiteProgramme.institution_site_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_statuses',
+                        'alias' => 'InstitutionSiteStatus',
+                        'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_types',
+                        'alias' => 'InstitutionSiteType',
+                        'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_ownership',
+                        'alias' => 'InstitutionSiteOwnership',
+                        'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
+                    ),
+                    array(
+                        'table' => 'institutions',
+                        'alias' => 'Institution',
+                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+                    ),
+                    array(
+                        'table' => 'areas',
+                        'alias' => 'Area',
+                        'conditions' => array('InstitutionSite.area_id = Area.id')
+                    ),
+                    array(
+                        'table' => 'area_educations',
+                        'alias' => 'AreaEducation',
+                        'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_custom_values',
+                        'alias' => 'InstitutionSiteCustomValue',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSite.id = InstitutionSiteCustomValue.institution_site_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_custom_fields',
+                        'alias' => 'InstitutionSiteCustomField',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id')
+                    ),
+                    array(
+                        'table' => 'student_nationalities',
+                        'alias' => 'StudentNationality',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStudent.student_id = StudentNationality.student_id')
+                    ),
+                    array(
+                        'table' => 'student_contacts',
+                        'alias' => 'StudentContact',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStudent.student_id = StudentContact.student_id')
+                    ),
+                    array(
+                        'table' => 'student_identities',
+                        'alias' => 'StudentIdentity',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStudent.student_id = StudentIdentity.student_id')
+                    ),
+                    array(
+                        'table' => 'countries',
+                        'alias' => 'Country',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('Country.id = StudentNationality.country_id')
+                    ),
+                    array(
+                        'table' => 'contact_types',
+                        'alias' => 'ContactType',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('ContactType.id = StudentContact.contact_type_id')
+                    ),
+                    array(
+                        'table' => 'identity_types',
+                        'alias' => 'IdentityType',
+                        'type' => 'left',
+                        'conditions' => array('IdentityType.id = StudentIdentity.identity_type_id')
                     ),
                     array(
                         'table' => 'student_statuses',
@@ -3619,7 +3895,7 @@ class InstitutionSitesController extends AppController {
                         'conditions' => array('InstitutionSiteStudent.student_status_id = StudentStatus.id')
                     )
                 );
-
+                $options['group'] = array('Student.id','InstitutionSiteProgramme.id');
                 $options['order'] = array('Student.first_name');
             } else if ($name == 'Student Result') {
                 $options['conditions'] = array();
@@ -3789,12 +4065,111 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'teachers',
                         'alias' => 'Teacher',
-                        'conditions' => array('InstitutionSiteTeacher.teacher_id = Teacher.id')
+                        'conditions' => array(
+                            'InstitutionSiteTeacher.teacher_id = Teacher.id',
+                            'InstitutionSiteTeacher.institution_site_id' => $this->institutionSiteId
+                            )
+                    ),
+                    array(
+                        'table' => 'teacher_custom_values',
+                        'alias' => 'TeacherCustomValue',
+                        'type' => 'left',
+                        'conditions' => array('Teacher.id = TeacherCustomValue.teacher_id')
+                    ),
+                    array(
+                        'table' => 'teacher_custom_fields',
+                        'alias' => 'TeacherCustomField',
+                        'type' => 'left',
+                        'conditions' => array('TeacherCustomField.id = TeacherCustomValue.teacher_custom_field_id')
                     ),
                     array(
                         'table' => 'institution_sites',
                         'alias' => 'InstitutionSite',
                         'conditions' => array('InstitutionSiteTeacher.institution_site_id = InstitutionSite.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_statuses',
+                        'alias' => 'InstitutionSiteStatus',
+                        'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_types',
+                        'alias' => 'InstitutionSiteType',
+                        'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_ownership',
+                        'alias' => 'InstitutionSiteOwnership',
+                        'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
+                    ),
+                    array(
+                        'table' => 'institutions',
+                        'alias' => 'Institution',
+                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+                    ),
+                    array(
+                        'table' => 'areas',
+                        'alias' => 'Area',
+                        'conditions' => array('InstitutionSite.area_id = Area.id')
+                    ),
+                    array(
+                        'table' => 'area_educations',
+                        'alias' => 'AreaEducation',
+                        'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_custom_values',
+                        'alias' => 'InstitutionSiteCustomValue',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSite.id = InstitutionSiteCustomValue.institution_site_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_custom_fields',
+                        'alias' => 'InstitutionSiteCustomField',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id')
+                    ),
+                    array(
+                        'table' => 'teacher_nationalities',
+                        'alias' => 'TeacherNationality',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherNationality.teacher_id')
+                    ),
+                    array(
+                        'table' => 'teacher_contacts',
+                        'alias' => 'TeacherContact',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherContact.teacher_id')
+                    ),
+                    array(
+                        'table' => 'teacher_identities',
+                        'alias' => 'TeacherIdentity',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherIdentity.teacher_id')
+                    ),
+                    array(
+                        'table' => 'countries',
+                        'alias' => 'Country',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('Country.id = TeacherNationality.country_id')
+                    ),
+                    array(
+                        'table' => 'contact_types',
+                        'alias' => 'ContactType',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('ContactType.id = TeacherContact.contact_type_id')
+                    ),
+                    array(
+                        'table' => 'identity_types',
+                        'alias' => 'IdentityType',
+                        'type' => 'left',
+                        'conditions' => array('IdentityType.id = TeacherIdentity.identity_type_id')
+                    ),
+                    array(
+                        'table' => 'teacher_statuses',
+                        'alias' => 'TeacherStatus',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteTeacher.teacher_status_id = TeacherStatus.id')
                     )
                 );
 
@@ -3856,12 +4231,111 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'staff',
                         'alias' => 'Staff',
-                        'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
+                        'conditions' => array(
+                            'InstitutionSiteStaff.staff_id = Staff.id',
+                            'InstitutionSiteStaff.institution_site_id' => $this->institutionSiteId
+                            )
+                    ),
+                    array(
+                        'table' => 'staff_custom_values',
+                        'alias' => 'StaffCustomValue',
+                        'type' => 'left',
+                        'conditions' => array('Staff.id = StaffCustomValue.staff_id')
+                    ),
+                    array(
+                        'table' => 'staff_custom_fields',
+                        'alias' => 'StaffCustomField',
+                        'type' => 'left',
+                        'conditions' => array('StaffCustomField.id = StaffCustomValue.staff_custom_field_id')
                     ),
                     array(
                         'table' => 'institution_sites',
                         'alias' => 'InstitutionSite',
                         'conditions' => array('InstitutionSiteStaff.institution_site_id = InstitutionSite.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_statuses',
+                        'alias' => 'InstitutionSiteStatus',
+                        'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_types',
+                        'alias' => 'InstitutionSiteType',
+                        'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_ownership',
+                        'alias' => 'InstitutionSiteOwnership',
+                        'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
+                    ),
+                    array(
+                        'table' => 'institutions',
+                        'alias' => 'Institution',
+                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+                    ),
+                    array(
+                        'table' => 'areas',
+                        'alias' => 'Area',
+                        'conditions' => array('InstitutionSite.area_id = Area.id')
+                    ),
+                    array(
+                        'table' => 'area_educations',
+                        'alias' => 'AreaEducation',
+                        'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_custom_values',
+                        'alias' => 'InstitutionSiteCustomValue',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSite.id = InstitutionSiteCustomValue.institution_site_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_custom_fields',
+                        'alias' => 'InstitutionSiteCustomField',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id')
+                    ),
+                    array(
+                        'table' => 'staff_nationalities',
+                        'alias' => 'StaffNationality',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStaff.staff_id = StaffNationality.staff_id')
+                    ),
+                    array(
+                        'table' => 'staff_contacts',
+                        'alias' => 'StaffContact',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStaff.staff_id = StaffContact.staff_id')
+                    ),
+                    array(
+                        'table' => 'staff_identities',
+                        'alias' => 'StaffIdentity',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStaff.staff_id = StaffIdentity.staff_id')
+                    ),
+                    array(
+                        'table' => 'countries',
+                        'alias' => 'Country',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('Country.id = StaffNationality.country_id')
+                    ),
+                    array(
+                        'table' => 'contact_types',
+                        'alias' => 'ContactType',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('ContactType.id = StaffContact.contact_type_id')
+                    ),
+                    array(
+                        'table' => 'identity_types',
+                        'alias' => 'IdentityType',
+                        'type' => 'left',
+                        'conditions' => array('IdentityType.id = StaffIdentity.identity_type_id')
+                    ),
+                    array(
+                        'table' => 'staff_statuses',
+                        'alias' => 'StaffStatus',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStaff.staff_status_id = StaffStatus.id')
                     )
                 );
 
@@ -5676,6 +6150,8 @@ class InstitutionSitesController extends AppController {
             foreach ($arrcols as $col => $value) {
                 if (strpos(substr($col, 0, 4), 'SUM(') !== false) {
                     $new[] = substr($col, 0, 4) . $model . "." . substr($col, 4);
+                } else if (strpos(substr($col, 0, 13), 'GROUP_CONCAT(') !== false) {
+                    $new[] = $col;
                 } else if (strpos(substr($col, 0, 13), 'COALESCE(SUM(') !== false) {
                     $new[] = substr($col, 0, 13) . $model . "." . substr($col, 13);
                 } else {
@@ -5713,7 +6189,7 @@ class InstitutionSitesController extends AppController {
         $newData = array();
         $dateFormat = 'd F, Y';
 
-        if ($name == 'Overview') {
+        if ($name == 'Overview and More') {
             foreach ($data AS $row) {
                 if ($row['InstitutionSite']['date_opened'] == '0000-00-00') {
                     $row['InstitutionSite']['date_opened'] = '';
@@ -5902,7 +6378,7 @@ class InstitutionSitesController extends AppController {
     }
 
     public function genReportPDF($name) {
-        if ($name == 'Overview') {
+        if ($name == 'Overview and More') {
             $profileurl = Router::url(array('controller' => 'InstitutionSites', 'action' => 'siteProfile', $this->institutionSiteId), true);
             $html = file_get_contents($profileurl);
             $html = str_replace('common.css', '', $html);
@@ -5924,9 +6400,9 @@ class InstitutionSitesController extends AppController {
     public function reportsGeneral() {
         $this->Navigation->addCrumb('Reports - General');
         $data = array('Reports - General' => array(
-                array('name' => 'Overview', 'types' => array('CSV')),
+                array('name' => 'Overview and More', 'types' => array('CSV')),
                 array('name' => 'Bank Accounts', 'types' => array('CSV')),
-                array('name' => 'More', 'types' => array('CSV'))
+                //array('name' => 'More', 'types' => array('CSV'))
         ));
         $this->set('data', $data);
         $this->set('actionName', 'genReport');
