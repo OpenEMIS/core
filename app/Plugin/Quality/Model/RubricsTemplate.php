@@ -254,7 +254,7 @@ class RubricsTemplate extends QualityAppModel {
         return $data;
     }
 
-    public function getRubricTemplateWeightingInfo() {
+   /* public function getRubricTemplateWeightingInfo() {
 
         $options['recursive'] = -1;
         $options['joins'] = array(
@@ -297,13 +297,13 @@ class RubricsTemplate extends QualityAppModel {
         }
         return $list;
     }
-
+*/
     public function getInstitutionQAReportHeader($institutionSiteId, $year = NULL, $includeArea = NULL) {
         if($includeArea === 'yes'){
-            $header = array(array('School Year'), array('Area Name'), array('Area Code'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+            $header = array(array('Year'), array('Area Name'), array('Area Code'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
         }
         else{
-            $header = array(array('School Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+            $header = array(array('Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
         }
 
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
@@ -342,7 +342,7 @@ class RubricsTemplate extends QualityAppModel {
         // pr($header); die;
         return $header;
     }
-
+/*
     public function processDataToCSVFormat($data, $autoGenerateFirstHeader = 'no', $includeArea = 'no') {
         $tempArray = array();
         $classId = '';
@@ -365,7 +365,7 @@ class RubricsTemplate extends QualityAppModel {
 
             // pr($classId. " || ".$currentClassId );
             //pr($currentRubricName. " || ".$rubricName );
-            if (!empty($classId) && !empty($rubricName) && $classId == $currentClassId /* && $rubricName == $currentRubricName */) {
+            if (!empty($classId) && !empty($rubricName) && $classId == $currentClassId) {
 
                 foreach ($row as $key => $value) {
                     if ($key == 'RubricTemplate') {
@@ -516,5 +516,5 @@ class RubricsTemplate extends QualityAppModel {
             //}
             $tempArray[$rubricCounter]['total_' . $rubricHeaderCounter]['value'] = $_sumValue;
         }
-    }
+    }*/
 }

@@ -527,26 +527,26 @@ class InstitutionSitesController extends AppController {
             'Model' => 'InstitutionSite',
             'fields' => array(
                 'SchoolYear' => array(
-                    'name' => ''
+                    'name AS Year' => ''
                 ),
                 'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'id' => ''
+                    'name AS InstitutionSiteName' => '',
+                    'code AS InstitutionSiteCode' => '',
+                    'id AS InstitutionSiteId' => ''
                 ),
                 'InstitutionSiteClass' => array(
-                    'name' => '',
-                    'id' => ''
+                    'name AS Class' => '',
+                    'id AS ClassId' => ''
                 ),
                 'EducationGrade' => array(
-                    'name' => ''
+                    'name AS Grade' => ''
                 ),
                 'RubricTemplate' => array(
-                    'name' => '',
-                    'id' => ''
+                    'name AS RubricName' => '',
+                    'id AS RubricId' => ''
                 ),
                 'RubricTemplateHeader' => array(
-                    'title' => ''
+                    'title AS RubricHeader' => ''
                 ),
                 'RubricTemplateColumnInfo' => array(
                     'COALESCE(SUM(weighting),0)' => ''
@@ -558,14 +558,14 @@ class InstitutionSitesController extends AppController {
             'Model' => 'QualityInstitutionVisit',
             'fields' => array(
                 'SchoolYear' => array(
-                    'name' => 'School Year'
+                    'name' => 'Year'
                 ),
                 'InstitutionSite' => array(
                     'name' => '',
                     'code' => ''
                 ),
                 'InstitutionSiteClass' => array(
-                    'name' => 'Class Name',
+                    'name' => 'Class',
                 ),
                 'EducationGrade' => array(
                     'name' => 'Grade'
@@ -3962,7 +3962,6 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'quality_statuses',
                         'alias' => 'QualityStatus',
-                        'type' => 'LEFT',
                         'conditions' => array('QualityStatus.year = SchoolYear.name')
                     ),
                     array(
@@ -3977,7 +3976,6 @@ class InstitutionSitesController extends AppController {
                         'type' => 'LEFT',
                         'conditions' => array(
                             'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
-                            'QualityInstitutionRubric.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
                             'RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
                             'SchoolYear.id = QualityInstitutionRubric.school_year_id'
                         )
@@ -5795,8 +5793,12 @@ class InstitutionSitesController extends AppController {
                 $newData[] = $row;
             }
         } else if ($name == 'QA Report') {
-            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-            $newData = $RubricsTemplate->processDataToCSVFormat($data);
+            //$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            //$newData = $RubricsTemplate->processDataToCSVFormat($data);
+            $QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
+            $newData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
+            $header = array(array('Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+            $newData = $QualityBatchReport->breakReportByYear($newData, 'no', $header);
         }
 
         if (!empty($newData)) {
@@ -5810,7 +5812,7 @@ class InstitutionSitesController extends AppController {
         $this->autoRender = false;
 
         $arrData = $this->formatCSVData($data, $name);
-        //pr($arrData);
+        //pr($arrData);die;
 
         if (array_key_exists($name, $this->reportMapping)) {
             $fileName = array_key_exists('FileName', $this->reportMapping[$name]) ? $this->reportMapping[$name]['FileName'] : "export_" . date("Y.m.d");
@@ -5822,28 +5824,28 @@ class InstitutionSitesController extends AppController {
         ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
         //create a file
 
-         $csv_file = fopen('php://output', 'w');
-          header('Content-type: application/csv');
-          header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
-         
+        $csv_file = fopen('php://output', 'w');
+        header('Content-type: application/csv');
+        header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
+
         $header_row = $this->getHeader($name);
-      //  pr($header_row);
-           fputcsv($csv_file, $header_row, ',', '"');
+        //  pr($header_row);
+        fputcsv($csv_file, $header_row, ',', '"');
 
-          // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
-          foreach ($arrData as $arrSingleResult) {
-          $row = array();
-          foreach ($arrSingleResult as $table => $arrFields) {
+        // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
+        foreach ($arrData as $arrSingleResult) {
+            $row = array();
+            foreach ($arrSingleResult as $table => $arrFields) {
 
-          foreach ($arrFields as $col) {
-          $row[] = $col;
-          }
-          }
+                foreach ($arrFields as $col) {
+                    $row[] = $col;
+                }
+            }
 
-          fputcsv($csv_file, $row, ',', '"');
-          }
+            fputcsv($csv_file, $row, ',', '"');
+        }
 
-          fclose($csv_file); 
+        fclose($csv_file);
     }
 
     private function genCSVAcademic($data, $name) {
