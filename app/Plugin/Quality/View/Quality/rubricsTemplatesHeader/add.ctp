@@ -32,10 +32,10 @@ echo $this->Html->script('config', false);
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
         <?php 
 		if(!empty($this->data[$modelName]['id'])){ 
-			$redirectURL = array('action' => 'RubricsTemplatesHeaderView',$rubric_template_id,$this->data[$modelName]['id'] );
+			$redirectURL = array('action' => 'rubricsTemplatesHeaderView',$rubric_template_id,$this->data[$modelName]['id'] );
 		}
 		else{
-			$redirectURL = array('action' => 'RubricsTemplatesHeader',$rubric_template_id);
+			$redirectURL = array('action' => 'rubricsTemplatesHeader',$rubric_template_id);
 		}
 		?>
         
