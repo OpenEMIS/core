@@ -97,10 +97,10 @@ class QualityStatus extends QualityAppModel {
         $controller->Navigation->addCrumb('Quality - Add Status');
         $controller->set('subheader', 'Quality - Add Status');
         $controller->set('modelName', $this->name);
-
+        $controller->set('displayType', 'add');
         $controller->set('selectedYear', date("Y"));
 
-        $this->_setupStatusForm($controller, $params);
+        $this->_setupStatusForm($controller, $params, 'add');
     }
 
     public function statusEdit($controller, $params) {
@@ -108,11 +108,12 @@ class QualityStatus extends QualityAppModel {
         $controller->set('subheader', 'Quality - Edit Status');
         $controller->set('modelName', $this->name);
         $controller->set('selectedYear', date("Y"));
-        $this->_setupStatusForm($controller, $params);
+        $controller->set('displayType', 'edit');
+        $this->_setupStatusForm($controller, $params, 'edit');
         $this->render = 'add';
     }
 
-    private function _setupStatusForm($controller, $params) {
+    private function _setupStatusForm($controller, $params, $type) {
         $controller->set('statusOptions', $this->statusOptions);
         // $institutionId = $controller->Session->read('InstitutionId');
 
@@ -120,7 +121,11 @@ class QualityStatus extends QualityAppModel {
         $rubricOptions = $RubricsTemplate->getRubricOptions();
 
         $controller->set('rubricOptions', $rubricOptions);
-
+        
+        $SchoolYear = ClassRegistry::init('SchoolYear');
+        $yearOptions = $SchoolYear->getYearListValues();
+        
+        $controller->set('yearOptions', $yearOptions);
         if ($controller->request->is('get')) {
 
             $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
@@ -128,7 +133,7 @@ class QualityStatus extends QualityAppModel {
             $this->recursive = -1;
             $data = $this->findById($id);
 
-            
+
 
             if (!empty($data)) {
                 $controller->request->data = $data;
@@ -138,14 +143,21 @@ class QualityStatus extends QualityAppModel {
             }
         } else {
             // $controller->request->data[$this->name]['student_id'] = $controller->studentId;
-           // pr($controller->request->data);
-           // die;
-            $conditions = array(
-                'QualityStatus.rubric_template_id' => $controller->request->data['QualityStatus']['rubric_template_id'],
-                'QualityStatus.year' => $controller->request->data['QualityStatus']['year']
-            );
-            if (!$this->hasAny($conditions)) {
-                //do something
+            // pr($controller->request->data);
+            // die;
+            $proceedToSave = true;
+            if ($type == 'add') {
+                $conditions = array(
+                    'QualityStatus.rubric_template_id' => $controller->request->data['QualityStatus']['rubric_template_id'],
+                    'QualityStatus.year' => $controller->request->data['QualityStatus']['year']
+                );
+                if ($this->hasAny($conditions)) {
+                    $proceedToSave = false;
+                    $controller->Utility->alert($controller->Utility->getMessage('DATA_EXIST'), array('type' => 'error'));
+                }
+            }
+
+            if ($proceedToSave) {
                 if ($this->save($controller->request->data)) {
                     if (empty($controller->request->data[$this->name]['id'])) {
                         $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
@@ -154,8 +166,6 @@ class QualityStatus extends QualityAppModel {
                     }
                     return $controller->redirect(array('action' => 'status'));
                 }
-            } else {
-                $controller->Utility->alert($controller->Utility->getMessage('DATA_EXIST'), array('type' => 'error'));
             }
         }
     }
@@ -186,7 +196,7 @@ class QualityStatus extends QualityAppModel {
                 'conditions' => array('RubricsTemplate.id = QualityStatus.rubric_template_id')
             )
         );
-        $options['order'] = array('RubricsTemplate.name', 'QualityStatus.year');
+        $options['order'] = array('QualityStatus.year DESC', 'RubricsTemplate.name');
         $options['fields'] = array('QualityStatus.*', 'RubricsTemplate.*');
         $data = $this->find('all', $options);
 
