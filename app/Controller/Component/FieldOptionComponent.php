@@ -14,7 +14,9 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class FieldOptionComponent extends Component {
+App::uses('AppComponent', 'Controller/Component');
+
+class FieldOptionComponent extends AppComponent {
 	public $render = false;
 	public $options = array();
 	public $optionFields = array();
@@ -70,6 +72,7 @@ class FieldOptionComponent extends Component {
 		$controller->set('selectedOption', '');
 	}
 	
+	/*
 	public function processAction($controller, $action) {
 		if(CakeSession::check('Auth.User') == false) {
 			$controller->redirect($controller->Auth->loginAction);
@@ -88,6 +91,7 @@ class FieldOptionComponent extends Component {
 		}
 		return $result;
 	}
+	*/
 	
 	private function buildOptions($list) {
 		$options = array();

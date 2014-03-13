@@ -82,7 +82,11 @@ class AppModel extends Model {
 	}
 	
 	public function findOptions($options=array()) {
-		$class = get_class($this);
+		$class = $this->alias;
+		if(is_bool($options) && $options) {
+			$options = array();
+			$options['conditions'] = array($class.'.visible' => 1);
+		}
 		$conditions = !isset($options['conditions']) ? array() : $options['conditions'];
 		$order = !isset($options['order']) ? array($class . '.order') : $options['order'];
 		
