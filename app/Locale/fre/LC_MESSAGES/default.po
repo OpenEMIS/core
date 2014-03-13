@@ -2,13 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-02-28 15:49+0800\n"
+"PO-Revision-Date: 2014-03-13 10:39+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.6.3\n"
+"X-Generator: Poedit 1.6.4\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
@@ -2279,3 +2279,69 @@ msgstr "Rapports de Divergence de Données"
 
 msgid "age"
 msgstr "âge"
+
+msgid "Please add an area level to this area"
+msgstr ""
+
+msgid "There are no assessments"
+msgstr ""
+
+msgid "Static fields"
+msgstr ""
+
+msgid "Groups"
+msgstr ""
+
+msgid "Custom Indicators"
+msgstr ""
+
+msgid "Build"
+msgstr ""
+
+msgid "Action"
+msgstr ""
+
+msgid "For more information on building custom indicators"
+msgstr ""
+
+msgid "Institution Sites"
+msgstr ""
+
+msgid "Institution Sites Total"
+msgstr ""
+
+msgid "There are no available files found for this report"
+msgstr ""
+
+msgid "Quality Assurance Report"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Time Periods"
+msgstr ""
+
+msgid "Advance Search"
+msgstr ""
+
+msgid "OpenEMIS ID, First Name or Last Name"
+msgstr ""
+
+msgid "Middle Name"
+msgstr ""
+
+msgid "Preferred Name"
+msgstr ""
+
+msgid "Date of Death"
+msgstr ""
+
+msgid "No File Chosen"
+msgstr ""
+
+msgid "Choose File"
+msgstr ""
+
+msgid "Max Resolution"
+msgstr ""
