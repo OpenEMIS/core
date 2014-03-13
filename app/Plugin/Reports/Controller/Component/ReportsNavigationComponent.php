@@ -36,7 +36,7 @@ class ReportsNavigationComponent extends Component {
                     $navigation->createLink('Data Quality Reports', $controller, 'DataQuality'),
                     $navigation->createLink('Indicator Reports', $controller, 'Indicator'),
 //					$navigation->createLink('Indicator Reports', $controller, 'Indicator'),
-					$navigation->createLink('Custom Reports', $controller, 'Olap')//,
+					$navigation->createLink('Custom Reports', 'Report', 'index')//,
                     //$navigation->createLink('OLAP Reports', 'olap')//,
 					//$navigation->createLink('Ad Hoc Reports', 'adhoc/', array('pattern' => 'index$'))
 				)
