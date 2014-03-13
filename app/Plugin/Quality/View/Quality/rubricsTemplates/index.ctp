@@ -9,7 +9,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         <span><?php echo __($subheader); ?></span>
         <?php
 		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'RubricsTemplatesAdd'), array('class' => 'divider'));
+			echo $this->Html->link(__('Add'), array('action' => 'rubricsTemplatesAdd'), array('class' => 'divider'));
 		}
 		?>
     </h1>
