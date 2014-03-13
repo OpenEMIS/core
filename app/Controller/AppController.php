@@ -140,16 +140,23 @@ class AppController extends Controller {
 			}
 		}
 		if(!empty($this->components)) { // for components
-			$actionCamel = Inflector::camelize($action);
+			//$actionCamel = Inflector::camelize($action);
+			$action = strtolower($action);
 			$name = '';
 			foreach($this->components as $component => $option) {
-				if(is_string($component) && strpos($actionCamel, $component) === 0) {
-					$name = $component;
-				} else if (is_string($option) && strpos($actionCamel, $option) === 0) {
-					$name = $option;
+				if(is_string($component)) {
+					$compare = strtolower($component);
+					if(strpos($action, $compare) === 0) {
+						$name = $component;
+					}
+				} else if (is_string($option)) {
+					$compare = strtolower($option);
+					if(strpos($action, $compare) === 0) {
+						$name = $option;
+					}
 				}
 				if(strlen($name) != 0) {
-					$action = substr($actionCamel, strlen($name));
+					$action = substr($action, strlen($name));
 					return $this->{$name}->processAction($this, $action);
 				}
 			}

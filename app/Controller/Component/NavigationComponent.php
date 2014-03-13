@@ -224,7 +224,7 @@ class NavigationComponent extends Component {
 				        $this->createLink('Visits', 'Quality', 'qualityVisit'),
 				),
 				'REPORTS' => array(
-					$this->createLink('General', 'InstitutionSites', 'reportsGeneral'),
+					$this->createLink('General', 'Report', 'index'),
 					$this->createLink('Details', 'InstitutionSites', 'reportsDetails'),
 					$this->createLink('Totals', 'InstitutionSites', 'reportsTotals'),
 					$this->createLink('Quality', 'InstitutionSites', 'reportsQuality')
@@ -242,7 +242,7 @@ class NavigationComponent extends Component {
 					$this->createLink('Education Structure', 'Education', 'index', 'index$|setup'),
 					$this->createLink('National Assessments', 'Assessment', 'index', '^index|assessment'),
 					//$this->createLink('Field Options', 'Setup', 'setupVariables', '^setupVariables|^custom'),
-					$this->createLink('Field Options', 'Setup', 'fieldOption', '^fieldOption|^custom'),
+					$this->createLink('Field Options', 'FieldOption', 'index', 'index$|^custom'),
 					$this->createLink('System Configurations', 'Config', 'index', 'index$|edit$|^dashboard')
 				),
 				'ACCOUNTS &amp; SECURITY' => array(
