@@ -16,7 +16,9 @@ echo $this->Html->script('attachments', false);
 	?>
 	<h1>
 		<span><?php echo __('Attachments'); ?></span>
+		<?php if(!$WizardMode){ ?>
 		<?php echo $this->Html->link(__('View'), array('action' => 'attachments'), array('class' => 'divider')); ?>
+		<?php } ?>
 	</h1>
 	
 	<?php echo $this->element('alert'); ?>
@@ -79,7 +81,16 @@ echo $this->Html->script('attachments', false);
 	
 	<div class="controls">
         <div style="position:absolute;float:left;color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+        <?php if(!$WizardMode){ ?>
+        <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'attachments'), array('class' => 'btn_cancel btn_left')); ?>
+        <?php }else{?>
+            <?php 
+                if(!$mandatory){
+                echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
+                echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
+                } 
+            echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+      } ?>
 	</div>
 </div>
