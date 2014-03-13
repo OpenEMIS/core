@@ -1,0 +1,17 @@
+{
+    "name": "kordit/openemis",
+    "description": "description_text",
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Eugene",
+            "email": "ewong@kordit.com"
+        }
+    ],
+    "config": {
+        "vendor-dir": "app/Vendor"
+    },
+    "require": {
+        "monolog/monolog": "1.4.0"
+    }
+}
