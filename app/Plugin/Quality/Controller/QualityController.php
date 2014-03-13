@@ -60,14 +60,15 @@ class QualityController extends QualityAppController {
                         $this->bodyTitle = $institutionName . ' - ' . $institutionSiteName;
                         $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view', 'plugin' => false));
                     } else {
-                        $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
+                        $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites','plugin' => false));
                     }
                 }
             } else {
                 if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
                     $this->layout = 'profile';
                 } else {
-                    $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+                  //  pr('here - Quality Controller');die;
+                    $this->redirect(array('controller' => 'Institutions', 'action' => 'index', 'plugin' => false));
                 }
             }
             
