@@ -29,13 +29,13 @@ $obj = @$data['Staff'];
 
 	<fieldset class="section_break">
 		<legend><?php echo __('Information'); ?></legend>
-		<?php if($this->Session->check('StaffId')){ ?>Ωå
+		<?php if($this->Session->check('StaffId')){ ?>
         <div class="row">
 			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<?php if($autoid==''){ ?>
             <div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'],
-														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_teacher_identification');")); ?>
-           		<input type="hidden" name="validate_teacher_identification" id="validate_teacher_identification" value="<?php echo $obj['identification_no']; ?>"/>
+														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_staff_identification');")); ?>
+           		<input type="hidden" name="validate_staff_identification" id="validate_staff_identification" value="<?php echo $obj['identification_no']; ?>"/>
             </div>
             <?php }else{ ?>
             <div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'])); ?>
@@ -157,16 +157,15 @@ $obj = @$data['Staff'];
 			<div class="value"><?php echo $this->Form->input('email', array('value' => $obj['email']));?></div>
 		</div>
 	</fieldset>
-
-	<div class="controls view_controls">
+    <div class="controls">
 		<?php if(!$WizardMode){ ?>
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
 		<?php }else{?>
 			<?php if(!$this->Session->check('StaffId')){ 
-			   echo $this->Form->submit('Cancel', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_left"));
+			   echo $this->Form->submit('Cancel', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
 			 }
-			 echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+			 echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
 		}?>
 	</div>
 	

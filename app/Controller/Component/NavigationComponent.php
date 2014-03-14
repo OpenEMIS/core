@@ -30,17 +30,21 @@ class NavigationComponent extends Component {
 		$this->controller =& $controller;
 		$this->navigations = $this->getLinks();
 		$this->topNavigations = array();
-                $this->SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
+        $this->SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');
 	}
 	
 	//called after Controller::beforeFilter()
-	public function startup(Controller $controller) {}
+	public function startup(Controller $controller) {
+	}
 	
 	//called after Controller::beforeRender()
 	public function beforeRender(Controller $controller) {
 		if(!$this->skip) {
 			$this->apply($controller->params['controller'], $this->controller->action);
 		}
+
+		$this->checkWizardModeLink();
+
 		$this->controller->set('_topNavigations', $this->topNavigations);
 		$this->controller->set('_leftNavigations', $this->leftNavigations);
 		$this->controller->set('_params', $this->params);
@@ -190,6 +194,29 @@ class NavigationComponent extends Component {
 		}
 	}
 
+	public function checkWizardModeLink(){
+		$wizardMode = false;
+		if(!empty($this->leftNavigations)){
+			foreach($this->leftNavigations as $module => $obj) {
+				foreach($obj as $value){
+					if($value['selected']=='1'){
+						foreach($obj as $chkValue){
+							if($chkValue['wizard'] == '1'){
+								$wizardMode = true;
+								break;
+							}
+						}
+						break;
+					}
+				}
+			}
+			if(!$wizardMode){
+				$this->Session->delete('WizardMode');
+		        $this->Session->delete('WizardLink');
+			}
+		}
+	}
+
 	public function getWizardLinks($module){
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getWizardByModule($module, false);
@@ -242,7 +269,7 @@ class NavigationComponent extends Component {
 
         $ConfigItem = ClassRegistry::init('ConfigItem');
        
-        $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => $configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+        $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
 
         $this->controller->set('mandatory', $mandatory);
         $linkCurrent = $this->getLastWizardStep(false);
@@ -338,12 +365,15 @@ class NavigationComponent extends Component {
         $this->controller->redirect(array('action'=>$nextLink));
     }
 
-    public function exitWizard(){
+    public function exitWizard($cancel = true){
 	 	$this->Session->delete('WizardMode');
         $this->Session->delete('WizardLink');
-        $this->Session->delete($this->controller->className.'Id');
-
-        $this->controller->redirect(array('action'=>'index'));
+        if($cancel){
+	        $this->Session->delete($this->controller->className.'Id');
+	        $this->controller->redirect(array('action'=>'index'));
+	    }else{
+  			$this->controller->redirect(array('action'=>'view'));
+	    }
     }
 
     public function updateWizard($action, $id){
@@ -371,7 +401,7 @@ class NavigationComponent extends Component {
 
 
         if($i+1 >= count($wizardLink)){
-            $this->exitWizard();
+            $this->exitWizard(false);
         }else{
             $currentLinkIndex = $this->getLastWizardStep(true);
             if(($i+1)>=$currentLinkIndex){
