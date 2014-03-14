@@ -51,10 +51,10 @@ var objTrainingSessions = {
 
         var selProvider = $('.provider');
         defaultVal = $(selProvider).val();
-       //var defaultVal = "";
-        //if(originalCourse.val == course.val){
-    
-        //}
+
+        var table = $('.trainee');
+        table.find('.table_body').empty();
+
         if(trainingCourseId === ""){
             provider[0].options.length = 0;
         }else{
@@ -138,7 +138,7 @@ var objTrainingSessions = {
             var callback = function() {
                 table.find('.table_body').append(data);
                 var element = '#searchTrainee' + index;
-                var url = getRootURL() + table.attr('url') + '/' + index;
+                var url = getRootURL() + table.attr('url') + '/' + index + '/' + $('.training_course').val();
                 objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainee);
             };
             $.unmask({id: maskId, callback: callback});
