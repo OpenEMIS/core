@@ -7,8 +7,8 @@
 </title>
 <?php
     echo $this->Html->meta('icon');
-    echo $this->Html->css('/ReportManager/css/generic');
-    echo $this->Html->css('/ReportManager/css/'.$reportStyle);
+    echo $this->Html->css('report/generic');
+    echo $this->Html->css('report/'.$reportStyle);
     echo $scripts_for_layout;
 ?>
 </head>

@@ -68,7 +68,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       <h2 class="StepTitle"><?php echo __d('report_manager','Step 1 Fields',true); ?></h2>
         <div class="reportManager index">
         <?php  
-        echo $this->Element('fields_dnd_table_header',array(
+        echo $this->Element('report/fields_dnd_table_header',array(
             'plugin'=>'ReportManager',
             'title'=>__d('report_manager','Report Manager'),
             'sortableClass'=>'sortable1'));
@@ -78,7 +78,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         else // new report
             $currentModelSchema = $modelSchema;
         
-        echo $this->Element('fields_dnd',array(
+        echo $this->Element('report/fields_dnd',array(
             'plugin'=>'ReportManager',
             'modelClass'=>$modelClass,
             'modelSchema'=>$currentModelSchema));
@@ -91,14 +91,14 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             else // new report
                 $currentModelSchema = $value;
             
-            echo $this->Element('fields_dnd',array(
+            echo $this->Element('report/fields_dnd',array(
                 'plugin'=>'ReportManager',
                 'modelClass'=>$key,
                 'modelSchema'=>$currentModelSchema));
         }
-        echo $this->Element('fields_dnd_table_close',array('plugin'=>'ReportManager'));
+        echo $this->Element('report/fields_dnd_table_close',array('plugin'=>'ReportManager'));
         if ( $oneToManyOption != null ) {
-            echo $this->Element('fields_dnd_table_header',array(
+            echo $this->Element('report/fields_dnd_table_header',array(
                 'plugin'=>'ReportManager',
                 'title'=>$oneToManyOption,
                 'sortableClass'=>'sortable2'));
@@ -108,12 +108,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
             else // new report
                 $currentModelSchema = $associatedModelsSchema[$oneToManyOption];
             
-            echo $this->Element('fields_dnd',array(
+            echo $this->Element('report/fields_dnd',array(
                 'plugin'=>'ReportManager',
                 'modelClass'=>$oneToManyOption,
                 'modelSchema'=>$currentModelSchema)
                 );
-            echo $this->Element('fields_dnd_table_close',array('plugin'=>'ReportManager'));
+            echo $this->Element('report/fields_dnd_table_close',array('plugin'=>'ReportManager'));
         }
         ?>
 
@@ -122,31 +122,31 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   <div id="step-2">
       <h2 class="StepTitle"><?php echo __d('report_manager','Step 2 Filter',true); ?></h2> 
         <?php      
-        echo $this->Element('logical_operator');
-        echo $this->Element('filter',array('plugin'=>'ReportManager','modelClass'=>$modelClass,'modelSchema'=>$modelSchema));
+        echo $this->Element('report/logical_operator');
+        echo $this->Element('report/filter',array('plugin'=>'ReportManager','modelClass'=>$modelClass,'modelSchema'=>$modelSchema));
         foreach ($associatedModelsSchema as $key => $value) {
             if ( $associatedModels[$key] != 'hasMany' && $associatedModels[$key] != 'hasAndBelongsToMany' )            
-                echo $this->Element('filter',array('plugin'=>'ReportManager','modelClass'=>$key,'modelSchema'=>$value));
+                echo $this->Element('report/filter',array('plugin'=>'ReportManager','modelClass'=>$key,'modelSchema'=>$value));
         }
         ?> 
   </div>                      
   <div id="step-3">
       <h2 class="StepTitle"><?php echo __d('report_manager','Step 3 Order',true); ?></h2>   
         <?php
-        echo $this->Element('order_direction');
-        echo $this->Element('order',array('plugin'=>'ReportManager','modelClass'=>$modelClass,'modelSchema'=>$modelSchema));
+        echo $this->Element('report/order_direction');
+        echo $this->Element('report/order',array('plugin'=>'ReportManager','modelClass'=>$modelClass,'modelSchema'=>$modelSchema));
         foreach ($associatedModelsSchema as $key => $value) {
             if ( $associatedModels[$key] != 'hasMany' && $associatedModels[$key] != 'hasAndBelongsToMany' )            
-                echo $this->Element('order',array('plugin'=>'ReportManager','modelClass'=>$key,'modelSchema'=>$value));
+                echo $this->Element('report/order',array('plugin'=>'ReportManager','modelClass'=>$key,'modelSchema'=>$value));
         }
         ?> 
   </div>
   <div id="step-4">
       <h2 class="StepTitle"><?php echo __d('report_manager','Step 4 Style',true); ?></h2>   
         <?php
-        echo $this->Element('report_style',array('plugin'=>'ReportManager','oneToManyOption'=>$oneToManyOption));
+        echo $this->Element('report/report_style',array('plugin'=>'ReportManager','oneToManyOption'=>$oneToManyOption));
         ?> 
   </div>    
 </div>
-<?php echo $this->Element('one_to_many_option',array('plugin'=>'ReportManager','oneToManyOption'=>$oneToManyOption)); ?> 
+<?php echo $this->Element('report/one_to_many_option',array('plugin'=>'ReportManager','oneToManyOption'=>$oneToManyOption)); ?> 
 <?php echo $this->Form->end() ;?>
