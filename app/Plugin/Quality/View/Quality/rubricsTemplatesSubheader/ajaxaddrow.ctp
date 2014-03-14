@@ -4,14 +4,16 @@
 	
         
         $displayEvenClass = (($lastId %2) == 1)? 'li_even': '';
-        echo sprintf('<li data-id="%s" class="%s">', $lastId, $displayEvenClass);
+        $html = sprintf('<li data-id="%s" class="%s">', $lastId, $displayEvenClass);
 	if($type == 'header'){
-		echo $this->RubricsView->insertRubricHeader($processItem, $lastId);
+		$html .= $this->RubricsView->insertRubricHeader($processItem, $lastId);
 	}
 	else{
 		//$item['columnHeader'] = $columnHeaderData;
-		echo $this->RubricsView->insertRubricQuestionRow($processItem , $lastId);
+		$html .= $this->RubricsView->insertRubricQuestionRow($processItem , $lastId);
 	}
-        echo $this->Utility->getListRowEnd();
+        $html .= '</li>';//$this->Utility->getListRowEnd();
+        
+        echo json_encode(array('html'=> $html, 'message' => $message));
 
 ?>

@@ -470,9 +470,9 @@ class DataProcessingController extends DataProcessingAppController {
 		$tmp = array();
 		$q = array();
 		if($this->request->is('post')){
-            foreach($this->data['Reports'] as $reportId){
+            /*foreach($this->data['Reports'] as $reportId){
                 $this->customizedReport($reportId);
-            }
+            }*/
             $this->processGenerate($this->data['Reports']);
 		}
 		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est','cus'))), 'order' => array('Report.order')));
@@ -821,7 +821,7 @@ class DataProcessingController extends DataProcessingAppController {
             ));
             $subquery = '';
             $i = 1;
-            $fields = "'Staff.first_name As FirstName', 'Staff.last_name As LastName', 'StaffPositionTitle.name As Position'";
+            $fields = "'Staff.identification_no as OpenEmisID', 'Staff.first_name As FirstName', 'Staff.last_name As LastName', 'StaffPositionTitle.name As Position'";
             $templateFields = 'FirstName,LastName,Position';
             $joins = "
                 array(

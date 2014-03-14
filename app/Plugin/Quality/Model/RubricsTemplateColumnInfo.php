@@ -51,13 +51,27 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
     );
 
     public function beforeAction($controller, $action) {
+        $id = empty($controller->params['pass'][0]) ? '' : $controller->params['pass'][0];
+
+        if (empty($id)) {
+            return $controller->redirect(array('action' => 'rubricsTemplates'));
+        }
+        
+        $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+        $rubricTemplateData = $RubricsTemplate->getRubric($id);
+        $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
+        
+        
+        
         $controller->set('modelName', $this->name);
+        
         $controller->Navigation->addCrumb('Rubric', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
+        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader',$id, 'plugin' => 'Quality'));
     }
 
     public function rubricsTemplatesCriteria($controller, $params) {
         $controller->Navigation->addCrumb('Setup Rubric Criteria');
-        $controller->set('subheader', 'Quality - Setup Rubric Criteria');
+        $controller->set('subheader', 'Setup Rubric Criteria');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
@@ -75,8 +89,8 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
     }
 
     public function rubricsTemplatesCriteriaOrder($controller, $params) {
-        $controller->Navigation->addCrumb('Edit Rubric Criteria Order');
-        $controller->set('subheader', 'Quality - Edit Rubric Criteria Order');
+        $controller->Navigation->addCrumb('Reorder Criteria');
+        $controller->set('subheader', 'Reorder Criteria');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
@@ -107,8 +121,8 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
     }
 
     public function rubricsTemplatesCriteriaView($controller, $params) {
-        $controller->Navigation->addCrumb('Rubric Criteria Details');
-        $controller->set('subheader', 'Quality - Rubric Criteria Details');
+        $controller->Navigation->addCrumb('Criteria Details');
+        $controller->set('subheader', 'Criteria Details');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0]; //rubrics template id
@@ -134,16 +148,16 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
     }
 
     public function rubricsTemplatesCriteriaAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Add Rubric Criteria');
-        $controller->set('subheader', 'Quality - Add Rubric Criteria');
+        $controller->Navigation->addCrumb('Add Criteria');
+        $controller->set('subheader', 'Add Criteria');
         $controller->set('modelName', $this->name);
 
         $this->_setupRubricCriteria($controller, $params, 'add');
     }
 
     public function rubricsTemplatesCriteriaEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Edit Rubric Criteria');
-        $controller->set('subheader', 'Quality - Edit Rubric Criteria');
+        $controller->Navigation->addCrumb('Edit Criteria');
+        $controller->set('subheader', 'Edit Criteria');
         $controller->set('modelName', $this->name);
 
         $this->_setupRubricCriteria($controller, $params, 'edit');

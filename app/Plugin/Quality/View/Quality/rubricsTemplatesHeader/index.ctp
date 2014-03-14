@@ -7,11 +7,11 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
 
 <div id="rubrics_template" class="content_wrapper">
     <h1>
-        <span><?php echo __($subheader); ?></span>
+        <span><?php echo $this->Utility->ellipsis(__($subheader),50); ?></span>
         <?php
-         echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesView', $id), array('class' => 'divider')); 
+         echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplates'), array('class' => 'divider')); 
         if ($_add) {
-            echo $this->Html->link(__('Add'), array('action' => 'rubricsTemplatesHeaderAdd', $id), array('class' => 'divider'));
+            echo $this->Html->link(__('Add Section Header'), array('action' => 'rubricsTemplatesHeaderAdd', $id), array('class' => 'divider'));
         }
 
         if ($_edit && !empty($data)) {
@@ -32,8 +32,8 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
             <?php foreach ($data as $key => $item) { ?>
                 <tr class="table_row"  row-id="<?php echo $item[$modelName]['id']; ?>">
                    <!-- <td class="table_cell"><?php echo $key + 1; ?></td> -->
-                    <td class="table_cell"><?php echo $this->Html->link($item[$modelName]['title'], array('action' => 'rubricsTemplatesHeaderView', $id,$item[$modelName]['id'])); ?></td>
-                    <td class="table_cell cell_status"><?php echo $this->Html->link(__('Rubric Table'), array('action' => 'rubricsTemplatesSubheaderView', $item[$modelName]['id'])); ?></td>
+                    <td class="table_cell"><?php echo $this->Html->link('<div>'.$item[$modelName]['title'].'</div>',array('action' => 'rubricsTemplatesSubheaderView', $item[$modelName]['id']), array('escape' => false)); ?></td>
+                    <td class="table_cell cell_status"><?php echo $this->Html->link('<div>'.__('View Details').'</div>',  array('action' => 'rubricsTemplatesHeaderView', $id,$item[$modelName]['id']), array('escape' => false)); ?></td>
                 </tr>
             <?php } ?>
         </tbody>

@@ -7,7 +7,7 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
 
 <div id="rubrics_template" class="content_wrapper">
     <h1>
-        <span><?php echo __($subheader); ?></span>
+        <span><?php echo $this->Utility->ellipsis(__($subheader), 50); ?></span>
        
     </h1>
     <?php echo $this->element('alert'); ?>
@@ -16,7 +16,7 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
         <thead class="table_head">
             <tr>
                 <td class="cell_id_no"><?php echo __('No.') ?></td>
-                <td><?php echo __('Header') ?></td>
+                <td><?php echo __('Section Header') ?></td>
                 <td class="cell_status"><?php echo __('Status') ?></td>
             </tr>
         </thead>

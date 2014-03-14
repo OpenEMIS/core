@@ -59,7 +59,7 @@ class QualityController extends QualityAppController {
                         $institutionSiteName = $InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
                         $this->bodyTitle = $institutionName . ' - ' . $institutionSiteName;
                         $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view', 'plugin' => false));
-                        $this->Navigation->addCrumb('Quality', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin'=> 'Quality'));
+                        //$this->Navigation->addCrumb('Quality', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin'=> 'Quality'));
                         
                     } else {
                         $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites','plugin' => false));
@@ -80,6 +80,7 @@ class QualityController extends QualityAppController {
             $this->Navigation->addCrumb('Administration', array('controller' => '../Setup', 'action' => 'index'));
             $this->Navigation->addCrumb('Quality', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin'=> 'Quality'));
         }
+
     }
 
     public function index() {

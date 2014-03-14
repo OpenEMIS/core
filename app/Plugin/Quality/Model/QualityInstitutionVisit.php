@@ -87,8 +87,8 @@ class QualityInstitutionVisit extends QualityAppModel {
 
     public function qualityVisit($controller, $params) {
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
-        $controller->Navigation->addCrumb('Quality - Visit');
-        $controller->set('subheader', 'Quality - Visit');
+        $controller->Navigation->addCrumb('Visit');
+        $controller->set('subheader', 'Visit');
         $controller->set('modelName', $this->name);
 
         $this->recursive = -1;
@@ -111,8 +111,8 @@ class QualityInstitutionVisit extends QualityAppModel {
     }
 
     public function qualityVisitView($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Visit');
-        $controller->set('subheader', 'Quality - Visit');
+        $controller->Navigation->addCrumb('Visit');
+        $controller->set('subheader', 'Visit');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
@@ -129,8 +129,9 @@ class QualityInstitutionVisit extends QualityAppModel {
         $year = $SchoolYear->findById($data[$this->name]['school_year_id']);
 
         $EducationGrade = ClassRegistry::init('EducationGrade');
-        $grade = $EducationGrade->find('first', array('recursive' => -1, 'contidions' => array('EducationGrade.id' => $data[$this->name]['education_grade_id'])));
-
+        $EducationGrade->recursive = -1;
+        $grade = $EducationGrade->findById($data[$this->name]['education_grade_id']);
+    
         $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
         $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_class_id']);
 
@@ -150,15 +151,15 @@ class QualityInstitutionVisit extends QualityAppModel {
     }
 
     public function qualityVisitAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Add Visit');
-        $controller->set('subheader', 'Quality - Add Visit');
+        $controller->Navigation->addCrumb('Add Visit');
+        $controller->set('subheader', 'Add Visit');
 
         $this->_setupStatusForm($controller, $params, 'add');
     }
 
     public function qualityVisitEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Edit Visit');
-        $controller->set('subheader', 'Quality - Edit Visit');
+        $controller->Navigation->addCrumb('Edit Visit');
+        $controller->set('subheader', 'Edit Visit');
 
         $this->_setupStatusForm($controller, $params, 'edit');
         $this->render = 'add';
@@ -192,7 +193,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                     //  $selectedId = $params['pass'][0];
                     //   $data = $this->find('first', array('conditions' => array('QualityInstitutionVisit.id' => $selectedId)));
 
-                    if (!empty($data)) {
+                    if (!empty($data)) {//pr($data);
                         $controller->request->data = $data;
                         $selectedTeacherId = $data[$this->name]['teacher_id'];
                         $selectedYearId = $data[$this->name]['school_year_id'];

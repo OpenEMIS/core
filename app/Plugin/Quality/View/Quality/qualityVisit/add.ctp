@@ -47,7 +47,7 @@ echo $this->Html->script('Quality.quality.visit', false);
     </div>
     <div class="row">
         <div class="label"><?php echo __('Class'); ?></div>
-        <div class="value"><?php echo $this->Form->input('institution_site_classes_id', array('id' => 'institutionSiteClassesId', 'options' => $classOptions, 'onChange' => 'QualityVisit.updateURL(this)')); ?></div>
+        <div class="value"><?php echo $this->Form->input('institution_site_class_id', array('id' => 'institutionSiteClassId', 'options' => $classOptions, 'onChange' => 'QualityVisit.updateURL(this)')); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Teacher'); ?></div>
