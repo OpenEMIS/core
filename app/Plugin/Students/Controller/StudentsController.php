@@ -503,10 +503,10 @@ class StudentsController extends StudentsAppController {
                         $arrV['value'] = $val['value'];
                         $arrV['student_id'] = $this->studentId;
                         $this->StudentCustomValue->save($arrV);
-                        $this->Navigation->updateWizard($this->action, null);
                     }
                 }
             }
+            $this->Navigation->updateWizard($this->action, null);
             $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
             $this->redirect(array('action' => 'additional'));
         }
