@@ -3924,46 +3924,22 @@ class InstitutionSitesController extends AppController {
                     array(
                         'recursive' => -1,
                         'fields'=>array('StudentCustomField.name as FieldName'),
-                        'joins' => array(
-                            array(
-                                'table' => 'institution_site_students',
-                                'alias' => 'InstitutionSiteStudent',
-                                'type' => 'left',
-                                'conditions' => array(
-                                    'InstitutionSiteStudent.institution_site_id' => $this->institutionSiteId
-                                    )
-                            ),
-                             array(
-                                'table' => 'students',
-                                'alias' => 'Student',
-                                'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
-                            ),
-                        ),
-                        'order'=>array('Student.first_name')
                     )
                 );
 
-pr($studentCustomFields);
                 $reportFields = $this->reportMapping['Student List']['fields'];
 
-
                 $i = 1;
-                foreach($institutionSiteCustomFields as $val){
-                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
-                       $temp = array('InsititionSiteCustomField'.$i => array($val['InstitutionSiteCustomField']['FieldName'] => $val['0']['FieldValue']));
-                        array_splice($reportFields, 4+($i-1), 0, $temp);
+                foreach($studentCustomFields as $val){
+                   if(!empty($val['StudentCustomField']['FieldName'])){
+                       $temp['StudentCustomField'.$i] = array('StudentCustomField'.$i => array($val['StudentCustomField']['FieldName'] => ''));
+                        array_splice($reportFields, 9+($i-1), 0, array('StudentCustomField'.$i => array($val['StudentCustomField']['FieldName'] => '')));
                    }
                    $i++;
                 }
 
-
-                pr($reportFields);
-
                 $this->reportMapping['Student List']['fields'] = $reportFields;
 
-
-
-                exit;
                 $options['group'] = array('Student.id','InstitutionSiteProgramme.id');
                 $options['order'] = array('Student.first_name');
             } else if ($name == 'Student Result') {
@@ -4995,7 +4971,7 @@ pr($studentCustomFields);
                 //pr($row);
                 $data[] = $row;
             }
-        }
+        } 
 
         return $data;
     }
@@ -6306,6 +6282,69 @@ pr($studentCustomFields);
                     'InstitutionSiteCustomValue' => array('custom_value' => $value)
                 );
             }
+        } else if ($name == 'Student List') {
+            $i = 0;
+            foreach ($data AS $row) {
+                $studentCustomFields = $this->StudentCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('StudentCustomField.name as FieldName', 'IFNULL(StudentCustomFieldOption.value,StudentCustomValue.value) as FieldValue'),
+                        'joins' => array(
+                        array(
+                            'table' => 'institution_site_programmes',
+                            'alias' => 'InstitutionSiteProgramme',
+                            'conditions' => array(
+                                'InstitutionSiteProgramme.institution_site_id' => $this->institutionSiteId
+                            )
+                        ),
+                        array(
+                            'table' => 'institution_site_students',
+                            'alias' => 'InstitutionSiteStudent',
+                            'type' => 'left',
+                            'conditions' => array(
+                                 'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
+                                )
+                        ),
+                        array(
+                            'table' => 'students',
+                            'alias' => 'Student',
+                            'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
+                        ),
+                        array(
+                            'table' => 'student_custom_values',
+                            'alias' => 'StudentCustomValue',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'StudentCustomField.id = StudentCustomValue.student_custom_field_id',
+                                'StudentCustomValue.student_id = InstitutionSiteStudent.student_id'
+                                )
+                        ),
+                        array(
+                            'table' => 'student_custom_field_options',
+                            'alias' => 'StudentCustomFieldOption',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'StudentCustomField.id = StudentCustomFieldOption.student_custom_field_id',
+                                'StudentCustomField.type' => 3,
+                                'StudentCustomValue.value = StudentCustomFieldOption.id'
+                            )
+                        ),
+                    ),
+                    'order'=>array('Student.first_name'),
+                    'offset' => $i
+                    )
+                );
+                $j = 0;
+                foreach($studentCustomFields as $val){
+                    if(!empty($val['StudentCustomField']['FieldName'])){
+                        $row[$j][$val['StudentCustomField']['FieldName']] = $val[0]['FieldValue'];
+                        $j++;
+                    }
+                }
+                //$newData[] = $row;
+                $i++;
+            }
+
         } else if ($name == 'Student Attendance') {
             foreach ($data AS $row) {
                 $row['StudentAttendance']['total_no_attend'] = $row['StudentAttendance']['total_no_attend'] == NULL ? 0 : $row['StudentAttendance']['total_no_attend'];
