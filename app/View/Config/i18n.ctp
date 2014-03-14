@@ -122,5 +122,9 @@ var i18n = {
 	Training: {
 		confirmActivateMessage: '<?php echo T("Do you wish to activate this record?", true); ?>',
 		confirmInactivateMessage: '<?php echo T("Do you wish to inactivate this record?", true); ?>'
+	},
+	Wizard: {
+		title: '<?php echo T("Wizard", true); ?>',
+		uncomplete: '<?php echo T("Unable to proceed until wizard is completed", true); ?>'
 	}
 }

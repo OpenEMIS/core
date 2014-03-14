@@ -4,7 +4,7 @@ echo $this->Html->css('custom_fields', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery.tools', false);
 echo $this->Html->script('jquery.quicksand', false);
 
-echo $this->Html->script('/Sms/js/sms', false);
+echo $this->Html->script('/Sms/js/sms.responses', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>

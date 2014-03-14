@@ -23,7 +23,7 @@ echo $this->Html->script('config', false);
 	
 	<?php
 	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Teachers', 'action' => 'healthTestAdd', 'plugin'=>'Teachers'),
+		'url' => array('controller' => 'Teachers', 'action' => $this->action, 'plugin'=>'Teachers'),
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
