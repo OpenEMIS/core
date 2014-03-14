@@ -161,7 +161,7 @@ class UtilityComponent extends Component {
                 
                 //Rubric
                $msgList['RUBRIC_FIRST_POS'] = 'Please ensure the header is at the 1st position.'; 
-
+                $msgList['RUBRIC_ROW_ADDED'] = 'New row has been added at the bottom of the rubric table.';
                 $msgList['DATA_EXIST'] = 'Please ensure no data duplication.';
                 
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';

@@ -44,9 +44,22 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
         ),
     );
 
+    public function beforeAction($controller, $action) {
+        $rubricTemplateId = empty($controller->params['pass'][1]) ? '' : $controller->params['pass'][1];
+        
+        if (empty($rubricTemplateId)){
+            return $controller->redirect(array('action' => 'qualityRubric'));
+        }
+                
+        $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+        $rubricTemplateData = $RubricsTemplate->getRubric($rubricTemplateId);
+        $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
+        
+      //  $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
+        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'qualityRubricView',$rubricTemplateId, 'plugin' => 'Quality'));
+        
+    }
     public function qualityRubricAnswerView($controller, $params) {
-        $controller->Navigation->addCrumb('Rubric Questions');
-        $controller->set('subheader', 'Quality - Rubric Questions');
         $controller->set('modelName', $this->name);
         
         $controller->set('editable', $controller->Session->read('QualityRubric.editable'));
@@ -62,7 +75,9 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
         $rubricTemplateData = $RubricsTemplateHeader->getRubricTemplate($rubricTemplateHeaderId);
         $headerCounter = $rubricTemplateData['RubricsTemplateHeader']['order'];
-
+     
+        $controller->Navigation->addCrumb($rubricTemplateData['RubricsTemplateHeader']['title']);
+        $controller->set('subheader', $rubricTemplateData['RubricsTemplateHeader']['title']);
         $controller->Session->write('RubricsTemplate.id', $rubricTemplateId);
         $controller->Session->write('RubricsTemplateHeader.id', $rubricTemplateHeaderId);
 
@@ -146,6 +161,11 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
         $controller->set('totalColumns', $count);
         //$controller->set('totalRows', 6);
         $controller->request->data['RubricsTemplateDetail'] = $data;
+        
+       
+        if(empty($data)){
+            return  $controller->redirect(array('action' => 'qualityRubricHeader',$selectedQualityRubricId,$rubricTemplateId));
+        }
     }
 
     //SQL function 
