@@ -6,7 +6,6 @@ echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 ?>
 
-
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="rubrics_template" class="content_wrapper edit">

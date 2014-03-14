@@ -7,9 +7,9 @@
 
 <div id="student" class="content_wrapper">
     <h1>
-        <span><?php echo __($subheader); ?></span>
+        <span><?php echo $this->Utility->ellipsis(__($subheader),50); ?></span>
         <?php
-        echo $this->Html->link(__('List'), array('action' => 'rubricsTemplatesHeader', $rubric_template_id), array('class' => 'divider'));
+        echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesHeader', $rubric_template_id), array('class' => 'divider'));
         if ($_edit) {
             echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesHeaderEdit', $rubric_template_id, $obj['id']), array('class' => 'divider'));
         }
@@ -24,7 +24,7 @@
     <?php echo $this->element('alert'); ?>
 
     <div class="row">
-        <div class="label"><?php echo __('Header'); ?></div>
+        <div class="label"><?php echo __('Section Header'); ?></div>
         <div class="value"><?php echo $obj['title']; ?></div>
     </div>
 
