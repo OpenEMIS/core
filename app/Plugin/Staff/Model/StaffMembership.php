@@ -114,7 +114,7 @@ class StaffMembership extends StaffAppModel {
 			}
 		}
 		else{
-			if(isset($controller->data['submit']) && $controller->data['submit']=='Skip'){
+			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
                $nextLink = $controller->data[$this->name]['nextLink'];
                 $controller->Navigation->skipWizardLink($controller->action, $nextLink);
             }
