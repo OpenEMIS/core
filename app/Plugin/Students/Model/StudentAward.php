@@ -120,7 +120,7 @@ class StudentAward extends StudentsAppModel {
 			}
 		}
 		else{
-			if(isset($controller->data['submit']) && $controller->data['submit']=='Skip'){
+			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
                 $nextLink = $controller->data['StudentAward']['nextLink'];
                 $controller->Navigation->skipWizardLink($controller->action, $nextLink);
             }
