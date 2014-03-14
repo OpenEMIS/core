@@ -186,10 +186,10 @@ class InstitutionSitesController extends AppController {
                     'name' => 'Area (Education)'
                 ),
                 'InstitutionSiteCustomField' => array(
-                    'GROUP_CONCAT(InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
                 ),
                 'InstitutionSiteCustomValue' => array(
-                    'GROUP_CONCAT(InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
                 )
             ),
             'FileName' => 'Report_General_Overview'
@@ -273,10 +273,10 @@ class InstitutionSitesController extends AppController {
                     'preferred_name' => 'Preferred Name'
                 ),
                 'StudentCustomField' => array(
-                    'GROUP_CONCAT(StudentCustomField.name)' => 'Student Custom Field Name'
+                    'GROUP_CONCAT(DISTINCT StudentCustomField.name)' => 'Student Custom Field Name'
                 ),
                 'StudentCustomValue' => array(
-                    'GROUP_CONCAT(StudentCustomValue.value)' => 'Student Custom Field Value'
+                    'GROUP_CONCAT(DISTINCT StudentCustomValue.value)' => 'Student Custom Field Value'
                 ),
                 'EducationProgramme' => array(
                     'name' => 'Programme'
@@ -315,10 +315,10 @@ class InstitutionSitesController extends AppController {
                     'name' => 'Area (Education)'
                 ),
                 'InstitutionSiteCustomField' => array(
-                    'GROUP_CONCAT(InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
                 ),
                 'InstitutionSiteCustomValue' => array(
-                    'GROUP_CONCAT(InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
                 ),
                 'StudentContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StudentContact.value))' => 'Contacts'
@@ -444,10 +444,10 @@ class InstitutionSitesController extends AppController {
                     'date_of_birth' => 'Date of Birth'
                 ),
                 'TeacherCustomField' => array(
-                    'GROUP_CONCAT(TeacherCustomField.name)' => 'Teacher Custom Field Name'
+                    'GROUP_CONCAT(DISTINCT TeacherCustomField.name)' => 'Teacher Custom Field Name'
                 ),
                 'TeacherCustomValue' => array(
-                    'GROUP_CONCAT(TeacherCustomValue.value)' => 'Teacher Custom Field Value'
+                    'GROUP_CONCAT(DISTINCT TeacherCustomValue.value)' => 'Teacher Custom Field Value'
                 ),
                 'Institution' => array(
                     'name' => ''
@@ -483,10 +483,10 @@ class InstitutionSitesController extends AppController {
                     'name' => 'Area (Education)'
                 ),
                 'InstitutionSiteCustomField' => array(
-                    'GROUP_CONCAT(InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
                 ),
                 'InstitutionSiteCustomValue' => array(
-                    'GROUP_CONCAT(InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
                 ),
                 'TeacherContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", TeacherContact.value))' => 'Contacts'
@@ -566,10 +566,10 @@ class InstitutionSitesController extends AppController {
                     'date_of_birth' => 'Date of Birth'
                 ),
                 'StaffCustomField' => array(
-                    'GROUP_CONCAT(StaffCustomField.name)' => 'Staff Custom Field Name'
+                    'GROUP_CONCAT(DISTINCT StaffCustomField.name)' => 'Staff Custom Field Name'
                 ),
                 'StaffCustomValue' => array(
-                    'GROUP_CONCAT(StaffCustomValue.value)' => 'Staff Custom Field Value'
+                    'GROUP_CONCAT(DISTINCT StaffCustomValue.value)' => 'Staff Custom Field Value'
                 ),
                 'Institution' => array(
                     'name' => ''
@@ -605,10 +605,10 @@ class InstitutionSitesController extends AppController {
                     'name' => 'Area (Education)'
                 ),
                 'InstitutionSiteCustomField' => array(
-                    'GROUP_CONCAT(InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
                 ),
                 'InstitutionSiteCustomValue' => array(
-                    'GROUP_CONCAT(InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
                 ),
                 'StaffContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StaffContact.value))' => 'Contacts'
@@ -3706,6 +3706,7 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'area_educations',
                         'alias' => 'AreaEducation',
+                        'type' => 'left',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
                     ),
                     array(
@@ -3834,6 +3835,7 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'area_educations',
                         'alias' => 'AreaEducation',
+                        'type' => 'left',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
                     ),
                     array(
@@ -4111,6 +4113,7 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'area_educations',
                         'alias' => 'AreaEducation',
+                        'type' => 'left',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
                     ),
                     array(
@@ -4277,6 +4280,7 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'area_educations',
                         'alias' => 'AreaEducation',
+                        'type' => 'left',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
                     ),
                     array(
