@@ -79,7 +79,7 @@ echo $this->Html->script('attachments', false);
 	
 	<?php if($_add) { echo $this->Utility->getAddRow('Attachment'); } ?>
 	
-	<div class="controls">
+    <div class="controls">
         <div style="position:absolute;float:left;color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
         <?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
@@ -88,9 +88,9 @@ echo $this->Html->script('attachments', false);
             <?php 
                 if(!$mandatory){
                 echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
-                echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
+                echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
                 } 
-            echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+            echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
       } ?>
 	</div>
 </div>

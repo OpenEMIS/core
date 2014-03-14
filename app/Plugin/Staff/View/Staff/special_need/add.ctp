@@ -51,7 +51,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
         <div class="value"><?php echo $this->Form->input('comment', array('type'=> 'textarea'));?></div>
     </div>
 	
-	<div class="controls view_controls">
+	 <div class="controls">
 		<?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
 	        <?php if(!empty($this->data[$modelName]['id'])){?>
@@ -63,9 +63,9 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
             <?php 
                 if(!$mandatory){
 	                echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
-	                echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
+	                echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
                 } 
-	            echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+	            echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
       	} ?>
 	</div>
 	
