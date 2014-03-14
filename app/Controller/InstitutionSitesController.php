@@ -184,12 +184,6 @@ class InstitutionSitesController extends AppController {
                 ),
                 'AreaEducation' => array(
                     'name' => 'Area (Education)'
-                ),
-                'InstitutionSiteCustomField' => array(
-                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
-                ),
-                'InstitutionSiteCustomValue' => array(
-                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
                 )
             ),
             'FileName' => 'Report_General_Overview'
@@ -3708,7 +3702,56 @@ class InstitutionSitesController extends AppController {
                         'alias' => 'AreaEducation',
                         'type' => 'left',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
-                    ),
+                    )
+                );
+
+                /*,
+                'InstitutionSiteCustomField' => array(
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomField.name)' => 'Institution Site Custom Field Name'
+                ),
+                'InstitutionSiteCustomValue' => array(
+                    'GROUP_CONCAT(DISTINCT InstitutionSiteCustomValue.value)' => 'Institution Site Custom Field Value'
+                )*/
+                $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all',
+                    array(
+                        'fields'=>array('InstitutionSiteCustomField.*'),
+                        'joins' => array(
+                            array(
+                                'table' => 'institution_site_custom_values',
+                                'alias' => 'InstitutionSiteCustomValue',
+                                'type' => 'left',
+                                'conditions' => array(
+                                    'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
+                                    'InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId
+                                    )
+                            ),
+                            array(
+                                'table' => 'institution_site_custom_field_options',
+                                'alias' => 'InstitutionSiteCustomFieldOption',
+                                'type' => 'left',
+                                'conditions' => array(
+                                    'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
+                                    'InstitutionSiteCustomField.type' => 3,
+                                    'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.order'
+                                )
+                            ),
+                        )
+                    )
+                );
+                $additionalJoin = array();
+                $reportFields = $this->reportMapping['Overview and More']['fields'];
+
+                $this->reportMapping['Overview and More']['fields'] = $reportFields;
+                $i = 1;
+                pr($institutionSiteCustomFields);
+                foreach($institutionSiteCustomFields as $val){
+                   $reportFields['InstitutionSiteCustomField'.$i] = array($val['InstitutionSiteCustomField']['value'] => $val['InstitutionSiteCustomField']['FieldValue']);
+                   $i++;
+                }
+
+                $options['joins'] = array_merge($additionalJoin, $options['joins']);
+                pr($options['joins']);
+                /*
                     array(
                         'table' => 'institution_site_custom_values',
                         'alias' => 'InstitutionSiteCustomValue',
@@ -3721,7 +3764,9 @@ class InstitutionSitesController extends AppController {
                         'type' => 'left',
                         'conditions' => array('InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id')
                     )
-                );
+                );*/
+
+exit;
                 $options['group'] = array('InstitutionSite.id');
             } else if ($name == 'Programme List') {
                 $options['recursive'] = -1;
