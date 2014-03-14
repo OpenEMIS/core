@@ -76,7 +76,7 @@ class QualityInstitutionRubric extends QualityAppModel {
     
     public function beforeAction($controller, $action) {
         if($action != 'qualityRubric'){
-            $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
+           // $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
         }
     }
 

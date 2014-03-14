@@ -25,6 +25,7 @@ var Security = {
 		
 		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled), #_execute:not(:disabled)').change(Security.toggleOperation);
 		$('fieldset[type] .icon_plus').click(function() { Security.addRoleArea(this); });
+                Security.autoCheckInstitutionSiteView();
 	},
 	
 	navigate: function(obj) {
@@ -380,5 +381,29 @@ var Security = {
 			}
 		}
 		Security.checkModuleToggled(obj);
-	}
+	},
+                
+        autoCheckInstitutionSiteView: function(){
+            var arrFinal = new Array();
+            var arrFunctionIdSiteDetails = [13, 15, 16, 17, 19, 20, 21, 23, 24, 25, 102, 27, 28, 29, 103];
+            var arrFunctionIdSiteTotals = [30, 31, 32, 33, 34, 99, 35, 36, 37, 38, 39, 40, 41, 42];
+            var arrFunctionIdSiteQuality = [174, 175, 183];
+            var arrFunctionIdSiteReports = [127, 128, 176];
+            arrFinal = arrFinal.concat(arrFunctionIdSiteDetails);
+            arrFinal = arrFinal.concat(arrFunctionIdSiteTotals);
+            arrFinal = arrFinal.concat(arrFunctionIdSiteQuality);
+            arrFinal = arrFinal.concat(arrFunctionIdSiteReports);
+            
+            for(var i in arrFinal){
+                var currentFunctionId = arrFinal[i];
+                $(".table_row[function-id='"+currentFunctionId+"'] .table_cell").find(":checkbox:not(:disabled)").click(function(){
+                    var checkboxInstitutionView = $(".table_row[function-id='1'] .table_cell").find("#_view:checkbox");
+                    var checkboxInstitutionSiteView = $(".table_row[function-id='8'] .table_cell").find("#_view:checkbox");
+                    checkboxInstitutionView.attr('checked', 'checked');// check Institution View
+                    checkboxInstitutionView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
+                    checkboxInstitutionSiteView.attr('checked', 'checked');// check Institution Site View
+                    checkboxInstitutionSiteView.closest('.section_group').find('.module_checkbox').attr('checked', 'checked');//check Institution group checkbox
+                });
+            }
+        }
 };

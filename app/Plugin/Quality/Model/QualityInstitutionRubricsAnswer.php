@@ -55,7 +55,7 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
         $rubricTemplateData = $RubricsTemplate->getRubric($rubricTemplateId);
         $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
         
-        $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
+      //  $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
         $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'qualityRubricView',$rubricTemplateId, 'plugin' => 'Quality'));
         
     }

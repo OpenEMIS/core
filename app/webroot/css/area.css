@@ -71,13 +71,13 @@
 }
 
 .cell_name_area_level { 
-	width: 666px !important;
+	width: 615px !important;
 }
 
 .cell_order_area_level {
 	margin-left: -1px; 
 	/*width: 63px !important;*/
-	min-width: 22px;
+	min-width: 34px;
 }
 
 .cell_order_area_level span{

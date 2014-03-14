@@ -13,7 +13,9 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
             echo $this->Html->link(__('Add'), array('action' => 'rubricsTemplatesCriteriaAdd', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
         }
         if ($_edit && !empty($data)) {
-            echo $this->Html->link(__('Reorder'), array('action' => 'RubricsTemplatesCriteriaOrder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+
+            echo $this->Html->link(__('Reorder'), array('action' => 'rubricsTemplatesCriteriaOrder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+
         }
         ?>
     </h1>

@@ -4,8 +4,9 @@ echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
 echo $this->Html->script('attachments', false);
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
+<?php echo $this->Html->script('/Staff/js/training_self_studies', false); ?>
 
+<?php echo $this->element('breadcrumb'); ?>
 
 <div id="training_self_study" class="content_wrapper edit add">
 	<h1>
@@ -68,7 +69,7 @@ echo $this->Html->script('attachments', false);
      <div class="row">
         <div class="label"><?php echo __('Provider'); ?></div>
         <div class="value">
-        	<?php echo $this->Form->input('training_provider_id', array('options'=>$trainingProviderOptions));?>
+        	<?php echo $this->Form->input('training_provider_id', array('options'=>$trainingProviderOptions, 'empty'=>'--Select--'));?>
         </div>
     </div>
   	<div class="row">
@@ -138,10 +139,10 @@ echo $this->Html->script('attachments', false);
 	</div>
 	<div class="controls view_controls">
 		<?php if(!isset($this->request->data['TeacherTrainingSelfStudy']['training_status_id'])|| $this->request->data['TeacherTrainingSelfStudy']['training_status_id']==1){ ?>
-		<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+		<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="js:if(objTrainingSelfStudies.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
+		<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="js:if(objTrainingSelfStudies.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
 		<?php } ?>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'trainingNeed'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'trainingSelfStudy'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

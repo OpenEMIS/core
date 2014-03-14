@@ -42,7 +42,7 @@
         <div class="value"><?php echo trim($teacher); ?></div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Supervisor'); ?></div>
+        <div class="label"><?php echo __('Evaluator'); ?></div>
         <div class="value"><?php echo trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']); ?></div>
     </div>
     <div class="row">
@@ -57,13 +57,16 @@
     <div class="row">
         <div class="label"><?php echo __('Attachment'); ?></div>
         <div class="value"><?php
-            if (!empty($obj['file_name'])) {
-                echo $this->Html->link($obj['file_name'], array(
-                    'controller' => $this->params['controller'],
-                    'action' => 'qualityVisitAttachmentDownload',
-                    $obj['id']
-                        ), array('target' => '_self', 'escape' => false)
-                );
+        
+            foreach($data['QualityInstitutionVisitAttachment'] as $file){
+                if (!empty($file['file_name'])) {
+                    echo $this->Html->link($file['file_name'], array(
+                        'controller' => $this->params['controller'],
+                        'action' => 'qualityVisitAttachmentDownload',
+                        $file['id']
+                            ), array('target' => '_self', 'escape' => false)
+                    ). "<br/>";
+                }
             }
             ?></div>
     </div>

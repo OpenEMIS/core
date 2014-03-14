@@ -65,7 +65,7 @@ $arrOptions = array('date_format' => array(
 				echo date(empty($item['value'])? $item['default_value']:$item['value']); ?></div>
 		<?php }elseif(stristr($item['name'], 'time_format')){ ?>
 				<div class="table_cell"><?php echo date($item['value']); ?></div>
-		<?php }elseif(stristr($item['name'], 'language')){ ?>
+		<?php }elseif($item['name'] == 'language'){ ?>
 				<div class="table_cell"><?php echo $arrOptions['language'][$item['value']]; ?></div>
 		<?php }elseif(stristr($item['name'], 'yearbook_school_year')){ ?>
 				<div class="table_cell"><?php echo $school_years[$item['value']]; ?></div>
@@ -99,6 +99,10 @@ $arrOptions = array('date_format' => array(
                 }
                 ?>
                 </div>		
+        <?php }elseif(stristr($item['name'], 'country_id')){ ?>
+				<div class="table_cell"><?php echo $countries[$item['value']]; ?></div>
+		 <?php }elseif(stristr($item['type'], 'Wizard')){ ?>
+				<div class="table_cell"><?php echo $wizardOptions[$item['value']]; ?></div>
         <?php }else{ ?>
 				<div class="table_cell"><?php echo $item['value']; ?></div>
 		<?php } ?>

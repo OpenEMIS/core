@@ -300,7 +300,8 @@ class RubricsTemplateSubheader extends QualityAppModel {
             if (empty($controller->request->data['RubricsTemplateDetail'])) {
 
                 $controller->request->data['RubricsTemplateDetail'] = $data;
-                pr($controller->request->data);
+                //pr($controller->request->data);
+                
                 if (empty($controller->request->data['RubricsTemplateDetail']) && $type != 'edit') {
                     $controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
                 }
