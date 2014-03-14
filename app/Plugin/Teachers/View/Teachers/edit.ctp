@@ -162,9 +162,9 @@ $obj = @$data['Teacher'];
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
 		<?php }else{?>
 			<?php if(!$this->Session->check('TeacherId')){ 
-			   echo $this->Form->submit('Cancel', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
+			   echo $this->Form->submit(__('Cancel'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
 			 }
-			 echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
+			 echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
 		}?>
 	</div>
 	
