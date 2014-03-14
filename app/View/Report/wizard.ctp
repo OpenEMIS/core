@@ -27,11 +27,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     myLabelPrevious = "<?php echo __d('report_manager','Previous',true) ?>";
     myLabelFinish = "<?php echo __d('report_manager','Finish',true) ?>";
 </script> 
-<?php echo $this->Html->css('/ReportManager/css/report_manager'); ?>
-<?php echo $this->Html->css('/ReportManager/css/smart_wizard'); ?>
-<?php echo $this->Html->script(array('https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js')); ?>
+<?php echo $this->Html->css('report/report_manager'); ?>
+<?php echo $this->Html->css('report/smart_wizard'); ?>
 <?php echo $this->Html->script(array('https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js')); ?>
-<?php echo $this->Html->script(array('/ReportManager/js/jquery.smartWizard-2.0.js','/ReportManager/js/default.js')); ?>
+<?php echo $this->Html->script(array('report/jquery.smartWizard-2.0.js','report/default.js')); ?>
 <?php echo $this->Form->create('Report',array('target'=>'blank'));?>
 <div id="wizard" class="swMain">
   <ul>

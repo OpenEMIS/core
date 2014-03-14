@@ -47,10 +47,10 @@ class ReportController extends AppController {
         parent::beforeFilter();
 		$this->bodyTitle = 'Reports';
         $this->Navigation->addCrumb('Reports', array('controller' => 'Reports', 'action' => 'index'));
+		$this->Navigation->addCrumb('Custom Reports');
     }
     
     public function index() {
-		$this->Navigation->addCrumb('Custom Reports');
         if (empty($this->data)) {
             $modelIgnoreList = Configure::read('ReportManager.modelIgnoreList'); 
             
@@ -203,6 +203,7 @@ class ReportController extends AppController {
 
 
     public function wizard($param1 = null,$param2 = null, $param3 = null) {
+		$this->bodyTitle = "";
         if (is_null($param1) || is_null($param2)) {
             $this->Session->setFlash(__('Please select a model or a saved report'));
             $this->redirect(array('action'=>'index'));
