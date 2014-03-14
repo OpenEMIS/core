@@ -62,14 +62,13 @@ class RubricsTemplateHeader extends QualityAppModel {
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $rubricTemplateData = $RubricsTemplate->getRubric($id);
         $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
-        
+
         $controller->set('modelName', $this->name);
         $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
-        
-        if($action != 'rubricsTemplatesHeader'){
-            $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader',$id, 'plugin' => 'Quality'));
-        }
-        else{
+
+        if ($action != 'rubricsTemplatesHeader') {
+            $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader', $id, 'plugin' => 'Quality'));
+        } else {
             $controller->Navigation->addCrumb($rubricName);
             $controller->set('subheader', $rubricName);
         }
@@ -78,13 +77,13 @@ class RubricsTemplateHeader extends QualityAppModel {
     public function rubricsTemplatesHeader($controller, $params) {
         $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
 
-        
+
         $data = $this->getRubricHeaders($id, 'all');
-        
-        if(empty($data)){
+
+        if (empty($data)) {
             //return $controller->redirect(array('action' => 'rubricsTemplates'));
         }
-        
+
         $controller->Session->write('RubricsHeader.order', count($data));
         $controller->set('id', $id);
         $controller->set('data', $data);
@@ -114,12 +113,12 @@ class RubricsTemplateHeader extends QualityAppModel {
 
     public function rubricsTemplatesHeaderAdd($controller, $params) {
         $rubric_template_id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-        
-        /*$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-        $rubricTemplateData = $RubricsTemplate->getRubric($rubric_template_id);
-        $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
-        $controller->Navigation->addCrumb($rubricName,array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader',$rubric_template_id, 'plugin' => 'Quality'));
-        */
+
+        /* $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+          $rubricTemplateData = $RubricsTemplate->getRubric($rubric_template_id);
+          $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
+          $controller->Navigation->addCrumb($rubricName,array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader',$rubric_template_id, 'plugin' => 'Quality'));
+         */
         $controller->Navigation->addCrumb('Add Section Header');
         $controller->set('subheader', 'Add Section Header');
 
@@ -162,14 +161,14 @@ class RubricsTemplateHeader extends QualityAppModel {
 
         if ($controller->request->is('get')) {
             $data = $this->findById($id);
-            
+
             if ($type == 'add') {
                 $data[$this->name]['order'] = $controller->Session->read('RubricsHeader.order') + 1;
             }
             $controller->request->data = $data;
         } else {
-            // pr($controller->request->data);
             if ($this->saveAll($controller->request->data)) {
+
                 return $controller->redirect(array('action' => 'rubricsTemplatesHeader', $rubric_template_id));
             }
         }
@@ -193,7 +192,7 @@ class RubricsTemplateHeader extends QualityAppModel {
     //SQL Function
 
     public function getRubricHeaders($rubricTemplateId, $type = 'list') {
-        $data = $this->find($type, array('conditions' => array('rubric_template_id' => $rubricTemplateId), 'recursive' => -1, 'order' => array('rubric_template_id','order')));
+        $data = $this->find($type, array('conditions' => array('rubric_template_id' => $rubricTemplateId), 'recursive' => -1, 'order' => array('rubric_template_id', 'order')));
 
         return $data;
     }
@@ -228,9 +227,10 @@ class RubricsTemplateHeader extends QualityAppModel {
                 ),
             )
         ));
+        
 
         $QualityInstitutionRubricsAnswer = ClassRegistry::init('Quality.QualityInstitutionRubricsAnswer');
-        $currentCompletedData = $QualityInstitutionRubricsAnswer->getTotalCount($institutionSiteId, $rubricId,$qualityInstitutionRubricsid);
+        $currentCompletedData = $QualityInstitutionRubricsAnswer->getTotalCount($institutionSiteId, $rubricId, $qualityInstitutionRubricsid);
 
         $statusData = array();
         foreach ($data AS $obj) {

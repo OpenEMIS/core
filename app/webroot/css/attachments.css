@@ -28,3 +28,15 @@
 
 .file_input .btn { margin-top: 5px; }
 .file_input .clear_btn { margin-left: 5px; }
+
+.form_attachment_name{
+    float:left;
+    width:300px;
+}
+
+.form_attachment_delete{
+    float:left;
+    width:20px;
+    padding-left:5px; 
+    padding-top:3px;
+}

@@ -37,19 +37,24 @@ var objTrainingSessions = {
         objTrainingSessions.getDetailsAfterChangeCourse($("#TrainingSessionTrainingCourseId"));
     },
 
+    selectProvider: function(obj){
+        var provider = $('.training_provider');
+        var selProvider = $('.provider');
+
+        $(selProvider).val($(provider).val());
+    },
+
     getDetailsAfterChangeCourse: function(obj){
         var trainingCourseId = $(obj).val();
         var course = $('.training_course');
         var provider = $('.training_provider');
 
-        var originalCourse = $('.course');
-        var originalProvider = $('.provider');
-
-        var defaultVal = "";
-
-        if(originalCourse.val == course.val){
-            defaultVal = originalProvider[0].value;
-        }
+        var selProvider = $('.provider');
+        defaultVal = $(selProvider).val();
+       //var defaultVal = "";
+        //if(originalCourse.val == course.val){
+    
+        //}
         if(trainingCourseId === ""){
             provider[0].options.length = 0;
         }else{

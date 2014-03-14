@@ -25,7 +25,8 @@ class ConfigController extends AppController {
 	public $uses = array(
 		'ConfigItem',
 		'ConfigAttachment',
-		'SchoolYear'
+		'SchoolYear',
+		'Country'
 	);
 	public $helpers = array('Number', 'Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -39,6 +40,7 @@ class ConfigController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
+		 $this->Auth->allow('fetchImage');
         $this->Auth->allow('getJSConfig');
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		$this->bodyTitle = 'Administration';
@@ -102,6 +104,12 @@ class ConfigController extends AppController {
 		
 		$schoolYear = $this->SchoolYear->find('list', array('fields' => array('SchoolYear.id', 'SchoolYear.name'), 'order' => array('name desc')));
 		$this->set('school_years', $schoolYear);
+
+		$country = $this->Country->find('list', array('fields' => array('Country.id', 'Country.name'), 'order' => array('name asc')));
+		$this->set('countries', $country);
+
+		$wizardOptions = array('0'=>'Non-Mandatory', '1'=>'Mandatory');
+		$this->set('wizardOptions', $wizardOptions);
 		// End Access Control
 		$this->set('items', $sorted);
 	}
@@ -189,9 +197,13 @@ class ConfigController extends AppController {
 		}
                 
 		$schoolYear = $this->SchoolYear->find('list', array('fields' => array('SchoolYear.id', 'SchoolYear.name'), 'order' => array('name desc')));
-
+		$country = $this->Country->find('list', array('fields' => array('Country.id', 'Country.name'), 'order' => array('name asc')));
+	
 		$sorted = $this->groupByType($this->Utility->formatResult($items));
 		$this->set('school_years', $schoolYear);
+		$this->set('countries', $country);
+		$wizardOptions = array('0'=>'Non-Mandatory', '1'=>'Mandatory');
+		$this->set('wizardOptions', $wizardOptions);
 		$this->set('items', $sorted);
                 
 	}

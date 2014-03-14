@@ -271,9 +271,8 @@ class TrainingSession extends TrainingAppModel {
 
 		$controller->set('modelName', $this->name);
 		
+		$provider = '';
 		if($controller->request->is('get')){
-			$provider = '';
-			$course = '';
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
 			$data = $this->findById($id);
@@ -283,7 +282,6 @@ class TrainingSession extends TrainingAppModel {
 				}
 
 				$provider = $data['TrainingSession']['training_provider_id'];
-				$course = $data['TrainingSession']['training_course_id'];
 				$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 				$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
 					array(
@@ -299,9 +297,6 @@ class TrainingSession extends TrainingAppModel {
 				}
 				$controller->request->data = array_merge($data, array('TrainingSessionTrainee'=>$trainingSessionTraineesVal));
 			}
-
-			$controller->set('provider', $provider);
-			$controller->set('course', $course);
 		}
 		else{
 			if ($this->saveAll($controller->request->data, array('validate' => 'only'))){
@@ -328,5 +323,6 @@ class TrainingSession extends TrainingAppModel {
 				}
 			}
 		}
+		$controller->set('provider', $provider);
 	}
 }

@@ -45,11 +45,11 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
     );
   */
     public function beforeAction($controller, $action) {
-        
+        $id = empty($controller->params['pass'][0]) ? '' : $controller->params['pass'][0];
         $rubricId = empty($controller->params['pass'][1]) ? '' : $controller->params['pass'][1];
         
         if (empty($rubricId)){
-            return $controller->redirect(array('action' => 'qualityRubric'));
+            return $controller->redirect(array('controller' => 'Quality','action' => 'qualityRubric'));
         }
                 
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
@@ -57,8 +57,8 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
         $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
      
         
-        $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
-        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'qualityRubricView',$rubricId, 'plugin' => 'Quality'));
+     //   $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
+        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'qualityRubricView',$id, 'plugin' => 'Quality'));
         
         if($action == 'qualityRubricHeader'){
              $controller->set('subheader', $rubricName);
