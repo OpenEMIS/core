@@ -42,8 +42,7 @@
         <div class="label"><?php echo __('Comments'); ?></div>
         <div class="value"><?php echo $this->Form->input('comments', array('type'=>'textarea')); ?></div>
     </div>
-
-	<div class="controls view_controls">
+     <div class="controls">
 	    <?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'identitiesView',$id), array('class' => 'btn_cancel btn_left')); ?>
@@ -51,9 +50,9 @@
             <?php 
                 if(!$mandatory){
                 echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
-                echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
+                echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
                 } 
-            echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+            echo $this->Form->submit('Next', array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
       } ?>
 	</div>
 	
