@@ -272,7 +272,7 @@ class StaffController extends StaffAppController {
         $imgValidate = new ImageValidate();
         $data = $this->data;
         if ($this->request->is('post')) {
-            if(isset($this->data['submit']) && $this->data['submit']=='Cancel'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Cancel')){
                 $this->Navigation->exitWizard();
             }
 
@@ -580,7 +580,7 @@ class StaffController extends StaffAppController {
         $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
         $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
         if ($this->request->is('post')) { // save
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $this->data['Staff']['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1130,7 +1130,7 @@ class StaffController extends StaffAppController {
     public function bankAccountsAdd() {
         $this->Navigation->addCrumb('Add Bank Accounts');
         if ($this->request->is('post')) { // save
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $this->request->data['StaffBankAccount']['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1169,7 +1169,7 @@ class StaffController extends StaffAppController {
                 $this->request->data = $bankAccountObj;
             }
         } else {
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $this->request->data['StaffBankAccount']['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1260,7 +1260,7 @@ class StaffController extends StaffAppController {
         $this->Navigation->addCrumb(__('Add Comments'));
         if ($this->request->is('post')) {
             $data = $this->data['StaffComment'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $data['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1303,7 +1303,7 @@ class StaffController extends StaffAppController {
         } else {
             $commentData = $this->data['StaffComment'];
 
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $commentData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1341,7 +1341,7 @@ class StaffController extends StaffAppController {
         $this->Navigation->addCrumb(__('Add Nationalities'));
         if ($this->request->is('post')) {
             $data = $this->data['StaffNationality'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $data['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1387,7 +1387,7 @@ class StaffController extends StaffAppController {
             }
         } else {
             $nationalityData = $this->data['StaffNationality'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $nationalityData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1428,7 +1428,7 @@ class StaffController extends StaffAppController {
         $this->Navigation->addCrumb(__('Add Identities'));
         if ($this->request->is('post')) {
             $data = $this->data['StaffIdentity'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $data['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1472,7 +1472,7 @@ class StaffController extends StaffAppController {
             }
         } else {
             $identityData = $this->data['StaffIdentity'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $identityData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1512,7 +1512,7 @@ class StaffController extends StaffAppController {
         $this->Navigation->addCrumb(__('Add Languages'));
         if ($this->request->is('post')) {
             $data = $this->data['StaffLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $data['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1562,7 +1562,7 @@ class StaffController extends StaffAppController {
             }
         } else {
             $languageData = $this->data['StaffLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $languageData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1614,7 +1614,7 @@ class StaffController extends StaffAppController {
         if ($this->request->is('post')) {
             $contactData = $this->data['StaffContact'];
 
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $contactData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1672,7 +1672,7 @@ class StaffController extends StaffAppController {
             }
         } else {
             $contactData = $this->data['StaffContact'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $contactData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
