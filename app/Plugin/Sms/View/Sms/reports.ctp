@@ -19,10 +19,16 @@ echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => fa
 					<div class="table_cell col_name"><?php echo __($arrTypVals['name']);?></div>
 					<div class="table_cell"  style="width:100px;text-align: center">
 						<?php foreach($arrTypVals['types'] as $val){?>
+                        <?php if($_execute){ ?>
 						   <?php 
 						   echo $this->Html->link( __($val),
 								array('controller' => 'Sms', 'action' =>'genReport', $arrTypVals['name'], $val));
-						   }?>
+						  ?>
+                         <?php }else{ ?>
+                            <?php echo $val;?>
+                         <?php } 
+                            }
+                         ?>
 					</div>
                 </div>
             <?php } ?>
