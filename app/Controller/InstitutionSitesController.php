@@ -2187,7 +2187,7 @@ class InstitutionSitesController extends AppController {
                         $this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_EXISTS_IN_OTHER_SITE'), array('type' => 'error'));
                     }else {
                         $duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
-                        $startDate = new DateTime(sprintf('%s-%s-%s', $date['year'], $date['month'], $date['day']));
+                        $startDate = new DateTime($date);//new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
                         $endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
                         $endYear = $endDate->format('Y');
                         $data['end_date'] = $endDate->format('Y-m-d');
