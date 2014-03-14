@@ -71,7 +71,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 			<!--<div class="login_line"></div>-->
 			
 			<div class="login_btn">
-				<?php echo $this->Form->submit('Login', array('class' => 'btn')); ?>
+				<?php echo $this->Form->submit(__('Login'), array('class' => 'btn')); ?>
 			</div>
 			
 			<?php echo $this->Form->end() ?>
