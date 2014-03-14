@@ -274,7 +274,7 @@ class TeachersController extends TeachersAppController {
         $imgValidate = new ImageValidate();
         $data = $this->data;
         if ($this->request->is('post')) {
-            if(isset($this->data['submit']) && $this->data['submit']=='Cancel'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Cancel')){
                 $this->Navigation->exitWizard();
             }
             $reset_image = $data['Teacher']['reset_image'];
@@ -584,7 +584,7 @@ class TeachersController extends TeachersAppController {
         $arrMap = array('model' => 'Teachers.TeacherAttachment', 'foreignKey' => 'teacher_id');
         $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
         if ($this->request->is('post')) { // save
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $this->data['Teachers']['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1243,7 +1243,7 @@ class TeachersController extends TeachersAppController {
     public function bankAccountsAdd() {
         $this->Navigation->addCrumb('Add Bank Accounts');
         if ($this->request->is('post')) { // save
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $this->request->data['TeacherBankAccount']['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1285,7 +1285,7 @@ class TeachersController extends TeachersAppController {
                 $this->request->data = $bankAccountObj;
             }
         } else {
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $this->request->data['TeacherBankAccount']['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1387,7 +1387,7 @@ class TeachersController extends TeachersAppController {
         $this->Navigation->addCrumb('Add Comments');
         if ($this->request->is('post')) {
             $data = $this->data['TeacherComment'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $data['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1428,7 +1428,7 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $commentData = $this->data['TeacherComment'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $commentData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1465,7 +1465,7 @@ class TeachersController extends TeachersAppController {
         $this->Navigation->addCrumb(__('Add Nationalities'));
         if ($this->request->is('post')) {
             $data = $this->data['TeacherNationality'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $data['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1512,7 +1512,7 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $nationalityData = $this->data['TeacherNationality'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $nationalityData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1553,7 +1553,7 @@ class TeachersController extends TeachersAppController {
          $this->Navigation->addCrumb(__('Add Identities'));
         if ($this->request->is('post')) {
             $data = $this->data['TeacherIdentity'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $data['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1597,7 +1597,7 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $identityData = $this->data['TeacherIdentity'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $identityData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1638,7 +1638,7 @@ class TeachersController extends TeachersAppController {
         $this->Navigation->addCrumb(__('Add Languages'));
         if ($this->request->is('post')) {
             $data = $this->data['TeacherLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $data['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1687,7 +1687,7 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $languageData = $this->data['TeacherLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $languageData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1738,7 +1738,7 @@ class TeachersController extends TeachersAppController {
         $this->Navigation->addCrumb(__('Add Contacts'));
         if ($this->request->is('post')) {
             $contactData = $this->data['TeacherContact'];
-            if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $contactData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
@@ -1796,7 +1796,7 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $contactData = $this->data['TeacherContact'];
-           if(isset($this->data['submit']) && $this->data['submit']=='Skip'){
+           if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $nextLink = $contactData['nextLink'];
                 $this->Navigation->skipWizardLink($this->action, $nextLink);
             }
