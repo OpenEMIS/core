@@ -9,6 +9,7 @@ var wizard = {
 		$('a[href]').each(function() {
 			if($(this).attr('href').indexOf('/') != -1) {
 				if($(this).attr('wizard') == undefined && !$(this).hasClass('logout')) {
+					$(this).attr('href', '');
 					$(this).click(function() {
 						var dlgOpt = {
 							id: 'wizard-dialog',
