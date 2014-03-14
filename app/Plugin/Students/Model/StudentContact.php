@@ -78,7 +78,7 @@ class StudentContact extends StudentsAppModel {
         return $flag;
     }
 
-     public function beforeValidate() {
+     public function beforeValidate($options = array()) {
       	if (isset($this->data[$this->alias]['contact_option_id'])) {
 	      	$contactOption = $this->data[$this->alias]['contact_option_id'];
 	        switch ($contactOption) {

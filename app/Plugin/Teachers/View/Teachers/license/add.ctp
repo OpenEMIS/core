@@ -11,10 +11,14 @@ echo $this->Html->script('jquery-ui.min', false);?>
 	<h1>
 		<span><?php echo __($subheader); ?></span>
 		<?php
-            echo $this->Html->link(__('Back'), array('action' => 'license'), array('class' => 'divider'));
-       
+            if (!$WizardMode) {
+	            if(!empty($this->data[$modelName]['id'])){
+     			 	echo $this->Html->link(__('Back'), array('action' => 'licenseView', $this->data[$modelName]['id']), array('class' => 'divider'));
+		       	}else{
+	        	 	echo $this->Html->link(__('Back'), array('action' => 'license'), array('class' => 'divider'));
+		        }
+	        }
 		?>
-	</h1>
 	</h1>
 	
 	<?php
@@ -64,9 +68,22 @@ echo $this->Html->script('jquery-ui.min', false);?>
         </div>
     </div>
 	
-	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'license'), array('class' => 'btn_cancel btn_left')); ?>
+	 <div class="controls">
+		<?php if(!$WizardMode){ ?>
+        <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+	        <?php if(!empty($this->data[$modelName]['id'])){?>
+	        <?php echo $this->Html->link(__('Cancel'), array('action' => 'licenseView', $this->data[$modelName]['id']), array('class' => 'btn_cancel btn_left')); ?>
+	        <?php }else{ ?>
+	         <?php echo $this->Html->link(__('Cancel'), array('action' => 'license'), array('class' => 'btn_cancel btn_left')); ?>
+	        <?php } ?>
+        <?php }else{?>
+            <?php 
+                if(!$mandatory){
+	                echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
+	                echo $this->Form->submit(__('Skip'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
+                } 
+	            echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
+      	} ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

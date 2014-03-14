@@ -284,7 +284,7 @@ input.default { width: 240px; }
 	text-shadow: -1px -1px rgba(0, 0, 0, 0.5); !important;
 }
 
-a.btn, a.btn_cancel { padding: 4px 14px 5px; }
+a.btn, a.btn_cancel, .btn_cancel_button { padding: 4px 14px 5px; }
 a.btn:hover { text-decoration: none; }
 
 .chrome .btn_save, .safari .btn_save { padding: 4px 12px; }

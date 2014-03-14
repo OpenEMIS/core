@@ -12,8 +12,10 @@ $obj = @$data['Teacher'];
 	<h1>
 		<span><?php echo __('Overview'); ?></span>
 		<?php
-		echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
-		echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
+		if(!$WizardMode){
+			echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
+			echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
+		}
 		?>
 	</h1>
 	
@@ -27,7 +29,8 @@ $obj = @$data['Teacher'];
 
 	<fieldset class="section_break">
 		<legend><?php echo __('Information'); ?></legend>
-        <div class="row">
+		<?php if($this->Session->check('TeacherId')){ ?>
+      	<div class="row">
 			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
             <?php if($autoid==''){ ?>
             <div class="value"><?php echo $this->Form->input('identification_no', array('value' => $obj['identification_no'],
@@ -39,6 +42,23 @@ $obj = @$data['Teacher'];
             </div>
             <?php } ?>
 		</div>
+		<?php }else{ ?>
+        <div class="row">
+			<div class="label"><?php echo __('OpenEMIS ID'); ?>
+            <?php if($autoid!=''){ ?>
+            <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid, 'error' => false)); ?>
+            <?php } ?>
+            </div>
+            <div class="value">
+            <?php if($autoid!=''){ ?>
+            	 <?php echo $autoid; ?>
+            <?php }else{ ?>
+                <?php echo $this->Form->input('identification_no', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_teacher_identification');")) ?>
+            	<input type="hidden" name="validate_teacher_identification" id="validate_teacher_identification"/>
+            <?php } ?>
+            </div>
+		</div>
+		<?php } ?>
 		<div class="row">
 			<div class="label"><?php echo __('First Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('first_name', array('value' => $obj['first_name'])); ?></div>
@@ -136,9 +156,16 @@ $obj = @$data['Teacher'];
 		</div>
 	</fieldset>
 
-	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
+	 <div class="controls">
+		<?php if(!$WizardMode){ ?>
+		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php }else{?>
+			<?php if(!$this->Session->check('TeacherId')){ 
+			   echo $this->Form->submit(__('Cancel'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
+			 }
+			 echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
+		}?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
