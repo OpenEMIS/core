@@ -14,31 +14,19 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 $(document).ready(function() {
-	sms.init();
+	smsResponse.init();
 });
 
-var sms = {
+var smsResponse = {
 	init: function() {
+		smsResponse.attachIconTitle();
 	},
- 
-	confirmModifySmsMessage: function(obj) {
-		var href = $(obj).attr('href');
-		if($(obj).prop('tagName') !== 'A') {
-			href = getRootURL() + href;
-		}
-		var btn = {
-			value: i18n.General.textContinue,
-			callback: function() { window.location.href = href; }
-		};
-		
-		var dlgOpt = {	
-			id: 'delete-dialog',
-			title: i18n.General.textWarningConfirmation,
-			content: i18n.SMS.confirmModifySmsMessageContent,
-			buttons: [btn]
-		};
-		
-		$.dialog(dlgOpt);
-		return false;
+	
+	attachIconTitle: function() {
+		try{
+		$('div[title]').tooltip({position: 'top center', effect: 'slide'});
+
+		}catch(e){}
 	}
+
 };
