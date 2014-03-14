@@ -73,12 +73,18 @@ class QualityInstitutionRubric extends QualityAppModel {
 
         return !empty($value);
     }
+    
+    public function beforeAction($controller, $action) {
+        if($action != 'qualityRubric'){
+            $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
+        }
+    }
 
     public function qualityRubric($controller, $params) {
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
         $institutionId = $controller->Session->read('InstitutionId');
         $controller->Navigation->addCrumb('Rubrics');
-        $controller->set('subheader', 'Quality - Rubrics');
+        $controller->set('subheader', 'Rubrics');
         $controller->set('modelName', $this->name);
 
         $this->recursive = -1;
@@ -106,14 +112,14 @@ class QualityInstitutionRubric extends QualityAppModel {
 
     public function qualityRubricAdd($controller, $params) {
         $controller->Navigation->addCrumb('Add Rubrics');
-        $controller->set('subheader', 'Quality - Add Rubrics');
+        $controller->set('subheader', 'Add Rubrics');
 
         $this->_setupRubricForm($controller, $params, 'add');
     }
 
     public function qualityRubricEdit($controller, $params) {
         $controller->Navigation->addCrumb('Edit Rubrics');
-        $controller->set('subheader', 'Quality - Edit Rubrics');
+        $controller->set('subheader', 'Edit Rubrics');
 
         $this->_setupRubricForm($controller, $params, 'edit');
 
@@ -219,8 +225,8 @@ class QualityInstitutionRubric extends QualityAppModel {
     }
 
     public function qualityRubricView($controller, $params) {
-        $controller->Navigation->addCrumb('Rubric Detail');
-        $controller->set('subheader', 'Quality - Rubric Detail');
+        $controller->Navigation->addCrumb('Details');
+        $controller->set('subheader', 'Details');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];

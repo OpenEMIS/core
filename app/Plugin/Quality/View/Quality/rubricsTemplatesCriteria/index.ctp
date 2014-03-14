@@ -8,12 +8,12 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
     <h1>
         <span><?php echo __($subheader); ?></span>
         <?php
-        echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesSubheaderEdit', $rubricTemplateHeaderId), array('class' => 'divider'));
+        echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'divider'));
         if ($_add) {
             echo $this->Html->link(__('Add'), array('action' => 'rubricsTemplatesCriteriaAdd', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
         }
         if ($_edit && !empty($data)) {
-            echo $this->Html->link(__('Edit'), array('action' => 'RubricsTemplatesCriteriaOrder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+            echo $this->Html->link(__('Reorder'), array('action' => 'RubricsTemplatesCriteriaOrder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
         }
         ?>
     </h1>

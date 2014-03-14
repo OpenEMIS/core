@@ -9,17 +9,17 @@ echo $this->Html->script('jquery.sort', false);
 
 <div id="student" class="content_wrapper">
     <h1>
-        <span><?php echo __($subheader); ?></span>
+        <span><?php echo $this->Utility->ellipsis(__($subheader), 50); ?></span>
         <?php
         /* if($_edit) {
           echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesDetails', $id ), array('class' => 'divider'));
           } */
-         echo $this->Html->link(__('Add Level / Column'), array('action' => 'rubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
+         //echo $this->Html->link(__('Add Level / Column'), array('action' => 'rubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
         
-        if (!empty($columnHeaderData)) {
+      //  if (!empty($columnHeaderData)) {
             echo $this->Html->link(__('Add Header'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
-            echo $this->Html->link(__('Add Criteria / Row'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
-        }
+            echo $this->Html->link(__('Add Criteria'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
+      //  }
         
         ?>
     </h1>
@@ -31,28 +31,30 @@ echo $this->Html->script('jquery.sort', false);
         //'url' => array('controller' => 'Quality','plugin'=>'Quality'),
         'type' => 'file',
         'novalidate' => true,
-        'inputDefaults' => array('label' => false, 'div' => array('class' => 'input_wrapper'), 'autocomplete' => 'off')
+        'inputDefaults' => array('label' => false, 
+        'div' => array('class' => 'input_wrapper'), 
+        'autocomplete' => 'off')
     ));
     ?>
+    
     <?php
     $lastId = 0;
     if (!empty($this->data['RubricsTemplateDetail'])) {
         $lastId = count($this->data['RubricsTemplateDetail']);
     }
-    echo $this->Form->hidden('setting.last_id', array('value' => $lastId, 'id' => 'last_id'));
+        echo $this->Form->hidden('setting.last_id', array('value' => $lastId, 'id' => 'last_id',  'autocomplete' => 'off'));
     ?>
-
+    
     <?php
     //$index = 0;
     echo $this->Utility->getListStart();
     if (!empty($this->data['RubricsTemplateDetail'])) {
         foreach ($this->data['RubricsTemplateDetail'] as $key => $item) {
-
+            $item['columnHeader'] = $columnHeaderData;
             echo $this->Utility->getListRowStart($key, true);
             if (array_key_exists('RubricsTemplateSubheader', $item)) {
                 echo $this->RubricsView->insertRubricHeader($item, $key);
             } else {
-                $item['columnHeader'] = $columnHeaderData;
                 echo $this->RubricsView->insertRubricQuestionRow($item, $key);
             }
             echo $this->Utility->getListRowEnd();

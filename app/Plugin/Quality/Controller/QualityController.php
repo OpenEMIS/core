@@ -77,7 +77,7 @@ class QualityController extends QualityAppController {
             $this->Navigation->addCrumb('Administration', array('controller' => '../Setup', 'action' => 'index'));
            
         }
-        $this->Navigation->addCrumb('Quality', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin'=> 'Quality'));
+       // $this->Navigation->addCrumb('Quality', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin'=> 'Quality'));
     }
 
     public function index() {
