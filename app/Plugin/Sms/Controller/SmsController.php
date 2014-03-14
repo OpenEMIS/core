@@ -461,10 +461,12 @@ class SmsController extends SmsAppController {
                     SELECT count(distinct number) as Number, 'NumberOfCompleted' as countType, 3 as countId
                     FROM `sms_responses` AS `SmsResponse` where `order`= '6'
                     UNION
+                    SELECT count(Number), countType, countId FROM(
                     SELECT count(distinct number) as Number, 'NumberOfPartial' as countType, 4 as countId
                     FROM `sms_responses` AS `SmsResponse`
                     group by number
                     having max(`order`) < 6
+                    )a
                     UNION
                     SELECT sum(response) as Number, 'NumberOfAbove16' as countType, 5 as countId
                     FROM `sms_responses` AS `SmsResponse` where `order`= '3'
