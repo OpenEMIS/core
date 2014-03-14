@@ -59,7 +59,7 @@ class RubricsTemplate extends QualityAppModel {
 
     public function rubricsTemplates($controller, $params) {
         $controller->Navigation->addCrumb('Rubrics');
-        $controller->set('subheader', 'Quality - Rubrics');
+        $controller->set('subheader', 'Rubrics');
         $controller->set('modelName', $this->name);
 
         $this->recursive = -1;
@@ -70,7 +70,7 @@ class RubricsTemplate extends QualityAppModel {
 
     public function rubricsTemplatesView($controller, $params) {
         $controller->Navigation->addCrumb('Rubric Details');
-        $controller->set('subheader', 'Quality - Rubric Details');
+        $controller->set('subheader', 'Rubric Details');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
@@ -86,7 +86,7 @@ class RubricsTemplate extends QualityAppModel {
 
     public function rubricsTemplatesAdd($controller, $params) {
         $controller->Navigation->addCrumb('Add Rubric');
-        $controller->set('subheader', 'Quality - Add Rubric');
+        $controller->set('subheader', 'Add Rubric');
         $controller->set('modelName', $this->name);
 
         $this->setupRubricsTemplate($controller, $params, 'add');
@@ -96,7 +96,7 @@ class RubricsTemplate extends QualityAppModel {
         $this->render = 'add';
 
         $controller->Navigation->addCrumb('Edit Rubric');
-        $controller->set('subheader', 'Quality - Edit Rubric');
+        $controller->set('subheader', 'Edit Rubric');
         $controller->set('modelName', $this->name);
 
         $this->setupRubricsTemplate($controller, $params, 'edit');

@@ -54,8 +54,8 @@ class QualityStatus extends QualityAppModel {
     public function status($controller, $params) {
         $institutionId = $controller->Session->read('InstitutionId');
         
-        $controller->Navigation->addCrumb('Quality - Status');
-        $controller->set('subheader', 'Quality - Status');
+        $controller->Navigation->addCrumb('Status');
+        $controller->set('subheader', 'Status');
         $controller->set('modelName', $this->name);
 
         $this->recursive = -1;
@@ -71,8 +71,8 @@ class QualityStatus extends QualityAppModel {
     }
 
     public function statusView($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Status');
-        $controller->set('subheader', 'Quality - Status');
+        $controller->Navigation->addCrumb('Status');
+        $controller->set('subheader', 'Status');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
@@ -94,8 +94,8 @@ class QualityStatus extends QualityAppModel {
     }
 
     public function statusAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Add Status');
-        $controller->set('subheader', 'Quality - Add Status');
+        $controller->Navigation->addCrumb('Add Status');
+        $controller->set('subheader', 'Add Status');
         $controller->set('modelName', $this->name);
 
         $controller->set('selectedYear', date("Y"));
@@ -104,8 +104,8 @@ class QualityStatus extends QualityAppModel {
     }
 
     public function statusEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Edit Status');
-        $controller->set('subheader', 'Quality - Edit Status');
+        $controller->Navigation->addCrumb('Edit Status');
+        $controller->set('subheader', 'Edit Status');
         $controller->set('modelName', $this->name);
         $controller->set('selectedYear', date("Y"));
         $this->_setupStatusForm($controller, $params);

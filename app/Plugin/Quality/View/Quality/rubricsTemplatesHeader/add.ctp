@@ -25,7 +25,7 @@ echo $this->Html->script('config', false);
     
     <?php if(!empty($this->data[$modelName]['order'])){ echo $this->Form->hidden('order');} ?>
     <div class="row">
-        <div class="label"><?php echo __('Header'); ?></div>
+        <div class="label"><?php echo __('Section Header'); ?></div>
         <div class="value"><?php echo $this->Form->input('title'); ?> </div>
     </div>
     <div class="controls view_controls">

@@ -19,6 +19,7 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
 
     public $useTable = false;
     public $actsAs = array('ControllerAction');
+    
    /* public $belongsTo = array(
         //'Student',
         //'RubricsTemplateHeader',
@@ -43,19 +44,38 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
         ),
     );
   */
+    public function beforeAction($controller, $action) {
+        
+        $rubricId = empty($controller->params['pass'][1]) ? '' : $controller->params['pass'][1];
+        
+        if (empty($rubricId)){
+            return $controller->redirect(array('action' => 'qualityRubric'));
+        }
+                
+        $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+        $rubricTemplateData = $RubricsTemplate->getRubric($rubricId);
+        $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
+     
+        
+        $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
+        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'qualityRubricView',$rubricId, 'plugin' => 'Quality'));
+        
+        if($action == 'qualityRubricHeader'){
+             $controller->set('subheader', $rubricName);
+        }
+    }
+    
     public function qualityRubricHeader($controller, $params){
-        $controller->Navigation->addCrumb('Headers');
+        $controller->Navigation->addCrumb('Section Header');
         
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
         $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
         $rubricId = empty($params['pass'][1]) ? '' : $params['pass'][1];
 
-        if (empty($rubricId)|| empty($id)) {
+        if (empty($id)) {
             return $controller->redirect(array('action' => 'rubricsTemplates'));
         }
         
-        
-    
        // $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
       //   pr($currentCompletedData);
         
@@ -79,7 +99,7 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
             $controller->Session->write('QualityRubric.editable', $editiable);
         }
         
-        $controller->set('subheader', 'Quality - Rubric Headers');
+       
         $controller->set('rubricId', $rubricId);
         $controller->set('id', $id);
         $controller->set('data', $data);

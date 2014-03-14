@@ -53,32 +53,46 @@ class RubricsTemplateHeader extends QualityAppModel {
     );
 
     public function beforeAction($controller, $action) {
-        $controller->set('modelName', $this->name);
-        $controller->Navigation->addCrumb('Rubric', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
-    }
-
-    public function rubricsTemplatesHeader($controller, $params) {
-        $controller->Navigation->addCrumb('Section Header');
-        $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
+        $id = empty($controller->params['pass'][0]) ? '' : $controller->params['pass'][0];
 
         if (empty($id)) {
             return $controller->redirect(array('action' => 'rubricsTemplates'));
         }
 
+        $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+        $rubricTemplateData = $RubricsTemplate->getRubric($id);
+        $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
+        
+        $controller->set('modelName', $this->name);
+        $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
+        
+        if($action != 'rubricsTemplatesHeader'){
+            $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader',$id, 'plugin' => 'Quality'));
+        }
+        else{
+            $controller->Navigation->addCrumb($rubricName);
+            $controller->set('subheader', $rubricName);
+        }
+    }
+
+    public function rubricsTemplatesHeader($controller, $params) {
+        $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
+
+        
         $data = $this->getRubricHeaders($id, 'all');
+        
+        if(empty($data)){
+            //return $controller->redirect(array('action' => 'rubricsTemplates'));
+        }
+        
         $controller->Session->write('RubricsHeader.order', count($data));
-        $controller->set('subheader', 'Quality - Section Header');
         $controller->set('id', $id);
         $controller->set('data', $data);
     }
 
     public function rubricsTemplatesHeaderOrder($controller, $params) {
-        $controller->Navigation->addCrumb('Edit Headers Order');
+        //$controller->Navigation->addCrumb('Edit Headers Order');
         $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
-
-        if (empty($id)) {
-            return $controller->redirect(array('action' => 'rubricsTemplates'));
-        }
 
         if ($controller->request->is('post')) {
             //  pr($controller->request->data);
@@ -91,22 +105,30 @@ class RubricsTemplateHeader extends QualityAppModel {
             }
         }
 
+        $controller->Navigation->addCrumb('Reorder Section Headers');
         $data = $this->getRubricHeaders($id, 'all');
-        $controller->set('subheader', 'Quality - Edit Rubric Headers Order');
+        $controller->set('subheader', 'Reorder Section Headers');
         $controller->set('id', $id);
         $controller->set('data', $data);
     }
 
     public function rubricsTemplatesHeaderAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Add Headers');
-        $controller->set('subheader', 'Quality - Add Rubric Headers');
+        $rubric_template_id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+        
+        /*$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+        $rubricTemplateData = $RubricsTemplate->getRubric($rubric_template_id);
+        $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
+        $controller->Navigation->addCrumb($rubricName,array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader',$rubric_template_id, 'plugin' => 'Quality'));
+        */
+        $controller->Navigation->addCrumb('Add Section Header');
+        $controller->set('subheader', 'Add Section Header');
 
         $this->_setupForm($controller, $params, 'add');
     }
 
     public function rubricsTemplatesHeaderEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Add Headers');
-        $controller->set('subheader', 'Quality - Add Rubric Headers');
+        $controller->Navigation->addCrumb('Edit Headers');
+        $controller->set('subheader', 'Edit Rubric Headers');
 
         $this->_setupForm($controller, $params, 'edit');
 
@@ -114,8 +136,8 @@ class RubricsTemplateHeader extends QualityAppModel {
     }
 
     public function rubricsTemplatesHeaderView($controller, $params) {
-        $controller->Navigation->addCrumb('Section Header Details');
-        $controller->set('subheader', 'Quality - Section Header Details');
+        $controller->Navigation->addCrumb('Details');
+        $controller->set('subheader', 'Details');
 
         if (count($params['pass']) < 2) {
             return $controller->redirect(array('action' => 'rubricsTemplates'));
@@ -140,6 +162,7 @@ class RubricsTemplateHeader extends QualityAppModel {
 
         if ($controller->request->is('get')) {
             $data = $this->findById($id);
+            
             if ($type == 'add') {
                 $data[$this->name]['order'] = $controller->Session->read('RubricsHeader.order') + 1;
             }

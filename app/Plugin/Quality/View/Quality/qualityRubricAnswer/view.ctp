@@ -9,7 +9,7 @@ echo $this->Html->script('/Quality/js/quality.rubric', false);
 
 <div id="student" class="content_wrapper">
     <h1>
-        <span><?php echo __($subheader); ?></span>
+        <span><?php echo $this->Utility->ellipsis(__($subheader), 50); ?></span>
         <?php
         /* echo $this->Html->link(__('List'), array('action' => 'qualityRubric'), array('class' => 'divider'));
 

@@ -10,7 +10,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
     <h1>
         <span><?php echo __($subheader); ?></span>
         <?php
-        echo $this->Html->link(__('List'), array('action' => 'rubricsTemplatesCriteria', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+        echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesCriteria', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
 
         if ($_edit) {
             echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesCriteriaEdit', $id, $rubricTemplateHeaderId, $obj['id']), array('class' => 'divider'));
@@ -22,7 +22,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
     </h1>
     <?php echo $this->element('alert'); ?>
     <div class="row">
-        <div class="label"><?php echo __('Name'); ?></div>
+        <div class="label"><?php echo __('Criteria Name'); ?></div>
         <div class="value"><?php echo $obj['name']; ?></div>
     </div>
     <div class="row">
