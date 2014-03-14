@@ -524,10 +524,10 @@ class StaffController extends StaffAppController {
                         $arrV['value'] = $val['value'];
                         $arrV['staff_id'] = $this->staffId;
                         $this->StaffCustomValue->save($arrV);
-                        $this->Navigation->updateWizard($this->action, null);
                     }
                 }
             }
+            $this->Navigation->updateWizard($this->action, null);    
             $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
             $this->redirect(array('action' => 'additional'));
         }
