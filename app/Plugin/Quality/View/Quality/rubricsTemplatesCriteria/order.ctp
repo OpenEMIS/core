@@ -17,6 +17,7 @@ echo $this->Html->script('jquery.sort', false);
     ?>
     <h1>
         <span><?php echo __($subheader); ?></span>
+        <?php echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesCriteria', $id, $rubricTemplateHeaderId), array('class' => 'divider')); ?>
     </h1>
     <?php echo $this->element('alert'); ?>
 
