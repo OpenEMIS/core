@@ -5,7 +5,7 @@
      <h1>
         <span><?php echo __('Contacts'); ?></span>
         <?php 
-        if ($_edit) {
+       if ($_edit && !$WizardMode) {
             echo $this->Html->link(__('Back'), array('action' => 'contactsView', $id), array('class' => 'divider'));
         }
         ?>
@@ -54,9 +54,18 @@
         <div class="value"><?php echo $this->Form->input('preferred', array('options'=>array('1'=>'Yes', '0'=>'No'))); ?></div>
     </div>
 
-	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'contactsView', $id), array('class' => 'btn_cancel btn_left')); ?>
+     <div class="controls">
+		  <?php if(!$WizardMode){ ?>
+        <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'contactsView', $id), array('class' => 'btn_cancel btn_left')); ?>
+        <?php }else{?>
+            <?php 
+                if(!$mandatory){
+                echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
+                echo $this->Form->submit(__('Skip'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
+                } 
+            echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
+      } ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

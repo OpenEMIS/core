@@ -62,14 +62,15 @@ class QualityController extends QualityAppController {
                         $this->Navigation->addCrumb('Quality', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin'=> 'Quality'));
                         
                     } else {
-                        $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
+                        $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites','plugin' => false));
                     }
                 }
             } else {
                 if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
                     $this->layout = 'profile';
                 } else {
-                    $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+                  //  pr('here - Quality Controller');die;
+                    $this->redirect(array('controller' => 'Institutions', 'action' => 'index', 'plugin' => false));
                 }
             }
             
