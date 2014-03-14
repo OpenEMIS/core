@@ -293,16 +293,14 @@ class StaffController extends StaffAppController {
                 $data['Staff']['photo_content'] = '';
                 $data['Staff']['photo_name'] = '';
             }
-
             $this->Staff->set($data);
             if ($this->Staff->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
                 unset($data['Staff']['rest_image']);
-                $this->Staff->set($data);
-                $this->Staff->save();
+                $rec = $this->Staff->save();
                 if(!$this->Session->check('StaffId')){
                     $id = $this->Staff->getLastInsertId();
                 }else{
-                    $id = $this->Staff->read('StaffId');
+                    $id = $this->Session->read('StaffId');
                 }
                 $this->Navigation->updateWizard('view', $id);
                 $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');

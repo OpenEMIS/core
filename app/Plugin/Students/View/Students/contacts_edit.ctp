@@ -54,7 +54,7 @@
         <div class="value"><?php echo $this->Form->input('preferred', array('options'=>array('1'=>'Yes', '0'=>'No'))); ?></div>
     </div>
 
-	<div class="controls view_controls">
+	 <div class="controls">
 		  <?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'contactsView',$id), array('class' => 'btn_cancel btn_left')); ?>
