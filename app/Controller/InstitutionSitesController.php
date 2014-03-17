@@ -4570,7 +4570,7 @@ class InstitutionSitesController extends AppController {
         }
 
         // pr($this->reportMapping[$name]);
-        //  pr($data); die;
+        //pr($data); die;
         return $data;
     }
 
@@ -6363,6 +6363,7 @@ class InstitutionSitesController extends AppController {
                     )
                 );
 
+
                 foreach($studentCustomFields as $val){
                    if(!empty($val['StudentCustomField']['FieldName'])){
                         $row['StudentCustomField'][$val['StudentCustomField']['FieldName']] = $val[0]['FieldValue'];
@@ -6374,7 +6375,17 @@ class InstitutionSitesController extends AppController {
                         $row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
                    }
                 }
-                $newData[] = $row;
+               
+               	$sortRow = array();
+				foreach($this->reportMapping['Student List']['fields'] as $key => $value) {
+					if(isset($row[$key])){
+				  		$sortRow[$key] = $row[$key];
+					}else{
+						$sortRow[0] = $row[0];
+					}
+				}
+				
+                $newData[] = $sortRow;
                 $r++;
             }
 
@@ -6473,7 +6484,16 @@ class InstitutionSitesController extends AppController {
                    }
                 }
 
-                $newData[] = $row;
+				$sortRow = array();
+				foreach($this->reportMapping['Teacher List']['fields'] as $key => $value) {
+					if(isset($row[$key])){
+				  		$sortRow[$key] = $row[$key];
+					}else{
+						$sortRow[0] = $row[0];
+					}
+				}
+				
+                $newData[] = $sortRow;
                 $r++;
             }
         } else if ($name == 'Teacher Behaviour') {
@@ -6565,7 +6585,15 @@ class InstitutionSitesController extends AppController {
                         $row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
                    }
                 }
-                $newData[] = $row;
+                
+                $sortRow = array();
+				foreach($this->reportMapping['Staff List']['fields'] as $key => $value) {
+					if(isset($row[$key])){
+				  		$sortRow[$key] = $row[$key];
+					}else{
+						$sortRow[0] = $row[0];
+					}
+				}
                 $r++;
             }
         } else if ($name == 'Staff Behaviour') {
