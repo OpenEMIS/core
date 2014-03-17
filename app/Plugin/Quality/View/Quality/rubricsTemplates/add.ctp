@@ -36,12 +36,12 @@ echo $this->Html->script('config', false);
         <div class="value"><?php echo $this->Form->input('name'); ?> </div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Descriptions'); ?></div>
+        <div class="label"><?php echo __('Description'); ?></div>
         <div class="value"><?php echo $this->Form->input('description'); ?> </div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Weighthings'); ?></div>
-        <div class="value"><?php echo $this->Form->input('weighthings', array('options' => $weighthingsOptions)); ?> </div>
+        <div class="label"><?php echo __('Weighting'); ?></div>
+        <div class="value"><?php echo $this->Form->input('weighting', array('options' => $weightingOptions)); ?> </div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Pass Mark'); ?></div>
