@@ -39,7 +39,7 @@ echo $this->Html->script('jquery-ui.min', false);
                 'empty' => __('--Select--'),
                 'class' => 'default training_course',
                 'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
-                'onchange' => 'objTrainingSessions.getDetailsAfterChangeCourse(this)'
+                'onchange' => 'objTrainingSessions.getDetailsAfterChangeCourse(this);objTrainingSessions.clearTrainee();'
             ));
 		?>
         </div>
