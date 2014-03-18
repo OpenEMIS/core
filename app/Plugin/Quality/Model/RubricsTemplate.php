@@ -251,6 +251,7 @@ class RubricsTemplate extends QualityAppModel {
     }
 
     public function getEnabledRubricsOptions($year) {
+        $date = date('Y-m-d', time());
         $options['order'] = array('RubricsTemplate.name');
         $options['recursive'] = -1;
 
@@ -262,10 +263,9 @@ class RubricsTemplate extends QualityAppModel {
             ),
         );
 
-        $options['conditions'] = array('QualityStatus.status' => 1, 'QualityStatus.year' => $year);
+        $options['conditions'] = array(/*'QualityStatus.status' => 1, */'QualityStatus.year' => $year, 'QualityStatus.date_enabled <= ' => $date, 'QualityStatus.date_disabled >= ' => $date);
 
         $data = $this->find('list', $options);
-//pr($data);die;
         return $data;
     }
 

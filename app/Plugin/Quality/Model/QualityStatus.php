@@ -31,7 +31,7 @@ class QualityStatus extends QualityAppModel {
             'foreignKey' => 'created_user_id'
         )
     );
-    //public $hasMany = array('RubricsTemplateColumnInfo');
+    public $hasMany = array('RubricsTemplateColumnInfo');
 
     public $validate = array(
         'rubric_template_id' => array(
@@ -132,13 +132,12 @@ class QualityStatus extends QualityAppModel {
 
             $this->recursive = -1;
             $data = $this->findById($id);
-
-
-
+            
             if (!empty($data)) {
                 $controller->request->data = $data;
                 $controller->set('selectedYear', $data[$this->name]['year']);
             } else {
+                $controller->request->data['QualityStatus']['date_disabled'] = date('Y-m-d', time()+86400);
                 //$controller->request->data[$this->name]['institution_id'] = $institutionId;
             }
         } else {
@@ -204,13 +203,17 @@ class QualityStatus extends QualityAppModel {
     }
 
     public function getRubricStatus($year, $rubricId) {
-        $data = $this->find('first', array('conditions' => array('year' => $year, 'rubric_template_id' => $rubricId), 'recurisve' => -1));
-        $enabled = 0;
+        $date = date('Y-m-d', time());
+        
+        $data = $this->find('first', array('conditions' => array('year' => $year, 'rubric_template_id' => $rubricId,'date_enabled <= ' => $date, 'date_disabled >= ' => $date), 'recurisve' => -1));
+        //$enabled = 0;
+      //  pr($data);die;
         if (!empty($data)) {
-            $enabled = $data[$this->name]['status'];
+            //$enabled = $data[$this->name]['status'];
+            return 'true';
         }
 
-        return ($enabled == 1) ? 'true' : 'false';
+        return /*($enabled == 1) ? 'true' : */'false';
     }
 
 }
