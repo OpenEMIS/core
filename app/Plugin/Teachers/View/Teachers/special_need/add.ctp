@@ -62,8 +62,8 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	        <?php } ?>
         <?php }else{?>
             <?php 
+                echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_cancel_button btn_right"));
                 if($mandatory!='1'){
-	                echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
 	                echo $this->Form->submit(__('Skip'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
                 } 
 	            echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 

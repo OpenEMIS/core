@@ -475,6 +475,9 @@ class StaffController extends StaffAppController {
         $this->Navigation->addCrumb('Edit Additional Info');
 
         if ($this->request->is('post')) {
+            if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }
             //pr($this->data);
             //die();
             $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
@@ -581,8 +584,9 @@ class StaffController extends StaffAppController {
         $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
         if ($this->request->is('post')) { // save
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $this->data['Staff']['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             if(!empty($_FILES)){
@@ -1131,8 +1135,9 @@ class StaffController extends StaffAppController {
         $this->Navigation->addCrumb('Add Bank Accounts');
         if ($this->request->is('post')) { // save
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $this->request->data['StaffBankAccount']['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $this->StaffBankAccount->create();
             if ($this->StaffBankAccount->save($this->request->data)) {
@@ -1170,8 +1175,9 @@ class StaffController extends StaffAppController {
             }
         } else {
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $this->request->data['StaffBankAccount']['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $this->request->data['StaffBankAccount']['staff_id'] = $this->staffId;
             if ($this->StaffBankAccount->save($this->request->data)) {
@@ -1261,8 +1267,9 @@ class StaffController extends StaffAppController {
         if ($this->request->is('post')) {
             $data = $this->data['StaffComment'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $data['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             $this->StaffComment->create();
@@ -1304,8 +1311,9 @@ class StaffController extends StaffAppController {
             $commentData = $this->data['StaffComment'];
 
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $commentData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             $commentData['staff_id'] = $this->staffId;
@@ -1342,8 +1350,9 @@ class StaffController extends StaffAppController {
         if ($this->request->is('post')) {
             $data = $this->data['StaffNationality'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $data['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $this->StaffNationality->create();
             $data['staff_id'] = $this->staffId;
@@ -1388,8 +1397,9 @@ class StaffController extends StaffAppController {
         } else {
             $nationalityData = $this->data['StaffNationality'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $nationalityData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $nationalityData['staff_id'] = $this->staffId;
 
@@ -1429,8 +1439,9 @@ class StaffController extends StaffAppController {
         if ($this->request->is('post')) {
             $data = $this->data['StaffIdentity'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $data['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             $this->StaffIdentity->create();
@@ -1473,8 +1484,9 @@ class StaffController extends StaffAppController {
         } else {
             $identityData = $this->data['StaffIdentity'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $identityData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $identityData['staff_id'] = $this->staffId;
 
@@ -1513,8 +1525,9 @@ class StaffController extends StaffAppController {
         if ($this->request->is('post')) {
             $data = $this->data['StaffLanguage'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $data['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             $this->StaffLanguage->create();
@@ -1563,8 +1576,9 @@ class StaffController extends StaffAppController {
         } else {
             $languageData = $this->data['StaffLanguage'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $languageData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $languageData['staff_id'] = $this->staffId;
 
@@ -1615,8 +1629,9 @@ class StaffController extends StaffAppController {
             $contactData = $this->data['StaffContact'];
 
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $contactData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             $this->StaffContact->create();
@@ -1673,8 +1688,9 @@ class StaffController extends StaffAppController {
         } else {
             $contactData = $this->data['StaffContact'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $contactData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $contactData['staff_id'] = $this->staffId;
 

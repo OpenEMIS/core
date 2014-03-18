@@ -346,7 +346,7 @@ class NavigationComponent extends Component {
         }
     }
 
-    public function skipWizardLink($action,$nextLink){
+    public function skipWizardLink($action){
     	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
@@ -361,7 +361,32 @@ class NavigationComponent extends Component {
         }
 
         $this->Session->write('WizardLink', $wizardLink);
-        $this->controller->redirect(array('action'=>$nextLink));
+        $this->controller->redirect(array('action'=>$wizardLink[$linkIndex+1]['new_action']));
+    }
+
+    public function previousWizardLink($action){
+    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
+        $linkIndex = $this->getWizardLink($action);
+        $wizardLink = $this->Session->read('WizardLink');
+
+        $ConfigItem = ClassRegistry::init('ConfigItem');
+
+        for($i=($linkIndex-1);$i>=0;$i--){
+        	$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$wizardLink[$i]['action'], 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+
+            if($mandatory!='2'){
+               if(isset($wizardLink[$i]['new_id'])){
+	                $this->controller->redirect(array('action'=>$wizardLink[$i]['new_action'], $wizardLink[$i]['new_id']));
+	            }else{
+	                $this->controller->redirect(array('action'=>$wizardLink[$i]['new_action']));
+	            }
+	            break;
+            }
+        }
+
+        $this->controller->redirect(array('action'=>$wizardLink[0]['new_action']));
     }
 
     public function exitWizard($cancel = true){
@@ -416,8 +441,11 @@ class NavigationComponent extends Component {
 
        			if($mandatory!='2'){
 					if(isset($wizardLink[$c]['new_id'])){
+
+					  	$this->Session->write('WizardLink', $wizardLink);
 		                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action'], $wizardLink[$c]['new_id']));
 		            }else{
+		            	  $this->Session->write('WizardLink', $wizardLink);
 		                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action']));
 		            }
 		            break;
