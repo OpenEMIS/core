@@ -4,9 +4,58 @@ var ajaxType = {
 	alert: <?php echo $ajaxReturnCodes['alert']; ?>
 };
 
+function confirmloading(){
+         return i18n.General.textBeforeUnloadBroweser;
+}
+
+function unconfirmLoading(){}
+
+var isContentEdited = false;
+
 $(document).ready(function() {
 	$.ajaxSetup({error: ajaxErrorHandler});
+        
+        $('textarea').keyup(function(){
+            isContentEdited = true;
+            window.onbeforeunload = confirmloading;
+        });
+        
+        $('select').change(function(){
+            window.onbeforeunload = unconfirmLoading;
+        });
+        
+        $('select').click(function(){
+            window.onbeforeunload = unconfirmLoading;
+        });
+        
+        $('input').keyup(function(){
+            isContentEdited = true;
+           
+            //alert('input change');
+            window.onbeforeunload = confirmloading;
+        });
+        
+        $('input[type=submit]').click(function(){
+            window.onbeforeunload = unconfirmLoading;
+        });
+        
+        $('a').click(function (){
+            var href  = $(this).attr('href');
+            var fChar = href.charAt(0);
+            if(href != '' && fChar!= '#' && isContentEdited){
+                var confirmWindow = confirm(i18n.General.textBeforeRedirect);
+                
+                if(confirmWindow != true){
+                    return false;
+                }
+                else{
+                    window.onbeforeunload = unconfirmLoading;
+                }
+                
+            }
+        });
 });
+
 
 function getRootURL() {
 	return '<?php echo $rootURL ?>';
