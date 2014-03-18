@@ -289,6 +289,7 @@ class TrainingSession extends TrainingAppModel {
 						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)
 					)
 				);
+
 				$trainingSessionTraineesVal = null;
 				if(!empty($trainingSessionTrainees)){
 					foreach($trainingSessionTrainees as $val){
