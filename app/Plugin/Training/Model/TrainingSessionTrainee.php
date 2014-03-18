@@ -19,7 +19,9 @@ class TrainingSessionTrainee extends TrainingAppModel {
 				'fields'=>array('TrainingCourseTargetPopulation.position_title_id', 'TrainingCourseTargetPopulation.position_title_table'),
 				'joins'=> array(
 					array(
-		                'table' => 'training_course_target_populations','alias' => 'TrainingCourseTargetPopulation','type' => 'INNER',
+		                'table' => 'training_course_target_populations',
+		                'alias' => 'TrainingCourseTargetPopulation',
+		                'type' => 'INNER',
 		                'conditions' => array('TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id')
 		            ),
 				),
@@ -37,13 +39,61 @@ class TrainingSessionTrainee extends TrainingAppModel {
 			}
 		}
 		
+		$completed = $trainingCourse->find('all', 
+			array(
+				'fields'=>array('TrainingSessionTrainee.*'),
+				'joins'=> array(
+					array(
+		                'table' => 'training_sessions',
+		                'alias' => 'TrainingSession',
+		                'type' => 'INNER',
+		                'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+		            ),
+					array(
+		                'table' => 'training_session_trainees',
+		                'alias' => 'TrainingSessionTrainee',
+		                'type' => 'INNER',
+		                'conditions' => array('TrainingSession.id = TrainingSessionTrainee.training_session_id')
+		            ),
+				),
+				'conditions'=>array('TrainingCourse.id'=>$trainingCourseID,'TrainingSession.training_status_id'=>3)
+			)
+		);
+
+		$excludedStaffID = '';
+		$excludedTeacherID = '';
+		foreach($completed as $val){
+			if($val['TrainingSessionTrainee']['identification_table']=='staff'){
+				$excludedStaffID .= ','.$val['TrainingSessionTrainee']['identification_id'];
+			}
+			if($val['TrainingSessionTrainee']['identification_table']=='teachers'){
+				$excludedTeacherID .= ','.$val['TrainingSessionTrainee']['identification_id'];
+			}
+		}
+		
 		$staffConditions = '';
 		$teacherConditions = '';
 		if(!empty($staffPositionID)){
 			$staffConditions = ' INNER JOIN institution_site_staff AS InstitutionSiteStaff ON Staff.id = InstitutionSiteStaff.staff_id 
 			WHERE InstitutionSiteStaff.staff_position_title_id IN (' . ltrim($staffPositionID, ',') . ')';
+			if(!empty($excludedStaffID)){
+				$staffConditions .= ' AND InstitutionSiteStaff.staff_id NOT IN (' . ltrim($excludedStaffID, ',') . ')';
+			}
+		}else{
+			if(!empty($excludedStaffID)){
+				$staffConditions = ' WHERE Staff.id NOT IN (' . ltrim($excludedStaffID, ',') . ')';
+			}
+		}
+		if(!empty($teacherPositionID)){
 			$teacherConditions = ' INNER JOIN institution_site_teachers AS InstitutionSiteTeacher ON Teacher.id = InstitutionSiteTeacher.teacher_id 
 			WHERE InstitutionSiteTeacher.teacher_position_title_id IN (' . ltrim($teacherPositionID, ',') . ')';
+			if(!empty($excludedTeacherID)){
+				$teacherConditions .= ' AND InstitutionSiteTeacher.teacher_id NOT IN (' . ltrim($excludedTeacherID, ',') . ')';
+			}
+		}else{
+			if(!empty($excludedTeacherID)){
+				$teacherConditions = ' WHERE Teacher.id NOT IN (' . ltrim($excludedTeacherID, ',') . ')';
+			}
 		}
 
 		$list = $this->query(

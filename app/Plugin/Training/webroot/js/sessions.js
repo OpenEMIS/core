@@ -52,8 +52,7 @@ var objTrainingSessions = {
         var selProvider = $('.provider');
         defaultVal = $(selProvider).val();
 
-        var table = $('.trainee');
-        table.find('.table_body').empty();
+        
 
         if(trainingCourseId === ""){
             provider[0].options.length = 0;
@@ -82,6 +81,11 @@ var objTrainingSessions = {
                 }
             });
         }
+    },
+
+    clearTrainee: function() {
+        var table = $('.trainee');
+        table.find('.table_body').empty();
     },
 
     selectLocationField: function(event, ui) {
