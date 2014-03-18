@@ -147,7 +147,7 @@ class ReportController extends AppController {
     }
 
     public function export2Xls(&$reportData = array(),&$fieldsList=array(), &$fieldsType=array(), &$oneToManyOption=null, &$oneToManyFieldsList=null, &$oneToManyFieldsType = null, &$showNoRelated = false ) {
-        App::import('Vendor', 'ReportManager.Excel');
+        App::import('Vendor', 'Excel');
         $xls = new Excel();      
         $xls->buildXls($reportData,$fieldsList, $fieldsType, $oneToManyOption, $oneToManyFieldsList, $oneToManyFieldsType, $showNoRelated );
     }
