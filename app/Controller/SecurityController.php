@@ -55,22 +55,6 @@ class SecurityController extends AppController {
 	private function renderFooter() {
 		if(!$this->Session->check('footer')){
 			$this->Session->write('footer', $this->ConfigItem->getWebFooter());
-			/*
-			$val = $this->ConfigItem->getVersion();
-			$results = $this->ConfigItem->find('all', array(
-				'conditions' => array('name' => array('footer', 'version'))
-			));
-			$values = array('footer' => '', 'version' => '0');
-			foreach ($results as $element) {
-				if($element['ConfigItem']['name'] === 'version'){
-					$values['version'] = $element['ConfigItem']['value'];
-				}
-				
-				if($element['ConfigItem']['name'] === 'footer'){
-					$values['footer'] = $element['ConfigItem']['value'];
-				}
-			}
-			$this->Session->write('footer', $values['footer'].' | '.$values['version']);*/
 		}
 	}
 	
@@ -176,8 +160,18 @@ class SecurityController extends AppController {
 				$this->render('login_ajax');
 			}
 			// added cause need to overwrite AppController pre-assigned Session value
-            $lang = (isset($this->request->query['lang'])) ? $this->request->query['lang'] : $this->ConfigItem->getValue('language');
-
+            $lang = $this->ConfigItem->getValue('language');
+			if(isset($this->request->query['lang'])) {
+				$lang = $this->request->query['lang'];
+			} else if(count($this->request->params['pass']) > 0) {
+				$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
+				if(in_array($this->request->params['pass'][0], $languageList)) {
+					$lang = $this->request->params['pass'][0];
+					setcookie('language', $lang);
+				}
+			} else if(isset($_COOKIE['language'])) {
+				$lang = $_COOKIE['language'];
+			}
             // Assign the language to session and configuration
             $this->Session->write('configItem.language', $lang);
 
@@ -186,24 +180,25 @@ class SecurityController extends AppController {
 			$catalog = $l10n->catalog($locale);
 			$this->set('lang_locale', $locale);
 			$this->set('lang_dir', $catalog['direction']);
+			$this->set('selectedLang', $lang);
 					
 			Configure::write('Config.language', $this->Session->read('configItem.language')); 
 		}
-	$username = $this->Session->check('login.username') ? $this->Session->read('login.username') : '';
-	$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
-	$this->set('username', $username);
-	$this->set('password', $password);
-
-	$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.type'=> array('login','partner'), 'ConfigAttachment.active' => 1), 'order'=>array('order')));
-	$imageData = array();
-	if(!empty($images)){
-		$i = 0;
-		foreach($images as $image){
-			$imageData[$i] = array_merge($image['ConfigAttachment']);
-			$i++;
+		$username = $this->Session->check('login.username') ? $this->Session->read('login.username') : '';
+		$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
+		$this->set('username', $username);
+		$this->set('password', $password);
+	
+		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.type'=> array('login','partner'), 'ConfigAttachment.active' => 1), 'order'=>array('order')));
+		$imageData = array();
+		if(!empty($images)){
+			$i = 0;
+			foreach($images as $image){
+				$imageData[$i] = array_merge($image['ConfigAttachment']);
+				$i++;
+			}
 		}
-	}
-	$this->set('images', $imageData);
+		$this->set('images', $imageData);
 
     }
 
