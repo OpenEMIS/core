@@ -55,7 +55,7 @@ class RubricsTemplate extends QualityAppModel {
             )
         )
     );
-    public $weighthingsOptions = array(1 => 'Points', 2 => 'Percentage');
+    public $weightingOptions = array(1 => 'Points', 2 => 'Percentage');
 
     public function rubricsTemplates($controller, $params) {
         $controller->Navigation->addCrumb('Rubrics');
@@ -81,7 +81,7 @@ class RubricsTemplate extends QualityAppModel {
         }
         $controller->Session->write('RubricsTemplate.id', $id);
         $controller->set('data', $data);
-        $controller->set('weighthingsOptions', $this->weighthingsOptions);
+        $controller->set('weightingOptions', $this->weightingOptions);
     }
 
     public function rubricsTemplatesAdd($controller, $params) {
@@ -104,7 +104,7 @@ class RubricsTemplate extends QualityAppModel {
 
     public function setupRubricsTemplate($controller, $params, $type) {
         $institutionId = $controller->Session->read('InstitutionId');
-        $controller->set('weighthingsOptions', $this->weighthingsOptions);
+        $controller->set('weightingOptions', $this->weightingOptions);
         
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
         $controller->set('id', $id);
