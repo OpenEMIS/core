@@ -276,6 +276,7 @@ input.default { width: 240px; }
 
 .btn_right { margin-right: 5px; }
 .btn_left { margin-left: 5px; }
+.btn_center { margin-left: 0px; margin-right:0px; }
 .btn_disabled {	cursor: default; opacity: 0.4; }
 .btn_disabled:hover {
 	color: #FFFFFF !important;

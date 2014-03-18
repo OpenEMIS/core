@@ -121,8 +121,9 @@ class StudentAward extends StudentsAppModel {
 		}
 		else{
 			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
-                $nextLink = $controller->data['StudentAward']['nextLink'];
-                $controller->Navigation->skipWizardLink($controller->action, $nextLink);
+                $controller->Navigation->skipWizardLink($controller->action);
+            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
+                $controller->Navigation->previousWizardLink($controller->action);
             }
 			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
 			if($this->save($controller->request->data)){

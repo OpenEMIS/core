@@ -115,8 +115,9 @@ class TeacherMembership extends TeachersAppModel {
 		}
 		else{
 			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
-               $nextLink = $controller->data[$this->name]['nextLink'];
-                $controller->Navigation->skipWizardLink($controller->action, $nextLink);
+                $controller->Navigation->skipWizardLink($controller->action);
+            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
+                $controller->Navigation->previousWizardLink($controller->action);
             }
 			$controller->request->data[$this->name]['teacher_id'] = $controller->teacherId;
 			if($this->save($controller->request->data)){
