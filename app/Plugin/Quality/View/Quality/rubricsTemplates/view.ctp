@@ -32,8 +32,8 @@
 			<div class="value"><?php echo $obj['description'];?></div>
 		</div>
         <div class="row">
-			<div class="label"><?php echo __('Weighthings'); ?></div>
-			<div class="value"><?php echo $weighthingsOptions[$obj['weighthings']]; ?></div>
+			<div class="label"><?php echo __('Weighting'); ?></div>
+			<div class="value"><?php echo $weightingOptions[$obj['weighting']]; ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Pass Mark'); ?></div>
