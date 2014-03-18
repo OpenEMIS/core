@@ -115,6 +115,8 @@ var i18n = {
 		iconMoveUp : '<?php echo T("Move Up", true); ?>',
 		iconMoveDown : '<?php echo T("Move Down", true); ?>',
 		iconToggleField : '<?php echo T("Toggle this field active/inactive", true); ?>',
+                textBeforeUnloadBroweser : '<?php echo T("All unsaved changes will be lost.", true); ?>',
+                textBeforeRedirect : '<?php echo T("Are you sure you want to leave this page? All unsaved changes will be lost.", true); ?>',
 	},
 	SMS: {
 		confirmModifySmsMessageContent: '<?php echo T("Note: Please clear the Responses page as existing responses may no longer match the updated Messages.", true); ?>'
