@@ -77,6 +77,12 @@ echo $this->Html->script('jquery-ui.min', false);
  			<?php echo $this->Form->input('location', array('id' => 'searchLocation', 'class'=>'default location', 'placeholder' => __('Location')));?>
         </div>
     </div>
+    <div class="row">
+        <div class="label"><?php echo __('Comments'); ?></div>
+        <div class="value">
+ 			<?php echo $this->Form->input('comments', array('type'=>'textarea'));?>
+        </div>
+    </div>
      <div class="row">
         <div class="label"><?php echo __('Trainer'); ?></div>
         <div class="value">
