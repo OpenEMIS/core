@@ -14,46 +14,56 @@ var isContentEdited = false;
 
 $(document).ready(function() {
 	$.ajaxSetup({error: ajaxErrorHandler});
-        
-        $('textarea').keyup(function(){
-            isContentEdited = true;
-            window.onbeforeunload = confirmloading;
-        });
-        
-        $('select').change(function(){
-            window.onbeforeunload = unconfirmLoading;
-        });
-        
-        $('select').click(function(){
-            window.onbeforeunload = unconfirmLoading;
-        });
-        
-        $('input').keyup(function(){
-            isContentEdited = true;
-           
-            //alert('input change');
-            window.onbeforeunload = confirmloading;
-        });
-        
-        $('input[type=submit]').click(function(){
-            window.onbeforeunload = unconfirmLoading;
-        });
-        
-        $('a').click(function (){
-            var href  = $(this).attr('href');
-            var fChar = href.charAt(0);
-            if(href != '' && fChar!= '#' && isContentEdited){
-                var confirmWindow = confirm(i18n.General.textBeforeRedirect);
-                
-                if(confirmWindow != true){
+       
+        var path = (window.location.pathname).toLowerCase();
+        if(path.search("add") != -1 || path.search("edit") != -1 ){
+            $('textarea').keyup(function(){
+                isContentEdited = true;
+                window.onbeforeunload = confirmloading;
+            });
+
+            $('select').change(function(){
+                window.onbeforeunload = unconfirmLoading;
+            });
+
+            $('select').click(function(){
+                window.onbeforeunload = unconfirmLoading;
+            });
+
+            $('input').keyup(function(){
+                isContentEdited = true;
+                window.onbeforeunload = confirmloading;
+            });
+
+            $('input[type=submit]').click(function(){
+                window.onbeforeunload = unconfirmLoading;
+            });
+
+            $('a').click(function (){
+                var href  = $(this).attr('href');
+                var fChar = href.charAt(0);
+                if(href != '' && fChar!= '#' && isContentEdited){
+                    var Leavebtn = {
+                            value: i18n.General.textLeavePage,
+                            callback: function() { 
+                                window.onbeforeunload = unconfirmLoading;
+                                window.location.href = href; 
+                            }
+                    };
+
+                    var dlgOpt = {
+                            id: 'unloadPage-dialog',
+                            title: i18n.General.textBeforeUnloadTitle,
+                            content: i18n.General.textBeforeRedirect,
+                            buttons: [Leavebtn],
+                            closeBtnCaption: i18n.General.textStayOnPage,
+                    };
+                    $.dialog(dlgOpt);
                     return false;
                 }
-                else{
-                    window.onbeforeunload = unconfirmLoading;
-                }
-                
-            }
-        });
+            });
+      }
+        
 });
 
 
