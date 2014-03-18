@@ -57,7 +57,7 @@
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'languagesView'), array('class' => 'btn_cancel btn_left')); ?>
         <?php }else{?>
             <?php 
-                if(!$mandatory){
+                if($mandatory!='1'){
                 echo $this->Form->hidden('nextLink', array('value'=>$nextLink)); 
                 echo $this->Form->submit('Skip', array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
                 } 

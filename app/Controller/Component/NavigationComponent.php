@@ -270,7 +270,6 @@ class NavigationComponent extends Component {
         $ConfigItem = ClassRegistry::init('ConfigItem');
        
         $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
-
         $this->controller->set('mandatory', $mandatory);
         $linkCurrent = $this->getLastWizardStep(false);
         $wizardLink = $this->Session->read('WizardLink');
@@ -408,11 +407,23 @@ class NavigationComponent extends Component {
                 $wizardLink[$i+1]['completed'] = '-1';
             }
             $this->Session->write('WizardLink', $wizardLink);
-            if(isset($wizardLink[$i+1]['new_id'])){
-                $this->controller->redirect(array('action'=>$wizardLink[$i+1]['new_action'], $wizardLink[$i+1]['new_id']));
-            }else{
-                $this->controller->redirect(array('action'=>$wizardLink[$i+1]['new_action']));
-            }
+
+         	$ConfigItem = ClassRegistry::init('ConfigItem');
+       	
+
+       		for($c=$i+1;$c<=count($wizardLink);$c++){
+       			$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$wizardLink[$c]['action'], 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+
+       			if($mandatory!='2'){
+					if(isset($wizardLink[$c]['new_id'])){
+		                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action'], $wizardLink[$c]['new_id']));
+		            }else{
+		                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action']));
+		            }
+		            break;
+       			}
+       		}
+	        $this->controller->redirect(array('action'=>$wizardLink[count($wizardLink)-1]['new_action']));
         }
     }
 
