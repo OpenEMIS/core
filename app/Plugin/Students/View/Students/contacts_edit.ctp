@@ -16,6 +16,8 @@
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
 	?>
+
+    
     <?php $obj = @$this->request->data['StudentContact']; ?>
 	<?php echo $this->Form->input('StudentContact.id');?>
 
