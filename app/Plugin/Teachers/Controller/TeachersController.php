@@ -480,6 +480,9 @@ class TeachersController extends TeachersAppController {
         $this->Navigation->addCrumb('Edit More');
 
         if ($this->request->is('post')) {
+            if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }
             //pr($this->data);
             //die();
             $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
@@ -585,8 +588,9 @@ class TeachersController extends TeachersAppController {
         $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
         if ($this->request->is('post')) { // save
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $this->data['Teachers']['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             if(!empty($_FILES)){
                 $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
@@ -1244,8 +1248,9 @@ class TeachersController extends TeachersAppController {
         $this->Navigation->addCrumb('Add Bank Accounts');
         if ($this->request->is('post')) { // save
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $this->request->data['TeacherBankAccount']['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             
             $this->TeacherBankAccount->create();
@@ -1286,8 +1291,9 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $this->request->data['TeacherBankAccount']['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $this->request->data['TeacherBankAccount']['teacher_id'] = $this->teacherId;
             if ($this->TeacherBankAccount->save($this->request->data)) {
@@ -1388,8 +1394,9 @@ class TeachersController extends TeachersAppController {
         if ($this->request->is('post')) {
             $data = $this->data['TeacherComment'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $data['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $this->TeacherComment->create();
             $data['teacher_id'] = $this->teacherId;
@@ -1429,8 +1436,9 @@ class TeachersController extends TeachersAppController {
         } else {
             $commentData = $this->data['TeacherComment'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $commentData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $commentData['teacher_id'] = $this->teacherId;
 
@@ -1466,8 +1474,9 @@ class TeachersController extends TeachersAppController {
         if ($this->request->is('post')) {
             $data = $this->data['TeacherNationality'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $data['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             
             $this->TeacherNationality->create();
@@ -1513,8 +1522,9 @@ class TeachersController extends TeachersAppController {
         } else {
             $nationalityData = $this->data['TeacherNationality'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $nationalityData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $nationalityData['teacher_id'] = $this->teacherId;
 
@@ -1554,8 +1564,9 @@ class TeachersController extends TeachersAppController {
         if ($this->request->is('post')) {
             $data = $this->data['TeacherIdentity'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $data['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             $this->TeacherIdentity->create();
@@ -1598,8 +1609,9 @@ class TeachersController extends TeachersAppController {
         } else {
             $identityData = $this->data['TeacherIdentity'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $identityData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             $identityData['teacher_id'] = $this->teacherId;
@@ -1639,8 +1651,9 @@ class TeachersController extends TeachersAppController {
         if ($this->request->is('post')) {
             $data = $this->data['TeacherLanguage'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $data['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $this->TeacherLanguage->create();
             $data['teacher_id'] = $this->teacherId;
@@ -1688,8 +1701,9 @@ class TeachersController extends TeachersAppController {
         } else {
             $languageData = $this->data['TeacherLanguage'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $languageData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $languageData['teacher_id'] = $this->teacherId;
 
@@ -1739,8 +1753,9 @@ class TeachersController extends TeachersAppController {
         if ($this->request->is('post')) {
             $contactData = $this->data['TeacherContact'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $contactData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
 
             $this->TeacherContact->create();
@@ -1796,9 +1811,10 @@ class TeachersController extends TeachersAppController {
             }
         } else {
             $contactData = $this->data['TeacherContact'];
-           if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $nextLink = $contactData['nextLink'];
-                $this->Navigation->skipWizardLink($this->action, $nextLink);
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
             }
             $contactData['student_id'] = $this->studentId;
 
