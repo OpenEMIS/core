@@ -62,6 +62,10 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $obj['location']; ?></div>
 		</div>
 		<div class="row">
+			<div class="label"><?php echo __('Comments'); ?></div>
+			<div class="value"><?php echo $obj['comments']; ?></div>
+		</div>
+		<div class="row">
 			<div class="label"><?php echo __('Trainer'); ?></div>
 			<div class="value"><?php echo $obj['trainer']; ?></div>
 		</div>
