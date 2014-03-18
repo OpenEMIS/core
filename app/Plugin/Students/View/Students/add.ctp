@@ -109,20 +109,7 @@ $obj = @$data['Student'];
 		<legend id="area"><?php echo __('Birth Place Area'); ?></legend>
 			<?php echo @$this->Utility->getAreaPicker($this->Form, 'birthplace_area_id',$obj['birthplace_area_id'], array()); ?>
 	</fieldset>
-	
-	<fieldset class="section_break">
-		<legend>Contact</legend>
-		<div class="row">
-			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $this->Form->input('telephone', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_telephone');")) ?>
-            <input type="hidden" name="validate_student_telephone" id="validate_student_telephone"/>
-            </div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Email'); ?></div>
-			<div class="value"><?php echo $this->Form->input('email'); ?></div>
-		</div>
-	</fieldset>
+
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
