@@ -47,9 +47,25 @@ echo $this->Html->script('config', false);
         <div class="label"><?php echo __('Year'); ?></div>
         <div class="value"><?php echo $yearField; ?> </div>
     </div>
-    <div class="row">
+    <!-- <div class="row">
         <div class="label"><?php echo __('Status'); ?></div>
         <div class="value"><?php echo $this->Form->input('status', array('options' => $statusOptions)); ?> </div>
+    </div> -->
+    <div class="row">
+        <div class="label"><?php echo __('Date Enabled'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('date_enabled', array('type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>','class'=>false)); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Date Disabled'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('date_disabled', array('type' => 'date', 'dateFormat' => 'DMY', 'before' => '<div class="left">', 'after' => '</div>','class'=>false)); 
+		?>
+        </div>
     </div>
     <div class="controls view_controls">
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>

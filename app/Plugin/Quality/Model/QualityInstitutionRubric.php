@@ -167,7 +167,7 @@ class QualityInstitutionRubric extends QualityAppModel {
                 // pr('save');
                 if ($type == 'add') {
                     $id = $this->id;
-
+                    $controller->Session->write('QualityRubric.editable', 'true');
                     return $controller->redirect(array('action' => 'qualityRubricHeader', $id, $controller->request->data['QualityInstitutionRubric']['rubric_template_id']));
                 } else {
                     return $controller->redirect(array('action' => 'qualityRubric'));

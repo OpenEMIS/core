@@ -30,10 +30,13 @@
         <div class="value"><?php echo $obj['year']; ?></div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Status'); ?></div>
-        <div class="value"><?php echo $statusOptions[$obj['status']]; ?></div>
+        <div class="label"><?php echo __('Date Enabled'); ?></div>
+        <div class="value"><?php echo $this->Utility->formatDate($obj['date_enabled']); ?></div>
     </div>
-
+    <div class="row">
+        <div class="label"><?php echo __('Date Disabled'); ?></div>
+        <div class="value"><?php echo $this->Utility->formatDate($obj['date_disabled']); ?></div>
+    </div>
     <div class="row">
         <div class="label"><?php echo __('Modified by'); ?></div>
         <div class="value"><?php echo trim($data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']); ?></div>
