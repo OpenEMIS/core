@@ -90,17 +90,6 @@ echo $this->Html->script('/Students/js/students', false);
 	</fieldset>
 	<?php } ?>
 
-	<fieldset class="section_break">
-		<legend><?php echo __('Contact'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $obj['telephone']; ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Email'); ?></div>
-			<div class="value"><?php echo $obj['email']; ?></div>
-		</div>
-	</fieldset>
 	
 	<?php echo $this->Form->end(); ?>
 </div>
