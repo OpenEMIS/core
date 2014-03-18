@@ -114,17 +114,25 @@ class TeacherMembership extends TeachersAppModel {
 			}
 		}
 		else{
+			$addMore = false;
 			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
                 $controller->Navigation->skipWizardLink($controller->action);
             }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
                 $controller->Navigation->previousWizardLink($controller->action);
+            }elseif(isset($controller->data['submit']) && $controller->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $controller->Navigation->validateModel($controller->action,$this->name);
             }
 			$controller->request->data[$this->name]['teacher_id'] = $controller->teacherId;
 			if($this->save($controller->request->data)){
 				if(empty($controller->request->data[$this->name]['id'])){
 					$id = $this->getLastInsertId();
-                	$controller->Navigation->updateWizard($controller->action,$id);
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
+					if($addMore){
+						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
+					}
+                	$controller->Navigation->updateWizard($controller->action,$id,$addMore);
+                	$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 				}
 				else{
                 	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
