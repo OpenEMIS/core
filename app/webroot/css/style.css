@@ -139,6 +139,10 @@ input.default { width: 240px; }
 	text-align: left;
 	padding:15px 0 0 160px;
 }
+.add_more_controls{
+	text-align: left;
+	padding:15px 0 0 140px;
+}
 
 /* styles for box */
 .box { border: 1px solid #CCCCCC; overflow: hidden; margin-bottom: 12px; }
