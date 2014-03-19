@@ -16,6 +16,8 @@ $(document).ready(function() {
 	$.ajaxSetup({error: ajaxErrorHandler});
        
         var path = (window.location.pathname).toLowerCase();
+        
+        
         if(path.search("add") != -1 || path.search("edit") != -1 ){
             $('textarea').keyup(function(){
                 isContentEdited = true;
@@ -41,8 +43,11 @@ $(document).ready(function() {
 
             $('a').click(function (){
                 var href  = $(this).attr('href');
-                var fChar = href.charAt(0);
-                if(href != '' && fChar!= '#' && isContentEdited){
+                
+                var re_js_rfc3986_path_absolute = /^\/(?:(?:[A-Za-z0-9\-._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})+(?:\/(?:[A-Za-z0-9\-._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})*)*)?$/;
+               
+                var pattern = new RegExp(re_js_rfc3986_path_absolute);
+                if(pattern.test(href) && isContentEdited) {
                     var Leavebtn = {
                             value: i18n.General.textLeavePage,
                             callback: function() { 
