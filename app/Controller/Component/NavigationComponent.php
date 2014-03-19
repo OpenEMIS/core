@@ -217,10 +217,33 @@ class NavigationComponent extends Component {
 		}
 	}
 
-	public function getWizardLinks($module){
+	public function checkWizardLink($controller, $module){
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getWizardByModule($module, false);
+		$i = 0;
+		foreach($links as $link){
+			$chkAction = $link['Navigation']['action'] . 'Add';
+			
+			if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
+				$chkAction = $link['Navigation']['action'] . 'Edit';
+			}else if($link['Navigation']['action']=='view'){
+				$chkAction = 'edit';
+			}
+			$validate = $this->AccessControl->check($controller, $chkAction);
+			if(!$validate){
+				unset($links[$i]);
+			}
+			$i++;
+		}
+
+		return $links;
+
+	}
+	//$this->AccessControl->apply($this->params['controller'], $this->params['action']);
+
+	public function getWizardLinks($module){
 		$wizardLinks = array();
+		$links = $this->checkWizardLink($this->controller->name,$module);
 		foreach($links as $link){
 			$link['Navigation']['completed'] = '0';
 			if($link['Navigation']['action'] == 'view'){
@@ -279,7 +302,6 @@ class NavigationComponent extends Component {
         $nextLink = '';
         $wizardEnd = '0';
        
-        //pr($wizardLink);
         if($action == 'view'){
             $newAction = 'edit';
             $this->controller->redirect(array('action'=>$newAction));
@@ -320,10 +342,14 @@ class NavigationComponent extends Component {
                 }
                 $i++;
             }
+        }else{
+        	break;
         }
-        if($i=count($wizardLink)){
+
+        if($action==$wizardLink[count($wizardLink)-1]['new_action']){
         	$wizardEnd = '1';
         }
+
         $this->controller->set('wizardEnd', $wizardEnd);
         $this->controller->set('nextLink', $nextLink);
         
