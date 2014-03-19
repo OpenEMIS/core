@@ -381,7 +381,7 @@ class NavigationComponent extends Component {
     	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
-        $linkIndex = $this->getWizardLink($action);
+        /*$linkIndex = $this->getWizardLink($action);
         $wizardLink = $this->Session->read('WizardLink');
         $wizardLink[$linkIndex]['completed'] = '1';
         $currentLinkIndex = $this->getLastWizardStep(true);
@@ -389,10 +389,32 @@ class NavigationComponent extends Component {
             if(($linkIndex+1)>=$currentLinkIndex){
                 $wizardLink[$linkIndex+1]['completed'] = '-1';
             }
-        }
+        }*/
+		$linkIndex = $this->getWizardLink($action);
+		$wizardLink = $this->Session->read('WizardLink');
 
-        $this->Session->write('WizardLink', $wizardLink);
-        $this->controller->redirect(array('action'=>$wizardLink[$linkIndex+1]['new_action']));
+        $ConfigItem = ClassRegistry::init('ConfigItem');
+       	
+   		for($c=$linkIndex+1;$c<=count($wizardLink);$c++){
+   			$mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$wizardLink[$c]['action'], 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+
+   			$wizardLink[$c]['completed'] = '-1';
+   			if($mandatory!='2'){
+				if(isset($wizardLink[$c]['new_id'])){
+				  	$this->Session->write('WizardLink', $wizardLink);
+	                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action'], $wizardLink[$c]['new_id']));
+	            }else{
+            	  	$this->Session->write('WizardLink', $wizardLink);
+	                $this->controller->redirect(array('action'=>$wizardLink[$c]['new_action']));
+	            }
+	            break;
+   			}
+   		}
+   		$this->Session->write('WizardLink', $wizardLink);
+        $this->controller->redirect(array('action'=>$wizardLink[count($wizardLink)-1]['new_action']));
+
+        //$this->Session->write('WizardLink', $wizardLink);
+        //$this->controller->redirect(array('action'=>$wizardLink[$linkIndex+1]['new_action']));
     }
 
     public function previousWizardLink($action){
