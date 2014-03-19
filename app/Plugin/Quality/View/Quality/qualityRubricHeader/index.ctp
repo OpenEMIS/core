@@ -8,7 +8,9 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
 <div id="rubrics_template" class="content_wrapper">
     <h1>
         <span><?php echo $this->Utility->ellipsis(__($subheader), 50); ?></span>
-       
+       <?php
+         echo $this->Html->link(__('Back'), array('action' => 'qualityRubricView',$id), array('class' => 'divider'));
+       ?>
     </h1>
     <?php echo $this->element('alert'); ?>
     <?php $params = implode('/',$this->params['pass']); ?>
