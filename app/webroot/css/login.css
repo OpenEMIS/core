@@ -74,15 +74,18 @@ body{
 .login_input{
 	padding:0 26px 14px 26px;
 }
-.login_input input{
+.login_input input, .login_input select {
 	border:1px solid #c7d8e0;
 	font-size:14px;
 	box-shadow:-2px -2px 0 #666666;
 	width:206px;
 	height:25px;
 	border-radius:4px;
-	padding:0 6px;
+	padding: 0 6px;
 }
+
+.login_input select { width: 219px; padding: 4px 6px; font-size: 11px; }
+
 .ie8 .login_input input, .ie7 .login_input input{
 	line-height:26px;
 }

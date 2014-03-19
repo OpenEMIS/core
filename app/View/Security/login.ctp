@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management Information System');
 ?>
 
@@ -20,7 +20,9 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		}
 		
 		echo $this->Html->script('jquery');
+		echo $this->Html->script('app');
 		echo $this->Html->script('css_browser_selector');
+		echo sprintf('<script type="text/javascript" src="%s%s"></script>', $this->webroot, 'Config/getJSConfig');
 	?>
 	<style>
 	.clear {
@@ -58,9 +60,9 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 	<!--<div id="country_design">
 		<?php //echo $this->Html->image('flag/un.gif', array('title' => 'UN')) ?>
     </div>  end country_design -->
-	<div class="login_container">
+	<div class="login_container" <?php echo $showLanguage ? 'style="height: 370px"' : ''; ?>>
     	
-		<div class="login_content">
+		<div class="login_content" <?php echo $showLanguage ? 'style="height: 370px"' : ''; ?>>
 			<h1><?php echo __('Login'); ?></h1>
 			
 			<?php
@@ -83,7 +85,29 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 			<div class="login_input">
 				<?php echo $this->Form->input('password', array('label' => false, 'div' => false, 'value' => $password)); ?>
 			</div>
-			
+			<?php if($showLanguage) : ?>
+			<p><?php echo __('Language'); ?></p>
+			<div class="login_input">
+				<?php
+				$languages = array(
+					'ara' => 'العربية',
+					'chi' => '中文',
+					'eng' => 'English',
+					'fre' => 'Français',
+					'rus' => 'русский',
+					'spa' => 'español'
+				);
+				echo $this->Form->input('language', array(
+					'label' => false,
+					'div' => false,
+					'options' => $languages,
+					'value' => $selectedLang,
+					'url' => $this->params['controller'] . '/' . $this->params['action'],
+					'onchange' => 'jsForm.change(this)'
+				));
+				?>
+			</div>
+			<?php endif; ?>
 			<!--<div class="login_line"></div>-->
 			
 			<div class="login_btn">

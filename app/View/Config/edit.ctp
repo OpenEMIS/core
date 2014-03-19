@@ -95,6 +95,7 @@ echo $this->Html->script('config', false);
 							'yearbook_school_year' => $school_years,
 							'school_year' => $school_years,
 							'country_id' => $countries,
+							'yesno' => array(0 => __('No'), 1 => __('Yes'))
 							);
 		foreach($element as $innerKey => $innerElement){ 
 				$item = $innerElement; 
@@ -183,7 +184,13 @@ echo $this->Html->script('config', false);
 
 							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
 							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
-						}else{
+						} elseif(stristr($item['name'], 'language_menu')){
+							$options = $arrOptions['yesno'];
+							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
+
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
+						} else {
 							
 							if(strtolower($item['label']) == 'currency'){
 								$options = array_merge ($options,array('maxlength'=>'3'));
