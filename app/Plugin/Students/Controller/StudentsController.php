@@ -863,16 +863,24 @@ class StudentsController extends StudentsAppController {
     public function bankAccountsAdd() {
         $this->Navigation->addCrumb(__('Add Bank Accounts'));
         if ($this->request->is('post')) { // save
+            $addMore = false;
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentBankAccount');
             }
             $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
             $this->StudentBankAccount->create();
             if ($this->StudentBankAccount->save($this->request->data)) {
                 $id = $this->StudentBankAccount->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'bankAccounts'));
             }
@@ -958,10 +966,15 @@ class StudentsController extends StudentsAppController {
     public function commentsAdd() {
         $this->Navigation->addCrumb(__('Add Comments'));
         if ($this->request->is('post')) {
+            $addMore = false;
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentComment');
             }
             $this->StudentComment->create();
             $this->request->data['StudentComment']['student_id'] = $this->studentId;
@@ -970,7 +983,10 @@ class StudentsController extends StudentsAppController {
 
             if ($this->StudentComment->save($data)) {
                 $id = $this->StudentComment->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'comments'));
             }
@@ -1041,10 +1057,15 @@ class StudentsController extends StudentsAppController {
         $this->Navigation->addCrumb(__('Add Nationalities'));
         if ($this->request->is('post')) {
             $data = $this->data['StudentNationality'];
+            $addMore = false;
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentNationality');
             }
 
             $this->StudentNationality->create();
@@ -1052,7 +1073,10 @@ class StudentsController extends StudentsAppController {
 
             if ($this->StudentNationality->save($data)) {
                 $id = $this->StudentNationality->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'nationalities'));
             }
@@ -1132,11 +1156,15 @@ class StudentsController extends StudentsAppController {
         $this->Navigation->addCrumb(__('Add Identities'));
         if ($this->request->is('post')) {
             $data = $this->data['StudentIdentity'];
-
+            $addMore = false;
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentIdentity');
             }
 
             $this->StudentIdentity->create();
@@ -1144,7 +1172,10 @@ class StudentsController extends StudentsAppController {
 
             if ($this->StudentIdentity->save($data)) {
                 $id = $this->StudentIdentity->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'identities'));
             }
@@ -1219,11 +1250,16 @@ class StudentsController extends StudentsAppController {
     public function languagesAdd() {
         $this->Navigation->addCrumb(__('Add Languages'));
         if ($this->request->is('post')) {
+            $addMore = false;
             $data = $this->data['StudentLanguage'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentLanguage');
             }
             
             $this->StudentLanguage->create();
@@ -1231,7 +1267,10 @@ class StudentsController extends StudentsAppController {
 
             if ($this->StudentLanguage->save($data)) {
                 $id = $this->StudentLanguage->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'languages'));
             }
@@ -1322,11 +1361,15 @@ class StudentsController extends StudentsAppController {
         $this->Navigation->addCrumb(__('Add Contacts'));
         if ($this->request->is('post')) {
             $contactData = $this->data['StudentContact'];
-
+            $addMore = false;
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentContact');
             }
             $this->StudentContact->create();
             $contactData['student_id'] = $this->studentId;
@@ -1336,7 +1379,10 @@ class StudentsController extends StudentsAppController {
                     $this->StudentContact->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($this->StudentContact->getLastInsertId())))));
                 }
                 $id = $this->StudentContact->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id, $addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'contacts'));
             }

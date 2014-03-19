@@ -226,11 +226,14 @@ class NavigationComponent extends Component {
 			if($link['Navigation']['action'] == 'view'){
 				$link['Navigation']['new_action'] = 'edit';
 				$link['Navigation']['completed'] = '-1';
+				$link['Navigation']['multiple'] = false;
 			}else{
 				if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
 					$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Edit';
+					$link['Navigation']['multiple'] = false;
 				}else{
 					$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Add';
+					$link['Navigation']['multiple'] = true;
 				}
 			}
 			$wizardLinks[] = $link['Navigation'];
@@ -305,11 +308,13 @@ class NavigationComponent extends Component {
                             $this->controller->redirect(array('action'=>$link['new_action']));
                         }
                     }else{
-                         $newAction = $link['action'] . 'Add';
-                    	 if(substr($link['new_action'], -3) != 'Add'){
-                         	$newAction = $link['action'] . 'Edit';
-                    	 }
-                         $this->controller->redirect(array('action'=>$newAction));
+                        $newAction = $link['action'] . 'Add';
+                        if($link['multiple']==false){
+	                    	if(substr($link['new_action'], -3) != 'Add'){
+	                         	$newAction = $link['action'] . 'Edit';
+	                    	}
+                    	}
+                        $this->controller->redirect(array('action'=>$newAction));
                     }
                     break;
                 }
@@ -400,7 +405,7 @@ class NavigationComponent extends Component {
 	    }
     }
 
-    public function updateWizard($action, $id){
+    public function updateWizard($action, $id=null, $addMore=false){
     	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
@@ -408,9 +413,8 @@ class NavigationComponent extends Component {
         $wizardLink = $this->Session->read('WizardLink');
         $action = str_replace("Add", "", $action);
         $action = str_replace("Edit", "", $action);
-
         foreach($wizardLink as $link){
-            if($link['action']==$action){
+            if($link['action']==$action && $link['multiple']==false){
                 $wizardLink[$i]['completed'] = '1';
                 if($link['new_action']!='edit'){
                     $wizardLink[$i]['new_action'] = $link['action'] . "Edit";
@@ -419,15 +423,23 @@ class NavigationComponent extends Component {
                     $this->Session->write($this->controller->className.'Id',$id);
                 }
                 break;
+            }else if($link['action']==$action && $link['multiple']==true && !$addMore){
+				$wizardLink[$i]['completed'] = '1';
+            	break;
             }
             $i++;
         }
 
+		if($addMore){
+    		 $this->controller->redirect(array('action'=>$action));
+    		 return;
+    	}
 
-        if($i+1 >= count($wizardLink)){
+    	if($i+1 >= count($wizardLink)){
             $this->exitWizard(false);
         }else{
             $currentLinkIndex = $this->getLastWizardStep(true);
+            
             if(($i+1)>=$currentLinkIndex){
                 $wizardLink[$i+1]['completed'] = '-1';
             }
@@ -449,9 +461,23 @@ class NavigationComponent extends Component {
 		            break;
        			}
        		}
-       		$this->Session->write('WizardLink', $wizardLink);
-	        $this->controller->redirect(array('action'=>$wizardLink[count($wizardLink)-1]['new_action']));
         }
+
+   		$this->Session->write('WizardLink', $wizardLink);
+        $this->controller->redirect(array('action'=>$wizardLink[count($wizardLink)-1]['new_action']));
+       
+    }
+
+
+    public function validateModel($action, $modelName){
+    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
+		$id = $this->Session->read($this->controller->className.'Id');
+    	$count = $this->controller->{$modelName}->find('count', array('conditions'=>array(strtolower($this->controller->className.'_id')=>$id)));
+    	if($count>0){
+    		$this->updateWizard($action, null, false);
+    	}
     }
 
 }
