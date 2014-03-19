@@ -222,49 +222,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
             <?php echo @$this->Utility->showAreaHistory($this->Form, 'address_area_id', array(), $data['Teacher']['birthplace_area_id'],$data2['birthplace_area_id']);  ?>
         </fieldset>
         <?php } ?>
-
-    <fieldset class="section_break">
-        <legend><?php echo __('Contact'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value">
-                            <span style="margin-left: 8px;"><?php echo $data['Teacher']['telephone']; ?></span>
-                            <?php if(@sizeof($data2['telephone'])>0){ ?>
-                            <div class="table" style="margin-top: 10px;">
-                                <div class="table_body">
-                                    <?php $ctr = 1; foreach($data2['telephone'] as $val => $time):?>
-                                    <?php if($ctr == 1 && $data['Teacher']['telephone'] == $val) continue; ?>
-                                    <div class="table_row">
-                                        <div class="table_cell cell_value"><?php echo $val; ?></div>
-                                        <div class="table_cell"><?php echo $time; ?></div>
-                                    </div>
-                                    <?php $ctr++; endforeach;?>
-                                </div>
-                            </div>
-                            <?php } ?>
-                        </div>
-		</div>
-
-		<div class="row">
-			<div class="label"><?php echo __('Email'); ?></div>
-			<div class="value">
-                            <span style="margin-left: 8px;"><?php echo $data['Teacher']['email']; ?></span>
-                            <?php if(@sizeof($data2['email'])>0){ ?>
-                            <div class="table" style="margin-top: 10px;">
-                                <div class="table_body">
-                                    <?php $ctr = 1; foreach($data2['email'] as $val => $time):?>
-                                    <?php if($ctr == 1 && $data['Teacher']['email'] == $val) continue; ?>
-                                    <div class="table_row">
-                                        <div class="table_cell cell_value"><?php echo $val; ?></div>
-                                        <div class="table_cell"><?php echo $time; ?></div>
-                                    </div>
-                                    <?php $ctr++; endforeach;?>
-                                </div>
-                            </div>
-                            <?php } ?>
-                        </div>
-		</div>
-	</fieldset>
     <?php endif; ?>
 </div>
 

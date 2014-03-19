@@ -229,48 +229,6 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
     </fieldset>
     <?php } ?>
 
-    <fieldset class="section_break">
-        <legend><?php echo __('Contact'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value">
-				<span><?php echo $data['Student']['telephone']; ?></span>
-				<?php if(@sizeof($data2['telephone'])>0){ // && ( sizeof($data2['telephone']) != 1 && array_key_exists($data['Student']['telephone'], $data2['telephone']) ) ) { ?>
-				<div class="table">
-					<div class="table_body">
-						<?php $ctr = 1; foreach($data2['telephone'] as $val => $time):?>
-						<?php if($ctr == 1 && $data['Student']['telephone'] == $val) continue; ?>
-						<div class="table_row">
-							<div class="table_cell cell_value"><?php echo $val; ?></div>
-							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
-
-						</div>
-						<?php $ctr++; endforeach;?>
-					</div>
-				</div>
-				<?php } ?>
-			</div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Email'); ?></div>
-			<div class="value">
-				<span><?php echo $data['Student']['email']; ?></span>
-				<?php if(@sizeof($data2['email'])>0){ // && ( sizeof($data2['email']) != 1 && array_key_exists($data['Student']['email'], $data2['email']) ) ) { ?>
-				<div class="table">
-					<div class="table_body">
-						<?php $ctr = 1; foreach($data2['email'] as $val => $time):?>
-						<?php if($ctr == 1 && $data['Student']['email'] == $val) continue; ?>
-						<div class="table_row">
-							<div class="table_cell cell_value"><?php echo $val; ?></div>
-							<div class="table_cell cell_datetime"><?php echo $time; ?></div>
-						</div>
-						<?php $ctr++; endforeach;?>
-					</div>
-				</div>
-				<?php } ?>
-			 </div>
-		</div>
-	</fieldset>
     <?php endif; ?>
 </div>
 <script type="text/javascript">
