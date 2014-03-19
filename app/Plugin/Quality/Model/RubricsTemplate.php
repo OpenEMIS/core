@@ -79,6 +79,14 @@ class RubricsTemplate extends QualityAppModel {
         if (empty($data)) {
             $controller->redirect(array('action' => 'rubricsTemplates'));
         }
+        
+        $disableDelete = false;
+        $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
+        if($QualityStatus->getCreatedRubricCount($id) > 0){
+            $disableDelete = true;
+        }
+        
+        $controller->set('disableDelete', $disableDelete);
         $controller->Session->write('RubricsTemplate.id', $id);
         $controller->set('data', $data);
         $controller->set('weightingOptions', $this->weightingOptions);
@@ -251,6 +259,7 @@ class RubricsTemplate extends QualityAppModel {
     }
 
     public function getEnabledRubricsOptions($year) {
+        $date = date('Y-m-d', time());
         $options['order'] = array('RubricsTemplate.name');
         $options['recursive'] = -1;
 
@@ -262,10 +271,9 @@ class RubricsTemplate extends QualityAppModel {
             ),
         );
 
-        $options['conditions'] = array('QualityStatus.status' => 1, 'QualityStatus.year' => $year);
+        $options['conditions'] = array(/*'QualityStatus.status' => 1, */'QualityStatus.year' => $year, 'QualityStatus.date_enabled <= ' => $date, 'QualityStatus.date_disabled >= ' => $date);
 
         $data = $this->find('list', $options);
-//pr($data);die;
         return $data;
     }
 

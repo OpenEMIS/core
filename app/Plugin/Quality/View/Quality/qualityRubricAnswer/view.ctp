@@ -11,19 +11,9 @@ echo $this->Html->script('/Quality/js/quality.rubric', false);
     <h1>
         <span><?php echo $this->Utility->ellipsis(__($subheader), 50); ?></span>
         <?php
-        /* echo $this->Html->link(__('List'), array('action' => 'qualityRubric'), array('class' => 'divider'));
-
-          echo $this->Html->link(__('View Rubric'), array('action' => 'qualityRubricDetailView', $obj['id']), array('class' => 'divider'));
-
-          if ($_edit) {
-          echo $this->Html->link(__('Edit'), array('action' => 'qualityRubricEdit', $obj['id']), array('class' => 'divider'));
-          }
-
-
-
-          if ($_delete) {
-          echo $this->Html->link(__('Delete'), array('action' => 'qualityRubricDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
-          } */
+        if (!$_edit) {
+            $editable = false;
+        }
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
