@@ -9,7 +9,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         <span><?php echo __($subheader); ?></span>
         <?php
         echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'divider'));
-        if ($_add) {
+        if ($_add && !$disableDelete) {
             echo $this->Html->link(__('Add'), array('action' => 'rubricsTemplatesCriteriaAdd', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
         }
         if ($_edit && !empty($data)) {

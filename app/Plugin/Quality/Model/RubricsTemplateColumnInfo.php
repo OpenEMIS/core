@@ -61,7 +61,12 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
         $rubricTemplateData = $RubricsTemplate->getRubric($id);
         $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
         
-        
+        $disableDelete = false;
+        $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
+        if($QualityStatus->getCreatedRubricCount($id) > 0){
+            $disableDelete = true;
+        }
+        $controller->set('disableDelete', $disableDelete);
         
         $controller->set('modelName', $this->name);
         
@@ -80,6 +85,8 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
         $rubricTemplateHeaderId = empty($params['pass'][1]) ? 0 : $params['pass'][1];
         $controller->set('rubricTemplateHeaderId', $rubricTemplateHeaderId);
 
+        
+        
         //$this->recursive = -1;
         $data = $this->getColumnsData($id); //('all', array('conditions' => array('rubric_template_id'=>$id)));
         $controller->Session->write('RubricsCriteria.order', count($data));
@@ -143,6 +150,7 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
             $controller->redirect(array('action' => 'rubricsTemplatesCriteria'));
         }
 
+        
         $controller->set('data', $data);
         //$controller->set('weighthingsOptions', $this->weighthingsOptions);
     }
