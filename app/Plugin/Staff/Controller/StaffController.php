@@ -1134,15 +1134,23 @@ class StaffController extends StaffAppController {
     public function bankAccountsAdd() {
         $this->Navigation->addCrumb('Add Bank Accounts');
         if ($this->request->is('post')) { // save
+            $addMore = false;
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StaffBankAccount');
             }
             $this->StaffBankAccount->create();
             if ($this->StaffBankAccount->save($this->request->data)) {
                 $id = $this->StaffBankAccount->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'bankAccounts'));
             }
@@ -1265,11 +1273,16 @@ class StaffController extends StaffAppController {
     public function commentsAdd() {
         $this->Navigation->addCrumb(__('Add Comments'));
         if ($this->request->is('post')) {
+            $addMore = false;
             $data = $this->data['StaffComment'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StaffComment');
             }
 
             $this->StaffComment->create();
@@ -1277,7 +1290,10 @@ class StaffController extends StaffAppController {
 
             if ($this->StaffComment->save($data)) {
                 $id = $this->StaffComment->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'comments'));
             }
@@ -1348,11 +1364,16 @@ class StaffController extends StaffAppController {
     public function nationalitiesAdd() {
         $this->Navigation->addCrumb(__('Add Nationalities'));
         if ($this->request->is('post')) {
+            $addMore = false;
             $data = $this->data['StaffNationality'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StaffNationality');
             }
             $this->StaffNationality->create();
             $data['staff_id'] = $this->staffId;
@@ -1360,7 +1381,10 @@ class StaffController extends StaffAppController {
 
             if ($this->StaffNationality->save($data)) {
                 $id = $this->StaffNationality->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'nationalities'));
             }
@@ -1437,11 +1461,16 @@ class StaffController extends StaffAppController {
     public function identitiesAdd() {
         $this->Navigation->addCrumb(__('Add Identities'));
         if ($this->request->is('post')) {
+            $addMore = false;
             $data = $this->data['StaffIdentity'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StaffIdentity');
             }
 
             $this->StaffIdentity->create();
@@ -1449,7 +1478,10 @@ class StaffController extends StaffAppController {
 
             if ($this->StaffIdentity->save($data)) {
                 $id = $this->StaffIdentity->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'identities'));
             }
@@ -1523,11 +1555,16 @@ class StaffController extends StaffAppController {
     public function languagesAdd() {
         $this->Navigation->addCrumb(__('Add Languages'));
         if ($this->request->is('post')) {
+            $addMore = false;
             $data = $this->data['StaffLanguage'];
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StaffLanguage');
             }
 
             $this->StaffLanguage->create();
@@ -1535,7 +1572,10 @@ class StaffController extends StaffAppController {
 
             if ($this->StaffLanguage->save($data)) {
                 $id = $this->StaffLanguage->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'languages'));
             }
@@ -1626,12 +1666,16 @@ class StaffController extends StaffAppController {
     public function contactsAdd() {
         $this->Navigation->addCrumb(__('Add Contacts'));
         if ($this->request->is('post')) {
+            $addMore = false;
             $contactData = $this->data['StaffContact'];
-
             if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StaffContact');
             }
 
             $this->StaffContact->create();
@@ -1642,7 +1686,10 @@ class StaffController extends StaffAppController {
                     $this->StaffContact->updateAll(array('StaffContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StaffContact.id' => array($this->StaffContact->getLastInsertId())))));
                 }
                 $id = $this->StaffContact->getLastInsertId();
-                $this->Navigation->updateWizard($this->action,$id);
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
                 $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $this->redirect(array('action' => 'contacts'));
             }

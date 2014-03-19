@@ -26,7 +26,6 @@
         <div class="label"><?php echo __('Comments'); ?></div>
         <div class="value"><?php echo $this->Form->input('comments', array('type'=>'textarea')); ?></div>
     </div>
-
 	 <div class="controls">
 	   <?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>

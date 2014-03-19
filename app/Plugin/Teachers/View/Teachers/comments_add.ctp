@@ -11,6 +11,7 @@
         ?>
     </h1>
 
+    <?php echo $this->element('alert'); ?>
     <?php
 
     echo $this->Form->create('TeacherComment', array(
@@ -33,6 +34,11 @@
             <?php echo $this->Form->input('comment', array('type'=>'textarea')); ?>
         </div>
     </div>
+      <?php if($WizardMode){ ?>
+    <div class="view_controls">
+        <?php echo $this->Form->submit(__('Add More'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_cancel_button btn_right")); ?>
+    </div>
+    <?php } ?>
      <div class="controls">
          <?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
