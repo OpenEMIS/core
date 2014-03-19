@@ -2,27 +2,29 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 $arrOptions = array('date_format' => array(
-								'Y-m-d' => date('Y-m-d'),
-								'd-M-Y' => date('d-M-Y'),
-								'd-m-Y' => date('d-m-Y'),
-								'd/m/Y' => date('d/m/Y'),
-								'm/d/Y' => date('m/d/Y'),
-								'd F Y' => date('d F Y'), 
-								'F d, Y' => date('F d, Y'), 
-								'dS F Y' => date('dS F Y')
-							),
-							'language' =>array(
-								'ara' => 'العربية',
-								'chi' => '中文',
-								'eng' => 'English',
-								'fre' => 'Français',
-								'rus' => 'русский',
-								'spa' => 'español'
-							),
-							'yearbook_orientation' => array(
-								'P' => 'Portrait',
-								'L' => 'Landscape'
-							));
+						'Y-m-d' => date('Y-m-d'),
+						'd-M-Y' => date('d-M-Y'),
+						'd-m-Y' => date('d-m-Y'),
+						'd/m/Y' => date('d/m/Y'),
+						'm/d/Y' => date('m/d/Y'),
+						'd F Y' => date('d F Y'), 
+						'F d, Y' => date('F d, Y'), 
+						'dS F Y' => date('dS F Y')
+					),
+					'language' =>array(
+						'ara' => 'العربية',
+						'chi' => '中文',
+						'eng' => 'English',
+						'fre' => 'Français',
+						'rus' => 'русский',
+						'spa' => 'español'
+					),
+					'yearbook_orientation' => array(
+						'P' => 'Portrait',
+						'L' => 'Landscape'
+					),
+					'yesno' => array(0 => __('No'), 1 => __('Yes'))
+				);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
@@ -101,8 +103,10 @@ $arrOptions = array('date_format' => array(
                 </div>		
         <?php }elseif(stristr($item['name'], 'country_id')){ ?>
 				<div class="table_cell"><?php echo $countries[$item['value']]; ?></div>
-		 <?php }elseif(stristr($item['type'], 'Wizard')){ ?>
+		<?php }elseif(stristr($item['type'], 'Wizard')){ ?>
 				<div class="table_cell"><?php echo $wizardOptions[$item['value']]; ?></div>
+		<?php }elseif(stristr($item['name'], 'language_menu')){ ?>
+				<div class="table_cell"><?php echo $arrOptions['yesno'][$item['value']]; ?></div>
         <?php }else{ ?>
 				<div class="table_cell"><?php echo $item['value']; ?></div>
 		<?php } ?>

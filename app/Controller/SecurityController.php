@@ -60,6 +60,25 @@ class SecurityController extends AppController {
 	
     public function login() {
 		$this->autoLayout = false;
+		$lang = $this->ConfigItem->getValue('language');
+		$showLanguage = $this->ConfigItem->getValue('language_menu');
+		if(isset($this->request->query['lang'])) {
+			$lang = $this->request->query['lang'];
+		} else if(count($this->request->params['pass']) > 0) {
+			$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
+			if(in_array($this->request->params['pass'][0], $languageList)) {
+				$lang = $this->request->params['pass'][0];
+				setcookie('language', $lang, time()+(60*60*24*7), '/');
+			} else {
+				$lang = 'eng';
+			}
+		} else if($showLanguage && isset($_COOKIE['language'])) {
+			$lang = $_COOKIE['language'];
+			
+		}
+		$this->set('showLanguage', $showLanguage);
+		// Assign the language to session and configuration
+		$this->Session->write('configItem.language', $lang);
 		if($this->request->is('post')) {
 			$username = $this->data['SecurityUser']['username'];
 			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
@@ -160,27 +179,11 @@ class SecurityController extends AppController {
 				$this->render('login_ajax');
 			}
 			// added cause need to overwrite AppController pre-assigned Session value
-            $lang = $this->ConfigItem->getValue('language');
-			if(isset($this->request->query['lang'])) {
-				$lang = $this->request->query['lang'];
-			} else if(count($this->request->params['pass']) > 0) {
-				$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
-				if(in_array($this->request->params['pass'][0], $languageList)) {
-					$lang = $this->request->params['pass'][0];
-					setcookie('language', $lang);
-				}
-			} else if(isset($_COOKIE['language'])) {
-				$lang = $_COOKIE['language'];
-			}
-            // Assign the language to session and configuration
-            $this->Session->write('configItem.language', $lang);
-
 			$l10n = new L10n();
 			$locale = $l10n->map($this->Session->read('configItem.language'));
 			$catalog = $l10n->catalog($locale);
 			$this->set('lang_locale', $locale);
 			$this->set('lang_dir', $catalog['direction']);
-			$this->set('selectedLang', $lang);
 					
 			Configure::write('Config.language', $this->Session->read('configItem.language')); 
 		}
@@ -188,6 +191,7 @@ class SecurityController extends AppController {
 		$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
 		$this->set('username', $username);
 		$this->set('password', $password);
+		$this->set('selectedLang', $lang);
 	
 		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.type'=> array('login','partner'), 'ConfigAttachment.active' => 1), 'order'=>array('order')));
 		$imageData = array();
