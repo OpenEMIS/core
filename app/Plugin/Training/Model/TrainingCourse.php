@@ -113,7 +113,7 @@ class TrainingCourse extends TrainingAppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Credit Hours.'
+				'message' => 'Please enter a valid Credits.'
 			)
 		),
 		'training_mode_delivery_id' => array(
