@@ -62,7 +62,7 @@ echo $this->Html->script('jquery-ui.min', false);
     <div class="add_more_controls">
         <?php echo $this->Form->submit(__('Add More'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right")); ?>
     </div>
-    <?php } ?>>
+    <?php } ?>
 	 <div class="controls">
 		<?php if(!$WizardMode){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
@@ -73,7 +73,7 @@ echo $this->Html->script('jquery-ui.min', false);
 	        <?php } ?>
         <?php }else{?>
             <?php 
-                echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_cancel_button btn_right"));
+                echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
          
 	            if(!$wizardEnd){
                     echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
