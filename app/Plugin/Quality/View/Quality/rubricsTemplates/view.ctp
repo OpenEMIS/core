@@ -16,7 +16,7 @@
 			
 			//echo $this->Html->link(__('Section Header'), array('action' => 'rubricsTemplatesHeader',$obj['id'] ), array('class' => 'divider'));
 			
-			if($_delete) {
+			if($_delete && !$disableDelete) {
 				echo $this->Html->link(__('Delete'), array('action' => 'rubricsTemplatesDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 			}
 		?>

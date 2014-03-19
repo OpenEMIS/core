@@ -14,7 +14,7 @@
             echo $this->Html->link(__('Edit'), array('action' => 'statusEdit', $obj['id']), array('class' => 'divider'));
         }
 
-        if ($_delete) {
+        if ($_delete && !$disableDelete) {
             echo $this->Html->link(__('Delete'), array('action' => 'statusDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
         }
         ?>

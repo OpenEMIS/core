@@ -79,6 +79,14 @@ class RubricsTemplate extends QualityAppModel {
         if (empty($data)) {
             $controller->redirect(array('action' => 'rubricsTemplates'));
         }
+        
+        $disableDelete = false;
+        $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
+        if($QualityStatus->getCreatedRubricCount($id) > 0){
+            $disableDelete = true;
+        }
+        
+        $controller->set('disableDelete', $disableDelete);
         $controller->Session->write('RubricsTemplate.id', $id);
         $controller->set('data', $data);
         $controller->set('weightingOptions', $this->weightingOptions);

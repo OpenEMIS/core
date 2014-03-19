@@ -31,7 +31,7 @@ class QualityStatus extends QualityAppModel {
             'foreignKey' => 'created_user_id'
         )
     );
-    public $hasMany = array('RubricsTemplateColumnInfo');
+  //  public $hasMany = array('RubricsTemplateColumnInfo');
 
     public $validate = array(
         'rubric_template_id' => array(
@@ -86,11 +86,26 @@ class QualityStatus extends QualityAppModel {
         $RubricsTemplate->recursive = -1;
         $rubricTemplateInfo = $RubricsTemplate->findById($data[$this->name]['rubric_template_id']);
 
+        
+        
+        $SchoolYear = ClassRegistry::init('SchoolYear');
+        $schoolyearId = $SchoolYear->getSchoolYearId($data[$this->name]['year']);
+        
+        $disableDelete = false;
+        $QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
+        if($QualityInstitutionRubric->getAssignedInstitutionRubricCount($schoolyearId, $id) > 0){
+            $disableDelete = true;
+        }
+        
+        
         $rubricName = $rubricTemplateInfo['RubricsTemplate']['name'];
         $controller->Session->write('QualityStatus.id', $id);
         $controller->set('rubricName', $rubricName);
+        $controller->set('disableDelete', $disableDelete);
         $controller->set('data', $data);
         $controller->set('statusOptions', $this->statusOptions);
+        
+        
     }
 
     public function statusAdd($controller, $params) {
@@ -172,12 +187,26 @@ class QualityStatus extends QualityAppModel {
     public function statusDelete($controller, $params) {
         if ($controller->Session->check('QualityStatus.id')) {
             $id = $controller->Session->read('QualityStatus.id');
-
-            $data = $this->find('first', array('conditions' => array($this->name . '.id' => $id)));
-
-
-            $name = $data[$this->name]['name'] . " (" . $data[$this->name]['year'] . ")";
-
+            
+            $options['conditions'] = array($this->name . '.id' => $id);
+            $options['joins'] = array(
+                array(
+                    'table' => 'rubrics_templates',
+                    'alias' => 'RubricsTemplate',
+                    'conditions' => array('RubricsTemplate.id = QualityStatus.rubric_template_id')
+                )
+            );
+            $options['fields'] = array('QualityStatus.*', 'RubricsTemplate.name');
+            $data = $this->find('first', $options);
+            
+            //$SchoolYear = ClassRegistry::init('SchoolYear');
+           // $schoolyearId = $SchoolYear->getSchoolYearId($data[$this->name]['year']);
+            
+            $name = $data['RubricsTemplate']['name'] . " (" . $data[$this->name]['year'] . ")";
+            
+          //  $QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
+         //   $QualityInstitutionRubric->deleteAllInstitutionRubrics($schoolyearId, $id);
+           // pr($name);die;
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
             $controller->Session->delete('QualityStatus.id');
@@ -214,6 +243,15 @@ class QualityStatus extends QualityAppModel {
         }
 
         return /*($enabled == 1) ? 'true' : */'false';
+    }
+    
+    public function getCreatedRubricCount($rubricId){
+        $options['conditions'] = array('rubric_template_id'=>$rubricId);
+        $options['fields'] = array('COUNT(id) as Total');
+        $options['recursive'] = -1;
+        $data = $this->find('first', $options);
+        
+        return $data[0]['Total'];
     }
 
 }

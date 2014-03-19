@@ -16,7 +16,7 @@
             echo $this->Html->link(__('Edit'), array('action' => 'qualityRubricEdit', $obj['id']), array('class' => 'divider'));
         }
 
-        if ($_delete) {
+        if ($_delete && !$disableDelete) {
             echo $this->Html->link(__('Delete'), array('action' => 'qualityRubricDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
         }
         ?>

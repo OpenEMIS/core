@@ -248,7 +248,6 @@ class QualityInstitutionRubric extends QualityAppModel {
         $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
         $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_class_id']);
 
-
         $InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
         $grade = $InstitutionSiteClassGrade->getGrade($data[$this->name]['institution_site_class_grade_id']);
 
@@ -257,6 +256,15 @@ class QualityInstitutionRubric extends QualityAppModel {
 
         $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
         $editable = $QualityStatus->getRubricStatus($year['SchoolYear']['name'], $data[$this->name]['rubric_template_id']);
+        
+        $disableDelete = false;
+        $QualityInstitutionRubricsAnswer = ClassRegistry::init('Quality.QualityInstitutionRubricsAnswer');
+        $answerCountData = $QualityInstitutionRubricsAnswer->getTotalCount($data[$this->name]['institution_site_id'], $data[$this->name]['rubric_template_id'], $data[$this->name]['id']);
+        if(empty($answerCountData)){
+            $disableDelete = true;
+        };
+        $controller->set('disableDelete', $disableDelete);
+        
         // pr($editable);
         $controller->Session->write('QualityRubric.editable', $editable);
 
@@ -288,5 +296,13 @@ class QualityInstitutionRubric extends QualityAppModel {
             $controller->redirect(array('action' => 'qualityRubric'));
         }
     }
-
+    
+    public function getAssignedInstitutionRubricCount($yearid, $rubricId){
+        $options['conditions'] = array('school_year_id' => $yearid, 'rubric_template_id'=>$rubricId);
+        $options['fields'] = array('COUNT(id) as Total');
+        $options['recursive'] = -1;
+        $data = $this->find('first', $options);
+        return $data[0]['Total'];
+    }
+   
 }
