@@ -53,6 +53,11 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
                 
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $rubricTemplateData = $RubricsTemplate->getRubric($rubricTemplateId);
+        
+        if (empty($rubricTemplateData)){
+            return $controller->redirect(array('action' => 'qualityRubric'));
+        }
+                
         $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
         
       //  $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
