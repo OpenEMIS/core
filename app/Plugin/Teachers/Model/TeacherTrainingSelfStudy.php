@@ -72,7 +72,7 @@ class TeacherTrainingSelfStudy extends TeachersAppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Credit Hours.'
+				'message' => 'Please enter a valid Credits.'
 			)
 		),
 		'pass' => array(
