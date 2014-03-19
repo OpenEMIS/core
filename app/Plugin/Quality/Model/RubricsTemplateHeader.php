@@ -144,6 +144,13 @@ class RubricsTemplateHeader extends QualityAppModel {
         $rubric_template_id = empty($params['pass'][0]) ? '' : $params['pass'][0];
         $id = empty($params['pass'][1]) ? '' : $params['pass'][1];
 
+        $disableDelete = false;
+        $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
+        if($QualityStatus->getCreatedRubricCount($rubric_template_id) > 0){
+            $disableDelete = true;
+        }
+        
+        $controller->set('disableDelete', $disableDelete);
         $controller->set('rubric_template_id', $rubric_template_id);
         $controller->Session->write('RubricsTemplateHeader.id', $id);
         $controller->Session->write('RubricsTemplateHeader.rubric_template_id', $rubric_template_id);

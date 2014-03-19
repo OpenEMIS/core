@@ -66,7 +66,7 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
     }
     
     public function qualityRubricHeader($controller, $params){
-        $controller->Navigation->addCrumb('Section Header');
+        $controller->Navigation->addCrumb('Section Headers');
         
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
         $id = empty($params['pass'][0]) ? '' : $params['pass'][0];
