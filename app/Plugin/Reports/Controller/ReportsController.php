@@ -78,42 +78,6 @@ class ReportsController extends ReportsAppController {
         }
     }
 
-    public function test(){
-           //$this->autoRender = false;
-           $InstitutionSite = ClassRegistry::init('InstitutionSite');
-            $InstitutionSite->formatResult = true;
-
-            $data = $InstitutionSite->find('all', 
-                array(
-                    'recursive' => -1, 
-                    'fields' => array('InstitutionSite.name as SiteName', 'InstitutionSite.code as SiteCode', 'InstitutionSiteType.name as Type', 'InstitutionSiteOwnership.name as Ownership', 'InstitutionSiteStatus.name as Status', 'InstitutionSite.date_opened as DateOpened', 'InstitutionSite.date_closed as DateClosed'),
-                    'joins' => array(
-                        array(
-                            'type' => 'LEFT',
-                            'table' => 'institution_site_ownership',
-                            'alias' => 'InstitutionSiteOwnership',
-                            'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
-                        ),
-                        array(
-                            'type' => 'LEFT',
-                            'table' => 'institution_site_types',
-                            'alias' => 'InstitutionSiteType',
-                            'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
-                        ),
-                        array(
-                            'type' => 'LEFT',
-                            'table' => 'institution_site_statuses',
-                            'alias' => 'InstitutionSiteStatus',
-                            'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
-                        )
-                    ),
-                    'conditions'=>array('InstitutionSite.area_id is null or InstitutionSite.area_id = 0')
-
-                )
-            );
-            pr($data);
-    }
-    
     public function index() {
         $this->redirect(array('controller' => $this->params['controller'], 'action' => 'Institution'));
     }
