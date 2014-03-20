@@ -463,6 +463,8 @@ class StudentsController extends StudentsAppController {
             /**
              * Note to Preserve the Primary Key to avoid exhausting the max PK limit
              */
+            pr($this->request->data);
+            exit;
             foreach ($arrFields as $fieldVal) {
                 // pr($fieldVal);
                 // pr($this->request->data['StudentCustomValue']);
@@ -556,6 +558,8 @@ class StudentsController extends StudentsAppController {
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentAttachment');
             }
             if(!empty($_FILES)){
                 $errors = $this->FileAttachment->saveAll($this->data, $_FILES, $id);

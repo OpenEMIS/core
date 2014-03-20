@@ -587,6 +587,8 @@ class StaffController extends StaffAppController {
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }else{
+                $this->Navigation->validateModel($this->action,'StaffAttachment');
             }
 
             if(!empty($_FILES)){

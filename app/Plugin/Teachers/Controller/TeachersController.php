@@ -591,6 +591,8 @@ class TeachersController extends TeachersAppController {
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }else{
+                $this->Navigation->validateModel($this->action,'TeacherAttachment');
             }
             if(!empty($_FILES)){
                 $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
