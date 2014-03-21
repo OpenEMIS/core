@@ -281,21 +281,34 @@ class NavigationComponent extends Component {
         }
     }
 
+    public function getMandatoryWizard($action){
+    	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
+			return;
+		}
+
+		$configItemName = str_replace('Add', '', $action);
+        $configItemName = str_replace('Edit', '', $configItemName);
+
+
+        $ConfigItem = ClassRegistry::init('ConfigItem');
+       
+        $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+        
+        return $mandatory;
+
+    }
+
     public function getWizard($action){
 		if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
 
         $newAction = '';
-        $configItemName = str_replace('Add', '', $this->controller->action);
-        $configItemName = str_replace('Edit', '', $configItemName);
 
         $actionConcat = str_replace("Add", "", $action);
         $actionConcat = str_replace("Edit", "", $actionConcat);
 
-        $ConfigItem = ClassRegistry::init('ConfigItem');
-       
-        $mandatory = $ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => strtolower($this->controller->className).'_'.$configItemName, 'ConfigItem.type' => 'Wizard - Add New '.$this->controller->className));
+        $mandatory = $this->getMandatoryWizard($this->controller->action);
         $this->controller->set('mandatory', $mandatory);
         $linkCurrent = $this->getLastWizardStep(false);
         $wizardLink = $this->Session->read('WizardLink');
