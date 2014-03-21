@@ -63,6 +63,7 @@ var rubricsTemplate = {
                 // alert(data);
                 $('form .table_view').append(data['html']);
                 $('#last_id').val(parseInt($('#last_id').val()) + 1);
+                rubricsTemplate.initRow(id);
             }
         });
     },
