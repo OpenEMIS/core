@@ -335,38 +335,40 @@ class RubricsTemplate extends QualityAppModel {
             $header = array(array('Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
         }
 
-        $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
-        if (empty($year)) {
-            $rubricYear = $this->getLatestRubricYear($institutionSiteId);
-        } else {
-            $rubricYear = $year;
-        }
-
-        //   pr($rubricYear);
-        $rubricOptions = $this->getRubricHeader($institutionSiteId, $rubricYear);
-        // pr($rubricOptions);
-        // die;
-        if (!empty($rubricOptions)) {
-            foreach ($rubricOptions as $key => $item) {
-                $headerOptions = $RubricsTemplateHeader->getRubricHeaders($key, 'all');
-//pr($headerOptions);
-
-                if (!empty($headerOptions)) {
-                    $tempArr = array();
-                    $tempArr[][] = 'Rubric Name';
-                    foreach ($headerOptions AS $obj) {
-                        $tempArr[][] = $obj['RubricsTemplateHeader']['title'];
-                    }
-                    $tempArr[][] = 'Total Weighting(%)';
-                    $tempArr[][] = 'Pass/Fail';
-                    $header = array_merge($header, $tempArr);
-                }
+        if(!empty($institutionSiteId)){
+            $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
+            if (empty($year)) {
+                $rubricYear = $this->getLatestRubricYear($institutionSiteId);
+            } else {
+                $rubricYear = $year;
             }
 
-            $headerOptions = array();
-            $headerOptions[][] = 'Grand Total Weighting(%)';
-            //  $headerOptions[] = 'Pass/Fail';
-            $header = array_merge($header, $headerOptions);
+            //   pr($rubricYear);
+            $rubricOptions = $this->getRubricHeader($institutionSiteId, $rubricYear);
+            // pr($rubricOptions);
+            // die;
+            if (!empty($rubricOptions)) {
+                foreach ($rubricOptions as $key => $item) {
+                    $headerOptions = $RubricsTemplateHeader->getRubricHeaders($key, 'all');
+    //pr($headerOptions);
+
+                    if (!empty($headerOptions)) {
+                        $tempArr = array();
+                        $tempArr[][] = 'Rubric Name';
+                        foreach ($headerOptions AS $obj) {
+                            $tempArr[][] = $obj['RubricsTemplateHeader']['title'];
+                        }
+                        $tempArr[][] = 'Total Weighting(%)';
+                        $tempArr[][] = 'Pass/Fail';
+                        $header = array_merge($header, $tempArr);
+                    }
+                }
+
+                $headerOptions = array();
+                $headerOptions[][] = 'Grand Total Weighting(%)';
+                //  $headerOptions[] = 'Pass/Fail';
+                $header = array_merge($header, $headerOptions);
+            }
         }
         // pr($header); die;
         return $header;
