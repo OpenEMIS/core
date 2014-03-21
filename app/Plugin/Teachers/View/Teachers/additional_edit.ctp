@@ -11,6 +11,7 @@ echo $this->Html->script('institution_site', false);
         <?php echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider')); ?>
         <?php } ?>
     </h1>
+    <?php echo $this->element('alert'); ?>
     <?php
     echo $this->Form->create('TeacherCustomValue', array(
         'url' => array('controller' => 'Teachers', 'action' => 'additionalEdit')

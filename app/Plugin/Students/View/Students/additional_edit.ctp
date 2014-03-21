@@ -8,6 +8,7 @@
         <?php echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider')); ?>
         <?php } ?>
     </h1>
+    <?php echo $this->element('alert'); ?>
     <?php
     echo $this->Form->create('StudentCustomValue', array(
         'url' => array('controller' => 'Students', 'action' => 'additionalEdit')
