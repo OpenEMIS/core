@@ -14,7 +14,7 @@
   border: 0px solid #CCC;
   overflow:visible;
   float:left;
-  width:980px;
+  width: 100%;
 }
 .swMain .stepContainer {
   display:block;
@@ -24,7 +24,6 @@
   border: 0px solid #CCC;    
   overflow:hidden;
   clear:both;
-/*  height:300px;*/
 }
 
 .swMain .stepContainer div.content {
@@ -32,38 +31,32 @@
   position: absolute;  
   float:left;
   margin: 0;
-  padding:5px;    
+  padding:5px;
   border: 1px solid #CCC; 
   font: normal 12px Verdana, Arial, Helvetica, sans-serif; 
   color:#5A5655;   
-  background-color:#F8F8F8;  
-/*  height:300px;*/
+  background-color:#F8F8F8;
   text-align:left;
-  overflow:visible;    
+  overflow:visible;
   z-index:88; 
   -webkit-border-radius: 5px;
-  -moz-border-radius  : 5px;
-  width:968px;
+  -moz-border-radius: 5px;
+  width: 98%;
   clear:both;
 }
 
 .swMain div.actionBar {
-  display:block;
-  position: relative; 
+  position: relative;
   clear:both;
-  margin:             3px 0 0 0;   
-  border:             1px solid #CCC;
-  padding:            0;    
-  color:              #5A5655;   
-  background-color:   #F8F8F8;
-  height:40px;
-  text-align:left;
-  overflow:auto;    
-  z-index:88; 
-
+  margin: 3px 0 0 0;
+  border: 1px solid #CCC;
+  padding-bottom: 5px;    
+  color: #5A5655;   
+  background-color: #F8F8F8;
+  overflow: hidden;
+  z-index: 88;
   -webkit-border-radius: 5px;
   -moz-border-radius  : 5px;
-  left:0;
   margin-bottom: 5px;
 }
 
@@ -110,8 +103,8 @@
   float:left;
   margin:0;
   padding:3px;
-  height:60px;
-  width:230px;
+  height:50px;
+  width:158px;
   text-decoration: none;
   outline-style:none;
   -moz-border-radius  : 5px;
@@ -125,7 +118,7 @@
   text-align: center;
   padding:5px;
   padding-top:0;
-  font: bold 45px Verdana, Arial, Helvetica, sans-serif;
+  font: bold 36px Verdana, Arial, Helvetica, sans-serif;
 }
 .swMain ul.anchor li a .stepDesc{
   position:relative;
@@ -134,7 +127,7 @@
   text-align: left;
   padding:5px;
 
-  font: bold 20px Verdana, Arial, Helvetica, sans-serif;
+  font: bold 14px Verdana, Arial, Helvetica, sans-serif;
 }
 .swMain ul.anchor li a .stepDesc small{
   font: normal 12px Verdana, Arial, Helvetica, sans-serif;

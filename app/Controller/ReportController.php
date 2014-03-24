@@ -27,7 +27,7 @@ App::uses('File', 'Utility');
 
 class ReportController extends AppController {
     
-    public $uses = array();
+    public $uses = array('ReportTemplate');
     public $helpers = array('Number');
     public $path = null;
     
@@ -51,11 +51,19 @@ class ReportController extends AppController {
     }
     
     public function index() {
+		$globalReport = $this->ReportTemplate->find('all', array('conditions' => array('security_user_id' => 0)));
+		$myReport = $this->ReportTemplate->find('all', array('conditions' => array('security_user_id' => $this->Auth->user('id'))));
+		$this->set('globalReport', $globalReport);
+		$this->set('myReport', $myReport);
+		//pr($data);
+		//pr($this->data);
+		//var_dump($this->request->is('post'));//die;
         if (empty($this->data)) {
             $modelIgnoreList = Configure::read('ReportManager.modelIgnoreList'); 
             
-            $models = App::objects('Model');
-            $models = array_combine($models,$models);            
+            //$models = App::objects('Model');
+			$models = array('Institution', 'InstitutionSite', 'CensusStudent', 'CensusTeacher', 'CensusStaff');
+            $models = array_combine($models,$models);
             
             if ( isset($modelIgnoreList) && is_array($modelIgnoreList)) {
                 foreach ($modelIgnoreList as $model) {
@@ -66,22 +74,28 @@ class ReportController extends AppController {
             $this->set('files',$this->listReports());
             $this->set('models',$models);
         } else {
-            if (isset($this->data['new'])) {
+            if (isset($this->data['Report']['new'])) {
                 $reportButton = 'new';
-                $modelClass = $this->data['ReportManager']['model'];
-                $oneToManyOption = $this->data['ReportManager']['one_to_many_option'];
-                $this->redirect(array('action'=>'wizard',$reportButton, $modelClass, $oneToManyOption));
+                $modelClass = $this->data['Report']['model'];
+                $oneToManyOption = $this->data['Report']['one_to_many_option'];
+                $this->redirect(array('action'=>'reportsWizard',$reportButton, $modelClass, $oneToManyOption));
             }
                 
             if (isset($this->data['load'])) {
                 $reportButton = 'load';
-                $fileName = $this->data['ReportManager']['saved_report_option'];
-                $this->redirect(array('action'=>'wizard',$reportButton, urlencode($fileName)));                
+                $fileName = $this->data['Report']['saved_report_option'];
+                $this->redirect(array('action'=>'reportsWizard',$reportButton, urlencode($fileName)));                
             }
                 
             $this->redirect(array('action'=>'index'));
         }
     }
+	
+	public function reportsNew() {
+		$models = array('Institution', 'InstitutionSite', 'CensusStudent', 'CensusTeacher', 'CensusStaff');
+		$models = array_combine($models,$models);
+		$this->set('models',$models);
+	}
     
     public function ajaxGetOneToManyOptions() {
         if ($this->request->is('ajax')) {
@@ -153,11 +167,9 @@ class ReportController extends AppController {
     }
  
     public function saveReport($modelClass = null,$oneToManyOption = null) {
-        $content='<?php $reportFields=';
+        $content='$reportFields=';
         $content.= var_export($this->data,1);
-        $content.='; ?>'; 
-
-
+        $content.=';';
         
         if ($this->data['Report']['ReportName'] != '') {
             $reportName = str_replace('.', '_', $this->data['Report']['ReportName']);
@@ -166,15 +178,26 @@ class ReportController extends AppController {
             $reportName = date('Ymd_His');
         }
         
+		/*
         $oneToManyOption = ( $oneToManyOption == '' ? $oneToManyOption : $oneToManyOption . '.' );
         $fileName = $modelClass . '.' . $oneToManyOption . $reportName.".crp";
         $file = new File(APP.$this->path.$fileName, true, 777);
         $file->write($content,'w',true);
         $file->close();
+		*/
+		$template = array(
+			'name' => 'test report',
+			'description' => 'test report',
+			'query' => $content,
+			'security_user_id' => $this->Auth->user('id')
+		);
+		$this->ReportTemplate->create();
+		$this->ReportTemplate->save($template);
+		//pr($content);die;
     }
 
     public function loadReport($fileName) {
-        require(APP.$this->path.$fileName);
+        //require(APP.$this->path.$fileName);
         $this->data = $reportFields;
         $this->set($this->data);
     }
@@ -202,8 +225,7 @@ class ReportController extends AppController {
     }
 
 
-    public function wizard($param1 = null,$param2 = null, $param3 = null) {
-		$this->bodyTitle = "";
+    public function reportsWizard($param1 = null,$param2 = null, $param3 = null) {
         if (is_null($param1) || is_null($param2)) {
             $this->Session->setFlash(__('Please select a model or a saved report'));
             $this->redirect(array('action'=>'index'));
