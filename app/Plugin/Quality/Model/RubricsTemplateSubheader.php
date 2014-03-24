@@ -58,24 +58,24 @@ class RubricsTemplateSubheader extends QualityAppModel {
         if (empty($rubricTemplateHeaderId)) {
             return $controller->redirect(array('action' => 'rubricsTemplates'));
         }
-        
+
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
         $this->rubricTemplateHeaderData = $RubricsTemplateHeader->getRubricTemplate($rubricTemplateHeaderId);
         $this->rubricId = $this->rubricTemplateHeaderData['RubricsTemplateHeader']['rubric_template_id'];
-        
+
         $sectionHeaderTitle = trim($this->rubricTemplateHeaderData['RubricsTemplateHeader']['title']);
-        
-        
+
+
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $rubricTemplateData = $RubricsTemplate->getRubric($this->rubricId);
         $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
-        
+
         $controller->Navigation->addCrumb('Rubric', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
-        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader',$this->rubricId , 'plugin' => 'Quality'));
-        
+        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader', $this->rubricId, 'plugin' => 'Quality'));
+
         $controller->set('modelName', $this->name);
-       
-        if($action == 'rubricsTemplatesSubheaderView'){
+
+        if ($action == 'rubricsTemplatesSubheaderView') {
             $controller->Navigation->addCrumb($sectionHeaderTitle);
         }
     }
@@ -85,7 +85,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
     }
 
     public function rubricsTemplatesSubheaderEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Edit - '.$this->rubricTemplateHeaderData['RubricsTemplateHeader']['title']);
+        $controller->Navigation->addCrumb('Edit - ' . $this->rubricTemplateHeaderData['RubricsTemplateHeader']['title']);
         $controller->set('modelName', $this->name);
 
         $this->_setupRubricsTemplateDetail($controller, $params, 'edit');
@@ -97,13 +97,13 @@ class RubricsTemplateSubheader extends QualityAppModel {
 
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
         $rubricTemplateHeaderData = $RubricsTemplateHeader->getRubricTemplate($rubricTemplateHeaderId);
-            
-       // $rubricTemplateId = $rubricTemplateHeaderData['RubricsTemplateHeader']['rubric_template_id'];
+
+        // $rubricTemplateId = $rubricTemplateHeaderData['RubricsTemplateHeader']['rubric_template_id'];
         $headerCounter = $this->rubricTemplateHeaderData['RubricsTemplateHeader']['order'];
 
         $controller->set('subheader', $this->rubricTemplateHeaderData['RubricsTemplateHeader']['title']);
         //$controller->set('sectionHeaderTitle', $sectionHeaderTItle);
-        
+
         $controller->Session->write('RubricsTemplate.id', $this->rubricId);
         $controller->Session->write('RubricsTemplateHeader.id', $rubricTemplateHeaderId);
 
@@ -177,10 +177,10 @@ class RubricsTemplateSubheader extends QualityAppModel {
               unset($controllerData['last_id']);
               } */
 
-             // pr($controllerData); 
+            // pr($controllerData); 
             $firstObj = array();
             foreach ($controllerData as $obj) {
-                if(empty($firstObj)){
+                if (empty($firstObj)) {
                     $firstObj = $obj;
                 }
                 if (array_key_exists('RubricsTemplateSubheader', $obj)) {
@@ -201,7 +201,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
             $RubricsTemplateAnswer->set($optionsData);
             $saveError = false;
 
-            
+
             if (isset($firstObj['RubricsTemplateSubheader']['title'])) {
 
                 if (empty($headerData) || empty($questionData) || empty($optionsData)) {
@@ -301,7 +301,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
 
                 $controller->request->data['RubricsTemplateDetail'] = $data;
                 //pr($controller->request->data);
-                
+
                 if (empty($controller->request->data['RubricsTemplateDetail']) && $type != 'edit') {
                     $controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
                 }
@@ -344,6 +344,24 @@ class RubricsTemplateSubheader extends QualityAppModel {
                 $controller->set('message', $controller->Utility->getMessage('RUBRIC_ROW_ADDED'));
             }
         }
+    }
+
+    public function rubricsTemplatesSubheaderDeleteAll($ids) {
+        $this->unbindModel(array('belongsTo' => array('RubricsTemplateHeader')));
+        $listOfHeaderIds = implode(',', $ids);
+        //  pr($listOfHeaderIds);
+
+        $data = $this->find('list', array('conditions' => array('rubric_template_header_id' => $listOfHeaderIds), 'fields' => array('id', 'id')));
+        if (!empty($data)) {
+            $RubricsTemplateItem = ClassRegistry::init('Quality.RubricsTemplateItem');
+            $RubricsTemplateItem->rubricsTemplatesItemDeleteAll($data);
+
+            foreach ($data as $obj) {
+                // pr($obj);
+               $this->delete($obj);
+            }
+        }
+        // pr($data);
     }
 
     //Pagination
