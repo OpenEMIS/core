@@ -80,9 +80,9 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
         $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
         $rubricTemplateData = $RubricsTemplateHeader->getRubricTemplate($rubricTemplateHeaderId);
         $headerCounter = $rubricTemplateData['RubricsTemplateHeader']['order'];
-     
+        
         $controller->Navigation->addCrumb($rubricTemplateData['RubricsTemplateHeader']['title']);
-        $controller->set('subheader', $rubricTemplateData['RubricsTemplateHeader']['title']);
+        $controller->set('subheader', $headerCounter.". ".$rubricTemplateData['RubricsTemplateHeader']['title']);
         $controller->Session->write('RubricsTemplate.id', $rubricTemplateId);
         $controller->Session->write('RubricsTemplateHeader.id', $rubricTemplateHeaderId);
 

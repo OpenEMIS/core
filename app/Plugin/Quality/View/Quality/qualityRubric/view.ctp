@@ -47,7 +47,10 @@
         <div class="label"><?php echo __('Evaluator'); ?></div>
         <div class="value"><?php echo trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']); ?></div>
     </div>
-
+    <div class="row">
+        <div class="label"><?php echo __('Comment'); ?></div>
+        <div class="value"><?php echo $obj['comment']; ?></div>
+    </div>
     <div class="row">
         <div class="label"><?php echo __('Modified by'); ?></div>
         <div class="value"><?php echo trim($data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']); ?></div>
