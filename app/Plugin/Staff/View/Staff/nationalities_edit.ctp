@@ -33,7 +33,7 @@
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'nationalitiesView',$id), array('class' => 'btn_cancel btn_left')); ?>
         <?php }else{?>
             <?php 
-                echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_cancel_button btn_right"));
+                echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
       
                 if(!$wizardEnd){
                     echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
