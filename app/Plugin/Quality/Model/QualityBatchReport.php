@@ -637,8 +637,7 @@ class QualityBatchReport extends QualityAppModel {
         $rubricsGrandTotal = 0;
 
         $rubricTemplateWeightingInfo = $this->getRubricTemplateWeightingInfo();
-      //  pr($rubricTemplateWeightingInfo);
-        // pr($data); die;
+       
         foreach ($data AS $num => $row) {
             $currentClassId = $row['InstitutionSiteClass']['ClassId'];
             $currentRubricName = $row['RubricTemplate']['RubricName'];
@@ -797,7 +796,6 @@ class QualityBatchReport extends QualityAppModel {
             }
         }
 
-//pr($tempArray);
         return $tempArray;
     }
 
@@ -834,41 +832,46 @@ class QualityBatchReport extends QualityAppModel {
      * =================================================================================== */
 
     public function getInstitutionQAReportHeader($institutionSiteId, $year = NULL, $header = array()) {
-        $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
-        if (empty($year)) {
-            $rubricYear = $this->getLatestRubricYear($institutionSiteId);
-        } else {
-            $rubricYear = $year;
-        }
-
-        $rubricOptions = $this->getRubricHeader($institutionSiteId, $rubricYear);
-
-        if (!empty($rubricOptions)) {
-            foreach ($rubricOptions as $key => $item) {
-                $headerOptions = $RubricsTemplateHeader->getRubricHeaders($key, 'all');
-
-                if (!empty($headerOptions)) {
-                    $tempArr = array();
-                    $tempArr[][] = 'Rubric Name';
-                    foreach ($headerOptions AS $obj) {
-                        $tempArr[][] = $obj['RubricsTemplateHeader']['title'];
-                    }
-                    $tempArr[][] = 'Total Weighting(%)';
-                    $tempArr[][] = 'Pass/Fail';
-                    if(!empty($header)){
-                        $header = array_merge($header, $tempArr);
-                    }
-                    else{
-                        $header = $tempArr;
-                    }
-                }
+        if(!empty($institutionSiteId)){
+            $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
+            if (empty($year)) {
+                $rubricYear = $this->getLatestRubricYear($institutionSiteId);
+            } else {
+                $rubricYear = $year;
             }
 
-            $headerOptions = array();
-            $headerOptions[][] = 'Grand Total Weighting(%)';
-            $header = array_merge($header, $headerOptions);
+            $rubricOptions = $this->getRubricHeader($institutionSiteId, $rubricYear);
+
+            if (!empty($rubricOptions)) {
+                foreach ($rubricOptions as $key => $item) {
+                    $headerOptions = $RubricsTemplateHeader->getRubricHeaders($key, 'all');
+
+                    if (!empty($headerOptions)) {
+                        $tempArr = array();
+                        $tempArr[][] = 'Rubric Name';
+                        foreach ($headerOptions AS $obj) {
+                            $tempArr[][] = $obj['RubricsTemplateHeader']['title'];
+                        }
+                        $tempArr[][] = 'Total Weighting(%)';
+                        $tempArr[][] = 'Pass/Fail';
+                        if(!empty($header)){
+                            $header = array_merge($header, $tempArr);
+                        }
+                        else{
+                            $header = $tempArr;
+                        }
+                    }
+                }
+
+                $headerOptions = array();
+                $headerOptions[][] = 'Grand Total Weighting(%)';
+                $header = array_merge($header, $headerOptions);
+            }
+            return $header;
         }
-        return $header;
+        else{
+            return array();
+        }
     }
 
     private function getRubricTemplateWeightingInfo() {
@@ -894,10 +897,11 @@ class QualityBatchReport extends QualityAppModel {
                 'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
             )
         );
-        $options['fields'] = array('RubricsTemplate.id', 'RubricsTemplate.weighthings', 'RubricsTemplate.pass_mark', 'Count(RubricTemplateItem.id) AS totalQuestion');
+        $options['fields'] = array('RubricsTemplate.id', 'RubricsTemplate.weighting', 'RubricsTemplate.pass_mark', 'Count(RubricTemplateItem.id) AS totalQuestion');
         $options['group'] = array('RubricsTemplate.id');
+      
         $data = $RubricsTemplate->find('all', $options);
-
+        
         $RubricTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
         $weightings = $RubricTemplateColumnInfo->getMaxWeighting();
 
@@ -907,10 +911,11 @@ class QualityBatchReport extends QualityAppModel {
                 $weighting = $weightings[$obj['RubricsTemplate']['id']];
             }
 
-            $list[$obj['RubricsTemplate']['id']]['WeightingType'] = ($obj['RubricsTemplate']['weighthings'] == 1) ? 'point' : 'percent';
+            $list[$obj['RubricsTemplate']['id']]['WeightingType'] = ($obj['RubricsTemplate']['weighting'] == 1) ? 'point' : 'percent';
             $list[$obj['RubricsTemplate']['id']]['PassMark'] = $obj['RubricsTemplate']['pass_mark'];
             $list[$obj['RubricsTemplate']['id']]['TotalWeighting'] = $weighting * $obj[0]['totalQuestion'];
         }
+        
         return $list;
     }
 
