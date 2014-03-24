@@ -167,3 +167,17 @@ ul.table_view li:first-child .cell{
 ul.table_view li:first-child{
     margin-top:0 !important;
 }
+
+/* Font Color */
+
+.font-red{
+    color: red !important;
+}
+
+.font-orange{
+    color: orange !important;
+}
+
+.font-green{
+    color: green !important;
+}
