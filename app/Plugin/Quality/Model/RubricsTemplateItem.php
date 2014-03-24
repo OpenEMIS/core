@@ -21,7 +21,6 @@ class RubricsTemplateItem extends QualityAppModel {
     //public $actsAs = array('ControllerAction');
     public $belongsTo = array(
         //'Student',
-        'RubricsTemplateHeader',
         'ModifiedUser' => array(
             'className' => 'SecurityUser',
             'foreignKey' => 'modified_user_id'
@@ -49,5 +48,23 @@ class RubricsTemplateItem extends QualityAppModel {
               )
               ) */
     );
+
+    public function rubricsTemplatesItemDeleteAll($ids) {
+        $listOfSubheaderIds = implode(',', $ids);
+
+        $data = $this->find('list', array('conditions' => array('rubric_template_subheader_id' => $listOfSubheaderIds), 'fields' => array('id', 'id')));
+
+        if (!empty($data)) {
+            $RubricsTemplateAnswer = ClassRegistry::init('Quality.RubricsTemplateAnswer');
+            $RubricsTemplateAnswer->rubricsTemplatesAnswerDeleteAll($data);
+
+
+            foreach ($data as $obj) {
+               // pr($obj);
+                $this->delete($obj);
+            }
+        }
+        // pr($data);
+    }
 
 }

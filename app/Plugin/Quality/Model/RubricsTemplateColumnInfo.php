@@ -215,6 +215,18 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
             $controller->redirect(array('action' => 'rubricsTemplatesCriteria', $rubricid, $rubricHeaderid));
         }
     }
+    
+    public function rubricsTemplatesCriteriaDeleteAll($id){
+        $this->unbindModel(array('belongsTo' => array('RubricsTemplate')));
+        $data = $this->find('list', array('conditions'=> array('rubric_template_id' => $id), 'fields'=> array('id','id')));
+          //
+        if(!empty($data)){
+        foreach ($data as $obj) {
+            //pr($obj);
+            $this->delete($obj);
+        }
+        }
+    }
 
     //Data retriving
     public function getTotalCriteriaById($id) {
