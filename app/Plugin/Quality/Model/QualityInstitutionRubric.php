@@ -260,7 +260,8 @@ class QualityInstitutionRubric extends QualityAppModel {
         $disableDelete = false;
         $QualityInstitutionRubricsAnswer = ClassRegistry::init('Quality.QualityInstitutionRubricsAnswer');
         $answerCountData = $QualityInstitutionRubricsAnswer->getTotalCount($data[$this->name]['institution_site_id'], $data[$this->name]['rubric_template_id'], $data[$this->name]['id']);
-        if(empty($answerCountData)){
+        
+        if(!empty($answerCountData)){
             $disableDelete = true;
         };
         $controller->set('disableDelete', $disableDelete);

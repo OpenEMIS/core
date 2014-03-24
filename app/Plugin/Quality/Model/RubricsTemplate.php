@@ -165,14 +165,27 @@ class RubricsTemplate extends QualityAppModel {
 
     public function rubricsTemplatesDelete($controller, $params) {
         if ($controller->Session->check('RubricsTemplate.id')) {
+            $this->unbindModel(array('hasMany' => array('RubricsTemplateHeader', 'RubricsTemplateColumnInfo')));
             $id = $controller->Session->read('RubricsTemplate.id');
-
+              
             $data = $this->find('first', array('conditions' => array($this->name . '.id' => $id)));
 
 
             $name = $data[$this->name]['name'];
 
+           
+            //Delete Header
+            $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
+            $RubricsTemplateHeader->rubricsTemplatesHeaderDeleteAll($id);
+     
+            
+            //Delete ColumnInfo
+            $RubricsTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
+            $RubricsTemplateColumnInfo->rubricsTemplatesCriteriaDeleteAll($id);
+
+            
             $this->delete($id);
+            
             $controller->Utility->alert($name . ' have been deleted successfully.');
             $controller->Session->delete('RubricsTemplate.id');
             $controller->redirect(array('action' => 'rubricsTemplates'));

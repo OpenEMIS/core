@@ -19,9 +19,12 @@ class RubricsTemplateAnswer extends QualityAppModel {
 
     //public $useTable = 'rubrics';
     //public $actsAs = array('ControllerAction');
+    
     public $belongsTo = array(
         //'Student',
-        'RubricsTemplateItem',
+        'RubricsTemplateItem' => array(
+            'foreignKey' => 'rubric_template_item_id'
+        ),
         'ModifiedUser' => array(
             'className' => 'SecurityUser',
             'foreignKey' => 'modified_user_id'
@@ -49,5 +52,22 @@ class RubricsTemplateAnswer extends QualityAppModel {
               )
               ) */
     );
+    
+    public function rubricsTemplatesAnswerDeleteAll($ids){
+        $this->unbindModel(array('belongsTo' => array('RubricsTemplateItem')));
+        $listOfItemIds = implode(',', $ids);
+        
+        $data = $this->find('list', array('conditions' => array('rubric_template_item_id' => array($listOfItemIds)), 'fields'=> array('id','id'), 'recursive'=> -1));
+     //   pr($this);
+       // pr($data);die;
+       if(!empty($data)){
+            foreach ($data as $obj) {
+                //pr($obj);
+                $this->delete($obj);
+            }
+        }
+       // pr($data);
+    }
+
 
 }
