@@ -56,22 +56,22 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
         if (empty($id)) {
             return $controller->redirect(array('action' => 'rubricsTemplates'));
         }
-        
+
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
         $rubricTemplateData = $RubricsTemplate->getRubric($id);
         $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
-        
+
         $disableDelete = false;
         $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
-        if($QualityStatus->getCreatedRubricCount($id) > 0){
+        if ($QualityStatus->getCreatedRubricCount($id) > 0) {
             $disableDelete = true;
         }
         $controller->set('disableDelete', $disableDelete);
-        
+
         $controller->set('modelName', $this->name);
-        
+
         $controller->Navigation->addCrumb('Rubric', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
-        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader',$id, 'plugin' => 'Quality'));
+        $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader', $id, 'plugin' => 'Quality'));
     }
 
     public function rubricsTemplatesCriteria($controller, $params) {
@@ -85,8 +85,8 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
         $rubricTemplateHeaderId = empty($params['pass'][1]) ? 0 : $params['pass'][1];
         $controller->set('rubricTemplateHeaderId', $rubricTemplateHeaderId);
 
-        
-        
+
+
         //$this->recursive = -1;
         $data = $this->getColumnsData($id); //('all', array('conditions' => array('rubric_template_id'=>$id)));
         $controller->Session->write('RubricsCriteria.order', count($data));
@@ -150,7 +150,7 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
             $controller->redirect(array('action' => 'rubricsTemplatesCriteria'));
         }
 
-        
+
         $controller->set('data', $data);
         //$controller->set('weighthingsOptions', $this->weighthingsOptions);
     }
@@ -215,16 +215,16 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
             $controller->redirect(array('action' => 'rubricsTemplatesCriteria', $rubricid, $rubricHeaderid));
         }
     }
-    
-    public function rubricsTemplatesCriteriaDeleteAll($id){
+
+    public function rubricsTemplatesCriteriaDeleteAll($id) {
         $this->unbindModel(array('belongsTo' => array('RubricsTemplate')));
-        $data = $this->find('list', array('conditions'=> array('rubric_template_id' => $id), 'fields'=> array('id','id')));
-          //
-        if(!empty($data)){
-        foreach ($data as $obj) {
-            //pr($obj);
-            $this->delete($obj);
-        }
+        $data = $this->find('list', array('conditions' => array('rubric_template_id' => $id), 'fields' => array('id', 'id')));
+        //
+        if (!empty($data)) {
+            foreach ($data as $obj) {
+                //pr($obj);
+                $this->delete($obj);
+            }
         }
     }
 
