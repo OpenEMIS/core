@@ -8,7 +8,7 @@
                 'label' => false,
                 'div' => false,
                 'value' => $age,
-                'defaultValue' => 0,
+                'defaultValue' => $age,
                 'maxlength' => 10,
                 'autocomplete' => 'off',
                 'onkeypress' => 'return utility.integerCheck(event);'
@@ -28,11 +28,12 @@
                         'class' => '',
                         'label' => false,
                         'div' => false,
-                        'value' => 0,
-                        'defaultValue' => 0,
+                        'value' => '',
+                        'defaultValue' => '',
                         'maxlength' => 10,
                         'autocomplete' => 'off',
-                        'onkeypress' => 'return utility.integerCheck(event);'
+                        'onkeypress' => 'return utility.integerCheck(event);',
+                        'onkeyup' => 'CensusEnrolment.computeByAgeGender(this);'
                 ));
                 ?>
             </div>
@@ -40,8 +41,8 @@
     <?php 
         }
     ?>
-    <td>-</td>
-    <td rowspan="2">-</td>
+    <td class="totalByAgeMale"></td>
+    <td rowspan="2" class="totalByAgeAllGender"></td>
     <td rowspan="2" class="cell_delete">
         <span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="CensusEnrolment.removeRow(this);"></span>
     </td>
@@ -59,11 +60,12 @@
                         'class' => '',
                         'label' => false,
                         'div' => false,
-                        'value' => 0,
-                        'defaultValue' => 0,
+                        'value' => '',
+                        'defaultValue' => '',
                         'maxlength' => 10,
                         'autocomplete' => 'off',
-                        'onkeypress' => 'return utility.integerCheck(event);'
+                        'onkeypress' => 'return utility.integerCheck(event);',
+                        'onkeyup' => 'CensusEnrolment.computeByAgeGender(this);'
                 ));
                 ?>
             </div>
@@ -71,5 +73,5 @@
     <?php 
         }
     ?>
-    <td>-</td>
+    <td class="totalByAgeFemale"></td>
 </tr>

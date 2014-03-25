@@ -134,10 +134,18 @@ class CensusStudent extends AppModel {
 		foreach($deleted as $id) {
 			$this->delete($id);
 		}
-		
+                
 		for($i=0; $i<sizeof($data); $i++) {
 			$row = $data[$i];
-			if($row['age'] > 0 && ($row['male'] > 0 || $row['female'] > 0)) {
+			if($row['age'] > 0 && (($row['male'] !== '' && $row['male'] >= 0) || ($row['female'] !== '' && $row['female'] >= 0))) {
+                                if($row['male'] === ''){
+                                   $row['male'] = 0; 
+                                }
+                                
+                                if($row['female'] === ''){
+                                    $row['female'] = 0;
+                                }
+                                
 				if($row['id'] == 0) {
 					$this->create();
 				}
@@ -147,7 +155,7 @@ class CensusStudent extends AppModel {
 				if($row['id'] == 0) {
 					$keys[strval($i+1)] = $save['CensusStudent']['id'];
 				}
-			} else if($row['id'] > 0 && $row['male'] == 0 && $row['female'] == 0) {
+			} else if($row['id'] > 0 && $row['male'] === '' && $row['female'] === '') {
 				$this->delete($row['id']);
 			}
 		}
