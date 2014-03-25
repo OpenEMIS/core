@@ -176,7 +176,7 @@ class CensusController extends AppController {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 		} else {
 			foreach($programmes as $obj) {
-                                $dataRowsArr = $this->getEnrolmentDataByRows($this->institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age'], 'view');
+                                $dataRowsArr = $this->getEnrolmentDataByRowsView($this->institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age']);
                                 //pr($dataRowsArr);
                                 
 				$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
@@ -222,7 +222,7 @@ class CensusController extends AppController {
 				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
 			} else {
 				foreach($programmes as $obj) {
-                                        $dataRowsArr = $this->getEnrolmentDataByRows($this->institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age'], 'edit');
+                                        $dataRowsArr = $this->getEnrolmentDataByRowsEdit($this->institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age']);
                                         //pr($dataRowsArr);
                                         
 					$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
@@ -252,12 +252,16 @@ class CensusController extends AppController {
 		$this->set('category', $categoryList);
 	}
         
-        private function getEnrolmentDataByRows($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age, $mode='') {
-                $mode = $mode !== '' ? $mode : 'edit'; // 'view' or 'edit'
-                
+        private function getEnrolmentDataByRowsView($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
                 $admission_age = $age;
-                $agePlus = 1;
-                $ageMinus = 1;
+                $agePlus = $this->ConfigItem->getValue('admission_age_plus');
+                $ageMinus = $this->ConfigItem->getValue('admission_age_minus');
+                if(empty($agePlus)){
+                  $agePlus = 0;  
+                }
+                if(empty($ageMinus)){
+                  $ageMinus = 0;  
+                }
                 $ageStart = ($admission_age - $ageMinus) >= 1 ? ($admission_age - $ageMinus) : 1;
                 $ageEnd = $admission_age + $agePlus;
                 $ageRange = array();
@@ -292,12 +296,7 @@ class CensusController extends AppController {
                 //pr($ageRange);
                 //pr($enrolmentArr);
                 
-                if($mode == 'view'){
-                    $censusDefaultValue = '-';
-                    $ageRange = array($admission_age);
-                }else{
-                    $censusDefaultValue = 0;
-                }
+                $defaultValueCharacter = '-';
 
                 $dataRowsArr = array();
                 $totalByGradeMale = array();
@@ -306,9 +305,6 @@ class CensusController extends AppController {
 
                 asort($ageRange);
                 foreach ($ageRange AS $ageOnCheck) {
-                    $totalAgeMale = 0;
-                    $totalAgeFemale = 0;
-
                     $tempRowMale = array();
                     $tempRowMale['type'] = 'input';
                     $tempRowMale['age'] = $ageOnCheck;
@@ -323,24 +319,52 @@ class CensusController extends AppController {
                     $tempRowFemale['data']['gender'] = 'F';
 
                     foreach ($gradeList AS $gradeId => $gradeName) {
-                        if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male']) && !empty($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
-                            $tempRowMale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
-                            $tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
-                            $tempRowMale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
-                            //$tempRowMale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+                        if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
+                            if(!empty($enrolmentArr[$ageOnCheck][$gradeId]['male'])){
+                                $tempRowMale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+                                $tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                                $tempRowMale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
+                                //$tempRowMale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
 
-                            $totalAgeMale += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
-                            if (!isset($totalByGradeMale[$gradeId])) {
-                                $totalByGradeMale[$gradeId] = 0;
-                            }
-                            $totalByGradeMale[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+                                if(!isset($totalAgeMale)){
+                                    $totalAgeMale = 0;
+                                }
+                                $totalAgeMale += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+                                
+                                if (!isset($totalByGradeMale[$gradeId])) {
+                                    $totalByGradeMale[$gradeId] = 0;
+                                }
+                                $totalByGradeMale[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
 
-                            if (!isset($totalByGrade[$gradeId])) {
-                                $totalByGrade[$gradeId] = 0;
+                                if (!isset($totalByGrade[$gradeId])) {
+                                    $totalByGrade[$gradeId] = 0;
+                                }
+                                $totalByGrade[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+                            }else{
+                                $tempRowMale['data']['grades'][$gradeId]['value'] = 0;
+                                
+                                if(!isset($totalAgeMale)){
+                                    $totalAgeMale = 0;
+                                }
+
+                                if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
+                                    $tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                                } else {
+                                    $tempRowMale['data']['grades'][$gradeId]['censusId'] = 0;
+                                }
+
+                                //$tempRowMale[$gradeId] = 0;
+
+                                if (!isset($totalByGradeMale[$gradeId])) {
+                                    $totalByGradeMale[$gradeId] = 0;
+                                }
+
+                                if (!isset($totalByGrade[$gradeId])) {
+                                    $totalByGrade[$gradeId] = 0;
+                                }
                             }
-                            $totalByGrade[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
                         } else {
-                            $tempRowMale['data']['grades'][$gradeId]['value'] = $censusDefaultValue;
+                            $tempRowMale['data']['grades'][$gradeId]['value'] = $defaultValueCharacter;
 
                             if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
                                 $tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
@@ -349,33 +373,54 @@ class CensusController extends AppController {
                             }
 
                             //$tempRowMale[$gradeId] = 0;
-
-                            if (!isset($totalByGradeMale[$gradeId])) {
-                                $totalByGradeMale[$gradeId] = 0;
-                            }
-
-                            if (!isset($totalByGrade[$gradeId])) {
-                                $totalByGrade[$gradeId] = 0;
-                            }
                         }
 
-                        if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female']) && !empty($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
-                            $tempRowFemale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
-                            $tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
-                            $tempRowFemale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
-                            //$tempRowFemale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                        if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
+                            if(!empty($enrolmentArr[$ageOnCheck][$gradeId]['female'])){
+                                $tempRowFemale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                                $tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                                $tempRowFemale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
+                                //$tempRowFemale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
 
-                            $totalAgeFemale += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
-                            if (!isset($totalByGradeFemale[$gradeId])) {
-                                $totalByGradeFemale[$gradeId] = 0;
+                                if(!isset($totalAgeFemale)){
+                                    $totalAgeFemale = 0;
+                                }
+                                $totalAgeFemale += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                                
+                                if (!isset($totalByGradeFemale[$gradeId])) {
+                                    $totalByGradeFemale[$gradeId] = 0;
+                                }
+                                $totalByGradeFemale[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                                if (!isset($totalByGrade[$gradeId])) {
+                                    $totalByGrade[$gradeId] = 0;
+                                }
+                                $totalByGrade[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                            }else{
+                                $tempRowFemale['data']['grades'][$gradeId]['value'] = 0;
+                                
+                                if(!isset($totalAgeFemale)){
+                                    $totalAgeFemale = 0;
+                                }
+
+                                if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
+                                    $tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                                } else {
+                                    $tempRowFemale['data']['grades'][$gradeId]['censusId'] = 0;
+                                }
+
+                                //$tempRowFemale[$gradeId] = 0;
+
+                                if (!isset($totalByGradeFemale[$gradeId])) {
+                                    $totalByGradeFemale[$gradeId] = 0;
+                                }
+
+                                if (!isset($totalByGrade[$gradeId])) {
+                                    $totalByGrade[$gradeId] = 0;
+                                }
                             }
-                            $totalByGradeFemale[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
-                            if (!isset($totalByGrade[$gradeId])) {
-                                $totalByGrade[$gradeId] = 0;
-                            }
-                            $totalByGrade[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                            
                         } else {
-                            $tempRowFemale['data']['grades'][$gradeId]['value'] = $censusDefaultValue;
+                            $tempRowFemale['data']['grades'][$gradeId]['value'] = $defaultValueCharacter;
 
                             if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
                                 $tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
@@ -384,24 +429,37 @@ class CensusController extends AppController {
                             }
 
                             //$tempRowFemale[$gradeId] = 0;
-
-                            if (!isset($totalByGradeFemale[$gradeId])) {
-                                $totalByGradeFemale[$gradeId] = 0;
-                            }
-
-                            if (!isset($totalByGrade[$gradeId])) {
-                                $totalByGrade[$gradeId] = 0;
-                            }
                         }
                     }
 
-                    $totalAge = $totalAgeMale + $totalAgeFemale;
-                    $tempRowMale['data']['totalByAgeMale'] = $totalAgeMale;
+                    if(isset($totalAgeMale) && isset($totalAgeFemale)){
+                        $totalAge = $totalAgeMale + $totalAgeFemale;
+                    }else if(!isset($totalAgeMale) && isset($totalAgeFemale)){
+                        $totalAge = $totalAgeFemale;
+                    }else if(isset($totalAgeMale) && !isset($totalAgeFemale)){
+                        $totalAge = $totalAgeMale;
+                    }else{
+                        $totalAge = $defaultValueCharacter;
+                    }
+                    
+                    $tempRowMale['data']['totalByAgeMale'] = isset($totalAgeMale) ? $totalAgeMale : $defaultValueCharacter;
                     $tempRowMale['data']['lastColumn'] = $totalAge;
                     $dataRowsArr[] = $tempRowMale;
 
-                    $tempRowFemale['data']['totalByAgeFemale'] = $totalAgeFemale;
+                    $tempRowFemale['data']['totalByAgeFemale'] = isset($totalAgeFemale) ? $totalAgeFemale : $defaultValueCharacter;
                     $dataRowsArr[] = $tempRowFemale;
+                    
+                    if(isset($totalAgeMale)){
+                       unset($totalAgeMale); 
+                    }
+                    
+                    if(isset($totalAgeFemale)){
+                       unset($totalAgeFemale); 
+                    }
+                    
+                    if(isset($totalAge)){
+                       unset($totalAge); 
+                    }
                 }
 
                 $rowTotalMale = array();
@@ -420,23 +478,47 @@ class CensusController extends AppController {
                 $rowTotal['gender'] = 'all';
                 $rowTotal['data']['colspan2'] = 'Total';
 
-                $totalEnrolMale = 0;
-                $totalEnrolFemale = 0;
-                $totalEnrolAllGrades = 0;
                 foreach ($gradeList AS $gradeId => $gradeName) {
-                    $rowTotalMale['data']['grades'][$gradeId]['value'] = $totalByGradeMale[$gradeId];
-                    $rowTotalFemale['data']['grades'][$gradeId]['value'] = $totalByGradeFemale[$gradeId];
-                    $rowTotal['data']['grades'][$gradeId]['value'] = $totalByGrade[$gradeId];
+                    $rowTotalMale['data']['grades'][$gradeId]['value'] = isset($totalByGradeMale[$gradeId]) ? $totalByGradeMale[$gradeId] : $defaultValueCharacter;
+                    $rowTotalFemale['data']['grades'][$gradeId]['value'] = isset($totalByGradeFemale[$gradeId]) ? $totalByGradeFemale[$gradeId] : $defaultValueCharacter;
+                    $rowTotal['data']['grades'][$gradeId]['value'] = isset($totalByGrade[$gradeId]) ? $totalByGrade[$gradeId] : $defaultValueCharacter;
 
-                    $totalEnrolMale += $totalByGradeMale[$gradeId];
-                    $totalEnrolFemale += $totalByGradeFemale[$gradeId];
-                    $totalEnrolAllGrades += $totalByGrade[$gradeId];
+                    if(isset($totalByGradeMale[$gradeId])){
+                        if(!isset($totalEnrolMale)){
+                            $totalEnrolMale = 0;
+                        }
+                        $totalEnrolMale += $totalByGradeMale[$gradeId];
+                    }
+                    
+                    if(isset($totalByGradeFemale[$gradeId])){
+                        if(!isset($totalEnrolFemale)){
+                            $totalEnrolFemale = 0;
+                        }
+                        $totalEnrolFemale += $totalByGradeFemale[$gradeId];
+                    }
+                    
+                    if(isset($totalByGrade[$gradeId])){
+                        if(!isset($totalEnrolAllGrades)){
+                            $totalEnrolAllGrades = 0;
+                        }
+                        $totalEnrolAllGrades += $totalByGrade[$gradeId];
+                    }
                 }
-                $rowTotalMale['data']['totalMaleAllGrades'] = $totalEnrolMale;
-                $rowTotalMale['data']['lastColumn'] = $totalEnrolMale + $totalEnrolFemale;
+                $rowTotalMale['data']['totalMaleAllGrades'] = isset($totalEnrolMale) ? $totalEnrolMale : $defaultValueCharacter;
+                
+                if(isset($totalEnrolMale) && isset($totalEnrolFemale)){
+                    $total2GendersAllGrades = $totalEnrolMale + $totalEnrolFemale;
+                }else if(!isset($totalEnrolMale) && isset($totalEnrolFemale)){
+                    $total2GendersAllGrades = $totalEnrolFemale;
+                }else if(isset($totalEnrolMale) && !isset($totalEnrolFemale)){
+                    $total2GendersAllGrades = $totalEnrolMale;
+                }else{
+                    $total2GendersAllGrades = $defaultValueCharacter;
+                }
+                $rowTotalMale['data']['lastColumn'] = $total2GendersAllGrades;
 
-                $rowTotalFemale['data']['totalFemaleAllGrades'] = $totalEnrolFemale;
-                $rowTotal['data']['totalAllGrades'] = $totalEnrolAllGrades;
+                $rowTotalFemale['data']['totalFemaleAllGrades'] = isset($totalEnrolFemale) ? $totalEnrolFemale : $defaultValueCharacter;
+                $rowTotal['data']['totalAllGrades'] = isset($totalEnrolAllGrades) ? $totalEnrolAllGrades : $defaultValueCharacter;
                 $rowTotal['data']['bottomRight'] = '';
 
                 $dataRowsArr[] = $rowTotalMale;
@@ -445,7 +527,243 @@ class CensusController extends AppController {
 
                 //pr($dataRowsArr);
                 return $dataRowsArr;
-    }
+        }
+        
+        private function getEnrolmentDataByRowsEdit($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
+                $admission_age = $age;
+                $agePlus = $this->ConfigItem->getValue('admission_age_plus');
+                $ageMinus = $this->ConfigItem->getValue('admission_age_minus');
+                if(empty($agePlus)){
+                  $agePlus = 0;  
+                }
+                if(empty($ageMinus)){
+                  $ageMinus = 0;  
+                }
+                $ageStart = ($admission_age - $ageMinus) >= 1 ? ($admission_age - $ageMinus) : 1;
+                $ageEnd = $admission_age + $agePlus;
+                $ageRange = array();
+                for ($i = $ageStart; $i <= $ageEnd; $i++) {
+                    $ageRange[] = $i;
+                }
+                $ageRangeStand = $ageRange;
+                
+                //pr($ageRange);
+                $conditions = array('EducationGrade.education_programme_id' => $educationProgrammeId);
+                $gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
+                //pr($gradeList);
+
+                $censusDataOrderByAge = $this->CensusStudent->getCensusDataOrderByAge($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId);
+                //pr($censusDataOrderByAge);
+                $enrolmentArr = array();
+                foreach ($censusDataOrderByAge AS $row) {
+                    $recordId = $row['id'];
+                    $age = $row['age'];
+                    $male = $row['male'];
+                    $female = $row['female'];
+                    $education_grade_id = $row['education_grade_id'];
+                    $source = $row['source'];
+
+                    $enrolmentArr[$age][$education_grade_id]['male'] = $male;
+                    $enrolmentArr[$age][$education_grade_id]['female'] = $female;
+                    $enrolmentArr[$age][$education_grade_id]['censusId'] = $recordId;
+                    $enrolmentArr[$age][$education_grade_id]['source'] = $source;
+
+                    if (!in_array($age, $ageRange)) {
+                        $ageRange[] = $age;
+                    }
+                }
+                //pr($ageRange);
+                //pr($enrolmentArr);
+                
+                $defaultValueCharacter = '';
+
+                $dataRowsArr = array();
+                $totalByGradeMale = array();
+                $totalByGradeFemale = array();
+                $totalByGrade = array();
+
+                asort($ageRange);
+                foreach ($ageRange AS $ageOnCheck) {
+                    $tempRowMale = array();
+                    $tempRowMale['type'] = 'input';
+                    $tempRowMale['age'] = $ageOnCheck;
+                    $tempRowMale['gender'] = 'M';
+                    $tempRowMale['data']['age'] = $ageOnCheck;
+                    $tempRowMale['data']['gender'] = 'M';
+                    if(!in_array($ageOnCheck, $ageRangeStand)){
+                        $tempRowMale['ageEditable'] = 'yes';
+                    }
+
+                    $tempRowFemale = array();
+                    $tempRowFemale['type'] = 'input';
+                    $tempRowFemale['age'] = $ageOnCheck;
+                    $tempRowFemale['gender'] = 'F';
+                    $tempRowFemale['data']['gender'] = 'F';
+
+                    foreach ($gradeList AS $gradeId => $gradeName) {
+                        if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
+                            if(!empty($enrolmentArr[$ageOnCheck][$gradeId]['male'])){
+                                $tempRowMale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+                                $tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                                $tempRowMale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
+                                //$tempRowMale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+
+                                if(!isset($totalAgeMale)){
+                                    $totalAgeMale = 0;
+                                }
+                                $totalAgeMale += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+                                
+                                if (!isset($totalByGradeMale[$gradeId])) {
+                                    $totalByGradeMale[$gradeId] = 0;
+                                }
+                                $totalByGradeMale[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+
+                                if (!isset($totalByGrade[$gradeId])) {
+                                    $totalByGrade[$gradeId] = 0;
+                                }
+                                $totalByGrade[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['male'];
+                            }else{
+                                $tempRowMale['data']['grades'][$gradeId]['value'] = 0;
+                                
+                                if(!isset($totalAgeMale)){
+                                    $totalAgeMale = 0;
+                                }
+
+                                if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
+                                    $tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                                } else {
+                                    $tempRowMale['data']['grades'][$gradeId]['censusId'] = 0;
+                                }
+
+                                //$tempRowMale[$gradeId] = 0;
+
+                                if (!isset($totalByGradeMale[$gradeId])) {
+                                    $totalByGradeMale[$gradeId] = 0;
+                                }
+
+                                if (!isset($totalByGrade[$gradeId])) {
+                                    $totalByGrade[$gradeId] = 0;
+                                }
+                            }
+                        } else {
+                            $tempRowMale['data']['grades'][$gradeId]['value'] = $defaultValueCharacter;
+
+                            if (isset($enrolmentArr[$ageOnCheck][$gradeId]['male'])) {
+                                $tempRowMale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                            } else {
+                                $tempRowMale['data']['grades'][$gradeId]['censusId'] = 0;
+                            }
+
+                            //$tempRowMale[$gradeId] = 0;
+                        }
+
+                        if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
+                            if(!empty($enrolmentArr[$ageOnCheck][$gradeId]['female'])){
+                                $tempRowFemale['data']['grades'][$gradeId]['value'] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                                $tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                                $tempRowFemale['data']['grades'][$gradeId]['source'] = $enrolmentArr[$ageOnCheck][$gradeId]['source'];
+                                //$tempRowFemale[$gradeId] = $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+
+                                if(!isset($totalAgeFemale)){
+                                    $totalAgeFemale = 0;
+                                }
+                                $totalAgeFemale += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                                
+                                if (!isset($totalByGradeFemale[$gradeId])) {
+                                    $totalByGradeFemale[$gradeId] = 0;
+                                }
+                                $totalByGradeFemale[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                                if (!isset($totalByGrade[$gradeId])) {
+                                    $totalByGrade[$gradeId] = 0;
+                                }
+                                $totalByGrade[$gradeId] += $enrolmentArr[$ageOnCheck][$gradeId]['female'];
+                            }else{
+                                $tempRowFemale['data']['grades'][$gradeId]['value'] = 0;
+                                
+                                if(!isset($totalAgeFemale)){
+                                    $totalAgeFemale = 0;
+                                }
+
+                                if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
+                                    $tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                                } else {
+                                    $tempRowFemale['data']['grades'][$gradeId]['censusId'] = 0;
+                                }
+
+                                //$tempRowFemale[$gradeId] = 0;
+
+                                if (!isset($totalByGradeFemale[$gradeId])) {
+                                    $totalByGradeFemale[$gradeId] = 0;
+                                }
+
+                                if (!isset($totalByGrade[$gradeId])) {
+                                    $totalByGrade[$gradeId] = 0;
+                                }
+                            }
+                            
+                        } else {
+                            $tempRowFemale['data']['grades'][$gradeId]['value'] = $defaultValueCharacter;
+
+                            if (isset($enrolmentArr[$ageOnCheck][$gradeId]['female'])) {
+                                $tempRowFemale['data']['grades'][$gradeId]['censusId'] = $enrolmentArr[$ageOnCheck][$gradeId]['censusId'];
+                            } else {
+                                $tempRowFemale['data']['grades'][$gradeId]['censusId'] = 0;
+                            }
+
+                            //$tempRowFemale[$gradeId] = 0;
+                        }
+                    }
+
+                    if(isset($totalAgeMale) && isset($totalAgeFemale)){
+                        $totalAge = $totalAgeMale + $totalAgeFemale;
+                    }else if(!isset($totalAgeMale) && isset($totalAgeFemale)){
+                        $totalAge = $totalAgeFemale;
+                    }else if(isset($totalAgeMale) && !isset($totalAgeFemale)){
+                        $totalAge = $totalAgeMale;
+                    }else{
+                        $totalAge = $defaultValueCharacter;
+                    }
+                    
+                    $tempRowMale['data']['totalByAgeMale'] = isset($totalAgeMale) ? $totalAgeMale : $defaultValueCharacter;
+                    $tempRowMale['data']['totalByAgeAllGender'] = $totalAge;
+                    $dataRowsArr[] = $tempRowMale;
+
+                    $tempRowFemale['data']['totalByAgeFemale'] = isset($totalAgeFemale) ? $totalAgeFemale : $defaultValueCharacter;
+                    $dataRowsArr[] = $tempRowFemale;
+                    
+                    if($totalAge !== $defaultValueCharacter){
+                        if(!isset($totalAllAges)){
+                            $totalAllAges = 0;
+                        }
+                        $totalAllAges += $totalAge;
+                    }
+                    
+                    if(isset($totalAgeMale)){
+                       unset($totalAgeMale); 
+                    }
+                    
+                    if(isset($totalAgeFemale)){
+                       unset($totalAgeFemale); 
+                    }
+                    
+                    if(isset($totalAge)){
+                       unset($totalAge); 
+                    }
+                }
+                
+                $rowTotal = array();
+                $rowTotal['type'] = 'read-only';
+                $rowTotal['gender'] = 'na';
+                $countGrades = count($gradeList);
+                $rowTotal['colspan'] = $countGrades + 3;
+                $rowTotal['data']['firstHalf'] = __('Total');
+                $rowTotal['data']['totalAllGrades'] = isset($totalAllAges) ? $totalAllAges : $defaultValueCharacter;
+                
+                $dataRowsArr[] = $rowTotal;
+                
+                //pr($dataRowsArr);
+                return $dataRowsArr;
+        }
 	
 	public function enrolmentAjax() {
 		$this->autoRender = false;
@@ -459,7 +777,11 @@ class CensusController extends AppController {
                         $programmeObj = $this->EducationProgramme->getProgrammeById($programmeId);
                         $admission_age = $programmeObj['admission_age'];
                         
-                        $dataRowsArr = $this->getEnrolmentDataByRows($this->institutionSiteId, $yearId, $programmeId, $categoryId, $admission_age);
+                        if($this->params->query['edit'] === 'true') {
+				$dataRowsArr = $this->getEnrolmentDataByRowsEdit($this->institutionSiteId, $yearId, $programmeId, $categoryId, $admission_age);
+			} else {
+				$dataRowsArr = $this->getEnrolmentDataByRowsView($this->institutionSiteId, $yearId, $programmeId, $categoryId, $admission_age);
+			}
                         //pr($dataRowsArr);
                                         
                         $conditions = array('EducationGrade.education_programme_id' => $programmeId);

@@ -46,6 +46,58 @@ var CensusEnrolment = {
 		var table = $(obj).closest('.table');
 		CensusEnrolment.computeTotal(table);
 	},
+                
+        computeByAgeGender: function(obj){
+                var row = $(obj).closest('tr');
+                var totalByAgeMaleValue = 0;
+                var totalByAgeFemaleValue = 0;
+                var totalAll = 0;
+                var currentFieldset = $(obj).closest('fieldset');
+                var rowTotalRightCol = currentFieldset.find('td.rowTotalRightCol');
+                
+                if($(obj).attr('id') === 'CensusStudentMale'){
+                    var totalByAgeMaleTd = row.find('td.totalByAgeMale');
+                    var femaleRow = row.next("tr[gender='female']");
+                    
+                    row.find('input#CensusStudentMale').each(function(){
+                        if($(this).val() !== ''){
+                            totalByAgeMaleValue += $(this).val().toInt();
+                        }
+                    });
+                    totalByAgeMaleTd.html(totalByAgeMaleValue);
+                    
+                    if(femaleRow.find('td.totalByAgeFemale').html() !== ''){
+                        totalByAgeFemaleValue = femaleRow.find('td.totalByAgeFemale').html().toInt();
+                    }
+                    
+                    row.find('td.totalByAgeAllGender').html(totalByAgeMaleValue + totalByAgeFemaleValue);
+                    
+                }else{
+                     var totalByAgeFemaleTd = row.find('td.totalByAgeFemale');
+                     var maleRow = row.prev("tr[gender='male']");
+                     
+                     row.find('input#CensusStudentFemale').each(function(){
+                         if($(this).val() !== ''){
+                             totalByAgeFemaleValue += $(this).val().toInt();
+                         }
+                     });
+                     totalByAgeFemaleTd.html(totalByAgeFemaleValue);
+                     
+                     if(maleRow.find('td.totalByAgeMale').html() !== ''){
+                         totalByAgeMaleValue = maleRow.find('td.totalByAgeMale').html().toInt();
+                     }
+                     
+                     maleRow.find('td.totalByAgeAllGender').html(totalByAgeMaleValue + totalByAgeFemaleValue);
+                }
+                
+                currentFieldset.find('td.totalByAgeAllGender').each(function(){
+                    if($(this).html() !== ''){
+                        totalAll += $(this).html().toInt();
+                    }
+                });
+                
+                rowTotalRightCol.html(totalAll);
+        },
 	
 	computeTotal: function(table) {
 		var total = 0;
@@ -121,9 +173,9 @@ var CensusEnrolment = {
 		var age = parent.attr('admission_age');
                 var programmeId = parent.attr('programme_id');
                 if (rowNum > 0) {
-                    lastAge = parent.find(last).find('#CensusStudentAge');
+                    lastAge = parent.find(last);
                     if (lastAge.length > 0) {
-                        age = lastAge.val().toInt() + 1;
+                        age = lastAge.attr('age').toInt() + 1;
                         while (CensusEnrolment.isAgeExistInList(parent, age)) {
                             age++;
                         }
@@ -161,6 +213,8 @@ var CensusEnrolment = {
                 var tbody = row.closest('tbody');
                 var age = row.attr('age');
                 var rowFemale = row.next("tr[gender='female']");
+                var currentFieldset = $(obj).closest('fieldset');
+                var totalAll = 0;
 
                 row.find('.input_wrapper').each(function(){
                     var censusId = $(this).attr('census_id');
@@ -171,6 +225,17 @@ var CensusEnrolment = {
                 
 		row.remove();
                 rowFemale.remove();
+                
+                var rowTotalRightCol = currentFieldset.find('td.rowTotalRightCol');
+                
+                currentFieldset.find('td.totalByAgeAllGender').each(function(){
+                    if($(this).html() !== ''){
+                        totalAll += $(this).html().toInt();
+                    }
+                });
+                
+                rowTotalRightCol.html(totalAll);
+                
 	},
 	
 	validateData: function() {
@@ -211,7 +276,12 @@ var CensusEnrolment = {
                     obj = $(this);
                     obj.find("tr[gender='male'][type='input']").each(function() {
                         objTrMale = $(this);
-                        age = objTrMale.find("input#CensusStudentAge").val();
+                        if(objTrMale.find("input#CensusStudentAge").length > 0){
+                            age = objTrMale.find("input#CensusStudentAge").val();
+                        }else{
+                            age = objTrMale.attr('age');
+                        }
+                        
                         objTrMale.find("input#CensusStudentMale").each(function(){
                             inputFieldMale = $(this);
                             id = inputFieldMale.parent(".input_wrapper").attr('census_id');
