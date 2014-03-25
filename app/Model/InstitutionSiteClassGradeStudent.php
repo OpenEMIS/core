@@ -23,7 +23,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		$data = $this->find('all', array(
 			'fields' => array(
 				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
-				'Student.telephone', 'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
+				'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
 				'StudentCategory.name', 'StudentCategory.id'
 			),
 			'joins' => array(
