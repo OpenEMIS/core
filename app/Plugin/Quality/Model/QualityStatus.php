@@ -31,7 +31,7 @@ class QualityStatus extends QualityAppModel {
             'foreignKey' => 'created_user_id'
         )
     );
-  //  public $hasMany = array('RubricsTemplateColumnInfo');
+    //  public $hasMany = array('RubricsTemplateColumnInfo');
 
     public $validate = array(
         'rubric_template_id' => array(
@@ -41,6 +41,12 @@ class QualityStatus extends QualityAppModel {
                 'message' => 'Please select a valid Name.'
             )
         ),
+        'date_enabled' => array(
+            'ruleNotLater' => array(
+                'rule' => array('compareDate', 'date_disabled'),
+                'message' => 'Date Enabled cannot be later than Date Disabled'
+            ),
+        )
     );
     public $statusOptions = array('Date Disabled', 'Date Enabled');
 
@@ -49,6 +55,12 @@ class QualityStatus extends QualityAppModel {
         $value = $value[0];
 
         return !empty($value);
+    }
+
+    public function compareDate($field = array(), $compareField = null) {
+        $startDate = new DateTime(current($field));
+        $endDate = new DateTime($this->data[$this->name][$compareField]);
+        return $endDate > $startDate;
     }
 
     public function status($controller, $params) {
@@ -86,26 +98,24 @@ class QualityStatus extends QualityAppModel {
         $RubricsTemplate->recursive = -1;
         $rubricTemplateInfo = $RubricsTemplate->findById($data[$this->name]['rubric_template_id']);
 
-        
-        
+
+
         $SchoolYear = ClassRegistry::init('SchoolYear');
         $schoolyearId = $SchoolYear->getSchoolYearId($data[$this->name]['year']);
-        
+
         $disableDelete = false;
         $QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
-        if($QualityInstitutionRubric->getAssignedInstitutionRubricCount($schoolyearId, $id) > 0){
+        if ($QualityInstitutionRubric->getAssignedInstitutionRubricCount($schoolyearId, $id) > 0) {
             $disableDelete = true;
         }
-        
-        
+
+
         $rubricName = $rubricTemplateInfo['RubricsTemplate']['name'];
         $controller->Session->write('QualityStatus.id', $id);
         $controller->set('rubricName', $rubricName);
         $controller->set('disableDelete', $disableDelete);
         $controller->set('data', $data);
         $controller->set('statusOptions', $this->statusOptions);
-        
-        
     }
 
     public function statusAdd($controller, $params) {
@@ -136,10 +146,10 @@ class QualityStatus extends QualityAppModel {
         $rubricOptions = $RubricsTemplate->getRubricOptions();
 
         $controller->set('rubricOptions', $rubricOptions);
-        
+
         $SchoolYear = ClassRegistry::init('SchoolYear');
         $yearOptions = $SchoolYear->getYearListValues();
-        
+
         $controller->set('yearOptions', $yearOptions);
         if ($controller->request->is('get')) {
 
@@ -147,12 +157,12 @@ class QualityStatus extends QualityAppModel {
 
             $this->recursive = -1;
             $data = $this->findById($id);
-            
+
             if (!empty($data)) {
                 $controller->request->data = $data;
                 $controller->set('selectedYear', $data[$this->name]['year']);
             } else {
-                $controller->request->data['QualityStatus']['date_disabled'] = date('Y-m-d', time()+86400);
+                $controller->request->data['QualityStatus']['date_disabled'] = date('Y-m-d', time() + 86400);
                 //$controller->request->data[$this->name]['institution_id'] = $institutionId;
             }
         } else {
@@ -187,7 +197,7 @@ class QualityStatus extends QualityAppModel {
     public function statusDelete($controller, $params) {
         if ($controller->Session->check('QualityStatus.id')) {
             $id = $controller->Session->read('QualityStatus.id');
-            
+
             $options['conditions'] = array($this->name . '.id' => $id);
             $options['joins'] = array(
                 array(
@@ -198,15 +208,15 @@ class QualityStatus extends QualityAppModel {
             );
             $options['fields'] = array('QualityStatus.*', 'RubricsTemplate.name');
             $data = $this->find('first', $options);
-            
+
             //$SchoolYear = ClassRegistry::init('SchoolYear');
-           // $schoolyearId = $SchoolYear->getSchoolYearId($data[$this->name]['year']);
-            
+            // $schoolyearId = $SchoolYear->getSchoolYearId($data[$this->name]['year']);
+
             $name = $data['RubricsTemplate']['name'] . " (" . $data[$this->name]['year'] . ")";
-            
-          //  $QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
-         //   $QualityInstitutionRubric->deleteAllInstitutionRubrics($schoolyearId, $id);
-           // pr($name);die;
+
+            //  $QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
+            //   $QualityInstitutionRubric->deleteAllInstitutionRubrics($schoolyearId, $id);
+            // pr($name);die;
             $this->delete($id);
             $controller->Utility->alert($name . ' have been deleted successfully.');
             $controller->Session->delete('QualityStatus.id');
@@ -233,24 +243,24 @@ class QualityStatus extends QualityAppModel {
 
     public function getRubricStatus($year, $rubricId) {
         $date = date('Y-m-d', time());
-        
-        $data = $this->find('first', array('conditions' => array('year' => $year, 'rubric_template_id' => $rubricId,'date_enabled <= ' => $date, 'date_disabled >= ' => $date), 'recurisve' => -1));
+
+        $data = $this->find('first', array('conditions' => array('year' => $year, 'rubric_template_id' => $rubricId, 'date_enabled <= ' => $date, 'date_disabled >= ' => $date), 'recurisve' => -1));
         //$enabled = 0;
-      //  pr($data);die;
+        //  pr($data);die;
         if (!empty($data)) {
             //$enabled = $data[$this->name]['status'];
             return 'true';
         }
 
-        return /*($enabled == 1) ? 'true' : */'false';
+        return /* ($enabled == 1) ? 'true' : */'false';
     }
-    
-    public function getCreatedRubricCount($rubricId){
-        $options['conditions'] = array('rubric_template_id'=>$rubricId);
+
+    public function getCreatedRubricCount($rubricId) {
+        $options['conditions'] = array('rubric_template_id' => $rubricId);
         $options['fields'] = array('COUNT(id) as Total');
         $options['recursive'] = -1;
         $data = $this->find('first', $options);
-        
+
         return $data[0]['Total'];
     }
 
