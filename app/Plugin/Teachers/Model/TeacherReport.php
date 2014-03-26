@@ -28,29 +28,29 @@ class TeacherReport extends TeachersAppModel {
             'Model' => 'InstitutionSite',
             'fields' => array(
                 'SchoolYear' => array(
-                    'name' => ''
+                    'name AS Year' => ''
                 ),
                 'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'id' => ''
+                    'name AS InstitutionSiteName' => '',
+                    'code AS InstitutionSiteCode' => '',
+                    'id AS InstitutionSiteId' => ''
                 ),
                 'InstitutionSiteClass' => array(
-                    'name' => '',
-                    'id' => ''
+                    'name AS Class' => '',
+                    'id AS ClassId' => ''
                 ),
-               'InstitutionSiteClassTeacher' => array(
+             /*  'InstitutionSiteClassTeacher' => array(
                     'teacher_id' => ''
-                ),
+                ),*/
                  'EducationGrade' => array(
-                    'name' => ''
+                    'name AS Grade' => ''
                 ),
                 'RubricTemplate' => array(
-                    'name' => '',
-                    'id' => ''
+                    'name AS RubricName' => '',
+                    'id AS RubricId' => ''
                 ),
                 'RubricTemplateHeader' => array(
-                    'title' => ''
+                    'title AS RubricHeader' => ''
                 ),
                 'RubricTemplateColumnInfo' => array(
                     'COALESCE(SUM(weighting),0)' => ''
@@ -305,12 +305,13 @@ class TeacherReport extends TeachersAppModel {
         $dateFormat = 'd F, Y';
 
         if ($name == 'QA Report') {
-            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-            $newData = $RubricsTemplate->processDataToCSVFormat($data);
-            
+            $header = array(array('Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+            $QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
+            $newData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
+            $newData = $QualityBatchReport->breakReportByYear($newData, 'no', $header); // pr($tempArray);die;
             if(!empty($data)){
-                $this->institutionSiteId = $data[0]['InstitutionSite']['id'];
-                $this->schoolYear = $data[0]['SchoolYear']['name'];
+                $this->institutionSiteId = $data[0]['InstitutionSite']['InstitutionSiteId'];
+                $this->schoolYear = $data[0]['SchoolYear']['Year'];
             }
         }
 
@@ -356,9 +357,17 @@ class TeacherReport extends TeachersAppModel {
             // pr('---------');
             fputcsv($csv_file, $row, ',', '"');
         }
+        
+        $this->addReportDate($csv_file);
         fclose($csv_file);
     }
 
+    public function addReportDate($csv_file){
+        $footer = array("Report Generated: " . date("Y-m-d H:i:s"));
+        fputcsv($csv_file, array(), ',', '"');
+        fputcsv($csv_file, $footer, ',', '"');
+    }
+    
     private function getFields($name) {
         if (array_key_exists($name, $this->reportMapping)) {
             $header = $this->reportMapping[$name]['fields'];
