@@ -155,26 +155,23 @@ class QualityInstitutionRubric extends QualityAppModel {
                 $data = $this->find('first', array('conditions' => array('QualityInstitutionRubric.id' => $selectedId)));
                 if (!empty($data)) {
                     $evaluatorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
-                }
-            }
-            $paramsLocateCounter = 1;
-        }
-        
-        if ($controller->request->is('get')) {
-            if ($type == 'edit') {
-                if (!empty($data)) {
-                    $controller->request->data = $data;
                     $selectedTeacherId = $data[$this->name]['teacher_id'];
                     $selectedRubricId = $data[$this->name]['rubric_template_id'];
                     $selectedYearId = $data[$this->name]['school_year_id'];
                     $selectedClassId = $data[$this->name]['institution_site_class_id'];
                     $selectedGradeId = $data[$this->name]['institution_site_class_grade_id'];
                     $institutionSiteId = $data[$this->name]['institution_site_id'];
-                    
                 }
             }
+            $paramsLocateCounter = 1;
+        }
+        
+        if ($controller->request->is('get')) {
+            if ($type == 'edit' && !empty($data)) {
+                 $controller->request->data = $data;
+            }
         } else {
-          //  pr($controller->request->data); // die;
+            // pr($controller->request->data); // die;
 
             $proceedToSave = true;
             if ($type == 'add') {
