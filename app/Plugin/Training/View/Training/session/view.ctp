@@ -42,10 +42,6 @@ echo $this->Html->script('search', false);
 			<div class="value"><?php echo $data['TrainingCourse']['title']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Provider'); ?></div>
-			<div class="value"><?php echo $data['TrainingProvider']['name'];?></div>
-		</div>
-		<div class="row">
 			<div class="label"><?php echo __('Start Date'); ?></div>
 			<div class="value"><?php echo $obj['start_date'];?></div>
 		</div>
@@ -64,6 +60,10 @@ echo $this->Html->script('search', false);
 		<div class="row">
 			<div class="label"><?php echo __('Comments'); ?></div>
 			<div class="value"><?php echo $obj['comments']; ?></div>
+		</div>
+		<div class="row">
+			<div class="label"><?php echo __('Provider'); ?></div>
+			<div class="value"><?php echo $data['TrainingProvider']['name'];?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Trainer'); ?></div>

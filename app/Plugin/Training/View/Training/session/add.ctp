@@ -45,17 +45,6 @@ echo $this->Html->script('jquery-ui.min', false);
         </div>
     </div>
     <div class="row">
-		<div class="label"><?php echo __('Provider'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('training_provider_id', array(
-				'options' => array(),
-				'onchange' => 'objTrainingSessions.selectProvider(this)',
-				'class'=>'default training_provider')); 
-		?>
-        </div>
-    </div>
-    <div class="row">
         <div class="label"><?php echo __('Start Date'); ?></div>
         <div class="value">
 		<?php 
@@ -81,6 +70,17 @@ echo $this->Html->script('jquery-ui.min', false);
         <div class="label"><?php echo __('Comments'); ?></div>
         <div class="value">
  			<?php echo $this->Form->input('comments', array('type'=>'textarea'));?>
+        </div>
+    </div>
+    <div class="row">
+		<div class="label"><?php echo __('Provider'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('training_provider_id', array(
+				'options' => array(),
+				'onchange' => 'objTrainingSessions.selectProvider(this)',
+				'class'=>'default training_provider')); 
+		?>
         </div>
     </div>
      <div class="row">
