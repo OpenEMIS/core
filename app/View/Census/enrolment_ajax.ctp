@@ -28,7 +28,7 @@ $gradesCount = count($grades);
                         <?php foreach ($dataValue AS $gradeId => $censusValue) { ?>
                             <td><?php echo $censusValue['value']; ?></td>
                         <?php } ?>
-                    <?}else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age'){?>
+                    <?php }else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age'){?>
                         <td rowspan="2"><?php echo $dataValue; ?></td>
                     <?php } else if ($dataKey == 'colspan2') { ?>
                         <td colspan="2"><?php echo $dataValue; ?></td>
