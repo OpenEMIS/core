@@ -168,7 +168,7 @@ class RubricsTemplate extends QualityAppModel {
                 $controller->request->data[$this->name]['institution_id'] = $institutionId;
             }
         } else {//post
-            // pr($controller->request->data);//die;
+           //  pr($controller->request->data);//die;
             $rubricData = $controller->request->data['RubricsTemplate'];
 
             if (isset($controller->request->data['RubricsTemplateGrade'])) {
@@ -180,13 +180,23 @@ class RubricsTemplate extends QualityAppModel {
                 $rubricId = $this->id;
 
                 if (isset($rubricGradeData)) {
-                    foreach ($rubricGradeData as $key => $objGrade) {
-                        $rubricGradeData[$key]['rubric_template_id'] = $rubricId;
+                    
+                    $unique = array_map('unserialize', array_unique(array_map('serialize', $rubricGradeData)));
+                    
+                    foreach ($unique as $key => $objGrade) {
+                        $conditions = array(
+                            'RubricsTemplateGrade.rubric_template_id' => $rubricId,
+                            'RubricsTemplateGrade.education_grade_id' => $objGrade['education_grade_id']
+                        );
+                        if (!$RubricsTemplateGrade->hasAny($conditions)) {
+                            $unique[$key]['rubric_template_id'] = $rubricId;
+                        }
+                        else{
+                            unset($unique[$key]);
+                        }
                     }
 
-                    // pr($rubricGradeData);
-                    // die;
-                    $RubricsTemplateGrade->saveAll($rubricGradeData);
+                    $RubricsTemplateGrade->saveAll($unique);
                 }
 
                 if ($type == 'add') {
