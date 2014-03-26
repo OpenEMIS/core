@@ -75,7 +75,7 @@ echo $this->Html->script('census_enrolment', false);
                             <tr class="th_bg">
                                 <?php foreach($obj['grades'] AS $gradeName){?>
                                     <td><?php echo $gradeName; ?></td>
-                                <? } ?>
+                                <?php } ?>
                                 <td></td>
                                 <td><?php echo __('Both'); ?></td>
                             </tr>
@@ -85,7 +85,7 @@ echo $this->Html->script('census_enrolment', false);
                                     <tr age="<?php echo $row['age'] ?>" gender="<?php echo $row['gender'] == 'M' ? 'male' : 'female'; ?>" type="input">
                                 <?php }else{?>
                                     <tr>
-                                <?}?>
+                                <?php }?>
                                     <?php foreach($row['data'] AS $dataKey => $dataValue){?>
                                         <?php if($dataKey == 'grades'){?>
                                             <?php foreach($dataValue AS $gradeId => $censusValue){?>
@@ -116,12 +116,12 @@ echo $this->Html->script('census_enrolment', false);
                                                         </div>
                                                     <?php }else{?>
                                                         <?php echo $censusValue['value']; ?>
-                                                    <?}?>
+                                                    <?php }?>
                                                 </td>
                                             <?php }?>
-                                        <?}else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn'){?>
+                                        <?php }else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn'){?>
                                             <td rowspan="2"><?php echo $dataValue; ?></td>
-                                        <? } else if ($dataKey == 'age') { ?>
+                                        <?php } else if ($dataKey == 'age') { ?>
                                             <?php if(isset($row['ageEditable']) && $row['ageEditable'] == 'yes'){?>
                                                 <td rowspan="2">
                                                     <div class="input_wrapper">
@@ -151,20 +151,20 @@ echo $this->Html->script('census_enrolment', false);
                                              <?php }else{?>
                                                 <td rowspan="2"><?php echo $dataValue; ?></td>
                                              <?php }?>
-                                        <?}else if($dataKey == 'colspan2'){?>
+                                        <?php }else if($dataKey == 'colspan2'){?>
                                             <td colspan="2"><?php echo $dataValue; ?></td>
-                                        <?}else if($dataKey == 'firstHalf'){?>
+                                        <?php }else if($dataKey == 'firstHalf'){?>
                                             <td colspan="<?php echo $row['colspan']; ?>" class="rowTotalLeftCol"><?php echo $dataValue; ?></td>
-                                        <?}else if($dataKey == 'totalAllGrades'){?>
+                                        <?php }else if($dataKey == 'totalAllGrades'){?>
                                             <td colspan="2" class="rowTotalRightCol"><?php echo $dataValue; ?></td>
-                                        <?}else if($dataKey == 'totalByAgeMale' || $dataKey == 'totalByAgeFemale'){?>
+                                        <?php }else if($dataKey == 'totalByAgeMale' || $dataKey == 'totalByAgeFemale'){?>
                                             <td class="<?php echo $dataKey; ?>"><?php echo $dataValue; ?></td>
-                                        <?}else if($dataKey == 'totalByAgeAllGender'){?>
+                                        <?php }else if($dataKey == 'totalByAgeAllGender'){?>
                                             <td rowspan="2" class="<?php echo $dataKey; ?>"><?php echo $dataValue; ?></td>
                                         <?php }else{?>
                                             <td><?php echo $dataValue; ?></td>
-                                        <?}?>
-                                    <?}?>
+                                        <?php }?>
+                                    <?php }?>
                                     <?php if($row['type'] == 'input' && $row['gender'] == 'M'){?>
                                         <?php if(isset($row['ageEditable']) && $row['ageEditable'] == 'yes'){?>
                                             <td rowspan="2" class="cell_delete">
@@ -177,9 +177,9 @@ echo $this->Html->script('census_enrolment', false);
                                         <td rowspan="2" class="cell_delete"></td>
                                     <?php }else if($row['type'] == 'read-only' && $row['gender'] == 'all'){?>
                                         <td class="cell_delete"></td>
-                                    <?}?>
+                                    <?php }?>
                                 </tr>
-                            <?}?>
+                            <?php }?>
                         </tbody>
                     </table>
                 </div>

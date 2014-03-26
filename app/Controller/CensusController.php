@@ -465,7 +465,7 @@ class CensusController extends AppController {
                 $rowTotalMale = array();
                 $rowTotalMale['type'] = 'read-only';
                 $rowTotalMale['gender'] = 'M';
-                $rowTotalMale['data']['firstColumn'] = 'Total';
+                $rowTotalMale['data']['firstColumn'] = __('Total');
                 $rowTotalMale['data']['gender'] = 'M';
 
                 $rowTotalFemale = array();
@@ -476,7 +476,7 @@ class CensusController extends AppController {
                 $rowTotal = array();
                 $rowTotal['type'] = 'read-only';
                 $rowTotal['gender'] = 'all';
-                $rowTotal['data']['colspan2'] = 'Total';
+                $rowTotal['data']['colspan2'] = __('Total');
 
                 foreach ($gradeList AS $gradeId => $gradeName) {
                     $rowTotalMale['data']['grades'][$gradeId]['value'] = isset($totalByGradeMale[$gradeId]) ? $totalByGradeMale[$gradeId] : $defaultValueCharacter;
