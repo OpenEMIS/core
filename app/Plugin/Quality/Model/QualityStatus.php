@@ -243,16 +243,16 @@ class QualityStatus extends QualityAppModel {
 
     public function getRubricStatus($year, $rubricId) {
         $date = date('Y-m-d', time());
+        
+        $conditions = array(
+            'QualityStatus.rubric_template_id' => $rubricId,
+            'QualityStatus.year' => $year,
+            'QualityStatus.date_enabled <= ' => $date,
+            'QualityStatus.date_disabled >= ' => $date
+        );
+        
 
-        $data = $this->find('first', array('conditions' => array('year' => $year, 'rubric_template_id' => $rubricId, 'date_enabled <= ' => $date, 'date_disabled >= ' => $date), 'recurisve' => -1));
-        //$enabled = 0;
-        //  pr($data);die;
-        if (!empty($data)) {
-            //$enabled = $data[$this->name]['status'];
-            return 'true';
-        }
-
-        return /* ($enabled == 1) ? 'true' : */'false';
+        return $this->hasAny($conditions);
     }
 
     public function getCreatedRubricCount($rubricId) {

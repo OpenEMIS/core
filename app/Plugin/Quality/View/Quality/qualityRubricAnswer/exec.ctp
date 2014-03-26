@@ -11,20 +11,17 @@ echo $this->Html->script('/Quality/js/quality.rubric', false);
     <h1>
         <span><?php echo $this->Utility->ellipsis(__($subheader), 50); ?></span>
         <?php
-       // if (!$_edit) {
-            //$editable = false;
-            echo $this->Html->link(__('Back'), array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId), array('class' => 'divider'));
-        //}
+        echo $this->Html->link(__('Back'), array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId), array('class' => 'divider'));
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
     <?php
-    /*echo $this->Form->create($modelName, array(
+    echo $this->Form->create($modelName, array(
         //'url' => array('controller' => 'Quality','plugin'=>'Quality'),
         //'type' => 'file',
         'novalidate' => true,
         'inputDefaults' => array('label' => false, 'div' => array('class' => 'input_wrapper'), 'autocomplete' => 'off')
-    ));*/
+    ));
     ?>
     <table class='rubric-table'>
         <?php
@@ -44,11 +41,11 @@ echo $this->Html->script('/Quality/js/quality.rubric', false);
         }
         ?>
     </table>
-    <!--<div class="controls ">
+    <div class="controls ">
         <?php if($editable === 'true'){ ?>
         <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
         <?php } ?>
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId), array('class' => 'btn_cancel btn_left')); ?>
     </div>
-    <?php echo $this->Form->end(); ?> -->
+    <?php echo $this->Form->end(); ?>
 </div>
