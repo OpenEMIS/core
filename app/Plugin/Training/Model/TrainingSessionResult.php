@@ -144,6 +144,112 @@ class TrainingSessionResult extends TrainingAppModel {
 		
 		$this->render = 'add';
 	}
+
+	public function resultDownloadTemplate($controller, $params){
+		 if($controller->Session->check('TrainingResultId')) {
+	 	 	$id = $controller->Session->read('TrainingResultId');
+
+	 	 	$trainingSessionResult = $this->find('first',  
+				array(
+					'recursive'=> -1,
+					'conditions'=>array('TrainingSessionResult.id'=>$id)
+				)
+			);
+
+	 	 	$trainingSessionId = $trainingSessionResult['TrainingSessionResult']['training_session_id'];
+
+		 	echo $this->download('TrainingResult_' . date('Ymdhis') . '.csv');
+
+		 	$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+			$data = $trainingSessionTrainee->find('all',  
+				array(
+					'fields' => array('identification_id', 'identification_first_name', 'identification_last_name', 'pass', 'result'),
+					'recursive' => -1, 
+					'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$trainingSessionId)
+				)
+			);
+
+			$result = array();
+
+		 	if(!empty($data)){
+		        $i = 0;
+		        foreach($data as $obj){
+		            foreach($obj as $key=>$value){
+		            	$result[$i][] = implode(",", $value);
+		            }
+		            $i++;
+		        }
+		    }
+
+			$fieldName = array('Id', 'First Name', 'Last Name', '(1=Pass/0=Fail)', 'Result');
+			echo $this->array2csv($result, $fieldName);
+		 	die();
+		 }else{
+	 		  $controller->redirect(array('action' => 'result'));
+		 }
+	}
+
+	public function resultUpload($controller, $params){
+	 	if($controller->Session->check('TrainingResultId')) {
+	 		$id = $controller->Session->read('TrainingResultId');
+	 		$trainingSessionResult = $this->find('first',  
+					array(
+						'recursive'=> -1,
+						'conditions'=>array('TrainingSessionResult.id'=>$id)
+					)
+			);
+			$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
+			$controller->set('subheader', $this->headerDefault);
+			$controller->set('id', $id);
+			$controller->set('modelName', $this->name);
+
+
+			if($controller->request->is('post')){
+				pr($_FILES);
+
+				if ($_FILES['error'][$this->name]['upload_file'] == UPLOAD_ERR_OK               //checks for errors
+				      && is_uploaded_file($_FILES['tmp_name'][$this->name]['upload_file'])) { //checks that file is uploaded
+				  echo file_get_contents($_FILES['tmp_name'][$this->name]['upload_file']); 
+				}
+			}
+
+		}else{
+		  	$controller->redirect(array('action' => 'result'));
+		}
+	}
+
+	public function array2csv($results=NULL, $fieldName=NULL)
+    {
+       ob_end_clean();
+       ob_start();
+       $df = fopen("php://output", 'w');
+       //fputs($df,$fieldName);
+       fputs($df, implode(",", $fieldName)."\n");
+
+        if(!empty($results)){
+            foreach($results as $key=>$value){
+                fputs($df, implode(",", $value)."\n");
+            }
+        }
+       fclose($df);
+       return ob_get_clean();
+    }
+
+	public function download($name){
+        if( ! $name)
+        {
+            $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
+        }
+        header('Expires: 0');
+        header('Content-Encoding: UTF-8');
+        // force download  
+        header("Content-Type: application/force-download; charset=UTF-8'");
+        header("Content-Type: application/octet-stream; charset=UTF-8'");
+        header("Content-Type: application/download; charset=UTF-8'");
+        // disposition / encoding on response body
+        header("Content-Disposition: attachment;filename={$name}");
+        header("Content-Transfer-Encoding: binary");
+	}
 	
 	
 	function setup_add_edit_form($controller, $params){
