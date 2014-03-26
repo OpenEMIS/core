@@ -53,24 +53,26 @@ class RubricsTemplateHeader extends QualityAppModel {
     );
 
     public function beforeAction($controller, $action) {
-        $id = empty($controller->params['pass'][0]) ? '' : $controller->params['pass'][0];
+        if ($action != 'rubricsTemplatesHeaderDelete') {
+            $id = empty($controller->params['pass'][0]) ? '' : $controller->params['pass'][0];
 
-        if (empty($id)) {
-            return $controller->redirect(array('action' => 'rubricsTemplates'));
-        }
+            if (empty($id)) {
+                return $controller->redirect(array('action' => 'rubricsTemplates'));
+            }
 
-        $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-        $rubricTemplateData = $RubricsTemplate->getRubric($id);
-        $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
+            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            $rubricTemplateData = $RubricsTemplate->getRubric($id);
+            $rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
 
-        $controller->set('modelName', $this->name);
-        $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
+            $controller->set('modelName', $this->name);
+            $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
 
-        if ($action != 'rubricsTemplatesHeader') {
-            $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader', $id, 'plugin' => 'Quality'));
-        } else {
-            $controller->Navigation->addCrumb($rubricName);
-            $controller->set('subheader', $rubricName);
+            if ($action != 'rubricsTemplatesHeader') {
+                $controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader', $id, 'plugin' => 'Quality'));
+            } else {
+                $controller->Navigation->addCrumb($rubricName);
+                $controller->set('subheader', $rubricName);
+            }
         }
     }
 
@@ -146,10 +148,10 @@ class RubricsTemplateHeader extends QualityAppModel {
 
         $disableDelete = false;
         $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
-        if($QualityStatus->getCreatedRubricCount($rubric_template_id) > 0){
+        if ($QualityStatus->getCreatedRubricCount($rubric_template_id) > 0) {
             $disableDelete = true;
         }
-        
+
         $controller->set('disableDelete', $disableDelete);
         $controller->set('rubric_template_id', $rubric_template_id);
         $controller->Session->write('RubricsTemplateHeader.id', $id);
@@ -196,6 +198,24 @@ class RubricsTemplateHeader extends QualityAppModel {
         }
     }
 
+    public function rubricsTemplatesHeaderDeleteAll($id) {
+        $this->unbindModel(array('belongsTo' => array('RubricsTemplate')));
+        $data = $this->find('list', array('conditions' => array('rubric_template_id' => $id), 'fields' => array('id', 'id')));
+        //
+        // $listOfHeaderId = implode(',', $data);
+        // pr($listOfHeaderId);
+        //Delete Sub Header
+        if (!empty($data)) {
+            $RubricsTemplateSubheader = ClassRegistry::init('Quality.RubricsTemplateSubheader');
+            $RubricsTemplateSubheader->rubricsTemplatesSubheaderDeleteAll($data);
+
+            foreach ($data as $obj) {
+                // pr($obj);
+               $this->delete($obj);
+            }
+        }
+    }
+
     //SQL Function
 
     public function getRubricHeaders($rubricTemplateId, $type = 'list') {
@@ -234,7 +254,7 @@ class RubricsTemplateHeader extends QualityAppModel {
                 ),
             )
         ));
-        
+
 
         $QualityInstitutionRubricsAnswer = ClassRegistry::init('Quality.QualityInstitutionRubricsAnswer');
         $currentCompletedData = $QualityInstitutionRubricsAnswer->getTotalCount($institutionSiteId, $rubricId, $qualityInstitutionRubricsid);
