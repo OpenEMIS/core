@@ -3694,7 +3694,9 @@ class InstitutionSitesController extends AppController {
                     )
                 );
 
-				    $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                $reportFields = $this->reportMapping['Overview and More']['fields'];
+
+				 $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
                     array(
                         'recursive' => -1,
                         'fields'=>array('InstitutionSiteCustomField.name as FieldName'),
@@ -3702,7 +3704,12 @@ class InstitutionSitesController extends AppController {
                             array(
                                 'table' => 'institution_sites',
                                 'alias' => 'InstitutionSite',
-                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                                'conditions' => array(
+                                    'OR' => array(
+                                        'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                        'InstitutionSiteCustomField.institution_site_type_id' => 0
+                                    )
+                                )    
                             )
                         ),
                          'conditions' => array(
@@ -3713,11 +3720,10 @@ class InstitutionSitesController extends AppController {
                         'order' => array('InstitutionSiteCustomField.order')
                     )
                 );
-                $reportFields = $this->reportMapping['Overview and More']['fields'];
 
-  				foreach($institutionSiteCustomFields as $val){
+                foreach($institutionSiteCustomFields as $val){
                    if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
-                      	$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+                        $reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
                    }
                 }
 
@@ -3879,7 +3885,12 @@ class InstitutionSitesController extends AppController {
                             array(
                                 'table' => 'institution_sites',
                                 'alias' => 'InstitutionSite',
-                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                                'conditions' => array(
+                                    'OR' => array(
+                                        'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                        'InstitutionSiteCustomField.institution_site_type_id' => 0
+                                    )
+                                )    
                             )
                         ),
                          'conditions' => array(
@@ -4182,7 +4193,12 @@ class InstitutionSitesController extends AppController {
                             array(
                                 'table' => 'institution_sites',
                                 'alias' => 'InstitutionSite',
-                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                                'conditions' => array(
+                                    'OR' => array(
+                                        'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                        'InstitutionSiteCustomField.institution_site_type_id' => 0
+                                    )
+                                )     
                             )
                         ),
                          'conditions' => array(
@@ -4374,7 +4390,12 @@ class InstitutionSitesController extends AppController {
                             array(
                                 'table' => 'institution_sites',
                                 'alias' => 'InstitutionSite',
-                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                                'conditions' => array(
+                                    'OR' => array(
+                                        'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                        'InstitutionSiteCustomField.institution_site_type_id' => 0
+                                    )
+                                )   
                             )
                         ),
                          'conditions' => array(
@@ -6282,9 +6303,12 @@ class InstitutionSitesController extends AppController {
                             'table' => 'institution_sites',
                             'alias' => 'InstitutionSite',
                             'conditions' => array(
-                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
-                                'InstitutionSite.id' => $this->institutionSiteId
+                                'InstitutionSite.id' => $this->institutionSiteId,
+                                'OR' => array(
+                                    'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                    'InstitutionSiteCustomField.institution_site_type_id' => 0
                                 )
+                            )
                         ),
                         array(
                             'table' => 'institution_site_custom_values',
@@ -6384,9 +6408,12 @@ class InstitutionSitesController extends AppController {
                             'table' => 'institution_sites',
                             'alias' => 'InstitutionSite',
                             'conditions' => array(
-                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
-                                'InstitutionSite.id' => $this->institutionSiteId
+                                'InstitutionSite.id' => $this->institutionSiteId,
+                                'OR' => array(
+                                    'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                    'InstitutionSiteCustomField.institution_site_type_id' => 0
                                 )
+                            )
                         ),
                         array(
                             'table' => 'institution_site_custom_values',
@@ -6522,9 +6549,12 @@ class InstitutionSitesController extends AppController {
                             'table' => 'institution_sites',
                             'alias' => 'InstitutionSite',
                             'conditions' => array(
-                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
-                                'InstitutionSite.id' => $this->institutionSiteId
+                                'InstitutionSite.id' => $this->institutionSiteId,
+                                'OR' => array(
+                                    'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                    'InstitutionSiteCustomField.institution_site_type_id' => 0
                                 )
+                            )
                         ),
                         array(
                             'table' => 'institution_site_custom_values',
@@ -6645,9 +6675,12 @@ class InstitutionSitesController extends AppController {
                             'table' => 'institution_sites',
                             'alias' => 'InstitutionSite',
                             'conditions' => array(
-                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
-                                'InstitutionSite.id' => $this->institutionSiteId
+                                'InstitutionSite.id' => $this->institutionSiteId,
+                                'OR' => array(
+                                    'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                    'InstitutionSiteCustomField.institution_site_type_id' => 0
                                 )
+                            )
                         ),
                         array(
                             'table' => 'institution_site_custom_values',
