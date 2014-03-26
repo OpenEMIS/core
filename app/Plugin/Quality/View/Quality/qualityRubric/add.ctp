@@ -50,22 +50,6 @@ echo $this->Html->script('Quality.quality.rubric', false);
         </div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Name'); ?></div>
-        <div class="value">
-            <?php
-            if ($type == 'add') {
-                echo $this->Form->input('rubric_template_id', array('id' => 'rubricsTemplateId', 'options' => $rubricOptions, 'onChange' => 'QualityRubric.updateURL(this)'));
-            } else {
-                if (isset($rubricOptions[$this->data['QualityInstitutionRubric']['rubric_template_id']])) {
-                    echo $rubricOptions[$this->data['QualityInstitutionRubric']['rubric_template_id']];
-                } else {
-                    echo $rubricOptions[0];
-                }
-            }
-            ?>
-        </div>
-    </div>
-    <div class="row">
         <div class="label"><?php echo __('Grade'); ?></div>
         <div class="value">
             <?php
@@ -98,6 +82,24 @@ echo $this->Html->script('Quality.quality.rubric', false);
         </div>
         <div class="value"><?php ?></div>
     </div>
+    <div class="row">
+        <div class="label"><?php echo __('Name'); ?></div>
+        <div class="value">
+            <?php
+            if ($type == 'add') {
+                echo $this->Form->input('rubric_template_id', array('id' => 'rubricsTemplateId', 'options' => $rubricOptions, 'onChange' => 'QualityRubric.updateURL(this)'));
+            } else {
+                if (isset($rubricOptions[$this->data['QualityInstitutionRubric']['rubric_template_id']])) {
+                    echo $rubricOptions[$this->data['QualityInstitutionRubric']['rubric_template_id']];
+                } else {
+                    echo $rubricOptions[0];
+                }
+            }
+            ?>
+        </div>
+    </div>
+    
+    
     <div class="row">
         <div class="label"><?php echo __('Teacher'); ?></div>
         <div class="value">
