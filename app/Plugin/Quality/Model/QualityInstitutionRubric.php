@@ -291,8 +291,8 @@ class QualityInstitutionRubric extends QualityAppModel {
         $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
         $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['teacher_id']);
 
-        $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
-        $editable = $QualityStatus->getRubricStatus($year['SchoolYear']['name'], $data[$this->name]['rubric_template_id']);
+        //$QualityStatus = ClassRegistry::init('Quality.QualityStatus');
+        //$editable = $QualityStatus->getRubricStatus($year['SchoolYear']['name'], $data[$this->name]['rubric_template_id']);
 
         $disableDelete = false;
         $QualityInstitutionRubricsAnswer = ClassRegistry::init('Quality.QualityInstitutionRubricsAnswer');
@@ -304,7 +304,7 @@ class QualityInstitutionRubric extends QualityAppModel {
         $controller->set('disableDelete', $disableDelete);
 
         // pr($editable);
-        $controller->Session->write('QualityRubric.editable', $editable);
+        //$controller->Session->write('QualityRubric.editable', $editable);
 
         $controller->set('rubric_template_id', $data[$this->name]['rubric_template_id']);
         $controller->set('schoolYear', $year['SchoolYear']['name']);
