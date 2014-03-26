@@ -67,6 +67,13 @@ class QualityInstitutionRubricsAnswer extends QualityAppModel {
     public function qualityRubricAnswerView($controller, $params) {
         $controller->set('modelName', $this->name);
         
+        $controller->set('editable', false);
+        $this->_SetupRubricsTemplateDetail($controller, $params);
+    }
+    
+    public function qualityRubricAnswerExec($controller, $params) {
+        $controller->set('modelName', $this->name);
+        
         $controller->set('editable', $controller->Session->read('QualityRubric.editable'));
         $this->_SetupRubricsTemplateDetail($controller, $params);
     }
