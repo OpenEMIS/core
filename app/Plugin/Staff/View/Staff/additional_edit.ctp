@@ -11,6 +11,7 @@ echo $this->Html->script('institution_site', false);
         <?php echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider')); ?>
         <?php } ?>
     </h1>
+    <?php echo $this->element('alert'); ?>
     <?php
     echo $this->Form->create('StaffCustomValue', array(
         'url' => array('controller' => 'Staff', 'action' => 'additionalEdit')
@@ -115,7 +116,7 @@ echo $this->Html->script('institution_site', false);
                 if($mandatory!='1' && !$wizardEnd){
                     echo $this->Form->submit(__('Skip'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_left"));
                 } 
-      } ?>å
+      } ?>
     </div>
     <?php echo $this->Form->end(); ?>
 </div>

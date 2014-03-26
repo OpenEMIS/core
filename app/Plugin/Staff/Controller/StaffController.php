@@ -478,6 +478,8 @@ class StaffController extends StaffAppController {
             if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
             }
+            $mandatory = $this->Navigation->getMandatoryWizard($this->action);
+            $error = false;
             //pr($this->data);
             //die();
             $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
@@ -492,7 +494,11 @@ class StaffController extends StaffAppController {
                 foreach ($this->request->data['StaffCustomValue'][$fieldVal] as $key => $val) {
 
                     if ($fieldVal == "checkbox") {
-
+                        if($mandatory && count($val['value'])==0){
+                            $this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
+                            $error = true;
+                            break;
+                        }
                         $arrCustomValues = $this->StaffCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
 
                         $tmp = array();
@@ -519,6 +525,11 @@ class StaffController extends StaffAppController {
                                 $ctr++;
                             }
                     } else { // if editing reuse the Primary KEY; so just update the record
+                        if($mandatory && empty($val['value'])){
+                            $this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
+                            $error = true;
+                            break;
+                        }
                         $datafields = $this->StaffCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
                         $this->StaffCustomValue->create();
                         if ($datafields)
@@ -530,9 +541,11 @@ class StaffController extends StaffAppController {
                     }
                 }
             }
-            $this->Navigation->updateWizard($this->action, null);    
-            $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
-            $this->redirect(array('action' => 'additional'));
+            if(!$error){
+                $this->Navigation->updateWizard($this->action, null);    
+                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
+                $this->redirect(array('action' => 'additional'));
+            }
         }
         $this->StaffCustomField->unbindModel(array('hasMany' => array('StaffCustomFieldOption')));
 
@@ -587,6 +600,8 @@ class StaffController extends StaffAppController {
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }else{
+                $this->Navigation->validateModel($this->action,'StaffAttachment');
             }
 
             if(!empty($_FILES)){
