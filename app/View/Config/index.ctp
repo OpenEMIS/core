@@ -2,14 +2,13 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 $arrOptions = array('date_format' => array(
-								'Y-m-d' => date('Y-m-d'),
-								'd-M-Y' => date('d-M-Y'),
-								'd-m-Y' => date('d-m-Y'),
-								'd/m/Y' => date('d/m/Y'),
-								'm/d/Y' => date('m/d/Y'),
-								'd F Y' => date('d F Y'), 
-								'F d, Y' => date('F d, Y'), 
-								'dS F Y' => date('dS F Y')
+								'Y-m-d' => date('Y-n-j'),
+								'd-M-Y' => date('j-M-Y'),
+								'd-m-Y' => date('j-n-Y'),
+								'd/m/Y' => date('j/n/Y'),
+								'm/d/Y' => date('n/d/Y'),
+								'F d, Y' => date('F j, Y'), 
+								'dS F Y' => date('jS F Y')
 							),
 							'language' =>array(
 								'ara' => 'العربية',
