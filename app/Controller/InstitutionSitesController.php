@@ -6776,6 +6776,12 @@ class InstitutionSitesController extends AppController {
         }
     }
 
+    public function addReportDate($csv_file){
+        $footer = array("Report Generated: " . date("Y-m-d H:i:s"));
+        fputcsv($csv_file, array(), ',', '"');
+        fputcsv($csv_file, $footer, ',', '"');
+    }
+    
     public function genCSV($data, $name) {
         $this->autoRender = false;
         $arrData = $this->formatCSVData($data, $name);
@@ -6812,7 +6818,9 @@ class InstitutionSitesController extends AppController {
 
             fputcsv($csv_file, $row, ',', '"');
         }
-
+       
+        $this->addReportDate($csv_file);
+        
         fclose($csv_file);
     }
 
