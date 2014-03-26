@@ -203,9 +203,9 @@ class InstitutionSiteClassGrade extends AppModel {
 					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 				)
 			),
-			//'conditions' => array('InstitutionSiteClassGrade.id' => $id),
+			'conditions' => array('EducationGrade.visible' => 1,'EducationCycle.visible'=> 1,'EducationProgramme.visible'=> 1),
 			'order' => array('EducationCycle.name', 'EducationProgramme.order', 'EducationGrade.order'),
-                    'group' => array('EducationGrade.name')
+                        'group' => array('EducationGrade.name')
 		));
 		//pr($data);
                 
