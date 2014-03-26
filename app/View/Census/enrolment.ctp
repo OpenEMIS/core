@@ -73,7 +73,7 @@ echo $this->Html->script('census_enrolment', false);
                             <tr class="th_bg">
                                 <?php foreach($obj['grades'] AS $gradeName){?>
                                     <td><?php echo $gradeName; ?></td>
-                                <? } ?>
+                                <?php } ?>
                                 <td></td>
                                 <td><?php echo __('Both'); ?></td>
                             </tr>
@@ -83,22 +83,22 @@ echo $this->Html->script('census_enrolment', false);
                                     <tr age="<?php echo $row['age'] ?>" gender="<?php echo $row['gender'] == 'M' ? 'male' : 'female'; ?>">
                                 <?php }else{?>
                                     <tr>
-                                <?}?>
+                                <?php }?>
                                     <?php foreach($row['data'] AS $dataKey => $dataValue){?>
                                         <?php if($dataKey == 'grades'){?>
                                             <?php foreach($dataValue AS $gradeId => $censusValue){?>
                                                 <td><?php echo $censusValue['value']; ?></td>
                                             <?php }?>
-                                        <?}else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age'){?>
+                                        <?php }else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age'){?>
                                             <td rowspan="2"><?php echo $dataValue; ?></td>
-                                        <?}else if($dataKey == 'colspan2'){?>
+                                        <?php }else if($dataKey == 'colspan2'){?>
                                             <td colspan="2"><?php echo $dataValue; ?></td>
                                         <?php }else{?>
                                             <td><?php echo $dataValue; ?></td>
-                                        <?}?>
-                                    <?}?>
+                                        <?php }?>
+                                    <?php }?>
                                 </tr>
-                            <?}?>
+                            <?php }?>
                         </tbody>
                     </table>
                 </div>
