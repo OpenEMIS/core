@@ -15,7 +15,13 @@ echo $this->Html->css('/Quality/css/rubrics', 'stylesheet', array('inline' => fa
     </h1>
     <?php echo $this->element('alert'); ?>
     <?php $params = implode('/', $this->params['pass']); ?>
-    <table class="table allow_hover full_width" action="<?php echo $this->params['controller']; ?>/qualityRubricAnswerView/<?php echo $params ?>/">
+    <?php
+    $defaultAction = 'qualityRubricAnswerView';
+    if ($_accessControl->check($this->params['controller'], 'qualityRubricAnswerExec') && $editiable) {
+        $defaultAction='qualityRubricAnswerExec';
+    }
+    ?>
+    <table class="table allow_hover full_width" action="<?php echo $this->params['controller'].'/'.$defaultAction.'/'.$params ?>/">
         <thead class="table_head">
             <tr>
                 <td class="cell_id_no"><?php echo __('No.') ?></td>
@@ -42,7 +48,6 @@ echo $this->Html->css('/Quality/css/rubrics', 'stylesheet', array('inline' => fa
                                 $fontColor = 'font-green';
                                 break;
                         }
-                        
                     } else {
                         $fontColor = '';
                     }
