@@ -81,7 +81,7 @@ class QualityInstitutionRubric extends QualityAppModel {
     }
 
     public function checkCommentLength($data) {
-        if (str_word_count($data['comment']) > 2) {
+        if (str_word_count($data['comment']) > 150) {
             return false;
         }
 
