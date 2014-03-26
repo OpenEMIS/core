@@ -457,6 +457,8 @@ class StudentsController extends StudentsAppController {
             if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
             }
+            $mandatory = $this->Navigation->getMandatoryWizard($this->action);
+            $error = false;
             //pr($this->data);
             //die();
             $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
@@ -471,6 +473,11 @@ class StudentsController extends StudentsAppController {
                 foreach ($this->request->data['StudentCustomValue'][$fieldVal] as $key => $val) {
 
                     if ($fieldVal == "checkbox") {
+                        if($mandatory && count($val['value'])==0){
+                            $this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
+                            $error = true;
+                            break;
+                        }
 
                         $arrCustomValues = $this->StudentCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('StudentCustomValue.student_id' => $this->studentId, 'StudentCustomValue.student_custom_field_id' => $key)));
 
@@ -498,6 +505,11 @@ class StudentsController extends StudentsAppController {
                                 $ctr++;
                             }
                     } else { // if editing reuse the Primary KEY; so just update the record
+                        if($mandatory && empty($val['value'])){
+                            $this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
+                            $error = true;
+                            break;
+                        }
                         $datafields = $this->StudentCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('StudentCustomValue.student_id' => $this->studentId, 'StudentCustomValue.student_custom_field_id' => $key)));
                         $this->StudentCustomValue->create();
                         if ($datafields)
@@ -509,9 +521,11 @@ class StudentsController extends StudentsAppController {
                     }
                 }
             }
-            $this->Navigation->updateWizard($this->action, null);
-            $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
-            $this->redirect(array('action' => 'additional'));
+            if(!$error){
+                $this->Navigation->updateWizard($this->action, null);
+                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
+                $this->redirect(array('action' => 'additional'));
+            }
         }
         $this->StudentCustomField->unbindModel(array('hasMany' => array('StudentCustomFieldOption')));
 
@@ -556,6 +570,8 @@ class StudentsController extends StudentsAppController {
                 $this->Navigation->skipWizardLink($this->action);
             }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $this->Navigation->previousWizardLink($this->action);
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentAttachment');
             }
             if(!empty($_FILES)){
                 $errors = $this->FileAttachment->saveAll($this->data, $_FILES, $id);
