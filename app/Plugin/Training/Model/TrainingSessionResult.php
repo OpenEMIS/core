@@ -145,41 +145,49 @@ class TrainingSessionResult extends TrainingAppModel {
 		$this->render = 'add';
 	}
 
+	public function getResultList($id){
+	 	$trainingSessionResult = $this->find('first',  
+			array(
+				'recursive'=> -1,
+				'conditions'=>array('TrainingSessionResult.id'=>$id)
+			)
+		);
+
+		$trainingSessionId = $trainingSessionResult['TrainingSessionResult']['training_session_id'];
+
+		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+		$data = $trainingSessionTrainee->find('all',  
+			array(
+				'fields' => array('id', 'identification_first_name', 'identification_last_name', 'pass', 'result'),
+				'recursive' => -1, 
+				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$trainingSessionId)
+			)
+		);
+
+		$result = array();
+
+	 	if(!empty($data)){
+	        $i = 0;
+	        foreach($data as $obj){
+	            foreach($obj as $key=>$value){
+	            	$result[$i][] = implode(",", $value);
+	            }
+	            $i++;
+	        }
+	    }
+
+		return $result;
+	}
+
 	public function resultDownloadTemplate($controller, $params){
 		 if($controller->Session->check('TrainingResultId')) {
 	 	 	$id = $controller->Session->read('TrainingResultId');
 
-	 	 	$trainingSessionResult = $this->find('first',  
-				array(
-					'recursive'=> -1,
-					'conditions'=>array('TrainingSessionResult.id'=>$id)
-				)
-			);
-
-	 	 	$trainingSessionId = $trainingSessionResult['TrainingSessionResult']['training_session_id'];
-
+	 	 	$result = $this->getResultList($id);
+		 	
 		 	echo $this->download('TrainingResult_' . date('Ymdhis') . '.csv');
 
-		 	$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
-			$data = $trainingSessionTrainee->find('all',  
-				array(
-					'fields' => array('identification_id', 'identification_first_name', 'identification_last_name', 'pass', 'result'),
-					'recursive' => -1, 
-					'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$trainingSessionId)
-				)
-			);
-
-			$result = array();
-
-		 	if(!empty($data)){
-		        $i = 0;
-		        foreach($data as $obj){
-		            foreach($obj as $key=>$value){
-		            	$result[$i][] = implode(",", $value);
-		            }
-		            $i++;
-		        }
-		    }
+			
 
 			$fieldName = array('Id', 'First Name', 'Last Name', '(1=Pass/0=Fail)', 'Result');
 			echo $this->array2csv($result, $fieldName);
@@ -193,11 +201,15 @@ class TrainingSessionResult extends TrainingAppModel {
 	 	if($controller->Session->check('TrainingResultId')) {
 	 		$id = $controller->Session->read('TrainingResultId');
 	 		$trainingSessionResult = $this->find('first',  
-					array(
-						'recursive'=> -1,
-						'conditions'=>array('TrainingSessionResult.id'=>$id)
-					)
+				array(
+					'recursive'=> -1,
+					'conditions'=>array('TrainingSessionResult.id'=>$id)
+				)
 			);
+
+			if($trainingSessionResult['TrainingSessionResult']['training_status_id']!=1){
+				$controller->redirect(array('action' => 'resultView', $id));	
+			}
 			$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 			$controller->set('subheader', $this->headerDefault);
 			$controller->set('id', $id);
@@ -205,11 +217,64 @@ class TrainingSessionResult extends TrainingAppModel {
 
 
 			if($controller->request->is('post')){
-				pr($_FILES);
+				if ($_FILES['data']['error'][$this->name]['upload_file'] == UPLOAD_ERR_OK               //checks for errors
+				      && is_uploaded_file($_FILES['data']['tmp_name'][$this->name]['upload_file'])) { //checks that file is uploaded
+				 	 $data = file_get_contents($_FILES['data']['tmp_name'][$this->name]['upload_file']); 
+				 	 
 
-				if ($_FILES['error'][$this->name]['upload_file'] == UPLOAD_ERR_OK               //checks for errors
-				      && is_uploaded_file($_FILES['tmp_name'][$this->name]['upload_file'])) { //checks that file is uploaded
-				  echo file_get_contents($_FILES['tmp_name'][$this->name]['upload_file']); 
+				 	 $result = $this->getResultList($id);
+
+				 	 $arr = preg_split('/\r\n|\r|\n/', $data);
+				 	 array_splice($arr, 0, 1);
+
+				 	 $i = 0;
+				 	 $count = 0;
+				 	 $validateFlag = true;
+				 	 $updateData= array();
+
+				 	 $error = '';
+				 	 $errorFormat = __('Row %s: %s');
+				 	 foreach($arr as $row){
+				 	 	if(!empty($row)){
+				 	 		if(isset($result[$i][0])){
+				 	 			$resultSplit = split(",",$result[$i][0]);
+				 	 			array_splice($resultSplit,3);
+
+				 	 			$rowSplit = split(",", $row);
+				 	 			$rowSplitCompare = $rowSplit;
+				 	 			array_splice($rowSplitCompare,3);
+
+				 	 			if($rowSplitCompare==$resultSplit){
+				 	 				if($rowSplit[3]!='1' && $rowSplit[3]!='0'){
+				 	 					$error .= '<br />' . sprintf($errorFormat, ($i+1), 'Pass Column only accepts 0 or 1 as input.');
+				 	 					$validateFlag = false;
+				 	 				}
+				 	 				$updateData[] = array('TrainingSessionTrainee'=>array('id'=>$rowSplit[0], 'pass'=>$rowSplit[3], 'result'=>$rowSplit[4]));
+				 	 				$count++;
+				 	 			}else{
+				 	 				$error .= '<br />' . sprintf($errorFormat, ($i+1), 'Columns/Data do not match.');
+				 	 				$validateFlag = false;
+				 	 			}
+				 	 		}else{
+				 	 			$error .= '<br />' . sprintf($errorFormat, ($i+1), 'Columns/Data do not match.');
+				 	 			$validateFlag = false;
+				 	 		}
+				 	 	}
+				 	 	$i++;
+				 	 }
+
+					if($validateFlag){
+						$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+
+						if($trainingSessionTrainee->saveAll($updateData)){
+							$controller->Utility->alert(sprintf(__('%s Record(s) have been updated'),$count));
+						}else{
+							$controller->Utility->alert(__('Error encountered, record(s) could not be updated'), array('type' => 'error'));
+						}
+						
+					}else{
+						$controller->Utility->alert(__('Invalid File Format').$error, array('type' => 'error'));
+					}
 				}
 			}
 
