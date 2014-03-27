@@ -140,8 +140,11 @@ class TrainingSessionResult extends TrainingAppModel {
 	
 	function setup_add_edit_form($controller, $params){
 		$trainingCourse = ClassRegistry::init('TrainingCourse');
-		$trainingCourseOptions = $trainingCourse->find('list', array('fields'=> array('id', 'code'), 'conditions'=>array('training_status_id'=>3)));
+
+		$trainingCourseCodeOptions = $trainingCourse->find('list', array('fields'=> array('id', 'code'), 'conditions'=>array('training_status_id'=>3)));
+		$trainingCourseOptions = $trainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
 	
+		$controller->set('trainingCourseCodeOptions', $trainingCourseCodeOptions);
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
 
 		$controller->set('modelName', $this->name);
