@@ -15,7 +15,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
           	echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider', 'style'=>'color:#000;'));
 		?>
 	</h1>
-	
+	<?php echo $this->element('alert'); ?>
 	<?php
 	echo $this->Form->create($modelName, array(
 		'url' => array('controller' => 'Training', 'action' => 'resultUpload', 'plugin'=>'Training'),
@@ -23,8 +23,6 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
 	?>
-
-	<?php if(!empty($this->data[$modelName]['error'])){ echo $error; } ?>
 	<div class="row">
 		<div class="label"><?php echo __('File'); ?></div>
         <div class="value">
