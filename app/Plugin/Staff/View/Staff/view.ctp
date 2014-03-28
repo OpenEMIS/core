@@ -59,7 +59,7 @@ echo $this->Html->script('/Staff/js/staff', false);
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
 		</div>
-                <<?php /*div class="row">
+                <?php /*<div class="row">
 			<div class="label"><?php echo __('Date of Death'); ?></div>
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_death']); ?></div>
 		</div>*/ ?>
