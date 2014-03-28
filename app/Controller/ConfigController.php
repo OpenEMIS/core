@@ -250,6 +250,17 @@ class ConfigController extends AppController {
 							$error[$innerElement['id']] = "Data Outliers: Minimum Student Number should be numeric value";
 						}
 					}
+                                }else if($key=='Student Admission Age'){
+                                    $value = $innerElement['value'];
+                                    if($innerElement['id']=='106'){
+                                        if(!is_numeric($value) || $value < 0 || $value > 10){
+                                            $error[$innerElement['id']] = "Student Admission Age: Admission Age Plus should be numeric value between 0 to 10";
+					}
+                                    }else if($innerElement['id']=='107'){
+                                        if(!is_numeric($value) || $value < 0 || $value > 10){
+                                            $error[$innerElement['id']] = "Student Admission Age: Admission Age Minus should be numeric value between 0 to 10";
+					}
+                                    }
 				}
                                 
 			}

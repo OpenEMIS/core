@@ -194,4 +194,38 @@ class EducationProgramme extends AppModel {
 		}
 		return $data;
 	}
+        
+        public function getProgrammeById($programmeId) {
+		$this->formatResult = true;
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'fields' => array(
+				'EducationSystem.name AS education_system_name',
+				'EducationCycle.name AS education_cycle_name',
+                                'EducationCycle.admission_age AS admission_age',
+				'EducationProgramme.name AS education_programme_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array('EducationLevel.id = EducationCycle.education_level_id')
+				),
+				array(
+					'table' => 'education_systems',
+					'alias' => 'EducationSystem',
+					'conditions' => array('EducationSystem.id = EducationLevel.education_system_id')
+				)
+			),
+			'conditions' => array(
+				'EducationProgramme.id' => $programmeId
+			)
+		));
+		return $data;
+	}
 }
