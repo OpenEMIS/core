@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class Area extends AppModel {
-	public $actsAs = array('Tree');
+	public $actsAs = array('Tree', 'CustomReport');
 	
 	public $validate = array(
 		'code' => array(

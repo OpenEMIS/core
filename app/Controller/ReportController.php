@@ -92,7 +92,7 @@ class ReportController extends AppController {
     }
 	
 	public function reportsNew() {
-		$models = array('Institution', 'InstitutionSite', 'CensusStudent', 'CensusTeacher', 'CensusStaff');
+		$models = array('Institution');//, 'InstitutionSite', 'CensusStudent', 'CensusTeacher', 'CensusStaff');
 		$models = array_combine($models,$models);
 		$this->set('models',$models);
 	}
@@ -255,21 +255,24 @@ class ReportController extends AppController {
             }             
         }
 
-        $labelFieldList = Configure::read('ReportManager.labelFieldList');
-        $this->set('labelFieldList',$labelFieldList);
+       // $labelFieldList = Configure::read('ReportManager.labelFieldList');
+       // $this->set('labelFieldList',$labelFieldList);
         
         if (empty($this->data)) {        
             $displayForeignKeys = Configure::read('ReportManager.displayForeignKeys');
             $globalFieldIgnoreList = Configure::read('ReportManager.globalFieldIgnoreList');
             $modelFieldIgnoreList = Configure::read('ReportManager.modelFieldIgnoreList');
-
+			
             $this->loadModel($modelClass);
             $modelSchema = $this->{$modelClass}->schema();
-            
-            if (isset($globalFieldIgnoreList) && is_array($globalFieldIgnoreList)) {
-                foreach ($globalFieldIgnoreList as $field) {
-                    unset($modelSchema[$field]);
-                }                
+			
+			$excludeFields = $this->{$modelClass}->getExcludedFields();
+            if (!empty($excludeFields)) {
+				foreach ($excludeFields as $field) {
+					if(isset($modelSchema[$field])) {
+						unset($modelSchema[$field]);
+					}
+                }
             }
             
             if (isset($displayForeignKeys) && !$displayForeignKeys) {               
@@ -281,32 +284,34 @@ class ReportController extends AppController {
             
             $associatedModels = $this->{$modelClass}->getAssociated();
             $associatedModelsSchema = array();
-
             foreach ($associatedModels as $key => $value) {
                 $className = $this->{$modelClass}->{$value}[$key]['className'];
-                //$this->loadModel($key);
                 $this->loadModel($className);
-                //$associatedModelsSchema[$key] = $this->{$key}->schema();
                 $associatedModelsSchema[$key] = $this->{$className}->schema();
-
-                if (isset($globalFieldIgnoreList) && is_array($globalFieldIgnoreList)) {
-                    foreach ($globalFieldIgnoreList as $value) {
-                        unset($associatedModelsSchema[$key][$value]);
-                    }
-                }
+				
+				$excludeFields = $this->{$modelClass}->getExcludedFields($className);
+				if (!empty($excludeFields)) {
+					foreach ($excludeFields as $field) {
+						if(isset($associatedModelsSchema[$key][$field])) {
+							unset($associatedModelsSchema[$key][$field]);
+						}
+					}                
+				}
                 
                 if (isset($displayForeignKeys) && !$displayForeignKeys) {
                     foreach($associatedModelsSchema as $model => $fields) {
                         foreach($fields as $field => $values) {
-                            if ( substr($field,-3)=='_id' )
-                                unset($associatedModelsSchema[$model][$field]);                            
+                            if ( substr($field,-3)=='_id' ) {
+								unset($associatedModelsSchema[$model][$field]);
+							}
                         }
                     }
                 }
                 foreach($associatedModelsSchema as $model => $fields) {
                     foreach($fields as $field => $values) {
-                        if ( isset($modelFieldIgnoreList[$model][$field]) )
-                            unset($associatedModelsSchema[$model][$field]);                            
+                        if ( isset($modelFieldIgnoreList[$model][$field]) ) {
+							unset($associatedModelsSchema[$model][$field]);
+						}
                     }
                 }                
             }
@@ -317,8 +322,9 @@ class ReportController extends AppController {
             $this->set('associatedModelsSchema',$associatedModelsSchema);
             $this->set('oneToManyOption',$oneToManyOption);
             
-            if (!is_null($fileName))
-                $this->loadReport($fileName);
+            if (!is_null($fileName)) {
+				$this->loadReport($fileName);
+			}
 
         } else {
             $this->loadModel($modelClass);
@@ -452,7 +458,6 @@ class ReportController extends AppController {
             $this->set('reportData',$reportData);
             $this->set('reportName',$this->data['Report']['ReportName']);
             $this->set('reportStyle',$this->data['Report']['Style']);
-            $this->set('showRecordCounter',$this->data['Report']['ShowRecordCounter']);
 
             if ( $this->data['Report']['Output'] == 'html') {
                 if ($oneToManyOption == '')
