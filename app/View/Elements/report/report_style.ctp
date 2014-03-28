@@ -1,4 +1,3 @@
-    <!-- Copyright (c) 2012-2013 Luis E. S. Dias - www.smartbyte.com.br -->
     <fieldset>
         <legend><?php echo __d('report_manager','Report Style'); ?></legend>
         <table class="reportManagerReportStyleSelector" cellpadding="0" cellspacing="0">
@@ -32,17 +31,6 @@
             echo $this->Form->input('Output',array('type'=>'select','options'=>$outputOptions));            
             echo '</td>';             
             echo '</tr>';
-            
-            echo '<tr>';
-            echo '<td>';
-            echo __d('report_manager','Show record counter');
-            if (isset($this->data['Report']['ShowRecordCounter']))
-                $showRecordCounter = $this->data['Report']['ShowRecordCounter'];
-            else
-                $showRecordCounter = true;
-            echo $this->Form->checkbox('ShowRecordCounter',array('hiddenField' => true,'checked'=>$showRecordCounter));                     
-            echo '</td>';             
-            echo '</tr>';            
             
             if ($oneToManyOption != '') {
                 echo '<tr>';

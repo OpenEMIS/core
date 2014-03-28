@@ -45,6 +45,10 @@
   clear:both;
 }
 
+.swMain fieldset {
+	margin-top: 10px;
+}
+
 .swMain div.actionBar {
   position: relative;
   clear:both;

@@ -24,7 +24,7 @@ class Institution extends AppModel {
 		'InstitutionSector'
 	);
 	
-        public $inputsMapping = array('label'=>1,'textbox'=>2,'dropdown'=>3,'multiple'=>4,'textarea'=>5);
+	public $inputsMapping = array('label'=>1,'textbox'=>2,'dropdown'=>3,'multiple'=>4,'textarea'=>5);
 	public $hasMany = array('InstitutionSite');
 	public $actsAs = array(
 		'TrackHistory',
@@ -33,6 +33,13 @@ class Institution extends AppModel {
 				'InstitutionAttachment',
 				'InstitutionCustomValue',
 				'InstitutionSite'
+			)
+		),
+		'CustomReport' => array(
+			'_default' => array('visible'),
+			'Institution' => array('date_opened', 'year_opened', 'date_closed', 'year_closed'),
+			'belongsTo' => array(
+				'Area' => array('lft', 'rght')
 			)
 		)
 	);
