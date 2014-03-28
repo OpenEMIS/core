@@ -40,7 +40,8 @@ var i18n = {
 		textUnsavedData: '<?php echo T("Unsaved Data", true); ?>',
 		contentUnsavedData: '<?php echo T("Please save your data before proceed. <br><br>Do you want to save now?", true); ?>',
 		textLeaving: '<?php echo T("Are you sure you want to leave?"); ?>',
-		textNoGrades: '<?php echo T("There are no grades in this programme."); ?>'
+		textNoGrades: '<?php echo T("There are no grades in this programme."); ?>',
+                textDuplicateAges: '<?php echo T("There is duplication in the age list.", true); ?>'
 	},
 	Finance : {
 		textNoData: '<?php echo T("No Data", true); ?>',

@@ -28,32 +28,32 @@ class TeacherReport extends TeachersAppModel {
             'Model' => 'InstitutionSite',
             'fields' => array(
                 'SchoolYear' => array(
-                    'name' => ''
+                    'name AS Year' => ''
                 ),
                 'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'id' => ''
+                    'name AS InstitutionSiteName' => '',
+                    'code AS InstitutionSiteCode' => '',
+                    'id AS InstitutionSiteId' => ''
                 ),
                 'InstitutionSiteClass' => array(
-                    'name' => '',
-                    'id' => ''
+                    'name AS Class' => '',
+                    'id AS ClassId' => ''
                 ),
-               'InstitutionSiteClassTeacher' => array(
+              /* 'InstitutionSiteClassTeacher' => array(
                     'teacher_id' => ''
-                ),
+                ),*/
                  'EducationGrade' => array(
-                    'name' => ''
+                    'name AS Grade' => ''
                 ),
                 'RubricTemplate' => array(
-                    'name' => '',
-                    'id' => ''
+                    'name AS RubricName' => '',
+                    'id AS RubricId' => ''
                 ),
                 'RubricTemplateHeader' => array(
-                    'title' => ''
+                    'title AS header' => ''
                 ),
                 'RubricTemplateColumnInfo' => array(
-                    'COALESCE(SUM(weighting),0)' => ''
+                    'COALESCE(SUM(weighting),0) AS total' => ''
                 ),
             ),
             'FileName' => 'Report_Teacher_Quality_Assurance'
@@ -87,8 +87,8 @@ class TeacherReport extends TeachersAppModel {
                     'last_name' => 'Teacher Last Name'
                 ),
                 'SecurityUser' => array(
-                    'first_name' => 'Supervisor First Name',
-                    'last_name' => 'Supervisor Last Name'
+                    'first_name' => 'Evaluator First Name',
+                    'last_name' => 'Evaluator Last Name'
                 )
             ),
             'FileName' => 'Report_Teacher_Quality_Visit'
@@ -305,12 +305,18 @@ class TeacherReport extends TeachersAppModel {
         $dateFormat = 'd F, Y';
 
         if ($name == 'QA Report') {
-            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-            $newData = $RubricsTemplate->processDataToCSVFormat($data);
+          //  pr($data);die;
+            $header = array(array('Year'),  array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+            $QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
+            $rubricData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
+            $newData = $QualityBatchReport->breakReportByYear($rubricData, 'no', $header); // pr($tempArray);die;
+           // pr($newData);die;
+           // $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+           // $newData = $RubricsTemplate->processDataToCSVFormat($data);
             
             if(!empty($data)){
-                $this->institutionSiteId = $data[0]['InstitutionSite']['id'];
-                $this->schoolYear = $data[0]['SchoolYear']['name'];
+                $this->institutionSiteId = $data[0]['InstitutionSite']['InstitutionSiteId'];
+                $this->schoolYear = $data[0]['SchoolYear']['Year'];
             }
         }
 

@@ -76,6 +76,52 @@ class CensusStudent extends AppModel {
 		));
 		return $data;
 	}
+        
+        public function getCensusDataOrderByAge($siteId, $yearId, $programmeId, $categoryId){
+                $this->formatResult = true;
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('CensusStudent.id', 'CensusStudent.age', 'CensusStudent.male', 'CensusStudent.female', 'CensusStudent.source', 'CensusStudent.education_grade_id'),
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						'EducationGrade.id = CensusStudent.education_grade_id'
+					)
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array(
+						'EducationProgramme.id = EducationGrade.education_programme_id',
+                                                'EducationProgramme.id = ' . $programmeId
+					)
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array(
+						'EducationCycle.id = EducationProgramme.education_cycle_id'
+					)
+				),
+				array(
+					'table' => 'education_levels',
+					'alias' => 'EducationLevel',
+					'conditions' => array(
+						'EducationLevel.id = EducationCycle.education_level_id'
+					)
+				)
+			),
+			'conditions' => array(
+				'CensusStudent.school_year_id' => $yearId,
+				'CensusStudent.student_category_id' => $categoryId,
+				'CensusStudent.institution_site_id' => $siteId
+			),
+			'order' => array('CensusStudent.age', 'EducationGrade.order')
+		));
+		return $data;
+        }
 	
 	public function saveCensusData($data, $institutionSiteId,$source=0) {
 		$keys = array();
@@ -88,10 +134,18 @@ class CensusStudent extends AppModel {
 		foreach($deleted as $id) {
 			$this->delete($id);
 		}
-		
+                
 		for($i=0; $i<sizeof($data); $i++) {
 			$row = $data[$i];
-			if($row['age'] > 0 && ($row['male'] > 0 || $row['female'] > 0)) {
+			if($row['age'] > 0 && (($row['male'] !== '' && $row['male'] >= 0) || ($row['female'] !== '' && $row['female'] >= 0))) {
+                                if($row['male'] === ''){
+                                   $row['male'] = 0; 
+                                }
+                                
+                                if($row['female'] === ''){
+                                    $row['female'] = 0;
+                                }
+                                
 				if($row['id'] == 0) {
 					$this->create();
 				}
@@ -101,7 +155,7 @@ class CensusStudent extends AppModel {
 				if($row['id'] == 0) {
 					$keys[strval($i+1)] = $save['CensusStudent']['id'];
 				}
-			} else if($row['id'] > 0 && $row['male'] == 0 && $row['female'] == 0) {
+			} else if($row['id'] > 0 && $row['male'] === '' && $row['female'] === '') {
 				$this->delete($row['id']);
 			}
 		}

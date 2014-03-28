@@ -17,9 +17,10 @@ echo $this->Html->script('jquery.sort', false);
          //echo $this->Html->link(__('Add Level / Column'), array('action' => 'rubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
     
       //  if (!empty($columnHeaderData)) {
+        if($_accessControl->check($this->params['controller'], 'rubricsTemplatesAdd')) {
             echo $this->Html->link(__('Add Header'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
             echo $this->Html->link(__('Add Criteria'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
-      //  }
+        }
         
         ?>
     </h1>
@@ -72,12 +73,11 @@ echo $this->Html->script('jquery.sort', false);
 </div>
 <?php
 //Addind auto insert function
-if ($_edit) {
+if($_accessControl->check($this->params['controller'], 'rubricsTemplatesEdit')) {
     if (!empty($columnHeaderData) && empty($this->data['RubricsTemplateDetail'])) {
 ?>
 <script type="text/javascript">
     <?php echo 'rubricsTemplate.initHeader(' . $rubricTemplateHeaderId . ');'; ?>
-    <?php echo 'rubricsTemplate.initRow(' . $rubricTemplateHeaderId . ');'; ?>
 </script>
 <?php
     }
