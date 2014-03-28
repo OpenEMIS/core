@@ -90,12 +90,12 @@ $obj = @$data['Teacher'];
 				<?php echo $this->Utility->getDatePicker($this->Form, 'date_of_birth', array('value' => $obj['date_of_birth'])); ?>
 			</div>
 		</div>
-                <div class="row">
+                <?php /*<div class="row">
 			<div class="label"><?php echo __('Date of Death'); ?></div>
 			<div class="value">
 				<?php echo $this->Utility->getDatePicker($this->Form, 'date_of_death', array('value' => $obj['date_of_death'], 'desc' => true, 'emptySelect' => true)); ?>
 			</div>
-		</div>
+		</div>*/ ?>
 		<div class="row">
 		    <div class="label"><?php echo __('Profile Image'); ?> </div>
 		    <div class="value">
