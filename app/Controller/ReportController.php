@@ -55,9 +55,7 @@ class ReportController extends AppController {
 		$myReport = $this->ReportTemplate->find('all', array('conditions' => array('security_user_id' => $this->Auth->user('id'))));
 		$this->set('globalReport', $globalReport);
 		$this->set('myReport', $myReport);
-		//pr($data);
-		//pr($this->data);
-		//var_dump($this->request->is('post'));//die;
+		/*
         if (empty($this->data)) {
             $modelIgnoreList = Configure::read('ReportManager.modelIgnoreList'); 
             
@@ -89,12 +87,17 @@ class ReportController extends AppController {
                 
             $this->redirect(array('action'=>'index'));
         }
+		*/
     }
 	
 	public function reportsNew() {
 		$models = array('Institution');//, 'InstitutionSite', 'CensusStudent', 'CensusTeacher', 'CensusStaff');
 		$models = array_combine($models,$models);
 		$this->set('models',$models);
+	}
+	
+	public function reportsView() {
+		
 	}
     
     public function ajaxGetOneToManyOptions() {
@@ -166,7 +169,7 @@ class ReportController extends AppController {
         $xls->buildXls($reportData,$fieldsList, $fieldsType, $oneToManyOption, $oneToManyFieldsList, $oneToManyFieldsType, $showNoRelated );
     }
  
-    public function saveReport($modelClass = null,$oneToManyOption = null) {
+    public function saveReport($modelClass = null, $oneToManyOption = null) {
         $content='$reportFields=';
         $content.= var_export($this->data,1);
         $content.=';';
@@ -175,25 +178,18 @@ class ReportController extends AppController {
             $reportName = str_replace('.', '_', $this->data['Report']['ReportName']);
             $reportName = str_replace(' ', '_', $this->data['Report']['ReportName']);
         } else {
-            $reportName = date('Ymd_His');
+            $reportName = $modelClass . '_Report_' . date('Ymd_His');
         }
+		$userId = $this->data['Report']['Type'] == 0 ? 0 : $this->Auth->user('id');
         
-		/*
-        $oneToManyOption = ( $oneToManyOption == '' ? $oneToManyOption : $oneToManyOption . '.' );
-        $fileName = $modelClass . '.' . $oneToManyOption . $reportName.".crp";
-        $file = new File(APP.$this->path.$fileName, true, 777);
-        $file->write($content,'w',true);
-        $file->close();
-		*/
 		$template = array(
-			'name' => 'test report',
-			'description' => 'test report',
+			'name' => $reportName,
+			'description' => $this->data['Report']['ReportDescription'],
 			'query' => $content,
 			'security_user_id' => $this->Auth->user('id')
 		);
 		$this->ReportTemplate->create();
 		$this->ReportTemplate->save($template);
-		//pr($content);die;
     }
 
     public function loadReport($fileName) {
@@ -254,9 +250,6 @@ class ReportController extends AppController {
                 }
             }             
         }
-
-       // $labelFieldList = Configure::read('ReportManager.labelFieldList');
-       // $this->set('labelFieldList',$labelFieldList);
         
         if (empty($this->data)) {        
             $displayForeignKeys = Configure::read('ReportManager.displayForeignKeys');
@@ -389,10 +382,8 @@ class ReportController extends AppController {
                                     }
 
                                     if ($parameters['Filter']=='LIKE')
-                                        //$example = '%'. mysql_real_escape_string($parameters['Example']) . '%';
                                         $example = '%'.$parameters['Example'] . '%';
                                     else
-                                        //$example = mysql_real_escape_string($parameters['Example']);
                                         $example = $parameters['Example'];
 
                                     $conditionsList[$model.'.'.$field.$criteria] = $example;
@@ -457,7 +448,6 @@ class ReportController extends AppController {
             $this->set('fieldsLength',$fieldsLength);
             $this->set('reportData',$reportData);
             $this->set('reportName',$this->data['Report']['ReportName']);
-            $this->set('reportStyle',$this->data['Report']['Style']);
 
             if ( $this->data['Report']['Output'] == 'html') {
                 if ($oneToManyOption == '')

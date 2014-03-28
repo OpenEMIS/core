@@ -7,10 +7,10 @@
 </title>
 <?php
     echo $this->Html->meta('icon');
-    echo $this->Html->css('report/generic');
-    //echo $this->Html->css('report/'.$reportStyle);
-	echo $this->Html->css('report/'.$reportStyle);
-    echo $scripts_for_layout;
+	echo $this->Html->css('style');
+	echo $this->Html->css('common');
+	echo $this->Html->css('body_common');
+	echo $this->Html->css('table');
 ?>
 </head>
 <body>
