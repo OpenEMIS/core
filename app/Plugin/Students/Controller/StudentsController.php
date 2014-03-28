@@ -55,6 +55,10 @@ class StudentsController extends StudentsAppController {
         'Students.StudentLanguage',
         'Students.StudentContact',
         'Students.StudentAward',
+        'Students.Guardian',
+        'Students.GuardianEducationLevel',
+        'Students.GuardianRelation',
+        'Students.StudentGuardian',
         'SchoolYear',
         'Country',
         'Language',
@@ -1166,6 +1170,110 @@ class StudentsController extends StudentsAppController {
         $this->Navigation->addCrumb(__('Identities'));
         $data = $this->StudentIdentity->find('all', array('conditions' => array('StudentIdentity.student_id' => $this->studentId)));
         $this->set('list', $data);
+    }
+    
+    public function guardians() {
+        $this->Navigation->addCrumb(__('Guardians'));
+        $data = $this->StudentGuardian->getGuardians($this->studentId);
+        $this->set('list', $data);
+    }
+    
+    public function guardiansAdd() {
+        $this->Navigation->addCrumb(__('Add Guardian'));
+        if ($this->request->is('post')) {
+            $data = $this->data;
+            $this->Guardian->create();
+            if($this->Guardian->saveAll($data, array('validate' => 'only'))){
+                if($this->Guardian->saveAll($data, array('validate' => false))){
+                    $guardianId = $this->Guardian->getInsertID();
+                    $data['StudentGuardian']['guardian_id'] = $guardianId;
+                    $data['StudentGuardian']['student_id'] = $this->studentId;
+                    
+                    $this->StudentGuardian->create();
+                    
+                    if($this->StudentGuardian->saveAll($data, array('validate' => 'only'))){
+                        if($this->StudentGuardian->saveAll($data, array('validate' => false))){
+                            $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                            $this->redirect(array('action' => 'guardians'));
+                        }
+                    }
+                }
+            }
+        }
+        
+        $genderOptions = array('M' => __('Male'), 'F' => __('Female'));
+        $relationshipOptions = $this->GuardianRelation->getOptions();
+        $educationOptions = $this->GuardianEducationLevel->getOptions();
+
+        $this->set('genderOptions', $genderOptions);
+        $this->set('relationshipOptions', $relationshipOptions);
+        $this->set('educationOptions', $educationOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function guardiansEdit() {
+        $guardianId = $this->params['pass'][0];
+        if ($this->request->is('get')) {
+            $guardianObj = $this->StudentGuardian->getGuardian($guardianId);
+            
+            if (!empty($guardianObj)) {
+                $this->Navigation->addCrumb(__('Edit Guardian Details'));
+                $this->request->data = $guardianObj;
+            }
+        } else {
+            $data = $this->data;
+            
+            if($this->Guardian->saveAll($data, array('validate' => 'only'))){
+                if($this->Guardian->saveAll($data, array('validate' => false))){
+                    $data['StudentGuardian']['student_id'] = $this->studentId;
+                    
+                    if($this->StudentGuardian->saveAll($data, array('validate' => 'only'))){
+                        if($this->StudentGuardian->saveAll($data, array('validate' => false))){
+                            $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                            $this->redirect(array('action' => 'guardiansView', $guardianId));
+                        }
+                    }
+                }
+            }
+        }
+
+        $genderOptions = array('M' => __('Male'), 'F' => __('Female'));
+        $relationshipOptions = $this->GuardianRelation->getOptions();
+        $educationOptions = $this->GuardianEducationLevel->getOptions();
+
+        $this->set('genderOptions', $genderOptions);
+        $this->set('relationshipOptions', $relationshipOptions);
+        $this->set('educationOptions', $educationOptions);
+
+        $this->set('guardianId', $guardianId);
+    }
+    
+    public function guardiansView() {
+        $guardianId = $this->params['pass'][0];
+        $guardianObj = $this->StudentGuardian->getGuardian($guardianId);
+
+        if (!empty($guardianObj)) {
+            //$guardianObj = $guardianResult[0];
+            //pr($guardianObj);
+            $this->Navigation->addCrumb(__('Guardian Details'));
+
+            $this->Session->write('guardianId', $guardianId);
+            $this->set('guardianObj', $guardianObj);
+        }else{
+            $this->redirect(array('action' => 'guardians'));
+        }
+    }
+    
+    public function guardiansDelete() {
+        if ($this->Session->check('StudentId') && $this->Session->check('guardianId')) {
+            $guardianId = $this->Session->read('guardianId');
+            $guardianObj = $this->StudentGuardian->getGuardian($guardianId);
+            //$guardianObj = $guardianResult[0];
+            $guardianName = $guardianObj['StudentGuardian']['first_name'] . ' ' . $guardianObj['StudentGuardian']['last_name'];
+            $this->StudentGuardian->delete($guardianId);
+            $this->Utility->alert($guardianName . __(' have been deleted successfully.'));
+            $this->redirect(array('action' => 'guardians'));
+        }
     }
 
     public function identitiesAdd() {
