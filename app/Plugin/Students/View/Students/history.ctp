@@ -153,7 +153,7 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
                 <?php } ?>
 			</div>
 		</div>
-                <div class="row">
+               <?php /* <div class="row">
 			<div class="label"><?php echo __('Date of Death'); ?></div>
 			<div class="value">
                 <span><?php echo $this->Utility->formatDate($data['Student']['date_of_death']); ?></span>
@@ -171,7 +171,7 @@ echo $this->Html->css('history', 'stylesheet', array('inline' => false));
                 </div>
                 <?php } ?>
 			</div>
-		</div>
+		</div> */ ?>
 	</fieldset>
 	<fieldset class="section_break">
 		<legend><?php echo __('Address'); ?></legend>
