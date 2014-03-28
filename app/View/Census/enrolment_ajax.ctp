@@ -1,34 +1,42 @@
 <?php
-$total = 0;
-if(!empty($enrolment) && !(sizeof($enrolment)==1 && $enrolment[0]['male']==0 && $enrolment[0]['female']==0)) {
+$gradesCount = count($grades);
 ?>
-<div class="table_body">
-	<?php 
-	$count = 0;
-	foreach($enrolment as $record) {
-		$count++;
-		$total += $record['male'] + $record['female'];
-		$record_tag="";
-		foreach ($source_type as $k => $v) {
-			if ($record['source']==$v) {
-				$record_tag = "row_" . $k;
-			}
-		}
+<table class="table">
+    <tbody>
+        <tr class="th_bg">
+            <td rowspan="2"><?php echo __('Age'); ?></td>
+            <td rowspan="2"><?php echo __('Gender'); ?></td>
+            <td colspan="<?php echo $gradesCount; ?>"><?php echo __('Grades'); ?></td>
+            <td colspan="2"><?php echo __('Totals'); ?></td>
+        </tr>
+        <tr class="th_bg">
+            <?php foreach ($grades AS $gradeName) { ?>
+                <td><?php echo $gradeName; ?></td>
+            <?php } ?>
+            <td></td>
+            <td><?php echo __('Both'); ?></td>
+        </tr>
 
-	?>
-	<div class="table_row <?php echo $count%2==0 ? 'even' : ''; ?>">
-		<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['age']; ?></div>
-		<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male']; ?></div>
-		<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['female']; ?></div>
-		<div class="table_cell cell_total cell_number <?php echo $record_tag; ?>"><?php echo $record['male'] + $record['female']; ?></div>
-	</div>
-	<?php } ?>
-</div>
-<?php } ?>
-
-<div class="table_foot">
-	<div class="table_cell"></div>
-	<div class="table_cell"></div>
-	<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
-	<div class="table_cell cell_value cell_number"><?php echo $total ?></div>
-</div>
+        <?php foreach ($dataRowsArr AS $row) { ?>
+            <?php if ($row['type'] == 'input') { ?>
+                <tr age="<?php echo $row['age'] ?>" gender="<?php echo $row['gender'] == 'M' ? 'male' : 'female'; ?>">
+                <?php } else { ?>
+                <tr>
+                <?php } ?>
+                <?php foreach ($row['data'] AS $dataKey => $dataValue) { ?>
+                    <?php if ($dataKey == 'grades') { ?>
+                        <?php foreach ($dataValue AS $gradeId => $censusValue) { ?>
+                            <td><?php echo $censusValue['value']; ?></td>
+                        <?php } ?>
+                    <?php }else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age'){?>
+                        <td rowspan="2"><?php echo $dataValue; ?></td>
+                    <?php } else if ($dataKey == 'colspan2') { ?>
+                        <td colspan="2"><?php echo $dataValue; ?></td>
+                    <?php } else { ?>
+                        <td><?php echo $dataValue; ?></td>
+                    <?php } ?>
+                <?php } ?>
+            </tr>
+        <?php } ?>
+    </tbody>
+</table>

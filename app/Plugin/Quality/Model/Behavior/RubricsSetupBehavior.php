@@ -15,61 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class RubricsSetupBehavior extends ModelBehavior {
-	/*public $defaultNoOfColumes = 3;
-	
-	public function insertRubricHeader(Model $model, $data = NULL, $mode = 'edit'){
-		$content = 'asd';
-		
-		
-		$display = '<tr>
-						<td class="leftColNav">asd</td>
-						<td colspan="'.$this->defaultNoOfColumes.'">'.$content.'</td>
-					</tr>';
-		
-		return $display;
-	}
-	
-	public function insertRubricQuestionRow(Model $model){
-		$display = '<tr>
-						<td rowspan="8" class="leftColNav">asd</td>
-						<td class="colHeader">Action</td>
-						<td class="colHeader">X</td>
-						<td class="colHeader">X</td>
-					</tr>
-					<tr>
-						<td class="colHeader">Criteria</td>
-						<td class="colHeader" colspan="'.($this->defaultNoOfColumes-1).'">Descriptors</td>
-					</tr>
-					<tr>
-						<td class="colHeader">Level</td>
-						<td>Good</td>
-						<td>Bad</td>
-					</tr>
-					<tr>
-						<td>asd</td>
-						<td>asd</td>
-						<td>asd</td>
-					</tr>
-					<tr>
-						<td>asd</td>
-						<td>asd</td>
-						<td>asd</td>
-					</tr>
-					<tr>
-						<td>asd</td>
-						<td>asd</td>
-						<td>asd</td>
-					</tr>
-					<tr>
-						<td class="colHeader" colspan="'.$this->defaultNoOfColumes.'">Weighthings</td>
-					</tr>
-					<tr>
-						<td>asd</td>
-						<td>asd</td>
-						<td>asd</td>
-					</tr>';
-		
-		return $display;
-	}*/
+
 }
 ?>

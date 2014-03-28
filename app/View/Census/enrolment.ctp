@@ -1,6 +1,7 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
+echo $this->Html->css('report', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
 
@@ -39,23 +40,10 @@ echo $this->Html->script('census_enrolment', false);
 	</div>
 	
 	<?php foreach($data as $key => $obj) { ?>
-	<fieldset class="section_group" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>">
+	<fieldset class="section_group table_scrollable scroll_active report" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
 		<legend><?php echo $obj['name']; ?></legend>
 		
 		<div class="row" style="margin-bottom: 15px;">
-			<div class="label grade"><?php echo __('Grade'); ?></div>
-			<div class="value grade">
-			<?php
-				echo $this->Form->input('education_grade_id', array(
-					'id' => 'EducationGradeId',
-					'label' => false,
-					'div' => false,
-					'options' => $obj['grades'],
-					'onchange' => 'CensusEnrolment.get(this)',
-					'autocomplete' => 'off'
-				));
-			?>
-			</div>
 			<div class="label category"><?php echo __('Category'); ?></div>
 			<div class="value category">
 			<?php
@@ -70,49 +58,50 @@ echo $this->Html->script('census_enrolment', false);
 			?>
 			</div>
 		</div>
-		
-		<div class="table">
-			<div class="table_head">
-				<div class="table_cell"><?php echo __('Age'); ?></div>
-				<div class="table_cell"><?php echo __('Male'); ?></div>
-				<div class="table_cell"><?php echo __('Female'); ?></div>
-				<div class="table_cell"><?php echo __('Total'); ?></div>
-			</div>
-			
-			<?php 
-			$total = 0;
-			$records = $obj['enrolment'];
-			if(!empty($records) && !(sizeof($records)==1 && $records[0]['male']==0 && $records[0]['female']==0)) {
-			?>
-			<div class="table_body">
-				<?php
-				foreach($records as $record) {
-					$total += $record['male'] + $record['female'];
-					$record_tag="";
-
-					foreach ($source_type as $k => $v) {
-						if ($record['source']==$v) {
-							$record_tag = "row_" . $k;
-						}
-					}
-				?>
-				<div class="table_row">
-					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['age']; ?></div>
-					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male']; ?></div>
-					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['female']; ?></div>
-					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male'] + $record['female']; ?></div>
-				</div>
-				<?php } // end foreach (records) ?>
-			</div>
-			<?php } ?>
-			
-			<div class="table_foot">
-				<div class="table_cell"></div>
-				<div class="table_cell"></div>
-				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
-				<div class="table_cell cell_value cell_number"><?php echo $total ?></div>
-			</div>
-		</div>
+		<?php 
+                    $gradesCount = count($obj['grades']);
+                ?>
+                <div class="list_wrapper ajaxContentHolder">
+                    <table class="table">
+                        <tbody>
+                            <tr class="th_bg">
+                                <td rowspan="2"><?php echo __('Age'); ?></td>
+                                <td rowspan="2"><?php echo __('Gender'); ?></td>
+                                <td colspan="<?php echo $gradesCount; ?>"><?php echo __('Grades'); ?></td>
+                                <td colspan="2"><?php echo __('Totals'); ?></td>
+                            </tr>
+                            <tr class="th_bg">
+                                <?php foreach($obj['grades'] AS $gradeName){?>
+                                    <td><?php echo $gradeName; ?></td>
+                                <?php } ?>
+                                <td></td>
+                                <td><?php echo __('Both'); ?></td>
+                            </tr>
+                            
+                            <?php foreach($obj['dataRowsArr'] AS $row){?>
+                                <?php if($row['type'] == 'input'){?>
+                                    <tr age="<?php echo $row['age'] ?>" gender="<?php echo $row['gender'] == 'M' ? 'male' : 'female'; ?>">
+                                <?php }else{?>
+                                    <tr>
+                                <?php }?>
+                                    <?php foreach($row['data'] AS $dataKey => $dataValue){?>
+                                        <?php if($dataKey == 'grades'){?>
+                                            <?php foreach($dataValue AS $gradeId => $censusValue){?>
+                                                <td><?php echo $censusValue['value']; ?></td>
+                                            <?php }?>
+                                        <?php }else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age'){?>
+                                            <td rowspan="2"><?php echo $dataValue; ?></td>
+                                        <?php }else if($dataKey == 'colspan2'){?>
+                                            <td colspan="2"><?php echo $dataValue; ?></td>
+                                        <?php }else{?>
+                                            <td><?php echo $dataValue; ?></td>
+                                        <?php }?>
+                                    <?php }?>
+                                </tr>
+                            <?php }?>
+                        </tbody>
+                    </table>
+                </div>
 	</fieldset>
 	<?php } // end foreach (data) ?>
 </div>
