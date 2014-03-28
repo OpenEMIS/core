@@ -21,8 +21,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	</h1>
 	
 	<fieldset class="section_group">
-		<legend><?php echo __('All Reports'); ?></legend>
-		<table class="table" >
+		<legend><?php echo __('System Reports'); ?></legend>
+		<table class="table">
 			<thead>
 				<tr>
 					<td>Name</td>
