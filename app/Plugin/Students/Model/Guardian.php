@@ -27,7 +27,6 @@ class Guardian extends StudentsAppModel {
             'foreignKey' => 'created_user_id'
         )
     );
-    
     //public $hasMany = array('StudentGuardian');
 
     public $validate = array(
@@ -57,14 +56,21 @@ class Guardian extends StudentsAppModel {
     public function getGuardian($guardianId) {
         $data = $this->find('first', array(
             'recursive' => -1,
-            'fields' => array('StudentGuardian.*', 'StudentGuardianRelationship.*', 'StudentGuardianEducation.*', 'CreatedUser.*', 'ModifiedUser.*'),
+            'fields' => array('Guardian.*', 'StudentGuardian.*', 'GuardianEducationLevel.*', 'GuardianRelation.*', 'CreatedUser.*', 'ModifiedUser.*'),
             'joins' => array(
+                array(
+                    'table' => 'student_guardians',
+                    'alias' => 'StudentGuardian',
+                    'conditions' => array(
+                        'Guardian.student_guardian_relationship_id = StudentGuardianRelationship.id'
+                    )
+                ),
                 array(
                     'table' => 'student_guardian_relationships',
                     'alias' => 'StudentGuardianRelationship',
                     'type' => 'LEFT',
                     'conditions' => array(
-                        'StudentGuardian.student_guardian_relationship_id = StudentGuardianRelationship.id'
+                        'Guardian.student_guardian_relationship_id = StudentGuardianRelationship.id'
                     )
                 ),
                 array(
@@ -72,7 +78,7 @@ class Guardian extends StudentsAppModel {
                     'alias' => 'StudentGuardianEducation',
                     'type' => 'LEFT',
                     'conditions' => array(
-                        'StudentGuardian.student_guardian_education_id = StudentGuardianEducation.id'
+                        'Guardian.student_guardian_education_id = StudentGuardianEducation.id'
                     )
                 ),
                 array(
@@ -80,7 +86,7 @@ class Guardian extends StudentsAppModel {
                     'alias' => 'CreatedUser',
                     'type' => 'LEFT',
                     'conditions' => array(
-                        'StudentGuardian.created_user_id = CreatedUser.id'
+                        'Guardian.created_user_id = CreatedUser.id'
                     )
                 ),
                 array(
@@ -88,7 +94,7 @@ class Guardian extends StudentsAppModel {
                     'alias' => 'ModifiedUser',
                     'type' => 'LEFT',
                     'conditions' => array(
-                        'StudentGuardian.modified_user_id = ModifiedUser.id'
+                        'Guardian.modified_user_id = ModifiedUser.id'
                     )
                 )
             ),
@@ -141,6 +147,81 @@ class Guardian extends StudentsAppModel {
             )
         ));
 
+        return $data;
+    }
+
+    public function getAutoCompleteList($search, $student_id = 0) {
+        $search = sprintf('%%%s%%', $search);
+        $invalidIds = array();
+        
+        if($student_id !== 0){
+            $invalidGuardians = $this->find('all', array(
+                'recursive' => -1,
+                'fields' => array('DISTINCT Guardian.id'),
+                'joins' => array(
+                    array(
+                        'table' => 'student_guardians',
+                        'alias' => 'StudentGuardian',
+                        'conditions' => array('Guardian.id = StudentGuardian.guardian_id')
+                    )
+                ),
+                'conditions' => array(
+                    'StudentGuardian.student_id' => $student_id
+                )
+            ));
+            
+            foreach($invalidGuardians AS $obj){
+                $invalidIds[] = $obj['Guardian']['id'];
+            }
+        }
+        
+        if(empty($invalidIds)){
+            $list = $this->find('all', array(
+                'recursive' => -1,
+                'fields' => array('Guardian.*'),
+                'conditions' => array(
+                    'OR' => array(
+                        'Guardian.first_name LIKE' => $search,
+                        'Guardian.last_name LIKE' => $search
+                    )
+                ),
+                'order' => array('Guardian.first_name', 'Guardian.last_name')
+            ));
+        }else{
+            $list = $this->find('all', array(
+                'recursive' => -1,
+                'fields' => array('Guardian.*'),
+                'conditions' => array(
+                    "NOT" => array('Guardian.id' => $invalidIds),
+                    'OR' => array(
+                        'Guardian.first_name LIKE' => $search,
+                        'Guardian.last_name LIKE' => $search
+                    )
+                ),
+                'order' => array('Guardian.first_name', 'Guardian.last_name')
+            ));
+        }
+
+        $data = array();
+        foreach ($list as $obj) {
+            $guardian = $obj['Guardian'];
+            $data[] = array(
+                'label' => sprintf('%s %s', $guardian['first_name'], $guardian['last_name']),
+                'value' => $guardian['id'],
+                'first_name' => $guardian['first_name'],
+                'last_name' => $guardian['last_name'],
+                'gender' => $guardian['gender'],
+                'email' => $guardian['email'],
+                'home_phone' => $guardian['home_phone'],
+                'office_phone' => $guardian['office_phone'],
+                'mobile_phone' => $guardian['mobile_phone'],
+                'address' => $guardian['address'],
+                'postal_code' => $guardian['postal_code'],
+                'occupation' => $guardian['occupation'],
+                'comments' => $guardian['comments'],
+                'guardian_education_level_id' => $guardian['guardian_education_level_id']
+            );
+        }
         return $data;
     }
 

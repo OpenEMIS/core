@@ -39,7 +39,7 @@ class StudentGuardian extends StudentsAppModel {
         )
     );
 
-    public function getGuardian($guardianId) {
+    public function getGuardian($guardianId, $studentId) {
         $data = $this->find('first', array(
             'recursive' => -1,
             'fields' => array('Guardian.*', 'StudentGuardian.*', 'GuardianRelation.*', 'GuardianEducationLevel.*', 'CreatedUser.*', 'ModifiedUser.*'),
@@ -83,9 +83,11 @@ class StudentGuardian extends StudentsAppModel {
                     )
                 )
             ),
-            'conditions' => array('StudentGuardian.id' => $guardianId)
+            'conditions' => array(
+                'StudentGuardian.guardian_id' => $guardianId,
+                'StudentGuardian.student_id' => $studentId
+             )
         ));
-
         return $data;
     }
 

@@ -26,7 +26,10 @@ echo $this->Html->script('search', false);
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
-
+    <div class="row">
+        <div class="label"><?php echo __('Relationship'); ?></div>
+        <div class="value"><?php echo $dataRelationship['name']; ?></div>
+    </div>
     <div class="row">
         <div class="label"><?php echo __('First Name'); ?></div>
         <div class="value"><?php echo $dataGuardian['first_name']; ?></div>
@@ -38,10 +41,6 @@ echo $this->Html->script('search', false);
     <div class="row">
         <div class="label"><?php echo __('Gender'); ?></div>
         <div class="value"><?php echo $this->Utility->formatGender($dataGuardian['gender']); ?></div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Relationship'); ?></div>
-        <div class="value"><?php echo $dataRelationship['name']; ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Mobile Phone'); ?></div>
@@ -64,8 +63,8 @@ echo $this->Html->script('search', false);
         <div class="value"><?php echo nl2br($dataGuardian['address']); ?></div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Post Code'); ?></div>
-        <div class="value"><?php echo $dataGuardian['post_code']; ?></div>
+        <div class="label"><?php echo __('Postal Code'); ?></div>
+        <div class="value"><?php echo $dataGuardian['postal_code']; ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Occupation'); ?></div>
