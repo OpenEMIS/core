@@ -1,6 +1,10 @@
 <?php echo $this->element('breadcrumb'); ?>
-<?php echo $this->Html->script('app.date', false); ?>
-
+<?php 
+echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
+echo $this->Html->script('jquery-ui.min', false);
+echo $this->Html->script('guardian', false);
+echo $this->Html->script('app.date', false);
+?>
 <div id="guardians" class="content_wrapper edit add">
     <h1>
         <span><?php echo __('Guardians'); ?></span>
@@ -17,9 +21,15 @@
         'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
     ));
     ?>
+    <?php $obj = @$this->request->data; ?>
+    <?php echo $this->Form->input('Guardian.existing_id', array('type' => 'hidden', 'value' => isset($obj['Guardian']['existing_id']) ? $obj['Guardian']['existing_id'] : 0)); ?>
     <div class="row">
         <div class="label"><?php echo __('Search'); ?></div>
         <div class="value"><?php echo $this->Form->input('Search.guardian_name'); ?></div>
+    </div>
+    <div class="row">
+        <div class="label"><?php echo __('Relationship'); ?></div>
+        <div class="value"><?php echo $this->Form->input('StudentGuardian.guardian_relation_id', array('empty' => __('--Select--'), 'options' => $relationshipOptions)); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('First Name'); ?></div>
@@ -32,10 +42,6 @@
     <div class="row">
         <div class="label"><?php echo __('Gender'); ?></div>
         <div class="value"><?php echo $this->Form->input('Guardian.gender', array('empty' => __('--Select--'), 'options' => $genderOptions)); ?></div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Relationship'); ?></div>
-        <div class="value"><?php echo $this->Form->input('StudentGuardian.guardian_relation_id', array('empty' => __('--Select--'), 'options' => $relationshipOptions)); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Mobile Phone'); ?></div>
@@ -58,8 +64,8 @@
         <div class="value"><?php echo $this->Form->input('Guardian.address', array('type' => 'textarea')); ?></div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Post Code'); ?></div>
-        <div class="value"><?php echo $this->Form->input('Guardian.post_code'); ?></div>
+        <div class="label"><?php echo __('Postal Code'); ?></div>
+        <div class="value"><?php echo $this->Form->input('Guardian.postal_code'); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Occupation'); ?></div>
