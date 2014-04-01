@@ -14,7 +14,7 @@ echo $this->Html->script(array('report/jquery.smartWizard-2.0.js','report/defaul
 	<h1>
 		<span><?php echo __('Custom Reports'); ?></span>
 		<?php
-		echo $this->Html->link(__('Back'), array('action' => 'reportsNew'), array('class' => 'divider'));
+		echo $this->Html->link(__('Back'), array('action' => 'index'), array('class' => 'divider'));
 		?>
 	</h1>
 	

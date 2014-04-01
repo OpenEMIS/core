@@ -55,7 +55,7 @@ class ReportController extends AppController {
 		$myReport = $this->ReportTemplate->find('all', array('conditions' => array('security_user_id' => $this->Auth->user('id'))));
 		$this->set('globalReport', $globalReport);
 		$this->set('myReport', $myReport);
-		/*
+		
         if (empty($this->data)) {
             $modelIgnoreList = Configure::read('ReportManager.modelIgnoreList'); 
             
@@ -81,13 +81,12 @@ class ReportController extends AppController {
                 
             if (isset($this->data['load'])) {
                 $reportButton = 'load';
-                $fileName = $this->data['Report']['saved_report_option'];
-                $this->redirect(array('action'=>'reportsWizard',$reportButton, urlencode($fileName)));                
+                $reportId = $this->data['Report']['id'];
+                $this->redirect(array('action'=>'reportsWizard', $reportButton, $reportId));                
             }
                 
             $this->redirect(array('action'=>'index'));
         }
-		*/
     }
 	
 	public function reportsNew() {
@@ -96,8 +95,13 @@ class ReportController extends AppController {
 		$this->set('models',$models);
 	}
 	
-	public function reportsView() {
-		
+	public function reportsView($id=null) {
+		if(!is_null($id)) {
+			$data = $this->ReportTemplate->findById($id);
+			$this->set('data', $data);
+		} else {
+			return $this->redirect(array('action' => 'index'));
+		}
 	}
     
     public function ajaxGetOneToManyOptions() {
@@ -185,17 +189,30 @@ class ReportController extends AppController {
 		$template = array(
 			'name' => $reportName,
 			'description' => $this->data['Report']['ReportDescription'],
-			'query' => $content,
-			'security_user_id' => $this->Auth->user('id')
+			'model' => $modelClass,
+			'query' => $content
 		);
-		$this->ReportTemplate->create();
+		
+		if(isset($this->data['Report']['id'])) {
+			$template['id'] = $this->data['Report']['id'];
+		} else {
+			$this->ReportTemplate->create();
+			$template['security_user_id'] = $this->Auth->user('id');
+		}
 		$this->ReportTemplate->save($template);
     }
 
-    public function loadReport($fileName) {
+    public function loadReport($id) {
         //require(APP.$this->path.$fileName);
-        $this->data = $reportFields;
-        $this->set($this->data);
+		if($this->ReportTemplate->exists($id)) {
+			$template = $this->ReportTemplate->findById($id);
+			$query = $template['ReportTemplate']['query'];
+			eval($query);
+			$this->data = $reportFields;
+        	$this->set($this->data);
+		} else {
+			return $this->redirect(array('action' => 'index'));
+		}
     }
 
     public function deleteReport($fileName) {
@@ -236,24 +253,25 @@ class ReportController extends AppController {
             $modelClass = $param2;
             $oneToManyOption = $param3;
         }
-        
+		
         if ( $reportAction == "load" ) {
-            $fileName = urldecode($param2);            
-
+            $fileName = urldecode($param2);
+			$modelClass = $this->ReportTemplate->field('model', array('id' => $param2));
+			/*
             if ($fileName!='') {
                 $params = explode('.', $fileName);
                 if (count($params)>=3) {
                     $modelClass = $params[0];
                     if (count($params)>3) {
                         $oneToManyOption = $params[1];
-                    } 
+                    }
                 }
-            }             
+            }
+			*/
         }
         
         if (empty($this->data)) {        
             $displayForeignKeys = Configure::read('ReportManager.displayForeignKeys');
-            $globalFieldIgnoreList = Configure::read('ReportManager.globalFieldIgnoreList');
             $modelFieldIgnoreList = Configure::read('ReportManager.modelFieldIgnoreList');
 			
             $this->loadModel($modelClass);

@@ -32,7 +32,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			<tbody>
 				<?php foreach($globalReport as $obj) : ?>
 				<tr>
-					<td><?php echo $obj['ReportTemplate']['name']; ?></td>
+					<td><?php echo $this->Html->link($obj['ReportTemplate']['name'], array('action' => 'reportsView', $obj['ReportTemplate']['id'])); ?></td>
 					<td><?php echo $obj['ReportTemplate']['description']; ?></td>
 				</tr>
 				<?php endforeach; ?>
@@ -52,7 +52,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 			<tbody>
 				<?php foreach($myReport as $obj) : ?>
 				<tr>
-					<td><?php echo $obj['ReportTemplate']['name']; ?></td>
+					<td><?php echo $this->Html->link($obj['ReportTemplate']['name'], array('action' => 'reportsView', $obj['ReportTemplate']['id'])); ?></td>
 					<td><?php echo $obj['ReportTemplate']['description']; ?></td>
 				</tr>
 				<?php endforeach; ?>
