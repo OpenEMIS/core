@@ -361,3 +361,6 @@ a.btn:hover { text-decoration: none; }
 .history .row { border-bottom: 1px dotted #DEDEDE; padding-bottom: 10px; margin-bottom: 10px; }
 .history .row.last { border: 0; padding-bottom: 0; margin-bottom: 0; }
 .history .cell_value { width: 360px; }
+.readonly{
+    color: #898989;
+}
