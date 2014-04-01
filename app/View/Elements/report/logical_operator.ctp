@@ -1,4 +1,3 @@
-    <!-- Copyright (c) 2012-2013 Luis E. S. Dias - www.smartbyte.com.br -->
     <fieldset>
         <legend><?php echo __d('report_manager','Logical Operator'); ?></legend>
         <table class="reportManagerLogicalOperatorSelector" cellpadding="0" cellspacing="0">
