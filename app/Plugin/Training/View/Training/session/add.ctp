@@ -12,7 +12,6 @@ echo $this->Html->script('jquery-ui.min', false);
 		<?php
 		
             echo $this->Html->link(__('Back'), array('action' => 'session'), array('class' => 'divider'));
-        
 		?>
 	</h1>
 	

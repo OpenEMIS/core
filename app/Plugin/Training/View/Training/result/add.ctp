@@ -11,7 +11,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		<?php
 		
             echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider'));
-        
+          	echo $this->Html->link(__('Download Template'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
+          	echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider'));
 		?>
 	</h1>
 	
