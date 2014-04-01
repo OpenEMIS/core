@@ -664,8 +664,8 @@ class InstitutionSitesController extends AppController {
                 ),
                 'InstitutionSiteClass' => array(
                     'name' => 'Class Name',
-                    'no_of_seats' => 'Number of Seats',
-                    'no_of_shifts' => 'Number of Shifts'
+                    'no_of_seats' => 'Seats',
+                    'no_of_shifts' => 'Shift'
                 )
             ),
             'FileName' => 'Report_Class_List'
@@ -1610,11 +1610,23 @@ class InstitutionSitesController extends AppController {
                         break;
                     }
                 }
+                
+                $shiftMax = intval($this->ConfigItem->getValue('no_of_shifts'));
+                $shiftOptions = array();
+                if($shiftMax > 1){
+                    for($i=1; $i <= $shiftMax; $i++){
+                        $shiftOptions[$i] = $i;
+                    }
+                }else{
+                    $shiftOptions[1] = 1;
+                }
+                //pr($shiftOptions);
 
                 $this->set('yearOptions', $yearOptions);
                 $this->set('programmeOptions', $programmeOptions);
                 $this->set('selectedProgramme', $selectedProgramme);
                 $this->set('gradeOptions', $gradeOptions);
+                $this->set('shiftOptions', $shiftOptions);
             } else {
                 $this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
             }
@@ -1668,7 +1680,7 @@ class InstitutionSitesController extends AppController {
 
             $this->set('subjects', $subjects);
         } else {
-            $this->redirect(array('action' => 'classesList'));
+            $this->redirect(array('action' => 'classes'));
         }
     }
 
@@ -1677,6 +1689,15 @@ class InstitutionSitesController extends AppController {
         $classObj = $this->InstitutionSiteClass->getClass($classId);
 
         if (!empty($classObj)) {
+            if ($this->request->is('post')) {
+                $data = $this->data['InstitutionSiteClass'];
+                $data['id'] = $classId;
+                //pr($data);
+                $this->InstitutionSiteClass->save($data);
+                //$this->Utility->alert($this->Utility->getMessage('UPDATE_SUCCESS'));
+                $this->redirect(array('action' => 'classesView', $classId));
+            }
+            
             $className = $classObj['InstitutionSiteClass']['name'];
             $this->Navigation->addCrumb(__('Edit') . ' ' . $className);
 
@@ -1685,6 +1706,17 @@ class InstitutionSitesController extends AppController {
             $teachers = $this->InstitutionSiteClassTeacher->getTeachers($classId);
             $subjects = $this->InstitutionSiteClassSubject->getSubjects($classId);
             $studentCategoryOptions = $this->StudentCategory->findList(true);
+            
+            $shiftMax = intval($this->ConfigItem->getValue('no_of_shifts'));
+            $shiftOptions = array();
+            if($shiftMax > 1){
+                for($i=1; $i <= $shiftMax; $i++){
+                    $shiftOptions[$i] = $i;
+                }
+            }else{
+                $shiftOptions[1] = 1;
+            }
+            //pr($shiftOptions);
 
             $this->set('classId', $classId);
             $this->set('className', $className);
@@ -1694,11 +1726,12 @@ class InstitutionSitesController extends AppController {
             $this->set('teachers', $teachers);
             $this->set('no_of_seats', $classObj['InstitutionSiteClass']['no_of_seats']);
             $this->set('no_of_shifts', $classObj['InstitutionSiteClass']['no_of_shifts']);
+            $this->set('shiftOptions', $shiftOptions);
             $this->set('studentCategoryOptions', $studentCategoryOptions);
 
             $this->set('subjects', $subjects);
         } else {
-            $this->redirect(array('action' => 'classesList'));
+            $this->redirect(array('action' => 'classes'));
         }
     }
 
@@ -3098,7 +3131,7 @@ class InstitutionSitesController extends AppController {
             $this->set('grades', $grades);
             $this->set('students', $students);
         } else {
-            $this->redirect(array('action' => 'classesList'));
+            $this->redirect(array('action' => 'classes'));
         }
     }
 
@@ -3121,7 +3154,7 @@ class InstitutionSitesController extends AppController {
                 $this->set('grades', $grades);
                 $this->set('students', $students);
             } else {
-                $this->redirect(array('action' => 'classesList'));
+                $this->redirect(array('action' => 'classes'));
             }
         } else {
             $classId = $this->Session->read('InstitutionSiteClassId');
