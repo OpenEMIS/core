@@ -21,35 +21,11 @@ class ReportsNavigationComponent extends Component {
 		$this->controller =& $controller;
 	}
 	
-	public function getLinks($navigation) {
+	public function getLinks($navigationComponent) {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Report', true);
+		$navigationComponent->ignoreLinks($links, 'Reports');
 		return array('Reports' => array('controller' => 'Reports', 'action' => 'Institution', 'links' => $links));
 	}
-/*
-	public function getLinks($navigation) {
-		$controller = 'Reports';
-		$links = array(
-			array(
-				array(
-					$navigation->createLink('Institution Reports', $controller, 'Institution'),
-					$navigation->createLink('Student Reports', $controller, 'Student'),
-					$navigation->createLink('Teacher Reports', $controller, 'Teacher'),
-					$navigation->createLink('Staff Reports', $controller, 'Staff'),
-					$navigation->createLink('Training Reports', $controller, 'Training'),
-					$navigation->createLink('Quality Assurance Reports', $controller, 'QualityAssurance'),
-					$navigation->createLink('Consolidated Reports', $controller, 'Consolidated'),
-                    $navigation->createLink('Data Quality Reports', $controller, 'DataQuality'),
-                    $navigation->createLink('Indicator Reports', $controller, 'Indicator'),
-//					$navigation->createLink('Indicator Reports', $controller, 'Indicator'),
-					$navigation->createLink('Custom Reports', 'Report', 'index', 'index|^reports|^wizard')//,
-                    //$navigation->createLink('OLAP Reports', 'olap')//,
-					//$navigation->createLink('Ad Hoc Reports', 'adhoc/', array('pattern' => 'index$'))
-				)
-			)
-		);
-		$navigation->ignoreLinks($links, 'Reports');
-		return array('Reports' => array('controller' => $controller, 'action' => 'Institution', 'links' => $links));
-	}*/
 }
 ?>

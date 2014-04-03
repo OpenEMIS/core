@@ -52,11 +52,6 @@ class ReportController extends AppController {
         $this->Navigation->addCrumb('Reports', array('controller' => 'Reports', 'action' => 'index'));
 		$this->Navigation->addCrumb('Custom Reports');
     }
-	
-	// For Shared Reports Permission
-	public function sharedReportView() {}
-	public function sharedReportView() {}
-	// End Shared Reports Permission
     
     public function index() {
 		$globalReport = $this->ReportTemplate->find('all', array('conditions' => array('security_user_id' => 0)));

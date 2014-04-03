@@ -181,7 +181,8 @@ class NavigationComponent extends Component {
 					if(isset($obj['controller'])) {
 						$controller = $obj['controller'];
 						$action = $obj['action'];
-						$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
+						$plugin = is_null($obj['plugin']) ? false : $obj['plugin'];
+						$this->ignoredLinks[$module][] = array('plugin' => $plugin, 'controller' => $controller, 'action' => $action);
 						$this->AccessControl->ignore($controller, $action);
 					}
 				}
