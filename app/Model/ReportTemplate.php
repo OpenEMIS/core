@@ -14,18 +14,8 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-class ReportsNavigationComponent extends Component {
-	private $controller;
+App::uses('AppModel', 'Model');
+
+class ReportTemplate extends AppModel {
 	
-	public function initialize(Controller $controller) {
-		$this->controller =& $controller;
-	}
-	
-	public function getLinks($navigationComponent) {
-		$navigation = ClassRegistry::init('Navigation');
-		$links = $navigation->getByModule('Report', true);
-		$navigationComponent->ignoreLinks($links, 'Reports');
-		return array('Reports' => array('controller' => 'Reports', 'action' => 'Institution', 'links' => $links));
-	}
 }
-?>
