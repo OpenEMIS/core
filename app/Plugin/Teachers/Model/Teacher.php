@@ -41,7 +41,8 @@ class Teacher extends TeachersAppModel {
 				'Teachers.TeacherQualification',
 				'Teachers.TeacherTraining'
 			)
-		)
+		),
+		'CustomReport'
 	);
 
 	public $validate = array(
