@@ -1,7 +1,3 @@
-<?php 
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-?>
-
 <?php echo $this->element('breadcrumb'); ?>
 
 <div class="content_wrapper">
@@ -14,14 +10,13 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         }
         ?>
     </h1>
-    <?php echo $this->element('alert'); ?>
-    <?php 
+    <?php
+	echo $this->element('alert');
 	echo $this->Form->create('Report', array(
-		'url' => array('controller' => 'Report', 'action' => 'index'), 
+		'target' => 'blank',
+		'url' => array('controller' => 'Report', 'action' => 'reportsWizard', 'load', $data['ReportTemplate']['id']), 
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
-	echo $this->Form->hidden('load', array('name' => 'load', 'value' => '1'));
-	echo $this->Form->hidden('id', array('value' => $data['ReportTemplate']['id']));
 	?>
     <div class="row">
         <div class="label"><?php echo __('Name'); ?></div>
@@ -33,9 +28,13 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         <div class="value"><?php echo $data['ReportTemplate']['description']; ?></div>
     </div>
 	
+	<div class="row">
+        <div class="label"><?php echo __('Format'); ?></div>
+        <div class="value"><?php echo $this->Form->input('Output', array('label' => false, 'class' => 'default', 'options' => $outputOptions)); ?></div>
+    </div>
+	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __('Run'); ?>" class="btn_save btn_right" />
 	</div>
-	
 	<?php echo $this->Form->end() ;?>
 </div>
