@@ -31,7 +31,11 @@ class ReportController extends AppController {
     public $helpers = array('Number');
     public $path = null;
 	public $models = array(
-		'InstitutionSite', 'Student', 'Teacher', 'Staff', 'CensusStudent'
+		'InstitutionSite' => 'Institution Site', 
+		'Students.Student' => 'Student', 
+		'Teachers.Teacher' => 'Teacher', 
+		'Staff.Staff' => 'Staff', 
+		'CensusStudent' => 'Census Student'
 	);
     
     public function __construct( $request = NULL, $response = NULL ) {
@@ -64,7 +68,7 @@ class ReportController extends AppController {
             
             //$models = App::objects('Model');
 			$models = $this->models;
-            $models = array_combine($models,$models);
+            //$models = array_combine($models,$models);
             
             if ( isset($modelIgnoreList) && is_array($modelIgnoreList)) {
                 foreach ($modelIgnoreList as $model) {
@@ -94,8 +98,8 @@ class ReportController extends AppController {
 	
 	public function reportsNew() {
 		$models = $this->models;
-		$models = array_combine($models,$models);
-		$this->set('models',$models);
+		//$models = array_combine($models,$models);
+		$this->set('models', $models);
 	}
 	
 	public function reportsView($id=null) {
@@ -283,6 +287,10 @@ class ReportController extends AppController {
             $modelFieldIgnoreList = Configure::read('ReportManager.modelFieldIgnoreList');
 			
             $this->loadModel($modelClass);
+			if(strpos($modelClass, '.') !== false) {
+				$split = explode('.', $modelClass);
+				$modelClass = $split[1];
+			}
             $modelSchema = $this->{$modelClass}->schema();
 			
 			$excludeFields = $this->{$modelClass}->getExcludedFields();
@@ -342,6 +350,10 @@ class ReportController extends AppController {
             $this->set('oneToManyOption',$oneToManyOption);
         } else {
             $this->loadModel($modelClass);
+			if(strpos($modelClass, '.') !== false) {
+				$split = explode('.', $modelClass);
+				$modelClass = $split[1];
+			}
             $associatedModels = $this->{$modelClass}->getAssociated();
             $oneToManyOption = $this->data['Report']['OneToManyOption'];
             
