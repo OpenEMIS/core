@@ -60,21 +60,24 @@ class Excel {
     public function buildXls(&$reportData = array(),&$fieldList=array(), &$fieldsType=array(), &$oneToManyOption=null, &$oneToManyFieldsList=null, &$oneToManyFieldsType = null, &$showNoRelated = false) {
         $this->sendHeaders();
         $row = 0;
-        $col = 0;         
+        $col = 0;
+		
         if (!empty($reportData)):
             $this->xlsBOF();
             foreach ($reportData as $reportItem): 
                 if ( $oneToManyOption !='' && !$showNoRelated && count($reportItem[$oneToManyOption])==0 )
                     continue;
                 if ( $row == 0 ) {
-                    $col = 0;                        
+                    $col = 0;
                     foreach ($fieldList as $field): 
+						$modelClass = substr($field, 0, strpos($field, '.'));
+						$modelClass = Inflector::humanize(Inflector::underScore($modelClass));
                         $displayField = substr($field, strpos($field, '.')+1);
                         $displayField = str_replace('_', ' ', $displayField);
-                        $displayField = ucfirst($displayField);
+                        $displayField = $modelClass . ' ' . ucfirst($displayField);
                         $this->xlsWriteLabel($row, $col, utf8_decode($displayField)); 
                         $col++;
-                    endforeach; 
+                    endforeach;
                     $row++;
                 }
                 $col = 0;

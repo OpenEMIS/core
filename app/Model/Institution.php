@@ -34,13 +34,6 @@ class Institution extends AppModel {
 				'InstitutionCustomValue',
 				'InstitutionSite'
 			)
-		),
-		'CustomReport' => array(
-			'_default' => array('visible'),
-			'Institution' => array('date_opened', 'year_opened', 'date_closed', 'year_closed'),
-			'belongsTo' => array(
-				'Area' => array('lft', 'rght')
-			)
 		)
 	);
         

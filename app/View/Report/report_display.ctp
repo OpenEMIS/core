@@ -6,7 +6,7 @@
     $floatFields = array();
     ?>     
     <?php if (!empty($reportData)):?>
-    <table class="table" style="margin: 10px; width: auto;>
+    <table class="table" style="margin: 10px; width: auto;">
         <thead>
 			<tr>
                 <?php foreach ($fieldList as $field): ?>
@@ -18,7 +18,8 @@
                 $displayField = ( isset($labelFieldList[$modelClass][$displayField]) ? $labelFieldList[$modelClass][$displayField] : ( isset($labelFieldList['*'][$displayField]) ? $labelFieldList['*'][$displayField] : $displayField ));
                 $displayField = str_replace('_', ' ', $displayField);
                 $displayField = ucfirst($displayField);
-                echo $displayField; 
+				$modelClass = Inflector::humanize(Inflector::underScore($modelClass));
+                echo $modelClass . ' ' . $displayField; 
                 if ( $fieldsType[$field] == 'float') // init array for float fields sum
                     $floatFields[$field] = 0;
                 ?>

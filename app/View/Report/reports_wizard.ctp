@@ -4,8 +4,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 echo $this->Html->css('report/report_manager');
 echo $this->Html->css('report/smart_wizard');
-echo $this->Html->script(array('https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js'));
-echo $this->Html->script(array('report/jquery.smartWizard-2.0.js','report/default.js'));
+echo $this->Html->script(array('report/jquery-ui-1.8.18.min'));
+echo $this->Html->script(array('report/jquery.smartWizard-2.0', 'report/default'));
 ?>
 <?php echo $this->Form->create('Report',array('id' => 'ReportWizardForm', 'target'=>'blank'));?>
 <?php echo $this->element('breadcrumb'); ?>

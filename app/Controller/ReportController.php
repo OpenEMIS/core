@@ -30,6 +30,9 @@ class ReportController extends AppController {
     public $uses = array('ReportTemplate');
     public $helpers = array('Number');
     public $path = null;
+	public $models = array(
+		'InstitutionSite', 'Student', 'Teacher', 'Staff', 'CensusStudent'
+	);
     
     public function __construct( $request = NULL, $response = NULL ) {
         $reportPath = Configure::read('ReportManager.reportPath');
@@ -49,6 +52,11 @@ class ReportController extends AppController {
         $this->Navigation->addCrumb('Reports', array('controller' => 'Reports', 'action' => 'index'));
 		$this->Navigation->addCrumb('Custom Reports');
     }
+	
+	// For Shared Reports Permission
+	public function sharedReportView() {}
+	public function sharedReportView() {}
+	// End Shared Reports Permission
     
     public function index() {
 		$globalReport = $this->ReportTemplate->find('all', array('conditions' => array('security_user_id' => 0)));
@@ -60,7 +68,7 @@ class ReportController extends AppController {
             $modelIgnoreList = Configure::read('ReportManager.modelIgnoreList'); 
             
             //$models = App::objects('Model');
-			$models = array('Institution', 'InstitutionSite', 'CensusStudent', 'CensusTeacher', 'CensusStaff');
+			$models = $this->models;
             $models = array_combine($models,$models);
             
             if ( isset($modelIgnoreList) && is_array($modelIgnoreList)) {
@@ -90,7 +98,7 @@ class ReportController extends AppController {
     }
 	
 	public function reportsNew() {
-		$models = array('Institution');//, 'InstitutionSite', 'CensusStudent', 'CensusTeacher', 'CensusStaff');
+		$models = $this->models;
 		$models = array_combine($models,$models);
 		$this->set('models',$models);
 	}
@@ -98,12 +106,22 @@ class ReportController extends AppController {
 	public function reportsView($id=null) {
 		if(!is_null($id)) {
 			$data = $this->ReportTemplate->findById($id);
+			$this->Session->write('CustomReport.id', $id);
 			$this->set('data', $data);
+			$outputOptions = array('html' => 'HTML', 'xls' => 'Excel');
+			$this->set('outputOptions', $outputOptions);
 		} else {
 			return $this->redirect(array('action' => 'index'));
 		}
 	}
-    
+	
+	public function reportsDelete() {
+		$id = $this->Session->read('CustomReport.id');
+		$this->ReportTemplate->delete($id);
+		$this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
+		return $this->redirect(array('action' => 'index'));
+    }
+	
     public function ajaxGetOneToManyOptions() {
         if ($this->request->is('ajax')) {
             Configure::write('debug',0);
@@ -120,7 +138,7 @@ class ReportController extends AppController {
                 foreach ($modelIgnoreList as $model) {
                     if (isset($associatedModels[$model]));
                         unset($associatedModels[$model]);
-                }                
+                }
             }            
             
             $this->set('associatedModels',$associatedModels);
@@ -184,7 +202,8 @@ class ReportController extends AppController {
         } else {
             $reportName = $modelClass . '_Report_' . date('Ymd_His');
         }
-		$userId = $this->data['Report']['Type'] == 0 ? 0 : $this->Auth->user('id');
+		
+		$userId = $this->Auth->user('super_admin') == 0 ? $this->Auth->user('id') : 0;
         
 		$template = array(
 			'name' => $reportName,
@@ -237,12 +256,14 @@ class ReportController extends AppController {
         return $files;
     }
 
-
     public function reportsWizard($param1 = null,$param2 = null, $param3 = null) {
         if (is_null($param1) || is_null($param2)) {
             $this->Session->setFlash(__('Please select a model or a saved report'));
             $this->redirect(array('action'=>'index'));
         }
+		
+		$outputOptions = array('html' => 'HTML', 'xls' => 'Excel');
+		$this->set('outputOptions', $outputOptions);
         
         $reportAction = $param1;
         $modelClass = null;
@@ -255,19 +276,11 @@ class ReportController extends AppController {
         }
 		
         if ( $reportAction == "load" ) {
-            $fileName = urldecode($param2);
 			$modelClass = $this->ReportTemplate->field('model', array('id' => $param2));
-			/*
-            if ($fileName!='') {
-                $params = explode('.', $fileName);
-                if (count($params)>=3) {
-                    $modelClass = $params[0];
-                    if (count($params)>3) {
-                        $oneToManyOption = $params[1];
-                    }
-                }
-            }
-			*/
+			$output = $this->request->data['Report']['Output'];
+			$this->loadReport($param2);
+			$this->request->data['Report']['Output'] = $output;
+			$this->request->data['Report']['SaveReport'] = false;
         }
         
         if (empty($this->data)) {        
@@ -332,11 +345,6 @@ class ReportController extends AppController {
             $this->set('associatedModels',$associatedModels);
             $this->set('associatedModelsSchema',$associatedModelsSchema);
             $this->set('oneToManyOption',$oneToManyOption);
-            
-            if (!is_null($fileName)) {
-				$this->loadReport($fileName);
-			}
-
         } else {
             $this->loadModel($modelClass);
             $associatedModels = $this->{$modelClass}->getAssociated();
@@ -466,7 +474,7 @@ class ReportController extends AppController {
             $this->set('fieldsLength',$fieldsLength);
             $this->set('reportData',$reportData);
             $this->set('reportName',$this->data['Report']['ReportName']);
-
+			
             if ( $this->data['Report']['Output'] == 'html') {
                 if ($oneToManyOption == '')
                     $this->render('report_display');

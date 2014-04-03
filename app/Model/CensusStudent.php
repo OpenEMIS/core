@@ -17,7 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusStudent extends AppModel {
-	public $actsAs = array('Containable');
+	public $actsAs = array(
+		'Containable',
+		'CustomReport' => array(
+			'_default' => array('visible')
+		)
+	);
+	
 	public $belongsTo = array(
 		'SchoolYear' => array('foreignKey' => 'school_year_id'),
 		'EducationGrade' => array('foreignKey' => 'education_grade_id'),
