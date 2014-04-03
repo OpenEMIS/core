@@ -149,7 +149,9 @@ class RubricsTemplate extends QualityAppModel {
         $rubricGradesOptions = array();
         if (!empty($rubricGradesList)) {
             foreach ($rubricGradesList as $rubricGradeid) {
-                $rubricGradesOptions[$rubricGradeid] = $gradeOptions[$rubricGradeid];
+                if(isset($gradeOptions[$rubricGradeid])){
+                    $rubricGradesOptions[$rubricGradeid] = $gradeOptions[$rubricGradeid];
+                }
             }
             sort($rubricGradesOptions);
         }
