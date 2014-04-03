@@ -48,10 +48,10 @@ echo $this->Html->script('config', false);
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
         <?php 
 		if(!empty($this->data['RubricsTemplateColumnInfo']['id'])){ 
-			$redirectURL = array('action' => 'RubricsTemplatesCriteriaView',$id,$rubricTemplateHeaderId,$this->data['RubricsTemplateColumnInfo']['id'] );
+			$redirectURL = array('action' => 'rubricsTemplatesCriteriaView',$id,$rubricTemplateHeaderId,$this->data['RubricsTemplateColumnInfo']['id'] );
 		}
 		else{
-			$redirectURL = array('action' => 'RubricsTemplatesCriteria',$id,$rubricTemplateHeaderId);
+			$redirectURL = array('action' => 'rubricsTemplatesCriteria',$id,$rubricTemplateHeaderId);
 		}
 		?>
         

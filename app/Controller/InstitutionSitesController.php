@@ -72,6 +72,8 @@ class InstitutionSitesController extends AppController {
         'Students.StudentBehaviour',
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
+        'Students.StudentCustomField',
+        'Students.StudentCustomFieldOption',
         'Students.StudentDetailsCustomField',
         'Students.StudentDetailsCustomFieldOption',
         'Students.StudentDetailsCustomValue',
@@ -84,6 +86,8 @@ class InstitutionSitesController extends AppController {
         'Teachers.TeacherPositionStep',
         'Teachers.TeacherBehaviour',
         'Teachers.TeacherBehaviourCategory',
+        'Teachers.TeacherCustomField',
+        'Teachers.TeacherCustomFieldOption',
         'Teachers.TeacherDetailsCustomField',
         'Teachers.TeacherDetailsCustomFieldOption',
         'Teachers.TeacherDetailsCustomValue',
@@ -96,6 +100,8 @@ class InstitutionSitesController extends AppController {
         'Staff.StaffPositionStep',
         'Staff.StaffBehaviour',
         'Staff.StaffBehaviourCategory',
+        'Staff.StaffCustomField',
+        'Staff.StaffCustomFieldOption',
         'Staff.StaffDetailsCustomField',
         'Staff.StaffDetailsCustomFieldOption',
         'Staff.StaffDetailsCustomValue',
@@ -149,7 +155,7 @@ class InstitutionSitesController extends AppController {
     );
     private $ReportData = array(); //param 1 name ; param2 type
     private $reportMapping = array(
-        'Overview' => array(
+        'Overview and More' => array(
             'Model' => 'InstitutionSite',
             'fields' => array(
                 'Institution' => array(
@@ -169,6 +175,8 @@ class InstitutionSitesController extends AppController {
                     'date_closed' => '',
                     'longitude' => '',
                     'latitude' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 ),
                 'InstitutionSiteStatus' => array(
                     'name' => 'Institution Site Status'
@@ -266,12 +274,59 @@ class InstitutionSitesController extends AppController {
                     'last_name' => 'Last Name',
                     'preferred_name' => 'Preferred Name'
                 ),
+                'StudentCustomField' => array(
+                ),
                 'EducationProgramme' => array(
                     'name' => 'Programme'
+                ),  
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => '',
+                    'address' => '',
+                    'postal_code' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => '',
+                    'date_opened' => '',
+                    'date_closed' => '',
+                    'longitude' => '',
+                    'latitude' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'StudentContact' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StudentContact.value))' => 'Contacts'
+                ),
+                'StudentIdentity' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(IdentityType.name, "-", StudentIdentity.number))' => 'Identities'
+                ),
+                'StudentNationality' => array(
+                    'GROUP_CONCAT(DISTINCT Country.name)' => 'Nationality'
                 ),
                 'StudentStatus' => array(
                     'name' => 'Status'
                 )
+
             ),
             'FileName' => 'Report_Student_List'
         ),
@@ -373,9 +428,6 @@ class InstitutionSitesController extends AppController {
         'Teacher List' => array(
             'Model' => 'InstitutionSiteTeacher',
             'fields' => array(
-                'InstitutionSite' => array(
-                    'name' => 'Institution Site'
-                ),
                 'Teacher' => array(
                     'identification_no' => 'OpenEMIS ID',
                     'first_name' => 'First Name',
@@ -384,6 +436,55 @@ class InstitutionSitesController extends AppController {
                     'preferred_name' => 'Preferred Name',
                     'gender' => 'Gender',
                     'date_of_birth' => 'Date of Birth'
+                ),
+                'TeacherCustomField' => array(
+                ),
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => '',
+                    'address' => '',
+                    'postal_code' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => '',
+                    'date_opened' => '',
+                    'date_closed' => '',
+                    'longitude' => '',
+                    'latitude' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'TeacherContact' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", TeacherContact.value))' => 'Contacts'
+                ),
+                'TeacherIdentity' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(IdentityType.name, "-", TeacherIdentity.number))' => 'Identities'
+                ),
+                'TeacherNationality' => array(
+                    'GROUP_CONCAT(DISTINCT Country.name)' => 'Nationality'
+                ),
+                'TeacherStatus' => array(
+                    'name' => 'Status'
                 )
             ),
             'FileName' => 'Report_Teacher_List'
@@ -441,9 +542,6 @@ class InstitutionSitesController extends AppController {
         'Staff List' => array(
             'Model' => 'InstitutionSiteStaff',
             'fields' => array(
-                'InstitutionSite' => array(
-                    'name' => 'Institution Site'
-                ),
                 'Staff' => array(
                     'identification_no' => 'OpenEMIS ID',
                     'first_name' => 'First Name',
@@ -452,6 +550,55 @@ class InstitutionSitesController extends AppController {
                     'preferred_name' => 'Preferred Name',
                     'gender' => 'Gender',
                     'date_of_birth' => 'Date of Birth'
+                ),
+                'StaffCustomField' => array(
+                ),
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => '',
+                    'address' => '',
+                    'postal_code' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => '',
+                    'date_opened' => '',
+                    'date_closed' => '',
+                    'longitude' => '',
+                    'latitude' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'StaffContact' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StaffContact.value))' => 'Contacts'
+                ),
+                'StaffIdentity' => array(
+                    'GROUP_CONCAT(DISTINCT CONCAT(IdentityType.name, "-", StaffIdentity.number))' => 'Identities'
+                ),
+                'StaffNationality' => array(
+                    'GROUP_CONCAT(DISTINCT Country.name)' => 'Nationality'
+                ),
+                'StaffStatus' => array(
+                    'name' => 'Status'
                 )
             ),
             'FileName' => 'Report_Staff_List'
@@ -527,26 +674,26 @@ class InstitutionSitesController extends AppController {
             'Model' => 'InstitutionSite',
             'fields' => array(
                 'SchoolYear' => array(
-                    'name' => ''
+                    'name AS Year' => ''
                 ),
                 'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'id' => ''
+                    'name AS InstitutionSiteName' => '',
+                    'code AS InstitutionSiteCode' => '',
+                    'id AS InstitutionSiteId' => ''
                 ),
                 'InstitutionSiteClass' => array(
-                    'name' => '',
-                    'id' => ''
+                    'name AS Class' => '',
+                    'id AS ClassId' => ''
                 ),
                 'EducationGrade' => array(
-                    'name' => ''
+                    'name AS Grade' => ''
                 ),
                 'RubricTemplate' => array(
-                    'name' => '',
-                    'id' => ''
+                    'name AS RubricName' => '',
+                    'id AS RubricId' => ''
                 ),
                 'RubricTemplateHeader' => array(
-                    'title' => ''
+                    'title AS RubricHeader' => ''
                 ),
                 'RubricTemplateColumnInfo' => array(
                     'COALESCE(SUM(weighting),0)' => ''
@@ -558,14 +705,14 @@ class InstitutionSitesController extends AppController {
             'Model' => 'QualityInstitutionVisit',
             'fields' => array(
                 'SchoolYear' => array(
-                    'name' => 'School Year'
+                    'name' => 'Year'
                 ),
                 'InstitutionSite' => array(
                     'name' => '',
                     'code' => ''
                 ),
                 'InstitutionSiteClass' => array(
-                    'name' => 'Class Name',
+                    'name' => 'Class',
                 ),
                 'EducationGrade' => array(
                     'name' => 'Grade'
@@ -583,8 +730,8 @@ class InstitutionSitesController extends AppController {
                     'last_name' => 'Teacher Last Name'
                 ),
                 'SecurityUser' => array(
-                    'first_name' => 'Supervisor First Name',
-                    'last_name' => 'Supervisor Last Name'
+                    'first_name' => 'Evaluator First Name',
+                    'last_name' => 'Evaluator Last Name'
                 )
             ),
             'FileName' => 'Report_Quality_Visit'
@@ -2008,18 +2155,23 @@ class InstitutionSitesController extends AppController {
                     $name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
                     $siteProgrammeId = $data['institution_site_programme_id'];
                     $exists = $this->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
+                    $checkCurrentSite = $this->InstitutionSiteStudent->checkWithinCurrentSite($data['student_id'], $data['start_year'], $this->institutionSiteId);
+                    $checkOtherSite = $this->InstitutionSiteStudent->checkWithinOtherSite($data['student_id'], $data['start_year'], $this->institutionSiteId);
 
-                    if (!$exists) {
+                    
+                    if (!$checkCurrentSite) {
+                        $this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+                    } else if(!$checkOtherSite){
+                        $this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_EXISTS_IN_OTHER_SITE'), array('type' => 'error'));
+                    }else {
                         $duration = $this->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
-                        $startDate = new DateTime(sprintf('%s-%s-%s', $date['year'], $date['month'], $date['day']));
+                        $startDate = new DateTime($date);//new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
                         $endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
                         $endYear = $endDate->format('Y');
                         $data['end_date'] = $endDate->format('Y-m-d');
                         $data['end_year'] = $endYear;
                         $this->InstitutionSiteStudent->save($data);
                         $this->Utility->alert($this->Utility->getMessage('CREATE_SUCCESS'));
-                    } else {
-                        $this->Utility->alert($name . ' ' . $this->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
                     }
                 } else {
                     $this->Utility->alert($this->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
@@ -3531,15 +3683,47 @@ class InstitutionSitesController extends AppController {
                         'conditions' => array('BankBranch.bank_id = Bank.id')
                     )
                 );
-            } else if ($name == 'Overview') {
+            } else if ($name == 'Overview and More') {
                 //$options['recursive'] = -1;
                 $options['joins'] = array(
                     array(
                         'table' => 'area_educations',
                         'alias' => 'AreaEducation',
+                        'type' => 'left',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
                     )
                 );
+
+				    $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('InstitutionSiteCustomField.name as FieldName'),
+                        'joins'=>array(
+                            array(
+                                'table' => 'institution_sites',
+                                'alias' => 'InstitutionSite',
+                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                            )
+                        ),
+                         'conditions' => array(
+                                'InstitutionSiteCustomField.visible'=>1,
+                                'InstitutionSiteCustomField.type != 1',
+                                'InstitutionSite.id' => $this->institutionSiteId
+                        ),
+                        'order' => array('InstitutionSiteCustomField.order')
+                    )
+                );
+                $reportFields = $this->reportMapping['Overview and More']['fields'];
+
+  				foreach($institutionSiteCustomFields as $val){
+                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
+                      	$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+                   }
+                }
+
+                $this->reportMapping['Overview and More']['fields'] = $reportFields;
+        
+                $options['group'] = array('InstitutionSite.id');
             } else if ($name == 'Programme List') {
                 $options['recursive'] = -1;
                 $options['joins'] = array(
@@ -3608,6 +3792,78 @@ class InstitutionSitesController extends AppController {
                         'conditions' => array('InstitutionSiteProgramme.education_programme_id = EducationProgramme.id')
                     ),
                     array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite',
+                        'conditions' => array('InstitutionSite.id = InstitutionSiteProgramme.institution_site_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_statuses',
+                        'alias' => 'InstitutionSiteStatus',
+                        'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_types',
+                        'alias' => 'InstitutionSiteType',
+                        'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_ownership',
+                        'alias' => 'InstitutionSiteOwnership',
+                        'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
+                    ),
+                    array(
+                        'table' => 'institutions',
+                        'alias' => 'Institution',
+                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+                    ),
+                    array(
+                        'table' => 'areas',
+                        'alias' => 'Area',
+                        'conditions' => array('InstitutionSite.area_id = Area.id')
+                    ),
+                    array(
+                        'table' => 'area_educations',
+                        'alias' => 'AreaEducation',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'student_nationalities',
+                        'alias' => 'StudentNationality',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStudent.student_id = StudentNationality.student_id')
+                    ),
+                    array(
+                        'table' => 'student_contacts',
+                        'alias' => 'StudentContact',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStudent.student_id = StudentContact.student_id')
+                    ),
+                    array(
+                        'table' => 'student_identities',
+                        'alias' => 'StudentIdentity',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStudent.student_id = StudentIdentity.student_id')
+                    ),
+                    array(
+                        'table' => 'countries',
+                        'alias' => 'Country',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('Country.id = StudentNationality.country_id')
+                    ),
+                    array(
+                        'table' => 'contact_types',
+                        'alias' => 'ContactType',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('ContactType.id = StudentContact.contact_type_id')
+                    ),
+                    array(
+                        'table' => 'identity_types',
+                        'alias' => 'IdentityType',
+                        'type' => 'left',
+                        'conditions' => array('IdentityType.id = StudentIdentity.identity_type_id')
+                    ),
+                    array(
                         'table' => 'student_statuses',
                         'alias' => 'StudentStatus',
                         'type' => 'left',
@@ -3615,6 +3871,55 @@ class InstitutionSitesController extends AppController {
                     )
                 );
 
+                $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('InstitutionSiteCustomField.name as FieldName'),
+                        'joins'=>array(
+                            array(
+                                'table' => 'institution_sites',
+                                'alias' => 'InstitutionSite',
+                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                            )
+                        ),
+                         'conditions' => array(
+                                'InstitutionSiteCustomField.visible'=>1,
+                                'InstitutionSiteCustomField.type != 1',
+                                'InstitutionSite.id' => $this->institutionSiteId
+                        ),
+                        'order' => array('InstitutionSiteCustomField.order')
+                    )
+                );
+
+
+                $reportFields = $this->reportMapping['Student List']['fields'];
+
+
+                $studentCustomFields = $this->StudentCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('StudentCustomField.name as FieldName'),
+                        'conditions' => array('StudentCustomField.visible'=>1, 'StudentCustomField.type != 1'),
+                        'order' => array('StudentCustomField.order'),
+                    )
+                );
+
+                foreach($studentCustomFields as $val){
+                   if(!empty($val['StudentCustomField']['FieldName'])){
+                       $reportFields['StudentCustomField'][$val['StudentCustomField']['FieldName']] = '';
+                   }
+                }
+
+                foreach($institutionSiteCustomFields as $val){
+                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
+                      	$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+                   }
+                }
+
+                $this->reportMapping['Student List']['fields'] = $reportFields;
+
+
+                $options['group'] = array('Student.id','InstitutionSiteProgramme.id');
                 $options['order'] = array('Student.first_name');
             } else if ($name == 'Student Result') {
                 $options['conditions'] = array();
@@ -3784,14 +4089,139 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'teachers',
                         'alias' => 'Teacher',
-                        'conditions' => array('InstitutionSiteTeacher.teacher_id = Teacher.id')
+                        'conditions' => array(
+                            'InstitutionSiteTeacher.teacher_id = Teacher.id',
+                            'InstitutionSiteTeacher.institution_site_id' => $this->institutionSiteId
+                            )
                     ),
                     array(
                         'table' => 'institution_sites',
                         'alias' => 'InstitutionSite',
                         'conditions' => array('InstitutionSiteTeacher.institution_site_id = InstitutionSite.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_statuses',
+                        'alias' => 'InstitutionSiteStatus',
+                        'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_types',
+                        'alias' => 'InstitutionSiteType',
+                        'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_ownership',
+                        'alias' => 'InstitutionSiteOwnership',
+                        'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
+                    ),
+                    array(
+                        'table' => 'institutions',
+                        'alias' => 'Institution',
+                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+                    ),
+                    array(
+                        'table' => 'areas',
+                        'alias' => 'Area',
+                        'conditions' => array('InstitutionSite.area_id = Area.id')
+                    ),
+                    array(
+                        'table' => 'area_educations',
+                        'alias' => 'AreaEducation',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'teacher_nationalities',
+                        'alias' => 'TeacherNationality',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherNationality.teacher_id')
+                    ),
+                    array(
+                        'table' => 'teacher_contacts',
+                        'alias' => 'TeacherContact',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherContact.teacher_id')
+                    ),
+                    array(
+                        'table' => 'teacher_identities',
+                        'alias' => 'TeacherIdentity',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherIdentity.teacher_id')
+                    ),
+                    array(
+                        'table' => 'countries',
+                        'alias' => 'Country',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('Country.id = TeacherNationality.country_id')
+                    ),
+                    array(
+                        'table' => 'contact_types',
+                        'alias' => 'ContactType',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('ContactType.id = TeacherContact.contact_type_id')
+                    ),
+                    array(
+                        'table' => 'identity_types',
+                        'alias' => 'IdentityType',
+                        'type' => 'left',
+                        'conditions' => array('IdentityType.id = TeacherIdentity.identity_type_id')
+                    ),
+                    array(
+                        'table' => 'teacher_statuses',
+                        'alias' => 'TeacherStatus',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteTeacher.teacher_status_id = TeacherStatus.id')
                     )
                 );
+
+                $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('InstitutionSiteCustomField.name as FieldName'),
+                        'joins'=>array(
+                            array(
+                                'table' => 'institution_sites',
+                                'alias' => 'InstitutionSite',
+                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                            )
+                        ),
+                         'conditions' => array(
+                                'InstitutionSiteCustomField.visible'=>1,
+                                'InstitutionSiteCustomField.type != 1',
+                                'InstitutionSite.id' => $this->institutionSiteId
+                        ),
+                        'order' => array('InstitutionSiteCustomField.order')
+                    )
+                );
+                $reportFields = $this->reportMapping['Teacher List']['fields'];
+
+
+                $teacherCustomFields = $this->TeacherCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('TeacherCustomField.name as FieldName'),
+                        'conditions' => array(
+                                'TeacherCustomField.visible'=>1,
+                                'TeacherCustomField.type != 1'
+                        ),
+                        'order' => array('TeacherCustomField.order')
+                    )
+                );
+
+
+                foreach($teacherCustomFields as $val){
+                   if(!empty($val['TeacherCustomField']['FieldName'])){
+                       $reportFields['TeacherCustomField'][$val['TeacherCustomField']['FieldName']] = '';
+                   }
+                }
+
+                foreach($institutionSiteCustomFields as $val){
+                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
+                      	$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+                   }
+                }
+
+                $this->reportMapping['Teacher List']['fields'] = $reportFields;
 
                 $options['group'] = array('Teacher.id');
                 $options['order'] = array('Teacher.first_name');
@@ -3851,14 +4281,137 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'staff',
                         'alias' => 'Staff',
-                        'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
+                        'conditions' => array(
+                            'InstitutionSiteStaff.staff_id = Staff.id',
+                            'InstitutionSiteStaff.institution_site_id' => $this->institutionSiteId
+                            )
                     ),
                     array(
                         'table' => 'institution_sites',
                         'alias' => 'InstitutionSite',
                         'conditions' => array('InstitutionSiteStaff.institution_site_id = InstitutionSite.id')
+                    ),
+                    array(
+                        'table' => 'institution_site_statuses',
+                        'alias' => 'InstitutionSiteStatus',
+                        'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_types',
+                        'alias' => 'InstitutionSiteType',
+                        'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
+                    ),
+                    array(
+                        'table' => 'institution_site_ownership',
+                        'alias' => 'InstitutionSiteOwnership',
+                        'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
+                    ),
+                    array(
+                        'table' => 'institutions',
+                        'alias' => 'Institution',
+                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+                    ),
+                    array(
+                        'table' => 'areas',
+                        'alias' => 'Area',
+                        'conditions' => array('InstitutionSite.area_id = Area.id')
+                    ),
+                    array(
+                        'table' => 'area_educations',
+                        'alias' => 'AreaEducation',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'staff_nationalities',
+                        'alias' => 'StaffNationality',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStaff.staff_id = StaffNationality.staff_id')
+                    ),
+                    array(
+                        'table' => 'staff_contacts',
+                        'alias' => 'StaffContact',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStaff.staff_id = StaffContact.staff_id')
+                    ),
+                    array(
+                        'table' => 'staff_identities',
+                        'alias' => 'StaffIdentity',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStaff.staff_id = StaffIdentity.staff_id')
+                    ),
+                    array(
+                        'table' => 'countries',
+                        'alias' => 'Country',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('Country.id = StaffNationality.country_id')
+                    ),
+                    array(
+                        'table' => 'contact_types',
+                        'alias' => 'ContactType',   
+                        'type' => 'left',                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                        'conditions' => array('ContactType.id = StaffContact.contact_type_id')
+                    ),
+                    array(
+                        'table' => 'identity_types',
+                        'alias' => 'IdentityType',
+                        'type' => 'left',
+                        'conditions' => array('IdentityType.id = StaffIdentity.identity_type_id')
+                    ),
+                    array(
+                        'table' => 'staff_statuses',
+                        'alias' => 'StaffStatus',
+                        'type' => 'left',
+                        'conditions' => array('InstitutionSiteStaff.staff_status_id = StaffStatus.id')
                     )
                 );
+
+     			$institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('InstitutionSiteCustomField.name as FieldName', 'InstitutionSiteCustomField.type'),
+                        'joins'=>array(
+                            array(
+                                'table' => 'institution_sites',
+                                'alias' => 'InstitutionSite',
+                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                            )
+                        ),
+                         'conditions' => array(
+                                'InstitutionSiteCustomField.visible'=>1,
+                                'InstitutionSiteCustomField.type != 1',
+                                'InstitutionSite.id' => $this->institutionSiteId
+                        ),
+                        'order' => array('InstitutionSiteCustomField.order')
+                    )
+                );
+
+                $reportFields = $this->reportMapping['Staff List']['fields'];
+
+
+                $staffCustomFields = $this->StaffCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('StaffCustomField.name as FieldName'),
+                        'conditions' => array('StaffCustomField.visible'=>1, 'StaffCustomField.type != 1'),
+                        'order' => array('StaffCustomField.order')
+                    )
+                );
+
+
+                foreach($staffCustomFields as $val){
+                   if(!empty($val['StaffCustomField']['FieldName'])){
+                       $reportFields['StaffCustomField'][$val['StaffCustomField']['FieldName']] = '';
+                   }
+                }
+
+                foreach($institutionSiteCustomFields as $val){
+                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
+                      	$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+                   }
+                }
+
+                $this->reportMapping['Staff List']['fields'] = $reportFields;
 
                 $options['group'] = array('Staff.id');
                 $options['order'] = array('Staff.first_name');
@@ -3957,7 +4510,6 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'quality_statuses',
                         'alias' => 'QualityStatus',
-                        'type' => 'LEFT',
                         'conditions' => array('QualityStatus.year = SchoolYear.name')
                     ),
                     array(
@@ -3971,7 +4523,7 @@ class InstitutionSitesController extends AppController {
                         'alias' => 'QualityInstitutionRubric',
                         'type' => 'LEFT',
                         'conditions' => array(
-                            'QualityInstitutionRubric.institution_site_classes_id = InstitutionSiteClass.id',
+                            'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
                             'RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
                             'SchoolYear.id = QualityInstitutionRubric.school_year_id'
                         )
@@ -4009,7 +4561,7 @@ class InstitutionSitesController extends AppController {
                             'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id',
                             'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
                             'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
-                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_classes_id'
+                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id'
                         )
                     ),
                     array(
@@ -4046,7 +4598,7 @@ class InstitutionSitesController extends AppController {
                         'table' => 'institution_site_classes',
                         'alias' => 'InstitutionSiteClass',
                         'conditions' => array(
-                            'QualityInstitutionVisit.institution_site_classes_id = InstitutionSiteClass.id',
+                            'QualityInstitutionVisit.institution_site_class_id = InstitutionSiteClass.id',
                         )
                     ),
                     array(
@@ -4076,13 +4628,17 @@ class InstitutionSitesController extends AppController {
                     )
                 );
             }
-
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
+
         // pr($this->reportMapping[$name]);
-        //  pr($data); die;
+        //pr($data); die;
         return $data;
     }
+
+    function assoc_splice($source_array, $key_name, $length, $replacement){
+	    return array_splice($source_array, array_search($key_name, array_keys($source_array)), $length, $replacement);
+	}
 
     private function getHeaderAcademic($name) {
         $commonFields = array(
@@ -4445,7 +5001,7 @@ class InstitutionSitesController extends AppController {
                 //pr($row);
                 $data[] = $row;
             }
-        }
+        } 
 
         return $data;
     }
@@ -5672,6 +6228,8 @@ class InstitutionSitesController extends AppController {
             foreach ($arrcols as $col => $value) {
                 if (strpos(substr($col, 0, 4), 'SUM(') !== false) {
                     $new[] = substr($col, 0, 4) . $model . "." . substr($col, 4);
+                } else if (strpos(substr($col, 0, 13), 'GROUP_CONCAT(') !== false) {
+                    $new[] = $col;
                 } else if (strpos(substr($col, 0, 13), 'COALESCE(SUM(') !== false) {
                     $new[] = substr($col, 0, 13) . $model . "." . substr($col, 13);
                 } else {
@@ -5694,13 +6252,18 @@ class InstitutionSitesController extends AppController {
         }
         $new = array();
         foreach ($header as $model => &$arrcols) {
+
             foreach ($arrcols as $col => $value) {
-                if (empty($value)) {
-                    $new[] = __(Inflector::humanize(Inflector::underscore($model))) . ' ' . __(Inflector::humanize($col));
-                } else {
-                    $new[] = __($value);
-                }
-            }
+	        	if(substr($model,-11) == 'CustomField'){
+	        		$new[] =  __(Inflector::humanize($col));	
+	        	}else{
+	                if (empty($value)) {
+	                    $new[] = __(Inflector::humanize(Inflector::underscore($model))) . ' ' . __(Inflector::humanize($col));
+	                } else {
+	                    $new[] = __($value);
+	                }
+	            }
+	        }
         }
         return $new;
     }
@@ -5709,7 +6272,49 @@ class InstitutionSitesController extends AppController {
         $newData = array();
         $dateFormat = 'd F, Y';
 
-        if ($name == 'Overview') {
+        if ($name == 'Overview and More') {
+    	   $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                array(
+                    'recursive' => -1,
+                    'fields'=>array('InstitutionSiteCustomField.id','InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
+                    'joins' => array(
+                        array(
+                            'table' => 'institution_sites',
+                            'alias' => 'InstitutionSite',
+                            'conditions' => array(
+                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
+                                'InstitutionSite.id' => $this->institutionSiteId
+                                )
+                        ),
+                        array(
+                            'table' => 'institution_site_custom_values',
+                            'alias' => 'InstitutionSiteCustomValue',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
+                                'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
+                                )
+                        ),
+                        array(
+                            'table' => 'institution_site_custom_field_options',
+                            'alias' => 'InstitutionSiteCustomFieldOption',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
+                                'InstitutionSiteCustomField.type' => array(3,4),
+                                'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
+                            )
+                        ),
+                    ),
+                    'conditions' => array(
+                            'InstitutionSiteCustomField.visible'=>1,
+                            'InstitutionSiteCustomField.type !=1',
+                    ),
+                    'order' => array('InstitutionSiteCustomField.order'),
+                    'group' => array('InstitutionSiteCustomField.id')
+                )
+            );
+
             foreach ($data AS $row) {
                 if ($row['InstitutionSite']['date_opened'] == '0000-00-00') {
                     $row['InstitutionSite']['date_opened'] = '';
@@ -5724,8 +6329,23 @@ class InstitutionSitesController extends AppController {
                     $originalDate = new DateTime($row['InstitutionSite']['date_closed']);
                     $row['InstitutionSite']['date_closed'] = $originalDate->format($dateFormat);
                 }
+            	foreach($institutionSiteCustomFields as $val){
+                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
+                        $row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
+                   }
+                }
 
-                $newData[] = $row;
+                $sortRow = array();
+                foreach($this->reportMapping['Overview and More']['fields'] as $key => $value) {
+                    if(isset($row[$key])){
+                        $sortRow[$key] = $row[$key];
+                    }else{
+                        $sortRow[0] = $row[0];
+                    }
+                }
+
+                $newData[] = $sortRow;
+
             }
         } else if ($name == 'Bank Accounts') {
             foreach ($data AS $row) {
@@ -5754,6 +6374,132 @@ class InstitutionSitesController extends AppController {
                     'InstitutionSiteCustomValue' => array('custom_value' => $value)
                 );
             }
+        } else if ($name == 'Student List') {
+    	   $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                array(
+                    'recursive' => -1,
+                    'fields'=>array('InstitutionSiteCustomField.id','InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
+                    'joins' => array(
+                        array(
+                            'table' => 'institution_sites',
+                            'alias' => 'InstitutionSite',
+                            'conditions' => array(
+                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
+                                'InstitutionSite.id' => $this->institutionSiteId
+                                )
+                        ),
+                        array(
+                            'table' => 'institution_site_custom_values',
+                            'alias' => 'InstitutionSiteCustomValue',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
+                                'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
+                                )
+                        ),
+                        array(
+                            'table' => 'institution_site_custom_field_options',
+                            'alias' => 'InstitutionSiteCustomFieldOption',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
+                                'InstitutionSiteCustomField.type' => array(3,4),
+                                'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
+                            )
+                        ),
+                    ),
+                    'conditions' => array(
+                            'InstitutionSiteCustomField.visible'=>1,
+                            'InstitutionSiteCustomField.type !=1',
+                    ),
+                    'order' => array('InstitutionSiteCustomField.order'),
+                    'group' => array('InstitutionSiteCustomField.id')
+                )
+            );
+
+            $students = $this->Student->find('list', 
+                array(
+                    'recursive' => -1,
+                    'fields'=>array('Student.id'),
+                    'joins' => array(
+                         array(
+                            'table' => 'institution_site_students',
+                            'alias' => 'InstitutionSiteStudent',
+                            'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
+                        ),
+                        array(
+                            'table' => 'institution_site_programmes',
+                            'alias' => 'InstitutionSiteProgramme',
+                            'conditions' => array(
+                                'InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id',
+                            )
+                        )
+                    ),
+                    'conditions' => array('InstitutionSiteProgramme.institution_site_id = ' . $this->institutionSiteId),
+                    'order' => array('Student.first_name')
+                )
+            );
+
+            $r = 0;
+            foreach ($data AS $row) {
+                $studentCustomFields = $this->StudentCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('StudentCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(StudentCustomFieldOption.value),StudentCustomValue.value) as FieldValue'),
+                        'joins' => array(
+                       		 array(
+	                            'table' => 'student_custom_values',
+	                            'alias' => 'StudentCustomValue',
+	                            'type' => 'left',
+	                            'conditions' => array(
+	                                'StudentCustomField.id = StudentCustomValue.student_custom_field_id',
+                                    'StudentCustomValue.student_id' => array_shift(array_slice($students,$r,1))
+	                            )
+	                        ),
+	                        array(
+	                            'table' => 'student_custom_field_options',
+	                            'alias' => 'StudentCustomFieldOption',
+	                            'type' => 'left',
+	                            'conditions' => array(
+	                                'StudentCustomField.id = StudentCustomFieldOption.student_custom_field_id',
+                                    'StudentCustomField.type' => array(3,4),
+	                                'StudentCustomValue.value = StudentCustomFieldOption.id'
+	                            )
+	                        ),
+                   	 	),
+                        'conditions' => array('StudentCustomField.visible'=>1, 'StudentCustomField.type !=1'),
+						'order' => array('StudentCustomField.order'),
+                        'group' => array('StudentCustomField.id')
+                    )
+                );
+
+                foreach($studentCustomFields as $val){
+                   if(!empty($val['StudentCustomField']['FieldName'])){
+                        $row['StudentCustomField'][$val['StudentCustomField']['FieldName']] = $val[0]['FieldValue'];
+                   }
+                }
+
+              	foreach($institutionSiteCustomFields as $val){
+                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
+                        $row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
+                   }
+                }
+               
+               	$sortRow = array();
+				foreach($this->reportMapping['Student List']['fields'] as $key => $value) {
+					if(isset($row[$key])){
+				  		$sortRow[$key] = $row[$key];
+					}else{
+						$sortRow[0] = $row[0];
+					}
+				}
+
+                //pr($sortRow);
+				
+                $newData[] = $sortRow;
+                $r++;
+            }
+
         } else if ($name == 'Student Attendance') {
             foreach ($data AS $row) {
                 $row['StudentAttendance']['total_no_attend'] = $row['StudentAttendance']['total_no_attend'] == NULL ? 0 : $row['StudentAttendance']['total_no_attend'];
@@ -5767,10 +6513,122 @@ class InstitutionSitesController extends AppController {
                 $newData[] = $row;
             }
         } else if ($name == 'Teacher List') {
+        	 $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                array(
+                    'recursive' => -1,
+                    'fields'=>array('InstitutionSiteCustomField.id','InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
+                    'joins' => array(
+                        array(
+                            'table' => 'institution_sites',
+                            'alias' => 'InstitutionSite',
+                            'conditions' => array(
+                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
+                                'InstitutionSite.id' => $this->institutionSiteId
+                                )
+                        ),
+                        array(
+                            'table' => 'institution_site_custom_values',
+                            'alias' => 'InstitutionSiteCustomValue',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
+                                'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
+                                )
+                        ),
+                        array(
+                            'table' => 'institution_site_custom_field_options',
+                            'alias' => 'InstitutionSiteCustomFieldOption',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
+                                'InstitutionSiteCustomField.type' => array(3,4),
+                                'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
+                            )
+                        ),
+                    ),
+                    'conditions' => array(
+                            'InstitutionSiteCustomField.visible'=>1,
+                            'InstitutionSiteCustomField.type !=1',
+                    ),
+                    'order' => array('InstitutionSiteCustomField.order'),
+                    'group' => array('InstitutionSiteCustomField.id')
+                )
+            );
+
+            $teachers = $this->Teacher->find('list', 
+                array(
+                    'recursive' => -1,
+                    'fields'=>array('Teacher.id'),
+                    'joins' => array(
+                         array(
+                            'table' => 'institution_site_teachers',
+                            'alias' => 'InstitutionSiteTeacher',
+                            'conditions' => array('InstitutionSiteTeacher.teacher_id = Teacher.id')
+                        )
+                    ),
+                    'conditions' => array('InstitutionSiteTeacher.institution_site_id = ' . $this->institutionSiteId),
+                    'order' => array('Teacher.first_name')
+                )
+            );
+
+            $r = 0;
             foreach ($data AS $row) {
                 $row['Teacher']['gender'] = $this->Utility->formatGender($row['Teacher']['gender']);
                 $row['Teacher']['date_of_birth'] = $this->DateTime->formatDateByConfig($row['Teacher']['date_of_birth']);
-                $newData[] = $row;
+                $teacherCustomFields = $this->TeacherCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('TeacherCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(TeacherCustomFieldOption.value),TeacherCustomValue.value) as FieldValue'),
+                        'joins' => array(
+                       		 array(
+	                            'table' => 'teacher_custom_values',
+	                            'alias' => 'TeacherCustomValue',
+	                            'type' => 'left',
+	                            'conditions' => array(
+	                                'TeacherCustomField.id = TeacherCustomValue.teacher_custom_field_id',
+                                    'TeacherCustomValue.teacher_id' => array_shift(array_slice($teachers,$r,1))
+                                )
+	                        ),
+	                        array(
+	                            'table' => 'teacher_custom_field_options',
+	                            'alias' => 'TeacherCustomFieldOption',
+	                            'type' => 'left',
+	                            'conditions' => array(
+	                                'TeacherCustomField.id = TeacherCustomFieldOption.teacher_custom_field_id',
+	                                'TeacherCustomField.type' => array(3,4),
+	                                'TeacherCustomValue.value = TeacherCustomFieldOption.id'
+	                            )
+	                        ),
+                   	 	),
+                        'conditions' => array('TeacherCustomField.visible'=>1,'TeacherCustomField.type !=1'),
+						'order' => array('TeacherCustomField.order'),
+                        'group' => array('TeacherCustomField.id')
+                    )
+                );
+
+                foreach($teacherCustomFields as $val){
+                   if(!empty($val['TeacherCustomField']['FieldName'])){
+                        $row['TeacherCustomField'][$val['TeacherCustomField']['FieldName']] = $val[0]['FieldValue'];
+                   }
+                }
+
+              	foreach($institutionSiteCustomFields as $val){
+                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
+                        $row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
+                   }
+                }
+
+				$sortRow = array();
+				foreach($this->reportMapping['Teacher List']['fields'] as $key => $value) {
+					if(isset($row[$key])){
+				  		$sortRow[$key] = $row[$key];
+					}else{
+						$sortRow[0] = $row[0];
+					}
+				}
+				
+                $newData[] = $sortRow;
+                $r++;
             }
         } else if ($name == 'Teacher Behaviour') {
             foreach ($data AS $row) {
@@ -5778,10 +6636,124 @@ class InstitutionSitesController extends AppController {
                 $newData[] = $row;
             }
         } else if ($name == 'Staff List') {
+        	 $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                array(
+                    'recursive' => -1,
+                    'fields'=>array('InstitutionSiteCustomField.id','InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
+                    'joins' => array(
+                        array(
+                            'table' => 'institution_sites',
+                            'alias' => 'InstitutionSite',
+                            'conditions' => array(
+                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
+                                'InstitutionSite.id' => $this->institutionSiteId
+                                )
+                        ),
+                        array(
+                            'table' => 'institution_site_custom_values',
+                            'alias' => 'InstitutionSiteCustomValue',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
+                                'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
+                                )
+                        ),
+                        array(
+                            'table' => 'institution_site_custom_field_options',
+                            'alias' => 'InstitutionSiteCustomFieldOption',
+                            'type' => 'left',
+                            'conditions' => array(
+                                'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
+                                'InstitutionSiteCustomField.type' => array(3,4),
+                                'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
+                            )
+                        ),
+                    ),
+                    'conditions' => array(
+                            'InstitutionSiteCustomField.visible'=>1,
+                            'InstitutionSiteCustomField.type !=1',
+                    ),
+                    'order' => array('InstitutionSiteCustomField.order'),
+                    'group' => array('InstitutionSiteCustomField.id')
+                )
+            );
+
+            $staff = $this->Staff->find('list', 
+                array(
+                    'recursive' => -1,
+                    'fields'=>array('Staff.id'),
+                    'joins' => array(
+                         array(
+                            'table' => 'institution_site_staff',
+                            'alias' => 'InstitutionSiteStaff',
+                            'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
+                        )
+                    ),
+                    'conditions' => array('InstitutionSiteStaff.institution_site_id = ' . $this->institutionSiteId),
+                    'order' => array('Staff.first_name')
+                )
+            );
+
+            $r = 0;
             foreach ($data AS $row) {
                 $row['Staff']['gender'] = $this->Utility->formatGender($row['Staff']['gender']);
                 $row['Staff']['date_of_birth'] = $this->DateTime->formatDateByConfig($row['Staff']['date_of_birth']);
-                $newData[] = $row;
+
+               
+                $staffCustomFields = $this->StaffCustomField->find('all', 
+                    array(
+                        'recursive' => -1,
+                        'fields'=>array('StaffCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(StaffCustomFieldOption.value),StaffCustomValue.value) as FieldValue'),
+                        'joins' => array(
+                       		 array(
+	                            'table' => 'staff_custom_values',
+	                            'alias' => 'StaffCustomValue',
+	                            'type' => 'left',
+	                            'conditions' => array(
+	                                'StaffCustomField.id = StaffCustomValue.staff_custom_field_id',
+                                    'StaffCustomValue.staff_id' => array_shift(array_slice($staff,$r,1))
+	                           )
+	                        ),
+	                        array(
+	                            'table' => 'staff_custom_field_options',
+	                            'alias' => 'StaffCustomFieldOption',
+	                            'type' => 'left',
+	                            'conditions' => array(
+	                                'StaffCustomField.id = StaffCustomFieldOption.staff_custom_field_id',
+	                                'StaffCustomField.type' => array(3,4),
+	                                'StaffCustomValue.value = StaffCustomFieldOption.id'
+	                            )
+	                        ),
+                   	 	),
+                        'conditions' => array('StaffCustomField.visible'=>1,'StaffCustomField.type !=1'),
+						'order' => array('StaffCustomField.order'),
+                        'group' => array('StaffCustomField.id')
+                    )
+                );
+
+
+                foreach($staffCustomFields as $val){
+                   if(!empty($val['StaffCustomField']['FieldName'])){
+                        $row['StaffCustomField'][$val['StaffCustomField']['FieldName']] = $val[0]['FieldValue'];
+                   }
+                }
+
+              	foreach($institutionSiteCustomFields as $val){
+                   if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
+                        $row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
+                   }
+                }
+                
+                $sortRow = array();
+				foreach($this->reportMapping['Staff List']['fields'] as $key => $value) {
+					if(isset($row[$key])){
+				  		$sortRow[$key] = $row[$key];
+					}else{
+						$sortRow[0] = $row[0];
+					}
+				}
+                $newData[] = $sortRow;
+                $r++;
             }
         } else if ($name == 'Staff Behaviour') {
             foreach ($data AS $row) {
@@ -5789,8 +6761,12 @@ class InstitutionSitesController extends AppController {
                 $newData[] = $row;
             }
         } else if ($name == 'QA Report') {
-            $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-            $newData = $RubricsTemplate->processDataToCSVFormat($data);
+            //$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+            //$newData = $RubricsTemplate->processDataToCSVFormat($data);
+            $QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
+            $newData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
+            $header = array(array('Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+            $newData = $QualityBatchReport->breakReportByYear($newData, 'no', $header);
         }
 
         if (!empty($newData)) {
@@ -5802,10 +6778,10 @@ class InstitutionSitesController extends AppController {
 
     public function genCSV($data, $name) {
         $this->autoRender = false;
-
         $arrData = $this->formatCSVData($data, $name);
-        //pr($arrData);
 
+        //pr($this->getHeader($name));
+        //exit;
         if (array_key_exists($name, $this->reportMapping)) {
             $fileName = array_key_exists('FileName', $this->reportMapping[$name]) ? $this->reportMapping[$name]['FileName'] : "export_" . date("Y.m.d");
         } else {
@@ -5816,28 +6792,28 @@ class InstitutionSitesController extends AppController {
         ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
         //create a file
 
-         $csv_file = fopen('php://output', 'w');
-          header('Content-type: application/csv');
-          header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
-         
+        $csv_file = fopen('php://output', 'w');
+        header('Content-type: application/csv');
+        header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
+
         $header_row = $this->getHeader($name);
-      //  pr($header_row);
-           fputcsv($csv_file, $header_row, ',', '"');
+        //  pr($header_row);
+        fputcsv($csv_file, $header_row, ',', '"');
 
-          // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
-          foreach ($arrData as $arrSingleResult) {
-          $row = array();
-          foreach ($arrSingleResult as $table => $arrFields) {
+        // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
+        foreach ($arrData as $arrSingleResult) {
+            $row = array();
+            foreach ($arrSingleResult as $table => $arrFields) {
 
-          foreach ($arrFields as $col) {
-          $row[] = $col;
-          }
-          }
+                foreach ($arrFields as $col) {
+                    $row[] = $col;
+                }
+            }
 
-          fputcsv($csv_file, $row, ',', '"');
-          }
+            fputcsv($csv_file, $row, ',', '"');
+        }
 
-          fclose($csv_file); 
+        fclose($csv_file);
     }
 
     private function genCSVAcademic($data, $name) {
@@ -5894,7 +6870,7 @@ class InstitutionSitesController extends AppController {
     }
 
     public function genReportPDF($name) {
-        if ($name == 'Overview') {
+        if ($name == 'Overview and More') {
             $profileurl = Router::url(array('controller' => 'InstitutionSites', 'action' => 'siteProfile', $this->institutionSiteId), true);
             $html = file_get_contents($profileurl);
             $html = str_replace('common.css', '', $html);
@@ -5916,9 +6892,9 @@ class InstitutionSitesController extends AppController {
     public function reportsGeneral() {
         $this->Navigation->addCrumb('Reports - General');
         $data = array('Reports - General' => array(
-                array('name' => 'Overview', 'types' => array('CSV')),
+                array('name' => 'Overview and More', 'types' => array('CSV')),
                 array('name' => 'Bank Accounts', 'types' => array('CSV')),
-                array('name' => 'More', 'types' => array('CSV'))
+                //array('name' => 'More', 'types' => array('CSV'))
         ));
         $this->set('data', $data);
         $this->set('actionName', 'genReport');

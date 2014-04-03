@@ -37,19 +37,23 @@ var objTrainingSessions = {
         objTrainingSessions.getDetailsAfterChangeCourse($("#TrainingSessionTrainingCourseId"));
     },
 
+    selectProvider: function(obj){
+        var provider = $('.training_provider');
+        var selProvider = $('.provider');
+
+        $(selProvider).val($(provider).val());
+    },
+
     getDetailsAfterChangeCourse: function(obj){
         var trainingCourseId = $(obj).val();
         var course = $('.training_course');
         var provider = $('.training_provider');
 
-        var originalCourse = $('.course');
-        var originalProvider = $('.provider');
+        var selProvider = $('.provider');
+        defaultVal = $(selProvider).val();
 
-        var defaultVal = "";
+        
 
-        if(originalCourse.val == course.val){
-            defaultVal = originalProvider[0].value;
-        }
         if(trainingCourseId === ""){
             provider[0].options.length = 0;
         }else{
@@ -77,6 +81,11 @@ var objTrainingSessions = {
                 }
             });
         }
+    },
+
+    clearTrainee: function() {
+        var table = $('.trainee');
+        table.find('.table_body').empty();
     },
 
     selectLocationField: function(event, ui) {
@@ -133,7 +142,7 @@ var objTrainingSessions = {
             var callback = function() {
                 table.find('.table_body').append(data);
                 var element = '#searchTrainee' + index;
-                var url = getRootURL() + table.attr('url') + '/' + index;
+                var url = getRootURL() + table.attr('url') + '/' + index + '/' + $('.training_course').val();
                 objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainee);
             };
             $.unmask({id: maskId, callback: callback});

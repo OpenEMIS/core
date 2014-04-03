@@ -47,6 +47,25 @@ echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 			<div class="value"><?php echo $this->Form->input('email', array('value' => $data['email'])); ?></div>
 		</div>
 	</fieldset>
+
+	<fieldset class="section_break">
+		<legend><?php echo __('Groups'); ?></legend>
+		<div class="table full_width">
+			<div class="table_head">
+				<div class="table_cell" style="width: 200px;"><?php echo __('Group'); ?></div>
+				<div class="table_cell"><?php echo __('Role'); ?></div>
+			</div>
+			
+			<div class="table_body">
+				<?php foreach($data['groups'] as $group) { ?>
+					<div class="table_row">
+						<div class="table_cell"><?php echo $group['security_group_name']; ?></div>
+						<div class="table_cell"><?php echo $group['security_role_name']; ?></div>
+					</div>
+				<?php } ?>
+			</div>
+		</div>
+	</fieldset>
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />

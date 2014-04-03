@@ -140,7 +140,7 @@ padding: 3px 0 5px 20px;
 		</div>
 	</div>
     <div class="row">
-        <div class="label"><?php echo __('Credit Hours'); ?></div>
+        <div class="label"><?php echo __('Credits'); ?></div>
         <div class="value">
 		<?php 
 			echo $this->Form->input('credit_hours', array('options'=>$trainingCreditHourOptions)); 
@@ -148,7 +148,7 @@ padding: 3px 0 5px 20px;
         </div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Duration'); ?></div>
+        <div class="label"><?php echo __('Hours'); ?></div>
         <div class="value">
 		<?php 
 			echo $this->Form->input('duration'); 

@@ -57,3 +57,4 @@ app/webroot/logs/*
 *.vcf
 *.pdf
 *.kml
+# *.xls*

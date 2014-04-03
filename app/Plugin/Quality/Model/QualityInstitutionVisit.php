@@ -31,8 +31,7 @@ class QualityInstitutionVisit extends QualityAppModel {
             'foreignKey' => 'created_user_id'
         )
     );
-    //public $hasMany = array('RubricsTemplateColumnInfo');
-
+    public $hasMany = array('QualityInstitutionVisitAttachment');
     public $validate = array(
         'education_grade_id' => array(
             'ruleRequired' => array(
@@ -41,7 +40,7 @@ class QualityInstitutionVisit extends QualityAppModel {
                 'message' => 'Please select a valid Grade.'
             )
         ),
-        'institution_site_classes_id' => array(
+        'institution_site_class_id' => array(
             'ruleRequired' => array(
                 'rule' => 'checkDropdownData',
                 //  'required' => true,
@@ -64,8 +63,8 @@ class QualityInstitutionVisit extends QualityAppModel {
         ),
         'comment' => array(
             'ruleRequired' => array(
-                'rule' => array('maxLength', 200),
-                'message' => 'Maximum 200 character per comment.'
+                'rule' => 'checkCommentLength',//array('maxLength', 1),
+                'message' => 'Maximum 150 words per comment.'
             )
         )
     );
@@ -77,11 +76,19 @@ class QualityInstitutionVisit extends QualityAppModel {
 
         return !empty($value);
     }
+    
+    public function checkCommentLength($data){
+        if(str_word_count($data['comment']) > 150) {
+            return false;
+        }
+        
+        return true;
+    }
 
     public function qualityVisit($controller, $params) {
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
-        $controller->Navigation->addCrumb('Quality - Visit');
-        $controller->set('subheader', 'Quality - Visit');
+        $controller->Navigation->addCrumb('Visit');
+        $controller->set('subheader', 'Visit');
         $controller->set('modelName', $this->name);
 
         $this->recursive = -1;
@@ -104,13 +111,13 @@ class QualityInstitutionVisit extends QualityAppModel {
     }
 
     public function qualityVisitView($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Visit');
-        $controller->set('subheader', 'Quality - Visit');
+        $controller->Navigation->addCrumb('Visit');
+        $controller->set('subheader', 'Visit');
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
         $data = $this->find('first', array('conditions' => array($this->name . '.id' => $id)));
-
+//pr($data);
         if (empty($data)) {
             $controller->redirect(array('action' => 'qualityVisit'));
         }
@@ -122,16 +129,19 @@ class QualityInstitutionVisit extends QualityAppModel {
         $year = $SchoolYear->findById($data[$this->name]['school_year_id']);
 
         $EducationGrade = ClassRegistry::init('EducationGrade');
-        $grade = $EducationGrade->find('first', array('recursive' => -1, 'contidions' => array('EducationGrade.id' => $data[$this->name]['education_grade_id'])));
-
+        $EducationGrade->recursive = -1;
+        $grade = $EducationGrade->findById($data[$this->name]['education_grade_id']);
+    
         $InstitutionSiteClass = ClassRegistry::init('InstitutionSiteClass');
-        $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_classes_id']);
+        $class = $InstitutionSiteClass->getClass($data[$this->name]['institution_site_class_id']);
 
         $InstitutionSiteClassTeacher = ClassRegistry::init('InstitutionSiteClassTeacher');
         $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['teacher_id']);
 
         $QualityVisitType = ClassRegistry::init('QualityVisitType');
         $visitType = $QualityVisitType->find('first', array('conditions' => array('id' => $data[$this->name]['quality_type_id'])));
+
+        //  $QualityVisitAttachment = ClassRegistry::init('QualityVisitType');
 
         $controller->set('schoolYear', $year['SchoolYear']['name']);
         $controller->set('grade', $grade['EducationGrade']['name']);
@@ -141,15 +151,15 @@ class QualityInstitutionVisit extends QualityAppModel {
     }
 
     public function qualityVisitAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Add Visit');
-        $controller->set('subheader', 'Quality - Add Visit');
+        $controller->Navigation->addCrumb('Add Visit');
+        $controller->set('subheader', 'Add Visit');
 
         $this->_setupStatusForm($controller, $params, 'add');
     }
 
     public function qualityVisitEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Quality - Edit Visit');
-        $controller->set('subheader', 'Quality - Edit Visit');
+        $controller->Navigation->addCrumb('Edit Visit');
+        $controller->set('subheader', 'Edit Visit');
 
         $this->_setupStatusForm($controller, $params, 'edit');
         $this->render = 'add';
@@ -158,57 +168,72 @@ class QualityInstitutionVisit extends QualityAppModel {
     private function _setupStatusForm($controller, $params, $type) {
         $institutionSiteId = $controller->Session->read('InstitutionSiteId');
         $userData = $controller->Session->read('Auth.User');
-        $supervisorName = $userData['first_name'] . ' ' . $userData['last_name'];
 
+        $evaluatorName = $userData['first_name'] . ' ' . $userData['last_name'];
+        
+        
 
         if ($type == 'add') {
             $paramsLocateCounter = 0;
         } else {
             $paramsLocateCounter = 1;
+
+
+            $selectedId = $params['pass'][0];
+
+            $data = $this->find('first', array('conditions' => array('QualityInstitutionVisit.id' => $selectedId)));
+            $controller->set('attachments', $data['QualityInstitutionVisitAttachment']);
+            unset($data['QualityInstitutionVisitAttachment']);
         }
 
 
         if ($controller->request->is('get')) {
             if ($type == 'edit') {
                 if (!empty($params['pass'][0])) {
-                    $selectedId = $params['pass'][0];
+                    //  $selectedId = $params['pass'][0];
+                    //   $data = $this->find('first', array('conditions' => array('QualityInstitutionVisit.id' => $selectedId)));
 
-                    $data = $this->find('first', array('conditions' => array('QualityInstitutionVisit.id' => $selectedId)));
-
-                    if (!empty($data)) {
+                    if (!empty($data)) {//pr($data);
                         $controller->request->data = $data;
                         $selectedTeacherId = $data[$this->name]['teacher_id'];
                         $selectedYearId = $data[$this->name]['school_year_id'];
                         $selectedGradeId = $data[$this->name]['education_grade_id'];
-                        $selectedClassId = $data[$this->name]['institution_site_classes_id'];
+                        $selectedClassId = $data[$this->name]['institution_site_class_id'];
                         $selectedVisitTypeId = $data[$this->name]['quality_type_id'];
                         $institutionSiteId = $data[$this->name]['institution_site_id'];
                         $selectedDate = $data[$this->name]['date'];
-                        $supervisorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
+
+                        $evaluatorName = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
+                       
+
                     }
                 } else {
                     //  return $controller->redirect(array('action' => 'index'));
                 }
             }
         } else {
-            $postData = $controller->request->data;
-            unset($postData[$this->name]['file']);
+            $postData = $controller->request->data; //pr($postData);
 
-            $this->set($postData);
-            if ($this->validates()) {
-                if ($this->save($postData)) {
-                    $fileData = $controller->request->data[$this->name]['file'];
-
-                    $uploadComplete = false;
-                    if ($fileData['error'] != 4) {
+            if (!empty($postData)) {
+                $this->set($postData['QualityInstitutionVisit']);
+                if ($this->validates()) {
+                    if ($this->save($postData['QualityInstitutionVisit'])) {
+                        $_modelName = 'QualityInstitutionVisitAttachment';
+                        $filesData = $postData[$_modelName]['files'];
+                        //     pr($filesData); die;
+                        //      $uploadComplete = false;
+                        // if ($this->_checkMultiAttachmentsExist($filesData)) {
                         $controller->FileUploader->fileSizeLimit = 2 * 1024 * 1024;
-                        $controller->FileUploader->fileModel = $this->name;
+                        $controller->FileUploader->fileModel = $_modelName; //$this->name;
                         $controller->FileUploader->dbPrefix = 'file';
+                        $controller->FileUploader->allowEmptyUpload = true;
+                        $controller->FileUploader->fileVar = 'files';
+                        $controller->FileUploader->additionData = array('quality_institution_visit_id' => $this->id);
                         $controller->FileUploader->additionalFileType();
-                        $controller->FileUploader->uploadFile($this->id);
+                        $controller->FileUploader->uploadFile();
 
                         if ($controller->FileUploader->success) {
-                            if (empty($controller->request->data[$this->name]['id'])) {
+                            if (empty($postData[$this->name]['id'])) {
                                 $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
                             } else {
                                 $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
@@ -216,15 +241,23 @@ class QualityInstitutionVisit extends QualityAppModel {
                             return $controller->redirect(array('action' => 'qualityVisitView', $this->id));
                         }
                     } else {
-                        if (empty($controller->request->data[$this->name]['id'])) {
-                            $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                        if ($type == 'add') {
+                            $controller->Utility->alert($controller->Utility->getMessage('ADD_ERROR'), array('type' => 'error'));
                         } else {
-                            $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
+                            $controller->Utility->alert($controller->Utility->getMessage('UPDATE_ERROR'), array('type' => 'error'));
                         }
-                        return $controller->redirect(array('action' => 'qualityVisitView', $this->id));
                     }
                 }
+            } else {
+                if ($type == 'add') {
+                    $controller->Utility->alert($controller->Utility->getMessage('ADD_ERROR'), array('type' => 'error'));
+                } else {
+                    $controller->Utility->alert($controller->Utility->getMessage('UPDATE_ERROR'), array('type' => 'error'));
+                }
+                return $controller->redirect(array('action' => 'qualityVisitView', $this->id));
             }
+
+            //  pr($postData);
         }
         $selectedDate = !empty($selectedDate) ? $selectedDate : '';
         $selectedDate = !empty($params['pass'][0 + $paramsLocateCounter]) ? $params['pass'][0 + $paramsLocateCounter] : $selectedDate;
@@ -292,10 +325,10 @@ class QualityInstitutionVisit extends QualityAppModel {
         $controller->request->data[$this->name]['school_year_id'] = $selectedYearId;
         $controller->request->data[$this->name]['institution_site_id'] = empty($controller->request->data[$this->name]['institution_site_id']) ? $institutionSiteId : $controller->request->data[$this->name]['institution_site_id'];
         $controller->request->data[$this->name]['education_grade_id'] = empty($selectedGradeId) ? 0 : $selectedGradeId;
-        $controller->request->data[$this->name]['institution_site_classes_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
+        $controller->request->data[$this->name]['institution_site_class_id'] = empty($selectedClassId) ? 0 : $selectedClassId;
         $controller->request->data[$this->name]['teacher_id'] = empty($selectedTeacherId) ? 0 : $selectedTeacherId;
         $controller->request->data[$this->name]['quality_type_id'] = empty($selectedVisitTypeId) ? 0 : $selectedVisitTypeId;
-        $controller->request->data[$this->name]['supervisor'] = $supervisorName;
+        $controller->request->data[$this->name]['evaluator'] = $evaluatorName;
     }
 
     public function qualityVisitAttachmentDownload($controller, $params) {
@@ -303,8 +336,10 @@ class QualityInstitutionVisit extends QualityAppModel {
         $id = empty($params['pass'][0]) ? NULL : $params['pass'][0];
 
         if (!empty($id)) {
+            $_modelName = 'QualityInstitutionVisitAttachment';
             $controller->FileUploader->fileModel = $this->name;
             $controller->FileUploader->dbPrefix = 'file';
+            $controller->FileUploader->fileModel = $_modelName; //$this->name;
             $controller->FileUploader->downloadFile($id);
         }
     }
@@ -322,6 +357,37 @@ class QualityInstitutionVisit extends QualityAppModel {
             $controller->Utility->alert($name . ' have been deleted successfully.');
             $controller->Session->delete('QualityVisit.id');
             $controller->redirect(array('action' => 'qualityVisit'));
+        }
+    }
+
+    private function _checkMultiAttachmentsExist($filesData) {
+        $attachmentExisit = false;
+
+        foreach ($filesData as $file) {
+            pr($file);
+            if (!empty($file['tmp_name'])) {
+                $attachmentExisit = true;
+                break;
+            }
+        }
+        die;
+        return $attachmentExisit;
+    }
+
+    public function qualityVisitAjaxAddAttachment($controller, $params) {
+        if ($controller->request->is('ajax')) {
+            
+        }
+    }
+
+    public function qualityVisitAjaxRemoveAttachment($controller, $params) {
+        $this->render = false;
+        if ($controller->request->is('ajax')) {
+            if (!empty($params['pass'])) {
+                $id = $params['pass'][0];
+                $QualityInstitutionVisitAttachment = ClassRegistry::init('QualityInstitutionVisitAttachment');
+                $QualityInstitutionVisitAttachment->delete($id);
+            }
         }
     }
 

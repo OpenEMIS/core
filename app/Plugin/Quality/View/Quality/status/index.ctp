@@ -20,7 +20,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
                 <tr>
                     <td class="table_cell"><?php echo __('Name'); ?></td>
                     <td class="table_cell"><?php echo __('Year'); ?></td>
-                    <td class="table_cell"><?php echo __('Status'); ?></td>
+                    <td class="table_cell"><?php echo __('Date Enabled'); ?></td>
+                    <td class="table_cell"><?php echo __('Date Disabled'); ?></td>
                 </tr>
             </thead>
 
@@ -29,7 +30,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
                     <tr class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
                         <td class="table_cell"><?php echo $rubricOptions[ $val[$modelName]['rubric_template_id']]; ?></td>
                         <td class="table_cell"><?php echo $val[$modelName]['year']; ?></td>
-                        <td class="table_cell"><?php echo $statusOptions[$val[$modelName]['status']]; ?></td>
+                        <td class="table_cell"><?php echo $this->Utility->formatDate($val[$modelName]['date_enabled']); ?></td>
+                        <td class="table_cell"><?php echo $this->Utility->formatDate($val[$modelName]['date_disabled']); ?></td>
                     </tr>
                 <?php } ?>
             </tbody>

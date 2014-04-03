@@ -25,17 +25,17 @@ echo $this->Html->script('config', false);
     
     <?php if(!empty($this->data[$modelName]['order'])){ echo $this->Form->hidden('order');} ?>
     <div class="row">
-        <div class="label"><?php echo __('Header'); ?></div>
+        <div class="label"><?php echo __('Section Header'); ?></div>
         <div class="value"><?php echo $this->Form->input('title'); ?> </div>
     </div>
     <div class="controls view_controls">
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
         <?php 
 		if(!empty($this->data[$modelName]['id'])){ 
-			$redirectURL = array('action' => 'RubricsTemplatesHeaderView',$rubric_template_id,$this->data[$modelName]['id'] );
+			$redirectURL = array('action' => 'rubricsTemplatesHeaderView',$rubric_template_id,$this->data[$modelName]['id'] );
 		}
 		else{
-			$redirectURL = array('action' => 'RubricsTemplatesHeader',$rubric_template_id);
+			$redirectURL = array('action' => 'rubricsTemplatesHeader',$rubric_template_id);
 		}
 		?>
         

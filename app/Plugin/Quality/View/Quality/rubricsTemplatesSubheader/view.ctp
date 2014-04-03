@@ -7,18 +7,25 @@ echo $this->Html->script('/Quality/js/rubrics', false);
 
 <div id="student" class="content_wrapper">
     <h1>
-        <span><?php echo __($subheader); ?></span>
+        <span><?php echo $this->Utility->ellipsis(__($subheader), 50); ?></span>
         <?php
-        echo $this->Html->link(__('View Header List'), array('action' => 'RubricsTemplatesHeader', $rubricTemplateId), array('class' => 'divider'));
+        echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesHeader', $rubricTemplateId), array('class' => 'divider'));
         
         if ($_edit) {
-            echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesSubheaderEdit', $rubricTemplateHeaderId), array('class' => 'divider'));
+            if(empty($this->data['RubricsTemplateDetail'])){
+                $linkName = 'Create Rubric Table';
+            }
+            else{
+                $linkName = 'Edit';
+            }
+            echo $this->Html->link(__($linkName), array('action' => 'rubricsTemplatesSubheaderEdit', $rubricTemplateHeaderId), array('class' => 'divider'));
+            
+            echo $this->Html->link(__('Setup Criteria Column'), array('action' => 'rubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
         }
         
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
-    
     
     <table class='rubric-table'>
         <?php

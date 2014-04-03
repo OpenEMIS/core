@@ -79,11 +79,11 @@ echo $this->Html->script('search', false);
 			</div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Credit Hours'); ?></div>
+			<div class="label"><?php echo __('Credits'); ?></div>
 			<div class="value"><?php echo $obj['credit_hours']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Duration'); ?></div>
+			<div class="label"><?php echo __('Hours'); ?></div>
 			<div class="value"><?php echo $obj['duration']; ?></div>
 		</div>
 		<div class="row">
