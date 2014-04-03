@@ -5,7 +5,7 @@
      <h1>
         <span><?php echo __('Nationalities'); ?></span>
         <?php 
-        if ($_edit) {
+        if ($_edit && !$WizardMode) {
             echo $this->Html->link(__('Back'), array('action' => 'nationalitiesView', $id), array('class' => 'divider'));
         }
         ?>
@@ -26,10 +26,23 @@
         <div class="label"><?php echo __('Comments'); ?></div>
         <div class="value"><?php echo $this->Form->input('comments', array('type'=>'textarea')); ?></div>
     </div>
-
-	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'nationalitiesView', $id), array('class' => 'btn_cancel btn_left')); ?>
+     <div class="controls">
+		 <?php if(!$WizardMode){ ?>
+        <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'nationalitiesView',$id), array('class' => 'btn_cancel btn_left')); ?>
+        <?php }else{?>
+            <?php 
+                echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
+      
+                if(!$wizardEnd){
+                    echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+                }else{
+                    echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+                } 
+                if($mandatory!='1' && !$wizardEnd){
+                    echo $this->Form->submit(__('Skip'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_left"));
+                } 
+      } ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>

@@ -58,7 +58,7 @@ echo $this->Html->script('/Staff/js/training_needs', false);
         </div>
     </div>
     <div class="row">
-		<div class="label"><?php echo __('Course Requirement'); ?></div>
+		<div class="label"><?php echo __('Training Requirement'); ?></div>
         <div class="value">
 		<?php 
 			echo $this->Form->input('requirement', array('disabled' => 'disabled', 'class' => 'default training_course_requirement')); 

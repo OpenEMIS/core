@@ -59,7 +59,7 @@ $obj = $data[$modelName]; ?>
 			<div class="value"><?php echo $obj['location']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Provicer'); ?></div>
+			<div class="label"><?php echo __('Provider'); ?></div>
 			<div class="value"><?php echo $data['TrainingProvider']['name']; ?></div>
 		</div>
 		<div class="row">
@@ -67,7 +67,7 @@ $obj = $data[$modelName]; ?>
 			<div class="value"><?php echo $obj['hours']; ?></div>
 		</div>
 		<div class="row">
-			<div class="label"><?php echo __('Credit Hours'); ?></div>
+			<div class="label"><?php echo __('Credits'); ?></div>
 			<div class="value"><?php echo $obj['credit_hours']; ?></div>
 		</div>
         <div class="row">

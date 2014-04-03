@@ -5,7 +5,6 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 ?>
-?>
 
 <?php echo $this->element('breadcrumb'); ?>
 

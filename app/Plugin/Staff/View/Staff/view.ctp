@@ -59,10 +59,10 @@ echo $this->Html->script('/Staff/js/staff', false);
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
 		</div>
-                <div class="row">
+                <?php /*<div class="row">
 			<div class="label"><?php echo __('Date of Death'); ?></div>
 			<div class="value"><?php echo $this->Utility->formatDate($obj['date_of_death']); ?></div>
-		</div>
+		</div>*/ ?>
 	</fieldset>
 
 	<fieldset class="section_break">
@@ -92,17 +92,6 @@ echo $this->Html->script('/Staff/js/staff', false);
     </fieldset>
     <?php } ?>
 	
-	<fieldset class="section_break">
-		<legend><?php echo __('Contact'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $obj['telephone']; ?></div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Email'); ?></div>
-			<div class="value"><?php echo $obj['email']; ?></div>
-		</div>
-	</fieldset>
 	
 	<?php echo $this->Form->end(); ?>
 </div>

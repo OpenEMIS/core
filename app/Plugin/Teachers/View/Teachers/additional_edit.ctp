@@ -7,8 +7,11 @@ echo $this->Html->script('institution_site', false);
 <div id="site" class="content_wrapper edit">
     <h1>
         <span><?php echo __('More'); ?></span>
+        <?php if(!$WizardMode){ ?>
         <?php echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider')); ?>
+        <?php } ?>
     </h1>
+    <?php echo $this->element('alert'); ?>
     <?php
     echo $this->Form->create('TeacherCustomValue', array(
         'url' => array('controller' => 'Teachers', 'action' => 'additionalEdit')
@@ -97,8 +100,21 @@ echo $this->Html->script('institution_site', false);
 
     ?>
     <div class="controls">
-        <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn-right" />
+        <?php if(!$WizardMode){ ?>
+        <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" />
         <?php echo $this->Html->link(__('Cancel'), array('action' => 'additional'), array('class' => 'btn_cancel btn_left')); ?>
+        <?php }else{?>
+            <?php 
+                echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
+                if(!$wizardEnd){
+                    echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+                }else{
+                    echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+                }
+                if($mandatory!='1' && !$wizardEnd){
+                    echo $this->Form->submit(__('Skip'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_left"));
+                } 
+      } ?>
     </div>
     <?php echo $this->Form->end(); ?>
 </div>

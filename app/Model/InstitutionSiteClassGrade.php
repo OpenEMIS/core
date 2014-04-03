@@ -146,4 +146,79 @@ class InstitutionSiteClassGrade extends AppModel {
 		}
 		return $list;
 	}
+        
+        public function getGrade($id) {
+		$data = $this->find('first', array(
+			'fields' => array('InstitutionSiteClassGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name'),
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				)
+			),
+			'conditions' => array('EducationGrade.id' => $id),
+			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+		));
+		
+                
+		$list = array();
+		//foreach($data as $obj) {
+			$id = $data['InstitutionSiteClassGrade']['id'];
+			$cycleName = $data['EducationCycle']['name'];
+			$programmeName = $data['EducationProgramme']['name'];
+			$gradeName = $data['EducationGrade']['name'];
+			$list['InstitutionSiteClassGrade']['grade_name'] = sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName);
+		//}
+		return $list;
+	}
+        
+        public function getGradeOptions() {
+		$data = $this->find('all', array(
+			'fields' => array('EducationGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name'),
+			'joins' => array(
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+				),
+				array(
+					'table' => 'education_programmes',
+					'alias' => 'EducationProgramme',
+					'conditions' => array('EducationProgramme.id = EducationGrade.education_programme_id')
+				),
+				array(
+					'table' => 'education_cycles',
+					'alias' => 'EducationCycle',
+					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
+				)
+			),
+			'conditions' => array('EducationGrade.visible' => 1,'EducationCycle.visible'=> 1,'EducationProgramme.visible'=> 1),
+			'order' => array('EducationCycle.name', 'EducationProgramme.order', 'EducationGrade.order'),
+                        'group' => array('EducationGrade.name')
+		));
+		//pr($data);
+                
+		$list = array();
+		foreach($data as $obj) {
+			$id = $obj['EducationGrade']['id'];
+			$cycleName = $obj['EducationCycle']['name'];
+			$programmeName = $obj['EducationProgramme']['name'];
+			$gradeName = $obj['EducationGrade']['name'];
+			$list[$id] = sprintf('%s - %s - %s', $cycleName, $programmeName, $gradeName);
+		}
+              
+		return $list;
+                
+	}
 }

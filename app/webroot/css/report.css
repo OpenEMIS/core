@@ -1,0 +1,33 @@
+.report table.table{
+    width: auto;
+    min-width: 99%;
+}
+.report table.table td{
+    text-align: center;
+}
+td.inputField{
+    min-width: 60px;
+}
+.scroll_active.report .list_wrapper{
+    overflow-y: visible;
+    overflow-x: auto;
+    width: 662px;
+}
+tr.th_bg{
+    background-color: #EFEFEF;
+    font-weight: bold;
+}
+td.cell_delete{
+    min-width: 0 !important;
+    width: 16px;
+}
+#enrolment .label.category{
+    margin-left: 0;
+}
+#enrolment td.rowTotalLeftCol{
+    text-align: right;
+    font-weight: bold;
+}
+#enrolment td.rowTotalRightCol{
+    font-weight: bold;
+}

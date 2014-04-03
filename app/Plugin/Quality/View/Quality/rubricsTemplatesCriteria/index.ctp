@@ -8,17 +8,19 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
     <h1>
         <span><?php echo __($subheader); ?></span>
         <?php
-        echo $this->Html->link(__('View Contents'), array('action' => 'rubricsTemplatesSubheaderEdit', $rubricTemplateHeaderId), array('class' => 'divider'));
-        if ($_add) {
-            echo $this->Html->link(__('Add'), array('action' => 'RubricsTemplatesCriteriaAdd', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+        echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplatesSubheaderView', $rubricTemplateHeaderId), array('class' => 'divider'));
+        if ($_add && !$disableDelete) {
+            echo $this->Html->link(__('Add'), array('action' => 'rubricsTemplatesCriteriaAdd', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
         }
         if ($_edit && !empty($data)) {
-            echo $this->Html->link(__('Edit'), array('action' => 'RubricsTemplatesCriteriaOrder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+
+            echo $this->Html->link(__('Reorder'), array('action' => 'rubricsTemplatesCriteriaOrder', $id, $rubricTemplateHeaderId), array('class' => 'divider'));
+
         }
         ?>
     </h1>
     <?php echo $this->element('alert'); ?>
-    <table class="table allow_hover full_width" action="<?php echo $this->params['controller']; ?>/RubricsTemplatesCriteriaView/<?php echo $id ?>/<?php echo $rubricTemplateHeaderId ?>/">
+    <table class="table allow_hover full_width" action="<?php echo $this->params['controller']; ?>/rubricsTemplatesCriteriaView/<?php echo $id ?>/<?php echo $rubricTemplateHeaderId ?>/">
         <thead class="table_head">
             <tr>
                 <td><?php echo __('Option') ?></td>

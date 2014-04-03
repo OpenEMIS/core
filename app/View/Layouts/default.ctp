@@ -45,6 +45,10 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->script('jquery.plugins');
 		echo $this->Html->script('app');
 		echo $this->Html->script('bootstrap');
+
+		if($this->Session->check('WizardMode') && $this->Session->read('WizardMode')==true){
+			echo $this->Html->script('wizard');
+		}
 		
 		echo sprintf('<script type="text/javascript" src="%s%s"></script>', $this->webroot, 'Config/getI18n');
 		echo sprintf('<script type="text/javascript" src="%s%s"></script>', $this->webroot, 'Config/getJSConfig');
@@ -78,9 +82,9 @@ $lastName = AuthComponent::user('last_name');
 						echo $divider;
 						echo sprintf($link, 'Home/details', __('Account'));
 						echo $divider;
-						echo sprintf($link, 'Home/support', __('Help'));
+						echo sprintf($link, 'Home/support', __('Support'));
 						echo $divider;
-						echo sprintf($link, 'Security/logout', __('Logout'));
+						echo sprintf('<a href="%s%s" class="logout">%s</a>', $this->webroot, 'Security/logout', __('Logout'));
 						?>
 					</div>
 				</div><!-- end header_side_nav -->
@@ -118,10 +122,7 @@ $lastName = AuthComponent::user('last_name');
 		</div><!-- end footer -->
 		
 	</div>
-	
 	<?php echo $this->element('sql'); ?>
 </body>
 
 </html>
-
-

@@ -29,9 +29,11 @@ table.rubric-table td.rubric-col-header{
     background-color:#efefef;
     text-align: center;
 }
-table td.answer-options-header{
+
+table td.center{
     text-align: center;
 }
+
 table td.answer-options{
     // background-color:yellow;
     cursor: pointer;
@@ -39,6 +41,10 @@ table td.answer-options{
 
 table td.answer-options:hover{
     //   background-color:red; 
+}
+
+.cell-bold{
+    font-weight: bold;
 }
 
 .cell-option-criteria{
@@ -55,11 +61,13 @@ table td.answer-options:hover{
 }
 
 .table_view li {
-    margin: 0 0 0 3px !important;
+   // margin: 0 0 0 3px !important;
 }
 
 .cell-rubric-row.input{
-    padding: 5px 8px !important;
+    /*padding: 5px 8px !important;*/
+    
+    height:45px !important
 }
 
 .cell-rubric-row{
@@ -68,10 +76,11 @@ table td.answer-options:hover{
     box-sizing:border-box; 
 
     border: 1px solid #CCC !important;
-    border-top: none !important;
+  //  border-top: none !important;
     height: 37px  !important;
     width: 607px;
 }
+
 
 .cell-rubric-row.first{
     border-top:1px solid #CCC !important;
@@ -97,6 +106,18 @@ table td.answer-options:hover{
     padding: 10px 8px;
 
     text-align: center;
+    vertical-align:middle !important;
+}
+
+
+.cell-rubric-col.input{
+    height:45px !important;
+}
+
+.cell-rubric-col.input.first{
+    position: relative;
+   // padding:0px  !important;
+    top:5px;
 }
 
 .cell-rubric-row-height{
@@ -118,7 +139,11 @@ table td.answer-options:hover{
 
 .cell-rubric-order.default{
     border-left:none !important;
-    border-top:none !important;
+    //border-top:none !important;
+}
+
+.cell-rubric-order.input{
+    height:45px !important
 }
 
 .cell-rubric-order.first{
@@ -133,4 +158,26 @@ table td.answer-options:hover{
 
 .cell-rubric-order .icon_down{
     margin-top: 4px !important;
+}
+
+ul.table_view li:first-child .cell{
+    border-top:1px solid #CCC !important;
+}
+
+ul.table_view li:first-child{
+    margin-top:0 !important;
+}
+
+/* Font Color */
+
+.font-red{
+    color: red !important;
+}
+
+.font-orange{
+    color: orange !important;
+}
+
+.font-green{
+    color: green !important;
 }

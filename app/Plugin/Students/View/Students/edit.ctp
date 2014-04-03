@@ -12,8 +12,10 @@ $obj = @$data['Student'];
 	<h1>
 		<span><?php echo __('Overview'); ?></span>
 		<?php
-		echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
-		echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
+		if(!$WizardMode){
+			echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
+			echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider')); 
+		}
 		?>
 	</h1>
 	
@@ -27,6 +29,7 @@ $obj = @$data['Student'];
 
 	<fieldset class="section_break">
 		<legend><?php echo __('Information'); ?></legend>
+		<?php if($this->Session->check('StudentId')){ ?>
         <div class="row">
 			<div class="label"><?php echo __('OpenEMIS ID'); ?></div>
 			<?php if($autoid==''){ ?>
@@ -39,6 +42,23 @@ $obj = @$data['Student'];
             </div>
             <?php } ?>
 		</div>
+		<?php }else{ ?>
+         <div class="row">
+			<div class="label"><?php echo __('OpenEMIS ID'); ?>
+            <?php if($autoid!=''){ ?>
+            <?php echo $this->Form->input('identification_no', array('hidden'=>true,  'default'=>$autoid, 'error' => false)); ?>
+            <?php } ?>
+            </div>
+            <div class="value">
+            <?php if($autoid!=''){ ?>
+            	 <?php echo $autoid; ?>
+            <?php }else{ ?>
+                <?php echo $this->Form->input('identification_no', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');")) ?>
+            	<input type="hidden" name="validate_student_identification" id="validate_student_identification"/>
+            <?php } ?>
+            </div>
+		</div>
+		<?php } ?>
 		<div class="row">
 			<div class="label"><?php echo  __('First Name'); ?></div>
 			<div class="value"><?php echo $this->Form->input('first_name', array('value' => $obj['first_name'])); ?></div>
@@ -70,12 +90,12 @@ $obj = @$data['Student'];
 				<?php echo $this->Utility->getDatePicker($this->Form, 'date_of_birth', array('desc' => true,'value' => $obj['date_of_birth'], 'emptySelect' => true)); ?>
 			</div>
 		</div>
-                <div class="row">
+                <?php /*<div class="row">
 			<div class="label"><?php echo  __('Date of Death'); ?></div>
 			<div class="value">
 				<?php echo $this->Utility->getDatePicker($this->Form, 'date_of_death', array('desc' => true,'value' => $obj['date_of_death'], 'emptySelect' => true)); ?>
 			</div>
-		</div>
+		</div>*/ ?>
 		<div class="row">
 		    <div class="label"><?php echo __('Profile Image'); ?> </div>
 		    <div class="value">
@@ -122,24 +142,20 @@ $obj = @$data['Student'];
 			<?php echo @$this->Utility->getAreaPicker($this->Form, 'birthplace_area_id',$obj['birthplace_area_id'], array()); ?>
 	</fieldset>
 	
-	<fieldset class="section_break">
-		<legend><?php echo __('Contact'); ?></legend>
-		<div class="row">
-			<div class="label"><?php echo  __('Telephone'); ?></div>
-			<div class="value"><?php echo $this->Form->input('telephone', array('value' => $obj['telephone'],
-														    'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_telephone');")); ?>
-           		<input type="hidden" name="validate_student_telephone" id="validate_student_telephone" value="<?php echo $obj['telephone']; ?>"/>
-            </div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo  __('Email'); ?></div>
-			<div class="value"><?php echo $this->Form->input('email', array('value' => $obj['email']));?></div>
-		</div>
-	</fieldset>
-
-	<div class="controls view_controls">
+	 <div class="controls">
+		<?php if(!$WizardMode){ ?>
 		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
+        <?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
+		<?php }else{?>
+			<?php if(!$this->Session->check('StudentId')){ 
+			   echo $this->Form->submit(__('Cancel'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_right"));
+			 }
+		 	if(!$wizardEnd){
+                echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
+           	}else{
+                echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
+            }
+		}?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
