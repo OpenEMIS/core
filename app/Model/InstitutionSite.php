@@ -47,6 +47,12 @@ class InstitutionSite extends AppModel {
 				'CensusTeacherTraining',
 				'CensusWater'
 			)
+		),
+		'CustomReport' => array(
+			'_default' => array('visible'),
+			'belongsTo' => array(
+				'Area' => array('lft', 'rght')
+			)
 		)
 	);
 	
