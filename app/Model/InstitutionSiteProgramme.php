@@ -85,6 +85,7 @@ class InstitutionSiteProgramme extends AppModel {
 				'InstitutionSiteProgramme.id',
 				'EducationSystem.name AS education_system_name',
 				'EducationCycle.name AS education_cycle_name',
+                                'EducationCycle.admission_age AS admission_age',
 				'EducationProgramme.id AS education_programme_id',
 				'EducationProgramme.name AS education_programme_name'
 			),

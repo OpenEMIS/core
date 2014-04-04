@@ -139,6 +139,10 @@ input.default { width: 240px; }
 	text-align: left;
 	padding:15px 0 0 160px;
 }
+.add_more_controls{
+	text-align: left;
+	padding:15px 0 0 140px;
+}
 
 /* styles for box */
 .box { border: 1px solid #CCCCCC; overflow: hidden; margin-bottom: 12px; }
@@ -276,6 +280,7 @@ input.default { width: 240px; }
 
 .btn_right { margin-right: 5px; }
 .btn_left { margin-left: 5px; }
+.btn_center { margin-left: 0px; margin-right:0px; }
 .btn_disabled {	cursor: default; opacity: 0.4; }
 .btn_disabled:hover {
 	color: #FFFFFF !important;
@@ -284,7 +289,7 @@ input.default { width: 240px; }
 	text-shadow: -1px -1px rgba(0, 0, 0, 0.5); !important;
 }
 
-a.btn, a.btn_cancel { padding: 4px 14px 5px; }
+a.btn, a.btn_cancel, .btn_cancel_button { padding: 4px 14px 5px; }
 a.btn:hover { text-decoration: none; }
 
 .chrome .btn_save, .safari .btn_save { padding: 4px 12px; }

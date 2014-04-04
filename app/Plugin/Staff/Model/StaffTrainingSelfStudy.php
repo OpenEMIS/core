@@ -61,13 +61,6 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             	'message' => 'End Date must be greater than Start Date'
             )
         ),
-        'training_provider_id' => array(
-            'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a Course Provider.'
-			)
-        ),
 		'hours' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
@@ -79,7 +72,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Credit Hours.'
+				'message' => 'Please enter a valid Credits.'
 			)
 		),
 		'pass' => array(

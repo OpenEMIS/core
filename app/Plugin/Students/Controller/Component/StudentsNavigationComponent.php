@@ -22,48 +22,9 @@ class StudentsNavigationComponent extends Component {
 	}
 	
 	public function getLinks($navigation) {
-		$controller = 'Students';
-		$links = array(
-			array(
-				array(
-					$navigation->createLink('List of Students', $controller, 'index', 'index$|advanced'),
-					$navigation->createLink('Add new Student', $controller, 'add', 'add$')
-				)
-			),
-			array(
-				'GENERAL' => array(
-					$navigation->createLink('Overview', $controller, 'view', 'view$|^edit$|\bhistory\b'),
-					$navigation->createLink('Contacts', $controller, 'contacts'),
-					$navigation->createLink('Identities', $controller, 'identities'),
-					$navigation->createLink('Nationalities', $controller, 'nationalities'),
-					$navigation->createLink('Languages', $controller, 'languages'),
-					$navigation->createLink('Bank Accounts', $controller, 'bankAccounts'),
-					$navigation->createLink('Comments', $controller, 'comments'),
-					$navigation->createLink('Special Needs', $controller, 'specialNeed', '^specialNeed'),
-					$navigation->createLink('Awards', $controller, 'award', '^award'),
-					$navigation->createLink('Attachments', $controller, 'attachments'),
-					$navigation->createLink('More', $controller, 'additional','additional|^custFieldYrView$')
-				),
-				'DETAILS' => array(
-                    $navigation->createLink('Classes', $controller, 'classes'),
-                    $navigation->createLink('Attendance', $controller, 'attendance'),
-                    $navigation->createLink('Behaviour', $controller, 'behaviour','behaviour|^behaviourView$'),
-                    $navigation->createLink('Results', $controller, 'assessments'),
-					$navigation->createLink('Extracurricular', $controller, 'extracurricular')
-                ),
-				'HEALTH' => array(
-                    $navigation->createLink('Overview', $controller, 'healthView', 'healthView|healthEdit'),
-                    $navigation->createLink('History', $controller, 'healthHistory', '^healthHistory'),
-                    $navigation->createLink('Family', $controller, 'healthFamily', '^healthFamily'),
-                    $navigation->createLink('Immunizations', $controller, 'healthImmunization', '^healthImmunization'),
-					$navigation->createLink('Medications', $controller, 'healthMedication', '^healthMedication'),
-					$navigation->createLink('Allergies', $controller, 'healthAllergy', '^healthAllergy'),
-					$navigation->createLink('Tests', $controller, 'healthTest', '^healthTest'),
-					$navigation->createLink('Consultations', $controller, 'healthConsultation', '^healthConsultation')
-                )
-			)
-		);
-		return array('Students' => array('controller' => $controller, 'links' => $links));
+		$navigation = ClassRegistry::init('Navigation');
+		$links = $navigation->getByModule('Student', true);
+		return array('Students' => array('controller' => 'Students', 'links' => $links));
 	}
 }
 ?>

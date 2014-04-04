@@ -34,7 +34,8 @@ class SecurityController extends AppController {
 		'SecurityUserAccess',
 		'Teachers.Teacher',
 		'Staff.Staff',
-		'Students.Student'
+		'Students.Student',
+		'ConfigAttachment'
 	);
 	public $components = array(
 		'LDAP'
@@ -54,27 +55,30 @@ class SecurityController extends AppController {
 	private function renderFooter() {
 		if(!$this->Session->check('footer')){
 			$this->Session->write('footer', $this->ConfigItem->getWebFooter());
-			/*
-			$val = $this->ConfigItem->getVersion();
-			$results = $this->ConfigItem->find('all', array(
-				'conditions' => array('name' => array('footer', 'version'))
-			));
-			$values = array('footer' => '', 'version' => '0');
-			foreach ($results as $element) {
-				if($element['ConfigItem']['name'] === 'version'){
-					$values['version'] = $element['ConfigItem']['value'];
-				}
-				
-				if($element['ConfigItem']['name'] === 'footer'){
-					$values['footer'] = $element['ConfigItem']['value'];
-				}
-			}
-			$this->Session->write('footer', $values['footer'].' | '.$values['version']);*/
 		}
 	}
 	
     public function login() {
 		$this->autoLayout = false;
+		$lang = $this->ConfigItem->getValue('language');
+		$showLanguage = $this->ConfigItem->getValue('language_menu');
+		if(isset($this->request->query['lang'])) {
+			$lang = $this->request->query['lang'];
+		} else if(count($this->request->params['pass']) > 0) {
+			$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
+			if(in_array($this->request->params['pass'][0], $languageList)) {
+				$lang = $this->request->params['pass'][0];
+				setcookie('language', $lang, time()+(60*60*24*7), '/');
+			} else {
+				$lang = 'eng';
+			}
+		} else if($showLanguage && isset($_COOKIE['language'])) {
+			$lang = $_COOKIE['language'];
+			
+		}
+		$this->set('showLanguage', $showLanguage);
+		// Assign the language to session and configuration
+		$this->Session->write('configItem.language', $lang);
 		if($this->request->is('post')) {
 			$username = $this->data['SecurityUser']['username'];
 			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
@@ -174,11 +178,6 @@ class SecurityController extends AppController {
 				$this->render('login_ajax');
 			}
 			// added cause need to overwrite AppController pre-assigned Session value
-            $lang = (isset($this->request->query['lang'])) ? $this->request->query['lang'] : $this->ConfigItem->getValue('language');
-
-            // Assign the language to session and configuration
-            $this->Session->write('configItem.language', $lang);
-
 			$l10n = new L10n();
 			$locale = $l10n->map($this->Session->read('configItem.language'));
 			$catalog = $l10n->catalog($locale);
@@ -191,6 +190,18 @@ class SecurityController extends AppController {
 		$password = $this->Session->check('login.password') ? $this->Session->read('login.password') : '';
 		$this->set('username', $username);
 		$this->set('password', $password);
+		$this->set('selectedLang', $lang);
+	
+		$images = $this->ConfigAttachment->find('all', array('fields' => array('id','file_name','name'), 'conditions' => array('ConfigAttachment.type'=> array('login','partner'), 'ConfigAttachment.active' => 1), 'order'=>array('order')));
+		$imageData = array();
+		if(!empty($images)){
+			$i = 0;
+			foreach($images as $image){
+				$imageData[$i] = array_merge($image['ConfigAttachment']);
+				$i++;
+			}
+		}
+		$this->set('images', $imageData);
     }
 
     public function login_remote() {
@@ -286,6 +297,9 @@ class SecurityController extends AppController {
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
 				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+                                if(!$allowEdit){
+                                    $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+                                }
 			}
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
@@ -309,6 +323,9 @@ class SecurityController extends AppController {
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
 				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+                                if(!$allowEdit){
+                                    $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+                                }
 			}
 			
 			if(!$allowEdit) {
