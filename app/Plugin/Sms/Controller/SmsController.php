@@ -1,4 +1,19 @@
 <?php
+/*
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+
+OpenEMIS
+Open Education Management Information System
+
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
+
 App::uses('HttpSocket', 'Network/Http');
 class SmsController extends SmsAppController {
     public $uses = array(
@@ -7,6 +22,8 @@ class SmsController extends SmsAppController {
         'Sms.SmsResponse',
         'ConfigItem'
     );
+
+
     public function beforeFilter() {
         parent::beforeFilter();
         $this->Auth->allow('receive');
@@ -425,6 +442,90 @@ class SmsController extends SmsAppController {
         $this->SmsResponse->truncate();
         $this->Utility->alert(__('All responses have been deleted successfully.'));
         $this->redirect(array('action' => 'responses'));
+    }
+
+
+    public function reports(){
+        $this->Navigation->addCrumb('Reports');
+        $data = array('Reports' => array(
+                array('name' => 'SMS Report', 'types' => array('XLSX'))
+        ));
+        $this->set('data', $data);
+    }
+    public function genReport($name, $type) { //$this->genReport('Site Details','CSV');
+        $this->autoRender = false;
+
+        if (method_exists($this, 'gen' . $type)) {
+            if ($type == 'XLSX') {
+                $data = $this->getReportData($name);
+                $this->genXLSX($data, $name);
+            }
+        }
+    }
+
+    public function getReportData($name){
+        $data = array();
+        switch ($name) {
+            case 'SMS Report':
+            $data = $this->SmsResponse->query("SELECT count(distinct number) as Number, 'NumberOfPaticipants' as countType, 1 as countId
+                    FROM `sms_responses` AS `SmsResponse`
+                    UNION
+                    SELECT sum(response) as Number, 'NumberOfSyrians' as countType, 2 as countId
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '2' and response = '1'
+                    UNION
+                    SELECT count(distinct number) as Number, 'NumberOfCompleted' as countType, 3 as countId
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '6'
+                    UNION
+                    SELECT count(Number), countType, countId FROM(
+                    SELECT count(distinct number) as Number, 'NumberOfPartial' as countType, 4 as countId
+                    FROM `sms_responses` AS `SmsResponse`
+                    group by number
+                    having max(`order`) < 6
+                    )a
+                    UNION
+                    SELECT sum(response) as Number, 'NumberOfAbove16' as countType, 5 as countId
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '3'
+                    UNION
+                    SELECT sum(response) as Number, 'NumberOfBetween6And16' as countType, 6 as countId 
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '4'
+                    UNION
+                    SELECT sum(response) as Number, 'NumberOfBetween6And16School' as countType, 7 as countId 
+                    FROM `sms_responses` AS `SmsResponse` where `order`= '5'
+                    UNION
+                    SELECT sum(SmsResponse1.response)-sum(SmsResponse2.response) as Number, 'NumberOfBetween6And16NoSchool' as countType, 9 as countId 
+                    FROM `sms_responses` AS `SmsResponse1`
+                    LEFT JOIN `sms_responses` AS `SmsResponse2` on `SmsResponse2`.`order`= '5' and `SmsResponse2`.`number` = `SmsResponse1`.`number`
+                     where `SmsResponse1`.`order`= '4'");
+                break;
+        }
+        return $data;
+
+    }
+
+    public function genXLSX($data, $name){
+        $webroot = WWW_ROOT;
+        $view = new View($this);
+        $phpExcel = $view->loadHelper('PhpExcel');
+        switch ($name) {
+            case 'SMS Report':
+                $templatePath = $webroot . 'reports/Sms_Reports/Sms/sms_report_template.xlsx';
+                if (file_exists($templatePath)) {
+                     $phpExcel->loadWorksheet($templatePath);
+                     $phpExcel->setDefaultFont('Calibri', 12);
+                } 
+
+
+                $i = 4;
+                foreach($data as $key=>$val){
+                    $phpExcel->changeCell($val[0]['Number'],'B'.$i); 
+                    $i++;
+                }
+               
+                $phpExcel->createSmsPieChart();
+
+                $phpExcel->output('sms_report_' . date('Ymdhis') . '.xlsx'); 
+                break;
+        }
     }
 
     function array2csv($results=NULL, $fieldName=NULL)

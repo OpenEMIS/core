@@ -19,17 +19,8 @@ $(document).ready(function() {
 
 var sms = {
 	init: function() {
-		sms.attachIconTitle();
 	},
-	
-	attachIconTitle: function() {
-		try{
-		$('div[title]').tooltip({position: 'top center', effect: 'slide'});
-
-		}catch(e){}
-	},
-
-
+ 
 	confirmModifySmsMessage: function(obj) {
 		var href = $(obj).attr('href');
 		if($(obj).prop('tagName') !== 'A') {

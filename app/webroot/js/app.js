@@ -179,6 +179,10 @@ var jsForm = {
         //this.datepickerUpdateSelector();
 	},
 	
+	goto: function(obj) {
+		window.location.href = getRootURL() + $(obj).attr('url');
+	},
+	
 	change: function(obj) {
 		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
 	},

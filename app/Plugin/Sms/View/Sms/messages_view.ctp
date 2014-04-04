@@ -1,6 +1,7 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false);
+
 echo $this->Html->script('/Sms/js/sms', false);
 ?>
 

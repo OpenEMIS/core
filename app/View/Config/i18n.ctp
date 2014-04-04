@@ -40,7 +40,8 @@ var i18n = {
 		textUnsavedData: '<?php echo T("Unsaved Data", true); ?>',
 		contentUnsavedData: '<?php echo T("Please save your data before proceed. <br><br>Do you want to save now?", true); ?>',
 		textLeaving: '<?php echo T("Are you sure you want to leave?"); ?>',
-		textNoGrades: '<?php echo T("There are no grades in this programme."); ?>'
+		textNoGrades: '<?php echo T("There are no grades in this programme."); ?>',
+                textDuplicateAges: '<?php echo T("There is duplication in the age list.", true); ?>'
 	},
 	Finance : {
 		textNoData: '<?php echo T("No Data", true); ?>',
@@ -115,6 +116,11 @@ var i18n = {
 		iconMoveUp : '<?php echo T("Move Up", true); ?>',
 		iconMoveDown : '<?php echo T("Move Down", true); ?>',
 		iconToggleField : '<?php echo T("Toggle this field active/inactive", true); ?>',
+                textStayOnPage : '<?php echo T("Stay on Page", true); ?>',
+                textLeavePage : '<?php echo T("Leave Page", true); ?>',
+                textBeforeUnloadTitle : '<?php echo T("Unsave data detected.", true); ?>',
+                textBeforeUnloadBroweser : '<?php echo T("All unsaved changes will be lost.", true); ?>',
+                textBeforeRedirect : '<?php echo T("Are you sure you want to leave this page? All unsaved changes will be lost.", true); ?>'
 	},
 	SMS: {
 		confirmModifySmsMessageContent: '<?php echo T("Note: Please clear the Responses page as existing responses may no longer match the updated Messages.", true); ?>'
@@ -122,5 +128,9 @@ var i18n = {
 	Training: {
 		confirmActivateMessage: '<?php echo T("Do you wish to activate this record?", true); ?>',
 		confirmInactivateMessage: '<?php echo T("Do you wish to inactivate this record?", true); ?>'
+	},
+	Wizard: {
+		title: '<?php echo T("Wizard", true); ?>',
+		uncomplete: '<?php echo T("Unable to proceed until wizard is completed", true); ?>'
 	}
 }

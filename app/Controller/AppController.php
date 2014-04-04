@@ -104,10 +104,13 @@ class AppController extends Controller {
 	}
 	
 	public function processAction() {
-            if(strpos(strtolower(substr($this->action, 0,6)), 'health') !== false){
+           /* if(strpos(strtolower(substr($this->action, 0,6)), 'health') !== false){
                 $action = Inflector::underscore($this->action);
             }
-            else if(strpos(strtolower(substr($this->action, 0,8)), 'training') !== false){
+            else */if(strpos(strtolower(substr($this->action, 0,8)), 'training') !== false){
+                $action = Inflector::underscore($this->action);
+            } 
+            else if(strpos(strtolower(substr($this->action, 0,7)), 'special') !== false){
                 $action = Inflector::underscore($this->action);
             }
             else{
@@ -140,23 +143,16 @@ class AppController extends Controller {
 			}
 		}
 		if(!empty($this->components)) { // for components
-			//$actionCamel = Inflector::camelize($action);
-			$action = strtolower($action);
+			$actionCamel = Inflector::camelize($action);
 			$name = '';
 			foreach($this->components as $component => $option) {
-				if(is_string($component)) {
-					$compare = strtolower($component);
-					if(strpos($action, $compare) === 0) {
-						$name = $component;
-					}
-				} else if (is_string($option)) {
-					$compare = strtolower($option);
-					if(strpos($action, $compare) === 0) {
-						$name = $option;
-					}
+				if(is_string($component) && strpos($actionCamel, $component) === 0) {
+					$name = $component;
+				} else if (is_string($option) && strpos($actionCamel, $option) === 0) {
+					$name = $option;
 				}
 				if(strlen($name) != 0) {
-					$action = substr($action, strlen($name));
+					$action = substr($actionCamel, strlen($name));
 					return $this->{$name}->processAction($this, $action);
 				}
 			}

@@ -56,15 +56,14 @@ $obj = @$data['Student'];
 			<div class="label"><?php echo __('Gender'); ?></div>
 			<div class="value"><?php echo $this->Form->input('gender', array('options'=>$gender)); ?></div>
 		</div>
-
 		<div class="row">
 			<div class="label"><?php echo __('Date of Birth'); ?></div>
 			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_of_birth',array('desc' => true, 'emptySelect' => true)); ?></div>
 		</div>
-                <div class="row">
+               <?php /* <div class="row">
 			<div class="label"><?php echo __('Date of Death'); ?></div>
 			<div class="value"><?php echo $this->Utility->getDatePicker($this->Form, 'date_of_death',array('desc' => true, 'emptySelect' => true)); ?></div>
-		</div>
+		</div>*/ ?>
                 <div class="row">
 		    <div class="label"><?php echo __('Profile Image'); ?> </div>
 		    <div class="value">
@@ -109,20 +108,7 @@ $obj = @$data['Student'];
 		<legend id="area"><?php echo __('Birth Place Area'); ?></legend>
 			<?php echo @$this->Utility->getAreaPicker($this->Form, 'birthplace_area_id',$obj['birthplace_area_id'], array()); ?>
 	</fieldset>
-	
-	<fieldset class="section_break">
-		<legend>Contact</legend>
-		<div class="row">
-			<div class="label"><?php echo __('Telephone'); ?></div>
-			<div class="value"><?php echo $this->Form->input('telephone', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_telephone');")) ?>
-            <input type="hidden" name="validate_student_telephone" id="validate_student_telephone"/>
-            </div>
-		</div>
-		<div class="row">
-			<div class="label"><?php echo __('Email'); ?></div>
-			<div class="value"><?php echo $this->Form->input('email'); ?></div>
-		</div>
-	</fieldset>
+
 	
 	<div class="controls view_controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>

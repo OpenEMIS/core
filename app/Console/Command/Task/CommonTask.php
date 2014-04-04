@@ -152,6 +152,22 @@ class CommonTask extends AppTask {
         eval($countSql);
         return array('total'=>((isset($data))?$data:0), 'limit'=>$this->limit);
     }
+    
+    public function getCountCustom($id) {
+        $this->autoRender = false;
+        $res = $this->Report->find('first', array('conditions' => array('id' => $id)));
+        $sql = $res['BatchReport'][0]['query'];
+        $cond = '\'offset\'=>null,\'limit\'=>null';
+        $sql = str_replace('{cond}', $cond, $sql);
+        $sql = str_replace('$data', '/*$data', $sql);
+
+        $sql .= '*/  $data = $dbo->fetchAll($queryCount);';
+        $sql .= ' $data = $data[0][0]["TotalCount"];';
+        $countSql = str_replace(array("\r\n", "\r", "\n"), ' ', $sql);
+     //   pr($countSql);
+        eval($countSql);
+        return array('total' => ((isset($data)) ? $data : 0), 'limit' => $this->limit);
+    }
 
     public function checkandFormatCustomCount(&$sql){
         if ( (preg_match('/[\'|"]*joins[\'|"]*\s*\=\>array\(/i', $sql)) || (preg_match('/[\'|"]*conditions[\'|"]*\s*\=\>array\(/i', $sql)) ) { 

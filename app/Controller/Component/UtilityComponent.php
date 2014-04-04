@@ -132,6 +132,7 @@ class UtilityComponent extends Component {
 		// Students
 		$msgList['STUDENT_SEARCH_NO_RESULT'] = "No Student found.";
 		$msgList['STUDENT_ALREADY_ADDED'] = "is already exists in this institution site.";
+                $msgList['STUDENT_ALREADY_EXISTS_IN_OTHER_SITE'] = "is already exists in other institution site.";
 		$msgList['STUDENT_NO_BEHAVIOUR_DATA'] = "No behaviour found.";
 		$msgList['SITE_STUDENT_BEHAVIOUR_EMPTY_TITLE'] = "Please enter a valid title.";
 		$msgList['SITE_STUDENT_ATTENDANCE_UPDATED'] = "The Student attendance data has been updated successfully.";
@@ -156,7 +157,13 @@ class UtilityComponent extends Component {
 
 		$msgList['ADD_ERROR'] = 'Record is not added due to errors encountered.';
 		$msgList['UPDATE_ERROR'] = 'Record is not updated due to errors encountered.';
-		
+		$msgList['ADD_UPDATE_ERROR'] = 'Record is not added/updated due to errors encountered.';
+                
+                //Rubric
+               $msgList['RUBRIC_FIRST_POS'] = 'Please ensure the header is at the 1st position.'; 
+                $msgList['RUBRIC_ROW_ADDED'] = 'New row has been added at the bottom of the rubric table.';
+                $msgList['DATA_EXIST'] = 'Please ensure no data duplication.';
+                
 		$msg = isset($msgList[$code]) ? $msgList[$code] : 'Message Not Found';
 
 
