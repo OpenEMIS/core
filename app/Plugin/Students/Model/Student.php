@@ -23,7 +23,8 @@ class Student extends StudentsAppModel {
 				'Students.StudentAttachment',
 				'Students.StudentCustomValue'
 			)
-		)
+		),
+		'CustomReport'
 	);
 	
 	public $validate = array(
