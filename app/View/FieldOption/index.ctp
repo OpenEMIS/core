@@ -50,7 +50,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	<?php endif; ?>
 	
 	<div class="table_content" style="margin-top: 10px;">
-		<table class="table table-hover table-striped">
+		<table class="table table-striped">
 			<thead>
 				<tr>
 					<td class="col-visible" style="width: 60px;"><?php echo __('Visible'); ?></td>
@@ -66,7 +66,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 					?>
 				</tr>
 			</thead>
-			<tbody action="FieldOption/view/">
+			<tbody>
 				<?php 
 				if(!empty($data)) :
 					foreach($data as $obj) :

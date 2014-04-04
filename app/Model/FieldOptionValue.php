@@ -17,7 +17,19 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class FieldOptionValue extends AppModel {
-	//public $hasMany = array('BankBranch');
 	public $actsAs = array('FieldOption');
+	
+	public function getOptionValues($obj) {
+		$model = $this->FieldOptionValue;
+		$data = array();
+		if(!is_null($obj['params'])) {
+			$params = (array) json_decode($obj['params']);
+			if(isset($params['model'])) {
+				$model = ClassRegistry::init($params['model']);
+				$data = $model->getAllOptions();
+			}
+		}
+		return $data;
+	}
 }
 ?>

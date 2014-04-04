@@ -15,7 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class FieldOptionBehavior extends ModelBehavior {
-	public $optionFields = array('national_code' => array('label' => 'National Code', 'display' => true), 'international_code' => array('label' => 'International Code', 'display' => true));
+	public $optionFields = array(
+		'national_code' => array('label' => 'National Code', 'display' => true), 
+		'international_code' => array('label' => 'International Code', 'display' => true)
+	);
 	
 	public function reorder(Model $model, $data) {
 		$id = $data[$model->alias]['id'];
@@ -82,8 +85,22 @@ class FieldOptionBehavior extends ModelBehavior {
 		return $data;
 	}
 	
-	public function setOptionFields(Model $model, $fields) {
-		$this->optionFields = $fields;
+	public function getAllOptions(Model $model) {
+		$model->formatResult = true;
+		$data = $model->find('all', array(
+			'recursive' => -1,
+			//'conditions' => $conditions,
+			'order' => array($model->alias . '.order')
+		));
+		return $data;
+	}
+	
+	public function setOptionFields(Model $model, $fields, $overwrite=false) {
+		if(!$overwrite) {
+			$this->optionFields = array_merge($this->optionFields, $fields);
+		} else {
+			$this->optionFields = $fields;
+		}
 	}
 	
 	public function getOptionFields(Model $model) {

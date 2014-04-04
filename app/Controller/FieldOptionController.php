@@ -22,6 +22,10 @@ class FieldOptionController extends AppController {
 		'FieldOptionValue'
 	);
 	
+	public $options = array(
+		
+	);
+	
 	private $CustomFieldModelLists = array(
 		'InstitutionCustomField' => array('hasSiteType' => false, 'label' => 'Institution Custom Fields'),
 		'InstitutionSiteCustomField' => array('hasSiteType' => true, 'label' => 'Institution Site Custom Fields'), 
@@ -59,9 +63,8 @@ class FieldOptionController extends AppController {
 		return $options;
 	}
 	
-	public function index() {
+	public function index($selectedOption=0) {
 		$list = $this->FieldOption->findOptions(true);
-		$selectedOption = isset($this->params['pass'][0]) ? $this->params['pass'][0] : 0;
 		$options = $this->buildOptions($list);
 		if(array_key_exists($selectedOption, $list)) {
 			$obj = $list[$selectedOption];
@@ -69,12 +72,12 @@ class FieldOptionController extends AppController {
 			
 		}
 		
-		pr($obj);
-		$data = $this->FieldOptionValue->findOptions(array('conditions' => array('field_option_id' => $obj['id'])));
-		$fields = $this->FieldOptionValue->getOptionFields();
+		$data = $this->FieldOptionValue->getOptionValues($obj);
+		$fields = array();//$model->getOptionFields();
 		//pr($data);
-		//pr($obj);
-		$header = trim($list[$selectedOption]['parent'] . ' - ' . $list[$selectedOption]['name']);
+		
+		$header = $list[$selectedOption]['parent'];
+		$header .= (count($header) > 0 ? ' - ' : '') . $list[$selectedOption]['name'];
 		$this->set('header', $header);
 		$this->set('selectedOption', $selectedOption);
 		$this->set('options', $options);

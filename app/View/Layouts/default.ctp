@@ -27,6 +27,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->meta('favicon', $this->webroot . 'favicon.ico?v=2', array('type' => 'icon'));
 		echo $this->fetch('meta');
 		
+		//echo $this->Html->css('default/bootstrap.min');
 		echo $this->Html->css('style');
 		echo $this->Html->css('icons');
 		echo $this->Html->css('fieldset');
@@ -40,11 +41,11 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 			echo $this->Html->css('rtl');
 		}
 		
+		echo $this->Html->script('default/jquery-1.9.1.min');
+		//echo $this->Html->script('default/bootstrap.min');
 		echo $this->Html->script('css_browser_selector');
-		echo $this->Html->script('jquery');
 		echo $this->Html->script('jquery.plugins');
 		echo $this->Html->script('app');
-		echo $this->Html->script('bootstrap');
 
 		if($this->Session->check('WizardMode') && $this->Session->read('WizardMode')==true){
 			echo $this->Html->script('wizard');
