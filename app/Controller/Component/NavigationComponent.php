@@ -41,7 +41,6 @@ class NavigationComponent extends Component {
 		if(!$this->skip) {
 			$this->apply($controller->params['controller'], $this->controller->action);
 		}
-
 		$this->checkWizardModeLink();
 		$this->controller->set('_topNavigations', $this->topNavigations);
 		$this->controller->set('_leftNavigations', $this->leftNavigations);
@@ -182,7 +181,8 @@ class NavigationComponent extends Component {
 					if(isset($obj['controller'])) {
 						$controller = $obj['controller'];
 						$action = $obj['action'];
-						$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
+						$plugin = is_null($obj['plugin']) ? false : $obj['plugin'];
+						$this->ignoredLinks[$module][] = array('plugin' => $plugin, 'controller' => $controller, 'action' => $action);
 						$this->AccessControl->ignore($controller, $action);
 					}
 				}
@@ -536,6 +536,5 @@ class NavigationComponent extends Component {
     		$this->updateWizard($action, null, false);
     	}
     }
-
 }
 ?>

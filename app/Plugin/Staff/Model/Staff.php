@@ -26,7 +26,8 @@ class Staff extends StaffAppModel {
 				'Staff.StaffAttachment',
 				'Staff.StaffCustomValue'
 			)
-		)
+		),
+		'CustomReport'
 	);
 
 	public $validate = array(
