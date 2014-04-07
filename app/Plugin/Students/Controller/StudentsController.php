@@ -64,7 +64,8 @@ class StudentsController extends StudentsAppController {
         'Language',
         'ConfigItem',
         'Students.StudentExtracurricular',
-        'ExtracurricularType'
+        'ExtracurricularType',
+        'Students.StudentAttendanceType'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -753,28 +754,80 @@ class StudentsController extends StudentsAppController {
     // STUDENT ATTENDANCE PART
     public function attendance() {
         $studentId = $this->studentId;
-        $data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+        //$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
         $this->Navigation->addCrumb('Attendance');
 
-        $id = @$this->request->params['pass'][0];
+        //$id = @$this->request->params['pass'][0];
         $yearList = $this->SchoolYear->getYearList();
         $yearId = $this->getAvailableYearId($yearList);
         $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-
-        $data = $this->StudentAttendance->getAttendanceData($studentId, isset($id) ? $id : $yearId);
-        foreach ($data as $id => $val) {
-            $class = $this->InstitutionSiteClass->getClass($data[$id]['StudentAttendance']['institution_site_class_id'], $data[$id]['StudentAttendance']['institution_site_id']);
-            $data[$id]['StudentAttendance']['name'] = $class['InstitutionSiteClass']['name'];
+        $attendanceTypes = $this->StudentAttendanceType->getAttendanceTypes();
+        
+        $dataAttendance = $this->StudentAttendance->getAttendanceByStudentAndYear($studentId, $yearId);
+        $attendanceCheckList = array();
+        $classesArr = array();
+        foreach($dataAttendance AS $rowAttendance){
+            $attendanceTypeId = $rowAttendance['StudentAttendance']['student_attendance_type_id'];
+            $attendanceValue = $rowAttendance['StudentAttendance']['value'];
+            $classId = $rowAttendance['InstitutionSiteClass']['id'];
+                
+            $attendanceCheckList[$classId][$attendanceTypeId] = $attendanceValue;
+            
+            $classesArr[$classId] = $rowAttendance['InstitutionSiteClass']['name'];
         }
+        
+        $attendanceData = array();
+        foreach($classesArr AS $classId => $className){
+            $tempRow = array();
+            $tempRow['classId'] = $classId;
+            $tempRow['className'] = $className;
+            
+            $tempRow['StudentAttendance'] = array();
+            foreach($attendanceTypes AS $attendanceType){
+                $attendanceTypeId = $attendanceType['StudentAttendanceType']['id'];
+                    
+                if(isset($attendanceCheckList[$classId][$attendanceTypeId])){
+                    $tempRow['StudentAttendance'][$attendanceTypeId] = $attendanceCheckList[$classId][$attendanceTypeId];
+                }else{
+                    $tempRow['StudentAttendance'][$attendanceTypeId] = 0;
+                }
+            }
+            $attendanceData[] = $tempRow;
+        }
+        
+        $legend = $this->generateAttendanceLegend();
 
-        if (empty($data)) {
+        if (empty($attendanceData)) {
             $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
         }
 
         $this->set('selectedYear', $yearId);
         $this->set('years', $yearList);
-        $this->set('data', $data);
+        $this->set('data', $attendanceData);
         $this->set('schoolDays', $schoolDays);
+        $this->set('attendanceTypes', $attendanceTypes);
+        $this->set('legend', $legend);
+    }
+    
+    public function generateAttendanceLegend(){
+        $data = $this->StudentAttendanceType->getAttendanceTypes();
+        
+        $indicator = 0;
+        $str = '';
+        foreach($data AS $row){
+            $code = $row['StudentAttendanceType']['national_code'];
+            $name = $row['StudentAttendanceType']['name'];
+            
+            if($indicator > 0){
+                $str .= '; ' . $code . ' = ' . $name;
+            }else{
+                $str .= $code . ' = ' . $name;
+            }
+            
+            $indicator++;
+        }
+        
+        return $str;
     }
 
     // Student behaviour part
