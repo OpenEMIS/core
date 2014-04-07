@@ -54,4 +54,16 @@ $(document).ready(function() {
         }        
     });      
     
+	CustomReport.toggle('.save-report');
 });
+
+var CustomReport = {
+	toggle: function(e) {
+		var val = $(e).val();
+		if(val == 0) {
+			$('.toggle').attr('disabled', 'disabled');
+		} else {
+			$('.toggle').removeAttr('disabled');
+		}
+	}
+};
