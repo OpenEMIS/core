@@ -19,16 +19,33 @@ App::uses('AppModel', 'Model');
 class FieldOptionValue extends AppModel {
 	public $actsAs = array('FieldOption');
 	
-	public function getOptionValues($obj) {
-		$model = $this->FieldOptionValue;
-		$data = array();
+	public function getModel($obj) {
+		$model = $this;
 		if(!is_null($obj['params'])) {
 			$params = (array) json_decode($obj['params']);
 			if(isset($params['model'])) {
 				$model = ClassRegistry::init($params['model']);
-				$data = $model->getAllOptions();
 			}
 		}
+		return $model;
+	}
+	
+	public function getAllValues($obj) {
+		$model = $this->getModel($obj);
+		$data =  $model->getAllOptions();
+		return $data;
+	}
+	
+	public function getValue($obj, $id) {
+		$model = $this->getModel($obj);
+		$model->recursive = 0;
+		$data = $model->findById($id);
+		return $data;
+	}
+	
+	public function getFields($obj) {
+		$model = $this->getModel($obj);
+		$data = $model->getOptionFields();
 		return $data;
 	}
 }
