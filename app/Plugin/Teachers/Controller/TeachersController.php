@@ -74,7 +74,8 @@ class TeachersController extends TeachersAppController {
         'EmploymentType',
         'SalaryAdditionType',
         'SalaryDeductionType',
-        'TrainingCourse'
+        'TrainingCourse',
+        'Teachers.TeacherAttendanceType'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -1029,8 +1030,8 @@ class TeachersController extends TeachersAppController {
     // Teacher ATTENDANCE PART
     public function attendance() {
         $teacherId = $this->teacherId;
-        $data = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
-        $name = sprintf('%s %s', $data['Teacher']['first_name'], $data['Teacher']['last_name']);
+        $dataTeacher = $this->Teacher->find('first', array('conditions' => array('Teacher.id' => $teacherId)));
+        $name = sprintf('%s %s', $dataTeacher['Teacher']['first_name'], $dataTeacher['Teacher']['last_name']);
         $this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
         $this->Navigation->addCrumb('Attendance');
 
@@ -1038,18 +1039,51 @@ class TeachersController extends TeachersAppController {
         $yearList = $this->SchoolYear->getYearList();
         $yearId = $this->getAvailableYearId($yearList);
         $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+        $attendanceTypes = $this->TeacherAttendanceType->getAttendanceTypes();
 
-        $data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'), isset($id) ? $id : $yearId);
+        $data = $this->TeacherAttendance->getAttendanceData($teacherId, isset($id) ? $id : $yearId);
+        $dataAttendance = array();
+        foreach($data AS $row){
+            $attendanceTypeId = $row['TeacherAttendance']['teacher_attendance_type_id'];
+            $attendanceValue = $row['TeacherAttendance']['value'];
+                
+            $dataAttendance[$attendanceTypeId] = $attendanceValue;
+        }
+
+        $legend = $this->generateAttendanceLegend();
 
         $this->set('selectedYear', $yearId);
         $this->set('years', $yearList);
-        $this->set('data', $data);
+        $this->set('data', $dataAttendance);
         $this->set('schoolDays', $schoolDays);
+        $this->set('attendanceTypes', $attendanceTypes);
+        $this->set('legend', $legend);
 
-        $id = @$this->request->params['pass'][0];
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+//        $id = @$this->request->params['pass'][0];
+//        $yearList = $this->SchoolYear->getYearList();
+//        $yearId = $this->getAvailableYearId($yearList);
+//        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+    }
+    
+    public function generateAttendanceLegend(){
+        $data = $this->TeacherAttendanceType->getAttendanceTypes();
+        
+        $indicator = 0;
+        $str = '';
+        foreach($data AS $row){
+            $code = $row['TeacherAttendanceType']['national_code'];
+            $name = $row['TeacherAttendanceType']['name'];
+            
+            if($indicator > 0){
+                $str .= '; ' . $code . ' = ' . $name;
+            }else{
+                $str .= $code . ' = ' . $name;
+            }
+            
+            $indicator++;
+        }
+        
+        return $str;
     }
 
     private function getAvailableYearId($yearList) {

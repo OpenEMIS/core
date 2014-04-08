@@ -75,7 +75,8 @@ class StaffController extends StaffAppController {
         'EmploymentType',
         'SalaryAdditionType',
         'SalaryDeductionType',
-        'TrainingCourse'
+        'TrainingCourse',
+        'Staff.StaffAttendanceType'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -745,13 +746,46 @@ class StaffController extends StaffAppController {
         $yearList = $this->SchoolYear->getYearList();
         $yearId = $this->getAvailableYearId($yearList);
         $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+        $attendanceTypes = $this->StaffAttendanceType->getAttendanceTypes();
 
-        $data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'), isset($id) ? $id : $yearId);
+        $data = $this->StaffAttendance->getAttendanceData($staffId, isset($id) ? $id : $yearId);
+        $dataAttendance = array();
+        foreach($data AS $row){
+            $attendanceTypeId = $row['StaffAttendance']['staff_attendance_type_id'];
+            $attendanceValue = $row['StaffAttendance']['value'];
+                
+            $dataAttendance[$attendanceTypeId] = $attendanceValue;
+        }
+
+        $legend = $this->generateAttendanceLegend();
 
         $this->set('selectedYear', $yearId);
         $this->set('years', $yearList);
-        $this->set('data', $data);
+        $this->set('data', $dataAttendance);
         $this->set('schoolDays', $schoolDays);
+        $this->set('attendanceTypes', $attendanceTypes);
+        $this->set('legend', $legend);
+    }
+    
+    public function generateAttendanceLegend(){
+        $data = $this->StaffAttendanceType->getAttendanceTypes();
+        
+        $indicator = 0;
+        $str = '';
+        foreach($data AS $row){
+            $code = $row['StaffAttendanceType']['national_code'];
+            $name = $row['StaffAttendanceType']['name'];
+            
+            if($indicator > 0){
+                $str .= '; ' . $code . ' = ' . $name;
+            }else{
+                $str .= $code . ' = ' . $name;
+            }
+            
+            $indicator++;
+        }
+        
+        return $str;
     }
 
     private function getAvailableYearId($yearList) {
