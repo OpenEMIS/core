@@ -16,8 +16,16 @@ have received a copy of the GNU General Public License along with this program. 
 
 class FieldOptionBehavior extends ModelBehavior {
 	public $optionFields = array(
-		'national_code' => array('label' => 'National Code', 'display' => true), 
-		'international_code' => array('label' => 'International Code', 'display' => true)
+		'fields' => array(
+			array('field' => 'name', 'label' => 'Name'),
+			array('field' => 'international_code', 'label' => 'International Code'),
+			array('field' => 'national_code', 'label' => 'National Code'),
+			array('field' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => array(0 => __('Inactive'), 1 => __('Active'))),
+			array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+			array('field' => 'modified', 'label' => 'Modified On', 'edit' => false),
+			array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+			array('field' => 'created', 'label' => 'Created On', 'edit' => false)
+		)
 	);
 	
 	public function reorder(Model $model, $data) {
@@ -104,6 +112,8 @@ class FieldOptionBehavior extends ModelBehavior {
 	}
 	
 	public function getOptionFields(Model $model) {
-		return $this->optionFields;
+		$fields = $this->optionFields;
+		$fields['model'] = $model->alias;
+		return $fields;
 	}
 }

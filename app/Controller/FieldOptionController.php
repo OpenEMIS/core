@@ -22,9 +22,8 @@ class FieldOptionController extends AppController {
 		'FieldOptionValue'
 	);
 	
-	public $options = array(
-		
-	);
+	public $optionList = array();
+	public $options = array();
 	
 	private $CustomFieldModelLists = array(
 		'InstitutionCustomField' => array('hasSiteType' => false, 'label' => 'Institution Custom Fields'),
@@ -45,6 +44,9 @@ class FieldOptionController extends AppController {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Field Options', array('controller' => 'FieldOption', 'action' => 'index'));
+		$this->optionList = $this->FieldOption->findOptions(true);
+		$this->options = $this->buildOptions($this->optionList);
 	}
 	
 	private function buildOptions($list) {
@@ -64,31 +66,34 @@ class FieldOptionController extends AppController {
 	}
 	
 	public function index($selectedOption=0) {
-		$list = $this->FieldOption->findOptions(true);
-		$options = $this->buildOptions($list);
-		if(array_key_exists($selectedOption, $list)) {
-			$obj = $list[$selectedOption];
-		} else {
-			
+		if(!array_key_exists($selectedOption, $this->optionList)) {
+			$selectedOption = 0;
 		}
-		
-		$data = $this->FieldOptionValue->getOptionValues($obj);
+		$options = $this->options;
+		$obj = $this->optionList[$selectedOption];
+		$data = $this->FieldOptionValue->getAllValues($obj);
 		$fields = array();//$model->getOptionFields();
 		//pr($data);
 		
-		$header = $list[$selectedOption]['parent'];
-		$header .= (count($header) > 0 ? ' - ' : '') . $list[$selectedOption]['name'];
-		$this->set('header', $header);
-		$this->set('selectedOption', $selectedOption);
-		$this->set('options', $options);
-		$this->set('fields', $fields);
-		$this->set('data', $data);
+		$header = $obj['parent'];
+		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
+		$this->set('data', compact('data', 'header', 'selectedOption', 'options', 'fields'));
+		$this->Navigation->addCrumb($header);
 	}
 	
 	public function add() {
 	}
 	
-	public function view() {
+	public function view($selectedOption=0, $selectedValue=0) {
+		if(!array_key_exists($selectedOption, $this->optionList)) {
+			$selectedOption = 0;
+		}
+		$obj = $this->optionList[$selectedOption];
+		$data = $this->FieldOptionValue->getValue($obj, $selectedValue);
+		$header = $obj['parent'];
+		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
+		$fields = $this->FieldOptionValue->getFields($obj);
+		$this->set('data', compact('data', 'header', 'fields', 'selectedOption'));
 	}
 	
 	public function edit() {

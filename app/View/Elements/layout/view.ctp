@@ -1,38 +1,38 @@
 <?php
-foreach($fields as $field) {
+foreach($fields['fields'] as $field) {
+	$model = isset($field['model']) ? $field['model'] : $fields['model'];
 	$value = '';
 	$key = $field['field'];
 	$label = isset($field['label']) ? __($field['label']) : Inflector::humanize($key);
 	
-	if(!isset($field['view']) || $field['view']!==false)) { // allow display
-		$fieldType = $field['type'];
+	if(!isset($field['view']) || $field['view']!==false) { // allow display
+		$fieldType = isset($field['type']) ? $field['type'] : 'text';
 		
 		if($fieldType === 'link') { // is a hyperlink
-			$labelText = $data[$field['model']][$field['link']['label_text']];
-			$labelAction = $field['link']['label_action'];
-			$labelParam = $field['link']['label_param'];
-			$linkParam = '';
-			foreach($labelParam as $l){
-				$linkParam .= $data[$field['model']][$l];
-			}
-			$value = $this->Html->link($labelText, array("controller" => $this->params['controller'], "action" => $labelAction, $linkParam));
+			
 		} else if($fieldType === 'file') { // downloadable
-			$value = $this->Html->link($data[$field['model']][$key], array(
-					'controller' => $this->params['controller'],
-					'action' => $field['action'], 
-					$data[$field['model']]['id']
-				),
-				array('target' => '_self','escape' => false)
-			);
+			
 		} else if($fieldType === 'select') { // dropdown list
 			
 		} else {
-			$value = $field['options'][$data[$field['model']][$key]];
+			if($key !== 'modified_by' && $key !== 'created_by') {
+				$value = $data[$model][$key];
+			} else {
+				$value = trim($data[$model]['first_name'] . ' ' . $data[$model]['last_name']);
+			}
 		}
+		
+		echo '<div class="row">';
+		echo '<div class="label">' . $label . '</div>';
+		echo '<div class="value">' . $value . '</div>';
+		echo '</div>';
+		
+		/*
 		echo '<div class="row">';
 		echo '<div class="col-md-2">' . $label . '</div>';
 		echo '<div class="col-md-6">' . $value . '</div>';
 		echo '</div>';
+		*/
 	}
 }
 ?>
