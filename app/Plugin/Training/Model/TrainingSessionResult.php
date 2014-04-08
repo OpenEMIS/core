@@ -393,8 +393,10 @@ class TrainingSessionResult extends TrainingAppModel {
 				}
 				
 				if($this->save($controller->request->data)){
-					$trainingSessionTrainee = ClassRegistry::init('Training.TrainingSessionTrainee');
-					if($trainingSessionTrainee->saveAll($controller->request->data['TrainingSessionTrainee'])){
+					if(isset($controller->request->data['TrainingSessionTrainee'])){
+						$trainingSessionTrainee = ClassRegistry::init('Training.TrainingSessionTrainee');
+						if($trainingSessionTrainee->saveAll($controller->request->data['TrainingSessionTrainee'])){
+						}
 					}
 					if(empty($controller->request->data[$this->name]['id'])){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
