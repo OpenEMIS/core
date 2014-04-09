@@ -25,32 +25,31 @@ class MessageComponent extends Component {
 	
 	public $messages = array(
 		'general' => array(
-			'error' => 'An unexpected error has been encounted. Please contact the administrator for assistance.',
+			'notExists' => array('type' => 'info', 'msg' => 'The Record does not exist.'),
+			'noData' => array('type' => 'info', 'msg' => 'There are no records.'),
+			'error' => array('type' => 'error', 'msg' => 'An unexpected error has been encounted. Please contact the administrator for assistance.'),
 			'add' => array(
-				'success' => 'Record has been added successfully.',
-				'failed' => 'Record is not added due to errors encountered.',
+				'success' => array('type' => 'ok', 'msg' => 'The record has been added successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'The record is not added due to errors encountered.')
 			),
 			'edit' => array(
-				'success' => 'Record has been updated successfully.',
-				'failed' => 'Record is not updated due to errors encountered.'
-			),
-			'view' => array(
-				'notExists' => 'The Record does not exist.'
+				'success' => array('type' => 'ok', 'msg' => 'The record has been updated successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'The record is not updated due to errors encountered.')
 			),
 			'delete' => array(
-				'success' => 'Record has been deleted successfully.',
-				'failed' => 'Record is not deleted due to errors encountered.',
+				'success' => array('type' => 'ok', 'msg' => 'The record has been deleted successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'The record is not deleted due to errors encountered.'),
 			)
 		),
 		'security' => array(
 			'login' => array(
-				'timeout' => 'Your session has timed out. Please login again.',
-				'fail' => 'You have entered an invalid username or password.', 
-				'inactive' => 'You are not an authorized user.'
+				'timeout' => array('type' => 'info', 'msg' => 'Your session has timed out. Please login again.'),
+				'fail' => array('type' => 'error', 'msg' => 'You have entered an invalid username or password.'),
+				'inactive' => array('type' => 'error', 'msg' => 'You are not an authorized user.')
 			)
 		),
 		'search' => array(
-			'no_result' => 'No result returned from the search.'
+			'no_result' => array('type' => 'info', 'msg' => 'No result returned from the search.')
 		)
 	);
 	
@@ -65,7 +64,7 @@ class MessageComponent extends Component {
 				break;
 			}
 		}
-		return __($message);
+		return !is_array($message) ? __($message) : $message;
 	}
 	
 	public function alert($code, $settings=array()) {
@@ -77,14 +76,16 @@ class MessageComponent extends Component {
 			'params' => array()
 		);
 		$_settings = array_merge($_settings, $settings);
+		$message = $this->get($code);
 		if(!array_key_exists($_settings['type'], $types)) {
 			$_settings['type'] = key($types);
+		} else {
+			$_settings['type'] = $message['type'];
 		}
-		$message = $this->get($code);
 		if(!empty($_settings['params'])) {
 			$message = vsprintf($message, $_settings['params']);
 		}
-		$_settings['message'] = $message;
+		$_settings['message'] = $message['msg'];
 		$this->Session->write('_alert', $_settings);
 	}
 }

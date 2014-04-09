@@ -77,11 +77,41 @@ class FieldOptionController extends AppController {
 		
 		$header = $obj['parent'];
 		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
-		$this->set('data', compact('data', 'header', 'selectedOption', 'options', 'fields'));
+		$this->set(compact('data', 'header', 'selectedOption', 'options', 'fields'));
 		$this->Navigation->addCrumb($header);
 	}
 	
-	public function add() {
+	public function indexEdit($selectedOption=0) {
+		if(!array_key_exists($selectedOption, $this->optionList)) {
+			$selectedOption = 0;
+		}
+		$options = $this->options;
+		$obj = $this->optionList[$selectedOption];
+		$model = $this->FieldOptionValue->getModel($obj)->alias;
+		$data = $this->FieldOptionValue->getAllValues($obj);
+		
+		$header = $obj['parent'];
+		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
+		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model'));
+		$this->Navigation->addCrumb($header);
+	}
+	
+	public function add($selectedOption=0) {
+		if(!array_key_exists($selectedOption, $this->optionList)) {
+			$selectedOption = 0;
+		}
+		$obj = $this->optionList[$selectedOption];
+		if($this->request->is('post') || $this->request->is('put')) {
+			if($this->FieldOptionValue->saveValue($obj, $this->request->data)) {
+				$this->Message->alert('general.add.success');
+				return $this->redirect(array('action' => 'index', $selectedOption));
+			}
+		}
+		$header = $obj['parent'];
+		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
+		$fields = $this->FieldOptionValue->getFields($obj);
+		$this->set(compact('header', 'fields', 'selectedOption'));
+		$this->Navigation->addCrumb($header);
 	}
 	
 	public function view($selectedOption=0, $selectedValue=0) {
@@ -90,17 +120,53 @@ class FieldOptionController extends AppController {
 		}
 		$obj = $this->optionList[$selectedOption];
 		$data = $this->FieldOptionValue->getValue($obj, $selectedValue);
+		if(empty($data)) {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index', $selectedOption));
+		}
 		$header = $obj['parent'];
 		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
 		$fields = $this->FieldOptionValue->getFields($obj);
-		$this->set('data', compact('data', 'header', 'fields', 'selectedOption'));
+		$this->set(compact('data', 'header', 'fields', 'selectedOption', 'selectedValue'));
+		$this->Navigation->addCrumb($header);
 	}
 	
-	public function edit() {
+	public function edit($selectedOption=0, $selectedValue=0) {
+		if($selectedValue == 0) {
+			$this->Message->alert('general.notExists');
+			return $this->redirect(array('action' => 'index', $selectedOption));
+		}
+		if(!array_key_exists($selectedOption, $this->optionList)) {
+			$selectedOption = 0;
+		}
+		$obj = $this->optionList[$selectedOption];
+		if($this->request->is('post') || $this->request->is('put')) {
+			if($this->FieldOptionValue->saveValue($obj, $this->request->data)) {
+				$this->Message->alert('general.edit.success');
+				return $this->redirect(array('action' => 'view', $selectedOption, $selectedValue));
+			}
+		} else {
+			$this->request->data = $this->FieldOptionValue->getValue($obj, $selectedValue);
+		}
+		$header = $obj['parent'];
+		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
+		$fields = $this->FieldOptionValue->getFields($obj);
+		$this->set(compact('header', 'fields', 'selectedOption', 'selectedValue'));
+		$this->Navigation->addCrumb($header);
 	}
 	
-	public function reorder() {
-		
+	public function reorder($selectedOption=0) {
+		if ($this->request->is('post')) {
+			$obj = $this->optionList[$selectedOption];
+			$data = $this->request->data;
+			if(isset($obj['conditions'])) {
+				$data['conditions'] = $obj['conditions'];
+			}
+			$model = $this->FieldOptionValue->getModel($obj);
+			$model->reorder($data);
+			$redirect = array('action' => 'indexEdit', $selectedOption);
+			return $this->redirect($redirect);
+		}
 	}
 	
 	private function getCustomFieldData($model,$sitetype){
