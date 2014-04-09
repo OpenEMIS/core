@@ -41,9 +41,11 @@ echo $this->Html->script('/OlapCube/js/olap', false);
 		<?php 
 			echo $this->Form->input('row_id', array(
 									'options' => $dimensionOptions,
-								 	'class'=>'row',
-									'onchange'=>'objOlapCube.getDetailsAfterChange(this)'
-								 	));
+									'class'=>'criteria',
+									'default' => $selectedCubeRows,
+									'url' => sprintf('/%s/%s/'.$selectedCubeOptions, $this->params['controller'], $this->params['action']),
+                    				'onchange' => 'jsForm.change(this)'
+									)); 
 		?>
         </div>
     </div>
@@ -54,8 +56,10 @@ echo $this->Html->script('/OlapCube/js/olap', false);
 		<?php 
 			echo $this->Form->input('column_id', array(
 									'options' => $dimensionOptions,
-									'class'=>'column',
-									'onchange'=>'objOlapCube.getDetailsAfterChange(this)'
+									'class'=>'criteria',
+									'default' => $selectedCubeColumns,
+									'url' => sprintf('/%s/%s/'.$selectedCubeOptions.'/'.$selectedCubeRows, $this->params['controller'], $this->params['action']),
+                    				'onchange' => 'jsForm.change(this)'
 									)); 
 		?>
         </div>
@@ -69,26 +73,30 @@ echo $this->Html->script('/OlapCube/js/olap', false);
 									'empty' => __('--Select--'),
 									'options' => $criteriaOptions,
 									'class'=>'criteria',
-									'url' => sprintf('/%s/%s/'.$selectedCubeOptions, $this->params['controller'], $this->params['action']),
+									'default' => $selectedCubeCriterias,
+									'url' => sprintf('/%s/%s/'.$selectedCubeOptions.'/'.$selectedCubeRows.'/'.$selectedCubeColumns, $this->params['controller'], $this->params['action']),
                     				'onchange' => 'jsForm.change(this)'
 									)); 
 		?>
-        </div>
-    </div>
-    <div class="row">
-	 	<div class="label"><?php echo __('Criteria'); ?></div>
-    	<div class="value">
-    	<?php 
+        <p>
+          	<?php 
     		if(isset($fields) && !empty($fields)){
-	    		foreach($fields as $field){
-	    			echo $this->Form->checkbox('criteria_');
-	    		}
+	    		echo $this->Form->input('Model.field', array(
+				    'type' => 'select',
+				    'multiple' => 'checkbox',
+				    'options' => $fields,
+				    'selected' => array_keys($fields)
+				));
 	    	}
+
+
     	?>
+    	</p>
     	</div>
     </div>
+  
      <div class="controls">
-        <input type="submit" value="<?php echo __("Generate"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();" target="_blank"/>
+          <?php echo $this->Html->link(__('Generate'), array('action' => ''), array('class' => 'Generate btn_save btn_right')); ?>
         <input type="reset" value="<?php echo __("Clear"); ?>" class="btn_cancel btn_left"/>
 	</div>
 	
