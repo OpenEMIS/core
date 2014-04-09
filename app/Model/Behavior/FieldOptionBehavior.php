@@ -17,10 +17,11 @@ have received a copy of the GNU General Public License along with this program. 
 class FieldOptionBehavior extends ModelBehavior {
 	public $optionFields = array(
 		'fields' => array(
+			array('field' => 'id', 'type' => 'hidden'),
 			array('field' => 'name', 'label' => 'Name'),
 			array('field' => 'international_code', 'label' => 'International Code'),
 			array('field' => 'national_code', 'label' => 'National Code'),
-			array('field' => 'status', 'label' => 'Status', 'type' => 'select', 'options' => array(0 => __('Inactive'), 1 => __('Active'))),
+			array('field' => 'visible', 'label' => 'Visible', 'type' => 'select'),
 			array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
 			array('field' => 'modified', 'label' => 'Modified On', 'edit' => false),
 			array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
@@ -38,6 +39,7 @@ class FieldOptionBehavior extends ModelBehavior {
 		$idConditions = array_merge(array($idField => $id), $conditions);
 		$updateConditions = array_merge(array($idField . ' <>' => $id), $conditions);
 		
+		$this->fixOrder($model, $conditions);
 		if($move === 'up') {
 			$model->updateAll(array($orderField => $order-1), $idConditions);
 			$updateConditions[$orderField] = $order-1;
@@ -55,6 +57,24 @@ class FieldOptionBehavior extends ModelBehavior {
 			$model->updateAll(array($orderField => $count), $idConditions);
 			$updateConditions[$orderField . ' >'] = $order;
 			$model->updateAll(array($orderField => $orderField . ' - 1'), $updateConditions);
+		}
+	}
+	
+	public function fixOrder(Model $model, $conditions) {
+		$count = $model->find('count', array(
+			'conditions' => $conditions,
+			'group' => array($model->alias . '.order HAVING COUNT(1) > 1')
+		));
+		if($count > 0) {
+			$list = $model->find('list', array(
+				'conditions' => $conditions,
+				'order' => array($model->alias . '.order')
+			));
+			$order = 1;
+			foreach($list as $id => $name) {
+				$model->id = $id;
+				$model->saveField('order', $order++);
+			}
 		}
 	}
 	
@@ -113,6 +133,11 @@ class FieldOptionBehavior extends ModelBehavior {
 	
 	public function getOptionFields(Model $model) {
 		$fields = $this->optionFields;
+		foreach($fields['fields'] as $key => $field) {
+			if($field['field'] === 'visible' && $field['type'] === 'select') {
+				$fields['fields'][$key]['options'] = array(0 => __('No'), 1 => __('Yes'));
+			}
+		}
 		$fields['model'] = $model->alias;
 		return $fields;
 	}

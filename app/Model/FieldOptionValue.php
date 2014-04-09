@@ -43,6 +43,11 @@ class FieldOptionValue extends AppModel {
 		return $data;
 	}
 	
+	public function saveValue($obj, $data) {
+		$model = $this->getModel($obj);
+		return $model->save($data);
+	}
+	
 	public function getFields($obj) {
 		$model = $this->getModel($obj);
 		$data = $model->getOptionFields();

@@ -107,6 +107,8 @@
 .table a { color: #007CBE; }
 .action { margin-left: 5px; }
 
+.col-order { width: 72px; }
+
 td.cell_order { width: 63px; margin-left: -1px; }
 
 .edit .table {
