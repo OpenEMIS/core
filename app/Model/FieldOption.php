@@ -17,6 +17,6 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class FieldOption extends AppModel {
-	//public $hasMany = array('BankBranch');
+	public $hasMany = array('FieldOptionValue');
 }
 ?>

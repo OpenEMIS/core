@@ -4,10 +4,10 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
 $params = array_merge(array('action' => 'index', $selectedOption));
-echo $this->Html->link(__('Back'), $params, array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 if($_edit) {
-	$params = array_merge(array('action' => 'edit', $selectedOption, $selectedValue));//, $parameters);
-	echo $this->Html->link(__('Edit'), $params, array('class' => 'divider'));
+	$params = array_merge(array('action' => 'edit', $selectedOption, $selectedValue));
+	echo $this->Html->link($this->Label->get('general.edit'), $params, array('class' => 'divider'));
 }
 $this->end(); // end contentActions
 
