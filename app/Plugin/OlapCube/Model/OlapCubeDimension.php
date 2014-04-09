@@ -22,23 +22,35 @@ class OlapCubeDimension extends OlapCubeAppModel {
 		$olapCube = ClassRegistry::init('OlapCube');
 
 		$cubeOptions = $olapCube->find('list', array('fields'=>array('id','cube'),'conditions'=>array('visible'=>1), 'order'=>array('order')));
+
 		$controller->set('cubeOptions', $cubeOptions);
 
         $cubeOptionsId = isset($params['pass'][0]) ? $params['pass'][0] : key($cubeOptions);
-        $cubeCriteriaId = isset($params['pass'][1]) ? $params['pass'][1] : '';
-
-        $dimensionOptions = $this->find('list', array('fields'=>array('id','dimension'), 'conditions' => array('olap_cube_id' => $cubeOptionsId, 'visible' => 1), 'recursive' => -1, 'order'=>array('order')));
+        $cubeCriteriaId = isset($params['pass'][3]) ? $params['pass'][3] : '';
+ 		$dimensionOptions = $this->find('list', array('fields'=>array('id','dimension'), 'conditions' => array('olap_cube_id' => $cubeOptionsId, 'visible' => 1), 'recursive' => -1, 'order'=>array('order')));
         $criteriaOptions = $this->find('list', array('fields'=>array('table_name','dimension'), 'conditions' => array('olap_cube_id' => $cubeOptionsId, 'visible' => 1), 'recursive' => -1, 'order'=>array('order')));
 
+       
+        $cubeRowId = isset($params['pass'][1]) ? $params['pass'][1] : key($dimensionOptions);
+        $cubeColumnId = isset($params['pass'][2]) ? $params['pass'][2] : key($dimensionOptions);
         if($cubeCriteriaId){
 			$olapCriteria = ClassRegistry::init($cubeCriteriaId);
+ 			$criteriaDimensions = $this->find('first',
+				array(
+					'recursive'=>-1,
+					'conditions'=>array('OlapCubeDimension.table_name' => $cubeCriteriaId)
+				)
+			);
 
-    	  	$controller->set('fields', $olapCriteria->schema());
+    	  	$controller->set('fields', $olapCriteria->find('list', array('fields'=>array($criteriaDimensions['OlapCubeDimension']['table_field']))));
         }
 
         $controller->set('dimensionOptions', $dimensionOptions);
       	$controller->set('criteriaOptions', $criteriaOptions);
         $controller->set('selectedCubeOptions', $cubeOptionsId);
+
+ 		$controller->set('selectedCubeRows', $cubeRowId);
+ 		$controller->set('selectedCubeColumns', $cubeColumnId);
  		$controller->set('selectedCubeCriterias', $cubeCriteriaId);
 
        	if(!$controller->request->is('get')){
@@ -176,7 +188,7 @@ class OlapCubeDimension extends OlapCubeAppModel {
 			$controller->Session->write('olap_column', $columnId);
 			$controller->Session->write('olap_report', $layout);
 
-			$controller->redirect(array('action'=>'olapReportDisplay'));
+			//$controller->redirect(array('action'=>'olapReportDisplay'));
        	}
 
        	$controller->set('modelName', $this->name);
