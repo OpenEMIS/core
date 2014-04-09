@@ -33,22 +33,4 @@ class IdentityType extends AppModel {
 		)
 	);
 	public $actsAs = array('FieldOption');
-	
-	public function getDisplayFields() {
-		/*
-		$data = array(
-			'model' => get_class($this),
-			'fields' => array(
-				array('field' => 'name', 'label' => 'Name'),
-				array('field' => 'international_code', 'label' => 'International Code'),
-				array('field' => 'national_code', 'label' => 'National Code'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'model' => $model, 'label' => 'Modified On', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'model' => $model, 'label' => 'Created On', 'edit' => false)
-			)
-		);
-		return $data;
-		*/
-	}
 }

@@ -7,11 +7,11 @@ $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if($_add) {
 	$params = array_merge(array('action' => 'add', $selectedOption));
-	echo $this->Html->link(__('Add'), $params, array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.add'), $params, array('class' => 'divider'));
 }
 if($_edit && count($data) > 1) {
 	$params = array_merge(array('action' => 'indexEdit', $selectedOption));
-	echo $this->Html->link(__('Reorder'), $params, array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.reorder'), $params, array('class' => 'divider'));
 }
 $this->end(); // end contentActions
 
@@ -32,8 +32,8 @@ $this->Form->end();
 	<table class="table table-striped">
 		<thead>
 			<tr>
-				<td class="col-visible" style="width: 60px;"><?php echo __('Visible'); ?></td>
-				<td><?php echo __('Option'); ?></td>
+				<td class="col-visible" style="width: 60px;"><?php echo $this->Label->get('general.visible'); ?></td>
+				<td><?php echo $this->Label->get('general.order'); ?></td>
 				<?php
 				if(isset($fields)) {
 					foreach($fields as $field => $value) {
@@ -51,13 +51,13 @@ $this->Form->end();
 				foreach($data as $obj) :
 			?>
 			<tr>
-				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></td>
-				<td><?php echo $this->Html->link($obj['name'], array('action' => 'view', $selectedOption, $obj['id'])); ?></td>
+				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1); ?></td>
+				<td><?php echo $this->Html->link($obj[$model]['name'], array('action' => 'view', $selectedOption, $obj[$model]['id'])); ?></td>
 				<?php
 				if(isset($fields)) {
 					foreach($fields as $field => $value) {
 						if($value['display']) {
-							echo '<td>' .$obj[$field] . '</td>';
+							echo '<td>' .$obj[$model][$field] . '</td>';
 						}
 					}
 				}

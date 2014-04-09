@@ -5,7 +5,7 @@ $this->assign('contentHeader', $header);
 $this->start('contentActions');
 
 $params = array_merge(array('action' => 'view', $selectedOption, $selectedValue));
-echo $this->Html->link(__('Back'), $params, array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 
 $this->end(); // end contentActions
 
@@ -18,8 +18,8 @@ echo $this->element('layout/edit', array('fields' => $fields));
 ?>
 
 <div class="controls view_controls">
-	<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => 'view', $selectedOption, $selectedValue), array('class' => 'btn_cancel btn_left')); ?>
+	<input type="submit" value="<?php echo $this->Label->get('general.save'); ?>" class="btn_save btn_right" />
+	<?php echo $this->Html->link($this->Label->get('general.cancel'), array('action' => 'view', $selectedOption, $selectedValue), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 
 <?php $this->end(); ?>

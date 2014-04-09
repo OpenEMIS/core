@@ -71,13 +71,12 @@ class FieldOptionController extends AppController {
 		}
 		$options = $this->options;
 		$obj = $this->optionList[$selectedOption];
-		$data = $this->FieldOptionValue->getAllValues($obj);
-		$fields = array();//$model->getOptionFields();
-		//pr($data);
+		$this->FieldOptionValue->setParent($obj);
+		$model = $this->FieldOptionValue->getModel()->alias;
+		$data = $this->FieldOptionValue->getAllValues();
+		$header = $this->FieldOptionValue->getHeader();
 		
-		$header = $obj['parent'];
-		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
-		$this->set(compact('data', 'header', 'selectedOption', 'options', 'fields'));
+		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model'));
 		$this->Navigation->addCrumb($header);
 	}
 	
@@ -87,12 +86,15 @@ class FieldOptionController extends AppController {
 		}
 		$options = $this->options;
 		$obj = $this->optionList[$selectedOption];
-		$model = $this->FieldOptionValue->getModel($obj)->alias;
-		$data = $this->FieldOptionValue->getAllValues($obj);
-		
-		$header = $obj['parent'];
-		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
-		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model'));
+		$this->FieldOptionValue->setParent($obj);
+		$model = $this->FieldOptionValue->getModel()->alias;
+		$data = $this->FieldOptionValue->getAllValues();
+		$header = $this->FieldOptionValue->getHeader();
+		$conditions = array();
+		if($model === 'FieldOptionValue') {
+			$conditions['field_option_id'] = $obj['id'];
+		}
+		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model', 'conditions'));
 		$this->Navigation->addCrumb($header);
 	}
 	
@@ -101,15 +103,15 @@ class FieldOptionController extends AppController {
 			$selectedOption = 0;
 		}
 		$obj = $this->optionList[$selectedOption];
+		$this->FieldOptionValue->setParent($obj);
 		if($this->request->is('post') || $this->request->is('put')) {
-			if($this->FieldOptionValue->saveValue($obj, $this->request->data)) {
+			if($this->FieldOptionValue->saveValue($this->request->data)) {
 				$this->Message->alert('general.add.success');
 				return $this->redirect(array('action' => 'index', $selectedOption));
 			}
 		}
-		$header = $obj['parent'];
-		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
-		$fields = $this->FieldOptionValue->getFields($obj);
+		$header = $this->FieldOptionValue->getHeader();
+		$fields = $this->FieldOptionValue->getFields();
 		$this->set(compact('header', 'fields', 'selectedOption'));
 		$this->Navigation->addCrumb($header);
 	}
@@ -119,14 +121,14 @@ class FieldOptionController extends AppController {
 			$selectedOption = 0;
 		}
 		$obj = $this->optionList[$selectedOption];
-		$data = $this->FieldOptionValue->getValue($obj, $selectedValue);
+		$this->FieldOptionValue->setParent($obj);
+		$data = $this->FieldOptionValue->getValue($selectedValue);
 		if(empty($data)) {
 			$this->Message->alert('general.notExists');
 			return $this->redirect(array('action' => 'index', $selectedOption));
 		}
-		$header = $obj['parent'];
-		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
-		$fields = $this->FieldOptionValue->getFields($obj);
+		$header = $this->FieldOptionValue->getHeader();
+		$fields = $this->FieldOptionValue->getFields();
 		$this->set(compact('data', 'header', 'fields', 'selectedOption', 'selectedValue'));
 		$this->Navigation->addCrumb($header);
 	}
@@ -140,29 +142,27 @@ class FieldOptionController extends AppController {
 			$selectedOption = 0;
 		}
 		$obj = $this->optionList[$selectedOption];
+		$this->FieldOptionValue->setParent($obj);
 		if($this->request->is('post') || $this->request->is('put')) {
-			if($this->FieldOptionValue->saveValue($obj, $this->request->data)) {
+			if($this->FieldOptionValue->saveValue($this->request->data)) {
 				$this->Message->alert('general.edit.success');
 				return $this->redirect(array('action' => 'view', $selectedOption, $selectedValue));
 			}
 		} else {
-			$this->request->data = $this->FieldOptionValue->getValue($obj, $selectedValue);
+			$this->request->data = $this->FieldOptionValue->getValue($selectedValue);
 		}
-		$header = $obj['parent'];
-		$header .= (count($header) > 0 ? ' - ' : '') . $obj['name'];
-		$fields = $this->FieldOptionValue->getFields($obj);
+		$header = $this->FieldOptionValue->getHeader();
+		$fields = $this->FieldOptionValue->getFields();
 		$this->set(compact('header', 'fields', 'selectedOption', 'selectedValue'));
 		$this->Navigation->addCrumb($header);
 	}
 	
 	public function reorder($selectedOption=0) {
-		if ($this->request->is('post')) {
+		if ($this->request->is('post') || $this->request->is('put')) {
 			$obj = $this->optionList[$selectedOption];
+			$this->FieldOptionValue->setParent($obj);
 			$data = $this->request->data;
-			if(isset($obj['conditions'])) {
-				$data['conditions'] = $obj['conditions'];
-			}
-			$model = $this->FieldOptionValue->getModel($obj);
+			$model = $this->FieldOptionValue->getModel();
 			$model->reorder($data);
 			$redirect = array('action' => 'indexEdit', $selectedOption);
 			return $this->redirect($redirect);

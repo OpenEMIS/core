@@ -113,11 +113,10 @@ class FieldOptionBehavior extends ModelBehavior {
 		return $data;
 	}
 	
-	public function getAllOptions(Model $model) {
-		$model->formatResult = true;
+	public function getAllOptions(Model $model, $conditions) {
 		$data = $model->find('all', array(
-			'recursive' => -1,
-			//'conditions' => $conditions,
+			'recursive' => 0,
+			'conditions' => $conditions,
 			'order' => array($model->alias . '.order')
 		));
 		return $data;
