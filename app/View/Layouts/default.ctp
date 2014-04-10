@@ -27,7 +27,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->meta('favicon', $this->webroot . 'favicon.ico?v=2', array('type' => 'icon'));
 		echo $this->fetch('meta');
 		
-		//echo $this->Html->css('default/bootstrap.min');
+		echo $this->Html->css('default/bootstrap.min');
 		echo $this->Html->css('style');
 		echo $this->Html->css('icons');
 		echo $this->Html->css('fieldset');
@@ -42,7 +42,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		}
 		
 		echo $this->Html->script('default/jquery-1.9.1.min');
-		echo $this->Html->script('bootstrap');
+		echo $this->Html->script('default/bootstrap.min');
 		echo $this->Html->script('css_browser_selector');
 		echo $this->Html->script('jquery.plugins');
 		echo $this->Html->script('app');
@@ -55,8 +55,6 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo sprintf('<script type="text/javascript" src="%s%s"></script>', $this->webroot, 'Config/getJSConfig');
 		
 		echo $this->fetch('script');
-		
-		//echo $this->Js->writeBuffer(array('cache'=>FALSE));
 	?>
 </head>
 <?php 
