@@ -233,12 +233,29 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 
 /*bootstrap*/
-
-.accordion-heading {
-  border-bottom: 0;
+.panel-group .panel {
+	border: none;
+	border-radius: 0px;
+	box-shadow: none;
 }
 
-.accordion-heading .accordion-toggle {
+.panel-group .panel + .panel { margin-top: 0px; }
+
+.panel-heading {
+	padding: 0;
+	border: none;
+}
+
+.panel-default > .panel-heading + .panel-collapse .panel-body { 
+	border: none;
+	padding: 0px;
+}
+
+.panel-title {
+	border-bottom: 0;
+}
+
+.panel-title .accordion-toggle {
 	display: block;
 	padding: 6px 15px 8px 15px;
 	color: #007CBE;
@@ -248,7 +265,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	background-position: right 14px;
 	background-repeat: no-repeat;
 }
-.accordion-heading .accordion-toggle:hover{
+.panel-title .accordion-toggle:hover{
 	background-color:#5B8BAF;
 	color:#ffffff;
 	background-position: right -76px;
@@ -270,3 +287,4 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .collapse.in {
   height: auto;
 }
+

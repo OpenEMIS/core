@@ -1,15 +1,17 @@
-<div class="left_nav accordion" id="accordion">
+<div class="left_nav panel-group" id="accordion">
 	<?php
 	$index = 0;
 	$group = '
-	<div class="accordion-group">
-		<div class="accordion-heading">
-		  <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#%s">
-			<p>%s</p>
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<h4 class="panel-title">
+				<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#%s">
+				<p>%s</p>
+			</h4>
 		  </a>
 		</div>
-		<div id="%s" class="accordion-body collapse %%s">
-		  <div class="accordion-inner">%%s</div>
+		<div id="%s" class="panel-collapse collapse %%s">
+		  <div class="panel-body">%%s</div>
 		</div>
 	</div>';
 	
