@@ -11,7 +11,7 @@ echo $this->Html->script('bankaccounts', false);
         <span><?php echo __('Bank Accounts'); ?></span>
         <?php 
         if ($_edit) {
-            echo $this->Html->link(__('Back'), array('action' => 'bankAccountsView', $id), array('class' => 'divider'));
+            echo $this->Html->link(__('Back'), array('action' => 'bankAccountsView', $bankAccountId), array('class' => 'divider'));
         }
         ?>
     </h1>
@@ -20,7 +20,7 @@ echo $this->Html->script('bankaccounts', false);
 	<?php 
 	echo $this->Form->create('InstitutionSiteBankAccount', array(
 			'id' => 'InstitutionSiteBankAccount',
-			'url' => array('controller' => 'InstitutionSites', 'action' => 'bankAccountsEdit', $id, $selectedBank),
+			'url' => array('controller' => 'InstitutionSites', 'action' => 'bankAccountsEdit', $bankAccountId, $bankId),
 			'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 		));
 	?>
@@ -48,10 +48,10 @@ echo $this->Html->script('bankaccounts', false);
         	<?php
                 echo $this->Form->input('bank_id', array(
                     'options' => $bank,
-                    'default' => $selectedBank,
+                    'default' => $bankId,
                     'label' => false,
                     'empty' => __('--Select--'),
-                    'url' => sprintf('%s/%s/%s', $this->params['controller'], $this->params['action'], $id),
+                    'url' => sprintf('%s/%s/%s', $this->params['controller'], $this->params['action'], $bankAccountId),
                     'onchange' => 'BankAccounts.getBranchesAfterChangeBank(this)'
                 ));
             ?>
