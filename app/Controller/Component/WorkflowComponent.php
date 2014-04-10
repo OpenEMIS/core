@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class WorkflowComponent extends Component {
+    private $controller;
     public $components = array('Session','Auth');
 
     private $modelMap = array(
@@ -85,6 +86,10 @@ class WorkflowComponent extends Component {
         }
 
         return $workflows;
+    }
+
+    public function getApprovalWorkflow($step, $module, $userId){
+        
     }
 
 }
