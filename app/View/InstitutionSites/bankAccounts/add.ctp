@@ -14,12 +14,12 @@ echo $this->Html->script('bankaccounts', false);
 	<?php 
 		echo $this->Form->create('InstitutionSiteBankAccount', array(
 			'id' => 'InstitutionSiteBankAccount',
-			'url' => array('controller' => 'InstitutionSites', 'action' => 'bankAccountsAdd', $selectedBank),
+			'url' => array('controller' => 'InstitutionSites', 'action' => 'bankAccountsAdd', $bankId),
 			'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 		));
 	?>
 	<div class="bankAccountForm">
-	<?php echo $this->Form->input('institution_site_id', array('type'=>'hidden', 'value'=>$institution_site_id)); ?>
+	<?php echo $this->Form->input('institution_site_id', array('type'=>'hidden', 'value'=>$institutionSiteId)); ?>
 	<div class="row edit">
         <div class="label"><?php echo __('Account Name'); ?></div>
         <div class="value"><?php echo $this->Form->input('account_name'); ?></div>
@@ -43,7 +43,7 @@ echo $this->Html->script('bankaccounts', false);
         	 <?php
                 echo $this->Form->input('bank_id', array(
                     'options' => $bank,
-                    'default' => $selectedBank,
+                    'default' => $bankId,
                     'label' => false,
                     'empty' => __('--Select--'),
                     'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),

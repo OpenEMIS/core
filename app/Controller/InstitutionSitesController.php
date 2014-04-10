@@ -59,7 +59,6 @@ class InstitutionSitesController extends AppController {
         'InstitutionSiteStatus',
         'InstitutionSiteProgramme',
         'InstitutionSiteAttachment',
-        'InstitutionSiteBankAccount',
         'InstitutionSiteType',
         'InstitutionSiteStudent',
         'InstitutionSiteTeacher',
@@ -153,6 +152,12 @@ class InstitutionSitesController extends AppController {
         ),
         'AreaHandler'
     );
+    
+    public $modules = array(
+        'bankAccounts' => 'InstitutionSiteBankAccount',
+        'programmes' => 'InstitutionSiteProgramme'
+    );
+    
     private $ReportData = array(); //param 1 name ; param2 type
     private $reportMapping = array(
         'Overview and More' => array(
@@ -1306,195 +1311,7 @@ class InstitutionSitesController extends AppController {
         $this->set('datavalues', $tmp);
     }
 
-    public function bankAccounts() {
-        $this->Navigation->addCrumb('Bank Accounts');
-
-        $data = $this->InstitutionSiteBankAccount->find('all', array('conditions' => array('InstitutionSiteBankAccount.institution_site_id' => $this->institutionSiteId)));
-        $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
-        $banklist = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('data', $data);
-        $this->set('bank', $bank);
-        $this->set('banklist', $banklist);
-    }
-
-    public function bankAccountsView() {
-        $bankAccountId = $this->params['pass'][0];
-        $bankAccountObj = $this->InstitutionSiteBankAccount->find('all', array('conditions' => array('InstitutionSiteBankAccount.id' => $bankAccountId)));
-
-        if (!empty($bankAccountObj)) {
-            $this->Navigation->addCrumb('Bank Account Details');
-
-            $this->Session->write('InstitutionSiteBankAccountId', $bankAccountId);
-            $this->set('bankAccountObj', $bankAccountObj);
-        }
-        $banklist = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('banklist', $banklist);
-    }
-
-    public function bankAccountsAdd() {
-        $this->Navigation->addCrumb('Add Bank Accounts');
-        if ($this->request->is('post')) { // save
-            $this->InstitutionSiteBankAccount->create();
-            if ($this->InstitutionSiteBankAccount->save($this->request->data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'bankAccounts'));
-            }
-        }
-        $bank = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-
-        $bankId = isset($this->request->data['InstitutionSiteBankAccount']['bank_id']) ? $this->request->data['InstitutionSiteBankAccount']['bank_id'] : "";
-        if (!empty($bankId)) {
-            $bankBranches = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
-        } else {
-            $bankBranches = array();
-        }
-
-        $this->set('bankBranches', $bankBranches);
-        $this->set('selectedBank', $bankId);
-
-        $this->set('institution_site_id', $this->institutionSiteId);
-        $this->set('bank', $bank);
-    }
-
-    public function bankAccountsEdit() {
-        $bankBranch = array();
-
-        $bankAccountId = $this->params['pass'][0];
-
-        if ($this->request->is('get')) {
-            $bankAccountObj = $this->InstitutionSiteBankAccount->find('first', array('conditions' => array('InstitutionSiteBankAccount.id' => $bankAccountId)));
-
-            if (!empty($bankAccountObj)) {
-                $this->Navigation->addCrumb('Edit Bank Account Details');
-                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
-                $this->request->data = $bankAccountObj;
-            }
-        } else {
-            $this->request->data['InstitutionSiteBankAccount']['institution_site_id'] = $this->institutionSiteId;
-            if ($this->InstitutionSiteBankAccount->save($this->request->data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'bankAccountsView', $this->request->data['InstitutionSiteBankAccount']['id']));
-            }
-        }
-
-        $bankId = isset($this->request->data['InstitutionSiteBankAccount']['bank_id']) ? $this->request->data['InstitutionSiteBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
-        $this->set('selectedBank', $bankId);
-
-        $bankBranch = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
-        $this->set('bankBranch', $bankBranch);
-
-        $bank = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('bank', $bank);
-
-        $this->set('id', $bankAccountId);
-    }
-
-    public function bankAccountsDelete($id) {
-        if ($this->Session->check('InstitutionSiteId') && $this->Session->check('InstitutionSiteBankAccountId')) {
-            $id = $this->Session->read('InstitutionSiteBankAccountId');
-            $institutionSiteId = $this->Session->read('InstitutionSiteId');
-            $name = $this->InstitutionSiteBankAccount->field('account_number', array('InstitutionSiteBankAccount.id' => $id));
-            $this->InstitutionSiteBankAccount->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'bankAccounts'));
-        }
-    }
-
-    public function bankAccountsBankBranches() {
-        $this->autoRender = false;
-        $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
-        echo json_encode($bank);
-    }
-
-    public function programmesGradeList() {
-        $this->layout = 'ajax';
-        $programmeId = $this->params->query['programmeId'];
-        $exclude = $this->params->query['exclude'];
-        $gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, $exclude);
-        $this->set('gradeOptions', $gradeOptions);
-        $this->render('/Elements/programmes/grade_options');
-    }
-
-    public function programmes() {
-        $this->Navigation->addCrumb('Programmes');
-
-        $yearOptions = $this->SchoolYear->getAvailableYears();
-        $selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-        $data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
-
-        $this->set('yearOptions', $yearOptions);
-        $this->set('selectedYear', $selectedYear);
-        $this->set('data', $data);
-    }
-
-    public function programmesEdit() {
-        if ($this->request->is('get')) {
-            $this->Navigation->addCrumb('Edit Programmes');
-
-            $yearOptions = $this->SchoolYear->getAvailableYears();
-            $selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearOptions);
-            $data = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
-
-            $this->set('yearOptions', $yearOptions);
-            $this->set('selectedYear', $selectedYear);
-            $this->set('data', $data);
-        } else {
-            $this->autoRender = false;
-        }
-    }
-
-    public function programmesAdd() {
-        $yearId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $this->layout = 'ajax';
-
-            $data = $this->EducationProgramme->getAvailableProgrammeOptions($this->institutionSiteId, $yearId);
-            $_delete_programme = $this->AccessControl->check('InstitutionSites', 'programmesDelete');
-            $this->set('data', $data);
-            $this->set('_delete_programme', $_delete_programme);
-        } else {
-            $this->autoRender = false;
-            $programmeId = $this->params->data['programmeId'];
-
-            $obj = array(
-                'education_programme_id' => $programmeId,
-                'institution_site_id' => $this->institutionSiteId,
-                'school_year_id' => $yearId
-            );
-
-            $this->InstitutionSiteProgramme->create();
-            $result = $this->InstitutionSiteProgramme->save($obj);
-            $return = array();
-            if ($result) {
-                $this->Utility->setAjaxResult('success', $return);
-            } else {
-                $this->Utility->setAjaxResult('error', $return);
-                $return['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
-            }
-            return json_encode($return);
-        }
-    }
-
-    public function programmesDelete() {
-        if (count($this->params['pass']) == 2) {
-            $this->autoRender = false;
-            $yearId = $this->params['pass'][0];
-            $id = $this->params['pass'][1];
-
-            $this->InstitutionSiteProgramme->delete($id, false);
-            $this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
-            $this->redirect(array('action' => 'programmes', $yearId));
-        }
-    }
-
-    public function programmesOptions() {
-        $this->layout = 'ajax';
-
-        $yearId = $this->params->query['yearId'];
-        $programmeOptions = $this->InstitutionSiteProgramme->getSiteProgrammeForSelection($this->institutionSiteId, $yearId, false);
-        $this->set('programmeOptions', $programmeOptions);
-        $this->render('/Elements/programmes/programmes_options');
-    }
+    
 
     public function history() {
         $this->Navigation->addCrumb('History');
