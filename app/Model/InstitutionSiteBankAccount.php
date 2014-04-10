@@ -155,7 +155,7 @@ class InstitutionSiteBankAccount extends AppModel {
     }
 
     public function bankAccountsBankBranches($controller, $params) {
-        $controller->autoRender = false;
+        $this->render = false;
         $bank = $controller->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
         echo json_encode($bank);
     }

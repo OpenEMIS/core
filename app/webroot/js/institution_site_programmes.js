@@ -54,6 +54,7 @@ var InstitutionSiteProgrammes = {
 					};
 					$.unmask({id: maskId, callback: callback});
 				};
+                                
 				$.ajax({
 					type: 'POST',
 					dataType: 'json',
@@ -64,14 +65,18 @@ var InstitutionSiteProgrammes = {
 				});
 			}
 		} else { // fetch programme list
+                    
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
-					if(!$(data).hasClass('alert')) {
+					if(!$($.parseHTML(data)).hasClass('alert')) {
 						table.append(data);
 						jsTable.fixTable(table.parent());
 					} else {
-						alertOpt['type'] = $(data).attr('type');
-						alertOpt['text'] = $(data).html();
+						//alertOpt['type'] = $($.parseHTML(data)).attr('type');
+                                                alertOpt['type'] = 0;
+						//alertOpt['text'] = $($.parseHTML(data)).html();
+                                                alertOpt['text'] = 'No programme available.';
+
 						$.alert(alertOpt);
 					}
 				};
