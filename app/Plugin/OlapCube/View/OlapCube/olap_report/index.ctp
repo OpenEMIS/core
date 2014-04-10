@@ -41,7 +41,7 @@ echo $this->Html->script('/OlapCube/js/olap', false);
 		<?php 
 			echo $this->Form->input('row_id', array(
 									'options' => $dimensionOptions,
-									'class'=>'criteria',
+									'class' => 'rowCube',
 									'default' => $selectedCubeRows,
 									'url' => sprintf('/%s/%s/'.$selectedCubeOptions, $this->params['controller'], $this->params['action']),
                     				'onchange' => 'jsForm.change(this)'
@@ -56,7 +56,6 @@ echo $this->Html->script('/OlapCube/js/olap', false);
 		<?php 
 			echo $this->Form->input('column_id', array(
 									'options' => $dimensionOptions,
-									'class'=>'criteria',
 									'default' => $selectedCubeColumns,
 									'url' => sprintf('/%s/%s/'.$selectedCubeOptions.'/'.$selectedCubeRows, $this->params['controller'], $this->params['action']),
                     				'onchange' => 'jsForm.change(this)'
@@ -81,7 +80,7 @@ echo $this->Html->script('/OlapCube/js/olap', false);
         <p>
           	<?php 
     		if(isset($fields) && !empty($fields)){
-	    		echo $this->Form->input('Model.field', array(
+	    		echo $this->Form->input('field', array(
 				    'type' => 'select',
 				    'multiple' => 'checkbox',
 				    'options' => $fields,
@@ -96,7 +95,8 @@ echo $this->Html->script('/OlapCube/js/olap', false);
     </div>
   
      <div class="controls">
-          <?php echo $this->Html->link(__('Generate'), array('action' => ''), array('class' => 'Generate btn_save btn_right')); ?>
+          <?php //echo $this->Html->link(__('Generate'), array('action' => ''), array('class' => 'Generate btn_save btn_right')); ?>
+       <input type="submit" value="<?php echo __("Generate"); ?>" class="btn_save btn_right"/>
         <input type="reset" value="<?php echo __("Clear"); ?>" class="btn_cancel btn_left"/>
 	</div>
 	
