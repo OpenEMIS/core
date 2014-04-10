@@ -142,6 +142,7 @@ class InstitutionSitesController extends AppController {
         'CensusCustomValue',
         'Quality.QualityInstitutionRubric',
         'Quality.QualityInstitutionVisit',
+        'InstitutionSiteShift'
     );
     public $helpers = array('Paginator');
     public $components = array(
@@ -1305,7 +1306,120 @@ class InstitutionSitesController extends AppController {
         $this->set('datafields', $datafields);
         $this->set('datavalues', $tmp);
     }
+    
+    public function shifts() {
+        $this->Navigation->addCrumb('Shifts');
 
+        $data = $this->InstitutionSiteShift->getAllShiftsByInstitutionSite($this->institutionSiteId);
+
+        $this->set('data', $data);
+    }
+    
+    public function shiftsView() {
+        $shiftId = $this->params['pass'][0];
+        $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
+        if(!empty($shiftObj)){
+            $this->Session->write('shiftId', $shiftId);
+            $this->set('shiftObj', $shiftObj);
+        }else{
+            $this->redirect(array('action' => 'shifts'));
+        }
+    }
+    
+    public function shiftsAdd() {
+        $this->Navigation->addCrumb('Add Shift');
+        $institutionObj = $this->InstitutionSite->getInstitutionSiteById($this->institutionSiteId);
+        
+        if ($this->request->is('post')) { // save
+            $data = $this->request->data;
+            $data['InstitutionSiteShift']['institution_site_id'] = $this->institutionSiteId;
+            $this->InstitutionSiteShift->create();
+            
+            if ($this->InstitutionSiteShift->save($data, array('validate' => 'only'))) {
+                if(empty($data['InstitutionSiteShift']['location_institution_site_id'])){
+                    $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
+                }else{
+                    $testLocationId = $this->InstitutionSite->getInstitutionSiteById($data['InstitutionSiteShift']['location_institution_site_id']);
+                    if(empty($testLocationId)){
+                        $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
+                    }else{
+                        $this->InstitutionSiteShift->save($data, array('validate' => 'false'));
+                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                        $this->redirect(array('action' => 'shifts'));
+                    }
+                }
+            }
+        }
+
+        $yearOptions = $this->SchoolYear->getAvailableYears();
+
+        $this->set('yearOptions', $yearOptions);
+        $this->set('institutionSiteId', $institutionObj['InstitutionSite']['id']);
+        $this->set('institutionSiteName', $institutionObj['InstitutionSite']['name']);
+    }
+    
+    public function shiftsEdit() {
+        $shiftId = $this->params['pass'][0];
+        $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
+        if(empty($shiftObj)){
+            $this->redirect(array('action' => 'shifts'));
+        }
+        
+        $locationSiteObj = $this->InstitutionSite->getInstitutionSiteById($shiftObj['InstitutionSiteShift']['location_institution_site_id']);
+        
+        if ($this->request->is('get')) { // save
+            $this->Navigation->addCrumb('Edit Shift');
+            
+            $this->request->data = $shiftObj;
+        }else{
+            $data = $this->request->data;
+            $data['InstitutionSiteShift']['institution_site_id'] = $this->institutionSiteId;
+            
+            if ($this->InstitutionSiteShift->save($data, array('validate' => 'only'))) {
+                if(empty($data['InstitutionSiteShift']['location_institution_site_id'])){
+                    $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
+                }else{
+                    $testLocationId = $this->InstitutionSite->getInstitutionSiteById($data['InstitutionSiteShift']['location_institution_site_id']);
+                    if(empty($testLocationId)){
+                        $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
+                    }else{
+                        $this->InstitutionSiteShift->save($data, array('validate' => 'false'));
+                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                        $this->redirect(array('action' => 'shiftsView', $shiftId));
+                    }
+                }
+            }
+        }
+
+        $yearOptions = $this->SchoolYear->getAvailableYears();
+
+        $this->set('yearOptions', $yearOptions);
+        $this->set('locationSiteName', $locationSiteObj['InstitutionSite']['name']);
+        $this->set('locationSiteId', $locationSiteObj['InstitutionSite']['id']);
+        $this->set('shiftId', $shiftId);
+    }
+    
+    public function shiftLocationAutoComplete() {
+        $this->autoRender = false;
+        $search = $this->params->query['term'];
+        $result = $this->InstitutionSite->getAutoCompleteList($search);
+        return json_encode($result);
+    }
+    
+    public function shiftsDelete() {
+        if ($this->Session->check('shiftId')) {
+            $shiftId = $this->Session->read('shiftId');
+            $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
+            $shiftName = $shiftObj['InstitutionSiteShift']['name'];
+            
+            $this->InstitutionSiteShift->deleteAll(array('InstitutionSiteShift.id' => $shiftId));
+            $this->Utility->alert($shiftName . __(' have been deleted successfully.'));
+            $this->redirect(array('action' => 'shifts'));
+        }else{
+            $this->redirect(array('action' => 'shifts'));
+        }
+    }
+    
     public function bankAccounts() {
         $this->Navigation->addCrumb('Bank Accounts');
 
