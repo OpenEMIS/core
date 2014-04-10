@@ -42,7 +42,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		}
 		
 		echo $this->Html->script('default/jquery-1.9.1.min');
-		//echo $this->Html->script('default/bootstrap.min');
+		echo $this->Html->script('bootstrap');
 		echo $this->Html->script('css_browser_selector');
 		echo $this->Html->script('jquery.plugins');
 		echo $this->Html->script('app');
