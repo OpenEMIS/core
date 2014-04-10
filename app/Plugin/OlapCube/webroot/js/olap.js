@@ -6,32 +6,17 @@ $(document).ready(function() {
 var objOlapCube = {
 
     init: function() {
-        $('.Generate').click(function(){
-            var table = $('.olap_report');
-
-            //$('#OlapCubeDimensionOlapReportForm').submit(); 
-     
-
-             $.ajax({
-                type: 'POST',
-                dataType: 'json',
-                url: getRootURL() + 'OlapCube/olapReport',
-                beforeSend: function (jqXHR) {
-                    maskId = $.mask({parent: '.content_wrapper', text: i18n.Attachments.textDeletingAttachment});
-                },
-                success: function (data, textStatus) {
-                    var callback = function() {
-                        
-                    };
-                    $.unmask({id: maskId, callback: callback});
-                }
-            });
+        
+        $('#OlapCubeDimensionOlapReportForm').submit(function() {
+            maskId = $.mask({parent: '#olap_report', text: i18n.Olap.textGeneratingCube});
+            return true;
+        });
+        $('.criteria').change(function() {
+            maskId = $.mask({parent: '#olap_report', text: i18n.Olap.textLoadingCube});
+            return true;
         });
 
-
     },
-
-
 
 
    getDetailsAfterChange: function(obj){
