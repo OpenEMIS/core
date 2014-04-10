@@ -152,6 +152,7 @@ CakePlugin::load(array('Survey' => array('routes' => true)));
 CakePlugin::load(array('Sms' => array('routes' => true)));
 CakePlugin::load(array('Quality' => array('routes' => true)));
 CakePlugin::load(array('Training' => array('routes' => true)));
+CakePlugin::load(array('OlapCube' => array('routes' => true)));
 CakePlugin::load('DevInfo6');
 
 // Custom Reports
