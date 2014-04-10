@@ -17,6 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteProgramme extends AppModel {
+    public $actsAs = array('ControllerAction');
+    
 	public $belongsTo = array(
 		'InstitutionSite'=>array('foreignKey' => 'institution_site_id'),
 		'EducationProgramme'=>array('foreignKey' => 'education_programme_id'),
@@ -378,5 +380,94 @@ class InstitutionSiteProgramme extends AppModel {
             
             return $data;
         }
+        
+        public function programmesGradeList($controller, $params) {
+        $controller->layout = 'ajax';
+        $programmeId = $controller->params->query['programmeId'];
+        $exclude = $controller->params->query['exclude'];
+        $gradeOptions = $controller->EducationGrade->getGradeOptions($programmeId, $exclude);
+        
+        $controller->set(compact('gradeOptions'));
+        $controller->render('/Elements/programmes/grade_options');
+    }
+
+    public function programmes($controller, $params) {
+        $controller->Navigation->addCrumb('Programmes');
+
+        $yearOptions = $controller->SchoolYear->getAvailableYears();
+        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearOptions);
+        $data = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+        
+        $controller->set(compact('yearOptions', 'selectedYear', 'data'));
+    }
+
+    public function programmesEdit($controller, $params) {
+        if ($controller->request->is('get')) {
+            $controller->Navigation->addCrumb('Edit Programmes');
+
+            $yearOptions = $controller->SchoolYear->getAvailableYears();
+            $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearOptions);
+            $data = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+            
+            $controller->set(compact('yearOptions', 'selectedYear', 'data'));
+        } else {
+            $this->render = false;
+        }
+    }
+
+    public function programmesAdd($controller, $params) {
+        $yearId = $controller->params['pass'][0];
+        if ($controller->request->is('get')) {
+            $controller->layout = 'ajax';
+
+            $data = $controller->EducationProgramme->getAvailableProgrammeOptions($controller->institutionSiteId, $yearId);
+            $_delete_programme = $controller->AccessControl->check('InstitutionSites', 'programmesDelete');
+
+            $controller->set(compact('_delete_programme', 'data'));
+        } else {
+            $this->render = false;
+            $programmeId = $controller->params->data['programmeId'];
+
+            $obj = array(
+                'education_programme_id' => $programmeId,
+                'institution_site_id' => $controller->institutionSiteId,
+                'school_year_id' => $yearId
+            );
+
+            $controller->InstitutionSiteProgramme->create();
+            $result = $controller->InstitutionSiteProgramme->save($obj);
+            $return = array();
+            if ($result) {
+                $controller->Utility->setAjaxResult('success', $return);
+            } else {
+                $controller->Utility->setAjaxResult('error', $return);
+                $return['msg'] = $controller->Utility->getMessage('ERROR_UNEXPECTED');
+            }
+            
+            return json_encode($return);
+        }
+    }
+
+    public function programmesDelete($controller, $params) {
+        if (count($controller->params['pass']) == 2) {
+            $this->render = false;
+            $yearId = $controller->params['pass'][0];
+            $id = $controller->params['pass'][1];
+
+            $controller->InstitutionSiteProgramme->delete($id, false);
+            $controller->Utility->alert($controller->Utility->getMessage('DELETE_SUCCESS'));
+            $controller->redirect(array('action' => 'programmes', $yearId));
+        }
+    }
+
+    public function programmesOptions($controller, $params) {
+        $controller->layout = 'ajax';
+
+        $yearId = $controller->params->query['yearId'];
+        $programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($controller->institutionSiteId, $yearId, false);
+        
+        $controller->set(compact('programmeOptions'));
+        $controller->render('/Elements/programmes/programmes_options');
+    }
 
 }
