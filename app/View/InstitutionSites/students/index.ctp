@@ -79,7 +79,6 @@ echo $this->Form->end();
 	<?php } ?>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
-		<!--div class="table allow_hover" action="InstitutionSites/studentsView/"-->
 			<thead>
 				<tr>
 					<th>
@@ -113,8 +112,8 @@ echo $this->Form->end();
 				$middleName = $this->Utility->highlight($searchField, $obj['Student']['middle_name']);
 				$lastName = $this->Utility->highlight($searchField, $obj['Student']['last_name']);
 				?>
-				<tr row-id="<?php echo $obj['Student']['id']; ?>">
-					<td><?php echo $idNo; ?></td>
+				<tr>
+					<td><?php echo $this->Html->link($idNo, array('action' => 'studentsView', $obj['Student']['id']), array('escape' => false)); ?></td>
 					<td><?php echo $firstName; ?></td>
 					<td><?php echo $middleName; ?></td>
 					<td><?php echo $lastName; ?></td>
