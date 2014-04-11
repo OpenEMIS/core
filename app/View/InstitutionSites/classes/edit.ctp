@@ -39,8 +39,8 @@ echo $this->Html->script('institution_site_classes', false);
 					<div class="table_cell_row <?php echo $i==sizeof($grades) ? 'last' : ''; ?>"><?php echo $name; ?></div>
 				<?php } ?>
 				</div>
-                                <div class="table_cell"><?php echo $no_of_seats; ?></div>
-                                <div class="table_cell"><?php echo $no_of_shifts; ?></div>
+                                <div class="table_cell"><?php echo $noOfSeats; ?></div>
+                                <div class="table_cell"><?php echo $noOfShifts; ?></div>
 			</div>
 		</div>
 	</div>
