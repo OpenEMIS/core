@@ -31,20 +31,21 @@ class FormUtilityHelper extends AppHelper {
 	public function getFormDefaults() {
 		$defaults = array(
 			'div' => 'form-group',
-			'label' => array('class' => 'col-md-2 control-label'),
-			'between' => '<div class="col-md-3">',
+			'label' => array('class' => 'col-md-3 control-label'),
+			'between' => '<div class="col-md-4">',
 			'after' => '</div>',
-			'class' => 'form-control',
-			'error' => array('attributes' => array('class' => 'alert alert-danger form-error'))
+			'class' => 'form-control'
 		);
-		return array();//$defaults;
+		return $defaults;
 	}
 	
-	public function getFormButtons($form, $option = NULL) {
-		$div = isset($option['div'])? $option['div'] : 'controls view_controls';
-		echo '<div class="'.$div.'">';
-		echo $form->button('Save', array('type' => 'submit', 'class' => 'btn btn-primary'));
-		echo $form->button('Cancel', array('type' => 'reset', 'class' => 'btn btn-primary btn-back'));
+	public function getFormButtons($view, $option = NULL) {
+		$cancelURL = $option['cancelURL'];
+		echo '<div class="form-group">';
+		echo '<div class="col-md-offset-4">';
+		echo $view->Form->submit(__('Save'), array('class' => 'btn_save btn_right', 'div' => false));
+		echo $view->Html->link(__('Cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
+		echo '</div>';
 		echo '</div>';
 	}
 }
