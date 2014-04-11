@@ -16,6 +16,7 @@
  */
 
 class StudentBehaviour extends StudentsAppModel {
+    public $actsAs = array('ControllerAction');
 
     public $useTable = 'student_behaviours';
     public $validate = array(

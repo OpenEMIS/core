@@ -17,6 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudent extends AppModel {
+    public $actsAs = array('ControllerAction');
+    
 	public $belongsTo = array('StudentStatus');
 	
 	public function getDetails($studentId, $institutionSiteId) {
@@ -377,4 +379,234 @@ class InstitutionSiteStudent extends AppModel {
                 return true;
             }
         }
+        
+        public function students($controller, $params) {
+        App::uses('Sanitize', 'Utility');
+        $controller->Navigation->addCrumb('List of Students');
+
+        $page = isset($controller->params->named['page']) ? $controller->params->named['page'] : 1;
+
+        $selectedYear = "";
+        $selectedProgramme = "";
+        $searchField = "";
+        $orderBy = 'Student.first_name';
+        $order = 'asc';
+        $yearOptions = $controller->SchoolYear->getYearListValues('start_year');
+        $programmeOptions = $controller->InstitutionSiteProgramme->getProgrammeOptions($controller->institutionSiteId);
+        $prefix = 'InstitutionSiteStudent.Search.%s';
+        if ($controller->request->is('post')) {
+            $searchField = Sanitize::escape(trim($controller->data['Student']['SearchField']));
+            $selectedYear = $controller->data['Student']['school_year'];
+            $selectedProgramme = $controller->data['Student']['education_programme_id'];
+            $orderBy = $controller->data['Student']['orderBy'];
+            $order = $controller->data['Student']['order'];
+
+            $controller->Session->write(sprintf($prefix, 'SearchField'), $searchField);
+            $controller->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
+            $controller->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
+            $controller->Session->write(sprintf($prefix, 'order'), $order);
+            $controller->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+        } else {
+            $searchField = $controller->Session->read(sprintf($prefix, 'SearchField'));
+            $selectedYear = $controller->Session->read(sprintf($prefix, 'SchoolYear'));
+            $selectedProgramme = $controller->Session->read(sprintf($prefix, 'EducationProgrammeId'));
+
+            if ($controller->Session->check(sprintf($prefix, 'orderBy'))) {
+                $orderBy = $controller->Session->read(sprintf($prefix, 'orderBy'));
+            }
+            if ($controller->Session->check(sprintf($prefix, 'order'))) {
+                $order = $controller->Session->read(sprintf($prefix, 'order'));
+            }
+        }
+        $conditions = array('institution_site_id' => $controller->institutionSiteId, 'order' => array($orderBy => $order));
+        $conditions['search'] = $searchField;
+        if (!empty($selectedYear)) {
+            $conditions['year'] = $selectedYear;
+        }
+
+        if (!empty($selectedProgramme)) {
+            $conditions['education_programme_id'] = $selectedProgramme;
+        }
+
+        $controller->paginate = array('limit' => 15, 'maxLimit' => 100);
+        $data = $controller->paginate('InstitutionSiteStudent', $conditions);
+
+        if (empty($data)) {
+            $controller->Utility->alert($controller->Utility->getMessage('STUDENT_SEARCH_NO_RESULT'), array('type' => 'info', 'dismissOnClick' => false));
+        }
+
+        // Checking if user has access to add
+        $_add_student = $controller->AccessControl->check('InstitutionSites', 'studentsAdd');
+        
+        // End Access Control
+        
+        $controller->set(compact('_add_student', 'searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data'));
+    }
+
+    public function studentsSearch($controller, $params) {
+        $controller->layout = 'ajax';
+        $search = trim($controller->params->query['searchString']);
+        $params = array('limit' => 100);
+        $data = $controller->Student->search($search, $params);
+        
+        $controller->set(compact('search', 'data'));
+    }
+
+    public function studentsAdd($controller, $params) {
+        $controller->Navigation->addCrumb('Add Student');
+        $yearOptions = $controller->SchoolYear->getYearList();
+        $yearRange = $controller->SchoolYear->getYearRange();
+        $statusOptions = $controller->StudentStatus->findList(true);
+        $programmeOptions = array();
+        $selectedYear = '';
+        if (!empty($yearOptions)) {
+            $selectedYear = key($yearOptions);
+            $programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($controller->institutionSiteId, $selectedYear);
+        }
+        $minYear = current($yearRange);
+        $maxYear = array_pop($yearRange);
+        
+        $controller->set(compact('yearOptions', 'minYear', 'maxYear', 'programmeOptions', 'statusOptions'));
+    }
+
+    public function studentsSave($controller, $params) {
+        if ($controller->request->is('post')) {
+            $data = $controller->data['InstitutionSiteStudent'];
+            if (isset($data['student_id'])) {
+                $date = $data['start_date'];
+                if (!empty($date['day']) && !empty($date['month']) && !empty($date['year'])) {
+                    $data['start_year'] = $date['year'];
+                    $yr = $date['year'];
+                    $mth = $date['month'];
+                    $day = $date['day'];
+
+                    while (!checkdate($mth, $day, $yr)) {
+                        $day--;
+                    }
+                    $data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
+                    $date = $data['start_date'];
+                    $student = $controller->Student->find('first', array('conditions' => array('Student.id' => $data['student_id'])));
+                    $name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
+                    $siteProgrammeId = $data['institution_site_programme_id'];
+                    $exists = $controller->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
+                    $checkCurrentSite = $controller->InstitutionSiteStudent->checkWithinCurrentSite($data['student_id'], $data['start_year'], $controller->institutionSiteId);
+                    $checkOtherSite = $controller->InstitutionSiteStudent->checkWithinOtherSite($data['student_id'], $data['start_year'], $controller->institutionSiteId);
+
+                    
+                    if (!$checkCurrentSite) {
+                        $controller->Utility->alert($name . ' ' . $controller->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+                    } else if(!$checkOtherSite){
+                        $controller->Utility->alert($name . ' ' . $controller->Utility->getMessage('STUDENT_ALREADY_EXISTS_IN_OTHER_SITE'), array('type' => 'error'));
+                    }else {
+                        $duration = $controller->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
+                        $startDate = new DateTime($date);//new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
+                        $endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
+                        $endYear = $endDate->format('Y');
+                        $data['end_date'] = $endDate->format('Y-m-d');
+                        $data['end_year'] = $endYear;
+                        $controller->InstitutionSiteStudent->save($data);
+                        $controller->Utility->alert($controller->Utility->getMessage('CREATE_SUCCESS'));
+                    }
+                } else {
+                    $controller->Utility->alert($controller->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
+                }
+                $controller->redirect(array('action' => 'studentsAdd'));
+            }
+        }
+    }
+
+    public function studentsView($controller, $params) {
+        if (isset($controller->params['pass'][0])) {
+            $studentId = $controller->params['pass'][0];
+            $controller->Session->write('InstitutionSiteStudentId', $studentId);
+            $data = $controller->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+            $name = sprintf('%s %s %s', $data['Student']['first_name'], $data['Student']['middle_name'], $data['Student']['last_name']);
+            $controller->Navigation->addCrumb($name);
+
+            $details = $controller->InstitutionSiteStudent->getDetails($studentId, $controller->institutionSiteId);
+            $classes = $controller->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId, $controller->institutionSiteId);
+            $results = $controller->AssessmentItemResult->getResultsByStudent($studentId, $controller->institutionSiteId);
+            $results = $controller->AssessmentItemResult->groupItemResults($results);
+            $_view_details = $controller->AccessControl->check('Students', 'view');
+            
+            $controller->set(compact('_view_details', 'data', 'classes', 'results', 'details'));
+        } else {
+            $controller->redirect(array('action' => 'students'));
+        }
+    }
+
+    public function studentsDelete($controller, $params) {
+        if ($controller->Session->check('InstitutionSiteStudentId') && $controller->Session->check('InstitutionSiteId')) {
+            $studentId = $controller->Session->read('InstitutionSiteStudentId');
+            $InstitutionSiteId = $controller->Session->read('InstitutionSiteId');
+
+            $SiteStudentRecordIds = $controller->InstitutionSiteStudent->getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId);
+            if (!empty($SiteStudentRecordIds)) {
+                $controller->InstitutionSiteStudent->deleteAll(array('InstitutionSiteStudent.id' => $SiteStudentRecordIds), false);
+            }
+
+            $GradeStudentRecordIds = $controller->InstitutionSiteClassGradeStudent->getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId);
+            if (!empty($GradeStudentRecordIds)) {
+                $controller->InstitutionSiteClassGradeStudent->deleteAll(array('InstitutionSiteClassGradeStudent.id' => $GradeStudentRecordIds), false);
+            }
+
+            $controller->AssessmentItemResult->deleteAll(array(
+                'AssessmentItemResult.student_id' => $studentId,
+                'AssessmentItemResult.institution_site_id' => $InstitutionSiteId
+                    ), false);
+
+            $controller->StudentBehaviour->deleteAll(array(
+                'StudentBehaviour.student_id' => $studentId,
+                'StudentBehaviour.institution_site_id' => $InstitutionSiteId
+                    ), false);
+
+            $controller->StudentAttendance->deleteAll(array(
+                'StudentAttendance.student_id' => $studentId,
+                'StudentAttendance.institution_site_id' => $InstitutionSiteId
+                    ), false);
+
+            $StudentDetailsCustomValueObj = ClassRegistry::init('StudentDetailsCustomValue');
+            $StudentDetailsCustomValueObj->deleteAll(array(
+                'StudentDetailsCustomValue.student_id' => $studentId,
+                'StudentDetailsCustomValue.institution_site_id' => $InstitutionSiteId
+                    ), false);
+
+
+            $controller->Utility->alert($controller->Utility->getMessage('DELETE_SUCCESS'));
+            $controller->redirect(array('action' => 'students'));
+        } else {
+            $controller->redirect(array('action' => 'students'));
+        }
+    }
+
+    public function studentsEdit($controller, $params) {
+        if ($controller->Session->check('InstitutionSiteStudentId')) {
+            $studentId = $controller->Session->read('InstitutionSiteStudentId');
+            if ($controller->request->is('post')) {
+                $postData = $controller->request->data['InstitutionSiteStudent'];
+                foreach ($postData as $i => $obj) {
+                    $postData[$i]['start_year'] = date('Y', strtotime($obj['start_date']));
+                    $postData[$i]['end_year'] = date('Y', strtotime($obj['end_date']));
+                }
+                $controller->InstitutionSiteStudent->saveMany($postData);
+                $controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
+                return $controller->redirect(array('action' => 'studentsView', $studentId));
+            }
+
+            $data = $controller->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+            $name = sprintf('%s %s %s', $data['Student']['first_name'], $data['Student']['middle_name'], $data['Student']['last_name']);
+            $controller->Navigation->addCrumb($name);
+            $statusOptions = $controller->StudentStatus->findList(true);
+
+            $details = $controller->InstitutionSiteStudent->getDetails($studentId, $controller->institutionSiteId);
+            $classes = $controller->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId, $controller->institutionSiteId);
+            $results = $controller->AssessmentItemResult->getResultsByStudent($studentId, $controller->institutionSiteId);
+            $results = $controller->AssessmentItemResult->groupItemResults($results);
+            $_view_details = $controller->AccessControl->check('Students', 'view');
+            
+            $controller->set(compact('_view_details', 'data', 'classes', 'results', 'details', 'statusOptions'));
+        } else {
+            $controller->redirect(array('action' => 'students'));
+        }
+    }
 }
