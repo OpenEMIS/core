@@ -45,6 +45,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->script('default/bootstrap.min');
 		echo $this->Html->script('css_browser_selector');
 		echo $this->Html->script('jquery.plugins');
+		echo $this->Html->script('app.table');
 		echo $this->Html->script('app');
 
 		if($this->Session->check('WizardMode') && $this->Session->read('WizardMode')==true){
@@ -57,69 +58,12 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->fetch('script');
 	?>
 </head>
-<?php 
-$firstName = AuthComponent::user('first_name');
-$lastName = AuthComponent::user('last_name');
-?>
+
 <body>
-	<div class="header">
-    	<div class="header_content">
-        	<div class="header_logo">
-            	<a href="<?php echo $this->base . '/Home' ?>">
-					<?php echo $this->Html->image('openemis_logo.png', array('title' => 'OpenEMIS')) ?>
-				</a>
-            </div><!-- end header_logo -->
-			
-			<div style="overflow: hidden;">
-				<div class="header_side_nav">
-					<div id="user_name"><?php echo sprintf('%s, %s %s', __('Welcome'), $firstName, $lastName); ?></div>
-					<div id="header_side_nav_container">
-						<?php
-						$link = sprintf('<a href="%s%%s">%%s</a>', $this->webroot);
-						$divider = '<div class="header_side_nav_function_divi"></div>';
-						echo sprintf($link, 'Home/index', __('Home'));
-						echo $divider;
-						echo sprintf($link, 'Home/details', __('Account'));
-						echo $divider;
-						echo sprintf($link, 'Home/support', __('Support'));
-						echo $divider;
-						echo sprintf('<a href="%s%s" class="logout">%s</a>', $this->webroot, 'Security/logout', __('Logout'));
-						?>
-					</div>
-				</div><!-- end header_side_nav -->
-            </div>
-			
-			<?php echo $this->element('top_nav'); ?>
-        </div><!-- end header_content -->
-    </div><!-- end header -->
-	
+	<?php echo $this->element('layout/header'); ?>
 	<div class="container">
-		<?php echo $this->Session->flash(); ?>
-		<?php echo $this->Session->flash('auth'); ?>
-		
-		<?php if(strlen($bodyTitle) > 0) { // bodyTitle comes together with left navigation ?>
-		<div class="body_title"><?php echo __($bodyTitle); ?></div>
-		<div class="body_content">
-			<?php echo $this->element('left_nav'); ?>
-			<div class="body_content_right"><?php echo $this->fetch('content'); ?></div>
-		</div>
-		<?php
-		} else {
-			echo $this->fetch('content');
-		} 
-		?>
-	
-		<div class="footer" lang="en" dir="ltr">
-			<div class="language">
-				<!-- &copy; 2012 openemis.org -->
-				<?php 
-				if($this->Session->check('footer')){
-					echo $this->Session->read('footer');
-				}
-				?>
-			</div>
-		</div><!-- end footer -->
-		
+		<?php echo $this->fetch('content'); ?>
+		<?php echo $this->element('layout/footer'); ?>
 	</div>
 	<?php echo $this->element('sql'); ?>
 </body>

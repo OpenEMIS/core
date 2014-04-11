@@ -50,7 +50,8 @@ class AppController extends Controller {
 			'logoutRedirect' => array('controller' => 'Security', 'action' => 'login'),
 			'authenticate' => array('Form' => array('userModel' => 'SecurityUser'))
 		),
-		'Message'
+		'Message',
+		'Option'
 	);
 	
 	public function beforeFilter() {

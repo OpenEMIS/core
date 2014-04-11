@@ -1,44 +1,48 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentId', 'institution-list');
+$this->assign('contentHeader', __('Contacts'));
+$this->start('contentActions');
+if($_add) {
+	echo $this->Html->link(__('Add'), array('action' => 'contactsAdd'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="contact" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Contacts'); ?></span>
-		<?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'contactsAdd'), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-		
-	<?php echo $this->element('alert'); ?>
-
-	<?php foreach($contactOptions as $key=>$ct){  ?>
-	<fieldset class="section_group">
-	<legend><?php echo __($ct);?></legend>
-	<div class="table allow_hover full_width" action="Students/contactsView/">
-		<div class="table_head">
-			<div class="table_cell"><?php echo __('Description'); ?></div>
-			<div class="table_cell"><?php echo __('Value'); ?></div>
-			<div class="table_cell"><?php echo __('Preferred'); ?></div>
-		</div>
-		
-		<div class="table_body">
-			<?php foreach($list as $obj): ?>
-			<?php if($obj['ContactType']['contact_option_id']==$key){?>
-			<div class="table_row" row-id="<?php echo $obj['StudentContact']['id']; ?>">
-				<div class="table_cell"><?php echo $obj['ContactType']['name']; ?></div>
-				<div class="table_cell"><?php echo $obj['StudentContact']['value']; ?></div>
-				<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['StudentContact']['preferred']==1); ?></div>
-			</div>
-			<?php } ?>
-			<?php endforeach; ?>
-		</div>
-	</div>
-	</fieldset>
-	<?php } ?>
+<?php foreach($contactOptions as $key=>$ct){  ?>
+<fieldset class="section_group">
+<legend><?php echo __($ct);?></legend>
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+		<thead>
+			<tr>
+				<th><?php echo $this->Label->get('general.description'); ?></th>
+				<th><?php echo $this->Label->get('general.value'); ?></th>
+				<th><?php echo __('Preferred'); ?></th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php 
+			foreach($list as $obj):
+				if($obj['ContactType']['contact_option_id']==$key):
+			?>
+			<tr row-id="<?php echo $obj['StudentContact']['id']; ?>">
+				<td><?php echo $obj['ContactType']['name']; ?></td>
+				<td><?php echo $this->Html->link($obj['StudentContact']['value'], array('action' => 'contactsView', $obj['StudentContact']['id'])); ?></td>
+				<td><?php echo $this->Utility->checkOrCrossMarker($obj['StudentContact']['preferred']==1); ?></td>
+			</tr>
+			<?php
+				endif;
+			endforeach;
+			?>
+		</tbody>
+	</table>
 </div>
+</fieldset>
+<?php } ?>
+<?php $this->end(); ?>

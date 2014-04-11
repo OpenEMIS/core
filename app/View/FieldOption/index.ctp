@@ -28,17 +28,17 @@ if(isset($data['subOptions'])) {
 $this->Form->end();
 ?>
 
-<div class="table_content" style="margin-top: 10px;">
-	<table class="table table-striped">
+<div class="table-responsive" style="margin-top: 10px;">
+	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<td class="col-visible" style="width: 60px;"><?php echo $this->Label->get('general.visible'); ?></td>
-				<td><?php echo $this->Label->get('general.order'); ?></td>
+				<th class="col-visible" style="width: 60px;"><?php echo $this->Label->get('general.visible'); ?></th>
+				<th><?php echo $this->Label->get('general.option'); ?></th>
 				<?php
 				if(isset($fields)) {
 					foreach($fields as $field => $value) {
 						if($value['display']) {
-							echo '<td>' . __($value['label']) . '</td>';
+							echo '<th>' . __($value['label']) . '</th>';
 						}
 					}
 				}

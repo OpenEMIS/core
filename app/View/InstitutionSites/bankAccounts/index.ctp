@@ -1,59 +1,47 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
-echo $this->Html->script('bankaccounts', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentId', 'institution-list');
+$this->assign('contentClass', 'search');
+$this->assign('contentHeader', __('Bank Accounts'));
+$this->start('contentActions');
+if($_add) {
+	echo $this->Html->link(__('Add'), array('action' => 'bankAccountsAdd'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+$model = 'InstitutionSiteBankAccount';
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="bank_accounts" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Bank Accounts'); ?></span>
-		<?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'bankAccountsAdd'), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-	 <?php echo $this->element('alert'); ?>
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+		<thead>
+			<tr>
+				<th><?php echo __('Active'); ?></th>
+				<th><?php echo __('Account Name'); ?></th>
+				<th><?php echo __('Account Number'); ?></th>
+				<th><?php echo __('Bank'); ?></th>
+				<th><?php echo __('Branch'); ?></th>
+			</tr>
+		</thead>
 		
-		
-	<div class="table allow_hover full_width" action="InstitutionSites/bankAccountsView/">
-		<div class="table_head">
-			<div class="table_cell cell_active"><?php echo __('Active'); ?></div>
-			<div class="table_cell"><?php echo __('Account Name'); ?></div>
-			<div class="table_cell"><?php echo __('Account Number'); ?></div>
-			<div class="table_cell"><?php echo __('Bank'); ?></div>
-			<div class="table_cell"><?php echo __('Branch'); ?></div>
-		</div>
-		
-		<div class="table_body">
+		<tbody>
 			<?php
 			if(count($data) > 0){
-				foreach($data as $arrVal){
-				   echo '<div class="table_row" row-id="' . $arrVal['InstitutionSiteBankAccount']['id'] . '">
-							<div class="table_cell cell_active">'.($arrVal['InstitutionSiteBankAccount']['active'] == 1?"✔":"").'</div>
-							<div class="table_cell">'.$arrVal['InstitutionSiteBankAccount']['account_name'].'</div>
-							<div class="table_cell">'.$arrVal['InstitutionSiteBankAccount']['account_number'].'</div>
-							<div class="table_cell">'.(!isset($banklist[$arrVal['BankBranch']['bank_id']])?"":$banklist[$arrVal['BankBranch']['bank_id']]).'</div>
-							<div class="table_cell">'.(!isset($arrVal['BankBranch']['name'])?"":$arrVal['BankBranch']['name']).'</div>
-					</div>';
+				foreach($data as $obj) {
+					$id = $obj[$model]['id'];
+					echo '<tr>
+							<td class="center">'.($obj[$model]['active'] == 1? '&#10003;' : '').'</td>
+							<td>'.$this->Html->link($obj[$model]['account_name'], array('action' => 'bankAccountsView', $id), array('escape' => false)).'</td>
+							<td>'.$obj[$model]['account_number'].'</td>
+							<td>'.$banklist[$obj['BankBranch']['bank_id']].'</td>
+							<td>'.$obj['BankBranch']['name'].'</td>
+						</tr>';
 				}
 			}
 			?>
-			<!--div class="table_row">
-				<div class="col_acctname">BULU ELEMENTARY</div>
-				<div class="col_acctno">1001087792</div>
-				<div class="col_branchcode">ABC</div>
-				<div class="col_branch">Branch A</div>
-			</div>
-			<div class="table_row even">
-				<div class="col_acctname">BULU SECONDARY</div>
-				<div class="col_acctno">1001087792</div>
-				<div class="col_branchcode">DEF</div>
-				<div class="col_branch">Branch B</div>
-			</div-->
-		</div>
-	</div>
-
+		</tbody>
+	</table>
 </div>
+<?php $this->end(); ?>
