@@ -27,7 +27,17 @@ class LabelHelper extends AppHelper {
 			'reorder' => 'Reorder',
 			'back' => 'Back',
 			'save' => 'Save',
-			'cancel' => 'Cancel'
+			'cancel' => 'Cancel',
+			'option' => 'Option',
+			'description' => 'Description',
+			'value' => 'Value',
+			'modified' => 'Modified On',
+			'created' => 'Created On'
+		),
+		
+		'BankBranch' => array(
+			'bank_id' => 'Bank',
+			'name' => 'Branch'
 		)
 	);
 	
@@ -38,10 +48,26 @@ class LabelHelper extends AppHelper {
 			if(isset($message[$i])) {
 				$message = $message[$i];
 			} else {
-				$message = '[Label Not Found]';
+				$message = false;
 				break;
 			}
 		}
-		return __($message);
+		return !is_bool($message) ? __($message) : $message;
+	}
+	
+	public function getLabel($labelKey, $obj) {
+		$field = $obj['field'];
+		if(isset($obj['labelKey'])) {
+			$labelKey = $obj['labelKey'];
+		}
+		if($field==='modified' || $field==='created') {
+			$labelKey = 'general';
+		}
+		$code = $labelKey .'.'. $obj['field'];
+		$label = $this->get($code);
+		if($label===false) {
+			$label = Inflector::humanize($obj['field']);
+		}
+		return $label;
 	}
 }

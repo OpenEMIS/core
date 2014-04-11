@@ -195,7 +195,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 /*body cotent*/
 .container{
-	width:960px;
+	width:980px;
 	margin:0 auto;
 	padding:104px 10px 0px 10px;
 	background-color:#ffffff;
@@ -208,6 +208,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	margin:-2px 6px 0 0;
 }
 
+.row { margin-left: 0 }
 
 
 /*footer*/

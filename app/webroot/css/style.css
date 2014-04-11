@@ -1,3 +1,7 @@
+/* bootstrap */
+.row { margin-bottom: 1em; color: #666666; }
+/* end bootstrap */
+
 textarea { resize: none; }
 
 .left { float: left; }
@@ -6,7 +10,6 @@ textarea { resize: none; }
 .middle { vertical-align: middle !important; }
 .hidden { visibility: hidden; }
 .no_input { color: #333333; }
-.even { background-color: #F7F7F7; }
 .none { display: none !important; }
 
 .orange { color: orange !important; }
@@ -224,7 +227,6 @@ input.default { width: 240px; }
 	color:#ffffff;
 }
 
-.row { position: relative; overflow: hidden; line-height: 18px; margin-bottom: 5px; }
 .label { float: left; width: 130px; margin-right: 10px; }
 .row.input .label,
 .edit .label, .edit .value { line-height: 25px; }

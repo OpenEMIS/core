@@ -1,15 +1,18 @@
 .section_group .table { width: 100%; }
 
 .table {
-	display: table;
 	color: #666666;
+	/*
+	display: table;
 	table-layout: fixed;
 	border-collapse: collapse;
 	margin-bottom: 12px;
+	*/
 }
 
 .table.full_width { width: 99%; margin-left: 3px; }
 
+/*
 .table_head {
 	display: table-header-group;
 	background-color: #EFEFEF;
@@ -42,7 +45,6 @@
 
 .table_head .table_cell {
 	min-width: 60px;
-	/* white-space: nowrap; */
 	text-align: center;
 	font-weight: bold;
 	line-height: 18px;
@@ -85,6 +87,7 @@
 .cell_datetime { width: 104px; }
 .cell_datepicker { width: 212px; }
 .cell_number_input { width: 80px; }
+*/
 
 /* Scrollable table body */
 .table_scrollable .table_header { margin-bottom: -1px; }
@@ -99,18 +102,12 @@
 .scroll_active .list_wrapper { overflow-y: scroll; padding-right: 1px; }
 
 /* <table> styles starts here */
-.table { width: 100%; border-spacing: 0; }
 .table thead tr { background-color: #EFEFEF; }
-.table thead td {  font-weight: bold;  text-align: center; }
-.table.table-hover tbody tr:hover { background-color:#5b8baf; color: #FFFFFF; cursor: pointer; }
-.table td { font-size: 11px; padding: 5px 8px; border: 1px solid #CCCCCC; }
+.table thead th {  font-weight: bold;  text-align: center; }
+.table td { font-size: 11px; }
 .table a { color: #007CBE; }
 .action { margin-left: 5px; }
 
-.col-order { width: 72px; }
+.col-order { width: 83px; }
 
 td.cell_order { width: 63px; margin-left: -1px; }
-
-.edit .table {
-    margin-bottom: 0;
-}

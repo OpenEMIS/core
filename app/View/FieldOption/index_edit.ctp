@@ -23,13 +23,13 @@ foreach($conditions as $key => $val) {
 echo $this->Form->end();
 ?>
 
-<div class="table_content">
-	<table class="table table-striped">
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<td class="col-visible" style="width: 60px;"><?php echo $this->Label->get('general.visible'); ?></td>
-				<td><?php echo __('Option'); ?></td>
-				<td class="col-order"><?php echo $this->Label->get('general.order'); ?></td>
+				<th class="col-visible" style="width: 60px;"><?php echo $this->Label->get('general.visible'); ?></th>
+				<th><?php echo __('Option'); ?></th>
+				<th class="col-order"><?php echo $this->Label->get('general.order'); ?></th>
 			</tr>
 		</thead>
 		<tbody>

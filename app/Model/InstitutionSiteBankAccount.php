@@ -1,38 +1,45 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+have received a copy of the GNU General Public License along with this program.  If not, see
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteBankAccount extends AppModel {
-
     public $actsAs = array('ControllerAction');
     public $belongsTo = array(
         'BankBranch' => array('foreignKey' => 'bank_branch_id'),
         'InstitutionSite' => array('foreignKey' => 'institution_site_id'),
-        'Institution' =>
-        array(
+        'Institution' => array(
             'className' => 'Institution',
             'joinTable' => 'institutions',
             'foreignKey' => false,
             'dependent' => false,
-            'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
+            'conditions' => array('Institution.id = InstitutionSite.institution_id '),
         ),
-        'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
-        'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser'),
+        'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+        'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
     );
     public $validate = array(
         'account_name' => array(
@@ -64,34 +71,58 @@ class InstitutionSiteBankAccount extends AppModel {
             )
         )
     );
+	
+	public function getDisplayFields($controller) {
+		$Bank = ClassRegistry::init('Bank');
+		$bankOptions = $Bank->findList();
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'account_name'),
+				array('field' => 'account_number'),
+				array('field' => 'bank_id', 'model' => 'BankBranch', 'type' => 'select', 'options' => $bankOptions),
+				array('field' => 'name', 'model' => 'BankBranch'),
+				array('field' => 'active', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
+				array('field' => 'remarks', 'type' => 'textarea'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 
     public function bankAccounts($controller, $params) {
         $controller->Navigation->addCrumb('Bank Accounts');
-
-        $data = $controller->InstitutionSiteBankAccount->find('all', array('conditions' => array('InstitutionSiteBankAccount.institution_site_id' => $controller->institutionSiteId)));
-        $bank = $controller->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
-        $banklist = $controller->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
+		
+        $data = $controller->InstitutionSiteBankAccount->findAllByInstitutionSiteId($controller->institutionSiteId);
+        $bank = $controller->Bank->find('all');
+        $banklist = $controller->Bank->find('list');
 
         $controller->set(compact('data', 'bank', 'banklist'));
     }
 
     public function bankAccountsView($controller, $params) {
-        $bankAccountId = $controller->params['pass'][0];
-        $bankAccountObj = $controller->InstitutionSiteBankAccount->find('all', array('conditions' => array('InstitutionSiteBankAccount.id' => $bankAccountId)));
+		$controller->Navigation->addCrumb('Bank Account Details');
+		$bankAccountId = $controller->params['pass'][0];
+        $data = $controller->InstitutionSiteBankAccount->findById($bankAccountId);
 
-        if (!empty($bankAccountObj)) {
-            $controller->Navigation->addCrumb('Bank Account Details');
-
+        if(!empty($data)) {
             $controller->Session->write('InstitutionSiteBankAccountId', $bankAccountId);
-            $controller->set('bankAccountObj', $bankAccountObj);
-        }
-        $banklist = $controller->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        
-        $controller->set(compact('banklist'));
+        } else {
+			return $controller->redirect(array('action' => 'bankAccounts'));
+		}
+        $banklist = $controller->Bank->find('list');
+		$model = $this->alias;
+        $fields = $this->getDisplayFields($controller);
+		$header = __('Bank Accounts');
+        $controller->set(compact('data', 'banklist', 'model', 'fields', 'header'));
     }
 
     public function bankAccountsAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Add Bank Accounts');
+        $controller->Navigation->addCrumb('Add Bank Account');
         if ($controller->request->is('post')) { // save
             $controller->InstitutionSiteBankAccount->create();
             if ($controller->InstitutionSiteBankAccount->save($controller->request->data)) {
@@ -99,7 +130,7 @@ class InstitutionSiteBankAccount extends AppModel {
                 $controller->redirect(array('action' => 'bankAccounts'));
             }
         }
-        $bank = $controller->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
+        $bank = $controller->Bank->find('list', array('conditions' => array('Bank.visible' => 1)));
 
         $bankId = isset($controller->request->data['InstitutionSiteBankAccount']['bank_id']) ? $controller->request->data['InstitutionSiteBankAccount']['bank_id'] : "";
         if (!empty($bankId)) {
@@ -138,7 +169,7 @@ class InstitutionSiteBankAccount extends AppModel {
 
         $bankBranch = $controller->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
 
-        $bank = $controller->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
+        $bank = $controller->Bank->find('list', array('conditions' => array('Bank.visible' => 1)));
         
         $controller->set(compact('bankId', 'bankBranch', 'bank', 'bankAccountId'));
     }
@@ -155,11 +186,9 @@ class InstitutionSiteBankAccount extends AppModel {
     }
 
     public function bankAccountsBankBranches($controller, $params) {
-        $this->render = false;
-        $bank = $controller->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
+        $controller->autoRender = false;
+        $bank = $controller->Bank->find('all', array('conditions' => array('Bank.visible' => 1)));
         echo json_encode($bank);
     }
 
 }
-
-?>
