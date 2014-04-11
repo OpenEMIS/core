@@ -104,7 +104,7 @@ var jsTable = {
 		var list = scrollable + ' .list_wrapper';
 		var selector = list + ' .table_body';
 		
-		if($(data).hasClass('alert')) {
+		if($($.parseHTML(data)).hasClass('alert')) {
 			var alertOpt = {
 				id: 'scrollable_alert',
 				parent: parent,
