@@ -18,6 +18,7 @@
 App::uses('AppModel', 'Model');
 
 class StudentBankAccount extends AppModel {
+
     public $actsAs = array('ControllerAction');
     public $belongsTo = array(
         'BankBranch' => array('foreignKey' => 'bank_branch_id'),
@@ -55,157 +56,195 @@ class StudentBankAccount extends AppModel {
             )
         )
     );
-    
-    
-    
-    
+
+    public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+
+    public function getDisplayFields($controller) {
+        $Bank = ClassRegistry::init('Bank');
+        $bankOptions = $Bank->findList();
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+                array('field' => 'bank_id', 'model' => 'BankBranch', 'type' => 'select', 'options' => $bankOptions),
+                array('field' => 'name', 'model' => 'BankBranch'),
+                array('field' => 'account_name'),
+                array('field' => 'account_number'),
+                array('field' => 'active', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
+                array('field' => 'remarks', 'type' => 'textarea'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+
     public function bankAccounts($controller, $params) {
         $controller->Navigation->addCrumb('Bank Accounts');
-
+        $header = __('Bank Accounts');
         $Bank = ClassRegistry::init('Bank');
-        
+
         $data = $this->find('all', array('conditions' => array('StudentBankAccount.student_id' => $controller->studentId)));
         $bank = $Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
         $banklist = $Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        
-        $controller->set(compact('data', 'bank', 'banklist'));
+
+        $controller->set(compact('data', 'bank', 'banklist', 'header'));
     }
 
     public function bankAccountsView($controller, $params) {
         $bankAccountId = $params['pass'][0];
-        $bankAccountObj = $this->find('all', array('conditions' => array('StudentBankAccount.id' => $bankAccountId)));
+        $data = $this->find('first', array('conditions' => array('StudentBankAccount.id' => $bankAccountId)));
+        $header = __('Bank Accounts');
+        $controller->Navigation->addCrumb('Bank Account Details');
 
-        if (!empty($bankAccountObj)) {
-            $controller->Navigation->addCrumb('Bank Account Details');
-
-            $controller->Session->write('StudentBankAccountId', $bankAccountId);
-            $controller->set('bankAccountObj', $bankAccountObj);
+        if (empty($data)) {
+            return $controller->redirect(array('action' => 'bankAccounts'));
         }
-        $Bank = ClassRegistry::init('Bank');
-        $banklist = $Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $controller->set('banklist', $banklist);
+
+        $controller->Session->write('StudentBankAccountId', $bankAccountId);
+        $fields = $this->getDisplayFields($controller);
+        $controller->set(compact('header', 'data', 'fields'));
     }
 
     public function bankAccountsAdd($controller, $params) {
+        $header = __('Add Bank Accounts');
         $controller->Navigation->addCrumb(__('Add Bank Accounts'));
         if ($controller->request->is('post') || $controller->request->is('put')) { // save
-           // pr($controller->request->data);die;
             $addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+            if (isset($this->data['submit']) && $this->data['submit'] == __('Skip')) {
                 $controller->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+            } else if (isset($this->data['submit']) && $this->data['submit'] == __('Previous')) {
                 $controller->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+            } elseif (isset($this->data['submit']) && $this->data['submit'] == __('Add More')) {
                 $addMore = true;
-            }else{
-                $controller->Navigation->validateModel($this->action,'StudentBankAccount');
+            } else {
+                $controller->Navigation->validateModel($this->action, 'StudentBankAccount');
             }
-            
+
             //$controller->request->data['StudentBankAccount']['student_id'] = $this->studentId;
             $this->create();
             if ($this->save($controller->request->data)) {
                 $id = $this->getLastInsertId();
-                if($addMore){
-                    $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                if ($addMore) {
+                    //$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                    $controller->Message->alert('general.add.success');
                 }
-                $controller->Navigation->updateWizard($this->action,$id,$addMore);
-                $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                $controller->Navigation->updateWizard($this->action, $id, $addMore);
+                $controller->Message->alert('general.add.success');
+                //$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
                 $controller->redirect(array('action' => 'bankAccounts'));
             }
-            
-           // pr($this->data);
-            /*$addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentBankAccount');
+            else{
+                $bankId = $controller->request->data[$this->alias]['bank_id'];
             }
-            $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
-            $this->StudentBankAccount->create();
-            if ($this->StudentBankAccount->save($this->request->data)) {
-                $id = $this->StudentBankAccount->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'bankAccounts'));
-            }*/
+
+            // pr($this->data);
+            /* $addMore = false;
+              if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+              $this->Navigation->skipWizardLink($this->action);
+              }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+              $this->Navigation->previousWizardLink($this->action);
+              }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+              $addMore = true;
+              }else{
+              $this->Navigation->validateModel($this->action,'StudentBankAccount');
+              }
+              $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
+              $this->StudentBankAccount->create();
+              if ($this->StudentBankAccount->save($this->request->data)) {
+              $id = $this->StudentBankAccount->getLastInsertId();
+              if($addMore){
+              $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+              }
+              $this->Navigation->updateWizard($this->action,$id,$addMore);
+              $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+              $this->redirect(array('action' => 'bankAccounts'));
+              } */
         }
         $Bank = ClassRegistry::init('Bank');
         $BankBranch = ClassRegistry::init('BankBranch');
-        
-        $bank = $Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
 
-        $selectedBankId = isset($controller->request->data['StudentBankAccount']['bank_id']) ? $controller->request->data['StudentBankAccount']['bank_id'] : "";
-        if (!empty($selectedBankId)) {
-            $bankBranches = $BankBranch->find('list', array('conditions' => array('bank_id' => $selectedBankId, 'visible' => 1), 'recursive' => -1));
+        $bankOptions = $Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
+
+        $bankId = empty($bankId)?key($bankOptions): $bankId;
+        $bankId = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : $bankId;
+
+        if (!empty($bankId)) {
+            $bankBranchesOptions = $BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
         } else {
-            $bankBranches = array();
+            $bankBranchesOptions = array();
         }
 
         $studentId = $controller->studentId;
-        $controller->set(compact('selectedBankId', 'studentId','bank','bankBranches'));
+        $yesnoOptions = $controller->Option->get('yesno');
+        $controller->set(compact('bankId', 'studentId', 'bankOptions', 'bankBranchesOptions', 'yesnoOptions', 'header'));
     }
 
     public function bankAccountsEdit($controller, $params) {
-        $bankBranch = array();
-
-        $id = $params['pass'][0]; //Bank Accound Id
-        
+        $header = __('Bank Account Details');
         $controller->Navigation->addCrumb('Edit Bank Account Details');
-        if ($controller->request->is('get')) {
-            $bankAccountObj = $this->find('first', array('conditions' => array('StudentBankAccount.id' => $id)));
+        $yesnoOptions = $controller->Option->get('yesno');
 
-            if (!empty($bankAccountObj)) {
-                $controller->request->data = $bankAccountObj;
+        $bankAccountId = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : 0;
+        $data = $this->findById($bankAccountId);
+
+        if (!empty($data)) {
+            if ($controller->request->is('post') || $controller->request->is('put')) {
+                if (isset($this->data['submit']) && $this->data['submit'] == __('Skip')) {
+                    $controller->Navigation->skipWizardLink($this->action);
+                } else if (isset($this->data['submit']) && $this->data['submit'] == __('Previous')) {
+                    $controller->Navigation->previousWizardLink($this->action);
+                }
+                $controller->request->data['StudentBankAccount']['student_id'] = $controller->studentId;
+                
+                $this->unbindModel(array('validate' => array('bank_id')));
+                if ($this->save($controller->request->data)) {
+                    $controller->Navigation->updateWizard($this->action, $bankAccountId);
+                    $controller->Message->alert('general.add.success');
+                    $controller->redirect(array('action' => 'bankAccountsView', $bankAccountId));
+                }
+                else{
+                    pr($this->invalidFields());
+                }
+            } else {
+                $controller->request->data = $data;
             }
+            $Bank = ClassRegistry::init('Bank');
+            $BankBranch = ClassRegistry::init('BankBranch');
+            $bankBranchOptions = $BankBranch->find('list', array('conditions' => array('bank_id' => $data['BankBranch']['bank_id'], 'visible' => 1), 'recursive' => -1));
+            $bankObj = $Bank->findById($data['BankBranch']['bank_id']);
+
+            $controller->set(compact('bankObj', 'bankBranchOptions', 'header', 'yesnoOptions'));
         } else {
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $controller->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $controller->Navigation->previousWizardLink($this->action);
-            }
-            $controller->request->data['StudentBankAccount']['student_id'] = $controller->studentId;
-            if ($this->save($controller->request->data)) {
-                $controller->Navigation->updateWizard($this->action,$id);
-                $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-                $controller->redirect(array('action' => 'bankAccountsView', $controller->request->data['StudentBankAccount']['id']));
-            }
+            return $controller->redirect(array('action' => 'bankAccounts'));
         }
-
-        $Bank = ClassRegistry::init('Bank');
-        $BankBranch = ClassRegistry::init('BankBranch');
-        $selectedBank = isset($controller->request->data['StudentBankAccount']['bank_id']) ? $controller->request->data['StudentBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
-        $bankBranch = $BankBranch->find('list', array('conditions' => array('bank_id' => $selectedBank, 'visible' => 1), 'recursive' => -1));
-        $bank = $Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        
-        $controller->set(compact('selectedBank','bankBranch','bank','id'));
     }
 
-    public function bankAccountsDelete($controller, $params){//$id) {
+    public function bankAccountsDelete($controller, $params) {//$id) {
         if ($controller->Session->check('StudentId') && $controller->Session->check('StudentBankAccountId')) {
             $id = $controller->Session->read('StudentBankAccountId');
 
-            $studentId = $controller->Session->read('StudentId');
-            $name = $this->field('account_number', array('StudentBankAccount.id' => $id));
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
+            if($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
+            $controller->Session->delete('StudentBankAccountId');
             $controller->redirect(array('action' => 'bankAccounts'));
         }
     }
-
+/*
     public function bankAccountsBankBranches($controller, $params) {
         //$controller->autoRender = false;
         $this->render = false;
         $Bank = ClassRegistry::init('Bank');
         $bank = $Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
         echo json_encode($bank);
-    }
+    }*/
 
 }
 
