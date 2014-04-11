@@ -79,15 +79,19 @@ class InstitutionSiteBankAccount extends AppModel {
 		);
 		return $fields;
 	}
+	
+	public function beforeAction($controller, $action) {
+		$controller->set('model', $this->alias);
+	}
 
     public function bankAccounts($controller, $params) {
         $controller->Navigation->addCrumb('Bank Accounts');
 		
         $data = $this->findAllByInstitutionSiteId($controller->institutionSiteId);
-        $bank = $controller->Bank->find('all');
-        $banklist = $controller->Bank->find('list');
-
-        $controller->set(compact('data', 'bank', 'banklist'));
+        $bankList = $controller->Bank->find('list');
+		$header = __('Bank Accounts');
+		
+        $controller->set(compact('data', 'bank', 'bankList', 'header'));
     }
 
     public function bankAccountsView($controller, $params) {
@@ -100,11 +104,9 @@ class InstitutionSiteBankAccount extends AppModel {
         } else {
 			return $controller->redirect(array('action' => 'bankAccounts'));
 		}
-        $banklist = $controller->Bank->find('list');
-		$model = $this->alias;
         $fields = $this->getDisplayFields($controller);
 		$header = __('Bank Accounts');
-        $controller->set(compact('model', 'data', 'banklist', 'fields', 'header'));
+        $controller->set(compact('data', 'fields', 'header'));
     }
 
     public function bankAccountsAdd($controller, $params) {
@@ -137,14 +139,13 @@ class InstitutionSiteBankAccount extends AppModel {
 		$bankAccountId = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : 0;
 		$data = $this->findById($bankAccountId);
 		$yesnoOptions = $controller->Option->get('yesno');
-		$model = $this->alias;
 		$header = __('Bank Account Details');
 		if(!empty($data)) {
 			$Bank = ClassRegistry::init('Bank');
 			$Branch = ClassRegistry::init('BankBranch');
 			$bankObj = $Bank->findById($data['BankBranch']['bank_id']);
 			$branchList = $Branch->find('list', array('conditions' => array('BankBranch.visible' => 1, 'bank_id' => $bankObj['Bank']['id']), 'order' => array('BankBranch.order')));
-			$controller->set(compact('model', 'bankObj', 'branchList', 'yesnoOptions', 'header'));
+			$controller->set(compact('bankObj', 'branchList', 'yesnoOptions', 'header'));
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				if ($this->save($controller->request->data)) {
 					$controller->Message->alert('general.add.success');

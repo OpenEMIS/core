@@ -5,7 +5,7 @@ $this->assign('contentHeader', $header);
 $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'bankAccountsAdd'));
-echo $this->Form->create('InstitutionSiteBankAccount', $formOptions);
+echo $this->Form->create($model, $formOptions);
 
 echo $this->Form->input('institution_site_id', array('type'=>'hidden', 'value'=>$institutionSiteId));
 echo $this->Form->input('bank_id', array(
