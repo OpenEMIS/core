@@ -1,7 +1,7 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
-echo $this->Html->script('bankaccounts', false);
+//echo $this->Html->script('bankaccounts', false);
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
