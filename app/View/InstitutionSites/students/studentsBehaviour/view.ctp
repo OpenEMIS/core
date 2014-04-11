@@ -12,7 +12,7 @@ echo $this->Html->script('search', false);
 		<?php
 		$data = $studentBehaviourObj[0]['StudentBehaviour'];
 		echo $this->Html->link(__('List'), array('action' => 'studentsBehaviour', $data['student_id']), array('class' => 'divider'));
-        if($institution_site_id == $data['institution_site_id']){
+        if($institutionSiteId == $data['institution_site_id']){
     		if($_edit) {
     			echo $this->Html->link(__('Edit'), array('action' => 'studentsBehaviourEdit', $data['id']), array('class' => 'divider'));
     		}
