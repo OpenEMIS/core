@@ -21,7 +21,8 @@ class WorkflowComponent extends Component {
     private $modelMap = array(
         'GroupUser' => 'SecurityGroupUser',
         'Workflow' => 'Workflow',
-        'WorkflowStep' => 'WorkflowStep'
+        'WorkflowStep' => 'WorkflowStep',
+        'WorkflowLog' => 'WorkflowLog'
     );
 
     //called before Controller::beforeFilter()
@@ -56,6 +57,7 @@ class WorkflowComponent extends Component {
             $this->Session->write('workflow', $workflows);
         } else {
             $this->Session->delete('workflow');
+            $this->Session->delete('workflowGroupUsers');
         }
     }
 
@@ -67,10 +69,13 @@ class WorkflowComponent extends Component {
             )
         );
 
+        $this->Session->write('workflowGroupUsers', $groupUsers);
+
         $workflows = array();
         foreach($groupUsers as $groupUser){
             $workflows = $this->Workflow->find('all',
                 array(
+                    'fields'=>array('Workflow.model_name', 'Workflow.id', 'Workflow.workflow_name', 'WorkflowStep.id', 'WorkflowStep.step', 'WorkflowStep.security_role_id'),
                     'joins' => array(
                         array(
                             'type' => 'LEFT',
@@ -88,8 +93,188 @@ class WorkflowComponent extends Component {
         return $workflows;
     }
 
-    public function getApprovalWorkflow($step, $module, $userId){
+    public function getApprovalWorkflow($model, $id){
+        $workflowLog = $this->WorkflowLog->find('first',
+            array(
+                'fields'=>array('WorkflowLog.workflow_step_id', 'WorkflowLog.approve', 'WorkflowStep.step'),
+                'joins' => array(
+                        array(
+                            'type' => 'LEFT',
+                            'table' => 'workflow_steps',
+                            'alias' => 'WorkflowStep',
+                            'conditions' => array('WorkflowLog.workflow_step_id = WorkflowStep.id')
+                        )
+                ),
+                'order'=>array('WorkflowLog.model_name, WorkflowLog.record_id, WorkflowLog.created DESC'),
+                'conditions'=>array('WorkflowLog.model_name'=>$model, 'WorkflowLog.record_id'=>$id)
+            )
+        );
+
+        $step = 0;
+        $new = false;
+        if(!empty($workflowLog)){
+            $step = $workflowLog['WorkflowStep']['step'];
+            if($workflowLog['WorkflowLog']['approve']=='0'){
+                $step = 0;
+                $new = true;
+            }
+        }
+
+        if(!$new){
+            $workflow = $this->getCurrentWorkflowStep($model, $step+1);
+            $this->controller->set('workflowStatus', $workflow['Workflow']['workflow_name']);
+        }
         
+        $this->getAllApprovalRights($model, $id);
+        $workflowRights = $this->Session->read('workflow');
+        if(empty($workflowRights)){
+            $this->controller->set('_approval', false);
+        }else{
+            $this->getWorkflowApprovalRight($model, $step, $workflowRights, $workflowLog);
+        }
+    }
+
+
+    private function getWorkflowApprovalRight($model, $step, $workflowRights, $workflowLog){
+        $this->controller->set('_approval', false);
+
+     
+        foreach($workflowRights as $workflowRight){
+            if($workflowRight['Workflow']['model_name']==$model){
+                if(empty($workflowLog)){
+                    if($workflowRight['WorkflowStep']['step']==1){
+                        $this->controller->set('workflowStepId', $workflowRight['WorkflowStep']['id']);
+                        $this->controller->set('workflowStep', $workflowRight['WorkflowStep']['step']);
+                        $this->controller->set('_approval', true);
+                        break;
+                    }
+                }else{
+                    if($workflowRight['WorkflowStep']['step']==($step+1)){
+                        $this->controller->set('workflowStepId', $workflowRight['WorkflowStep']['id']);
+                        $this->controller->set('workflowStep', $workflowRight['WorkflowStep']['step']);
+                        $this->controller->set('_approval', true);
+                        break;
+                    }
+                }
+            }
+
+        }
+    }
+
+    private function getAllApprovalRights($model, $id){
+        $this->controller->set('_viewApprovalLog', false);
+        $modelTemp = ClassRegistry::init($model);
+
+        $modelTemp->id = $id;
+        $createdUserId = $modelTemp->field('created_user_id');
+
+        $viewWorkflowLog = false;
+
+        if($createdUserId == $this->Auth->user('id')){
+             $viewWorkflowLog = true;
+        }else{
+            $workflows = $this->Workflow->find('all',
+                array(
+                    'fields'=>array('DISTINCT(WorkflowStep.security_role_id) as RoleID'),
+                    'joins' => array(
+                        array(
+                            'type' => 'LEFT',
+                            'table' => 'workflow_steps',
+                            'alias' => 'WorkflowStep',
+                            'conditions' => array('Workflow.id = WorkflowStep.workflow_id')
+                        )
+                    ),
+                    'conditions'=>array('Workflow.model_name'=>$model),
+                    'order'=>array('Workflow.id, WorkflowStep.step')
+                )
+            );
+            $workflowGroupUsers = $this->Session->read('workflowGroupUsers');
+            if(!empty($workflowGroupUsers)){
+                if(!empty($workflows)){
+                    foreach($workflowGroupUsers as $workflowGroupUser){
+                        foreach($workflows as $workflow){
+                            if($workflowGroupUser['SecurityGroupUser']['RoleID'] == $workflow['WorkflowStep']['RoleID']){
+                                $viewWorkflowLog = true;
+                                break;
+                            }
+                        }
+                    }
+                   
+                }
+            }
+        }
+
+        if($viewWorkflowLog){
+             $workflowLogs = $this->WorkflowLog->find('all',
+                    array(
+                        'fields'=>array('Workflow.workflow_name', 'WorkflowLog.approve', 'WorkflowLog.comments', 'WorkflowLog.created' ,'SecurityUser.first_name', 'SecurityUser.last_name', 'WorkflowStep.step'),
+                        'joins' => array(
+                                array(
+                                    'type' => 'LEFT',
+                                    'table' => 'workflow_steps',
+                                    'alias' => 'WorkflowStep',
+                                    'conditions' => array('WorkflowLog.workflow_step_id = WorkflowStep.id')
+                                ),
+                                 array(
+                                    'type' => 'LEFT',
+                                    'table' => 'workflows',
+                                    'alias' => 'Workflow',
+                                    'conditions' => array('Workflow.id = WorkflowStep.workflow_id')
+                                ),
+                                 array(
+                                    'type' => 'LEFT',
+                                    'table' => 'security_users',
+                                    'alias' => 'SecurityUser',
+                                    'conditions' => array('SecurityUser.id = WorkflowLog.user_id')
+                                )
+                        ),
+                        'order'=>array('WorkflowLog.created DESC'),
+                        'conditions'=>array('WorkflowLog.model_name'=>$model, 'WorkflowLog.record_id'=>$id)
+                    )
+                );
+             $this->controller->set('workflowLogs', $workflowLogs);
+        }
+        $this->controller->set('_viewApprovalLog', $viewWorkflowLog);
+
+    }
+
+    public function getCurrentWorkflowStep($model, $step){
+         $workflows = $this->Workflow->find('first',
+            array(
+                'fields'=>array('Workflow.workflow_name', 'WorkflowStep.id', 'WorkflowStep.step', 'WorkflowStep.security_role_id'),
+                    'joins' => array(
+                    array(
+                        'type' => 'LEFT',
+                        'table' => 'workflow_steps',
+                        'alias' => 'WorkflowStep',
+                        'conditions' => array('Workflow.id = WorkflowStep.workflow_id')
+                    )
+                ),
+                'conditions'=>array('Workflow.model_name'=>$model, 'WorkflowStep.step'=>$step),
+                'order'=>array('WorkflowStep.workflow_id, WorkflowStep.step')
+            )
+        );
+
+        return $workflows;
+    }
+
+    public function getEndOfWorkflow($model, $step, $approve){
+         if($approve){
+
+            $workflows = $this->getCurrentWorkflowStep($model, $step+1);
+            if(empty($workflows)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function updateApproval($data){
+        $data['WorkflowLog']['user_id'] = $this->Auth->user('id');
+        if($this->WorkflowLog->save($data)){
+            return true;
+        }
+        return false;
     }
 
 }
