@@ -91,11 +91,11 @@ class StudentBankAccount extends AppModel {
         if ($controller->request->is('post') || $controller->request->is('put')) { // save
            // pr($controller->request->data);die;
             $addMore = false;
-            if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
                 $controller->Navigation->skipWizardLink($this->action);
-            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
                 $controller->Navigation->previousWizardLink($this->action);
-            }elseif(isset($controller->data['submit']) && $controller->data['submit']==__('Add More')){
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
                 $addMore = true;
             }else{
                 $controller->Navigation->validateModel($this->action,'StudentBankAccount');
@@ -108,7 +108,7 @@ class StudentBankAccount extends AppModel {
                 if($addMore){
                     $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
                 }
-                $controller->Navigation->updateWizard($controller->action,$id,$addMore);
+                $controller->Navigation->updateWizard($this->action,$id,$addMore);
                 $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
                 $controller->redirect(array('action' => 'bankAccounts'));
             }
@@ -165,14 +165,14 @@ class StudentBankAccount extends AppModel {
                 $controller->request->data = $bankAccountObj;
             }
         } else {
-            if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
-                $controller->Navigation->skipWizardLink($controller->action);
-            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
-                $controller->Navigation->previousWizardLink($controller->action);
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $controller->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $controller->Navigation->previousWizardLink($this->action);
             }
-            $controller->request->data['StudentBankAccount']['student_id'] = $this->studentId;
+            $controller->request->data['StudentBankAccount']['student_id'] = $controller->studentId;
             if ($this->save($controller->request->data)) {
-                $controller->Navigation->updateWizard($controller->action,$id);
+                $controller->Navigation->updateWizard($this->action,$id);
                 $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
                 $controller->redirect(array('action' => 'bankAccountsView', $controller->request->data['StudentBankAccount']['id']));
             }
