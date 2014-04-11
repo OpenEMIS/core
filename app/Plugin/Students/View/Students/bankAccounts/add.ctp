@@ -19,12 +19,12 @@ echo $this->Html->script('bankaccounts', false);
 	<?php 
 	echo $this->Form->create('StudentBankAccount', array(
 			'id' => 'StudentBankAccount',
-			'url' => array('controller' => 'Students', 'action' => 'bankAccountsAdd', $selectedBank),
+			'url' => array('controller' => 'Students', 'action' => 'bankAccountsAdd', $selectedBankId),
 			'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 		));
 	?>
 	<div class="bankAccountForm">
-	<?php echo $this->Form->input('student_id', array('type'=>'hidden', 'value'=>$student_id)); ?>
+	<?php echo $this->Form->input('student_id', array('type'=>'hidden', 'value'=>$studentId)); ?>
 	<div class="row edit">
         <div class="label"><?php echo __('Account Name'); ?></div>
         <div class="value"><?php echo $this->Form->input('account_name'); ?></div>
@@ -48,7 +48,7 @@ echo $this->Html->script('bankaccounts', false);
         	<?php
                 echo $this->Form->input('bank_id', array(
                     'options' => $bank,
-                    'default' => $selectedBank,
+                    'default' => $selectedBankId,
                     'label' => false,
                     'empty' => __('--Select--'),
                     'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
