@@ -92,6 +92,12 @@ class TrainingSessionResult extends TrainingAppModel {
 		$controller->set('trainingSessionTrainees', $trainingSessionTrainees);
 		$controller->set('trainingProviders', $trainingProviders);
 		$controller->set('data', $data);
+
+		//APROVAL
+		$controller->Workflow->getApprovalWorkflow($this->name, $id);
+		$controller->set('approvalMethod', 'result');
+		$controller->set('controller', 'Training');
+		$controller->set('plugin', 'Training');
 	}
 
     public function resultActivate($controller, $params) {
@@ -143,6 +149,30 @@ class TrainingSessionResult extends TrainingAppModel {
 		$this->setup_add_edit_form($controller, $params);
 		
 		$this->render = 'add';
+	}
+
+	public function resultApproval($controller, $params){
+		if(!$controller->request->is('get')){
+			$saveData = $controller->request->data;
+			if (isset($saveData['approve'])) {
+			   	$saveData['WorkflowLog']['approve'] = 1; 
+			} else if (isset($saveData['reject'])) {
+		      	$saveData['WorkflowLog']['approve'] = 0; 
+			}
+		
+			if($controller->Workflow->updateApproval($saveData)){
+				if($saveData['WorkflowLog']['approve']==1){
+					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
+						$this->id =  $saveData['WorkflowLog']['record_id'];
+						$this->saveField('training_status_id', 3);
+					}
+				}else{
+					$this->id =  $saveData['WorkflowLog']['record_id'];
+					$this->saveField('training_status_id', 1);
+				}
+				return $controller->redirect(array('action'=>'resultView', $saveData['WorkflowLog']['record_id']));
+			}
+		}
 	}
 
 	public function getResultList($id){

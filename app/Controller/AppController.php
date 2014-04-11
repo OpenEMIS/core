@@ -49,7 +49,8 @@ class AppController extends Controller {
 			'loginAction' => array('controller' => 'Security', 'action' => 'login'),
 			'logoutRedirect' => array('controller' => 'Security', 'action' => 'login'),
 			'authenticate' => array('Form' => array('userModel' => 'SecurityUser'))
-		)
+		),
+		'Workflow'
 	);
 	
 	public function beforeFilter() {

@@ -49,7 +49,7 @@ echo $this->Html->script('setup_variables', false);
                 }   
 
                  ?>
-                <div class="table_cell"><?php echo $val['TrainingStatus']['name'] ?>
+                <div class="table_cell"><?php echo $this->TrainingUtility->getTrainingStatus($modelName, $val['TrainingStatus']['name'], $val[$modelName]['training_status_id']); ?>
                 </div>
             </div>
            <?php } ?>
