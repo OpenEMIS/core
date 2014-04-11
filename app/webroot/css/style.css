@@ -1,5 +1,7 @@
 /* bootstrap */
+.form-horizontal { color: #666666; }
 .row { margin-bottom: 1em; color: #666666; }
+
 /* end bootstrap */
 
 textarea { resize: none; }
@@ -16,10 +18,6 @@ textarea { resize: none; }
 .green { color: green !important; }
 .red { color: red !important; }
 .grey { color: #CCCCCC !important; }
-
-input[disabled], 
-textarea[disabled],
-select[disabled] { background-color: #FFFFFF; }
 
 .divider {
 	border-left: 1px solid #AAAAAA;
@@ -38,9 +36,8 @@ a.link_back span { font-size: 16px; }
 	float: left;
 	font-size: 11px;
 	color: #FF0000;
-	line-height: 20px;
-	padding: 1px 10px 0;
-	margin-left: 10px;
+	line-height: 19px;
+	padding: 6px 12px;
 	border: 1px solid #FF7171;
 	background-color: #FCE1E2;
 	border-radius: 3px;
@@ -55,34 +52,6 @@ input.empty { color: #CCCCCC; }
 .wrapper { overflow: hidden; padding: 1px 0 1px 10px; margin-bottom: 1px; }
 .filter_wrapper { margin-bottom: 20px; }
 
-.input_wrapper:hover,
-.input_wrapper:focus,
-select:hover,
-select:focus,
-textarea:hover,
-textarea:focus {
-	border: 1px solid #BCE2FF;
-}
-
-input.default,
-.body_content_right select,
-.body_content_right textarea {
-	border: 1px solid #CCCCCC;
-	font-size: 11px;
-	padding: 3px;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-	border-radius: 3px;
-}
-input.default:hover,
-.body_content_right select:hover,
-.body_content_right textarea:hover,
-input.default:focus,
-.body_content_right select:focus,
-.body_content_right textarea:focus{
-	border:1px solid #BCE2FF;
-}
-
 select.default { width: 250px; }
 .chrome input.default, .safari input.default{
 	height:18px;
@@ -94,10 +63,7 @@ select.default { width: 250px; }
 	height:24px;
 }
 select.full_width { width: 100%; }
-.body_content_right textarea,
 input.default { width: 240px; }
-
-.body_content_right textarea { height: 80px; }
 
 .input_wrapper {
 	border: 1px solid #CCCCCC;

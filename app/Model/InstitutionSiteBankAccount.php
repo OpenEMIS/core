@@ -19,15 +19,8 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteBankAccount extends AppModel {
     public $actsAs = array('ControllerAction');
     public $belongsTo = array(
-        'BankBranch' => array('foreignKey' => 'bank_branch_id'),
-        'InstitutionSite' => array('foreignKey' => 'institution_site_id'),
-        'Institution' => array(
-            'className' => 'Institution',
-            'joinTable' => 'institutions',
-            'foreignKey' => false,
-            'dependent' => false,
-            'conditions' => array('Institution.id = InstitutionSite.institution_id '),
-        ),
+		'BankBranch',
+        'InstitutionSite',
         'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -56,13 +49,6 @@ class InstitutionSiteBankAccount extends AppModel {
                 'message' => 'Please enter an Account number'
             )
         ),
-        'bank_id' => array(
-            'ruleRequired' => array(
-                'rule' => 'notEmpty',
-                'required' => true,
-                'message' => 'Please select a Bank'
-            )
-        ),
         'bank_branch_id' => array(
             'ruleRequired' => array(
                 'rule' => 'notEmpty',
@@ -79,10 +65,10 @@ class InstitutionSiteBankAccount extends AppModel {
 			'model' => $this->alias,
 			'fields' => array(
 				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'account_name'),
-				array('field' => 'account_number'),
 				array('field' => 'bank_id', 'model' => 'BankBranch', 'type' => 'select', 'options' => $bankOptions),
 				array('field' => 'name', 'model' => 'BankBranch'),
+				array('field' => 'account_name'),
+				array('field' => 'account_number'),
 				array('field' => 'active', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
 				array('field' => 'remarks', 'type' => 'textarea'),
 				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
@@ -97,7 +83,7 @@ class InstitutionSiteBankAccount extends AppModel {
     public function bankAccounts($controller, $params) {
         $controller->Navigation->addCrumb('Bank Accounts');
 		
-        $data = $controller->InstitutionSiteBankAccount->findAllByInstitutionSiteId($controller->institutionSiteId);
+        $data = $this->findAllByInstitutionSiteId($controller->institutionSiteId);
         $bank = $controller->Bank->find('all');
         $banklist = $controller->Bank->find('list');
 
@@ -107,10 +93,10 @@ class InstitutionSiteBankAccount extends AppModel {
     public function bankAccountsView($controller, $params) {
 		$controller->Navigation->addCrumb('Bank Account Details');
 		$bankAccountId = $controller->params['pass'][0];
-        $data = $controller->InstitutionSiteBankAccount->findById($bankAccountId);
-
+        $data = $this->findById($bankAccountId);
+		
         if(!empty($data)) {
-            $controller->Session->write('InstitutionSiteBankAccountId', $bankAccountId);
+            $controller->Session->write('InstitutionSiteBankAccount.id', $bankAccountId);
         } else {
 			return $controller->redirect(array('action' => 'bankAccounts'));
 		}
@@ -118,77 +104,69 @@ class InstitutionSiteBankAccount extends AppModel {
 		$model = $this->alias;
         $fields = $this->getDisplayFields($controller);
 		$header = __('Bank Accounts');
-        $controller->set(compact('data', 'banklist', 'model', 'fields', 'header'));
+        $controller->set(compact('model', 'data', 'banklist', 'fields', 'header'));
     }
 
     public function bankAccountsAdd($controller, $params) {
         $controller->Navigation->addCrumb('Add Bank Account');
-        if ($controller->request->is('post')) { // save
-            $controller->InstitutionSiteBankAccount->create();
-            if ($controller->InstitutionSiteBankAccount->save($controller->request->data)) {
-                $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-                $controller->redirect(array('action' => 'bankAccounts'));
+		$Bank = ClassRegistry::init('Bank');
+		$Branch = ClassRegistry::init('BankBranch');
+        $bankList = $Bank->find('list', array('conditions' => array('Bank.visible' => 1), 'order' => array('order')));
+		$branchList = array();
+		$bankId = 0;
+		$yesnoOptions = $controller->Option->get('yesno');
+		$header = __('Add Bank Account');
+		if(!empty($bankList)) {
+			$bankId = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($bankList);
+			$branchList = $Branch->find('list', array('conditions' => array('BankBranch.visible' => 1, 'bank_id' => $bankId), 'order' => array('BankBranch.order')));
+		}
+        $institutionSiteId = $controller->institutionSiteId;
+        if ($controller->request->is('post')) {
+            $this->create();
+            if ($this->save($controller->request->data)) {
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'bankAccounts'));
             }
         }
-        $bank = $controller->Bank->find('list', array('conditions' => array('Bank.visible' => 1)));
-
-        $bankId = isset($controller->request->data['InstitutionSiteBankAccount']['bank_id']) ? $controller->request->data['InstitutionSiteBankAccount']['bank_id'] : "";
-        if (!empty($bankId)) {
-            $bankBranches = $controller->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
-        } else {
-            $bankBranches = array();
-        }
-        
-        $institutionSiteId = $controller->institutionSiteId;
-        
-        $controller->set(compact('bankBranches', 'bankId', 'institutionSiteId', 'bank'));
+        $controller->set(compact('bankList', 'branchList', 'bankId', 'institutionSiteId', 'yesnoOptions', 'header'));
     }
 
     public function bankAccountsEdit($controller, $params) {
-        $bankBranch = array();
-
-        $bankAccountId = $controller->params['pass'][0];
-
-        if ($controller->request->is('get')) {
-            $bankAccountObj = $controller->InstitutionSiteBankAccount->find('first', array('conditions' => array('InstitutionSiteBankAccount.id' => $bankAccountId)));
-
-            if (!empty($bankAccountObj)) {
-                $controller->Navigation->addCrumb('Edit Bank Account Details');
-                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
-                $controller->request->data = $bankAccountObj;
-            }
-        } else {
-            $controller->request->data['InstitutionSiteBankAccount']['institution_site_id'] = $controller->institutionSiteId;
-            if ($controller->InstitutionSiteBankAccount->save($controller->request->data)) {
-                $controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-                $controller->redirect(array('action' => 'bankAccountsView', $controller->request->data['InstitutionSiteBankAccount']['id']));
-            }
-        }
-
-        $bankId = isset($controller->request->data['InstitutionSiteBankAccount']['bank_id']) ? $controller->request->data['InstitutionSiteBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
-
-        $bankBranch = $controller->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
-
-        $bank = $controller->Bank->find('list', array('conditions' => array('Bank.visible' => 1)));
-        
-        $controller->set(compact('bankId', 'bankBranch', 'bank', 'bankAccountId'));
+		$controller->Navigation->addCrumb('Bank Account Details');
+		
+		$bankAccountId = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : 0;
+		$data = $this->findById($bankAccountId);
+		$yesnoOptions = $controller->Option->get('yesno');
+		$model = $this->alias;
+		$header = __('Bank Account Details');
+		if(!empty($data)) {
+			$Bank = ClassRegistry::init('Bank');
+			$Branch = ClassRegistry::init('BankBranch');
+			$bankObj = $Bank->findById($data['BankBranch']['bank_id']);
+			$branchList = $Branch->find('list', array('conditions' => array('BankBranch.visible' => 1, 'bank_id' => $bankObj['Bank']['id']), 'order' => array('BankBranch.order')));
+			$controller->set(compact('model', 'bankObj', 'branchList', 'yesnoOptions', 'header'));
+			if($controller->request->is('post') || $controller->request->is('put')) {
+				if ($this->save($controller->request->data)) {
+					$controller->Message->alert('general.add.success');
+					return $controller->redirect(array('action' => 'bankAccountsView', $bankAccountId));
+				}
+			} else {
+				$controller->request->data = $data;
+			}
+		} else {
+			return $controller->redirect(array('action' => 'bankAccounts'));
+		}
     }
 
     public function bankAccountsDelete($controller, $params) {
-        if ($controller->Session->check('InstitutionSiteId') && $controller->Session->check('InstitutionSiteBankAccountId')) {
-            $id = $controller->Session->read('InstitutionSiteBankAccountId');
-            $institutionSiteId = $controller->Session->read('InstitutionSiteId');
-            $name = $controller->InstitutionSiteBankAccount->field('account_number', array('InstitutionSiteBankAccount.id' => $id));
-            $controller->InstitutionSiteBankAccount->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
-            $controller->redirect(array('action' => 'bankAccounts'));
+        if ($controller->Session->check('InstitutionSiteBankAccount.id')) {
+            $id = $controller->Session->read('InstitutionSiteBankAccount.id');
+			if($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			return $controller->redirect(array('action' => 'bankAccounts'));
         }
     }
-
-    public function bankAccountsBankBranches($controller, $params) {
-        $controller->autoRender = false;
-        $bank = $controller->Bank->find('all', array('conditions' => array('Bank.visible' => 1)));
-        echo json_encode($bank);
-    }
-
 }
