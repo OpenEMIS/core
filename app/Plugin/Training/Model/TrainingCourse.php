@@ -324,6 +324,12 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('trainingProviders', $trainingProviders);
 		$controller->set('attachments', $attachments);
 		$controller->set('_model','TrainingCourseAttachment');
+
+		//APROVAL
+		$controller->Workflow->getApprovalWorkflow($this->name, $id);
+		$controller->set('approvalMethod', 'course');
+		$controller->set('controller', 'Training');
+		$controller->set('plugin', 'Training');
 	}
 	
 	public function courseDelete($controller, $params) {
@@ -393,7 +399,30 @@ class TrainingCourse extends TrainingAppModel {
 		
 		$this->render = 'add';
 	}
-	
+
+	public function courseApproval($controller, $params){
+		if(!$controller->request->is('get')){
+			$saveData = $controller->request->data;
+			if (isset($saveData['approve'])) {
+			   	$saveData['WorkflowLog']['approve'] = 1; 
+			} else if (isset($saveData['reject'])) {
+		      	$saveData['WorkflowLog']['approve'] = 0; 
+			}
+		
+			if($controller->Workflow->updateApproval($saveData)){
+				if($saveData['WorkflowLog']['approve']==1){
+					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
+						$this->id =  $saveData['WorkflowLog']['record_id'];
+						$this->saveField('training_status_id', 3);
+					}
+				}else{
+					$this->id =  $saveData['WorkflowLog']['record_id'];
+					$this->saveField('training_status_id', 1);
+				}
+				return $controller->redirect(array('action'=>'courseView', $saveData['WorkflowLog']['record_id']));
+			}
+		}
+	}
 	
 	function setup_add_edit_form($controller, $params){
 		$trainingFieldStudy = ClassRegistry::init('TrainingFieldStudy');
@@ -441,9 +470,13 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('trainingCourseTypeOptions', $trainingCourseTypeOptions);
 
 		$controller->set('modelName', $this->name);
+
 		
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+
+			//==================================================
+
 			$this->recursive = -1;
 			$data = $this->findById($id);
 			if(!empty($data)){
@@ -451,7 +484,6 @@ class TrainingCourse extends TrainingAppModel {
 					return $controller->redirect(array('action' => 'courseView', $id));
 				}
 				$controller->request->data = $data;
-				//$trainingCourseTargetPopulation = ClassRegistry::init('TrainingCourseTargetPopulation');
 				$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
 
 				$trainingCoursePrerequisite = ClassRegistry::init('TrainingCoursePrerequisite');

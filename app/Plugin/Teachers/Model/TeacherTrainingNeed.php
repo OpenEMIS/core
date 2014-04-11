@@ -81,6 +81,13 @@ class TeacherTrainingNeed extends TeachersAppModel {
 		$controller->Session->write('TeacherTrainingNeedId', $id);
 		$controller->set('data', $data);
 		$controller->set('trainingRequirementOptions', $trainingRequirementOptions);
+
+
+		//APROVAL
+		$controller->Workflow->getApprovalWorkflow($this->name, $id);
+		$controller->set('approvalMethod', 'trainingNeed');
+		$controller->set('controller', 'Teachers');
+		$controller->set('plugin', '');
 	}
 	
 
@@ -154,6 +161,30 @@ class TeacherTrainingNeed extends TeachersAppModel {
 		$this->setup_add_edit_form($controller, $params);
 		
 		$this->render = 'add';
+	}
+
+	public function trainingNeedApproval($controller, $params){
+		if(!$controller->request->is('get')){
+			$saveData = $controller->request->data;
+			if (isset($saveData['approve'])) {
+			   	$saveData['WorkflowLog']['approve'] = 1; 
+			} else if (isset($saveData['reject'])) {
+		      	$saveData['WorkflowLog']['approve'] = 0; 
+			}
+		
+			if($controller->Workflow->updateApproval($saveData)){
+				if($saveData['WorkflowLog']['approve']==1){
+					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
+						$this->id =  $saveData['WorkflowLog']['record_id'];
+						$this->saveField('training_status_id', 3);
+					}
+				}else{
+					$this->id =  $saveData['WorkflowLog']['record_id'];
+					$this->saveField('training_status_id', 1);
+				}
+				return $controller->redirect(array('action'=>'trainingNeedView', $saveData['WorkflowLog']['record_id']));
+			}
+		}
 	}
 	
 	function setup_add_edit_form($controller, $params){
