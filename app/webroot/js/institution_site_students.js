@@ -93,13 +93,13 @@ var InstitutionSiteStudents = {
 				var ajaxParams = {searchString: searchString};
 				var ajaxSuccess = function(data, textStatus) {
 					var callback = function() {
-						if(!$(data).hasClass('alert')) {
+						if(!$($.parseHTML(data)).hasClass('alert')) {
 							var parent = '#search';
 							$(parent).find('.table_body').empty();
 							jsTable.tableScrollableAdd(parent, data);
 						} else {
-							alertOpt['type'] = $(data).attr('type');
-							alertOpt['text'] = $(data).html();
+							alertOpt['type'] = $($.parseHTML(data)).attr('type');
+							alertOpt['text'] = $($.parseHTML(data)).html();
 							$.alert(alertOpt);
 						}
 					};
