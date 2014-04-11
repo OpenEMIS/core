@@ -2,9 +2,7 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentId', 'institution-list');
-$this->assign('contentClass', 'search');
-$this->assign('contentHeader', __('Bank Accounts'));
+$this->assign('contentHeader', $header);
 $this->start('contentActions');
 if($_add) {
 	echo $this->Html->link(__('Add'), array('action' => 'bankAccountsAdd'), array('class' => 'divider'));
@@ -12,7 +10,6 @@ if($_add) {
 $this->end();
 
 $this->start('contentBody');
-$model = 'InstitutionSiteBankAccount';
 ?>
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
@@ -35,7 +32,7 @@ $model = 'InstitutionSiteBankAccount';
 							<td class="center">'.($obj[$model]['active'] == 1? '&#10003;' : '').'</td>
 							<td>'.$this->Html->link($obj[$model]['account_name'], array('action' => 'bankAccountsView', $id), array('escape' => false)).'</td>
 							<td>'.$obj[$model]['account_number'].'</td>
-							<td>'.$banklist[$obj['BankBranch']['bank_id']].'</td>
+							<td>'.$bankList[$obj['BankBranch']['bank_id']].'</td>
 							<td>'.$obj['BankBranch']['name'].'</td>
 						</tr>';
 				}
