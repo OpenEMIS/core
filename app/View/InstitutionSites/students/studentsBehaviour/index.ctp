@@ -19,8 +19,6 @@ echo $this->Form->create('InstitutionSite', array(
 	'inputDefaults' => array('label' => false, 'div' => false)
 ));
 ?>
-
-<!--div class="table full_width allow_hover" action="InstitutionSites/studentsBehaviourView/"-->
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
@@ -34,10 +32,10 @@ echo $this->Form->create('InstitutionSite', array(
 		
 		<tbody>
 			<?php foreach($data as $id => $obj) { $i=0; ?>
-			<tr row-id="<?php echo $obj['StudentBehaviour']['id']; ?>">
+			<tr>
 				<td class="center"><?php echo $this->Utility->formatDate($obj['StudentBehaviour']['date_of_behaviour']); ?></td>
 				<td><?php echo $obj['StudentBehaviourCategory']['name']; ?></td>
-				<td><?php echo $obj['StudentBehaviour']['title']; ?></td>
+				<td><?php echo $this->Html->link($obj['StudentBehaviour']['title'], array('action' => 'studentsBehaviourView', $obj['StudentBehaviour']['id'])); ?></td>
 				<td><?php echo $obj['InstitutionSite']['name']; ?></td>
 			</div>
 			<?php } ?>
