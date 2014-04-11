@@ -33,10 +33,5 @@ class Bank extends AppModel {
 	public function getOptionFields() {
 		return array('code' => array('label' => 'Code', 'display' => true));
 	}
-	
-	public function getLookupVariables() {
-		$lookup = array('Banks' => array('model' => 'Bank'));
-		return $lookup;
-	}
 }
 ?>

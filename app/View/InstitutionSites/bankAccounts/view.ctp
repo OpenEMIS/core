@@ -1,6 +1,7 @@
 <?php
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
+
 $this->start('contentActions');
 echo $this->Html->link(__('List'), array('action' => 'bankAccounts'), array('class' => 'divider'));
 if($_edit) {
