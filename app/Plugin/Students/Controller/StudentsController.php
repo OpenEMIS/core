@@ -49,7 +49,7 @@ class StudentsController extends StudentsAppController {
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
-        'Students.StudentComment',
+        //'Students.StudentComment',
         'Students.StudentNationality',
         'Students.StudentIdentity',
         'Students.StudentLanguage',
@@ -83,7 +83,8 @@ class StudentsController extends StudentsAppController {
         'health' => 'Students.StudentHealth',
         'special_need' => 'Students.StudentSpecialNeed',
         'award' => 'Students.StudentAward',
-        'bankAccounts' => 'Students.StudentBankAccount'
+        'bankAccounts' => 'Students.StudentBankAccount',
+        'comments' => 'Students.StudentComment'
     );
 
     public $className = 'Student';
@@ -854,96 +855,7 @@ class StudentsController extends StudentsAppController {
 
     
 
-    public function comments() {
-        $this->Navigation->addCrumb('Comments');
-        $data = $this->StudentComment->find('all', array('conditions' => array('StudentComment.student_id' => $this->studentId), 'recursive' => -1, 'order' => 'StudentComment.comment_date'));
-
-        $this->set('list', $data);
-    }
-
-    public function commentsAdd() {
-        $this->Navigation->addCrumb(__('Add Comments'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentComment');
-            }
-            $this->StudentComment->create();
-            $this->request->data['StudentComment']['student_id'] = $this->studentId;
-
-            $data = $this->data['StudentComment'];
-
-            if ($this->StudentComment->save($data)) {
-                $id = $this->StudentComment->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'comments'));
-            }
-        }
-
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function commentsView() {
-        $commentId = $this->params['pass'][0];
-        $commentObj = $this->StudentComment->find('all', array('conditions' => array('StudentComment.id' => $commentId)));
-        if (!empty($commentObj)) {
-            $this->Navigation->addCrumb('Comment Details');
-
-            $this->Session->write('StudentCommentId', $commentId);
-            $this->set('commentObj', $commentObj);
-        }
-    }
-
-    public function commentsEdit() {
-        $commentId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $commentObj = $this->StudentComment->find('first', array('conditions' => array('StudentComment.id' => $commentId)));
-
-            if (!empty($commentObj)) {
-                $this->Navigation->addCrumb('Edit Comment Details');
-                $this->request->data = $commentObj;
-            }
-        } else {
-            $commentData = $this->data['StudentComment'];
-
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $commentData['student_id'] = $this->studentId;
-
-            if ($this->StudentComment->save($commentData)) {
-                $this->Navigation->updateWizard($this->action,$commentId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'commentsView', $commentData['id']));
-            }
-        }
-
-
-        $this->set('id', $commentId);
-    }
-
-    public function commentsDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentCommentId')) {
-            $id = $this->Session->read('StudentCommentId');
-            $studentId = $this->Session->read('StudentId');
-            $name = $this->StudentComment->field('title', array('StudentComment.id' => $id));
-            $this->StudentComment->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'comments', $studentId));
-        }
-    }
+    
 
     public function nationalities() {
         $this->Navigation->addCrumb(__('Nationalities'));
