@@ -34,17 +34,14 @@ class NavigationComponent extends Component {
 	}
 	
 	//called after Controller::beforeFilter()
-	public function startup(Controller $controller) {
-	}
+	public function startup(Controller $controller) {}
 	
 	//called after Controller::beforeRender()
 	public function beforeRender(Controller $controller) {
 		if(!$this->skip) {
 			$this->apply($controller->params['controller'], $this->controller->action);
 		}
-
 		$this->checkWizardModeLink();
-
 		$this->controller->set('_topNavigations', $this->topNavigations);
 		$this->controller->set('_leftNavigations', $this->leftNavigations);
 		$this->controller->set('_params', $this->params);
@@ -158,14 +155,12 @@ class NavigationComponent extends Component {
 	public function getHomeLinks() {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Home', true);
-
 		return $links;
 	}
 	
 	public function getInstitutionsLinks() {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Institution', true);
-		
 		return $links;
 	}
 	
@@ -186,7 +181,8 @@ class NavigationComponent extends Component {
 					if(isset($obj['controller'])) {
 						$controller = $obj['controller'];
 						$action = $obj['action'];
-						$this->ignoredLinks[$module][] = array('controller' => $controller, 'action' => $action);
+						$plugin = is_null($obj['plugin']) ? false : $obj['plugin'];
+						$this->ignoredLinks[$module][] = array('plugin' => $plugin, 'controller' => $controller, 'action' => $action);
 						$this->AccessControl->ignore($controller, $action);
 					}
 				}
@@ -540,6 +536,5 @@ class NavigationComponent extends Component {
     		$this->updateWizard($action, null, false);
     	}
     }
-
 }
 ?>

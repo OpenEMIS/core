@@ -31,29 +31,26 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 		<div class="label"><?php echo __('School Days'); ?></div>
 		<div class="value"><input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" /></div>
 	</div>
-
+<div class="legendWrapper"><?php echo $legend; ?></div>
 	<div class="table full_width" style="margin-top: 10px;">
 		<div class="table_head">
-			<div class="table_cell"><?php echo __('Total days attended'); ?></div>
-			<div class="table_cell"><?php echo __('Total days absent'); ?></div>
+			<?php foreach($attendanceTypes AS $attendanceType): ?>
+                            <div class="table_cell"><?php echo __($attendanceType['StaffAttendanceType']['national_code']); ?></div>
+                        <?php endforeach; ?>
             <div class="table_cell"><?php echo __('Total'); ?></div>
             <?php
 				$total = 0;
-				if(!empty($data[0]['StaffAttendance']['total_no_attend'])){
-					$total += $data[0]['StaffAttendance']['total_no_attend'];
-				}
-				if(!empty($data[0]['StaffAttendance']['total_no_absence'])){
-					$total += $data[0]['StaffAttendance']['total_no_absence'];
-				}
 			?>
 		</div>
 
 		<div class="table_body">
 			<div class="table_row">
-				<div class="table_cell cell_totals"><?php echo empty($data[0]['StaffAttendance']['total_no_attend']) ? 0 : $data[0]['StaffAttendance']['total_no_attend'] ?>
-                </div>
-				<div class="table_cell cell_totals"><?php echo empty($data[0]['StaffAttendance']['total_no_absence']) ? 0 : $data[0]['StaffAttendance']['total_no_absence'] ?>
-                </div>
+                        <?php foreach($attendanceTypes AS $attendanceType): ?>
+                            <?php $attendanceTypeId = $attendanceType['StaffAttendanceType']['id']; ?>
+                            <?php $attendanceValue = isset($data[$attendanceTypeId]) ? $data[$attendanceTypeId] : 0; ?>
+                            <?php $total += $attendanceValue; ?>
+                            <div class="table_cell cell_totals"><?php echo $attendanceValue; ?></div>
+                        <?php endforeach; ?>
                 <div class="table_cell cell_total cell_number"><?php echo $total; ?></div>
 			</div>
 		</div>

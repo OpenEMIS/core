@@ -72,7 +72,7 @@ $obj = $data['TrainingSessionTrainee']; ?>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Status'); ?></div>
-			<div class="value"><?php echo $data['TrainingSessionStatus']['name']; ?></div>
+			<div class="value"><?php echo $this->TrainingUtility->getTrainingStatus('TrainingSessionResult',$data['TrainingResultStatus']['name'],$data['TrainingResultStatus']['id']); ?> <?php echo(isset($workflowStatus)?  $workflowStatus : ''); ?></div>
 		</div>
         <div class="row">
             <div class="label"><?php echo __('Modified by'); ?></div>

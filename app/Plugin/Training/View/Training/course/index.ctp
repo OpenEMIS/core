@@ -46,7 +46,7 @@ echo $this->Html->script('setup_variables', false);
             	<div class="table_cell"><?php echo $val[$modelName]['code'] ?></div>
                 <div class="table_cell"><?php echo  $val[$modelName]['title']; ?></div>
                 <div class="table_cell"><?php echo  $val[$modelName]['credit_hours']; ?></div>
-                <div class="table_cell"><?php echo $val['TrainingStatus']['name'] ?>
+                <div class="table_cell"><?php echo $this->TrainingUtility->getTrainingStatus($modelName, $val['TrainingStatus']['name'], $val[$modelName]['training_status_id']); ?>
                 </div>
             </div>
            <?php } ?>

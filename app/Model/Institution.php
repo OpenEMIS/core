@@ -24,7 +24,7 @@ class Institution extends AppModel {
 		'InstitutionSector'
 	);
 	
-        public $inputsMapping = array('label'=>1,'textbox'=>2,'dropdown'=>3,'multiple'=>4,'textarea'=>5);
+	public $inputsMapping = array('label'=>1,'textbox'=>2,'dropdown'=>3,'multiple'=>4,'textarea'=>5);
 	public $hasMany = array('InstitutionSite');
 	public $actsAs = array(
 		'TrackHistory',
