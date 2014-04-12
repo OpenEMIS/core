@@ -103,6 +103,7 @@
 .table thead td {  font-weight: bold;  text-align: center; }
 .table.table-hover tbody tr:hover { background-color:#5b8baf; color: #FFFFFF; cursor: pointer; }
 .table td { font-size: 11px; padding: 5px 8px; border: 1px solid #CCCCCC; }
+.table a { color: #007CBE; }
 .action { margin-left: 5px; }
 
 td.cell_order { width: 63px; margin-left: -1px; }
