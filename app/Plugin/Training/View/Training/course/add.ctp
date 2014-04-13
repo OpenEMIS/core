@@ -148,7 +148,7 @@ padding: 3px 0 5px 20px;
         </div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Hours'); ?></div>
+        <div class="label"><?php echo 'ساعات'; ?></div>
         <div class="value">
 		<?php 
 			echo $this->Form->input('duration'); 
@@ -195,7 +195,7 @@ padding: 3px 0 5px 20px;
 			<?php } ?>
 			</div>
 		</div>
-		<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addProvider(this)" url="Training/ajax_add_provider"  href="javascript: void(0)"><?php echo __('Add Provider');?></a></div>
+		<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addProvider(this)" url="Training/ajax_add_provider"  href="javascript: void(0)"><?php echo 'إضافة موفر';?></a></div>
 		</div>
     </div>
     <div class="row">
