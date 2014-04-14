@@ -83,7 +83,8 @@ class CensusController extends AppController {
             'teachers' => 'CensusTeacher',
             'staff' => 'CensusStaff',
             'classes' => 'CensusClass',
-            'shifts' => 'CensusShift'
+            'shifts' => 'CensusShift',
+            'graduates' => 'CensusGraduate'
         );
 	
 	public function beforeFilter() {
@@ -274,59 +275,6 @@ class CensusController extends AppController {
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
 			$this->redirect(array('controller' => 'Census', 'action' => 'behaviour', $yearId));
 		}
-	}
-	
-	public function graduates() {
-		$this->Navigation->addCrumb('Graduates');
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		
-		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
-		$data = array();
-		if(empty($programmes)) {
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-		} else {
-			$data = $this->CensusGraduate->getCensusData($this->institutionSiteId, $selectedYear);
-			if(empty($data)) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
-			}
-		}
-		$this->set('selectedYear', $selectedYear);
-		$this->set('years', $yearList);
-		$this->set('data', $data);
-		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
-	}
-	
-	public function graduatesEdit() {
-		if($this->request->is('post')) {
-			$data = $this->data['CensusGraduate'];
-			$yearId = $data['school_year_id'];
-			$this->CensusGraduate->saveCensusData($data);
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
-			$this->redirect(array('action' => 'graduates', $yearId));
-		}
-		$this->Navigation->addCrumb('Edit Graduates');
-		
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$selectedYear = $this->getAvailableYearId($yearList);
-		$programmes = $this->InstitutionSiteProgramme->getSiteProgrammes($this->institutionSiteId, $selectedYear);
-		$data = array();
-		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
-		if(!$editable) {
-			$this->redirect(array('action' => 'graduates', $selectedYear));
-		} else {
-			if(empty($programmes)) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-			} else {
-				$data = $this->CensusGraduate->getCensusData($this->institutionSiteId, $selectedYear);
-				if(empty($data)) {
-					$this->Utility->alert($this->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
-				}
-			}
-		}
-		$this->set('selectedYear', $selectedYear);
-		$this->set('years', $yearList);
-		$this->set('data', $data);
 	}
 	
 	public function textbooks() {
