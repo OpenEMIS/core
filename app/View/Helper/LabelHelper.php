@@ -33,17 +33,14 @@ class LabelHelper extends AppHelper {
 			'value' => 'Value',
 			'modified' => 'Modified On',
 			'created' => 'Created On',
-                        'type' => 'Type'
+                        'type' => 'Type',
+                        'title' => 'Title'
 		),
 		
 		'BankBranch' => array(
 			'bank_id' => 'Bank',
 			'name' => 'Branch'
 		),
-                'ContactType' => array(
-                    'name' => 'Description',
-                    'contact_option_id' => 'Type'
-                ),
             'SchoolYear' => array(
                 'name' => 'School Year'
             )

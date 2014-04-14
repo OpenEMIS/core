@@ -1163,16 +1163,7 @@ class StudentsController extends StudentsAppController {
 
     
 
-    public function searchAutoComplete() {
-        if ($this->request->is('get')) {
-            if ($this->request->is('ajax')) {
-                $this->autoRender = false;
-                $search = $this->params->query['term'];
-                $result = $this->StudentExtracurricular->autocomplete($search);
-                return json_encode($result);
-            }
-        }
-    }
+    
 
     public function ajax_find_award($type) {
         if ($this->request->is('ajax')) {

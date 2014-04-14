@@ -71,7 +71,7 @@ $this->start('contentBody');
                     $id = $obj[$model]['id'];
             ?>
                     <tr>
-                        <td><?php echo $obj['SchoolYears']['name']; ?></td>
+                        <td><?php echo $obj['SchoolYear']['name']; ?></td>
                         <td ><?php echo $this->Utility->formatDate($obj['StudentExtracurricular']['start_date']); ?></td>
                         <td><?php echo $obj['ExtracurricularType']['name']; ?></td>
                         <td><?php echo $this->Html->link($obj['StudentExtracurricular']['name'], array('action' => 'extracurricularView', $id), array('escape' => false)) ?></td>

@@ -121,7 +121,7 @@ class StudentComment extends StudentsAppModel {
 			return $controller->redirect(array('action' => 'comments'));
 		}
         $fields = $this->getDisplayFields($controller);
-		$header = __('Comment Details');
+		$header = __('Details');
         $controller->set(compact('data', 'fields', 'header'));
     }
 
