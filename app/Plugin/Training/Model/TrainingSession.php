@@ -282,12 +282,10 @@ class TrainingSession extends TrainingAppModel {
 					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
 						$this->id =  $saveData['WorkflowLog']['record_id'];
 						$this->saveField('training_status_id', 3);
-						/* Added by Jeff, to create the result record after the end of the workflow */
-						$result = array();
-						$result['training_session_id'] = $saveData['WorkflowLog']['record_id'];
-                                		$result['training_status_id'] = '1';
-						$TrainingSessionResult = ClassRegistry::init('Training.TrainingSessionResult');
-                                		$TrainingSessionResult->save($result);
+						$data['training_session_id'] = $saveData['WorkflowLog']['record_id'];
+						$data['training_status_id'] = '1';
+
+						$this->TrainingSessionResult->save($data);
 					}
 				}else{
 					$this->id =  $saveData['WorkflowLog']['record_id'];

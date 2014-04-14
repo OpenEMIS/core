@@ -239,7 +239,8 @@ class WorkflowComponent extends Component {
     }
 
     public function getCurrentWorkflowStep($model, $step){
-         $workflows = $this->Workflow->find('first',
+         $Workflow = ClassRegistry::init('Workflow');
+         $workflows = $Workflow->find('first',
             array(
                 'fields'=>array('Workflow.workflow_name', 'WorkflowStep.id', 'WorkflowStep.step', 'WorkflowStep.security_role_id'),
                     'joins' => array(
@@ -275,6 +276,35 @@ class WorkflowComponent extends Component {
             return true;
         }
         return false;
+    }
+
+    public function getWorkflowStatus($model, $id){
+        $workflowStatus = '';
+        $WorkflowLog = ClassRegistry::init('WorkflowLog');
+        $workflowLog = $WorkflowLog->find('first',
+            array(
+                'fields'=>array('WorkflowLog.workflow_step_id', 'WorkflowLog.approve', 'WorkflowStep.step'),
+                'joins' => array(
+                        array(
+                            'type' => 'LEFT',
+                            'table' => 'workflow_steps',
+                            'alias' => 'WorkflowStep',
+                            'conditions' => array('WorkflowLog.workflow_step_id = WorkflowStep.id')
+                        )
+                ),
+                'order'=>array('WorkflowLog.model_name, WorkflowLog.record_id, WorkflowLog.created DESC'),
+                'conditions'=>array('WorkflowLog.model_name'=>$model, 'WorkflowLog.record_id'=>$id)
+            )
+        );
+
+        $step = 0;
+        if(!empty($workflowLog)){
+            $step = $workflowLog['WorkflowStep']['step'];
+        }
+
+        $workflow = $this->getCurrentWorkflowStep($model, $step+1);
+        $workflowStatus = $workflow['Workflow']['workflow_name'];
+        return $workflowStatus;
     }
 
 }
