@@ -26,7 +26,7 @@ echo $this->Html->script('census', false);
 			echo $this->Form->input('school_year_id', array(
 				'label' => false,
 				'div' => false,
-				'options' => $years,
+				'options' => $yearList,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
 				'url' => 'Census/' . $this->action
@@ -47,7 +47,7 @@ echo $this->Html->script('census', false);
 				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
 				<div class="table_cell"><?php echo __('Classes'); ?></div>
 				<?php 
-				for($i=1;$i<=intval($no_of_shifts);$i++){
+				for($i=1;$i<=intval($noOfShifts);$i++){
 					echo '<div class="table_cell cell_shifts">' . __('Shift')  . ' ' . $i . '</div>';
 				}?>
 				<div class="table_cell"><?php echo __('Total'); ?></div>
@@ -71,7 +71,7 @@ echo $this->Html->script('census', false);
 					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $value['classes']; ?></div>
 					<?php 
 					$totalShifts = 0;
-					for($s=1;$s<=intval($no_of_shifts);$s++){
+					for($s=1;$s<=intval($noOfShifts);$s++){
 						$shift = null;
 						if(isset($value['shift_' . $s])){
 							$shift = $value['shift_' . $s];
@@ -104,7 +104,7 @@ echo $this->Html->script('census', false);
 				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
 				<div class="table_cell"><?php echo __('Classes'); ?></div>
 				<?php 
-				for($i=1;$i<=intval($no_of_shifts);$i++){
+				for($i=1;$i<=intval($noOfShifts);$i++){
 					echo '<div class="table_cell cell_shifts">' . __('Shift')  . ' ' . $i . '</div>';
 				}?>
 				<div class="table_cell"><?php echo __('Total'); ?></div>
@@ -142,7 +142,7 @@ echo $this->Html->script('census', false);
 					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $value['classes']; ?></div>
 					<?php 
 					$totalShifts = 0;
-					for($s=1;$s<=intval($no_of_shifts);$s++){
+					for($s=1;$s<=intval($noOfShifts);$s++){
 						$shift = null;
 						if(isset($value['shift_' . $s])){
 							$shift = $value['shift_' . $s];
