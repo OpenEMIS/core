@@ -87,7 +87,8 @@ class CensusController extends AppController {
             'graduates' => 'CensusGraduate',
             'assessments' => 'CensusAssessment',
             'behaviour' => 'CensusBehaviour',
-            'textbooks' => 'CensusTextbook'
+            'textbooks' => 'CensusTextbook',
+            'finances' => 'CensusFinance'
         );
 	
 	public function beforeFilter() {
@@ -479,81 +480,6 @@ class CensusController extends AppController {
 		
 	private function getFinanceCatByFinanceType($typeid){
 		return $cat = $this->FinanceCategory->find('list',array('conditions'=>array('FinanceCategory.finance_type_id'=>$typeid)));
-	}
-	
-	public function finances() {
-		$this->Navigation->addCrumb('Finances');
-                
-		if($this->request->is('post')) {
-			$yearId = $this->data['CensusFinance']['school_year_id'];
-			$this->request->data['CensusFinance']['institution_site_id'] = $this->institutionSiteId;
-			$this->CensusFinance->save($this->request->data['CensusFinance']);
-			
-			$this->redirect(array('action' => 'finances', $yearId));
-		}
-		
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-        $data = $this->CensusFinance->find('all',array('recursive'=>3,'conditions'=>array('CensusFinance.institution_site_id'=>$this->institutionSiteId,'CensusFinance.school_year_id'=>$selectedYear)));
-		$newSort = array();
-        //pr($data);
-		foreach($data as $k => $arrv){
-			//$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
-			$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
-		}
-		$natures = $this->FinanceNature->find('list',array('recursive'=>2,'conditions'=>array('FinanceNature.visible'=>1)));
-		$sources = $this->FinanceSource->find('list',array('conditions'=>array('FinanceSource.visible'=>1)));
-		$this->set('data', $newSort);
-		$this->set('selectedYear', $selectedYear);
-		$this->set('years', $yearList);
-		$this->set('natures',$natures);
-		$this->set('sources',$sources);
-		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
-	}
-	
-	public function financesEdit() {
-		$this->Navigation->addCrumb('Edit Finances');
-				
-		if($this->request->is('post')) {
-			$data = $this->data['CensusFinance'];
-			$yearId = $data['school_year_id'];
-			unset($data['school_year_id']);
-			foreach($data as &$val){
-				$val['institution_site_id']= $this->institutionSiteId;
-				$val['school_year_id'] = $yearId;
-			}
-			//pr($this->request->data);die;
-			$this->CensusFinance->saveMany($data);
-			
-			$this->redirect(array('action' => 'finances', $yearId));
-		}
-                
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$selectedYear = $this->getAvailableYearId($yearList);
-		$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
-		if(!$editable) {
-			$this->redirect(array('action' => 'finances', $selectedYear));
-		} else {
-			$data = $this->CensusFinance->find('all',array('recursive'=>3,'conditions'=>array('CensusFinance.institution_site_id'=>$this->institutionSiteId,'CensusFinance.school_year_id'=>$selectedYear)));
-			$newSort = array();
-			//pr($data);
-			foreach($data as $k => $arrv){
-				//$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
-				
-				
-				$arrv['CategoryTypes'] = $this->getFinanceCatByFinanceType($arrv['FinanceCategory']['FinanceType']['id']);
-				$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
-				
-			}
-				 
-			$natures = $this->FinanceNature->find('list',array('recursive'=>2,'conditions'=>array('FinanceNature.visible'=>1)));
-			$sources = $this->FinanceSource->find('list',array('conditions'=>array('FinanceSource.visible'=>1)));
-			$this->set('data', $newSort);
-			$this->set('selectedYear', $selectedYear);
-			$this->set('years', $yearList);
-			$this->set('natures',$natures);        
-			$this->set('sources',$sources);
-		}
 	}
 	
 	public function financesDelete($id) {
