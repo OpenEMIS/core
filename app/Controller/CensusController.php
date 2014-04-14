@@ -80,7 +80,8 @@ class CensusController extends AppController {
         
         public $modules = array(
             'enrolment' => 'CensusStudent',
-            'teachers' => 'CensusTeacher'
+            'teachers' => 'CensusTeacher',
+            'staff' => 'CensusStaff'
         );
 	
 	public function beforeFilter() {
@@ -545,43 +546,6 @@ class CensusController extends AppController {
 			$this->CensusAssessment->saveCensusData($data);
 			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
 			$this->redirect(array('action' => 'assessments', $yearId));
-		}
-	}
-	
-	public function staff() {
-		$this->Navigation->addCrumb('Staff');
-		
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$data = $this->CensusStaff->getCensusData($this->institutionSiteId, $selectedYear);
-		
-		$this->set('selectedYear', $selectedYear);
-		$this->set('years', $yearList);
-		$this->set('data', $data);
-		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
-	}
-	
-	public function staffEdit() {
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Staff');
-			
-			$yearList = $this->SchoolYear->getAvailableYears();
-			$selectedYear = $this->getAvailableYearId($yearList);
-			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
-			if(!$editable) {
-				$this->redirect(array('action' => 'staff', $selectedYear));
-			} else {
-				$data = $this->CensusStaff->getCensusData($this->institutionSiteId, $selectedYear);
-				$this->set('selectedYear', $selectedYear);
-				$this->set('years', $yearList);
-				$this->set('data', $data);
-			}
-		} else {
-			$data = $this->data['CensusStaff'];
-			$yearId = $data['school_year_id'];
-			$this->CensusStaff->saveCensusData($data, $this->institutionSiteId);
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
-			$this->redirect(array('controller' => 'Census', 'action' => 'staff', $yearId));
 		}
 	}
 	
