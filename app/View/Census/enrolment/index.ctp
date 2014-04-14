@@ -14,24 +14,8 @@ if($_edit && $isEditable) {
 $this->end();
 
 $this->start('contentBody');
-
+echo $this->element('census/year_options');
 ?>
-<div class="row page-controls">
-	<div class="col-md-3">
-		<?php
-		echo $this->Form->input('school_year_id', array(
-			'label' => false,
-			'div' => false,
-			'options' => $yearList,
-			'class' => 'form-control',
-			'default' => $selectedYear,
-			'onchange' => 'jsForm.change(this)',
-			'url' => 'Census/' . $this->action
-		));
-		?>
-	</div>
-	<?php echo $this->element('census/legend'); ?>
-</div>
 
 <?php foreach($data as $key => $obj) : ?>
 <fieldset class="section_group report" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
@@ -55,7 +39,7 @@ $this->start('contentBody');
 	$gradesCount = count($obj['grades']);
 	?>
 	<div class="table-responsive ajaxContentHolder">
-		<table class="table">
+		<table class="table table-bordered">
 			<tbody>
 				<tr class="th_bg">
 					<td rowspan="2"><?php echo __('Age'); ?></td>

@@ -16,22 +16,8 @@ echo $this->Form->create('CensusStudent', array(
 	'inputDefaults' => array('label' => false, 'div' => false),	
 	'url' => array('controller' => 'Census', 'action' => 'enrolmentEdit')
 ));
+echo $this->element('census/year_options');
 ?>
-
-<div class="row page-controls">
-	<div class="col-md-3">
-		<?php
-		echo $this->Form->input('school_year_id', array(
-			'options' => $yearList,
-			'class' => 'form-control',
-			'default' => $selectedYear,
-			'onchange' => 'jsForm.change(this)',
-			'url' => 'Census/' . $this->action
-		));
-		?>
-	</div>
-	<?php echo $this->element('census/legend'); ?>
-</div>
 
 <?php foreach($data as $key => $obj) : ?>
 
@@ -57,7 +43,7 @@ echo $this->Form->create('CensusStudent', array(
 	?>
 	
 	<div class="table-responsive ajaxContentHolder">
-		<table class="table">
+		<table class="table table-bordered">
 			 <tbody>
 				<tr class="th_bg">
 					<td rowspan="2"><?php echo __('Age'); ?></td>
