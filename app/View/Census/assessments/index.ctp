@@ -7,12 +7,12 @@ echo $this->Html->script('census', false);
 
 <?php echo $this->element('breadcrumb'); ?>
 
-<div id="textbooks" class="content_wrapper">
+<div id="assessments" class="content_wrapper">
 	<h1>
-		<span><?php echo __('Textbooks'); ?></span>
+		<span><?php echo __('Results'); ?></span>
 		<?php
 		if($_edit && $isEditable) {
-			echo $this->Html->link(__('Edit'), array('action' => 'textbooksEdit', $selectedYear), array('class' => 'divider'));
+			echo $this->Html->link(__('Edit'), array('action' => 'assessmentsEdit', $selectedYear), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -25,15 +25,14 @@ echo $this->Html->script('census', false);
 			echo $this->Form->input('school_year_id', array(
 				'label' => false,
 				'div' => false,
-				'options' => $years,
+				'options' => $yearList,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
 				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
-		
-	<?php echo $this->element('census_legend'); ?>
+		<?php echo $this->element('census_legend'); ?>
 	</div>
 	
 	<?php foreach($data as $key => $val) { ?>
@@ -44,14 +43,12 @@ echo $this->Html->script('census', false);
 			<div class="table_head">
 				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
 				<div class="table_cell"><?php echo __('Subject'); ?></div>
-				<div class="table_cell"><?php echo __('Total'); ?></div>
+				<div class="table_cell"><?php echo __('Score'); ?></div>
 			</div>
 			
 			<div class="table_body">
 				<?php
-				$total = 0;
-				foreach($val as $record) { 
-					$total += $record['total'];
+				foreach($val as $record) {
 					$record_tag="";
 					foreach ($source_type as $k => $v) {
 						if ($record['source']==$v) {
@@ -65,12 +62,6 @@ echo $this->Html->script('census', false);
 					<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['total']; ?></div>
 				</div>
 				<?php } ?>
-			</div>
-			
-			<div class="table_foot">
-				<div class="table_cell"></div>
-				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
-				<div class="table_cell cell_value cell_number"><?php echo $total; ?></div>
 			</div>
 		</div>
 	</fieldset>

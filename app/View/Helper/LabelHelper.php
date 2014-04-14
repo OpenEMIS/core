@@ -5,7 +5,7 @@
 OpenEMIS School
 Open School Management Information System
 
-Copyright © 2014 KORD IT. This program is free software: you can redistribute it and/or modify 
+Copyright ï¿½ 2014 KORD IT. This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation, 
 either version 3 of the License, or any later version. This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -32,13 +32,21 @@ class LabelHelper extends AppHelper {
 			'description' => 'Description',
 			'value' => 'Value',
 			'modified' => 'Modified On',
-			'created' => 'Created On'
+			'created' => 'Created On',
+                        'type' => 'Type'
 		),
 		
 		'BankBranch' => array(
 			'bank_id' => 'Bank',
 			'name' => 'Branch'
-		)
+		),
+                'ContactType' => array(
+                    'name' => 'Description',
+                    'contact_option_id' => 'Type'
+                ),
+            'SchoolYear' => array(
+                'name' => 'School Year'
+            )
 	);
 	
 	public function get($code) {
@@ -55,15 +63,15 @@ class LabelHelper extends AppHelper {
 		return !is_bool($message) ? __($message) : $message;
 	}
 	
-	public function getLabel($labelKey, $obj) {
+	public function getLabel($model, $obj) {
 		$field = $obj['field'];
+                $code = $model . '.' . $obj['field'];
 		if(isset($obj['labelKey'])) {
-			$labelKey = $obj['labelKey'];
-		}
-		if($field==='modified' || $field==='created') {
-			$labelKey = 'general';
-		}
-		$code = $labelKey .'.'. $obj['field'];
+                    $code = $obj['labelKey'];
+		} else if($field==='modified' || $field==='created') {
+                    $code = 'general.'.$obj['field'];
+                }
+		
 		$label = $this->get($code);
 		if($label===false) {
 			$label = Inflector::humanize($obj['field']);
