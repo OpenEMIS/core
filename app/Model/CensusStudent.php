@@ -386,11 +386,9 @@ class CensusStudent extends AppModel {
 				);
 			}
 		}
-		$controller->set('data', $data);
-		$controller->set('selectedYear', $selectedYear);
-		$controller->set('years', $yearList);
-		$controller->set('category', $categoryList);
-		$controller->set('isEditable', $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear));
+                $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+                
+                $controller->set(compact('data', 'selectedYear', 'yearList', 'categoryList', 'isEditable'));
 	}
 	
 	public function enrolmentEdit($controller, $params) {
@@ -434,10 +432,8 @@ class CensusStudent extends AppModel {
 			}
 		}
                 //pr($data);
-		$controller->set('data', $data);
-		$controller->set('selectedYear', $selectedYear);
-		$controller->set('years', $yearList);
-		$controller->set('category', $categoryList);
+                
+                $controller->set(compact('data', 'selectedYear', 'yearList', 'categoryList'));
 	}
         
         private function getEnrolmentDataByRowsView($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
@@ -986,9 +982,8 @@ class CensusStudent extends AppModel {
 			$gradeList = $EducationGrade->findList(array('conditions' => $conditions));
                         
 			//$enrolment = $controller->CensusStudent->getCensusDataOrderByAge($controller->institutionSiteId, $yearId, $programmeId, $categoryId);
-			
-			$controller->set('dataRowsArr', $dataRowsArr);
-                        $controller->set('grades', $gradeList);
+                        
+                        $controller->set(compact('dataRowsArr', 'gradeList'));
 			
 			if($controller->params->query['edit'] === 'true') {
 				$controller->render('enrolment_edit_ajax');
@@ -1018,9 +1013,8 @@ class CensusStudent extends AppModel {
                                         
                 $conditions = array('EducationGrade.education_programme_id' => $programmeId);
                 $gradeList = $EducationGrade->findList(array('conditions' => $conditions));
-		
-		$controller->set('age', $age);
-                $controller->set('grades', $gradeList);
+                
+                $controller->set(compact('age', 'gradeList'));
                 
 	}
 }

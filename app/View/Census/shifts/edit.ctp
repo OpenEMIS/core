@@ -28,7 +28,7 @@ echo $this->Html->script('census_classes', false);
 			echo $this->Form->input('school_year_id', array(
 				'id' => 'SchoolYearId',
 				'name' => 'school_year_id',
-				'options' => $years,
+				'options' => $yearList,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
 				'url' => 'Census/' . $this->action
@@ -48,7 +48,7 @@ echo $this->Html->script('census_classes', false);
 				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
 				<div class="table_cell"><?php echo __('Classes'); ?></div>
 				<?php 
-				for($i=1;$i<=intval($no_of_shifts);$i++){
+				for($i=1;$i<=intval($noOfShifts);$i++){
 					echo '<div class="table_cell cell_shifts">' . __('Shift')  . ' ' . $i . '</div>';
 				}?>
 				<div class="table_cell"><?php echo __('Total'); ?></div>
@@ -81,7 +81,7 @@ echo $this->Html->script('census_classes', false);
 
 					
 
-					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
+					for($s=1;$s<=intval($noOfShifts);$s++){ ?>
 						<?php 
 						$shift = null;
 						if(isset($this->request->data['CensusShift'][$pk])){
@@ -143,7 +143,7 @@ echo $this->Html->script('census_classes', false);
 				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
 				<div class="table_cell"><?php echo __('Classes'); ?></div>
 				<?php 
-				for($i=1;$i<=intval($no_of_shifts);$i++){
+				for($i=1;$i<=intval($noOfShifts);$i++){
 					echo '<div class="table_cell cell_shifts">' . __('Shift')  . ' ' . $i . '</div>';
 				}?>
 				<div class="table_cell"><?php echo __('Total'); ?></div>
@@ -182,7 +182,7 @@ echo $this->Html->script('census_classes', false);
 					<?php
 					$totalShifts = 0;
 					$pk = $name;
-					for($s=1;$s<=intval($no_of_shifts);$s++){ ?>
+					for($s=1;$s<=intval($noOfShifts);$s++){ ?>
 						<?php 
 						$shift = null;
 						if(isset($this->request->data['CensusShift'][$pk])){

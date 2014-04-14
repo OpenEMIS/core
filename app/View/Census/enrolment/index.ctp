@@ -28,7 +28,7 @@ echo $this->Html->script('census_enrolment', false);
 			echo $this->Form->input('school_year_id', array(
 				'label' => false,
 				'div' => false,
-				'options' => $years,
+				'options' => $yearList,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
 				'url' => 'Census/' . $this->action
@@ -51,7 +51,7 @@ echo $this->Html->script('census_enrolment', false);
 					'id' => 'StudentCategoryId',
 					'label' => false,
 					'div' => false,
-					'options' => $category,
+					'options' => $categoryList,
 					'onchange' => 'CensusEnrolment.get(this)',
 					'autocomplete' => 'off'
 				));
