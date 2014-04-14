@@ -1,49 +1,28 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
-
 echo $this->Html->script('census', false);
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Staff'));
+$this->start('contentActions');
+echo $this->Html->link(__('View'), array('action' => 'staff', $selectedYear), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
+echo $this->Form->create('CensusStaff', array(
+	'inputDefaults' => array('label' => false, 'div' => false),	
+	'url' => array('controller' => 'Census', 'action' => 'staffEdit')
+));
+echo $this->element('census/year_options');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="staff" class="content_wrapper edit">
-	<?php
-	echo $this->Form->create('CensusStaff', array(
-		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'Census', 'action' => 'staffEdit')
-	));
-	?>
-	<h1>
-		<span><?php echo __('Staff'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'staff', $selectedYear), array('class' => 'divider')); ?>
-	</h1>
-	
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+		<thead>
+			<?php echo $this->Html->tableHeaders(array(__('Position'), __('Male'), __('Female'), __('Total'))); ?>
+		</thead>
+		<tbody>
 			<?php
-			echo $this->Form->input('school_year_id', array(
-				'options' => $yearList,
-				'default' => $selectedYear,
-				'onchange' => 'Census.navigateYear(this)',
-				'url' => 'Census/' . $this->action
-			));
-			?>
-		</div>
-	<?php echo $this->element('census_legend'); ?>
-	</div>
-		
-	<div class="table full_width">
-		<div class="table_head">
-			<div class="table_cell cell_category"><?php echo __('Position'); ?></div>
-			<div class="table_cell"><?php echo __('Male'); ?></div>
-			<div class="table_cell"><?php echo __('Female'); ?></div>
-			<div class="table_cell"><?php echo __('Total'); ?></div>
-		</div>
-		
-		<div class="table_body">
-			<?php 
 			$total = 0;
 			$index = 0;
 			foreach($data as $record) {
@@ -57,13 +36,13 @@ echo $this->Html->script('census', false);
 							$record_tag.="row_estimate";break;
 					}
 			?>
-			<div class="table_row">
+			<tr>
 				<?php
 				echo $this->Form->hidden($index . '.id', array('value' => $record['id']));
 				echo $this->Form->hidden($index . '.staff_category_id', array('value' => $record['staff_category_id']));
 				?>
-				<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['staff_category_name']; ?></div>
-				<div class="table_cell">
+				<td class="<?php echo $record_tag; ?>"><?php echo $record['staff_category_name']; ?></div>
+				<td class="cell-number">
 					<div class="input_wrapper">
 					<?php 
 					echo $this->Form->input($index . '.male', array(
@@ -76,8 +55,8 @@ echo $this->Html->script('census', false);
 					));
 					?>
 					</div>
-				</div>
-				<div class="table_cell">
+				</td>
+				<td class="cell-number">
 					<div class="input_wrapper">
 					<?php 
 					echo $this->Form->input($index . '.female', array(
@@ -90,27 +69,28 @@ echo $this->Html->script('census', false);
 					));
 					?>
 					</div>
-				</div>
-				<div class="table_cell cell_total cell_number"><?php echo $record['male'] + $record['female']; ?></div>
+				</td>
+				<td class="cell-total cell-number"><?php echo $record['male'] + $record['female']; ?></div>
 			</div>
 			<?php 
 					$index++; 
 				} 
 			}
 			?>
-		</div>
-		
-		<div class="table_foot">
-			<div class="table_cell"></div>
-			<div class="table_cell"></div>
-			<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
-			<div class="table_cell cell_value cell_number"><?php echo $total; ?></div>
-		</div>
-	</div>
-	
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'staff', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-	<?php echo $this->Form->end(); ?>
+		</tbody>
+		<tfoot>
+			<tr>
+				<td colspan="3" class="cell-number"><?php echo __('Total'); ?></td>
+				<td class="cell-value cell-number"><?php echo $total; ?></td>
+			</tr>
+		</tfoot>
+	</table>
 </div>
+
+<div class="controls">
+	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+	<?php echo $this->Html->link(__('Cancel'), array('action' => 'staff', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+</div>
+<?php echo $this->Form->end(); ?>
+
+<?php $this->end(); ?>

@@ -2,77 +2,57 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
-echo $this->Html->script('census', false);
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Staff'));
+$this->start('contentActions');
+if($_edit && $isEditable) {
+	echo $this->Html->link(__('Edit'), array('action' => 'staffEdit', $selectedYear), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+echo $this->element('census/year_options');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="staff" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Staff'); ?></span>
-		<?php 
-		if($_edit && $isEditable) {
-			echo $this->Html->link(__('Edit'), array('action' => 'staffEdit', $selectedYear), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-	<?php echo $this->element('alert'); ?>
-	
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+		<thead>
+			<?php echo $this->Html->tableHeaders(array(__('Position'), __('Male'), __('Female'), __('Total'))); ?>
+		</thead>
+		<tbody>
 			<?php
-			echo $this->Form->input('school_year_id', array(
-				'label' => false,
-				'div' => false,
-				'options' => $yearList,
-				'default' => $selectedYear,
-				'onchange' => 'Census.navigateYear(this)',
-				'url' => 'Census/' . $this->action
-			));
-			?>
-		</div>
-	<?php echo $this->element('census_legend'); ?>
-	</div>
-		
-	<div class="table full_width">
-		<div class="table_head">
-			<div class="table_cell cell_category"><?php echo __('Position'); ?></div>
-			<div class="table_cell"><?php echo __('Male'); ?></div>
-			<div class="table_cell"><?php echo __('Female'); ?></div>
-			<div class="table_cell"><?php echo __('Total'); ?></div>
-		</div>
-		
-		<div class="table_body">
-			<?php 
+			$tableData = array();
 			$total = 0;
-			foreach($data as $record) {
-				if($record['staff_category_visible'] == 1) {
-					$total += $record['male'] + $record['female'];
-					$record_tag="";
+			foreach($data as $obj) {
+				if($obj['staff_category_visible'] == 1) {
+					$total += $obj['male'] + $obj['female'];
+					$recordTag="";
 					foreach ($source_type as $k => $v) {
-						if ($record['source']==$v) {
-							$record_tag = "row_" . $k;
+						if ($obj['source']==$v) {
+							$recordTag = "row_" . $k;
 						}
 					}
+					$male = is_null($obj['male']) ? 0 : $obj['male'];
+					$female = is_null($obj['female']) ? 0 : $obj['female'];
+					$subtotal = $obj['male'] + $obj['female'];
+					$tableData[] = array(
+						$obj['staff_category_name'],
+						array($male, array('class' => 'cell-number')),
+						array($female, array('class' => 'cell-number')),
+						array($subtotal, array('class' => 'cell-number'))
+					);
+				}
+			}
+			echo $this->Html->tableCells($tableData, array('class' => $recordTag), array('class' => $recordTag));
 			?>
-			<div class="table_row">
-				<div class="table_cell <?php echo $record_tag; ?>"><?php echo $record['staff_category_name']; ?></div>
-				<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['male']) ? 0 : $record['male']; ?></div>
-				<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['female']) ? 0 : $record['female']; ?></div>
-				<div class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['male'] + $record['female']; ?></div>
-			</div>
-			<?php 
-				} // end if
-			} // end for
-			?>
-		</div>
-		
-		<div class="table_foot">
-			<div class="table_cell"></div>
-			<div class="table_cell"></div>
-			<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
-			<div class="table_cell cell_value cell_number"><?php echo $total; ?></div>
-		</div>
-	</div>
+		</tbody>
+		<tfoot>
+			<tr>
+				<td colspan="3" class="cell-number"><?php echo __('Total'); ?></td>
+				<td class="cell-number"><?php echo $total; ?></td>
+			</tr>
+		</tfoot>
+	</table>
 </div>
+
+<?php $this->end(); ?>
