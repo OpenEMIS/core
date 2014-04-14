@@ -85,6 +85,11 @@ fieldset.section_group > legend {
 	font-size: 12px;
 	font-weight: bold;
 	color: #666666;
+	
+	/* bootstrap override */
+	width: auto;
+	margin-bottom: 0;
+	border: 0;
 }
 
 fieldset.section_group > legend a {
@@ -98,3 +103,10 @@ fieldset.section_group .section_group_body {
 }
 
 /* end section group */
+
+/* bootstrap override */
+fieldset.section_group .form-control {
+	font-size: 11px;
+	padding: 4px 6px;
+	height: 25px;
+}
