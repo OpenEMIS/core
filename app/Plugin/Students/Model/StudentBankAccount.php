@@ -136,7 +136,7 @@ class StudentBankAccount extends AppModel {
                 $controller->Navigation->updateWizard($this->action, $id, $addMore);
                 $controller->Message->alert('general.add.success');
                 //$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-                $controller->redirect(array('action' => 'bankAccounts'));
+                return $controller->redirect(array('action' => 'bankAccounts'));
             }
             else{
                 $bankId = $controller->request->data[$this->alias]['bank_id'];
@@ -205,7 +205,7 @@ class StudentBankAccount extends AppModel {
                 if ($this->save($controller->request->data)) {
                     $controller->Navigation->updateWizard($this->action, $bankAccountId);
                     $controller->Message->alert('general.add.success');
-                    $controller->redirect(array('action' => 'bankAccountsView', $bankAccountId));
+                    return $controller->redirect(array('action' => 'bankAccountsView', $bankAccountId));
                 }
                 else{
                     pr($this->invalidFields());
@@ -234,7 +234,7 @@ class StudentBankAccount extends AppModel {
                 $controller->Message->alert('general.delete.failed');
             }
             $controller->Session->delete('StudentBankAccountId');
-            $controller->redirect(array('action' => 'bankAccounts'));
+            return $controller->redirect(array('action' => 'bankAccounts'));
         }
     }
 /*

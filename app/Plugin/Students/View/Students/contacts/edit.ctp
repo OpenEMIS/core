@@ -1,3 +1,5 @@
+<?php /*
+
 <?php echo $this->element('breadcrumb'); ?>
 <?php echo $this->Html->script('app.date', false); ?>
 
@@ -77,3 +79,55 @@
 	
 	<?php echo $this->Form->end(); ?>
 </div>
+*/ ?>
+
+<?php
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+
+$this->start('contentActions');
+if ($_edit && !$WizardMode) {
+    echo $this->Html->link(__('Back'), array('action' => 'contactsView', $id), array('class' => 'divider'));
+}
+$this->end();
+$this->start('contentBody');
+
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'contactsEdit', $id, $contactOptionId));
+echo $this->Form->create($model, $formOptions);
+echo $this->Form->input('id');
+
+echo $this->Form->input('contact_option_id', array(
+    'options' => $contactOptions,
+    'default' => $contactOptionId,
+    'url' => sprintf('%s/%s/%s', $this->params['controller'], $this->params['action'], $id),
+    'onchange' => 'jsForm.change(this)',
+    'label' => array('text'=> $this->Label->get('ContactType.contact_option_id'), 'class'=>'col-md-3 control-label')
+));
+echo $this->Form->input('contact_type_id', array(
+    'options' => $contactTypeOptions,
+    'label' => array('text'=> $this->Label->get('ContactType.name'), 'class'=>'col-md-3 control-label')
+));
+echo $this->Form->input('value');
+echo $this->Form->input('preferred', array('options' => $yesnoOptions));
+
+
+if (!$WizardMode) {
+    echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'contactsView', $id)));
+} else {
+    echo '<div class="add_more_controls">' . $this->Form->submit(__('Add More'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div>';
+    echo $this->Form->submit(__('Previous'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right"));
+
+    if (!$wizardEnd) {
+        echo $this->Form->submit(__('Next'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right", 'onclick' => "return Config.checkValidate();"));
+    } else {
+        echo $this->Form->submit(__('Finish'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right", 'onclick' => "return Config.checkValidate();"));
+    }
+    if ($mandatory != '1' && !$wizardEnd) {
+        echo $this->Form->submit(__('Skip'), array('div' => false, 'name' => 'submit', 'class' => "btn_cancel btn_cancel_button btn_left"));
+    }
+}
+echo $this->Form->end();
+
+$this->end();
+?>
