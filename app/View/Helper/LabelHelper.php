@@ -32,7 +32,8 @@ class LabelHelper extends AppHelper {
 			'description' => 'Description',
 			'value' => 'Value',
 			'modified' => 'Modified On',
-			'created' => 'Created On'
+			'created' => 'Created On',
+                        'type' => 'Type'
 		),
 		
 		'BankBranch' => array(
@@ -43,6 +44,9 @@ class LabelHelper extends AppHelper {
                     'name' => 'Description',
                     'contact_option_id' => 'Type'
                 ),
+            'SchoolYear' => array(
+                'name' => 'School Year'
+            )
 	);
 	
 	public function get($code) {
@@ -59,15 +63,15 @@ class LabelHelper extends AppHelper {
 		return !is_bool($message) ? __($message) : $message;
 	}
 	
-	public function getLabel($labelKey, $obj) {
+	public function getLabel($model, $obj) {
 		$field = $obj['field'];
+                $code = $model . '.' . $obj['field'];
 		if(isset($obj['labelKey'])) {
-			$labelKey = $obj['labelKey'];
-		}
-		if($field==='modified' || $field==='created') {
-			$labelKey = 'general';
-		}
-		$code = $labelKey .'.'. $obj['field'];
+                    $code = $obj['labelKey'];
+		} else if($field==='modified' || $field==='created') {
+                    $code = 'general.'.$obj['field'];
+                }
+		
 		$label = $this->get($code);
 		if($label===false) {
 			$label = Inflector::humanize($obj['field']);

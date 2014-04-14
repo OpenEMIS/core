@@ -1,3 +1,5 @@
+<?php /*
+
 <?php
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
@@ -94,4 +96,23 @@ $data = $data[0];
     </div>
    
  
-</div>
+</div>*/ ?>
+
+<?php
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+
+$this->start('contentActions');
+echo $this->Html->link(__('List'), array('action' => 'extracurricular'), array('class' => 'divider'));
+if($_edit) {
+    echo $this->Html->link(__('Edit'), array('action' => 'extracurricularEdit', $data[$model]['id']), array('class' => 'divider'));
+}
+if($_delete) {
+    echo $this->Html->link(__('Delete'), array('action' => 'extracurricularDelete', $data[$model]['id']), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+}
+$this->end();
+
+$this->start('contentBody');
+echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+$this->end();
+?>
