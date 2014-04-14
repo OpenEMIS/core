@@ -85,7 +85,8 @@ class CensusController extends AppController {
             'classes' => 'CensusClass',
             'shifts' => 'CensusShift',
             'graduates' => 'CensusGraduate',
-            'assessments' => 'CensusAssessment'
+            'assessments' => 'CensusAssessment',
+            'behaviour' => 'CensusBehaviour'
         );
 	
 	public function beforeFilter() {
@@ -240,44 +241,7 @@ class CensusController extends AppController {
 			$this->redirect(array('controller' => 'Census', 'action' => 'attendance', $yearId));
 		}
 	}
-	
-	public function behaviour() {
-		$this->Navigation->addCrumb('Behaviour');
-		
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$data = $this->CensusBehaviour->getCensusData($this->institutionSiteId, $selectedYear);
-		
-		$this->set('selectedYear', $selectedYear);
-		$this->set('years', $yearList);
-		$this->set('data', $data);
-		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
-	}
-	
-	public function behaviourEdit() {
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Behaviour');
-			
-			$yearList = $this->SchoolYear->getAvailableYears();
-			$selectedYear = $this->getAvailableYearId($yearList);
-			$data = $this->CensusBehaviour->getCensusData($this->institutionSiteId, $selectedYear);
-			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
-			if(!$editable) {
-				$this->redirect(array('action' => 'behaviour', $selectedYear));
-			} else {
-				$this->set('selectedYear', $selectedYear);
-				$this->set('years', $yearList);
-				$this->set('data', $data);
-			}
-		} else {
-			$data = $this->data['CensusBehaviour'];
-			$yearId = $data['school_year_id'];
-			$this->CensusBehaviour->saveCensusData($data, $this->institutionSiteId);
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
-			$this->redirect(array('controller' => 'Census', 'action' => 'behaviour', $yearId));
-		}
-	}
-	
+
 	public function textbooks() {
 		$this->Navigation->addCrumb('Textbooks');
 		
