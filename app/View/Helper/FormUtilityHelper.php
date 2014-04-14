@@ -17,6 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppHelper', 'View/Helper');
 
 class FormUtilityHelper extends AppHelper {
+	public $helpers = array('Html', 'Form', 'Label');
+	
 	public function getFormOptions($url=array(), $type='') {
 		$options = array(
 			'url' => $url,
@@ -39,13 +41,54 @@ class FormUtilityHelper extends AppHelper {
 		return $defaults;
 	}
 	
-	public function getFormButtons($view, $option = NULL) {
+	public function getFormButtons($option = NULL) {
 		$cancelURL = $option['cancelURL'];
 		echo '<div class="form-group">';
 		echo '<div class="col-md-offset-4">';
-		echo $view->Form->submit(__('Save'), array('class' => 'btn_save btn_right', 'div' => false));
-		echo $view->Html->link(__('Cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
+		echo $this->Form->submit($this->Label->get('general.save'), array('class' => 'btn_save btn_right', 'div' => false));
+		echo $this->Html->link($this->Label->get('general.cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
 		echo '</div>';
 		echo '</div>';
+	}
+	
+	public function datepicker($field, $options=array()) {
+		$dateFormat = 'dd-mm-yyyy';
+		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
+		$_options = array(
+			'id' => 'date',
+			'date-format' => $dateFormat,
+			'date' => date('d-m-Y')
+		);
+		if(!empty($options)) {
+			$_options = array_merge($_options, $options);
+		}
+		$wrapper = $this->Html->div(
+			'input-group date', // class
+			null, 				// text
+			array( 				// options
+				'id' => $_options['id'],
+				'data-date' => $_options['date'],
+				'data-date-format' => $_options['date-format'],
+				'data-date-autoclose' => 'true'
+			)
+		);
+		
+		$defaults = $this->Form->inputDefaults();
+		$html = $this->Form->input($field, array(
+			'id' => $_options['id'],
+			'type' => 'text',
+			'between' => $defaults['between'] . $wrapper,
+			'after' => $icon . $defaults['after'],
+			'value' => $_options['date']
+		));
+		
+		if(!is_null($this->_View->get('datepicker'))) {
+			$datepickers = $this->_View->get('datepicker');
+			$datepickers[] = $_options['id'];
+			$this->_View->set('datepicker', $datepickers);
+		} else {
+			$this->_View->set('datepicker', array($_options['id']));
+		}
+		return $html;
 	}
 }

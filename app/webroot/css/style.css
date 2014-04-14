@@ -312,7 +312,7 @@ a.btn:hover { text-decoration: none; }
 }
 
 .options > span { margin: 5px 3px 0 0; }
-
+/*
 .datepicker { float: left; }
 .datepicker_date { display: none; }
 .datepicker_day { width: 55px; padding-left: 2px !important; }
@@ -324,7 +324,7 @@ a.btn:hover { text-decoration: none; }
 }
 .add .datepicker_month { width: 101px; }
 .add .datepicker_year { width: 64px; }
-
+*/
 .address { width: 400px; }
 .history .row { border-bottom: 1px dotted #DEDEDE; padding-bottom: 10px; margin-bottom: 10px; }
 .history .row.last { border: 0; padding-bottom: 0; margin-bottom: 0; }
