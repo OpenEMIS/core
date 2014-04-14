@@ -15,4 +15,8 @@
 		</div>
 	</div>
 </div>
-
+<?php
+if(isset($datepicker) && !empty($datepicker)) {
+	echo $this->element('layout/datepicker');
+}
+?>
