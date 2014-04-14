@@ -30,7 +30,7 @@ echo $this->Html->script('census_finance', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'options' => $years,
+				'options' => $yearList,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
 				'url' => 'Census/' . $this->action

@@ -9,14 +9,14 @@ echo $this->Html->script('census', false);
 
 <div id="textbooks" class="content_wrapper edit">
 	<?php
-	echo $this->Form->create('CensusAssessment', array(
+	echo $this->Form->create('CensusTextbook', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'Census', 'action' => 'assessmentsEdit')
+		'url' => array('controller' => 'Census', 'action' => 'textbooksEdit')
 	));
 	?>
 	<h1>
-		<span><?php echo __('Results'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'assessments', $selectedYear), array('class' => 'divider')); ?>
+		<span><?php echo __('Textbooks'); ?></span>
+		<?php echo $this->Html->link(__('View'), array('action' => 'textbooks', $selectedYear), array('class' => 'divider')); ?>
 	</h1>
 	<?php echo $this->element('alert'); ?>
 	
@@ -25,14 +25,15 @@ echo $this->Html->script('census', false);
 		<div class="value">
 			<?php
 			echo $this->Form->input('school_year_id', array(
-				'options' => $years,
+				'options' => $yearList,
 				'default' => $selectedYear,
 				'onchange' => 'Census.navigateYear(this)',
 				'url' => 'Census/' . $this->action
 			));
 			?>
 		</div>
-		<?php echo $this->element('census_legend'); ?>
+		
+	<?php echo $this->element('census_legend'); ?>
 	</div>
 	
 	<?php 
@@ -46,7 +47,7 @@ echo $this->Html->script('census', false);
 			<div class="table_head">
 				<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
 				<div class="table_cell"><?php echo __('Subject'); ?></div>
-				<div class="table_cell"><?php echo __('Score'); ?></div>
+				<div class="table_cell"><?php echo __('Total'); ?></div>
 			</div>
 			
 			<div class="table_body">
@@ -90,7 +91,7 @@ echo $this->Html->script('census', false);
 	<?php if(!empty($data)) { ?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'assessments', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'textbooks', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php } ?>
 	
