@@ -17,12 +17,12 @@ echo $this->Form->submit(__('Add More'), array('div'=>false, 'name'=>'submit','c
 echo '</div>';
 }
 
-echo '<div class="form-group">';
-echo '<div class="col-md-offset-4">';
+//echo '<div class="form-group">';
+//echo '<div class="col-md-offset-4">';
 
 if(!$WizardMode) {
-	echo '<input type="submit" value="' . $this->Label->get('general.save') . '" class="btn_save btn_right" />';
-	echo $this->Html->link($this->Label->get('general.cancel'), array('action' => 'commentsView', $id), array('class' => 'btn_cancel btn_left'));
+        echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'comments')));
+	
 } else {
 	echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
 	if(!$wizardEnd) {
@@ -35,8 +35,8 @@ if(!$WizardMode) {
 	}
 }
 
-echo '</div>';
-echo '</div>';
+//echo '</div>';
+//echo '</div>';
 echo $this->Form->end();
 $this->end();
 ?>
