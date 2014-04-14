@@ -17,6 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusGraduate extends AppModel {
+        public $actsAs = array(
+                'ControllerAction'
+	);
+    
 	public $belongsTo = array(
 		'SchoolYear' => array('foreignKey' => 'school_year_id')
 	);
@@ -108,4 +112,56 @@ class CensusGraduate extends AppModel {
 			}
 		}
 	}
+        
+        public function graduates($controller, $params) {
+        $controller->Navigation->addCrumb('Graduates');
+        $yearList = $controller->SchoolYear->getYearList();
+        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+
+        $programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+        $data = array();
+        if (empty($programmes)) {
+            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+        } else {
+            $data = $controller->CensusGraduate->getCensusData($controller->institutionSiteId, $selectedYear);
+            if (empty($data)) {
+                $controller->Utility->alert($controller->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
+            }
+        }
+        
+        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+        
+        $controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+    }
+
+    public function graduatesEdit($controller, $params) {
+        if ($controller->request->is('post')) {
+            $data = $controller->data['CensusGraduate'];
+            $yearId = $data['school_year_id'];
+            $controller->CensusGraduate->saveCensusData($data);
+            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+            $controller->redirect(array('action' => 'graduates', $yearId));
+        }
+        $controller->Navigation->addCrumb('Edit Graduates');
+
+        $yearList = $controller->SchoolYear->getAvailableYears();
+        $selectedYear = $controller->getAvailableYearId($yearList);
+        $programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+        $data = array();
+        $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+        if (!$editable) {
+            $controller->redirect(array('action' => 'graduates', $selectedYear));
+        } else {
+            if (empty($programmes)) {
+                $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+            } else {
+                $data = $controller->CensusGraduate->getCensusData($controller->institutionSiteId, $selectedYear);
+                if (empty($data)) {
+                    $controller->Utility->alert($controller->Utility->getMessage('CENSUS_GRADUATE_NOT_REQUIRED'), array('type' => 'info'));
+                }
+            }
+        }
+        
+        $controller->set(compact('selectedYear', 'yearList', 'data'));
+    }
 }
