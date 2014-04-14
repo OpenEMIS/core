@@ -478,7 +478,7 @@ class CensusController extends AppController {
 	   
 	}
 		
-	private function getFinanceCatByFinanceType($typeid){
+	public function getFinanceCatByFinanceType($typeid){
 		return $cat = $this->FinanceCategory->find('list',array('conditions'=>array('FinanceCategory.finance_type_id'=>$typeid)));
 	}
 	

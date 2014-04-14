@@ -72,6 +72,9 @@ class CensusFinance extends AppModel {
             //$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
             $newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
         }
+        
+        $data = $newSort;
+        
         $natures = $controller->FinanceNature->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
         $sources = $controller->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
         
@@ -113,6 +116,8 @@ class CensusFinance extends AppModel {
                 $arrv['CategoryTypes'] = $controller->getFinanceCatByFinanceType($arrv['FinanceCategory']['FinanceType']['id']);
                 $newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
             }
+            
+            $data = $newSort;
 
             $natures = $controller->FinanceNature->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
             $sources = $controller->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
