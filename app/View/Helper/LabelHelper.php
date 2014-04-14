@@ -5,7 +5,7 @@
 OpenEMIS School
 Open School Management Information System
 
-Copyright © 2014 KORD IT. This program is free software: you can redistribute it and/or modify 
+Copyright ï¿½ 2014 KORD IT. This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation, 
 either version 3 of the License, or any later version. This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -38,7 +38,11 @@ class LabelHelper extends AppHelper {
 		'BankBranch' => array(
 			'bank_id' => 'Bank',
 			'name' => 'Branch'
-		)
+		),
+                'ContactType' => array(
+                    'name' => 'Description',
+                    'contact_option_id' => 'Type'
+                ),
 	);
 	
 	public function get($code) {
