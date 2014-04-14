@@ -81,7 +81,8 @@ class CensusController extends AppController {
         public $modules = array(
             'enrolment' => 'CensusStudent',
             'teachers' => 'CensusTeacher',
-            'staff' => 'CensusStaff'
+            'staff' => 'CensusStaff',
+            'classes' => 'CensusClass'
         );
 	
 	public function beforeFilter() {
@@ -325,118 +326,6 @@ class CensusController extends AppController {
 		$this->set('selectedYear', $selectedYear);
 		$this->set('years', $yearList);
 		$this->set('data', $data);
-	}
-	
-	public function classes() {
-		$this->Navigation->addCrumb('Classes');
-		
-		$yearList = $this->SchoolYear->getYearList();
-		$selectedYear = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($yearList);
-		$displayContent = true;
-		
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
-		if(empty($programmeGrades)) {
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-			$displayContent = false;
-		} else {
-			$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
-			$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
-			$singleGradeData = $programmeGrades;
-			$this->CensusClass->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
-			$this->set('singleGradeData', $singleGradeData);
-			$this->set('multiGradeData', $multiGradeData);
-		}
-		
-		$this->set('displayContent', $displayContent);
-		$this->set('selectedYear', $selectedYear);
-		$this->set('years', $yearList);
-		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
-	}
-	
-	public function classesEdit() {
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Edit Classes');
-			
-			$yearList = $this->SchoolYear->getAvailableYears();
-			$selectedYear = $this->getAvailableYearId($yearList);
-			$editable = $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear);
-			if(!$editable) {
-				$this->redirect(array('action' => 'classes', $selectedYear));
-			} else {
-				$displayContent = true;
-				$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear);
-				if(empty($programmeGrades)) {
-					$this->Utility->alert($this->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-					$displayContent = false;
-				} else {
-					$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $selectedYear, false);
-					$singleGradeClasses = $this->CensusClass->getSingleGradeData($this->institutionSiteId, $selectedYear);
-					$multiGradeData = $this->CensusClass->getMultiGradeData($this->institutionSiteId, $selectedYear);
-					$singleGradeData = $programmeGrades;
-					$this->CensusClass->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
-					
-					$this->set('programmes', $programmes);
-					$this->set('programmeGrades', $programmeGrades);
-					$this->set('singleGradeData', $singleGradeData);
-					$this->set('multiGradeData', $multiGradeData);
-				}
-				$this->set('displayContent', $displayContent);
-				$this->set('selectedYear', $selectedYear);
-				$this->set('years', $yearList);
-			}
-		} else {
-			$yearId = $this->data['school_year_id'];
-			$duplicate = false;
-			$data = $this->CensusClass->clean($this->data['CensusClass'], $yearId, $this->institutionSiteId, $duplicate);
-
-			if($duplicate) {
-				$this->Utility->alert($this->Utility->getMessage('CENSUS_MULTI_DUPLICATE'), array('type' => 'warn', 'dismissOnClick' => false));
-			}
-			$this->CensusClass->saveCensusData($data);
-			$this->Utility->alert($this->Utility->getMessage('CENSUS_UPDATED'));
-			$this->redirect(array('action' => 'classes', $yearId));
-		}
-	}
-	
-	public function classesAddMultiClass() {
-		$this->layout = 'ajax';
-		
-		$yearId = $this->params['pass'][0];
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId);
-		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId, false);
-		
-		$this->set('i', $this->params->query['index']);
-		$this->set('body', $this->params->query['tableBody']);
-		$this->set('programmes', $programmes);
-		$this->set('programmeGrades', $programmeGrades);
-		$this->set('yearId', $yearId);
-	}
-	
-	public function classesAddMultiGrade() {
-		$this->autoRender = false;
-		
-		$row = $this->params->query['row'];
-		$index = $this->params->query['index'];
-		$yearId = $this->params['pass'][0];
-		$programmeGrades = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId);
-		$programmes = $this->InstitutionSiteProgramme->getProgrammeList($this->institutionSiteId, $yearId, false);
-		$grades = $programmeGrades[current($programmes)]['education_grades'];
-		
-		$option = '<option value="%d">%s</option>';
-		$programmesHtml = sprintf('<div class="table_cell_row"><select index="%d" url="Census/loadGradeList" onchange="Census.loadGradeList(this)">', $index);
-		foreach($programmes as $id => $value) {
-			$programmesHtml .= sprintf($option, $id, $value);
-		}
-		$programmesHtml .= '</select></div>';
-		
-		$gradesHtml = sprintf('<div class="table_cell_row"><select index="%d" name="data[CensusClass][%d][CensusClassGrade][%d]">', $index, $row, $index);
-		foreach($grades as $id => $value) {
-			$gradesHtml .= sprintf($option, $id, $value);
-		}
-		$gradesHtml .= '</select></div>';
-		
-		$data = array('programmes' => $programmesHtml, 'grades' => $gradesHtml);
-		return json_encode($data);
 	}
 	
 	public function textbooks() {
