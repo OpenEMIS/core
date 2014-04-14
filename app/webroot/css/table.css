@@ -111,3 +111,10 @@
 .col-order { width: 83px; }
 
 td.cell_order { width: 63px; margin-left: -1px; }
+
+.report .table td {
+	border: 1px solid #CCCCCC;
+    font-size: 11px;
+    padding: 5px 8px;
+	vertical-align: middle;
+}

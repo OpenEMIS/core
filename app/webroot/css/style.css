@@ -1,7 +1,9 @@
 /* bootstrap */
 .form-horizontal { color: #666666; }
 .row { margin-bottom: 1em; color: #666666; }
-
+.page-controls > div {
+	padding-left: 0;
+}
 /* end bootstrap */
 
 textarea { resize: none; }
