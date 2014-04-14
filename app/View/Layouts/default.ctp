@@ -28,6 +28,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->fetch('meta');
 		
 		echo $this->Html->css('default/bootstrap.min');
+		echo $this->Html->css('default/font-awesome.min');
 		echo $this->Html->css('style');
 		echo $this->Html->css('icons');
 		echo $this->Html->css('fieldset');
@@ -66,6 +67,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		<?php echo $this->element('layout/footer'); ?>
 	</div>
 	<?php echo $this->element('sql'); ?>
+	<?php echo $this->fetch('scriptBottom'); ?>
 </body>
 
 </html>

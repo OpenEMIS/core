@@ -102,6 +102,7 @@ class InstitutionSiteBankAccount extends AppModel {
         if(!empty($data)) {
             $controller->Session->write('InstitutionSiteBankAccount.id', $bankAccountId);
         } else {
+			$controller->Message->alert('general.notExists');
 			return $controller->redirect(array('action' => 'bankAccounts'));
 		}
         $fields = $this->getDisplayFields($controller);

@@ -1,37 +1,36 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Comments'));
+$this->start('contentActions');
+if($_add) {
+	echo $this->Html->link(__('Add'), array('action' => 'commentsAdd'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="bank_accounts" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Comments'); ?></span>
-		<?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'commentsAdd'), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-		
-	<?php echo $this->element('alert'); ?>
-
-	<div class="table allow_hover full_width" action="Students/commentsView/">
-		<div class="table_head">
-			<div class="table_cell"><?php echo __('Date'); ?></div>
-			<div class="table_cell"><?php echo __('Title'); ?></div>
-			<div class="table_cell"><?php echo __('Comment'); ?></div>
-		</div>
-		
-		<div class="table_body">
-			<?php foreach($list as $obj): ?>
-			<div class="table_row" row-id="<?php echo $obj['StudentComment']['id']; ?>">
-				<div class="table_cell"><?php echo $this->Utility->formatDate($obj['StudentComment']['comment_date']); ?></div>
-				<div class="table_cell"><?php echo $obj['StudentComment']['title']; ?></div>
-				<div class="table_cell"><?php echo $obj['StudentComment']['comment']; ?></div>
-			</div>
-			<?php endforeach; ?>
-		</div>
-	</div>
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+		<thead>
+			<?php echo $this->Html->tableHeaders(array(__('Date'), __('Title'), __('Comment'))); ?>
+		</thead>
+		<tbody>
+			<?php
+			$tableData = array();
+			foreach($data as $obj) {
+				$tableData[] = array(
+					$this->Utility->formatDate($obj[$model]['comment_date'], null, false),
+					$this->Html->link($obj[$model]['title'], array('action' => 'commentsView', $obj[$model]['id'])),
+					$obj[$model]['comment']
+				);
+			}
+			echo $this->Html->tableCells($tableData);
+			?>
+		</tbody>
+	</table>
 </div>
+
+<?php $this->end(); ?>
