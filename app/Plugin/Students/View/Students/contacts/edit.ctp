@@ -102,11 +102,11 @@ echo $this->Form->input('contact_option_id', array(
     'default' => $contactOptionId,
     'url' => sprintf('%s/%s/%s', $this->params['controller'], $this->params['action'], $id),
     'onchange' => 'jsForm.change(this)',
-    'label' => array('text'=> $this->Label->get('ContactType.contact_option_id'), 'class'=>'col-md-3 control-label')
+    'label' => array('text'=> $this->Label->get('general.type'), 'class'=>'col-md-3 control-label')
 ));
 echo $this->Form->input('contact_type_id', array(
     'options' => $contactTypeOptions,
-    'label' => array('text'=> $this->Label->get('ContactType.name'), 'class'=>'col-md-3 control-label')
+    'label' => array('text'=> $this->Label->get('general.description'), 'class'=>'col-md-3 control-label')
 ));
 echo $this->Form->input('value');
 echo $this->Form->input('preferred', array('options' => $yesnoOptions));

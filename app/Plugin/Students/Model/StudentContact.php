@@ -126,8 +126,8 @@ class StudentContact extends StudentsAppModel {
             'model' => $this->alias,
             'fields' => array(
                 array('field' => 'id', 'type' => 'hidden'),
-                array('field' => 'contact_option_id', 'model' => 'ContactType', 'type' => 'select', 'options' => $contactOptions),
-                array('field' => 'name', 'model' => 'ContactType'),
+                array('field' => 'contact_option_id', 'model' => 'ContactType', 'labelKey' => 'general.type', 'type' => 'select', 'options' => $contactOptions),
+                array('field' => 'name', 'model' => 'ContactType', 'labelKey' => 'general.description'),
                 array('field' => 'value'),
                 array('field' => 'preferred', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
                 array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
@@ -209,7 +209,7 @@ class StudentContact extends StudentsAppModel {
         }
 
         $controller->Navigation->addCrumb('Contact Details');
-        $header = __('Contacts');
+        $header = __('Details');
         
         $controller->Session->write('StudentContactId', $contactId);
         
