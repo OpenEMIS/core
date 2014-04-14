@@ -52,8 +52,7 @@ echo $this->Html->script('search', false);
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Status'); ?></div>
-			<!--div class="value"><?php echo $this->TrainingUtility->getTrainingStatus($modelName,$data['TrainingStatus']['name'],$data['TrainingStatus']['id']); ?> <?php echo(isset($workflowStatus)?  $workflowStatus : ''); ?></div-->
-			<div class="value"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($modelName,$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
+			<div class="value"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($modelName,$obj['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
 		</div>
 		<div class="row">
 			<div class="label"><?php echo __('Location'); ?></div>
