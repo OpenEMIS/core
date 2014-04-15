@@ -77,7 +77,7 @@ echo $this->Form->input('comments', array('type'=>'textarea'));
 
 
 if(!$WizardMode){ 
-    echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'identities')));
+    echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'nationalities')));
 }
 else{
     echo '<div class="add_more_controls">'.$this->Form->submit(__('Add More'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right")).'</div>';
