@@ -95,6 +95,7 @@ class StudentLanguage extends StudentsAppModel {
     public function languages($controller, $params) {
         $controller->Navigation->addCrumb('Languages');
         $header = __('Languages');
+        $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
         $data = $this->find('all', array('conditions' => array('StudentLanguage.student_id' => $controller->studentId)));
         $controller->set(compact('data', 'header'));
     }

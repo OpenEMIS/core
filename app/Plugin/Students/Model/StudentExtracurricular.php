@@ -129,6 +129,7 @@ class StudentExtracurricular extends StudentsAppModel {
     public function extracurricular($controller, $params) {
         $controller->Navigation->addCrumb('Extracurricular');
         $header = __('Extracurricular');
+        $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
         $data = $this->find('all', array('conditions' => array('student_id' => $controller->studentId), 'order' => 'SchoolYear.start_date')); //$this->getAllList('student_id', $controller->studentId);
       
         $controller->set(compact('data', 'header'));

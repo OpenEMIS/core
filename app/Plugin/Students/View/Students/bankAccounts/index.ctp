@@ -32,7 +32,7 @@ $this->start('contentBody');
 							<td class="center">'.($obj[$model]['active'] == 1? '&#10003;' : '&#10008;').'</td>
 							<td>'.$this->Html->link($obj[$model]['account_name'], array('action' => 'bankAccountsView', $id), array('escape' => false)).'</td>
 							<td>'.$obj[$model]['account_number'].'</td>
-							<td>'.$banklist[$obj['BankBranch']['bank_id']].'</td>
+							<td>'.$obj['BankBranch']['Bank']['name'].'</td>
 							<td>'.$obj['BankBranch']['name'].'</td>
 						</tr>';
 				}

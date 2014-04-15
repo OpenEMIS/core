@@ -86,13 +86,11 @@ class StudentBankAccount extends AppModel {
     public function bankAccounts($controller, $params) {
         $controller->Navigation->addCrumb('Bank Accounts');
         $header = __('Bank Accounts');
-        $Bank = ClassRegistry::init('Bank');
-
+        $this->recursive = 2;
+        $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
         $data = $this->find('all', array('conditions' => array('StudentBankAccount.student_id' => $controller->studentId)));
-        $bank = $Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
-        $banklist = $Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-
-        $controller->set(compact('data', 'bank', 'banklist', 'header'));
+ 
+        $controller->set(compact('data', 'header'));
     }
 
     public function bankAccountsView($controller, $params) {
@@ -208,7 +206,7 @@ class StudentBankAccount extends AppModel {
                     return $controller->redirect(array('action' => 'bankAccountsView', $bankAccountId));
                 }
                 else{
-                    pr($this->invalidFields());
+                   // pr($this->invalidFields());
                 }
             } else {
                 $controller->request->data = $data;

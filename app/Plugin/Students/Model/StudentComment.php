@@ -16,20 +16,21 @@
  */
 
 class StudentComment extends StudentsAppModel {
+
     public $actsAs = array('ControllerAction', 'DatePicker' => array('comment_date'));
     public $belongsTo = array(
         'Student',
         'ModifiedUser' => array(
             'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
+            'fields' => array('first_name', 'last_name'),
+            'foreignKey' => 'modified_user_id',
+            'type' => 'LEFT'
         ),
         'CreatedUser' => array(
             'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
+            'fields' => array('first_name', 'last_name'),
+            'foreignKey' => 'created_user_id',
+            'type' => 'LEFT'
         )
     );
     public $validate = array(
@@ -48,38 +49,39 @@ class StudentComment extends StudentsAppModel {
             )
         ),
     );
-	
-	public function getDisplayFields($controller) {
-		$fields = array(
-			'model' => $this->alias,
-			'fields' => array(
-				array('field' => 'id', 'type' => 'hidden'),
-				array('field' => 'comment_date', 'type' => 'datepicker'),
-				array('field' => 'title'),
-				array('field' => 'comment', 'type' => 'textarea'),
-				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-				array('field' => 'modified', 'edit' => false),
-				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-				array('field' => 'created', 'edit' => false)
-			)
-		);
-		return $fields;
-	}
-	
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
-	}
+
+    public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+                array('field' => 'comment_date', 'type' => 'datepicker'),
+                array('field' => 'title'),
+                array('field' => 'comment', 'type' => 'textarea'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+
+    public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
 
     public function comments($controller, $params) {
-		$controller->Navigation->addCrumb('Comments');
-		$data = $this->find('all', array('conditions' => array('student_id' => $controller->studentId), 'order' => 'StudentComment.comment_date'));
-		
+        $controller->Navigation->addCrumb('Comments');
+        $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
+        $data = $this->find('all', array('conditions' => array('student_id' => $controller->studentId), 'order' => 'StudentComment.comment_date'));
+
         $controller->set('data', $data);
     }
 
     public function commentsAdd($controller, $params) {
         $controller->Navigation->addCrumb(__('Add Comment'));
-		$header = __('Add Comment');
+        $header = __('Add Comment');
         if ($controller->request->is('post')) {
             $addMore = false;
             if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
@@ -98,36 +100,36 @@ class StudentComment extends StudentsAppModel {
             if ($this->save($data)) {
                 $id = $this->getLastInsertId();
                 if ($addMore) {
-					$controller->Message->alert('general.add.success');
+                    $controller->Message->alert('general.add.success');
                 }
                 $controller->Navigation->updateWizard($controller->action, $id, $addMore);
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'comments'));
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'comments'));
             }
         }
         $controller->UserSession->readStatusSession($controller->request->action);
-		$controller->set(compact('header'));
+        $controller->set(compact('header'));
     }
 
     public function commentsView($controller, $params) {
-		$controller->Navigation->addCrumb('Comment Details');
+        $controller->Navigation->addCrumb('Comment Details');
         $id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$data = $this->findById($id);
-		
-		if(!empty($data)) {
+        $data = $this->findById($id);
+
+        if (!empty($data)) {
             $controller->Session->write($this->alias . '.id', $id);
         } else {
-			$controller->Message->alert('general.notExists');
-			return $controller->redirect(array('action' => 'comments'));
-		}
+            $controller->Message->alert('general.notExists');
+            return $controller->redirect(array('action' => 'comments'));
+        }
         $fields = $this->getDisplayFields($controller);
-		$header = __('Details');
+        $header = __('Details');
         $controller->set(compact('data', 'fields', 'header'));
     }
 
     public function commentsEdit($controller, $params) {
         $id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-		$header = __('Comment Details');
+        $header = __('Comment Details');
         if ($controller->request->is('get')) {
             $obj = $this->findById($id);
 
@@ -135,9 +137,9 @@ class StudentComment extends StudentsAppModel {
                 $controller->Navigation->addCrumb('Edit Comment Details');
                 $controller->request->data = $obj;
             } else {
-				$controller->Message->alert('general.notExists');
-				return $controller->redirect(array('action' => 'comments'));
-			}
+                $controller->Message->alert('general.notExists');
+                return $controller->redirect(array('action' => 'comments'));
+            }
         } else {
             $commentData = $controller->request->data['StudentComment'];
             if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
@@ -149,22 +151,22 @@ class StudentComment extends StudentsAppModel {
 
             if ($this->save($commentData)) {
                 $controller->Navigation->updateWizard($controller->action, $id);
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => 'commentsView', $commentData['id']));
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'commentsView', $commentData['id']));
             }
         }
-		$controller->set(compact('id', 'header'));
+        $controller->set(compact('id', 'header'));
     }
 
     public function commentsDelete($controller, $params) {
-		if ($controller->Session->check('StudentComment.id')) {
+        if ($controller->Session->check('StudentComment.id')) {
             $id = $controller->Session->read('StudentComment.id');
-			if($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			return $controller->redirect(array('action' => 'comments'));
+            if ($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
+            return $controller->redirect(array('action' => 'comments'));
         }
     }
 
