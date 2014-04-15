@@ -18,6 +18,17 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteLocality extends AppModel {
 	public $hasMany = array('InstitutionsSite');
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
 	
 	public function findListAsSubgroups() {
 		return $this->findList(true);

@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentIdentity extends StudentsAppModel {
+        public $actsAs = array('ControllerAction','DatePicker' => array('issue_date','expiry_date'));
 	public $belongsTo = array(
 		'Student',
 		'IdentityType',
@@ -69,4 +70,142 @@ class StudentIdentity extends StudentsAppModel {
         }
         return true;
     }
+    
+    public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+    
+    public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+                array('field' => 'name', 'model' => 'IdentityType', 'labelKey' => 'general.type'),
+                array('field' => 'number'),
+                array('field' => 'issue_date'),
+                array('field' => 'expiry_date'),
+                array('field' => 'issue_location'),
+                array('field' => 'comments'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+    
+    public function identities($controller, $params) {
+        $controller->Navigation->addCrumb(__('Identities'));
+        $header = __('Identities');
+        $data = $this->find('all', array('conditions' => array('StudentIdentity.student_id' => $controller->studentId)));
+        
+        $controller->set(compact('header', 'data'));
+    }
+
+    public function identitiesAdd($controller, $params) {
+        $controller->Navigation->addCrumb(__('Add Identity'));
+        $header = __('Add Identity');
+        if ($controller->request->is('post')) {
+            $data = $controller->request->data['StudentIdentity'];
+            $addMore = false;
+            if(isset($controller->request->data['submit']) && $controller->request->data['submit']==__('Skip')){
+                $controller->Navigation->skipWizardLink($this->action);
+            }else if(isset($controller->request->data['submit']) && $controller->request->data['submit']==__('Previous')){
+                $controller->Navigation->previousWizardLink($this->action);
+            }elseif(isset($controller->request->data['submit']) && $controller->request->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $controller->Navigation->validateModel($this->action,'StudentIdentity');
+            }
+
+            $this->create();
+            $data['student_id'] = $controller->studentId;
+
+            if ($this->save($data)) {
+                $id = $this->getLastInsertId();
+                if($addMore){
+                    $controller->Message->alert('general.add.success');
+                }
+                $controller->Navigation->updateWizard($this->action,$id,$addMore);
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'identities'));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $controller->set('identityTypeOptions', $identityTypeOptions);
+        $controller->UserSession->readStatusSession($controller->request->action);
+        
+        $controller->set(compact('header','identityTypeOptions'));
+    }
+
+    public function identitiesView($controller, $params) {
+        $id = isset($params['pass'][0]) ?$params['pass'][0] : 0; //Identity Id
+        
+        $controller->Navigation->addCrumb(__('Identity Details'));
+        $header = __('Details');
+        $data = $this->findById($id); 
+        
+        if (empty($data)) {
+            $controller->Message->alert('general.noData');
+            return $controller->redirect(array('action' => 'identities'));
+        }
+        
+        $controller->Session->write('StudentIdentityId', $id);
+        $fields = $this->getDisplayFields($controller);
+        $controller->set(compact('data', 'header', 'fields','id'));
+    }
+
+    public function identitiesEdit($controller, $params) {
+        $controller->Navigation->addCrumb(__('Edit Identity'));
+        $header = 'Edit Identity';
+        $id = isset($params['pass'][0])?$params['pass'][0]:0; // <<--- Identity Id
+        $data = $this->findById($id);
+
+        if ($controller->request->is('post') || $controller->request->is('put')) {
+            $identityData = $controller->request->data['StudentIdentity'];
+
+            if(isset($controller->request->data['submit']) && $controller->request->data['submit']==__('Skip')){
+                $controller->Navigation->skipWizardLink($this->action);
+            }else if(isset($controller->request->data['submit']) && $controller->request->data['submit']==__('Previous')){
+                $controller->Navigation->previousWizardLink($this->action);
+            }
+            $identityData['student_id'] = $controller->studentId;
+
+            if ($this->save($identityData)) {
+                $controller->Navigation->updateWizard($this->action,$id);
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'identitiesView', $id));
+            }
+        }
+        else{
+            if (empty($data)) {
+                return $controller->redirect(array('action' => 'identities'));
+            }
+       
+            $controller->request->data = $data;
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        
+        $controller->set(compact('id','header','identityTypeOptions'));
+    }
+
+    public function identitiesDelete($controller, $params) {
+        if ($controller->Session->check('StudentId') && $controller->Session->check('StudentIdentityId')) {
+            $id = $controller->Session->read('StudentIdentityId');
+            
+            if($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
+            
+            $controller->Session->delete('StudentIdentityId');
+            
+            return $controller->redirect(array('action' => 'identities'));
+        }
+    }
+    
 }

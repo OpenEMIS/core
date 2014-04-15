@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteClass extends AppModel {
+    
 	public $belongsTo = array('SchoolYear');
 	
 	public $actsAs = array(
@@ -25,7 +26,8 @@ class InstitutionSiteClass extends AppModel {
 				'InstitutionSiteClassGrade',
 				'InstitutionSiteClassTeacher'
 			)
-		)
+		),
+                'ControllerAction'
 	);
 	
 	public function isNameExists($name, $institutionSiteId, $yearId) {
@@ -112,4 +114,133 @@ class InstitutionSiteClass extends AppModel {
             
             return $data;
         }
+        
+        public function classes($controller, $params) {
+        $controller->Navigation->addCrumb('List of Classes');
+        $yearOptions = $controller->SchoolYear->getYearList();
+        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearOptions);
+        $data = $controller->InstitutionSiteClass->getListOfClasses($selectedYear, $controller->institutionSiteId);
+
+        // Checking if user has access to add
+        $_add_class = $controller->AccessControl->check('InstitutionSites', 'classesAdd');
+        // End Access Control
+        
+        $controller->set(compact('yearOptions', 'selectedYear', 'data', '_add_class'));
+    }
+
+    public function classesAdd($controller, $params) {
+        if ($controller->request->is('get')) {
+            $controller->Navigation->addCrumb('Add Class');
+            $years = $controller->SchoolYear->getYearList();
+            $yearOptions = array();
+
+            $programmeOptions = array();
+            foreach ($years as $yearId => $year) {
+                $programmes = $controller->InstitutionSiteProgramme->getProgrammeOptions($controller->institutionSiteId, $yearId);
+                if (!empty($programmes)) {
+                    $yearOptions[$yearId] = $year;
+                    if (empty($programmeOptions)) {
+                        $programmeOptions = $programmes;
+                    }
+                }
+            }
+            $displayContent = !empty($programmeOptions);
+
+            if ($displayContent) {
+                $gradeOptions = array();
+                $selectedProgramme = false;
+                // loop through the programme list until a valid list of grades is found
+                foreach ($programmeOptions as $programmeId => $name) {
+                    $gradeOptions = $controller->EducationGrade->getGradeOptions($programmeId, array(), true);
+                    if (!empty($gradeOptions)) {
+                        $selectedProgramme = $programmeId;
+                        break;
+                    }
+                }
+                
+                $controller->set(compact('yearOptions', 'programmeOptions', 'selectedProgramme', 'gradeOptions'));
+            } else {
+                $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+            }
+            
+            $controller->set(compact('displayContent'));
+        } else {
+            $classData = $controller->data['InstitutionSiteClass'];
+            $classData['institution_site_id'] = $controller->institutionSiteId;
+            $controller->InstitutionSiteClass->create();
+            $classObj = $controller->InstitutionSiteClass->save($classData);
+            if ($classObj) {
+                $classId = $classObj['InstitutionSiteClass']['id'];
+                $gradesData = $controller->data['InstitutionSiteClassGrade'];
+                $grades = array();
+                foreach ($gradesData as $obj) {
+                    $gradeId = $obj['education_grade_id'];
+                    if ($gradeId > 0 && !in_array($gradeId, $grades)) {
+                        $grades[] = $obj['education_grade_id'];
+                        $obj['institution_site_class_id'] = $classId;
+                        $controller->InstitutionSiteClassGrade->create();
+                        $controller->InstitutionSiteClassGrade->save($obj);
+                    }
+                }
+            }
+            $controller->redirect(array('action' => 'classesEdit', $classId));
+        }
+    }
+
+    public function classesView($controller, $params) {
+        $classId = $controller->params['pass'][0];
+        $controller->Session->write('InstitutionSiteClassId', $classId);
+        $classObj = $controller->InstitutionSiteClass->getClass($classId);
+
+        if (!empty($classObj)) {
+            $className = $classObj['InstitutionSiteClass']['name'];
+            $controller->Navigation->addCrumb($className);
+
+            $grades = $controller->InstitutionSiteClassGrade->getGradesByClass($classId);
+            $students = $controller->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
+            $teachers = $controller->InstitutionSiteClassTeacher->getTeachers($classId);
+            $subjects = $controller->InstitutionSiteClassSubject->getSubjects($classId);
+
+            $yearId = $classObj['SchoolYear']['id'];
+            $year = $classObj['SchoolYear']['name'];
+            $noOfSeats = $classObj['InstitutionSiteClass']['no_of_seats'];
+            $noOfShifts = $classObj['InstitutionSiteClass']['no_of_shifts'];
+            
+            $controller->set(compact('classId', 'className', 'yearId', 'year', 'grades', 'students', 'teachers', 'noOfSeats', 'noOfShifts', 'subjects'));
+        } else {
+            $controller->redirect(array('action' => 'classesList'));
+        }
+    }
+
+    public function classesEdit($controller, $params) {
+        $classId = $controller->params['pass'][0];
+        $classObj = $controller->InstitutionSiteClass->getClass($classId);
+
+        if (!empty($classObj)) {
+            $className = $classObj['InstitutionSiteClass']['name'];
+            $controller->Navigation->addCrumb(__('Edit') . ' ' . $className);
+
+            $grades = $controller->InstitutionSiteClassGrade->getGradesByClass($classId);
+            $students = $controller->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
+            $teachers = $controller->InstitutionSiteClassTeacher->getTeachers($classId);
+            $subjects = $controller->InstitutionSiteClassSubject->getSubjects($classId);
+            $studentCategoryOptions = $controller->StudentCategory->findList(true);
+            
+            $year = $classObj['SchoolYear']['name'];
+            $noOfSeats = $classObj['InstitutionSiteClass']['no_of_seats'];
+            $noOfShifts = $classObj['InstitutionSiteClass']['no_of_shifts'];
+            
+            $controller->set(compact('classId', 'className', 'year', 'grades', 'students', 'teachers', 'noOfSeats', 'noOfShifts', 'studentCategoryOptions', 'subjects'));
+        } else {
+            $controller->redirect(array('action' => 'classesList'));
+        }
+    }
+
+    public function classesDelete($controller, $params) {
+        $id = $controller->params['pass'][0];
+        $name = $controller->InstitutionSiteClass->field('name', array('InstitutionSiteClass.id' => $id));
+        $controller->InstitutionSiteClass->delete($id);
+        $controller->Utility->alert($name . ' have been deleted successfully.');
+        $controller->redirect(array('action' => 'classes'));
+    }
 }

@@ -17,6 +17,18 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class StudentBehaviourCategory extends AppModel {
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
 	// Used by SetupController
 	public function getLookupVariables() {
 		$lookup = array('Behaviour Category' => array('model' => 'Students.StudentBehaviourCategory'));

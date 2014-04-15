@@ -1,35 +1,27 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('area', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('area', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Administrative Boundaries'));
+$this->start('contentActions');
+if($_edit) {
+	echo $this->Html->link(__('Edit'), array('action' => 'index'), array('class' => 'divider', 'id'=>'edit'));
+}
+$this->end();
+
+$this->start('contentBody');
+echo $this->element('area_categories');
+if(count($topArea)>1) :
+	echo $this->Form->create('Area', array(
+		'model' => 'Area',
+		'url' => array('controller' => 'Areas',	'action' => 'index'),
+		'inputDefaults' => array('label' => false, 'div' =>false)
+	));
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div class="content_wrapper" style="min-height: 650px;">
-	<h1>
-		<span><?php echo __('Administrative Boundaries'); ?></span>
-		<?php
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'index'), array('class' => 'divider', 'id'=>'edit'));
-		}
-		?>
-	</h1>
-	<?php echo $this->element('alert'); ?>
-	<?php echo $this->element('area_categories'); ?>
-    <?php if(count($topArea)>1){ ?>
-	<?php
-	echo $this->Form->create('Area', array(
-			'url' => array(
-				'controller' => 'Areas',
-				'action' => 'index'
-			),
-			'model' => 'Area',
-            'inputDefaults' => array('label' => false, 'div' =>false)
-		)
-	);
-	?>
 	<input id="selectedArea" type="hidden" value="1" name="selectedArea"></input>
 	<fieldset id="area_section_group" class="section_group">
 		<legend id="area"><?php echo __('Area'); ?></legend>
@@ -43,10 +35,10 @@ echo $this->Html->script('area', false);
 		<div id="mainlist">
 			<div class="table" style="table-layout: auto;">
 				<div class="table_head">
-						<div class="table_cell" style="width:20px;"><?php echo __('Visible'); ?></div>
-						<div class="table_cell" style="width:100px;"><?php echo __('Level'); ?></div>
-						<div class="table_cell" style="width:100px;"><?php echo __('Code'); ?></div>
-						<div class="table_cell"><?php echo __('Name'); ?></div>
+					<div class="table_cell" style="width:20px;"><?php echo __('Visible'); ?></div>
+					<div class="table_cell" style="width:100px;"><?php echo __('Level'); ?></div>
+					<div class="table_cell" style="width:100px;"><?php echo __('Code'); ?></div>
+					<div class="table_cell"><?php echo __('Name'); ?></div>
 				</div>
 				<div class="table_body" style="display:none;">
 				</div>
@@ -77,12 +69,5 @@ echo $this->Html->script('area', false);
     	<?php } ?>
     });
     </script>
-    <?php } ?>
-</div>
-
-
-
-
-
-	
-	
+    <?php endif; ?>
+<?php $this->end(); ?>	
