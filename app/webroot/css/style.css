@@ -215,7 +215,7 @@ input.default { width: 240px; }
 	margin-top: 10px !important;
 }
 
-.btn, .btn_save {
+input.btn, .btn_save {
 	background-color: #5B8BAF;
     border: 2px outset #3e729a;
     border-radius: 4px 4px 4px 4px;
@@ -243,7 +243,7 @@ input.default { width: 240px; }
     text-shadow: -1px -1px rgba(255, 255, 255, 0.5);
 }
 
-.btn:hover, .btn_save:hover {
+input.btn:hover, .btn_save:hover {
 	color: #ffffff;
 	background-color: #294a63;
 	border: 2px outset #294a63;
@@ -266,7 +266,7 @@ input.default { width: 240px; }
 	text-shadow: -1px -1px rgba(0, 0, 0, 0.5); !important;
 }
 
-a.btn, a.btn_cancel, .btn_cancel_button { padding: 4px 14px 5px; }
+a.btn_cancel, .btn_cancel_button { padding: 4px 14px 5px; }
 a.btn:hover { text-decoration: none; }
 
 .chrome .btn_save, .safari .btn_save { padding: 4px 12px; }
