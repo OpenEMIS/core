@@ -8,8 +8,11 @@ foreach($fields['fields'] as $field) {
 		$label = $this->Label->getLabel($model, $field);
 		$value = '';
 		
-		if($fieldType === 'link') { // is a hyperlink
-			
+		if($fieldType === 'file') { // is a hyperlink
+			$value = $data[$model][$key];
+			$linkOptions = $field['url'];
+			$linkOptions[] = $data[$model]['id'];
+			$value = $this->Html->link($value, $linkOptions);
 		} else if($fieldType === 'select') { // dropdown list
 			$value = $field['options'][$data[$model][$key]];
 		} else {
