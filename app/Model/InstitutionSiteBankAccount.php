@@ -79,10 +79,6 @@ class InstitutionSiteBankAccount extends AppModel {
 		);
 		return $fields;
 	}
-	
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
-	}
 
     public function bankAccounts($controller, $params) {
         $controller->Navigation->addCrumb('Bank Accounts');
@@ -149,7 +145,7 @@ class InstitutionSiteBankAccount extends AppModel {
 			$controller->set(compact('bankObj', 'branchList', 'yesnoOptions', 'header'));
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				if ($this->save($controller->request->data)) {
-					$controller->Message->alert('general.add.success');
+					$controller->Message->alert('general.edit.success');
 					return $controller->redirect(array('action' => 'bankAccountsView', $bankAccountId));
 				}
 			} else {
