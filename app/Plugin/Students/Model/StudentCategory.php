@@ -17,6 +17,18 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class StudentCategory extends AppModel {
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
 	public function findOptions($options=array()) {
 		$conditions = array('StudentCategory.order >' => 0); // Not fetching system default categories for editing
 		if(isset($options['conditions'])) {
@@ -24,11 +36,5 @@ class StudentCategory extends AppModel {
 		}
 		$list = parent::findOptions($options);
 		return $list;
-	}
-	
-	// Used by SetupController
-	public function getLookupVariables() {
-		$lookup = array('Category' => array('model' => 'Students.StudentCategory'));
-		return $lookup;
 	}
 }

@@ -332,11 +332,11 @@ class AccessControlComponent extends Component {
 		$controller = $this->controller->params['controller'];
 		$action = $this->controller->action;
                 
-                if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view')){
-                    return;
-                }
+		if($controller == 'InstitutionSites' && ($action == 'index' || $action == 'view')){
+			return;
+		}
 		
-		// if action is not in ignore list then check for access	
+		// if action is not in ignore list then check for access
 		if(!$this->isIgnored($controller, $action)) {
 			if(!$this->newCheck($controller, $action)) {
 				$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));
@@ -371,7 +371,7 @@ class AccessControlComponent extends Component {
 					}
 				}
 				if(!empty($url)) {
-					$this->controller->redirect(array('controller' => $url['controller'], 'action' => $url['action']));
+					$this->controller->redirect(array('plugin' => $url['plugin'], 'controller' => $url['controller'], 'action' => $url['action']));
 				}
 				if($found) {
 					$this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'), array('type' => 'warn'));

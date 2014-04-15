@@ -17,7 +17,17 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteType extends AppModel {
-       
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
 	
     public function getSiteTypesList(){
         return $this->find('list',array('conditions'=>array('visible'=>1)));

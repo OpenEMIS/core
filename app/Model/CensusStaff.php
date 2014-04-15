@@ -17,6 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusStaff extends AppModel {
+        public $actsAs = array(
+                'ControllerAction'
+	);
+    
 	public $useTable = 'census_staff';
 	
 	public $belongsTo = array(
@@ -159,4 +163,39 @@ class CensusStaff extends AppModel {
             
             return $data;
         }
+        
+        public function staff($controller, $params) {
+        $controller->Navigation->addCrumb('Staff');
+
+        $yearList = $controller->SchoolYear->getYearList();
+        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+        $data = $controller->CensusStaff->getCensusData($controller->institutionSiteId, $selectedYear);
+
+        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+
+        $controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+    }
+
+    public function staffEdit($controller, $params) {
+        if ($controller->request->is('get')) {
+            $controller->Navigation->addCrumb('Edit Staff');
+
+            $yearList = $controller->SchoolYear->getAvailableYears();
+            $selectedYear = $controller->getAvailableYearId($yearList);
+            $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+            if (!$editable) {
+                $controller->redirect(array('action' => 'staff', $selectedYear));
+            } else {
+                $data = $controller->CensusStaff->getCensusData($controller->institutionSiteId, $selectedYear);
+
+                $controller->set(compact('selectedYear', 'yearList', 'data'));
+            }
+        } else {
+            $data = $controller->data['CensusStaff'];
+            $yearId = $data['school_year_id'];
+            $controller->CensusStaff->saveCensusData($data, $controller->institutionSiteId);
+            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+            $controller->redirect(array('controller' => 'Census', 'action' => 'staff', $yearId));
+        }
+    }
 }

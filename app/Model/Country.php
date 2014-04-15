@@ -18,6 +18,7 @@ App::uses('AppModel', 'Model');
 
 class Country extends AppModel {
 	public $hasMany = array('StaffNationality', 'StudentNationality', 'TeacherNationality');
+	public $actsAs = array('FieldOption');
 	
 	public function getLookupVariables() {
 		$lookup = array(

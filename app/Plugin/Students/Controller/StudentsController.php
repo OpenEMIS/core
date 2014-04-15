@@ -33,12 +33,12 @@ class StudentsController extends StudentsAppController {
         'InstitutionSiteClass',
         'InstitutionSiteType',
         'InstitutionSiteClassGradeStudent',
-        'Bank',
-        'BankBranch',
+        //'Bank',
+        //'BankBranch',
         'IdentityType',
-        'ContactOption',
-        'ContactType',
-        'Students.StudentBankAccount',
+        //'ContactOption',
+       // 'ContactType',
+       // 'Students.StudentBankAccount',
         'Students.Student',
         'Students.StudentHistory',
         'Students.StudentCustomField',
@@ -49,18 +49,18 @@ class StudentsController extends StudentsAppController {
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
-        'Students.StudentComment',
+        //'Students.StudentComment',
         'Students.StudentNationality',
-        'Students.StudentIdentity',
+      //  'Students.StudentIdentity',
         'Students.StudentLanguage',
-        'Students.StudentContact',
+     //   'Students.StudentContact',
         'Students.StudentAward',
         'SchoolYear',
         'Country',
         'Language',
         'ConfigItem',
-        'Students.StudentExtracurricular',
-        'ExtracurricularType'
+        //'Students.StudentExtracurricular',
+        //'ExtracurricularType'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -82,7 +82,12 @@ class StudentsController extends StudentsAppController {
         'healthConsultation' => 'Students.StudentHealthConsultation',
         'health' => 'Students.StudentHealth',
         'special_need' => 'Students.StudentSpecialNeed',
-        'award' => 'Students.StudentAward'
+        'award' => 'Students.StudentAward',
+        'bankAccounts' => 'Students.StudentBankAccount',
+        'comments' => 'Students.StudentComment',
+        'contacts' => 'Students.StudentContact',
+        'extracurricular' => 'Students.StudentExtracurricular',
+        'identities' => 'Students.StudentIdentity',
     );
 
     public $className = 'Student';
@@ -853,217 +858,9 @@ class StudentsController extends StudentsAppController {
 
     /*     * *BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already* */
 
-    public function bankAccounts() {
-        $this->Navigation->addCrumb('Bank Accounts');
+    
 
-        $data = $this->StudentBankAccount->find('all', array('conditions' => array('StudentBankAccount.student_id' => $this->studentId)));
-        $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
-        $banklist = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('data', $data);
-        $this->set('bank', $bank);
-        $this->set('banklist', $banklist);
-    }
-
-    public function bankAccountsView() {
-        $bankAccountId = $this->params['pass'][0];
-        $bankAccountObj = $this->StudentBankAccount->find('all', array('conditions' => array('StudentBankAccount.id' => $bankAccountId)));
-
-        if (!empty($bankAccountObj)) {
-            $this->Navigation->addCrumb('Bank Account Details');
-
-            $this->Session->write('StudentBankAccountId', $bankAccountId);
-            $this->set('bankAccountObj', $bankAccountObj);
-        }
-        $banklist = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('banklist', $banklist);
-    }
-
-    public function bankAccountsAdd() {
-        $this->Navigation->addCrumb(__('Add Bank Accounts'));
-        if ($this->request->is('post')) { // save
-            $addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentBankAccount');
-            }
-            $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
-            $this->StudentBankAccount->create();
-            if ($this->StudentBankAccount->save($this->request->data)) {
-                $id = $this->StudentBankAccount->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'bankAccounts'));
-            }
-        }
-        $bank = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-
-        $bankId = isset($this->request->data['StudentBankAccount']['bank_id']) ? $this->request->data['StudentBankAccount']['bank_id'] : "";
-        if (!empty($bankId)) {
-            $bankBranches = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
-        } else {
-            $bankBranches = array();
-        }
-
-        $this->set('bankBranches', $bankBranches);
-        $this->set('selectedBank', $bankId);
-        $this->set('student_id', $this->studentId);
-        $this->set('bank', $bank);
-    }
-
-    public function bankAccountsEdit() {
-        $bankBranch = array();
-
-        $bankAccountId = $this->params['pass'][0];
-        $this->Navigation->addCrumb('Edit Bank Account Details');
-        if ($this->request->is('get')) {
-            $bankAccountObj = $this->StudentBankAccount->find('first', array('conditions' => array('StudentBankAccount.id' => $bankAccountId)));
-
-            if (!empty($bankAccountObj)) {
-                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
-                $this->request->data = $bankAccountObj;
-            }
-        } else {
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
-            if ($this->StudentBankAccount->save($this->request->data)) {
-                $this->Navigation->updateWizard($this->action,$bankAccountId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'bankAccountsView', $this->request->data['StudentBankAccount']['id']));
-            }
-        }
-
-        $bankId = isset($this->request->data['StudentBankAccount']['bank_id']) ? $this->request->data['StudentBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
-        $this->set('selectedBank', $bankId);
-
-        $bankBranch = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
-        $this->set('bankBranch', $bankBranch);
-
-        $bank = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('bank', $bank);
-
-        $this->set('id', $bankAccountId);
-    }
-
-    public function bankAccountsDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentBankAccountId')) {
-            $id = $this->Session->read('StudentBankAccountId');
-
-            $studentId = $this->Session->read('StudentId');
-            $name = $this->StudentBankAccount->field('account_number', array('StudentBankAccount.id' => $id));
-            $this->StudentBankAccount->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'bankAccounts'));
-        }
-    }
-
-    public function bankAccountsBankBranches() {
-        $this->autoRender = false;
-        $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
-        echo json_encode($bank);
-    }
-
-    public function comments() {
-        $this->Navigation->addCrumb('Comments');
-        $data = $this->StudentComment->find('all', array('conditions' => array('StudentComment.student_id' => $this->studentId), 'recursive' => -1, 'order' => 'StudentComment.comment_date'));
-
-        $this->set('list', $data);
-    }
-
-    public function commentsAdd() {
-        $this->Navigation->addCrumb(__('Add Comments'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentComment');
-            }
-            $this->StudentComment->create();
-            $this->request->data['StudentComment']['student_id'] = $this->studentId;
-
-            $data = $this->data['StudentComment'];
-
-            if ($this->StudentComment->save($data)) {
-                $id = $this->StudentComment->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'comments'));
-            }
-        }
-
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function commentsView() {
-        $commentId = $this->params['pass'][0];
-        $commentObj = $this->StudentComment->find('all', array('conditions' => array('StudentComment.id' => $commentId)));
-        if (!empty($commentObj)) {
-            $this->Navigation->addCrumb('Comment Details');
-
-            $this->Session->write('StudentCommentId', $commentId);
-            $this->set('commentObj', $commentObj);
-        }
-    }
-
-    public function commentsEdit() {
-        $commentId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $commentObj = $this->StudentComment->find('first', array('conditions' => array('StudentComment.id' => $commentId)));
-
-            if (!empty($commentObj)) {
-                $this->Navigation->addCrumb('Edit Comment Details');
-                $this->request->data = $commentObj;
-            }
-        } else {
-            $commentData = $this->data['StudentComment'];
-
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $commentData['student_id'] = $this->studentId;
-
-            if ($this->StudentComment->save($commentData)) {
-                $this->Navigation->updateWizard($this->action,$commentId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'commentsView', $commentData['id']));
-            }
-        }
-
-
-        $this->set('id', $commentId);
-    }
-
-    public function commentsDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentCommentId')) {
-            $id = $this->Session->read('StudentCommentId');
-            $studentId = $this->Session->read('StudentId');
-            $name = $this->StudentComment->field('title', array('StudentComment.id' => $id));
-            $this->StudentComment->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'comments', $studentId));
-        }
-    }
+    
 
     public function nationalities() {
         $this->Navigation->addCrumb(__('Nationalities'));
@@ -1164,100 +961,7 @@ class StudentsController extends StudentsAppController {
         }
     }
 
-    public function identities() {
-        $this->Navigation->addCrumb(__('Identities'));
-        $data = $this->StudentIdentity->find('all', array('conditions' => array('StudentIdentity.student_id' => $this->studentId)));
-        $this->set('list', $data);
-    }
-
-    public function identitiesAdd() {
-        $this->Navigation->addCrumb(__('Add Identities'));
-        if ($this->request->is('post')) {
-            $data = $this->data['StudentIdentity'];
-            $addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentIdentity');
-            }
-
-            $this->StudentIdentity->create();
-            $data['student_id'] = $this->studentId;
-
-            if ($this->StudentIdentity->save($data)) {
-                $id = $this->StudentIdentity->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'identities'));
-            }
-        }
-
-        $identityTypeOptions = $this->IdentityType->getOptions();
-        $this->set('identityTypeOptions', $identityTypeOptions);
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function identitiesView() {
-        $identityId = $this->params['pass'][0];
-        $identityObj = $this->StudentIdentity->find('all', array('conditions' => array('StudentIdentity.id' => $identityId)));
-
-        if (!empty($identityObj)) {
-            $this->Navigation->addCrumb(__('Identity Details'));
-
-            $this->Session->write('StudentIdentityId', $identityId);
-            $this->set('identityObj', $identityObj);
-        }
-    }
-
-    public function identitiesEdit() {
-        $identityId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $identityObj = $this->StudentIdentity->find('first', array('conditions' => array('StudentIdentity.id' => $identityId)));
-
-            if (!empty($identityObj)) {
-                $this->Navigation->addCrumb(__('Edit Identity Details'));
-                $this->request->data = $identityObj;
-            }
-        } else {
-            $identityData = $this->data['StudentIdentity'];
-
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $identityData['student_id'] = $this->studentId;
-
-            if ($this->StudentIdentity->save($identityData)) {
-                $this->Navigation->updateWizard($this->action,$identityId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
-            }
-        }
-
-        $identityTypeOptions = $this->IdentityType->getOptions();
-        $this->set('identityTypeOptions', $identityTypeOptions);
-
-        $this->set('id', $identityId);
-    }
-
-    public function identitiesDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentIdentityId')) {
-            $id = $this->Session->read('StudentIdentityId');
-            $studentId = $this->Session->read('StudentId');
-            $name = $this->StudentIdentity->field('number', array('StudentIdentity.id' => $id));
-            $this->StudentIdentity->delete($id);
-            $this->Utility->alert($name . __(' have been deleted successfully.'));
-            $this->redirect(array('action' => 'identities', $studentId));
-        }
-    }
+    
 
     public function languages() {
         $this->Navigation->addCrumb('Languages');
@@ -1365,217 +1069,11 @@ class StudentsController extends StudentsAppController {
         }
     }
 
-    public function contacts() {
-        $this->Navigation->addCrumb('Contacts');
-        $data = $this->StudentContact->find('all', array('conditions' => array('StudentContact.student_id' => $this->studentId), 'order' => array('ContactType.contact_option_id', 'StudentContact.preferred DESC')));
+    
 
-        $contactOptions = $this->ContactOption->getOptions();
-        $this->set('contactOptions', $contactOptions);
+    
 
-        $this->set('list', $data);
-    }
-
-    public function contactsAdd() {
-        $this->Navigation->addCrumb(__('Add Contacts'));
-        if ($this->request->is('post')) {
-            $contactData = $this->data['StudentContact'];
-            $addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentContact');
-            }
-            $this->StudentContact->create();
-            $contactData['student_id'] = $this->studentId;
-
-            if ($this->StudentContact->save($contactData)) {
-                if ($contactData['preferred'] == '1') {
-                    $this->StudentContact->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($this->StudentContact->getLastInsertId())))));
-                }
-                $id = $this->StudentContact->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id, $addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'contacts'));
-            }
-        }
-
-
-        $contactOptions = $this->ContactOption->getOptions();
-        $this->set('contactOptions', $contactOptions);
-
-        $contactOptionId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($contactOptions);
-        $contactTypeOptions = $this->ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
-        $this->set('contactTypeOptions', $contactTypeOptions);
-        $this->set('selectedContactOptions', $contactOptionId);
-
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function contactsView() {
-        $contactId = $this->params['pass'][0];
-        $contactObj = $this->StudentContact->find('all', array('conditions' => array('StudentContact.id' => $contactId)));
-
-        if (!empty($contactObj)) {
-            $this->Navigation->addCrumb('Contact Details');
-
-            $this->Session->write('StudentContactId', $contactId);
-            $this->set('contactObj', $contactObj);
-        }
-
-        $contactOptions = $this->ContactOption->getOptions();
-        $this->set('contactOptions', $contactOptions);
-    }
-
-    public function contactsEdit() {
-        $contactId = $this->params['pass'][0];
-        $contactObj = array();
-        if ($this->request->is('get')) {
-            $contactObj = $this->StudentContact->find('first', array('conditions' => array('StudentContact.id' => $contactId)));
-
-            if (!empty($contactObj)) {
-                $this->Navigation->addCrumb('Edit Contact Details');
-                $this->request->data = $contactObj;
-            }
-        } else {
-            $contactData = $this->data['StudentContact'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $contactData['student_id'] = $this->studentId;
-
-            if ($this->StudentContact->save($contactData)) {
-                if ($contactData['preferred'] == '1') {
-                    $this->StudentContact->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($contactId)))));
-                }
-                $this->Navigation->updateWizard($this->action,$contactId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'contactsView', $contactData['id']));
-            }
-        }
-
-        $contactOptions = $this->ContactOption->getOptions();
-        $this->set('contactOptions', $contactOptions);
-
-        $contactOptionId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $contactObj['ContactType']['contact_option_id'];
-        $contactTypeOptions = $this->ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
-        $this->set('contactTypeOptions', $contactTypeOptions);
-        $this->set('selectedContactOptions', $contactOptionId);
-
-        $this->set('id', $contactId);
-    }
-
-    public function contactsDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentContactId')) {
-            $id = $this->Session->read('StudentContactId');
-            $studentId = $this->Session->read('StudentId');
-
-            $name = $this->StudentContact->field('value', array('StudentContact.id' => $id));
-            $this->StudentContact->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'contacts', $studentId));
-        }
-    }
-
-    public function extracurricular() {
-        $this->Navigation->addCrumb('Extracurricular');
-        $data = $this->StudentExtracurricular->getAllList('student_id', $this->studentId);
-        $this->set('list', $data);
-    }
-
-    public function extracurricularView() {
-        $id = $this->params['pass'][0];
-        $data = $this->StudentExtracurricular->getAllList('id', $id);
-        if (!empty($data)) {
-            $this->Navigation->addCrumb('Extracurricular Details');
-
-            $this->Session->write('StudentExtracurricularId', $id);
-            $this->set('data', $data);
-        }
-    }
-
-    public function extracurricularAdd() {
-        $this->Navigation->addCrumb('Add Extracurricular');
-
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $typeList = $this->ExtracurricularType->findList(array('fields' => array('id', 'name'), 'conditions' => array('visible' => '1'), 'orderBy' => 'name'));
-
-
-        $this->set('selectedYear', $yearId);
-        $this->set('years', $yearList);
-        $this->set('types', $typeList);
-        if ($this->request->isPost()) {
-            $data = $this->request->data;
-            $data['StudentExtracurricular']['student_id'] = $this->studentId;
-            if ($this->StudentExtracurricular->save($data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'extracurricular'));
-            }
-        }
-    }
-
-    public function extracurricularEdit() {
-        $id = $this->params['pass'][0];
-        $this->Navigation->addCrumb('Edit Extracurricular Details');
-
-        if ($this->request->is('get')) {
-            $data = $this->StudentExtracurricular->find('first', array('conditions' => array('StudentExtracurricular.id' => $id)));
-
-            if (!empty($data)) {
-                $this->request->data = $data;
-            }
-        } else {
-            $data = $this->data;
-            $data['StudentExtracurricular']['student_id'] = $this->studentId;
-            $data['StudentExtracurricular']['id'] = $id;
-            if ($this->StudentExtracurricular->save($data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'extracurricularView', $data['StudentExtracurricular']['id']));
-            }
-        }
-
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $typeList = $this->ExtracurricularType->findList(array('fields' => array('id', 'name'), 'conditions' => array('visible' => '1'), 'orderBy' => 'name'));
-
-        $this->set('selectedYear', $yearId);
-        $this->set('years', $yearList);
-        $this->set('types', $typeList);
-
-        $this->set('id', $id);
-    }
-
-    public function extracurricularDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentExtracurricularId')) {
-            $id = $this->Session->read('StudentExtracurricularId');
-            $studentId = $this->Session->read('StudentId');
-            $name = $this->StudentExtracurricular->field('name', array('StudentExtracurricular.id' => $id));
-
-            $this->StudentExtracurricular->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'extracurricular'));
-        }
-    }
-
-    public function searchAutoComplete() {
-        if ($this->request->is('get')) {
-            if ($this->request->is('ajax')) {
-                $this->autoRender = false;
-                $search = $this->params->query['term'];
-                $result = $this->StudentExtracurricular->autocomplete($search);
-                return json_encode($result);
-            }
-        }
-    }
+    
 
     public function ajax_find_award($type) {
         if ($this->request->is('ajax')) {

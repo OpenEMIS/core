@@ -534,6 +534,15 @@ class UtilityHelper extends AppHelper {
 		return $status ? '<span class="green">'.__('Active').'</span>' : __('Inactive');
 	}
 	
+	public function getVisibleOptions() {
+		return array(1 => __('Yes'), 0 => __('No'));
+	}
+	
+	public function getVisible($flag) {
+		$option = $this->getVisibleOptions();
+		return $option[$flag];
+	}
+	
 	// for permissions	
 	public function getPermissionInput($form, $fieldName, $type, $value) {
 		$options = array(
