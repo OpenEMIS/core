@@ -33,4 +33,11 @@ class IdentityType extends AppModel {
 		)
 	);
 	public $actsAs = array('FieldOption');
+        
+        public function getOptions($options = array()){
+            if(is_array($options)){
+                $data = $this->find('list',$options);
+                return $data;
+            }
+        }
 }

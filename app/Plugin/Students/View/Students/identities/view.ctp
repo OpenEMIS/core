@@ -1,3 +1,5 @@
+<?php /*
+
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
@@ -10,7 +12,8 @@ echo $this->Html->script('search', false);
     <h1>
         <span><?php echo __('Identities'); ?></span>
         <?php
-        $data = $identityObj[0]['StudentIdentity'];
+ 
+        $data = $identityObj['StudentIdentity'];
         echo $this->Html->link(__('List'), array('action' => 'identities', $data['student_id']), array('class' => 'divider'));
         if($_edit) {
             echo $this->Html->link(__('Edit'), array('action' => 'identitiesEdit', $data['id']), array('class' => 'divider'));
@@ -24,7 +27,7 @@ echo $this->Html->script('search', false);
     
     <div class="row">
         <div class="label"><?php echo __('Type'); ?></div>
-        <div class="value"><?php echo $identityObj[0]['IdentityType']['name']; ?></div>
+        <div class="value"><?php echo $identityObj['IdentityType']['name']; ?></div>
     </div>
 
     <div class="row">
@@ -34,12 +37,12 @@ echo $this->Html->script('search', false);
     
     <div class="row">
         <div class="label"><?php echo __('Issue Date'); ?></div>
-        <div class="value"><?php echo $this->Utility->formatDate($data['issue_date']); ?></div>
+        <div class="value"><?php echo $data['issue_date']; ?></div>
     </div>
     
     <div class="row">
         <div class="label"><?php echo __('Expiry Date'); ?></div>
-        <div class="value"><?php echo $this->Utility->formatDate($data['expiry_date']); ?></div>
+        <div class="value"><?php echo $data['expiry_date']; ?></div>
     </div>
 
     <div class="row">
@@ -55,7 +58,7 @@ echo $this->Html->script('search', false);
     
    <div class="row">
         <div class="label"><?php echo __('Modified by'); ?></div>
-        <div class="value"><?php echo trim($identityObj[0]['ModifiedUser']['first_name'] . ' ' . $identityObj[0]['ModifiedUser']['last_name']); ?></div>
+        <div class="value"><?php echo trim($identityObj['ModifiedUser']['first_name'] . ' ' . $identityObj['ModifiedUser']['last_name']); ?></div>
     </div>
     
     <div class="row">
@@ -65,7 +68,7 @@ echo $this->Html->script('search', false);
     
     <div class="row">
         <div class="label"><?php echo __('Created by'); ?></div>
-        <div class="value"><?php echo trim($identityObj[0]['CreatedUser']['first_name'] . ' ' . $identityObj[0]['CreatedUser']['last_name']); ?></div>
+        <div class="value"><?php echo trim($identityObj['CreatedUser']['first_name'] . ' ' . $identityObj['CreatedUser']['last_name']); ?></div>
     </div>
     
     <div class="row">
@@ -74,3 +77,23 @@ echo $this->Html->script('search', false);
     </div>
     
 </div>
+*/ ?>
+
+<?php
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+
+$this->start('contentActions');
+echo $this->Html->link(__('List'), array('action' => 'identities'), array('class' => 'divider'));
+        if($_edit) {
+            echo $this->Html->link(__('Edit'), array('action' => 'identitiesEdit', $id), array('class' => 'divider'));
+        }
+        if($_delete) {
+            echo $this->Html->link(__('Delete'), array('action' => 'identitiesDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+        }
+$this->end();
+
+$this->start('contentBody');
+echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+$this->end();
+?>
