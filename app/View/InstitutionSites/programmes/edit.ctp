@@ -1,66 +1,59 @@
-<?php 
+<?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
+echo $this->Html->css('../js/plugins/icheck/skins/minimal/blue', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
+echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
-echo $this->Html->script('institution_site_programmes', false);
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Programmes'));
+$this->start('contentActions');
+echo $this->Html->link(__('View'), array('action' => 'programmes', $selectedYear), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
+echo $this->element('templates/year_options', array('url' => 'programmesEdit'));
+$formOptions = $this->FormUtility->getFormOptions(array('action' => 'programmesEdit', $selectedYear));
+echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="programmes" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Edit Programmes'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'programmes', $selectedYear), array('class' => 'divider')); ?>
-	</h1>
-    <?php echo $this->element('alert'); ?>
-	
-	<?php 
-	echo $this->Form->create('InstitutionSite', array(
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'programmes'),
-		'inputDefaults' => array('label' => false, 'div' => false)
-	)); 
-	?>
-	
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
-			<?php
-			echo $this->Form->input('school_year_id', array(
-				'id' => 'SchoolYearId',
-				'options' => $yearOptions,
-				'default' => $selectedYear,
-				'url' => 'InstitutionSites/programmesEdit',
-				'onchange' => 'jsForm.change(this)'
-			));
-			?>
-		</div>
-	</div>
-	
-	<div class="table full_width">
-		<div class="table_head">
-			<div class="table_cell cell_system"><?php echo __('Programme'); ?></div>
-			<div class="table_cell"><?php echo __('System') . ' - ' . __('Cycle'); ?></div>
-			<?php if($_delete) { ?>
-			<div class="table_cell cell_delete">&nbsp;</div>
-			<?php } ?>
-		</div>
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered table-checkable table-input">
+		<thead>
+			<tr>
+				<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+				<th><?php echo __('Programme'); ?></th>
+				<th><?php echo __('System'); ?></th>
+				<th><?php echo __('Cycle'); ?></th>
+			</tr>
+		</thead>
 		
-		<div class="table_body">
-			<?php foreach($data as $obj) { ?>
-			<div class="table_row" row-id="<?php echo $obj['education_programme_id']; ?>">
-				<div class="table_cell"><?php echo $obj['education_programme_name']; ?></div>
-				<div class="table_cell"><?php echo sprintf('%s - %s', $obj['education_system_name'], $obj['education_cycle_name']); ?></div>
-				<?php if($_delete) { ?>
-				<div class="table_cell cell_delete"><span class="icon_delete" href="InstitutionSites/programmesDelete/<?php echo $selectedYear . '/' . $obj['id']; ?>" onclick="jsForm.confirmDelete(this)"></span></div>
-				<?php } ?>
-			</div>
-			<?php } ?>
-		</div>
-	</div>
-	
-	<?php if($_add) { ?>
-	<div class="row">
-		<a class="void icon_plus" url="InstitutionSites/programmesAdd/<?php echo $selectedYear; ?>"><?php echo __('Add').' '.__('Programme'); ?></a>
-	</div>
-	<?php } ?>
+		<tbody>
+			<?php 
+			foreach($data as $obj) :
+				$checked = false;//!empty($obj[$model]['education_grade_subject_id']) ? 'checked="checked"' : '';
+				//$subjectId = $obj['EducationGradesSubject']['id'];
+				//if($obj['EducationSubject']['visible']==1 || !empty($checked)) :
+					//$name = sprintf('%s.%d.%%s', $model, $i);
+			?>
+			<tr>
+				<td class="checkbox-column">
+					<input type="checkbox" class="icheck-input" name="data[AssessmentItem][<?php echo 0; ?>][education_grade_subject_id]" value="<?php echo 0; ?>" <?php echo $checked; ?> />
+				</td>
+				<td><?php echo $obj['education_programme_name']; ?></td>
+				<td><?php echo $obj['education_system_name']; ?></td>
+				<td><?php echo $obj['education_cycle_name']; ?></td>
+			</tr>
+			<?php 
+				//endif;
+			endforeach;
+			?>
+		</tbody>
+	</table>
 </div>
+
+<div class="controls">
+	<input type="button" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+	<?php echo $this->Html->link(__('Cancel'), array('action' => 'programmes', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+</div>
+
+<?php $this->end(); ?>

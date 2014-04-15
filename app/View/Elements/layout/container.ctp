@@ -1,6 +1,6 @@
 <div class="body_title"><?php echo __($bodyTitle); ?></div>
 <div class="body_content">
-	<?php echo $this->element('left_nav'); ?>
+	<?php echo $this->element('layout/left_nav'); ?>
 	<div class="body_content_right">
 		<?php echo $this->element('breadcrumb'); ?>
 		<div id="<?php echo $this->fetch('contentId'); ?>" class="content_wrapper <?php echo $this->fetch('contentClass'); ?>">

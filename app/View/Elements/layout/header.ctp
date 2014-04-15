@@ -29,6 +29,6 @@ $lastName = AuthComponent::user('last_name');
 				</div>
 			</div><!-- end header_side_nav -->
 		</div>
-		<?php echo $this->element('top_nav'); ?>
+		<?php echo $this->element('layout/top_nav'); ?>
 	</div><!-- end header_content -->
 </div><!-- end header -->
