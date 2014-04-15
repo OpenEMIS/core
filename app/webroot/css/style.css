@@ -4,6 +4,13 @@
 .page-controls > div {
 	padding-left: 0;
 }
+.page-controls .form-control {
+	font-size: 11px;
+    height: 25px;
+    padding: 4px 6px;
+}
+
+.table-checkable .checkbox-column { width: 36px; }
 /* end bootstrap */
 
 textarea { resize: none; }

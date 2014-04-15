@@ -20,6 +20,9 @@ class FormUtilityHelper extends AppHelper {
 	public $helpers = array('Html', 'Form', 'Label');
 	
 	public function getFormOptions($url=array(), $type='') {
+		if(!isset($url['controller'])) {
+			$url['controller'] = $this->_View->params['controller'];
+		}
 		$options = array(
 			'url' => $url,
 			'class' => 'form-horizontal',
@@ -56,30 +59,21 @@ class FormUtilityHelper extends AppHelper {
 		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';
 		$_options = array(
 			'id' => 'date',
-			'date-format' => $dateFormat,
-			'date' => date('d-m-Y')
+			'data-date' => date('d-m-Y'),
+			'data-date-format' => $dateFormat,
+			'data-date-autoclose' => 'true'
 		);
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
-		$wrapper = $this->Html->div(
-			'input-group date', // class
-			null, 				// text
-			array( 				// options
-				'id' => $_options['id'],
-				'data-date' => $_options['date'],
-				'data-date-format' => $_options['date-format'],
-				'data-date-autoclose' => 'true'
-			)
-		);
-		
+		$wrapper = $this->Html->div('input-group date', null, $_options);
 		$defaults = $this->Form->inputDefaults();
 		$html = $this->Form->input($field, array(
 			'id' => $_options['id'],
 			'type' => 'text',
 			'between' => $defaults['between'] . $wrapper,
 			'after' => $icon . $defaults['after'],
-			'value' => $_options['date']
+			'value' => $_options['data-date']
 		));
 		
 		if(!is_null($this->_View->get('datepicker'))) {

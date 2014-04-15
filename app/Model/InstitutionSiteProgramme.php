@@ -20,6 +20,7 @@ class InstitutionSiteProgramme extends AppModel {
     public $actsAs = array('ControllerAction');
     
 	public $belongsTo = array(
+		'SchoolYear',
 		'InstitutionSite'=>array('foreignKey' => 'institution_site_id'),
 		'EducationProgramme'=>array('foreignKey' => 'education_programme_id'),
 		'Institution' =>
@@ -31,12 +32,6 @@ class InstitutionSiteProgramme extends AppModel {
                 'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
             )
 	);
-	
-	/* can't work if recursive is set to 0
-	public $virtualFields = array(
-		'name' => 'EducationProgramme.name'
-	);
-	*/
 	
 	public $virtualFields = array(
 		'name' => "SELECT name from `education_programmes` WHERE id = InstitutionSiteProgramme.education_programme_id"
@@ -393,11 +388,10 @@ class InstitutionSiteProgramme extends AppModel {
 
     public function programmes($controller, $params) {
         $controller->Navigation->addCrumb('Programmes');
-
-        $yearOptions = $controller->SchoolYear->getAvailableYears();
+		
+        $yearOptions = $this->SchoolYear->getAvailableYears();
         $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearOptions);
-        $data = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
-        
+        $data = $this->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
         $controller->set(compact('yearOptions', 'selectedYear', 'data'));
     }
 
@@ -407,7 +401,7 @@ class InstitutionSiteProgramme extends AppModel {
 
             $yearOptions = $controller->SchoolYear->getAvailableYears();
             $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearOptions);
-            $data = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+            $data = $this->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
             
             $controller->set(compact('yearOptions', 'selectedYear', 'data'));
         } else {
@@ -434,8 +428,8 @@ class InstitutionSiteProgramme extends AppModel {
                 'school_year_id' => $yearId
             );
 
-            $controller->InstitutionSiteProgramme->create();
-            $result = $controller->InstitutionSiteProgramme->save($obj);
+            $this->create();
+            $result = $this->save($obj);
             $return = array();
             if ($result) {
                 $controller->Utility->setAjaxResult('success', $return);
@@ -454,7 +448,7 @@ class InstitutionSiteProgramme extends AppModel {
             $yearId = $controller->params['pass'][0];
             $id = $controller->params['pass'][1];
 
-            $controller->InstitutionSiteProgramme->delete($id, false);
+            $this->delete($id, false);
             $controller->Utility->alert($controller->Utility->getMessage('DELETE_SUCCESS'));
             $controller->redirect(array('action' => 'programmes', $yearId));
         }
@@ -464,7 +458,7 @@ class InstitutionSiteProgramme extends AppModel {
         $controller->layout = 'ajax';
 
         $yearId = $controller->params->query['yearId'];
-        $programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($controller->institutionSiteId, $yearId, false);
+        $programmeOptions = $this->getSiteProgrammeForSelection($controller->institutionSiteId, $yearId, false);
         
         $controller->set(compact('programmeOptions'));
         $controller->render('/Elements/programmes/programmes_options');

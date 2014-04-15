@@ -66,7 +66,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		<?php echo $this->fetch('content'); ?>
 		<?php echo $this->element('layout/footer'); ?>
 	</div>
-	<?php echo $this->element('sql'); ?>
+	<?php echo $this->element('debug/sql'); ?>
 	<?php echo $this->fetch('scriptBottom'); ?>
 </body>
 
