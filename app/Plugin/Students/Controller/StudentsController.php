@@ -52,7 +52,7 @@ class StudentsController extends StudentsAppController {
         //'Students.StudentComment',
         'Students.StudentNationality',
       //  'Students.StudentIdentity',
-        'Students.StudentLanguage',
+      //  'Students.StudentLanguage',
      //   'Students.StudentContact',
         'Students.StudentAward',
         'SchoolYear',
@@ -88,6 +88,7 @@ class StudentsController extends StudentsAppController {
         'contacts' => 'Students.StudentContact',
         'extracurricular' => 'Students.StudentExtracurricular',
         'identities' => 'Students.StudentIdentity',
+        'languages' => 'Students.StudentLanguage',
     );
 
     public $className = 'Student';
@@ -856,10 +857,6 @@ class StudentsController extends StudentsAppController {
 
     /*     * *BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already* */
 
-    
-
-    
-
     public function nationalities() {
         $this->Navigation->addCrumb(__('Nationalities'));
         $data = $this->StudentNationality->find('all', array('conditions' => array('StudentNationality.student_id' => $this->studentId)));
@@ -958,121 +955,7 @@ class StudentsController extends StudentsAppController {
             $this->redirect(array('action' => 'nationalities', $studentId));
         }
     }
-
     
-
-    public function languages() {
-        $this->Navigation->addCrumb('Languages');
-        $data = $this->StudentLanguage->find('all', array('conditions' => array('StudentLanguage.student_id' => $this->studentId)));
-        $this->set('list', $data);
-    }
-
-    public function languagesAdd() {
-        $this->Navigation->addCrumb(__('Add Languages'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $data = $this->data['StudentLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentLanguage');
-            }
-            
-            $this->StudentLanguage->create();
-            $data['student_id'] = $this->studentId;
-
-            if ($this->StudentLanguage->save($data)) {
-                $id = $this->StudentLanguage->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'languages'));
-            }
-        }
-
-        $gradeOptions = array();
-        for ($i = 0; $i < 6; $i++) {
-            $gradeOptions[$i] = $i;
-        }
-        $this->set('gradeOptions', $gradeOptions);
-
-        $languageOptions = $this->Language->getOptions();
-        $this->set('languageOptions', $languageOptions);
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function languagesView() {
-        $languageId = $this->params['pass'][0];
-        $languageObj = $this->StudentLanguage->find('all', array('conditions' => array('StudentLanguage.id' => $languageId)));
-
-        if (!empty($languageObj)) {
-            $this->Navigation->addCrumb('Language Details');
-
-            $this->Session->write('StudentLanguageId', $languageId);
-            $this->set('languageObj', $languageObj);
-        }
-    }
-
-    public function languagesEdit() {
-        $languageId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $languageObj = $this->StudentLanguage->find('first', array('conditions' => array('StudentLanguage.id' => $languageId)));
-
-            if (!empty($languageObj)) {
-                $this->Navigation->addCrumb('Edit Language Details');
-                $this->request->data = $languageObj;
-            }
-        } else {
-            $languageData = $this->data['StudentLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $languageData['student_id'] = $this->studentId;
-
-            if ($this->StudentLanguage->save($languageData)) {
-                $this->Navigation->updateWizard($this->action,$languageId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'languagesView', $languageData['id']));
-            }
-        }
-        $gradeOptions = array();
-        for ($i = 0; $i < 6; $i++) {
-            $gradeOptions[$i] = $i;
-        }
-        $this->set('gradeOptions', $gradeOptions);
-
-        $languageOptions = $this->Language->getOptions();
-        $this->set('languageOptions', $languageOptions);
-
-        $this->set('id', $languageId);
-    }
-
-    public function languagesDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentLanguageId')) {
-            $id = $this->Session->read('StudentLanguageId');
-            $studentId = $this->Session->read('StudentId');
-            $languageId = $this->StudentLanguage->field('language_id', array('StudentLanguage.id' => $id));
-            $name = $this->Language->field('name', array('Language.id' => $languageId));
-            $this->StudentLanguage->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'languages', $studentId));
-        }
-    }
-
-    
-
-    
-
-    
-
     public function ajax_find_award($type) {
         if ($this->request->is('ajax')) {
             $this->autoRender = false;
