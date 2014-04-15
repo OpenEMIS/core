@@ -155,7 +155,6 @@ class StudentContact extends StudentsAppModel {
         $header = __('Add Contacts');
         $studentId = $controller->studentId;
         if ($controller->request->is('post')) {
-           // pr($controller->request->data);
             $contactData = $controller->request->data['StudentContact'];
             $addMore = false;
             if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
@@ -176,11 +175,9 @@ class StudentContact extends StudentsAppModel {
                 }
                 $id = $this->getLastInsertId();
                 if ($addMore) {
-                    //$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
                     $controller->Message->alert('general.add.success');
                 }
                 $controller->Navigation->updateWizard($this->action, $id, $addMore);
-                //$controller->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'contacts'));
             }
@@ -201,7 +198,7 @@ class StudentContact extends StudentsAppModel {
 
     public function contactsView($controller, $params) {
         $contactId = isset($params['pass'][0])?$params['pass'][0]:0;
-        $data = $this->findById($contactId);//('all', array('conditions' => array('StudentContact.id' => $contactId)));
+        $data = $this->findById($contactId);
 
         if (empty($data)) {
             $controller->Message->alert('general.noData');
@@ -223,7 +220,7 @@ class StudentContact extends StudentsAppModel {
         $id = isset($params['pass'][0])?$params['pass'][0]:0; //<<-- contact id
         $data = array();
         if ($controller->request->is('get')) {
-            $data = $this->findById($id);//('first', array('conditions' => array('StudentContact.id' => $id)));
+            $data = $this->findById($id);
 
             if (!empty($data)) {
                 $controller->request->data = $data;
@@ -242,7 +239,6 @@ class StudentContact extends StudentsAppModel {
                     $this->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($id)))));
                 }
                 $controller->Navigation->updateWizard($this->action, $id);
-               // $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'contactsView', $contactData['id']));
             }
@@ -272,7 +268,7 @@ class StudentContact extends StudentsAppModel {
             }
             
             $controller->Session->delete('StudentContactId');
-            $controller->redirect(array('action' => 'contacts', $studentId));
+            return $controller->redirect(array('action' => 'contacts', $studentId));
         }
     }
 
