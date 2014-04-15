@@ -11,12 +11,11 @@ $this->end();
 
 $this->start('contentBody');
 echo $this->element('templates/year_options', array('url' => 'programmes'));
-$tableHeaders = array(__('Programme'), __('System'), __('Cycle'));
+$tableHeaders = array(__('Programme'), __('Cycle'));
 $tableData = array();
 foreach($data as $obj) {
 	$row = array();
 	$row[] = $obj['education_programme_name'];
-	$row[] = $obj['education_system_name'];
 	$row[] = $obj['education_cycle_name'];
 	$tableData[] = $row;
 }

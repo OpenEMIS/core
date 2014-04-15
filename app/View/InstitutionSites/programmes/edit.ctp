@@ -22,38 +22,38 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 			<tr>
 				<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 				<th><?php echo __('Programme'); ?></th>
-				<th><?php echo __('System'); ?></th>
 				<th><?php echo __('Cycle'); ?></th>
 			</tr>
 		</thead>
 		
 		<tbody>
 			<?php 
-			foreach($data as $obj) :
-				$checked = false;//!empty($obj[$model]['education_grade_subject_id']) ? 'checked="checked"' : '';
-				//$subjectId = $obj['EducationGradesSubject']['id'];
-				//if($obj['EducationSubject']['visible']==1 || !empty($checked)) :
-					//$name = sprintf('%s.%d.%%s', $model, $i);
+			foreach($data as $i => $obj) :
+				$checked = !empty($obj[$model]['status']);
+				if($obj['EducationProgramme']['visible']!=0 && !$checked) {
+					continue;
+				}
 			?>
 			<tr>
 				<td class="checkbox-column">
-					<input type="checkbox" class="icheck-input" name="data[AssessmentItem][<?php echo 0; ?>][education_grade_subject_id]" value="<?php echo 0; ?>" <?php echo $checked; ?> />
+					<?php
+					echo $this->Form->hidden($i . '.id', array('value' => $obj[$model]['id']));
+					echo $this->Form->hidden($i . '.education_programme_id', array('value' => $obj['EducationProgramme']['id']));
+					echo $this->Form->checkbox($i . '.status', array('class' => 'icheck-input',	'checked' => $checked));
+					?>
 				</td>
-				<td><?php echo $obj['education_programme_name']; ?></td>
-				<td><?php echo $obj['education_system_name']; ?></td>
-				<td><?php echo $obj['education_cycle_name']; ?></td>
+				<td><?php echo $obj['EducationProgramme']['name']; ?></td>
+				<td><?php echo $obj['EducationCycle']['name']; ?></td>
 			</tr>
-			<?php 
-				//endif;
-			endforeach;
-			?>
+			<?php endforeach; ?>
 		</tbody>
 	</table>
 </div>
 
 <div class="controls">
-	<input type="button" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'programmes', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 
+<?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>
