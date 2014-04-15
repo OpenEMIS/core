@@ -97,8 +97,8 @@ class StudentIdentity extends StudentsAppModel {
     public function identities($controller, $params) {
         $controller->Navigation->addCrumb(__('Identities'));
         $header = __('Identities');
+        $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
         $data = $this->find('all', array('conditions' => array('StudentIdentity.student_id' => $controller->studentId)));
-
         $controller->set(compact('header', 'data'));
     }
 

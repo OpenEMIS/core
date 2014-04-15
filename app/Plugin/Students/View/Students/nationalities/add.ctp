@@ -1,3 +1,5 @@
+<?php /*
+
 <?php echo $this->element('breadcrumb'); ?>
 <?php echo $this->Html->script('app.date', false); ?>
 
@@ -54,3 +56,44 @@
     </div>
     <?php echo $this->Form->end(); ?>
 </div>
+ * 
+ */?>
+
+<?php
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+$this->start('contentActions');
+if ($_edit && !$WizardMode) {
+            echo $this->Html->link(__('Back'), array('action' => 'nationalities'), array('class' => 'divider'));
+        }
+$this->end();
+$this->start('contentBody');
+
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'nationalitiesAdd'));
+echo $this->Form->create($model, $formOptions);
+
+echo $this->Form->input('country_id', array('options'=>$countryOptions, 'default'=>$defaultCountryId));
+echo $this->Form->input('comments', array('type'=>'textarea'));
+
+
+if(!$WizardMode){ 
+    echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'identities')));
+}
+else{
+    echo '<div class="add_more_controls">'.$this->Form->submit(__('Add More'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right")).'</div>';
+    
+    echo $this->Form->submit(__('Previous'), array('div'=>false, 'name'=>'submit','class'=>"btn_save btn_right"));
+
+    if(!$wizardEnd){
+        echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+    }else{
+        echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
+    }
+    if($mandatory!='1' && !$wizardEnd){
+        echo $this->Form->submit(__('Skip'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_left"));
+    } 
+}
+
+echo $this->Form->end();
+$this->end();
+?>

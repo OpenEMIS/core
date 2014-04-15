@@ -36,14 +36,16 @@ class LabelHelper extends AppHelper {
                         'type' => 'Type',
                         'title' => 'Title'
 		),
-		
 		'BankBranch' => array(
 			'bank_id' => 'Bank',
 			'name' => 'Branch'
 		),
-            'SchoolYear' => array(
-                'name' => 'School Year'
-            )
+                'SchoolYear' => array(
+                    'name' => 'School Year'
+                ),
+                'Country' => array(
+                    'name' => 'Country'
+                )
 	);
 	
 	public function get($code) {
