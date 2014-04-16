@@ -86,7 +86,7 @@ class StudentHealthAllergy extends StudentsAppModel {
         $data = $this->findById($id);
         if (empty($data)) {
             $controller->Message->alert('general.noData');
-            $controller->redirect(array('action' => 'healthAllergy'));
+            return $controller->redirect(array('action' => 'healthAllergy'));
         }
 
         $controller->Session->write('StudentHealthAllergyTypeId', $id);
@@ -103,7 +103,7 @@ class StudentHealthAllergy extends StudentsAppModel {
                 $controller->Message->alert('general.delete.failed');
             }
             $controller->Session->delete('StudentHealthAllergyTypeId');
-            $controller->redirect(array('action' => 'healthAllergy'));
+            return $controller->redirect(array('action' => 'healthAllergy'));
         }
     }
 
