@@ -5,7 +5,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_add) {
-    echo $this->Html->link(__('Add'), array('action' => 'identitiesAdd'), array('class' => 'divider'));
+    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'identitiesAdd'), array('class' => 'divider'));
 }
 $this->end();
 

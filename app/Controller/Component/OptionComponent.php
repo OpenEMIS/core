@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright ï¿½ 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -17,7 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 class OptionComponent extends Component {
 	public function get($code) {
 		$options = array(
-			'yesno' => array(0 => __('No'), 1 => __('Yes'))
+			'yesno' => array(0 => __('No'), 1 => __('Yes')),
+                        'bloodtype' => array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-')
 		);
 		
 		$index = explode('.', $code);

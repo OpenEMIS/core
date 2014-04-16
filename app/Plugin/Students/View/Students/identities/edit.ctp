@@ -76,7 +76,7 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
 if ($_edit && !$WizardMode) {
-    echo $this->Html->link(__('Back'), array('action' => 'identitiesView', $id), array('class' => 'divider'));
+    echo $this->Html->link($this->Label->get('general.back'), array('action' => 'identitiesView', $id), array('class' => 'divider'));
 }
 $this->end();
 
