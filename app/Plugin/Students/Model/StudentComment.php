@@ -74,7 +74,7 @@ class StudentComment extends StudentsAppModel {
     public function comments($controller, $params) {
         $controller->Navigation->addCrumb('Comments');
         $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
-        $data = $this->find('all', array('conditions' => array('student_id' => $controller->studentId), 'order' => 'StudentComment.comment_date'));
+        $data = $this->findAllByStudentId($controller->studentId,  array(), array('StudentComment.comment_date' => 'asc'));
 
         $controller->set('data', $data);
     }

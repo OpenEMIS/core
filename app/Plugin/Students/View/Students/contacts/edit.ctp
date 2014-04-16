@@ -88,7 +88,7 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
 if ($_edit && !$WizardMode) {
-    echo $this->Html->link(__('Back'), array('action' => 'contactsView', $id), array('class' => 'divider'));
+    echo $this->Html->link($this->Label->get('general.back'), array('action' => 'contactsView', $id), array('class' => 'divider'));
 }
 $this->end();
 $this->start('contentBody');
@@ -111,22 +111,12 @@ echo $this->Form->input('contact_type_id', array(
 echo $this->Form->input('value');
 echo $this->Form->input('preferred', array('options' => $yesnoOptions));
 
-
-if (!$WizardMode) {
-    echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'contactsView', $id)));
-} else {
-    echo '<div class="add_more_controls">' . $this->Form->submit(__('Add More'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div>';
-    echo $this->Form->submit(__('Previous'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right"));
-
-    if (!$wizardEnd) {
-        echo $this->Form->submit(__('Next'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right", 'onclick' => "return Config.checkValidate();"));
-    } else {
-        echo $this->Form->submit(__('Finish'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right", 'onclick' => "return Config.checkValidate();"));
-    }
-    if ($mandatory != '1' && !$wizardEnd) {
-        echo $this->Form->submit(__('Skip'), array('div' => false, 'name' => 'submit', 'class' => "btn_cancel btn_cancel_button btn_left"));
-    }
-}
+echo $this->FormUtility->getFormWizardButtons(array(
+    'cancelURL' => array('action' => 'contactsView', $id),
+    'WizardMode' => $WizardMode,
+    'WizardEnd' => isset($wizardEnd)?$wizardEnd : NULL,
+    'WizardMandatory' => isset($mandatory)?$mandatory : NULL
+));
 echo $this->Form->end();
 
 $this->end();

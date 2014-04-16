@@ -19,7 +19,7 @@ App::uses('AppModel', 'Model');
 
 class StudentBankAccount extends AppModel {
 
-    public $actsAs = array('ControllerAction');
+    public $actsAs = array('ControllerAction','Containable');
     public $belongsTo = array(
         'BankBranch' => array('foreignKey' => 'bank_branch_id'),
         'Student' => array('foreignKey' => 'student_id'),
@@ -88,14 +88,21 @@ class StudentBankAccount extends AppModel {
         $header = __('Bank Accounts');
         $this->recursive = 2;
         $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
-        $data = $this->find('all', array('conditions' => array('StudentBankAccount.student_id' => $controller->studentId)));
- 
+        $this->contain(array('BankBranch' => array(
+            'Bank' => array(
+                'name'
+            ),
+            'fields' => array( 'name')
+        )));
+        $data = $this->findAllByStudentId($controller->studentId);
+       
         $controller->set(compact('data', 'header'));
     }
 
     public function bankAccountsView($controller, $params) {
         $bankAccountId = $params['pass'][0];
-        $data = $this->find('first', array('conditions' => array('StudentBankAccount.id' => $bankAccountId)));
+        $data = $this->findById($bankAccountId);//('first', array('conditions' => array('StudentBankAccount.id' => $bankAccountId)));
+        
         $header = __('Bank Accounts');
         $controller->Navigation->addCrumb('Bank Account Details');
 
@@ -164,7 +171,7 @@ class StudentBankAccount extends AppModel {
               } */
         }
         $Bank = ClassRegistry::init('Bank');
-        $BankBranch = ClassRegistry::init('BankBranch');
+        //$BankBranch = ClassRegistry::init('BankBranch');
 
         $bankOptions = $Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
 
@@ -172,7 +179,7 @@ class StudentBankAccount extends AppModel {
         $bankId = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : $bankId;
 
         if (!empty($bankId)) {
-            $bankBranchesOptions = $BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
+            $bankBranchesOptions = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
         } else {
             $bankBranchesOptions = array();
         }
@@ -212,8 +219,8 @@ class StudentBankAccount extends AppModel {
                 $controller->request->data = $data;
             }
             $Bank = ClassRegistry::init('Bank');
-            $BankBranch = ClassRegistry::init('BankBranch');
-            $bankBranchOptions = $BankBranch->find('list', array('conditions' => array('bank_id' => $data['BankBranch']['bank_id'], 'visible' => 1), 'recursive' => -1));
+            //$BankBranch = ClassRegistry::init('BankBranch');
+            $bankBranchOptions = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $data['BankBranch']['bank_id'], 'visible' => 1), 'recursive' => -1));
             $bankObj = $Bank->findById($data['BankBranch']['bank_id']);
 
             $controller->set(compact('bankObj', 'bankBranchOptions', 'header', 'yesnoOptions'));

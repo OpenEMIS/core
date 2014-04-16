@@ -1,44 +1,31 @@
 <?php
+
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-if($_add) {
-	echo $this->Html->link(__('Add'), array('action' => 'bankAccountsAdd'), array('class' => 'divider'));
+if ($_add) {
+    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'bankAccountsAdd'), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
+$tableHeaders = array(__('Active'), __('Account Name'), __('Account Number'), __('Bank'), __('Branch'));
+$tableData = array();
+
+
+foreach ($data as $obj) {
+    $symbol = $this->Utility->checkOrCrossMarker($obj[$model]['active'] == 1);
+    $row = array();
+    $row[] = array($symbol, array('class' => 'center'));
+    $row[] = $this->Html->link($obj[$model]['account_name'], array('action' => 'bankAccountsView', $obj[$model]['id']), array('escape' => false));
+    $row[] = $obj[$model]['account_number'];
+    $row[] = $obj['BankBranch']['Bank']['name'];
+    $row[] = $obj['BankBranch']['name'];
+    $tableData[] = $row;
+}
+echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
+
+$this->end();
 ?>
-<div class="table-responsive">
-	<table class="table table-striped table-hover table-bordered">
-		<thead>
-			<tr>
-				<th><?php echo __('Active'); ?></th>
-				<th><?php echo __('Account Name'); ?></th>
-				<th><?php echo __('Account Number'); ?></th>
-				<th><?php echo __('Bank'); ?></th>
-				<th><?php echo __('Branch'); ?></th>
-			</tr>
-		</thead>
-		
-		<tbody>
-			<?php
-			if(count($data) > 0){
-				foreach($data as $obj) {
-					$id = $obj[$model]['id'];
-					echo '<tr>
-							<td class="center">'.($obj[$model]['active'] == 1? '&#10003;' : '&#10008;').'</td>
-							<td>'.$this->Html->link($obj[$model]['account_name'], array('action' => 'bankAccountsView', $id), array('escape' => false)).'</td>
-							<td>'.$obj[$model]['account_number'].'</td>
-							<td>'.$obj['BankBranch']['Bank']['name'].'</td>
-							<td>'.$obj['BankBranch']['name'].'</td>
-						</tr>';
-				}
-			}
-			?>
-		</tbody>
-	</table>
-</div>
-<?php $this->end(); ?>
