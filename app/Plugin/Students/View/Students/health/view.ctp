@@ -4,7 +4,7 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
         if($_edit) {
-            echo $this->Html->link(__('Edit'), array('action' => 'healthEdit'), array('class' => 'divider'));
+            echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'healthEdit'), array('class' => 'divider'));
         }
 $this->end();
 

@@ -141,15 +141,14 @@ class StudentContact extends StudentsAppModel {
 
     public function contacts($controller, $params) {
         $controller->Navigation->addCrumb('Contacts');
-        
+        $header = __('Contacts');
         $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
-        $data = $this->find('all', array('conditions' => array('StudentContact.student_id' => $controller->studentId), 'order' => array('ContactType.contact_option_id', 'StudentContact.preferred DESC')));
+        $data = $this->findAllByStudentId($controller->studentId, array(), array('ContactType.contact_option_id' => 'asc', 'StudentContact.preferred' => 'desc'));//('all', array('conditions' => array('StudentContact.student_id' => $controller->studentId), 'order' => array('ContactType.contact_option_id', 'StudentContact.preferred DESC')));
 
         $ContactOption = ClassRegistry::init('ContactOption');
         $contactOptions = $ContactOption->getOptions();
-        $controller->set('contactOptions', $contactOptions);
 
-        $controller->set('list', $data);
+        $controller->set(compact('header', 'data', 'contactOptions'));
     }
 
     public function contactsAdd($controller, $params) {

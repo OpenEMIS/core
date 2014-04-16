@@ -75,7 +75,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'healthView'), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'healthView'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');

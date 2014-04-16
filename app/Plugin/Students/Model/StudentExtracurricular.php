@@ -19,7 +19,7 @@
 
 class StudentExtracurricular extends StudentsAppModel {
 
-    public $actsAs = array('ControllerAction');
+    public $actsAs = array('ControllerAction','Datepicker' => 'start_date');
     public $belongsTo = array(
         'Student',
         'SchoolYear',

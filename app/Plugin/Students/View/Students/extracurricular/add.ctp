@@ -138,7 +138,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 
-echo $this->Html->link(__('Back'), array('action' => 'extracurricular'), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'extracurricular'), array('class' => 'divider'));
 
 $this->end();
 $this->start('contentBody');

@@ -18,42 +18,49 @@ App::uses('AppHelper', 'View/Helper');
 
 class LabelHelper extends AppHelper {
 	public $messages = array(
-		'general' => array(
-			'add' => 'Add',
-			'edit' => 'Edit',
-			'delete' => 'Delete',
-			'order' => 'Order',
-			'visible' => 'Visible',
-			'reorder' => 'Reorder',
-			'back' => 'Back',
-                        'list' => 'List',
-			'save' => 'Save',
-			'cancel' => 'Cancel',
-			'option' => 'Option',
-			'description' => 'Description',
-			'value' => 'Value',
-			'modified' => 'Modified On',
-			'created' => 'Created On',
-                        'type' => 'Type',
-                        'title' => 'Title'
-		),
-		'BankBranch' => array(
-			'bank_id' => 'Bank',
-			'name' => 'Branch'
-		),
-                'SchoolYear' => array(
-                    'name' => 'School Year'
-                ),
-                'Country' => array(
-                    'name' => 'Country'
-                ),
-                'HealthRelationships' => array(
-                    'name' => 'Relationship'
-                ),
-                'HealthCondition' => array(
-                    'name' => 'Condition'
-                )
-	);
+            'general' => array(
+            'add' => 'Add',
+            'edit' => 'Edit',
+            'delete' => 'Delete',
+            'order' => 'Order',
+            'visible' => 'Visible',
+            'reorder' => 'Reorder',
+            'back' => 'Back',
+            'list' => 'List',
+            'save' => 'Save',
+            'cancel' => 'Cancel',
+            'option' => 'Option',
+            'description' => 'Description',
+            'value' => 'Value',
+            'modified' => 'Modified On',
+            'created' => 'Created On',
+            'type' => 'Type',
+            'title' => 'Title'
+        ),
+        'wizard' => array(
+            'previous' => 'Previous',
+            'next' => 'Next',
+            'finish' => 'Finish',
+            'skip' => 'Skip',
+            'addmore' => 'Add More'
+        ),
+        'BankBranch' => array(
+            'bank_id' => 'Bank',
+            'name' => 'Branch'
+        ),
+        'SchoolYear' => array(
+            'name' => 'School Year'
+        ),
+        'Country' => array(
+            'name' => 'Country'
+        ),
+        'HealthRelationships' => array(
+            'name' => 'Relationship'
+        ),
+        'HealthCondition' => array(
+            'name' => 'Condition'
+        )
+    );
 	
 	public function get($code) {
 		$index = explode('.', $code);

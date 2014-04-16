@@ -96,7 +96,7 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
 if ($_edit) {
-	echo $this->Html->link(__('Back'), array('action' => 'bankAccountsView', $this->data[$model]['id']), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'bankAccountsView', $this->data[$model]['id']), array('class' => 'divider'));
 }
 $this->end();
 
@@ -111,7 +111,14 @@ echo $this->Form->input('account_name');
 echo $this->Form->input('account_number');
 echo $this->Form->input('active', array('options' => $yesnoOptions));
 echo $this->Form->input('remarks', array('type' => 'textarea'));
-echo $this->FormUtility->getFormButtons( array('cancelURL' => array('action' => 'bankAccountsView', $this->data[$model]['id'])));
+
+echo $this->FormUtility->getFormWizardButtons(array(
+    'cancelURL' => array('action' => 'bankAccountsView', $this->data[$model]['id']),
+    'WizardMode' => $WizardMode,
+    'WizardEnd' => isset($wizardEnd) ? $wizardEnd : NULL,
+    'WizardMandatory' => isset($mandatory) ? $mandatory : NULL
+));
+//echo $this->FormUtility->getFormButtons( array('cancelURL' => array('action' => 'bankAccountsView', $this->data[$model]['id'])));
 echo $this->Form->end();
 
 $this->end();
