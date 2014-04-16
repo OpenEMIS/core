@@ -61,20 +61,27 @@ class FormUtilityHelper extends AppHelper {
 			'id' => 'date',
 			'data-date' => date('d-m-Y'),
 			'data-date-format' => $dateFormat,
-			'data-date-autoclose' => 'true'
+			'data-date-autoclose' => 'true',
+			'label' => false
 		);
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
+		$label = $_options['label'];
+		unset($_options['label']);
 		$wrapper = $this->Html->div('input-group date', null, $_options);
 		$defaults = $this->Form->inputDefaults();
-		$html = $this->Form->input($field, array(
+		$inputOptions = array(
 			'id' => $_options['id'],
 			'type' => 'text',
 			'between' => $defaults['between'] . $wrapper,
 			'after' => $icon . $defaults['after'],
 			'value' => $_options['data-date']
-		));
+		);
+		if($label !== false) {
+			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
+		}
+		$html = $this->Form->input($field, $inputOptions);
 		
 		if(!is_null($this->_View->get('datepicker'))) {
 			$datepickers = $this->_View->get('datepicker');
