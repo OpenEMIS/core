@@ -109,13 +109,13 @@ class StudentHealthAllergy extends StudentsAppModel {
 
     public function healthAllergyAdd($controller, $params) {
         $controller->Navigation->addCrumb('Health - Add Allergy');
-        $controller->set('header', 'Health - Add Allergy');
+        $controller->set('header', __('Health - Add Allergy'));
         $this->setup_add_edit_form($controller, $params);
     }
 
     public function healthAllergyEdit($controller, $params) {
         $controller->Navigation->addCrumb('Health - Edit Allergy');
-        $controller->set('header', 'Health - Edit Allergy');
+        $controller->set('header', __('Health - Edit Allergy'));
         $this->setup_add_edit_form($controller, $params);
         $this->render = 'add';
     }

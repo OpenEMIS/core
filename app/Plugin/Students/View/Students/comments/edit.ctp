@@ -16,7 +16,7 @@ $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'commentsEdit'));
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
-echo $this->FormUtility->datepicker('comment_date', array('id' => 'CommentDate', 'date' => $this->data[$model]['comment_date']));
+echo $this->FormUtility->datepicker('comment_date', array('id' => 'CommentDate', 'data-date' => $this->data[$model]['comment_date']));
 echo $this->Form->input('title');
 echo $this->Form->input('comment', array('type' => 'textarea'));
 
