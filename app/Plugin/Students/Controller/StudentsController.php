@@ -33,12 +33,6 @@ class StudentsController extends StudentsAppController {
         'InstitutionSiteClass',
         'InstitutionSiteType',
         'InstitutionSiteClassGradeStudent',
-        //'Bank',
-        //'BankBranch',
-        'IdentityType',
-        //'ContactOption',
-       // 'ContactType',
-       // 'Students.StudentBankAccount',
         'Students.Student',
         'Students.StudentHistory',
         'Students.StudentCustomField',
@@ -49,18 +43,10 @@ class StudentsController extends StudentsAppController {
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
-        //'Students.StudentComment',
-      //  'Students.StudentNationality',
-      //  'Students.StudentIdentity',
-      //  'Students.StudentLanguage',
-     //   'Students.StudentContact',
         'Students.StudentAward',
         'SchoolYear',
         'Country',
-        'Language',
         'ConfigItem',
-        //'Students.StudentExtracurricular',
-        //'ExtracurricularType'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(

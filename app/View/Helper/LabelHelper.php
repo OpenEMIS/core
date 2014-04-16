@@ -46,6 +46,12 @@ class LabelHelper extends AppHelper {
                 ),
                 'Country' => array(
                     'name' => 'Country'
+                ),
+                'HealthRelationships' => array(
+                    'name' => 'Relationship'
+                ),
+                'HealthCondition' => array(
+                    'name' => 'Condition'
                 )
 	);
 	
