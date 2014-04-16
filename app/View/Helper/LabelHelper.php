@@ -26,6 +26,7 @@ class LabelHelper extends AppHelper {
 			'visible' => 'Visible',
 			'reorder' => 'Reorder',
 			'back' => 'Back',
+                        'list' => 'List',
 			'save' => 'Save',
 			'cancel' => 'Cancel',
 			'option' => 'Option',

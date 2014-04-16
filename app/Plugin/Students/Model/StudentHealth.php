@@ -47,9 +47,29 @@ class StudentHealth extends StudentsAppModel {
 		)
 	);*/
 	
-	public $bloodTypeOptions = array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-');
-	public $booleanOptions = array('No', 'Yes');
-	
+        public function getDisplayFields($controller) {
+            $fields = array(
+                'model' => $this->alias,
+                'fields' => array(
+                    array('field' => 'id', 'type' => 'hidden'),
+                    array('field' => 'blood_type'),
+                    array('field' => 'doctor_name'),
+                    array('field' => 'doctor_contact'),
+                    array('field' => 'medical_facility'),
+                    array('field' => 'health_insurance', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
+                    array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                    array('field' => 'modified', 'edit' => false),
+                    array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                    array('field' => 'created', 'edit' => false)
+                )
+            );
+            return $fields;
+        }
+
+        public function beforeAction($controller, $action) {
+            $controller->set('model', $this->alias);
+        }
+
 	public function health($controller, $params) {
 		$this->render = false;
 		return $controller->redirect(array('action' =>'healthView'));
@@ -57,40 +77,38 @@ class StudentHealth extends StudentsAppModel {
 	
 	public function healthView($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Overview');
-        $data = $this->findByStudentId($controller->studentId);
-	
-		$controller->set('data', $data);
-		$controller->set('modelName', $this->name);
+                $header = __('Health - Overview');
+                $data = $this->findByStudentId($controller->studentId);
+                
+                $fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header','fields',  'data'));
 	}
 	
 	public function healthEdit($controller, $params){
 		$controller->Navigation->addCrumb('Health - Edit Overview');
-		$controller->set('bloodTypeOptions', $this->bloodTypeOptions);
-		$controller->set('booleanOptions', $this->booleanOptions);
-		$controller->set('modelName', $this->name);
-		//pr($controller->request);
-		if($controller->request->is('get')){
-			$this->recursive = -1;
-			$data = $this->findByStudentId($controller->studentId);
-			if(!empty($data)){
-				$controller->request->data = $data;
-			}
-		}
-		else{
+                $header = __('Health - Edit Overview');
+                
+		if ($controller->request->is('post') || $controller->request->is('put')) {
 			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
 			if(empty($controller->studentId)){
 				return $controller->redirect(array('action' => 'view'));
 			}
 			
 			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
+				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'healthView'));
 			}
 		}
+                else{
+                    $this->recursive = -1;
+			$data = $this->findByStudentId($controller->studentId);
+			if(!empty($data)){
+				$controller->request->data = $data;
+			}
+                }
+                
+                $yesnoOptions = $controller->Option->get('yesno');
+                $bloodTypeOptions = $controller->Option->get('bloodtype');
+                $controller->set(compact('header','yesnoOptions','bloodTypeOptions'));
 	}
 }
