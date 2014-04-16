@@ -104,7 +104,7 @@ class StudentHealthImmunization extends StudentsAppModel {
                 $controller->Message->alert('general.delete.failed');
             }
             $controller->Session->delete('StudentHealthImmunizationId');
-            $controller->redirect(array('action' => 'healthImmunization'));
+            return $controller->redirect(array('action' => 'healthImmunization'));
         }
     }
 
