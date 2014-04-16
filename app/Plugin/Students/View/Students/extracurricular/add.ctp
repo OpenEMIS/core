@@ -156,7 +156,7 @@ echo $this->Form->input('extracurricular_type_id', array(
 );
 echo $this->Form->input('name', array('class' => 'form-control autoComplete',  'label' => array('text'=> $this->Label->get('general.title'), 'class'=>'col-md-3 control-label'), 'url' => 'Students/extracurricularSearchAutoComplete'));
 echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate'));
-echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'date' => date('d-m-Y', time() + 86400)));
+echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'data-date' => date('d-m-Y', time() + 86400)));
 echo $this->Form->input('hours', array('type' => 'number'));
 echo $this->Form->input('points', array('type' => 'number'));
 echo $this->Form->input('location');
