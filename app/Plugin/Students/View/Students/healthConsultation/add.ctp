@@ -4,7 +4,7 @@ echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-if ($_edit && !$WizardMode) {
+if ($_edit) {
     if(!empty($this->data[$model]['id'])){
         $redirectAction = array('action' => 'healthConsultationView', $this->data[$model]['id']);
         $setDate = array('data-date' => $this->data[$model]['date']);

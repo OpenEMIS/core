@@ -117,11 +117,9 @@ class StudentHealthConsultation extends StudentsAppModel {
     function setup_add_edit_form($controller, $params) {
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
         
-        $date = null;
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $controller->request->data[$this->alias]['student_id'] = $controller->studentId;
             
-            $date = $controller->request->data[$this->alias]['date'];
             if ($this->save($controller->request->data)) {
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'healthConsultation'));
@@ -131,13 +129,12 @@ class StudentHealthConsultation extends StudentsAppModel {
             $this->recursive = -1;
             $data = $this->findById($id);
             if (!empty($data)) {
-                $date = $data[$this->alias]['date'];
                 $controller->request->data = $data;
             }
         }
         
         $healthConsultationsOptions = $this->HealthConsultationType->find('list', array('fields' => array('id', 'name')));
-        $controller->set(compact('healthConsultationsOptions','date'));
+        $controller->set(compact('healthConsultationsOptions'));
     }
 
 }

@@ -59,6 +59,9 @@ class LabelHelper extends AppHelper {
         ),
         'HealthCondition' => array(
             'name' => 'Condition'
+        ),
+        'HealthImmunization' => array(
+            'name' => 'Immunization'
         )
     );
 	

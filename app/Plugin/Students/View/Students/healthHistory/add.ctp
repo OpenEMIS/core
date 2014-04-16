@@ -73,7 +73,7 @@ echo $this->Html->script('config', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-if ($_edit && !$WizardMode) {
+if ($_edit) {
     if(!empty($this->data[$model]['id'])){
         $redirectAction = array('action' => 'healthHistoryView', $this->data[$model]['id']);
     }
