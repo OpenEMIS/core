@@ -14,8 +14,8 @@ $tableHeaders = array(__('Date'), __('Type'), __('Description'), __('Treatment')
 $tableData = array();
 foreach($data as $obj) {
 	$row = array();
-        $row[] = $this->Html->link($obj[$model]['date'], array('action' => 'healthConsultationView', $obj[$model]['id']), array('escape' => false)) ;
-        $row[] = $obj['HealthConsultationType']['name'] ;
+        $row[] = $obj[$model]['date'];
+        $row[] = $this->Html->link($obj['HealthConsultationType']['name'], array('action' => 'healthConsultationView', $obj[$model]['id']), array('escape' => false));
         $row[] = $obj[$model]['description'] ;
         $row[] = $obj[$model]['treatment'] ;
 	$tableData[] = $row;
