@@ -112,13 +112,13 @@ echo $this->element('census/year_options');
         </fieldset>
     <?php } ?>
 
-<?php if (!empty($data)) { ?>
+    <?php if (!empty($data)) { ?>
         <div class="controls">
             <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-        <?php echo $this->Html->link(__('Cancel'), array('action' => 'graduates', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+            <?php echo $this->Html->link(__('Cancel'), array('action' => 'graduates', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
         </div>
     <?php } ?>
 
-<?php echo $this->Form->end(); ?>
+    <?php echo $this->Form->end(); ?>
 </div>
 <?php $this->end(); ?>
