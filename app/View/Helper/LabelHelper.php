@@ -48,6 +48,12 @@ class LabelHelper extends AppHelper {
             'bank_id' => 'Bank',
             'name' => 'Branch'
         ),
+		'InfrastructureMaterial' => array(
+			'infrastructure_category_id' => 'Category'
+		),
+		'InfrastructureStatus' => array(
+			'infrastructure_category_id' => 'Category'
+		),
         'SchoolYear' => array(
             'name' => 'School Year'
         ),

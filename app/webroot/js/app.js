@@ -180,8 +180,14 @@ var jsForm = {
 		window.location.href = getRootURL() + $(obj).attr('url');
 	},
 	
-	change: function(obj) {
-		window.location.href = getRootURL() + $(obj).attr('url') + '/' + $(obj).val();
+	change: function(obj, trailingSlash) {
+		var url = getRootURL() + $(obj).attr('url');
+		if(trailingSlash!=undefined && trailingSlash == false) {
+			url += $(obj).val();
+		} else {
+			url += '/' + $(obj).val();
+		}
+		window.location.href = url;
 	},
 	
 	initDatepicker: function(p) {
