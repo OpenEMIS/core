@@ -14,7 +14,8 @@ $this->end(); // end contentActions
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('action' => 'add', $selectedOption));
+$formURL = array_merge($params, array('action' => 'add'));
+$formOptions = $this->FormUtility->getFormOptions($formURL);
 echo $this->Form->create($fields['model'], $formOptions);
 echo $this->Form->hidden('order', array('value' => 0));
 echo $this->element('layout/edit', array('fields' => $fields));

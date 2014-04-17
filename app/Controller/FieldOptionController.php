@@ -168,7 +168,7 @@ class FieldOptionController extends AppController {
 		
 		if($this->request->is('post') || $this->request->is('put')) {
 			if($this->FieldOptionValue->saveValue($this->request->data)) {
-				$redirect = array('action' => 'index', $selectedOption);
+				$redirect = array('action' => 'index', $selectedOption);//pr($conditionId);die;
 				if($conditionId !== false) {
 					$redirect = array_merge($redirect, array($conditionId => $this->request->data[$model->alias][$conditionId]));
 				}

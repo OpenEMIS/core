@@ -54,6 +54,12 @@ class LabelHelper extends AppHelper {
 		'InfrastructureStatus' => array(
 			'infrastructure_category_id' => 'Category'
 		),
+		'FinanceType' => array(
+			'finance_nature_id' => 'Nature'
+		),
+		'ContactType' => array(
+			'contact_option_id' => 'Contact Option'
+		),
         'SchoolYear' => array(
             'name' => 'School Year'
         ),
