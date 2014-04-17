@@ -2,7 +2,7 @@
 $defaults = $this->FormUtility->getFormDefaults();
 foreach($fields['fields'] as $field) {
 	$fieldType = isset($field['type']) ? $field['type'] : 'text';
-	$editable = (!isset($field['edit']) || $field['edit']!==false) && $fieldType !== 'hidden';
+	$editable = (!isset($field['edit']) || $field['edit']!==false);
 	if($editable) {
 		$key = $field['field'];
 		$model = isset($field['model']) ? $field['model'] : $fields['model'];
@@ -14,7 +14,12 @@ foreach($fields['fields'] as $field) {
 		$value = '';
 		
 		if($fieldType === 'select') { // dropdown list
-			$options = array_merge($options, array('options' => $field['options']));
+			if(isset($field['options'])) {
+				$options['options'] = $field['options'];
+			}
+			if(isset($field['default'])) {
+				$options['default'] = $field['default'];
+			}
 			if(!empty($this->request->data)) {
 				/*
 				if(!empty($this->request->data[$field['model']][$key])) {
@@ -22,13 +27,13 @@ foreach($fields['fields'] as $field) {
 				}*/
 			}
 		} else if($fieldType === 'textarea') {
-		
+			$options['type'] = 'textarea';
 		} else if($fieldType === 'hidden') {
 			$options['type'] = 'hidden';
-			echo $this->Form->input($fieldName, $options);
-			continue;
+			$options['label'] = false;
+			$options['div'] = false;
 		}
-		$value = $this->Form->input($fieldName, $options);
+		echo $this->Form->input($fieldName, $options);
 	}
 }
 ?>

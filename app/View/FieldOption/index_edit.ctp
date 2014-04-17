@@ -6,20 +6,26 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-$params = array_merge(array('action' => 'index', $selectedOption));
+$params = array('action' => 'index', $selectedOption);
+if(isset($conditionId)) {
+	$params = array_merge($params, array($conditionId => $selectedSubOption));
+}
 echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
 $this->end(); // end contentActions
 
 $this->start('contentBody');
-echo $this->Form->create($model, array(
-	'id' => 'OptionMoveForm',
-	'url' => array('controller' => $this->params['controller'], 'action' => 'reorder', $selectedOption)
-));
+$formParams = array('controller' => $this->params['controller'], 'action' => 'reorder', $selectedOption);
+if(isset($conditionId)) {
+	$formParams = array_merge($formParams, array($conditionId => $selectedSubOption));
+}
+echo $this->Form->create($model, array('id' => 'OptionMoveForm', 'url' => $formParams));
 echo $this->Form->hidden('id', array('class' => 'option-id'));
 echo $this->Form->hidden('move', array('class' => 'option-move'));
+/*
 foreach($conditions as $key => $val) {
 	echo $this->Form->hidden('conditions.'.$key, array('value' => $val));
 }
+*/
 echo $this->Form->end();
 ?>
 
@@ -27,9 +33,9 @@ echo $this->Form->end();
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th class="col-visible" style="width: 60px;"><?php echo $this->Label->get('general.visible'); ?></th>
-				<th><?php echo __('Option'); ?></th>
-				<th class="col-order"><?php echo $this->Label->get('general.order'); ?></th>
+				<th class="cell-visible"><?php echo $this->Label->get('general.visible'); ?></th>
+				<th><?php echo $this->Label->get('general.option'); ?></th>
+				<th class="cell-order"><?php echo $this->Label->get('general.order'); ?></th>
 			</tr>
 		</thead>
 		<tbody>

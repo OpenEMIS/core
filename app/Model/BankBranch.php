@@ -17,54 +17,56 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class BankBranch extends AppModel {
-	public $belongsTo = array('Bank');
 	public $actsAs = array('FieldOption');
-	
+	public $belongsTo = array(
+		'Bank',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
 	public $validate = array(
 		'name' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',
 				'required' => true,
-				'message' => 'Please enter a valid Option'
+				'message' => 'Please enter a valid Name'
+			)
+		),
+		'code' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Code'
 			)
 		)
 	);
 	
+	public function getSubOptions() {
+		return $this->Bank->findList();
+	}
+	
 	public function getOptionFields() {
-		$Bank = ClassRegistry::init('Bank');
-		$options = $Bank->find('list', array('order' => array('order')));
-		
-		$fields = array(
-			'code' => array('label' => 'Code', 'display' => true),
-			'bank_id' => array(
-				'label' => 'Bank', 
-				'display' => false, 
-				'options' => $options
-			)
-		);
+		$bankOptions = $this->getSubOptions();
+		$codeField = array('field' => 'code');
+		$bankField = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $bankOptions);
+		$this->removeOptionFields(array('international_code', 'national_code'));
+		$this->addOptionField($codeField, 'after', 'name'); // add code after name
+		$this->addOptionField($bankField, 'before', 'name'); // add bank before name
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
 		return $fields;
 	}
 	
-	public function getSubOptions() {
-		$modelName = get_class($this);
-		$Bank = ClassRegistry::init('Bank');
-		$list = $Bank->find('list', array('order' => array('order')));
-		$options = array();
-		foreach($list as $id => $name) {
-			$options[] = array('model' => $modelName, 'label' => $name, 'conditions' => array('bank_id' => $id));
-		}
-		return $options;
-	}
-	
-	public function getLookupVariables() {
-		$Bank = ClassRegistry::init('Bank');
-		$list = $Bank->findList();
-		$lookup = array();
-		
-		foreach($list as $id => $name) {
-			$lookup[$name] = array('model' => 'BankBranch', 'conditions' => array('bank_id' => $id));
-		}
-		return $lookup;
+	public function getConditionId() {
+		return 'bank_id';
 	}
 }
 ?>

@@ -108,8 +108,8 @@
 .table a { color: #007CBE; }
 .action { margin-left: 5px; }
 .cell-number { text-align: right; }
-
-.col-order { width: 83px; }
+.cell-visible { width: 70px; }
+.cell-order { width: 83px; }
 
 td.cell_order { width: 63px; margin-left: -1px; }
 

@@ -18,10 +18,10 @@ class FieldOptionBehavior extends ModelBehavior {
 	public $optionFields = array(
 		'fields' => array(
 			array('field' => 'id', 'type' => 'hidden'),
-			array('field' => 'name', 'label' => 'Name'),
-			array('field' => 'international_code', 'label' => 'International Code'),
-			array('field' => 'national_code', 'label' => 'National Code'),
-			array('field' => 'visible', 'label' => 'Visible', 'type' => 'select'),
+			array('field' => 'name'),
+			array('field' => 'international_code'),
+			array('field' => 'national_code'),
+			array('field' => 'visible', 'type' => 'select'),
 			array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
 			array('field' => 'modified', 'label' => 'Modified On', 'edit' => false),
 			array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
@@ -29,13 +29,38 @@ class FieldOptionBehavior extends ModelBehavior {
 		)
 	);
 	
-	public function reorder(Model $model, $data) {
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
+	public function setup(Model $model, $settings = array()) {
+		foreach($this->validate as $name => $rule) {
+			if(!array_key_exists($name, $model->validate)) {
+				$model->validate[$name] = $rule;
+			}
+		}
+		/*
+		if (!isset($this->settings[$model->alias])) {
+			$this->settings[$model->alias] = array(
+				'model' => 'FieldOptionValue'
+			);
+		}
+		$this->settings[$model->alias] = array_merge($this->settings[$model->alias], (array)$settings);
+		*/
+	}
+	
+	public function reorder(Model $model, $data, $conditions=array()) {
 		$id = $data[$model->alias]['id'];
 		$idField = $model->alias . '.id';
 		$orderField = $model->alias . '.order';
 		$move = $data[$model->alias]['move'];
 		$order = $model->field('order', array('id' => $id));
-		$conditions = isset($data['conditions']) ? $data['conditions'] : array();
 		$idConditions = array_merge(array($idField => $id), $conditions);
 		$updateConditions = array_merge(array($idField . ' <>' => $id), $conditions);
 		
@@ -78,6 +103,7 @@ class FieldOptionBehavior extends ModelBehavior {
 		}
 	}
 	
+	/*
 	public function getOption(Model $model, $id) {
 		$alias = $model->alias;
 		$data = $model->find('first', array(
@@ -112,6 +138,7 @@ class FieldOptionBehavior extends ModelBehavior {
 		}
 		return $data;
 	}
+	*/
 	
 	public function getAllOptions(Model $model, $conditions) {
 		$data = $model->find('all', array(
@@ -139,5 +166,31 @@ class FieldOptionBehavior extends ModelBehavior {
 		}
 		$fields['model'] = $model->alias;
 		return $fields;
+	}
+	
+	public function addOptionField(Model $model, $addField, $mode, $targetField) {
+		$newOptionFields = array();
+		foreach($this->optionFields['fields'] as $key => $obj) {
+			if($mode == 'after') {
+				$newOptionFields[] = $obj;
+			}
+			if($obj['field'] === $targetField) {
+				$newOptionFields[] = $addField;
+			}
+			if($mode == 'before') {
+				$newOptionFields[] = $obj;
+			}
+		}
+		$this->optionFields['fields'] = $newOptionFields;
+	}
+	
+	public function removeOptionFields(Model $model, $fields = array()) {
+		if(is_array($fields)) {
+			foreach($this->optionFields['fields'] as $key => $obj) {
+				if(in_array($obj['field'], $fields)) {
+					unset($this->optionFields['fields'][$key]);
+				}
+			}
+		}
 	}
 }
