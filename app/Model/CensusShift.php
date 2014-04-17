@@ -154,7 +154,8 @@ class CensusShift extends AppModel {
         if ($controller->request->is('post')) {
             if (!empty($controller->request->data)) {
                 $data = $controller->data['CensusShift'];
-                $yearId = $controller->data['school_year_id'];
+                $yearId = $controller->data['CensusShift']['school_year_id'];
+                unset($controller->request->data['CensusShift']['school_year_id']);
 
                 $saveData = array();
                 $errorMsg = array();
