@@ -53,7 +53,7 @@ class StudentHealthImmunization extends StudentsAppModel {
             'model' => $this->alias,
             'fields' => array(
                 array('field' => 'date', 'type' => 'datepicker'),
-                array('field' => 'name', 'model' => 'HealthImmunization', 'labelKey' => 'HealthImmunization.name'),
+                array('field' => 'name', 'model' => 'HealthImmunization'),
                 array('field' => 'dosage'),
                 array('field' => 'comment'),
                 array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
