@@ -17,8 +17,6 @@ $this->start('contentBody');
 echo $this->element('census/year_options');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
 <div id="classes" class="content_wrapper">
 
     <?php if ($displayContent) { ?>
