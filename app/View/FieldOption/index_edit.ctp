@@ -11,7 +11,7 @@ if(isset($conditionId)) {
 	$params = array_merge($params, array($conditionId => $selectedSubOption));
 }
 echo $this->Html->link($this->Label->get('general.back'), $params, array('class' => 'divider'));
-$this->end(); // end contentActions
+$this->end();
 
 $this->start('contentBody');
 $formParams = array('controller' => $this->params['controller'], 'action' => 'reorder', $selectedOption);
@@ -21,11 +21,6 @@ if(isset($conditionId)) {
 echo $this->Form->create($model, array('id' => 'OptionMoveForm', 'url' => $formParams));
 echo $this->Form->hidden('id', array('class' => 'option-id'));
 echo $this->Form->hidden('move', array('class' => 'option-move'));
-/*
-foreach($conditions as $key => $val) {
-	echo $this->Form->hidden('conditions.'.$key, array('value' => $val));
-}
-*/
 echo $this->Form->end();
 ?>
 
@@ -63,4 +58,4 @@ echo $this->Form->end();
 	</table>
 </div>
 
-<?php $this->end(); // end contentBody ?>
+<?php $this->end(); ?>
