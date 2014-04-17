@@ -62,6 +62,13 @@ class LabelHelper extends AppHelper {
         ),
         'HealthImmunization' => array(
             'name' => 'Immunization'
+        ),
+        'HealthMedication' => array(
+            'start_date' => 'Commenced Date',
+            'end_date' => 'Ended Date',
+        ),
+        'Identities' => array(
+            'issue_location' => 'Issuer'
         )
     );
 	
