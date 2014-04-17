@@ -314,7 +314,8 @@ class CensusClass extends AppModel {
                 $controller->set(compact('displayContent', 'selectedYear', 'yearList'));
             }
         } else {
-            $yearId = $controller->data['school_year_id'];
+            $yearId = $controller->data['CensusClass']['school_year_id'];
+            unset($controller->request->data['CensusClass']['school_year_id']);
             $duplicate = false;
             $data = $controller->CensusClass->clean($controller->data['CensusClass'], $yearId, $controller->institutionSiteId, $duplicate);
 
@@ -335,6 +336,7 @@ class CensusClass extends AppModel {
         $programmes = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $yearId, false);
 
         $body = $controller->params->query['tableBody'];
+        $i = $controller->params->query['index'];
 
         $controller->set(compact('i', 'body', 'programmes', 'programmeGrades', 'yearId'));
     }
@@ -350,13 +352,13 @@ class CensusClass extends AppModel {
         $grades = $programmeGrades[current($programmes)]['education_grades'];
 
         $option = '<option value="%d">%s</option>';
-        $programmesHtml = sprintf('<div class="table_cell_row"><select index="%d" url="Census/loadGradeList" onchange="Census.loadGradeList(this)">', $index);
+        $programmesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" url="Census/loadGradeList" onchange="Census.loadGradeList(this)">', $index);
         foreach ($programmes as $id => $value) {
             $programmesHtml .= sprintf($option, $id, $value);
         }
         $programmesHtml .= '</select></div>';
 
-        $gradesHtml = sprintf('<div class="table_cell_row"><select index="%d" name="data[CensusClass][%d][CensusClassGrade][%d]">', $index, $row, $index);
+        $gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusClass][%d][CensusClassGrade][%d]">', $index, $row, $index);
         foreach ($grades as $id => $value) {
             $gradesHtml .= sprintf($option, $id, $value);
         }

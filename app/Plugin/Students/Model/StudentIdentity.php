@@ -83,7 +83,7 @@ class StudentIdentity extends StudentsAppModel {
                 array('field' => 'number'),
                 array('field' => 'issue_date'),
                 array('field' => 'expiry_date'),
-                array('field' => 'issue_location'),
+                array('field' => 'issue_location', 'labelKey' => 'Identities.issue_location'),
                 array('field' => 'comments'),
                 array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
                 array('field' => 'modified', 'edit' => false),
