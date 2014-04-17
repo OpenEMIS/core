@@ -30,13 +30,13 @@ var Census = {
 				subtotal += $(this).val().toInt();
 			}
 		});
-		row.find('.cell-total').html(subtotal);
-		table = row.closest('.table');
+		row.find('.cell_total').html(subtotal);
+		table = row.closest('table');
 		var total = 0;
 		table.find('tbody tr').each(function() {
-			total += $(this).find('.cell-total').html().toInt();
+			total += $(this).find('.cell_total').html().toInt();
 		});
-		table.find('tfoot .cell-value').html(total);
+		table.find('tfoot .cell_value').html(total);
 	},
 	
 	loadGradeList: function(obj) {
