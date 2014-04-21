@@ -58,7 +58,7 @@ class InstitutionSitesController extends AppController {
         'InstitutionSiteSector',
         'InstitutionSiteStatus',
         'InstitutionSiteProgramme',
-        'InstitutionSiteAttachment',
+        
         'InstitutionSiteType',
         'InstitutionSiteStudent',
         'InstitutionSiteTeacher',
@@ -150,6 +150,7 @@ class InstitutionSitesController extends AppController {
             'model' => 'InstitutionSiteAttachment',
             'foreignKey' => 'institution_site_id'
         ),
+		'FileUploader',
         'AreaHandler'
     );
     
@@ -158,7 +159,8 @@ class InstitutionSitesController extends AppController {
         'programmes' => 'InstitutionSiteProgramme',
         'studentsBehaviour' => 'Students.StudentBehaviour',
         'students' => 'InstitutionSiteStudent',
-        'classes' => 'InstitutionSiteClass'
+        'classes' => 'InstitutionSiteClass',
+		'attachments' => 'InstitutionSiteAttachment',
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -1164,65 +1166,6 @@ class InstitutionSitesController extends AppController {
         $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
     }
 
-    public function attachments() {
-        $this->Navigation->addCrumb('Attachments');
-        $id = $this->Session->read('InstitutionSiteId');
-        $data = $this->FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/index');
-    }
-	
-	public function attachmentsAdd() {
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Add Attachment');
-			$this->render('/Elements/attachment/add');
-		} else {
-			//pr($this->request->data);die;
-		}
-	}
-
-    public function attachmentsEdit() {
-        $this->Navigation->addCrumb('Edit Attachments');
-        $id = $this->Session->read('InstitutionSiteId');
-
-        if ($this->request->is('post')) { // save
-            $errors = $this->FileAttachment->saveAll($this->data, $_FILES, $id);
-            if (sizeof($errors) == 0) {
-                $this->Utility->alert('Files have been saved successfully.');
-                $this->redirect(array('action' => 'attachments'));
-            } else {
-                $this->Utility->alert('Some errors have been encountered while saving files.', array('type' => 'error'));
-            }
-        }
-
-        $data = $this->FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/edit');
-    }
-
-    public function attachmentsDelete() {
-        $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            if ($this->FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-
-            return json_encode($result);
-        }
-    }
-
-    public function attachmentsDownload($id) {
-        $this->FileAttachment->download($id);
-    }
 
     public function additional() {
         $this->Navigation->addCrumb('More');

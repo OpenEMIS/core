@@ -6,7 +6,7 @@ echo $this->Html->script('attachments', false);
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Attachments'));
+$this->assign('contentHeader', $header);
 $this->start('contentActions');
 if($_add) {
 	echo $this->Html->link(__('Add'), array('action' => 'attachmentsAdd'), array('class' => 'divider'));
