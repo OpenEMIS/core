@@ -61,20 +61,27 @@ class FormUtilityHelper extends AppHelper {
 			'id' => 'date',
 			'data-date' => date('d-m-Y'),
 			'data-date-format' => $dateFormat,
-			'data-date-autoclose' => 'true'
+			'data-date-autoclose' => 'true',
+			'label' => false
 		);
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
+		$label = $_options['label'];
+		unset($_options['label']);
 		$wrapper = $this->Html->div('input-group date', null, $_options);
 		$defaults = $this->Form->inputDefaults();
-		$html = $this->Form->input($field, array(
+		$inputOptions = array(
 			'id' => $_options['id'],
 			'type' => 'text',
 			'between' => $defaults['between'] . $wrapper,
 			'after' => $icon . $defaults['after'],
 			'value' => $_options['data-date']
-		));
+		);
+		if($label !== false) {
+			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
+		}
+		$html = $this->Form->input($field, $inputOptions);
 		
 		if(!is_null($this->_View->get('datepicker'))) {
 			$datepickers = $this->_View->get('datepicker');
@@ -85,4 +92,22 @@ class FormUtilityHelper extends AppHelper {
 		}
 		return $html;
 	}
+        
+        public function getFormWizardButtons($option = NULL) {
+            if (!$option['WizardMode']) {
+                echo $this->getFormButtons(array('cancelURL' => $option['cancelURL']));
+            } else {
+                echo '<div class="add_more_controls">' . $this->Form->submit($this->Label->get('wizard.addmore'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div>';
+
+                echo $this->Form->submit($this->Label->get('wizard.previous'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right"));
+                if (!$option['WizardEnd']) {
+                    echo $this->Form->submit($this->Label->get('wizard.next'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
+                } else {
+                    echo $this->Form->submit($this->Label->get('wizard.finish'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
+                }
+                if ($option['WizardMandatory'] != '1' && !$option['WizardEnd']) {
+                    echo $this->Form->submit($this->Label->get('wizard.skip'), array('div' => false, 'name' => 'submit', 'class' => "btn_cancel btn_cancel_button btn_left"));
+                }
+            }
+        }
 }

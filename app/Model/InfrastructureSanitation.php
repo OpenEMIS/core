@@ -18,46 +18,20 @@ App::uses('AppModel', 'Model');
 
 class InfrastructureSanitation extends AppModel {
 	public $actsAs = array('FieldOption');
-	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Option'
-			)
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
 		)
 	);
-	
-	public function getSubOptions() {
-		$modelName = get_class($this);
-		$categoryModel = ClassRegistry::init('InfrastructureCategory');
-		$categoryId = $categoryModel->field('id', array('name' => 'Sanitation'));
-		$options = array(
-			array('model' => $modelName, 'label' => 'Category'),
-			array('model' => 'InfrastructureMaterial', 'label' => 'Material', 'conditions' => array('infrastructure_category_id' => $categoryId)),
-			array('model' => 'InfrastructureStatus', 'label' => 'Status', 'conditions' => array('infrastructure_category_id' => $categoryId))
-		);
-		return $options;
-	}
-	
-	public function getLookupVariables() {
-		$modelName = get_class($this);
-		$categoryModel = ClassRegistry::init('InfrastructureCategory');
-		$categoryId = $categoryModel->field('id', array('name' => 'Sanitation'));
-		$lookup = array(
-			'Sanitation' => array('model' => $modelName),
-			'Materials' => array(
-				'model' => 'InfrastructureMaterial',
-				'conditions' => array('infrastructure_category_id' => $categoryId)
-			),
-			'Status' => array(
-				'model' => 'InfrastructureStatus',
-				'conditions' => array('infrastructure_category_id' => $categoryId)
-			)
-		);
-		return $lookup;
-	}
 	
 	public function findListAsSubgroups() {
 		$categoryModel = ClassRegistry::init('InfrastructureCategory');

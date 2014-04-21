@@ -439,7 +439,8 @@ class CensusTeacher extends AppModel {
                 $controller->set(compact('displayContent', 'selectedYear', 'yearList'));
             }
         } else {
-            $yearId = $controller->data['school_year_id'];
+            $yearId = $controller->data['CensusTeacher']['school_year_id'];
+            unset($controller->request->data['CensusTeacher']['school_year_id']);
             $fte = $controller->data['CensusTeacherFte'];
             $training = $controller->data['CensusTeacherTraining'];
             $teachers = $controller->data['CensusTeacher'];
@@ -458,6 +459,7 @@ class CensusTeacher extends AppModel {
 
     public function teachersAddMultiTeacher($controller, $params) {
         $controller->layout = 'ajax';
+        //$this->render = false;
 
         $yearId = $controller->params['pass'][0];
         $programmeGrades = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $yearId);
@@ -480,13 +482,13 @@ class CensusTeacher extends AppModel {
         $grades = $programmeGrades[current($programmes)]['education_grades'];
 
         $option = '<option value="%d">%s</option>';
-        $programmesHtml = sprintf('<div class="table_cell_row"><select index="%d" url="Census/loadGradeList" onchange="CensusTeacher.loadGradeList(this)">', $index);
+        $programmesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" url="Census/loadGradeList" onchange="CensusTeacher.loadGradeList(this)">', $index);
         foreach ($programmes as $id => $value) {
             $programmesHtml .= sprintf($option, $id, $value);
         }
         $programmesHtml .= '</select></div>';
 
-        $gradesHtml = sprintf('<div class="table_cell_row"><select index="%d" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]">', $index, $row, $index);
+        $gradesHtml = sprintf('<div class="table_cell_row"><select class="form-control" index="%d" name="data[CensusTeacher][%d][CensusTeacherGrade][%d]">', $index, $row, $index);
         foreach ($grades as $id => $value) {
             $gradesHtml .= sprintf($option, $id, $value);
         }

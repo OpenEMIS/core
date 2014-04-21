@@ -1170,8 +1170,17 @@ class InstitutionSitesController extends AppController {
         $data = $this->FileAttachment->getList($id);
         $this->set('data', $data);
         $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/view');
+        $this->render('/Elements/attachment/index');
     }
+	
+	public function attachmentsAdd() {
+		if($this->request->is('get')) {
+			$this->Navigation->addCrumb('Add Attachment');
+			$this->render('/Elements/attachment/add');
+		} else {
+			//pr($this->request->data);die;
+		}
+	}
 
     public function attachmentsEdit() {
         $this->Navigation->addCrumb('Edit Attachments');
@@ -1191,12 +1200,6 @@ class InstitutionSitesController extends AppController {
         $this->set('data', $data);
         $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
         $this->render('/Elements/attachment/edit');
-    }
-
-    public function attachmentsAdd() {
-        $this->layout = 'ajax';
-        $this->set('params', $this->params->query);
-        $this->render('/Elements/attachment/add');
     }
 
     public function attachmentsDelete() {

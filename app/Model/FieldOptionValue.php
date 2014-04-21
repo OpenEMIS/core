@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class FieldOptionValue extends AppModel {
+	public $actsAs = array('FieldOption');
 	public $belongsTo = array(
 		'FieldOption',
 		'ModifiedUser' => array(
@@ -32,7 +33,6 @@ class FieldOptionValue extends AppModel {
 			'type' => 'LEFT'
 		)
 	);
-	public $actsAs = array('FieldOption');
 	public $parent = null;
 	
 	public function setParent($obj) {
@@ -53,11 +53,10 @@ class FieldOptionValue extends AppModel {
 		return $model;
 	}
 	
-	public function getAllValues($obj=null) {
-		$obj = $this->parent;
+	public function getAllValues($conditions=array()) {
 		$model = $this->getModel();
-		$conditions = array();
 		if($model->alias === $this->alias) {
+			$obj = $this->parent;
 			$conditions['field_option_id'] = $obj['id'];
 		}
 		$data = $model->getAllOptions($conditions);
@@ -71,10 +70,11 @@ class FieldOptionValue extends AppModel {
 		return $data;
 	}
 	
-	public function saveValue($data) {
-		$obj = $this->parent;
+	public function saveValue($data) {	
 		$model = $this->getModel();
+		
 		if($model->alias === $this->alias) {
+			$obj = $this->parent;
 			$data[$model->alias]['field_option_id'] = $obj['id'];
 		}
 		return $model->save($data);
@@ -90,6 +90,14 @@ class FieldOptionValue extends AppModel {
 		$header = $this->parent['parent'];
 		$header .= (count($header) > 0 ? ' - ' : '') . $this->parent['name'];
 		return $header;
+	}
+	
+	public function getSubOptions() {
+		$model = $this->getModel();
+		if($model->alias !== $this->alias && method_exists($model, 'getSubOptions')) {
+			return $model->getSubOptions();
+		}
+		return false;
 	}
 }
 ?>

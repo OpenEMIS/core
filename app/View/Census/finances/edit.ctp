@@ -4,11 +4,17 @@ echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
 echo $this->Html->script('census_finance', false);
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
-<?php
-    echo $this->Form->create('CensusFinance', array(
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Finances'));
+
+$this->start('contentActions');
+echo $this->Html->link(__('View'), array('action' => 'finances', $selectedYear), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
+
+echo $this->Form->create('CensusFinance', array(
                     'id' => 'submitForm',
                     'inputDefaults' => array('label' => false, 'div' => false),
                     'url' => array(
@@ -17,28 +23,9 @@ echo $this->Html->script('census_finance', false);
                     )
             )
     );
+echo $this->element('census/year_options');
 ?>
 <div id="finances" class="content_wrapper edit">
-	<h1>
-		<span><?php echo __('Finances'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'finances', $selectedYear), array('class' => 'divider')); ?>
-		
-	</h1>
-	
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
-			<?php
-			echo $this->Form->input('school_year_id', array(
-				'options' => $yearList,
-				'default' => $selectedYear,
-				'onchange' => 'Census.navigateYear(this)',
-				'url' => 'Census/' . $this->action
-			));
-			?>
-		</div>
-	<?php echo $this->element('census_legend'); ?>
-	</div>
 	<?php
         //pr($data);
 		$ctr = 0;
@@ -49,15 +36,17 @@ echo $this->Html->script('census_finance', false);
                  foreach($arrFinanceType as $finance => $arrCategories){
                     echo '<fieldset class="section_break">
                                 <legend>'.$finance.'</legend>
-                                <div class="table">
-									<div class="table_head">
-										<div class="table_cell">'.__('Source').'</div>
-										<div class="table_cell">'.__('Category').'</div>
-										<div class="table_cell">'.__('Description').'</div>
-										<div class="table_cell">'.__('Amount').'</div>
-										<div class="table_cell cell_delete">&nbsp;</div>
-									</div>
-									<div class="table_body">';
+                                <table class="table table-striped table-hover table-bordered">
+									<thead>
+                                                                        <tr>
+										<td class="table_cell">'.__('Source').'</td>
+										<td class="table_cell">'.__('Category').'</td>
+										<td class="table_cell">'.__('Description').'</td>
+										<td class="table_cell">'.__('Amount').'</td>
+										<td class="table_cell cell_delete">&nbsp;</td>
+                                                                        </tr>
+									</thead>
+									<tbody>';
                                     foreach($arrCategories as $arrValues){
                                         //pr($arrCategories);die;
 										$record_tag="";
@@ -68,36 +57,36 @@ echo $this->Html->script('census_finance', false);
 												$record_tag.="row_estimate";break;
 										}
 										
-                                        echo '<div class="table_row" id="bankaccount_row_'.$arrValues['CensusFinance']['id'].'" >
+                                        echo '<tr id="bankaccount_row_'.$arrValues['CensusFinance']['id'].'" >
 													<input type="hidden" name="data[CensusFinance]['.$ctr.'][id]" value="'.$arrValues['CensusFinance']['id'].'">
-                                                    <div class="table_cell">
-                                                        <select name="data[CensusFinance]['.$ctr.'][finance_source_id]" class="full_width '. $record_tag .'" >';
+                                                    <td class="table_cell">
+                                                        <select name="data[CensusFinance]['.$ctr.'][finance_source_id]" class="full_width form-control '. $record_tag .'" >';
                                                         
                                                         
                                                         foreach($sources as $i => $v){
                                                             echo '<option value="'.$i.'" '.($i == $arrValues['CensusFinance']['finance_source_id']?'selected="selected"':"").'>'.$v.'</option>';
                                                         }
                                                         echo '<select>
-                                                    </div>
-                                                    <div class="table_cell">
-                                                        <select name="data[CensusFinance]['.$ctr.'][finance_category_id]" class="full_width '. $record_tag .'">';
+                                                    </td>
+                                                    <td class="table_cell">
+                                                        <select name="data[CensusFinance]['.$ctr.'][finance_category_id]" class="full_width form-control '. $record_tag .'">';
                                                         foreach($arrValues['CategoryTypes'] as $i=>$v){
                                                             echo '<option value="'.$i.'" '.($i == $arrValues['CensusFinance']['finance_category_id']?'selected="selected"':"").'>'.$v.'</option>';
                                                         }
                                                    echo '<select>
-                                                    </div>
-                                                    <div class="table_cell">
+                                                    </td>
+                                                    <td class="table_cell">
 														<div class="input_wrapper">
-															<input class="'. $record_tag .'" type="text" name="data[CensusFinance]['.$ctr.'][description]" value="'.$arrValues['CensusFinance']['description'].'"></div></div>
-													<div class="table_cell">
+															<input class="'. $record_tag .'" type="text" name="data[CensusFinance]['.$ctr.'][description]" value="'.$arrValues['CensusFinance']['description'].'"></div></td>
+													<td class="table_cell">
 														<div class="input_wrapper">
-															<input class="'. $record_tag .'" type="text" name="data[CensusFinance]['.$ctr.'][amount]" value="'.$arrValues['CensusFinance']['amount'].'"></div></div>
-                                                    <div class="table_cell"><span class="icon_delete" title="'.__('Delete').'"" onClick="CensusFinance.confirmDeletedlg('.$arrValues['CensusFinance']['id'].')"></span></div>
-                                              </div>';
+															<input class="'. $record_tag .'" type="text" name="data[CensusFinance]['.$ctr.'][amount]" value="'.$arrValues['CensusFinance']['amount'].'"></div></td>
+                                                    <td class="table_cell"><span class="icon_delete" title="'.__('Delete').'"" onClick="CensusFinance.confirmDeletedlg('.$arrValues['CensusFinance']['id'].')"></span></td>
+                                              </tr>';
 												   $ctr++;
                                     }     
-                                  echo '</div>
-                                </div>
+                                  echo '</tbody>
+                                </table>
                           </fieldset>';
 					 
                  }
@@ -115,3 +104,4 @@ echo $this->Html->script('census_finance', false);
 </div>
 
 <?php echo $this->Form->end(); ?>
+<?php $this->end(); ?>

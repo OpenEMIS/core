@@ -47,40 +47,24 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_add) {
-    echo $this->Html->link(__('Add'), array('action' => 'extracurricularAdd'), array('class' => 'divider'));
+    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'extracurricularAdd'), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
-?>
-<div class="table-responsive">
-    <table class="table table-striped table-hover table-bordered" action="Students/extracurricularView/">
-        <thead>
-            <tr>
-                <th><?php echo __('Year'); ?></th>
-                <th><?php echo __('Start Date'); ?></th>
-                <th><?php echo __('Type'); ?></th>
-                <th><?php echo __('Title'); ?></th>
-            </tr>
-        </thead>
+$tableHeaders = array(__('Year'), __('Start Date'), __('Type'), __('Title'));
+$tableData = array();
 
-        <tbody>
-            <?php
-            if (count($data) > 0):
-                foreach ($data as $obj):
-                    $id = $obj[$model]['id'];
-            ?>
-                    <tr>
-                        <td><?php echo $obj['SchoolYear']['name']; ?></td>
-                        <td ><?php echo $this->Utility->formatDate($obj['StudentExtracurricular']['start_date']); ?></td>
-                        <td><?php echo $obj['ExtracurricularType']['name']; ?></td>
-                        <td><?php echo $this->Html->link($obj['StudentExtracurricular']['name'], array('action' => 'extracurricularView', $id), array('escape' => false)) ?></td>
-                    </tr>
-            <?php
-                endforeach;
-            endif;
-            ?>
-        </tbody>
-    </table>
-</div>
-<?php $this->end(); ?>
+
+foreach($data as $obj) {
+	$row = array();
+        
+        $row[] = $obj['SchoolYear']['name'];
+        $row[] = $obj['StudentExtracurricular']['start_date'] ;
+        $row[] = $obj['ExtracurricularType']['name'] ;
+        $row[] = $this->Html->link($obj[$model]['name'], array('action' => 'extracurricularView', $obj[$model]['id']), array('escape' => false));
+	$tableData[] = $row;
+}
+echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
+$this->end(); 
+?>

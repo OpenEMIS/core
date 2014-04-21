@@ -18,33 +18,71 @@ App::uses('AppHelper', 'View/Helper');
 
 class LabelHelper extends AppHelper {
 	public $messages = array(
-		'general' => array(
-			'add' => 'Add',
-			'edit' => 'Edit',
-			'delete' => 'Delete',
-			'order' => 'Order',
-			'visible' => 'Visible',
-			'reorder' => 'Reorder',
-			'back' => 'Back',
-			'save' => 'Save',
-			'cancel' => 'Cancel',
-			'option' => 'Option',
-			'description' => 'Description',
-			'value' => 'Value',
-			'modified' => 'Modified On',
-			'created' => 'Created On',
-                        'type' => 'Type',
-                        'title' => 'Title'
+            'general' => array(
+            'add' => 'Add',
+            'edit' => 'Edit',
+            'delete' => 'Delete',
+            'order' => 'Order',
+            'visible' => 'Visible',
+            'reorder' => 'Reorder',
+            'back' => 'Back',
+            'list' => 'List',
+            'save' => 'Save',
+            'cancel' => 'Cancel',
+            'option' => 'Option',
+            'description' => 'Description',
+            'value' => 'Value',
+            'modified' => 'Modified On',
+            'created' => 'Created On',
+            'type' => 'Type',
+            'title' => 'Title'
+        ),
+        'wizard' => array(
+            'previous' => 'Previous',
+            'next' => 'Next',
+            'finish' => 'Finish',
+            'skip' => 'Skip',
+            'addmore' => 'Add More'
+        ),
+        'BankBranch' => array(
+            'bank_id' => 'Bank',
+            'name' => 'Branch'
+        ),
+		'InfrastructureMaterial' => array(
+			'infrastructure_category_id' => 'Category'
 		),
-		
-		'BankBranch' => array(
-			'bank_id' => 'Bank',
-			'name' => 'Branch'
+		'InfrastructureStatus' => array(
+			'infrastructure_category_id' => 'Category'
 		),
-            'SchoolYear' => array(
-                'name' => 'School Year'
-            )
-	);
+		'FinanceType' => array(
+			'finance_nature_id' => 'Nature'
+		),
+		'ContactType' => array(
+			'contact_option_id' => 'Contact Option'
+		),
+        'SchoolYear' => array(
+            'name' => 'School Year'
+        ),
+        'Country' => array(
+            'name' => 'Country'
+        ),
+        'HealthRelationships' => array(
+            'name' => 'Relationship'
+        ),
+        'HealthCondition' => array(
+            'name' => 'Condition'
+        ),
+        'HealthImmunization' => array(
+            'name' => 'Immunization'
+        ),
+        'HealthMedication' => array(
+            'start_date' => 'Commenced Date',
+            'end_date' => 'Ended Date',
+        ),
+        'Identities' => array(
+            'issue_location' => 'Issuer'
+        )
+    );
 	
 	public function get($code) {
 		$index = explode('.', $code);

@@ -1,36 +1,26 @@
 <?php
+
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Comments'));
 $this->start('contentActions');
-if($_add) {
-	echo $this->Html->link(__('Add'), array('action' => 'commentsAdd'), array('class' => 'divider'));
+if ($_add) {
+    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'commentsAdd'), array('class' => 'divider'));
 }
 $this->end();
 
 $this->start('contentBody');
+$tableHeaders = array(__('Date'), __('Title'), __('Comment'));
+$tableData = array();
 
+foreach ($data as $obj) {
+    $row = array();
+    $row[] = $obj[$model]['comment_date'];
+    $row[] = $this->Html->link($obj[$model]['title'], array('action' => 'commentsView', $obj[$model]['id']));
+    $row[] = $obj[$model]['comment'];
+    $tableData[] = $row;
+}
+echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
+$this->end();
 ?>
-<div class="table-responsive">
-	<table class="table table-striped table-hover table-bordered">
-		<thead>
-			<?php echo $this->Html->tableHeaders(array(__('Date'), __('Title'), __('Comment'))); ?>
-		</thead>
-		<tbody>
-			<?php
-			$tableData = array();
-			foreach($data as $obj) {
-				$tableData[] = array(
-					$this->Utility->formatDate($obj[$model]['comment_date'], null, false),
-					$this->Html->link($obj[$model]['title'], array('action' => 'commentsView', $obj[$model]['id'])),
-					$obj[$model]['comment']
-				);
-			}
-			echo $this->Html->tableCells($tableData);
-			?>
-		</tbody>
-	</table>
-</div>
-
-<?php $this->end(); ?>

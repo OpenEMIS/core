@@ -18,30 +18,42 @@ App::uses('AppModel', 'Model');
 
 class InfrastructureStatus extends AppModel {
 	public $actsAs = array('FieldOption');
-	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Option'
-			)
+	public $belongsTo = array(
+		'InfrastructureCategory',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
 		)
 	);
 	
+	public function getSubOptions() {
+		$options = $this->InfrastructureCategory->find('list', array(
+			'conditions' => array('OR' => array(
+				array('InfrastructureCategory.name' => 'Buildings'),
+				array('InfrastructureCategory.name' => 'Sanitation')
+			)),
+			'order' => array('InfrastructureCategory.order')
+		));
+		return $options;
+	}
+	
 	public function getOptionFields() {
-		$Category = ClassRegistry::init('InfrastructureCategory');
-		$options = $Category->find('list', array('order' => array('order')));
-		
-		$fields = array(
-			'national_code' => array('label' => 'National Code', 'display' => true), 
-			'international_code' => array('label' => 'International Code', 'display' => true),
-			'infrastructure_category_id' => array(
-				'label' => 'Category', 
-				'display' => false, 
-				'options' => $options
-			)
-		);
+		$options = $this->getSubOptions();
+		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
+		$this->addOptionField($field, 'after', 'name');
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
 		return $fields;
+	}
+	
+	public function getConditionId() {
+		return 'infrastructure_category_id';
 	}
 }

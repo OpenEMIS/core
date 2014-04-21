@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class IdentityType extends AppModel {
+	public $actsAs = array('FieldOption');
 	public $hasMany = array('StaffIdentity', 'StudentIdentity', 'TeacherIdentity');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -32,12 +33,11 @@ class IdentityType extends AppModel {
 			'type' => 'LEFT'
 		)
 	);
-	public $actsAs = array('FieldOption');
-        
-        public function getOptions($options = array()){
-            if(is_array($options)){
-                $data = $this->find('list',$options);
-                return $data;
-            }
-        }
+	
+	public function getOptions($options = array()){
+		if(is_array($options)){
+			$data = $this->find('list',$options);
+			return $data;
+		}
+	}
 }
