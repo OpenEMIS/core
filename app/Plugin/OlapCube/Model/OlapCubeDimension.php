@@ -30,20 +30,25 @@ class OlapCubeDimension extends OlapCubeAppModel {
  		$dimensionOptions = $this->find('list', array('fields'=>array('id','dimension'), 'conditions' => array('olap_cube_id' => $cubeOptionsId, 'visible' => 1), 'recursive' => -1, 'order'=>array('order')));
         $criteriaOptions = $this->find('list', array('fields'=>array('id','dimension'), 'conditions' => array('olap_cube_id' => $cubeOptionsId, 'visible' => 1), 'recursive' => -1, 'order'=>array('order')));
 
-       
+       	
         $cubeRowId = isset($params['pass'][1]) ? $params['pass'][1] : key($dimensionOptions);
         $cubeColumnId = isset($params['pass'][2]) ? $params['pass'][2] : key($dimensionOptions);
         if($cubeCriteriaId){
- 			$criteriaDimensions = $this->find('first',
+        	$criteriaDimensions = $this->find('first',
 				array(
 					'recursive'=>-1,
 					'conditions'=>array('OlapCubeDimension.id' => $cubeCriteriaId)
 				)
 			);
 
-			if(!empty($criteriaDimensions)){
-				$olapCriteria = ClassRegistry::init($criteriaDimensions['OlapCubeDimension']['table_name']);
-	    	  	$controller->set('fields', $olapCriteria->find('list', array('fields'=>array($criteriaDimensions['OlapCubeDimension']['table_field'],$criteriaDimensions['OlapCubeDimension']['table_field']))));
+        	if($cubeCriteriaId=='8' || $cubeCriteriaId=='17' || $cubeCriteriaId=='25'){
+        		//Gender
+    			$controller->set('fields', array($criteriaDimensions['OlapCubeDimension']['table_name'].'.male'=>'Male', $criteriaDimensions['OlapCubeDimension']['table_name'].'.female'=>'Female'));
+        	}else{
+				if(!empty($criteriaDimensions)){
+					$olapCriteria = ClassRegistry::init($criteriaDimensions['OlapCubeDimension']['table_name']);
+		    	  	$controller->set('fields', $olapCriteria->find('list', array('fields'=>array($criteriaDimensions['OlapCubeDimension']['table_field'],$criteriaDimensions['OlapCubeDimension']['table_field']))));
+	    	  	}
     	  	}
         }
 
@@ -117,7 +122,7 @@ class OlapCubeDimension extends OlapCubeAppModel {
 			
 			$modelTable = ClassRegistry::init($rowDimensions['OlapCubeDimension']['table_parent']);
 
-			$group[] = $rowDimensions['OlapCubeDimension']['table_group'];
+			//$group[] = $rowDimensions['OlapCubeDimension']['table_group'];
 			$group[] = $columnDimensions['OlapCubeDimension']['table_group'];
 			$conditions = array();
 			if(isset($criteria) && !empty($criteria)){
@@ -126,18 +131,50 @@ class OlapCubeDimension extends OlapCubeAppModel {
 				}
 			}
 
- 
- 			$modelData = $modelTable->find('all',
-				array(
-					'recursive'=>-1,
-					'fields'=>array("{$rowDimensions['OlapCubeDimension']['table_field']} as CubeRow", "{$columnDimensions['OlapCubeDimension']['table_field']} as CubeColumn", 'Count(*) as Number'),
-					'joins'=> $options,
-					'conditions'=>$conditions,
-					'group' => $group,
-					'order' => $group
-				)
-			);
+ 			/*if($rowId=='8' || $rowId=='17' || $rowId=='25'){
+        		//Gender
 
+ 				$newGroup = array_merge($group, array($rowDimensions['OlapCubeDimension']['table_parent'].'.male'));
+ 			
+ 				$modelData = $modelTable->find('all',
+					array(
+						'recursive'=>-1,
+						'fields'=>array("'Male' as CubeRow", "{$columnDimensions['OlapCubeDimension']['table_field']} as CubeColumn", "Count({$rowDimensions['OlapCubeDimension']['table_field']}) as Number"),
+						'joins'=> $options,
+						'conditions'=>$conditions,
+						'group' => $newGroup,
+						'order' => $group
+					)
+				);
+
+
+				$newGroup = array_merge($group, array($rowDimensions['OlapCubeDimension']['table_parent'].'.female'));
+				$modelData[] = $modelTable->find('all',
+					array(
+						'recursive'=>-1,
+						'fields'=>array("'Female' as CubeRow", "{$columnDimensions['OlapCubeDimension']['table_field']} as CubeColumn", "Count({$rowDimensions['OlapCubeDimension']['table_field']}) as Number"),
+						'joins'=> $options,
+						'conditions'=>$conditions,
+						'group' => $newGroup,
+						'order' => $group
+					)
+				);
+			*/
+        	//}else if($columnId=='8' || $columnId=='17' || $columnId=='25'){
+        		//Gender
+ 				//$modelData = 'Select '
+        	//}else{
+	 			$modelData = $modelTable->find('all',
+					array(
+						'recursive'=>-1,
+						'fields'=>array("{$rowDimensions['OlapCubeDimension']['table_field']} as CubeRow", "{$columnDimensions['OlapCubeDimension']['table_field']} as CubeColumn", "Count({$rowDimensions['OlapCubeDimension']['table_field']}) as Number"),
+						'joins'=> $options,
+						'conditions'=>$conditions,
+						'group' => $group,
+						'order' => $group
+					)
+				);
+	 		//}
 
 			$layout = array();
 			$rowName = array();
