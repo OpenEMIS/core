@@ -89,15 +89,17 @@ class OlapCubeDimension extends OlapCubeAppModel {
 
 			$str = $rowDimensions['OlapCubeDimension']['table_join'];
 
-			if(!empty($str)){
-				$str .= ',';
-			}
 
-			$str .= $columnDimensions['OlapCubeDimension']['table_join'];
+
+			if(!empty($columnDimensions['OlapCubeDimension']['table_join'])){
+				$str .= ',' . $columnDimensions['OlapCubeDimension']['table_join'];
+			}
 			if(isset($criteriaDimensions) && !empty($criteriaDimensions)){
 				$str .= ',' . $criteriaDimensions['OlapCubeDimension']['table_join'];
 			}
-
+			if(substr($str, 0, 1)==','){
+				$str =  substr($str, 1);
+			}
 			 
 			eval("\$options = array($str);");
 
