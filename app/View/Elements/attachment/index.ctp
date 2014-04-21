@@ -20,7 +20,7 @@ foreach($data as $value) {
 	$obj = $value[$_model];
 	$fileext = strtolower(pathinfo($obj['file_name'], PATHINFO_EXTENSION));
 	$ext = array_key_exists($fileext, $arrFileExtensions) ? $arrFileExtensions[$fileext] : $fileext;
-	$link = $this->Html->link($obj['name'], array('action' => 'attachmentsDownload', $obj['id']));
+	$link = $this->Html->link($obj['name'], array('action' => 'attachmentsView', $obj['id']));
 	$row = array();
 	$row[] = $link;
 	$row[] = $obj['description'];
