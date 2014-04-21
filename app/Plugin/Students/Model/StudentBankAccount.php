@@ -107,6 +107,7 @@ class StudentBankAccount extends AppModel {
         $controller->Navigation->addCrumb('Bank Account Details');
 
         if (empty($data)) {
+			$controller->Message->alert('general.noData');
             return $controller->redirect(array('action' => 'bankAccounts'));
         }
 

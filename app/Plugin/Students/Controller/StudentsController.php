@@ -38,7 +38,7 @@ class StudentsController extends StudentsAppController {
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-        'Students.StudentAttachment',
+        
         'Students.StudentBehaviour',
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
@@ -56,6 +56,8 @@ class StudentsController extends StudentsAppController {
             'model' => 'Students.StudentAttachment',
             'foreignKey' => 'student_id'
         ),
+		
+		'FileUploader',
         'AccessControl'
     );
     public $modules = array(
@@ -76,6 +78,7 @@ class StudentsController extends StudentsAppController {
         'identities' => 'Students.StudentIdentity',
         'languages' => 'Students.StudentLanguage',
         'nationalities' => 'Students.StudentNationality',
+        'attachments' =>'Students.StudentAttachment',
     );
 
     public $className = 'Student';
@@ -543,75 +546,6 @@ class StudentsController extends StudentsAppController {
         $datavalues = $tmp;
         $this->set('datafields', $datafields);
         $this->set('datavalues', $tmp);
-    }
-
-    public function attachments() {
-        $this->Navigation->addCrumb('Attachments');
-        $id = $this->Session->read('StudentId');
-        $data = $this->FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/view');
-    }
-
-    public function attachmentsEdit() {
-        $this->Navigation->addCrumb('Edit Attachments');
-        $id = $this->Session->read('StudentId');
-
-        if ($this->request->is('post')) { // save
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentAttachment');
-            }
-            if(!empty($_FILES)){
-                $errors = $this->FileAttachment->saveAll($this->data, $_FILES, $id);
-                if (sizeof($errors) == 0) {
-                    $this->Navigation->updateWizard($this->action, null);
-                    $this->Utility->alert(__('Files have been saved successfully.'));
-                    $this->redirect(array('action' => 'attachments'));
-                } else {
-                    $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-                }
-            }else {
-                $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-            }
-        }
-
-        $data = $this->FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/edit');
-    }
-
-    public function attachmentsAdd() {
-        $this->layout = 'ajax';
-        $this->set('params', $this->params->query);
-        $this->render('/Elements/attachment/add');
-    }
-
-    public function attachmentsDelete() {
-        $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            if ($this->FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-
-            return json_encode($result);
-        }
-    }
-
-    public function attachmentsDownload($id) {
-        $this->FileAttachment->download($id);
     }
 
     public function history() {
