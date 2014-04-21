@@ -17,12 +17,26 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteAttachment extends AppModel {
-       public $belongsTo = array('InstitutionSite' => 
-       array('foreignKey' => 'institution_site_id')
-       );
+	public $belongsTo = array('InstitutionSite');
        
-       public $virtualFields = array(
+	public $virtualFields = array(
 		'blobsize' => "OCTET_LENGTH(file_content)"
 	);
+	
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'name', 'type' => 'file', 'url' => array('action' => 'attachmentsDownload')),
+				array('field' => 'description', 'type' => 'textarea'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 }
 ?>

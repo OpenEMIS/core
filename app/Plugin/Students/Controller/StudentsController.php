@@ -33,34 +33,20 @@ class StudentsController extends StudentsAppController {
         'InstitutionSiteClass',
         'InstitutionSiteType',
         'InstitutionSiteClassGradeStudent',
-        //'Bank',
-        //'BankBranch',
-        'IdentityType',
-        //'ContactOption',
-       // 'ContactType',
-       // 'Students.StudentBankAccount',
         'Students.Student',
         'Students.StudentHistory',
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-        'Students.StudentAttachment',
+        
         'Students.StudentBehaviour',
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
-        //'Students.StudentComment',
-        'Students.StudentNationality',
-      //  'Students.StudentIdentity',
-        'Students.StudentLanguage',
-     //   'Students.StudentContact',
         'Students.StudentAward',
         'SchoolYear',
         'Country',
-        'Language',
         'ConfigItem',
-        //'Students.StudentExtracurricular',
-        //'ExtracurricularType'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -70,6 +56,8 @@ class StudentsController extends StudentsAppController {
             'model' => 'Students.StudentAttachment',
             'foreignKey' => 'student_id'
         ),
+		
+		'FileUploader',
         'AccessControl'
     );
     public $modules = array(
@@ -88,6 +76,9 @@ class StudentsController extends StudentsAppController {
         'contacts' => 'Students.StudentContact',
         'extracurricular' => 'Students.StudentExtracurricular',
         'identities' => 'Students.StudentIdentity',
+        'languages' => 'Students.StudentLanguage',
+        'nationalities' => 'Students.StudentNationality',
+        'attachments' =>'Students.StudentAttachment',
     );
 
     public $className = 'Student';
@@ -557,75 +548,6 @@ class StudentsController extends StudentsAppController {
         $this->set('datavalues', $tmp);
     }
 
-    public function attachments() {
-        $this->Navigation->addCrumb('Attachments');
-        $id = $this->Session->read('StudentId');
-        $data = $this->FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/view');
-    }
-
-    public function attachmentsEdit() {
-        $this->Navigation->addCrumb('Edit Attachments');
-        $id = $this->Session->read('StudentId');
-
-        if ($this->request->is('post')) { // save
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentAttachment');
-            }
-            if(!empty($_FILES)){
-                $errors = $this->FileAttachment->saveAll($this->data, $_FILES, $id);
-                if (sizeof($errors) == 0) {
-                    $this->Navigation->updateWizard($this->action, null);
-                    $this->Utility->alert(__('Files have been saved successfully.'));
-                    $this->redirect(array('action' => 'attachments'));
-                } else {
-                    $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-                }
-            }else {
-                $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-            }
-        }
-
-        $data = $this->FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/edit');
-    }
-
-    public function attachmentsAdd() {
-        $this->layout = 'ajax';
-        $this->set('params', $this->params->query);
-        $this->render('/Elements/attachment/add');
-    }
-
-    public function attachmentsDelete() {
-        $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            if ($this->FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-
-            return json_encode($result);
-        }
-    }
-
-    public function attachmentsDownload($id) {
-        $this->FileAttachment->download($id);
-    }
-
     public function history() {
         $this->Navigation->addCrumb('History');
 
@@ -857,223 +779,6 @@ class StudentsController extends StudentsAppController {
     }
 
     /*     * *BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already* */
-
-    
-
-    
-
-    public function nationalities() {
-        $this->Navigation->addCrumb(__('Nationalities'));
-        $data = $this->StudentNationality->find('all', array('conditions' => array('StudentNationality.student_id' => $this->studentId)));
-        $this->set('list', $data);
-    }
-
-    public function nationalitiesAdd() {
-        $this->Navigation->addCrumb(__('Add Nationalities'));
-        if ($this->request->is('post')) {
-            $data = $this->data['StudentNationality'];
-            $addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentNationality');
-            }
-
-            $this->StudentNationality->create();
-            $data['student_id'] = $this->studentId;
-
-            if ($this->StudentNationality->save($data)) {
-                $id = $this->StudentNationality->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'nationalities'));
-            }
-        }
-
-        $defaultCountryId = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
-        $countryOptions = $this->Country->getOptions();
-        $this->set('countryOptions', $countryOptions);
-        $this->set('defaultCountryId', $defaultCountryId);
-		$this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function nationalitiesView() {
-        $nationalityId = $this->params['pass'][0];
-        $nationalityObj = $this->StudentNationality->find('all', array('conditions' => array('StudentNationality.id' => $nationalityId)));
-
-        if (!empty($nationalityObj)) {
-            $this->Navigation->addCrumb(__('Nationality Details'));
-
-            $this->Session->write('StudentNationalityId', $nationalityId);
-            $this->set('nationalityObj', $nationalityObj);
-        }
-    }
-
-    public function nationalitiesEdit() {
-        $nationalityId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $nationalityObj = $this->StudentNationality->find('first', array('conditions' => array('StudentNationality.id' => $nationalityId)));
-
-            if (!empty($nationalityObj)) {
-                $this->Navigation->addCrumb(__('Edit Nationality Details'));
-                $this->request->data = $nationalityObj;
-            }
-        } else {
-            $nationalityData = $this->data['StudentNationality'];
-
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            
-            $nationalityData['student_id'] = $this->studentId;
-
-            if ($this->StudentNationality->save($nationalityData)) {
-                $this->Navigation->updateWizard($this->action,$nationalityId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
-            }
-        }
-
-        $countryOptions = $this->Country->getOptions();
-        $this->set('countryOptions', $countryOptions);
-
-        $this->set('id', $nationalityId);
-    }
-
-    public function nationalitiesDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentNationalityId')) {
-            $id = $this->Session->read('StudentNationalityId');
-            $studentId = $this->Session->read('StudentId');
-            $countryId = $this->StudentNationality->field('country_id', array('StudentNationality.id' => $id));
-            $name = $this->Country->field('name', array('Country.id' => $countryId));
-            $this->StudentNationality->delete($id);
-            $this->Utility->alert($name . __(' have been deleted successfully.'));
-            $this->redirect(array('action' => 'nationalities', $studentId));
-        }
-    }
-
-    
-
-    public function languages() {
-        $this->Navigation->addCrumb('Languages');
-        $data = $this->StudentLanguage->find('all', array('conditions' => array('StudentLanguage.student_id' => $this->studentId)));
-        $this->set('list', $data);
-    }
-
-    public function languagesAdd() {
-        $this->Navigation->addCrumb(__('Add Languages'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $data = $this->data['StudentLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StudentLanguage');
-            }
-            
-            $this->StudentLanguage->create();
-            $data['student_id'] = $this->studentId;
-
-            if ($this->StudentLanguage->save($data)) {
-                $id = $this->StudentLanguage->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'languages'));
-            }
-        }
-
-        $gradeOptions = array();
-        for ($i = 0; $i < 6; $i++) {
-            $gradeOptions[$i] = $i;
-        }
-        $this->set('gradeOptions', $gradeOptions);
-
-        $languageOptions = $this->Language->getOptions();
-        $this->set('languageOptions', $languageOptions);
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function languagesView() {
-        $languageId = $this->params['pass'][0];
-        $languageObj = $this->StudentLanguage->find('all', array('conditions' => array('StudentLanguage.id' => $languageId)));
-
-        if (!empty($languageObj)) {
-            $this->Navigation->addCrumb('Language Details');
-
-            $this->Session->write('StudentLanguageId', $languageId);
-            $this->set('languageObj', $languageObj);
-        }
-    }
-
-    public function languagesEdit() {
-        $languageId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $languageObj = $this->StudentLanguage->find('first', array('conditions' => array('StudentLanguage.id' => $languageId)));
-
-            if (!empty($languageObj)) {
-                $this->Navigation->addCrumb('Edit Language Details');
-                $this->request->data = $languageObj;
-            }
-        } else {
-            $languageData = $this->data['StudentLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $languageData['student_id'] = $this->studentId;
-
-            if ($this->StudentLanguage->save($languageData)) {
-                $this->Navigation->updateWizard($this->action,$languageId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'languagesView', $languageData['id']));
-            }
-        }
-        $gradeOptions = array();
-        for ($i = 0; $i < 6; $i++) {
-            $gradeOptions[$i] = $i;
-        }
-        $this->set('gradeOptions', $gradeOptions);
-
-        $languageOptions = $this->Language->getOptions();
-        $this->set('languageOptions', $languageOptions);
-
-        $this->set('id', $languageId);
-    }
-
-    public function languagesDelete($id) {
-        if ($this->Session->check('StudentId') && $this->Session->check('StudentLanguageId')) {
-            $id = $this->Session->read('StudentLanguageId');
-            $studentId = $this->Session->read('StudentId');
-            $languageId = $this->StudentLanguage->field('language_id', array('StudentLanguage.id' => $id));
-            $name = $this->Language->field('name', array('Language.id' => $languageId));
-            $this->StudentLanguage->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'languages', $studentId));
-        }
-    }
-
-    
-
-    
-
-    
 
     public function ajax_find_award($type) {
         if ($this->request->is('ajax')) {

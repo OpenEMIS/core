@@ -1,40 +1,34 @@
-<?php 
+<?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+$this->start('contentActions');
+if ($_add) {
+    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'healthAllergyAdd'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="health" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-        <?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'healthAllergyAdd'), array('class' => 'divider'));
-		}
-		?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-    <?php if(isset($data)) { ?>
-    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/healthAllergyView/">
-        <div class="table_head">
-       		<div class="table_cell"><?php echo __('Type'); ?></div>
-            <div class="table_cell"><?php echo __('Description'); ?></div>
-            <div class="table_cell"><?php echo __('Severe'); ?></div>
-            <div class="table_cell"><?php echo __('Comment'); ?></div>
-        </div>
-       
-        <div class="table_body">
-        	<?php foreach($data as $id=>$val) { ?>
-            <div class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
-            	<div class="table_cell"><?php echo $healthAllergiesOptions[$val[$modelName]['health_allergy_type_id'] ]?></div>
-                <div class="table_cell"><?php echo $val[$modelName]['description']; ?></div>
-             	<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($val[$modelName]['severe'] == 1);?></div>
-                <div class="table_cell"><?php echo $val[$modelName]['comment'] ?>
-                </div>
-            </div>
-           <?php } ?>
-        </div>
-    </div>
-    <?php } ?>
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr><?php echo $this->Html->tableHeaders(array(__('Type'), __('Description'), __('Severe'), __('Comment'))); ?></tr>
+        </thead>
+        <tbody>
+            <?php
+            foreach ($data as $obj) {
+                $id = $obj[$model]['id'];
+                echo '<tr>			
+                            <td>' . $this->Html->link($obj['HealthAllergyType']['name'], array('action' => 'healthAllergyView', $id), array('escape' => false)) . '</td>
+                            <td>' . $obj[$model]['description'] . '</td>
+                            <td class="center">' . ($obj[$model]['severe'] == 1 ? '&#10003;' : '&#10008;') . '</td>
+                            <td>' . $obj[$model]['comment'] . '</td>
+                    </tr>';
+            }
+            ?>
+        </tbody>
+    </table>
 </div>
+<?php $this->end(); ?>

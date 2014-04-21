@@ -141,13 +141,14 @@ class StudentContact extends StudentsAppModel {
 
     public function contacts($controller, $params) {
         $controller->Navigation->addCrumb('Contacts');
-        $data = $this->find('all', array('conditions' => array('StudentContact.student_id' => $controller->studentId), 'order' => array('ContactType.contact_option_id', 'StudentContact.preferred DESC')));
+        $header = __('Contacts');
+        $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser', 'CreatedUser')));
+        $data = $this->findAllByStudentId($controller->studentId, array(), array('ContactType.contact_option_id' => 'asc', 'StudentContact.preferred' => 'desc'));//('all', array('conditions' => array('StudentContact.student_id' => $controller->studentId), 'order' => array('ContactType.contact_option_id', 'StudentContact.preferred DESC')));
 
         $ContactOption = ClassRegistry::init('ContactOption');
         $contactOptions = $ContactOption->getOptions();
-        $controller->set('contactOptions', $contactOptions);
 
-        $controller->set('list', $data);
+        $controller->set(compact('header', 'data', 'contactOptions'));
     }
 
     public function contactsAdd($controller, $params) {
@@ -158,13 +159,13 @@ class StudentContact extends StudentsAppModel {
             $contactData = $controller->request->data['StudentContact'];
             $addMore = false;
             if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($this->action);
+                $controller->Navigation->skipWizardLink($controller->request->action);
             } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($this->action);
+                $controller->Navigation->previousWizardLink($controller->request->action);
             } elseif (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Add More')) {
                 $addMore = true;
             } else {
-                $controller->Navigation->validateModel($this->action, 'StudentContact');
+                $controller->Navigation->validateModel($controller->request->action, 'StudentContact');
             }
             $this->create();
             
@@ -177,7 +178,7 @@ class StudentContact extends StudentsAppModel {
                 if ($addMore) {
                     $controller->Message->alert('general.add.success');
                 }
-                $controller->Navigation->updateWizard($this->action, $id, $addMore);
+                $controller->Navigation->updateWizard($controller->request->action, $id, $addMore);
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'contacts'));
             }
@@ -228,9 +229,9 @@ class StudentContact extends StudentsAppModel {
         } else {
             $contactData = $controller->request->data['StudentContact'];
             if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($this->action);
+                $controller->Navigation->skipWizardLink($controller->request->action);
             } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($this->action);
+                $controller->Navigation->previousWizardLink($controller->request->action);
             }
             $contactData['student_id'] = $controller->studentId;
 
@@ -238,7 +239,7 @@ class StudentContact extends StudentsAppModel {
                 if ($contactData['preferred'] == '1') {
                     $this->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($id)))));
                 }
-                $controller->Navigation->updateWizard($this->action, $id);
+                $controller->Navigation->updateWizard($controller->request->action, $id);
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'contactsView', $contactData['id']));
             }

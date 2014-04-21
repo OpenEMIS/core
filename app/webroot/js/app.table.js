@@ -152,13 +152,18 @@ var jsTable = {
 	},
 	
 	doRemove: function(obj) {
-		$(obj).closest('.table_row').remove();
+                if($(obj).closest('.table_row').length>0) {
+                    $(obj).closest('.table_row').remove();
+                }
+                if($(obj).closest('tr').length>0) {
+                    $(obj).closest('tr').remove();
+                }
 		jsTable.fixTable();
 	},
 	
 	computeSubtotal: function(obj) {
-		var table = $(obj).closest('.table_body');
-		var row = $(obj).closest('.table_row');
+		var table = $(obj).closest('tbody');
+		var row = $(obj).closest('tr');
 		var type = $(obj).attr('computeType');
 		var subtotal = 0;
 		
@@ -178,11 +183,11 @@ var jsTable = {
 		table.find('.cell_subtotal').each(function() {
 			total += $(this).html().toInt();
 		});
-		table.siblings('.table_foot').find('.' + type).html(total);
+		table.siblings('tfoot').find('.' + type).html(total);
 	},
 	
 	computeTotal: function(obj) {
-		var table = $(obj).closest('.table_body');
+		var table = $(obj).closest('tbody');
 		var type = $(obj).attr('computeType');
 		var total = 0;
 		table.find('input[computeType="' + type + '"]').each(function() {
@@ -195,7 +200,7 @@ var jsTable = {
 				total += $(this).val().toInt();
 			}
 		});
-		$(table).siblings('.table_foot').find('.' + type).html(total);
+		$(table).siblings('tfoot').find('.' + type).html(total);
 	},
 	
 	computeAllTotal: function(p) {
@@ -205,12 +210,12 @@ var jsTable = {
 			type = $(this).attr('computeType');
 			total[type] = (total[type] != undefined ? total[type] : 0) + ($(this).val().length>0 ? $(this).val().toInt() : 0);
 		});
-		if($(p + ' .table_body').length>0) {
+		if($(p + ' tbody').length>0) {
 			for(var i in total) {
-				$(p + ' .table_foot .' + i).html(total[i]);
+				$(p + ' tfoot .' + i).html(total[i]);
 			}
 		} else {
-			$(p + ' .table_foot .cell_value').html(0);
+			$(p + ' tfoot .cell_value').html(0);
 		}
 	}
 };

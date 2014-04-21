@@ -30,13 +30,13 @@ var Census = {
 				subtotal += $(this).val().toInt();
 			}
 		});
-		row.find('.cell-total').html(subtotal);
-		table = row.closest('.table');
+		row.find('.cell_total').html(subtotal);
+		table = row.closest('table');
 		var total = 0;
 		table.find('tbody tr').each(function() {
-			total += $(this).find('.cell-total').html().toInt();
+			total += $(this).find('.cell_total').html().toInt();
 		});
-		table.find('tfoot .cell-value').html(total);
+		table.find('tfoot .cell_value').html(total);
 	},
 	
 	loadGradeList: function(obj) {
@@ -65,17 +65,19 @@ var Census = {
 	},
 	
 	addMultiGradeRow: function() {
-		var index = $('.table_row').length;
-		var tableBody = $('.multi .table_body').length;
+		var index = $('tr').length;
+		var tableBody = $('.multi tbody').length;
 		var maskId;
 		var ajaxParams = {index: index, tableBody: tableBody};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				if(!$(data).hasClass('alert')) {
+				if(!$($.parseHTML(data)).hasClass('alert')) {
 					if(tableBody==1) {
-						$('.multi .table_body').append(data);
-					} else {
-						$('.multi .table_head').after(data);
+						$('.multi tbody').append(data);
+					} else if(tableBody==0){
+                                            $('.multi thead').after(data);
+                                        }else {
+						$('.multi tbody').after(data);
 					}
 					jsTable.fixTable();
 				} else {
@@ -102,7 +104,7 @@ var Census = {
 	},
 	
 	addMultiGrade: function(obj) {
-		var parent = $(obj).closest('.table_row');
+		var parent = $(obj).closest('tr');
 		var index = parent.find('.programme_list .table_cell_row').length;
 		var maskId;
 		var ajaxParams = {index: index, row: parent.attr('row')};

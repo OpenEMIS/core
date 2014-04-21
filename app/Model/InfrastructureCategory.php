@@ -18,18 +18,18 @@ App::uses('AppModel', 'Model');
 
 class InfrastructureCategory extends AppModel {
 	public $actsAs = array('FieldOption');
-	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Option'
-			)
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
 		)
 	);
-	
-	public function getLookupVariables() {
-		return array('Categories' => array('model' => 'InfrastructureCategory'));
-	}
 }

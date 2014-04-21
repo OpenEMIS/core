@@ -17,21 +17,29 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class Bank extends AppModel {
-	public $hasMany = array('BankBranch');
 	public $actsAs = array('FieldOption');
-	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Option'
-			)
+	public $hasMany = array('BankBranch');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
 		)
 	);
 	
 	public function getOptionFields() {
-		return array('code' => array('label' => 'Code', 'display' => true));
+		$codeField = array('field' => 'code');
+		$this->removeOptionFields(array('international_code', 'national_code'));
+		$this->addOptionField($codeField, 'after', 'name'); // add code after name
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
+		return $fields;
 	}
 }
 ?>

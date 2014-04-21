@@ -1,12 +1,12 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', 'GNU GENERAL PUBLIC LICENSE');
+
+$this->start('contentBody');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="user_details" class="content_wrapper">
-	<h1>GNU GENERAL PUBLIC LICENSE<?php //echo $subTitle; ?></h1>
-	
 <div dir="ltr">
 <!-- <h3><a id="SEC1">GNU GENERAL PUBLIC LICENSE</a></h3> -->
 <p>
@@ -400,5 +400,5 @@ POSSIBILITY OF SUCH DAMAGES.
 <h3>END OF TERMS AND CONDITIONS</h3>
 
 </div>
-</div><!-- for id="content", starts in the include above -->
-<!-- </div> -->
+
+<?php $this->end(); ?>

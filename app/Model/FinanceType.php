@@ -17,55 +17,37 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class FinanceType extends AppModel {
-	public $belongsTo = array('FinanceNature');
-	public $hasMany = array('FinanceCategory');
 	public $actsAs = array('FieldOption');
-	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Option'
-			)
+	public $hasMany = array('FinanceCategory');
+	public $belongsTo = array(
+		'FinanceNature',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
 		)
 	);
 	
 	public function getSubOptions() {
-		$modelName = get_class($this);
-		$Nature = ClassRegistry::init('FinanceNature');
-		$list = $Nature->find('list', array('order' => array('order')));
-		$options = array();
-		foreach($list as $id => $name) {
-			$options[] = array('model' => $modelName, 'label' => $name, 'conditions' => array('finance_nature_id' => $id));
-		}
-		return $options;
+		return $this->FinanceNature->findList();
 	}
 	
 	public function getOptionFields() {
-		$Nature = ClassRegistry::init('FinanceNature');
-		$options = $Nature->find('list', array('order' => array('order')));
-		
-		$fields = array(
-			'national_code' => array('label' => 'National Code', 'display' => true), 
-			'international_code' => array('label' => 'International Code', 'display' => true),
-			'finance_nature_id' => array(
-				'label' => 'Nature', 
-				'display' => false, 
-				'options' => $options
-			)
-		);
+		$options = $this->getSubOptions();
+		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
+		$this->addOptionField($field, 'after', 'name');
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
 		return $fields;
 	}
 	
-	public function getLookupVariables() {
-		$parent = ClassRegistry::init('FinanceNature');
-		$list = $parent->findList();
-		$lookup = array();
-		
-		foreach($list as $id => $name) {
-			$lookup[$name] = array('model' => 'FinanceType', 'conditions' => array('finance_nature_id' => $id));
-		}
-		return $lookup;
+	public function getConditionId() {
+		return 'finance_nature_id';
 	}
 }
