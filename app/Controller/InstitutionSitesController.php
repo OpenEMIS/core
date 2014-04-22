@@ -17,6 +17,7 @@
 
 App::uses('AppController', 'Controller');
 App::uses('AreaHandlerComponent', 'Controller/Component');
+App::uses('Sanitize', 'Utility');
 
 class InstitutionSitesController extends AppController {
 
@@ -831,14 +832,18 @@ class InstitutionSitesController extends AppController {
         parent::beforeFilter();
 
         $this->Auth->allow('viewMap', 'siteProfile');
-        
+
         $this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-        
+
         if ($this->action === 'index' || $this->action === 'add') {
             $this->bodyTitle = 'Institutions';
-        } else if($this->action == 'siteProfile' || $this->action == 'viewMap'){
-            $this->layout = 'profile';
+        } else if ($this->action === 'view'){
+            
         } else {
+            if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
+                $this->layout = 'profile';
+            }
+            
             if ($this->Session->check('InstitutionSiteId')) {
                 $this->institutionSiteId = $this->Session->read('InstitutionSiteId');
                 $this->institutionSiteObj = $this->Session->read('InstitutionSiteObj');
@@ -850,119 +855,63 @@ class InstitutionSitesController extends AppController {
             }
         }
     }
-
-//    public function beforeFilter() {
-//        parent::beforeFilter();
-//
-//        $this->Auth->allow('viewMap', 'siteProfile');
-//
-//        if ($this->Session->check('InstitutionId')) {
-//            $institutionId = $this->Session->read('InstitutionId');
-//            $institutionName = $this->Institution->field('name', array('Institution.id' => $institutionId));
-//            $this->Navigation->addCrumb('Institutions', array('controller' => 'Institutions', 'action' => 'index'));
-//            $this->Navigation->addCrumb($institutionName, array('controller' => 'Institutions', 'action' => 'view'));
-//
-//            if ($this->action === 'index' || $this->action === 'add') {
-//                $this->bodyTitle = $institutionName;
-//            } else {
-//                if ($this->Session->check('InstitutionSiteId')) {
-//                    $this->institutionSiteId = $this->Session->read('InstitutionSiteId');
-//                    $this->institutionSiteObj = $this->Session->read('InstitutionSiteObj');
-//                    $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
-//                    $this->bodyTitle = $institutionName . ' - ' . $institutionSiteName;
-//                    $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
-//                } else {
-//                    $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
-//                }
-//            }
-//        } else {
-//            if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
-//                $this->layout = 'profile';
-//            } else {
-//                $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
-//            }
-//        }
-//    }
     
     public function index() {
         $this->AccessControl->init($this->Auth->user('id'));
 
         $this->Navigation->addCrumb('List of Institutions');
-        if ($this->request->is('post')){
-			if(isset($this->request->data['InstitutionSite']['SearchField'])){
-				$this->request->data['InstitutionSite']['SearchField'] = Sanitize::escape(trim($this->request->data['InstitutionSite']['SearchField']));
-				
-				if($this->request->data['InstitutionSite']['SearchField'] != $this->Session->read('Search.SearchField')) {
-					$this->Session->delete('Search.SearchField');
-					$this->Session->write('Search.SearchField', $this->request->data['InstitutionSite']['SearchField']);
-				}
-			}
-			
-			if(isset($this->request->data['sortdir']) && isset($this->request->data['order']) ){
-				if($this->request->data['sortdir'] != $this->Session->read('Search.sortdir')) {
-					$this->Session->delete('Search.sortdir');
-					$this->Session->write('Search.sortdir', $this->request->data['sortdir']);
-				}
-				if($this->request->data['order'] != $this->Session->read('Search.order')) {
-					$this->Session->delete('Search.order');
-					$this->Session->write('Search.order', $this->request->data['order']);
-				}
-			}
+        if ($this->request->is('post')) {
+            if (isset($this->request->data['InstitutionSite']['SearchField'])) {
+                $this->request->data['InstitutionSite']['SearchField'] = Sanitize::escape(trim($this->request->data['InstitutionSite']['SearchField']));
+
+                if ($this->request->data['InstitutionSite']['SearchField'] != $this->Session->read('Search.SearchField')) {
+                    $this->Session->delete('Search.SearchField');
+                    $this->Session->write('Search.SearchField', $this->request->data['InstitutionSite']['SearchField']);
+                }
+            }
+
+            if (isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
+                if ($this->request->data['sortdir'] != $this->Session->read('Search.sortdir')) {
+                    $this->Session->delete('Search.sortdir');
+                    $this->Session->write('Search.sortdir', $this->request->data['sortdir']);
+                }
+                if ($this->request->data['order'] != $this->Session->read('Search.order')) {
+                    $this->Session->delete('Search.order');
+                    $this->Session->write('Search.order', $this->request->data['order']);
+                }
+            }
         }
-		
-		$fieldordername = ($this->Session->read('Search.order'))?$this->Session->read('Search.order'):'InstitutionSite.name';
-		$fieldorderdir = ($this->Session->read('Search.sortdir'))?$this->Session->read('Search.sortdir'):'asc';
-		
-		$searchKey = stripslashes($this->Session->read('Search.SearchField'));
-                
-		$conditions = array(
-			'SearchKey' => $searchKey, 
-			'AdvancedSearch' => $this->Session->check('InstitutionSite.AdvancedSearch') ? $this->Session->read('InstitutionSite.AdvancedSearch') : null,
-			'isSuperAdmin' => $this->Auth->user('super_admin'),
-			'userId' => $this->Auth->user('id'),
-                        'order' => array($fieldordername => $fieldorderdir)
-		);
-		
-		$order = array('order' => array($fieldordername => $fieldorderdir));
+
+        $fieldordername = ($this->Session->read('Search.order')) ? $this->Session->read('Search.order') : 'InstitutionSite.name';
+        $fieldorderdir = ($this->Session->read('Search.sortdir')) ? $this->Session->read('Search.sortdir') : 'asc';
+
+        $searchKey = stripslashes($this->Session->read('Search.SearchField'));
+
+        $conditions = array(
+            'SearchKey' => $searchKey,
+            'AdvancedSearch' => $this->Session->check('InstitutionSite.AdvancedSearch') ? $this->Session->read('InstitutionSite.AdvancedSearch') : null,
+            'isSuperAdmin' => $this->Auth->user('super_admin'),
+            'userId' => $this->Auth->user('id'),
+            'order' => array($fieldordername => $fieldorderdir)
+        );
+
+        $order = array('order' => array($fieldordername => $fieldorderdir));
         $limit = ($this->Session->read('Search.perpage')) ? $this->Session->read('Search.perpage') : 30;
         $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
-		
+
         $data = $this->paginate('InstitutionSite', $conditions);
-//		if(!$this->Session->check('Search.SearchField') && !$this->Session->check('Institution.AdvancedSearch')) {
-//			// if user do not have access to add institution and the records is 1, redirect to list of sites
-//			if(count($data) == 1 && !$this->AccessControl->newCheck($this->params['controller'], 'add')) {
-//				$this->redirect(array('action' => 'listSites', $data[0]['Institution']['id']));
-//			}
-//		}
-		
-		if(empty($data) && !$this->request->is('ajax')) {
-			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
-		}
+
+        if (empty($data) && !$this->request->is('ajax')) {
+            $this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+        }
         $this->set('institutions', $data);
-		$this->set('sortedcol', $fieldordername);
-		$this->set('sorteddir', ($fieldorderdir == 'asc')?'up':'down');
-		$this->set('searchField', stripslashes($this->Session->read('Search.SearchField'))); 
-        if ($this->request->is('post')){
-			$this->render('index_records','ajax');
+        $this->set('sortedcol', $fieldordername);
+        $this->set('sorteddir', ($fieldorderdir == 'asc') ? 'up' : 'down');
+        $this->set('searchField', stripslashes($this->Session->read('Search.SearchField')));
+        if ($this->request->is('post')) {
+            $this->render('index_records', 'ajax');
         }
     }
-
-//    public function index() {
-//        if (isset($this->params['pass'][0])) {
-//            $id = $this->params['pass'][0];
-//            $obj = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $id)));
-//
-//            if ($obj) {
-//                $this->Session->write('InstitutionSiteId', $id);
-//                $this->Session->write('InstitutionSiteObj', $obj);
-//                $this->redirect(array('action' => 'view'));
-//            } else {
-//                $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
-//            }
-//        } else {
-//            $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
-//        }
-//    }
     
     public function advanced() {
 		$key = 'Institution.AdvancedSearch';
@@ -1022,11 +971,35 @@ class InstitutionSitesController extends AppController {
         }
 
     public function view() {
+        if (isset($this->params['pass'][0])) {
+            $institutionSiteId = $this->params['pass'][0];
+            $obj = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
+
+            if ($obj) {
+                $this->Session->write('InstitutionSiteId', $institutionSiteId);
+                $this->Session->write('InstitutionSiteObj', $obj);
+            } else {
+                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+            }
+        }else if ($this->Session->check('InstitutionSiteId')){
+            $institutionSiteId = $this->Session->read('InstitutionSiteId');
+            $obj = $this->Session->read('InstitutionSiteObj');
+        } else {
+            $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+        }
+        
+        $this->institutionSiteId = $institutionSiteId;
+        $this->institutionSiteObj = $obj;
+        
+        $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $institutionSiteId));
+        $this->bodyTitle = $institutionSiteName;
+        $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+        
         $this->Navigation->addCrumb('Overview');
 
         $levels = $this->AreaLevel->find('list', array('recursive' => 0));
         $adminarealevels = $this->AreaEducationLevel->find('list', array('recursive' => 0));
-        $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
+        $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
 
         $areaLevel = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_id']);
         $areaLevel = array_reverse($areaLevel);
