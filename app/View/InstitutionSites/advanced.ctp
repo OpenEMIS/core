@@ -6,7 +6,7 @@ echo $this->Html->script('jquery-ui.min', false);
 echo $this->Html->script('search', false);
 echo $this->element('breadcrumb'); 
 $session = $this->Session;
-$arrKeys = @array_keys($session->read('Institution.AdvancedSearch'));
+$arrKeys = @array_keys($session->read('InstitutionSite.AdvancedSearch'));
 if($arrKeys){
     foreach($arrKeys as $names){ 
         if(strpos($names, "CustomValue") > 0){ 
@@ -16,8 +16,11 @@ if($arrKeys){
 }else {
      $Model = "Institution";
 }
-$preload = @array($Model,(is_null($session->read('Institution.AdvancedSearch.siteType'))?0:$session->read('Institution.AdvancedSearch.siteType')));
+$preload = @array($Model,(is_null($session->read('InstitutionSite.AdvancedSearch.siteType'))?0:$session->read('InstitutionSite.AdvancedSearch.siteType')));
 
+$this->extend('/Elements/layout/container');
+
+$this->start('contentBody');
 ?>
 <div id="institutions" class="content_wrapper search">
 	<h1>
@@ -31,21 +34,21 @@ $preload = @array($Model,(is_null($session->read('Institution.AdvancedSearch.sit
 	
 	<?php
 	echo $this->Form->create('Search', array(
-		'url' => array('controller' => 'Institutions', 'action' => 'advanced'),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'advanced'),
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default')
 	));
-	echo $this->Form->hidden('area_id', array('id' => 'area_id', 'value' => $session->read('Institution.AdvancedSearch.Search.area_id')));
+	echo $this->Form->hidden('area_id', array('id' => 'area_id', 'value' => $session->read('InstitutionSite.AdvancedSearch.Search.area_id')));
 	?>
         <h3><?php echo __('General'); ?></h3>
 	<div class="row">
 		<div class="label"><?php echo __('Area'); ?></div>
-		<div class="value"><?php echo $this->Form->input('area', array('id' => 'area', 'type' => 'text', 'onfocus' => 'this.select()', 'value' => $session->read('Institution.AdvancedSearch.Search.area'))); ?></div>
+		<div class="value"><?php echo $this->Form->input('area', array('id' => 'area', 'type' => 'text', 'onfocus' => 'this.select()', 'value' => $session->read('InstitutionSite.AdvancedSearch.Search.area'))); ?></div>
 	</div>
 	
         
         <h3>Custom Fields</h3>
         <?php
-        $arrTabs = array('Institution','InstitutionSite');
+        $arrTabs = array('InstitutionSite');
         ?>
         <div class="containerTab">
             <ul class="tabs">
@@ -79,3 +82,4 @@ $(document).ready(function() {
     
 })
 </script>
+<?php $this->end(); ?>
