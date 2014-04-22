@@ -24,7 +24,15 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteLocality',
 		'InstitutionSiteType',
 		'InstitutionSiteOwnership',
-		'Area'
+		'Area',
+                'InstitutionSiteProvider' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'institution_site_provider_id'
+		),
+                'InstitutionSiteSector' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'institution_site_sector_id'
+		)
 	);
 	
 	public $actsAs = array(
@@ -338,4 +346,444 @@ class InstitutionSite extends AppModel {
 		return $data;
 	}
 	// End Yearbook
+        
+        public function getQueryFromInstitutionsWithoutSites($params) {
+		$joins = array(
+			array(
+				'table' => 'security_group_users',
+				'alias' => 'CreatorGroup',
+				'conditions' => array('CreatorGroup.security_user_id = Institution.created_user_id')
+			),
+			array(
+				'table' => 'security_group_users',
+				'alias' => 'UserGroup',
+				'conditions' => array(
+					'UserGroup.security_group_id = CreatorGroup.security_group_id',
+					'UserGroup.security_user_id = ' . $params['userId']
+				)
+			)
+		);
+		$conditions = array(
+			'NOT EXISTS (SELECT id FROM institution_sites WHERE institution_id = Institution.id)',
+			'OR' => array(
+				'CreatorGroup.security_group_id IS NULL',
+				'AND' => array(
+					'CreatorGroup.security_group_id IS NOT NULL',
+					'UserGroup.security_group_id IS NOT NULL'
+				)
+			)
+		);
+		$dbo = $this->getDataSource();
+		$query = $dbo->buildStatement(array(
+			'fields' => array('Institution.id'),
+			'table' => $dbo->fullTableName($this),
+			'alias' => get_class($this),
+			'limit' => null, 
+			'offset' => null,
+			'joins' => $joins,
+			'conditions' => $conditions,
+			'group' => array('Institution.id'),
+			'order' => null
+		), $this);
+		return $query;
+	}
+	
+	// To get the list of institutions based on the security settings on areas
+	public function getQueryFromSecurityAreas($params) {
+		$joins = array(
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array('InstitutionSite.institution_id = Institution.id')
+			),
+			array(
+				'table' => 'areas',
+				'alias' => 'Area',
+				'conditions' => array('Area.id = InstitutionSite.area_id')
+			),
+			array( // to get all child areas including the current parent
+				'table' => 'areas',
+				'alias' => 'AreaAll',
+				'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght')
+			),
+			array(
+				'table' => 'security_group_areas',
+				'alias' => 'SecurityGroupArea',
+				'conditions' => array('SecurityGroupArea.area_id = AreaAll.id')
+			),
+			array(
+				'table' => 'security_group_users',
+				'alias' => 'SecurityGroupUser',
+				'conditions' => array(
+					'SecurityGroupUser.security_group_id = SecurityGroupArea.security_group_id',
+					'SecurityGroupUser.security_user_id = ' . $params['userId']
+				)
+			)
+		);
+		$dbo = $this->getDataSource();
+		$query = $dbo->buildStatement(array(
+			'fields' => array('Institution.id'),
+			'table' => $dbo->fullTableName($this),
+			'alias' => get_class($this),
+			'limit' => null, 
+			'offset' => null,
+			'joins' => $joins,
+			'conditions' => null,
+			'group' => array('Institution.id'),
+			'order' => null
+		), $this);
+		return $query;
+	}
+	
+	public function getQueryFromSecuritySites($params) {
+		$joins = array(
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite',
+				'conditions' => array('InstitutionSite.institution_id = Institution.id')
+			),
+			array(
+				'table' => 'security_group_institution_sites',
+				'alias' => 'SecurityGroupInstitutionSite',
+				'conditions' => array('SecurityGroupInstitutionSite.institution_site_id = InstitutionSite.id')
+			),
+			array(
+				'table' => 'security_group_users',
+				'alias' => 'SecurityGroupUser',
+				'conditions' => array(
+					'SecurityGroupUser.security_group_id = SecurityGroupInstitutionSite.security_group_id',
+					'SecurityGroupUser.security_user_id = ' . $params['userId']
+				)
+			)
+		);
+		$dbo = $this->getDataSource();
+		$query = $dbo->buildStatement(array(
+			'fields' => array('Institution.id'),
+			'table' => $dbo->fullTableName($this),
+			'alias' => get_class($this),
+			'limit' => null, 
+			'offset' => null,
+			'joins' => $joins,
+			'conditions' => null,
+			'group' => array('Institution.id'),
+			'order' => null
+		), $this);
+		return $query;
+	}
+	
+	public function paginateJoins($joins, $params) {
+                
+		if(strlen($params['SearchKey']) != 0) {
+			$joins[] = array(
+				'table' => 'institution_site_history',
+				'alias' => 'InstitutionSiteHistory',
+				'type' => 'LEFT',
+				'conditions' => array('InstitutionSiteHistory.institution_site_id = InstitutionSite.id')
+			);
+		}
+                
+                //aids
+                /*if(count($params['AdvancedSearch']) > 0) {
+                    foreach ($params['AdvancedSearch'] as $key => $value) {
+                        if(strpos($key,'CustomValue') > 0){
+                            $rawTableName = Inflector::tableize($key);
+                            $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName));
+                            $joins[] = array(
+				'table' => $rawTableName,
+				'alias' => $key,
+				'type' => 'LEFT',
+				'conditions' => array($key.'.'.$fkey.' = '.  str_replace('CustomValue', '', $key).'.id')
+                            );
+                        }
+                    }
+		}*/
+                
+//		$joins[] = array(
+//			'table' => 'institution_providers',
+//			'alias' => 'InstitutionProvider',
+//			'conditions' => array('InstitutionProvider.id = Institution.institution_provider_id')
+//		);
+//		$joins[] = array(
+//			'table' => 'institution_sectors',
+//			'alias' => 'InstitutionSector',
+//			'conditions' => array('InstitutionSector.id = Institution.institution_sector_id')
+//		);
+                
+		return $joins;
+	}
+	
+	public function paginateConditions($params) {
+		$conditions = array();
+		if(strlen($params['SearchKey']) != 0) {
+			$search = "%".$params['SearchKey']."%";
+			$conditions['OR'] = array(
+				'InstitutionSite.name LIKE' => $search,
+				'InstitutionSite.code LIKE' => $search,
+				'InstitutionSiteHistory.name LIKE' => $search,
+				'InstitutionSiteHistory.code LIKE' => $search
+			);
+		}
+		if(!is_null($params['AdvancedSearch'])) {
+			$arrAdvanced = $params['AdvancedSearch'];
+                        //pr($arrAdvanced);
+			if(count($arrAdvanced) > 0 ){
+                            foreach($arrAdvanced as $key => $advanced){
+                               //echo $key;
+                                if($key == 'Search'){
+                                    if($advanced['area_id'] > 0) { // search by area and all its children
+                                            $joins = array(
+                                                    array(
+                                                            'table' => 'areas',
+                                                            'alias' => 'Area',
+                                                            'conditions' => array('Area.id = InstitutionSite.area_id')
+                                                    ),
+                                                    array(
+                                                            'table' => 'areas',
+                                                            'alias' => 'AreaAll',
+                                                            'conditions' => array('AreaAll.lft <= Area.lft', 'AreaAll.rght >= Area.rght', 'AreaAll.id = ' . $advanced['area_id'])
+                                                    )
+                                            );
+                                            $dbo = $this->getDataSource();
+                                            $query = $dbo->buildStatement(array(
+                                                    'fields' => array('InstitutionSite.institution_id'),
+                                                    'table' => 'institution_sites',
+                                                    'alias' => 'InstitutionSite',
+                                                    'limit' => null, 
+                                                    'offset' => null,
+                                                    'joins' => $joins,
+                                                    'conditions' => array('InstitutionSite.institution_id = Institution.id'),
+                                                    'group' => array('InstitutionSite.institution_id'),
+                                                    'order' => null
+                                            ), $this);
+                                            $conditions[] = 'EXISTS (' . $query . ')';
+                                    }
+                                }
+                                /*
+                                 * 
+                                 * 
+                                 `Institution`.id in (SELECT institution_id FROM institution_custom_values WHERE id = 10) 
+
+AND 
+`Institution`.id in (SELECT institution_id FROM institution_sites WHERE institution_sites.id in (SELECT institution_site_id FROM  institution_site_custom_values WHERE id = 10)) 
+                                 */
+                                if(strpos($key,'CustomValue') > 0){
+                                   //pr($advanced);
+                                   if($key == 'InstitutionCustomValue'){
+                                   
+                                   //echo $key; pr(array('or'=>$arrCond));die;
+                                       
+                                        $dbo = $this->getDataSource();
+                                        $rawTableName = Inflector::tableize($key);
+                                        $mainTable = str_replace("CustomValue","",$key);
+                                        $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName)); //insitution_id
+                                        $fkey2 = strtolower(str_replace("_values", "_field_id", $rawTableName)); //insitution_custom_field_id
+                                        $field = $key.'.'.$fkey;
+                                        
+                                        foreach($advanced as $arrIdVal){
+                                            foreach ($arrIdVal as $id => $val) {
+                                                if(!empty($val['value']))
+                                                $arrCond[] = array($key.'.'.$fkey2=>$id,$key.'.value'=>$val['value']);
+                                            }
+
+                                        }
+                                        if(!empty($arrCond)){
+                                            $query = $dbo->buildStatement(array(
+                                                    'fields' => array($field),
+                                                    'table' => $rawTableName,
+                                                    'alias' => $key,
+                                                    'limit' => null, 
+                                                    'offset' => null,
+                                                    //'joins' => $joins,
+                                                    'conditions' => array('OR'=>$arrCond),
+                                                    'group' => array($field),
+                                                    'order' => null
+                                            ), $this);
+                                            $conditions[] = ' '.$mainTable.'.id IN (' . $query . ')';
+                                           
+                                        }
+                                   }
+                                   
+                                   if($key == 'InstitutionSiteCustomValue'){ //hack
+                                        $arrCond = array();
+                                   //echo $key; pr(array('or'=>$arrCond));die;
+                                       
+                                        $dbo = $this->getDataSource();
+                                        $rawTableName = Inflector::tableize($key);
+                                         $mainTable = str_replace("CustomValue","",$key);
+                                        $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName)); //insitution_id
+                                        $fkey2 = strtolower(str_replace("_values", "_field_id", $rawTableName)); //insitution_custom_field_id
+                                        //$field = $key.'.'.$fkey;
+                                        $field = 'InstitutionSite.institution_id';
+                                        
+                                        foreach($advanced as $arrIdVal){
+                                            foreach ($arrIdVal as $id => $val) {
+                                                if(!empty($val['value']))
+                                                $arrCond[] = array($key.'.'.$fkey2=>$id,$key.'.value'=>$val['value']);
+                                            }
+
+                                        }
+                                        
+                                        $joins[] = array(
+                                            'table' => 'institution_sites',
+                                            'alias' => 'InstitutionSite',
+                                            'type' => 'LEFT',
+                                            'conditions' => array($key.'.'.$fkey.' = '.$mainTable.'.id')
+                                        );
+                                        
+                                        if(!empty($arrCond)){
+                                            $query = $dbo->buildStatement(array(
+                                                    'fields' => array($field),
+                                                    'table' => $rawTableName,
+                                                    'alias' => $key,
+                                                    'limit' => null, 
+                                                    'offset' => null,
+                                                    'joins' => $joins,
+                                                    'conditions' => array('OR'=>$arrCond),
+                                                    'group' => array($field),
+                                                    'order' => null
+                                            ), $this);
+                                            
+                                            $conditions[] = 'Institution.id IN (' . $query . ')';
+                                           
+                                        }
+                                        
+                                        
+                                   }
+                                   
+                                }
+                            
+                                /*
+                                 * 
+                                 * if($key == 'InstitutionCustomValue'){
+                                   
+                                    if($advanced > 0) { 
+                                       
+                                        
+                                            $joins = array(
+                                                    array(
+                                                            'table' => Inflector::tableize($key),
+                                                            'alias' => $key,
+                                                            'conditions' => array($key.'.institution_site_id = InstitutionSite.id')
+                                                    )
+                                            );
+                                            
+                                             foreach($advanced as $type => $arrTypeVals){
+                                            
+                                                    echo $this->inputsMapping[$type];
+                                                    pr($arrTypeVals);
+                                                }
+
+                                       
+                                            $dbo = $this->getDataSource();
+                                            $query = $dbo->buildStatement(array(
+                                                    'fields' => array('InstitutionSite.institution_id'),
+                                                    'table' => 'institution_sites',
+                                                    'alias' => 'InstitutionSite',
+                                                    'limit' => null, 
+                                                    'offset' => null,
+                                                    'joins' => $joins,
+                                                    'conditions' => array('InstitutionSite.institution_id = Institution.id'),
+                                                    'group' => array('InstitutionSite.institution_id'),
+                                                    'order' => null
+                                            ), $this);
+                                            $conditions[] = 'EXISTS (' . $query . ')';
+                                    }
+                                }
+                                 */
+                            }
+                            
+                            
+                        }
+		}
+                
+		return $conditions;
+	}
+	
+	public function paginateQuery($conditions, $fields=null, $order=null, $limit=null, $page = 1) {
+           
+		$dbo = $this->getDataSource();
+		$queries = array(
+			$this->getQueryFromInstitutionsWithoutSites($conditions),
+			$this->getQueryFromSecurityAreas($conditions),
+			$this->getQueryFromSecuritySites($conditions)
+		);
+		$union = implode(' UNION ', $queries);
+		$joins = array(
+			array(
+				'table' => '(' . $union . ')',
+				'alias' => 'InstitutionFilter',
+				'conditions' => array('InstitutionFilter.id = Institution.id')
+			)
+		);
+		$query = $dbo->buildStatement(array(
+			'fields' => !is_null($fields) ? $fields : array('COUNT(*) AS COUNT'),
+			'table' => $dbo->fullTableName($this),
+			'alias' => 'Institution',
+			'limit' => $limit,
+			'offset' => !is_null($fields) ? (($page-1)*$limit) : null,
+			'joins' => $this->paginateJoins($joins, $conditions),
+			'conditions' => $this->paginateConditions($conditions),
+			'group' => !is_null($fields) ? array('Institution.id') : null,
+			'order' => $order
+		), $this);
+                
+		$data = $dbo->fetchAll($query);
+		return $data;
+	}
+	
+	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
+                if(array_key_exists('order', $conditions)){
+                    $order = $conditions['order'];
+                }
+            
+		$isSuperAdmin = $conditions['isSuperAdmin'];
+		$fields = array(
+			'InstitutionSite.id',
+			'InstitutionSite.code',
+			'InstitutionSite.name'
+		);
+		if(strlen($conditions['SearchKey']) != 0) {
+			$fields[] = 'InstitutionSiteHistory.code';
+			$fields[] = 'InstitutionSiteHistory.name';
+		}
+		
+		$joins = array();
+		$data = array();
+		// if super admin
+                
+               // pr($this->paginateConditions($conditions));die;
+		if($isSuperAdmin) {
+			$data = $this->find('all', array(
+				'recursive' => -1,
+				'fields' => $fields,
+				'joins' => $this->paginateJoins($joins, $conditions),
+				'conditions' => $this->paginateConditions($conditions),
+				'limit' => $limit,
+				'offset' => (($page-1)*$limit),
+				'group' => array('InstitutionSite.id'),
+				'order' => $order
+			));
+		} else {
+			$data = $this->paginateQuery($conditions, $fields, $order, $limit, $page);
+		}
+                
+		return $data;
+	}
+	
+	public function paginateCount($conditions = null, $recursive = 0, $extra = array()) {
+		$isSuperAdmin = $conditions['isSuperAdmin'];
+		$joins = array();
+		$count = 0;
+		if($isSuperAdmin) {
+			$count = $this->find('count', array(
+				'recursive' => -1,
+				'joins' => $this->paginateJoins($joins, $conditions),
+				'conditions' => $this->paginateConditions($conditions)
+			));
+		} else {
+			$data = $this->paginateQuery($conditions);
+			$count = isset($data[0][0]['COUNT']) ? $data[0][0]['COUNT'] : 0;
+		}
+		return $count;
+	}
 }
