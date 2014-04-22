@@ -848,8 +848,12 @@ class InstitutionSitesController extends AppController {
                 $this->institutionSiteId = $this->Session->read('InstitutionSiteId');
                 $this->institutionSiteObj = $this->Session->read('InstitutionSiteObj');
                 $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
-                $this->bodyTitle = $institutionSiteName;
-                $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+                
+                if($this->action !== 'advanced'){
+                    $this->bodyTitle = $institutionSiteName;
+                    $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+                }
+                
             } else {
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
             }
@@ -914,38 +918,35 @@ class InstitutionSitesController extends AppController {
     }
     
     public function advanced() {
-		$key = 'Institution.AdvancedSearch';
-		if($this->request->is('get')) {
-			if($this->request->is('ajax')) {
-				$this->autoRender = false;
-				$search = $this->params->query['term'];
-				$result = $this->Area->autocomplete($search);
-				return json_encode($result);
-			} else {
-				$this->Navigation->addCrumb('List of Institutions', array('controller' => 'Institutions', 'action' => 'index'));
-				$this->Navigation->addCrumb('Advanced Search');
-				
-				if(isset($this->params->pass[0])) {
-					if(intval($this->params->pass[0])===0) {
-						$this->Session->delete($key);
-						$this->redirect(array('action' => 'index'));
-					}
-				}
-			}
-		} else {
-                   
-			//$search = $this->data['Search'];
-                        $search = $this->data;
-			if(!empty($search)) {
-                           //pr($this->data);die;
-				$this->Session->write($key, $search);
-			}
-			$this->redirect(array('action' => 'index'));
-		}
-                
-                
-                
-	}
+        $key = 'InstitutionSite.AdvancedSearch';
+        if ($this->request->is('get')) {
+            if ($this->request->is('ajax')) {
+                $this->autoRender = false;
+                $search = $this->params->query['term'];
+                $result = $this->Area->autocomplete($search);
+                return json_encode($result);
+            } else {
+                $this->Navigation->addCrumb('List of Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
+                $this->Navigation->addCrumb('Advanced Search');
+
+                if (isset($this->params->pass[0])) {
+                    if (intval($this->params->pass[0]) === 0) {
+                        $this->Session->delete($key);
+                        $this->redirect(array('action' => 'index'));
+                    }
+                }
+            }
+        } else {
+
+            //$search = $this->data['Search'];
+            $search = $this->data;
+            if (!empty($search)) {
+                //pr($this->data);die;
+                $this->Session->write($key, $search);
+            }
+            $this->redirect(array('action' => 'index'));
+        }
+    }
         
         public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution'){
              $this->layout = false;
