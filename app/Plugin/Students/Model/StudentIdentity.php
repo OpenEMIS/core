@@ -54,13 +54,20 @@ class StudentIdentity extends StudentsAppModel {
         ),
         'expiry_date' => array(
             'comparison' => array(
-                'rule' => array('field_comparison', '>', 'issue_date'),
+                //'rule' => array('field_comparison', '>', 'issue_date'),
+				'rule' => array('compareDate', 'issue_date'),
                 'allowEmpty' => true,
                 'message' => 'Expiry Date must be greater than Issue Date'
             )
         )
     );
 
+	public function compareDate($field = array(), $compareField = null) {
+        $startDate = new DateTime(current($field));
+        $endDate = new DateTime($this->data[$this->name][$compareField]);
+        return $endDate < $startDate;
+    }
+	
     function field_comparison($check1, $operator, $field2) {
         foreach ($check1 as $key => $value1) {
             $value2 = $this->data[$this->alias][$field2];
@@ -108,14 +115,14 @@ class StudentIdentity extends StudentsAppModel {
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $data = $controller->request->data['StudentIdentity'];
             $addMore = false;
-            if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($controller->request->action);
-            } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($controller->request->action);
-            } elseif (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Add More')) {
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
+            } elseif (isset($controller->data['submit']) && $controller->data['submit'] == __('Add More')) {
                 $addMore = true;
             } else {
-                $controller->Navigation->validateModel($controller->request->action, 'StudentIdentity');
+                $controller->Navigation->validateModel($controller->action, 'StudentIdentity');
             }
 
             $this->create();
@@ -126,7 +133,7 @@ class StudentIdentity extends StudentsAppModel {
                 if ($addMore) {
                     $controller->Message->alert('general.add.success');
                 }
-                $controller->Navigation->updateWizard($controller->request->action, $id, $addMore);
+                $controller->Navigation->updateWizard($controller->action, $id, $addMore);
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'identities'));
             }
@@ -165,15 +172,15 @@ class StudentIdentity extends StudentsAppModel {
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $identityData = $controller->request->data['StudentIdentity'];
 
-            if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($controller->request->action);
-            } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($controller->request->action);
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
             }
             $identityData['student_id'] = $controller->studentId;
 
             if ($this->save($identityData)) {
-                $controller->Navigation->updateWizard($controller->request->action, $id);
+                $controller->Navigation->updateWizard($controller->action, $id);
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'identitiesView', $id));
             }

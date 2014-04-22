@@ -75,14 +75,14 @@ class StudentNationality extends StudentsAppModel {
         if ($controller->request->is('post')) {
             $data = $controller->request->data['StudentNationality'];
             $addMore = false;
-            if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($this->action);
-            } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($this->action);
-            } elseif (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Add More')) {
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
+            } elseif (isset($controller->data['submit']) && $controller->data['submit'] == __('Add More')) {
                 $addMore = true;
             } else {
-                $controller->Navigation->validateModel($this->action, 'StudentNationality');
+                $controller->Navigation->validateModel($controller->action, 'StudentNationality');
             }
 
             $this->create();
@@ -93,7 +93,7 @@ class StudentNationality extends StudentsAppModel {
                 if ($addMore) {
                     $controller->Message->alert('general.add.success');
                 }
-                $controller->Navigation->updateWizard($this->action, $id, $addMore);
+                $controller->Navigation->updateWizard($controller->action, $id, $addMore);
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'nationalities'));
             }
@@ -130,16 +130,16 @@ class StudentNationality extends StudentsAppModel {
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $nationalityData = $controller->request->data['StudentNationality'];
 
-            if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($this->action);
-            } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($this->action);
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
             }
 
             $nationalityData['student_id'] = $controller->studentId;
 
             if ($this->save($nationalityData)) {
-                $controller->Navigation->updateWizard($this->action, $id);
+                $controller->Navigation->updateWizard($controller->action, $id);
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'nationalitiesView', $id));
             }

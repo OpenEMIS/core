@@ -106,14 +106,14 @@ class StudentLanguage extends StudentsAppModel {
         if ($controller->request->is('post')) {
             $addMore = false;
             $data = $controller->request->data['StudentLanguage'];
-            if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($controller->request->action);
-            } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($controller->request->action);
-            } elseif (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Add More')) {
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
+            } elseif (isset($controller->data['submit']) && $controller->data['submit'] == __('Add More')) {
                 $addMore = true;
             } else {
-                $controller->Navigation->validateModel($controller->request->action, 'StudentLanguage');
+                $controller->Navigation->validateModel($controller->action, 'StudentLanguage');
             }
 
             $this->create();
@@ -124,7 +124,7 @@ class StudentLanguage extends StudentsAppModel {
                 if ($addMore) {
                     $controller->Message->alert('general.add.success');
                 }
-                $controller->Navigation->updateWizard($controller->request->action, $id, $addMore);
+                $controller->Navigation->updateWizard($controller->action, $id, $addMore);
                 $controller->Message->alert('general.add.success');
                 return $controller->redirect(array('action' => 'languages'));
             }
@@ -166,15 +166,15 @@ class StudentLanguage extends StudentsAppModel {
 
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $languageData = $controller->request->data['StudentLanguage'];
-            if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($controller->request->action);
-            } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($controller->request->action);
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
             }
             $languageData['student_id'] = $controller->studentId;
 
             if ($this->save($languageData)) {
-                $controller->Navigation->updateWizard($controller->request->action, $id);
+                $controller->Navigation->updateWizard($controller->action, $id);
                 //$this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
                 return $controller->redirect(array('action' => 'languagesView', $id));
             }

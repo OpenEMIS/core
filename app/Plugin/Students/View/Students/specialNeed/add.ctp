@@ -93,6 +93,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
+
 if (!$WizardMode) {
 	if (!empty($this->data[$model]['id'])) {
 		$redirectAction = array('action' => 'specialNeedView', $this->data[$model]['id']);
@@ -113,7 +114,7 @@ echo $this->FormUtility->datepicker('special_need_date', array('label'=>$this->L
 echo $this->Form->input('special_need_type_id', array('options' => $specialNeedTypeOptions,'label'=>array('text'=> $this->Label->get('general.type'),'class'=>'col-md-3 control-label')));
 echo $this->Form->input('comment');
 echo $this->FormUtility->getFormWizardButtons(array(
-	'cancelURL' => $redirectAction,
+	'cancelURL' => isset($redirectAction) ? $redirectAction : NULL,
 	'WizardMode' => $WizardMode,
 	'WizardEnd' => isset($wizardEnd) ? $wizardEnd : NULL,
 	'WizardMandatory' => isset($mandatory) ? $mandatory : NULL

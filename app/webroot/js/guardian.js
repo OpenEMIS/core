@@ -15,7 +15,7 @@
 
 $(document).ready(function() {
     $("#SearchGuardianName").autocomplete({
-        source: "guardianAutoComplete",
+        source: "guardiansAutoComplete",
         minLength: 2,
         select: function(event, ui) {
             $('#SearchGuardianName').val(ui.item.label);

@@ -44,9 +44,9 @@ class StudentsController extends StudentsAppController {
         'Students.StudentAttendance',
         'Students.StudentAssessment',
         'Students.StudentAward',
-        'Students.Guardian',
-        'Students.GuardianEducationLevel',
-        'Students.GuardianRelation',
+        //'Students.Guardian',
+        //'Students.GuardianEducationLevel',
+        //'Students.GuardianRelation',
         'Students.StudentGuardian',
         'SchoolYear',
         'Country',
@@ -83,6 +83,7 @@ class StudentsController extends StudentsAppController {
         'languages' => 'Students.StudentLanguage',
         'nationalities' => 'Students.StudentNationality',
         'attachments' =>'Students.StudentAttachment',
+		'guardians' => 'Students.StudentGuardian'
     );
 
     public $className = 'Student';
@@ -780,127 +781,4 @@ class StudentsController extends StudentsAppController {
         return $generate_no;
     }
 
-    /*     * *BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already* */
-
-    public function guardians() {
-        $this->Navigation->addCrumb(__('Guardians'));
-        $data = $this->StudentGuardian->getGuardians($this->studentId);
-        $this->set('list', $data);
-    }
-    
-    public function guardiansAdd() {
-        $this->Navigation->addCrumb(__('Add Guardian'));
-        if ($this->request->is('post')) {
-            $data = $this->data;
-            if(!empty($data['Guardian']['existing_id'])){
-                $data['StudentGuardian']['guardian_id'] = $data['Guardian']['existing_id'];
-                $data['StudentGuardian']['student_id'] = $this->studentId;
-
-                $this->StudentGuardian->create();
-                
-                if($this->StudentGuardian->saveAll($data, array('validate' => 'only'))){
-                    if($this->StudentGuardian->saveAll($data, array('validate' => false))){
-                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                        $this->redirect(array('action' => 'guardians'));
-                    }
-                }
-            }else{
-                $this->Guardian->create();
-                if($this->Guardian->saveAll($data, array('validate' => 'only'))){
-                    if($this->Guardian->saveAll($data, array('validate' => false))){
-                        $guardianId = $this->Guardian->getInsertID();
-                        $data['StudentGuardian']['guardian_id'] = $guardianId;
-                        $data['StudentGuardian']['student_id'] = $this->studentId;
-
-                        $this->StudentGuardian->create();
-
-                        if($this->StudentGuardian->saveAll($data, array('validate' => 'only'))){
-                            if($this->StudentGuardian->saveAll($data, array('validate' => false))){
-                                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                                $this->redirect(array('action' => 'guardians'));
-                            }
-                        }else{
-                            $this->request->data['Guardian']['existing_id'] = $guardianId;
-                        }
-                    }
-                }
-            }
-        }
-        
-        $genderOptions = array('M' => __('Male'), 'F' => __('Female'));
-        $relationshipOptions = $this->GuardianRelation->getOptions();
-        $educationOptions = $this->GuardianEducationLevel->getOptions();
-
-        $this->set('genderOptions', $genderOptions);
-        $this->set('relationshipOptions', $relationshipOptions);
-        $this->set('educationOptions', $educationOptions);
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-    
-    public function guardiansEdit() {
-        $guardianId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
-            
-            if (!empty($guardianObj)) {
-                $this->Navigation->addCrumb(__('Edit Guardian Details'));
-                $this->request->data = $guardianObj;
-            }
-        } else {
-            $data = $this->data;
-            
-            if($this->Guardian->saveAll($data, array('validate' => 'only'))){
-                if($this->Guardian->saveAll($data, array('validate' => false))){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                    $this->redirect(array('action' => 'guardiansView', $guardianId));
-                }
-            }
-        }
-
-        $genderOptions = array('M' => __('Male'), 'F' => __('Female'));
-        $relationshipOptions = $this->GuardianRelation->getOptions();
-        $educationOptions = $this->GuardianEducationLevel->getOptions();
-
-        $this->set('genderOptions', $genderOptions);
-        $this->set('relationshipOptions', $relationshipOptions);
-        $this->set('educationOptions', $educationOptions);
-
-        $this->set('guardianId', $guardianId);
-    }
-    
-    public function guardiansView() {
-        $guardianId = $this->params['pass'][0];
-        $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
-
-        if (!empty($guardianObj)) {
-            //$guardianObj = $guardianResult[0];
-            //pr($guardianObj);
-            $this->Navigation->addCrumb(__('Guardian Details'));
-
-            $this->Session->write('guardianId', $guardianId);
-            $this->set('guardianObj', $guardianObj);
-        }else{
-            $this->redirect(array('action' => 'guardians'));
-        }
-    }
-    
-    public function guardiansDelete() {
-        if ($this->Session->check('StudentId') && $this->Session->check('guardianId')) {
-            $guardianId = $this->Session->read('guardianId');
-            $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
-            //$guardianObj = $guardianResult[0];
-            $guardianName = $guardianObj['Guardian']['first_name'] . ' ' . $guardianObj['Guardian']['last_name'];
-            
-            $this->StudentGuardian->deleteAll(array('StudentGuardian.guardian_id' => $guardianId, 'StudentGuardian.student_id' => $this->studentId));
-            $this->Utility->alert($guardianName . __(' have been deleted successfully.'));
-            $this->redirect(array('action' => 'guardians'));
-        }
-    }
-    
-    public function guardianAutoComplete() {
-        $this->autoRender = false;
-        $search = $this->params->query['term'];
-        $result = $this->Guardian->getAutoCompleteList($search, $this->studentId);
-        return json_encode($result);
-    }
 }
