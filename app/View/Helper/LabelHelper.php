@@ -36,7 +36,8 @@ class LabelHelper extends AppHelper {
             'created' => 'Created On',
             'type' => 'Type',
             'title' => 'Title',
-				'name' => 'Name'
+			'name' => 'Name',
+			'date' => 'Date'
         ),
         'wizard' => array(
             'previous' => 'Previous',

@@ -68,12 +68,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentActions');
-echo $this->Html->link(__('List'), array('action' => 'award'), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'award'), array('class' => 'divider'));
 if($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'awardEdit', $data[$model]['id']), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'awardEdit', $data[$model]['id']), array('class' => 'divider'));
 }
 if($_delete) {
-	echo $this->Html->link(__('Delete'), array('action' => 'awardDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'awardDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
 

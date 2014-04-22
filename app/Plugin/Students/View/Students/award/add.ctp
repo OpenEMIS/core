@@ -99,7 +99,7 @@ echo $this->Html->script('/staff/js/awards', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-if ($_edit) {
+if (!$WizardMode) {
     if(!empty($this->data[$model]['id'])){
         $redirectAction = array('action' => 'awardView', $this->data[$model]['id']);
     }
