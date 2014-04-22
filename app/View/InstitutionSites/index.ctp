@@ -57,7 +57,7 @@ $this->start('contentBody');
 	
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
-			<thead url="Institutions/index">
+			<thead url="InstitutionSites/index">
 				<tr>
 					<th>
 						<span class="left"><?php echo __('Code'); ?></span>
@@ -78,7 +78,7 @@ $this->start('contentBody');
 			?>
 				<tr row-id="<?php echo $id ?>">
 					<td><?php echo $code; ?></td>
-					<td><?php echo $this->Html->link($name, array('action' => 'listSites', $id), array('escape' => false)); ?></td>
+					<td><?php echo $this->Html->link($name, array('action' => 'view', $id), array('escape' => false)); ?></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody>
