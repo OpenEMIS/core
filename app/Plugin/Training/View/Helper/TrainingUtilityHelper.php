@@ -16,38 +16,46 @@ have received a copy of the GNU General Public License along with this program. 
 
 App::uses('AppHelper', 'View/Helper');
 App::uses('String', 'Utility');
+App::uses('Workflow', 'Controller/Component');
 
 class TrainingUtilityHelper extends AppHelper {
 	public function ellipsis($string, $length = '30') {
 		return String::truncate($string, $length, array('ellipsis' => '...', 'exact' => false));
 	}
 
-	public function getTrainingStatus($module, $status, $value) {
-		
-		if($module=='TrainingCourse' && $value==3){
-			$status='Accredited';
-		}
-		if($module=='TrainingSession' && $value==3){
-			$status='Registered';
-		}
-		if($module=='TrainingSessionResult' && $value==3){
-			$status='Posted';
-		}
-		if($module=='TeacherTrainingNeed' && $value==3){
-			$status='Approved';
-		}
-		if($module=='TeacherTrainingSelfStudy' && $value==3){
-			$status='Accredited';
-		}
-		if($module=='StaffTrainingNeed' && $value==3){
-			$status='Approved';
-		}
-		if($module=='StaffTrainingSelfStudy' && $value==3){
-			$status='Accredited';
+	public function getTrainingStatus($module, $id, $status, $value) {
+		$workflow = new WorkflowComponent(new ComponentCollection);
+
+		if($value==3){
+			if($module=='TrainingCourse'){
+				$status='Accredited';
+			}
+			if($module=='TrainingSession'){
+				$status='Registered';
+			}
+			if($module=='TrainingSessionResult'){
+				$status='Posted';
+			}
+			if($module=='TeacherTrainingNeed'){
+				$status='Approved';
+			}
+			if($module=='TeacherTrainingSelfStudy'){
+				$status='Accredited';
+			}
+			if($module=='StaffTrainingNeed'){
+				$status='Approved';
+			}
+			if($module=='StaffTrainingSelfStudy'){
+				$status='Accredited';
+			}
+		}else if($value==2){
+			$status = $workflow->getWorkflowStatus($module,$id);
 		}
 
 		return $status;
 	}
+
+
 
 
 }
