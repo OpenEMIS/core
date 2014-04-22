@@ -23,7 +23,7 @@ var objStaffAwards = {
         var elementAward = '#searchAward';
         var elementIssuer = '#searchIssuer';
         var table = $('#award');
-        var selectAwardUrl = getRootURL() + table.attr('selectAwardUrl');
+        var selectAwardUrl = getRootURL() + table.attr('selectAwardUrl');alert(selectAwardUrl);
         objStaffAwards.attachAutoComplete(elementAward, selectAwardUrl + '1/', objStaffAwards.selectAwardField);
         objStaffAwards.attachAutoComplete(elementIssuer, selectAwardUrl + '2/', objStaffAwards.selectIssuerField);
     },

@@ -67,7 +67,7 @@ class StudentAttachment extends StudentsAppModel {
 		$data = $this->findAllByStudentIdAndVisible($controller->studentId, 1, array('id', 'name', 'description', 'file_name', 'file_content', 'created'), array(), null, null, -1);
 		$arrFileExtensions = $controller->Utility->getFileExtensionList();
 
-		$controller->set(compact('data', 'arrFileExtensions'));
+		$controller->set(compact('data', 'arrFileExtensions', 'header'));
 		$controller->render('../Elements/attachment/index');
 	}
 
