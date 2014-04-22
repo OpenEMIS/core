@@ -50,11 +50,27 @@ class StudentAward extends StudentsAppModel {
         $controller->set('model', $this->alias);
     }
 	
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'issue_date'),
+                array('field' => 'award', 'labelKey' => 'general.name' ),
+                array('field' => 'issuer'),
+				array('field' => 'comment'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
 	
 	public function award($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
-		$controller->set('modelName', $this->name);
+		//$controller->set('modelName', $this->name);
 		$data = $this->find('all', array('conditions'=> array('student_id'=> $controller->studentId)));
 		$header = __($this->headerDefault);
 		$controller->set(compact('header', 'data'));
@@ -62,19 +78,21 @@ class StudentAward extends StudentsAppModel {
 
 	public function awardView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('modelName', $this->name);
+		$controller->set('header', __($this->headerDefault . ' Details'));
+		//$controller->set('subheader', $this->headerDefault);
+		//$controller->set('modelName', $this->name);
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->findById($id);//('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
+			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'award'));
 		}
 		
 		$controller->Session->write('StudentAwardId', $id);
-		
-		$controller->set('data', $data);
+		$fields = $this->getDisplayFields($controller);
+        $controller->set(compact('header', 'data', 'fields', 'id'));
 	}
 	
 	public function awardDelete($controller, $params) {
@@ -83,8 +101,6 @@ class StudentAward extends StudentsAppModel {
             $studentId = $controller->Session->read('StudentId');
 			
 			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			
             $name = $data['StudentAward']['issuer'] . ' - ' .$data['StudentAward']['award'] ;
 			
             $this->delete($id);
@@ -174,4 +190,17 @@ class StudentAward extends StudentsAppModel {
 
 		return $data;
 	}
+	
+	//Ajax method
+	public function awardAjaxFindAward($controller, $params) {
+        if ($controller->request->is('ajax')) {
+			$this->render = false;
+			$type = $params['pass'][0];
+            $search = $params->query['term'];
+            $data = $this->autocomplete($search, $type);
+
+            return json_encode($data);
+        }
+    }
+
 }
