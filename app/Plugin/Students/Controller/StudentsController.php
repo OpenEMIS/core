@@ -903,16 +903,4 @@ class StudentsController extends StudentsAppController {
         $result = $this->Guardian->getAutoCompleteList($search, $this->studentId);
         return json_encode($result);
     }
-
-    public function ajax_find_award($type) {
-        if ($this->request->is('ajax')) {
-            $this->autoRender = false;
-            $search = $this->params->query['term'];
-            $data = $this->StudentAward->autocomplete($search, $type);
-
-            return json_encode($data);
-        }
-    }
-
-
 }

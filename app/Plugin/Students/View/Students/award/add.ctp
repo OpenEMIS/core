@@ -95,7 +95,7 @@ echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', a
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 echo $this->Html->script('jquery-ui.min', false);
-echo $this->Html->script('Staff.awards', false);
+echo $this->Html->script('/staff/js/awards', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
@@ -113,12 +113,12 @@ $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin'=>'Students'));
 $formOptions['id'] = 'award';
-$formOptions['selectAwardUrl']="Students/ajax_find_award/";
+$formOptions['selectAwardUrl']="Students/awardAjaxFindAward/";
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->FormUtility->datepicker('issue_date');
-echo $this->Form->input('award', array('id' => 'searchAward','label'=>array('text'=> $this->Label->get('general.name'),'class'=>'col-md-3 control-label')));
-echo $this->Form->input('issuer', array('id' => 'searchIssuer'));
+echo $this->Form->input('award', array('id' => 'searchAward', 'class' => array('form-control award'), 'label'=>array('text'=> $this->Label->get('general.name'),'class'=>'col-md-3 control-label')));
+echo $this->Form->input('issuer', array('id' => 'searchIssuer', 'class' => array('form-control issuer')));
 echo $this->Form->input('comment');
 
 //echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
