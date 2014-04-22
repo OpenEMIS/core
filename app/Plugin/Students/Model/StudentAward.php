@@ -98,13 +98,11 @@ class StudentAward extends StudentsAppModel {
 	public function awardDelete($controller, $params) {
         if($controller->Session->check('StudentId') && $controller->Session->check('StudentAwardId')) {
             $id = $controller->Session->read('StudentAwardId');
-            $studentId = $controller->Session->read('StudentId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-            $name = $data['StudentAward']['issuer'] . ' - ' .$data['StudentAward']['award'] ;
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
+            if($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
 			$controller->Session->delete('StudentAwardId');
             $controller->redirect(array('action' => 'award'));
         }
@@ -117,7 +115,7 @@ class StudentAward extends StudentsAppModel {
 	}
 	
 	public function awardEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
+		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault);
 		$controller->set('header', __('Edit '.$this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 		

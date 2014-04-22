@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright ï¿½ 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -50,6 +50,21 @@ class MessageComponent extends Component {
 		),
 		'search' => array(
 			'no_result' => array('type' => 'info', 'msg' => 'No result returned from the search.')
+		),
+		'FileUplaod' => array(
+			'success' => array(
+				'singular' =>  array('type' => 'ok', 'msg' => 'The file has been uploaded.'),
+				'plural' =>  array('type' => 'ok', 'msg' => 'The files has been uploaded.')
+			),
+			'error' => array(
+				'general' => array('type' => 'error', 'msg' => 'An error has occur. Please contact the system administrator.'),
+				'uploadSizeError' => array('type' => 'error', 'msg' => 'Please ensure that the file is smaller than file limit.'),
+				'UPLOAD_ERR_NO_FILE' => array('type' => 'info', 'msg' => 'No file was uploaded.'),
+				'UPLOAD_ERR_FORM_SIZE' => array('type' => 'error', 'msg' => 'Please ensure that the file is smaller than file limit.'),
+				'UPLOAD_ERR_INI_SIZE' => array('type' => 'error', 'msg' => 'Please ensure that the file is smaller than file limit.'),
+				'invalidFileFormat' => array('type' => 'error', 'msg' => 'The file is not a valid format.'),
+				'saving' => array('type' => 'error', 'msg' => 'The record is not added due to errors encountered.')
+			)
 		)
 	);
 	

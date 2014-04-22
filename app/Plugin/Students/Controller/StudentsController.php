@@ -73,7 +73,7 @@ class StudentsController extends StudentsAppController {
         'healthTest' => 'Students.StudentHealthTest',
         'healthConsultation' => 'Students.StudentHealthConsultation',
         'health' => 'Students.StudentHealth',
-        'special_need' => 'Students.StudentSpecialNeed',
+        'specialNeed' => 'Students.StudentSpecialNeed',
         'award' => 'Students.StudentAward',
         'bankAccounts' => 'Students.StudentBankAccount',
         'comments' => 'Students.StudentComment',
