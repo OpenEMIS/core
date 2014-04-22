@@ -84,11 +84,11 @@ class StudentComment extends StudentsAppModel {
         $header = __('Add Comment');
         if ($controller->request->is('post')) {
             $addMore = false;
-            if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
                 $controller->Navigation->skipWizardLink($controller->action);
-            } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
                 $controller->Navigation->previousWizardLink($controller->action);
-            } elseif (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Add More')) {
+            } elseif (isset($controller->data['submit']) && $controller->data['submit'] == __('Add More')) {
                 $addMore = true;
             } else {
                 $controller->Navigation->validateModel($controller->action, 'StudentComment');
@@ -142,9 +142,9 @@ class StudentComment extends StudentsAppModel {
             }
         } else {
             $commentData = $controller->request->data['StudentComment'];
-            if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
                 $controller->Navigation->skipWizardLink($controller->action);
-            } else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
                 $controller->Navigation->previousWizardLink($controller->action);
             }
             $commentData['student_id'] = $controller->studentId;

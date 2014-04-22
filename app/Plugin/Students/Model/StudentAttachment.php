@@ -97,12 +97,12 @@ class StudentAttachment extends StudentsAppModel {
 		//$controller->set('params', $params);
 
 		if ($controller->request->is(array('post', 'put'))) {
-			if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-				$controller->Navigation->skipWizardLink($controller->request->action);
-			} else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-				$controller->Navigation->previousWizardLink($controller->request->action);
+			if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+				$controller->Navigation->skipWizardLink($controller->action);
+			} else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+				$controller->Navigation->previousWizardLink($controller->action);
 			} else {
-				$controller->Navigation->validateModel($controller->request->action, 'StudentAttachment');
+				$controller->Navigation->validateModel($controller->action, 'StudentAttachment');
 			}
 			/* if (!empty($_FILES)) {
 			  $errors = $this->FileAttachment->saveAll($controller->request->data, $_FILES, $id);
@@ -123,7 +123,7 @@ class StudentAttachment extends StudentsAppModel {
 				$controller->FileUploader->additionData = array('student_id' => $controller->studentId, 'name' => $postData['name'], 'description' => $postData['description']);
 				$controller->FileUploader->uploadFile();
 				if ($controller->FileUploader->success) {
-					$controller->Navigation->updateWizard($controller->request->action, null);
+					$controller->Navigation->updateWizard($controller->action, null);
 					return $controller->redirect(array('action' => 'attachments'));
 				}
 			}

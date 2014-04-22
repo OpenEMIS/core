@@ -121,14 +121,14 @@ class StudentBankAccount extends AppModel {
         $controller->Navigation->addCrumb(__('Add Bank Accounts'));
         if ($controller->request->is('post') || $controller->request->is('put')) { // save
             $addMore = false;
-            if (isset($this->data['submit']) && $this->data['submit'] == __('Skip')) {
-                $controller->Navigation->skipWizardLink($controller->request->action);
-            } else if (isset($this->data['submit']) && $this->data['submit'] == __('Previous')) {
-                $controller->Navigation->previousWizardLink($controller->request->action);
-            } elseif (isset($this->data['submit']) && $this->data['submit'] == __('Add More')) {
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
+            } elseif (isset($controller->data['submit']) && $controller->data['submit'] == __('Add More')) {
                 $addMore = true;
             } else {
-                $controller->Navigation->validateModel($controller->request->action, 'StudentBankAccount');
+                $controller->Navigation->validateModel($controller->action, 'StudentBankAccount');
             }
 
             //$controller->request->data['StudentBankAccount']['student_id'] = $this->studentId;
@@ -139,7 +139,7 @@ class StudentBankAccount extends AppModel {
                     //$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
                     $controller->Message->alert('general.add.success');
                 }
-                $controller->Navigation->updateWizard($controller->request->action, $id, $addMore);
+                $controller->Navigation->updateWizard($controller->action, $id, $addMore);
                 $controller->Message->alert('general.add.success');
                 //$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
                 return $controller->redirect(array('action' => 'bankAccounts'));
@@ -200,16 +200,16 @@ class StudentBankAccount extends AppModel {
 
         if (!empty($data)) {
             if ($controller->request->is('post') || $controller->request->is('put')) {
-                if (isset($this->data['submit']) && $this->data['submit'] == __('Skip')) {
-                    $controller->Navigation->skipWizardLink($controller->request->action);
-                } else if (isset($this->data['submit']) && $this->data['submit'] == __('Previous')) {
-                    $controller->Navigation->previousWizardLink($controller->request->action);
+                if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                    $controller->Navigation->skipWizardLink($controller->action);
+                } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                    $controller->Navigation->previousWizardLink($controller->action);
                 }
                 $controller->request->data['StudentBankAccount']['student_id'] = $controller->studentId;
                 
                 $this->unbindModel(array('validate' => array('bank_id')));
                 if ($this->save($controller->request->data)) {
-                    $controller->Navigation->updateWizard($controller->request->action, $bankAccountId);
+                    $controller->Navigation->updateWizard($controller->action, $bankAccountId);
                     $controller->Message->alert('general.add.success');
                     return $controller->redirect(array('action' => 'bankAccountsView', $bankAccountId));
                 }

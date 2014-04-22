@@ -123,7 +123,7 @@ echo $this->Form->input('comment');
 
 //echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
 echo $this->FormUtility->getFormWizardButtons(array(
-    'cancelURL' => $redirectAction,
+    'cancelURL' => isset($redirectAction) ? $redirectAction : NULL,
     'WizardMode' => $WizardMode,
     'WizardEnd' => isset($wizardEnd)?$wizardEnd : NULL,
     'WizardMandatory' => isset($mandatory)?$mandatory : NULL
