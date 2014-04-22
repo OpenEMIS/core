@@ -116,7 +116,7 @@ class StudentsController extends StudentsAppController {
                 $name = __('New Student');
                 $this->bodyTitle = $name;
             }
-        }
+        } 
     }
 
     public function index() {

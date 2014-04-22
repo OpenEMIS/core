@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentAward extends StudentsAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Datepicker' => array('issue_date'));
 	
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -44,21 +44,20 @@ class StudentAward extends StudentsAppModel {
 			)
 		)
 	);
-	
-
-	public $booleanOptions = array('No', 'Yes');
 
 	public $headerDefault = 'Awards';
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+	
 	
 	public function award($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$controller->set('modelName', $this->name);
 		$data = $this->find('all', array('conditions'=> array('student_id'=> $controller->studentId)));
-		
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('data', $data);
-		
+		$header = __($this->headerDefault);
+		$controller->set(compact('header', 'data'));
 	}
 
 	public function awardView($controller, $params){
@@ -97,20 +96,19 @@ class StudentAward extends StudentsAppModel {
 	
 	public function awardAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
-		$controller->set('subheader', $this->headerDefault);
+		$controller->set('header', __('Add '.$this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
 	public function awardEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
+		$controller->set('header', __('Edit '.$this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 		
 		$this->render = 'add';
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -135,14 +133,14 @@ class StudentAward extends StudentsAppModel {
 				if(empty($controller->request->data[$this->name]['id'])){
 					$id = $this->getLastInsertId();
 					if($addMore){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+						$controller->Message->alert('general.add.success');
 					}
                 	$controller->Navigation->updateWizard($controller->action,$id,$addMore);	
-                	$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                	$controller->Message->alert('general.add.success');
 				}
 				else{
                 	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+					$controller->Message->alert('general.add.success');
 				}
 				return $controller->redirect(array('action' => 'award'));
 			}
