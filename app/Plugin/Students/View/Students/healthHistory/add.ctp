@@ -73,15 +73,15 @@ echo $this->Html->script('config', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-if ($_edit) {
-    if(!empty($this->data[$model]['id'])){
-        $redirectAction = array('action' => 'healthHistoryView', $this->data[$model]['id']);
-    }
-    else{
-        $redirectAction = array('action' => 'healthHistory');
-    }
-    echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
+
+if(!empty($this->data[$model]['id'])){
+	$redirectAction = array('action' => 'healthHistoryView', $this->data[$model]['id']);
 }
+else{
+	$redirectAction = array('action' => 'healthHistory');
+}
+echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
+
 $this->end();
 $this->start('contentBody');
 
