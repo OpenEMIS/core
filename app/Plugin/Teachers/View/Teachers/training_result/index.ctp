@@ -25,7 +25,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
                  <div class="table_cell"><?php echo $val['TrainingCourse']['code'] ?></div>
                 <div class="table_cell"><?php echo $val['TrainingCourse']['title'] ?></div>
                 <div class="table_cell"><?php echo $val['TrainingCourse']['credit_hours']; ?></div>
-                 <div class="table_cell"><?php echo $this->TrainingUtility->getTrainingStatus('TrainingSessionResult', $val['TrainingStatus']['name'], $val['TrainingStatus']['id']); ?></div>
+                 <div class="table_cell"><?php echo $this->TrainingUtility->getTrainingStatus('TrainingSessionResult', $val[$modelName]['id'], $val['TrainingStatus']['name'], $val['TrainingStatus']['id']); ?></div>
                 </div>
            <?php } ?>
         </div>
