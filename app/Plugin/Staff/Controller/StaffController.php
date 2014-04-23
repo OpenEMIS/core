@@ -36,7 +36,7 @@ class StaffController extends StaffAppController {
         'Staff.StaffCustomField',
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
-        'Staff.StaffAttachment',
+        
         'Staff.StaffAttendance',
         'Staff.StaffLeave',
         'Staff.StaffLeaveType',
@@ -72,7 +72,8 @@ class StaffController extends StaffAppController {
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
         'UserSession',
-        'Paginator'
+        'Paginator',
+		'FileUploader',
     );
     public $modules = array(
         'healthHistory' => 'Staff.StaffHealthHistory',
@@ -96,6 +97,7 @@ class StaffController extends StaffAppController {
 		'languages' => 'Staff.StaffLanguage',
 		'bankAccounts' => 'Staff.StaffBankAccount',
 		'comments' => 'Staff.StaffComment',
+		'attachments' => 'Staff.StaffAttachment',
     );
 
     public $className = 'Staff';
@@ -571,92 +573,6 @@ class StaffController extends StaffAppController {
         //pr($tmp);die;
         $this->set('datafields', $datafields);
         $this->set('datavalues', $tmp);
-    }
-
-    public function attachments() {
-        $this->Navigation->addCrumb('Attachments');
-        $id = $this->Session->read('StaffId');
-        $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-        $data = $FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('_model', 'StaffAttachment');
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/view');
-    }
-
-    public function attachmentsEdit() {
-        $this->Navigation->addCrumb('Edit Attachments');
-
-        $id = $this->Session->read('StaffId');
-
-        $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-        if ($this->request->is('post')) { // save
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffAttachment');
-            }
-
-            if(!empty($_FILES)){
-                $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
-
-                if (sizeof($errors) == 0) {
-                    $this->Navigation->updateWizard($this->action, null);
-                    $this->Utility->alert(__('Files have been saved successfully.'));
-                    $this->redirect(array('action' => 'attachments'));
-                } else {
-                    $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-                }
-            } else {
-                $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-            }
-        }
-
-        $data = $FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('_model', 'StaffAttachment');
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/edit');
-    }
-
-    public function attachmentsAdd() {
-        $this->layout = 'ajax';
-        $this->set('params', $this->params->query);
-        $this->set('_model', 'StaffAttachment');
-        $this->render('/Elements/attachment/add');
-    }
-
-    public function attachmentsDelete() {
-        $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-            if ($FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-
-            return json_encode($result);
-        }
-    }
-
-    public function attachmentsDownload($id) {
-        $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-        $FileAttachment->download($id);
     }
 
     public function history() {
