@@ -70,8 +70,8 @@ class StudentAward extends StudentsAppModel {
 	public function award($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
-		//$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('student_id'=> $controller->studentId)));
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		$data = $this->findAllByStudentId($controller->studentId);
 		$header = __($this->headerDefault);
 		$controller->set(compact('header', 'data'));
 	}
@@ -79,11 +79,9 @@ class StudentAward extends StudentsAppModel {
 	public function awardView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('header', __($this->headerDefault . ' Details'));
-		//$controller->set('subheader', $this->headerDefault);
-		//$controller->set('modelName', $this->name);
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->findById($id);//('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->findById($id);
 		
 		if(empty($data)){
 			$controller->Message->alert('general.noData');

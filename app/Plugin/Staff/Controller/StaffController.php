@@ -48,7 +48,7 @@ class StaffController extends StaffAppController {
         'Staff.StaffSalary',
         'Staff.StaffSalaryAddition',
         'Staff.StaffSalaryDeduction',
-        'Staff.StaffAward',
+       // 'Staff.StaffAward',
         'Staff.StaffMembership',
         'Staff.StaffLicense',
         'QualificationLevel',
@@ -1559,15 +1559,6 @@ class StaffController extends StaffAppController {
         }
     }
 
-    public function ajax_find_award($type) {
-        if ($this->request->is('ajax')) {
-            $this->autoRender = false;
-            $search = $this->params->query['term'];
-            $data = $this->StaffAward->autocomplete($search, $type);
-
-            return json_encode($data);
-        }
-    }
 
     public function ajax_find_membership() {
         if ($this->request->is('ajax')) {
