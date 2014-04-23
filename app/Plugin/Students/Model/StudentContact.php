@@ -246,13 +246,13 @@ class StudentContact extends StudentsAppModel {
         }
 
         $ContactOption = ClassRegistry::init('ContactOption');
-        $ContactType = ClassRegistry::init('ContactType');
+      //  $ContactType = ClassRegistry::init('ContactType');
         
         $contactOptions = $ContactOption->getOptions();
         $controller->set('contactOptions', $contactOptions);
 
         $contactOptionId = isset($params['pass'][1]) ? $params['pass'][1] : $data['ContactType']['contact_option_id'];
-        $contactTypeOptions = $ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
         $yesnoOptions = $controller->Option->get('yesno');
         $controller->set(compact('id' ,'header','contactOptions','contactTypeOptions','contactOptionId','yesnoOptions'));
     }
