@@ -10,7 +10,7 @@ if ($_add) {
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('Type'), __('Number'), __('Issued'), __('Expiry'), __('Location'));
+$tableHeaders = array(__('Type'), __('Number'), __('Issued'), __('Expiry'), __('Issuer'));
 $tableData = array();
 foreach($data as $obj) {
 	$row = array();

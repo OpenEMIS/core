@@ -131,7 +131,7 @@ class StudentBankAccount extends AppModel {
                 $controller->Navigation->validateModel($controller->action, 'StudentBankAccount');
             }
 
-            //$controller->request->data['StudentBankAccount']['student_id'] = $this->studentId;
+            $controller->request->data['StudentBankAccount']['student_id'] = $this->studentId;
             $this->create();
             if ($this->save($controller->request->data)) {
                 $id = $this->getLastInsertId();

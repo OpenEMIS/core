@@ -17,7 +17,7 @@ echo $this->Form->input('identity_type_id', array('options'=>$identityTypeOption
 echo $this->Form->input('number'); 
 echo $this->FormUtility->datepicker('issue_date', array('id' => 'IssueDate'));
 echo $this->FormUtility->datepicker('expiry_date', array('id' => 'ExpiryDate', 'data-date' => date('d-m-Y', time() + 86400)));
-echo $this->Form->input('issue_location');
+echo $this->Form->input('issue_location', array('label' => array('text'=> $this->Label->get('Identities.issue_location'), 'class'=>'col-md-3 control-label')));
 echo $this->Form->input('comments', array('type'=>'textarea'));
 
 echo $this->FormUtility->getFormWizardButtons(array(
