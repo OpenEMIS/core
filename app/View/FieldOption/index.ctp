@@ -38,13 +38,14 @@ $tableData = array();
 if(!empty($data)) {
 	foreach($data as $obj) {
 		$visible = $this->Utility->checkOrCrossMarker($obj[$model]['visible']==1);
+		$name = isset($obj[$model]['name']) ? $obj[$model]['name'] : $obj[$model]['value'];
 		$row = array();
 		$row[] = array($visible, array('class' => 'center'));
 		$linkParams = array('action' => 'view', $selectedOption, $obj[$model]['id']);
 		if(isset($conditionId)) {
 			$linkParams = array_merge($linkParams, array($conditionId => $selectedSubOption));
 		}
-		$row[] = $this->Html->link($obj[$model]['name'], $linkParams);
+		$row[] = $this->Html->link($name, $linkParams);
 		if(isset($fields)) {
 			foreach($fields as $field => $value) {
 				if($value['display']) {

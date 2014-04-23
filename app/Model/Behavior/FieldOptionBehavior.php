@@ -140,6 +140,18 @@ class FieldOptionBehavior extends ModelBehavior {
 	}
 	*/
 	
+	public function getCustomFieldTypes(Model $model) {
+		$customFieldTypes = array(
+			1 => __('Label'),
+			2 => __('Text'),
+			3 => __('Dropdown'),
+			4 => __('Multiple'),
+			5 => __('Textarea')
+		);
+		
+		return $customFieldTypes;
+	}
+	
 	public function getAllOptions(Model $model, $conditions) {
 		$data = $model->find('all', array(
 			'recursive' => 0,
