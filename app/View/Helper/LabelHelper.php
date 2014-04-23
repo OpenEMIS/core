@@ -80,9 +80,6 @@ class LabelHelper extends AppHelper {
         'HealthMedication' => array(
             'start_date' => 'Commenced Date',
             'end_date' => 'Ended Date',
-        ),
-        'Identities' => array(
-            'issue_location' => 'Issuer'
         )
     );
 	
