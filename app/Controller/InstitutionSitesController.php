@@ -167,23 +167,7 @@ class InstitutionSitesController extends AppController {
                 ),
                 'InstitutionSite' => array(
                     'name' => '',
-                    'code' => '',
-                    'address' => '',
-                    'postal_code' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => '',
-                    'date_opened' => '',
-                    'date_closed' => '',
-                    'longitude' => '',
-                    'latitude' => ''
-                ),
-                'InstitutionSiteCustomField' => array(
-                ),
-                'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
+                    'code' => ''
                 ),
                 'InstitutionSiteType' => array(
                     'name' => 'Institution Site Type'
@@ -191,11 +175,31 @@ class InstitutionSitesController extends AppController {
                 'InstitutionSiteOwnership' => array(
                     'name' => 'Institution Site Ownership'
                 ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSite2' => array(
+                    'date_opened' => '',
+                    'date_closed' => '',
+                ),
                 'Area' => array(
                     'name' => 'Area'
                 ),
                 'AreaEducation' => array(
                     'name' => 'Area (Education)'
+                ),
+                'InstitutionSite3' => array(
+                    'address' => '',
+                    'postal_code' => '',
+                    'longitude' => '',
+                    'latitude' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 )
             ),
             'FileName' => 'Report_General_Overview'
@@ -278,46 +282,6 @@ class InstitutionSitesController extends AppController {
                     'last_name' => 'Last Name',
                     'preferred_name' => 'Preferred Name'
                 ),
-                'StudentCustomField' => array(
-                ),
-                'EducationProgramme' => array(
-                    'name' => 'Programme'
-                ),  
-                'Institution' => array(
-                    'name' => ''
-                ),
-                'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'address' => '',
-                    'postal_code' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => '',
-                    'date_opened' => '',
-                    'date_closed' => '',
-                    'longitude' => '',
-                    'latitude' => ''
-                ),
-                'InstitutionSiteCustomField' => array(
-                ),
-                'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
-                ),
-                'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
-                ),
-                'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
-                ),
-                'Area' => array(
-                    'name' => 'Area'
-                ),
-                'AreaEducation' => array(
-                    'name' => 'Area (Education)'
-                ),
                 'StudentContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StudentContact.value))' => 'Contacts'
                 ),
@@ -329,8 +293,51 @@ class InstitutionSitesController extends AppController {
                 ),
                 'StudentStatus' => array(
                     'name' => 'Status'
+                ),
+                'StudentCustomField' => array(
+                ),
+                'EducationProgramme' => array(
+                    'name' => 'Programme'
+                ),  
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => '',
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSite2' => array(
+                    'date_opened' => '',
+                    'date_closed' => '',
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSite3' => array(
+                    'address' => '',
+                    'postal_code' => '',
+                    'longitude' => '',
+                    'latitude' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 )
-
             ),
             'FileName' => 'Report_Student_List'
         ),
@@ -441,43 +448,6 @@ class InstitutionSitesController extends AppController {
                     'gender' => 'Gender',
                     'date_of_birth' => 'Date of Birth'
                 ),
-                'TeacherCustomField' => array(
-                ),
-                'Institution' => array(
-                    'name' => ''
-                ),
-                'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'address' => '',
-                    'postal_code' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => '',
-                    'date_opened' => '',
-                    'date_closed' => '',
-                    'longitude' => '',
-                    'latitude' => ''
-                ),
-                'InstitutionSiteCustomField' => array(
-                ),
-                'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
-                ),
-                'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
-                ),
-                'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
-                ),
-                'Area' => array(
-                    'name' => 'Area'
-                ),
-                'AreaEducation' => array(
-                    'name' => 'Area (Education)'
-                ),
                 'TeacherContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", TeacherContact.value))' => 'Contacts'
                 ),
@@ -489,6 +459,47 @@ class InstitutionSitesController extends AppController {
                 ),
                 'TeacherStatus' => array(
                     'name' => 'Status'
+                ),
+                'TeacherCustomField' => array(
+                ),
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => ''
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSite2' => array(
+                    'date_opened' => '',
+                    'date_closed' => '',
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSite3' => array(
+                    'address' => '',
+                    'postal_code' => '',
+                    'longitude' => '',
+                    'latitude' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 )
             ),
             'FileName' => 'Report_Teacher_List'
@@ -555,43 +566,6 @@ class InstitutionSitesController extends AppController {
                     'gender' => 'Gender',
                     'date_of_birth' => 'Date of Birth'
                 ),
-                'StaffCustomField' => array(
-                ),
-                'Institution' => array(
-                    'name' => ''
-                ),
-                'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'address' => '',
-                    'postal_code' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => '',
-                    'date_opened' => '',
-                    'date_closed' => '',
-                    'longitude' => '',
-                    'latitude' => ''
-                ),
-                'InstitutionSiteCustomField' => array(
-                ),
-                'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
-                ),
-                'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
-                ),
-                'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
-                ),
-                'Area' => array(
-                    'name' => 'Area'
-                ),
-                'AreaEducation' => array(
-                    'name' => 'Area (Education)'
-                ),
                 'StaffContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StaffContact.value))' => 'Contacts'
                 ),
@@ -603,6 +577,47 @@ class InstitutionSitesController extends AppController {
                 ),
                 'StaffStatus' => array(
                     'name' => 'Status'
+                ),
+                'StaffCustomField' => array(
+                ),
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => ''
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSite2' => array(
+                    'date_opened' => '',
+                    'date_closed' => '',
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSite3' => array(
+                    'address' => '',
+                    'postal_code' => '',
+                    'longitude' => '',
+                    'latitude' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 )
             ),
             'FileName' => 'Report_Staff_List'
@@ -3992,6 +4007,18 @@ class InstitutionSitesController extends AppController {
                         'alias' => 'AreaEducation',
                         'type' => 'left',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite2',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite3',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
                     )
                 );
 
@@ -4102,6 +4129,18 @@ class InstitutionSitesController extends AppController {
                         'table' => 'institution_sites',
                         'alias' => 'InstitutionSite',
                         'conditions' => array('InstitutionSite.id = InstitutionSiteProgramme.institution_site_id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite2',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite3',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
                     ),
                     array(
                         'table' => 'institution_site_statuses',
@@ -4412,6 +4451,18 @@ class InstitutionSitesController extends AppController {
                         'conditions' => array('InstitutionSiteTeacher.institution_site_id = InstitutionSite.id')
                     ),
                     array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite2',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite3',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
+                    ),
+                    array(
                         'table' => 'institution_site_statuses',
                         'alias' => 'InstitutionSiteStatus',
                         'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
@@ -4607,6 +4658,18 @@ class InstitutionSitesController extends AppController {
                         'table' => 'institution_sites',
                         'alias' => 'InstitutionSite',
                         'conditions' => array('InstitutionSiteStaff.institution_site_id = InstitutionSite.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite2',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite3',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
                     ),
                     array(
                         'table' => 'institution_site_statuses',
@@ -6641,18 +6704,18 @@ class InstitutionSitesController extends AppController {
             );
 
             foreach ($data AS $row) {
-                if ($row['InstitutionSite']['date_opened'] == '0000-00-00') {
-                    $row['InstitutionSite']['date_opened'] = '';
+                if ($row['InstitutionSite2']['date_opened'] == '0000-00-00') {
+                    $row['InstitutionSite2']['date_opened'] = '';
                 } else {
-                    $originalDate = new DateTime($row['InstitutionSite']['date_opened']);
-                    $row['InstitutionSite']['date_opened'] = $originalDate->format($dateFormat);
+                    $originalDate = new DateTime($row['InstitutionSite2']['date_opened']);
+                    $row['InstitutionSite2']['date_opened'] = $originalDate->format($dateFormat);
                 }
 
-                if ($row['InstitutionSite']['date_closed'] == '0000-00-00') {
-                    $row['InstitutionSite']['date_closed'] = '';
+                if ($row['InstitutionSite2']['date_closed'] == '0000-00-00') {
+                    $row['InstitutionSite2']['date_closed'] = '';
                 } else {
-                    $originalDate = new DateTime($row['InstitutionSite']['date_closed']);
-                    $row['InstitutionSite']['date_closed'] = $originalDate->format($dateFormat);
+                    $originalDate = new DateTime($row['InstitutionSite2']['date_closed']);
+                    $row['InstitutionSite2']['date_closed'] = $originalDate->format($dateFormat);
                 }
             	foreach($institutionSiteCustomFields as $val){
                    if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
