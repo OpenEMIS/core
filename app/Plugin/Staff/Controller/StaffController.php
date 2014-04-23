@@ -49,7 +49,7 @@ class StaffController extends StaffAppController {
         'Staff.StaffComment',
         
         
-        'Staff.StaffLanguage',
+        
         
         'Staff.StaffExtracurricular',
         'Staff.StaffEmployment',
@@ -101,6 +101,7 @@ class StaffController extends StaffAppController {
 		'contacts' => 'Staff.StaffContact',
 		'identities' => 'Staff.StaffIdentity',
 		'nationalities' => 'Staff.StaffNationality',
+		'languages' => 'Staff.StaffLanguage',
     );
 
     public $className = 'Staff';
@@ -1372,119 +1373,6 @@ class StaffController extends StaffAppController {
             $this->redirect(array('action' => 'comments', $staffId));
         }
     }
-
-    
-
-    
-
-    public function languages() {
-        $this->Navigation->addCrumb('Languages');
-        $data = $this->StaffLanguage->find('all', array('conditions' => array('StaffLanguage.staff_id' => $this->staffId)));
-        $this->set('list', $data);
-    }
-
-    public function languagesAdd() {
-        $this->Navigation->addCrumb(__('Add Languages'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $data = $this->data['StaffLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffLanguage');
-            }
-
-            $this->StaffLanguage->create();
-            $data['staff_id'] = $this->staffId;
-
-            if ($this->StaffLanguage->save($data)) {
-                $id = $this->StaffLanguage->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'languages'));
-            }
-        }
-
-        $gradeOptions = array();
-        for ($i = 0; $i < 6; $i++) {
-            $gradeOptions[$i] = $i;
-        }
-        $this->set('gradeOptions', $gradeOptions);
-
-        $languageOptions = $this->Language->getOptions();
-        $this->set('languageOptions', $languageOptions);
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function languagesView() {
-        $languageId = $this->params['pass'][0];
-        $languageObj = $this->StaffLanguage->find('all', array('conditions' => array('StaffLanguage.id' => $languageId)));
-
-        if (!empty($languageObj)) {
-            $this->Navigation->addCrumb('Language Details');
-
-            $this->Session->write('StaffLanguageId', $languageId);
-            $this->set('languageObj', $languageObj);
-        }
-    }
-
-    public function languagesEdit() {
-        $languageId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $languageObj = $this->StaffLanguage->find('first', array('conditions' => array('StaffLanguage.id' => $languageId)));
-
-            if (!empty($languageObj)) {
-                $this->Navigation->addCrumb('Edit Language Details');
-                $this->request->data = $languageObj;
-            }
-        } else {
-            $languageData = $this->data['StaffLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $languageData['staff_id'] = $this->staffId;
-
-            if ($this->StaffLanguage->save($languageData)) {
-                $this->Navigation->updateWizard($this->action,$languageId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'languagesView', $languageData['id']));
-            }
-        }
-
-        $gradeOptions = array();
-        for ($i = 0; $i < 6; $i++) {
-            $gradeOptions[$i] = $i;
-        }
-        $this->set('gradeOptions', $gradeOptions);
-
-        $languageOptions = $this->Language->getOptions();
-        $this->set('languageOptions', $languageOptions);
-
-        $this->set('id', $languageId);
-    }
-
-    public function languagesDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffLanguageId')) {
-            $id = $this->Session->read('StaffLanguageId');
-            $staffId = $this->Session->read('StaffId');
-            $languageId = $this->StaffLanguage->field('language_id', array('StaffLanguage.id' => $id));
-            $name = $this->Language->field('name', array('Language.id' => $languageId));
-            $this->StaffLanguage->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'languages', $staffId));
-        }
-    }
-
-    
 
     public function extracurricular() {
         $this->Navigation->addCrumb('Extracurricular');
