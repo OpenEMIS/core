@@ -20,6 +20,7 @@ class OlapCubeDimension extends OlapCubeAppModel {
 
 	public function olapReport($controller, $params){
 		$olapCube = ClassRegistry::init('OlapCube');
+	  	$controller->Navigation->addCrumb('OLAP');
 
 		$cubeOptions = $olapCube->find('list', array('fields'=>array('id','cube'),'conditions'=>array('visible'=>1), 'order'=>array('order')));
 
@@ -47,7 +48,8 @@ class OlapCubeDimension extends OlapCubeAppModel {
         	}else{
 				if(!empty($criteriaDimensions)){
 					$olapCriteria = ClassRegistry::init($criteriaDimensions['OlapCubeDimension']['table_name']);
-		    	  	$controller->set('fields', $olapCriteria->find('list', array('fields'=>array($criteriaDimensions['OlapCubeDimension']['table_field'],$criteriaDimensions['OlapCubeDimension']['table_field']))));
+					$filterFields = $olapCriteria->find('list', array('fields'=>array($criteriaDimensions['OlapCubeDimension']['table_field'],$criteriaDimensions['OlapCubeDimension']['table_field'])));
+		    	  	$controller->set('filterFields', $filterFields);
 	    	  	}
     	  	}
         }
@@ -323,6 +325,8 @@ class OlapCubeDimension extends OlapCubeAppModel {
 		}else{
 			$controller->redirect(array('action'=>'olapReport'));
 		}
+	 	$controller->Navigation->addCrumb('OLAP', array('controller' => '../OlapCube', 'action' => 'olapReport'));
+		$controller->Navigation->addCrumb('Result');
 
 		$controller->set('modelName', $this->name);
 		$controller->set('subheader', $this->headerDefault);
