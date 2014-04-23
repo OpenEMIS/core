@@ -83,7 +83,7 @@ class StaffController extends StaffAppController {
         'healthTest' => 'Staff.StaffHealthTest',
         'healthConsultation' => 'Staff.StaffHealthConsultation',
         'health' => 'Staff.StaffHealth',
-        'special_need' => 'Staff.StaffSpecialNeed',
+        'specialNeed' => 'Staff.StaffSpecialNeed',
         'award' => 'Staff.StaffAward',
         'membership' => 'Staff.StaffMembership',
         'license' => 'Staff.StaffLicense',
