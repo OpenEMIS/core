@@ -56,7 +56,7 @@ if ($_add) {
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('Type'), __('Number'), __('Issued'), __('Expiry'), __('Issuer'));
+$tableHeaders = array(__('Type'), __('Number'), __('Issued'), __('Expiry'), __('Location'));
 $tableData = array();
 foreach($data as $obj) {
 	$row = array();
