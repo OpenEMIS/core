@@ -835,7 +835,7 @@ class InstitutionSitesController extends AppController {
 
         $this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 
-        if ($this->action === 'index' || $this->action === 'add') {
+        if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced') {
             $this->bodyTitle = 'Institutions';
         } else if ($this->action === 'view'){
             
