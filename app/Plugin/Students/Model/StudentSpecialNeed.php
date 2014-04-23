@@ -38,8 +38,6 @@ class StudentSpecialNeed extends StudentsAppModel {
 			)
 		)
 	);
-	//public $booleanOptions = array('No', 'Yes');
-
 	public $headerDefault = 'Special Needs';
 	public function beforeAction($controller, $action) {
         $controller->set('model', $this->alias);
@@ -63,9 +61,9 @@ class StudentSpecialNeed extends StudentsAppModel {
 	public function specialNeed($controller, $params) {
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$header = $this->headerDefault;
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
 		$data = $this->findAllByStudentId($controller->studentId);
 		$controller->set(compact('header', 'data'));
-		
 	}
 
 	public function specialNeedView($controller, $params){
@@ -135,17 +133,16 @@ class StudentSpecialNeed extends StudentsAppModel {
             }
 			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
 			if($this->save($controller->request->data)){
+				$controller->Message->alert('general.add.success');
 				if(empty($controller->request->data[$this->name]['id'])){
 					$id = $this->getLastInsertId();
-					if($addMore){
+					/*if($addMore){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-					}
+					}*/
                 	$controller->Navigation->updateWizard($controller->action,$id,$addMore);
-                	$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 				}
 				else{
                		$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
 				return $controller->redirect(array('action' => 'specialNeed'));
 			}
