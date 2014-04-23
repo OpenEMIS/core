@@ -150,7 +150,7 @@ class StudentIdentity extends StudentsAppModel {
         $id = isset($params['pass'][0]) ? $params['pass'][0] : 0; //Identity Id
 
         $controller->Navigation->addCrumb(__('Identity Details'));
-        $header = __('Details');
+        $header = __('Identity Details');
         $data = $this->findById($id);
 
         if (empty($data)) {
