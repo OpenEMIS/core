@@ -47,7 +47,7 @@ class StaffController extends StaffAppController {
         'Staff.StaffBehaviourCategory',
         'Staff.StaffQualification',
         'Staff.StaffComment',
-        'Staff.StaffNationality',
+        
         
         'Staff.StaffLanguage',
         
@@ -100,6 +100,7 @@ class StaffController extends StaffAppController {
         'training_self_study' => 'Staff.StaffTrainingSelfStudy',
 		'contacts' => 'Staff.StaffContact',
 		'identities' => 'Staff.StaffIdentity',
+		'nationalities' => 'Staff.StaffNationality',
     );
 
     public $className = 'Staff';
@@ -1372,102 +1373,7 @@ class StaffController extends StaffAppController {
         }
     }
 
-    public function nationalities() {
-        $this->Navigation->addCrumb(__('Nationalities'));
-        $data = $this->StaffNationality->find('all', array('conditions' => array('StaffNationality.staff_id' => $this->staffId)));
-        $this->set('list', $data);
-    }
-
-    public function nationalitiesAdd() {
-        $this->Navigation->addCrumb(__('Add Nationalities'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $data = $this->data['StaffNationality'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffNationality');
-            }
-            $this->StaffNationality->create();
-            $data['staff_id'] = $this->staffId;
-
-
-            if ($this->StaffNationality->save($data)) {
-                $id = $this->StaffNationality->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'nationalities'));
-            }
-        }
-
-        $defaultCountryId = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
-        $countryOptions = $this->Country->getOptions();
-        $this->set('countryOptions', $countryOptions);
-        $this->set('defaultCountryId', $defaultCountryId);
-		$this->UserSession->readStatusSession($this->request->action);
-	}
-	
-	public function nationalitiesView() {
-        $nationalityId = $this->params['pass'][0];
-        $nationalityObj = $this->StaffNationality->find('all', array('conditions' => array('StaffNationality.id' => $nationalityId)));
-
-        if (!empty($nationalityObj)) {
-            $this->Navigation->addCrumb(__('Nationality Details'));
-
-            $this->Session->write('StaffNationalityId', $nationalityId);
-            $this->set('nationalityObj', $nationalityObj);
-        }
-    }
-
-    public function nationalitiesEdit() {
-        $nationalityId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $nationalityObj = $this->StaffNationality->find('first', array('conditions' => array('StaffNationality.id' => $nationalityId)));
-
-            if (!empty($nationalityObj)) {
-                $this->Navigation->addCrumb(__('Edit Nationality Details'));
-                $this->request->data = $nationalityObj;
-            }
-        } else {
-            $nationalityData = $this->data['StaffNationality'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $nationalityData['staff_id'] = $this->staffId;
-
-            if ($this->StaffNationality->save($nationalityData)) {
-                $this->Navigation->updateWizard($this->action,$nationalityId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
-            }
-        }
-
-        $countryOptions = $this->Country->getOptions();
-        $this->set('countryOptions', $countryOptions);
-
-        $this->set('id', $nationalityId);
-    }
-
-    public function nationalitiesDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffNationalityId')) {
-            $id = $this->Session->read('StaffNationalityId');
-            $staffId = $this->Session->read('StaffId');
-            $countryId = $this->StaffNationality->field('country_id', array('StaffNationality.id' => $id));
-            $name = $this->Country->field('name', array('Country.id' => $countryId));
-            $this->StaffNationality->delete($id);
-            $this->Utility->alert($name . __(' have been deleted successfully.'));
-            $this->redirect(array('action' => 'nationalities', $staffId));
-        }
-    }
+    
 
     
 
