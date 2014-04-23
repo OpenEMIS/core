@@ -1,11 +1,11 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
+echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
+
 echo $this->Html->script('attachments', false);
 echo $this->Html->script('/Training/js/courses', false);
-echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
-
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
@@ -14,7 +14,6 @@ if($_edit) {
 	echo $this->Html->link(__('Back'), array('action' => 'course'), array('class' => 'divider', 'id'=>'back'));
 }
 $this->end();
-
 $this->start('contentBody');
 ?>
 
@@ -28,65 +27,25 @@ padding: 3px 0 5px 20px;
 </style>
 
 <?php
-echo $this->Form->create($modelName, array(
-	'url' => array('controller' => 'Training', 'action' => 'courseAdd', 'plugin'=>'Training'),
-	'type' => 'file',
-	'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-));
+
+
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'courseAdd'), 'file');
+echo $this->Form->create($model, $formOptions);
 ?>
+
 
 <span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
 <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 <?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
-<div class="row">
-    <div class="col-md-3 control-label"><?php echo __('Course Code'); ?></div>
-    <div class="col-md-4">
-	<?php 
-		echo $this->Form->input('code'); 
-	?>
-    </div>
-</div>
-<div class="row">
-    <div class="col-md-3 control-label"><?php echo __('Course Title'); ?></div>
-    <div class="col-md-4">
-	<?php 
-		echo $this->Form->input('title'); 
-	?>
-    </div>
-</div>
-<div class="row">
-    <div class="label"><?php echo __('Course Description'); ?></div>
-    <div class="col-md-4">
-	<?php 
-		echo $this->Form->input('description', array('type'=>'textarea')); 
-	?>
-    </div>
-</div>
-	<div class="row">
-    <div class="label"><?php echo __('Goal / Objectives'); ?></div>
-    <div class="col-md-4">
-	<?php 
-		echo $this->Form->input('objective', array('type'=>'textarea')); 
-	?>
-    </div>
-</div>
-<div class="row">
-    <div class="label"><?php echo __('Category / Field of Study'); ?></div>
-    <div class="value">
-	<?php 
-		echo $this->Form->input('training_field_study_id', array('options'=>$trainingFieldStudyOptions)); 
-	?>
-    </div>
-</div>
 
-<div class="row">
-    <div class="label"><?php echo __('Course Type'); ?></div>
-    <div class="value">
 	<?php 
-		echo $this->Form->input('training_course_type_id', array('options'=>$trainingCourseTypeOptions)); 
+		echo $this->Form->input('code', array('label'=>array('text'=>__('Course Code'), 'class'=>'col-md-3 control-label'))); 
+		echo $this->Form->input('title', array('label'=>array('text'=>__('Course Title'), 'class'=>'col-md-3 control-label'))); 
+		echo $this->Form->input('description', array('label'=>array('text'=>__('Course Description'), 'class'=>'col-md-3 control-label'), 'type'=>'textarea')); 
+		echo $this->Form->input('objective', array('label'=>array('text'=>__('Goal / objective'), 'class'=>'col-md-3 control-label'), 'type'=>'textarea')); 
+		echo $this->Form->input('training_field_study_id', array('label'=>array('text'=>__('Category / Field of Study'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingFieldStudyOptions)); 
+		echo $this->Form->input('training_course_type_id', array('label'=>array('text'=>__('Course Type'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingCourseTypeOptions)); 
 	?>
-    </div>
-</div>
  <div class="row row_target_population" style="min-height:45px;">
 	<div class="label"><?php echo __('Target Population'); ?></div>
 	<div class="value">
@@ -139,30 +98,12 @@ echo $this->Form->create($modelName, array(
 
 	</div>
 </div>
-<div class="row">
-    <div class="label"><?php echo __('Credits'); ?></div>
-    <div class="value">
-	<?php 
-		echo $this->Form->input('credit_hours', array('options'=>$trainingCreditHourOptions)); 
-	?>
-    </div>
-</div>
-<div class="row">
-    <div class="label"><?php echo __('Hours'); ?></div>
-    <div class="value">
-	<?php 
-		echo $this->Form->input('duration'); 
-	?>
-    </div>
-</div>
- <div class="row">
-    <div class="label"><?php echo __('Mode of Delivery'); ?></div>
-    <div class="value">
-	<?php 
-		echo $this->Form->input('training_mode_delivery_id', array('options'=>$trainingModeDeliveryOptions)); 
-	?>
-    </div>
-</div>
+
+<?php 
+	echo $this->Form->input('credit_hours', array('label'=>array('text'=>__('Credits'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingCreditHourOptions)); 
+	echo $this->Form->input('duration', array('label'=>array('text'=>__('Hours'), 'class'=>'col-md-3 control-label'))); 
+	echo $this->Form->input('training_mode_delivery_id', array('label'=>array('text'=>__('Mode of Delivery'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingModeDeliveryOptions)); 
+?>
 <div class="row row_provider" style="min-height:45px;">
     <div class="label"><?php echo __('Training Provider'); ?></div>
     <div class="value">
@@ -198,22 +139,11 @@ echo $this->Form->create($modelName, array(
 	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addProvider(this)" url="Training/ajax_add_provider"  href="javascript: void(0)"><?php echo __('Add Provider');?></a></div>
 	</div>
 </div>
-<div class="row">
-    <div class="label"><?php echo __('Training Requirement'); ?></div>
-    <div class="value">
-	<?php 
-		echo $this->Form->input('training_requirement_id', array('options'=>$trainingRequirementOptions)); 
-	?>
-    </div>
-</div>
-	<div class="row">
-    <div class="label"><?php echo __('Training Level'); ?></div>
-    <div class="value">
-	<?php 
-		echo $this->Form->input('training_level_id', array('options'=>$trainingLevelOptions)); 
-	?>
-    </div>
-</div>
+
+<?php 
+	echo $this->Form->input('training_requirement_id', array('label'=>array('text'=>__('Training Requirement'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingRequirementOptions)); 
+	echo $this->Form->input('training_level_id', array('label'=>array('text'=>__('Training Level'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingLevelOptions)); 
+?>
 <div class="row row_prerequisite" style="min-height:45px;">
 	<div class="label"><?php echo __('Prerequisite'); ?></div>
 	<div class="value">
@@ -255,15 +185,10 @@ echo $this->Form->create($modelName, array(
 	</div>
 	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
 	</div>
-</div>
-<div class="row">
-    <div class="label"><?php echo __('Pass Result'); ?></div>
-    <div class="value">
-	<?php 
-		echo $this->Form->input('pass_result'); 
-	?>
-    </div>
-</div>
+</div> 
+<?php 
+	echo $this->Form->input('pass_result'); 
+?>
 <span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
 
 <div class="row">
