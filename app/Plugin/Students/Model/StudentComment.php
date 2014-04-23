@@ -123,18 +123,19 @@ class StudentComment extends StudentsAppModel {
             return $controller->redirect(array('action' => 'comments'));
         }
         $fields = $this->getDisplayFields($controller);
-        $header = __('Details');
+        $header = __('Comment Details');
         $controller->set(compact('data', 'fields', 'header'));
     }
 
     public function commentsEdit($controller, $params) {
         $id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-        $header = __('Comment Details');
+		$controller->Navigation->addCrumb('Edit Comment');
+        $header = __('Edit Comment');
         if ($controller->request->is('get')) {
             $obj = $this->findById($id);
 
             if (!empty($obj)) {
-                $controller->Navigation->addCrumb('Edit Comment Details');
+                
                 $controller->request->data = $obj;
             } else {
                 $controller->Message->alert('general.notExists');
