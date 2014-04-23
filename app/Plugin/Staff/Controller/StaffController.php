@@ -30,9 +30,9 @@ class StaffController extends StaffAppController {
         'InstitutionSite',
         'InstitutionSiteType',
         'InstitutionSiteStaff',
-        'Bank',
-        'Staff.StaffBankAccount',
-        'BankBranch',
+        ///'Bank',
+        
+        //'BankBranch',
         'Staff.InstitutionSiteStaff',
         'Staff.Staff',
         'Staff.StaffHistory',
@@ -102,6 +102,7 @@ class StaffController extends StaffAppController {
 		'identities' => 'Staff.StaffIdentity',
 		'nationalities' => 'Staff.StaffNationality',
 		'languages' => 'Staff.StaffLanguage',
+		'bankAccounts' => 'Staff.StaffBankAccount',
     );
 
     public $className = 'Staff';
@@ -1124,7 +1125,7 @@ class StaffController extends StaffAppController {
     }
 
     /*     * *BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already* */
-
+/*
     public function bankAccounts() {
         $this->Navigation->addCrumb('Bank Accounts');
 
@@ -1243,7 +1244,7 @@ class StaffController extends StaffAppController {
         $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
         echo json_encode($bank);
     }
-
+*/
     // Staff behaviour part
     public function behaviour() {
         $this->Navigation->addCrumb('List of Behaviour');
