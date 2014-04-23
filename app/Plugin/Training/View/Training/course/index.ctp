@@ -15,8 +15,6 @@ $this->end();
 
 $this->start('contentBody');
 ?>
-
-
 <?php echo $this->element('alert'); ?>
 <div class="row select_row form-group">
     <div class="col-md-4">

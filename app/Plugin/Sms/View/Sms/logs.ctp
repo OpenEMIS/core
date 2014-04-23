@@ -3,10 +3,13 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('setup_variables', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('setup_variables', false);
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Reports'));
+$this->start('contentActions');
+$this->end();
+
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
 <div id="messages" class="content_wrapper">
 	<h1>
 		<span><?php echo __('Logs'); ?></span>

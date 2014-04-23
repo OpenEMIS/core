@@ -18,7 +18,7 @@ App::uses('AppHelper', 'View/Helper');
 
 class LabelHelper extends AppHelper {
 	public $messages = array(
-            'general' => array(
+        'general' => array(
             'add' => 'Add',
             'edit' => 'Edit',
             'delete' => 'Delete',
@@ -35,7 +35,9 @@ class LabelHelper extends AppHelper {
             'modified' => 'Modified On',
             'created' => 'Created On',
             'type' => 'Type',
-            'title' => 'Title'
+            'title' => 'Title',
+            'activate' => 'Activate',
+            'inactivate' => 'Inactivate'
         ),
         'wizard' => array(
             'previous' => 'Previous',
