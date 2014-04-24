@@ -124,7 +124,7 @@ class FileUploaderComponent extends Component {
 			//	pr($this->uploadedFile);die;
 			//	pr($this->data);
 			//	$id = '';
-			if (!empty($this->data[$this->fileModel]['id'])) {
+			if (empty($id) && !empty($this->data[$this->fileModel]['id'])) {
 				$id = $this->data[$this->fileModel]['id'];
 			}
 
