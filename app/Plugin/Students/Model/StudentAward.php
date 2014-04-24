@@ -179,7 +179,7 @@ class StudentAward extends StudentsAppModel {
 			$studentAwardField = $obj['StudentAward'][$field];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s', $studentAwardField)),
+				'label' => trim($studentAwardField),
 				'value' => array($field => $studentAwardField)
 			);
 		}
