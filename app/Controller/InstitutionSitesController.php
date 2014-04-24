@@ -1203,10 +1203,11 @@ class InstitutionSitesController extends AppController {
     public function add() {
 
         $this->Navigation->addCrumb('Add New Institution Site');
-        $institutionId = $this->Session->read('InstitutionId');
+        //$institutionId = $this->Session->read('InstitutionId');
         $areadropdowns = array('0' => '--' . __('Select') . '--');
         $adminareadropdowns = array('0' => '--' . __('Select') . '--');
         $areaLevel = array();
+        
         if ($this->request->is('post')) {
 
             $last_area_id = 0;
@@ -1230,17 +1231,17 @@ class InstitutionSitesController extends AppController {
                 $institutionSiteId = $newInstitutionSiteRec['InstitutionSite']['id'];
 
                 //** Reinitialize the Site Session by adding the newly added site **/
-                $tmp = $this->Session->read('AccessControl.sites');
-                array_push($tmp, $institutionSiteId);
-                $this->Session->write('AccessControl.sites', $tmp);
+//                $tmp = $this->Session->read('AccessControl.sites');
+//                array_push($tmp, $institutionSiteId);
+//                $this->Session->write('AccessControl.sites', $tmp);
 
                 //** Reinitialize the Institution + Site Session by adding the newly added site **/
-                $sites = $this->Session->read('AccessControl.institutions');
-                $sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][] = $institutionSiteId;
-                $this->Session->write('AccessControl.institutions', $sites);
+                //$sites = $this->Session->read('AccessControl.institutions');
+//                $sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][] = $institutionSiteId;
+//                $this->Session->write('AccessControl.institutions', $sites);
                 $this->Session->write('InstitutionSiteId', $institutionSiteId);
 
-                $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
+                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
             }
             /**
              * preserve the dropdown values on error
@@ -1285,13 +1286,18 @@ class InstitutionSitesController extends AppController {
         // Get security group area
         $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
         $filterArea = $this->SecurityGroupArea->getAreas($groupId);
+		
+		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
+		$this->Utility->unshiftArray($providerOptions, array('0' => '--' . __('Select') . '--'));
+		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
+        $this->Utility->unshiftArray($sectorOptions, array('0' => '--' . __('Select') . '--'));
 
         $this->set('filterArea', $filterArea);
         $this->set('type_options', $type);
         $this->set('ownership_options', $ownership);
         $this->set('locality_options', $locality);
         $this->set('status_options', $status);
-        $this->set('institutionId', $institutionId);
+        //$this->set('institutionId', $institutionId);
         $this->set('arealevel', $areaLevel);
         $this->set('levels', $levels);
 
@@ -1302,14 +1308,22 @@ class InstitutionSitesController extends AppController {
         $this->set('adminareadropdowns', $adminareadropdowns);
         $this->set('highestLevel', $topArea);
         $this->set('highestAdminLevel', $topAdminArea);
+		
+		$this->set('providerOptions', $providerOptions);
+		$this->set('sectorOptions', $sectorOptions);
     }
 
     public function delete() {
         $id = $this->Session->read('InstitutionSiteId');
         $name = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $id));
-        $this->InstitutionSite->delete($id);
-        $this->Utility->alert($name . ' have been deleted successfully.');
-        $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
+        //$this->InstitutionSite->delete($id);
+		if($this->InstitutionSite->delete($id)){
+			$this->Utility->alert($name . ' have been deleted successfully. ' . $id);
+		}else{
+			$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
+		}
+        
+        $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
     }
 
 
