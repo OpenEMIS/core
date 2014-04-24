@@ -46,6 +46,13 @@ class LabelHelper extends AppHelper {
             'skip' => 'Skip',
             'addmore' => 'Add More'
         ),
+		'InstitutionSiteCustomField' => array(
+			'type' => 'Field Type',
+			'institution_site_type_id' => 'Institution Type'
+		),
+		'InstitutionSiteCustomFieldOption' => array(
+			'institution_site_custom_field_id' => 'Custom Field'
+		),
         'BankBranch' => array(
             'bank_id' => 'Bank',
             'name' => 'Branch'
