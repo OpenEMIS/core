@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffMembership extends StaffAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Datepicker' => array('issue_date', 'expiry_date'));
 	
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -35,40 +35,70 @@ class StaffMembership extends StaffAppModel {
 				'required' => true,
 				'message' => 'Please enter a valid Membership.'
 			)
-		)
+		),
+		'issue_date' => array(
+            'ruleNotLater' => array(
+                'rule' => array('compareDate', 'expiry_date'),
+		//		'allowEmpty' => true,
+                'message' => 'Issue Date cannot be later than Expiry Date'
+            ),
+        )
 	);
-	
-
-	public $booleanOptions = array('No', 'Yes');
-
 	public $headerDefault = 'Memberships';
+	
+	public function compareDate($field = array(), $compareField = null) {
+        $startDate = new DateTime(current($field));
+        $endDate = new DateTime($this->data[$this->name][$compareField]);
+        return $endDate >= $startDate;
+    }
+	
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+	
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'issue_date', 'type' => 'datepicker'),
+				array('field' => 'membership',  'labelKey' => 'general.name'),
+                array('field' => 'expiry_date', 'type' => 'datepicker'),
+				array('field' => 'comment'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
 	
 	public function membership($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
-		
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('data', $data);
+		$header = __($this->headerDefault);
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser','CreatedUser')));
+		$data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
+		$controller->set(compact('header', 'data'));
 		
 	}
 
 	public function membershipView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('modelName', $this->name);
+		$header = __($this->headerDefault . ' Details');
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->findById($id);//('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'membership'));
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action'=>'membership'));
 		}
 		
 		$controller->Session->write('StaffMembershipId', $id);
-		
-		$controller->set('data', $data);
+		$fields = $this->getDisplayFields($controller);
+        $controller->set(compact('data', 'header', 'fields', 'id'));
 	}
 	
 	public function membershipDelete($controller, $params) {
@@ -90,23 +120,23 @@ class StaffMembership extends StaffAppModel {
 	
 	public function membershipAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
-		$controller->set('subheader', $this->headerDefault);
+		$controller->set('header', __('Add ' . $this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
 	public function membershipEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
+		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault );
+		$controller->set('header', __('Edit ' . $this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 		
 		$this->render = 'add';
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
+		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 		
 		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+			
 			$this->recursive = -1;
 			$data = $this->findById($id);
 			if(!empty($data)){
@@ -125,7 +155,8 @@ class StaffMembership extends StaffAppModel {
                 $controller->Navigation->validateModel($controller->action,$this->name);
             }
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if($this->save($controller->request->data)){
+			
+			if($this->saveAll($controller->request->data)){
 				if(empty($controller->request->data[$this->name]['id'])){
 					$id = $this->getLastInsertId();
 					if($addMore){
@@ -160,7 +191,7 @@ class StaffMembership extends StaffAppModel {
 			$staffMembershipField = $obj['StaffMembership'][$field];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s', $staffMembershipField)),
+				'label' => trim($staffMembershipField),
 				'value' => array($field => $staffMembershipField)
 			);
 		}
