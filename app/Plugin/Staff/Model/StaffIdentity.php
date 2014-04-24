@@ -15,6 +15,8 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffIdentity extends StaffAppModel {
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date', 'expiry_date'));
+	
 	public $belongsTo = array(
 		'Staff',
 		'IdentityType',
@@ -59,8 +61,6 @@ class StaffIdentity extends StaffAppModel {
         )
 	);
 
-
-
   	function field_comparison($check1, $operator, $field2) {
         foreach($check1 as $key=>$value1) {
             $value2 = $this->data[$this->alias][$field2];
@@ -68,5 +68,144 @@ class StaffIdentity extends StaffAppModel {
                 return false;
         }
         return true;
+    }
+	
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+	
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+                array('field' => 'name', 'model' => 'IdentityType', 'labelKey' => 'general.type'),
+                array('field' => 'number'),
+                array('field' => 'issue_date'),
+                array('field' => 'expiry_date'),
+                array('field' => 'issue_location'),
+                array('field' => 'comments'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+
+	
+	public function identities($controller, $params) {
+        $controller->Navigation->addCrumb(__('Identities'));
+        $header = __('Identities');
+		$this->unbindModel(array('belongsTo' => array('Staff', 'ModifiedUser','CreatedUser')));
+        $data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions' => array('StaffIdentity.staff_id' => $this->staffId)));
+        $controller->set(compact('header', 'data'));
+    }
+
+	public function identitiesAdd($controller, $params) {
+        $controller->Navigation->addCrumb(__('Add Identity'));
+        $header = __('Add Identity');
+        if ($controller->request->is('post') || $controller->request->is('put')) {
+            $data = $controller->request->data['StaffIdentity'];
+            $addMore = false;
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
+            } elseif (isset($controller->data['submit']) && $controller->data['submit'] == __('Add More')) {
+                $addMore = true;
+            } else {
+                $controller->Navigation->validateModel($controller->action, 'StaffIdentity');
+            }
+
+            $this->create();
+            $data['staff_id'] = $controller->staffId;
+
+            if ($this->save($data)) {
+                $id = $this->getLastInsertId();
+                if ($addMore) {
+                    $controller->Message->alert('general.add.success');
+                }
+                $controller->Navigation->updateWizard($controller->action, $id, $addMore);
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'identities'));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $controller->set('identityTypeOptions', $identityTypeOptions);
+        $controller->UserSession->readStatusSession($controller->request->action);
+
+        $controller->set(compact('header', 'identityTypeOptions'));
+    }
+	
+    public function identitiesView($controller, $params) {
+        $id = isset($params['pass'][0]) ? $params['pass'][0] : 0; //Identity Id
+
+        $controller->Navigation->addCrumb(__('Identity Details'));
+        $header = __('Identity Details');
+        $data = $this->findById($id);
+
+        if (empty($data)) {
+            $controller->Message->alert('general.noData');
+            return $controller->redirect(array('action' => 'identities'));
+        }
+
+        $controller->Session->write('StaffIdentityId', $id);
+        $fields = $this->getDisplayFields($controller);
+        $controller->set(compact('data', 'header', 'fields', 'id'));
+    }
+
+
+	
+	public function identitiesEdit($controller, $params) {
+        $controller->Navigation->addCrumb(__('Edit Identity'));
+        $header = 'Edit Identity';
+        $id = isset($params['pass'][0]) ? $params['pass'][0] : 0; // <<--- Identity Id
+        $data = $this->findById($id);
+
+        if ($controller->request->is('post') || $controller->request->is('put')) {
+            $identityData = $controller->request->data['StaffIdentity'];
+
+            if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+                $controller->Navigation->skipWizardLink($controller->action);
+            } else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+                $controller->Navigation->previousWizardLink($controller->action);
+            }
+            $identityData['staff_id'] = $controller->staffId;
+
+            if ($this->save($identityData)) {
+                $controller->Navigation->updateWizard($controller->action, $id);
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'identitiesView', $id));
+            }
+        } else {
+            if (empty($data)) {
+                return $controller->redirect(array('action' => 'identities'));
+            }
+
+            $controller->request->data = $data;
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+
+        $controller->set(compact('id', 'header', 'identityTypeOptions'));
+    }
+
+	public function identitiesDelete($controller, $params) {
+        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffIdentityId')) {
+            $id = $controller->Session->read('StaffIdentityId');
+
+            if ($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
+
+            $controller->Session->delete('StaffIdentityId');
+
+            return $controller->redirect(array('action' => 'identities'));
+        }
     }
 }

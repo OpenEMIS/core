@@ -30,33 +30,25 @@ class StaffController extends StaffAppController {
         'InstitutionSite',
         'InstitutionSiteType',
         'InstitutionSiteStaff',
-        'Bank',
-        'Staff.StaffBankAccount',
-        'BankBranch',
         'Staff.InstitutionSiteStaff',
         'Staff.Staff',
         'Staff.StaffHistory',
         'Staff.StaffCustomField',
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
-        'Staff.StaffAttachment',
+        
         'Staff.StaffAttendance',
         'Staff.StaffLeave',
         'Staff.StaffLeaveType',
         'Staff.StaffBehaviour',
         'Staff.StaffBehaviourCategory',
         'Staff.StaffQualification',
-        'Staff.StaffComment',
-        'Staff.StaffNationality',
-        'Staff.StaffIdentity',
-        'Staff.StaffLanguage',
-        'Staff.StaffContact',
         'Staff.StaffExtracurricular',
         'Staff.StaffEmployment',
         'Staff.StaffSalary',
         'Staff.StaffSalaryAddition',
         'Staff.StaffSalaryDeduction',
-        'Staff.StaffAward',
+       // 'Staff.StaffAward',
         'Staff.StaffMembership',
         'Staff.StaffLicense',
         'QualificationLevel',
@@ -80,7 +72,8 @@ class StaffController extends StaffAppController {
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
         'UserSession',
-        'Paginator'
+        'Paginator',
+		'FileUploader',
     );
     public $modules = array(
         'healthHistory' => 'Staff.StaffHealthHistory',
@@ -91,13 +84,20 @@ class StaffController extends StaffAppController {
         'healthTest' => 'Staff.StaffHealthTest',
         'healthConsultation' => 'Staff.StaffHealthConsultation',
         'health' => 'Staff.StaffHealth',
-        'special_need' => 'Staff.StaffSpecialNeed',
+        'specialNeed' => 'Staff.StaffSpecialNeed',
         'award' => 'Staff.StaffAward',
         'membership' => 'Staff.StaffMembership',
         'license' => 'Staff.StaffLicense',
         'training_need' => 'Staff.StaffTrainingNeed',
         'training_result' => 'Staff.StaffTrainingResult',
-        'training_self_study' => 'Staff.StaffTrainingSelfStudy'
+        'training_self_study' => 'Staff.StaffTrainingSelfStudy',
+		'contacts' => 'Staff.StaffContact',
+		'identities' => 'Staff.StaffIdentity',
+		'nationalities' => 'Staff.StaffNationality',
+		'languages' => 'Staff.StaffLanguage',
+		'bankAccounts' => 'Staff.StaffBankAccount',
+		'comments' => 'Staff.StaffComment',
+		'attachments' => 'Staff.StaffAttachment',
     );
 
     public $className = 'Staff';
@@ -575,92 +575,6 @@ class StaffController extends StaffAppController {
         $this->set('datavalues', $tmp);
     }
 
-    public function attachments() {
-        $this->Navigation->addCrumb('Attachments');
-        $id = $this->Session->read('StaffId');
-        $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-        $data = $FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('_model', 'StaffAttachment');
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/view');
-    }
-
-    public function attachmentsEdit() {
-        $this->Navigation->addCrumb('Edit Attachments');
-
-        $id = $this->Session->read('StaffId');
-
-        $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-        if ($this->request->is('post')) { // save
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffAttachment');
-            }
-
-            if(!empty($_FILES)){
-                $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
-
-                if (sizeof($errors) == 0) {
-                    $this->Navigation->updateWizard($this->action, null);
-                    $this->Utility->alert(__('Files have been saved successfully.'));
-                    $this->redirect(array('action' => 'attachments'));
-                } else {
-                    $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-                }
-            } else {
-                $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-            }
-        }
-
-        $data = $FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('_model', 'StaffAttachment');
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/edit');
-    }
-
-    public function attachmentsAdd() {
-        $this->layout = 'ajax';
-        $this->set('params', $this->params->query);
-        $this->set('_model', 'StaffAttachment');
-        $this->render('/Elements/attachment/add');
-    }
-
-    public function attachmentsDelete() {
-        $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-            if ($FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-
-            return json_encode($result);
-        }
-    }
-
-    public function attachmentsDownload($id) {
-        $arrMap = array('model' => 'Staff.StaffAttachment', 'foreignKey' => 'staff_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-        $FileAttachment->download($id);
-    }
-
     public function history() {
         $this->Navigation->addCrumb('History');
 
@@ -1119,127 +1033,6 @@ class StaffController extends StaffAppController {
         }
     }
 
-    /*     * *BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already* */
-
-    public function bankAccounts() {
-        $this->Navigation->addCrumb('Bank Accounts');
-
-        $data = $this->StaffBankAccount->find('all', array('conditions' => array('StaffBankAccount.staff_id' => $this->staffId)));
-        $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
-        $banklist = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('data', $data);
-        $this->set('bank', $bank);
-        $this->set('banklist', $banklist);
-    }
-
-    public function bankAccountsView() {
-        $bankAccountId = $this->params['pass'][0];
-        $bankAccountObj = $this->StaffBankAccount->find('all', array('conditions' => array('StaffBankAccount.id' => $bankAccountId)));
-
-        if (!empty($bankAccountObj)) {
-            $this->Navigation->addCrumb('Bank Account Details');
-
-            $this->Session->write('StaffBankAccountId', $bankAccountId);
-            $this->set('bankAccountObj', $bankAccountObj);
-        }
-        $banklist = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('banklist', $banklist);
-    }
-
-    public function bankAccountsAdd() {
-        $this->Navigation->addCrumb('Add Bank Accounts');
-        if ($this->request->is('post')) { // save
-            $addMore = false;
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffBankAccount');
-            }
-            $this->StaffBankAccount->create();
-            if ($this->StaffBankAccount->save($this->request->data)) {
-                $id = $this->StaffBankAccount->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'bankAccounts'));
-            }
-        }
-        $bank = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-
-        $bankId = isset($this->request->data['StaffBankAccount']['bank_id']) ? $this->request->data['StaffBankAccount']['bank_id'] : "";
-        if (!empty($bankId)) {
-            $bankBranches = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
-        } else {
-            $bankBranches = array();
-        }
-
-        $this->set('bankBranches', $bankBranches);
-        $this->set('selectedBank', $bankId);
-        $this->set('staff_id', $this->staffId);
-        $this->set('bank', $bank);
-    }
-
-    public function bankAccountsEdit() {
-        $bankBranch = array();
-        $bankAccountId = $this->params['pass'][0];
-        $this->Navigation->addCrumb('Edit Bank Account Details');
-        if ($this->request->is('get')) {
-            $bankAccountObj = $this->StaffBankAccount->find('first', array('conditions' => array('StaffBankAccount.id' => $bankAccountId)));
-
-            if (!empty($bankAccountObj)) {
-                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
-                $this->request->data = $bankAccountObj;
-            }
-        } else {
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $this->request->data['StaffBankAccount']['staff_id'] = $this->staffId;
-            if ($this->StaffBankAccount->save($this->request->data)) {
-                $this->Navigation->updateWizard($this->action,$bankAccountId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'bankAccountsView', $this->request->data['StaffBankAccount']['id']));
-            }
-        }
-
-        $bankId = isset($this->request->data['StaffBankAccount']['bank_id']) ? $this->request->data['StaffBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
-        $this->set('selectedBank', $bankId);
-
-        $bankBranch = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
-        $this->set('bankBranch', $bankBranch);
-
-        $bank = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
-        $this->set('bank', $bank);
-
-        $this->set('id', $bankAccountId);
-    }
-
-    public function bankAccountsDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffBankAccountId')) {
-            $id = $this->Session->read('StaffBankAccountId');
-
-            $staffId = $this->Session->read('StaffId');
-            $name = $this->StaffBankAccount->field('account_number', array('StaffBankAccount.id' => $id));
-            $this->StaffBankAccount->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'bankAccounts'));
-        }
-    }
-
-    public function bankAccountsBankBranches() {
-        $this->autoRender = false;
-        $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
-        echo json_encode($bank);
-    }
-
     // Staff behaviour part
     public function behaviour() {
         $this->Navigation->addCrumb('List of Behaviour');
@@ -1278,7 +1071,7 @@ class StaffController extends StaffAppController {
         }
     }
 
-    public function comments() {
+    /*public function comments() {
         $this->Navigation->addCrumb('Comments');
         $data = $this->StaffComment->find('all', array('conditions' => array('StaffComment.staff_id' => $this->staffId), 'recursive' => -1, 'order' => 'StaffComment.comment_date'));
 
@@ -1369,426 +1162,7 @@ class StaffController extends StaffAppController {
             $this->redirect(array('action' => 'comments', $staffId));
         }
     }
-
-    public function nationalities() {
-        $this->Navigation->addCrumb(__('Nationalities'));
-        $data = $this->StaffNationality->find('all', array('conditions' => array('StaffNationality.staff_id' => $this->staffId)));
-        $this->set('list', $data);
-    }
-
-    public function nationalitiesAdd() {
-        $this->Navigation->addCrumb(__('Add Nationalities'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $data = $this->data['StaffNationality'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffNationality');
-            }
-            $this->StaffNationality->create();
-            $data['staff_id'] = $this->staffId;
-
-
-            if ($this->StaffNationality->save($data)) {
-                $id = $this->StaffNationality->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'nationalities'));
-            }
-        }
-
-        $defaultCountryId = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
-        $countryOptions = $this->Country->getOptions();
-        $this->set('countryOptions', $countryOptions);
-        $this->set('defaultCountryId', $defaultCountryId);
-		$this->UserSession->readStatusSession($this->request->action);
-	}
-	
-	public function nationalitiesView() {
-        $nationalityId = $this->params['pass'][0];
-        $nationalityObj = $this->StaffNationality->find('all', array('conditions' => array('StaffNationality.id' => $nationalityId)));
-
-        if (!empty($nationalityObj)) {
-            $this->Navigation->addCrumb(__('Nationality Details'));
-
-            $this->Session->write('StaffNationalityId', $nationalityId);
-            $this->set('nationalityObj', $nationalityObj);
-        }
-    }
-
-    public function nationalitiesEdit() {
-        $nationalityId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $nationalityObj = $this->StaffNationality->find('first', array('conditions' => array('StaffNationality.id' => $nationalityId)));
-
-            if (!empty($nationalityObj)) {
-                $this->Navigation->addCrumb(__('Edit Nationality Details'));
-                $this->request->data = $nationalityObj;
-            }
-        } else {
-            $nationalityData = $this->data['StaffNationality'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $nationalityData['staff_id'] = $this->staffId;
-
-            if ($this->StaffNationality->save($nationalityData)) {
-                $this->Navigation->updateWizard($this->action,$nationalityId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
-            }
-        }
-
-        $countryOptions = $this->Country->getOptions();
-        $this->set('countryOptions', $countryOptions);
-
-        $this->set('id', $nationalityId);
-    }
-
-    public function nationalitiesDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffNationalityId')) {
-            $id = $this->Session->read('StaffNationalityId');
-            $staffId = $this->Session->read('StaffId');
-            $countryId = $this->StaffNationality->field('country_id', array('StaffNationality.id' => $id));
-            $name = $this->Country->field('name', array('Country.id' => $countryId));
-            $this->StaffNationality->delete($id);
-            $this->Utility->alert($name . __(' have been deleted successfully.'));
-            $this->redirect(array('action' => 'nationalities', $staffId));
-        }
-    }
-
-    public function identities() {
-        $this->Navigation->addCrumb(__('Identities'));
-        $data = $this->StaffIdentity->find('all', array('conditions' => array('StaffIdentity.staff_id' => $this->staffId)));
-        $this->set('list', $data);
-    }
-
-    public function identitiesAdd() {
-        $this->Navigation->addCrumb(__('Add Identities'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $data = $this->data['StaffIdentity'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffIdentity');
-            }
-
-            $this->StaffIdentity->create();
-            $data['staff_id'] = $this->staffId;
-
-            if ($this->StaffIdentity->save($data)) {
-                $id = $this->StaffIdentity->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'identities'));
-            }
-        }
-
-        $identityTypeOptions = $this->IdentityType->getOptions();
-        $this->set('identityTypeOptions', $identityTypeOptions);
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function identitiesView() {
-        $identityId = $this->params['pass'][0];
-        $identityObj = $this->StaffIdentity->find('all', array('conditions' => array('StaffIdentity.id' => $identityId)));
-
-        if (!empty($identityObj)) {
-            $this->Navigation->addCrumb(__('Identity Details'));
-
-            $this->Session->write('StaffIdentityId', $identityId);
-            $this->set('identityObj', $identityObj);
-        }
-    }
-
-    public function identitiesEdit() {
-        $identityId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $identityObj = $this->StaffIdentity->find('first', array('conditions' => array('StaffIdentity.id' => $identityId)));
-
-            if (!empty($identityObj)) {
-                $this->Navigation->addCrumb(__('Edit Identity Details'));
-                $this->request->data = $identityObj;
-            }
-        } else {
-            $identityData = $this->data['StaffIdentity'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $identityData['staff_id'] = $this->staffId;
-
-            if ($this->StaffIdentity->save($identityData)) {
-                $this->Navigation->updateWizard($this->action,$identityId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
-            }
-        }
-
-        $identityTypeOptions = $this->IdentityType->getOptions();
-        $this->set('identityTypeOptions', $identityTypeOptions);
-
-        $this->set('id', $identityId);
-    }
-
-    public function identitiesDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffIdentityId')) {
-            $id = $this->Session->read('StaffIdentityId');
-            $staffId = $this->Session->read('StaffId');
-            $name = $this->StaffIdentity->field('number', array('StaffIdentity.id' => $id));
-            $this->StaffIdentity->delete($id);
-            $this->Utility->alert($name . __(' have been deleted successfully.'));
-            $this->redirect(array('action' => 'identities', $staffId));
-        }
-    }
-
-    public function languages() {
-        $this->Navigation->addCrumb('Languages');
-        $data = $this->StaffLanguage->find('all', array('conditions' => array('StaffLanguage.staff_id' => $this->staffId)));
-        $this->set('list', $data);
-    }
-
-    public function languagesAdd() {
-        $this->Navigation->addCrumb(__('Add Languages'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $data = $this->data['StaffLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffLanguage');
-            }
-
-            $this->StaffLanguage->create();
-            $data['staff_id'] = $this->staffId;
-
-            if ($this->StaffLanguage->save($data)) {
-                $id = $this->StaffLanguage->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'languages'));
-            }
-        }
-
-        $gradeOptions = array();
-        for ($i = 0; $i < 6; $i++) {
-            $gradeOptions[$i] = $i;
-        }
-        $this->set('gradeOptions', $gradeOptions);
-
-        $languageOptions = $this->Language->getOptions();
-        $this->set('languageOptions', $languageOptions);
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function languagesView() {
-        $languageId = $this->params['pass'][0];
-        $languageObj = $this->StaffLanguage->find('all', array('conditions' => array('StaffLanguage.id' => $languageId)));
-
-        if (!empty($languageObj)) {
-            $this->Navigation->addCrumb('Language Details');
-
-            $this->Session->write('StaffLanguageId', $languageId);
-            $this->set('languageObj', $languageObj);
-        }
-    }
-
-    public function languagesEdit() {
-        $languageId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $languageObj = $this->StaffLanguage->find('first', array('conditions' => array('StaffLanguage.id' => $languageId)));
-
-            if (!empty($languageObj)) {
-                $this->Navigation->addCrumb('Edit Language Details');
-                $this->request->data = $languageObj;
-            }
-        } else {
-            $languageData = $this->data['StaffLanguage'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $languageData['staff_id'] = $this->staffId;
-
-            if ($this->StaffLanguage->save($languageData)) {
-                $this->Navigation->updateWizard($this->action,$languageId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'languagesView', $languageData['id']));
-            }
-        }
-
-        $gradeOptions = array();
-        for ($i = 0; $i < 6; $i++) {
-            $gradeOptions[$i] = $i;
-        }
-        $this->set('gradeOptions', $gradeOptions);
-
-        $languageOptions = $this->Language->getOptions();
-        $this->set('languageOptions', $languageOptions);
-
-        $this->set('id', $languageId);
-    }
-
-    public function languagesDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffLanguageId')) {
-            $id = $this->Session->read('StaffLanguageId');
-            $staffId = $this->Session->read('StaffId');
-            $languageId = $this->StaffLanguage->field('language_id', array('StaffLanguage.id' => $id));
-            $name = $this->Language->field('name', array('Language.id' => $languageId));
-            $this->StaffLanguage->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'languages', $staffId));
-        }
-    }
-
-    public function contacts() {
-        $this->Navigation->addCrumb('Contacts');
-        $data = $this->StaffContact->find('all', array('conditions' => array('StaffContact.staff_id' => $this->staffId), 'order' => array('ContactType.contact_option_id', 'StaffContact.preferred DESC')));
-
-        $contactOptions = $this->ContactOption->getOptions();
-        $this->set('contactOptions', $contactOptions);
-
-        $this->set('list', $data);
-    }
-
-    public function contactsAdd() {
-        $this->Navigation->addCrumb(__('Add Contacts'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $contactData = $this->data['StaffContact'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffContact');
-            }
-
-            $this->StaffContact->create();
-            $contactData['staff_id'] = $this->staffId;
-
-            if ($this->StaffContact->save($contactData)) {
-                if ($contactData['preferred'] == '1') {
-                    $this->StaffContact->updateAll(array('StaffContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StaffContact.id' => array($this->StaffContact->getLastInsertId())))));
-                }
-                $id = $this->StaffContact->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'contacts'));
-            }
-        }
-
-
-        $contactOptions = $this->ContactOption->getOptions();
-        $this->set('contactOptions', $contactOptions);
-
-        $contactOptionId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($contactOptions);
-        $contactTypeOptions = $this->ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
-        $this->set('contactTypeOptions', $contactTypeOptions);
-        $this->set('selectedContactOptions', $contactOptionId);
-
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function contactsView() {
-        $contactId = $this->params['pass'][0];
-        $contactObj = $this->StaffContact->find('all', array('conditions' => array('StaffContact.id' => $contactId)));
-
-        if (!empty($contactObj)) {
-            $this->Navigation->addCrumb('Contact Details');
-
-            $this->Session->write('StaffContactId', $contactId);
-            $this->set('contactObj', $contactObj);
-        }
-
-        $contactOptions = $this->ContactOption->getOptions();
-        $this->set('contactOptions', $contactOptions);
-    }
-
-    public function contactsEdit() {
-        $contactId = $this->params['pass'][0];
-        $contactObj = array();
-        if ($this->request->is('get')) {
-            $contactObj = $this->StaffContact->find('first', array('conditions' => array('StaffContact.id' => $contactId)));
-
-            if (!empty($contactObj)) {
-                $this->Navigation->addCrumb('Edit Contact Details');
-                $this->request->data = $contactObj;
-            }
-        } else {
-            $contactData = $this->data['StaffContact'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $contactData['staff_id'] = $this->staffId;
-
-            if ($this->StaffContact->save($contactData)) {
-                if ($contactData['preferred'] == '1') {
-                    $this->StaffContact->updateAll(array('StaffContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StaffContact.id' => array($contactId)))));
-                }
-                $this->Navigation->updateWizard($this->action,$contactId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'contactsView', $contactData['id']));
-            }
-        }
-
-        $contactOptions = $this->ContactOption->getOptions();
-        $this->set('contactOptions', $contactOptions);
-
-        $contactOptionId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $contactObj['ContactType']['contact_option_id'];
-        $contactTypeOptions = $this->ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
-        $this->set('contactTypeOptions', $contactTypeOptions);
-        $this->set('selectedContactOptions', $contactOptionId);
-
-        $this->set('id', $contactId);
-    }
-
-    public function contactsDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffContactId')) {
-            $id = $this->Session->read('StaffContactId');
-            $staffId = $this->Session->read('StaffId');
-
-            $name = $this->StaffContact->field('value', array('StaffContact.id' => $id));
-            $this->StaffContact->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'contacts', $staffId));
-        }
-    }
-
+*/
     public function extracurricular() {
         $this->Navigation->addCrumb('Extracurricular');
         $data = $this->StaffExtracurricular->getAllList('staff_id', $this->staffId);
@@ -2101,15 +1475,6 @@ class StaffController extends StaffAppController {
         }
     }
 
-    public function ajax_find_award($type) {
-        if ($this->request->is('ajax')) {
-            $this->autoRender = false;
-            $search = $this->params->query['term'];
-            $data = $this->StaffAward->autocomplete($search, $type);
-
-            return json_encode($data);
-        }
-    }
 
     public function ajax_find_membership() {
         if ($this->request->is('ajax')) {

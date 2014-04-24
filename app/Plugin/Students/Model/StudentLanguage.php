@@ -96,7 +96,7 @@ class StudentLanguage extends StudentsAppModel {
         $controller->Navigation->addCrumb('Languages');
         $header = __('Languages');
         $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
-        $data = $this->find('all', array('conditions' => array('StudentLanguage.student_id' => $controller->studentId)));
+		$data = $this->findAllByStudentId($controller->studentId);
         $controller->set(compact('data', 'header'));
     }
 
@@ -134,10 +134,8 @@ class StudentLanguage extends StudentsAppModel {
         for ($i = 0; $i < 6; $i++) {
             $gradeOptions[$i] = $i;
         }
-        //$controller->set('gradeOptions', $gradeOptions);
 
         $languageOptions = $this->Language->getOptions();
-        //$controller->set('languageOptions', $languageOptions);
         $controller->UserSession->readStatusSession($controller->request->action);
         
         $controller->set(compact('header', 'gradeOptions','languageOptions'));
@@ -146,7 +144,7 @@ class StudentLanguage extends StudentsAppModel {
     public function languagesView($controller, $params) {
         $id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
         $controller->Navigation->addCrumb('Language Details');
-        $header = __('Details');
+        $header = __('Language Details');
         $data = $this->findById($id);
 
         if (empty($data)) {

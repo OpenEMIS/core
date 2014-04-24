@@ -118,7 +118,7 @@ $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'attachmentsEdit', 'plugin' => false));
 $formOptions['type'] = 'file';
-echo $this->Form->create($_model, $formOptions);
+echo $this->Form->create($model, $formOptions);
 echo $this->Form->input('id');
 echo $this->Form->input('name');
 echo $this->Form->input('description', array('type' => 'textarea'));

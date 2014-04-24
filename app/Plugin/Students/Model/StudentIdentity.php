@@ -90,7 +90,7 @@ class StudentIdentity extends StudentsAppModel {
                 array('field' => 'number'),
                 array('field' => 'issue_date'),
                 array('field' => 'expiry_date'),
-                array('field' => 'issue_location', 'labelKey' => 'Identities.issue_location'),
+                array('field' => 'issue_location'),
                 array('field' => 'comments'),
                 array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
                 array('field' => 'modified', 'edit' => false),
@@ -150,7 +150,7 @@ class StudentIdentity extends StudentsAppModel {
         $id = isset($params['pass'][0]) ? $params['pass'][0] : 0; //Identity Id
 
         $controller->Navigation->addCrumb(__('Identity Details'));
-        $header = __('Details');
+        $header = __('Identity Details');
         $data = $this->findById($id);
 
         if (empty($data)) {
