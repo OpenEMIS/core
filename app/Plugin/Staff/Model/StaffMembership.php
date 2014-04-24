@@ -104,15 +104,11 @@ class StaffMembership extends StaffAppModel {
 	public function membershipDelete($controller, $params) {
         if($controller->Session->check('StaffId') && $controller->Session->check('StaffMembershipId')) {
             $id = $controller->Session->read('StaffMembershipId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			
-            $name = $data['StaffMembership']['membership'];
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
+            if($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
 			$controller->Session->delete('StaffMembershipId');
             $controller->redirect(array('action' => 'membership'));
         }
@@ -157,17 +153,18 @@ class StaffMembership extends StaffAppModel {
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
 			
 			if($this->saveAll($controller->request->data)){
+				$controller->Message->alert('general.add.success');
 				if(empty($controller->request->data[$this->name]['id'])){
 					$id = $this->getLastInsertId();
-					if($addMore){
+					/*if($addMore){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-					}
+					}*/
                 	$controller->Navigation->updateWizard($controller->action,$id,$addMore);	
-                	$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                	//$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 				}
 				else{
                 	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+					//$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
 				return $controller->redirect(array('action' => 'membership'));
 			}
@@ -198,4 +195,14 @@ class StaffMembership extends StaffAppModel {
 
 		return $data;
 	}
+	
+	public function membershipsAjaxFindMembership($controller, $params){
+        if ($controller->request->is('ajax')) {
+            $this->render = false;
+            $search = $params->query['term'];
+            $data = $this->autocomplete($search);
+
+            return json_encode($data);
+        }
+    }
 }

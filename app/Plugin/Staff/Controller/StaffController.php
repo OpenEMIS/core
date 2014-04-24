@@ -36,7 +36,6 @@ class StaffController extends StaffAppController {
         'Staff.StaffCustomField',
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
-        
         'Staff.StaffAttendance',
         'Staff.StaffLeave',
         'Staff.StaffLeaveType',
@@ -48,9 +47,6 @@ class StaffController extends StaffAppController {
         'Staff.StaffSalary',
         'Staff.StaffSalaryAddition',
         'Staff.StaffSalaryDeduction',
-       // 'Staff.StaffAward',
-        'Staff.StaffMembership',
-        'Staff.StaffLicense',
         'QualificationLevel',
         'QualificationInstitution',
         'QualificationSpecialisation',
@@ -1070,99 +1066,7 @@ class StaffController extends StaffAppController {
             $this->redirect(array('action' => 'behaviour'));
         }
     }
-
-    /*public function comments() {
-        $this->Navigation->addCrumb('Comments');
-        $data = $this->StaffComment->find('all', array('conditions' => array('StaffComment.staff_id' => $this->staffId), 'recursive' => -1, 'order' => 'StaffComment.comment_date'));
-
-        $this->set('list', $data);
-    }
-
-    public function commentsAdd() {
-        $this->Navigation->addCrumb(__('Add Comments'));
-        if ($this->request->is('post')) {
-            $addMore = false;
-            $data = $this->data['StaffComment'];
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $this->Navigation->validateModel($this->action,'StaffComment');
-            }
-
-            $this->StaffComment->create();
-            $data['staff_id'] = $this->staffId;
-
-            if ($this->StaffComment->save($data)) {
-                $id = $this->StaffComment->getLastInsertId();
-                if($addMore){
-                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                }
-                $this->Navigation->updateWizard($this->action,$id,$addMore);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'comments'));
-            }
-        }
-
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function commentsView() {
-        $commentId = $this->params['pass'][0];
-        $commentObj = $this->StaffComment->find('all', array('conditions' => array('StaffComment.id' => $commentId)));
-
-        if (!empty($commentObj)) {
-            $this->Navigation->addCrumb('Comment Details');
-
-            $this->Session->write('StaffCommentId', $commentId);
-            $this->set('commentObj', $commentObj);
-        }
-    }
-
-    public function commentsEdit() {
-        $commentId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $commentObj = $this->StaffComment->find('first', array('conditions' => array('StaffComment.id' => $commentId)));
-
-            if (!empty($commentObj)) {
-                $this->Navigation->addCrumb('Edit Comment Details');
-                $this->request->data = $commentObj;
-            }
-        } else {
-            $commentData = $this->data['StaffComment'];
-
-            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
-                $this->Navigation->skipWizardLink($this->action);
-            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-
-            $commentData['staff_id'] = $this->staffId;
-
-            if ($this->StaffComment->save($commentData)) {
-                $this->Navigation->updateWizard($this->action,$commentId);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'commentsView', $commentData['id']));
-            }
-        }
-
-        $this->set('id', $commentId);
-    }
-
-    public function commentsDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffCommentId')) {
-            $id = $this->Session->read('StaffCommentId');
-            $staffId = $this->Session->read('StaffId');
-            $name = $this->StaffComment->field('title', array('StaffComment.id' => $id));
-            $this->StaffComment->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'comments', $staffId));
-        }
-    }
-*/
+	
     public function extracurricular() {
         $this->Navigation->addCrumb('Extracurricular');
         $data = $this->StaffExtracurricular->getAllList('staff_id', $this->staffId);
@@ -1476,25 +1380,9 @@ class StaffController extends StaffAppController {
     }
 
 
-    public function ajax_find_membership() {
-        if ($this->request->is('ajax')) {
-            $this->autoRender = false;
-            $search = $this->params->query['term'];
-            $data = $this->StaffMembership->autocomplete($search);
+    
 
-            return json_encode($data);
-        }
-    }
-
-    public function ajax_find_license() {
-        if ($this->request->is('ajax')) {
-            $this->autoRender = false;
-            $search = $this->params->query['term'];
-            $data = $this->StaffLicense->autocomplete($search);
-
-            return json_encode($data);
-        }
-    }
+    
 
     public function attachmentsTrainingSelfStudyAdd() {
         $this->layout = 'ajax';
