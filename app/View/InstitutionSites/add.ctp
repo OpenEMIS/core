@@ -3,12 +3,12 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('config', false);
 echo $this->Html->script('institution', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Add New Institution Site'));
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
 <div id="site" class="content_wrapper edit add">
-	<h1><?php echo __('Add New Institution Site'); ?></h1>
 
 	<?php
 	echo $this->Form->create('InstitutionSite', array(
@@ -124,3 +124,4 @@ echo $this->Html->script('institution', false);
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
+<?php $this->end(); ?>

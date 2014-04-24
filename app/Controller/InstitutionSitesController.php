@@ -835,7 +835,7 @@ class InstitutionSitesController extends AppController {
 
         $this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 
-        if ($this->action === 'index' || $this->action === 'add') {
+        if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced') {
             $this->bodyTitle = 'Institutions';
         } else if ($this->action === 'view'){
             
@@ -935,6 +935,33 @@ class InstitutionSitesController extends AppController {
                         $this->redirect(array('action' => 'index'));
                     }
                 }
+
+                // custom fields start
+                $sitetype = 0;
+                $customfields = 'InstitutionSite';
+                
+                $arrSettings = array(
+                    'CustomField' => $customfields . 'CustomField',
+                    'CustomFieldOption' => $customfields . 'CustomFieldOption',
+                    'CustomValue' => $customfields . 'CustomValue',
+                    'Year' => ''
+                );
+                if ($this->{$customfields}->hasField('institution_site_type_id')) {
+                    $arrSettings = array_merge(array('institutionSiteTypeId' => $sitetype), $arrSettings);
+                }
+                $arrCustFields = array($customfields => $arrSettings);
+
+                $instituionSiteCustField = $this->Components->load('CustomField', $arrCustFields[$customfields]);
+                $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+                $types = $this->InstitutionSiteType->findList(1);
+                //pr(array($customfields));
+                $this->set("customfields", array($customfields));
+                $this->set('types', $types);
+                $this->set('typeSelected', $sitetype);
+                $this->set('dataFields', $dataFields);
+                //pr($dataFields);
+                //$this->render('/Elements/customfields/search');
+                // custom fields end
             }
         } else {
 
@@ -964,6 +991,7 @@ class InstitutionSitesController extends AppController {
             $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
             $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
             $types = $this->InstitutionSiteType->findList(1);
+            //pr(array($customfields));
             $this->set("customfields",array($customfields));
             $this->set('types',  $types);        
             $this->set('typeSelected',  $sitetype);

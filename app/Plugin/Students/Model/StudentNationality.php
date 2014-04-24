@@ -64,7 +64,7 @@ class StudentNationality extends StudentsAppModel {
         $controller->Navigation->addCrumb('Nationalities');
         $header = __('Nationalities');
         $this->unbindModel(array('belongsTo' => array('Student', 'ModifiedUser','CreatedUser')));
-        $data = $this->find('all', array('conditions' => array('StudentNationality.student_id' => $controller->studentId)));
+		$data = $this->findAllByStudentId($controller->studentId);
         $controller->set(compact('header', 'data'));
     }
 
@@ -110,7 +110,7 @@ class StudentNationality extends StudentsAppModel {
     public function nationalitiesView($controller, $params) {
         $id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
         $controller->Navigation->addCrumb('Nationality Details');
-        $header = __('Details');
+        $header = __('Nationality Details');
         $data = $this->findById($id);
 
         if (empty($data)) {
@@ -125,7 +125,7 @@ class StudentNationality extends StudentsAppModel {
     public function nationalitiesEdit($controller, $params)  {
         $id = isset($params['pass'][0]) ?$params['pass'][0] : 0;
         $controller->Navigation->addCrumb('Edit Nationality');
-        $header = __('Details');
+        $header = __('Edit Nationality');
         
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $nationalityData = $controller->request->data['StudentNationality'];
@@ -149,7 +149,7 @@ class StudentNationality extends StudentsAppModel {
             $data = $this->findById($id);
 
             if (empty($data)) {
-                return $controller->redirect(array('action' => 'languages'));
+                return $controller->redirect(array('action' => 'nationalities'));
             }
             $controller->request->data = $data;
         }

@@ -113,7 +113,7 @@ $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin'=>'Students'));
 $formOptions['id'] = 'award';
-$formOptions['selectAwardUrl']="Students/awardAjaxFindAward/";
+$formOptions['selectAwardUrl']=$this->params['controller']."/awardAjaxFindAward/";
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->FormUtility->datepicker('issue_date');
