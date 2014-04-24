@@ -99,5 +99,24 @@ class FieldOptionValue extends AppModel {
 		}
 		return false;
 	}
+        
+	public function getList() {
+		$alias = $this->alias;
+		
+		$list = $this->find('list', array(
+			'joins' => array(
+				array(
+					'table' => 'field_options',
+					'alias' => 'FieldOption',
+					'conditions' => array(
+						'FieldOption.id = ' . $alias . '.field_option_id',
+						"FieldOption.code = '" . $alias . "'"
+					)
+				)
+			),
+			'order' => array($alias.'.order')
+		));
+		return $list;
+	}
 }
 ?>
