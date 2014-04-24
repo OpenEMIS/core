@@ -19,7 +19,6 @@ App::uses('AppModel', 'Model');
 class InstitutionSite extends AppModel {
     
     public $belongsTo = array(
-		'Institution',
 		'InstitutionSiteStatus',
 		'InstitutionSiteLocality',
 		'InstitutionSiteType',
@@ -102,7 +101,7 @@ class InstitutionSite extends AppModel {
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Provider'
+				'message' => 'Please select a Locality'
 			)
 		),
 		'institution_site_status_id' => array(
@@ -159,8 +158,44 @@ class InstitutionSite extends AppModel {
 				'rule' => array('checkLatitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Latitude'
+		),
+		'institution_site_provider_id' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', '>', 0),
+				'required' => true,
+				'message' => 'Please select a Provider'
+			)
+		),
+		'institution_site_sector_id' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', '>', 0),
+				'required' => true,
+				'message' => 'Please select a Sector'
+			)
 		)
 	);
+	
+//	public function getDisplayFields($controller) {
+//		$fields = array(
+//			'model' => $this->alias,
+//			'fields' => array(
+//				array('field' => 'id', 'type' => 'hidden'),
+//				array('field' => 'name'),
+//				array('field' => 'code')
+//				//array('field' => 'validate_institution_site_code', 'type' => 'hidden')
+//				//array('field' => 'bank_id', 'model' => 'BankBranch', 'type' => 'select', 'options' => $bankOptions),
+////				array('field' => 'account_name'),
+////				array('field' => 'account_number'),
+////				array('field' => 'active', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
+////				array('field' => 'remarks', 'type' => 'textarea'),
+////				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+////				array('field' => 'modified', 'edit' => false),
+////				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+////				array('field' => 'created', 'edit' => false)
+//			)
+//		);
+//		return $fields;
+//	}
     
 	public function checkNumeric($arrVal){
 		$o = array_values($arrVal);
@@ -195,16 +230,6 @@ class InstitutionSite extends AppModel {
         }
         return $isValid;
     }
-
-	public function getLookupVariables() {
-		$lookup = array(
-			'Type' => array('model' => 'InstitutionSiteType'),
-			'Ownership' => array('model' => 'InstitutionSiteOwnership'),
-			'Locality' => array('model' => 'InstitutionSiteLocality'),
-			'Status' => array('model' => 'InstitutionSiteStatus')
-		);
-		return $lookup;
-	}
 	
 	// Used by SecurityController
 	public function getGroupAccessList($exclude) {
@@ -489,7 +514,7 @@ class InstitutionSite extends AppModel {
 			'conditions' => array('InstitutionSite.institution_site_type_id = InstitutionSiteType.id')
 		);
                 
-                $joins[] = array(
+        $joins[] = array(
 			'table' => 'areas',
 			'alias' => 'Area',
                         'type' => 'LEFT',
