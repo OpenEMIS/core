@@ -90,6 +90,20 @@ class LabelHelper extends AppHelper {
         ),
         'Identities' => array(
             'issue_location' => 'Issuer'
+        ),
+		'QualificationLevel' => array(
+            'name' => 'Level'
+        ),
+		'QualificationInstitution' => array(
+            'name' => 'Institution'
+        ),
+		'QualificationSpecialisation' => array(
+            'name' => 'Major/Specialisation'
+        ),
+		'StaffQualification' => array(
+            'qualification_institution_country' => 'Institution Country',
+			'gpa' => 'Grade/Score',
+			'file_name' => 'Attachment',
         )
     );
 	

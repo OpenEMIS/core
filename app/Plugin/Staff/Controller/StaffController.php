@@ -41,15 +41,13 @@ class StaffController extends StaffAppController {
         'Staff.StaffLeaveType',
         'Staff.StaffBehaviour',
         'Staff.StaffBehaviourCategory',
-        'Staff.StaffQualification',
+        
         'Staff.StaffExtracurricular',
         'Staff.StaffEmployment',
         'Staff.StaffSalary',
         'Staff.StaffSalaryAddition',
         'Staff.StaffSalaryDeduction',
-        'QualificationLevel',
-        'QualificationInstitution',
-        'QualificationSpecialisation',
+        /**/
         'SchoolYear',
         'ConfigItem',
         'LeaveStatus',
@@ -94,6 +92,7 @@ class StaffController extends StaffAppController {
 		'bankAccounts' => 'Staff.StaffBankAccount',
 		'comments' => 'Staff.StaffComment',
 		'attachments' => 'Staff.StaffAttachment',
+		'qualifications' => 'Staff.StaffQualification',
     );
 
     public $className = 'Staff';
@@ -845,189 +844,8 @@ class StaffController extends StaffAppController {
         $FileAttachment->download($id);
     }
 
-    public function qualifications() {
-        $this->Navigation->addCrumb('Qualifications');
-        $list = $this->StaffQualification->getData($this->staffId);
 
-        $this->UserSession->readStatusSession($this->request->action);
-        $this->set('list', $list);
-    }
-
-    public function qualificationsAdd() {
-        if ($this->request->is('post')) {
-            $this->StaffQualification->create();
-            $this->request->data['StaffQualification']['staff_id'] = $this->staffId;
-
-            $staffQualificationData = $this->data['StaffQualification'];
-
-            $this->StaffQualification->set($staffQualificationData);
-
-            if ($this->StaffQualification->validates()) {
-                if (empty($staffQualificationData['qualification_institution_id'])) {
-                    $data = array(
-                        'QualificationInstitution' =>
-                        array(
-                            'name' => $staffQualificationData['qualification_institution'],
-                            'order' => 0,
-                            'visible' => 1,
-                            'created_user_id' => $this->Auth->user('id'),
-                            'created' => date('Y-m-d h:i:s')
-                        )
-                    );
-                    $this->QualificationInstitution->save($data);
-                    $qualificationInstitutionId = $this->QualificationInstitution->getInsertID();
-                    $staffQualificationData['qualification_institution_id'] = $qualificationInstitutionId;
-                }
-
-                $this->StaffQualification->save($staffQualificationData);
-
-                $staffQualificationId = $this->StaffQualification->getInsertID();
-
-                $arrMap = array('model' => 'Staff.StaffQualification');
-                $Q = $this->Components->load('FileAttachment', $arrMap);
-                $staffQualificationData['id'] = $staffQualificationId;
-                $errors = $Q->save($staffQualificationData, $_FILES);
-
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'qualifications'));
-            }
-        }
-
-        $levels = $this->QualificationLevel->getOptions();
-        $specializations = $this->QualificationSpecialisation->getOptions();
-        $institutes = $this->QualificationInstitution->getOptions();
-
-        $this->UserSession->readStatusSession($this->request->action);
-        $this->set('specializations', $specializations);
-        $this->set('levels', $levels);
-        $this->set('institutes', $institutes);
-    }
-
-    public function qualificationsView() {
-        $staffQualificationId = $this->params['pass'][0];
-        $staffQualificationObj = $this->StaffQualification->find('all', array('conditions' => array('StaffQualification.id' => $staffQualificationId)));
-
-        if (!empty($staffQualificationObj)) {
-            $this->Navigation->addCrumb('Qualification Details');
-
-            $levels = $this->QualificationLevel->getOptions();
-            $specializations = $this->QualificationSpecialisation->getOptions();
-            $institutes = $this->QualificationInstitution->getOptions();
-
-            $this->Session->write('StaffQualificationId', $staffQualificationId);
-            $this->set('levels', $levels);
-            $this->set('specializations', $specializations);
-            $this->set('institutes', $institutes);
-            $this->set('staffQualificationObj', $staffQualificationObj);
-
-            $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        } else {
-            //$this->redirect(array('action' => 'classesList'));
-        }
-    }
-
-    public function qualificationsEdit() {
-        $levels = $this->QualificationLevel->getOptions();
-        $institutes = $this->QualificationInstitution->getOptions();
-        $specializations = $this->QualificationSpecialisation->getOptions();
-
-        $this->set('levels', $levels);
-        $this->set('institutes', $institutes);
-        $this->set('specializations', $specializations);
-
-        if ($this->request->is('get')) {
-            $staffQualificationId = $this->params['pass'][0];
-            $staffQualificationObj = $this->StaffQualification->find('first', array('conditions' => array('StaffQualification.id' => $staffQualificationId)));
-
-            if (!empty($staffQualificationObj)) {
-                $this->Navigation->addCrumb('Edit Qualification Details');
-                $staffQualificationObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
-                $this->request->data = $staffQualificationObj;
-                $this->set('id', $staffQualificationId);
-            } else {
-                //$this->redirect(array('action' => 'studentsBehaviour'));
-            }
-        } else {
-            $staffQualificationData = $this->data['StaffQualification'];
-            $staffQualificationData['staff_id'] = $this->staffId;
-
-            $this->StaffQualification->set($staffQualificationData);
-
-            if ($this->StaffQualification->validates()) {
-                if (empty($staffQualificationData['qualification_institution_id'])) {
-                    $data = array(
-                        'QualificationInstitution' =>
-                        array(
-                            'name' => $staffQualificationData['qualification_institution'],
-                            'order' => 0,
-                            'visible' => 1,
-                            'created_user_id' => $this->Auth->user('id'),
-                            'created' => date('Y-m-d h:i:s')
-                        )
-                    );
-                    $this->QualificationInstitution->save($data);
-                    $qualificationInstitutionId = $this->QualificationInstitution->getInsertID();
-                    $staffQualificationData['qualification_institution_id'] = $qualificationInstitutionId;
-                }
-                $this->StaffQualification->save($staffQualificationData);
-                $arrMap = array('model' => 'Staff.StaffQualification');
-                $Q = $this->Components->load('FileAttachment', $arrMap);
-
-                $errors = $Q->save($staffQualificationData, $_FILES);
-
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'qualificationsView', $staffQualificationData['id']));
-            }
-        }
-    }
-
-    public function qualificationsDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffQualificationId')) {
-            $id = $this->Session->read('StaffQualificationId');
-            $staffId = $this->Session->read('StaffId');
-            $name = $this->StaffQualification->field('qualification_title', array('StaffQualification.id' => $id));
-            $this->StaffQualification->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'qualifications', $staffId));
-        }
-    }
-
-    public function qualificationAttachmentsDelete($id) {
-        $this->autoRender = false;
-
-        $result = array('alertOpt' => array());
-        $this->Utility->setAjaxResult('alert', $result);
-
-        $staffQualification = $this->StaffQualification->findById($id);
-        $name = $staffQualification['StaffQualification']['qualification_title'];
-        $staffQualification['StaffQualification']['file_name'] = null;
-        $staffQualification['StaffQualification']['file_content'] = null;
-
-        if ($this->StaffQualification->save($staffQualification)) {
-            //$this->Utility->alert($name . ' have been deleted successfully.');
-        } else {
-            //$this->Utility->alert('Error occurred while deleting file.');
-        }
-
-        $this->redirect(array('action' => 'qualificationsEdit', $id));
-    }
-
-    public function qualificationAttachmentsDownload($id) {
-        $arrMap = array('model' => 'Staff.StaffQualification');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-        $FileAttachment->download($id);
-        exit;
-    }
-
-    public function ajax_find_institution() {
-        if ($this->request->is('ajax')) {
-            $this->autoRender = false;
-            $search = $this->params->query['term'];
-            $data = $this->QualificationInstitution->autocomplete($search);
-
-            return json_encode($data);
-        }
-    }
+    
 
     // Staff behaviour part
     public function behaviour() {
