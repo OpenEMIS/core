@@ -1,30 +1,20 @@
 <?php
-echo $this->Html->css('/Quality/css/rubrics', 'stylesheet', array('inline' => false));
+echo $this->Html->css('../Quality/css/rubrics', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Quality/js/rubrics', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
-//echo $this->Html->script('config', false);
-?>
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader',  $this->Utility->ellipsis(__($subheader), 50));
+$this->start('contentActions');
+if($_accessControl->check($this->params['controller'], 'rubricsTemplatesAdd')) {
+    echo $this->Html->link(__('Add Header'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
+    echo $this->Html->link(__('Add Criteria'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
+}
+$this->end();
 
-<div id="student" class="content_wrapper">
-    <h1>
-        <span><?php echo $this->Utility->ellipsis(__($subheader), 50); ?></span>
-        <?php
-        /* if($_edit) {
-          echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesDetails', $id ), array('class' => 'divider'));
-          } */
-         //echo $this->Html->link(__('Add Level / Column'), array('action' => 'rubricsTemplatesCriteria', $rubricTemplateId, $rubricTemplateHeaderId), array('class' => 'divider'));
-    
-      //  if (!empty($columnHeaderData)) {
-        if($_accessControl->check($this->params['controller'], 'rubricsTemplatesAdd')) {
-            echo $this->Html->link(__('Add Header'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
-            echo $this->Html->link(__('Add Criteria'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addRow(' . $rubricTemplateHeaderId . ')'));
-        }
-        
-        ?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
+$this->start('contentBody');
+?>
+ <?php echo $this->element('alert'); ?>
     <?php
     $this->RubricsView->defaultNoOfColumns = $totalColumns;
 
@@ -70,7 +60,7 @@ echo $this->Html->script('jquery.sort', false);
     </div>
 
     <?php echo $this->Form->end(); ?>
-</div>
+
 <?php
 //Addind auto insert function
 if($_accessControl->check($this->params['controller'], 'rubricsTemplatesEdit')) {
@@ -83,3 +73,4 @@ if($_accessControl->check($this->params['controller'], 'rubricsTemplatesEdit')) 
     }
 }
 ?>
+<?php $this->end(); ?>

@@ -27,8 +27,6 @@ padding: 3px 0 5px 20px;
 </style>
 
 <?php
-
-
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'courseAdd'), 'file');
 echo $this->Form->create($model, $formOptions);
 ?>
@@ -46,9 +44,9 @@ echo $this->Form->create($model, $formOptions);
 		echo $this->Form->input('training_field_study_id', array('label'=>array('text'=>__('Category / Field of Study'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingFieldStudyOptions)); 
 		echo $this->Form->input('training_course_type_id', array('label'=>array('text'=>__('Course Type'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingCourseTypeOptions)); 
 	?>
- <div class="row row_target_population" style="min-height:45px;">
-	<div class="label"><?php echo __('Target Population'); ?></div>
-	<div class="value">
+ <div class="row form-group row_target_population" style="min-height:45px;">
+	<label class="col-md-3 control-label"><?php echo __('Target Population'); ?></label>
+	<div class="col-md-4">
 	<div class="table target_population" style="width:247px;" url="Training/ajax_find_target_population/">
 		<div class="delete-target-population" name="data[DeleteTargetPopulation][{index}][id]"></div>
 		<div class="table_body" style="display:table;">
@@ -104,9 +102,9 @@ echo $this->Form->create($model, $formOptions);
 	echo $this->Form->input('duration', array('label'=>array('text'=>__('Hours'), 'class'=>'col-md-3 control-label'))); 
 	echo $this->Form->input('training_mode_delivery_id', array('label'=>array('text'=>__('Mode of Delivery'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingModeDeliveryOptions)); 
 ?>
-<div class="row row_provider" style="min-height:45px;">
-    <div class="label"><?php echo __('Training Provider'); ?></div>
-    <div class="value">
+<div class="row form-group row_provider" style="min-height:45px;">
+    <label class="col-md-3 control-label"><?php echo __('Training Provider'); ?></label>
+    <div class="col-md-4">
 	<div class="table provider" style="width:247px;" url="Training/ajax_find_prerequisite/">
 		<div class="delete-provider" name="data[DeleteProvider][{index}][id]"></div>
 		<div class="table_body" style="display:table;">
@@ -144,9 +142,9 @@ echo $this->Form->create($model, $formOptions);
 	echo $this->Form->input('training_requirement_id', array('label'=>array('text'=>__('Training Requirement'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingRequirementOptions)); 
 	echo $this->Form->input('training_level_id', array('label'=>array('text'=>__('Training Level'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingLevelOptions)); 
 ?>
-<div class="row row_prerequisite" style="min-height:45px;">
-	<div class="label"><?php echo __('Prerequisite'); ?></div>
-	<div class="value">
+<div class="row form-group row_prerequisite" style="min-height:45px;">
+	<label class="col-md-3 control-label"><?php echo __('Prerequisite'); ?></label>
+	<div class="col-md-4">
 	<div class="table prerequisite" style="width:247px;" url="Training/ajax_find_prerequisite/">
 		<div class="delete-prerequisite" name="data[DeletePrerequisite][{index}][id]"></div>
 		<div class="table_body" style="display:table;">
@@ -191,9 +189,9 @@ echo $this->Form->create($model, $formOptions);
 ?>
 <span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
 
-<div class="row">
-	<div class="label"><?php echo __('Attachments'); ?></div>
-	<div class="value">
+<div class="row form-group">
+	<label class="col-md-3 control-label"><?php echo __('Attachments'); ?></label>
+	<div class="col-md-4">
 	<div class="table file_upload" style="width:240px;">
 		<div class="table_body">
 			<?php

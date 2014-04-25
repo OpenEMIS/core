@@ -27,7 +27,7 @@ $this->end();
 
 $this->start('contentBody'); ?>
 <?php echo $this->element('alert'); ?>
-		
+
 <div class="row">
 	<div class="col-md-3"><?php echo __('Course Code'); ?></div>
 	<div class="col-md-6"><?php echo $data['TrainingCourse']['code']; ?></div>

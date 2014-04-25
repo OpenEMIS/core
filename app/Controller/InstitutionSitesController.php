@@ -17,6 +17,7 @@
 
 App::uses('AppController', 'Controller');
 App::uses('AreaHandlerComponent', 'Controller/Component');
+App::uses('Sanitize', 'Utility');
 
 class InstitutionSitesController extends AppController {
 
@@ -58,7 +59,7 @@ class InstitutionSitesController extends AppController {
         'InstitutionSiteSector',
         'InstitutionSiteStatus',
         'InstitutionSiteProgramme',
-        'InstitutionSiteAttachment',
+        
         'InstitutionSiteType',
         'InstitutionSiteStudent',
         'InstitutionSiteTeacher',
@@ -150,6 +151,7 @@ class InstitutionSitesController extends AppController {
             'model' => 'InstitutionSiteAttachment',
             'foreignKey' => 'institution_site_id'
         ),
+		'FileUploader',
         'AreaHandler'
     );
     
@@ -158,7 +160,8 @@ class InstitutionSitesController extends AppController {
         'programmes' => 'InstitutionSiteProgramme',
         'studentsBehaviour' => 'Students.StudentBehaviour',
         'students' => 'InstitutionSiteStudent',
-        'classes' => 'InstitutionSiteClass'
+        'classes' => 'InstitutionSiteClass',
+		'attachments' => 'InstitutionSiteAttachment',
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -824,63 +827,180 @@ class InstitutionSitesController extends AppController {
             'typeForeignKey' => 'infrastructure_furniture_id'
         )
     );
-
+    
     public function beforeFilter() {
         parent::beforeFilter();
 
         $this->Auth->allow('viewMap', 'siteProfile');
 
-        if ($this->Session->check('InstitutionId')) {
-            $institutionId = $this->Session->read('InstitutionId');
-            $institutionName = $this->Institution->field('name', array('Institution.id' => $institutionId));
-            $this->Navigation->addCrumb('Institutions', array('controller' => 'Institutions', 'action' => 'index'));
-            $this->Navigation->addCrumb($institutionName, array('controller' => 'Institutions', 'action' => 'view'));
+        $this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 
-            if ($this->action === 'index' || $this->action === 'add') {
-                $this->bodyTitle = $institutionName;
-            } else {
-                if ($this->Session->check('InstitutionSiteId')) {
-                    $this->institutionSiteId = $this->Session->read('InstitutionSiteId');
-                    $this->institutionSiteObj = $this->Session->read('InstitutionSiteObj');
-                    $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
-                    $this->bodyTitle = $institutionName . ' - ' . $institutionSiteName;
-                    $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
-                } else {
-                    $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
-                }
-            }
+        if ($this->action === 'index' || $this->action === 'add') {
+            $this->bodyTitle = 'Institutions';
+        } else if ($this->action === 'view'){
+            
         } else {
             if ($this->action == 'siteProfile' || $this->action == 'viewMap') {
                 $this->layout = 'profile';
+            }
+            
+            if ($this->Session->check('InstitutionSiteId')) {
+                $this->institutionSiteId = $this->Session->read('InstitutionSiteId');
+                $this->institutionSiteObj = $this->Session->read('InstitutionSiteObj');
+                $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
+                
+                if($this->action !== 'advanced'){
+                    $this->bodyTitle = $institutionSiteName;
+                    $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+                }
+                
             } else {
-                $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
             }
         }
     }
-
+    
     public function index() {
-        if (isset($this->params['pass'][0])) {
-            $id = $this->params['pass'][0];
-            $obj = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $id)));
+        $this->AccessControl->init($this->Auth->user('id'));
 
-            if ($obj) {
-                $this->Session->write('InstitutionSiteId', $id);
-                $this->Session->write('InstitutionSiteObj', $obj);
-                $this->redirect(array('action' => 'view'));
+        $this->Navigation->addCrumb('List of Institutions');
+        if ($this->request->is('post')) {
+            if (isset($this->request->data['InstitutionSite']['SearchField'])) {
+                $this->request->data['InstitutionSite']['SearchField'] = Sanitize::escape(trim($this->request->data['InstitutionSite']['SearchField']));
+
+                if ($this->request->data['InstitutionSite']['SearchField'] != $this->Session->read('Search.SearchField')) {
+                    $this->Session->delete('Search.SearchField');
+                    $this->Session->write('Search.SearchField', $this->request->data['InstitutionSite']['SearchField']);
+                }
+            }
+
+            if (isset($this->request->data['sortdir']) && isset($this->request->data['order'])) {
+                if ($this->request->data['sortdir'] != $this->Session->read('Search.sortdir')) {
+                    $this->Session->delete('Search.sortdir');
+                    $this->Session->write('Search.sortdir', $this->request->data['sortdir']);
+                }
+                if ($this->request->data['order'] != $this->Session->read('Search.order')) {
+                    $this->Session->delete('Search.order');
+                    $this->Session->write('Search.order', $this->request->data['order']);
+                }
+            }
+        }
+
+        $fieldordername = ($this->Session->read('Search.order')) ? $this->Session->read('Search.order') : 'InstitutionSite.name';
+        $fieldorderdir = ($this->Session->read('Search.sortdir')) ? $this->Session->read('Search.sortdir') : 'asc';
+
+        $searchKey = stripslashes($this->Session->read('Search.SearchField'));
+
+        $conditions = array(
+            'SearchKey' => $searchKey,
+            'AdvancedSearch' => $this->Session->check('InstitutionSite.AdvancedSearch') ? $this->Session->read('InstitutionSite.AdvancedSearch') : null,
+            'isSuperAdmin' => $this->Auth->user('super_admin'),
+            'userId' => $this->Auth->user('id'),
+            'order' => array($fieldordername => $fieldorderdir)
+        );
+
+        $order = array('order' => array($fieldordername => $fieldorderdir));
+        $limit = ($this->Session->read('Search.perpage')) ? $this->Session->read('Search.perpage') : 30;
+        $this->Paginator->settings = array_merge(array('limit' => $limit, 'maxLimit' => 100), $order);
+
+        $data = $this->paginate('InstitutionSite', $conditions);
+
+        if (empty($data) && !$this->request->is('ajax')) {
+            $this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+        }
+        $this->set('institutions', $data);
+        $this->set('sortedcol', $fieldordername);
+        $this->set('sorteddir', ($fieldorderdir == 'asc') ? 'up' : 'down');
+        $this->set('searchField', stripslashes($this->Session->read('Search.SearchField')));
+        if ($this->request->is('post')) {
+            $this->render('index_records', 'ajax');
+        }
+    }
+    
+    public function advanced() {
+        $key = 'InstitutionSite.AdvancedSearch';
+        if ($this->request->is('get')) {
+            if ($this->request->is('ajax')) {
+                $this->autoRender = false;
+                $search = $this->params->query['term'];
+                $result = $this->Area->autocomplete($search);
+                return json_encode($result);
             } else {
-                $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+                $this->Navigation->addCrumb('List of Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
+                $this->Navigation->addCrumb('Advanced Search');
+
+                if (isset($this->params->pass[0])) {
+                    if (intval($this->params->pass[0]) === 0) {
+                        $this->Session->delete($key);
+                        $this->redirect(array('action' => 'index'));
+                    }
+                }
             }
         } else {
-            $this->redirect(array('controller' => 'Institutions', 'action' => 'index'));
+
+            //$search = $this->data['Search'];
+            $search = $this->data;
+            if (!empty($search)) {
+                //pr($this->data);die;
+                $this->Session->write($key, $search);
+            }
+            $this->redirect(array('action' => 'index'));
         }
     }
+        
+        public function getCustomFieldsSearch($sitetype = 0,$customfields = 'Institution'){
+             $this->layout = false;
+             $arrSettings = array(
+                                                            'CustomField'=>$customfields.'CustomField',
+                                                            'CustomFieldOption'=>$customfields.'CustomFieldOption',
+                                                            'CustomValue'=>$customfields.'CustomValue',
+                                                            'Year'=>''
+                                                        );
+             if($this->{$customfields}->hasField('institution_site_type_id')){
+                 $arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
+             }
+             $arrCustFields = array($customfields => $arrSettings);
+             
+            $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
+            $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+            $types = $this->InstitutionSiteType->findList(1);
+            $this->set("customfields",array($customfields));
+            $this->set('types',  $types);        
+            $this->set('typeSelected',  $sitetype);
+            $this->set('dataFields',  $dataFields);
+            $this->render('/Elements/customfields/search');
+        }
 
     public function view() {
+        if (isset($this->params['pass'][0])) {
+            $institutionSiteId = $this->params['pass'][0];
+            $obj = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
+
+            if ($obj) {
+                $this->Session->write('InstitutionSiteId', $institutionSiteId);
+                $this->Session->write('InstitutionSiteObj', $obj);
+            } else {
+                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+            }
+        }else if ($this->Session->check('InstitutionSiteId')){
+            $institutionSiteId = $this->Session->read('InstitutionSiteId');
+            $obj = $this->Session->read('InstitutionSiteObj');
+        } else {
+            $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+        }
+        
+        $this->institutionSiteId = $institutionSiteId;
+        $this->institutionSiteObj = $obj;
+        
+        $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $institutionSiteId));
+        $this->bodyTitle = $institutionSiteName;
+        $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+        
         $this->Navigation->addCrumb('Overview');
 
         $levels = $this->AreaLevel->find('list', array('recursive' => 0));
         $adminarealevels = $this->AreaEducationLevel->find('list', array('recursive' => 0));
-        $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $this->institutionSiteId)));
+        $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
 
         $areaLevel = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_id']);
         $areaLevel = array_reverse($areaLevel);
@@ -1164,65 +1284,6 @@ class InstitutionSitesController extends AppController {
         $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
     }
 
-    public function attachments() {
-        $this->Navigation->addCrumb('Attachments');
-        $id = $this->Session->read('InstitutionSiteId');
-        $data = $this->FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/index');
-    }
-	
-	public function attachmentsAdd() {
-		if($this->request->is('get')) {
-			$this->Navigation->addCrumb('Add Attachment');
-			$this->render('/Elements/attachment/add');
-		} else {
-			//pr($this->request->data);die;
-		}
-	}
-
-    public function attachmentsEdit() {
-        $this->Navigation->addCrumb('Edit Attachments');
-        $id = $this->Session->read('InstitutionSiteId');
-
-        if ($this->request->is('post')) { // save
-            $errors = $this->FileAttachment->saveAll($this->data, $_FILES, $id);
-            if (sizeof($errors) == 0) {
-                $this->Utility->alert('Files have been saved successfully.');
-                $this->redirect(array('action' => 'attachments'));
-            } else {
-                $this->Utility->alert('Some errors have been encountered while saving files.', array('type' => 'error'));
-            }
-        }
-
-        $data = $this->FileAttachment->getList($id);
-        $this->set('data', $data);
-        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-        $this->render('/Elements/attachment/edit');
-    }
-
-    public function attachmentsDelete() {
-        $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            if ($this->FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-
-            return json_encode($result);
-        }
-    }
-
-    public function attachmentsDownload($id) {
-        $this->FileAttachment->download($id);
-    }
 
     public function additional() {
         $this->Navigation->addCrumb('More');
@@ -2976,7 +3037,9 @@ class InstitutionSitesController extends AppController {
                     )
                 );
 
-				    $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
+                $reportFields = $this->reportMapping['Overview and More']['fields'];
+
+				 $institutionSiteCustomFields = $this->InstitutionSiteCustomField->find('all', 
                     array(
                         'recursive' => -1,
                         'fields'=>array('InstitutionSiteCustomField.name as FieldName'),
@@ -2984,7 +3047,12 @@ class InstitutionSitesController extends AppController {
                             array(
                                 'table' => 'institution_sites',
                                 'alias' => 'InstitutionSite',
-                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                                'conditions' => array(
+                                    'OR' => array(
+                                        'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                        'InstitutionSiteCustomField.institution_site_type_id' => 0
+                                    )
+                                )    
                             )
                         ),
                          'conditions' => array(
@@ -2995,11 +3063,10 @@ class InstitutionSitesController extends AppController {
                         'order' => array('InstitutionSiteCustomField.order')
                     )
                 );
-                $reportFields = $this->reportMapping['Overview and More']['fields'];
 
-  				foreach($institutionSiteCustomFields as $val){
+                foreach($institutionSiteCustomFields as $val){
                    if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
-                      	$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+                        $reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
                    }
                 }
 
@@ -3161,7 +3228,12 @@ class InstitutionSitesController extends AppController {
                             array(
                                 'table' => 'institution_sites',
                                 'alias' => 'InstitutionSite',
-                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                                'conditions' => array(
+                                    'OR' => array(
+                                        'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                        'InstitutionSiteCustomField.institution_site_type_id' => 0
+                                    )
+                                )    
                             )
                         ),
                          'conditions' => array(
@@ -3464,7 +3536,12 @@ class InstitutionSitesController extends AppController {
                             array(
                                 'table' => 'institution_sites',
                                 'alias' => 'InstitutionSite',
-                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                                'conditions' => array(
+                                    'OR' => array(
+                                        'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                        'InstitutionSiteCustomField.institution_site_type_id' => 0
+                                    )
+                                )     
                             )
                         ),
                          'conditions' => array(
@@ -3656,7 +3733,12 @@ class InstitutionSitesController extends AppController {
                             array(
                                 'table' => 'institution_sites',
                                 'alias' => 'InstitutionSite',
-                                'conditions' => array('InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id')    
+                                'conditions' => array(
+                                    'OR' => array(
+                                        'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                        'InstitutionSiteCustomField.institution_site_type_id' => 0
+                                    )
+                                )   
                             )
                         ),
                          'conditions' => array(
@@ -5564,9 +5646,12 @@ class InstitutionSitesController extends AppController {
                             'table' => 'institution_sites',
                             'alias' => 'InstitutionSite',
                             'conditions' => array(
-                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
-                                'InstitutionSite.id' => $this->institutionSiteId
+                                'InstitutionSite.id' => $this->institutionSiteId,
+                                'OR' => array(
+                                    'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                    'InstitutionSiteCustomField.institution_site_type_id' => 0
                                 )
+                            )
                         ),
                         array(
                             'table' => 'institution_site_custom_values',
@@ -5666,9 +5751,12 @@ class InstitutionSitesController extends AppController {
                             'table' => 'institution_sites',
                             'alias' => 'InstitutionSite',
                             'conditions' => array(
-                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
-                                'InstitutionSite.id' => $this->institutionSiteId
+                                'InstitutionSite.id' => $this->institutionSiteId,
+                                'OR' => array(
+                                    'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                    'InstitutionSiteCustomField.institution_site_type_id' => 0
                                 )
+                            )
                         ),
                         array(
                             'table' => 'institution_site_custom_values',
@@ -5804,9 +5892,12 @@ class InstitutionSitesController extends AppController {
                             'table' => 'institution_sites',
                             'alias' => 'InstitutionSite',
                             'conditions' => array(
-                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
-                                'InstitutionSite.id' => $this->institutionSiteId
+                                'InstitutionSite.id' => $this->institutionSiteId,
+                                'OR' => array(
+                                    'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                    'InstitutionSiteCustomField.institution_site_type_id' => 0
                                 )
+                            )
                         ),
                         array(
                             'table' => 'institution_site_custom_values',
@@ -5927,9 +6018,12 @@ class InstitutionSitesController extends AppController {
                             'table' => 'institution_sites',
                             'alias' => 'InstitutionSite',
                             'conditions' => array(
-                                'InstitutionSite.institution_site_type_id = InstitutionSiteCustomField.institution_site_type_id',
-                                'InstitutionSite.id' => $this->institutionSiteId
+                                'InstitutionSite.id' => $this->institutionSiteId,
+                                'OR' => array(
+                                    'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+                                    'InstitutionSiteCustomField.institution_site_type_id' => 0
                                 )
+                            )
                         ),
                         array(
                             'table' => 'institution_site_custom_values',
@@ -6058,6 +6152,12 @@ class InstitutionSitesController extends AppController {
         }
     }
 
+    public function addReportDate($csv_file){
+        $footer = array("Report Generated: " . date("Y-m-d H:i:s"));
+        fputcsv($csv_file, array(), ',', '"');
+        fputcsv($csv_file, $footer, ',', '"');
+    }
+    
     public function genCSV($data, $name) {
         $this->autoRender = false;
         $arrData = $this->formatCSVData($data, $name);
@@ -6094,7 +6194,9 @@ class InstitutionSitesController extends AppController {
 
             fputcsv($csv_file, $row, ',', '"');
         }
-
+       
+        $this->addReportDate($csv_file);
+        
         fclose($csv_file);
     }
 

@@ -4,7 +4,7 @@ echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
-
+$this->start('contentActions');
 echo $this->Html->link(__('Back'), array('action' => 'rubricsTemplates'), array('class' => 'divider')); 
 if ($_add) {
     echo $this->Html->link(__('Add Section Header'), array('action' => 'rubricsTemplatesHeaderAdd', $id), array('class' => 'divider'));
@@ -13,7 +13,10 @@ if ($_add) {
 if ($_edit && !empty($data)) {
     echo $this->Html->link(__('Reorder'), array('action' => 'rubricsTemplatesHeaderOrder', $id), array('class' => 'divider'));
 }
-$this->start('contentActions');
+
+$this->end();
+
+$this->start('contentBody');
 ?>
 <?php echo $this->element('alert'); ?>
 <div class="table-responsive">

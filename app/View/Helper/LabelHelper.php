@@ -37,7 +37,11 @@ class LabelHelper extends AppHelper {
             'type' => 'Type',
             'title' => 'Title',
             'activate' => 'Activate',
-            'inactivate' => 'Inactivate'
+            'inactivate' => 'Inactivate',
+			'name' => 'Name',
+			'date' => 'Date',
+            'yes' => 'Yes',
+            'no' => 'No'
         ),
         'wizard' => array(
             'previous' => 'Previous',
@@ -81,8 +85,16 @@ class LabelHelper extends AppHelper {
             'start_date' => 'Commenced Date',
             'end_date' => 'Ended Date',
         ),
-        'Identities' => array(
-            'issue_location' => 'Issuer'
+        'Config' => array(
+            'name' => 'System Configurations',
+            'host'=>'LDAP Server',
+            'port'=>'Port',
+            'version'=>'Version',
+            'base_dn'=>'Base DN',
+            'file' => 'File',
+            'file_type' => 'File Type',
+            'default' => 'Default',
+            'uploaded_on' => 'Uploaded On'
         )
     );
 	

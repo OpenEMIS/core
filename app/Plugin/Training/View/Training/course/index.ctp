@@ -4,7 +4,6 @@ echo $this->Html->css('setup_variables', 'stylesheet', array('inline' => false))
 
 echo $this->Html->script('setup_variables', false);
 
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
