@@ -17,7 +17,7 @@ $this->start('contentBody');
 $tableHeaders = array(__('File'), __('Description'), __('File Type'), __('Uploaded On'));
 $tableData = array();
 foreach($data as $value) {
-	$obj = $value[$_model];
+	$obj = $value[$model];
 	$fileext = strtolower(pathinfo($obj['file_name'], PATHINFO_EXTENSION));
 	$ext = array_key_exists($fileext, $arrFileExtensions) ? $arrFileExtensions[$fileext] : $fileext;
 	$link = $this->Html->link($obj['name'], array('action' => 'attachmentsView', $obj['id']));

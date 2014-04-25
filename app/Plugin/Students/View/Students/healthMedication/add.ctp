@@ -81,7 +81,7 @@ if ($_edit) {
     }
     else{
         $redirectAction = array('action' => 'healthMedication');
-        $startDate = array('id' => 'endDate');
+        $startDate = array('id' => 'startDate');
         $endDate = array('id' => 'endDate' ,'data-date' => date('d-m-Y', time() + 86400));
     }
     echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));

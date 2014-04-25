@@ -23,14 +23,12 @@ class FieldOptionValue extends AppModel {
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
+			'foreignKey' => 'modified_user_id'
 		),
 		'CreatedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
+			'foreignKey' => 'created_user_id'
 		)
 	);
 	public $parent = null;
@@ -98,6 +96,36 @@ class FieldOptionValue extends AppModel {
 			return $model->getSubOptions();
 		}
 		return false;
+	}
+	
+	public function getFirstSubOptionKey($suboptions) {
+		$key = 0;
+		if(!empty($suboptions)) {
+			$key = key($suboptions);
+			if(is_array($suboptions[$key]) && !empty($suboptions[$key])) {
+				$key = key($suboptions[$key]);
+			}
+		}
+		return $key;
+	}
+        
+	public function getList() {
+		$alias = $this->alias;
+		
+		$list = $this->find('list', array(
+			'joins' => array(
+				array(
+					'table' => 'field_options',
+					'alias' => 'FieldOption',
+					'conditions' => array(
+						'FieldOption.id = ' . $alias . '.field_option_id',
+						"FieldOption.code = '" . $alias . "'"
+					)
+				)
+			),
+			'order' => array($alias.'.order')
+		));
+		return $list;
 	}
 }
 ?>
