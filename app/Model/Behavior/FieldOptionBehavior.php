@@ -40,8 +40,9 @@ class FieldOptionBehavior extends ModelBehavior {
 	);
 	
 	public function setup(Model $model, $settings = array()) {
+		$schema = $model->schema();
 		foreach($this->validate as $name => $rule) {
-			if(!array_key_exists($name, $model->validate)) {
+			if(!array_key_exists($name, $model->validate) && array_key_exists($name, $schema)) {
 				$model->validate[$name] = $rule;
 			}
 		}
@@ -141,15 +142,14 @@ class FieldOptionBehavior extends ModelBehavior {
 	*/
 	
 	public function getCustomFieldTypes(Model $model) {
-		$customFieldTypes = array(
+		$types = array(
 			1 => __('Label'),
 			2 => __('Text'),
 			3 => __('Dropdown'),
 			4 => __('Multiple'),
 			5 => __('Textarea')
 		);
-		
-		return $customFieldTypes;
+		return $types;
 	}
 	
 	public function getAllOptions(Model $model, $conditions) {
@@ -173,7 +173,7 @@ class FieldOptionBehavior extends ModelBehavior {
 		$fields = $this->optionFields;
 		foreach($fields['fields'] as $key => $field) {
 			if($field['field'] === 'visible' && $field['type'] === 'select') {
-				$fields['fields'][$key]['options'] = array(0 => __('No'), 1 => __('Yes'));
+				$fields['fields'][$key]['options'] = array(1 => __('Yes'), 0 => __('No'));
 			}
 		}
 		$fields['model'] = $model->alias;

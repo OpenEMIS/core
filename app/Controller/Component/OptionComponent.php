@@ -17,8 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 class OptionComponent extends Component {
 	public function get($code) {
 		$options = array(
-			'yesno' => array(0 => __('No'), 1 => __('Yes')),
-                        'bloodtype' => array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-')
+			'yesno' => array(1 => __('Yes'), 0 => __('No')),
+			'bloodtype' => array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-')
 		);
 		
 		$index = explode('.', $code);

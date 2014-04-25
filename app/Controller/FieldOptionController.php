@@ -80,7 +80,7 @@ class FieldOptionController extends AppController {
 		$conditions = array();
 		if(!empty($subOptions)) {
 			$conditionId = $this->FieldOptionValue->getModel()->getConditionId();
-			$selectedSubOption = key($subOptions);
+			$selectedSubOption = $this->FieldOptionValue->getFirstSubOptionKey($subOptions);
 			if(isset($this->request->params['named'][$conditionId])) {
 				$selectedSubOption = $this->request->params['named'][$conditionId];
 			}
@@ -106,7 +106,7 @@ class FieldOptionController extends AppController {
 		$conditions = array();
 		if(!empty($subOptions)) {
 			$conditionId = $this->FieldOptionValue->getModel()->getConditionId();
-			$selectedSubOption = key($subOptions);
+			$selectedSubOption = $this->FieldOptionValue->getFirstSubOptionKey($subOptions);
 			if(isset($this->request->params['named'][$conditionId])) {
 				$selectedSubOption = $this->request->params['named'][$conditionId];
 			}
@@ -146,6 +146,7 @@ class FieldOptionController extends AppController {
 		if(!array_key_exists($selectedOption, $this->optionList)) {
 			$selectedOption = 1;
 		}
+		
 		$obj = $this->optionList[$selectedOption];
 		$this->FieldOptionValue->setParent($obj);
 		$header = $this->FieldOptionValue->getHeader();
@@ -174,6 +175,8 @@ class FieldOptionController extends AppController {
 				}
 				$this->Message->alert('general.add.success');
 				return $this->redirect($redirect);
+			} else {
+				$this->Message->alert('general.add.failed');
 			}
 		}
 		$this->set(compact('header', 'fields', 'selectedOption'));

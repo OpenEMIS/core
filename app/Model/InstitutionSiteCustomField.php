@@ -17,8 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteCustomField extends AppModel {
-	public $hasMany = array('InstitutionSiteCustomFieldOption' => array('order'=>'order'));
 	public $actsAs = array('FieldOption');
+	public $hasMany = array('InstitutionSiteCustomFieldOption' => array('order'=>'order'));
 	public $belongsTo = array(
 		'InstitutionSiteType',
 		'ModifiedUser' => array(
@@ -35,13 +35,13 @@ class InstitutionSiteCustomField extends AppModel {
 	
 	public function getSubOptions() {
 		$options = $this->InstitutionSiteType->findList();
-		array_unshift($options, array(0 => __('All')));
+		array_unshift($options, __('All'));
 		return $options;
 	}
 	
 	public function getOptionFields() {
 		$siteTypeOptions = $this->getSubOptions();
-		$fieldTypeOptions = array(1 => 'Label', 2 => 'Text', 3 => 'Dropdown', 4 => 'Multiple', 5 => 'Textarea');
+		$fieldTypeOptions = $this->getCustomFieldTypes();
 		$fieldType = array('field' => 'type', 'type' => 'select', 'options' => $fieldTypeOptions);
 		$siteType = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $siteTypeOptions);
 		$this->removeOptionFields(array('international_code', 'national_code'));
