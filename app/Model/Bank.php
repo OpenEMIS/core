@@ -23,14 +23,12 @@ class Bank extends AppModel {
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
+			'foreignKey' => 'modified_user_id'
 		),
 		'CreatedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
+			'foreignKey' => 'created_user_id'
 		)
 	);
 	

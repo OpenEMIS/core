@@ -144,10 +144,7 @@ class FileAttachmentComponent extends Component {
 			}
 		}
 		if(sizeof($errors) == 0) {
-			pr($model);
-			pr($data);
 			$this->model->save($data);
-			pr('test');
 		}
 
 		

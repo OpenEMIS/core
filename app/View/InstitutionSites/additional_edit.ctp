@@ -1,14 +1,18 @@
 <?php 
 echo $this->Html->script('institution_site', false);
+
+$this->extend('/Elements/layout/container');
+
+$this->assign('contentHeader', __('More'));
+
+$this->start('contentActions');
+echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
 <div id="additional" class="content_wrapper edit">
-	<h1>
-		<span><?php echo __('More'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider')); ?>
-	</h1>
 	<?php
 	echo $this->Form->create('InstitutionSiteCustomValue', array(
 		'url' => array(
@@ -104,3 +108,4 @@ echo $this->Html->script('institution_site', false);
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
+<?php $this->end(); ?>

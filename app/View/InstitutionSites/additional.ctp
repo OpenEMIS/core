@@ -1,18 +1,19 @@
 <?php 
 //echo $this->Html->script('institution_site', false);
-?>
+$this->extend('/Elements/layout/container');
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->assign('contentHeader', __('More'));
 
-<div id="site" class="content_wrapper">
-	<h1>
-		<span><?php echo __('More'); ?></span>
-		<?php
-		if($_edit) {
+$this->start('contentActions');
+if($_edit) {
 			echo $this->Html->link(__('Edit'), array('action' => 'additionalEdit'),	array('class' => 'divider')); 
 		}
-		?>
-	</h1>
+$this->end();
+
+$this->start('contentBody');
+?>
+
+<div id="site" class="content_wrapper">
         <?php 
         //pr($datafields); 
         //pr($datavalues);
@@ -106,3 +107,4 @@
         ?>
 	
 </div>
+<?php $this->end(); ?>

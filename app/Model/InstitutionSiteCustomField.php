@@ -17,7 +17,70 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteCustomField extends AppModel {
-	public $hasMany = array(
-		'InstitutionSiteCustomFieldOption' => array('order'=>'order')
+	public $actsAs = array('FieldOption');
+	public $hasMany = array('InstitutionSiteCustomFieldOption' => array('order'=>'order'));
+	public $belongsTo = array(
+		'InstitutionSiteType',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
 	);
+	
+	public function getSubOptions() {
+		$options = $this->InstitutionSiteType->findList();
+		array_unshift($options, __('All'));
+		return $options;
+	}
+	
+	public function getOptionFields() {
+		$siteTypeOptions = $this->getSubOptions();
+		$fieldTypeOptions = $this->getCustomFieldTypes();
+		$fieldType = array('field' => 'type', 'type' => 'select', 'options' => $fieldTypeOptions);
+		$siteType = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $siteTypeOptions);
+		$this->removeOptionFields(array('international_code', 'national_code'));
+		$this->addOptionField($fieldType, 'after', 'name');
+		$this->addOptionField($siteType, 'after', 'type');
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
+		return $fields;
+	}
+	
+	public function getConditionId() {
+		return 'institution_site_type_id';
+	}
+	
+	public function findList($options=array()) {
+		$_options = array(
+			'conditions' => array()
+		);
+		if(!empty($options)) {
+			$_options = array_merge($_options, $options);
+		}
+		$class = $this->alias;
+		$data = $this->find('all', array(
+			'recursive' => 0,
+			'conditions' => $_options['conditions'],
+			'order' => array('InstitutionSiteType.order', $class . '.order')
+		));
+		$list = array();
+		foreach($data as $obj) {
+			$field = $obj[$class];
+			$siteType = $obj['InstitutionSiteType'];
+			$typeName = __('All');
+			if($field['institution_site_type_id'] > 0) {
+				$typeName = $siteType['name'];
+			}
+			if(!array_key_exists($typeName, $list)) {
+				$list[$typeName] = array();
+			}
+			$list[$typeName][$field['id']] = $field['name'];
+		}
+		return $list;
+	}
 }

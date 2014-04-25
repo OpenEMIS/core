@@ -18,7 +18,7 @@ App::uses('AppHelper', 'View/Helper');
 
 class LabelHelper extends AppHelper {
 	public $messages = array(
-        'general' => array(
+		'general' => array(
             'add' => 'Add',
             'edit' => 'Edit',
             'delete' => 'Delete',
@@ -42,6 +42,7 @@ class LabelHelper extends AppHelper {
 			'date' => 'Date',
             'yes' => 'Yes',
             'no' => 'No'
+			'general' => 'General'
         ),
         'wizard' => array(
             'previous' => 'Previous',
@@ -50,6 +51,17 @@ class LabelHelper extends AppHelper {
             'skip' => 'Skip',
             'addmore' => 'Add More'
         ),
+		'InstitutionSite' => array(
+			'institution_site_provider_id' => 'Provider',
+			'institution_site_sector_id' => 'Sector'
+		),
+		'InstitutionSiteCustomField' => array(
+			'type' => 'Field Type',
+			'institution_site_type_id' => 'Institution Type'
+		),
+		'InstitutionSiteCustomFieldOption' => array(
+			'institution_site_custom_field_id' => 'Custom Field'
+		),
         'BankBranch' => array(
             'bank_id' => 'Bank',
             'name' => 'Branch'
@@ -95,6 +107,23 @@ class LabelHelper extends AppHelper {
             'file_type' => 'File Type',
             'default' => 'Default',
             'uploaded_on' => 'Uploaded On'
+        ),
+        'Identities' => array(
+            'issue_location' => 'Issuer'
+        ),
+		'QualificationLevel' => array(
+            'name' => 'Level'
+        ),
+		'QualificationInstitution' => array(
+            'name' => 'Institution'
+        ),
+		'QualificationSpecialisation' => array(
+            'name' => 'Major/Specialisation'
+        ),
+		'StaffQualification' => array(
+            'qualification_institution_country' => 'Institution Country',
+			'gpa' => 'Grade/Score',
+			'file_name' => 'Attachment'
         )
     );
 	

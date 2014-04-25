@@ -80,7 +80,7 @@ class FieldOptionController extends AppController {
 		$conditions = array();
 		if(!empty($subOptions)) {
 			$conditionId = $this->FieldOptionValue->getModel()->getConditionId();
-			$selectedSubOption = key($subOptions);
+			$selectedSubOption = $this->FieldOptionValue->getFirstSubOptionKey($subOptions);
 			if(isset($this->request->params['named'][$conditionId])) {
 				$selectedSubOption = $this->request->params['named'][$conditionId];
 			}
@@ -106,7 +106,7 @@ class FieldOptionController extends AppController {
 		$conditions = array();
 		if(!empty($subOptions)) {
 			$conditionId = $this->FieldOptionValue->getModel()->getConditionId();
-			$selectedSubOption = key($subOptions);
+			$selectedSubOption = $this->FieldOptionValue->getFirstSubOptionKey($subOptions);
 			if(isset($this->request->params['named'][$conditionId])) {
 				$selectedSubOption = $this->request->params['named'][$conditionId];
 			}
@@ -146,6 +146,7 @@ class FieldOptionController extends AppController {
 		if(!array_key_exists($selectedOption, $this->optionList)) {
 			$selectedOption = 1;
 		}
+		
 		$obj = $this->optionList[$selectedOption];
 		$this->FieldOptionValue->setParent($obj);
 		$header = $this->FieldOptionValue->getHeader();
@@ -168,12 +169,14 @@ class FieldOptionController extends AppController {
 		
 		if($this->request->is('post') || $this->request->is('put')) {
 			if($this->FieldOptionValue->saveValue($this->request->data)) {
-				$redirect = array('action' => 'index', $selectedOption);//pr($conditionId);die;
+				$redirect = array('action' => 'index', $selectedOption);
 				if($conditionId !== false) {
 					$redirect = array_merge($redirect, array($conditionId => $this->request->data[$model->alias][$conditionId]));
 				}
 				$this->Message->alert('general.add.success');
 				return $this->redirect($redirect);
+			} else {
+				$this->Message->alert('general.add.failed');
 			}
 		}
 		$this->set(compact('header', 'fields', 'selectedOption'));
