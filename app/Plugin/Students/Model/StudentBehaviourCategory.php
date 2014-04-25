@@ -18,22 +18,18 @@ App::uses('AppModel', 'Model');
 
 class StudentBehaviourCategory extends AppModel {
 	public $actsAs = array('FieldOption');
-	
-	public $validate = array(
-		'name' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter a valid Option'
-			)
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
 		)
 	);
-	
-	// Used by SetupController
-	public function getLookupVariables() {
-		$lookup = array('Behaviour Category' => array('model' => 'Students.StudentBehaviourCategory'));
-		return $lookup;
-	}
 	
 	public function getCategory(){
 		$list = $this->find('list',array(
