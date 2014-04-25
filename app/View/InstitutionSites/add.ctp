@@ -11,6 +11,7 @@ $this->assign('contentHeader', __('Add New Institution'));
 $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'add'));
+$labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('InstitutionSite', $formOptions);
 ?>
 <div id="site" class="content_wrapper edit add">
@@ -24,7 +25,7 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	?>
 
 	<fieldset class="section_break">
-		<legend><?php echo __('General'); ?></legend>
+		<legend><?php echo $this->Label->get('general.general'); ?></legend>
 		<?php 
 		echo $this->Form->input('name'); 
 		
@@ -34,9 +35,10 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 		
 		echo $this->Form->input('validate_institution_site_code', array('type'=>'hidden', 'id' => 'validate_institution_site_code'));
 		
-		echo $this->Form->input('institution_site_provider_id', array('options'=>$providerOptions));
-		
-		echo $this->Form->input('institution_site_sector_id', array('options'=>$sectorOptions));
+		$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_provider_id');
+		echo $this->Form->input('institution_site_provider_id', array('options'=>$providerOptions, 'label' => $labelOptions));
+		$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_sector_id');
+		echo $this->Form->input('institution_site_sector_id', array('options'=>$sectorOptions, 'label' => $labelOptions));
 		
 		echo $this->Form->input('institution_site_type_id', array('options'=>$type_options));
 		

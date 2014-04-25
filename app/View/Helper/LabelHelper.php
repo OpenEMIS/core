@@ -18,7 +18,7 @@ App::uses('AppHelper', 'View/Helper');
 
 class LabelHelper extends AppHelper {
 	public $messages = array(
-            'general' => array(
+		'general' => array(
             'add' => 'Add',
             'edit' => 'Edit',
             'delete' => 'Delete',
@@ -37,7 +37,8 @@ class LabelHelper extends AppHelper {
             'type' => 'Type',
             'title' => 'Title',
 			'name' => 'Name',
-			'date' => 'Date'
+			'date' => 'Date',
+			'general' => 'General'
         ),
         'wizard' => array(
             'previous' => 'Previous',
@@ -46,6 +47,10 @@ class LabelHelper extends AppHelper {
             'skip' => 'Skip',
             'addmore' => 'Add More'
         ),
+		'InstitutionSite' => array(
+			'institution_site_provider_id' => 'Provider',
+			'institution_site_sector_id' => 'Sector'
+		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
 			'institution_site_type_id' => 'Institution Type'
