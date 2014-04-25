@@ -1,31 +1,3 @@
--- phpMyAdmin SQL Dump
--- version 4.0.4.1
--- http://www.phpmyadmin.net
---
--- Host: 127.0.0.1
--- Generation Time: Apr 17, 2014 at 04:30 PM
--- Server version: 5.6.11
--- PHP Version: 5.4.24
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
-
---
--- Database: `dev_openemis_demo`
---
-
--- --------------------------------------------------------
-
---
--- Table structure for table `field_options`
---
-
 DROP TABLE IF EXISTS `field_options`;
 CREATE TABLE IF NOT EXISTS `field_options` (
   `id` int(5) NOT NULL AUTO_INCREMENT,
@@ -40,13 +12,8 @@ CREATE TABLE IF NOT EXISTS `field_options` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=35 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=54 ;
 
---
--- Truncate table before insert `field_options`
---
-
-TRUNCATE TABLE `field_options`;
 --
 -- Dumping data for table `field_options`
 --
@@ -65,28 +32,43 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 (11, 'FinanceSource', 'Source', 'Finance', '{"model":"FinanceSource"}', 11, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (12, 'Bank', 'Banks', 'Bank', '{"model":"Bank"}', 12, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (13, 'BankBranch', 'Branches', 'Bank', '{"model":"BankBranch"}', 13, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(14, 'AssessmentResultType', 'Result Type', 'Assessment', '{"model":"AssessmentResultType"}', 14, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(15, 'Country', 'Countries', NULL, '{"model":"Country"}', 15, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(16, 'Language', 'Languages', NULL, '{"model":"Language"}', 16, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(17, 'IdentityType', 'Identity Types', NULL, '{"model":"IdentityType"}', 17, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(18, 'QualityVisitType', 'Visit Types', 'Quality', NULL, 18, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(19, 'HealthRelationship', 'Relationships', 'Health', NULL, 19, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(20, 'HealthCondition', 'Conditions', 'Health', NULL, 20, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(21, 'HealthImmunization', 'Immunization', 'Health', NULL, 21, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(22, 'HealthAllergyType', 'Allergy Types', 'Health', NULL, 22, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(23, 'HealthTestType', 'Test Types', 'Health', NULL, 23, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(24, 'HealthConsultationType', 'Consultation Types', 'Health', NULL, 24, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(25, 'InfrastructureCategory', 'Categories', 'Infrastructure', '{"model":"InfrastructureCategory"}', 25, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(26, 'InfrastructureBuilding', 'Buildings', 'Infrastructure', '{"model":"InfrastructureBuilding"}', 26, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(27, 'InfrastructureEnergy', 'Energy', 'Infrastructure', '{"model":"InfrastructureEnergy"}', 27, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(28, 'InfrastructureFurniture', 'Furniture', 'Infrastructure', '{"model":"InfrastructureFurniture"}', 28, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(29, 'InfrastructureResource', 'Resources', 'Infrastructure', '{"model":"InfrastructureResource"}', 29, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(30, 'InfrastructureRoom', 'Rooms', 'Infrastructure', '{"model":"InfrastructureRoom"}', 30, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(31, 'InfrastructureSanitation', 'Sanitation', 'Infrastructure', '{"model":"InfrastructureSanitation"}', 31, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(32, 'InfrastructureWater', 'Water', 'Infrastructure', '{"model":"InfrastructureWater"}', 32, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(33, 'InfrastructureMaterial', 'Materials', 'Infrastructure', '{"model":"InfrastructureMaterial"}', 33, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(34, 'InfrastructureStatus', 'Statuses', 'Infrastructure', '{"model":"InfrastructureStatus"}', 34, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+(14, 'AssessmentResultType', 'Result Types', 'Assessment', '{"model":"AssessmentResultType"}', 14, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(15, 'ContactType', 'Types', 'Contact', '{"model":"ContactType"}', 15, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(16, 'EmploymentType', 'Types', 'Employment', '{"model":"EmploymentType"}', 16, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(17, 'ExtracurricularType', 'Types', 'Extracurricular', '{"model":"ExtracurricularType"}', 17, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(18, 'Country', 'Countries', NULL, '{"model":"Country"}', 18, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(19, 'Language', 'Languages', NULL, '{"model":"Language"}', 19, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(20, 'IdentityType', 'Identity Types', NULL, '{"model":"IdentityType"}', 20, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(21, 'QualityVisitType', 'Visit Types', 'Quality', '{"model":"QualityVisitType"}', 21, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(22, 'HealthRelationship', 'Relationships', 'Health', '{"model":"HealthRelationship"}', 22, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(23, 'HealthCondition', 'Conditions', 'Health', '{"model":"HealthCondition"}', 23, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(24, 'HealthImmunization', 'Immunization', 'Health', '{"model":"HealthImmunization"}', 24, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(25, 'HealthAllergyType', 'Allergy Types', 'Health', '{"model":"HealthAllergyType"}', 25, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(26, 'HealthTestType', 'Test Types', 'Health', '{"model":"HealthTestType"}', 26, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(27, 'HealthConsultationType', 'Consultation Types', 'Health', '{"model":"HealthConsultationType"}', 27, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(28, 'InfrastructureCategory', 'Categories', 'Infrastructure', '{"model":"InfrastructureCategory"}', 28, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(29, 'InfrastructureBuilding', 'Buildings', 'Infrastructure', '{"model":"InfrastructureBuilding"}', 29, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(30, 'InfrastructureEnergy', 'Energy', 'Infrastructure', '{"model":"InfrastructureEnergy"}', 30, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(31, 'InfrastructureFurniture', 'Furniture', 'Infrastructure', '{"model":"InfrastructureFurniture"}', 31, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(32, 'InfrastructureResource', 'Resources', 'Infrastructure', '{"model":"InfrastructureResource"}', 32, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(33, 'InfrastructureRoom', 'Rooms', 'Infrastructure', '{"model":"InfrastructureRoom"}', 33, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(34, 'InfrastructureSanitation', 'Sanitation', 'Infrastructure', '{"model":"InfrastructureSanitation"}', 34, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(35, 'InfrastructureWater', 'Water', 'Infrastructure', '{"model":"InfrastructureWater"}', 35, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(36, 'InfrastructureMaterial', 'Materials', 'Infrastructure', '{"model":"InfrastructureMaterial"}', 36, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(37, 'InfrastructureStatus', 'Statuses', 'Infrastructure', '{"model":"InfrastructureStatus"}', 37, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(38, 'SalaryAdditionType', 'Addition Types', 'Salary', '{"model":"SalaryAdditionType"}', 38, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(39, 'SalaryDeductionType', 'Deduction Types', 'Salary', '{"model":"SalaryDeductionType"}', 39, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(40, 'TrainingCourseType', 'Course Types', 'Training', '{"model":"TrainingCourseType"}', 40, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(41, 'TrainingFieldStudy', 'Field of Studies', 'Training', '{"model":"TrainingFieldStudy"}', 41, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(42, 'TrainingLevel', 'Levels', 'Training', '{"model":"TrainingLevel"}', 42, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(43, 'TrainingModeDelivery', 'Mode of Deliveries', 'Training', '{"model":"TrainingModeDelivery"}', 43, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(44, 'TrainingPriority', 'Priorities', 'Training', '{"model":"TrainingPriority"}', 44, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(45, 'TrainingProvider', 'Providers', 'Training', '{"model":"TrainingProvider"}', 45, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(46, 'TrainingRequirement', 'Requirements', 'Training', '{"model":"TrainingRequirement"}', 46, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(47, 'TrainingStatus', 'Statuses', 'Training', '{"model":"TrainingStatus"}', 47, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(48, 'StudentCategory', 'Categories', 'Student', '{"model":"StudentCategory"}', 48, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(49, 'StudentBehaviourCategory', 'Behaviour Categories', 'Student', '{"model":"StudentBehaviourCategory"}', 49, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(50, 'PositionTitle', 'Titles', 'Position', '{"model":"StudentBehaviourCategory"}', 50, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(51, 'PositionGrade', 'Grades', 'Position', '{"model":"StudentBehaviourCategory"}', 51, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(52, 'PositionStep', 'Steps', 'Position', '{"model":"StudentBehaviourCategory"}', 52, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(53, 'PositionStep', 'Steps', 'Position', '{"model":"StudentBehaviourCategory"}', 53, 1, NULL, NULL, 1, '0000-00-00 00:00:00');

@@ -44,6 +44,10 @@ class StudentsController extends StudentsAppController {
         'Students.StudentAttendance',
         'Students.StudentAssessment',
         'Students.StudentAward',
+        //'Students.Guardian',
+        //'Students.GuardianEducationLevel',
+        //'Students.GuardianRelation',
+        'Students.StudentGuardian',
         'SchoolYear',
         'Country',
         'ConfigItem',
@@ -69,7 +73,7 @@ class StudentsController extends StudentsAppController {
         'healthTest' => 'Students.StudentHealthTest',
         'healthConsultation' => 'Students.StudentHealthConsultation',
         'health' => 'Students.StudentHealth',
-        'special_need' => 'Students.StudentSpecialNeed',
+        'specialNeed' => 'Students.StudentSpecialNeed',
         'award' => 'Students.StudentAward',
         'bankAccounts' => 'Students.StudentBankAccount',
         'comments' => 'Students.StudentComment',
@@ -79,6 +83,7 @@ class StudentsController extends StudentsAppController {
         'languages' => 'Students.StudentLanguage',
         'nationalities' => 'Students.StudentNationality',
         'attachments' =>'Students.StudentAttachment',
+		'guardians' => 'Students.StudentGuardian'
     );
 
     public $className = 'Student';
@@ -116,7 +121,7 @@ class StudentsController extends StudentsAppController {
                 $name = __('New Student');
                 $this->bodyTitle = $name;
             }
-        }
+        } 
     }
 
     public function index() {
@@ -777,18 +782,5 @@ class StudentsController extends StudentsAppController {
 
         return $generate_no;
     }
-
-    /*     * *BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already* */
-
-    public function ajax_find_award($type) {
-        if ($this->request->is('ajax')) {
-            $this->autoRender = false;
-            $search = $this->params->query['term'];
-            $data = $this->StudentAward->autocomplete($search, $type);
-
-            return json_encode($data);
-        }
-    }
-
 
 }

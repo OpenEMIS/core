@@ -5,9 +5,6 @@ echo $this->Html->script('search', false);
 ?>
 <?php $obj = $data[$modelName]; 
 ?>
-<?php echo $this->element('breadcrumb'); ?>
-
-
 <?php
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Results'));

@@ -1,6 +1,6 @@
 <?php
 echo $this->Html->css('/Quality/css/rubrics', 'stylesheet', array('inline' => false));
-echo $this->Html->script('/Quality/js/rubrics', false);
+echo $this->Html->script('Quality/js/rubrics', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Utility->ellipsis(__($subheader), 50));

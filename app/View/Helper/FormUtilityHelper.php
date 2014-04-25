@@ -95,10 +95,10 @@ class FormUtilityHelper extends AppHelper {
         
         public function getFormWizardButtons($option = NULL) {
             if (!$option['WizardMode']) {
-                echo $this->getFormButtons(array('cancelURL' => $option['cancelURL']));
+                echo '<div class="controls">'.$this->getFormButtons(array('cancelURL' => $option['cancelURL'])).'</div>';
             } else {
                 echo '<div class="add_more_controls">' . $this->Form->submit($this->Label->get('wizard.addmore'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div>';
-
+				echo '<div class="controls">';
                 echo $this->Form->submit($this->Label->get('wizard.previous'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right"));
                 if (!$option['WizardEnd']) {
                     echo $this->Form->submit($this->Label->get('wizard.next'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
@@ -108,6 +108,7 @@ class FormUtilityHelper extends AppHelper {
                 if ($option['WizardMandatory'] != '1' && !$option['WizardEnd']) {
                     echo $this->Form->submit($this->Label->get('wizard.skip'), array('div' => false, 'name' => 'submit', 'class' => "btn_cancel btn_cancel_button btn_left"));
                 }
+				echo '</div>';
             }
         }
 }

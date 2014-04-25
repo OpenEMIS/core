@@ -1,13 +1,12 @@
 <?php
 
 class QualityController extends QualityAppController {
-
     public $uses = array();
     public $components = array('Paginator', 'FileUploader');
     public $paginate = array(
         'limit' => 25,
     );
-    public $helpers = array('Quality.RubricsView');
+    public $helpers = array('Js' => array('Jquery'), 'Quality.RubricsView');
     public $modules = array(
         'status' => 'Quality.QualityStatus',
         'rubricsTemplatesCriteria' => 'Quality.RubricsTemplateColumnInfo',

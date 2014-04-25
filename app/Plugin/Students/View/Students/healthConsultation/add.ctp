@@ -4,17 +4,16 @@ echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
-if ($_edit) {
-    if(!empty($this->data[$model]['id'])){
-        $redirectAction = array('action' => 'healthConsultationView', $this->data[$model]['id']);
-        $setDate = array('data-date' => $this->data[$model]['date']);
-    }
-    else{
-        $redirectAction = array('action' => 'healthConsultation');
-        $setDate = null;
-    }
-    echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
+if(!empty($this->data[$model]['id'])){
+	$redirectAction = array('action' => 'healthConsultationView', $this->data[$model]['id']);
+	$setDate = array('data-date' => $this->data[$model]['date']);
 }
+else{
+	$redirectAction = array('action' => 'healthConsultation');
+	$setDate = null;
+}
+echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
+
 $this->end();
 $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin'=>'Students'));

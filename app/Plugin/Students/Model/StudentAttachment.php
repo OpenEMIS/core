@@ -23,8 +23,8 @@ class StudentAttachment extends StudentsAppModel {
 	public $belongsTo = array(
 		'Student',
 		'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
-        'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser')
-		);
+		'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser')
+	);
 	public $virtualFields = array(
 		'blobsize' => "OCTET_LENGTH(file_content)"
 	);
@@ -45,46 +45,45 @@ class StudentAttachment extends StudentsAppModel {
 	}
 
 	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'name'),
-                array('field' => 'description'),
-                array('field' => 'file_name', 'type' => 'file', 'url'=> array('action' => 'attachmentsDownload')),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
-	
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'name'),
+				array('field' => 'description'),
+				array('field' => 'file_name', 'type' => 'file', 'url' => array('action' => 'attachmentsDownload')),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
+
 	public function attachments($controller, $params) {
+		$this->render = false;
 		$controller->Navigation->addCrumb('Attachments');
-		$id = $controller->studentId;
-		$data = $controller->FileUploader->getList(array('student_id' => $id));
+		$header = __('Attachments');
+		$data = $this->findAllByStudentIdAndVisible($controller->studentId, 1, array('id', 'name', 'description', 'file_name', 'file_content', 'created'), array(), null, null, -1);
 		$arrFileExtensions = $controller->Utility->getFileExtensionList();
 
-		$controller->set(compact('data', 'arrFileExtensions'));
-		$this->render = false;
+		$controller->set(compact('data', 'arrFileExtensions', 'header'));
 		$controller->render('../Elements/attachment/index');
 	}
 
-	public function attachmentsEdit($controller, $params)  {
+	public function attachmentsEdit($controller, $params) {
 		$this->render = false;
 		$controller->Navigation->addCrumb('Edit Attachments');
 		$header = __('Edit Attachments');
-		$id = isset($params['pass'][0])?$params['pass'][0]:0 ;
+		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
 
 		if ($controller->request->is(array('post', 'put'))) { // save
-			if($this->save($controller->request->data)){
+			if ($this->save($controller->request->data)) {
 				$controller->Message->alert('general.add.success');
 				$controller->redirect(array('action' => 'attachments'));
 			}
-		}
-		else{
-			$data = $this->findById($id);//pr($data);
+		} else {
+			$data = $this->findById($id); //pr($data);
 			$controller->request->data = $data;
 		}
 		$controller->set(compact('header', 'data', 'id'));
@@ -98,87 +97,72 @@ class StudentAttachment extends StudentsAppModel {
 		//$controller->set('params', $params);
 
 		if ($controller->request->is(array('post', 'put'))) {
-			if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Skip')) {
-				$controller->Navigation->skipWizardLink($controller->request->action);
-			} else if (isset($controller->request->data['submit']) && $controller->request->data['submit'] == __('Previous')) {
-				$controller->Navigation->previousWizardLink($controller->request->action);
+			if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
+				$controller->Navigation->skipWizardLink($controller->action);
+			} else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
+				$controller->Navigation->previousWizardLink($controller->action);
 			} else {
-				$controller->Navigation->validateModel($controller->request->action, 'StudentAttachment');
+				$controller->Navigation->validateModel($controller->action, 'StudentAttachment');
 			}
-			/*if (!empty($_FILES)) {
-				$errors = $this->FileAttachment->saveAll($controller->request->data, $_FILES, $id);
-				if (sizeof($errors) == 0) {
-					$controller->Navigation->updateWizard($controller->request->action, null);
-					$controller->Utility->alert(__('Files have been saved successfully.'));
-					$controller->redirect(array('action' => 'attachments'));
-				} else {
-					$controller->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-				}
-			} else {
-				$controller->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-			}*/
-			
-			$this->set( $controller->request->data );
+			/* if (!empty($_FILES)) {
+			  $errors = $this->FileAttachment->saveAll($controller->request->data, $_FILES, $id);
+			  if (sizeof($errors) == 0) {
+			  $controller->Navigation->updateWizard($controller->request->action, null);
+			  $controller->Utility->alert(__('Files have been saved successfully.'));
+			  $controller->redirect(array('action' => 'attachments'));
+			  } else {
+			  $controller->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
+			  }
+			  } else {
+			  $controller->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
+			  } */
+
+			$this->set($controller->request->data);
 			if ($this->validates()) {
 				$postData = $controller->request->data[$this->alias];
 				$controller->FileUploader->additionData = array('student_id' => $controller->studentId, 'name' => $postData['name'], 'description' => $postData['description']);
 				$controller->FileUploader->uploadFile();
 				if ($controller->FileUploader->success) {
-					$controller->Navigation->updateWizard($controller->request->action, null);
+					$controller->Navigation->updateWizard($controller->action, null);
 					return $controller->redirect(array('action' => 'attachments'));
-				} 
+				}
 			}
 		}
-		
+
 		$controller->set(compact('header', 'params'));
 		$controller->render('/Elements/attachment/add');
 	}
-	
+
 	public function attachmentsView($controller, $params) {
 		$this->render = false;
 		$controller->Navigation->addCrumb('Attachment Details');
-		$id = isset($params['pass'][0])?$params['pass'][0]:0 ;
-		
+		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
+
 		$data = $this->findById($id);
-		if(empty($data)){
+		if (empty($data)) {
 			$controller->Message->alert('general.noData');
-			return $controller->redirect(array('action'=> 'attachments'));
+			$controller->redirect(array('action' => 'attachmentsView', $id));
 		}
-		
+
 		$controller->Session->write('StudentAttachmentId', $id);
 		$fields = $this->getDisplayFields($controller);
-        $controller->set(compact('data', 'fields'));
+		$controller->set(compact('data', 'fields'));
 		$controller->render('/Elements/attachment/view');
 	}
 
 	public function attachmentsDelete($controller, $params) {
 		$controller->autoRender = false;
 		if ($controller->Session->check('StudentId') && $controller->Session->check('StudentAttachmentId')) {
-            $id = $controller->Session->read('StudentAttachmentId');
+			$id = $controller->Session->read('StudentAttachmentId');
 
-            if($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-            $controller->Session->delete('StudentAttachmentId');
-            return $controller->redirect(array('action' => 'attachments'));
-        }
-		/*
-		if ($this->request->is('post')) {
-			$result = array('alertOpt' => array());
-			$controller->Utility->setAjaxResult('alert', $result);
-			$id = $this->params->data['id'];
-
-			if ($this->FileAttachment->delete($id)) {
-				$result['alertOpt']['text'] = __('File is deleted successfully.');
+			if ($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
 			} else {
-				$result['alertType'] = $controller->Utility->getAlertType('alert.error');
-				$result['alertOpt']['text'] = __('Error occurred while deleting file.');
+				$controller->Message->alert('general.delete.failed');
 			}
-
-			return json_encode($result);
-		}*/
+			$controller->Session->delete('StudentAttachmentId');
+			return $controller->redirect(array('action' => 'attachments'));
+		}
 	}
 
 	public function attachmentsDownload($controller, $params) {
