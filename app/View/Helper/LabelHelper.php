@@ -18,7 +18,7 @@ App::uses('AppHelper', 'View/Helper');
 
 class LabelHelper extends AppHelper {
 	public $messages = array(
-            'general' => array(
+		'general' => array(
             'add' => 'Add',
             'edit' => 'Edit',
             'delete' => 'Delete',
@@ -52,6 +52,13 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteCustomFieldOption' => array(
 			'institution_site_custom_field_id' => 'Custom Field'
+		),
+		'CensusCustomField' => array(
+			'type' => 'Field Type',
+			'institution_site_type_id' => 'Institution Type'
+		),
+		'CensusCustomFieldOption' => array(
+			'census_custom_field_id' => 'Custom Field'
 		),
         'BankBranch' => array(
             'bank_id' => 'Bank',
@@ -123,12 +130,13 @@ class LabelHelper extends AppHelper {
 	
 	public function getLabel($model, $obj) {
 		$field = $obj['field'];
-                $code = $model . '.' . $obj['field'];
+		$code = $model . '.' . $obj['field'];
+		
 		if(isset($obj['labelKey'])) {
-                    $code = $obj['labelKey'];
+			$code = $obj['labelKey'];
 		} else if($field==='modified' || $field==='created') {
-                    $code = 'general.'.$obj['field'];
-                }
+			$code = 'general.'.$obj['field'];
+		}
 		
 		$label = $this->get($code);
 		if($label===false) {

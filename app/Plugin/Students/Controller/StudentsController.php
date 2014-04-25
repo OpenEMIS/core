@@ -428,27 +428,24 @@ class StudentsController extends StudentsAppController {
         $this->Navigation->addCrumb('More');
 
         // get all student custom field in order
-        $datafields = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
+        $data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
 
         $this->StudentCustomValue->unbindModel(
-                array('belongsTo' => array('Student'))
+			array('belongsTo' => array('Student'))
         );
-        $datavalues = $this->StudentCustomValue->find('all', array(
+        $dataValues = $this->StudentCustomValue->find('all', array(
             'conditions' => array('StudentCustomValue.student_id' => $this->studentId))
         );
-
-        // pr($datafields);
-        // pr($datavalues);
         $tmp = array();
-        foreach ($datavalues as $arrV) {
+        foreach ($dataValues as $arrV) {
             $tmp[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
             // pr($arrV);
         }
-        $datavalues = $tmp;
+        $dataValues = $tmp;
         // pr($tmp);die;
         $this->UserSession->readStatusSession($this->request->action);
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
+        $this->set('data', $data);
+        $this->set('dataValues', $tmp);
     }
 
     public function additionalEdit() {
@@ -539,18 +536,18 @@ class StudentsController extends StudentsAppController {
                 )
             )
         ));
-        $datafields = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
+        $data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
         $this->StudentCustomValue->unbindModel(
                 array('belongsTo' => array('Student'))
         );
-        $datavalues = $this->StudentCustomValue->find('all', array('conditions' => array('StudentCustomValue.student_id' => $this->studentId)));
+        $dataValues = $this->StudentCustomValue->find('all', array('conditions' => array('StudentCustomValue.student_id' => $this->studentId)));
         $tmp = array();
-        foreach ($datavalues as $arrV) {
+        foreach ($dataValues as $arrV) {
             $tmp[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
         }
-        $datavalues = $tmp;
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
+        $dataValues = $tmp;
+        $this->set('data', $data);
+        $this->set('dataValues', $tmp);
     }
 
     public function history() {
