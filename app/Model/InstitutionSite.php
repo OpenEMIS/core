@@ -24,11 +24,11 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteType',
 		'InstitutionSiteOwnership',
 		'Area',
-                'InstitutionSiteProvider' => array(
+		'InstitutionSiteProvider' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'institution_site_provider_id'
 		),
-                'InstitutionSiteSector' => array(
+		'InstitutionSiteSector' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'institution_site_sector_id'
 		)
