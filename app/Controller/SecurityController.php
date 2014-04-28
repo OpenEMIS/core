@@ -532,6 +532,12 @@ class SecurityController extends AppController {
 		$this->set('type', $type);
 		$this->set('levelOptions', $levelOptions);
 		$this->set('valueOptions', $valueOptions);
+		
+		if($type==='areas'){
+			$this->render('groups_add_access_options');
+		}else if($type==='sites'){
+			$this->render('groups_add_institution_options');
+		}
 	}
 	
 	public function groupsLoadValueOptions() {

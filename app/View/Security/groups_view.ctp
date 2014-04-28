@@ -53,14 +53,12 @@ echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 			<legend><?php echo __('Institution Sites'); ?></legend>
 			<div class="table">
 				<div class="table_head">
-					<div class="table_cell cell_institution"><?php echo __('Institution'); ?></div>
 					<div class="table_cell"><?php echo __('Institution Site'); ?></div>
 				</div>
 				
 				<div class="table_body">
 					<?php foreach($data['SecurityGroup']['sites'] as $siteObj) { ?>
 					<div class="table_row">
-						<div class="table_cell"><?php echo $siteObj['institution_name']; ?></div>
 						<div class="table_cell"><?php echo $siteObj['institution_site_name']; ?></div>
 					</div>
 					<?php } ?>
