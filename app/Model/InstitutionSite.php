@@ -236,14 +236,14 @@ class InstitutionSite extends AppModel {
 	}
 	
 	public function getGroupAccessValueList($parentId, $exclude) {
-		$conditions = array('InstitutionSite.institution_id' => $parentId);
+		//$conditions = array('InstitutionSite.institution_id' => $parentId);
 		if(!empty($exclude)) {
 			$conditions['InstitutionSite.id NOT'] = $exclude;
 		}
 		
 		$data = $this->find('list', array(
 			'fields' => array('InstitutionSite.id', 'InstitutionSite.name'),
-			'conditions' => $conditions,
+			//'conditions' => $conditions,
 			'order' => array('InstitutionSite.name')
 		));
 		return $data;
