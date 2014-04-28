@@ -37,7 +37,9 @@ class LabelHelper extends AppHelper {
             'type' => 'Type',
             'title' => 'Title',
 			'name' => 'Name',
-			'date' => 'Date'
+			'date' => 'Date',
+			'attachments' => 'Attachments',
+			'status' => 'Status'
         ),
         'wizard' => array(
             'previous' => 'Previous',
@@ -104,7 +106,11 @@ class LabelHelper extends AppHelper {
             'qualification_institution_country' => 'Institution Country',
 			'gpa' => 'Grade/Score',
 			'file_name' => 'Attachment',
-        )
+        ),
+		'StaffLeave' => array(
+			'date_from' => 'First Day',
+			'date_to' => 'Last Day',
+		)
     );
 	
 	public function get($code) {

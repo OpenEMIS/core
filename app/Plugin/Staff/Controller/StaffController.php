@@ -37,8 +37,8 @@ class StaffController extends StaffAppController {
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
         'Staff.StaffAttendance',
-        'Staff.StaffLeave',
-        'Staff.StaffLeaveType',
+        
+       // 'Staff.StaffLeaveType',
         'Staff.StaffBehaviour',
         'Staff.StaffBehaviourCategory',
         
@@ -53,7 +53,7 @@ class StaffController extends StaffAppController {
         'LeaveStatus',
         'Country',
         'IdentityType',
-        'StaffLeaveAttachment',
+        //'StaffLeaveAttachment',
         'Language',
         'ContactOption',
         'ContactType',
@@ -93,6 +93,7 @@ class StaffController extends StaffAppController {
 		'comments' => 'Staff.StaffComment',
 		'attachments' => 'Staff.StaffAttachment',
 		'qualifications' => 'Staff.StaffQualification',
+		'leaves' => 'Staff.StaffLeave',
     );
 
     public $className = 'Staff';
@@ -316,6 +317,7 @@ class StaffController extends StaffAppController {
 
     public function positions() {
         $this->Navigation->addCrumb(ucfirst($this->action));
+		$this->set('header', 'Positions');
         $staffId = $this->Session->read('StaffId');
         $data = array();
 
@@ -701,148 +703,7 @@ class StaffController extends StaffAppController {
         return $generate_no;
     }
 
-    public function leaves() {
-        $this->Navigation->addCrumb('Leaves');
-        $staffId = $this->Session->read('StaffId');
-        $data = $this->StaffLeave->find('all', array(
-            'recursive' => 0,
-            'conditions' => array('StaffLeave.staff_id' => $staffId),
-            'order' => array('StaffLeave.date_from')
-        ));
-        $this->set('data', $data);
-    }
-
-    public function leavesAdd() {
-        $this->Navigation->addCrumb('Leaves');
-        $typeOptions = $this->StaffLeaveType->findList(true);
-        $statusOptions = $this->LeaveStatus->findList(true);
-
-        if ($this->request->is('post')) {
-            $data = $this->request->data;
-            $data['StaffLeave']['staff_id'] = $this->Session->read('StaffId');
-            $this->StaffLeave->set($data);
-            if ($this->StaffLeave->validates()) {
-                $this->StaffLeave->create();
-                $obj = $this->StaffLeave->save($data);
-                $id = $this->StaffLeave->getInsertID();
-
-                $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-                $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-                if (!empty($_FILES)) {
-                    $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
-                }
-                if ($obj) {
-                    return $this->redirect(array('action' => 'leaves'));
-                }
-            }
-        }
-        $this->set('statusOptions', $statusOptions);
-        $this->set('typeOptions', $typeOptions);
-        $this->set('_model', 'StaffLeaveAttachment');
-    }
-
-    public function leavesView($id = null) {
-        $this->Navigation->addCrumb('Leaves');
-        if (!is_null($id) && $this->StaffLeave->exists($id)) {
-            $typeOptions = $this->StaffLeaveType->findList(true);
-            $statusOptions = $this->LeaveStatus->findList(true);
-            $data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
-            $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-            $attachments = $FileAttachment->getList($id);
-            $this->set('typeOptions', $typeOptions);
-            $this->set('statusOptions', $statusOptions);
-            $this->set('data', $data);
-            $this->set('attachments', $attachments);
-            $this->set('_model', 'StaffLeaveAttachment');
-        } else {
-            return $this->redirect(array('action' => 'leaves'));
-        }
-    }
-
-    public function leavesEdit($id = null) {
-        $this->Navigation->addCrumb('Leaves');
-        if (!is_null($id) && $this->StaffLeave->exists($id)) {
-            $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-            if ($this->request->is('post') || $this->request->is('put')) {
-                $data = $this->request->data;
-                $data['StaffLeave']['id'] = $id;
-                $data['StaffLeave']['staff_id'] = $this->Session->read('StaffId');
-                $this->StaffLeave->set($data);
-                if ($this->StaffLeave->validates()) {
-                    $obj = $this->StaffLeave->save($data);
-                    if (!empty($_FILES)) {
-                        $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
-                    }
-                    if ($obj) {
-                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                        return $this->redirect(array('action' => 'leavesView', $obj['StaffLeave']['id']));
-                    }
-                }
-            }
-
-            $attachments = $FileAttachment->getList($id);
-            $this->set('attachments', $attachments);
-            $this->set('_model', 'StaffLeaveAttachment');
-
-            $typeOptions = $this->StaffLeaveType->findList(true);
-            $statusOptions = $this->LeaveStatus->findList(true);
-            $this->request->data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
-            $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-            $this->set('typeOptions', $typeOptions);
-            $this->set('statusOptions', $statusOptions);
-        } else {
-            return $this->redirect(array('action' => 'leaves'));
-        }
-    }
-
-    public function leavesDelete($id = null) {
-        if (!is_null($id) && $this->StaffLeave->exists($id) && $this->Session->check('StaffId')) {
-            $this->StaffLeave->delete($id);
-            $this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
-        }
-        return $this->redirect(array('action' => 'leaves'));
-    }
-
-    public function attachmentsLeaveAdd() {
-        $this->layout = 'ajax';
-        $this->set('params', $this->params->query);
-        $this->set('_model', 'StaffLeaveAttachment');
-        $this->set('jsname', 'objStaffLeaves');
-        $this->render('/Elements/attachment/compact_add');
-    }
-
-    public function attachmentsLeaveDelete() {
-        $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-            if ($FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-
-            return json_encode($result);
-        }
-    }
-
-    public function attachmentsLeaveDownload($id) {
-        $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-        $FileAttachment->download($id);
-    }
+    
 
 
     
