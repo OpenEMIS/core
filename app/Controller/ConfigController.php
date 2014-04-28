@@ -24,24 +24,25 @@ App::uses('ImageValidate', 'Image');
 class ConfigController extends AppController {
 	public $uses = array(
 		'ConfigItem',
+		'ConfigItemOption',
 		'ConfigAttachment',
 		'SchoolYear',
 		'Country'
 	);
 	public $helpers = array('Number', 'Js' => array('Jquery'), 'Paginator');
-    public $components = array(
+	public $components = array(
 		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'ConfigAttachment'
 		),
 		'LDAP'
 	);
-    private $imageConfig = array();
+	private $imageConfig = array();
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
 		 $this->Auth->allow('fetchImage');
-        $this->Auth->allow('getJSConfig');
+		$this->Auth->allow('getJSConfig');
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		$this->bodyTitle = 'Administration';
 		$this->imageConfig = $this->ConfigItem->getImageConfItem();
@@ -53,7 +54,7 @@ class ConfigController extends AppController {
 		$this->RequestHandler->respondAs('text/javascript');
 		
 		$protocol = ($_SERVER['SERVER_PORT'] == '443'?'https://':'http://');
-                $host = $_SERVER['HTTP_HOST'];
+				$host = $_SERVER['HTTP_HOST'];
 		
 		$url = $protocol . $host . $this->webroot;
 		
@@ -72,36 +73,76 @@ class ConfigController extends AppController {
 
 	public function index(){
 		$this->Navigation->addCrumb('System Configurations');
-		
-		$items = $this->ConfigItem->find('all',array(
-			'fields' => array('ConfigItem.id', 'ConfigItem.name', 'ConfigItem.label', 'ConfigItem.type', 'ConfigItem.value', 'ConfigItem.default_value', 'ConfigItem.editable', 'ConfigItem.visible'),
-			'recursive' => 0,
-			'conditions' => array('ConfigItem.visible' => 1, 'ConfigItem.editable' => 1)
+
+
+		$typeOptions = $this->ConfigItem->find('list',array(
+			'fields' => array('ConfigItem.type', 'ConfigItem.type'),
+			'recursive' => -1,
+			'conditions' => array('ConfigItem.visible' => 1),
+			'order'=> array('ConfigItem.type')
 		));
-		foreach ($items as $key => $value) {
-			foreach ($items[$key] as $innerKey => $innerValue) {
-				$items[$key][$innerKey]['value'] = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
-				if ($items[$key][$innerKey]['name'] == "yearbook_logo") {
-					$items[$key][$innerKey]['hasYearbookLogoContent'] = false;
 
-					$attachment = $this->ConfigAttachment->findById($items[$key][$innerKey]['value']);
+		if($this->AccessControl->newCheck($this->params['controller'], 'dashboard')) {
+			$typeOptions['Dashboard'] = 'Dashboard';
+		}
 
-					if (!empty($attachment['ConfigAttachment']['file_content'])) {
-						$items[$key][$innerKey]['hasYearbookLogoContent'] = true;
-					}
-
+		$selectedType = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($typeOptions);
+		
+		$items = array();
+		if($selectedType == 'Dashboard'){
+			$fileExtensions = $this->Utility->getFileExtensionList(); 
+			$imageFileExts = array();
+			foreach ($fileExtensions as $key => $value) {
+				if(strtolower($value) == 'image'){
+					$imageFileExts[$key] = $value;
 				}
 			}
+			$items = $this->ConfigAttachment->find('all', array('conditions' => array('ConfigAttachment.type' => 'dashboard')));
+			$this->set('arrFileExtensions', $imageFileExts);
+			$this->set('items', $items);
+		}else{
+			$items = $this->ConfigItem->find('all',array(
+				'recursive' => -1,
+				'conditions' => array('ConfigItem.visible' => 1, 'ConfigItem.type' => $selectedType)
+			));
 		}
 
-		$sorted = $this->groupByType($this->ConfigItem->formatArray($items));
-		// Checking if user has access to _view for setup
-		$_view_dashboard = false;
-		if($this->AccessControl->newCheck($this->params['controller'], 'dashboard')) {
-			$_view_dashboard = true;
-		}
-		$this->set('_view_dashboard', $_view_dashboard);
+
+
+
+		$this->set(compact('typeOptions', 'selectedType'));
+		$options = array();
+		if($selectedType!='Dashboard'){
+			foreach ($items as $key => $value) {
+
+				foreach ($items[$key] as $innerKey => $innerValue) {
+					if(isset($items[$key][$innerKey]['option_type'])){
+						$options[$items[$key][$innerKey]['id']] = $this->getOptionValue($items[$key][$innerKey]['option_type']);
+					}
+					if(isset($items[$key][$innerKey]['value'])){
+						$items[$key][$innerKey]['value'] = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
+					}
+					if ($items[$key][$innerKey]['name'] == "yearbook_logo") {
+						$items[$key][$innerKey]['hasYearbookLogoContent'] = false;
+
+						$attachment = $this->ConfigAttachment->findById($items[$key][$innerKey]['value']);
+
+						if (!empty($attachment['ConfigAttachment']['file_content'])) {
+							$items[$key][$innerKey]['hasYearbookLogoContent'] = true;
+						}
+
+					}
+				}
+			}
+			$sorted = $this->groupByType($this->ConfigItem->formatArray($items));
 		
+			$this->set('items', $sorted);
+		}
+
+
+
+		// Checking if user has access to _view for setup
+	
 		$schoolYear = $this->SchoolYear->find('list', array('fields' => array('SchoolYear.id', 'SchoolYear.name'), 'order' => array('name desc')));
 		$this->set('school_years', $schoolYear);
 
@@ -111,16 +152,164 @@ class ConfigController extends AppController {
 		$wizardOptions = array('0'=>'Non-Mandatory', '1'=>'Mandatory', '2'=>'Excluded');
 		$this->set('wizardOptions', $wizardOptions);
 		// End Access Control
-		$this->set('items', $sorted);
+
+		$this->set('options', $options);
+		$this->set('action', $this->action);
+		$this->renderView($selectedType);
+
 	}
 
+	private function renderView($selectedType){
+		if($selectedType=='LDAP Configuration'){
+			$this->render('/Config/custom/ldap');
+		}else if($selectedType=='Dashboard'){
+			$this->render('/Config/custom/dashboard');
+		}
+	}
+
+	private function getDisplayFields($id) {
+		if($id == 'LDAP Configuration'){
+			$fields = array(
+				'model' => 'ConfigItem',
+				'fields' => array(
+					array('field' => 'type'),
+					array('field' => 'host', 'labelKey'=>'Config.host'),
+					array('field' => 'port', 'labelKey'=>'Config.port'),
+					array('field' => 'version', 'labelKey'=>'Config.version'),
+					array('field' => 'base_dn', 'labelKey'=>'Config.base_dn'),
+					array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+					array('field' => 'modified', 'edit' => false),
+					array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+					array('field' => 'created', 'edit' => false)
+				)
+			);
+		}else{
+			$fields = array(
+				'model' => 'ConfigItem',
+				'fields' => array(
+					array('field' => 'type'),
+					array('field' => 'label'),
+					array('field' => 'value'),
+					array('field' => 'default_value'),
+					array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+					array('field' => 'modified', 'edit' => false),
+					array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+					array('field' => 'created', 'edit' => false)
+				)
+			);
+		}
+		
+		return $fields;
+	}
+
+	private function getData($id){
+		$data = array();
+		if($id=='LDAP Configuration'){
+			$dataVal = $this->ConfigItem->find('all',array(
+				'conditions' => array('ConfigItem.visible' => 1, 'ConfigItem.type' =>$id)
+			));
+			foreach($dataVal as $key=>$value){
+				$data['ConfigItem'][$value['ConfigItem']['name']] = $value['ConfigItem']['value'];
+				$data['ConfigItem']['editable'] = $value['ConfigItem']['editable'];
+				$data['ConfigItem']['type'] = $value['ConfigItem']['type'];
+				$data['ConfigItem']['field_type'] = $value['ConfigItem']['field_type'];
+				$data['ConfigItem']['option_type'] = $value['ConfigItem']['option_type'];
+				$data['ConfigItem']['visible'] = $value['ConfigItem']['visible'];
+				$data['ConfigItem'][$value['ConfigItem']['name'].'Id'] = $value['ConfigItem']['id'];
+				$data['ModifiedUser']['modified'] = $value['ModifiedUser']['modified'];
+				$data['ModifiedUser']['first_name'] = $value['ModifiedUser']['first_name'];
+				$data['ModifiedUser']['last_name'] = $value['ModifiedUser']['last_name'];
+				$data['CreatedUser']['created'] = $value['CreatedUser']['created'];
+				$data['CreatedUser']['first_name'] = $value['CreatedUser']['first_name'];
+				$data['CreatedUser']['last_name'] = $value['CreatedUser']['last_name'];
+			}
+		}else if($id == 'Dashboard'){
+			$fileExtensions = $this->Utility->getFileExtensionList(); 
+			$imageFileExts = array();
+			foreach ($fileExtensions as $key => $value) {
+				if(strtolower($value) == 'image'){
+					$imageFileExts[$key] = $value;
+				}
+			}
+			$data = $this->ConfigAttachment->find('all', array('conditions' => array('ConfigAttachment.type' => 'dashboard')));
+
+			$this->set('arrFileExtensions', $imageFileExts);
+		}else{
+			$data = $this->ConfigItem->find('first',array(
+				'conditions' => array('ConfigItem.visible' => 1, 'ConfigItem.id' =>$id)
+			));
+		}
+
+		return $data;
+	}
+
+
+	private function getOptionValue($option_type){
+		$optionValues = $this->ConfigItemOption->find('list',array(
+			'fields' => array('ConfigItemOption.value', 'ConfigItemOption.option'),
+			'recursive' => -1,
+			'conditions' => array('ConfigItemOption.visible'=>1, 'ConfigItemOption.option_type' =>$option_type),
+			'order' => array('ConfigItemOption.order')
+		));
+
+		$options = array();
+		if(strpos($option_type, 'database:')!==false){
+			$tableName = str_replace('database:', '', $option_type);
+			$table = ClassRegistry::init($tableName);
+
+			$options = $table->find('list', array(
+				'fields'=>array(key($optionValues), $optionValues[key($optionValues)]),
+				'order' => array(key($optionValues))
+			));
+		}else{
+			foreach($optionValues as $key=>$value){
+
+				if(strpos($value, 'date')!==false){
+					eval("\$val = $value;");
+				}else{
+					$val = $value;
+				}
+				
+				$options[$key] = $val;
+			}
+		}
+
+		return $options;
+	}
+
+	public function view(){
+		$this->Navigation->addCrumb('View System Configurations');
+
+		$id = isset($this->params['pass'][0]) ? $this->params['pass'][0] : '';
+		if(empty($id)){
+			$this->redirect(array('action'=>'index'));
+		}
+
+		$data = $this->getData($id);
+
+		$editable = $data['ConfigItem']['editable'];
+		$type = $data['ConfigItem']['type'];
+		$fieldType = $data['ConfigItem']['field_type'];
+		$optionType = $data['ConfigItem']['option_type'];
+		$fields = $this->getDisplayFields($id);
+		$options = $this->getOptionValue($optionType);
+		if(!empty($options)){
+			$data['ConfigItem']['value'] = $options[$data['ConfigItem']['value']];
+			$data['ConfigItem']['default_value'] = $options[$data['ConfigItem']['default_value']];
+		}
+
+		$this->set(compact('id', 'data', 'fields', 'editable', 'type', 'options'));
+		$this->set('action', $this->action);
+		$this->renderView($type);
+
+	}
 	public function edit(){
 		$this->Navigation->addCrumb('Edit System Configurations');
-
+		$id = empty($this->params['pass'][0])? 0:$this->params['pass'][0];
 
 		if($this->request->is('post')){
-			//pr($this->request->data);
-			$dataToBeSave = array();
+			$data = $this->request->data;
+			/*$dataToBeSave = array();
 			foreach($this->request->data as $key => $element){
 				if(strtolower($key) == 'configitem'){
 					$dataToBeSave = $element;
@@ -133,69 +322,98 @@ class ConfigController extends AppController {
 
 			if(empty($errorCustomMsg)) {
 				$this->save();
-                        }else{
-                            $this->Utility->alertArray($errorCustomMsg, array('type' => 'error'));
-                        }
+						}else{
+							$this->Utility->alertArray($errorCustomMsg, array('type' => 'error'));
+						}*/
 
 			//$this->set('errorCustomMsg', $errorCustomMsg);
+			if($id == 'LDAP Configuration'){
+				$fields = array('host', 'port', 'version', 'base_dn');
+				$saveData = array();
+				$i = 0;
+				foreach($fields as $value){
+					$saveData[$i]['id'] = $data['ConfigItem'][$value.'Id'];
+					$saveData[$i]['value'] = $data['ConfigItem'][$value];
+					$i++;
+				}
+				if($this->ConfigItem->saveAll($saveData)){
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action'=>'index', $data['ConfigItem']['type']));
+				}
+			}else{     
+				if($this->ConfigItem->save($data)){
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('action'=>'index', $data['ConfigItem']['type']));
+				}
+			}
+		}else{
+			$data = $this->getData($id);
+
+			$this->request->data = $data;
 		}
 
 
-		$items = $this->ConfigItem->find('all',array(
-				'fields' => array('ConfigItem.id', 'ConfigItem.name', 'ConfigItem.label', 'ConfigItem.type', 'ConfigItem.value', 'ConfigItem.default_value', 'ConfigItem.visible'),
-				'recursive' => 0,
-				'conditions' => array('ConfigItem.editable' => 1, 'ConfigItem.visible' => 1)
-			));
-                
-                if($this->request->is('post')){
-                    $requestData = $this->request->data;
-                    
-                    foreach ($requestData['ConfigItem']['Data Discrepancy'] as $key => $value){
-                        if($value['id'] == 17){
-                            $dataDiscrepancy = $value['value'];
-                            break;
-                        }
-                    }
-                    
-                    foreach ($requestData['ConfigItem']['Data Outliers'] as $key => $value){
-                        if($value['id'] == 18){
-                            $maxStudentAge = $value['value'];
-                            continue;
-                        }else if($value['id'] == 19){
-                            $minStudentAge = $value['value'];
-                            continue;
-                        }else if($value['id'] == 20){
-                            $maxStudentNumber = $value['value'];
-                            continue;
-                        }else if($value['id'] == 21){
-                            $minStudentNumber = $value['value'];
-                            continue;
-                        }
-                    }
-                }
-                
+		$type = $this->request->data['ConfigItem']['type'];
+		$fieldType = $this->request->data['ConfigItem']['field_type'];
+		$optionType = $this->request->data['ConfigItem']['option_type'];
+
+		$options = $this->getOptionValue($optionType);
+
+		$this->set(compact('options', 'id', 'type', 'fieldType'));
+
+		$this->set('action', $this->action);
+		$this->renderView($type);
+		/*
+				
+				if($this->request->is('post')){
+					$requestData = $this->request->data;
+					
+					foreach ($requestData['ConfigItem']['Data Discrepancy'] as $key => $value){
+						if($value['id'] == 17){
+							$dataDiscrepancy = $value['value'];
+							break;
+						}
+					}
+					
+					foreach ($requestData['ConfigItem']['Data Outliers'] as $key => $value){
+						if($value['id'] == 18){
+							$maxStudentAge = $value['value'];
+							continue;
+						}else if($value['id'] == 19){
+							$minStudentAge = $value['value'];
+							continue;
+						}else if($value['id'] == 20){
+							$maxStudentNumber = $value['value'];
+							continue;
+						}else if($value['id'] == 21){
+							$minStudentNumber = $value['value'];
+							continue;
+						}
+					}
+				}
+				
 		foreach ($items as $key => $value) {
 			foreach ($items[$key] as $innerKey => $innerValue) {
-                            if($this->request->is('post') && ($innerValue['id'] == 17 || $innerValue['id'] == 18 || $innerValue['id'] == 19 || $innerValue['id'] == 20 || $innerValue['id'] == 21)){
-                                $backUpValue = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
-                                if($innerValue['id'] == 17){
-                                    $items[$key][$innerKey]['value'] = isset($dataDiscrepancy) ? $dataDiscrepancy : $backUpValue;
-                                }else if($innerValue['id'] == 18){
-                                    $items[$key][$innerKey]['value'] = isset($maxStudentAge) ? $maxStudentAge : $backUpValue;
-                                }else if($innerValue['id'] == 19){
-                                    $items[$key][$innerKey]['value'] = isset($minStudentAge) ? $minStudentAge : $backUpValue;
-                                }else if($innerValue['id'] == 20){
-                                    $items[$key][$innerKey]['value'] = isset($maxStudentNumber) ? $maxStudentNumber : $backUpValue;
-                                }else if($innerValue['id'] == 21){
-                                    $items[$key][$innerKey]['value'] = isset($minStudentNumber) ? $minStudentNumber : $backUpValue;
-                                }
-                            }else{
-                                $items[$key][$innerKey]['value'] = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
-                            }
+							if($this->request->is('post') && ($innerValue['id'] == 17 || $innerValue['id'] == 18 || $innerValue['id'] == 19 || $innerValue['id'] == 20 || $innerValue['id'] == 21)){
+								$backUpValue = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
+								if($innerValue['id'] == 17){
+									$items[$key][$innerKey]['value'] = isset($dataDiscrepancy) ? $dataDiscrepancy : $backUpValue;
+								}else if($innerValue['id'] == 18){
+									$items[$key][$innerKey]['value'] = isset($maxStudentAge) ? $maxStudentAge : $backUpValue;
+								}else if($innerValue['id'] == 19){
+									$items[$key][$innerKey]['value'] = isset($minStudentAge) ? $minStudentAge : $backUpValue;
+								}else if($innerValue['id'] == 20){
+									$items[$key][$innerKey]['value'] = isset($maxStudentNumber) ? $maxStudentNumber : $backUpValue;
+								}else if($innerValue['id'] == 21){
+									$items[$key][$innerKey]['value'] = isset($minStudentNumber) ? $minStudentNumber : $backUpValue;
+								}
+							}else{
+								$items[$key][$innerKey]['value'] = (is_null($items[$key][$innerKey]['value']) || empty($items[$key][$innerKey]['value']))? $items[$key][$innerKey]['default_value']: $items[$key][$innerKey]['value'];
+							}
 				
 			}
 		}
-                
+				
 		$schoolYear = $this->SchoolYear->find('list', array('fields' => array('SchoolYear.id', 'SchoolYear.name'), 'order' => array('name desc')));
 		$country = $this->Country->find('list', array('fields' => array('Country.id', 'Country.name'), 'order' => array('name asc')));
 	
@@ -204,8 +422,8 @@ class ConfigController extends AppController {
 		$this->set('countries', $country);
 		$wizardOptions = array('0'=>'Non-Mandatory', '1'=>'Mandatory', '2'=>'Excluded');
 		$this->set('wizardOptions', $wizardOptions);
-		$this->set('items', $sorted);
-                
+		$this->set('items', $sorted);*/
+				
 	}
 
 	private function validateFields($data){
@@ -220,8 +438,8 @@ class ConfigController extends AppController {
 						}
 					}
 				}
-                                
-                                if($key=='Data Discrepancy'){
+								
+								if($key=='Data Discrepancy'){
 					if($innerElement['id']=='17'){
 						$value = $innerElement['value'];
 						if(!is_numeric($value) || $value < 0 || $value > 100){
@@ -250,19 +468,19 @@ class ConfigController extends AppController {
 							$error[$innerElement['id']] = "Data Outliers: Minimum Student Number should be numeric value";
 						}
 					}
-                                }else if($key=='Student Admission Age'){
-                                    $value = $innerElement['value'];
-                                    if($innerElement['id']=='106'){
-                                        if(!is_numeric($value) || $value < 0 || $value > 10){
-                                            $error[$innerElement['id']] = "Student Admission Age: Admission Age Plus should be numeric value between 0 to 10";
+								}else if($key=='Student Admission Age'){
+									$value = $innerElement['value'];
+									if($innerElement['id']=='106'){
+										if(!is_numeric($value) || $value < 0 || $value > 10){
+											$error[$innerElement['id']] = "Student Admission Age: Admission Age Plus should be numeric value between 0 to 10";
 					}
-                                    }else if($innerElement['id']=='107'){
-                                        if(!is_numeric($value) || $value < 0 || $value > 10){
-                                            $error[$innerElement['id']] = "Student Admission Age: Admission Age Minus should be numeric value between 0 to 10";
+									}else if($innerElement['id']=='107'){
+										if(!is_numeric($value) || $value < 0 || $value > 10){
+											$error[$innerElement['id']] = "Student Admission Age: Admission Age Minus should be numeric value between 0 to 10";
 					}
-                                    }
+									}
 				}
-                                
+								
 			}
 		}
 
@@ -372,10 +590,10 @@ class ConfigController extends AppController {
 							}
 						}
 					}else if($key === 'Data Outliers') {
-                                            if($innerElement['id'] == 18 || $innerElement['id'] == 19 || $innerElement['id'] == 20 || $innerElement['id'] == 21){
-                                                $innerElement['value'] = intval($innerElement['value']);
-                                            }
-                                        }
+											if($innerElement['id'] == 18 || $innerElement['id'] == 19 || $innerElement['id'] == 20 || $innerElement['id'] == 21){
+												$innerElement['value'] = intval($innerElement['value']);
+											}
+										}
 
 					$this->log($innerElement, 'debug');
 					if ($this->ConfigItem->save($innerElement)) {
@@ -383,9 +601,9 @@ class ConfigController extends AppController {
 						if($configItem['ConfigItem']['name'] == "date_format") {
 							$_SESSION['Config.DateFormat'] = $innerElement['value'];
 						}
-	                }else{
-	                    #echo 'false<br/>';
-	                }
+					}else{
+						#echo 'false<br/>';
+					}
 				}
 				//$this->ConfigItem->saveAll($element);
 				
@@ -401,96 +619,151 @@ class ConfigController extends AppController {
 	################# Start Yearbook #################
 
 	public function fetchYearbookImage($id){
-        $this->autoRender = false;
+		$this->autoRender = false;
 
-        $mime_types = ImageMeta::mimeTypes();
+		$mime_types = ImageMeta::mimeTypes();
 
-        $imageRawData = $this->ConfigAttachment->findById($id);
+		$imageRawData = $this->ConfigAttachment->findById($id);
 
-        if(empty($imageRawData['ConfigAttachment']['file_content']) || empty($imageRawData['ConfigAttachment']['file_content'])){
-            header("HTTP/1.0 404 Not Found");
-            die();
-        }else{
-            $imageFilename = $imageRawData['ConfigAttachment']['file_name'];
-            $fileExt = pathinfo($imageFilename, PATHINFO_EXTENSION);
-            $imageContent = $imageRawData['ConfigAttachment']['file_content'];
-       // header("Content-type: {$imageMeta->getMime()}");
-            header("Content-type: " . $mime_types[$fileExt]);
-            echo $imageContent;
-        }
-    }
+		if(empty($imageRawData['ConfigAttachment']['file_content']) || empty($imageRawData['ConfigAttachment']['file_content'])){
+			header("HTTP/1.0 404 Not Found");
+			die();
+		}else{
+			$imageFilename = $imageRawData['ConfigAttachment']['file_name'];
+			$fileExt = pathinfo($imageFilename, PATHINFO_EXTENSION);
+			$imageContent = $imageRawData['ConfigAttachment']['file_content'];
+	   // header("Content-type: {$imageMeta->getMime()}");
+			header("Content-type: " . $mime_types[$fileExt]);
+			echo $imageContent;
+		}
+	}
 
 	################# End Yearbook #################
 	################# Start Dashboard #################
 
-	public function dashboard(){
+	public function dashboardView(){
 		$this->Navigation->addCrumb('System Configurations', array('controller' => 'Config', 'action' => 'index'));
 		$this->Navigation->addCrumb('Dashboard Image');
-		$fileExtensions = $this->Utility->getFileExtensionList(); 
-		$imageFileExts = array();
-		foreach ($fileExtensions as $key => $value) {
-			if(strtolower($value) == 'image'){
-				$imageFileExts[$key] = $value;
-			}
+
+		$id = empty($this->params['pass'][0])? 0:$this->params['pass'][0];
+		
+		$data = $this->ConfigAttachment->find('first', array('conditions' => array('ConfigAttachment.type' => 'dashboard', 'ConfigAttachment.id' => $id)));
+		$this->set('data', $data);
+		$this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
+
+		if(empty($data)){
+			return $this->redirect(array('action'=>'index', 'Dashboard'));
 		}
-		$data = $this->ConfigAttachment->find('all', array('conditions' => array('ConfigAttachment.type' => 'dashboard')));
-        $this->set('data', $data);
-		$this->set('arrFileExtensions', $imageFileExts);
+
+		$image['width'] = $this->ConfigItem->getValue('dashboard_img_width');
+		$image['height'] = $this->ConfigItem->getValue('dashboard_img_height');
+		$image = array_merge($image, $this->ConfigAttachment->getCoordinates($data['ConfigAttachment']['file_name']));
+
+		$this->Session->write('DashboardId', $id);
+		$this->set('image', $image);
+		$this->set('id', $id);
 		$this->render('/Config/dashboard/view');
 	}
 	
-    public function dashboardEdit() {
+	public function dashboardEdit() {
 		$this->Navigation->addCrumb('System Configurations', array('controller' => 'Config', 'action' => 'index'));
 		$this->Navigation->addCrumb('Dashboard Image', array('controller' => 'Config', 'action' => 'dashboard'));
 		$this->Navigation->addCrumb('Edit');
 
-        if($this->request->is('post')) { // save
-        	$requestData = $this->data;
-        	$active = $requestData['ConfigAttachment']['visible'];
-        	unset($requestData['ConfigAttachment']['visible']);
-        	foreach ($requestData['ConfigAttachment'] as $key => $value) {
-        		if($key == $active){
-	        		$requestData['ConfigAttachment'][$key]['active'] = 1;
-        		}else{
-	        		$requestData['ConfigAttachment'][$key]['active'] = 0;	
-        		}
-        	    $requestData['ConfigAttachment'][$key]['type'] = 'dashboard';
-        	}
+		if($this->request->is('post')) { // save
+			$requestData = $this->data;
+			$active = $requestData['ConfigAttachment']['visible'];
+			unset($requestData['ConfigAttachment']['visible']);
+			foreach ($requestData['ConfigAttachment'] as $key => $value) {
+				if($key == $active){
+					$requestData['ConfigAttachment'][$key]['active'] = 1;
+				}else{
+					$requestData['ConfigAttachment'][$key]['active'] = 0;	
+				}
+				$requestData['ConfigAttachment'][$key]['type'] = 'dashboard';
+			}
 
-        	$errors = (isset($_FILES['files']))?$this->vaildateImage($_FILES):array();
-        	// pr($_FILES);
-        	// die();
+			$errors = (isset($_FILES['files']))?$this->vaildateImage($_FILES):array();
+			// pr($_FILES);
+			// die();
 
-        	if(sizeof($errors) == 0) $errors = array_merge($errors,$this->FileAttachment->saveAll($requestData, $_FILES, null));
-        	
+			if(sizeof($errors) == 0) $errors = array_merge($errors,$this->FileAttachment->saveAll($requestData, $_FILES, null));
+			
 			if(sizeof($errors) == 0) {
 				$this->Utility->alert(__('Files have been saved successfully.'));
 				$this->redirect(array('action' => 'dashboard'));
 			} else {
 				$this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
 			}
-        }
+		}
 		
-        $data = $this->ConfigAttachment->find('all',
-            array('fields' => array('ConfigAttachment.id', 'ConfigAttachment.name', 'ConfigAttachment.file_name', 'ConfigAttachment.order', 'ConfigAttachment.active', 'ConfigAttachment.created'),
-                'conditions' => array('ConfigAttachment.type' => 'dashboard')
-            ));
-        $this->set('data',$data);
+		$data = $this->ConfigAttachment->find('all',
+			array('fields' => array('ConfigAttachment.id', 'ConfigAttachment.name', 'ConfigAttachment.file_name', 'ConfigAttachment.order', 'ConfigAttachment.active', 'ConfigAttachment.created'),
+				'conditions' => array('ConfigAttachment.type' => 'dashboard')
+			));
+		$this->set('data',$data);
 		$this->set('imageConfig', $this->imageConfig);
 		$this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
 		$this->render('/Config/dashboard/edit');
-    }
+	}
 	
 	public function dashboardAdd() {
-		$this->layout = 'ajax';
+		//$this->layout = 'ajax';
 		$this->set('params', $this->params->query);
-		$this->set('_model', $this->ConfigAttachment->modelName());
+
+		$model = $this->ConfigAttachment->modelName();
+		$this->set('_model', $model);
+
+
+		if($this->request->is('post')) { // save
+			$requestData = $this->data;
+			//$active = $requestData[$model][0]['default'];
+
+			foreach ($requestData['ConfigAttachment'] as $key => $value) {
+				$requestData['ConfigAttachment'][$key]['active'] = 0;	
+				
+				$requestData['ConfigAttachment'][$key]['type'] = 'dashboard';
+			}
+
+			$errors = (isset($_FILES['files']))?$this->vaildateImage($_FILES):array();
+			// pr($_FILES);
+			// die();
+			pr($requestData);
+			if($this->ConfigAttachment->saveAll($requestData)){
+				var_dump('good ?');
+			}else{
+				var_dump('bad ?');
+			}
+
+			if(sizeof($errors) == 0) $errors = array_merge($errors,$this->FileAttachment->saveAll($requestData, $_FILES, null));
+			pr($errors);
+			if(sizeof($errors) == 0) {
+				$this->Utility->alert(__('Files have been saved successfully.'));
+				$this->redirect(array('action' => 'dashboard'));
+			} else {
+				$this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
+			}
+			
+		}
 		$this->render('/Config/dashboard/add');
 	}
-       
-    public function dashboardUpdateVisible() {
+	
+	public function dashboardDelete(){
+		if($this->Session->check('DashboardId')) {
+			$id = $this->Session->read('DashboardId');
+			if($this->ConfigAttachment->delete($id)) {
+				$this->Message->alert('general.delete.success');
+			} else {
+				$this->Message->alert('general.delete.failed');
+			}
+			$this->Session->delete('DashboardId');
+			return $this->redirect(array('action' => 'index'));
+		}
+	}
+	   
+	public function dashboardUpdateVisible() {
 		$this->autoRender = false;
-        if($this->request->is('post')) {
+		if($this->request->is('post')) {
 			$result = array('alertOpt' => array());
 			// $this->Utility->setAjaxResult('alert', $result);
 			$id = $this->params->data['id'];
@@ -516,12 +789,12 @@ class ConfigController extends AppController {
 			}
 			
 			return json_encode($result);
-        }
-    }
-       
-    public function dashboardDelete() {
+		}
+	}
+	/*  
+	public function dashboardDelete() {
 		$this->autoRender = false;
-        if($this->request->is('post')) {
+		if($this->request->is('post')) {
 			$result = array('alertOpt' => array());
 			$this->Utility->setAjaxResult('alert', $result);
 			$id = $this->params->data['id'];
@@ -548,12 +821,12 @@ class ConfigController extends AppController {
 
 			
 			return json_encode($result);
-        }
-    }
-        
-    public function attachmentsDownload($id) {
-        $this->FileAttachment->download($id);
-    }
+		}
+	}*/
+		
+	public function attachmentsDownload($id) {
+		$this->FileAttachment->download($id);
+	}
 
 	public function fetchImage($id){
 		$this->autoRender = false;

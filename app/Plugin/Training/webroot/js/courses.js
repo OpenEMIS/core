@@ -1,6 +1,7 @@
 
 $(document).ready(function() {
-    objTrainingCourses.init();
+    //objTrainingCourses.init();
+    console.log('test');
 });
 
 function in_array (needle, haystack, argStrict) {
