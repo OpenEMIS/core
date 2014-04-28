@@ -6,20 +6,16 @@ echo $this->Html->script('population', false);
 
 $currentYear = intval(date('Y'));
 $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Population'));
+$this->start('contentActions');
+if($_edit) { 
+	echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('id' => 'edit', 'class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="population" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Population'); ?></span>
-		<?php
-		if($_edit) { 
-			echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('id' => 'edit', 'class' => 'divider'));
-		}
-		?>
-	</h1>
-
 	<?php
 	echo $this->Form->create('Population', array(
 			'url' => array(
@@ -31,22 +27,18 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 		)
 	);
 	?>
+	<?php 
+		echo $this->Utility->getYearList($this->Form,'data[year]',array(
+			'name' => "data[year]",
+			'id' => "year_id",
+			'maxlength' => 30,
+			'desc' => true,
+			'label' => false,
+			'default' => $selectedYear,
+			'div' => false), true);
+	?>
+    <?php echo $this->element('census_legend_population'); ?>
 
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<?php 
-			echo $this->Utility->getYearList($this->Form,'data[year]',array(
-				'name' => "data[year]",
-				'id' => "year_id",
-				'maxlength' => 30,
-				'desc' => true,
-				'label' => false,
-				'default' => $selectedYear,
-				'div' => false), true);
-		?>
-                <?php echo $this->element('census_legend_population'); ?>
-	</div>
-	
 	<fieldset id="area_section_group" class="section_group">
         <legend id="area"><?php echo __('Area'); ?></legend>
         <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id', $initAreaSelection['area_id'], array()); ?>
@@ -57,15 +49,19 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 	<fieldset id="data_section_group" class="section_group">
 		<legend><?php echo __('Population'); ?></legend>
 		<div id="mainlist">
-			<div class="table">
-				<div class="table_head">
+			<div class="table-responsive">
+			<table class="table table-striped table-hover table-bordered">
+
+				<thead class="table_head">
+					<tr>
 					<!--div class="table_cell">Area Level</div-->
-					<div class="table_cell cell_source"><?php echo __('Source'); ?></span></div>
-					<div class="table_cell"><?php echo __('Age'); ?></div>
-					<div class="table_cell"><?php echo __('Male'); ?></div>
-					<div class="table_cell"><?php echo __('Female'); ?></div>
-					<div class="table_cell"><?php echo __('Total'); ?></div>
-				</div>
+					<td class="table_cell cell_source"><?php echo __('Source'); ?></span></div>
+					<td class="table_cell"><?php echo __('Age'); ?></div>
+					<td class="table_cell"><?php echo __('Male'); ?></td>
+					<td class="table_cell"><?php echo __('Female'); ?></td>
+					<td class="table_cell"><?php echo __('Total'); ?></td>
+					</tr>
+				</thead>
 
 				<div class="table_body" style="display:none;">&nbsp;</div>
 
@@ -76,10 +72,10 @@ $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 					<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
 					<div class="table_cell cell_value cell_number">0</div>
 				</div>
+			</table>
 			</div>
 		</div>
 	</fieldset>
-</div>
 
 <script type="text/javascript">
 
@@ -123,3 +119,5 @@ $(document).ready(function(){
 
 
 </script>
+
+<?php $this->end(); ?>  
