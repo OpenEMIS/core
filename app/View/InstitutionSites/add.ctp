@@ -37,14 +37,18 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 		
 		$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_provider_id');
 		echo $this->Form->input('institution_site_provider_id', array('options'=>$providerOptions, 'label' => $labelOptions));
+		
 		$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_sector_id');
 		echo $this->Form->input('institution_site_sector_id', array('options'=>$sectorOptions, 'label' => $labelOptions));
 		
-		echo $this->Form->input('institution_site_type_id', array('options'=>$type_options));
+		$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_type_id');
+		echo $this->Form->input('institution_site_type_id', array('options'=>$typeOptions, 'label' => $labelOptions));
 		
-		echo $this->Form->input('institution_site_ownership_id', array('options'=>$ownership_options));
+		$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_ownership_id');
+		echo $this->Form->input('institution_site_ownership_id', array('options'=>$ownershipOptions, 'label' => $labelOptions));
 		
-		echo $this->Form->input('institution_site_status_id', array('options'=>$status_options));
+		$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_status_id');
+		echo $this->Form->input('institution_site_status_id', array('options'=>$statusOptions, 'label' => $labelOptions));
 		
 		echo $this->FormUtility->datepicker('date_opened', array('id' => 'dateOpened'));
 		
@@ -54,16 +58,6 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 
 
 	</fieldset>
-	<fieldset class="section_break">
-        <legend id="area"><?php echo __('Area'); ?></legend>
-        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id','', array(), $filterArea); ?>
-    </fieldset>
-	<fieldset class="section_break">
-        <legend id="education"><?php echo __('Area').' ('.__('Education').')'; ?></legend>
-        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id','', array()); ?>
-    </fieldset>
-	
-	
 	<fieldset class="section_break">
 		<legend><?php echo __('Location'); ?></legend>
 		<?php 
@@ -78,7 +72,8 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 		
 		echo $this->Form->input('validate_institution_site_postal_code', array('type'=>'hidden', 'id' => 'validate_institution_site_postal_code'));
 		
-		echo $this->Form->input('institution_site_locality_id', array('options'=>$locality_options));
+		$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_locality_id');
+		echo $this->Form->input('institution_site_locality_id', array('options'=>$localityOptions, 'label' => $labelOptions));
 		
 		echo $this->Form->input('latitude');
 		

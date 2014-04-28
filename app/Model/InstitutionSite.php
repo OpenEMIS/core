@@ -60,7 +60,8 @@ class InstitutionSite extends AppModel {
 			'belongsTo' => array(
 				'Area' => array('lft', 'rght')
 			)
-		)
+		),
+		'DatePicker' => array('date_opened', 'date_closed')
 	);
 	
 	public $validate = array(
@@ -115,7 +116,7 @@ class InstitutionSite extends AppModel {
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Site Type'
+				'message' => 'Please select a Type'
 			)
 		),
 		'institution_site_ownership_id' => array(
@@ -125,13 +126,13 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please select an Ownership'
 			)
 		),
-		'area_id' => array(
-			'ruleRequired' => array(
-				'rule' => array('comparison', '>', 0),
-				'required' => true,
-				'message' => 'Please select an Area'
-			)
-		),
+//		'area_id' => array(
+//			'ruleRequired' => array(
+//				'rule' => array('comparison', '>', 0),
+//				'required' => true,
+//				'message' => 'Please select an Area'
+//			)
+//		),
 		'email' => array(
 			'ruleRequired' => array(
 				'rule' => 'email',
@@ -139,22 +140,24 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please enter a valid Email'
 			)
 		),
-		'date_opened' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select the Date Opened'
-			),
-			'ruleCompare' => array(
-				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
-				'required' => true,
-				'message' => 'Please select the Date Opened'
-			)
-		),'longitude' => array(
+//		'date_opened' => array(
+//			'ruleRequired' => array(
+//				'rule' => 'notEmpty',
+//				'required' => true,
+//				'message' => 'Please select the Date Opened'
+//			),
+//			'ruleCompare' => array(
+//				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
+//				'required' => true,
+//				'message' => 'Please select the Date Opened'
+//			)
+//		),
+		'longitude' => array(
 				'rule' => array('checkLongitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Longitude'
-		),'latitude' => array(
+		),
+		'latitude' => array(
 				'rule' => array('checkLatitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Latitude'
@@ -174,28 +177,6 @@ class InstitutionSite extends AppModel {
 			)
 		)
 	);
-	
-//	public function getDisplayFields($controller) {
-//		$fields = array(
-//			'model' => $this->alias,
-//			'fields' => array(
-//				array('field' => 'id', 'type' => 'hidden'),
-//				array('field' => 'name'),
-//				array('field' => 'code')
-//				//array('field' => 'validate_institution_site_code', 'type' => 'hidden')
-//				//array('field' => 'bank_id', 'model' => 'BankBranch', 'type' => 'select', 'options' => $bankOptions),
-////				array('field' => 'account_name'),
-////				array('field' => 'account_number'),
-////				array('field' => 'active', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
-////				array('field' => 'remarks', 'type' => 'textarea'),
-////				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-////				array('field' => 'modified', 'edit' => false),
-////				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-////				array('field' => 'created', 'edit' => false)
-//			)
-//		);
-//		return $fields;
-//	}
     
 	public function checkNumeric($arrVal){
 		$o = array_values($arrVal);

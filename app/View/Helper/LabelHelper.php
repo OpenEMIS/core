@@ -49,7 +49,11 @@ class LabelHelper extends AppHelper {
         ),
 		'InstitutionSite' => array(
 			'institution_site_provider_id' => 'Provider',
-			'institution_site_sector_id' => 'Sector'
+			'institution_site_sector_id' => 'Sector',
+			'institution_site_type_id' => 'Type',
+			'institution_site_ownership_id' => 'Ownership',
+			'institution_site_status_id' => 'Status',
+			'institution_site_locality_id' => 'Locality'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
