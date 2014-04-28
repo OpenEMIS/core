@@ -36,8 +36,12 @@ class LabelHelper extends AppHelper {
             'created' => 'Created On',
             'type' => 'Type',
             'title' => 'Title',
+            'activate' => 'Activate',
+            'inactivate' => 'Inactivate',
 			'name' => 'Name',
 			'date' => 'Date',
+            'yes' => 'Yes',
+            'no' => 'No',
 			'general' => 'General'
         ),
         'wizard' => array(
@@ -97,6 +101,17 @@ class LabelHelper extends AppHelper {
             'start_date' => 'Commenced Date',
             'end_date' => 'Ended Date',
         ),
+        'Config' => array(
+            'name' => 'System Configurations',
+            'host'=>'LDAP Server',
+            'port'=>'Port',
+            'version'=>'Version',
+            'base_dn'=>'Base DN',
+            'file' => 'File',
+            'file_type' => 'File Type',
+            'default' => 'Default',
+            'uploaded_on' => 'Uploaded On'
+        ),
         'Identities' => array(
             'issue_location' => 'Issuer'
         ),
@@ -112,7 +127,7 @@ class LabelHelper extends AppHelper {
 		'StaffQualification' => array(
             'qualification_institution_country' => 'Institution Country',
 			'gpa' => 'Grade/Score',
-			'file_name' => 'Attachment',
+			'file_name' => 'Attachment'
         )
     );
 	
