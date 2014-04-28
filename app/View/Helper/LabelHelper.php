@@ -41,7 +41,7 @@ class LabelHelper extends AppHelper {
 			'name' => 'Name',
 			'date' => 'Date',
             'yes' => 'Yes',
-            'no' => 'No'
+            'no' => 'No',
 			'general' => 'General'
         ),
         'wizard' => array(
