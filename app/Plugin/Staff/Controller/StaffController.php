@@ -42,7 +42,7 @@ class StaffController extends StaffAppController {
         'Staff.StaffBehaviour',
         'Staff.StaffBehaviourCategory',
         
-        'Staff.StaffExtracurricular',
+        //'Staff.StaffExtracurricular',
         'Staff.StaffEmployment',
         'Staff.StaffSalary',
         'Staff.StaffSalaryAddition',
@@ -94,6 +94,7 @@ class StaffController extends StaffAppController {
 		'attachments' => 'Staff.StaffAttachment',
 		'qualifications' => 'Staff.StaffQualification',
 		'leaves' => 'Staff.StaffLeave',
+		'extracurricular' => 'Staff.StaffExtracurricular',
     );
 
     public $className = 'Staff';
@@ -745,96 +746,6 @@ class StaffController extends StaffAppController {
             $this->set('staffBehaviourObj', $staffBehaviourObj);
         } else {
             $this->redirect(array('action' => 'behaviour'));
-        }
-    }
-	
-    public function extracurricular() {
-        $this->Navigation->addCrumb('Extracurricular');
-        $data = $this->StaffExtracurricular->getAllList('staff_id', $this->staffId);
-        $this->set('list', $data);
-    }
-
-    public function extracurricularView() {
-        $id = $this->params['pass'][0];
-        $data = $this->StaffExtracurricular->getAllList('id', $id);
-        if (!empty($data)) {
-            $this->Navigation->addCrumb('Extracurricular Details');
-
-            $this->Session->write('StaffExtracurricularId', $id);
-            $this->set('data', $data);
-        }
-    }
-
-    public function extracurricularAdd() {
-        $this->Navigation->addCrumb('Add Extracurricular');
-
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $typeList = $this->ExtracurricularType->findList(array('fields' => array('id', 'name'), 'conditions' => array('visible' => '1'), 'orderBy' => 'name'));
-
-        $this->set('selectedYear', $yearId);
-        $this->set('years', $yearList);
-        $this->set('types', $typeList);
-        if ($this->request->isPost()) {
-            $data = $this->request->data;
-            $data['StaffExtracurricular']['staff_id'] = $this->staffId;
-            if ($this->StaffExtracurricular->save($data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'extracurricular'));
-            }
-        }
-    }
-
-    public function extracurricularEdit() {
-        $id = $this->params['pass'][0];
-        $this->Navigation->addCrumb('Edit Extracurricular Details');
-        if ($this->request->is('get')) {
-            $data = $this->StaffExtracurricular->find('first', array('conditions' => array('StaffExtracurricular.id' => $id)));
-
-            if (!empty($data)) {
-                $this->request->data = $data;
-            }
-        } else {
-            $data = $this->data;
-            $data['StaffExtracurricular']['staff_id'] = $this->staffId;
-            $data['StaffExtracurricular']['id'] = $id;
-            if ($this->StaffExtracurricular->save($data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'extracurricularView', $data['StaffExtracurricular']['id']));
-            }
-        }
-
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $typeList = $this->ExtracurricularType->findList(array('fields' => array('id', 'name'), 'conditions' => array('visible' => '1'), 'orderBy' => 'name'));
-
-        $this->set('selectedYear', $yearId);
-        $this->set('years', $yearList);
-        $this->set('types', $typeList);
-
-        $this->set('id', $id);
-    }
-
-    public function extracurricularDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffExtracurricularId')) {
-            $id = $this->Session->read('StaffExtracurricularId');
-            $staffId = $this->Session->read('StaffId');
-            $name = $this->StaffExtracurricular->field('name', array('StaffExtracurricular.id' => $id));
-
-            $this->StaffExtracurricular->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'extracurricular'));
-        }
-    }
-
-    public function searchAutoComplete() {
-        if ($this->request->is('get')) {
-            if ($this->request->is('ajax')) {
-                $this->autoRender = false;
-                $search = $this->params->query['term'];
-                $result = $this->StaffExtracurricular->autocomplete($search);
-                return json_encode($result);
-            }
         }
     }
 
