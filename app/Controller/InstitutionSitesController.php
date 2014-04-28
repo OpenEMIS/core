@@ -1084,8 +1084,8 @@ class InstitutionSitesController extends AppController {
             if ($last_area_id == 0) {
                 $last_area_id = '';
             }
-            $this->request->data['InstitutionSite']['area_id'] = $last_area_id;
-            $this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
+            //$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+            //$this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
 
 
             $this->InstitutionSite->set($this->request->data);
@@ -1094,9 +1094,10 @@ class InstitutionSitesController extends AppController {
                 $this->request->data['InstitutionSite']['longitude'] = trim($this->request->data['InstitutionSite']['longitude']);
 
                 $rec = $this->InstitutionSite->save($this->request->data);
+				//pr($this->request->data);
 
                 $this->redirect(array('action' => 'view'));
-            }
+			}
 
             /**
              * preserve the dropdown values on error
@@ -1181,12 +1182,17 @@ class InstitutionSitesController extends AppController {
         // Get security group area
         $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
         $filterArea = $this->SecurityGroupArea->getAreas($groupId);
+		
+		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
+		$this->Utility->unshiftArray($providerOptions, array('0' => '--' . __('Select') . '--'));
+		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
+        $this->Utility->unshiftArray($sectorOptions, array('0' => '--' . __('Select') . '--'));
 
         $this->set('filterArea', $filterArea);
-        $this->set('type_options', $type);
-        $this->set('ownership_options', $ownership);
-        $this->set('locality_options', $locality);
-        $this->set('status_options', $status);
+        $this->set('typeOptions', $type);
+        $this->set('ownershipOptions', $ownership);
+        $this->set('localityOptions', $locality);
+        $this->set('statusOptions', $status);
         //$this->set('arealevel',$areaLevel);
         //$this->set('adminarealevel',$adminareaLevel);
         //$this->set('levels',$levels);
@@ -1195,14 +1201,16 @@ class InstitutionSitesController extends AppController {
         //$this->set('adminareadropdowns',$adminareadropdowns);
 
         $this->set('disabledAreas', $disabledAreas);
-
+		
+		$this->set('providerOptions', $providerOptions);
+		$this->set('sectorOptions', $sectorOptions);
 
         $this->set('highestLevel', $topArea);
     }
 
     public function add() {
 
-        $this->Navigation->addCrumb('Add New Institution Site');
+        $this->Navigation->addCrumb('Add New Institution');
         //$institutionId = $this->Session->read('InstitutionId');
         $areadropdowns = array('0' => '--' . __('Select') . '--');
         $adminareadropdowns = array('0' => '--' . __('Select') . '--');
@@ -1221,10 +1229,9 @@ class InstitutionSitesController extends AppController {
                     unset($this->request->data['InstitutionSite'][$key]);
                 }
             }
-            //pr($this->request->data);die;
-            $this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+            //$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
             $this->InstitutionSite->set($this->request->data);
-
+			
             if ($this->InstitutionSite->validates()) {
                 $newInstitutionSiteRec = $this->InstitutionSite->save($this->request->data);
 
@@ -1293,10 +1300,10 @@ class InstitutionSitesController extends AppController {
         $this->Utility->unshiftArray($sectorOptions, array('0' => '--' . __('Select') . '--'));
 
         $this->set('filterArea', $filterArea);
-        $this->set('type_options', $type);
-        $this->set('ownership_options', $ownership);
-        $this->set('locality_options', $locality);
-        $this->set('status_options', $status);
+        $this->set('typeOptions', $type);
+        $this->set('ownershipOptions', $ownership);
+        $this->set('localityOptions', $locality);
+        $this->set('statusOptions', $status);
         //$this->set('institutionId', $institutionId);
         $this->set('arealevel', $areaLevel);
         $this->set('levels', $levels);
@@ -1318,9 +1325,9 @@ class InstitutionSitesController extends AppController {
         $name = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $id));
         //$this->InstitutionSite->delete($id);
 		if($this->InstitutionSite->delete($id)){
-			$this->Utility->alert($name . ' have been deleted successfully. ' . $id);
+			$this->Utility->alert($name . ' have been deleted successfully.');
 		}else{
-			$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
+			//$this->Utility->alert($name . ' have been deleted unsuccessfully. ' . $id);
 		}
         
         $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
