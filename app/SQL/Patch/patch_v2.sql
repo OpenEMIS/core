@@ -33,3 +33,35 @@ CREATE TABLE IF NOT EXISTS `field_option_values` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 ALTER TABLE `institution_site_programmes` ADD `status` INT( 1 ) NOT NULL AFTER `id` ;
+
+--
+-- Update table `navigations` to remove institution from navigation
+--
+
+DELETE 
+FROM `navigations`
+WHERE `module` LIKE 'Institution'
+AND `controller` LIKE 'Institutions'
+AND `header` LIKE 'GENERAL'
+
+DELETE 
+FROM `navigations`
+WHERE `module` LIKE 'Institution'
+AND `controller` LIKE 'Institutions'
+AND `header` LIKE 'INSTITUTION SITE'
+
+DELETE 
+FROM `navigations`
+WHERE `module` LIKE 'Institution'
+AND `controller` LIKE 'InstitutionSites'
+AND `header` LIKE 'INSTITUTION SITE'
+
+UPDATE `navigations` SET `controller` = 'InstitutionSites' 
+WHERE `module` LIKE 'Institution'
+AND `controller` LIKE 'Institutions'
+AND `title` LIKE 'List of Institutions'
+
+UPDATE `navigations` SET `controller` = 'InstitutionSites' 
+WHERE `module` LIKE 'Institution'
+AND `controller` LIKE 'Institutions'
+AND `title` LIKE 'Add new Institution'
