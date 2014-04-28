@@ -117,11 +117,11 @@ class FileUploaderComponent extends Component {
 	 * 
 	 * ---------------------------------------------------------------------------- */
 
-	public function uploadFile($id = NULL) {
+	public function uploadFile($id = NULL, $postFileData = array()) {
 		// pr($this->data);die;
 		if (!empty($this->data)) {
-			$this->uploadedFile = $this->_getUploadFileArr();
-			//	pr($this->uploadedFile);die;
+			$this->uploadedFile = $this->_getUploadFileArr($postFileData);
+				//pr($this->uploadedFile);die;
 			//	pr($this->data);
 			//	$id = '';
 			if (empty($id) && !empty($this->data[$this->fileModel]['id'])) {
@@ -198,16 +198,18 @@ class FileUploaderComponent extends Component {
 	}
 
 	public function getList($option = array()) {
-		if(empty($option)){
-			return array();
+		$defaultOption['conditions'] = array($this->fileModel . '.visible' => 1);
+		$defaultOption['fields'] = array('id',$this->dbPrefix . '_name');
+		
+		if(!empty($option['conditions'])){
+			$defaultOption['conditions'] = array_merge($defaultOption['conditions'], $option['conditions']);
 		}
-		$foreignKey = key($option);
-		$id = $option[$foreignKey];
+		
+		if(!empty($option['fields'])){
+			$defaultOption['fields'] = array_merge($defaultOption['fields'], $option['fields']);
+		}
 		$model = & $this->getModel();
-		$data = $model->find('all', array(
-			'conditions' => array($this->fileModel . '.visible' => 1, $this->fileModel . '.' . $foreignKey => $id)
-		));
-		//$this->fixBlankFile($data);
+		$data = $model->find('all', $defaultOption);
 		return $data;
 	}
 
@@ -274,11 +276,14 @@ class FileUploaderComponent extends Component {
 		}
 	}
 
-	function _getUploadFileArr() {
+	function _getUploadFileArr($postFileData = array()) {
 		 /*pr($this->fileModel);
 		  pr($this->fileVar);
 		  pr($this->data[$this->fileModel][$this->fileVar]); die;*/
-		if (!empty($this->fileModel) && isset($this->data[$this->fileModel][$this->fileVar])) {
+		if(!empty($postFileData)){
+			$fileArr[] = $postFileData;
+		}
+		else if (!empty($this->fileModel) && isset($this->data[$this->fileModel][$this->fileVar])) {
 			if ($this->fileVar == 'files') {
 				$fileArr = $this->data[$this->fileModel][$this->fileVar];
 			} else {
@@ -291,7 +296,7 @@ class FileUploaderComponent extends Component {
 	}
 
 	function _checkFile() {
-		foreach ($this->uploadedFile as $key => $selectedFile) {
+	foreach ($this->uploadedFile as $key => $selectedFile) {
 			if ($selectedFile['size'] > $this->fileSizeLimit) {
 				//$message = __(sprintf($this->alertMessage['error']['uploadSizeError']));
 				//$this->Utility->alert(__($message), array('type' => 'error'));
@@ -331,11 +336,10 @@ class FileUploaderComponent extends Component {
 	}
 
 	function _checkType() {
-
 		foreach ($this->uploadedFile as $selectedFile) {
 			$isSameFileType = false;
-
 			foreach ($this->allowedTypes as $fileType) {
+				
 				if (strtolower($fileType) == strtolower($selectedFile['type']) && !$isSameFileType) {
 					$isSameFileType = true;
 					break;
@@ -349,7 +353,6 @@ class FileUploaderComponent extends Component {
 				return false;
 			}
 		}
-
 		return true;
 	}
 
