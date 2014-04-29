@@ -70,7 +70,6 @@ echo $this->Html->script('security', false);
 			<legend><?php echo __('Institution Sites'); ?></legend>
 			<div class="table">
 				<div class="table_head">
-					<div class="table_cell cell_institution"><?php echo __('Institution'); ?></div>
 					<div class="table_cell"><?php echo __('Institution Site'); ?></div>
 					<div class="table_cell cell_delete"></div>
 				</div>
