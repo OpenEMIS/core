@@ -99,8 +99,10 @@ echo $this->FormUtility->datepicker('date_from', array('id' => 'StaffLeaveDateFr
 echo $this->FormUtility->datepicker('date_to', array('id' => 'StaffLeaveDateToDay' ,'onchange'=>'objStaffLeaves.compute_work_days()' ,'data-date' => date('d-m-Y', time() + 86400)));
 echo $this->Form->input('number_of_days', array('type'=>'number', 'class' => 'form-control compute_days'));
 echo $this->Form->input('comments');
+
+$multiple = array('multipleURL' => $this->params['controller']."/leavesAjaxAddField/");
 echo $this->Form->hidden('maxFileSize', array('name'=> 'MAX_FILE_SIZE','value'=>(2*1024*1024)));
-echo $this->element('templates/file_upload');
+echo $this->element('templates/file_upload', compact('multiple'));
 
 echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
 echo $this->Form->end();

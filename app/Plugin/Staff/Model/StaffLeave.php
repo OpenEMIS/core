@@ -71,7 +71,9 @@ class StaffLeave extends StaffAppModel {
 	
 	public function beforeAction($controller, $action) {
         $controller->set('model', $this->alias);
+		$controller->FileUploader->fileVar = 'files';
 		$controller->FileUploader->fileModel = 'StaffLeaveAttachment';
+		$controller->FileUploader->allowEmptyUpload = true;
 		$controller->FileUploader->additionalFileType();
     }
 	
@@ -176,25 +178,26 @@ class StaffLeave extends StaffAppModel {
 
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $postData = $controller->request->data[$this->alias];
-		//	pr($postData);die;
+			//pr($postData);die;
             $postData['staff_id'] = $controller->Session->read('StaffId');
-			unset($postData['file']);
-			$postFileData = $controller->request->data[$this->alias]['file'];
+			unset($postData['files']);
+			$postFileData = $controller->request->data[$this->alias]['files'];
 	
             $this->set($postData);
             if ($this->validates()) {
 				if($this->save($postData)){
-					if(!empty($postFileData['tmp_name'])){ 
+					//if(!empty($postFileData['tmp_name'])){ 
 						$controller->FileUploader->additionData = array('staff_leave_id' => $id);
 						$controller->FileUploader->uploadFile(NULL, $postFileData);
 						if ($controller->FileUploader->success) {
 							$controller->Message->alert('general.add.success');
+							return $controller->redirect(array('action' => 'leavesView', $id));
 						}
-					}
-					else{
-						$controller->Message->alert('general.add.success');
-					}
-					return $controller->redirect(array('action' => 'leavesView', $id));
+					//}
+					//else{
+					//	$controller->Message->alert('general.add.success');
+					//}
+					//return $controller->redirect(array('action' => 'leavesView', $id));
 				}
             }
         }
@@ -202,7 +205,6 @@ class StaffLeave extends StaffAppModel {
 			if (empty($data)) {
                 return $controller->redirect(array('action' => 'leaves'));
             }
-
             $controller->request->data = $data;
 		}
 		
@@ -234,9 +236,6 @@ class StaffLeave extends StaffAppModel {
             $controller->Utility->setAjaxResult('alert', $result);
             $id = $params->data['id'];
 
-            //$arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            //$FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
 			$StaffLeaveAttachment = ClassRegistry::init('StaffLeaveAttachment');
             if ($StaffLeaveAttachment->delete($id)) {
                 $result['alertOpt']['text'] = __('File is deleted successfully.');
@@ -244,9 +243,8 @@ class StaffLeave extends StaffAppModel {
                 $result['alertType'] = $this->Utility->getAlertType('alert.error');
                 $result['alertOpt']['text'] = __('Error occurred while deleting file.');
             }
-			//alert($result);
+			
             return json_encode($result);
-			//return $result;
         }
     }
 
@@ -255,4 +253,13 @@ class StaffLeave extends StaffAppModel {
 		$this->render = false;
 		$controller->FileUploader->downloadFile($id);
     }
+	
+	public function leavesAjaxAddField($controller, $params) {
+		$this->render =false;
+		
+		$fileId = $controller->request->data['size'];
+		$multiple = true;
+		$controller->set(compact('fileId', 'multiple'));
+		$controller->render('/Elements/templates/file_upload_field');
+	}
 }
