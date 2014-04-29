@@ -68,7 +68,6 @@ echo $this->Html->script('security', false);
 			<legend><?php echo __('Institution Sites'); ?></legend>
 			<div class="table">
 				<div class="table_head">
-					<div class="table_cell cell_institution"><?php echo __('Institution'); ?></div>
 					<div class="table_cell"><?php echo __('Institution Site'); ?></div>
 					<div class="table_cell cell_delete"></div>
 				</div>
@@ -77,7 +76,6 @@ echo $this->Html->script('security', false);
 					<?php foreach($data['SecurityGroup']['sites'] as $index => $siteObj) { ?>
 					<div class="table_row">
 						<?php echo $this->Form->hidden('SecurityGroupInstitutionSite.'.$index.'.institution_site_id', array('class' => 'value_id', 'value' => $siteObj['institution_site_id'])); ?>
-						<div class="table_cell"><?php echo $siteObj['institution_name']; ?></div>
 						<div class="table_cell"><?php echo $siteObj['institution_site_name']; ?></div>
 						<div class="table_cell"><span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="jsTable.doRemove(this)"></span></div>
 					</div>
