@@ -46,6 +46,10 @@ class LabelHelper extends AppHelper {
             'no' => 'No',
 			'general' => 'General'
         ),
+		'fileUpload' => array(
+			'single' => '*File size should not be larger than 2MB.',
+			'multi' => '*Maximum 5 files are permited on single upload. Each file size should not be larger than 2MB.',
+		),
         'wizard' => array(
             'previous' => 'Previous',
             'next' => 'Next',
@@ -67,6 +71,13 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteCustomFieldOption' => array(
 			'institution_site_custom_field_id' => 'Custom Field'
+		),
+		'CensusCustomField' => array(
+			'type' => 'Field Type',
+			'institution_site_type_id' => 'Institution Type'
+		),
+		'CensusCustomFieldOption' => array(
+			'census_custom_field_id' => 'Custom Field'
 		),
         'BankBranch' => array(
             'bank_id' => 'Bank',
@@ -153,12 +164,13 @@ class LabelHelper extends AppHelper {
 	
 	public function getLabel($model, $obj) {
 		$field = $obj['field'];
-                $code = $model . '.' . $obj['field'];
+		$code = $model . '.' . $obj['field'];
+		
 		if(isset($obj['labelKey'])) {
-                    $code = $obj['labelKey'];
+			$code = $obj['labelKey'];
 		} else if($field==='modified' || $field==='created') {
-                    $code = 'general.'.$obj['field'];
-                }
+			$code = 'general.'.$obj['field'];
+		}
 		
 		$label = $this->get($code);
 		if($label===false) {

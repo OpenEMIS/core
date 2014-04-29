@@ -1,3 +1,38 @@
+<?php
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('More'));
+
+$this->start('contentActions');
+if(!$WizardMode) {
+	echo $this->Html->link(__('View'), array('action' => 'additional'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+$customElement = array(
+	1 => 'customFields/label',
+	2 => 'customFields/text',
+	3 => 'customFields/dropdown',
+	4 => 'customFields/multiple',
+	5 => 'customFields/textarea'
+);
+$model = 'StudentCustomField';
+$modelOption = 'StudentCustomFieldOption';
+$modelValue = 'StudentCustomValue';
+$action = 'edit';
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'additionalEdit'));
+unset($formOptions['div']);
+unset($formOptions['label']);
+echo $this->Form->create($modelValue, $formOptions);
+
+foreach($data as $obj) {
+	$element = $customElement[$obj[$model]['type']];
+	echo $this->element($element, compact('model', 'modelOption', 'modelValue', 'obj', 'action'));
+}
+echo $this->Form->end();
+$this->end();
+?>
+
 
 <?php echo $this->element('breadcrumb'); ?>
 
@@ -15,8 +50,7 @@
 	));
     ?>
     <?php 
-        // pr($datafields); 
-        // pr($datavalues);
+	
     $ctr = 1;
     foreach($datafields as $arrVals){
         if($arrVals['StudentCustomField']['type'] == 1){//Label

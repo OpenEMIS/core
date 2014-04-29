@@ -7,8 +7,8 @@ var objStaffLeaves = {
 	init: function() {
 		//alert('here');
 		objStaffLeaves.compute_work_days();
-		//   $(".icon_plus").unbind( "click" );
-		//  $('.icon_plus').click(objStaffLeaves.addRow);
+		$(".icon_plus").unbind("click");
+		$('.icon_plus').click(jsForm.insertNewInputFile);
 	},
 	validateFileSize: function(obj) {
 		//this.files[0].size gets the size of your file.
@@ -21,30 +21,8 @@ var objStaffLeaves = {
 
 		}
 	},
-	addRow: function() {
-		var size = $('.table_row').length;
-		var maskId;
-		var controller = $('#controller').text();
-		var url = getRootURL() + controller + '/attachmentsLeaveAdd';
-
-		$.ajax({
-			type: 'GET',
-			dataType: 'text',
-			url: url,
-			data: {size: size},
-			beforeSend: function(jqXHR) {
-				maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
-			},
-			success: function(data, textStatus) {
-				var callback = function() {
-					$('.file_upload .table_body').append(data);
-				};
-				$.unmask({id: maskId, callback: callback});
-			}
-		});
-	},
 	deleteFile: function(id) {
-	//	alert(getRootURL() + $('form').attr('deleteurl'));
+		//	alert(getRootURL() + $('form').attr('deleteurl'));
 		var dlgId = 'deleteDlg';
 		var btn = {
 			value: i18n.General.textDelete,
