@@ -36,8 +36,15 @@ class LabelHelper extends AppHelper {
             'created' => 'Created On',
             'type' => 'Type',
             'title' => 'Title',
+            'activate' => 'Activate',
+            'inactivate' => 'Inactivate',
 			'name' => 'Name',
-			'date' => 'Date'
+			'date' => 'Date',
+			'attachments' => 'Attachments',
+			'status' => 'Status',
+            'yes' => 'Yes',
+            'no' => 'No',
+			'general' => 'General'
         ),
         'wizard' => array(
             'previous' => 'Previous',
@@ -46,6 +53,14 @@ class LabelHelper extends AppHelper {
             'skip' => 'Skip',
             'addmore' => 'Add More'
         ),
+		'InstitutionSite' => array(
+			'institution_site_provider_id' => 'Provider',
+			'institution_site_sector_id' => 'Sector',
+			'institution_site_type_id' => 'Type',
+			'institution_site_ownership_id' => 'Ownership',
+			'institution_site_status_id' => 'Status',
+			'institution_site_locality_id' => 'Locality'
+		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
 			'institution_site_type_id' => 'Institution Type'
@@ -95,6 +110,17 @@ class LabelHelper extends AppHelper {
             'start_date' => 'Commenced Date',
             'end_date' => 'Ended Date',
         ),
+        'Config' => array(
+            'name' => 'System Configurations',
+            'host'=>'LDAP Server',
+            'port'=>'Port',
+            'version'=>'Version',
+            'base_dn'=>'Base DN',
+            'file' => 'File',
+            'file_type' => 'File Type',
+            'default' => 'Default',
+            'uploaded_on' => 'Uploaded On'
+        ),
         'Identities' => array(
             'issue_location' => 'Issuer'
         ),
@@ -111,7 +137,11 @@ class LabelHelper extends AppHelper {
             'qualification_institution_country' => 'Institution Country',
 			'gpa' => 'Grade/Score',
 			'file_name' => 'Attachment',
-        )
+        ),
+		'StaffLeave' => array(
+			'date_from' => 'First Day',
+			'date_to' => 'Last Day',
+		)
     );
 	
 	public function get($code) {

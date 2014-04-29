@@ -24,6 +24,146 @@ class ConfigItem extends AppModel {
 	    )
     );
 
+    
+    public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		)
+	);
+
+	/*public $hasMany = array('ConfigItemOption');*/
+
+
+	 public $validateDataDiscrepancy = array(
+	      'value' => array(
+	      		'num'=>array(
+	      			 'rule'  => 'numeric',
+	      			 'message' => 'Numeric Value should be between 0 to 100'
+	      		),
+	      		'bet' => array(
+	          		'rule'    => array('range', -1, 101),
+	            	'message' => 'Numeric Value should be between 0 to 100'
+	            )
+	      	)
+  	);
+
+  	public $validateDataOutlier = array(
+	      'value' => array(
+	      		'num'=>array(
+	      			 'rule'  => 'numeric',
+	      			 'message' => 'Numeric Value should be between 0 to 100'
+	      		),
+	      		'bet' => array(
+	          		'rule'    => array('range', -1, 101),
+	            	'message' => 'Numeric Value should be between 0 to 100'
+	            )
+	      	)
+  	);
+
+  	public $validateStudentAdmissionAge = array(
+	      'value' => array(
+	      		'num'=>array(
+	      			 'rule'  => 'numeric',
+	      			 'message' => 'Numeric Value should be between 0 to 100'
+	      		),
+	      		'bet' => array(
+	          		'rule'    => array('range', -1, 101),
+	            	'message' => 'Numeric Value should be between 0 to 100'
+	            )
+	      	)
+  	);
+
+	public $validateNoOfShift = array(
+	      'value' => array(
+	      		'num'=>array(
+	      			 'rule'  => 'numeric',
+	      			 'message' => 'Numeric Value should be between 0 to 10'
+	      		),
+	      		'bet' => array(
+	          		'rule'    => array('range', -1, 101),
+	            	'message' => 'Numeric Value should be between 0 to 10'
+	            )
+	      	)
+  	);
+
+  	public $validateCreditHour = array(
+      	'value' => array(
+			 'rule'  => 'numeric',
+  			 'message' => 'Value should be numeric'
+  		)
+  	);
+  
+	public $validateSmsRetryTime = array(
+      	'value' => array(
+      		'num'=>array(
+      			 'rule'  => 'numeric',
+      			 'message' =>  'Numeric Value should be between 0 to 10'
+      		),
+      		'bet' => array(
+          		'rule'    => array('range', -1, 11),
+            	'message' => 'Numeric Value should be between 0 to 10'
+            )
+      	)
+  	);
+	
+  	public $validateSmsRetryWait = array(
+      	'value' => array(
+      		'num'=>array(
+      			 'rule'  => 'numeric',
+      			 'message' =>  'Numeric Value should be between 0 to 60'
+      		),
+      		'bet' => array(
+          		'rule'    => array('range', -1, 61),
+            	'message' => 'Numeric Value should be between 0 to 60'
+            )
+      	)
+  	);
+	 
+ 	public function beforeValidate() {
+      // We might want to check data
+
+      if ($this->data['ConfigItem']['type']=='Data Discrepancy') {
+          $this->validate = array_merge($this->validate, $this->validateDataDiscrepancy);
+      }else if ($this->data['ConfigItem']['type']=='Data Outliers') {
+          $this->validate = array_merge($this->validate, $this->validateDataOutlier);
+      }else if ($this->data['ConfigItem']['type']=='Student Admission Age') {
+          $this->validate = array_merge($this->validate, $this->validateStudentAdmissionAge);
+      }else if ($this->data['ConfigItem']['name']=='no_of_shifts') {
+          $this->validate = array_merge($this->validate, $this->validateNoOfShift);
+      }else if ($this->data['ConfigItem']['name']=='training_credit_hour') {
+          $this->validate = array_merge($this->validate, $this->validateCreditHour);
+      }else if ($this->data['ConfigItem']['name']=='sms_retry_times') {
+          $this->validate = array_merge($this->validate, $this->validateSmsRetryTime);
+      }else if ($this->data['ConfigItem']['name']=='sms_retry_wait') {
+          $this->validate = array_merge($this->validate, $this->validateSmsRetryWait);
+      }
+      /*
+      // Maybe only on an edit action?
+      // We know it's edit because there is an id
+      if (isset($this->data['Post']['id'])) {
+          $this->validate = array_merge($this->validate, $this->validatePost);
+      }
+
+      // Perhaps we want to add a single new rule for add using the validator?
+      // We know it's add because there is no id
+      if (!isset($this->data['Post']['id'])) {
+          $this->validator()->add('pubDate', array(
+                  'one' => array(
+                      'rule' => array('datetime', 'ymd'),
+                      'message' => 'Publish date must be ymd'
+                  )
+              )
+          )
+      }*/
+
+      return true;
+  }
+
     public function getYearbook() {
     	$yearbook = array();
     	$yearbook['yearbook_organization_name'] = $this->getValue('yearbook_organization_name');

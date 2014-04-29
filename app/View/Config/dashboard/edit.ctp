@@ -4,7 +4,6 @@ echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
 echo $this->Html->css('config-attachments', 'stylesheet', array('inline' => false));
 echo $this->Html->script('dashboard', false);
 ?>
-
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="attachments" class="content_wrapper">

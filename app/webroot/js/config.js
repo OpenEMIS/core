@@ -79,12 +79,12 @@ var Config = {
 	},
 	
 	checkLDAPconn : function(){
-		
-		var server = $('#ConfigItemLDAPConfiguration0Value').val();
-		var port = $('#ConfigItemLDAPConfiguration1Value').val();
-		var version = $('#ConfigItemLDAPConfiguration2Value').val();
-		var basedn = $('#ConfigItemLDAPConfiguration3Value').val();
+		var server = $('#ConfigItemHost').val();
+		var port = $('#ConfigItemPort').val();
+		var version = $('#ConfigItemVersion').val();
+		var basedn = $('#ConfigItemBaseDn').val();
 		var url = getRootURL()+'Config/checkLDAPConn';
+
 		var successCall = function (data,status){
 			var alertOpt = {
 						id: 'multi_alert',

@@ -22,15 +22,7 @@ class InstitutionSiteProgramme extends AppModel {
 	public $belongsTo = array(
 		'SchoolYear',
 		'InstitutionSite',
-		'EducationProgramme',
-		'Institution' =>
-            array(
-                'className' => 'Institution',
-                'joinTable' => 'institutions',
-				'foreignKey' => false,
-				'dependent' => false,
-                'conditions' => array('Institution.id = InstitutionSite.institution_id'),
-            )
+		'EducationProgramme'
 	);
 	
 	public $virtualFields = array(

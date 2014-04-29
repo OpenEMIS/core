@@ -17,9 +17,9 @@ foreach($data as $obj) {
     $symbol = $this->Utility->checkOrCrossMarker($obj[$model]['active']==1);
 	$row = array();
         $row[] = array($symbol, array('class' => 'center')) ;
-        $row[] = $this->Html->link($obj[$model]['account_name'], array('action' => 'bankAccountsView', $id), array('escape' => false));
+        $row[] = $this->Html->link($obj[$model]['account_name'], array('action' => 'bankAccountsView', $obj[$model]['id']), array('escape' => false));
         $row[] = $obj[$model]['account_number'];
-        $row[] = $obj['Bank']['name'] ;
+        $row[] = $bankList[$obj['BankBranch']['bank_id']] ;
         $row[] = $obj['BankBranch']['name'];
 	$tableData[] = $row;
 }

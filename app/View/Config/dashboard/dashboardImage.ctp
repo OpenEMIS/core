@@ -4,9 +4,17 @@ echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 echo $this->Html->css('imgareaselect-default.css', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('jquery.imgareaselect.pack.js', false);
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('System Configurations'));
+
+$this->start('contentActions');
+echo $this->Html->link(__('Back to List'), array('controller' => 'Config', 'action' => 'dashboard'), array('class' => 'divider', 'id' => 'back_to_config'));
+$this->end();
+
+$this->start('contentBody'); ?>
+<?php echo $this->element('alert'); ?>
+?>
 
 <div id="site" class="content_wrapper dashboard_wrapper">
 	<h1>

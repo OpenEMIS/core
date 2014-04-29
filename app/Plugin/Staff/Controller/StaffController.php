@@ -37,28 +37,13 @@ class StaffController extends StaffAppController {
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
         'Staff.StaffAttendance',
-        'Staff.StaffLeave',
-        'Staff.StaffLeaveType',
         'Staff.StaffBehaviour',
         'Staff.StaffBehaviourCategory',
-        
-        'Staff.StaffExtracurricular',
-        'Staff.StaffEmployment',
         'Staff.StaffSalary',
         'Staff.StaffSalaryAddition',
         'Staff.StaffSalaryDeduction',
-        /**/
         'SchoolYear',
         'ConfigItem',
-        'LeaveStatus',
-        'Country',
-        'IdentityType',
-        'StaffLeaveAttachment',
-        'Language',
-        'ContactOption',
-        'ContactType',
-        'ExtracurricularType',
-        'EmploymentType',
         'SalaryAdditionType',
         'SalaryDeductionType',
         'TrainingCourse'
@@ -93,6 +78,9 @@ class StaffController extends StaffAppController {
 		'comments' => 'Staff.StaffComment',
 		'attachments' => 'Staff.StaffAttachment',
 		'qualifications' => 'Staff.StaffQualification',
+		'leaves' => 'Staff.StaffLeave',
+		'extracurricular' => 'Staff.StaffExtracurricular',
+		'employments' => 'Staff.StaffEmployment',
     );
 
     public $className = 'Staff';
@@ -316,6 +304,7 @@ class StaffController extends StaffAppController {
 
     public function positions() {
         $this->Navigation->addCrumb(ucfirst($this->action));
+		$this->set('header', 'Positions');
         $staffId = $this->Session->read('StaffId');
         $data = array();
 
@@ -691,6 +680,8 @@ class StaffController extends StaffAppController {
             $id = $str['Staff']['id'] + 1;
             if (strlen($id) < 6) {
                 $str = str_pad($id, 6, "0", STR_PAD_LEFT);
+            }else{
+                $str = $id;
             }
             // Get two random number
             $rnd1 = rand(0, 9);
@@ -701,148 +692,7 @@ class StaffController extends StaffAppController {
         return $generate_no;
     }
 
-    public function leaves() {
-        $this->Navigation->addCrumb('Leaves');
-        $staffId = $this->Session->read('StaffId');
-        $data = $this->StaffLeave->find('all', array(
-            'recursive' => 0,
-            'conditions' => array('StaffLeave.staff_id' => $staffId),
-            'order' => array('StaffLeave.date_from')
-        ));
-        $this->set('data', $data);
-    }
-
-    public function leavesAdd() {
-        $this->Navigation->addCrumb('Leaves');
-        $typeOptions = $this->StaffLeaveType->findList(true);
-        $statusOptions = $this->LeaveStatus->findList(true);
-
-        if ($this->request->is('post')) {
-            $data = $this->request->data;
-            $data['StaffLeave']['staff_id'] = $this->Session->read('StaffId');
-            $this->StaffLeave->set($data);
-            if ($this->StaffLeave->validates()) {
-                $this->StaffLeave->create();
-                $obj = $this->StaffLeave->save($data);
-                $id = $this->StaffLeave->getInsertID();
-
-                $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-                $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-                if (!empty($_FILES)) {
-                    $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
-                }
-                if ($obj) {
-                    return $this->redirect(array('action' => 'leaves'));
-                }
-            }
-        }
-        $this->set('statusOptions', $statusOptions);
-        $this->set('typeOptions', $typeOptions);
-        $this->set('_model', 'StaffLeaveAttachment');
-    }
-
-    public function leavesView($id = null) {
-        $this->Navigation->addCrumb('Leaves');
-        if (!is_null($id) && $this->StaffLeave->exists($id)) {
-            $typeOptions = $this->StaffLeaveType->findList(true);
-            $statusOptions = $this->LeaveStatus->findList(true);
-            $data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
-            $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-            $attachments = $FileAttachment->getList($id);
-            $this->set('typeOptions', $typeOptions);
-            $this->set('statusOptions', $statusOptions);
-            $this->set('data', $data);
-            $this->set('attachments', $attachments);
-            $this->set('_model', 'StaffLeaveAttachment');
-        } else {
-            return $this->redirect(array('action' => 'leaves'));
-        }
-    }
-
-    public function leavesEdit($id = null) {
-        $this->Navigation->addCrumb('Leaves');
-        if (!is_null($id) && $this->StaffLeave->exists($id)) {
-            $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-            if ($this->request->is('post') || $this->request->is('put')) {
-                $data = $this->request->data;
-                $data['StaffLeave']['id'] = $id;
-                $data['StaffLeave']['staff_id'] = $this->Session->read('StaffId');
-                $this->StaffLeave->set($data);
-                if ($this->StaffLeave->validates()) {
-                    $obj = $this->StaffLeave->save($data);
-                    if (!empty($_FILES)) {
-                        $errors = $FileAttachment->saveAll($this->data, $_FILES, $id);
-                    }
-                    if ($obj) {
-                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                        return $this->redirect(array('action' => 'leavesView', $obj['StaffLeave']['id']));
-                    }
-                }
-            }
-
-            $attachments = $FileAttachment->getList($id);
-            $this->set('attachments', $attachments);
-            $this->set('_model', 'StaffLeaveAttachment');
-
-            $typeOptions = $this->StaffLeaveType->findList(true);
-            $statusOptions = $this->LeaveStatus->findList(true);
-            $this->request->data = $this->StaffLeave->find('first', array('recursive' => 0, 'conditions' => array('StaffLeave.id' => $id)));
-            $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
-            $this->set('typeOptions', $typeOptions);
-            $this->set('statusOptions', $statusOptions);
-        } else {
-            return $this->redirect(array('action' => 'leaves'));
-        }
-    }
-
-    public function leavesDelete($id = null) {
-        if (!is_null($id) && $this->StaffLeave->exists($id) && $this->Session->check('StaffId')) {
-            $this->StaffLeave->delete($id);
-            $this->Utility->alert($this->Utility->getMessage('DELETE_SUCCESS'));
-        }
-        return $this->redirect(array('action' => 'leaves'));
-    }
-
-    public function attachmentsLeaveAdd() {
-        $this->layout = 'ajax';
-        $this->set('params', $this->params->query);
-        $this->set('_model', 'StaffLeaveAttachment');
-        $this->set('jsname', 'objStaffLeaves');
-        $this->render('/Elements/attachment/compact_add');
-    }
-
-    public function attachmentsLeaveDelete() {
-        $this->autoRender = false;
-        if ($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-            if ($FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-
-            return json_encode($result);
-        }
-    }
-
-    public function attachmentsLeaveDownload($id) {
-        $arrMap = array('model' => 'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-        $FileAttachment->download($id);
-    }
+    
 
 
     
@@ -884,169 +734,8 @@ class StaffController extends StaffAppController {
             $this->redirect(array('action' => 'behaviour'));
         }
     }
-	
-    public function extracurricular() {
-        $this->Navigation->addCrumb('Extracurricular');
-        $data = $this->StaffExtracurricular->getAllList('staff_id', $this->staffId);
-        $this->set('list', $data);
-    }
 
-    public function extracurricularView() {
-        $id = $this->params['pass'][0];
-        $data = $this->StaffExtracurricular->getAllList('id', $id);
-        if (!empty($data)) {
-            $this->Navigation->addCrumb('Extracurricular Details');
-
-            $this->Session->write('StaffExtracurricularId', $id);
-            $this->set('data', $data);
-        }
-    }
-
-    public function extracurricularAdd() {
-        $this->Navigation->addCrumb('Add Extracurricular');
-
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $typeList = $this->ExtracurricularType->findList(array('fields' => array('id', 'name'), 'conditions' => array('visible' => '1'), 'orderBy' => 'name'));
-
-        $this->set('selectedYear', $yearId);
-        $this->set('years', $yearList);
-        $this->set('types', $typeList);
-        if ($this->request->isPost()) {
-            $data = $this->request->data;
-            $data['StaffExtracurricular']['staff_id'] = $this->staffId;
-            if ($this->StaffExtracurricular->save($data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'extracurricular'));
-            }
-        }
-    }
-
-    public function extracurricularEdit() {
-        $id = $this->params['pass'][0];
-        $this->Navigation->addCrumb('Edit Extracurricular Details');
-        if ($this->request->is('get')) {
-            $data = $this->StaffExtracurricular->find('first', array('conditions' => array('StaffExtracurricular.id' => $id)));
-
-            if (!empty($data)) {
-                $this->request->data = $data;
-            }
-        } else {
-            $data = $this->data;
-            $data['StaffExtracurricular']['staff_id'] = $this->staffId;
-            $data['StaffExtracurricular']['id'] = $id;
-            if ($this->StaffExtracurricular->save($data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'extracurricularView', $data['StaffExtracurricular']['id']));
-            }
-        }
-
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $typeList = $this->ExtracurricularType->findList(array('fields' => array('id', 'name'), 'conditions' => array('visible' => '1'), 'orderBy' => 'name'));
-
-        $this->set('selectedYear', $yearId);
-        $this->set('years', $yearList);
-        $this->set('types', $typeList);
-
-        $this->set('id', $id);
-    }
-
-    public function extracurricularDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffExtracurricularId')) {
-            $id = $this->Session->read('StaffExtracurricularId');
-            $staffId = $this->Session->read('StaffId');
-            $name = $this->StaffExtracurricular->field('name', array('StaffExtracurricular.id' => $id));
-
-            $this->StaffExtracurricular->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'extracurricular'));
-        }
-    }
-
-    public function searchAutoComplete() {
-        if ($this->request->is('get')) {
-            if ($this->request->is('ajax')) {
-                $this->autoRender = false;
-                $search = $this->params->query['term'];
-                $result = $this->StaffExtracurricular->autocomplete($search);
-                return json_encode($result);
-            }
-        }
-    }
-
-    public function employments() {
-        $this->Navigation->addCrumb('Employment');
-        $data = $this->StaffEmployment->find('all', array('conditions' => array('StaffEmployment.staff_id' => $this->staffId)));
-        $this->set('list', $data);
-    }
-
-    public function employmentsAdd() {
-        if ($this->request->is('post')) {
-            $this->StaffEmployment->create();
-            $this->request->data['StaffEmployment']['staff_id'] = $this->staffId;
-
-            $data = $this->data['StaffEmployment'];
-
-            if ($this->StaffEmployment->save($data)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'employments'));
-            }
-        }
-
-        $employmentTypeOptions = $this->EmploymentType->getOptions();
-        $this->set('employmentTypeOptions', $employmentTypeOptions);
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function employmentsView() {
-        $employmentId = $this->params['pass'][0];
-        $employmentObj = $this->StaffEmployment->find('all', array('conditions' => array('StaffEmployment.id' => $employmentId)));
-
-        if (!empty($employmentObj)) {
-            $this->Navigation->addCrumb('Employment Details');
-
-            $this->Session->write('StaffEmploymentId', $employmentId);
-            $this->set('employmentObj', $employmentObj);
-        }
-    }
-
-    public function employmentsEdit() {
-        $employmentId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $employmentObj = $this->StaffEmployment->find('first', array('conditions' => array('StaffEmployment.id' => $employmentId)));
-
-            if (!empty($employmentObj)) {
-                $this->Navigation->addCrumb('Edit Employment Details');
-                $this->request->data = $employmentObj;
-            }
-        } else {
-            $employmentData = $this->data['StaffEmployment'];
-            $employmentData['staff_id'] = $this->staffId;
-
-            if ($this->StaffEmployment->save($employmentData)) {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'employmentsView', $employmentData['id']));
-            }
-        }
-
-        $employmentTypeOptions = $this->EmploymentType->getOptions();
-        $this->set('employmentTypeOptions', $employmentTypeOptions);
-
-        $this->set('id', $employmentId);
-    }
-
-    public function employmentsDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffEmploymentId')) {
-            $id = $this->Session->read('StaffEmploymentId');
-            $staffId = $this->Session->read('StaffId');
-            $employmentTypeId = $this->StaffEmployment->field('employment_type_id', array('StaffEmployment.id' => $id));
-            $name = $this->EmploymentType->field('name', array('EmploymentType.id' => $employmentTypeId));
-            $this->StaffEmployment->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'employments', $staffId));
-        }
-    }
+   
 
     public function salaries() {
         $this->Navigation->addCrumb('Salary');
