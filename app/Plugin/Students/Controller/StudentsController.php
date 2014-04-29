@@ -38,18 +38,11 @@ class StudentsController extends StudentsAppController {
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-        
         'Students.StudentBehaviour',
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
-        'Students.StudentAward',
-        //'Students.Guardian',
-        //'Students.GuardianEducationLevel',
-        //'Students.GuardianRelation',
-        'Students.StudentGuardian',
         'SchoolYear',
-        'Country',
         'ConfigItem',
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
