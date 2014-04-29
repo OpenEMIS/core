@@ -38,18 +38,11 @@ class StudentsController extends StudentsAppController {
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-        
         'Students.StudentBehaviour',
         'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
-        'Students.StudentAward',
-        //'Students.Guardian',
-        //'Students.GuardianEducationLevel',
-        //'Students.GuardianRelation',
-        'Students.StudentGuardian',
         'SchoolYear',
-        'Country',
         'ConfigItem',
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
@@ -768,6 +761,8 @@ class StudentsController extends StudentsAppController {
             $id = $str['Student']['id'] + 1;
             if (strlen($id) < 6) {
                 $str = str_pad($id, 6, "0", STR_PAD_LEFT);
+            }else{
+                $str = $id;
             }
             // Get two random number
             $rnd1 = rand(0, 9);

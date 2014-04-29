@@ -84,7 +84,7 @@ class InstitutionSiteBankAccount extends AppModel {
         $controller->Navigation->addCrumb('Bank Accounts');
 		
         $data = $this->findAllByInstitutionSiteId($controller->institutionSiteId);
-        $bankList = $controller->Bank->find('list');
+        $bankList = $this->BankBranch->Bank->find('list');
 		$header = __('Bank Accounts');
 		
         $controller->set(compact('data', 'bank', 'bankList', 'header'));

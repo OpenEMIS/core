@@ -19,17 +19,16 @@ App::uses('AppModel', 'Model');
 class InstitutionSite extends AppModel {
     
     public $belongsTo = array(
-		'Institution',
 		'InstitutionSiteStatus',
 		'InstitutionSiteLocality',
 		'InstitutionSiteType',
 		'InstitutionSiteOwnership',
 		'Area',
-                'InstitutionSiteProvider' => array(
+		'InstitutionSiteProvider' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'institution_site_provider_id'
 		),
-                'InstitutionSiteSector' => array(
+		'InstitutionSiteSector' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'institution_site_sector_id'
 		)
@@ -61,7 +60,8 @@ class InstitutionSite extends AppModel {
 			'belongsTo' => array(
 				'Area' => array('lft', 'rght')
 			)
-		)
+		),
+		'DatePicker' => array('date_opened', 'date_closed')
 	);
 	
 	public $validate = array(
@@ -102,7 +102,7 @@ class InstitutionSite extends AppModel {
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Provider'
+				'message' => 'Please select a Locality'
 			)
 		),
 		'institution_site_status_id' => array(
@@ -116,7 +116,7 @@ class InstitutionSite extends AppModel {
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Site Type'
+				'message' => 'Please select a Type'
 			)
 		),
 		'institution_site_ownership_id' => array(
@@ -126,13 +126,13 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please select an Ownership'
 			)
 		),
-		'area_id' => array(
-			'ruleRequired' => array(
-				'rule' => array('comparison', '>', 0),
-				'required' => true,
-				'message' => 'Please select an Area'
-			)
-		),
+//		'area_id' => array(
+//			'ruleRequired' => array(
+//				'rule' => array('comparison', '>', 0),
+//				'required' => true,
+//				'message' => 'Please select an Area'
+//			)
+//		),
 		'email' => array(
 			'ruleRequired' => array(
 				'rule' => 'email',
@@ -140,25 +140,41 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please enter a valid Email'
 			)
 		),
-		'date_opened' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select the Date Opened'
-			),
-			'ruleCompare' => array(
-				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
-				'required' => true,
-				'message' => 'Please select the Date Opened'
-			)
-		),'longitude' => array(
+//		'date_opened' => array(
+//			'ruleRequired' => array(
+//				'rule' => 'notEmpty',
+//				'required' => true,
+//				'message' => 'Please select the Date Opened'
+//			),
+//			'ruleCompare' => array(
+//				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
+//				'required' => true,
+//				'message' => 'Please select the Date Opened'
+//			)
+//		),
+		'longitude' => array(
 				'rule' => array('checkLongitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Longitude'
-		),'latitude' => array(
+		),
+		'latitude' => array(
 				'rule' => array('checkLatitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Latitude'
+		),
+		'institution_site_provider_id' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', '>', 0),
+				'required' => true,
+				'message' => 'Please select a Provider'
+			)
+		),
+		'institution_site_sector_id' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', '>', 0),
+				'required' => true,
+				'message' => 'Please select a Sector'
+			)
 		)
 	);
     
@@ -195,16 +211,6 @@ class InstitutionSite extends AppModel {
         }
         return $isValid;
     }
-
-	public function getLookupVariables() {
-		$lookup = array(
-			'Type' => array('model' => 'InstitutionSiteType'),
-			'Ownership' => array('model' => 'InstitutionSiteOwnership'),
-			'Locality' => array('model' => 'InstitutionSiteLocality'),
-			'Status' => array('model' => 'InstitutionSiteStatus')
-		);
-		return $lookup;
-	}
 	
 	// Used by SecurityController
 	public function getGroupAccessList($exclude) {
@@ -230,14 +236,14 @@ class InstitutionSite extends AppModel {
 	}
 	
 	public function getGroupAccessValueList($parentId, $exclude) {
-		$conditions = array('InstitutionSite.institution_id' => $parentId);
+		//$conditions = array('InstitutionSite.institution_id' => $parentId);
 		if(!empty($exclude)) {
 			$conditions['InstitutionSite.id NOT'] = $exclude;
 		}
 		
 		$data = $this->find('list', array(
 			'fields' => array('InstitutionSite.id', 'InstitutionSite.name'),
-			'conditions' => $conditions,
+			//'conditions' => $conditions,
 			'order' => array('InstitutionSite.name')
 		));
 		return $data;
@@ -489,7 +495,7 @@ class InstitutionSite extends AppModel {
 			'conditions' => array('InstitutionSite.institution_site_type_id = InstitutionSiteType.id')
 		);
                 
-                $joins[] = array(
+        $joins[] = array(
 			'table' => 'areas',
 			'alias' => 'Area',
                         'type' => 'LEFT',
