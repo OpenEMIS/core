@@ -74,3 +74,6 @@
 #students_search .cell_name{
     width: auto;
 }
+input.inlineShortField, select.inlineShortField{
+    width: 140px;
+}

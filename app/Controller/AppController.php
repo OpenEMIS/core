@@ -50,6 +50,7 @@ class AppController extends Controller {
 			'logoutRedirect' => array('controller' => 'Security', 'action' => 'login'),
 			'authenticate' => array('Form' => array('userModel' => 'SecurityUser'))
 		),
+		'Workflow',
 		'Message',
 		'Option'
 	);
