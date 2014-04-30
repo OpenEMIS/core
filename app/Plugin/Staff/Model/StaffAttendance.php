@@ -17,9 +17,16 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffAttendance extends StaffAppModel {
 	public $useTable = 'staff_attendances';
 	
-	public function getAttendanceData($id,$yearId) {
-		$list = $this->find('all',array(
-										'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.school_year_id' => $yearId)));
+	public function getAttendanceData($id,$yearId,$institutionSiteId=null) {
+                if(empty($institutionSiteId)){
+                    $list = $this->find('all',array(
+				'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.school_year_id' => $yearId)));
+                }else{
+                    $institutionSiteId = intval($institutionSiteId);
+                    $list = $this->find('all',array(
+				'conditions'=>array('StaffAttendance.staff_id' => $id, 'StaffAttendance.school_year_id' => $yearId, 'StaffAttendance.institution_site_id' => $institutionSiteId)));
+                }
+
 		return $list;
 	}
 

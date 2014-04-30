@@ -27,32 +27,31 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
     </div>
 
     <?php echo $this->element('alert'); ?>
+    <div class="legendWrapper"><?php echo $legend; ?></div>
 
     <?php if(isset($data)) { ?>
     <div class="table full_width" style="margin-top: 10px;">
         <div class="table_head">
             <div class="table_cell"><?php echo __('Classes'); ?></div>
-            <div class="table_cell"><?php echo __('Total days attended'); ?></div>
-            <div class="table_cell"><?php echo __('Total days absent'); ?></div>
+            <?php foreach($attendanceTypes AS $attendanceType): ?>
+                <div class="table_cell"><?php echo __($attendanceType['StudentAttendanceType']['national_code']); ?></div>
+            <?php endforeach; ?>
             <div class="table_cell"><?php echo __('Total'); ?></div>
         </div>
-        <?php foreach($data as $id=>$val) { ?>
+        <?php foreach($data as $val) { ?>
         <?php
             $total = 0;
-            if(!empty($data[$id]['StudentAttendance']['total_no_attend'])){
-                $total += $data[$id]['StudentAttendance']['total_no_attend'];
-            }
-            if(!empty($data[$id]['StudentAttendance']['total_no_absence'])){
-                $total += $data[$id]['StudentAttendance']['total_no_absence'];
-            }
+            $classId = $val['classId'];
         ?>
         <div class="table_body">
             <div class="table_row">
-                <div class="table_cell"><?php echo $data[$id]['StudentAttendance']['name']; ?></div>
-                <div class="table_cell cell_totals"><?php echo empty($data[$id]['StudentAttendance']['total_no_attend']) ? 0 : $data[$id]['StudentAttendance']['total_no_attend'] ?>
-                </div>
-                <div class="table_cell cell_totals"><?php echo empty($data[$id]['StudentAttendance']['total_no_absence']) ? 0 : $data[$id]['StudentAttendance']['total_no_absence'] ?>
-                </div>
+                <div class="table_cell"><?php echo $val['className']; ?></div>
+                <?php foreach($attendanceTypes AS $attendanceType): ?>
+                            <?php $attendanceTypeId = $attendanceType['StudentAttendanceType']['id']; ?>
+                            <?php $attendanceValue = $val['StudentAttendance'][$attendanceTypeId]; ?>
+                            <?php $total += $attendanceValue; ?>
+                            <div class="table_cell cell_totals"><?php echo empty($attendanceValue) ? 0 : $attendanceValue ?></div>
+                <?php endforeach; ?>
                 <div class="table_cell cell_total cell_number"><?php echo $total; ?></div>
             </div>
         </div>
