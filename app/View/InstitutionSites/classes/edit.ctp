@@ -18,7 +18,7 @@ echo $this->Html->script('institution_site_classes', false);
 	
 	<?php 
 	echo $this->Form->create('InstitutionSiteClass', array(
-		'url' => array('controller' => 'InstitutionSite', 'action' => 'classesEdit'),
+		'url' => array('controller' => 'InstitutionSites', 'action' => 'classesEdit', $classId),
 		'inputDefaults' => array('label' => false, 'div' => false)
 	));
 	$i = 0;
@@ -28,8 +28,8 @@ echo $this->Html->script('institution_site_classes', false);
 		<div class="table_head">
 			<div class="table_cell cell_year"><?php echo __('Year'); ?></div>
 			<div class="table_cell"><?php echo __('Grade'); ?></div>
-                        <div class="table_cell"><?php echo __('Number of Seats'); ?></div>
-                        <div class="table_cell"><?php echo __('Number of Shifts'); ?></div>
+                        <div class="table_cell"><?php echo __('Seats'); ?></div>
+                        <div class="table_cell"><?php echo __('Shift'); ?></div>
 		</div>
 		<div class="table_body">
 			<div class="table_row">
@@ -39,8 +39,8 @@ echo $this->Html->script('institution_site_classes', false);
 					<div class="table_cell_row <?php echo $i==sizeof($grades) ? 'last' : ''; ?>"><?php echo $name; ?></div>
 				<?php } ?>
 				</div>
-                                <div class="table_cell"><?php echo $noOfSeats; ?></div>
-                                <div class="table_cell"><?php echo $noOfShifts; ?></div>
+                                <div class="table_cell"><?php echo $this->Form->input('no_of_seats', array('id' => 'NoOfSeats', 'value' => $no_of_seats, 'class' => 'default inlineShortField')); ?></div>
+                                <div class="table_cell"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'options' => $shiftOptions, 'value' => $no_of_shifts, 'class' => 'default inlineShortField')); ?></div>
 			</div>
 		</div>
 	</div>
@@ -154,4 +154,10 @@ echo $this->Html->script('institution_site_classes', false);
 		</fieldset>
 		<?php } ?>
 	</fieldset>
+        <div class="controls">
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classesView', $classId), array('class' => 'btn_cancel btn_left')); ?>
+	</div>
+	
+	<?php echo $this->Form->end(); ?>
 </div>

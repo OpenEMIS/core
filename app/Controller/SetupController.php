@@ -100,7 +100,10 @@ class SetupController extends AppController {
 		'TrainingRequirement',
 		'TrainingStatus',
                 'Students.GuardianEducationLevel',
-                'Students.GuardianRelation'
+                'Students.GuardianRelation',
+                'Students.StudentAttendanceType',
+                'Teachers.TeacherAttendanceType',
+                'Staff.StaffAttendanceType'
 	);
 	
 	private $CustomFieldModelLists = array(
@@ -403,7 +406,8 @@ class SetupController extends AppController {
 		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
-
+                $lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Attendance Type', 'items' => $this->StudentAttendanceType->getLookupVariables()));
+                
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
 			'view' => 'customFields',
@@ -451,6 +455,11 @@ class SetupController extends AppController {
 			'name' => 'Behaviour Category',
 			'items' => $this->TeacherBehaviourCategory->getLookupVariables()
 		));
+                $lookup[] = array('Teacher' => array(
+			'optgroup' => true,
+			'name' => 'Attendance Type',
+			'items' => $this->TeacherAttendanceType->getLookupVariables()
+		));
 		// End Teacher
 		
 		// Staff
@@ -483,6 +492,11 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Behaviour Category',
 			'items' => $this->StaffBehaviourCategory->getLookupVariables()
+		));
+                $lookup[] = array('Staff' => array(
+			'optgroup' => true,
+			'name' => 'Attendance Type',
+			'items' => $this->StaffAttendanceType->getLookupVariables()
 		));
 		// End Staff
                 
