@@ -5,7 +5,7 @@
 OpenEMIS School
 Open School Management Information System
 
-Copyright © 2014 KORD IT. This program is free software: you can redistribute it and/or modify 
+Copyright Â© 2014 KORD IT. This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation, 
 either version 3 of the License, or any later version. This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -39,9 +39,11 @@ class DatePickerBehavior extends ModelBehavior {
 		$fields = $this->settings[$model->alias];
 		foreach($results as $i => $result) {
 			foreach($fields as $field) {
-				if(isset($result[$model->alias][$field]) && !empty($result[$model->alias][$field])) {
+				if(isset($result[$model->alias][$field]) && !empty($result[$model->alias][$field]) && ($result[$model->alias][$field] !== '0000-00-00')) {
 					$value = $result[$model->alias][$field];
 					$results[$i][$model->alias][$field] = date($format, strtotime($value));
+				}else{
+					$results[$i][$model->alias][$field] = '';
 				}
 			}
 		}

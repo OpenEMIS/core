@@ -60,6 +60,7 @@ fieldset.section_break > legend {
 fieldset.section_break > legend a {	font-size: 11px; }
 
 fieldset.section_break > .row { margin-left: 15px; }
+fieldset.section_break.area > .row { margin-left: -15px; }
 fieldset.section_break > .row.icon_add_row { margin-left: 5px; }
 /* End fieldset section_break */
 

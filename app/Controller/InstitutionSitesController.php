@@ -1084,8 +1084,8 @@ class InstitutionSitesController extends AppController {
             if ($last_area_id == 0) {
                 $last_area_id = '';
             }
-            //$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
-            //$this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
+            $this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+            $this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
 
 
             $this->InstitutionSite->set($this->request->data);
@@ -1219,6 +1219,7 @@ class InstitutionSitesController extends AppController {
         if ($this->request->is('post')) {
 
             $last_area_id = 0;
+			$last_area_education_id = 0;
             //this key sort is impt so that the lowest area level will be saved correctly
             ksort($this->request->data['InstitutionSite']);
             foreach ($this->request->data['InstitutionSite'] as $key => $arrValSave) {
@@ -1228,8 +1229,17 @@ class InstitutionSitesController extends AppController {
                 if (stristr($key, 'area_level_') == true) {
                     unset($this->request->data['InstitutionSite'][$key]);
                 }
+				
+				if (stristr($key, 'area_education_level_') == true && ($arrValSave != '' && $arrValSave != 0)) {
+                    $last_area_education_id = $arrValSave;
+                }
+                if (stristr($key, 'area_education_level_') == true) {
+                    unset($this->request->data['InstitutionSite'][$key]);
+                }
             }
-            //$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+            $this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+			$this->request->data['InstitutionSite']['area_education_id'] = $last_area_education_id;
+			
             $this->InstitutionSite->set($this->request->data);
 			
             if ($this->InstitutionSite->validates()) {

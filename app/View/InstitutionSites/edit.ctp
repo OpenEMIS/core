@@ -1,7 +1,7 @@
 <?php
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('institution_site', false);
-echo $this->Html->script('config', false); 
+echo $this->Html->script('config', false);
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 $this->extend('/Elements/layout/container');
@@ -11,7 +11,7 @@ $this->assign('contentHeader', __('Overview'));
 $this->assign('contentClass', 'edit add');
 $this->start('contentActions');
 echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
-echo $this->Html->link(__('History'), array('action' => 'history'),	array('class' => 'divider')); 
+echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -34,65 +34,75 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 ?>
 
 <?php $obj = @$data['InstitutionSite']; ?>
-	
+
 <fieldset class="section_break">
 	<legend><?php echo __('Information'); ?></legend>
-	<?php 
-	echo $this->Form->input('name', array('value' => $obj['name'])); 
-	
+	<?php
+	echo $this->Form->input('name', array('value' => $obj['name']));
+
 	echo $this->Form->input('code', array(
-			'onkeyup' => 'updateHiddenField(this, "validate_institution_site_code")',
-			'value' => $obj['code']
-		));
-	echo $this->Form->input('validate_institution_site_code', array('type'=>'hidden', 'id' => 'validate_institution_site_code', 'value' => $obj['code']));
-	
+		'onkeyup' => 'updateHiddenField(this, "validate_institution_site_code")',
+		'value' => $obj['code']
+	));
+	echo $this->Form->input('validate_institution_site_code', array('type' => 'hidden', 'id' => 'validate_institution_site_code', 'value' => $obj['code']));
+
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_provider_id');
-	echo $this->Form->input('institution_site_provider_id', array('options'=>$providerOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_provider_id']));
-	
+	echo $this->Form->input('institution_site_provider_id', array('options' => $providerOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_provider_id']));
+
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_sector_id');
-	echo $this->Form->input('institution_site_sector_id', array('options'=>$sectorOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_sector_id']));
-	
+	echo $this->Form->input('institution_site_sector_id', array('options' => $sectorOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_sector_id']));
+
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_type_id');
-	echo $this->Form->input('institution_site_type_id', array('options'=>$typeOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_type_id']));
-	
+	echo $this->Form->input('institution_site_type_id', array('options' => $typeOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_type_id']));
+
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_ownership_id');
-	echo $this->Form->input('institution_site_ownership_id', array('options'=>$ownershipOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_ownership_id']));
-		
+	echo $this->Form->input('institution_site_ownership_id', array('options' => $ownershipOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_ownership_id']));
+
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_status_id');
-	echo $this->Form->input('institution_site_status_id', array('options'=>$statusOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_status_id']));
-		
-	echo $this->FormUtility->datepicker('date_opened', array('id' => 'dateOpened', 'value' => $obj['date_opened']));
-		
-	echo $this->FormUtility->datepicker('date_closed', array('id' => 'dateClosed', 'value' => $obj['date_closed']));
+	echo $this->Form->input('institution_site_status_id', array('options' => $statusOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_status_id']));
+
+	echo $this->FormUtility->datepicker('date_opened', array('id' => 'dateOpened', 'data-date' => $obj['date_opened']));
+
+	echo $this->FormUtility->datepicker('date_closed', array('id' => 'dateClosed', 'data-date' => $obj['date_closed']));
 	?>
 </fieldset>
 <fieldset class="section_break">
 	<legend><?php echo __('Location'); ?></legend>
-	<?php 
+	<?php
 	echo $this->Form->input('address', array(
 		'onkeyup' => 'utility.charLimit(this)',
-		'type'=>'textarea',
+		'type' => 'textarea',
 		'value' => $obj['address']
 	));
-		
+
 	echo $this->Form->input('postal_code', array(
 		'onkeyup' => 'updateHiddenField(this, "validate_institution_site_postal_code")',
 		'value' => $obj['postal_code']
 	));
-	echo $this->Form->input('validate_institution_site_postal_code', array('type'=>'hidden', 'id' => 'validate_institution_site_postal_code', 'value' => $obj['postal_code']));
-		
+	echo $this->Form->input('validate_institution_site_postal_code', array('type' => 'hidden', 'id' => 'validate_institution_site_postal_code', 'value' => $obj['postal_code']));
+
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_locality_id');
-	echo $this->Form->input('institution_site_locality_id', array('options'=>$localityOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_locality_id']));
-		
+	echo $this->Form->input('institution_site_locality_id', array('options' => $localityOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_locality_id']));
+
 	echo $this->Form->input('latitude', array('value' => $obj['latitude']));
-		
+
 	echo $this->Form->input('longitude', array('value' => $obj['longitude']));
 	?>
 </fieldset>
 
+<fieldset class="section_break area">
+	<legend id="area"><?php echo __('Area'); ?></legend>
+	<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id', $obj['area_id'], array(), $filterArea); ?>
+</fieldset>
+
+<fieldset class="section_break area">
+	<legend id="education"><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
+	<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id', $obj['area_education_id'], array()); ?>
+</fieldset>
+
 <fieldset class="section_break">
 	<legend><?php echo __('Contact'); ?></legend>
-	<?php 
+	<?php
 	echo $this->Form->input('contact_person', array('value' => $obj['contact_person']));
 
 	echo $this->Form->input('telephone', array(
@@ -114,7 +124,11 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 </fieldset>
 
 <div class="controls view_controls">
-	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if(jsDate.checkValidDateClosed() && Config.checkValidate()){ return true; }else{ return false; }"/>
+	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if (jsDate.checkValidDateClosed() && Config.checkValidate()) {
+			return true;
+		} else {
+			return false;
+		}"/>
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 
