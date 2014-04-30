@@ -34,8 +34,8 @@ echo $this->Html->script('search', false);
 		<div class="table_head">
 			<div class="table_cell cell_year"><?php echo __('Year'); ?></div>
 			<div class="table_cell"><?php echo __('Grade'); ?></div>
-                        <div class="table_cell"><?php echo __('Number of Seats'); ?></div>
-                        <div class="table_cell"><?php echo __('Number of Shifts'); ?></div>
+                        <div class="table_cell"><?php echo __('Seats'); ?></div>
+                        <div class="table_cell"><?php echo __('Shift'); ?></div>
 		</div>
 		<div class="table_body">
 			<div class="table_row">

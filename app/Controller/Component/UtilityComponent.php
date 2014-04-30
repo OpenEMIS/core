@@ -119,6 +119,7 @@ class UtilityComponent extends Component {
 		
 		// Institution Sites
 		$msgList['NO_SITES'] = "No Institution Sites";
+                $msgList['SHIFT_WITHOUT_LOCATION'] = "Please select a location.";
 		
 		// Institution Site Classes
 		$msgList['SITE_CLASS_EMPTY_NAME'] = "Please enter a valid class name.";
