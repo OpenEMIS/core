@@ -423,9 +423,7 @@ class StudentsController extends StudentsAppController {
         // get all student custom field in order
         $data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
 
-        $this->StudentCustomValue->unbindModel(
-			array('belongsTo' => array('Student'))
-        );
+        $this->StudentCustomValue->unbindModel(array('belongsTo' => array('Student')));
         $dataValues = $this->StudentCustomValue->find('all', array(
             'conditions' => array('StudentCustomValue.student_id' => $this->studentId))
         );
@@ -530,9 +528,7 @@ class StudentsController extends StudentsAppController {
             )
         ));
         $data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
-        $this->StudentCustomValue->unbindModel(
-                array('belongsTo' => array('Student'))
-        );
+        $this->StudentCustomValue->unbindModel(array('belongsTo' => array('Student')));
         $dataValues = $this->StudentCustomValue->find('all', array('conditions' => array('StudentCustomValue.student_id' => $this->studentId)));
         $tmp = array();
         foreach ($dataValues as $arrV) {
