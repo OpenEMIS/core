@@ -41,7 +41,7 @@ echo $this->element('templates/year_options', array('url' => 'classes'));
 				$i = 0;
 				?>
 				<tr row-id="<?php echo $id; ?>">
-					<td class="table_cell"><?php echo $obj['name']; ?></td>
+					<td class="table_cell"><?php echo $this->Html->link($obj['name'], array('action' => 'classesView', $id), array('escape' => false)); ?></td>
 
 					<td class="table_cell">
 						<?php

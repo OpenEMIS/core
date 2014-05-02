@@ -422,24 +422,22 @@ class StudentsController extends StudentsAppController {
 
     public function additional() {
         $this->Navigation->addCrumb('More');
-
+		$header = __('More');
         // get all student custom field in order
         $data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
 
         $this->StudentCustomValue->unbindModel(array('belongsTo' => array('Student')));
-        $dataValues = $this->StudentCustomValue->find('all', array(
+        $cusValuesData = $this->StudentCustomValue->find('all', array(
             'conditions' => array('StudentCustomValue.student_id' => $this->studentId))
         );
-        $tmp = array();
-        foreach ($dataValues as $arrV) {
-            $tmp[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
+        $dataValues = array();
+        foreach ($cusValuesData as $arrV) {
+            $dataValues[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
             // pr($arrV);
         }
-        $dataValues = $tmp;
         // pr($tmp);die;
         $this->UserSession->readStatusSession($this->request->action);
-        $this->set('data', $data);
-        $this->set('dataValues', $tmp);
+		$this->set(compact('header','data', 'dataValues'));
     }
 
     public function additionalEdit() {
@@ -638,10 +636,10 @@ class StudentsController extends StudentsAppController {
     }
 
     private function custFieldSites($institution_sites) {
-        $institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name', 'Institution.name'), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
+        $institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name'/*, 'Institution.name'*/), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
         $tmp = array('0' => '--');
         foreach ($institution_sites as $arrVal) {
-            $tmp[$arrVal['InstitutionSite']['id']] = $arrVal['Institution']['name'] . ' - ' . $arrVal['InstitutionSite']['name'];
+            $tmp[$arrVal['InstitutionSite']['id']] = /*$arrVal['Institution']['name'] . ' - ' . */$arrVal['InstitutionSite']['name'];
         }
         return $tmp;
     }

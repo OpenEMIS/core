@@ -393,6 +393,7 @@ class InstitutionSiteProgramme extends AppModel {
 	
 	public function programmesGradeList($controller, $params) {
         $controller->layout = 'ajax';
+		$this->render = false;
         $programmeId = $controller->params->query['programmeId'];
         $exclude = $controller->params->query['exclude'];
         $gradeOptions = $controller->EducationGrade->getGradeOptions($programmeId, $exclude);

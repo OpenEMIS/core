@@ -173,7 +173,7 @@ $tableData = array();
 foreach ($attachments as $obj) {
 	$row = array();
 	$row[] = array($obj['StaffLeaveAttachment']['file_name'], array('file-id' =>$obj['StaffLeaveAttachment']['id']));
-	$row[] = '<span class="icon_delete" title="'. __("Delete").'" onClick="objStaffLeaves.deleteFile('.$obj['StaffLeaveAttachment']['id'].')"></span>';
+	$row[] = '<span class="icon_delete" title="'. $this->Label->get('general.delete').'" onClick="objStaffLeaves.deleteFile('.$obj['StaffLeaveAttachment']['id'].')"></span>';
 	$tableData[] = $row;
 }
 echo $this->element('templates/file_list', compact('tableHeaders', 'tableData'));
