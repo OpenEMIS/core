@@ -19,6 +19,7 @@ $this->start('contentBody');
                 'options' => $statusOptions,
                 'default' => $selectedStatus,
                 'empty' => __('All'),
+                'class'=>'form-control',
                 'label' => false,
                 'url' => 'Training/result',
                 'onchange' => 'jsForm.change(this)'
