@@ -47,6 +47,7 @@ fieldset.section_break {
 	border: none;
 	border-top: 1px solid #CCCCCC;
 	margin: 5px 10px 0px 0px;
+	padding-top: 15px;
 }
 
 fieldset.section_break > legend {
@@ -55,6 +56,11 @@ fieldset.section_break > legend {
 	font-size: 11px;
 	font-weight: bold;
 	color: #999999;
+	
+	/* bootstrap override */
+	width: auto;
+	margin-bottom: 0;
+	border: 0;
 }
 
 fieldset.section_break > legend a {	font-size: 11px; }
