@@ -44,7 +44,8 @@ class LabelHelper extends AppHelper {
 			'status' => 'Status',
             'yes' => 'Yes',
             'no' => 'No',
-			'general' => 'General'
+			'general' => 'General',
+			'default' => 'Default'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',

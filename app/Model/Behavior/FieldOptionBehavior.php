@@ -22,6 +22,7 @@ class FieldOptionBehavior extends ModelBehavior {
 			array('field' => 'international_code'),
 			array('field' => 'national_code'),
 			array('field' => 'visible', 'type' => 'select'),
+			array('field' => 'default', 'type' => 'select'),
 			array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
 			array('field' => 'modified', 'label' => 'Modified On', 'edit' => false),
 			array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
@@ -104,42 +105,26 @@ class FieldOptionBehavior extends ModelBehavior {
 		}
 	}
 	
-	/*
-	public function getOption(Model $model, $id) {
-		$alias = $model->alias;
-		$data = $model->find('first', array(
-			'recursive' => 0,
-			'fields' => array(
-				$alias . '.*',
-				'ModifiedUser.first_name',
-				'ModifiedUser.last_name',
-				'CreatedUser.first_name',
-				'CreatedUser.last_name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'security_users',
-					'alias' => 'ModifiedUser',
-					'type' => 'LEFT',
-					'conditions' => array('ModifiedUser.id = ' . $alias . '.modified_user_id')
-				),
-				array(
-					'table' => 'security_users',
-					'alias' => 'CreatedUser',
-					'type' => 'LEFT',
-					'conditions' => array('CreatedUser.id = ' . $alias . '.created_user_id')
-				)
-			),
-			'conditions' => array($alias.'.id' => $id)
-		));
+	public function beforeSave(Model $model, $options = array()) {
+		$schema = $model->schema();
+		$data = current($model->data);
 		
-		if($data) {
-			$data[$alias]['modified_user'] = trim($data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']);
-			$data[$alias]['created_user'] = trim($data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']);
+		if(isset($schema['default']) && isset($data['default'])) {
+			$conditionId = $model->getConditionId();
+			$default = $data['default'];
+			if($default == 1) {
+				$model->updateAll(
+					array($model->alias.'.default' => 0),
+					array($model->alias.'.'.$conditionId => $data[$conditionId])
+				);
+			}
 		}
-		return $data;
+		return true;
 	}
-	*/
+	
+	public function getConditionId(Model $model) {
+		return 'field_option_id';
+	}
 	
 	public function getCustomFieldTypes(Model $model) {
 		$types = array(
@@ -170,10 +155,18 @@ class FieldOptionBehavior extends ModelBehavior {
 	}
 	
 	public function getOptionFields(Model $model) {
+		$schema = $model->schema();
 		$fields = $this->optionFields;
 		foreach($fields['fields'] as $key => $field) {
-			if($field['field'] === 'visible' && $field['type'] === 'select') {
-				$fields['fields'][$key]['options'] = array(1 => __('Yes'), 0 => __('No'));
+			if(!isset($schema[$field['field']])) {
+				unset($fields['fields'][$key]);
+			} else {
+				if($field['field'] === 'visible' && $field['type'] === 'select') {
+					$fields['fields'][$key]['options'] = array(1 => __('Yes'), 0 => __('No'));
+				} else if($field['field'] === 'default' && $field['type'] === 'select') {
+					$fields['fields'][$key]['options'] = array(1 => __('Yes'), 0 => __('No'));
+					$fields['fields'][$key]['default'] = 0;
+				}
 			}
 		}
 		$fields['model'] = $model->alias;

@@ -31,3 +31,5 @@ CREATE TABLE IF NOT EXISTS `field_option_values` (
   PRIMARY KEY (`id`),
   KEY `field_option_id` (`field_option_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+ALTER TABLE `field_option_values` ADD `default` INT( 1 ) NOT NULL DEFAULT '0' AFTER `editable` ;
