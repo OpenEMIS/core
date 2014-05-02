@@ -67,7 +67,7 @@ class StudentHealthConsultation extends StudentsAppModel {
         $controller->Navigation->addCrumb('Health - Consultations');
         $header = __('Health - Consultations');
         $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-        $data = $this->find('all', array('conditions' => array('student_id' => $controller->studentId)));
+        $data = $this->findAllByStudentId($controller->studentId);//('all', array('conditions' => array('student_id' => $controller->studentId)));
         $controller->set(compact('header', 'data'));
     }
 

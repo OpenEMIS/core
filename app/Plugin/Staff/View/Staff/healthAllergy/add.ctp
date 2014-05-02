@@ -1,71 +1,27 @@
 <?php
-echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false));
-echo $this->Html->script('app.date', false);
-echo $this->Html->script('/Staff/js/staff', false);
-echo $this->Html->script('config', false);
-//$obj = @$data['Student'];
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+$this->start('contentActions');
+if(!empty($this->data[$model]['id'])){
+	$redirectAction = array('action' => 'healthAllergyView', $this->data[$model]['id']);
+}
+else{
+	$redirectAction = array('action' => 'healthAllergy');
+}
+echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
+
+$this->end();
+$this->start('contentBody');
+
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin'=>'Staff'));
+echo $this->Form->create($model, $formOptions);
+echo $this->Form->hidden('id');
+echo $this->Form->input('health_allergy_type_id', array('options' => $healthAllergiesOptions, 'label'=>array('text'=> $this->Label->get('general.type'),'class'=>'col-md-3 control-label'))); 
+echo $this->Form->input('description');
+echo $this->Form->input('severe', array('options' => $yesnoOptions));
+echo $this->Form->input('comment', array('type'=>'textarea'));
+
+echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
+echo $this->Form->end();
+$this->end();
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="student" class="content_wrapper edit add">
-	<h1>
-		<span><?php echo __($subheader); ?></span>
-		<?php
-		if(!empty($this->data[$modelName]['id'])){
-			echo $this->Html->link(__('View'), array('action' => 'healthAllergyView', $this->data[$modelName]['id']), array('class' => 'divider'));
-		}
-		else{
-			echo $this->Html->link(__('List'), array('action' => 'healthAllergy'), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-	
-	<?php
-	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Staff', 'action' =>  $this->action, 'plugin'=>'Staff'),
-		'type' => 'file',
-		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-	));
-	?>
-
-	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
-	
-    <div class="row">
-        <div class="label"><?php echo __('Type'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('health_allergy_type_id', array(
-									'options' => $healthAllergiesOptions,
-									'label' => false)
-									); 
-		?>
-        </div>
-    </div>
-	<div class="row">
-        <div class="label"><?php echo __('Descriptions'); ?></div>
-        <div class="value"><?php echo $this->Form->input('description'); ?> </div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Severe'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('severe', array(
-									'options' => $booleanOptions,
-									'label' => false)
-									); 
-		?>
-        </div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Comment'); ?></div>
-        <div class="value"><?php echo $this->Form->input('comment', array('type'=> 'textarea'));?></div>
-    </div>
-	
-	<div class="controls view_controls">
-		<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'healthAllergy'), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-	
-	<?php echo $this->Form->end(); ?>
-</div>
