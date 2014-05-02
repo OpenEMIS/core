@@ -1,21 +1,19 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('area', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('area', false);
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Administrative Boundaries'));
+$this->start('contentActions');
+if($_edit) {
+	echo $this->Html->link(__('Edit'), array('action' => 'AreaEducationEdit'), array('class' => 'divider','id'=>'edit'));
+}
+$this->end();
 
-<div class="content_wrapper" style="min-height: 650px;">
-	<h1>
-		<span><?php echo __('Administrative Boundaries'); ?></span>
-		<?php
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'AreaEducationEdit'), array('class' => 'divider','id'=>'edit'));
-		}
-		?>
-	</h1>
+$this->start('contentBody');?>
+
 	<?php echo $this->element('alert'); ?>
 	<?php echo $this->element('area_categories'); ?>
 
@@ -84,8 +82,7 @@ echo $this->Html->script('area', false);
     </script>
 
     <?php } ?>
-</div>
-
+<?php $this->end(); ?>	
 
 	
 	

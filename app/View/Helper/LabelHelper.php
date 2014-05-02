@@ -42,7 +42,13 @@ class LabelHelper extends AppHelper {
 			'date' => 'Date',
             'yes' => 'Yes',
             'no' => 'No',
-			'general' => 'General'
+			'general' => 'General',
+            'label' => 'Label',
+            'default' => 'Default',
+            'modified_by' => 'Modified By',
+            'created_by' => 'Created By',
+            'enabled' => 'Enabled',
+            'disabled' => 'Disabled'
         ),
         'wizard' => array(
             'previous' => 'Previous',
@@ -124,6 +130,16 @@ class LabelHelper extends AppHelper {
             'qualification_institution_country' => 'Institution Country',
 			'gpa' => 'Grade/Score',
 			'file_name' => 'Attachment'
+        ),
+        'Database' => array(
+            'backup' => 'Backup',
+            'restore' => 'Restore'
+        ),
+        'DataProcessing' => array(
+            'process' => 'Processes',
+            'export' => 'Export',
+            'generate' => 'Generate',
+            'custom_indicators' => 'Custom Indicators'
         )
     );
 	
