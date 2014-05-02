@@ -16,8 +16,8 @@ $this->end();
 
 $this->start('contentBody');
 ?>
-	<div class="row year" style="margin-left:5px;">
-		<div class="col-md-3" style="width: 90px;"><?php echo __('Year'); ?></div>
+	<div class="row year">
+		<div class="col-md-3"><?php echo __('Year'); ?></div>
 		<div class="col-md-6">
 			<?php
 				echo $this->Form->input('school_year_id', array(
@@ -32,8 +32,8 @@ $this->start('contentBody');
 		</div>
 	</div>
 	<?php if(isset($institution_sites)) { ?>
-	<div class="row" style="margin-left:5px;">
-		<div class="col-md-3" style="width: 90px;"><?php echo __('Institution Sites'); ?></div>
+	<div class="row" >
+		<div class="col-md-3"><?php echo __('Institution Sites'); ?></div>
 		<div class="col-md-6" style="margin-bottom: 10px;">
 			<?php
 				echo $this->Form->input('institution_site_id', array(
