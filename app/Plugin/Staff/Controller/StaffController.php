@@ -39,9 +39,6 @@ class StaffController extends StaffAppController {
         'Staff.StaffAttendance',
         'Staff.StaffBehaviour',
         'Staff.StaffBehaviourCategory',
-        'Staff.StaffSalary',
-        'Staff.StaffSalaryAddition',
-        'Staff.StaffSalaryDeduction',
         'SchoolYear',
         'ConfigItem',
         'SalaryAdditionType',
@@ -82,6 +79,7 @@ class StaffController extends StaffAppController {
 		'leaves' => 'Staff.StaffLeave',
 		'extracurricular' => 'Staff.StaffExtracurricular',
 		'employments' => 'Staff.StaffEmployment',
+		'salaries' => 'Staff.StaffSalary',
     );
 
     public $className = 'Staff';
@@ -430,137 +428,134 @@ class StaffController extends StaffAppController {
     }
 
     public function additional() {
-        $this->Navigation->addCrumb('Additional Info');
+		$this->Navigation->addCrumb('More');
+		$header = __('More');
+		// get all staff custom field in order
+		$data = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
 
-        // get all staff custom field in order
-        $datafields = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
+		$this->StaffCustomValue->unbindModel(
+				array('belongsTo' => array('Staff'))
+		);
+		$cusValuesData = $this->StaffCustomValue->find('all', array(
+			'conditions' => array('StaffCustomValue.staff_id' => $this->staffId))
+		);
 
-        $this->StaffCustomValue->unbindModel(
-                array('belongsTo' => array('Staff'))
-        );
-        $datavalues = $this->StaffCustomValue->find('all', array(
-            'conditions' => array('StaffCustomValue.staff_id' => $this->staffId))
-        );
+		$dataValues = array();
+		foreach ($cusValuesData as $arrV) {
+			$dataValues[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
+			// pr($arrV);
+		}
+		
+		$this->UserSession->readStatusSession($this->request->action);
+		$this->set(compact('header', 'data', 'dataValues'));
+	}
 
-        // pr($datafields);
-        // pr($datavalues);
-        $tmp = array();
-        foreach ($datavalues as $arrV) {
-            $tmp[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
-            // pr($arrV);
-        }
-        $datavalues = $tmp;
-        // pr($tmp);die;
-        $this->UserSession->readStatusSession($this->request->action);
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
-    }
+	public function additionalEdit() {
+		$this->Navigation->addCrumb('Edit More');
+		$header = __('Edit More');
+		if ($this->request->is('post')) {
+			if (isset($this->data['submit']) && $this->data['submit'] == __('Previous')) {
+				$this->Navigation->previousWizardLink($this->action);
+			}
+			$mandatory = $this->Navigation->getMandatoryWizard($this->action);
+			$error = false;
+			//pr($this->data);
+			//die();
+			$arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
+			/**
+			 * Note to Preserve the Primary Key to avoid exhausting the max PK limit
+			 */
+			foreach ($arrFields as $fieldVal) {
+				// pr($fieldVal);
+				// pr($this->request->data['StaffCustomValue']);
+				if (!isset($this->request->data['StaffCustomValue'][$fieldVal]))
+					continue;
+				foreach ($this->request->data['StaffCustomValue'][$fieldVal] as $key => $val) {
 
-    public function additionalEdit() {
-        $this->Navigation->addCrumb('Edit Additional Info');
+					if ($fieldVal == "checkbox") {
+						if ($mandatory && count($val['value']) == 0) {
+							$this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
+							$error = true;
+							break;
+						}
+						$arrCustomValues = $this->StaffCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
 
-        if ($this->request->is('post')) {
-            if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $mandatory = $this->Navigation->getMandatoryWizard($this->action);
-            $error = false;
-            //pr($this->data);
-            //die();
-            $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
-            /**
-             * Note to Preserve the Primary Key to avoid exhausting the max PK limit
-             */
-            foreach ($arrFields as $fieldVal) {
-                // pr($fieldVal);
-                // pr($this->request->data['StaffCustomValue']);
-                if (!isset($this->request->data['StaffCustomValue'][$fieldVal]))
-                    continue;
-                foreach ($this->request->data['StaffCustomValue'][$fieldVal] as $key => $val) {
+						$tmp = array();
+						if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
+							foreach ($arrCustomValues as $pk => $intVal) {
+								//pr($val['value']); echo "$intVal";
+								if (!in_array($intVal, $val['value'])) {
+									//echo "not in db so remove \n";
+									$this->StaffCustomValue->delete($pk);
+								}
+							}
+						$ctr = 0;
+						if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
+							foreach ($val['value'] as $intVal) {
+								//pr($val['value']); echo "$intVal";
+								if (!in_array($intVal, $arrCustomValues)) {
+									$this->StaffCustomValue->create();
+									$arrV['staff_custom_field_id'] = $key;
+									$arrV['value'] = $val['value'][$ctr];
+									$arrV['staff_id'] = $this->staffId;
+									$this->StaffCustomValue->save($arrV);
+									unset($arrCustomValues[$ctr]);
+								}
+								$ctr++;
+							}
+					} else { // if editing reuse the Primary KEY; so just update the record
+						if ($mandatory && empty($val['value'])) {
+							$this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
+							$error = true;
+							break;
+						}
+						$data = $this->StaffCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
+						$this->StaffCustomValue->create();
+						if ($data)
+							$this->StaffCustomValue->id = $data['StaffCustomValue']['id'];
+						$arrV['staff_custom_field_id'] = $key;
+						$arrV['value'] = $val['value'];
+						$arrV['staff_id'] = $this->staffId;
+						$this->StaffCustomValue->save($arrV);
+					}
+				}
+			}
+			if (!$error) {
+				$this->Navigation->updateWizard($this->action, null);
+				$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
+				$this->redirect(array('action' => 'additional'));
+			}
+		}
+		$this->StaffCustomField->unbindModel(array('hasMany' => array('StaffCustomFieldOption')));
 
-                    if ($fieldVal == "checkbox") {
-                        if($mandatory && count($val['value'])==0){
-                            $this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
-                            $error = true;
-                            break;
-                        }
-                        $arrCustomValues = $this->StaffCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
+		$this->StaffCustomField->bindModel(array(
+			'hasMany' => array(
+				'StaffCustomFieldOption' => array(
+					'conditions' => array(
+						'StaffCustomFieldOption.visible' => 1),
+					'order' => array('StaffCustomFieldOption.order' => "ASC")
+				)
+			)
+		));
 
-                        $tmp = array();
-                        if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
-                            foreach ($arrCustomValues as $pk => $intVal) {
-                                //pr($val['value']); echo "$intVal";
-                                if (!in_array($intVal, $val['value'])) {
-                                    //echo "not in db so remove \n";
-                                    $this->StaffCustomValue->delete($pk);
-                                }
-                            }
-                        $ctr = 0;
-                        if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
-                            foreach ($val['value'] as $intVal) {
-                                //pr($val['value']); echo "$intVal";
-                                if (!in_array($intVal, $arrCustomValues)) {
-                                    $this->StaffCustomValue->create();
-                                    $arrV['staff_custom_field_id'] = $key;
-                                    $arrV['value'] = $val['value'][$ctr];
-                                    $arrV['staff_id'] = $this->staffId;
-                                    $this->StaffCustomValue->save($arrV);
-                                    unset($arrCustomValues[$ctr]);
-                                }
-                                $ctr++;
-                            }
-                    } else { // if editing reuse the Primary KEY; so just update the record
-                        if($mandatory && empty($val['value'])){
-                            $this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
-                            $error = true;
-                            break;
-                        }
-                        $datafields = $this->StaffCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
-                        $this->StaffCustomValue->create();
-                        if ($datafields)
-                            $this->StaffCustomValue->id = $datafields['StaffCustomValue']['id'];
-                        $arrV['staff_custom_field_id'] = $key;
-                        $arrV['value'] = $val['value'];
-                        $arrV['staff_id'] = $this->staffId;
-                        $this->StaffCustomValue->save($arrV);
-                    }
-                }
-            }
-            if(!$error){
-                $this->Navigation->updateWizard($this->action, null);    
-                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
-                $this->redirect(array('action' => 'additional'));
-            }
-        }
-        $this->StaffCustomField->unbindModel(array('hasMany' => array('StaffCustomFieldOption')));
+		$data = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
+		$this->StaffCustomValue->unbindModel(array('belongsTo' => array('Staff')));
+		$cusValueData = $this->StaffCustomValue->find('all', array('conditions' => array('StaffCustomValue.staff_id' => $this->staffId)));
+		$tmp = array();
+		foreach ($cusValueData as $arrV) {
+			$tmp[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
+		}
+		$dataValues = $tmp;
 
-        $this->StaffCustomField->bindModel(array(
-            'hasMany' => array(
-                'StaffCustomFieldOption' => array(
-                    'conditions' => array(
-                        'StaffCustomFieldOption.visible' => 1),
-                    'order' => array('StaffCustomFieldOption.order' => "ASC")
-                )
-            )
-        ));
+		// pr($data);
+		// pr($datavalues);
+		//pr($tmp);die;
+		$this->set(compact('header', 'data', 'dataValues'));
+		/* $this->set('data', $data);
+		  $this->set('datavalues', $tmp); */
+	}
 
-        $datafields = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
-        $this->StaffCustomValue->unbindModel(array('belongsTo' => array('Staff')));
-        $datavalues = $this->StaffCustomValue->find('all', array('conditions' => array('StaffCustomValue.staff_id' => $this->staffId)));
-        $tmp = array();
-        foreach ($datavalues as $arrV) {
-            $tmp[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
-        }
-        $datavalues = $tmp;
-
-        // pr($datafields);
-        // pr($datavalues);
-        //pr($tmp);die;
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
-    }
-
-    public function history() {
+	public function history() {
         $this->Navigation->addCrumb('History');
 
         $arrTables = array('StaffHistory');
@@ -608,10 +603,12 @@ class StaffController extends StaffAppController {
     }
 
     private function custFieldSites($institution_sites) {
-        $institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name', 'Institution.name'), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
+        $institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name'/*, 'Institution.name'*/), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
+		//$institution_sites = $this->InstitutionSite->find('all', array('limit'=>1));
+	
         $tmp = array('0' => '--');
         foreach ($institution_sites as $arrVal) {
-            $tmp[$arrVal['InstitutionSite']['id']] = $arrVal['Institution']['name'] . ' - ' . $arrVal['InstitutionSite']['name'];
+            $tmp[$arrVal['InstitutionSite']['id']] = /*$arrVal['Institution']['name'] . ' - ' .*/ $arrVal['InstitutionSite']['name'];
         }
         return $tmp;
     }
@@ -735,162 +732,6 @@ class StaffController extends StaffAppController {
             $this->redirect(array('action' => 'behaviour'));
         }
     }
-
-   
-
-    public function salaries() {
-        $this->Navigation->addCrumb('Salary');
-        $data = $this->StaffSalary->find('all', array('conditions' => array('StaffSalary.staff_id' => $this->staffId)));
-        $this->set('list', $data);
-    }
-
-    public function salariesAdd() {
-        if ($this->request->is('post')) {
-            $this->request->data['StaffSalary']['staff_id'] = $this->staffId;
-
-            $this->StaffSalary->create();
-
-            $this->StaffSalary->saveAll($this->request->data['StaffSalary'], array('validate' => 'only'));
-            if (isset($this->request->data['StaffSalaryAddition'])) {
-                $this->StaffSalaryAddition->saveAll($this->request->data['StaffSalaryAddition'], array('validate' => 'only'));
-            }
-            if (isset($this->request->data['StaffSalaryDeduction'])) {
-                $this->StaffSalaryDeduction->saveAll($this->request->data['StaffSalaryDeduction'], array('validate' => 'only'));
-            }
-
-            if (!$this->StaffSalary->validationErrors &&
-                    !$this->StaffSalaryAddition->validationErrors &&
-                    !$this->StaffSalaryDeduction->validationErrors) {
-                $this->StaffSalary->saveAll($this->request->data);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'salaries'));
-            } else {
-                $this->Utility->alert($this->Utility->getMessage('ADD_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
-            }
-        }
-
-        $visible = true;
-        $additionOptions = $this->SalaryAdditionType->findList($visible);
-        $this->set('additionOptions', $additionOptions);
-        $deductionOptions = $this->SalaryDeductionType->findList($visible);
-        $this->set('deductionOptions', $deductionOptions);
-
-        $this->UserSession->readStatusSession($this->request->action);
-    }
-
-    public function salariesView() {
-        $salaryId = $this->params['pass'][0];
-        $salaryObj = $this->StaffSalary->find('all', array('conditions' => array('StaffSalary.id' => $salaryId)));
-
-        if (!empty($salaryObj)) {
-            $this->Navigation->addCrumb('Salary Details');
-
-            $this->Session->write('StaffSalaryId', $salaryId);
-            $this->set('salaryObj', $salaryObj);
-            $visible = true;
-            $additionOptions = $this->SalaryAdditionType->findList($visible);
-            $this->set('additionOptions', $additionOptions);
-            $deductionOptions = $this->SalaryDeductionType->findList($visible);
-            $this->set('deductionOptions', $deductionOptions);
-        }
-    }
-
-    public function salariesEdit() {
-        $salaryId = $this->params['pass'][0];
-        if ($this->request->is('get')) {
-            $salaryObj = $this->StaffSalary->find('first', array('conditions' => array('StaffSalary.id' => $salaryId)));
-
-            if (!empty($salaryObj)) {
-                $this->Navigation->addCrumb('Edit Salary Details');
-                $this->request->data = $salaryObj;
-            }
-        } else {
-            if (isset($this->request->data['DeleteAddition'])) {
-                $deletedId = array();
-                foreach ($this->request->data['DeleteAddition'] as $key => $value) {
-                    $deletedId[] = $value['id'];
-                    pr('test');
-                    unset($this->request->data['StaffSalaryAddition'][$key]);
-                }
-                $this->StaffSalaryAddition->deleteAll(array('StaffSalaryAddition.id' => $deletedId, 'StaffSalaryAddition.staff_salary_id' => $salaryId), false);
-            }
-            if (isset($this->request->data['DeleteDeduction'])) {
-                $deletedId = array();
-                foreach ($this->request->data['DeleteDeduction'] as $key => $value) {
-                    $deletedId[] = $value['id'];
-                    unset($this->request->data['StaffSalaryDeduction'][$key]);
-                }
-                $this->StaffSalaryDeduction->deleteAll(array('StaffSalaryDeduction.id' => $deletedId, 'StaffSalaryDeduction.staff_salary_id' => $salaryId), false);
-            }
-            $this->request->data['StaffSalary']['staff_id'] = $this->staffId;
-
-            $this->StaffSalary->saveAll($this->request->data['StaffSalary'], array('validate' => 'only'));
-            if (isset($this->request->data['StaffSalaryAddition'])) {
-                $this->StaffSalaryAddition->saveAll($this->request->data['StaffSalaryAddition'], array('validate' => 'only'));
-            }
-            if (isset($this->request->data['StaffSalaryDeduction'])) {
-                $this->StaffSalaryDeduction->saveAll($this->request->data['StaffSalaryDeduction'], array('validate' => 'only'));
-            }
-
-            if (!$this->StaffSalary->validationErrors &&
-                    !$this->StaffSalaryAddition->validationErrors &&
-                    !$this->StaffSalaryDeduction->validationErrors) {
-                $this->StaffSalary->saveAll($this->request->data);
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                $this->redirect(array('action' => 'salariesView', $salaryId));
-            } else {
-                $this->Utility->alert($this->Utility->getMessage('UPDATE_ERROR'), array('type' => 'warn', 'dismissOnClick' => false));
-            }
-        }
-
-        $visible = true;
-        $additionOptions = $this->SalaryAdditionType->findList($visible);
-        $this->set('additionOptions', $additionOptions);
-        $deductionOptions = $this->SalaryDeductionType->findList($visible);
-        $this->set('deductionOptions', $deductionOptions);
-
-        $this->set('id', $salaryId);
-    }
-
-    public function salaryAdditionAdd() {
-        $this->layout = 'ajax';
-        $order = $this->params->query['order'];
-        $this->set('order', $order);
-
-        $visible = true;
-        $categories = $this->SalaryAdditionType->findList($visible);
-
-        $this->UserSession->readStatusSession($this->request->action);
-        $this->set('categories', $categories);
-    }
-
-    public function salaryDeductionAdd() {
-        $this->layout = 'ajax';
-        $order = $this->params->query['order'];
-        $this->set('order', $order);
-
-        $visible = true;
-        $categories = $this->SalaryDeductionType->findList($visible);
-
-        $this->UserSession->readStatusSession($this->request->action);
-        $this->set('categories', $categories);
-    }
-
-    public function salariesDelete($id) {
-        if ($this->Session->check('StaffId') && $this->Session->check('StaffSalaryId')) {
-            $id = $this->Session->read('StaffSalaryId');
-            $staffId = $this->Session->read('StaffId');
-            $name = $this->StaffSalary->field('salary_date', array('StaffSalary.id' => $id));
-            $this->StaffSalary->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'salaries', $staffId));
-        }
-    }
-
-
-    
-
-    
 
     public function attachmentsTrainingSelfStudyAdd() {
         $this->layout = 'ajax';

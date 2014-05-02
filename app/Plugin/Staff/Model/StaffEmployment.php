@@ -17,7 +17,7 @@
 
 class StaffEmployment extends StaffAppModel {
 
-	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date', 'employment_date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('employment_date'));
 	public $belongsTo = array(
 		'Staff',
 		'EmploymentType',

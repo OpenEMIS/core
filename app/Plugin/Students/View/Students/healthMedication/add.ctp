@@ -74,15 +74,16 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_edit) {
+    $startDate = array('id' => 'startDate', 'label' => $this->Label->get('HealthMedication.start_date'));
+	$endDate = array('id' => 'endDate', 'label' => $this->Label->get('HealthMedication.end_date'));
     if(!empty($this->data[$model]['id'])){
         $redirectAction = array('action' => 'healthMedicationView', $this->data[$model]['id']);
-        $startDate = array('id' => 'startDate' ,'data-date' => $this->data[$model]['start_date']);
-        $endDate = array('id' => 'endDate' ,'data-date' => $this->data[$model]['end_date']);
+        $startDate['data-date'] = $this->data[$model]['start_date'];
+        $endDate['data-date'] = $this->data[$model]['end_date'];
     }
     else{
         $redirectAction = array('action' => 'healthMedication');
-        $startDate = array('id' => 'startDate');
-        $endDate = array('id' => 'endDate' ,'data-date' => date('d-m-Y', time() + 86400));
+        $endDate['data-date'] =  date('d-m-Y', time() + 86400);
     }
     echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
 }
