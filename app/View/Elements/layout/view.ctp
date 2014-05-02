@@ -27,6 +27,12 @@ foreach($fields['fields'] as $field) {
 			echo '<div class="col-md-6">' . $multiValue . '</div>';
 			echo '</div>';
 		}
+		else if(empty($data[$model])){
+			echo '<div class="row">';
+			echo '<div class="col-md-3">' . $label . '</div>';
+			echo '<div class="col-md-6"></div>';
+			echo '</div>';
+		}
 		else if(array_key_exists($key, $data[$model])) {
 				$value = $data[$model][$key];
 
