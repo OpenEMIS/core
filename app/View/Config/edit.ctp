@@ -33,19 +33,6 @@ $this->start('contentBody'); ?>
 	if($fieldType=='Dropdown'){
 		echo $this->Form->input('value', array('options'=>$options));
 		echo $this->Form->input('default_value', array('value' => $options[$this->request->data['ConfigItem']['default_value']],'readonly' => 'readonly'));
-	}else if($fieldType=='File'){
-		echo $this->Form->input('ConfigItem.file_value', array('type' => 'file', 'class' => 'form-error'));
-		echo $this->Form->hidden('ConfigItem.value', array('value'=> (empty($item['value']))?$item['default_value']:$item['value'] ));
-		echo $this->Form->hidden('ConfigItem.reset_yearbook_logo', array('value'=>'0'));
-		echo "<span id=\"resetDefault\" class=\"icon_delete\"></span>";
-        echo isset($imageUploadError) ? '<div class="error-message">'.$imageUploadError.'</div>' : '';
-        echo "<br/>";
-        echo "<div id=\"image_upload_info\"><em>";
-        echo sprintf(__("Max Resolution: %s pixels"), '400 x 514')."<br/>";
-        echo __("Max File Size:"). ' 200 KB' ."<br/>";
-        echo __("Format Supported:"). " .jpg, .jpeg, .png, .gif".
-        "</em>";
-        echo '</div>';
 	}else if($fieldType=='Datepicker'){
 		echo $this->FormUtility->datepicker('value');
 		echo $this->Form->input('default_value', array('readonly' => 'readonly'));
@@ -61,24 +48,4 @@ $this->start('contentBody'); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
 
-
-<script type="text/javascript">
-$(document).ready(function() {
-
-    $('#resetDefault').click(function(e){
-        e.preventDefault();
-        var photoContent = $('input[id^="ConfigItemYearbook"][id$="FileValue"]');
-        var resetImage= $('input[id^="ConfigItemYearbook"][id$="ResetYearbookLogo"]');
-        
-
-        if (photoContent.attr('disabled')){
-            photoContent.removeAttr('disabled');
-            resetImage.attr('value', '0');
-        }else {
-            photoContent.attr('disabled', 'disabled');
-            resetImage.attr('value', '1');
-        }
-    });
-});
-</script>
 <?php $this->end(); ?>
