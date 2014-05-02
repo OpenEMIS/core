@@ -22,10 +22,7 @@ echo $this->Html->script('search', false);
 				}
 			}
 			if($_execute) {
-				if($obj['training_status_id'] == 2 || $obj['training_status_id']==3){
-					if($obj['training_status_id'] == 2){
-						echo $this->Html->link(__('Activate'), array('action' => 'trainingNeedActivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmActivate(this)'));
-					}
+				if($obj['training_status_id']==3){
 					echo $this->Html->link(__('Inactivate'), array('action' => 'trainingNeedInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmInactivate(this)'));
 				}
 			}
@@ -59,7 +56,7 @@ echo $this->Html->script('search', false);
 		</div>
         <div class="row">
 			<div class="label"><?php echo __('Status'); ?></div>
-			<div class="value"><?php echo $data['TrainingStatus']['name']; ?></div>
+			<div class="value"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($modelName,$obj['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
 		</div>
         <div class="row">
             <div class="label"><?php echo __('Modified by'); ?></div>
@@ -80,4 +77,5 @@ echo $this->Html->script('search', false);
             <div class="label"><?php echo __('Created on'); ?></div>
             <div class="value"><?php echo $obj['created']; ?></div>
         </div>
+         <?php echo $this->element('Training.workflow');?>
 </div>

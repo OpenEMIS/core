@@ -353,7 +353,7 @@ class InstitutionSite extends AppModel {
 	}
 	// End Yearbook
         
-        public function getQueryFromInstitutionsWithoutSites($params) {
+	public function getQueryFromInstitutionsWithoutSites($params) {
 		$joins = array(
 			array(
 				'table' => 'security_group_users',
@@ -774,5 +774,37 @@ AND
 			$count = isset($data[0][0]['COUNT']) ? $data[0][0]['COUNT'] : 0;
 		}
 		return $count;
+	}
+
+	public function getAutoCompleteList($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this->find('all', array(
+				'recursive' => -1,
+				'fields' => array('InstitutionSite.name, InstitutionSite.id'),
+				'conditions' => array(
+					'InstitutionSite.name LIKE' => $search
+				),
+				'order' => array('InstitutionSite.name')
+			));
+
+		$data = array();
+		foreach ($list as $obj) {
+			$site = $obj['InstitutionSite'];
+			$data[] = array(
+				'label' => $site['name'],
+				'value' => $site['id'],
+			);
+		}
+		return $data;
+	}
+	
+	public function getInstitutionSiteById($institutionSiteId){
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'conditions' => array('InstitutionSite.id' => $institutionSiteId)
+		));
+		
+		return $data;
 	}
 }

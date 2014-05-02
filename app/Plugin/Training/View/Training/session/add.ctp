@@ -16,8 +16,27 @@ $this->start('contentBody');
 ?>
 <?php
 
+<<<<<<< HEAD
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'],'action' => 'sessionAdd'), 'file');
 echo $this->Form->create($model, $formOptions);
+=======
+<div id="training_session" class="content_wrapper edit add" url="Training/ajax_find_session/" >
+	<h1>
+		<span><?php echo __($subheader); ?></span>
+		<?php
+		
+            echo $this->Html->link(__('Back'), array('action' => 'session'), array('class' => 'divider'));
+		?>
+	</h1>
+	
+	<?php
+	echo $this->Form->create($modelName, array(
+		'url' => array('controller' => 'Training', 'action' => 'sessionAdd', 'plugin'=>'Training'),
+		'type' => 'file',
+		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
+	));
+	?>
+>>>>>>> 38e03e699fdf3d4d1f0eab27f2b18acf10efbe9b
 
 ?>
 

@@ -40,13 +40,13 @@ echo $this->Html->script('institution_site_classes', false);
 	</div>
     
         <div class="row edit">
-		<div class="label"><?php echo __('Number of Seats'); ?></div>
+		<div class="label"><?php echo __('Seats'); ?></div>
 		<div class="value"><?php echo $this->Form->input('no_of_seats', array('id' => 'NoOfSeats', 'class' => 'default')); ?></div>
 	</div>
     
         <div class="row edit">
-		<div class="label"><?php echo __('Number of Shifts'); ?></div>
-		<div class="value"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'class' => 'default')); ?></div>
+		<div class="label"><?php echo __('Shift'); ?></div>
+		<div class="value"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'options' => $shiftOptions, 'class' => 'default')); ?></div>
 	</div>
 	
 	<div class="table full_width" id="grade_list">

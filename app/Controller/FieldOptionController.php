@@ -248,7 +248,7 @@ class FieldOptionController extends AppController {
 		$this->set(compact('header', 'fields', 'selectedOption', 'selectedValue'));
 		$this->Navigation->addCrumb($header);
 	}
-	
+	/*
 	private function getCustomFieldData($model,$sitetype){
 		$cond = ($sitetype != '')
 			  ? array('conditions'=>array('institution_site_type_id' => $sitetype),'order'=>'order') 
@@ -256,6 +256,7 @@ class FieldOptionController extends AppController {
 		$this->{$model}->bindModel(array('hasMany'=>array($model.'Option' => array('order'=> 'order'))));
 		return $data = $this->{$model}->find('all',$cond);
 	}
+	
 	
 	public function customFields($category, $model = 'InstitutionCustomField', $sitetype = '') {
 		$ref_id = Inflector::underscore($model);
@@ -359,6 +360,7 @@ class FieldOptionController extends AppController {
 		$fieldId = $this->params->query['fieldId'];
 		$this->set('params', array($model, $order, $field, $fieldId));
 	}
+	*/
 	
 	public function customTables($category, $siteType = '') {
 		$siteTypes = $this->InstitutionSiteType->getSiteTypesList();
