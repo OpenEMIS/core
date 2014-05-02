@@ -431,137 +431,134 @@ class StaffController extends StaffAppController {
     }
 
     public function additional() {
-        $this->Navigation->addCrumb('Additional Info');
+		$this->Navigation->addCrumb('More');
+		$header = __('More');
+		// get all staff custom field in order
+		$data = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
 
-        // get all staff custom field in order
-        $datafields = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
+		$this->StaffCustomValue->unbindModel(
+				array('belongsTo' => array('Staff'))
+		);
+		$cusValuesData = $this->StaffCustomValue->find('all', array(
+			'conditions' => array('StaffCustomValue.staff_id' => $this->staffId))
+		);
 
-        $this->StaffCustomValue->unbindModel(
-                array('belongsTo' => array('Staff'))
-        );
-        $datavalues = $this->StaffCustomValue->find('all', array(
-            'conditions' => array('StaffCustomValue.staff_id' => $this->staffId))
-        );
+		$dataValues = array();
+		foreach ($cusValuesData as $arrV) {
+			$dataValues[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
+			// pr($arrV);
+		}
+		
+		$this->UserSession->readStatusSession($this->request->action);
+		$this->set(compact('header', 'data', 'dataValues'));
+	}
 
-        // pr($datafields);
-        // pr($datavalues);
-        $tmp = array();
-        foreach ($datavalues as $arrV) {
-            $tmp[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
-            // pr($arrV);
-        }
-        $datavalues = $tmp;
-        // pr($tmp);die;
-        $this->UserSession->readStatusSession($this->request->action);
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
-    }
+	public function additionalEdit() {
+		$this->Navigation->addCrumb('Edit More');
+		$header = __('Edit More');
+		if ($this->request->is('post')) {
+			if (isset($this->data['submit']) && $this->data['submit'] == __('Previous')) {
+				$this->Navigation->previousWizardLink($this->action);
+			}
+			$mandatory = $this->Navigation->getMandatoryWizard($this->action);
+			$error = false;
+			//pr($this->data);
+			//die();
+			$arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
+			/**
+			 * Note to Preserve the Primary Key to avoid exhausting the max PK limit
+			 */
+			foreach ($arrFields as $fieldVal) {
+				// pr($fieldVal);
+				// pr($this->request->data['StaffCustomValue']);
+				if (!isset($this->request->data['StaffCustomValue'][$fieldVal]))
+					continue;
+				foreach ($this->request->data['StaffCustomValue'][$fieldVal] as $key => $val) {
 
-    public function additionalEdit() {
-        $this->Navigation->addCrumb('Edit Additional Info');
+					if ($fieldVal == "checkbox") {
+						if ($mandatory && count($val['value']) == 0) {
+							$this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
+							$error = true;
+							break;
+						}
+						$arrCustomValues = $this->StaffCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
 
-        if ($this->request->is('post')) {
-            if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
-                $this->Navigation->previousWizardLink($this->action);
-            }
-            $mandatory = $this->Navigation->getMandatoryWizard($this->action);
-            $error = false;
-            //pr($this->data);
-            //die();
-            $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
-            /**
-             * Note to Preserve the Primary Key to avoid exhausting the max PK limit
-             */
-            foreach ($arrFields as $fieldVal) {
-                // pr($fieldVal);
-                // pr($this->request->data['StaffCustomValue']);
-                if (!isset($this->request->data['StaffCustomValue'][$fieldVal]))
-                    continue;
-                foreach ($this->request->data['StaffCustomValue'][$fieldVal] as $key => $val) {
+						$tmp = array();
+						if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
+							foreach ($arrCustomValues as $pk => $intVal) {
+								//pr($val['value']); echo "$intVal";
+								if (!in_array($intVal, $val['value'])) {
+									//echo "not in db so remove \n";
+									$this->StaffCustomValue->delete($pk);
+								}
+							}
+						$ctr = 0;
+						if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
+							foreach ($val['value'] as $intVal) {
+								//pr($val['value']); echo "$intVal";
+								if (!in_array($intVal, $arrCustomValues)) {
+									$this->StaffCustomValue->create();
+									$arrV['staff_custom_field_id'] = $key;
+									$arrV['value'] = $val['value'][$ctr];
+									$arrV['staff_id'] = $this->staffId;
+									$this->StaffCustomValue->save($arrV);
+									unset($arrCustomValues[$ctr]);
+								}
+								$ctr++;
+							}
+					} else { // if editing reuse the Primary KEY; so just update the record
+						if ($mandatory && empty($val['value'])) {
+							$this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
+							$error = true;
+							break;
+						}
+						$data = $this->StaffCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
+						$this->StaffCustomValue->create();
+						if ($data)
+							$this->StaffCustomValue->id = $data['StaffCustomValue']['id'];
+						$arrV['staff_custom_field_id'] = $key;
+						$arrV['value'] = $val['value'];
+						$arrV['staff_id'] = $this->staffId;
+						$this->StaffCustomValue->save($arrV);
+					}
+				}
+			}
+			if (!$error) {
+				$this->Navigation->updateWizard($this->action, null);
+				$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
+				$this->redirect(array('action' => 'additional'));
+			}
+		}
+		$this->StaffCustomField->unbindModel(array('hasMany' => array('StaffCustomFieldOption')));
 
-                    if ($fieldVal == "checkbox") {
-                        if($mandatory && count($val['value'])==0){
-                            $this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
-                            $error = true;
-                            break;
-                        }
-                        $arrCustomValues = $this->StaffCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
+		$this->StaffCustomField->bindModel(array(
+			'hasMany' => array(
+				'StaffCustomFieldOption' => array(
+					'conditions' => array(
+						'StaffCustomFieldOption.visible' => 1),
+					'order' => array('StaffCustomFieldOption.order' => "ASC")
+				)
+			)
+		));
 
-                        $tmp = array();
-                        if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
-                            foreach ($arrCustomValues as $pk => $intVal) {
-                                //pr($val['value']); echo "$intVal";
-                                if (!in_array($intVal, $val['value'])) {
-                                    //echo "not in db so remove \n";
-                                    $this->StaffCustomValue->delete($pk);
-                                }
-                            }
-                        $ctr = 0;
-                        if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
-                            foreach ($val['value'] as $intVal) {
-                                //pr($val['value']); echo "$intVal";
-                                if (!in_array($intVal, $arrCustomValues)) {
-                                    $this->StaffCustomValue->create();
-                                    $arrV['staff_custom_field_id'] = $key;
-                                    $arrV['value'] = $val['value'][$ctr];
-                                    $arrV['staff_id'] = $this->staffId;
-                                    $this->StaffCustomValue->save($arrV);
-                                    unset($arrCustomValues[$ctr]);
-                                }
-                                $ctr++;
-                            }
-                    } else { // if editing reuse the Primary KEY; so just update the record
-                        if($mandatory && empty($val['value'])){
-                            $this->Utility->alert(__('Record is not added due to errors encountered.'), array('type' => 'error'));
-                            $error = true;
-                            break;
-                        }
-                        $datafields = $this->StaffCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('StaffCustomValue.staff_id' => $this->staffId, 'StaffCustomValue.staff_custom_field_id' => $key)));
-                        $this->StaffCustomValue->create();
-                        if ($datafields)
-                            $this->StaffCustomValue->id = $datafields['StaffCustomValue']['id'];
-                        $arrV['staff_custom_field_id'] = $key;
-                        $arrV['value'] = $val['value'];
-                        $arrV['staff_id'] = $this->staffId;
-                        $this->StaffCustomValue->save($arrV);
-                    }
-                }
-            }
-            if(!$error){
-                $this->Navigation->updateWizard($this->action, null);    
-                $this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
-                $this->redirect(array('action' => 'additional'));
-            }
-        }
-        $this->StaffCustomField->unbindModel(array('hasMany' => array('StaffCustomFieldOption')));
+		$data = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
+		$this->StaffCustomValue->unbindModel(array('belongsTo' => array('Staff')));
+		$cusValueData = $this->StaffCustomValue->find('all', array('conditions' => array('StaffCustomValue.staff_id' => $this->staffId)));
+		$tmp = array();
+		foreach ($cusValueData as $arrV) {
+			$tmp[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
+		}
+		$dataValues = $tmp;
 
-        $this->StaffCustomField->bindModel(array(
-            'hasMany' => array(
-                'StaffCustomFieldOption' => array(
-                    'conditions' => array(
-                        'StaffCustomFieldOption.visible' => 1),
-                    'order' => array('StaffCustomFieldOption.order' => "ASC")
-                )
-            )
-        ));
+		// pr($data);
+		// pr($datavalues);
+		//pr($tmp);die;
+		$this->set(compact('header', 'data', 'dataValues'));
+		/* $this->set('data', $data);
+		  $this->set('datavalues', $tmp); */
+	}
 
-        $datafields = $this->StaffCustomField->find('all', array('conditions' => array('StaffCustomField.visible' => 1), 'order' => 'StaffCustomField.order'));
-        $this->StaffCustomValue->unbindModel(array('belongsTo' => array('Staff')));
-        $datavalues = $this->StaffCustomValue->find('all', array('conditions' => array('StaffCustomValue.staff_id' => $this->staffId)));
-        $tmp = array();
-        foreach ($datavalues as $arrV) {
-            $tmp[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
-        }
-        $datavalues = $tmp;
-
-        // pr($datafields);
-        // pr($datavalues);
-        //pr($tmp);die;
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
-    }
-
-    public function history() {
+	public function history() {
         $this->Navigation->addCrumb('History');
 
         $arrTables = array('StaffHistory');
@@ -609,10 +606,12 @@ class StaffController extends StaffAppController {
     }
 
     private function custFieldSites($institution_sites) {
-        $institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name', 'Institution.name'), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
+        $institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name'/*, 'Institution.name'*/), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
+		//$institution_sites = $this->InstitutionSite->find('all', array('limit'=>1));
+	
         $tmp = array('0' => '--');
         foreach ($institution_sites as $arrVal) {
-            $tmp[$arrVal['InstitutionSite']['id']] = $arrVal['Institution']['name'] . ' - ' . $arrVal['InstitutionSite']['name'];
+            $tmp[$arrVal['InstitutionSite']['id']] = /*$arrVal['Institution']['name'] . ' - ' .*/ $arrVal['InstitutionSite']['name'];
         }
         return $tmp;
     }
