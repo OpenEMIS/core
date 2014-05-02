@@ -904,7 +904,6 @@ class SecurityController extends AppController {
 	
 	public function permissions() {
 		$this->Navigation->addCrumb('Permissions');
-		
 		if(isset($this->params['pass'][0])) {
 			$selectedRole = $this->params['pass'][0];
 			

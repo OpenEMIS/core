@@ -134,7 +134,7 @@ class FileAttachmentComponent extends Component {
 				$name = pathinfo($file['files']['name'], PATHINFO_FILENAME);
 				$blob = file_get_contents($tmpName);
 
-				$data['name']  = (!isset($data['name']) || is_null($data['name']) || strlen(trim($data['name']))==0) ? $name : trim($data['name']);
+				$data['name']  = (!isset($data['name']) || is_null($data['name']) || strlen(trim($data['name']))==0) ? $name : trim($data[$i]['name']);
 				
 				$fileext = pathinfo($file['files']['name'], PATHINFO_EXTENSION);
 				$data['file_name'] = $file['files']['name'];
@@ -143,6 +143,7 @@ class FileAttachmentComponent extends Component {
 				$errors[] = __('error'); // add some meaningful messages
 			}
 		}
+
 		if(sizeof($errors) == 0) {
 			$this->model->save($data);
 		}
