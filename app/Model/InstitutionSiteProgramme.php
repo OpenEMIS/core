@@ -121,7 +121,8 @@ class InstitutionSiteProgramme extends AppModel {
 					'type' => 'LEFT',
 					'conditions' => array(
 						'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id',
-						'InstitutionSiteProgramme.school_year_id = ' . $yearId
+						'InstitutionSiteProgramme.school_year_id = ' . $yearId,
+						'InstitutionSiteProgramme.institution_site_id = ' . $institutionSiteId
 					)
 				)/*,
 				array(
@@ -436,4 +437,13 @@ class InstitutionSiteProgramme extends AppModel {
 			return $controller->redirect(array('action' => 'programmes', $selectedYear));
         }
     }
+	
+	public function getSiteProgrammeForSelection($institutionSiteId, $yearId) {
+		$data = array();
+		$list = $this->getSiteProgrammes($institutionSiteId, $yearId);
+		foreach($list as &$obj) {
+			$data[$obj['id']] = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
+		}
+		return $data;
+	}
 }

@@ -30,7 +30,7 @@ echo $this->Form->create('InstitutionSiteProgramme', $formOptions);
 			<?php 
 			foreach($data as $i => $obj) :
 				$checked = !empty($obj[$model]['status']);
-				if($obj['EducationProgramme']['visible']!=0 && !$checked) {
+				if($obj['EducationProgramme']['visible']!=1 && !$checked) {
 					continue;
 				}
 			?>
