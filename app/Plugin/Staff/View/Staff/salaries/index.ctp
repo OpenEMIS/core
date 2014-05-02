@@ -1,3 +1,5 @@
+<?php /*
+
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
@@ -39,3 +41,34 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 		</div>
 	</div>
 </div>
+ * 
+ */?>
+
+<?php
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+$this->start('contentActions');
+if ($_add) {
+    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'salariesAdd'), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+$tableHeaders = array(__('Date'), __('Gross'), __('Additions'), __('Deductions'), __('Net'));
+$tableData = array();
+
+foreach($data as $obj) {
+	$row = array();
+        $row[] = $this->Html->link($obj[$model]['salary_date'], array('action' => 'salariesView', $obj[$model]['id']), array('escape' => false));
+        $row[] = $obj[$model]['gross_salary'] ;
+        $row[] = $obj[$model]['additions'] ;
+        $row[] = $obj[$model]['deductions'] ;
+		$row[] = $obj[$model]['net_salary'] ;
+	$tableData[] = $row;
+}
+echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
+$this->end(); 
+
+?>
