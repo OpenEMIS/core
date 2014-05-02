@@ -8,9 +8,8 @@ $customElement = array(
 );
 
 $elementOptions = compact('model', 'modelOption', 'action');
-if($action == 'edit') {
-	$elementOptions['modelValue'] = $modelValue;
-}
+$elementOptions['modelValue'] = $action == 'edit' ? $modelValue : '';
+
 foreach($data as $obj) {
 	$element = $customElement[$obj[$model]['type']];
 	$elementOptions['obj'] = $obj;

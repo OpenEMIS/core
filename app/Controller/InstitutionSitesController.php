@@ -166,6 +166,7 @@ class InstitutionSitesController extends AppController {
         'students' => 'InstitutionSiteStudent',
         'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
+		'additional' => 'InstitutionSiteCustomField'
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -1304,10 +1305,6 @@ class InstitutionSitesController extends AppController {
         $ownership = $this->InstitutionSiteOwnership->findList($visible);
         $locality = $this->InstitutionSiteLocality->findList($visible);
         $status = $this->InstitutionSiteStatus->findList($visible);
-        $this->Utility->unshiftArray($type, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($ownership, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($locality, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($status, array('0' => '--' . __('Select') . '--'));
 
         $levels = $this->AreaLevel->find('list');
         $topArea = $this->Area->find('list', array('conditions' => array('Area.parent_id' => '-1', 'Area.visible' => 1)));
@@ -1324,9 +1321,7 @@ class InstitutionSitesController extends AppController {
         $filterArea = $this->SecurityGroupArea->getAreas($groupId);
 		
 		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
-		$this->Utility->unshiftArray($providerOptions, array('0' => '--' . __('Select') . '--'));
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
-        $this->Utility->unshiftArray($sectorOptions, array('0' => '--' . __('Select') . '--'));
 
         $this->set('filterArea', $filterArea);
         $this->set('typeOptions', $type);
@@ -1360,100 +1355,6 @@ class InstitutionSitesController extends AppController {
 		}
         
         $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-    }
-
-
-    public function additional() {
-        $this->Navigation->addCrumb('More');
-
-        $datafields = $this->InstitutionSiteCustomField->find('all', array('conditions' => array('InstitutionSiteCustomField.visible' => 1, 'InstitutionSiteCustomField.institution_site_type_id' => (array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'], 0))), 'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')));
-        $this->InstitutionSiteCustomValue->unbindModel(
-                array('belongsTo' => array('InstitutionSite'))
-        );
-        $datavalues = $this->InstitutionSiteCustomValue->find('all', array('conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId)));
-        $tmp = array();
-        foreach ($datavalues as $arrV) {
-            $tmp[$arrV['InstitutionSiteCustomField']['id']][] = $arrV['InstitutionSiteCustomValue'];
-        }
-        $datavalues = $tmp;
-        //pr($datafields);die;
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
-    }
-
-    public function additionalEdit() {
-        $this->Navigation->addCrumb('Edit More');
-
-        if ($this->request->is('post')) {
-            //pr($this->data);
-            //die();
-            $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
-            /**
-             * Note to Preserve the Primary Key to avoid exhausting the max PK limit
-             */
-            foreach ($arrFields as $fieldVal) {
-                if (!isset($this->request->data['InstitutionsSiteCustomFieldValue'][$fieldVal]))
-                    continue;
-                foreach ($this->request->data['InstitutionsSiteCustomFieldValue'][$fieldVal] as $key => $val) {
-                    if ($fieldVal == "checkbox") {
-
-                        $arrCustomValues = $this->InstitutionSiteCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId, 'InstitutionSiteCustomValue.institution_site_custom_field_id' => $key)));
-
-                        $tmp = array();
-                        if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
-                            foreach ($arrCustomValues as $pk => $intVal) {
-                                //pr($val['value']); echo "$intVal";
-                                if (!in_array($intVal, $val['value'])) {
-                                    //echo "not in db so remove \n";
-                                    $this->InstitutionSiteCustomValue->delete($pk);
-                                }
-                            }
-                        $ctr = 0;
-                        if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
-                            foreach ($val['value'] as $intVal) {
-                                //pr($val['value']); echo "$intVal";
-                                if (!in_array($intVal, $arrCustomValues)) {
-                                    $this->InstitutionSiteCustomValue->create();
-                                    $arrV['institution_site_custom_field_id'] = $key;
-                                    $arrV['value'] = $val['value'][$ctr];
-                                    $arrV['institution_site_id'] = $this->institutionSiteId;
-                                    $this->InstitutionSiteCustomValue->save($arrV);
-                                    unset($arrCustomValues[$ctr]);
-                                }
-                                $ctr++;
-                            }
-                    } else { // if editing reuse the Primary KEY; so just update the record
-                        $x = $this->InstitutionSiteCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId, 'InstitutionSiteCustomValue.institution_site_custom_field_id' => $key)));
-                        $this->InstitutionSiteCustomValue->create();
-                        if ($x)
-                            $this->InstitutionSiteCustomValue->id = $x['InstitutionSiteCustomValue']['id'];
-                        $arrV['institution_site_custom_field_id'] = $key;
-                        $arrV['value'] = $val['value'];
-                        $arrV['institution_site_id'] = $this->institutionSiteId;
-                        $this->InstitutionSiteCustomValue->save($arrV);
-                    }
-                }
-            }
-            $this->redirect(array('action' => 'additional'));
-        }
-
-        $this->institutionSiteObj['InstitutionSite'];
-        $datafields = $this->InstitutionSiteCustomField->find('all', array('conditions' => array('InstitutionSiteCustomField.visible' => 1, 'InstitutionSiteCustomField.institution_site_type_id' => (array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'], 0))), 'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')));
-        //$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id'])));
-
-        $this->InstitutionSiteCustomValue->unbindModel(
-                array('belongsTo' => array('InstitutionSite'))
-        );
-        $datavalues = $this->InstitutionSiteCustomValue->find('all', array('conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId)));
-        $tmp = array();
-        foreach ($datavalues as $arrV) {
-            $tmp[$arrV['InstitutionSiteCustomField']['id']][] = $arrV['InstitutionSiteCustomValue'];
-        }
-        $datavalues = $tmp;
-        // pr($tmp);die;
-        // pr($datafields);
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
     }
     
     public function shifts() {
