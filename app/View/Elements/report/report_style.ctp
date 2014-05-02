@@ -5,22 +5,22 @@
 	</div>
 	<div class="row">
 		<div class="label"><?php echo __('Save Report'); ?></div>
-		<div class="value"><?php echo $this->Form->input('SaveReport', array('label' => false, 'class' => 'default', 'options' => array('No', 'Yes'))); ?></div>
+		<div class="value"><?php echo $this->Form->input('SaveReport', array('label' => false, 'class' => 'default save-report', 'options' => array('No', 'Yes'), 'autocomplete' => 'off', 'onchange' => 'CustomReport.toggle(this)')); ?></div>
 	</div>
 	<div class="row">
 		<div class="label"><?php echo __('Report Name'); ?></div>
-		<div class="value"><?php echo $this->Form->input('ReportName', array('label' => false, 'class' => 'default')); ?></div>
+		<div class="value"><?php echo $this->Form->input('ReportName', array('label' => false, 'class' => 'default toggle')); ?></div>
 	</div>
 	<div class="row">
 		<div class="label"><?php echo __('Description'); ?></div>
-		<div class="value"><?php echo $this->Form->textarea('ReportDescription', array('label' => false, 'class' => 'default')); ?></div>
+		<div class="value"><?php echo $this->Form->textarea('ReportDescription', array('label' => false, 'class' => 'default toggle')); ?></div>
 	</div>
 	<?php
 	if($_accessControl->check('Report', 'sharedReportAdd')) :
 	?>
 	<div class="row">
 		<div class="label"><?php echo __('Shared Report'); ?></div>
-		<div class="value"><?php echo $this->Form->input('SharedReport', array('label' => false, 'class' => 'default', 'options' => array(0 => 'No', 1 => 'Yes'))); ?></div>
+		<div class="value"><?php echo $this->Form->input('SharedReport', array('label' => false, 'class' => 'default toggle', 'options' => array(0 => 'No', 1 => 'Yes'))); ?></div>
 	</div>
 	<?php 
 	else :

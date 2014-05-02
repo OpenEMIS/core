@@ -32,5 +32,28 @@ class StudentAttendance extends AppModel {
         }
         return $myid;
     }
+    
+    public function getAttendanceByStudentAndYear($studentId, $yearId){
+        $data = $this->find('all', array(
+            'recursive' => -1,
+            'fields' => array(
+               	'StudentAttendance.id', 'StudentAttendance.student_attendance_type_id', 'StudentAttendance.value',
+                'InstitutionSiteClass.id', 'InstitutionSiteClass.name'
+            ),
+            'joins' => array(
+                array(
+                    'table' => 'institution_site_classes',
+                    'alias' => 'InstitutionSiteClass',
+                    'conditions' => array('StudentAttendance.institution_site_class_id = InstitutionSiteClass.id')
+                )
+            ),
+            'conditions' => array(
+                'StudentAttendance.student_id' => $studentId,
+                'StudentAttendance.school_year_id' => $yearId
+            )
+        ));
+        
+        return $data;
+    }
 
 }

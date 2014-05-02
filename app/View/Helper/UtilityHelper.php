@@ -95,6 +95,7 @@ class UtilityHelper extends AppHelper {
 		$this->fieldLevels = $this->AreaHandler->getAreaList($arrmap);
 
 		$ctr = 0;
+		
 		foreach($this->fieldLevels as $levelid => $levelName){
 			$areaVal = array('id'=>'0','name'=>'a');
 			foreach($this->fieldAreaLevels as $arealevelid => $arrval){
@@ -233,23 +234,27 @@ class UtilityHelper extends AppHelper {
 		$ctr = 0;
 
 		foreach($this->fieldLevels as $levelid => $levelName){
+			//pr($this->fieldAreaLevels[$ctr]['id'] . '|');
             $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
+			
 
             $display = '';
             if($mylevel===''){
                 $display = 'display:none;';
             }
-            echo '<div class="row" style="'.$display.'">
-                    <div class="label">'.$mylevel.'</div>
-                    <div class="value">'. $form->input($arealevelfk.'_'.$ctr,
-                                                        array('class'=>'areapicker default',
+            echo '<div class="form-group row" style="'.$display.'">
+                    <label class="col-md-3 control-label label">'.$mylevel.'</label>
+                    '. $form->input($arealevelfk.'_'.$ctr,
+                                                        array('class'=>'areapicker default form-control',
                                                         'style'=>'float:left;',
+														'div' => false,
+														'label' => false,
                                                         'default'=>@$this->fieldAreaLevels[$ctr]['id'],
                                                         'options'=>$this->fieldAreadropdowns[$arealevelfk.'_'.$ctr]['options']));
             if ($ctr==0){
-                echo $form->input($id,array('class'=>'areapicker_areaid','type'=>'text','style'=>'display:none','value' => $value));
+                echo $form->input($id,array('class'=>'areapicker_areaid','div' => false, 'label' => false,'type'=>'text','style'=>'display:none','value' => $value));
             }
-            echo		'</div>
+            echo		'
                 </div>';
 			$ctr++;
 		}

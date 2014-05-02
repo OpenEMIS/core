@@ -1,23 +1,4 @@
-
-DROP TABLE IF EXISTS `field_options`;
-CREATE TABLE IF NOT EXISTS `field_options` (
-  `id` int(5) NOT NULL AUTO_INCREMENT,
-  `code` varchar(50) NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `parent` varchar(50) DEFAULT NULL,
-  `params` text,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `field_options`
---
+TRUNCATE TABLE `field_options`;
 
 INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 (1, 'InstitutionSiteProvider', 'Provider', 'Institution', NULL, 1, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),

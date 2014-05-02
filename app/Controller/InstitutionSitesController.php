@@ -142,6 +142,10 @@ class InstitutionSitesController extends AppController {
         'CensusCustomValue',
         'Quality.QualityInstitutionRubric',
         'Quality.QualityInstitutionVisit',
+        'Students.StudentAttendanceType',
+        'Staff.StaffAttendanceType',
+        'Teachers.TeacherAttendanceType',
+        'InstitutionSiteShift'
     );
     public $helpers = array('Paginator');
     public $components = array(
@@ -162,6 +166,7 @@ class InstitutionSitesController extends AppController {
         'students' => 'InstitutionSiteStudent',
         'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
+		'additional' => 'InstitutionSiteCustomField'
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -174,23 +179,7 @@ class InstitutionSitesController extends AppController {
                 ),
                 'InstitutionSite' => array(
                     'name' => '',
-                    'code' => '',
-                    'address' => '',
-                    'postal_code' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => '',
-                    'date_opened' => '',
-                    'date_closed' => '',
-                    'longitude' => '',
-                    'latitude' => ''
-                ),
-                'InstitutionSiteCustomField' => array(
-                ),
-                'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
+                    'code' => ''
                 ),
                 'InstitutionSiteType' => array(
                     'name' => 'Institution Site Type'
@@ -198,11 +187,31 @@ class InstitutionSitesController extends AppController {
                 'InstitutionSiteOwnership' => array(
                     'name' => 'Institution Site Ownership'
                 ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSite2' => array(
+                    'date_opened' => '',
+                    'date_closed' => '',
+                ),
                 'Area' => array(
                     'name' => 'Area'
                 ),
                 'AreaEducation' => array(
                     'name' => 'Area (Education)'
+                ),
+                'InstitutionSite3' => array(
+                    'address' => '',
+                    'postal_code' => '',
+                    'longitude' => '',
+                    'latitude' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 )
             ),
             'FileName' => 'Report_General_Overview'
@@ -285,46 +294,6 @@ class InstitutionSitesController extends AppController {
                     'last_name' => 'Last Name',
                     'preferred_name' => 'Preferred Name'
                 ),
-                'StudentCustomField' => array(
-                ),
-                'EducationProgramme' => array(
-                    'name' => 'Programme'
-                ),  
-                'Institution' => array(
-                    'name' => ''
-                ),
-                'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'address' => '',
-                    'postal_code' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => '',
-                    'date_opened' => '',
-                    'date_closed' => '',
-                    'longitude' => '',
-                    'latitude' => ''
-                ),
-                'InstitutionSiteCustomField' => array(
-                ),
-                'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
-                ),
-                'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
-                ),
-                'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
-                ),
-                'Area' => array(
-                    'name' => 'Area'
-                ),
-                'AreaEducation' => array(
-                    'name' => 'Area (Education)'
-                ),
                 'StudentContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StudentContact.value))' => 'Contacts'
                 ),
@@ -336,8 +305,51 @@ class InstitutionSitesController extends AppController {
                 ),
                 'StudentStatus' => array(
                     'name' => 'Status'
+                ),
+                'StudentCustomField' => array(
+                ),
+                'EducationProgramme' => array(
+                    'name' => 'Programme'
+                ),  
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => '',
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSite2' => array(
+                    'date_opened' => '',
+                    'date_closed' => '',
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSite3' => array(
+                    'address' => '',
+                    'postal_code' => '',
+                    'longitude' => '',
+                    'latitude' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 )
-
             ),
             'FileName' => 'Report_Student_List'
         ),
@@ -448,43 +460,6 @@ class InstitutionSitesController extends AppController {
                     'gender' => 'Gender',
                     'date_of_birth' => 'Date of Birth'
                 ),
-                'TeacherCustomField' => array(
-                ),
-                'Institution' => array(
-                    'name' => ''
-                ),
-                'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'address' => '',
-                    'postal_code' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => '',
-                    'date_opened' => '',
-                    'date_closed' => '',
-                    'longitude' => '',
-                    'latitude' => ''
-                ),
-                'InstitutionSiteCustomField' => array(
-                ),
-                'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
-                ),
-                'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
-                ),
-                'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
-                ),
-                'Area' => array(
-                    'name' => 'Area'
-                ),
-                'AreaEducation' => array(
-                    'name' => 'Area (Education)'
-                ),
                 'TeacherContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", TeacherContact.value))' => 'Contacts'
                 ),
@@ -496,6 +471,47 @@ class InstitutionSitesController extends AppController {
                 ),
                 'TeacherStatus' => array(
                     'name' => 'Status'
+                ),
+                'TeacherCustomField' => array(
+                ),
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => ''
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSite2' => array(
+                    'date_opened' => '',
+                    'date_closed' => '',
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSite3' => array(
+                    'address' => '',
+                    'postal_code' => '',
+                    'longitude' => '',
+                    'latitude' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 )
             ),
             'FileName' => 'Report_Teacher_List'
@@ -562,43 +578,6 @@ class InstitutionSitesController extends AppController {
                     'gender' => 'Gender',
                     'date_of_birth' => 'Date of Birth'
                 ),
-                'StaffCustomField' => array(
-                ),
-                'Institution' => array(
-                    'name' => ''
-                ),
-                'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
-                    'address' => '',
-                    'postal_code' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => '',
-                    'date_opened' => '',
-                    'date_closed' => '',
-                    'longitude' => '',
-                    'latitude' => ''
-                ),
-                'InstitutionSiteCustomField' => array(
-                ),
-                'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
-                ),
-                'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
-                ),
-                'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
-                ),
-                'Area' => array(
-                    'name' => 'Area'
-                ),
-                'AreaEducation' => array(
-                    'name' => 'Area (Education)'
-                ),
                 'StaffContact' => array(
                     'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StaffContact.value))' => 'Contacts'
                 ),
@@ -610,6 +589,47 @@ class InstitutionSitesController extends AppController {
                 ),
                 'StaffStatus' => array(
                     'name' => 'Status'
+                ),
+                'StaffCustomField' => array(
+                ),
+                'Institution' => array(
+                    'name' => ''
+                ),
+                'InstitutionSite' => array(
+                    'name' => '',
+                    'code' => ''
+                ),
+                'InstitutionSiteType' => array(
+                    'name' => 'Institution Site Type'
+                ),
+                'InstitutionSiteOwnership' => array(
+                    'name' => 'Institution Site Ownership'
+                ),
+                'InstitutionSiteStatus' => array(
+                    'name' => 'Institution Site Status'
+                ),
+                'InstitutionSite2' => array(
+                    'date_opened' => '',
+                    'date_closed' => '',
+                ),
+                'Area' => array(
+                    'name' => 'Area'
+                ),
+                'AreaEducation' => array(
+                    'name' => 'Area (Education)'
+                ),
+                'InstitutionSite3' => array(
+                    'address' => '',
+                    'postal_code' => '',
+                    'longitude' => '',
+                    'latitude' => '',
+                    'contact_person' => '',
+                    'telephone' => '',
+                    'fax' => '',
+                    'email' => '',
+                    'website' => ''
+                ),
+                'InstitutionSiteCustomField' => array(
                 )
             ),
             'FileName' => 'Report_Staff_List'
@@ -675,8 +695,8 @@ class InstitutionSitesController extends AppController {
                 ),
                 'InstitutionSiteClass' => array(
                     'name' => 'Class Name',
-                    'no_of_seats' => 'Number of Seats',
-                    'no_of_shifts' => 'Number of Shifts'
+                    'no_of_seats' => 'Seats',
+                    'no_of_shifts' => 'Shift'
                 )
             ),
             'FileName' => 'Report_Class_List'
@@ -1084,8 +1104,8 @@ class InstitutionSitesController extends AppController {
             if ($last_area_id == 0) {
                 $last_area_id = '';
             }
-            //$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
-            //$this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
+            $this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+            $this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
 
 
             $this->InstitutionSite->set($this->request->data);
@@ -1219,6 +1239,7 @@ class InstitutionSitesController extends AppController {
         if ($this->request->is('post')) {
 
             $last_area_id = 0;
+			$last_area_education_id = 0;
             //this key sort is impt so that the lowest area level will be saved correctly
             ksort($this->request->data['InstitutionSite']);
             foreach ($this->request->data['InstitutionSite'] as $key => $arrValSave) {
@@ -1228,8 +1249,17 @@ class InstitutionSitesController extends AppController {
                 if (stristr($key, 'area_level_') == true) {
                     unset($this->request->data['InstitutionSite'][$key]);
                 }
+				
+				if (stristr($key, 'area_education_level_') == true && ($arrValSave != '' && $arrValSave != 0)) {
+                    $last_area_education_id = $arrValSave;
+                }
+                if (stristr($key, 'area_education_level_') == true) {
+                    unset($this->request->data['InstitutionSite'][$key]);
+                }
             }
-            //$this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+            $this->request->data['InstitutionSite']['area_id'] = $last_area_id;
+			$this->request->data['InstitutionSite']['area_education_id'] = $last_area_education_id;
+			
             $this->InstitutionSite->set($this->request->data);
 			
             if ($this->InstitutionSite->validates()) {
@@ -1275,10 +1305,6 @@ class InstitutionSitesController extends AppController {
         $ownership = $this->InstitutionSiteOwnership->findList($visible);
         $locality = $this->InstitutionSiteLocality->findList($visible);
         $status = $this->InstitutionSiteStatus->findList($visible);
-        $this->Utility->unshiftArray($type, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($ownership, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($locality, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($status, array('0' => '--' . __('Select') . '--'));
 
         $levels = $this->AreaLevel->find('list');
         $topArea = $this->Area->find('list', array('conditions' => array('Area.parent_id' => '-1', 'Area.visible' => 1)));
@@ -1295,9 +1321,7 @@ class InstitutionSitesController extends AppController {
         $filterArea = $this->SecurityGroupArea->getAreas($groupId);
 		
 		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
-		$this->Utility->unshiftArray($providerOptions, array('0' => '--' . __('Select') . '--'));
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
-        $this->Utility->unshiftArray($sectorOptions, array('0' => '--' . __('Select') . '--'));
 
         $this->set('filterArea', $filterArea);
         $this->set('typeOptions', $type);
@@ -1332,102 +1356,118 @@ class InstitutionSitesController extends AppController {
         
         $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
     }
+    
+    public function shifts() {
+        $this->Navigation->addCrumb('Shifts');
 
+        $data = $this->InstitutionSiteShift->getAllShiftsByInstitutionSite($this->institutionSiteId);
 
-    public function additional() {
-        $this->Navigation->addCrumb('More');
-
-        $datafields = $this->InstitutionSiteCustomField->find('all', array('conditions' => array('InstitutionSiteCustomField.visible' => 1, 'InstitutionSiteCustomField.institution_site_type_id' => (array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'], 0))), 'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')));
-        $this->InstitutionSiteCustomValue->unbindModel(
-                array('belongsTo' => array('InstitutionSite'))
-        );
-        $datavalues = $this->InstitutionSiteCustomValue->find('all', array('conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId)));
-        $tmp = array();
-        foreach ($datavalues as $arrV) {
-            $tmp[$arrV['InstitutionSiteCustomField']['id']][] = $arrV['InstitutionSiteCustomValue'];
-        }
-        $datavalues = $tmp;
-        //pr($datafields);die;
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
+        $this->set('data', $data);
     }
-
-    public function additionalEdit() {
-        $this->Navigation->addCrumb('Edit More');
-
-        if ($this->request->is('post')) {
-            //pr($this->data);
-            //die();
-            $arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
-            /**
-             * Note to Preserve the Primary Key to avoid exhausting the max PK limit
-             */
-            foreach ($arrFields as $fieldVal) {
-                if (!isset($this->request->data['InstitutionsSiteCustomFieldValue'][$fieldVal]))
-                    continue;
-                foreach ($this->request->data['InstitutionsSiteCustomFieldValue'][$fieldVal] as $key => $val) {
-                    if ($fieldVal == "checkbox") {
-
-                        $arrCustomValues = $this->InstitutionSiteCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId, 'InstitutionSiteCustomValue.institution_site_custom_field_id' => $key)));
-
-                        $tmp = array();
-                        if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
-                            foreach ($arrCustomValues as $pk => $intVal) {
-                                //pr($val['value']); echo "$intVal";
-                                if (!in_array($intVal, $val['value'])) {
-                                    //echo "not in db so remove \n";
-                                    $this->InstitutionSiteCustomValue->delete($pk);
-                                }
-                            }
-                        $ctr = 0;
-                        if (count($arrCustomValues) < count($val['value'])) //if answer has greater value than db, insert
-                            foreach ($val['value'] as $intVal) {
-                                //pr($val['value']); echo "$intVal";
-                                if (!in_array($intVal, $arrCustomValues)) {
-                                    $this->InstitutionSiteCustomValue->create();
-                                    $arrV['institution_site_custom_field_id'] = $key;
-                                    $arrV['value'] = $val['value'][$ctr];
-                                    $arrV['institution_site_id'] = $this->institutionSiteId;
-                                    $this->InstitutionSiteCustomValue->save($arrV);
-                                    unset($arrCustomValues[$ctr]);
-                                }
-                                $ctr++;
-                            }
-                    } else { // if editing reuse the Primary KEY; so just update the record
-                        $x = $this->InstitutionSiteCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId, 'InstitutionSiteCustomValue.institution_site_custom_field_id' => $key)));
-                        $this->InstitutionSiteCustomValue->create();
-                        if ($x)
-                            $this->InstitutionSiteCustomValue->id = $x['InstitutionSiteCustomValue']['id'];
-                        $arrV['institution_site_custom_field_id'] = $key;
-                        $arrV['value'] = $val['value'];
-                        $arrV['institution_site_id'] = $this->institutionSiteId;
-                        $this->InstitutionSiteCustomValue->save($arrV);
+    
+    public function shiftsView() {
+        $shiftId = $this->params['pass'][0];
+        $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
+        if(!empty($shiftObj)){
+            $this->Session->write('shiftId', $shiftId);
+            $this->set('shiftObj', $shiftObj);
+        }else{
+            $this->redirect(array('action' => 'shifts'));
+        }
+    }
+    
+    public function shiftsAdd() {
+        $this->Navigation->addCrumb('Add Shift');
+        $institutionObj = $this->InstitutionSite->getInstitutionSiteById($this->institutionSiteId);
+        
+        if ($this->request->is('post')) { // save
+            $data = $this->request->data;
+            $data['InstitutionSiteShift']['institution_site_id'] = $this->institutionSiteId;
+            $this->InstitutionSiteShift->create();
+            
+            if ($this->InstitutionSiteShift->save($data, array('validate' => 'only'))) {
+                if(empty($data['InstitutionSiteShift']['location_institution_site_id'])){
+                    $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
+                }else{
+                    $testLocationId = $this->InstitutionSite->getInstitutionSiteById($data['InstitutionSiteShift']['location_institution_site_id']);
+                    if(empty($testLocationId)){
+                        $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
+                    }else{
+                        $this->InstitutionSiteShift->save($data, array('validate' => 'false'));
+                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                        $this->redirect(array('action' => 'shifts'));
                     }
                 }
             }
-            $this->redirect(array('action' => 'additional'));
         }
 
-        $this->institutionSiteObj['InstitutionSite'];
-        $datafields = $this->InstitutionSiteCustomField->find('all', array('conditions' => array('InstitutionSiteCustomField.visible' => 1, 'InstitutionSiteCustomField.institution_site_type_id' => (array($this->institutionSiteObj['InstitutionSite']['institution_site_type_id'], 0))), 'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')));
-        //$datafields = $this->InstitutionSiteCustomField->find('all',array('conditions'=>array('InstitutionSiteCustomField.visible'=>1,'InstitutionSiteCustomField.institution_site_type_id'=>$this->institutionSiteObj['InstitutionSite']['institution_site_type_id'])));
+        $yearOptions = $this->SchoolYear->getAvailableYears();
 
-        $this->InstitutionSiteCustomValue->unbindModel(
-                array('belongsTo' => array('InstitutionSite'))
-        );
-        $datavalues = $this->InstitutionSiteCustomValue->find('all', array('conditions' => array('InstitutionSiteCustomValue.institution_site_id' => $this->institutionSiteId)));
-        $tmp = array();
-        foreach ($datavalues as $arrV) {
-            $tmp[$arrV['InstitutionSiteCustomField']['id']][] = $arrV['InstitutionSiteCustomValue'];
-        }
-        $datavalues = $tmp;
-        // pr($tmp);die;
-        // pr($datafields);
-        $this->set('datafields', $datafields);
-        $this->set('datavalues', $tmp);
+        $this->set('yearOptions', $yearOptions);
+        $this->set('institutionSiteId', $institutionObj['InstitutionSite']['id']);
+        $this->set('institutionSiteName', $institutionObj['InstitutionSite']['name']);
     }
-
     
+    public function shiftsEdit() {
+        $shiftId = $this->params['pass'][0];
+        $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
+        if(empty($shiftObj)){
+            $this->redirect(array('action' => 'shifts'));
+        }
+        
+        $locationSiteObj = $this->InstitutionSite->getInstitutionSiteById($shiftObj['InstitutionSiteShift']['location_institution_site_id']);
+        
+        if ($this->request->is('get')) { // save
+            $this->Navigation->addCrumb('Edit Shift');
+            
+            $this->request->data = $shiftObj;
+        }else{
+            $data = $this->request->data;
+            $data['InstitutionSiteShift']['institution_site_id'] = $this->institutionSiteId;
+            
+            if ($this->InstitutionSiteShift->save($data, array('validate' => 'only'))) {
+                if(empty($data['InstitutionSiteShift']['location_institution_site_id'])){
+                    $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
+                }else{
+                    $testLocationId = $this->InstitutionSite->getInstitutionSiteById($data['InstitutionSiteShift']['location_institution_site_id']);
+                    if(empty($testLocationId)){
+                        $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
+                    }else{
+                        $this->InstitutionSiteShift->save($data, array('validate' => 'false'));
+                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                        $this->redirect(array('action' => 'shiftsView', $shiftId));
+                    }
+                }
+            }
+        }
+        $yearOptions = $this->SchoolYear->getAvailableYears();
+
+        $this->set('yearOptions', $yearOptions);
+        $this->set('locationSiteName', $locationSiteObj['InstitutionSite']['name']);
+        $this->set('locationSiteId', $locationSiteObj['InstitutionSite']['id']);
+        $this->set('shiftId', $shiftId);
+    }
+    
+    public function shiftLocationAutoComplete() {
+        $this->autoRender = false;
+        $search = $this->params->query['term'];
+        $result = $this->InstitutionSite->getAutoCompleteList($search);
+        return json_encode($result);
+    }
+    
+    public function shiftsDelete() {
+        if ($this->Session->check('shiftId')) {
+            $shiftId = $this->Session->read('shiftId');
+            $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
+            $shiftName = $shiftObj['InstitutionSiteShift']['name'];
+            
+            $this->InstitutionSiteShift->deleteAll(array('InstitutionSiteShift.id' => $shiftId));
+            $this->Utility->alert($shiftName . __(' have been deleted successfully.'));
+            $this->redirect(array('action' => 'shifts'));
+        }else{
+            $this->redirect(array('action' => 'shifts'));
+        }
+    }
 
     public function history() {
         $this->Navigation->addCrumb('History');
@@ -2482,16 +2522,61 @@ class InstitutionSitesController extends AppController {
             $this->Navigation->addCrumb('Attendance');
             $yearId = $classObj['InstitutionSiteClass']['school_year_id'];
 
-            $grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
-            $students = $this->InstitutionSiteClassGradeStudent->getStudentsAttendance($classId, array_keys($grades), $yearId);
+            $siteClassGrades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
+            $attendanceTypesAndData = $this->getStudentAttendanceTypesAndData(array_keys($siteClassGrades));
+            $legend = $this->generateAttendanceLegend('student');
 
             $this->set('classId', $classId);
             $this->set('selectedYear', $yearId);
-            $this->set('grades', $grades);
-            $this->set('students', $students);
+            $this->set('grades', $siteClassGrades);
+            $this->set('students', $attendanceTypesAndData['data']);
+            $this->set('attendanceTypes', $attendanceTypesAndData['types']);
+            $this->set('legend', $legend);
         } else {
-            $this->redirect(array('action' => 'classesList'));
+            $this->redirect(array('action' => 'classes'));
         }
+    }
+    
+    private function getStudentAttendanceTypesAndData($siteClassGradeIds){
+            $dataStudents = $this->InstitutionSiteClassGradeStudent->getStudentsForAttendance($siteClassGradeIds);
+            $attendanceTypes = $this->StudentAttendanceType->getAttendanceTypes();
+            $dataAttendance = $this->InstitutionSiteClassGradeStudent->getStudentAttendance($siteClassGradeIds);
+            
+            $attendanceCheckList = array();
+            foreach($dataAttendance AS $rowAttendance){
+                $studentId = $rowAttendance['Student']['id'];
+                $attendanceId = $rowAttendance['StudentAttendance']['id'];
+                $attendanceTypeId = $rowAttendance['StudentAttendance']['student_attendance_type_id'];
+                $attendanceValue = $rowAttendance['StudentAttendance']['value'];
+                
+                $attendanceCheckList[$studentId][$attendanceTypeId]['id'] = $attendanceId;
+                $attendanceCheckList[$studentId][$attendanceTypeId]['value'] = $attendanceValue;
+            }
+
+            $students = array();
+            foreach($dataStudents AS $rowStudent){
+                $studentId = $rowStudent['Student']['id'];
+                
+                $tempStudent = $rowStudent;
+                $tempStudent['StudentAttendance'] = array();
+                foreach($attendanceTypes AS $attendanceType){
+                    $attendanceTypeId = $attendanceType['StudentAttendanceType']['id'];
+                    
+                    if(isset($attendanceCheckList[$studentId][$attendanceTypeId])){
+                        $tempStudent['StudentAttendance'][$attendanceTypeId]['id'] = $attendanceCheckList[$studentId][$attendanceTypeId]['id'];
+                        $tempStudent['StudentAttendance'][$attendanceTypeId]['value'] = $attendanceCheckList[$studentId][$attendanceTypeId]['value'];
+                    }else{
+                        $tempStudent['StudentAttendance'][$attendanceTypeId]['id'] = 0;
+                        $tempStudent['StudentAttendance'][$attendanceTypeId]['value'] = 0;
+                    }
+                    
+                }
+                $students[] = $tempStudent;
+            }
+            
+            $data['types'] = $attendanceTypes;
+            $data['data'] = $students;
+            return $data;
     }
 
     public function classesAttendanceEdit() {
@@ -2505,21 +2590,26 @@ class InstitutionSitesController extends AppController {
                 $this->Navigation->addCrumb('Attendance');
                 $yearId = $classObj['InstitutionSiteClass']['school_year_id'];
 
-                $grades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
-                $students = $this->InstitutionSiteClassGradeStudent->getStudentsAttendance($classId, array_keys($grades), $yearId);
+                $siteClassGrades = $this->InstitutionSiteClassGrade->getGradesByClass($classId);
+                $attendanceTypesAndData = $this->getStudentAttendanceTypesAndData(array_keys($siteClassGrades));
+                //pr($attendanceTypesAndData);
+                $legend = $this->generateAttendanceLegend('student');
 
                 $this->set('classId', $classId);
                 $this->set('selectedYear', $yearId);
-                $this->set('grades', $grades);
-                $this->set('students', $students);
+                $this->set('grades', $siteClassGrades);
+                $this->set('students', $attendanceTypesAndData['data']);
+                $this->set('attendanceTypes', $attendanceTypesAndData['types']);
+                $this->set('institutionSiteId', $this->institutionSiteId);
+                $this->set('schoolYearId', $yearId);
+                $this->set('legend', $legend);
             } else {
-                $this->redirect(array('action' => 'classesList'));
+                $this->redirect(array('action' => 'classes'));
             }
         } else {
-            $classId = $this->Session->read('InstitutionSiteClassId');
-            $classObj = $this->InstitutionSiteClass->getClass($classId);
-            $yearId = $classObj['InstitutionSiteClass']['school_year_id'];
-            $classId = $this->request->data['ClassesAttendance']['institution_site_class_id'];
+            $yearId = $this->request->data['ClassesAttendance']['schoolYearId'];
+            $classId = $this->request->data['ClassesAttendance']['InstitutionSiteClassId'];
+            $institutionSiteId = $this->request->data['ClassesAttendance']['institutionSiteId'];
             $myArr = array();
             if (isset($this->request->data['Attendance'])) {
                 foreach ($this->request->data['Attendance'] as $obj) {
@@ -2529,6 +2619,7 @@ class InstitutionSitesController extends AppController {
                     }
                     $data['school_year_id'] = $yearId;
                     $data['institution_site_class_id'] = $classId;
+                    $data['institution_site_id'] = $institutionSiteId;
                     $myArr[] = $data;
                 }
                 $this->StudentAttendance->saveAll($myArr);
@@ -2548,18 +2639,53 @@ class InstitutionSitesController extends AppController {
             $this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'teachersView', $teacherId));
             $this->Navigation->addCrumb('Attendance');
 
-            $id = $teacherId;
             $yearList = $this->SchoolYear->getYearList();
             $yearId = $this->getAvailableYearId($yearList);
             $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 
-            $data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'), $yearId);
+            //$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'), $yearId);
+            $attendanceAndTypes = $this->getTeacherAttendanceTypesAndData($teacherId, $yearId, $this->institutionSiteId);
+            $legend = $this->generateAttendanceLegend('teacher');
+            
             $this->set('selectedYear', $yearId);
             $this->set('years', $yearList);
-            $this->set('data', $data);
+            $this->set('data', $attendanceAndTypes['data']);
             $this->set('schoolDays', $schoolDays);
             $this->set('id', $teacherId);
+            $this->set('attendanceTypes', $attendanceAndTypes['types']);
+            $this->set('legend', $legend);
         }
+    }
+    
+    private function getTeacherAttendanceTypesAndData($teacherId, $yearId, $institutionSiteId){
+            $attendanceTypes = $this->TeacherAttendanceType->getAttendanceTypes();
+            $dataAttendance = $this->TeacherAttendance->getAttendanceData($teacherId, $yearId, $institutionSiteId);
+            
+            $attendanceCheckList = array();
+            foreach($dataAttendance AS $rowAttendance){
+                $attendanceId = $rowAttendance['TeacherAttendance']['id'];
+                $attendanceTypeId = $rowAttendance['TeacherAttendance']['teacher_attendance_type_id'];
+                $attendanceValue = $rowAttendance['TeacherAttendance']['value'];
+                
+                $attendanceCheckList[$attendanceTypeId]['id'] = $attendanceId;
+                $attendanceCheckList[$attendanceTypeId]['value'] = $attendanceValue;
+            }
+
+            $teacherAttendance = array();
+            foreach($attendanceTypes AS $attendanceType){
+                $attendanceTypeId = $attendanceType['TeacherAttendanceType']['id'];
+                if(isset($attendanceCheckList[$attendanceTypeId])){
+                    $teacherAttendance[$attendanceTypeId]['id'] = $attendanceCheckList[$attendanceTypeId]['id'];
+                    $teacherAttendance[$attendanceTypeId]['value'] = $attendanceCheckList[$attendanceTypeId]['value'];
+                }else{
+                    $teacherAttendance[$attendanceTypeId]['id'] = 0;
+                    $teacherAttendance[$attendanceTypeId]['value'] = 0;
+                }
+            }
+            
+            $data['types'] = $attendanceTypes;
+            $data['data'] = $teacherAttendance;
+            return $data;
     }
 
     public function teachersAttendanceEdit() {
@@ -2574,32 +2700,47 @@ class InstitutionSitesController extends AppController {
                 $yearList = $this->SchoolYear->getYearList();
                 $yearId = $this->getAvailableYearId($yearList);
                 $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-                $data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'), $yearId);
+                //$data = $this->TeacherAttendance->getAttendanceData($this->Session->read('InstitutionSiteTeachersId'), $yearId);
+                $attendanceAndTypes = $this->getTeacherAttendanceTypesAndData($teacherId, $yearId, $this->institutionSiteId);
+                $legend = $this->generateAttendanceLegend('teacher');
 
                 $this->set('teacherid', $this->Session->read('InstitutionSiteTeachersId'));
                 $this->set('institutionSiteId', $this->institutionSiteId);
                 $this->set('selectedYear', $yearId);
                 $this->set('years', $yearList);
                 $this->set('schoolDays', $schoolDays);
-                $this->set('data', $data);
+                $this->set('data', $attendanceAndTypes['data']);
+                $this->set('attendanceTypes', $attendanceAndTypes['types']);
+                $this->set('legend', $legend);
             }
         } else {
             $schoolDayNo = $this->request->data['schoolDays'];
-            $totalNo = $this->request->data['TeachersAttendance']['total_no_attend'] + $this->request->data['TeachersAttendance']['total_no_absence'];
             unset($this->request->data['schoolDays']);
+            
+            $teacherId = $this->request->data['Attendance']['teacherId'];
+            $institutionSiteId = $this->request->data['Attendance']['institutionSiteId'];
+            $yearId = $this->request->data['Attendance']['school_year_id'];
+            
+            $totalNoDays = 0;
+            $myArr = array();
+            foreach ($this->request->data['TeachersAttendance'] as $obj) {
+                $data = $obj;
+                if ($obj['id'] == 0) {
+                    unset($data['id']);
+                }
+                $data['school_year_id'] = $yearId;
+                $data['teacher_id'] = $teacherId;
+                $data['institution_site_id'] = $institutionSiteId;
+                $myArr[] = $data;
+                
+                $totalNoDays += $obj['value'];
+            }
 
-            $data = $this->request->data['TeachersAttendance'];
-            $yearId = $data['school_year_id'];
-
-            if ($schoolDayNo < $totalNo) {
+            if ($schoolDayNo < $totalNoDays) {
                 $this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'teachersAttendanceEdit', $yearId));
             } else {
-                $thisId = $this->TeacherAttendance->findID($this->Session->read('InstitutionSiteTeachersId'), $yearId);
-                if ($thisId != '') {
-                    $data['id'] = $thisId;
-                }
-                $this->TeacherAttendance->save($data);
+                $this->TeacherAttendance->saveAll($myArr);
                 $this->Utility->alert($this->Utility->getMessage('SITE_TEACHER_ATTENDANCE_UPDATED'));
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'teachersAttendance', $yearId));
             }
@@ -2761,19 +2902,54 @@ class InstitutionSitesController extends AppController {
             $this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
             $this->Navigation->addCrumb('Attendance');
 
-            $id = @$this->request->params['pass'][0];
+            //$id = @$this->request->params['pass'][0];
             $yearList = $this->SchoolYear->getYearList();
             $yearId = $this->getAvailableYearId($yearList);
             $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 
-            $data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'), isset($id) ? $id : $yearId);
+            //$data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'), isset($id) ? $id : $yearId);
+            $attendanceAndTypes = $this->getStaffAttendanceTypesAndData($staffId, $yearId, $this->institutionSiteId);
+            $legend = $this->generateAttendanceLegend('staff');
 
             $this->set('selectedYear', $yearId);
             $this->set('years', $yearList);
-            $this->set('data', $data);
+            $this->set('data', $attendanceAndTypes['data']);
             $this->set('schoolDays', $schoolDays);
             $this->set('id', $staffId);
+            $this->set('attendanceTypes', $attendanceAndTypes['types']);
+            $this->set('legend', $legend);
         }
+    }
+    
+    private function getStaffAttendanceTypesAndData($staffId, $yearId, $institutionSiteId){
+            $attendanceTypes = $this->StaffAttendanceType->getAttendanceTypes();
+            $dataAttendance = $this->StaffAttendance->getAttendanceData($staffId, $yearId, $institutionSiteId);
+            
+            $attendanceCheckList = array();
+            foreach($dataAttendance AS $rowAttendance){
+                $attendanceId = $rowAttendance['StaffAttendance']['id'];
+                $attendanceTypeId = $rowAttendance['StaffAttendance']['staff_attendance_type_id'];
+                $attendanceValue = $rowAttendance['StaffAttendance']['value'];
+                
+                $attendanceCheckList[$attendanceTypeId]['id'] = $attendanceId;
+                $attendanceCheckList[$attendanceTypeId]['value'] = $attendanceValue;
+            }
+
+            $staffAttendance = array();
+            foreach($attendanceTypes AS $attendanceType){
+                $attendanceTypeId = $attendanceType['StaffAttendanceType']['id'];
+                if(isset($attendanceCheckList[$attendanceTypeId])){
+                    $staffAttendance[$attendanceTypeId]['id'] = $attendanceCheckList[$attendanceTypeId]['id'];
+                    $staffAttendance[$attendanceTypeId]['value'] = $attendanceCheckList[$attendanceTypeId]['value'];
+                }else{
+                    $staffAttendance[$attendanceTypeId]['id'] = 0;
+                    $staffAttendance[$attendanceTypeId]['value'] = 0;
+                }
+            }
+            
+            $data['types'] = $attendanceTypes;
+            $data['data'] = $staffAttendance;
+            return $data;
     }
 
     public function staffAttendanceEdit() {
@@ -2789,32 +2965,47 @@ class InstitutionSitesController extends AppController {
                 $yearId = $this->getAvailableYearId($yearList);
                 $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
 
-                $data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'), $yearId);
+                //$data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'), $yearId);
+                $attendanceAndTypes = $this->getStaffAttendanceTypesAndData($staffId, $yearId, $this->institutionSiteId);
+                $legend = $this->generateAttendanceLegend('staff');
 
                 $this->set('staffid', $this->Session->read('InstitutionSiteStaffId'));
                 $this->set('institutionSiteId', $this->institutionSiteId);
                 $this->set('selectedYear', $yearId);
                 $this->set('years', $yearList);
                 $this->set('schoolDays', $schoolDays);
-                $this->set('data', $data);
+                $this->set('data', $attendanceAndTypes['data']);
+                $this->set('attendanceTypes', $attendanceAndTypes['types']);
+                $this->set('legend', $legend);
             }
         } else {
             $schoolDayNo = $this->request->data['schoolDays'];
-            $totalNo = $this->request->data['StaffAttendance']['total_no_attend'] + $this->request->data['StaffAttendance']['total_no_absence'];
             unset($this->request->data['schoolDays']);
+            
+            $staffId = $this->request->data['Attendance']['staffId'];
+            $institutionSiteId = $this->request->data['Attendance']['institutionSiteId'];
+            $yearId = $this->request->data['Attendance']['school_year_id'];
+            
+            $totalNoDays = 0;
+            $myArr = array();
+            foreach ($this->request->data['StaffAttendance'] as $obj) {
+                $data = $obj;
+                if ($obj['id'] == 0) {
+                    unset($data['id']);
+                }
+                $data['school_year_id'] = $yearId;
+                $data['staff_id'] = $staffId;
+                $data['institution_site_id'] = $institutionSiteId;
+                $myArr[] = $data;
+                
+                $totalNoDays += $obj['value'];
+            }
 
-            $data = $this->request->data['StaffAttendance'];
-            $yearId = $data['school_year_id'];
-
-            if ($schoolDayNo < $totalNo) {
+            if ($schoolDayNo < $totalNoDays) {
                 $this->Utility->alert('Total no of days Attended and Total no of days Absent cannot exceed the no of School Days.', array('type' => 'error'));
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'staffAttendanceEdit', $yearId));
             } else {
-                $thisId = $this->StaffAttendance->findID($this->Session->read('InstitutionSiteStaffId'), $yearId);
-                if ($thisId != '') {
-                    $data['id'] = $thisId;
-                }
-                $this->StaffAttendance->save($data);
+                $this->StaffAttendance->saveAll($myArr);
                 $this->Utility->alert($this->Utility->getMessage('SITE_STAFF_ATTENDANCE_UPDATED'));
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'staffAttendance', $yearId));
             }
@@ -3083,6 +3274,18 @@ class InstitutionSitesController extends AppController {
                         'alias' => 'AreaEducation',
                         'type' => 'left',
                         'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite2',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite3',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
                     )
                 );
 
@@ -3193,6 +3396,18 @@ class InstitutionSitesController extends AppController {
                         'table' => 'institution_sites',
                         'alias' => 'InstitutionSite',
                         'conditions' => array('InstitutionSite.id = InstitutionSiteProgramme.institution_site_id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite2',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite3',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
                     ),
                     array(
                         'table' => 'institution_site_statuses',
@@ -3503,6 +3718,18 @@ class InstitutionSitesController extends AppController {
                         'conditions' => array('InstitutionSiteTeacher.institution_site_id = InstitutionSite.id')
                     ),
                     array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite2',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite3',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
+                    ),
+                    array(
                         'table' => 'institution_site_statuses',
                         'alias' => 'InstitutionSiteStatus',
                         'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
@@ -3698,6 +3925,18 @@ class InstitutionSitesController extends AppController {
                         'table' => 'institution_sites',
                         'alias' => 'InstitutionSite',
                         'conditions' => array('InstitutionSiteStaff.institution_site_id = InstitutionSite.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite2',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+                    ),
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite3',
+                        'type' => 'inner',
+                        'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
                     ),
                     array(
                         'table' => 'institution_site_statuses',
@@ -5732,18 +5971,18 @@ class InstitutionSitesController extends AppController {
             );
 
             foreach ($data AS $row) {
-                if ($row['InstitutionSite']['date_opened'] == '0000-00-00') {
-                    $row['InstitutionSite']['date_opened'] = '';
+                if ($row['InstitutionSite2']['date_opened'] == '0000-00-00') {
+                    $row['InstitutionSite2']['date_opened'] = '';
                 } else {
-                    $originalDate = new DateTime($row['InstitutionSite']['date_opened']);
-                    $row['InstitutionSite']['date_opened'] = $originalDate->format($dateFormat);
+                    $originalDate = new DateTime($row['InstitutionSite2']['date_opened']);
+                    $row['InstitutionSite2']['date_opened'] = $originalDate->format($dateFormat);
                 }
 
-                if ($row['InstitutionSite']['date_closed'] == '0000-00-00') {
-                    $row['InstitutionSite']['date_closed'] = '';
+                if ($row['InstitutionSite2']['date_closed'] == '0000-00-00') {
+                    $row['InstitutionSite2']['date_closed'] = '';
                 } else {
-                    $originalDate = new DateTime($row['InstitutionSite']['date_closed']);
-                    $row['InstitutionSite']['date_closed'] = $originalDate->format($dateFormat);
+                    $originalDate = new DateTime($row['InstitutionSite2']['date_closed']);
+                    $row['InstitutionSite2']['date_closed'] = $originalDate->format($dateFormat);
                 }
             	foreach($institutionSiteCustomFields as $val){
                    if(!empty($val['InstitutionSiteCustomField']['FieldName'])){
@@ -6482,6 +6721,45 @@ class InstitutionSitesController extends AppController {
         $this->set('data', $data);
         $this->set('actionName', 'genReport');
         $this->render('Reports/general');
+    }
+    
+    public function generateAttendanceLegend($module){
+        if($module == 'student'){
+            $data = $this->StudentAttendanceType->getAttendanceTypes();
+        }else if($module == 'teacher'){
+            $data = $this->TeacherAttendanceType->getAttendanceTypes();
+        }
+        else if($module == 'staff'){
+            $data = $this->StaffAttendanceType->getAttendanceTypes();
+        }else{
+            return null;
+        }
+        
+        $indicator = 0;
+        $str = '';
+        foreach($data AS $row){
+            if($module == 'student'){
+                $code = $row['StudentAttendanceType']['national_code'];
+                $name = $row['StudentAttendanceType']['name'];
+            }else if($module == 'teacher'){
+                $code = $row['TeacherAttendanceType']['national_code'];
+                $name = $row['TeacherAttendanceType']['name'];
+            }
+            else if($module == 'staff'){
+                $code = $row['StaffAttendanceType']['national_code'];
+                $name = $row['StaffAttendanceType']['name'];
+            }
+            
+            if($indicator > 0){
+                $str .= '; ' . $code . ' = ' . $name;
+            }else{
+                $str .= $code . ' = ' . $name;
+            }
+            
+            $indicator++;
+        }
+        
+        return $str;
     }
 
 }
