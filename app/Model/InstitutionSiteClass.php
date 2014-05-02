@@ -157,8 +157,19 @@ class InstitutionSiteClass extends AppModel {
                         break;
                     }
                 }
+				
+				$shiftMax = intval($controller->ConfigItem->getValue('no_of_shifts'));
+                $shiftOptions = array();
+                if($shiftMax > 1){
+                    for($i=1; $i <= $shiftMax; $i++){
+                        $shiftOptions[$i] = $i;
+                    }
+                }else{
+                    $shiftOptions[1] = 1;
+                }
+                //pr($shiftOptions);
                 
-                $controller->set(compact('yearOptions', 'programmeOptions', 'selectedProgramme', 'gradeOptions'));
+                $controller->set(compact('yearOptions', 'programmeOptions', 'selectedProgramme', 'gradeOptions', 'shiftOptions'));
             } else {
                 $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
             }
@@ -217,6 +228,14 @@ class InstitutionSiteClass extends AppModel {
         $classObj = $controller->InstitutionSiteClass->getClass($classId);
 
         if (!empty($classObj)) {
+			if ($controller->request->is('post')) {
+                $data = $controller->data['InstitutionSiteClass'];
+                $data['id'] = $classId;
+                //pr($data);
+                $controller->InstitutionSiteClass->save($data);
+                $controller->redirect(array('action' => 'classesView', $classId));
+            }
+			
             $className = $classObj['InstitutionSiteClass']['name'];
             $controller->Navigation->addCrumb(__('Edit') . ' ' . $className);
 
@@ -229,8 +248,19 @@ class InstitutionSiteClass extends AppModel {
             $year = $classObj['SchoolYear']['name'];
             $noOfSeats = $classObj['InstitutionSiteClass']['no_of_seats'];
             $noOfShifts = $classObj['InstitutionSiteClass']['no_of_shifts'];
+			
+			$shiftMax = intval($controller->ConfigItem->getValue('no_of_shifts'));
+            $shiftOptions = array();
+            if($shiftMax > 1){
+                for($i=1; $i <= $shiftMax; $i++){
+                    $shiftOptions[$i] = $i;
+                }
+            }else{
+                $shiftOptions[1] = 1;
+            }
+            //pr($shiftOptions);
             
-            $controller->set(compact('classId', 'className', 'year', 'grades', 'students', 'teachers', 'noOfSeats', 'noOfShifts', 'studentCategoryOptions', 'subjects'));
+            $controller->set(compact('classId', 'className', 'year', 'grades', 'students', 'teachers', 'noOfSeats', 'noOfShifts', 'studentCategoryOptions', 'subjects', 'shiftOptions'));
         } else {
             $controller->redirect(array('action' => 'classesList'));
         }

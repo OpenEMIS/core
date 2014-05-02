@@ -3,30 +3,31 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->script('institution_site', false);
 echo $this->Html->script('institution_site_classes', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Add Class'));
+
+$this->start('contentBody');
+
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
 <div id="classes" class="content_wrapper add">
-    <h1>
-        <span><?php echo __('Add Class'); ?></span>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-	
 	<?php if($displayContent) { ?>
 	<?php 
 	echo $this->Form->create('InstitutionSiteClass', array(
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'classesAdd'),
-		'inputDefaults' => array('label' => false, 'div' => false)
+		'inputDefaults' => array('label' => false, 'div' => false),
+		'class' => 'form-horizontal'
 	));
 	?>
 	
-	<div class="row edit">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
+	<div class="form-group edit">
+		<label class="control-label col-md-3"><?php echo __('Year'); ?></label>
+		<div class=" col-md-4">
 		<?php 
 		echo $this->Form->input('school_year_id', array(
 			'id' => 'SchoolYearId', 
+			'class' => 'form-control',
 			'options' => $yearOptions,
 			'onchange' => 'InstitutionSiteClasses.switchYear()'
 		));
@@ -34,57 +35,60 @@ echo $this->Html->script('institution_site_classes', false);
 		</div>
 	</div>
 	
-	<div class="row edit">
-		<div class="label"><?php echo __('Class'); ?></div>
-		<div class="value"><?php echo $this->Form->input('name', array('id' => 'ClassName', 'class' => 'default')); ?></div>
+	<div class="form-group edit">
+		<label class="control-label col-md-3"><?php echo __('Class'); ?></label>
+		<div class="value col-md-4"><?php echo $this->Form->input('name', array('id' => 'ClassName', 'class' => 'default form-control')); ?></div>
 	</div>
     
-        <div class="row edit">
-		<div class="label"><?php echo __('Seats'); ?></div>
-		<div class="value"><?php echo $this->Form->input('no_of_seats', array('id' => 'NoOfSeats', 'class' => 'default')); ?></div>
+        <div class="form-group edit">
+		<label class="control-label col-md-3"><?php echo __('Seats'); ?></label>
+		<div class="value col-md-4"><?php echo $this->Form->input('no_of_seats', array('id' => 'NoOfSeats', 'class' => 'default form-control')); ?></div>
 	</div>
     
-        <div class="row edit">
-		<div class="label"><?php echo __('Shift'); ?></div>
-		<div class="value"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'options' => $shiftOptions, 'class' => 'default')); ?></div>
+        <div class="form-group edit">
+		<label class="control-label col-md-3"><?php echo __('Shift'); ?></label>
+		<div class="value col-md-4"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'options' => $shiftOptions, 'class' => 'default form-control')); ?></div>
 	</div>
 	
-	<div class="table full_width" id="grade_list">
-		<div class="table_head">
-			<div class="table_cell"><?php echo __('Programme'); ?></div>
-			<div class="table_cell cell_grade"><?php echo __('Grade'); ?></div>
-			<div class="table_cell cell_delete"></div>
-		</div>
+	<table class="table table-striped table-hover table-bordered" id="grade_list">
+		<thead>
+			<tr>
+			<td class="table_cell"><?php echo __('Programme'); ?></td>
+			<td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
+			<td class="table_cell cell_delete"></td>
+			</tr>
+		</thead>
 		
 		<?php
 		$gradeModel = 'InstitutionSiteClassGrade';
 		?>
 		
-		<div class="table_body">
-			<div class="table_row">
-				<div class="table_cell">
+		<tbody>
+			<tr>
+				<td class="table_cell">
 					<?php
 					echo $this->Form->input('institution_site_programme_id', array(
 						'name' => 'institution_site_programme_id',
 						'url' => 'InstitutionSites/programmesGradeList',
+						'class' => 'form-control',
 						'options' => $programmeOptions,
 						'default' => $selectedProgramme,
 						'onchange' => 'objInstitutionSite.getGradeList(this)'
 					));
 					?>
-				</div>
-				<div class="table_cell">
+				</td>
+				<td class="table_cell">
 					<?php 
 					echo $this->Form->input($gradeModel.'.0.education_grade_id', array(
-						'class' => 'grades',
+						'class' => 'grades form-control',
 						'options' => $gradeOptions
 					)); 
 					?>
-				</div>
-				<div class="table_cell"><?php echo $this->Utility->getDeleteControl(); ?></div>
-			</div>
-		</div>
-	</div>
+				</td>
+				<td class="table_cell"><?php echo $this->Utility->getDeleteControl(); ?></td>
+			</tr>
+		</tbody>
+	</table>
 	
 	<div class="row" style="margin-left: 3px;">
 		<a class="void icon_plus" url="InstitutionSites/classesAddGrade"><?php echo __('Add').' '.__('Grade'); ?></a>
@@ -99,3 +103,4 @@ echo $this->Html->script('institution_site_classes', false);
 	
 	<?php } // end if displayContent ?>
 </div>
+<?php $this->end(); ?>
