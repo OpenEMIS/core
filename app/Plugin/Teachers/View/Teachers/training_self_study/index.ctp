@@ -29,7 +29,7 @@ echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
                 <div class="table_cell"><?php echo $val[$modelName]['end_date'] ?></div>
                 <div class="table_cell"><?php echo $val[$modelName]['title'] ?></div>
                 <div class="table_cell"><?php echo $val[$modelName]['credit_hours']; ?></div>
-                <div class="table_cell"><?php echo  $val['TrainingStatus']['name']; ?></div>
+                <div class="table_cell"><?php echo $this->TrainingUtility->getTrainingStatus($modelName, $val[$modelName]['id'], $val['TrainingStatus']['name'], $val[$modelName]['training_status_id']); ?></div>
                 </div>
            <?php } ?>
            </div>

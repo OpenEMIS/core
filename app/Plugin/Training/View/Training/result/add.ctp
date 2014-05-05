@@ -4,8 +4,10 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
+echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider'));
 if($_edit) {
-	echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider', 'id'=>'back'));
+	echo $this->Html->link(__('Download Template'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
+  	echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider'));
 }
 $this->end();
 $this->start('contentBody');

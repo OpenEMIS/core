@@ -60,7 +60,8 @@ class InstitutionSite extends AppModel {
 			'belongsTo' => array(
 				'Area' => array('lft', 'rght')
 			)
-		)
+		),
+		'DatePicker' => array('date_opened', 'date_closed')
 	);
 	
 	public $validate = array(
@@ -115,7 +116,7 @@ class InstitutionSite extends AppModel {
 			'ruleRequired' => array(
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
-				'message' => 'Please select a Site Type'
+				'message' => 'Please select a Type'
 			)
 		),
 		'institution_site_ownership_id' => array(
@@ -125,13 +126,13 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please select an Ownership'
 			)
 		),
-		'area_id' => array(
-			'ruleRequired' => array(
-				'rule' => array('comparison', '>', 0),
-				'required' => true,
-				'message' => 'Please select an Area'
-			)
-		),
+//		'area_id' => array(
+//			'ruleRequired' => array(
+//				'rule' => array('comparison', '>', 0),
+//				'required' => true,
+//				'message' => 'Please select an Area'
+//			)
+//		),
 		'email' => array(
 			'ruleRequired' => array(
 				'rule' => 'email',
@@ -139,22 +140,24 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please enter a valid Email'
 			)
 		),
-		'date_opened' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select the Date Opened'
-			),
-			'ruleCompare' => array(
-				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
-				'required' => true,
-				'message' => 'Please select the Date Opened'
-			)
-		),'longitude' => array(
+//		'date_opened' => array(
+//			'ruleRequired' => array(
+//				'rule' => 'notEmpty',
+//				'required' => true,
+//				'message' => 'Please select the Date Opened'
+//			),
+//			'ruleCompare' => array(
+//				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
+//				'required' => true,
+//				'message' => 'Please select the Date Opened'
+//			)
+//		),
+		'longitude' => array(
 				'rule' => array('checkLongitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Longitude'
-		),'latitude' => array(
+		),
+		'latitude' => array(
 				'rule' => array('checkLatitude'),
 				'allowEmpty' => true,
 				'message' => 'Please enter a valid Latitude'
@@ -174,28 +177,6 @@ class InstitutionSite extends AppModel {
 			)
 		)
 	);
-	
-//	public function getDisplayFields($controller) {
-//		$fields = array(
-//			'model' => $this->alias,
-//			'fields' => array(
-//				array('field' => 'id', 'type' => 'hidden'),
-//				array('field' => 'name'),
-//				array('field' => 'code')
-//				//array('field' => 'validate_institution_site_code', 'type' => 'hidden')
-//				//array('field' => 'bank_id', 'model' => 'BankBranch', 'type' => 'select', 'options' => $bankOptions),
-////				array('field' => 'account_name'),
-////				array('field' => 'account_number'),
-////				array('field' => 'active', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
-////				array('field' => 'remarks', 'type' => 'textarea'),
-////				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-////				array('field' => 'modified', 'edit' => false),
-////				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-////				array('field' => 'created', 'edit' => false)
-//			)
-//		);
-//		return $fields;
-//	}
     
 	public function checkNumeric($arrVal){
 		$o = array_values($arrVal);
@@ -255,14 +236,14 @@ class InstitutionSite extends AppModel {
 	}
 	
 	public function getGroupAccessValueList($parentId, $exclude) {
-		$conditions = array('InstitutionSite.institution_id' => $parentId);
+		//$conditions = array('InstitutionSite.institution_id' => $parentId);
 		if(!empty($exclude)) {
 			$conditions['InstitutionSite.id NOT'] = $exclude;
 		}
 		
 		$data = $this->find('list', array(
 			'fields' => array('InstitutionSite.id', 'InstitutionSite.name'),
-			'conditions' => $conditions,
+			//'conditions' => $conditions,
 			'order' => array('InstitutionSite.name')
 		));
 		return $data;
@@ -372,7 +353,7 @@ class InstitutionSite extends AppModel {
 	}
 	// End Yearbook
         
-        public function getQueryFromInstitutionsWithoutSites($params) {
+	public function getQueryFromInstitutionsWithoutSites($params) {
 		$joins = array(
 			array(
 				'table' => 'security_group_users',
@@ -793,5 +774,37 @@ AND
 			$count = isset($data[0][0]['COUNT']) ? $data[0][0]['COUNT'] : 0;
 		}
 		return $count;
+	}
+
+	public function getAutoCompleteList($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this->find('all', array(
+				'recursive' => -1,
+				'fields' => array('InstitutionSite.name, InstitutionSite.id'),
+				'conditions' => array(
+					'InstitutionSite.name LIKE' => $search
+				),
+				'order' => array('InstitutionSite.name')
+			));
+
+		$data = array();
+		foreach ($list as $obj) {
+			$site = $obj['InstitutionSite'];
+			$data[] = array(
+				'label' => $site['name'],
+				'value' => $site['id'],
+			);
+		}
+		return $data;
+	}
+	
+	public function getInstitutionSiteById($institutionSiteId){
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'conditions' => array('InstitutionSite.id' => $institutionSiteId)
+		));
+		
+		return $data;
 	}
 }

@@ -132,5 +132,9 @@ var i18n = {
 	Wizard: {
 		title: '<?php echo T("Wizard", true); ?>',
 		uncomplete: '<?php echo T("Unable to proceed until wizard is completed", true); ?>'
+	},
+	Olap: {
+		textLoadingCube : '<?php echo T("Loading Cube...", true); ?>',
+		textGeneratingCube : '<?php echo T("Generating Cube...", true); ?>'
 	}
 }

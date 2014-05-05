@@ -17,10 +17,7 @@ if($_edit) {
 	}
 }
 if($_execute) {
-    if($obj['training_status_id'] == 2 || $obj['training_status_id']==3){
-		if($obj['training_status_id'] == 2){
-			echo $this->Html->link($this->Label->get('general.activate'), array('action' => 'resultActivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmActivate(this)'));
-		}
+	if($obj['training_status_id']==3){
 		echo $this->Html->link($this->Label->get('general.inactivate'), array('action' => 'resultInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmInactivate(this)'));
 	}
 }
@@ -28,7 +25,6 @@ $this->end();
 
 $this->start('contentBody'); ?>
 <?php echo $this->element('alert'); ?>
-
 
 <div class="row">
 	<div class="col-md-3"><?php echo __('Course Code'); ?></div>
@@ -130,4 +126,5 @@ $this->start('contentBody'); ?>
     <div class="col-md-3"><?php echo __('Created on'); ?></div>
     <div class="col-md-6"><?php echo $obj['created']; ?></div>
 </div>
+<?php echo $this->element('workflow');?>
 <?php $this->end(); ?>

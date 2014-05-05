@@ -64,7 +64,7 @@ class FileUploaderComponent extends Component {
 	 * $dbPrefix : the name that will be used in the database column 
 	 * it will always auto append with "_name" | "_content"
 	 * ---------------------------------------------------------------------------- */
-	public $dbPrefix = 'file';//'photo';
+	public $dbPrefix = 'file'; //'photo';
 
 	/* ---------------------------------------------------------------------------
 	 * $additionData : Additional infomation to be append and save togather with the data
@@ -87,20 +87,20 @@ class FileUploaderComponent extends Component {
 
 	/*
 	  public $alertMessage = array(
-		'success' => 'The file%s has been uploaded.',
-		'error' => array(
-			'general' => 'An error has occur. Please contact the system administrator.',
-			'uploadSizeError' => 'Please ensure that the file is smaller than file limit.',
-			'UPLOAD_ERR_NO_FILE' => 'No file was uploaded.',
-			//'UPLOAD_ERR_FORM_SIZE' => 'The uploaded file "%s" exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
-			//'UPLOAD_ERR_FORM_SIZE' => 'Please ensure that the file "%s" is smaller than %s.',
-			'UPLOAD_ERR_FORM_SIZE' => 'Please ensure that the file is smaller than file limit.',
-			'UPLOAD_ERR_INI_SIZE' => 'Please ensure that the file is smaller than file limit.',
-			//'UPLOAD_ERR_INI_SIZE' => 'The uploaded file "%s" exceeds the upload_max_filesize directive in php.ini.',
-			'invalidFileFormat' => 'file is not a valid format.',
-			'saving' => 'Failed to save the file.'
-		)
-	);
+	  'success' => 'The file%s has been uploaded.',
+	  'error' => array(
+	  'general' => 'An error has occur. Please contact the system administrator.',
+	  'uploadSizeError' => 'Please ensure that the file is smaller than file limit.',
+	  'UPLOAD_ERR_NO_FILE' => 'No file was uploaded.',
+	  //'UPLOAD_ERR_FORM_SIZE' => 'The uploaded file "%s" exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+	  //'UPLOAD_ERR_FORM_SIZE' => 'Please ensure that the file "%s" is smaller than %s.',
+	  'UPLOAD_ERR_FORM_SIZE' => 'Please ensure that the file is smaller than file limit.',
+	  'UPLOAD_ERR_INI_SIZE' => 'Please ensure that the file is smaller than file limit.',
+	  //'UPLOAD_ERR_INI_SIZE' => 'The uploaded file "%s" exceeds the upload_max_filesize directive in php.ini.',
+	  'invalidFileFormat' => 'file is not a valid format.',
+	  'saving' => 'Failed to save the file.'
+	  )
+	  );
 	 * 
 	 */
 	public $components = array('Message');
@@ -117,20 +117,18 @@ class FileUploaderComponent extends Component {
 	 * 
 	 * ---------------------------------------------------------------------------- */
 
-	public function uploadFile($id = NULL) {
+	public function uploadFile($id = NULL, $postFileData = array()) {
 		// pr($this->data);die;
 		if (!empty($this->data)) {
-			$this->uploadedFile = $this->_getUploadFileArr();
-			//	pr($this->uploadedFile);die;
+			$this->uploadedFile = $this->_getUploadFileArr($postFileData);
+			//pr($this->uploadedFile);die;
 			//	pr($this->data);
 			//	$id = '';
 			if (empty($id) && !empty($this->data[$this->fileModel]['id'])) {
 				$id = $this->data[$this->fileModel]['id'];
 			}
 
-			//pr($id);
-
-			if ($this->_checkFile() && $this->_checkType()) {
+			if ($this->_checkType() && $this->_checkFile()) {
 				$this->_processFile($id);
 			} else {
 				$this->success = false;
@@ -198,16 +196,18 @@ class FileUploaderComponent extends Component {
 	}
 
 	public function getList($option = array()) {
-		if(empty($option)){
-			return array();
+		$defaultOption['conditions'] = array($this->fileModel . '.visible' => 1);
+		$defaultOption['fields'] = array('id', $this->dbPrefix . '_name');
+
+		if (!empty($option['conditions'])) {
+			$defaultOption['conditions'] = array_merge($defaultOption['conditions'], $option['conditions']);
 		}
-		$foreignKey = key($option);
-		$id = $option[$foreignKey];
+
+		if (!empty($option['fields'])) {
+			$defaultOption['fields'] = array_merge($defaultOption['fields'], $option['fields']);
+		}
 		$model = & $this->getModel();
-		$data = $model->find('all', array(
-			'conditions' => array($this->fileModel . '.visible' => 1, $this->fileModel . '.' . $foreignKey => $id)
-		));
-		//$this->fixBlankFile($data);
+		$data = $model->find('all', $defaultOption);
 		return $data;
 	}
 
@@ -217,8 +217,6 @@ class FileUploaderComponent extends Component {
 
 		if ($name) {
 			$model = ClassRegistry::init($name);
-
-
 			if (empty($model) && $this->fileModel) {
 				//$this->_error('FileUpload::getModel() - Model is not set or could not be found');
 				return null;
@@ -230,10 +228,7 @@ class FileUploaderComponent extends Component {
 	function _processFile($id = NULL) {
 		$model = & $this->getModel();
 		$fileData = array();
-
-
 		foreach ($this->uploadedFile as $selectedFile) {
-
 			$selectedData = array();
 			if (!empty($id)) {
 				$selectedData['id'] = $id;
@@ -244,9 +239,10 @@ class FileUploaderComponent extends Component {
 			if (!empty($this->additionData)) {
 				$selectedData = array_merge($selectedData, $this->additionData);
 			}
-			//pr($selectedData);die;
+
 			array_push($fileData, array($this->fileModel => $selectedData));
 		}
+
 		if (!empty($fileData) && !empty($model)) {
 			if ($model->saveAll($fileData, array('validate' => false))) {
 				$this->success = true;
@@ -274,11 +270,18 @@ class FileUploaderComponent extends Component {
 		}
 	}
 
-	function _getUploadFileArr() {
-		 /*pr($this->fileModel);
+	function _getUploadFileArr($postFileData = array()) {
+		/* pr($this->fileModel);
 		  pr($this->fileVar);
-		  pr($this->data[$this->fileModel][$this->fileVar]); die;*/
-		if (!empty($this->fileModel) && isset($this->data[$this->fileModel][$this->fileVar])) {
+		  pr($this->data[$this->fileModel][$this->fileVar]); die; */
+		if (!empty($postFileData)) {
+			if ($this->fileVar == 'files') {
+				$fileArr = $postFileData;
+			} else {
+				$fileArr[] = $postFileData;
+			}
+			
+		} else if (!empty($this->fileModel) && isset($this->data[$this->fileModel][$this->fileVar])) {
 			if ($this->fileVar == 'files') {
 				$fileArr = $this->data[$this->fileModel][$this->fileVar];
 			} else {
@@ -331,11 +334,10 @@ class FileUploaderComponent extends Component {
 	}
 
 	function _checkType() {
-
 		foreach ($this->uploadedFile as $selectedFile) {
 			$isSameFileType = false;
-
 			foreach ($this->allowedTypes as $fileType) {
+
 				if (strtolower($fileType) == strtolower($selectedFile['type']) && !$isSameFileType) {
 					$isSameFileType = true;
 					break;
@@ -349,7 +351,6 @@ class FileUploaderComponent extends Component {
 				return false;
 			}
 		}
-
 		return true;
 	}
 

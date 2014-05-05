@@ -490,7 +490,33 @@ var jsForm = {
     fixedBracket: function(){
         var replaced = $("body").html().replace(/\)/g,')&#x200E;');
         $("body").html(replaced);
-    }
+    },
+			
+	insertNewInputFile: function() {
+		var size = $('.fileupload').length;
+		var fileMaxLimit = 5;
+
+		if (size < fileMaxLimit) {
+			var maskId;
+			var url = getRootURL() + $(this).attr('multipleURL');
+
+			$.ajax({
+				type: 'POST',
+				dataType: 'text',
+				url: url,
+				data: {size: size + 1},
+				beforeSend: function(jqXHR) {
+					maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
+				},
+				success: function(data, textStatus) {
+					var callback = function() {
+						$('#file-upload-wrapper-' + size).after(data);
+					};
+					$.unmask({id: maskId, callback: callback});
+				}
+			});
+		}
+	},
 };
 
 var jsList = {
@@ -593,7 +619,8 @@ var jsList = {
 		list.find('li').each(function(i) {
 			$(this).find('#order').val(i+1);
 		});
-	}
+	},
+	
 };
 
 var utils = {

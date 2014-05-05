@@ -20,6 +20,7 @@ class StaffHealthAllergy extends StaffAppModel {
 	
 	public $belongsTo = array(
 		//'Staff',
+		'HealthAllergyType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -46,106 +47,100 @@ class StaffHealthAllergy extends StaffAppModel {
 			)
 		)
 	);
-	public $booleanOptions = array('No', 'Yes');
 	
-	public function healthAllergy($controller, $params) {
-	//	pr('aas');
-		$controller->Navigation->addCrumb('Health - Allergies');
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
-		
-		$HealthAllergyType = ClassRegistry::init('HealthAllergyType');
-		$healthAllergiesOptions = $HealthAllergyType->find('list', array('fields'=> array('id', 'name')));
-		
-		
-		$controller->set('subheader', 'Health - Allergies');
-		$controller->set('data', $data);
-		$controller->set('healthAllergiesOptions', $healthAllergiesOptions);
-		
-	}
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                //   array('field' => 'id', 'type' => 'hidden'),
+                array('field' => 'name', 'model' => 'HealthAllergyType', 'labelKey' => 'general.type'),
+                array('field' => 'description'),
+                array('field' => 'severe', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
+                array('field' => 'comment'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+    
+    public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
 
-	public function healthAllergyView($controller, $params){
-		$controller->Navigation->addCrumb('Health - View Allergy');
-		$controller->set('subheader', 'Health - View Allergy');
-		$controller->set('modelName', $this->name);
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-		
-		if(empty($data)){
-			$controller->redirect(array('action'=>'healthAllergy'));
-		}
-		
-		$controller->Session->write('StaffHealthAllergyTypeId', $id);
-		$HealthAllergyType = ClassRegistry::init('HealthAllergyType');
-		$healthAllergiesOptions = $HealthAllergyType->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('healthAllergiesOptions', $healthAllergiesOptions);
-		$controller->set('booleanOptions', $this->booleanOptions);
-	}
-	
-	public function healthAllergyDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthAllergyTypeId')) {
+    public function healthAllergy($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Allergies');
+        $header = __('Health - Allergies');
+
+        $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+        $data = $this->findAllByStaffId($controller->staffId);
+
+        $controller->set(compact('header', 'data'));
+    }
+
+    public function healthAllergyView($controller, $params) {
+        $controller->Navigation->addCrumb('Health - View Allergy');
+        $header = __('Health - View Allergy');
+
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+        $data = $this->findById($id);
+        if (empty($data)) {
+            $controller->Message->alert('general.noData');
+            return $controller->redirect(array('action' => 'healthAllergy'));
+        }
+
+        $controller->Session->write('StaffHealthAllergyTypeId', $id);
+        $fields = $this->getDisplayFields($controller);
+        $controller->set(compact('header', 'data', 'fields', 'id'));
+    }
+
+    public function healthAllergyDelete($controller, $params) {
+        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthAllergyTypeId')) {
             $id = $controller->Session->read('StaffHealthAllergyTypeId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			$HealthAllergyType = ClassRegistry::init('HealthAllergyType');
-			$healthAllergiesOptions = $HealthAllergyType->find('first', array('conditions'=> array('id' => $data[$this->name]['health_allergy_type_id'])));
-		
-            $name = !empty($healthAllergiesOptions['HealthAllergyType']['name'])?$healthAllergiesOptions['HealthAllergyType']['name']:'';
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('StaffHealthAllergyTypeId');
-            $controller->redirect(array('action' => 'healthAllergy'));
+            if ($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
+            $controller->Session->delete('StaffHealthAllergyTypeId');
+            return $controller->redirect(array('action' => 'healthAllergy'));
         }
     }
-	
-	public function healthAllergyAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Health - Add Allergy');
-		$controller->set('subheader', 'Health - Add Allergy');
-		$this->setup_add_edit_form($controller, $params);
-	}
-	
-	public function healthAllergyEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Health - Edit Allergy');
-		$controller->set('subheader', 'Health - Edit Allergy');
-		$this->setup_add_edit_form($controller, $params);
-		
-		
-		$this->render = 'add';
-	}
-	
-	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		$HealthAllergyType = ClassRegistry::init('HealthAllergyType');
-		$healthAllergiesOptions = $HealthAllergyType->find('list', array('fields'=> array('id', 'name')));
-		$controller->set('healthAllergiesOptions', $healthAllergiesOptions);
-		$controller->set('booleanOptions', $this->booleanOptions);
-		
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$this->recursive = -1;
-			$data = $this->findById($id);
-			if(!empty($data)){
-				$controller->request->data = $data;
-			}
-		}
-		else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
-				return $controller->redirect(array('action' => 'healthAllergy'));
-			}
-		}
-	}
+
+    public function healthAllergyAdd($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Add Allergy');
+        $controller->set('header', __('Health - Add Allergy'));
+        $this->setup_add_edit_form($controller, $params);
+    }
+
+    public function healthAllergyEdit($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Edit Allergy');
+        $controller->set('header', __('Health - Edit Allergy'));
+        $this->setup_add_edit_form($controller, $params);
+        $this->render = 'add';
+    }
+
+    function setup_add_edit_form($controller, $params) {
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+        if ($controller->request->is('post') || $controller->request->is('put')) {
+            $controller->request->data[$this->alias]['staff_id'] = $controller->staffId;
+            if ($this->save($controller->request->data)) {
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'healthAllergy'));
+            }
+        } else {
+            $this->recursive = -1;
+            $data = $this->findById($id);
+            if (!empty($data)) {
+                $controller->request->data = $data;
+            }
+        }
+
+        $healthAllergiesOptions = $this->HealthAllergyType->find('list', array('fields' => array('id', 'name')));
+        $yesnoOptions = $controller->Option->get('yesno');
+
+        $controller->set(compact('healthAllergiesOptions', 'yesnoOptions'));
+    }
 }

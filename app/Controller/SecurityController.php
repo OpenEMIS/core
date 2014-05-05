@@ -296,10 +296,8 @@ class SecurityController extends AppController {
 				// if the user himself is a super admin, then allow edit
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
-				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-                                if(!$allowEdit){
-                                    $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
-                                }
+				//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+                                $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
 			}
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
@@ -322,10 +320,8 @@ class SecurityController extends AppController {
 			if($this->Auth->user('super_admin')==1) {
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
-				$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-                                if(!$allowEdit){
-                                    $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
-                                }
+				//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
+                                $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
 			}
 			
 			if(!$allowEdit) {
@@ -532,6 +528,12 @@ class SecurityController extends AppController {
 		$this->set('type', $type);
 		$this->set('levelOptions', $levelOptions);
 		$this->set('valueOptions', $valueOptions);
+		
+		if($type==='areas'){
+			$this->render('groups_add_access_options');
+		}else if($type==='sites'){
+			$this->render('groups_add_institution_options');
+		}
 	}
 	
 	public function groupsLoadValueOptions() {

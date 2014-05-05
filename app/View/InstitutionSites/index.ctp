@@ -67,13 +67,14 @@ $this->start('contentBody');
 						<span class="left"><?php echo __('Institution Name'); ?></span>
 						<span class="icon_sort_<?php echo ($sortedcol =='InstitutionSite.name')?$sorteddir:'up'; ?>" order="InstitutionSite.name"></span>
 					</th>
-                                        <th>
-						<span class="left"><?php echo __('Type'); ?></span>
-						<span class="icon_sort_<?php echo ($sortedcol =='InstitutionSiteType.name')?$sorteddir:'up'; ?>" order="InstitutionSiteType.name"></span>
-					</th>
-                                        <th>
+                    
+                    <th>
 						<span class="left"><?php echo __('Area'); ?></span>
 						<span class="icon_sort_<?php echo ($sortedcol =='Area.name')?$sorteddir:'up'; ?>" order="Area.name"></span>
+					</th>
+					<th>
+						<span class="left"><?php echo __('Type'); ?></span>
+						<span class="icon_sort_<?php echo ($sortedcol =='InstitutionSiteType.name')?$sorteddir:'up'; ?>" order="InstitutionSiteType.name"></span>
 					</th>
 				</tr>
 			</thead>
@@ -87,8 +88,9 @@ $this->start('contentBody');
 				<tr row-id="<?php echo $id ?>">
 					<td><?php echo $code; ?></td>
 					<td><?php echo $this->Html->link($name, array('action' => 'view', $id), array('escape' => false)); ?></td>
-                                        <td><?php echo $arrItems['InstitutionSiteType']['name']; ?></td>
-                                        <td><?php echo $arrItems['Area']['name']; ?></td>
+                                        
+                    <td><?php echo $arrItems['Area']['name']; ?></td>
+					<td><?php echo $arrItems['InstitutionSiteType']['name']; ?></td>
 				</tr>
 			<?php endforeach; ?>
 			</tbody>

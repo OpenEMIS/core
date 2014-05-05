@@ -4,19 +4,19 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentId', 'site');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if($_edit) {
+if ($_edit) {
 	echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
 }
-if($_delete) {
+if ($_delete) {
 	echo $this->Html->link(__('Delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
-echo $this->Html->link(__('History'), array('action' => 'history'),	array('class' => 'divider')); 
+echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 $obj = $data['InstitutionSite'];
 ?>
-	
+
 <fieldset class="section_break">
 	<legend><?php echo __('Information'); ?></legend>
 	<div class="row">
@@ -48,19 +48,6 @@ $obj = $data['InstitutionSite'];
 		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['date_closed']); ?></div>
 	</div>
 </fieldset>
-
-<?php if($obj['area_id']>0){ ?>
-<fieldset class="section_break">
-	<legend id="area"><?php echo __('Area'); ?></legend>
-	<?php echo @$this->Utility->showArea($this->Form, 'area_id',$obj['area_id'], array()); ?>
-</fieldset>
-<?php } ?>
-<?php if($obj['area_education_id']>0){ ?>
-<fieldset class="section_break">
-	<legend id="education"><?php echo __('Area').' ('.__('Education').')'; ?></legend>
-	<?php echo @$this->Utility->showArea($this->Form, 'area_education_id',$obj['area_education_id'], array()); ?>
-</fieldset>
-<?php } ?>
 <fieldset class="section_break">
 	<legend><?php echo __('Location'); ?></legend>
 	<div class="row">
@@ -84,6 +71,19 @@ $obj = $data['InstitutionSite'];
 		<div class="col-md-6"><?php echo $obj['longitude']; ?></div>
 	</div>
 </fieldset>
+
+<?php if ($obj['area_id'] > 0) { ?>
+	<fieldset class="section_break">
+		<legend id="area"><?php echo __('Area'); ?></legend>
+		<?php echo @$this->Utility->showArea($this->Form, 'area_id', $obj['area_id'], array()); ?>
+	</fieldset>
+<?php } ?>
+<?php if ($obj['area_education_id'] > 0) { ?>
+	<fieldset class="section_break">
+		<legend id="education"><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
+		<?php echo @$this->Utility->showArea($this->Form, 'area_education_id', $obj['area_education_id'], array()); ?>
+	</fieldset>
+<?php } ?>
 
 <fieldset class="section_break">
 	<legend><?php echo __('Contact'); ?></legend>
@@ -110,7 +110,7 @@ $obj = $data['InstitutionSite'];
 </fieldset>
 <span id="gmap"></span>
 <script>
-	$('#gmap').load(getRootURL()+'InstitutionSites/viewMap/');
+	$('#gmap').load(getRootURL() + 'InstitutionSites/viewMap/');
 </script>
 
 <?php $this->end(); ?>
