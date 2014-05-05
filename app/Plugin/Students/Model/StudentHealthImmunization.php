@@ -73,7 +73,7 @@ class StudentHealthImmunization extends StudentsAppModel {
         $controller->Navigation->addCrumb('Health - Immunizations');
         $header = __('Health - Immunizations');
         $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-        $data = $this->find('all', array('conditions' => array('student_id' => $controller->studentId)));
+        $data = $this->findAllByStudentId( $controller->studentId);
 
         $controller->set(compact('header', 'data'));
     }

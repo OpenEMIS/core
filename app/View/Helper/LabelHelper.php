@@ -40,6 +40,8 @@ class LabelHelper extends AppHelper {
             'inactivate' => 'Inactivate',
 			'name' => 'Name',
 			'date' => 'Date',
+			'attachments' => 'Attachments',
+			'status' => 'Status',
             'yes' => 'Yes',
             'no' => 'No',
 			'general' => 'General',
@@ -50,6 +52,10 @@ class LabelHelper extends AppHelper {
             'enabled' => 'Enabled',
             'disabled' => 'Disabled'
         ),
+		'fileUpload' => array(
+			'single' => '*File size should not be larger than 2MB.',
+			'multi' => '*Maximum 5 files are permited on single upload. Each file size should not be larger than 2MB.',
+		),
         'wizard' => array(
             'previous' => 'Previous',
             'next' => 'Next',
@@ -59,7 +65,11 @@ class LabelHelper extends AppHelper {
         ),
 		'InstitutionSite' => array(
 			'institution_site_provider_id' => 'Provider',
-			'institution_site_sector_id' => 'Sector'
+			'institution_site_sector_id' => 'Sector',
+			'institution_site_type_id' => 'Type',
+			'institution_site_ownership_id' => 'Ownership',
+			'institution_site_status_id' => 'Status',
+			'institution_site_locality_id' => 'Locality'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -67,6 +77,13 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteCustomFieldOption' => array(
 			'institution_site_custom_field_id' => 'Custom Field'
+		),
+		'CensusCustomField' => array(
+			'type' => 'Field Type',
+			'institution_site_type_id' => 'Institution Type'
+		),
+		'CensusCustomFieldOption' => array(
+			'census_custom_field_id' => 'Custom Field'
 		),
         'BankBranch' => array(
             'bank_id' => 'Bank',
@@ -140,7 +157,11 @@ class LabelHelper extends AppHelper {
             'export' => 'Export',
             'generate' => 'Generate',
             'custom_indicators' => 'Custom Indicators'
-        )
+        ),
+		'StaffLeave' => array(
+			'date_from' => 'First Day',
+			'date_to' => 'Last Day',
+		)
     );
 	
 	public function get($code) {
@@ -159,12 +180,13 @@ class LabelHelper extends AppHelper {
 	
 	public function getLabel($model, $obj) {
 		$field = $obj['field'];
-                $code = $model . '.' . $obj['field'];
+		$code = $model . '.' . $obj['field'];
+		
 		if(isset($obj['labelKey'])) {
-                    $code = $obj['labelKey'];
+			$code = $obj['labelKey'];
 		} else if($field==='modified' || $field==='created') {
-                    $code = 'general.'.$obj['field'];
-                }
+			$code = 'general.'.$obj['field'];
+		}
 		
 		$label = $this->get($code);
 		if($label===false) {

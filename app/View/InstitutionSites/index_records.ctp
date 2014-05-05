@@ -15,8 +15,8 @@ $pageNumberOptions = array('modulus' => 5, 'first' => 2, 'last' => 2, 'tag' => '
         <tr>
             <td class="table_cell cell_code"><span class="left"><?php echo __('Code'); ?></span><span class="icon_sort_<?php echo ($sortedcol == 'InstitutionSite.code') ? $sorteddir : 'up'; ?>"  order="InstitutionSite.code"></span></td>
             <td class="table_cell cell_name"><span class="left"><?php echo __('Institution Name'); ?></span><span class="icon_sort_<?php echo ($sortedcol == 'InstitutionSite.name') ? $sorteddir : 'up'; ?>" order="InstitutionSite.name"></span></td>
-            <td class="table_cell cell_name"><span class="left"><?php echo __('Type'); ?></span><span class="icon_sort_<?php echo ($sortedcol == 'InstitutionSiteType.name') ? $sorteddir : 'up'; ?>" order="InstitutionSiteType.name"></span></td>
             <td class="table_cell cell_name"><span class="left"><?php echo __('Area'); ?></span><span class="icon_sort_<?php echo ($sortedcol == 'Area.name') ? $sorteddir : 'up'; ?>" order="Area.name"></span></td>
+			<td class="table_cell cell_name"><span class="left"><?php echo __('Type'); ?></span><span class="icon_sort_<?php echo ($sortedcol == 'InstitutionSiteType.name') ? $sorteddir : 'up'; ?>" order="InstitutionSiteType.name"></span></td>
         </tr></thead>
     <tbody>
         <?php
@@ -31,8 +31,8 @@ $pageNumberOptions = array('modulus' => 5, 'first' => 2, 'last' => 2, 'tag' => '
                 <tr row-id="<?php echo $id ?>" class="table_row_selection <?php echo ((($ctr++ % 2) != 0) ? 'odd' : 'even'); ?>">
                     <td class="table_cell"><?php echo $code; ?></td>
                     <td class="table_cell"><?php echo $this->Html->link($name, array('action' => 'view', $id), array('escape' => false)); ?></td>
-                    <td class="table_cell"><?php echo $arrItems['InstitutionSiteType']['name']; ?></td>
                     <td class="table_cell"><?php echo $arrItems['Area']['name']; ?></td>
+					<td class="table_cell"><?php echo $arrItems['InstitutionSiteType']['name']; ?></td>
                 </tr>
             <?php
             endforeach;

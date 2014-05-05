@@ -149,6 +149,12 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		$controller->set('data', $data);
 		$controller->set('attachments', $attachments);
 		$controller->set('_model','StaffTrainingSelfStudyAttachment');
+
+		//APROVAL
+		$controller->Workflow->getApprovalWorkflow($this->name, $id);
+		$controller->set('approvalMethod', 'trainingSelfStudy');
+		$controller->set('controller', 'Staff');
+		$controller->set('plugin', '');
 	}
 	
 
@@ -223,6 +229,30 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		$this->setup_add_edit_form($controller, $params);
 		
 		$this->render = 'add';
+	}
+
+	public function trainingSelfStudyApproval($controller, $params){
+		if(!$controller->request->is('get')){
+			$saveData = $controller->request->data;
+			if (isset($saveData['approve'])) {
+			   	$saveData['WorkflowLog']['approve'] = 1; 
+			} else if (isset($saveData['reject'])) {
+		      	$saveData['WorkflowLog']['approve'] = 0; 
+			}
+		
+			if($controller->Workflow->updateApproval($saveData)){
+				if($saveData['WorkflowLog']['approve']==1){
+					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
+						$this->id =  $saveData['WorkflowLog']['record_id'];
+						$this->saveField('training_status_id', 3);
+					}
+				}else{
+					$this->id =  $saveData['WorkflowLog']['record_id'];
+					$this->saveField('training_status_id', 1);
+				}
+				return $controller->redirect(array('action'=>'trainingSelfStudyView', $saveData['WorkflowLog']['record_id']));
+			}
+		}
 	}
 	
 	function setup_add_edit_form($controller, $params){

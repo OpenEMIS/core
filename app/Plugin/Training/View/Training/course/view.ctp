@@ -1,4 +1,6 @@
 <?php
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Courses'));
 $obj = $data[$modelName];
@@ -14,12 +16,8 @@ if($_delete) {
     	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'courseDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 	}
 }
-
 if($_execute) {
-    if($obj['training_status_id'] == 2 || $obj['training_status_id']==3){
-		if($obj['training_status_id'] == 2){
-			echo $this->Html->link($this->Label->get('general.activate'), array('action' => 'courseActivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmActivate(this)'));
-		}
+	if($obj['training_status_id']==3){
 		echo $this->Html->link($this->Label->get('general.inactivate'), array('action' => 'courseInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmInactivate(this)'));
 	}
 }
@@ -151,5 +149,8 @@ $this->start('contentBody'); ?>
 <div class="row">
     <div class="col-md-3"><?php echo __('Created on'); ?></div>
     <div class="col-md-6"><?php echo $obj['created']; ?></div>
-</div>
+</div>     
+
+<?php echo $this->element('workflow');?>
+
 <?php $this->end(); ?>

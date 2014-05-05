@@ -53,7 +53,6 @@ $this->start('contentBody');
                 break;
                 }
             }   
-
              ?>
             <td class="table_cell"><?php echo $val['TrainingStatus']['name'] ?></td>
         </tr>
@@ -64,3 +63,4 @@ $this->start('contentBody');
 <?php } ?>
 
 <?php $this->end(); ?>  
+
