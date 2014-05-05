@@ -1,163 +1,176 @@
-<?php 
+<?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('institution_site_classes', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Edit') . ' ' . $className);
+
+$this->start('contentActions');
+echo $this->Html->link(__('View'), array('action' => 'classesView', $classId), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
 <div id="classes" class="content_wrapper edit">
-    <h1>
-        <span><?php echo __('Edit') . ' ' . $className; ?></span>
-		<?php
-		echo $this->Html->link(__('View'), array('action' => 'classesView', $classId), array('class' => 'divider'));
-		?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-	
-	<?php 
+
+	<?php
 	echo $this->Form->create('InstitutionSiteClass', array(
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'classesEdit', $classId),
 		'inputDefaults' => array('label' => false, 'div' => false)
 	));
 	$i = 0;
 	?>
-	
-	<div class="table full_width" style="margin-bottom: 20px;">
-		<div class="table_head">
-			<div class="table_cell cell_year"><?php echo __('Year'); ?></div>
-			<div class="table_cell"><?php echo __('Grade'); ?></div>
-                        <div class="table_cell"><?php echo __('Seats'); ?></div>
-                        <div class="table_cell"><?php echo __('Shift'); ?></div>
-		</div>
-		<div class="table_body">
-			<div class="table_row">
-				<div class="table_cell cell_year"><?php echo $year; ?></div>
-				<div class="table_cell">
-				<?php foreach($grades as $id => $name) { $i++; ?>
-					<div class="table_cell_row <?php echo $i==sizeof($grades) ? 'last' : ''; ?>"><?php echo $name; ?></div>
-				<?php } ?>
-				</div>
-                                <div class="table_cell"><?php echo $this->Form->input('no_of_seats', array('id' => 'NoOfSeats', 'value' => $no_of_seats, 'class' => 'default inlineShortField')); ?></div>
-                                <div class="table_cell"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'options' => $shiftOptions, 'value' => $no_of_shifts, 'class' => 'default inlineShortField')); ?></div>
-			</div>
-		</div>
-	</div>
+
+	<table class="table table-striped table-hover table-bordered" style="margin-bottom: 20px;">
+		<thead>
+			<tr>
+				<td class="table_cell cell_year"><?php echo __('Year'); ?></td>
+				<td class="table_cell"><?php echo __('Grade'); ?></td>
+				<td class="table_cell"><?php echo __('Seats'); ?></td>
+				<td class="table_cell"><?php echo __('Shift'); ?></td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td class="table_cell cell_year"><?php echo $year; ?></td>
+				<td class="table_cell">
+					<?php
+					foreach ($grades as $id => $name) {
+						$i++;
+						?>
+						<div class="table_cell_row <?php echo $i == sizeof($grades) ? 'last' : ''; ?>"><?php echo $name; ?></div>
+					<?php } ?>
+				</td>
+				<td class="table_cell"><?php echo $this->Form->input('no_of_seats', array('id' => 'NoOfSeats', 'value' => $noOfSeats, 'class' => 'default inlineShortField form-control')); ?></td>
+				<td class="table_cell"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'options' => $shiftOptions, 'value' => $noOfShifts, 'class' => 'default inlineShortField form-control')); ?></td>
+			</tr>
+		</tbody>
+	</table>
 
 	<fieldset class="section_group">
         <legend><?php echo __('Subjects'); ?></legend>
-        <div class="table">
-            <div class="table_head">
-                <div class="table_cell cell_year"><?php echo __('Code'); ?></div>
-                <div class="table_cell"><?php echo __('Name'); ?></div>
-                <div class="table_cell cell_category"><?php echo __('Grade'); ?></div>
-                <div class="table_cell cell_delete"></div>
-            </div>
-            <div class="table_body" url="InstitutionSites/classesSubjectAjax/<?php echo $classId; ?>">
-                <?php foreach($subjects as $obj) { ?>
-                <div class="table_row" subject-id="<?php echo $obj['InstitutionSiteClassSubject']['education_grade_subject_id']; ?>">
-                    <div class="table_cell"><?php echo $obj['EducationSubject']['code']; ?></div>
-                    <div class="table_cell"><?php echo $obj['EducationSubject']['name']; ?></div>
-                    <div class="table_cell"><?php echo $obj['EducationGrade']['name']; ?></div>
-                    <div class="table_cell">
-                        <?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteSubject(this)', 'onDelete' => false)); ?>
-                    </div>
-                </div>
-                <?php } ?>
-            </div>
-        </div>
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+				<tr>
+					<td class="table_cell cell_year"><?php echo __('Code'); ?></td>
+					<td class="table_cell"><?php echo __('Name'); ?></td>
+					<td class="table_cell cell_category"><?php echo __('Grade'); ?></td>
+					<td class="table_cell cell_delete"></td>
+				</tr>
+            </thead>
+            <tbody url="InstitutionSites/classesSubjectAjax/<?php echo $classId; ?>">
+				<?php foreach ($subjects as $obj) { ?>
+					<tr subject-id="<?php echo $obj['InstitutionSiteClassSubject']['education_grade_subject_id']; ?>">
+						<td class="table_cell"><?php echo $obj['EducationSubject']['code']; ?></td>
+						<td class="table_cell"><?php echo $obj['EducationSubject']['name']; ?></td>
+						<td class="table_cell"><?php echo $obj['EducationGrade']['name']; ?></td>
+						<td class="table_cell">
+							<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteSubject(this)', 'onDelete' => false)); ?>
+						</td>
+					</tr>
+				<?php } ?>
+            </tbody>
+        </table>
         <div class="row">
-            <?php $url = 'InstitutionSites/classesAddSubjectRow/'.$year.'/'.$classId.'/'; ?>
-            <a class="void icon_plus subjects" url="<?php echo $url; ?>"><?php echo __('Add').' '.__('Subject'); ?></a>
+			<?php $url = 'InstitutionSites/classesAddSubjectRow/' . $year . '/' . $classId . '/'; ?>
+            <a class="void icon_plus subjects" url="<?php echo $url; ?>"><?php echo __('Add') . ' ' . __('Subject'); ?></a>
         </div>
     </fieldset>
-	
+
 	<fieldset class="section_group">
 		<legend><?php echo __('Teachers'); ?></legend>
-		<div class="table">
-			<div class="table_head">
-				<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
-				<div class="table_cell"><?php echo __('Name'); ?></div>
-				<div class="table_cell cell_delete"></div>
-			</div>
-			<div class="table_body" url="InstitutionSites/classesTeacherAjax/<?php echo $classId; ?>">
-				<?php foreach($teachers as $obj) { ?>
-				<div class="table_row" teacher-id="<?php echo $obj['Teacher']['id']; ?>" subject-id="<?php echo $obj['InstitutionSiteClassTeacher']['education_subject_id']; ?>">
-					<div class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></div>
-					<div class="table_cell"><?php echo $obj['Teacher']['first_name'] . ' ' . $obj['Teacher']['last_name']; ?></div>
-					<div class="table_cell">
-						<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteTeacher(this)', 'onDelete' => false)); ?>
-					</div>
-				</div>
+		<table class="table table-striped table-hover table-bordered">
+			<thead>
+				<tr>
+					<td class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></td>
+					<td class="table_cell"><?php echo __('Name'); ?></td>
+					<td class="table_cell cell_delete"></td>
+				</tr>
+			</thead>
+			<tbody url="InstitutionSites/classesTeacherAjax/<?php echo $classId; ?>">
+				<?php foreach ($teachers as $obj) { ?>
+					<tr teacher-id="<?php echo $obj['Teacher']['id']; ?>" subject-id="<?php echo $obj['InstitutionSiteClassTeacher']['education_subject_id']; ?>">
+						<td class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></td>
+						<td class="table_cell"><?php echo $obj['Teacher']['first_name'] . ' ' . $obj['Teacher']['last_name']; ?></td>
+						<td class="table_cell">
+							<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteTeacher(this)', 'onDelete' => false)); ?>
+						</td>
+					</tr>
 				<?php } ?>
-			</div>
-		</div>
+			</tbody>
+		</table>
 		<div class="row">
-			<?php $url = 'InstitutionSites/classesAddTeacherRow/'.$year.'/'.$classId.'/'; ?>
-			<a class="void icon_plus teachers" url="<?php echo $url; ?>"><?php echo __('Add').' '.__('Teacher'); ?></a>
+			<?php $url = 'InstitutionSites/classesAddTeacherRow/' . $year . '/' . $classId . '/'; ?>
+			<a class="void icon_plus teachers" url="<?php echo $url; ?>"><?php echo __('Add') . ' ' . __('Teacher'); ?></a>
 		</div>
 	</fieldset>
-	
-	<fieldset class="section_group">
+
+	<fieldset class="section_group students">
 		<legend><?php echo __('Students'); ?></legend>
-		<?php foreach($grades as $id => $name) { ?>
-	
-		<fieldset class="section_break">
-			<legend>
-				<span><?php echo $name ?></span>
-			</legend>
-			
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
-					<div class="table_cell"><?php echo __('Name'); ?></div>
-					<div class="table_cell cell_category"><?php echo __('Category'); ?></div>
-					<div class="table_cell cell_delete"></div>
+		<?php foreach ($grades as $id => $name) { ?>
+
+			<fieldset class="section_break">
+				<legend>
+					<span><?php echo $name ?></span>
+				</legend>
+
+				<table class="table table-striped table-hover table-bordered">
+					<thead>
+						<tr>
+							<td class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></td>
+							<td class="table_cell"><?php echo __('Name'); ?></td>
+							<td class="table_cell cell_category"><?php echo __('Category'); ?></td>
+							<td class="table_cell cell_delete"></td>
+						</tr>
+					</thead>
+
+					<tbody url="InstitutionSites/classesStudentAjax/<?php echo $id; ?>">
+						<?php if (isset($students[$id])) { ?>
+							<?php foreach ($students[$id] as $obj) { ?>
+								<tr student-id="<?php echo $obj['id']; ?>">
+									<td class="table_cell"><?php echo $obj['identification_no']; ?></td>
+									<td class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']; ?></td>
+									<td class="table_cell" attr="category">
+										<?php
+										echo $this->Form->input('student_category_id', array(
+											'label' => false,
+											'div' => false,
+											'class' => 'full_width form-control',
+											'options' => $studentCategoryOptions,
+											'onchange' => 'InstitutionSiteClasses.changeStudentCategory(this)',
+											'default' => $obj['category_id']
+										));
+										?>
+									</td>
+									<td class="table_cell">
+										<?php
+										echo $this->Utility->getDeleteControl(array(
+											'onclick' => 'InstitutionSiteClasses.deleteStudent(this)',
+											'onDelete' => false
+										));
+										?>
+									</td>
+								</tr>
+							<?php } // end for ?>
+						<?php } // end if   ?>
+					</tbody>
+				</table>
+
+				<div class="row">
+					<?php $url = 'InstitutionSites/classesAddStudentRow/' . $year . '/' . $id; ?>
+					<a class="void icon_plus students" url="<?php echo $url; ?>"><?php echo __('Add') . ' ' . __('Student'); ?></a>
 				</div>
-				
-				<div class="table_body" url="InstitutionSites/classesStudentAjax/<?php echo $id; ?>">
-					<?php if(isset($students[$id])) { ?>
-					<?php foreach($students[$id] as $obj) { ?>
-					<div class="table_row" student-id="<?php echo $obj['id']; ?>">
-						<div class="table_cell"><?php echo $obj['identification_no']; ?></div>
-						<div class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']; ?></div>
-						<div class="table_cell" attr="category">
-                                                    <?php
-                                                        echo $this->Form->input('student_category_id', array(
-                                                                'label' => false,
-                                                                'div' => false,
-                                                                'class' => 'full_width',
-                                                                'options' => $studentCategoryOptions,
-                                                                'onchange' => 'InstitutionSiteClasses.changeStudentCategory(this)',
-                                                                'default' => $obj['category_id']
-                                                        ));
-                                                        ?>
-                                                </div>
-						<div class="table_cell">
-							<?php echo $this->Utility->getDeleteControl(array(
-								'onclick' => 'InstitutionSiteClasses.deleteStudent(this)',
-								'onDelete' => false
-							));
-							?>
-						</div>
-					</div>
-					<?php } // end for ?>
-					<?php } // end if ?>
-				</div>
-			</div>
-			
-			<div class="row">
-				<?php $url = 'InstitutionSites/classesAddStudentRow/'.$year.'/'.$id; ?>
-				<a class="void icon_plus students" url="<?php echo $url; ?>"><?php echo __('Add').' '.__('Student'); ?></a>
-			</div>
-		</fieldset>
+			</fieldset>
 		<?php } ?>
 	</fieldset>
-        <div class="controls">
+	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classesView', $classId), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
-	
+
 	<?php echo $this->Form->end(); ?>
 </div>
+<?php $this->end(); ?>
