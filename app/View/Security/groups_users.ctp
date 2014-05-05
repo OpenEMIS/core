@@ -48,7 +48,7 @@ $this->start('contentBody');
 	<?php foreach($data as $roleId => $obj) { ?>
 	<fieldset class="section_break">
 		<legend><?php echo $obj['name']; ?> (<span class="user_count"><?php echo count($obj['users']) ; ?></span>)</legend>
-		<div class="table-responsive">
+		<div class="table-responsive list_wrapper">
 		<table class="table table-striped table-hover table-bordered <?php echo count($obj['users']) > 4 ? 'scroll_active' : ''; ?>">
 			<thead class="table table_header">
 				<tr class="table_head">
