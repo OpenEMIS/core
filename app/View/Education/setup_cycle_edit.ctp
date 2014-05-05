@@ -1,15 +1,22 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('education', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('education', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($pageTitle));
+$this->start('contentActions');
+echo $this->Html->link(__('Structure'), array('action' => 'index'), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'setup', $selectedOption), array('class' => 'divider'));
+$this->end();
+$this->assign('contentId', 'education_setup');
+$this->assign('contentClass', 'edit setup_cycle');
+
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="education_setup" class="content_wrapper edit setup_cycle">
 	<?php
 	echo $this->Form->create('Education', array(
 			'id' => 'submitForm',
@@ -18,14 +25,6 @@ echo $this->Html->script('jquery.sort', false);
 		)
 	);
 	?>
-	<h1>
-		<span><?php echo __($pageTitle); ?></span>
-		<?php
-		echo $this->Html->link(__('Structure'), array('action' => 'index'), array('class' => 'divider'));
-		echo $this->Html->link(__('View'), array('action' => 'setup', $selectedOption), array('class' => 'divider'));
-		?>
-	</h1>
-	
 	<div id="params" class="none">
 		<span name="category"><?php echo $selectedOption; ?></span>
 	</div>
@@ -36,6 +35,8 @@ echo $this->Html->script('jquery.sort', false);
 			'id' => 'category',
 			'options' => $setupOptions,
 			'default' => $selectedOption,
+			'class' => 'form-control',
+			'div' => 'col-md-4',
 			'autocomplete' => 'off',
 			'onchange' => 'education.navigateTo(this)'
 		));
@@ -107,4 +108,4 @@ echo $this->Html->script('jquery.sort', false);
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
-</div>
+<?php $this->end(); ?>

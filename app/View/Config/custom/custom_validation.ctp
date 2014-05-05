@@ -13,6 +13,7 @@ $this->assign('contentHeader', $this->Label->get('Config.name'));
 $this->end();
 
 $this->start('contentBody'); ?>
+
 <div class="row select_row form-group">
     <div class="col-md-4">
         <?php
@@ -38,33 +39,37 @@ $this->start('contentBody'); ?>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<td><?php echo __('Host');?></td>
-					<td><?php echo __('Port');?></td>
-					<td><?php echo __('Version');?></td>
-					<td><?php echo __('Base Dn');?></td>
+					<td><?php echo __('No');?></td>
+					<td><?php echo __('Name');?></td>
+					<td><?php echo __('Value');?></td>
 				</tr>
 			</thead>
 
 			<tbody class="table_body">
-
-				<tr>
 				<?php 
 				$i = 0;
 				foreach($element as $innerKey => $innerElement){
 					$item = $innerElement;
-					if($i++==4){
-						continue;
-					}
 				 ?>
-
+				<tr>
+					<td><?php echo ++$i;?></td>
+					<td><?php echo $this->Html->link($item['label'], array('action' => 'view', $item['id']), array('escape' => false));?></td>
+					<?php if($item['name']=='yearbook_logo'){ ?>
 					<td>
-						<?php echo ($i!=1)? $item['value'] : $this->Html->link($item['value'], array('action' => 'view', 'LDAP Configuration'), array('escape' => false));?>
+						<?php 
+						if($item['hasYearbookLogoContent']){
+							echo $this->Html->image("/Config/fetchYearbookImage/{$item['value']}", array('class' => 'profile_image', 'alt' => '90x115')); 
+						}
+						?>
 					</td>
-				
-				<?php } ?>
-				
+					<?php }else{?>
+					<td><?php echo !empty($options[$item['id']])? $options[$item['id']][$item['value']] : $item['value'];?></td>
+					<?php } ?>
 				</tr>
+
+				<?php } ?>
 			</tbody>
+		
 			</table>
 		</div>
 		<?php 
@@ -72,13 +77,14 @@ $this->start('contentBody'); ?>
 			}
 		} 
 		?>
-		<?php $this->end(); ?> 
+
+<?php $this->end(); ?>  
 <?php } ?>
 <?php if($action == 'view') { ?>
 	<?php $this->start('contentActions');
 	echo $this->Html->link($this->Label->get('general.back'), array('action' => 'index', $type), array('class' => 'divider'));
 	if($_edit && $editable) {
-		echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', 'LDAP Configuration'), array('class' => 'divider'));
+		echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $id), array('class' => 'divider'));
 	}
 	$this->end();
 
@@ -95,30 +101,31 @@ $this->end();
 $this->start('contentBody'); ?>
 
 <?php echo $this->element('alert'); ?>
-<div class="ldap">
+
+<div class="row">
+	<div class="left"><b>N</b> </div>
+	<div class="left">(Numbers)&nbsp;|&nbsp;</div>
+	<div class="left"><b>A</b> </div><div class="left">(Alpha Character)&nbsp;|&nbsp;</div><div class="left">(Special Chars)</div>
+</div>
+<div class="customvalidation">
+
 <?php
 	$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, $id));
 	echo $this->Form->create('ConfigItem', $formOptions);
 
-	echo $this->Form->input('hostId', array('type' => 'hidden'));
-	echo $this->Form->input('portId', array('type' => 'hidden'));
-	echo $this->Form->input('versionId', array('type' => 'hidden'));
-	echo $this->Form->input('base_dnId', array('type' => 'hidden'));
-	echo $this->Form->input('typeId', array('value'=> $this->request->data['ConfigItem']['type'],'type' => 'hidden'));
+	echo $this->Form->input('id', array('type' => 'hidden'));
+	echo $this->Form->input('name', array('type' => 'hidden'));
+	echo $this->Form->input('field_type', array('type' => 'hidden'));
+	echo $this->Form->input('option_type', array('type' => 'hidden'));
 
-	echo $this->Form->input('host');
-	echo $this->Form->input('port');
-	echo $this->Form->input('version');
-	echo $this->Form->input('base_dn');
+	echo $this->Form->input('type', array('value'=> $type, 'readonly' => 'readonly'));
+	echo $this->Form->input('label', array('value'=> $type, 'readonly' => 'readonly'));
+	echo $this->Form->input('value', array('class'=>'form-control custom_validation'));
+	echo $this->Form->input('default_value', array('readonly' => 'readonly'));
 
 	echo $this->Form->input('type', array('disabled' => 'disabled'));
 	
 	?>
-	<div class="form-group">
-		<label class="col-md-3 control-label"><?php echo __('Test Connection');?></label>
-		<div class="col-md-4"><?php echo $this->Form->button('Connect',array('div' => false, 'type'=>'button', 'onclick'=>'Config.checkLDAPconn()')); ?>
-		</div>
-	</div>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view', $id), array('class' => 'btn_cancel btn_left')); ?>

@@ -124,7 +124,7 @@ class ConfigItem extends AppModel {
       	)
   	);
 	 
- 	public function beforeValidate() {
+ 	public function beforeValidate($options = array()) {
       // We might want to check data
 
       if ($this->data['ConfigItem']['type']=='Data Discrepancy') {

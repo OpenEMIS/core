@@ -44,7 +44,13 @@ class LabelHelper extends AppHelper {
 			'status' => 'Status',
             'yes' => 'Yes',
             'no' => 'No',
-			'general' => 'General'
+			'general' => 'General',
+            'label' => 'Label',
+            'default' => 'Default',
+            'modified_by' => 'Modified By',
+            'created_by' => 'Created By',
+            'enabled' => 'Enabled',
+            'disabled' => 'Disabled'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
@@ -140,7 +146,17 @@ class LabelHelper extends AppHelper {
 		'StaffQualification' => array(
             'qualification_institution_country' => 'Institution Country',
 			'gpa' => 'Grade/Score',
-			'file_name' => 'Attachment',
+			'file_name' => 'Attachment'
+        ),
+        'Database' => array(
+            'backup' => 'Backup',
+            'restore' => 'Restore'
+        ),
+        'DataProcessing' => array(
+            'process' => 'Processes',
+            'export' => 'Export',
+            'generate' => 'Generate',
+            'custom_indicators' => 'Custom Indicators'
         ),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',

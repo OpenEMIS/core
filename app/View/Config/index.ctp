@@ -28,9 +28,7 @@ $this->start('contentBody'); ?>
 	<!-- Items -->
 	<?php
 		if(isset($items)) {
-			// pr($items);
 			foreach($items as $key => $element){ 
-			// pr($element);
 				if(isset($element) && sizeof($element) > 0) { 
 	?>
 
@@ -53,7 +51,17 @@ $this->start('contentBody'); ?>
 				<tr>
 					<td><?php echo ++$i;?></td>
 					<td><?php echo $this->Html->link($item['label'], array('action' => 'view', $item['id']), array('escape' => false));?></td>
+					<?php if($item['name']=='yearbook_logo'){ ?>
+					<td>
+						<?php 
+						if($item['hasYearbookLogoContent']){
+							echo $this->Html->image("/Config/fetchYearbookImage/{$item['value']}", array('class' => 'profile_image', 'alt' => '90x115')); 
+						}
+						?>
+					</td>
+					<?php }else{?>
 					<td><?php echo !empty($options[$item['id']])? $options[$item['id']][$item['value']] : $item['value'];?></td>
+					<?php } ?>
 				</tr>
 
 				<?php } ?>

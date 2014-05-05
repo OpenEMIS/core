@@ -1,54 +1,54 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('education', 'stylesheet', array('inline' => false));
-
 echo $this->Html->script('education', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($pageTitle));
+$this->start('contentActions');
+echo $this->Html->link(__('Structure'), array('action' => 'index'), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'setup', $selectedOption), array('class' => 'divider'));
+$this->end();
+$this->assign('contentId', 'education_setup');
+$this->assign('contentClass', 'edit');
+
+$this->start('contentBody');
 ?>
+<?php
+echo $this->Form->create('Education', array(
+	'id' => 'submitForm',
+	'inputDefaults' => array('label' => false, 'div' => false),
+	'url' => array('controller' => 'Education', 'action' => 'setupEdit', $selectedOption)
+));
+?>
+<div id="params" class="none">
+	<span name="category"><?php echo $selectedOption; ?></span>
+</div>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="education_setup" class="content_wrapper edit">
+<div class="row category">
 	<?php
-	echo $this->Form->create('Education', array(
-		'id' => 'submitForm',
-		'inputDefaults' => array('label' => false, 'div' => false),
-		'url' => array('controller' => 'Education', 'action' => 'setupEdit', $selectedOption)
+	echo $this->Form->input('category', array(
+		'id' => 'category',
+		'options' => $setupOptions,
+		'default' => $selectedOption,
+		'class' => 'form-control',
+		'div' => 'col-md-4',
+		'autocomplete' => 'off',
+		'onchange' => 'education.navigateTo(this)'
 	));
 	?>
-	<h1>
-		<span><?php echo __($pageTitle); ?></span>
-		<?php
-		echo $this->Html->link(__('Structure'), array('action' => 'index'), array('class' => 'divider'));
-		echo $this->Html->link(__('View'), array('action' => 'setup', $selectedOption), array('class' => 'divider'));
-		?>
-	</h1>
+</div>
 	
-	<div id="params" class="none">
-		<span name="category"><?php echo $selectedOption; ?></span>
+<div class="table full_width">
+	<div class="table_head">
+		<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
+		<div class="table_cell"><?php echo __($pageTitle); ?></div>
+		<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
 	</div>
-	
-	<div class="row category">
-		<?php
-		echo $this->Form->input('category', array(
-			'id' => 'category',
-			'options' => $setupOptions,
-			'default' => $selectedOption,
-			'autocomplete' => 'off',
-			'onchange' => 'education.navigateTo(this)'
-		));
-		?>
-	</div>
-		
-	<div class="table full_width">
-		<div class="table_head">
-			<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-			<div class="table_cell"><?php echo __($pageTitle); ?></div>
-			<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
-		</div>
-	</div>
-	
+
+</div>
 	<?php
 	echo $this->Utility->getListStart();
 	foreach($list as $i => $obj) {
@@ -66,11 +66,10 @@ echo $this->Html->script('jquery.sort', false);
 	echo $this->Utility->getListEnd();
 	if($_add && $addAllowed) { echo $this->Utility->getAddRow($pageTitle); }
 	?>
-	
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'setup', $selectedOption), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-	
-	<?php echo $this->Form->end(); ?>
+<div class="controls">
+	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+	<?php echo $this->Html->link(__('Cancel'), array('action' => 'setup', $selectedOption), array('class' => 'btn_cancel btn_left')); ?>
 </div>
+
+<?php echo $this->Form->end(); ?>
+<?php $this->end(); ?>

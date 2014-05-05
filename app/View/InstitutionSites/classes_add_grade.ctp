@@ -1,30 +1,31 @@
 <?php if(!empty($gradeOptions)) { ?>
 
-<div class="table_row">
-	<div class="table_cell">
+<tr>
+	<td class="table_cell">
 		<?php
 		echo $this->Form->input('institution_site_programme_id', array(
 			'label' => false,
 			'div' => false,
+			'class' => 'form-control',
 			'url' => 'InstitutionSites/programmesGradeList',
 			'options' => $programmeOptions,
 			'default' => $selectedProgramme,
 			'onchange' => 'objInstitutionSite.getGradeList(this)'
 		));
 		?>
-	</div>
-	<div class="table_cell">
+	</td>
+	<td class="table_cell">
 		<?php 
 		echo $this->Form->input(sprintf('%s.%d.%s', $model, $index, 'education_grade_id'), array(
 			'label' => false,
 			'div' => false,
-			'class' => 'grades',
+			'class' => 'grades form-control',
 			'options' => $gradeOptions
 		)); 
 		?>
-	</div>
-	<div class="table_cell"><?php echo $this->Utility->getDeleteControl(); ?></div>
-</div>
+	</td>
+	<td class="table_cell"><?php echo $this->Utility->getDeleteControl(); ?></td>
+</tr>
 
 <?php } else { ?>
 

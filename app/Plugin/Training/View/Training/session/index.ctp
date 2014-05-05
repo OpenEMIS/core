@@ -22,6 +22,7 @@ $this->start('contentBody');
                 'options' => $statusOptions,
                 'default' => $selectedStatus,
                 'empty' => __('All'),
+                'class'=>'form-control',
                 'label' => false,
                 'url' => 'Training/session',
                 'onchange' => 'jsForm.change(this)'
@@ -42,22 +43,12 @@ $this->start('contentBody');
        </thead>
         <tbody>
         	<?php foreach($data as $id=>$val) { ?>
-<<<<<<< HEAD
             <tr row-id="<?php echo $val[$modelName]['id']; ?>">
             	<td class="table_cell"><?php echo $val[$modelName]['start_date'] ?> - <?php echo $val[$modelName]['end_date'] ?></td>
                 <td class="table_cell"><?php echo $val[$modelName]['location']; ?></td>
                 <td class="table_cell"><?php echo $this->Html->link($val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title'], array('action' => 'sessionView', $val[$modelName]['id']), array('escape' => false)); ?></td>
                 <td class="table_cell"><?php echo $val['TrainingStatus']['name'] ?></td>
             </tr>
-=======
-            <div class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
-            	<div class="table_cell"><?php echo $val[$modelName]['start_date'] ?> - <?php echo $val[$modelName]['end_date'] ?></div>
-                <div class="table_cell"><?php echo $val[$modelName]['location']; ?></div>
-                <div class="table_cell"><?php echo  $val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title']; ?></div>
-                <div class="table_cell"><?php echo $this->TrainingUtility->getTrainingStatus($modelName, $val[$modelName]['id'], $val['TrainingStatus']['name'], $val[$modelName]['training_status_id']); ?>
-                </div>
-            </div>
->>>>>>> 38e03e699fdf3d4d1f0eab27f2b18acf10efbe9b
            <?php } ?>
         </tbody>
     </table>
