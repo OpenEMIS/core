@@ -1,6 +1,6 @@
 <?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('table_cell', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false));
