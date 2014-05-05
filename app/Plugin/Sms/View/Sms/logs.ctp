@@ -24,6 +24,7 @@ $this->start('contentBody');
 			echo $this->Form->input('type_id', array(
 				'options' => $typeOptions,
 				'default' => $selectedType,
+				'class'=>'form-control',
 				'empty' => __('All'),
 				'label' => false,
 				'url' => 'Sms/logs',

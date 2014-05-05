@@ -92,7 +92,6 @@ echo $this->Form->create($model, $formOptions);
 		<?php } ?>
 		</div>
 	</div>
-<<<<<<< HEAD
 	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
 
 	</div>
@@ -110,58 +109,6 @@ echo $this->Form->create($model, $formOptions);
 		<div class="delete-provider" name="data[DeleteProvider][{index}][id]"></div>
 		<div class="table_body" style="display:table;">
 		<?php if(isset($this->request->data['TrainingCourseProvider']) && !empty($this->request->data['TrainingCourseProvider'])){ ?>
-=======
-    <div class="row">
-        <div class="label"><?php echo __('Credits'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('credit_hours', array('options'=>$trainingCreditHourOptions)); 
-		?>
-        </div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo 'ساعات'; ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('duration'); 
-		?>
-        </div>
-    </div>
-     <div class="row">
-        <div class="label"><?php echo __('Mode of Delivery'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('training_mode_delivery_id', array('options'=>$trainingModeDeliveryOptions)); 
-		?>
-        </div>
-    </div>
-    <div class="row row_provider" style="min-height:45px;">
-        <div class="label"><?php echo __('Training Provider'); ?></div>
-        <div class="value">
-		<div class="table provider" style="width:247px;" url="Training/ajax_find_prerequisite/">
-			<div class="delete-provider" name="data[DeleteProvider][{index}][id]"></div>
-			<div class="table_body" style="display:table;">
-			<?php if(isset($this->request->data['TrainingCourseProvider']) && !empty($this->request->data['TrainingCourseProvider'])){ ?>
-				<?php 
-				$i = 0;   
-				foreach($this->request->data['TrainingCourseProvider'] as $val){ ?>
-				<div class="table_row " row-id="<?php echo $i;?>">
-					<div class="table_cell cell_description" style="width:90%">
-						<div class="input_wrapper">	
-						<?php echo $this->Form->input('TrainingCourseProvider.' . $i . '.training_provider_id', array(
-							'options'=>$trainingProviderOptions,'value'=>$val['training_provider_id'], 'label'=>false, 'div'=>false, 'class'=>false)); ?>
-						<?php if(isset($val['id'])){ ?>
-						<?php echo $this->Form->hidden('TrainingCourseProvider.' . $i . '.id', array('value'=>$val['id'], 
-						'class' => 'control-id')); ?>
-						<?php } ?>
-						</div>
-				    </div>
-				 
-					<div class="table_cell cell_delete">
-				    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteProvider(this)"></span>
-				    </div>
-				</div>
->>>>>>> 38e03e699fdf3d4d1f0eab27f2b18acf10efbe9b
 			<?php 
 			$i = 0;   
 			foreach($this->request->data['TrainingCourseProvider'] as $val){ ?>
@@ -181,16 +128,6 @@ echo $this->Form->create($model, $formOptions);
 			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteProvider(this)"></span>
 			    </div>
 			</div>
-<<<<<<< HEAD
-=======
-		</div>
-		<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addProvider(this)" url="Training/ajax_add_provider"  href="javascript: void(0)"><?php echo 'إضافة موفر';?></a></div>
-		</div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Training Requirement'); ?></div>
-        <div class="value">
->>>>>>> 38e03e699fdf3d4d1f0eab27f2b18acf10efbe9b
 		<?php 
 			$i++;
 		} ?>
@@ -290,7 +227,6 @@ echo $this->Form->create($model, $formOptions);
 	 <div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
 	<?php echo $this->Utility->getAddRow('Attachment'); ?>
 	</div>
-<<<<<<< HEAD
 </div>
 <div class="controls view_controls">
 	<?php if(!isset($this->request->data['TrainingCourse']['training_status_id']) || $this->request->data['TrainingCourse']['training_status_id']==1){ ?>
@@ -303,8 +239,3 @@ echo $this->Form->create($model, $formOptions);
 <?php echo $this->Form->end(); ?>
 
 <?php $this->end(); ?>	
-=======
-	
-	<?php echo $this->Form->end(); ?>
-</div>
->>>>>>> 38e03e699fdf3d4d1f0eab27f2b18acf10efbe9b

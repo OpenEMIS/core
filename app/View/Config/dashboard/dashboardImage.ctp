@@ -9,21 +9,15 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('System Configurations'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('Back to List'), array('controller' => 'Config', 'action' => 'dashboard'), array('class' => 'divider', 'id' => 'back_to_config'));
+echo $this->Html->link(__('Back to List'), array('controller' => 'Config', 'action' => 'DashboardEdit', $data["id"]), array('class' => 'divider', 'id' => 'back_to_config'));
 $this->end();
-
+$this->assign('contentId', 'site');
+$this->assign('contentClass', 'dashboard_wrapper');
 $this->start('contentBody'); ?>
-<?php echo $this->element('alert'); ?>
-?>
 
-<div id="site" class="content_wrapper dashboard_wrapper">
-	<h1>
-		<span><?php echo __('Dashboard Image'); ?></span>
-		<?php echo $this->Html->link(__('Back to List'), array('controller' => 'Config', 'action' => 'dashboard'), array('class' => 'divider', 'id' => 'back_to_config')); ?>
-		<!-- <a class="void link-edit divider">Edit</a> -->
-	</h1>
+<?php echo $this->element('alert'); ?>
+
 	<?php if(isset($data)){ ?>
-	<?php echo $this->element('alert'); ?>
 	<!-- <fieldset class="section_break">
 		<legend>Dashboard</legend>
 	</fieldset> -->
@@ -48,9 +42,9 @@ $this->start('contentBody'); ?>
 	<?php }else{ ?>
 		<div><strong>No Image</strong></div>
 	<?php } ?>
-</div>
 
 <?php //echo $this->element('sql_dump'); ?>
+
 <?php if(isset($data)) { ?>
 <script type="text/javascript">
 	$(document).ready(function(){
@@ -152,3 +146,5 @@ $this->start('contentBody'); ?>
 	} 
 </script>
 <?php } ?>
+
+<?php $this->end(); ?>

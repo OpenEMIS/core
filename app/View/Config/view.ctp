@@ -5,7 +5,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get('Config.name'));
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', $type), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'index', $type), array('class' => 'divider'));
 if($_edit && $editable) {
 	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'edit', $id), array('class' => 'divider'));
 }

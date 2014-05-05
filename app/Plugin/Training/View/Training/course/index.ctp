@@ -22,6 +22,7 @@ $this->start('contentBody');
                 'options' => $statusOptions,
                 'default' => $selectedStatus,
                 'empty' => __('All'),
+                'class'=>'form-control',
                 'label' => false,
                 'url' => 'Training/course',
                 'onchange' => 'jsForm.change(this)',
@@ -29,7 +30,6 @@ $this->start('contentBody');
             ));
         ?>
     </div>
-<<<<<<< HEAD
 </div>
 <?php if(isset($data)) { ?>
 <div class="table-responsive">
@@ -57,28 +57,3 @@ $this->start('contentBody');
 <?php } ?>
 
 <?php $this->end(); ?>  
-=======
-    <?php if(isset($data)) { ?>
-    <div class="table allow_hover full_width" action="<?php echo $this->params['controller'];?>/courseView/">
-        <div class="table_head">
-       		<div class="table_cell"><?php echo __('Code'); ?></div>
-            <div class="table_cell"><?php echo __('Title'); ?></div>
-            <div class="table_cell"><?php echo __('Credits'); ?></div>
-            <div class="table_cell"><?php echo __('Status'); ?></div>
-        </div>
-       
-        <div class="table_body">
-        	<?php foreach($data as $id=>$val) { ?>
-            <div class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
-            	<div class="table_cell"><?php echo $val[$modelName]['code'] ?></div>
-                <div class="table_cell"><?php echo  $val[$modelName]['title']; ?></div>
-                <div class="table_cell"><?php echo  $val[$modelName]['credit_hours']; ?></div>
-                <div class="table_cell"><?php echo $this->TrainingUtility->getTrainingStatus($modelName, $val[$modelName]['id'], $val['TrainingStatus']['name'], $val[$modelName]['training_status_id']); ?>
-                </div>
-            </div>
-           <?php } ?>
-        </div>
-    </div>
-    <?php } ?>
-</div>
->>>>>>> 38e03e699fdf3d4d1f0eab27f2b18acf10efbe9b

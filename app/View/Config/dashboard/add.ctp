@@ -12,7 +12,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get('Config.name'));
 
 $this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.list'), array('action' => 'index', 'Dashboard'), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'index', 'Dashboard'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody'); ?>
@@ -35,6 +35,7 @@ echo $this->Form->create(null, $formOptions);
 		</div>
 	</div>
 </div>
+
 <?php //echo $this->Form->input('ConfigAttachment.0.visible', array('options'=>array('0'=>'No', '1'=>'Yes'))); ?>
 <div class="controls">
 	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />

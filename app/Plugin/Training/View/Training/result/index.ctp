@@ -19,6 +19,7 @@ $this->start('contentBody');
                 'options' => $statusOptions,
                 'default' => $selectedStatus,
                 'empty' => __('All'),
+                'class'=>'form-control',
                 'label' => false,
                 'url' => 'Training/result',
                 'onchange' => 'jsForm.change(this)'
@@ -52,8 +53,6 @@ $this->start('contentBody');
                 break;
                 }
             }   
-
-<<<<<<< HEAD
              ?>
             <td class="table_cell"><?php echo $val['TrainingStatus']['name'] ?></td>
         </tr>
@@ -64,14 +63,4 @@ $this->start('contentBody');
 <?php } ?>
 
 <?php $this->end(); ?>  
-=======
-                 ?>
-                <div class="table_cell"><?php echo $this->TrainingUtility->getTrainingStatus($modelName, $val[$modelName]['id'], $val['TrainingStatus']['name'], $val[$modelName]['training_status_id']); ?>
-                </div>
-            </div>
-           <?php } ?>
-        </div>
-    </div>
-    <?php } ?>
-</div>
->>>>>>> 38e03e699fdf3d4d1f0eab27f2b18acf10efbe9b
+

@@ -4,8 +4,10 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
+echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider'));
 if($_edit) {
-	echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider', 'id'=>'back'));
+	echo $this->Html->link(__('Download Template'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
+  	echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider'));
 }
 $this->end();
 $this->start('contentBody');
@@ -26,7 +28,6 @@ echo $this->Form->create($model, $formOptions);
 	echo $this->Form->input('TrainingSession.location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'disabled' => 'disabled', 'class'=>'form-control location', 'placeholder' => __('Location'), 'value'=>$this->request->data['TrainingSession']['location']));
 	echo $this->Form->input('TrainingSession.trainer', array('label'=>array('text'=>__('Trainer'), 'class'=>'col-md-3 control-label'), 'id' => 'searchTrainer', 'disabled' => 'disabled', 'class'=>'form-control trainer', 'placeholder' => __('Identification No, First Name or Last Name'), 'value'=>$this->request->data['TrainingSession']['trainer']));
 
-<<<<<<< HEAD
 	?>
  <div class="row">
 	<div class="label"><?php echo __('Trainees'); ?></div>
@@ -34,62 +35,6 @@ echo $this->Form->create($model, $formOptions);
 	<div class="table trainee" style="width:240px;" url="Training/ajax_find_trainee/">
 		<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
 		<div class="table_body" style="display:table;">
-=======
-<div id="training_session" class="content_wrapper edit add" url="Training/ajax_find_session/" >
-	<h1>
-		<span><?php echo __($subheader); ?></span>
-		<?php
-		
-            echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider'));
-          	echo $this->Html->link(__('Download Template'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
-          	echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider'));
-		?>
-	</h1>
-	
-	<?php
-	echo $this->Form->create($modelName, array(
-		'url' => array('controller' => 'Training', 'action' => 'resultEdit', 'plugin'=>'Training'),
-		'type' => 'file',
-		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-	));
-	?>
-
-	<?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
-	<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
-	<div class="row">
-		<div class="label"><?php echo __('Course'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('TrainingCourse.training_course_id', array('options' => $trainingCourseCodeOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingCourse']['id'])); 
-		?>
-        </div>
-    </div>
-    <div class="row">
-		<div class="label"><?php echo __('Course'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('TrainingCourse.training_course_name', array('options' => $trainingCourseOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingCourse']['id'])); 
-		?>
-        </div>
-    </div>
-    <div class="row">
-		<div class="label"><?php echo __('Provider'); ?></div>
-		<div class="value">
-			<?php echo $this->Form->input('TrainingSession.training_provider_id', array('options' => $trainingProviderOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingSession']['training_provider_id']));?>
-        </div>
-	</div>
-    <div class="row">
-        <div class="label"><?php echo __('Start Date'); ?></div>
-        <div class="value">
-		<?php 
-			echo $this->Form->input('TrainingSession.start_date', array('type' => 'date', 'default'=>$this->request->data['TrainingSession']['start_date'], 'dateFormat' => 'DMY', 'disabled' => 'disabled', 'before' => '<div class="left">', 'after' => '</div>','class'=>false)); 
-		?>
-        </div>
- 	</div>   
-    <div class="row">
-         <div class="label"><?php echo __('End Date'); ?></div>
-        <div class="value">
->>>>>>> 38e03e699fdf3d4d1f0eab27f2b18acf10efbe9b
 		<?php 
 		if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->request->data['TrainingSessionTrainee'])){ ?>
 			<?php 
