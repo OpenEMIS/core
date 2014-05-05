@@ -145,6 +145,12 @@ class LabelHelper extends AppHelper {
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
 			'date_to' => 'Last Day',
+		),
+		'StaffTrainingNeed' => array(
+			'course_title' => 'Course Title',
+			'code' => 'Course Code',
+			'requirement' => 'Training Requirement',
+			'inactivate' => 'Inactivate'
 		)
     );
 	
