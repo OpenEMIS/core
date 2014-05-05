@@ -3,7 +3,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false);
 ?>
-<?php $obj = $data[$modelName]; ?>
+<?php $obj = $data[$model]; ?>
 <?php echo $this->element('breadcrumb'); ?>
 
 <div id="training_need" class="content_wrapper">
@@ -81,6 +81,7 @@ echo $this->Html->script('search', false);
 </div> */?>
 
 <?php
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
@@ -133,7 +134,7 @@ $this->start('contentBody');
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Status'); ?></div>
-	<div class="col-md-6"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($modelName,$obj['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
+	<div class="col-md-6"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$data[$model]['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Modified by'); ?></div>
