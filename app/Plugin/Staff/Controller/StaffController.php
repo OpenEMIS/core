@@ -637,20 +637,40 @@ class StaffController extends StaffAppController {
         $staffId = $this->staffId;
         $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
         $this->Navigation->addCrumb('Attendance');
-
+		$header = __('Attendance');
         $id = @$this->request->params['pass'][0];
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+        $yearOptions = $this->SchoolYear->getYearList();
+        $selectedYearId = $this->getAvailableYearId($yearOptions);
+        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYearId));
 
-        $data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'), isset($id) ? $id : $yearId);
-
-        $this->set('selectedYear', $yearId);
-        $this->set('years', $yearList);
-        $this->set('data', $data);
-        $this->set('schoolDays', $schoolDays);
+        $data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'), isset($id) ? $id : $selectedYearId);
+		$legend = $this->generateAttendanceLegend();
+		$attendanceTypes = $this->StaffAttendanceType->getAttendanceTypes();
+		
+		$this->set(compact('header', 'attendanceTypes','legend','data','schoolDays', 'selectedYearId', 'yearOptions'));
     }
 
+	public function generateAttendanceLegend(){
+        $data = $this->StaffAttendanceType->getAttendanceTypes();
+        
+        $indicator = 0;
+        $str = '';
+        foreach($data AS $row){
+            $code = $row['StaffAttendanceType']['national_code'];
+            $name = $row['StaffAttendanceType']['name'];
+            
+            if($indicator > 0){
+                $str .= '; ' . $code . ' = ' . $name;
+            }else{
+                $str .= $code . ' = ' . $name;
+            }
+            
+            $indicator++;
+        }
+        
+        return $str;
+    }
+	
     private function getAvailableYearId($yearList) {
         $yearId = 0;
         if (isset($this->params['pass'][0])) {
