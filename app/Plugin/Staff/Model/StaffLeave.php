@@ -238,10 +238,12 @@ class StaffLeave extends StaffAppModel {
 
 			$StaffLeaveAttachment = ClassRegistry::init('StaffLeaveAttachment');
             if ($StaffLeaveAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
+				$msgData  = $controller->Message->get('FileUplaod.success.delete');
+                $result['alertOpt']['text'] = $msgData['msg'];// __('File is deleted successfully.');
             } else {
+				$msgData  = $controller->Message->get('FileUplaod.error.delete');
                 $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+                $result['alertOpt']['text'] = $msgData;//__('Error occurred while deleting file.');
             }
 			
             return json_encode($result);
