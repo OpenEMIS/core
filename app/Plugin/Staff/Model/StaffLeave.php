@@ -117,25 +117,26 @@ class StaffLeave extends StaffAppModel {
 			
 			$postData = $controller->request->data[$this->alias];
             $postData['staff_id'] = $controller->Session->read('StaffId');
-			unset($postData['file']);
-			$postFileData = $controller->request->data[$this->alias]['file'];
-			
+			unset($postData['files']);
+			$postFileData = $controller->request->data[$this->alias]['files'];
+			//pr($postFileData);
+			//pr($postData);die;
             $this->set($postData);
             if ($this->validates()) {
 				if($this->save($postData)){
 					$this->create();
 					$id = $this->getInsertID();
 					
-					if(!empty($postFileData['tmp_name'])){ 
+					//if(!empty($postFileData['tmp_name'])){ 
 						$controller->FileUploader->additionData = array('staff_leave_id' => $id);
 						$controller->FileUploader->uploadFile(NULL, $postFileData);
 						if ($controller->FileUploader->success) {
 							$controller->Message->alert('general.add.success');
 						}
-					}
+					/*}
 					else{
 						$controller->Message->alert('general.add.success');
-					}
+					}*/
 					return $controller->redirect(array('action' => 'leaves'));
 					
 				}
