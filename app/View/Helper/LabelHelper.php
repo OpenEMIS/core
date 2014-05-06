@@ -51,7 +51,8 @@ class LabelHelper extends AppHelper {
             'created_by' => 'Created By',
             'enabled' => 'Enabled',
             'disabled' => 'Disabled',
-			'category' => 'Category'
+			'category' => 'Category',
+			'year' => 'Year'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
@@ -71,7 +72,8 @@ class LabelHelper extends AppHelper {
 			'institution_site_ownership_id' => 'Ownership',
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
-			'name' => 'Institution Site'
+			'name' => 'Institution Site',
+			'programme' => 'Programme'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',

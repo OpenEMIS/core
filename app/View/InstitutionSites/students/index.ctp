@@ -41,7 +41,7 @@ echo $this->Form->create('Student', array(
 	<?php
 	echo $this->Form->input('school_year', array(
 		'id' => 'SchoolYearId',
-		'class' => 'search_select',
+		'class' => 'search_select form-control',
 		'empty' => __('All Years'),
 		'options' => $yearOptions,
 		'default' => $selectedYear
@@ -53,7 +53,7 @@ echo $this->Form->create('Student', array(
 	<?php
 	echo $this->Form->input('education_programme_id', array(
 		'id' => 'EducationProgrammeId',
-		'class' => 'search_select',
+		'class' => 'search_select form-control',
 		'empty' => __('All Programmes'),
 		'options' => $programmeOptions,
 		'default' => $selectedYear
