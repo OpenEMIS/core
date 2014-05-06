@@ -474,17 +474,20 @@ class InstitutionSiteStudent extends AppModel {
             $data = $controller->data['InstitutionSiteStudent'];
             if (isset($data['student_id'])) {
                 $date = $data['start_date'];
-                if (!empty($date['day']) && !empty($date['month']) && !empty($date['year'])) {
-                    $data['start_year'] = $date['year'];
-                    $yr = $date['year'];
-                    $mth = $date['month'];
-                    $day = $date['day'];
+                if (!empty($date)) {
+					
+					$startDate = new DateTime($date);//new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
+					
+                    $data['start_year'] = $startDate->format('Y');
+//                    $yr = $date['year'];
+//                    $mth = $date['month'];
+//                    $day = $date['day'];
 
-                    while (!checkdate($mth, $day, $yr)) {
-                        $day--;
-                    }
-                    $data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
-                    $date = $data['start_date'];
+//                    while (!checkdate($mth, $day, $yr)) {
+//                        $day--;
+//                    }
+                    //$data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
+                    //$date = $data['start_date'];
                     $student = $controller->Student->find('first', array('conditions' => array('Student.id' => $data['student_id'])));
                     $name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
                     $siteProgrammeId = $data['institution_site_programme_id'];
@@ -499,7 +502,7 @@ class InstitutionSiteStudent extends AppModel {
                         $controller->Utility->alert($name . ' ' . $controller->Utility->getMessage('STUDENT_ALREADY_EXISTS_IN_OTHER_SITE'), array('type' => 'error'));
                     }else {
                         $duration = $controller->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
-                        $startDate = new DateTime($date);//new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
+                        
                         $endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
                         $endYear = $endDate->format('Y');
                         $data['end_date'] = $endDate->format('Y-m-d');
