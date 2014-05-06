@@ -162,9 +162,14 @@ class LabelHelper extends AppHelper {
 			'date_from' => 'First Day',
 			'date_to' => 'Last Day',
 		),
-		'StaffTrainingNeed' => array(
+		'StaffTraining' => array(
 			'course_title' => 'Course Title',
+			'description' => 'Course Description',
 			'code' => 'Course Code',
+			'objective' => 'Course Goal / Objectives',
+			'provider' => 'Provider',
+			'credit_hours' => 'Credit',
+			'completed' => 'Completed',
 			'requirement' => 'Training Requirement',
 			'inactivate' => 'Inactivate'
 		)

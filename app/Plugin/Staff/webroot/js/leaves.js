@@ -7,8 +7,8 @@ var objStaffLeaves = {
 	init: function() {
 		//alert('here');
 		objStaffLeaves.compute_work_days();
-		$(".icon_plus").unbind("click");
-		$('.icon_plus').click(jsForm.insertNewInputFile);
+		//$(".icon_plus").unbind("click");
+		//$('.icon_plus').click(jsForm.insertNewInputFile);
 	},
 	validateFileSize: function(obj) {
 		//this.files[0].size gets the size of your file.
@@ -21,7 +21,7 @@ var objStaffLeaves = {
 
 		}
 	},
-	deleteFile: function(id) {
+	/*deleteFile: function(id) {
 		//	alert(getRootURL() + $('form').attr('deleteurl'));
 		var dlgId = 'deleteDlg';
 		var btn = {
@@ -65,7 +65,7 @@ var objStaffLeaves = {
 		};
 
 		$.dialog(dlgOpt);
-	},
+	},*/
 	compute_work_days: function() {
 		/*var dateFrom = new Date($('#StaffLeaveDateFromYear').val()+'-'+ $('#StaffLeaveDateFromMonth').val()+'-'+$('#StaffLeaveDateFromDay').val());
 		 var dateTo = new Date($('#StaffLeaveDateToYear').val()+'-'+$('#StaffLeaveDateToMonth').val()+'-'+$('#StaffLeaveDateToDay').val());*/
