@@ -3,7 +3,7 @@
 <?php if(isset($multiple)) :?>
 <div class="form-group">
 	<label class="col-md-3 control-label">&nbsp;</label>
-	<div class="col-md-7"><a class="void icon_plus" multipleURL='<?php echo $multiple['multipleURL'];?>'><?php echo __($this->Label->get('general.add')); ?></a></div>
+	<div class="col-md-7"><a class="void icon_plus" onclick="jsForm.insertNewInputFile(this)" multipleURL='<?php echo $multiple['multipleURL'];?>'><?php echo __($this->Label->get('general.add')); ?></a></div>
 </div>
 <?php endIf; ?>
 

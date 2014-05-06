@@ -18,7 +18,8 @@ class OptionComponent extends Component {
 	public function get($code) {
 		$options = array(
 			'yesno' => array(1 => __('Yes'), 0 => __('No')),
-			'bloodtype' => array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-')
+			'bloodtype' => array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-'),
+			'passfail' => array(1 => __('Passed'), 0 => __('Failed')),
 		);
 		
 		$index = explode('.', $code);

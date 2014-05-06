@@ -54,9 +54,11 @@ class MessageComponent extends Component {
 		'FileUplaod' => array(
 			'success' => array(
 				'singular' =>  array('type' => 'ok', 'msg' => 'The file has been uploaded.'),
-				'plural' =>  array('type' => 'ok', 'msg' => 'The files has been uploaded.')
+				'plural' =>  array('type' => 'ok', 'msg' => 'The files has been uploaded.'),
+				'delete' => array('type'=> 'error', 'msg' => 'File is deleted successfully.'),
 			),
 			'error' => array(
+				'delete' => array('type'=> 'error', 'msg' => 'Error occurred while deleting file.'),
 				'general' => array('type' => 'error', 'msg' => 'An error has occur. Please contact the system administrator.'),
 				'uploadSizeError' => array('type' => 'error', 'msg' => 'Please ensure that the file is smaller than file limit.'),
 				'UPLOAD_ERR_NO_FILE' => array('type' => 'info', 'msg' => 'No file was uploaded.'),

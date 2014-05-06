@@ -492,14 +492,14 @@ var jsForm = {
         $("body").html(replaced);
     },
 			
-	insertNewInputFile: function() {
+	insertNewInputFile: function(obj) {
+
 		var size = $('.fileupload').length;
 		var fileMaxLimit = 5;
 
 		if (size < fileMaxLimit) {
 			var maskId;
-			var url = getRootURL() + $(this).attr('multipleURL');
-
+			var url = getRootURL() + $(obj).attr('multipleURL');
 			$.ajax({
 				type: 'POST',
 				dataType: 'text',
@@ -516,6 +516,51 @@ var jsForm = {
 				}
 			});
 		}
+	},
+	deleteFile: function(id) {
+		//	alert(getRootURL() + $('form').attr('deleteurl'));
+		var dlgId = 'deleteDlg';
+		var btn = {
+			value: i18n.General.textDelete,
+			callback: function() {
+				var maskId;
+				//var controller = $('#controller').text();
+				var url = getRootURL() + $('form').attr('deleteurl');
+				$.ajax({
+					type: 'POST',
+					dataType: 'json',
+					url: url,
+					data: {id: id},
+					beforeSend: function(jqXHR) {
+						maskId = $.mask({parent: '.content_wrapper', text: i18n.Attachments.textDeletingAttachment});
+					},
+					success: function(data, textStatus) {
+						var callback = function() {
+							var closeEvent = function() {
+								var successHandler = function() {
+									$('[file-id=' + id + ']').parent().fadeOut(600, function() {
+										$(this).remove();
+										attachments.renderTable();
+									});
+								};
+								jsAjax.result({data: data, callback: successHandler});
+							};
+							$.closeDialog({id: dlgId, onClose: closeEvent});
+						};
+						$.unmask({id: maskId, callback: callback});
+					}
+				});
+			}
+		};
+
+		var dlgOpt = {
+			id: dlgId,
+			title: i18n.Attachments.titleDeleteAttachment,
+			content: i18n.Attachments.contentDeleteAttachment,
+			buttons: [btn]
+		};
+
+		$.dialog(dlgOpt);
 	},
 };
 

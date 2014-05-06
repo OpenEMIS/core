@@ -20,11 +20,14 @@ class StaffTrainingResult extends AppModel {
 	public $useTable = false; // This model uses a database table 'exmp'
 
 	public $headerDefault = 'Training Results';
-		
+	
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+	
 	public function trainingResult($controller, $params) {
 
 		$controller->Navigation->addCrumb($this->headerDefault);
-		$controller->set('modelName', $this->name);
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$data = $trainingSessionTrainee->find('all',
 			array(
@@ -70,7 +73,7 @@ class StaffTrainingResult extends AppModel {
 			)
 		);
 
-		$controller->set('subheader', $this->headerDefault);
+		$controller->set('header', __($this->headerDefault));
 		$controller->set('data', $data);
 		
 	}

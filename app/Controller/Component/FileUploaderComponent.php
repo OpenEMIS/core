@@ -128,7 +128,7 @@ class FileUploaderComponent extends Component {
 				$id = $this->data[$this->fileModel]['id'];
 			}
 
-			if ($this->_checkType() && $this->_checkFile()) {
+			if ($this->_checkFile() && $this->_checkType() ) {
 				$this->_processFile($id);
 			} else {
 				$this->success = false;
