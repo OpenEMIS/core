@@ -14,13 +14,14 @@ $this->end();
 
 $this->start('contentBody'); ?>
 <div class="row select_row form-group">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <?php
             echo $this->Form->input('type', array(
                 'options' => $typeOptions,
                 'default' => $selectedType,
                 'label' => false,
                 'url' => 'Config/index',
+                'class' => 'form-control',
                 'onchange' => 'jsForm.change(this)',
                 'div' => false
             ));

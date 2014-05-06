@@ -1,13 +1,11 @@
 .section_group .table { width: 100%; }
 
 .table {
-	color: #666666;
-	/*
 	display: table;
+	color: #666666;
 	table-layout: fixed;
 	border-collapse: collapse;
 	margin-bottom: 12px;
-	*/
 }
 
 .table.full_width { width: 99%; margin-left: 3px; }
@@ -44,6 +42,7 @@
 
 .table_head .table_cell {
 	min-width: 60px;
+	/* white-space: nowrap; */
 	text-align: center;
 	font-weight: bold;
 	line-height: 18px;
@@ -99,18 +98,16 @@
 .list_wrapper > .table { margin-bottom: 0; }
 .scroll_active .list_wrapper { overflow-y: scroll; padding-right: 1px; }
 
-/* <table> styles starts here */
+.table { width: 100%; border-spacing: 0; }
 .table thead tr { background-color: #EFEFEF; }
-.table thead th {  font-weight: bold;  text-align: center; }
-.table td { font-size: 11px; }
+.table thead td {  font-weight: bold;  text-align: center; }
+.table.table-hover tbody tr:hover { background-color:#5b8baf; color: #FFFFFF; cursor: pointer; }
+.table td { font-size: 11px; padding: 5px 8px; border: 1px solid #CCCCCC; }
 .table a { color: #007CBE; }
 .action { margin-left: 5px; }
-.cell-number { text-align: right; }
-
-.col-order { width: 83px; }
 
 td.cell_order { width: 63px; margin-left: -1px; }
 
-.report .table td {
-	vertical-align: middle;
+.edit .table {
+    margin-bottom: 0;
 }

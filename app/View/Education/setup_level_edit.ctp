@@ -1,5 +1,5 @@
 <?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('education', 'stylesheet', array('inline' => false));
 echo $this->Html->script('education', false);
 echo $this->Html->script('jquery.quicksand', false);
@@ -54,49 +54,79 @@ foreach($list as $systemName => $levels) {
 		<span name="education_system_id"><?php echo $levels['id']; ?></span>
 	</div>
 	
-	<div class="table full_width">
-		<div class="table_head">
-			<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-			<div class="table_cell"><?php echo __($pageTitle); ?></div>
-			<div class="table_cell"><?php echo __('ISCED Level'); ?></div>
-			<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
-		</div>
-	</div>
-	
-	<?php
-	echo $this->Utility->getListStart();
-	foreach($levels as $i => $obj) {
-		if($i === 'id') continue;
-		$isVisible = $obj['visible']==1;
-		$fieldName = sprintf('data[%s][%s][%%s]', $model, $index++);
-	
-		echo $this->Utility->getListRowStart($i, $isVisible);
-		echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
-		echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
-		echo $this->Form->hidden('education_system_id', array(
-			'id' => 'education_system_id',
-			'name' => sprintf($fieldName, 'education_system_id'),
-			'value' => $levels['id']
-		));
-		echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
-		echo $this->Utility->getNameInput($this->Form, $fieldName, $obj['name'], $isNameEditable);
+	<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered table_view">
+		<thead>
+			<tr>
+				<th class="table_cell cell_visible"><?php echo __('Visible'); ?></th>
+				<th class="table_cell"><?php echo __($pageTitle); ?></th>
+				<th class="table_cell"><?php echo __('ISCED Level'); ?></th>
+				<th class="table_cell cell_order"><?php echo __('Order'); ?></th>
+			</tr>
+		</thead>
+		<tbody>
+		<?php
+		//echo $this->Utility->getListStart();
+		$index = 1;
+		foreach($levels as $i => $obj) {
+			if($i === 'id') continue;
+			$fieldName = sprintf('data[%s][%s][%%s]', $model, $index++);
+			/*$isVisible = $obj['visible']==1;
+			$fieldName = sprintf('data[%s][%s][%%s]', $model, $index++);
 		
-		echo '<div class="cell cell_isced">';
-		echo $this->Form->select('education_level_isced_id', $isced,
-			array(
-				'name' => sprintf($fieldName, 'education_level_isced_id'),
-				'value' => $obj['education_level_isced_id'],
-				'empty' => false
-			)
-		);
-		echo '</div>';
-		echo $this->Utility->getOrderControls();
-		echo $this->Utility->getListRowEnd();
-	}
-	echo $this->Utility->getListEnd();
-	
-	if($_add) { echo $this->Utility->getAddRow($pageTitle); }
-	?>
+			echo $this->Utility->getListRowStart($i, $isVisible);
+			echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
+			echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
+			echo $this->Form->hidden('education_system_id', array(
+				'id' => 'education_system_id',
+				'name' => sprintf($fieldName, 'education_system_id'),
+				'value' => $levels['id']
+			));
+			echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
+			echo $this->Utility->getNameInput($this->Form, $fieldName, $obj['name'], $isNameEditable);
+			
+			echo '<div class="cell cell_isced">';
+			echo $this->Form->select('education_level_isced_id', $isced,
+				array(
+					'name' => sprintf($fieldName, 'education_level_isced_id'),
+					'value' => $obj['education_level_isced_id'],
+					'empty' => false
+				)
+			);
+			echo '</div>';
+			echo $this->Utility->getOrderControls();
+			echo $this->Utility->getListRowEnd();*/ ?>
+
+			<tr row-id="<?php echo $obj['id']; ?>">
+				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></td>
+				<td><?php echo $obj['name']; ?></td>
+				<td><?php echo $this->Form->select('education_level_isced_id', $isced,
+					array(
+						'name' => sprintf($fieldName, 'education_level_isced_id'),
+						'value' => $obj['education_level_isced_id'],
+						'empty' => false,
+						'class' => 'form-control'
+					)
+				); ?>
+				</td>
+				<td class="action">
+					<?php
+					$size = count($obj);
+					echo $this->element('layout/reorder', compact('index', 'size'));
+					$index++;
+					?>
+				</td>
+			</tr>
+		<?php 
+		}
+		//åecho $this->Utility->getListEnd();
+		?>
+	</tbody>
+</table>
+</div>
+<?php 
+if($_add) { echo $this->Utility->getAddRow($pageTitle); }
+?>
 </fieldset>
 <?php } ?>
 

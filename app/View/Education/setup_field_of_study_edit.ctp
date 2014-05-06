@@ -43,21 +43,25 @@ echo $this->Form->create('Education', array(
 	?>
 </div>
 	
-<div class="table full_width">
-	<div class="table_head">
-		<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-		<div class="table_cell"><?php echo __($pageTitle); ?></div>
-		<div class="table_cell"><?php echo __('Programme Orientation'); ?></div>
-		<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
-	</div>
-</div>
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered table_view">
+	<thead>
+		<tr>
+			<th class="table_cell cell_visible"><?php echo __('Visible'); ?></th>
+			<th class="table_cell"><?php echo __($pageTitle); ?></th>
+			<th class="table_cell"><?php echo __('Programme Orientation'); ?></th>
+			<th class="table_cell cell_order"><?php echo __('Order'); ?></th>
+		</tr>
+	</thead>
+<tbody>
 	
 <?php
-echo $this->Utility->getListStart();
+//echo $this->Utility->getListStart();
+$index = 1;
 foreach($list as $i => $obj) {
 	$isVisible = $obj['visible']==1;
 	$fieldName = sprintf('data[%s][%s][%%s]', $model, $i);
-	
+	/*
 	echo $this->Utility->getListRowStart($i, $isVisible);
 	echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
 	echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
@@ -72,12 +76,37 @@ foreach($list as $i => $obj) {
 	));
 	echo '</div>';
 	echo $this->Utility->getOrderControls();
-	echo $this->Utility->getListRowEnd();
+	echo $this->Utility->getListRowEnd();*/ ?>
+	<tr row-id="<?php echo $obj['id']; ?>">
+		<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></td>
+		<td><?php echo $obj['name']; ?></td>
+		<td><?php echo $this->Form->input('education_programme_orientation_id', array(
+			'name' => sprintf($fieldName, 'education_programme_orientation_id'),
+			'options' => $orientation,
+			'default' => $obj['education_programme_orientation_id'],
+			'autocomplete' => 'off',
+			'class' => 'form-control'
+		)); ?>
+		</td>
+		<td class="action">
+			<?php
+			$size = count($obj);
+			echo $this->element('layout/reorder', compact('index', 'size'));
+			$index++;
+			?>
+		</td>
+	</tr>
+<?php
 }
-echo $this->Utility->getListEnd();
-if($_add) { echo $this->Utility->getAddRow($pageTitle); } 
-?>
+//echo $this->Utility->getListEnd();
 
+?>
+</tbody>
+</table>
+</div>
+<?php 
+if($_add) { echo $this->Utility->getAddRow($pageTitle); }
+?>
 <div class="controls">
 	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'setup', $selectedOption), array('class' => 'btn_cancel btn_left')); ?>
