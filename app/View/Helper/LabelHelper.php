@@ -52,7 +52,8 @@ class LabelHelper extends AppHelper {
             'enabled' => 'Enabled',
             'disabled' => 'Disabled',
 			'category' => 'Category',
-			'year' => 'Year'
+			'year' => 'Year',
+			'details' => 'Details'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
