@@ -1,5 +1,5 @@
 <?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('education', 'stylesheet', array('inline' => false));
 echo $this->Html->script('education', false);
 echo $this->Html->script('jquery.quicksand', false);
@@ -60,23 +60,27 @@ foreach($list as $systemId => $systemObj) {
 			<span name="education_cycle_id"><?php echo $cycleId; ?></span>
 		</div>
 
-		<div class="table full_width">
-			<div class="table_head">
-				<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-				<div class="table_cell cell_code"><?php echo __('Code'); ?></div>
-				<div class="table_cell"><?php echo __($pageTitle); ?></div>
-				<div class="table_cell cell_duration"><?php echo __('Duration'); ?></div>
-				<div class="table_cell cell_grade_link"><?php echo __('Grades'); ?></div>
-				<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
-			</div>
-		</div>
+		<div class="table-responsive">
+		<table class="table table-striped table-hover table-bordered table_view">
+			<thead>
+				<tr>
+					<th class="table_cell cell_visible"><?php echo __('Visible'); ?></th>
+					<th class="table_cell cell_code"><?php echo __('Code'); ?></th>
+					<th class="table_cell"><?php echo __($pageTitle); ?></th>
+					<th class="table_cell cell_duration"><?php echo __('Duration'); ?></th>
+					<th class="table_cell cell_grade_link"><?php echo __('Grades'); ?></th>
+					<th class="table_cell cell_order"><?php echo __('Order'); ?></th>
+				</tr>
+			</thead>
+		<tbody>
 		
 		<?php
-		echo $this->Utility->getListStart();
+		//echo $this->Utility->getListStart();
+		$index = 1;
 		foreach($cycleObj['programmes'] as $i => $obj) {
 			$isVisible = $obj['visible']==1;
 			$fieldName = sprintf('data[%s][%s][%%s]', $model, $index++);
-			echo $this->Utility->getListRowStart($i, $isVisible);
+			/*echo $this->Utility->getListRowStart($i, $isVisible);
 			echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
 			echo $this->Utility->getOrderInput($this->Form, $fieldName, ($i+1));
 			echo $this->Utility->getVisibleInput($this->Form, $fieldName, $isVisible);
@@ -99,11 +103,40 @@ foreach($list as $systemId => $systemObj) {
 			echo $this->Html->link(__('Grades'), array('action' => 'setupEdit', 'Grade', $obj['id']));
 			echo '</div>';
 			echo $this->Utility->getOrderControls();
-			echo $this->Utility->getListRowEnd();
+			echo $this->Utility->getListRowEnd();*/ ?>
+			<tr row-id="<?php echo $obj['id']; ?>">
+				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></td>
+				<td><?php echo $obj['name']; ?></td>
+				<td><?php echo $this->Form->input('name', array('name' => sprintf($fieldName, 'name'), 'value' => $obj['name'],
+					'class' => 'form-control')); ?></td>
+				<td><?php $inputOpts = array(
+					'name' => sprintf($fieldName, 'duration'),
+					'type' => 'text',
+					'value' => $obj['duration'],
+					'maxlength' => 2,
+					'class' => 'form-control'
+				);
+				echo $this->Form->input('duration', $inputOpts); ?>
+				</td>
+				<td><?php echo $this->Html->link(__('Grades'), array('action' => 'setupEdit', 'Grade', $obj['id'])); ?></td>
+				<td class="action">
+					<?php
+					$size = count($obj);
+					echo $this->element('layout/reorder', compact('index', 'size'));
+					$index++;
+					?>
+				</td>
+			</tr>
+		<?php
 		}
-		echo $this->Utility->getListEnd();
-		if($_add) { echo $this->Utility->getAddRow($pageTitle); }
+		//echo $this->Utility->getListEnd();
 		?>
+	</tbody>
+	</table>
+	</div>
+	<?php 
+	if($_add) { echo $this->Utility->getAddRow($pageTitle); }
+	?>
 	</fieldset>
 	<?php 
 		} // end for(cycles)
