@@ -164,7 +164,7 @@ echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
 ?>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Status'); ?></div>
-	<div class="col-md-6"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($modelName,$obj['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
+	<div class="col-md-6"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$obj['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
 </div>
 
 <?php 
