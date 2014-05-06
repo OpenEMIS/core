@@ -1,4 +1,4 @@
-<?php
+<?php /*
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 ?>
@@ -67,3 +67,18 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
     		</div>
     	</div>
 </div>
+ * 
+ */ ?>
+
+<?php
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+
+$this->start('contentActions');
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'behaviour'), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
+echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+$this->end();
+?>

@@ -45,6 +45,9 @@ foreach($fields['fields'] as $field) {
 						$value = $field['options'][$data[$model][$key]];
 					}
 				}
+				else{
+					$value = nl2br($value);
+				}
 
 				echo '<div class="row">';
 				echo '<div class="col-md-3">' . $label . '</div>';

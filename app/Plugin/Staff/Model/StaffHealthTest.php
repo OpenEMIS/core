@@ -80,7 +80,7 @@ class StaffHealthTest extends StaffAppModel {
 
         if (empty($data)) {
             $controller->Message->alert('general.noData');
-            $controller->redirect(array('action' => 'healthTest'));
+            return $controller->redirect(array('action' => 'healthTest'));
         }
 
         $controller->Session->write('StaffHealthTestId', $id);

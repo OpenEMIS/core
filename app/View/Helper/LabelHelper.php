@@ -50,7 +50,8 @@ class LabelHelper extends AppHelper {
             'modified_by' => 'Modified By',
             'created_by' => 'Created By',
             'enabled' => 'Enabled',
-            'disabled' => 'Disabled'
+            'disabled' => 'Disabled',
+			'category' => 'Category'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
@@ -69,7 +70,8 @@ class LabelHelper extends AppHelper {
 			'institution_site_type_id' => 'Type',
 			'institution_site_ownership_id' => 'Ownership',
 			'institution_site_status_id' => 'Status',
-			'institution_site_locality_id' => 'Locality'
+			'institution_site_locality_id' => 'Locality',
+			'name' => 'Institution Site'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
