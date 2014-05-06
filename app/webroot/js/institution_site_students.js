@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 $(document).ready(function() {
 	InstitutionSiteStudents.init();
+	
 });
 
 var InstitutionSiteStudents = {
@@ -98,8 +99,8 @@ var InstitutionSiteStudents = {
 							$(parent).find('.table_body').empty();
 							jsTable.tableScrollableAdd(parent, data);
 						} else {
-							alertOpt['type'] = $($.parseHTML(data)).attr('type');
-							alertOpt['text'] = $($.parseHTML(data)).html();
+							alertOpt['type'] = alertType.error;
+							alertOpt['text'] = 'No record matched.';
 							$.alert(alertOpt);
 						}
 					};
@@ -111,7 +112,7 @@ var InstitutionSiteStudents = {
 					dataType: 'text',
 					url: getRootURL() + url,
 					data: {searchString: searchString},
-					beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSearching}); },
+					beforeSend: function (jqXHR) { maskId = $.mask({parent: '#search', text: i18n.Search.textSearching}); },
 					success: ajaxSuccess
 				});
 			}
