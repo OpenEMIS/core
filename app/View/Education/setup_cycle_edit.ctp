@@ -1,5 +1,5 @@
 <?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('education', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('education', false);
@@ -58,20 +58,25 @@ $this->start('contentBody');
 				<span name="education_level_id"><?php echo $levelId; ?></span>
 			</div>
 			
-			<div class="table full_width">
-				<div class="table_head">
-					<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-					<div class="table_cell"><?php echo __($pageTitle); ?></div>
-					<div class="table_cell cell_admission_age"><?php echo __('Admission Age'); ?></div>
-					<div class="table_cell cell_order"><?php echo __('Order'); ?></div>
-				</div>
-			</div>
+			<div class="table-responsive">
+			<table class="table table-striped table-hover table-bordered table_view">
+				<thead>
+					<tr>
+						<th class="table_cell cell_visible"><?php echo __('Visible'); ?></th>
+						<th class="table_cell"><?php echo __($pageTitle); ?></th>
+						<th class="table_cell cell_admission_age"><?php echo __('Admission Age'); ?></th>
+						<th class="table_cell cell_order"><?php echo __('Order'); ?></th>
+					</tr>
+				</thead>
+			<tbody>
 			
 			<?php
-			echo $this->Utility->getListStart();
+			//echo $this->Utility->getListStart();
+			$index = 1;
 			foreach($levelObj['cycles'] as $i => $obj) {
 				if($i === 'id') continue;
-				$isVisible = $obj['visible']==1;
+				$fieldName = sprintf('data[%s][%s][%%s]', $model, $index++);
+				/*$isVisible = $obj['visible']==1;
 				$fieldName = sprintf('data[%s][%s][%%s]', $model, $index++);
 				echo $this->Utility->getListRowStart($i, $isVisible);
 				echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
@@ -91,10 +96,36 @@ $this->start('contentBody');
 				echo '</div>';
 				
 				echo $this->Utility->getOrderControls();
-				echo $this->Utility->getListRowEnd();
+				echo $this->Utility->getListRowEnd();*/ ?>
+				<tr row-id="<?php echo $obj['id']; ?>">
+					<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']==1); ?></td>
+					<td><?php echo $obj['name']; ?></td>
+					<td>
+					<?php echo $this->Form->input('admission_age', array(
+						'name' => sprintf($fieldName, 'admission_age'),
+						'value' => $obj['admission_age'],
+						'before' => '<div class="input_wrapper">',
+						'after' => '</div>',
+						'maxlength' => 2,
+						'onkeypress' => 'return utility.integerCheck(event)'
+					)); ?>
+					</td>
+					<td class="action">
+						<?php
+						$size = count($obj);
+						echo $this->element('layout/reorder', compact('index', 'size'));
+						$index++;
+						?>
+					</td>
+				</tr>
+			<?php 
 			}
 			echo $this->Utility->getListEnd();
-			
+			?>
+			</tbody>
+			</table>
+			</div>
+			<?php 
 			if($_add) { echo $this->Utility->getAddRow($pageTitle); }
 			?>
 		</fieldset>

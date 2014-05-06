@@ -303,7 +303,7 @@ class WorkflowComponent extends Component {
         }
 
         $workflow = $this->getCurrentWorkflowStep($model, $step+1);
-        $workflowStatus = $workflow['Workflow']['workflow_name'];
+        $workflowStatus = !empty($workflow) ? $workflow['Workflow']['workflow_name'] : NULL;
         return $workflowStatus;
     }
 
