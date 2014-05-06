@@ -4,7 +4,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright Â© 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -100,8 +100,13 @@ var jsTable = {
 		var active = 'scroll_active';
 		selector = parent!=undefined ? parent : '.table_scrollable';
 		$(selector).each(function() {
-			var rows = $(this).find('.table_body .table_row:visible').length;
 			var list = $(this).find('.list_wrapper');
+			
+			if(list.hasClass(hide)) {
+				list.removeClass(hide);
+			}
+			
+			var rows = $(this).find('.table_body .table_row:visible').length;
 			var scrollable = list.closest('.table_scrollable');
 			
 			if(rows > list.attr('limit')) {
@@ -113,9 +118,7 @@ var jsTable = {
 					scrollable.removeClass(active);
 				}
 			}
-			if(list.hasClass(hide)) {
-				list.removeClass(hide);
-			}
+			
 		});
 	},
 	
