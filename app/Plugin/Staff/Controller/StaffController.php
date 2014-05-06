@@ -37,8 +37,8 @@ class StaffController extends StaffAppController {
         'Staff.StaffCustomFieldOption',
         'Staff.StaffCustomValue',
         'Staff.StaffAttendance',
-        'Staff.StaffBehaviour',
-        'Staff.StaffBehaviourCategory',
+        //'Staff.StaffBehaviour',
+        //'Staff.StaffBehaviourCategory',
         'SchoolYear',
         'ConfigItem',
         'SalaryAdditionType',
@@ -80,6 +80,7 @@ class StaffController extends StaffAppController {
 		'extracurricular' => 'Staff.StaffExtracurricular',
 		'employments' => 'Staff.StaffEmployment',
 		'salaries' => 'Staff.StaffSalary',
+		'behaviour' =>'Staff.StaffBehaviour',
     );
 
     public $className = 'Staff';
@@ -696,44 +697,9 @@ class StaffController extends StaffAppController {
     
 
     // Staff behaviour part
-    public function behaviour() {
-        $this->Navigation->addCrumb('List of Behaviour');
+    
 
-        $data = $this->StaffBehaviour->getBehaviourData($this->staffId);
-        if (empty($data)) {
-            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
-        }
-
-        $this->set('data', $data);
-    }
-
-    public function behaviourView() {
-        $staffBehaviourId = $this->params['pass'][0];
-        $staffBehaviourObj = $this->StaffBehaviour->find('all', array('conditions' => array('StaffBehaviour.id' => $staffBehaviourId)));
-
-        if (!empty($staffBehaviourObj)) {
-            $staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
-            $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-            $this->Navigation->addCrumb('Behaviour Details');
-
-            $yearOptions = array();
-            $yearOptions = $this->SchoolYear->getYearList();
-            $categoryOptions = array();
-            $categoryOptions = $this->StaffBehaviourCategory->getCategory();
-
-            $institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive' => -1));
-            $this->set('institution_site_id', $staffBehaviourObj[0]['StaffBehaviour']['institution_site_id']);
-            $this->set('institutionSiteOptions', $institutionSiteOptions);
-            $this->Session->write('StaffBehaviourId', $staffBehaviourId);
-            $this->set('categoryOptions', $categoryOptions);
-            $this->set('yearOptions', $yearOptions);
-            $this->set('staffBehaviourObj', $staffBehaviourObj);
-        } else {
-            $this->redirect(array('action' => 'behaviour'));
-        }
-    }
-
-    public function attachmentsTrainingSelfStudyAdd() {
+  /*  public function attachmentsTrainingSelfStudyAdd() {
         $this->layout = 'ajax';
         $this->set('params', $this->params->query);
         $this->set('_model', 'StaffTrainingSelfStudyAttachment');
@@ -767,7 +733,7 @@ class StaffController extends StaffAppController {
         $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
 
         $FileAttachment->download($id);
-    }
+    }*/
 
     public function getTrainingCoursesById() {
         $this->autoRender = false;
