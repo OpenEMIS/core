@@ -30,6 +30,10 @@ class StudentBehaviour extends StudentsAppModel {
             )
         )
     );
+	
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
 
     public function getBehaviourData($studentId, $institutionSiteId = null) {
 
@@ -210,6 +214,20 @@ class StudentBehaviour extends StudentsAppModel {
         }
 
         return 'true';
+    }
+	
+	//Student Module
+	public function behaviour($controller, $params) {
+     //   extract($controller->studentsCustFieldYrInits());
+        $controller->Navigation->addCrumb('List of Behaviour');
+		$header = __('List of Behaviour');
+        $data = $this->getBehaviourData($controller->studentId);
+        if (empty($data)) {
+			$controller->Message->alert('general.noData');
+           // $controller->Utility->alert($controller->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
+
+        $controller->set(compact('data', 'header'));
     }
 
 }
