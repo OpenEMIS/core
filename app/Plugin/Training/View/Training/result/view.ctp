@@ -16,11 +16,6 @@ if($_edit) {
 	    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'resultEdit', $obj['id']), array('class' => 'divider'));
 	}
 }
-if($_execute) {
-	if($obj['training_status_id']==3){
-		echo $this->Html->link($this->Label->get('general.inactivate'), array('action' => 'resultInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmInactivate(this)'));
-	}
-}
 $this->end();
 
 $this->start('contentBody'); ?>
