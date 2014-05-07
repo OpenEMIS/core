@@ -38,8 +38,8 @@ class StudentsController extends StudentsAppController {
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-        'Students.StudentBehaviour',
-        'Students.StudentBehaviourCategory',
+       // 'Students.StudentBehaviour',
+        //'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
         'SchoolYear',
@@ -79,7 +79,8 @@ class StudentsController extends StudentsAppController {
         'languages' => 'Students.StudentLanguage',
         'nationalities' => 'Students.StudentNationality',
         'attachments' =>'Students.StudentAttachment',
-		'guardians' => 'Students.StudentGuardian'
+		'guardians' => 'Students.StudentGuardian',
+		'behaviour'=>'Students.StudentBehaviour',
     );
 
     public $className = 'Student';
@@ -257,7 +258,7 @@ class StudentsController extends StudentsAppController {
         $imgValidate = new ImageValidate();
         $data = $this->data;
 
-        if ($this->request->is('post')) {
+        if ($this->request->is(array('post', 'put'))) {//pr($this->data);die;
             if(isset($this->data['submit']) && $this->data['submit']==__('Cancel')){
                 $this->Navigation->exitWizard();
             }
@@ -295,16 +296,20 @@ class StudentsController extends StudentsAppController {
             }
         } else {
             $data = $this->Student->find('first', array('conditions' => array('id' => $this->Session->read('StudentId'))));
+			//pr($data);
+			$this->request->data = $data;
         }
-
+		//pr($this->Session->check('StudentId'));
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
         $this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
         $this->set('data', $data);
+		$this->set('model', 'Student');
     }
 
     public function classes() {
         $this->Navigation->addCrumb(ucfirst($this->action));
+		$header = __(ucfirst($this->action));
         $studentId = $this->Session->read('StudentId');
         $data = array();
         $classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId);
@@ -314,9 +319,10 @@ class StudentsController extends StudentsAppController {
             $data[$key][] = $row;
         }
         if (empty($data)) {
-            $this->Utility->alert($this->Utility->getMessage('NO_CLASSES'), array('type' => 'info', 'dismissOnClick' => false));
+			$this->Message->alert('general.noData');
+            //$this->Utility->alert($this->Utility->getMessage('NO_CLASSES'), array('type' => 'info', 'dismissOnClick' => false));
         }
-        $this->set('data', $data);
+        $this->set(compact('data', 'header'));
     }
 
     public function fetchImage($id) {
@@ -576,6 +582,7 @@ class StudentsController extends StudentsAppController {
      */
     public function assessments() {
         $this->Navigation->addCrumb('Results');
+		$header = __('Results');
         if (is_null($this->studentId)) {
             //var_dump($this->name);
             $this->redirect(array('controller' => $this->name));
@@ -612,6 +619,7 @@ class StudentsController extends StudentsAppController {
         $this->set('programmeGrades', $programmeGrades);
         $this->set('selectedProgrammeGrade', $selectedProgrammeGrade);
         $this->set('data', $data);
+		$this->set('header',$header);
     }
 
     private function custFieldYrInits() {
@@ -670,14 +678,14 @@ class StudentsController extends StudentsAppController {
         $studentId = $this->studentId;
         //$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
         $this->Navigation->addCrumb('Attendance');
-
+		$header = __('Attendance');
         //$id = @$this->request->params['pass'][0];
-        $yearList = $this->SchoolYear->getYearList();
-        $yearId = $this->getAvailableYearId($yearList);
-        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
+        $yearOptions = $this->SchoolYear->getYearList();
+        $selectedYearId = $this->getAvailableYearId($yearOptions);
+        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYearId));
         $attendanceTypes = $this->StudentAttendanceType->getAttendanceTypes();
         
-        $dataAttendance = $this->StudentAttendance->getAttendanceByStudentAndYear($studentId, $yearId);
+        $dataAttendance = $this->StudentAttendance->getAttendanceByStudentAndYear($studentId, $selectedYearId);
         $attendanceCheckList = array();
         $classesArr = array();
         foreach($dataAttendance AS $rowAttendance){
@@ -690,7 +698,7 @@ class StudentsController extends StudentsAppController {
             $classesArr[$classId] = $rowAttendance['InstitutionSiteClass']['name'];
         }
         
-        $attendanceData = array();
+        $data = array();
         foreach($classesArr AS $classId => $className){
             $tempRow = array();
             $tempRow['classId'] = $classId;
@@ -706,21 +714,23 @@ class StudentsController extends StudentsAppController {
                     $tempRow['StudentAttendance'][$attendanceTypeId] = 0;
                 }
             }
-            $attendanceData[] = $tempRow;
+            $data[] = $tempRow;
         }
         
         $legend = $this->generateAttendanceLegend();
 
-        if (empty($attendanceData)) {
-            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        if (empty($data)) {
+			$this->Message->alert('general.noData');
+            //$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
         }
 
-        $this->set('selectedYear', $yearId);
-        $this->set('years', $yearList);
-        $this->set('data', $attendanceData);
+		$this->set(compact('header', 'selectedYearId', 'yearOptions', 'data','schoolDays','attendanceTypes','legend'));
+       /* $this->set('selectedYear', $selectedYearId);
+        $this->set('years', $yearOptions);
+        $this->set('data', $data);
         $this->set('schoolDays', $schoolDays);
         $this->set('attendanceTypes', $attendanceTypes);
-        $this->set('legend', $legend);
+        $this->set('legend', $legend);*/
     }
     
     public function generateAttendanceLegend(){
@@ -745,7 +755,7 @@ class StudentsController extends StudentsAppController {
     }
 
     // Student behaviour part
-    public function behaviour() {
+    /*public function behaviour() {
         $this->Navigation->addCrumb('List of Behaviour');
 
         $data = $this->StudentBehaviour->getBehaviourData($this->studentId);
@@ -780,7 +790,7 @@ class StudentsController extends StudentsAppController {
         } else {
             $this->redirect(array('action' => 'behaviour'));
         }
-    }
+    }*/
 
     private function getAvailableYearId($yearList) {
         $yearId = 0;

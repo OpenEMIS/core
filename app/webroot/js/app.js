@@ -244,12 +244,15 @@ var jsForm = {
 	
 	areapickerUpdate: function() {
 		var areaItemSelected=$(this);
-
-		var hiddenValue= $(this).parents().find('.areapicker_areaid').first();
+		var mainContainerId = $(this).parents().parents().parents().attr('id');
+		
+		var hiddenValue= $(this).closest('#'+mainContainerId).find('.areapicker_areaid').first();//$(this).parents().find('.areapicker_areaid').first();//alert('out = '+hiddenValue.attr('id') );
 		var myAreaArr = ["area_level","area_education_level"];
         for (var i = 0; i < myAreaArr.length; i++) {
             var areaItems = $(this).parent().parent().parent().find('select[name*="['+myAreaArr[i]+'_"]');
+			
             areaItems.reverse().each(function(index) {
+				//alert($(this).attr('id'));
                 if (areaItemSelected.is($(this))){
                     var tmpVal=$(this).val();
                     if (tmpVal != 0 && !!tmpVal) {

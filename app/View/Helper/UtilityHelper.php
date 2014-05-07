@@ -106,8 +106,8 @@ class UtilityHelper extends AppHelper {
 			}
             if($areaVal['name']!='a'){
                 echo '<div class="row">
-                            <div class="label">'.$levelName.'</div>
-                            <div class="value" value="'.$areaVal['id'].'" name="'.$arealevelfk.'_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
+                            <div class="col-md-2">'.$levelName.'</div>
+                            <div class="col-md-6" value="'.$areaVal['id'].'" name="'.$arealevelfk.'_'.$ctr.'" type="select">'.($areaVal['name']=='a'?'':$areaVal['name']).'</div>
                         </div>';
             }
 			$ctr++;
@@ -145,8 +145,8 @@ class UtilityHelper extends AppHelper {
         }
 
         echo '<div class="row">
-					<div class="label">&nbsp;&nbsp;</div>
-					<div class="value" style="width:510px; float: right;"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
+					<div class="col-md-2">&nbsp;&nbsp;</div>
+					<div class="col-md-6" style="width:510px; float: right;"><span>'.str_replace(',',' &rarr; ',rtrim($val,',')).'</span>';
         echo '<div class="table" style="width:510px; float: right;">
 							<div class="table_body">';
 		$myCompVal = str_replace(',',' &rarr; ',rtrim($val,','));
@@ -232,7 +232,7 @@ class UtilityHelper extends AppHelper {
         $this->fieldAreadropdowns = $this->AreaHandler->getAllSiteAreaToParent($value,$arrmap);
 
 		$ctr = 0;
-
+		echo '<div id="'.substr($id,0,-3) .'">';
 		foreach($this->fieldLevels as $levelid => $levelName){
 			//pr($this->fieldAreaLevels[$ctr]['id'] . '|');
             $mylevel = $this->AreaHandler->getAreaLevel($this->fieldAreaLevels[$ctr]['id'],$arrmap);
@@ -258,6 +258,7 @@ class UtilityHelper extends AppHelper {
                 </div>';
 			$ctr++;
 		}
+		echo '</div>';
     }
 
 	public function getDatePicker($form, $id, $settings=array()) {
