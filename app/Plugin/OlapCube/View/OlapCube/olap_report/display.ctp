@@ -14,29 +14,43 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         
 		?>
 	</h1>
-	<?php if(isset($data)) { ?>
+	<?php 
+    if(isset($data)) { ?>
     <div class="table" style="overflow:auto;width:670px;display:block;">
 		<table style="width:99%;border:none;" cellpadding="0" cellspacing="0" border="0">
 	      <thead>
-	      	<tr>
-			<?php foreach($data[0] as $key=>$value){ ?>
-	        	<td class="table_cell"><?php echo $value; ?></td>
+      	  <tr>
+            <td class="table_cell"><?php echo key($data); ?></td>
+            <?php 
+            foreach($column as $col){ ?>
+            <td class="table_cell"><?php echo $col;?></td>
+            <?php } ?>
+          </tr>
+        </thead>
+        <tbody>
+			<?php 
+      $i = 0;
+      foreach($data as $key=>$value){ 
+          $i++;
+         if($i==1){
+            continue;
+          }
+        ?>
+         <tr>
+	        	<td class="table_cell"><?php echo $key; ?></td>
+            <?php foreach($column as $col){
+                $val = '';
+                if(array_key_exists($col, $value)){
+                  $val = $value[$col];
+                }?>
+                <td><?php echo $val; ?></td>
+              <?php
+              }
+             ?>
+              
+          </tr>
 	     	<?php } ?>
-	       </tr>
-           </thead>
-           <tbody>
-           	<?php foreach($data as $key=>$value){ 
-           		if($key==0){
-           			continue;
-           		}
-           	?>
-           	<tr>
-           	  	<?php foreach ($value as $key2=>$value2){ ?>
-           	  		<td><?php echo $value2; ?></td>
-           	  	<?php } ?>
-           	 </tr>
-           	 <?php } ?>
-           </tbody>
+      </tbody>
       </table>
     </div>
     <?php } ?>

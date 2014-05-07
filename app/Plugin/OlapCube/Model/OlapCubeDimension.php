@@ -63,7 +63,7 @@ class OlapCubeDimension extends OlapCubeAppModel {
  		$controller->set('selectedCubeCriterias', $cubeCriteriaId);
 
        	if(!$controller->request->is('get')){
-       		ini_set('memory_limit', '256M');
+       		ini_set('memory_limit', '999M');
 			set_time_limit(0);
        		$data = $controller->request->data;
 
@@ -96,8 +96,6 @@ class OlapCubeDimension extends OlapCubeAppModel {
 
 			$str = $rowDimensions['OlapCubeDimension']['table_join'];
 
-
-
 			if(!empty($columnDimensions['OlapCubeDimension']['table_join'])){
 				$str .= ',' . $columnDimensions['OlapCubeDimension']['table_join'];
 			}
@@ -124,8 +122,15 @@ class OlapCubeDimension extends OlapCubeAppModel {
 			
 			$modelTable = ClassRegistry::init($rowDimensions['OlapCubeDimension']['table_parent']);
 
-			//$group[] = $rowDimensions['OlapCubeDimension']['table_group'];
-			$group[] = $columnDimensions['OlapCubeDimension']['table_group'];
+			$group = array();
+			if(!empty($columnDimensions['OlapCubeDimension']['table_group'])){
+				$group[] = $columnDimensions['OlapCubeDimension']['table_group'];
+			}
+			if(!empty($rowDimensions['OlapCubeDimension']['table_group'])){
+				$group[] = $rowDimensions['OlapCubeDimension']['table_group'];
+			}
+			$order = $rowDimensions['OlapCubeDimension']['table_field'];
+
 			$conditions = array();
 			if(isset($criteria) && !empty($criteria)){
 				foreach($criteria as $c){
@@ -133,127 +138,124 @@ class OlapCubeDimension extends OlapCubeAppModel {
 				}
 			}
 
- 			/*if($rowId=='8' || $rowId=='17' || $rowId=='25'){
-        		//Gender
+			//$conditions['Institution.id'] = 16039;
+ 
+			$rowField = $rowDimensions['OlapCubeDimension']['table_field'];
+			$columnField = $columnDimensions['OlapCubeDimension']['table_field'];
+			$computeField = $columnDimensions['OlapCubeDimension']['table_compute'];
+			if($rowDimensions['OlapCubeDimension']['table_aggregate']=='1'){
+				$computeField = $rowDimensions['OlapCubeDimension']['table_compute'];
+			}
+			$computeRowField = $rowDimensions['OlapCubeDimension']['table_compute'];
+			$computeColumnField = $columnDimensions['OlapCubeDimension']['table_compute'];
 
- 				$newGroup = array_merge($group, array($rowDimensions['OlapCubeDimension']['table_parent'].'.male'));
- 			
- 				$modelData = $modelTable->find('all',
-					array(
-						'recursive'=>-1,
-						'fields'=>array("'Male' as CubeRow", "{$columnDimensions['OlapCubeDimension']['table_field']} as CubeColumn", "Count({$rowDimensions['OlapCubeDimension']['table_field']}) as Number"),
-						'joins'=> $options,
-						'conditions'=>$conditions,
-						'group' => $newGroup,
-						'order' => $group
+			$rowFieldCount = 1;
+			$columnFieldCount = 1;
+			$computeFieldCount = 1;
+			$switchCompute = false;
+			$fields = array();
+
+			$a = 0;
+			if(strpos($rowField, ',')!==false){
+				$arrRowField = split(',', $rowField);
+				$rowFieldCount = count($arrRowField);
+				$a = 0;
+				foreach($arrRowField as $r){
+					$fields[] = "{$r} as CubeRow" . ($a+1);
+					$a++;
+				}
+			}else{
+				$fields[] = "{$rowField} as CubeRow1";
+			}
+			if(strpos($columnField, ',')!==false){
+				$arrColumnField = split(',', $columnField);
+				$columnFieldCount = count($arrColumnField);
+				$a = 0;
+				foreach($arrColumnField as $r){
+					$fields[] = "{$r} as CubeColumn" . ($a+1);
+					$a++;
+				}
+			}else{
+				$fields[] = "{$columnField} as CubeColumn1";
+			}
+			if(strpos($computeColumnField, ',')!==false || strpos($computeRowField, ',')!==false){
+				$arrComputeField = array();
+				if(strpos($computeColumnField, ',')!==false){
+					$arrComputeField = split(',', $computeColumnField);
+				}else{
+					$arrComputeField = split(',', $computeRowField);
+					$switchCompute = true;
+				}
+				
+				$computeFieldCount = count($arrComputeField);
+				$a = 0;
+				foreach($arrComputeField as $r){
+					$fields[] = "SUM({$r}) as Number" . ($a+1);
+					$a++;
+				}
+			}else{
+				$fields[] = "SUM({$computeField}) as Number1";
+			}
+
+
+
+ 			$modelData = $modelTable->find('all',
+				array(
+					'recursive'=>-1,
+					'fields'=>$fields,
+					'joins'=> $options,
+					'conditions'=>$conditions,
+					'group' => $group,
+					'order' => $order
 					)
-				);
+			);
 
-
-				$newGroup = array_merge($group, array($rowDimensions['OlapCubeDimension']['table_parent'].'.female'));
-				$modelData[] = $modelTable->find('all',
-					array(
-						'recursive'=>-1,
-						'fields'=>array("'Female' as CubeRow", "{$columnDimensions['OlapCubeDimension']['table_field']} as CubeColumn", "Count({$rowDimensions['OlapCubeDimension']['table_field']}) as Number"),
-						'joins'=> $options,
-						'conditions'=>$conditions,
-						'group' => $newGroup,
-						'order' => $group
-					)
-				);
-			*/
-        	//}else if($columnId=='8' || $columnId=='17' || $columnId=='25'){
-        		//Gender
- 				//$modelData = 'Select '
-        	//}else{
-	 			$modelData = $modelTable->find('all',
-					array(
-						'recursive'=>-1,
-						'fields'=>array("{$rowDimensions['OlapCubeDimension']['table_field']} as CubeRow", "{$columnDimensions['OlapCubeDimension']['table_field']} as CubeColumn", "Count({$rowDimensions['OlapCubeDimension']['table_field']}) as Number"),
-						'joins'=> $options,
-						'conditions'=>$conditions,
-						'group' => $group,
-						'order' => $group
-					)
-				);
-	 		//}
-
+			//pr($modelData);
+		
 			$layout = array();
 			$rowName = array();
 			$columnName = array();
-			$layout[0][0] = 'Name';
-			$i = 1;
-			$rowAffected = 0;
-			$colAffected = 0;
+			$layout[$rowDimensions['OlapCubeDimension']['dimension']] = array();
 			$cubeRowTable = $rowDimensions['OlapCubeDimension']['table_name'];
 			$cubeColumnTable = $columnDimensions['OlapCubeDimension']['table_name'];
-
-			//pr($modelData);
 			foreach($modelData as $result){
-				$sameRow = false;
-				if(!in_array($result[$cubeColumnTable]['CubeColumn'], $columnName)){
-					$value = $result[$cubeColumnTable]['CubeColumn'];
-					if(!isset($value)){
-						$value = '';
+				$temp = isset($result[$cubeColumnTable])? $result[$cubeColumnTable] : array();
+				if(!array_key_exists('CubeColumn1', $temp)){
+					$cubeColumnTable = 0;
+					$temp = isset($result[$cubeColumnTable])? $result[$cubeColumnTable] : array();
+					if(!array_key_exists('CubeColumn1', $temp)){
+						$cubeColumnTable = $rowDimensions['OlapCubeDimension']['table_name'];
 					}
-					$layout[0][count($columnName)+1] = $value;
-					array_push($columnName, $result[$cubeColumnTable]['CubeColumn']);
-					$colAffected = $i;
 				}
-				if(!in_array($result[$cubeRowTable]['CubeRow'], $rowName)){
-					$sameRow = false;
-					$value = $result[$cubeRowTable]['CubeRow'];
-					if(!isset($value)){
-						$value = '';
+				$temp = isset($result[$cubeRowTable])? $result[$cubeRowTable] : array();
+				if(!array_key_exists('CubeRow1', $temp)){
+					$cubeRowTable = 0;
+					$temp = isset($result[$cubeRowTable])? $result[$cubeRowTable] : array();
+					if(!array_key_exists('CubeRow1', $temp)){
+						$cubeRowTable = $columnDimensions['OlapCubeDimension']['table_name'];
 					}
-					$layout[$i][0] = $value;
-					array_push($rowName, $result[$cubeRowTable]['CubeRow']);
-					$rowAffected = $i;
-				}else{
-					$sameRow = true;
 				}
-				
 
-				if(!$sameRow){
-					$j = 1;
-					foreach($columnName as $col){
-						if($col==$result[$cubeColumnTable]['CubeColumn']){
-							$layout[$i][$j] = $result[0]['Number'];
+				for($ii=1;$ii<=$rowFieldCount;$ii++){
+					for($jj=1;$jj<=$columnFieldCount;$jj++){
+						if($switchCompute){
+							$layout[$result[$cubeRowTable]['CubeRow'.$ii]][$result[$cubeColumnTable]['CubeColumn'.$jj]] = $result[0]['Number'.$ii];
 						}else{
-							$layout[$i][$j] = '';
+							$layout[$result[$cubeRowTable]['CubeRow'.$ii]][$result[$cubeColumnTable]['CubeColumn'.$jj]] = $result[0]['Number'.$jj];
 						}
-						$j++;
-					}
-				}else{
-					$j = 1;
-					foreach($columnName as $col){
-						if($col==$result[$cubeColumnTable]['CubeColumn']){
-							$layout[$rowAffected][$j] = $result[0]['Number'];
-						}
-						$j++;
 					}
 				}
-				$i++;
-			}
-
-			$layout = array_values($layout);
-			for($c=0;$c<=$colAffected;$c++){
-				$r = 1;
-				if(isset($layout[$c][0])){
-					foreach($columnName as $col){
-						if(!isset($layout[$c][$r])){
-							$layout[$c][$r] = '';
-						}
-						$r++;
+				for($ii=1;$ii<=$columnFieldCount;$ii++){
+					if(!in_array($result[$cubeColumnTable]['CubeColumn'.$ii], $columnName)){
+						array_push($columnName, $result[$cubeColumnTable]['CubeColumn'.$ii]);
 					}
 				}
 			}
-
 			$controller->Session->write('olap_cube', $cubeId);
 			$controller->Session->write('olap_row', $rowId);
 			$controller->Session->write('olap_column', $columnId);
 			$controller->Session->write('olap_report', $layout);
-
+			$controller->Session->write('olap_report_column', $columnName);
 			$controller->redirect(array('action'=>'olapReportDisplay'));
        	}
 
@@ -320,11 +322,15 @@ class OlapCubeDimension extends OlapCubeAppModel {
 
 
 	public function olapReportDisplay($controller, $params) {
+		ini_set('memory_limit', '999M');
+		set_time_limit(0);
 		if($controller->Session->check('olap_report')){
 			$controller->set('data', $controller->Session->read('olap_report'));
+			$controller->set('column', $controller->Session->read('olap_report_column'));
 		}else{
 			$controller->redirect(array('action'=>'olapReport'));
 		}
+
 	 	$controller->Navigation->addCrumb('OLAP', array('controller' => '../OlapCube', 'action' => 'olapReport'));
 		$controller->Navigation->addCrumb('Result');
 
