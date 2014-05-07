@@ -28,10 +28,10 @@ echo $this->element('templates/year_options', array('url' => 'classes'));
 	<table class="table table-striped table-hover table-bordered" action="InstitutionSites/classesView/">
 		<thead>
 			<tr>
-				<td class="table_cell cell_class"><?php echo __('Class'); ?></td>
-				<td class="table_cell"><?php echo __('Grade'); ?></td>
-				<td class="table_cell cell_gender"><?php echo __('Male'); ?></td>
-				<td class="table_cell cell_gender"><?php echo __('Female'); ?></td>
+				<th class="table_cell cell_class"><?php echo __('Class'); ?></th>
+				<th class="table_cell"><?php echo __('Grade'); ?></th>
+				<th class="table_cell cell_gender"><?php echo __('Male'); ?></th>
+				<th class="table_cell cell_gender"><?php echo __('Female'); ?></th>
 			</tr>
 		</thead>
 

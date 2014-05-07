@@ -19,10 +19,10 @@ $this->start('contentBody');
     <table class="table table-striped table-hover table-bordered" action="InstitutionSites/shiftsView/">
         <thead>
 			<tr>
-				<td class="table_cell"><?php echo __('Year'); ?></td>
-				<td class="table_cell"><?php echo __('Shift'); ?></td>
-				<td class="table_cell"><?php echo __('Period'); ?></td>
-				<td class="table_cell"><?php echo __('Location'); ?></td>
+				<th class="table_cell"><?php echo __('Year'); ?></th>
+				<th class="table_cell"><?php echo __('Shift'); ?></th>
+				<th class="table_cell"><?php echo __('Period'); ?></th>
+				<th class="table_cell"><?php echo __('Location'); ?></th>
 			</tr>
         </thead>
 

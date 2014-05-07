@@ -39,10 +39,10 @@ $this->start('contentBody');
 		<table class="table table-striped table-hover table-bordered" style="margin-top: 15px;">
 			<thead>
 				<tr>
-					<td class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></td>
-					<td class="table_cell"><?php echo __('Student Name'); ?></td>
-					<td class="table_cell cell_marks"><?php echo __('Marks'); ?></td>
-					<td class="table_cell cell_grading"><?php echo __('Grading'); ?></td>
+					<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
+					<th class="table_cell"><?php echo __('Student Name'); ?></th>
+					<th class="table_cell cell_marks"><?php echo __('Marks'); ?></th>
+					<th class="table_cell cell_grading"><?php echo __('Grading'); ?></th>
 				</tr>
 			</thead>
 			<tbody>
