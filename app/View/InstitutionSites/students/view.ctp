@@ -80,10 +80,10 @@ $this->start('contentBody');
 		<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 			<thead>
 				<tr>
-					<td class="table_cell" style="width: 220px;"><?php echo __('Programme'); ?></td>
-					<td class="table_cell"><?php echo __('From'); ?></td>
-					<td class="table_cell"><?php echo __('To'); ?></td>
-					<td class="table_cell" style="width: 100px;"><?php echo __('Status'); ?></td>
+					<th class="table_cell" style="width: 220px;"><?php echo __('Programme'); ?></th>
+					<th class="table_cell"><?php echo __('From'); ?></th>
+					<th class="table_cell"><?php echo __('To'); ?></th>
+					<th class="table_cell" style="width: 100px;"><?php echo __('Status'); ?></th>
 				</tr>
 			</thead>
 
@@ -105,10 +105,10 @@ $this->start('contentBody');
 		<table class="table table-striped table-hover table-bordered" style="margin-top: 10px;">
 			<thead>
 				<tr>
-					<td class="table_cell" style="width: 80px;"><?php echo __('Year'); ?></td>
-					<td class="table_cell" style="width: 120px;"><?php echo __('Class'); ?></td>
-					<td class="table_cell"><?php echo __('Programme'); ?></td>
-					<td class="table_cell" style="width: 120px;"><?php echo __('Grade'); ?></td>
+					<th class="table_cell" style="width: 80px;"><?php echo __('Year'); ?></th>
+					<th class="table_cell" style="width: 120px;"><?php echo __('Class'); ?></th>
+					<th class="table_cell"><?php echo __('Programme'); ?></th>
+					<th class="table_cell" style="width: 120px;"><?php echo __('Grade'); ?></th>
 				</tr>
 			</thead>
 
@@ -136,10 +136,10 @@ $this->start('contentBody');
 						<table class="table table-striped table-hover table-bordered">
 							<thead>
 								<tr>
-									<td class="table_cell"><?php echo __('Code'); ?></td>
-									<td class="table_cell"><?php echo __('Subject'); ?></td>
-									<td class="table_cell"><?php echo __('Marks'); ?></td>
-									<td class="table_cell"><?php echo __('Grading'); ?></td>
+									<th class="table_cell"><?php echo __('Code'); ?></th>
+									<th class="table_cell"><?php echo __('Subject'); ?></th>
+									<th class="table_cell"><?php echo __('Marks'); ?></th>
+									<th class="table_cell"><?php echo __('Grading'); ?></th>
 								</tr>
 
 							</thead>
