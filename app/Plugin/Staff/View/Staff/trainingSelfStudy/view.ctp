@@ -152,11 +152,6 @@ if($_delete) {
 		echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'trainingSelfStudyDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 	}
 }
-if($_execute) {
-	if($obj['training_status_id']==3){
-		echo $this->Html->link($this->Label->get('StaffTraining.inactivate'), array('action' => 'trainingSelfStudyInactivate'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmInactivate(this)'));
-	}
-}
 $this->end();
 
 $this->start('contentBody');
