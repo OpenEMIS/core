@@ -371,8 +371,25 @@ fieldset.area .label{
 	font-weight: normal;
 	text-align: left;
 	padding: 0;
+	white-space: normal;
 }
 .dataDisplay .row .value{
 	line-height: 25px;
+}
+.customFieldsWrapper .row .label{
+	color: #333333;
+	font-size: 12px;
+	font-weight: normal;
+	text-align: left;
+	padding: 0;
+	white-space: normal;
+	line-height: 1.4;
+}
+.customFieldsWrapper .row{
+	padding-left: 15px;
+}
+.customFieldsWrapper h3{
+	font-size: 15px;
+	color: #666;
 }
 
