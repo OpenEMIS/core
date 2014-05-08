@@ -47,9 +47,9 @@ $tableData = array();
 foreach ($data as $obj) {
 	$row = array();
 	$row[] = $obj['TrainingCourse']['code'];
-	$row[] = $this->Html->link($obj['TrainingCourse']['title'], array('action' => 'healthConsultationView', $obj[$model]['id']), array('escape' => false));
+	$row[] = $this->Html->link($obj['TrainingCourse']['title'], array('action' => 'trainingResultView', $obj['TrainingSessionTrainee']['id']), array('escape' => false));
 	$row[] = $obj['TrainingCourse']['credit_hours'];
-	$row[] = $this->TrainingUtility->getTrainingStatus('TrainingSessionResult', $obj[$model]['id'], $obj['TrainingStatus']['name'], $obj['TrainingStatus']['id']);;
+	$row[] = $this->TrainingUtility->getTrainingStatus('TrainingSessionResult', $obj['TrainingSessionTrainee']['id'], $obj['TrainingStatus']['name'], $obj['TrainingStatus']['id']);;
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
