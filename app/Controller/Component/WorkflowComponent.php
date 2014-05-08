@@ -141,6 +141,21 @@ class WorkflowComponent extends Component {
     private function getWorkflowApprovalRight($model, $step, $workflowRights, $workflowLog){
         $this->controller->set('_approval', false);
 
+        $workflows = $this->Workflow->find('list',
+            array(
+                'fields'=>array('WorkflowStep.id', 'Workflow.action'),
+                'joins' => array(
+                        array(
+                            'type' => 'INNER',
+                            'table' => 'workflow_steps',
+                            'alias' => 'WorkflowStep',
+                            'conditions' => array('WorkflowStep.workflow_id = Workflow.id')
+                        )
+                ),
+                'conditions'=>array('Workflow.model_name'=>$model)
+            )
+        );
+
      
         foreach($workflowRights as $workflowRight){
             if($workflowRight['Workflow']['model_name']==$model){
@@ -148,6 +163,7 @@ class WorkflowComponent extends Component {
                     if($workflowRight['WorkflowStep']['step']==1){
                         $this->controller->set('workflowStepId', $workflowRight['WorkflowStep']['id']);
                         $this->controller->set('workflowStep', $workflowRight['WorkflowStep']['step']);
+                        $this->controller->set('workflowAction', $workflows[$workflowRight['WorkflowStep']['id']]);
                         $this->controller->set('_approval', true);
                         break;
                     }
@@ -155,6 +171,7 @@ class WorkflowComponent extends Component {
                     if($workflowRight['WorkflowStep']['step']==($step+1)){
                         $this->controller->set('workflowStepId', $workflowRight['WorkflowStep']['id']);
                         $this->controller->set('workflowStep', $workflowRight['WorkflowStep']['step']);
+                        $this->controller->set('workflowAction', $workflows[$workflowRight['WorkflowStep']['id']]);
                         $this->controller->set('_approval', true);
                         break;
                     }
@@ -210,7 +227,7 @@ class WorkflowComponent extends Component {
         if($viewWorkflowLog){
              $workflowLogs = $this->WorkflowLog->find('all',
                     array(
-                        'fields'=>array('Workflow.workflow_name', 'WorkflowLog.approve', 'WorkflowLog.comments', 'WorkflowLog.created' ,'SecurityUser.first_name', 'SecurityUser.last_name', 'WorkflowStep.step'),
+                        'fields'=>array('Workflow.workflow_name', 'Workflow.action', 'WorkflowLog.approve', 'WorkflowLog.comments', 'WorkflowLog.created' ,'SecurityUser.first_name', 'SecurityUser.last_name', 'WorkflowStep.step'),
                         'joins' => array(
                                 array(
                                     'type' => 'LEFT',
