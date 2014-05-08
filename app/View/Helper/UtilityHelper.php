@@ -373,6 +373,120 @@ class UtilityHelper extends AppHelper {
 		return $select;
 	}
 	
+	public function getDatePickerNew($form, $id, $settings=array()) {
+		$_settings = array(
+			'order' => 'dmy',
+			'desc' => true,
+			'glue' => "\n<span>-</span>\n",
+			'yearRange' => array(),
+			'yearAdjust' => 0,
+			'emptySelect' => false,
+			'endDateValidation' => ''
+		);
+		$_settings = array_merge($_settings, $settings);
+		
+		$wrapper = '<div class="datepicker" id="%s">%s</div>%s';
+		
+		$onChange = 'jsDate.updateDay(this);';
+		if(strlen($_settings['endDateValidation']) > 0) {
+			$wrapper = sprintf('<div class="datepicker" id="%%s" start="#%s" end="#%s">%%s</div>%%s', $id, $_settings['endDateValidation']);
+			$onChange = 'jsDate.validateEndDate(this);' . $onChange;
+		}
+		
+		$utility = new UtilityComponent(new ComponentCollection);
+		
+		$day = DateTimeComponent::generateDay();
+		$month = DateTimeComponent::generateMonth();
+		$year = DateTimeComponent::generateYear($_settings['yearRange']);
+		
+		if($_settings['yearAdjust']>0) {
+			$yearLast = end($year);
+			for($i=0; $i<$_settings['yearAdjust']; $i++) {
+				$year[++$yearLast] = $yearLast;
+			}
+		} else if($_settings['yearAdjust']<0) {
+			for($i=0; $i>$_settings['yearAdjust']; $i--) {
+				array_pop($year);
+			}
+		}
+		
+		if(isset($_settings['desc'])) {
+			krsort($year);
+		}
+		
+		$defaultDay = 0;
+		$defaultMonth = 0;
+		$defaultYear = 0;
+		
+		if($_settings['emptySelect']) {
+			$utility->unshiftArray($day, array('0' => __('Day')));
+			$utility->unshiftArray($month, array('0' => __('Month')));
+			$utility->unshiftArray($year, array('0' => __('Year')));
+		}
+		
+		$dateOptions = array('class' => 'datepicker_date', 'type' => 'text', 'div' => false, 'label' => false);
+		if(isset($_settings['name'])) {
+			$dateOptions['name'] = $_settings['name'];
+		}
+		$dateValue = '';
+		if(isset($_settings['value']) && !empty($_settings['value'])) {
+			$dateValue = $_settings['value'];
+		} else {
+			if(!$_settings['emptySelect']) {
+				$dateValue = date('Y-m-d');
+			} else {
+				$dateValue = '0000-00-00';
+			}
+		}
+		$dateOptions['value'] = $dateValue;
+		$dateOptions['default'] = $dateValue;
+		$date = explode(' ', $dateOptions['value']);
+		$dateParams = explode('-', $date[0]);
+		list($defaultYear, $defaultMonth, $defaultDay) = $dateParams;
+		if(isset($_settings['class'])) {
+			$dateOptions['class'] = $dateOptions['class'] . ' ' . $_settings['class'];
+		}
+		$hiddenOptions = $dateOptions;
+		$hiddenOptions['type'] = 'hidden';
+		$dateHidden = $form->input($id, $hiddenOptions);
+		
+		$selectOpts = array(
+			'name' => '',
+			'type' => 'select',
+			'autocomplete' => 'off',
+			'div' => false,
+			'label' => false,
+			'onchange' => $onChange
+		);
+		
+		$daySelect = $form->input($id.'_day', array_merge($selectOpts, 
+			array('class' => 'datepicker_day', 'options' => $day, 'default' => $defaultDay)
+		));
+			
+		$monthSelect =  $form->input($id.'_month', array_merge($selectOpts, 
+			array('class' => 'datepicker_month', 'options' => $month, 'default' => $defaultMonth)
+		));
+			
+		$yearSelect =  $form->input($id.'_year', array_merge($selectOpts, 
+			array('class' => 'datepicker_year', 'options' => $year, 'default' => $defaultYear)
+		));
+		
+		$order = $_settings['order'];
+		$dateSelect = array();
+		for($i=0; $i<strlen($order); $i++) {
+			if(strcmp($order[$i], 'd')==0) {
+				$dateSelect[] = $daySelect;
+			} else if(strcmp($order[$i], 'm')==0) {
+				$dateSelect[] = $monthSelect;
+			} else {
+				$dateSelect[] = $yearSelect;
+			}
+		}
+		
+		$select = sprintf($wrapper, $id, implode($_settings['glue'], $dateSelect), $dateHidden);
+		return $select;
+	}
+	
 	/**
 	 * Formatting input date based on Config Setting on view
 	 * @param  string $date   [input date]

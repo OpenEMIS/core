@@ -54,9 +54,10 @@ class LabelHelper extends AppHelper {
 			'category' => 'Category',
 			'year' => 'Year',
 			'details' => 'Details',
-			'openemisId' => 'OpenEMIS ID',
 			'search' => 'Search',
-			'clear' => 'Clear'
+			'clear' => 'Clear',
+			'school_year' => 'School Year',
+			'location' => 'Location'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
@@ -181,6 +182,9 @@ class LabelHelper extends AppHelper {
 			'requirement' => 'Training Requirement',
 			'inactivate' => 'Inactivate'
 		),
+		'Shift' => array(
+			'name' => 'Shift Name'
+		)
     );
 	
 	public function get($code) {
