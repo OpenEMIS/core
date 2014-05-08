@@ -37,6 +37,8 @@ class TrainingSessionResult extends TrainingAppModel {
 		$conditions = array();
 		if(!empty($selectedStatus)){
 			$conditions['TrainingSessionResult.training_status_id'] = $selectedStatus;
+		}else{
+			$conditions['NOT']['TrainingSessionResult.training_status_id'] = 4;
 		}
 
 		$data = $this->find('all', 
