@@ -28,12 +28,12 @@ $this->start('contentBody');
 				<table class="table table-striped table-hover table-bordered">
 					<thead>
 						<tr>
-							<td class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></td>
-							<td class="table_cell"><?php echo __('Name'); ?></td>
+							<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
+							<th class="table_cell"><?php echo __('Name'); ?></th>
 							<?php foreach ($attendanceTypes AS $attendanceType): ?>
-								<td class="table_cell"><?php echo __($attendanceType['StudentAttendanceType']['national_code']); ?></td>
+								<th class="table_cell"><?php echo __($attendanceType['StudentAttendanceType']['national_code']); ?></th>
 							<?php endforeach; ?>
-							<td class="table_cell"><?php echo __('Total'); ?></td>
+							<th class="table_cell"><?php echo __('Total'); ?></th>
 						</tr>
 					</thead>
 

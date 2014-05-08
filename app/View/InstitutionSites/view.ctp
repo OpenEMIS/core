@@ -28,6 +28,14 @@ $obj = $data['InstitutionSite'];
 		<div class="col-md-6" type="text" name="code"><?php echo $obj['code']; ?></div>
 	</div>
 	<div class="row">
+		<div class="col-md-2"><?php echo __('Provider'); ?></div>
+		<div class="col-md-6"><?php echo $data['InstitutionSiteProvider']['name']; ?></div>
+	</div>
+	<div class="row">
+		<div class="col-md-2"><?php echo __('Sector'); ?></div>
+		<div class="col-md-6"><?php echo $data['InstitutionSiteSector']['name']; ?></div>
+	</div>
+	<div class="row">
 		<div class="col-md-2"><?php echo __('Type'); ?></div>
 		<div class="col-md-6"><?php echo $data['InstitutionSiteType']['name']; ?></div>
 	</div>
