@@ -947,7 +947,7 @@ class InstitutionSitesController extends AppController {
                 $result = $this->Area->autocomplete($search);
                 return json_encode($result);
             } else {
-                $this->Navigation->addCrumb('List of Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
+                //$this->Navigation->addCrumb('List of Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
                 $this->Navigation->addCrumb('Advanced Search');
 
                 if (isset($this->params->pass[0])) {
@@ -973,7 +973,7 @@ class InstitutionSitesController extends AppController {
                 $arrCustFields = array($customfields => $arrSettings);
 
                 $instituionSiteCustField = $this->Components->load('CustomField', $arrCustFields[$customfields]);
-                $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+                $dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
                 $types = $this->InstitutionSiteType->findList(1);
                 //pr(array($customfields));
                 $this->set("customfields", array($customfields));
@@ -1010,7 +1010,7 @@ class InstitutionSitesController extends AppController {
              $arrCustFields = array($customfields => $arrSettings);
              
             $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
-            $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+            $dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
             $types = $this->InstitutionSiteType->findList(1);
             //pr(array($customfields));
             $this->set("customfields",array($customfields));
