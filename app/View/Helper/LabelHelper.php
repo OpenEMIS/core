@@ -57,7 +57,9 @@ class LabelHelper extends AppHelper {
 			'search' => 'Search',
 			'clear' => 'Clear',
 			'school_year' => 'School Year',
-			'location' => 'Location'
+			'location' => 'Location',
+			'grade' => 'Grade',
+			'history' => 'History'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
@@ -184,6 +186,10 @@ class LabelHelper extends AppHelper {
 		),
 		'Shift' => array(
 			'name' => 'Shift Name'
+		),
+		'Position' => array(
+			'teaching' => 'Teaching',
+			'number' => 'Number'
 		)
     );
 	
