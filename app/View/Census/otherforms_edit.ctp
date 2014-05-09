@@ -3,40 +3,31 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Other Forms'));
 
-<div id="infrastructure" class="content_wrapper">
-	<?php
+$this->start('contentActions');
+echo $this->Html->link(__('View'), array('action' => 'otherforms', $selectedYear), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
+
 	echo $this->Form->create('CensusGridValue', array(
 		'id' => 'submitForm',
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Census', 'action' => 'otherformsEdit')
 	));
-	?>
-	<h1>
-		<span><?php echo __('Other Forms'); ?></span>
-		<?php echo $this->Html->link(__('View'), array('action' => 'otherforms', $selectedYear), array('class' => 'divider')); ?>
-	</h1>
 	
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
-			<?php
-				echo $this->Form->input('school_year_id', array(
-					'id' => 'SchoolYearId',
-					'options' => $years,
-					'default' => $selectedYear
-				));
-			?>
-		</div>
-	</div>
+echo $this->element('census/year_options');
+?>
+
+<div id="infrastructure" class="">
 	
 	<!-- Custom Grid -->
 	<?php $index = 1; foreach($data as $arrval) { ?>
 	<div class="custom_grid">
-		<fieldset class="custom_section_break">
+		<fieldset class="section_break">
 			<legend><?php echo $arrval['CensusGrid']['name']; ?></legend>
 		</fieldset>
 		
@@ -44,23 +35,25 @@ echo $this->Html->script('census', false);
 		<div class="x_title"><?php echo $arrval['CensusGrid']['x_title']; ?></div>
 		
 		<div class="table_wrapper">
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell y_col">&nbsp;</div>
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+					<tr>
+					<th class="table_cell y_col">&nbsp;</th>
 					<?php foreach($arrval['CensusGridXCategory'] as $statVal) { ?>
-					<div class="table_cell"><?php echo $statVal['name'] ?></div>
+					<th class="table_cell"><?php echo $statVal['name'] ?></th>
 					<?php } ?>
-				</div>
+					</tr>
+				</thead>
 				
-				<div class="table_body" id="<?php echo $statVal['name']; ?>_section">
+				<tbody class="table_body" id="<?php echo $statVal['name']; ?>_section">
 				<?php
 				
 				foreach($arrval['CensusGridYCategory']  as $yCatId => $yCatName) {
 				?>
-					<div class="table_row">
-						<div class="table_cell"><?php echo $yCatName['name']; ?></div>
+					<tr class="table_row">
+						<td class="table_cell"><?php echo $yCatName['name']; ?></td>
 						<?php foreach($arrval['CensusGridXCategory'] as $xCatId => $xCatName) { ?>
-						<div class="table_cell">
+						<td class="table_cell">
 							<?php
 							echo $this->Form->input($index . '.census_grid_x_category_id', array('type' => 'hidden', 'value' => $xCatName['id']));
 							echo $this->Form->input($index . '.census_grid_y_category_id', array('type' => 'hidden', 'value' => $yCatName['id']));
@@ -86,12 +79,12 @@ echo $this->Html->script('census', false);
 								)
 							); 
 							?>
-						</div>
+						</td>
 						<?php } ?>
-					</div>
+					</tr>
 				<?php } ?>
-				</div>
-			</div>
+				</tbody>
+			</table>
 		</div>
 	</div>
 	<?php }	?>	
@@ -153,7 +146,7 @@ echo $this->Html->script('census', false);
             $ctr = 1;
             foreach($datafields as $arrVals){
                 if($arrVals['CensusCustomField']['type'] == 1){//Label
-                    echo '<fieldset class="custom_section_break">
+                    echo '<fieldset class="section_break">
                                     <legend>'.$arrVals['CensusCustomField']['name'].'</legend>
                             </fieldset>';
                 }elseif($arrVals['CensusCustomField']['type'] == 2) {//Text
@@ -238,3 +231,4 @@ echo $this->Html->script('census', false);
 	<?php echo $this->Form->end(); ?>
 	
 </div>
+<?php $this->end(); ?>

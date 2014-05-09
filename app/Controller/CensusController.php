@@ -492,7 +492,7 @@ class CensusController extends AppController {
 		$this->set('datavalues',$tmp);
 		$this->set('data',$data);
 		$this->set('selectedYear', $selectedYear);
-		$this->set('years', $yearList);
+		$this->set('yearList', $yearList);
 		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
 	
@@ -628,7 +628,7 @@ class CensusController extends AppController {
 			$this->set('datavalues',$tmp);
 			$this->set('data',$data);
 			$this->set('selectedYear', $selectedYear);
-			$this->set('years', $yearList);
+			$this->set('yearList', $yearList);
 		}
 	}
 }
