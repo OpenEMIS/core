@@ -81,6 +81,7 @@ class StaffTrainingResult extends AppModel {
 	
 	public function trainingResultView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
+		$header = __($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', 'TrainingSessionTrainee');
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
@@ -168,6 +169,7 @@ class StaffTrainingResult extends AppModel {
 		
 		$controller->Session->write('TeacherTrainingResultId', $id);
 		$controller->set('data', $data);
+		$controller->set('header', $header);
 	}
 	
 

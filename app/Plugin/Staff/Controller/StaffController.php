@@ -81,6 +81,8 @@ class StaffController extends StaffAppController {
 		'employments' => 'Staff.StaffEmployment',
 		'salaries' => 'Staff.StaffSalary',
 		'behaviour' =>'Staff.StaffBehaviour',
+		'training' => 'Staff.StaffTraining',
+		'report' => 'Staff.StaffReport'
     );
 
     public $className = 'Staff';
@@ -178,6 +180,7 @@ class StaffController extends StaffAppController {
 
     public function advanced() {
         $key = 'Staff.AdvancedSearch';
+		$this->set('header', __('Advanced Search'));
         if ($this->request->is('get')) {
             if ($this->request->is('ajax')) {
                 $this->autoRender = false;

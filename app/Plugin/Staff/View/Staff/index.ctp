@@ -120,6 +120,6 @@ $this->start('contentBody');
 		</ul>
 	</div>
 </div> <!-- mainlist end-->
-</div>
+
 <?php echo $this->Js->writeBuffer(); ?>
 <?php $this->end(); ?>
