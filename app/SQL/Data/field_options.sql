@@ -59,8 +59,7 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 (56, 'StudentAttendanceType', 'Attendance Types', 'Student', '{"model":"Students.StudentAttendanceType"}', 56, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (57, 'StudentCustomField', 'Custom Fields', 'Student', '{"model":"Students.StudentCustomField"}', 57, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (58, 'StudentCustomFieldOption', 'Custom Fields Options', 'Student', '{"model":"Students.StudentCustomFieldOptions"}', 58, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(59, 'PositionTitle', 'Titles', 'Position', '{"model":"StudentBehaviourCategory"}', 59, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(60, 'PositionGrade', 'Grades', 'Position', '{"model":"StudentBehaviourCategory"}', 60, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(61, 'PositionStep', 'Steps', 'Position', '{"model":"StudentBehaviourCategory"}', 61, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(62, 'StaffTrainingCategory', 'Training Categories', 'Staff', NULL, 62, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(63, 'TrainingResultType', 'Result Types', 'Training', NULL, 63, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(59, 'PositionTitle', 'Titles', 'Position', '{"model":"Staff.StaffPositionTitle"}', 59, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(60, 'PositionGrade', 'Grades', 'Position', '{"model":"Staff.StaffPositionGrade"}', 60, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(61, 'PositionStep', 'Steps', 'Position', '{"model":"Staff.StaffPositionStep"}', 61, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(62, 'StaffTrainingCategory', 'Training Categories', 'Staff', NULL, 62, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
