@@ -53,7 +53,11 @@ class LabelHelper extends AppHelper {
             'disabled' => 'Disabled',
 			'category' => 'Category',
 			'year' => 'Year',
-			'details' => 'Details'
+			'details' => 'Details',
+			'search' => 'Search',
+			'clear' => 'Clear',
+			'school_year' => 'School Year',
+			'location' => 'Location'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
@@ -177,6 +181,9 @@ class LabelHelper extends AppHelper {
 			'completed' => 'Completed',
 			'requirement' => 'Training Requirement',
 			'inactivate' => 'Inactivate'
+		),
+		'Shift' => array(
+			'name' => 'Shift Name'
 		)
     );
 	

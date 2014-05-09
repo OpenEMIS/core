@@ -235,7 +235,7 @@ $this->start('contentBody');
     <?php } ?>
 
     <?php endif; ?>
-<?php $this->end(); ?>
+
 <script type="text/javascript">
 var values;
 $('.table_body').each(function(i, obj){
@@ -245,3 +245,5 @@ $('.table_body').each(function(i, obj){
     }
 });
 </script>
+<?php $this->end(); ?>
+

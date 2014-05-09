@@ -58,7 +58,7 @@ $this->start('contentBody');
 	</fieldset>
 
 	<?php
-	$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'InstitutionSites', 'action' => 'studentsSave', 'id' => 'submitForm', 'class' => 'form-horizontal', 'onsubmit' => 'return InstitutionSiteStudents.validateStudentAdd()'));
+	$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'InstitutionSites', 'action' => 'studentsSave'));
 	$labelOptions = $formOptions['inputDefaults']['label'];
 	echo $this->Form->create('InstitutionSiteStudent', $formOptions);
 	
@@ -73,7 +73,7 @@ $this->start('contentBody');
 	echo $this->Form->hidden('student_id', array('id' => 'StudentId', 'value' => 0, 'autocomplete' => 'off'));
 	?>
 
-	<div class="info">
+	<div class="info dataDisplay">
 		<div class="form-group">
 			<label class="control-label col-md-3"><?php echo __('OpenEMIS ID'); ?></label>
 			<div class=" col-md-4" id="IdentificationNo"></div>
