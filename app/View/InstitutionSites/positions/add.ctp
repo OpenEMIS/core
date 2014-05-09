@@ -18,7 +18,7 @@ $labelDefault = $formOptions;
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->Form->input('position_no', array('label'=>array('text'=> $this->Label->get('Position.number'),'class'=>'col-md-3 control-label')));
-echo $this->Form->input('staff_position_title_id', array('options' => $positionTitleptions, 'label'=>array('text'=> $this->Label->get('general.title'),'class'=>'col-md-3 control-label')));
+echo $this->Form->input('staff_position_title_id', array('options' => $positionTitleOptions, 'label'=>array('text'=> $this->Label->get('general.title'),'class'=>'col-md-3 control-label')));
 echo $this->Form->input('staff_position_grade_id', array('options' => $positionGradeOptions, 'label'=>array('text'=> $this->Label->get('general.grade'),'class'=>'col-md-3 control-label')));
 echo $this->Form->input('type', array('options' => $yesnoOptions, 'label'=>array('text'=> $this->Label->get('Position.teaching'),'class'=>'col-md-3 control-label')));
 echo $this->Form->input('status', array('options' => $enableOptions));

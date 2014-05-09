@@ -27,7 +27,10 @@ class Staff extends StaffAppModel {
 				'Staff.StaffCustomValue'
 			)
 		),
-		'CustomReport'
+		'CustomReport',
+		'Datepicker' => array(
+			'date_of_birth'
+		)
 	);
 
 	public $validate = array(

@@ -19,8 +19,8 @@ foreach ($data as $obj) {
 	$symbol = $this->Utility->checkOrCrossMarker($obj[$model]['type'] == 1);
 	$row = array();
 	$row[] = $this->Html->link($obj[$model]['position_no'], array('action' => 'positionsView', $obj[$model]['id']), array('escape' => false));
-	$row[] = $obj['PositionTitle']['name'];
-	$row[] = $obj['PositionGrade']['name'];
+	$row[] = $obj['StaffPositionTitle']['name'];
+	$row[] = $obj['StaffPositionGrade']['name'];
 	$row[] = array($symbol, array('class' => 'center'));
 	$row[] = $obj[$model]['status'];
 	$tableData[] = $row;

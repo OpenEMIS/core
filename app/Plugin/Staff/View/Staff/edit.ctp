@@ -39,7 +39,7 @@ echo $this->Form->create('Staff', $formOptions);
 	<?php 
 		
 			$openEmisIdLabel = $labelOptions;
-			$openEmisIdLabel['text'] =$this->Label->get('general.openemisId');
+			$openEmisIdLabel['text'] = $this->Label->get('general.openemisId');
 			
 			if($autoid==''){
 				echo $this->Form->input('identification_no', array(
@@ -156,7 +156,7 @@ echo $this->Form->create('Staff', $formOptions);
 		</div>
 	</div>
 	*/?> -->
-		<?php echo $this->Form->input('photo_content', array('type' => 'file', 'class' => 'form-error')); ?>
+		<?php echo $this->Form->input('photo_content', array('type' => 'file', 'class' => 'form-error', 'label'=>array('text'=> $this->Label->get('general.profile_image'),'class'=>'col-md-3 control-label'))); ?>
 
 		<div class="form-group">
 			<div class="col-md-3"> </div>

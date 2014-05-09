@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffPositionGrade extends StaffAppModel {
+	public $actsAs = array('FieldOption');
 	public function getLookupVariables() {
 		$lookup = array(
 			'Categories' => array('model' => 'Staff.StaffPositionGrade')

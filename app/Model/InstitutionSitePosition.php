@@ -26,15 +26,16 @@ class InstitutionSitePosition extends AppModel {
         /* 'RubricsTemplate' => array(
           'foreignKey' => 'rubric_template_id'
           ), */
-		
-		'PositionTitle' => array(
+		'StaffPositionTitle',
+		'StaffPositionGrade',
+		/*'PositionTitle' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'staff_position_title_id'
 		),
 		'PositionGrade' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'staff_Position_grade_id'
-		),
+		),*/
         'ModifiedUser' => array(
             'className' => 'SecurityUser',
             'foreignKey' => 'modified_user_id'
@@ -118,8 +119,8 @@ class InstitutionSitePosition extends AppModel {
             'model' => $this->alias,
             'fields' => array(
 				array('field' => 'position_no', 'labelKey' => 'Position.number'),
-                array('field' => 'name', 'model' => 'PositionTitle', 'labelKey' => 'general.title'),
-				array('field' => 'name', 'model' => 'PositionGrade', 'labelKey' => 'general.grade'),
+                array('field' => 'name', 'model' => 'StaffPositionTitle', 'labelKey' => 'general.title'),
+				array('field' => 'name', 'model' => 'StaffPositionGrade', 'labelKey' => 'general.grade'),
 				array('field' => 'type', 'type' => 'select', 'options' => $controller->Option->get('yesno'), 'labelKey' => 'Position.teaching'),
 				array('field' => 'status', 'type' => 'select', 'options' => $controller->Option->get('enableOptions')),
                 array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
@@ -136,8 +137,8 @@ class InstitutionSitePosition extends AppModel {
             'model' => $this->alias,
             'fields' => array(
 				array('field' => 'position_no', 'labelKey' => 'Position.number'),
-                array('field' => 'name', 'model' => 'PositionTitle', 'labelKey' => 'general.title'),
-				array('field' => 'name', 'model' => 'PositionGrade', 'labelKey' => 'general.grade'),
+                array('field' => 'name', 'model' => 'StaffPositionTitle', 'labelKey' => 'general.title'),
+				array('field' => 'name', 'model' => 'StaffPositionGrade', 'labelKey' => 'general.grade'),
 				array('field' => 'type', 'type' => 'select', 'options' => $controller->Option->get('yesno'), 'labelKey' => 'Position.teaching'),
 				array('field' => 'status', 'type' => 'select', 'options' => $controller->Option->get('enableOptions'))
             )
@@ -169,8 +170,7 @@ class InstitutionSitePosition extends AppModel {
         $controller->Navigation->addCrumb('Edit Position');
 		$controller->set('header', __('Edit Position'));
         $this->setup_add_edit_form($controller, $params);
-
-        $this->render('add');
+		$this->render = 'add';
     }
 
     public function positionsView($controller, $params) {
@@ -204,7 +204,7 @@ class InstitutionSitePosition extends AppModel {
     }
 	
 	function setup_add_edit_form($controller, $params) {
-        $id = empty($this->params['pass'][0]) ? 0 : $this->params['pass'][0];
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
         if ($controller->request->is('post') || $controller->request->is('put')) {
             $controller->request->data[$this->alias]['institution_site_id'] = $controller->institutionSiteId;
             if ($this->save($controller->request->data)) {
@@ -223,12 +223,12 @@ class InstitutionSitePosition extends AppModel {
         }
 
 
-        $positionTitleptions = $this->PositionTitle->getList();
-        $positionGradeOptions = $this->PositionGrade->getList();
+        $positionTitleOptions = $this->StaffPositionTitle->findList(true);
+        $positionGradeOptions = $this->StaffPositionGrade->findList(true);
 		$yesnoOptions = $controller->Option->get('yesno');
 		$enableOptions = $controller->Option->get('enableOptions');
 		
-		$controller->set(compact('positionTitleptions', 'positionGradeOptions', 'yesnoOptions','enableOptions'));
+		$controller->set(compact('positionTitleOptions', 'positionGradeOptions', 'yesnoOptions','enableOptions'));
     }
 	
 	public function positionsHistory($controller, $params) {
