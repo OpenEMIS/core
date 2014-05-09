@@ -48,7 +48,7 @@ $this->start('contentBody');
         	<td class="table_cell"><?php echo $val[$modelName]['code'] ?></td>
             <td class="table_cell"><?php echo $this->Html->link($val[$modelName]['title'], array('action' => 'courseView', $val[$modelName]['id']), array('escape' => false)); ?></td>
             <td class="table_cell"><?php echo  $val[$modelName]['credit_hours']; ?></td>
-            <td class="table_cell"><?php echo $val['TrainingStatus']['name'] ?></td>
+            <td class="table_cell"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$val[$modelName]['id'],$val['TrainingStatus']['name'],$val['TrainingStatus']['id'])); ?></td>
         </tr>
        <?php } ?>
     </tbody>

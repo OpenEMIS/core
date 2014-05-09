@@ -67,7 +67,7 @@ class MessageComponent extends Component {
 				'invalidFileFormat' => array('type' => 'error', 'msg' => 'The file is not a valid format.'),
 				'saving' => array('type' => 'error', 'msg' => 'The record is not added due to errors encountered.')
 			)
-		)
+		),
 	);
 	
 	public function get($code) {
