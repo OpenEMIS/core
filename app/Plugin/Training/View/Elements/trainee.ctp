@@ -8,7 +8,6 @@
 		<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $index . '.identification_id', array('class' => 'trainee-id-'.$index)); ?>
 		<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $index . '.identification_first_name', array('class' => 'trainee-first-name-'.$index)); ?>
 		<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $index . '.identification_last_name', array('class' => 'trainee-last-name-'.$index)); ?>
-		<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $index . '.identification_table', array('class' => 'trainee-table-'.$index)); ?>
 		<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $index . '.identification_validate', array('class' => 'trainee-validate-'.$index . ' validate-trainee')); ?>
 		</div>
     </div>

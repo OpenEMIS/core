@@ -144,6 +144,23 @@ class TrainingSession extends TrainingAppModel {
 		return $data;
 	}
 
+	private function getSessionResultStatus($sessionId){
+		$trainingSessionResult = ClassRegistry::init('TrainingSessionResult');
+
+		$trainingSessionResults = $trainingSessionResult->find('first', array('conditions'=>array('TrainingSessionResult.training_session_id'=>$sessionId)));
+
+
+		if(!empty($trainingSessionResults)){
+			if($trainingSessionResults['TrainingSessionResult']['training_status_id']!='1'){
+				return '0';
+			}else{
+				return '2';
+			}
+		}
+
+		return '1';
+	}
+
 	
 	public function session($controller, $params) {
 	//	pr('aas');
@@ -186,10 +203,12 @@ class TrainingSession extends TrainingAppModel {
 			)
 		);
 
-
+		$sessionEditable = $this->getSessionResultStatus($id);
+		
 		$controller->Session->write('TrainingSessionId', $id);
 		$controller->set('trainingSessionTrainees', $trainingSessionTrainees);
 		$controller->set('data', $data);
+		$controller->set('sessionEditable', $sessionEditable);
 
 		//APROVAL
 		$controller->Workflow->getApprovalWorkflow($this->name, $id);
@@ -306,12 +325,15 @@ class TrainingSession extends TrainingAppModel {
 		$controller->set('modelName', $this->name);
 		
 		$provider = '';
+
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
 			$data = $this->findById($id);
+			$sessionEditable = '1';
 			if(!empty($data)){
-				if($data['TrainingSession']['training_status_id']!=1){
+				$sessionEditable = $this->getSessionResultStatus($id);
+				if(!$sessionEditable){
 					return $controller->redirect(array('action' => 'sessionView', $id));
 				}
 
@@ -332,6 +354,7 @@ class TrainingSession extends TrainingAppModel {
 				}
 				$controller->request->data = array_merge($data, array('TrainingSessionTrainee'=>$trainingSessionTraineesVal));
 			}
+			$controller->request->data['TrainingSession']['sessionEditable'] = $sessionEditable;
 		}
 		else{
 			if ($this->saveAll($controller->request->data, array('validate' => 'only'))){

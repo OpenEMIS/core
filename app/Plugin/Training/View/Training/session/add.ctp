@@ -23,6 +23,7 @@ echo $this->Form->create($model, $formOptions);
 <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 <?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
 <?php  echo $this->Form->input('provider', array('type'=> 'hidden', 'class'=>'provider', 'default'=>$provider)); ?>
+<?php  echo $this->Form->input('sessionEditable', array('type'=> 'hidden', 'default'=>$this->request->data['TrainingSession']['sessionEditable'])); ?>
 <?php
 
 $startDate = date('Y-m-d');
@@ -58,7 +59,7 @@ if(isset($this->data[$model]['end_date'])){
     	echo $this->Form->input('trainer', array('label'=>array('text'=>__('Trainer'), 'class'=>'col-md-3 control-label'), 'id' => 'searchTrainer', 'class'=>'form-control trainer', 'placeholder' => __('Identification No, First Name or Last Name')));
     ?>
 
-
+    <?php if($this->request->data['TrainingSession']['sessionEditable']!='0'){ ?>
 	 <div class="row form-group" style="min-height:45px;">
 		<label class="col-md-3 control-label"><?php echo __('Trainees'); ?></label>
 		<div class="col-md-4">
@@ -85,8 +86,7 @@ if(isset($this->data[$model]['end_date'])){
 							'value'=>$val['identification_id'])); ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_first_name', array('value'=>$val['identification_first_name'])); ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_last_name', array('value'=>$val['identification_last_name'])); ?>
-							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_table', array('value'=>$val['identification_table'])); ?>
-							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_validate', array('class' => 'trainee-validate-'.$i . ' validate-trainee', 'value'=>$val['identification_table'] . '_' . $val['identification_id'])); ?>
+							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_validate', array('class' => 'trainee-validate-'.$i . ' validate-trainee', 'value'=>$val['identification_id'])); ?>
 						</div>
 				    </div>
 				 
@@ -105,6 +105,7 @@ if(isset($this->data[$model]['end_date'])){
 	<div class="row"><a class="void icon_plus" onclick="objTrainingSessions.addTrainee(this)" url="Training/ajax_add_trainee"  href="javascript: void(0)"><?php echo __('Add Trainee');?></a></div>
 
 	</div>
+	<?php } ?>
 </div>
 <div class="controls view_controls">
 	<?php if(!isset($this->request->data['TrainingSession']['training_status_id'])|| $this->request->data['TrainingSession']['training_status_id']==1){ ?>
