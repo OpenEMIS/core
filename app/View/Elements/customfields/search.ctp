@@ -28,7 +28,7 @@ foreach ($customfields as $arrdataFieldsVal){
         if(count(@$dataFields[$arrdataFieldsVal]) > 0){
                 foreach ($dataFields[$arrdataFieldsVal] as $arrVals){
                     if($arrVals[$arrdataFieldsVal.'CustomField']['type'] == 1){//Label
-                                              echo '<fieldset class="custom_section_break">
+                                              echo '<fieldset class="section_break">
 								<legend>'.__($arrVals[$arrdataFieldsVal.'CustomField']['name']).'</legend>
 						</fieldset>';
                                        }else{
