@@ -153,27 +153,27 @@ echo $this->element('census/year_options');
                     
                     echo '<div class="custom_field">
                                     <div class="field_label">'.$arrVals['CensusCustomField']['name'].'</div>
-                                    <div class="field_value">'; 
+                                    <div class="field_value"><div class="col-md-4">'; 
                                     $val = (isset($datavalues[$arrVals['CensusCustomField']['id']][0]['value']))?
                                         $datavalues[$arrVals['CensusCustomField']['id']][0]['value']:"";
                                     
-                                    echo '<input type="text" name="data[CensusCustomValue][textbox]['.$arrVals["CensusCustomField"]["id"].'][value]" value="'.$val.'" >';
-                              echo '</div>
+                                    echo '<input type="text" class="form-control" name="data[CensusCustomValue][textbox]['.$arrVals["CensusCustomField"]["id"].'][value]" value="'.$val.'" >';
+                              echo '</div></div>
                             </div>';
                 }elseif($arrVals['CensusCustomField']['type'] == 3) {//DropDown
                     echo '<div class="custom_field">
                                     <div class="field_label">'.$arrVals['CensusCustomField']['name'].'</div>
-                                    <div class="field_value">';
+                                    <div class="field_value"><div class="col-md-4">';
                                        
                                         if(count($arrVals['CensusCustomFieldOption'])> 0){
-                                            echo '<select name="data[CensusCustomValue][dropdown]['.$arrVals["CensusCustomField"]["id"].'][value]">';
+                                            echo '<select name="data[CensusCustomValue][dropdown]['.$arrVals["CensusCustomField"]["id"].'][value]" class="form-control">';
                                             foreach($arrVals['CensusCustomFieldOption'] as $arrDropDownVal){
                                                 if(isset($datavalues[$arrVals['CensusCustomField']['id']][0]['value'])){
                                                     $defaults =  $datavalues[$arrVals['CensusCustomField']['id']][0]['value'];
                                                 }
                                                 echo '<option value="'.$arrDropDownVal['id'].'" '.($defaults == $arrDropDownVal['id']?'selected="selected"':"").'>'.$arrDropDownVal['value'].'</option>';
                                             }
-                                            echo '</select>';
+                                            echo '</select></div>';
                                         }
                               echo '</div>
                             </div>';
@@ -212,7 +212,7 @@ echo $this->element('census/year_options');
                                     if(isset($datavalues[$arrVals['CensusCustomField']['id']][0]['value'])){
                                         $val = ($datavalues[$arrVals['CensusCustomField']['id']][0]['value']?$datavalues[$arrVals['CensusCustomField']['id']][0]['value']:""); 
                                     }
-                                    echo '<textarea name="data[CensusCustomValue][textarea]['.$arrVals["CensusCustomField"]["id"].'][value]">'.$val.'</textarea>';
+                                    echo '<textarea class="form-control" name="data[CensusCustomValue][textarea]['.$arrVals["CensusCustomField"]["id"].'][value]">'.$val.'</textarea>';
                               echo '</div>
                             </div>';
                 }
