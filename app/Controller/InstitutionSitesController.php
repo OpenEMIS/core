@@ -166,7 +166,8 @@ class InstitutionSitesController extends AppController {
         'students' => 'InstitutionSiteStudent',
         'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
-		'additional' => 'InstitutionSiteCustomField'
+		'additional' => 'InstitutionSiteCustomField',
+		'shifts' => 'InstitutionSiteShift'
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -174,25 +175,25 @@ class InstitutionSitesController extends AppController {
         'Overview and More' => array(
             'Model' => 'InstitutionSite',
             'fields' => array(
-                'Institution' => array(
-                    'name' => ''
-                ),
+//                'Institution' => array(
+//                    'name' => ''
+//                ),
                 'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => ''
+                    'name' => 'Institution Name',
+                    'code' => 'Institution Code'
                 ),
                 'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
+                    'name' => 'Institution Type'
                 ),
                 'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
+                    'name' => 'Institution Ownership'
                 ),
                 'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
+                    'name' => 'Institution Status'
                 ),
                 'InstitutionSite2' => array(
-                    'date_opened' => '',
-                    'date_closed' => '',
+                    'date_opened' => 'Date Opened',
+                    'date_closed' => 'Date Closed',
                 ),
                 'Area' => array(
                     'name' => 'Area'
@@ -201,15 +202,15 @@ class InstitutionSitesController extends AppController {
                     'name' => 'Area (Education)'
                 ),
                 'InstitutionSite3' => array(
-                    'address' => '',
-                    'postal_code' => '',
-                    'longitude' => '',
-                    'latitude' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => ''
+                    'address' => 'Address',
+                    'postal_code' => 'Postal Code',
+                    'longitude' => 'Longitude',
+                    'latitude' => 'Latitude',
+                    'contact_person' => 'Contact Person',
+                    'telephone' => 'Telephone',
+                    'fax' => 'Fax',
+                    'email' => 'Email',
+                    'website' => 'Website'
                 ),
                 'InstitutionSiteCustomField' => array(
                 )
@@ -311,25 +312,25 @@ class InstitutionSitesController extends AppController {
                 'EducationProgramme' => array(
                     'name' => 'Programme'
                 ),  
-                'Institution' => array(
-                    'name' => ''
-                ),
+//                'Institution' => array(
+//                    'name' => ''
+//                ),
                 'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => '',
+                    'name' => 'Institution Name',
+                    'code' => 'Institution Code',
                 ),
                 'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
+                    'name' => 'Institution Type'
                 ),
                 'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
+                    'name' => 'Institution Ownership'
                 ),
                 'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
+                    'name' => 'Institution Status'
                 ),
                 'InstitutionSite2' => array(
-                    'date_opened' => '',
-                    'date_closed' => '',
+                    'date_opened' => 'Date Opened',
+                    'date_closed' => 'Date Closed',
                 ),
                 'Area' => array(
                     'name' => 'Area'
@@ -338,15 +339,15 @@ class InstitutionSitesController extends AppController {
                     'name' => 'Area (Education)'
                 ),
                 'InstitutionSite3' => array(
-                    'address' => '',
-                    'postal_code' => '',
-                    'longitude' => '',
-                    'latitude' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => ''
+                    'address' => 'Address',
+                    'postal_code' => 'Postal Code',
+                    'longitude' => 'Longitude',
+                    'latitude' => 'Latitude',
+                    'contact_person' => 'Contact Person',
+                    'telephone' => 'Telephone',
+                    'fax' => 'Fax',
+                    'email' => 'Email',
+                    'website' => 'Website'
                 ),
                 'InstitutionSiteCustomField' => array(
                 )
@@ -357,7 +358,7 @@ class InstitutionSitesController extends AppController {
             'Model' => 'InstitutionSiteClassGradeStudent',
             'fields' => array(
                 'InstitutionSite' => array(
-                    'name' => 'Institution Site'
+                    'name' => 'Institution'
                 ),
                 'SchoolYear' => array(
                     'name' => 'School Year'
@@ -395,7 +396,7 @@ class InstitutionSitesController extends AppController {
             'Model' => 'InstitutionSiteClassGradeStudent',
             'fields' => array(
                 'InstitutionSite' => array(
-                    'name' => 'Institution Site'
+                    'name' => 'Institution'
                 ),
                 'SchoolYear' => array(
                     'name' => 'School Year'
@@ -427,7 +428,7 @@ class InstitutionSitesController extends AppController {
             'Model' => 'StudentBehaviour',
             'fields' => array(
                 'InstitutionSite' => array(
-                    'name' => 'Institution Site'
+                    'name' => 'Institution'
                 ),
                 'Student' => array(
                     'identification_no' => 'Student OpenEMIS ID',
@@ -474,25 +475,25 @@ class InstitutionSitesController extends AppController {
                 ),
                 'TeacherCustomField' => array(
                 ),
-                'Institution' => array(
-                    'name' => ''
-                ),
+//                'Institution' => array(
+//                    'name' => ''
+//                ),
                 'InstitutionSite' => array(
                     'name' => '',
                     'code' => ''
                 ),
                 'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
+                    'name' => 'Institution Type'
                 ),
                 'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
+                    'name' => 'Institution Ownership'
                 ),
                 'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
+                    'name' => 'Institution Status'
                 ),
                 'InstitutionSite2' => array(
-                    'date_opened' => '',
-                    'date_closed' => '',
+                    'date_opened' => 'Date Opened',
+                    'date_closed' => 'Date Closed',
                 ),
                 'Area' => array(
                     'name' => 'Area'
@@ -501,15 +502,15 @@ class InstitutionSitesController extends AppController {
                     'name' => 'Area (Education)'
                 ),
                 'InstitutionSite3' => array(
-                    'address' => '',
-                    'postal_code' => '',
-                    'longitude' => '',
-                    'latitude' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => ''
+                    'address' => 'Address',
+                    'postal_code' => 'Postal Code',
+                    'longitude' => 'Longitude',
+                    'latitude' => 'Latitude',
+                    'contact_person' => 'Contact Person',
+                    'telephone' => 'Telephone',
+                    'fax' => 'Fax',
+                    'email' => 'Email',
+                    'website' => 'Website'
                 ),
                 'InstitutionSiteCustomField' => array(
                 )
@@ -520,7 +521,7 @@ class InstitutionSitesController extends AppController {
             'Model' => 'TeacherAttendance',
             'fields' => array(
                 'InstitutionSite' => array(
-                    'name' => 'Institution Site'
+                    'name' => 'Institution'
                 ),
                 'Teacher' => array(
                     'identification_no' => 'OpenEMIS ID',
@@ -545,7 +546,7 @@ class InstitutionSitesController extends AppController {
             'Model' => 'TeacherBehaviour',
             'fields' => array(
                 'InstitutionSite' => array(
-                    'name' => 'Institution Site'
+                    'name' => 'Institution'
                 ),
                 'Teacher' => array(
                     'identification_no' => 'Teacher OpenEMIS ID',
@@ -592,25 +593,25 @@ class InstitutionSitesController extends AppController {
                 ),
                 'StaffCustomField' => array(
                 ),
-                'Institution' => array(
-                    'name' => ''
-                ),
+//                'Institution' => array(
+//                    'name' => ''
+//                ),
                 'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => ''
+                    'name' => 'Institution Name',
+                    'code' => 'Institution Code'
                 ),
                 'InstitutionSiteType' => array(
-                    'name' => 'Institution Site Type'
+                    'name' => 'Institution Type'
                 ),
                 'InstitutionSiteOwnership' => array(
-                    'name' => 'Institution Site Ownership'
+                    'name' => 'Institution Ownership'
                 ),
                 'InstitutionSiteStatus' => array(
-                    'name' => 'Institution Site Status'
+                    'name' => 'Institution Status'
                 ),
                 'InstitutionSite2' => array(
-                    'date_opened' => '',
-                    'date_closed' => '',
+                    'date_opened' => 'Date Opened',
+                    'date_closed' => 'Date Closed',
                 ),
                 'Area' => array(
                     'name' => 'Area'
@@ -619,15 +620,15 @@ class InstitutionSitesController extends AppController {
                     'name' => 'Area (Education)'
                 ),
                 'InstitutionSite3' => array(
-                    'address' => '',
-                    'postal_code' => '',
-                    'longitude' => '',
-                    'latitude' => '',
-                    'contact_person' => '',
-                    'telephone' => '',
-                    'fax' => '',
-                    'email' => '',
-                    'website' => ''
+                    'address' => 'Address',
+                    'postal_code' => 'Postal Code',
+                    'longitude' => 'Longitude',
+                    'latitude' => 'Latitude',
+                    'contact_person' => 'Contact Person',
+                    'telephone' => 'Telephone',
+                    'fax' => 'Fax',
+                    'email' => 'Email',
+                    'website' => 'Website'
                 ),
                 'InstitutionSiteCustomField' => array(
                 )
@@ -638,7 +639,7 @@ class InstitutionSitesController extends AppController {
             'Model' => 'StaffAttendance',
             'fields' => array(
                 'InstitutionSite' => array(
-                    'name' => 'Institution Site'
+                    'name' => 'Institution'
                 ),
                 'Staff' => array(
                     'identification_no' => 'OpenEMIS ID',
@@ -663,7 +664,7 @@ class InstitutionSitesController extends AppController {
             'Model' => 'StaffBehaviour',
             'fields' => array(
                 'InstitutionSite' => array(
-                    'name' => 'Institution Site'
+                    'name' => 'Institution'
                 ),
                 'Staff' => array(
                     'identification_no' => 'Staff OpenEMIS ID',
@@ -688,7 +689,7 @@ class InstitutionSitesController extends AppController {
             'Model' => 'InstitutionSiteClass',
             'fields' => array(
                 'InstitutionSite' => array(
-                    'name' => 'Institution Site'
+                    'name' => 'Institution'
                 ),
                 'SchoolYear' => array(
                     'name' => 'School Year'
@@ -708,9 +709,9 @@ class InstitutionSitesController extends AppController {
                     'name AS Year' => ''
                 ),
                 'InstitutionSite' => array(
-                    'name AS InstitutionSiteName' => '',
-                    'code AS InstitutionSiteCode' => '',
-                    'id AS InstitutionSiteId' => ''
+                    'name AS InstitutionSiteName' => 'Institution Name',
+                    'code AS InstitutionSiteCode' => 'Institution Code',
+                    'id AS InstitutionSiteId' => 'Institution ID'
                 ),
                 'InstitutionSiteClass' => array(
                     'name AS Class' => '',
@@ -855,7 +856,7 @@ class InstitutionSitesController extends AppController {
 
         $this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 
-        if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced') {
+        if ($this->action === 'index' || $this->action === 'add' || $this->action === 'advanced' || $this->action === 'getCustomFieldsSearch') {
             $this->bodyTitle = 'Institutions';
         } else if ($this->action === 'view'){
             
@@ -946,7 +947,7 @@ class InstitutionSitesController extends AppController {
                 $result = $this->Area->autocomplete($search);
                 return json_encode($result);
             } else {
-                $this->Navigation->addCrumb('List of Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
+                //$this->Navigation->addCrumb('List of Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
                 $this->Navigation->addCrumb('Advanced Search');
 
                 if (isset($this->params->pass[0])) {
@@ -972,7 +973,7 @@ class InstitutionSitesController extends AppController {
                 $arrCustFields = array($customfields => $arrSettings);
 
                 $instituionSiteCustField = $this->Components->load('CustomField', $arrCustFields[$customfields]);
-                $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+                $dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
                 $types = $this->InstitutionSiteType->findList(1);
                 //pr(array($customfields));
                 $this->set("customfields", array($customfields));
@@ -1009,7 +1010,7 @@ class InstitutionSitesController extends AppController {
              $arrCustFields = array($customfields => $arrSettings);
              
             $instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
-            $dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
+            $dataFields[$customfields] = $instituionSiteCustField->getInstitutionSiteCustomFields();
             $types = $this->InstitutionSiteType->findList(1);
             //pr(array($customfields));
             $this->set("customfields",array($customfields));
@@ -1357,116 +1358,11 @@ class InstitutionSitesController extends AppController {
         $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
     }
     
-    public function shifts() {
-        $this->Navigation->addCrumb('Shifts');
-
-        $data = $this->InstitutionSiteShift->getAllShiftsByInstitutionSite($this->institutionSiteId);
-
-        $this->set('data', $data);
-    }
-    
-    public function shiftsView() {
-        $shiftId = $this->params['pass'][0];
-        $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
-        if(!empty($shiftObj)){
-            $this->Session->write('shiftId', $shiftId);
-            $this->set('shiftObj', $shiftObj);
-        }else{
-            $this->redirect(array('action' => 'shifts'));
-        }
-    }
-    
-    public function shiftsAdd() {
-        $this->Navigation->addCrumb('Add Shift');
-        $institutionObj = $this->InstitutionSite->getInstitutionSiteById($this->institutionSiteId);
-        
-        if ($this->request->is('post')) { // save
-            $data = $this->request->data;
-            $data['InstitutionSiteShift']['institution_site_id'] = $this->institutionSiteId;
-            $this->InstitutionSiteShift->create();
-            
-            if ($this->InstitutionSiteShift->save($data, array('validate' => 'only'))) {
-                if(empty($data['InstitutionSiteShift']['location_institution_site_id'])){
-                    $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
-                }else{
-                    $testLocationId = $this->InstitutionSite->getInstitutionSiteById($data['InstitutionSiteShift']['location_institution_site_id']);
-                    if(empty($testLocationId)){
-                        $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
-                    }else{
-                        $this->InstitutionSiteShift->save($data, array('validate' => 'false'));
-                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                        $this->redirect(array('action' => 'shifts'));
-                    }
-                }
-            }
-        }
-
-        $yearOptions = $this->SchoolYear->getAvailableYears();
-
-        $this->set('yearOptions', $yearOptions);
-        $this->set('institutionSiteId', $institutionObj['InstitutionSite']['id']);
-        $this->set('institutionSiteName', $institutionObj['InstitutionSite']['name']);
-    }
-    
-    public function shiftsEdit() {
-        $shiftId = $this->params['pass'][0];
-        $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
-        if(empty($shiftObj)){
-            $this->redirect(array('action' => 'shifts'));
-        }
-        
-        $locationSiteObj = $this->InstitutionSite->getInstitutionSiteById($shiftObj['InstitutionSiteShift']['location_institution_site_id']);
-        
-        if ($this->request->is('get')) { // save
-            $this->Navigation->addCrumb('Edit Shift');
-            
-            $this->request->data = $shiftObj;
-        }else{
-            $data = $this->request->data;
-            $data['InstitutionSiteShift']['institution_site_id'] = $this->institutionSiteId;
-            
-            if ($this->InstitutionSiteShift->save($data, array('validate' => 'only'))) {
-                if(empty($data['InstitutionSiteShift']['location_institution_site_id'])){
-                    $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
-                }else{
-                    $testLocationId = $this->InstitutionSite->getInstitutionSiteById($data['InstitutionSiteShift']['location_institution_site_id']);
-                    if(empty($testLocationId)){
-                        $this->Utility->alert($this->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
-                    }else{
-                        $this->InstitutionSiteShift->save($data, array('validate' => 'false'));
-                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-                        $this->redirect(array('action' => 'shiftsView', $shiftId));
-                    }
-                }
-            }
-        }
-        $yearOptions = $this->SchoolYear->getAvailableYears();
-
-        $this->set('yearOptions', $yearOptions);
-        $this->set('locationSiteName', $locationSiteObj['InstitutionSite']['name']);
-        $this->set('locationSiteId', $locationSiteObj['InstitutionSite']['id']);
-        $this->set('shiftId', $shiftId);
-    }
-    
     public function shiftLocationAutoComplete() {
         $this->autoRender = false;
         $search = $this->params->query['term'];
         $result = $this->InstitutionSite->getAutoCompleteList($search);
         return json_encode($result);
-    }
-    
-    public function shiftsDelete() {
-        if ($this->Session->check('shiftId')) {
-            $shiftId = $this->Session->read('shiftId');
-            $shiftObj = $this->InstitutionSiteShift->getShiftById($shiftId);
-            $shiftName = $shiftObj['InstitutionSiteShift']['name'];
-            
-            $this->InstitutionSiteShift->deleteAll(array('InstitutionSiteShift.id' => $shiftId));
-            $this->Utility->alert($shiftName . __(' have been deleted successfully.'));
-            $this->redirect(array('action' => 'shifts'));
-        }else{
-            $this->redirect(array('action' => 'shifts'));
-        }
     }
 
     public function history() {
@@ -3424,11 +3320,11 @@ class InstitutionSitesController extends AppController {
                         'alias' => 'InstitutionSiteOwnership',
                         'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
                     ),
-                    array(
-                        'table' => 'institutions',
-                        'alias' => 'Institution',
-                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
-                    ),
+//                    array(
+//                        'table' => 'institutions',
+//                        'alias' => 'Institution',
+//                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+//                    ),
                     array(
                         'table' => 'areas',
                         'alias' => 'Area',
@@ -3744,11 +3640,11 @@ class InstitutionSitesController extends AppController {
                         'alias' => 'InstitutionSiteOwnership',
                         'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
                     ),
-                    array(
-                        'table' => 'institutions',
-                        'alias' => 'Institution',
-                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
-                    ),
+//                    array(
+//                        'table' => 'institutions',
+//                        'alias' => 'Institution',
+//                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+//                    ),
                     array(
                         'table' => 'areas',
                         'alias' => 'Area',
@@ -3953,11 +3849,11 @@ class InstitutionSitesController extends AppController {
                         'alias' => 'InstitutionSiteOwnership',
                         'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
                     ),
-                    array(
-                        'table' => 'institutions',
-                        'alias' => 'Institution',
-                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
-                    ),
+//                    array(
+//                        'table' => 'institutions',
+//                        'alias' => 'Institution',
+//                        'conditions' => array('Institution.id = InstitutionSite.institution_id')
+//                    ),
                     array(
                         'table' => 'areas',
                         'alias' => 'Area',
@@ -4294,7 +4190,7 @@ class InstitutionSitesController extends AppController {
 
     private function getHeaderAcademic($name) {
         $commonFields = array(
-            'institution_site' => 'Institution Site',
+            'institution_site' => 'Institution',
             'openemis_id' => 'OpenEMIS ID',
             'first_name' => 'First Name',
             'middle_name' => 'Middle Name',

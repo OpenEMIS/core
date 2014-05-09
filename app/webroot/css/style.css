@@ -361,4 +361,41 @@ fieldset.area .label{
     margin-top: 6px;
     margin-bottom: 6px;
 }
+.dataDisplay .form-group .col-md-4{
+	padding-top: 7px;
+}
+.dataDisplay .row .label{
+	color: #333333;
+	line-height: 25px;
+	font-size: 12px;
+	font-weight: normal;
+	text-align: left;
+	padding: 0;
+	white-space: normal;
+	width: 25%;
+}
+.dataDisplay .row .value{
+	line-height: 25px;
+}
+.customFieldsWrapper .row .label,
+.customFieldsWrapper .row .col-md-3{
+	color: #333333;
+	font-size: 12px;
+	font-weight: normal;
+	text-align: left;
+	padding: 0;
+	white-space: normal;
+	line-height: 1.4;
+	width: 25%;
+}
+.customFieldsWrapper .row .col-md-4{
+	width: auto;
+}
+.customFieldsWrapper .row{
+	padding-left: 15px;
+}
+.customFieldsWrapper h3{
+	font-size: 15px;
+	color: #666;
+}
 
