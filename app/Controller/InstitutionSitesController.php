@@ -167,7 +167,8 @@ class InstitutionSitesController extends AppController {
         'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
-		'shifts' => 'InstitutionSiteShift'
+		'shifts' => 'InstitutionSiteShift',
+		'positions' => 'InstitutionSitePosition'
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
