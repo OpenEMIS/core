@@ -51,8 +51,22 @@ class CustomFieldComponent extends Component {
                     $arrCond = array_merge($arrCond,array($this->settings['CustomField'].'.institution_site_type_id' => $this->institutionSiteTypeId));
                 }
                 
-		$arr = $this->customField->find('all',array('conditions' => $arrCond, $this->settings['CustomField'].'.order'=>'order'));
+		$arr = $this->customField->find('all',array('conditions' => $arrCond, 'order' => array($this->settings['CustomField'] . '.order')));
 		
+		return ($arr) ? $arr : array();
+	}
+	
+	public function getInstitutionSiteCustomFields() {
+		$this->customField->unbindModel(array('hasMany' => array($this->settings['CustomValue'])));
+		$this->customField->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		
+		$arrCond = array($this->settings['CustomField'] . '.visible' => '1');
+		if ($this->institutionSiteTypeId >= 0 && isset($this->institutionSiteTypeId)) {
+			$arrCond = array_merge($arrCond, array($this->settings['CustomField'] . '.institution_site_type_id' => $this->institutionSiteTypeId));
+		}
+
+		$arr = $this->customField->find('all', array('conditions' => $arrCond, 'order' => array($this->settings['CustomField'] . '.order')));
+
 		return ($arr) ? $arr : array();
 	}
 	
