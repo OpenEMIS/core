@@ -17,8 +17,8 @@ $this->end();
 $this->start('contentBody');
 ?>
 	<div class="row year">
-		<div class="col-md-3"><?php echo __('Year'); ?></div>
-		<div class="col-md-6">
+		<div class="col-md-2"><?php echo __('Year'); ?></div>
+		<div class="col-md-10">
 			<?php
 				echo $this->Form->input('school_year_id', array(
 					'label' => false,
@@ -52,7 +52,7 @@ $this->start('contentBody');
 		if(count(@$dataFields) > 0 ) {
             foreach($dataFields as $arrVals){
                 if($arrVals[$arrMap['CustomField']]['type'] == 1){//Label
-                    echo '<fieldset class="custom_section_break">
+                    echo '<fieldset class="section_break">
                                     <legend>'.__($arrVals[$arrMap['CustomField']]['name']).'</legend>
                             </fieldset>';
                 }elseif($arrVals[$arrMap['CustomField']]['type'] == 2) {//Text

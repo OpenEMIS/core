@@ -53,3 +53,7 @@
 .row_estimate { color: #FF0000; }
 .row_internal { color: #809800; }
 /* End legend styles */
+#infrastructure fieldset.section_group select.form-control{
+	width: 30%;
+	display: inline-block;
+}
