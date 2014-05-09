@@ -26,9 +26,9 @@ class StaffTrainingResult extends AppModel {
     }
 	
 	public function trainingResult($controller, $params) {
-
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+		$controller->set('modelName', 'TrainingSessionTrainee');
 		$data = $trainingSessionTrainee->find('all',
 			array(
 				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingStatus.*'),

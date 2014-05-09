@@ -21,18 +21,15 @@ $this->end();
 $this->start('contentBody');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="attendance" class="content_wrapper">
-    <?php echo $this->element('alert'); ?>
+<div id="attendance" class="">
 
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
-                <td class="table_cell"><?php echo __('Year'); ?></td>
-                <td class="table_cell"><?php echo __('By'); ?></td>
-                <td class="table_cell"><?php echo __('Date'); ?></td>
-                <td class="table_cell"><?php echo __('Status'); ?></td>
+                <th class="table_cell"><?php echo __('Year'); ?></th>
+                <th class="table_cell"><?php echo __('By'); ?></th>
+                <th class="table_cell"><?php echo __('Date'); ?></th>
+                <th class="table_cell"><?php echo __('Status'); ?></th>
             </tr>
         </thead>
 
