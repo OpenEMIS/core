@@ -7,7 +7,7 @@ $obj = $data[$modelName];
 $this->start('contentActions');
 echo $this->Html->link($this->Label->get('general.list'), array('action' => 'session'), array('class' => 'divider'));
 if($_edit) {
-	if($obj['training_status_id'] == 1){
+	if($sessionEditable){
 	    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'sessionEdit', $obj['id']), array('class' => 'divider'));
 	}
 }
