@@ -35,7 +35,7 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Status'); ?></div>
-	<div class="col-md-6"><?php echo $data['TrainingStatus']['name']; ?></div>
+	<div class="col-md-6"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$obj['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Course Description'); ?></div>

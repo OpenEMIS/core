@@ -4,7 +4,7 @@ echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->script('jquery-ui.min', false);
 echo $this->Html->script('search', false);
-echo $this->element('breadcrumb');
+
 $session = $this->Session;
 //$arrKeys = @array_keys($session->read('InstitutionSite.AdvancedSearch'));
 //if ($arrKeys) {
@@ -19,18 +19,16 @@ $session = $this->Session;
 //$preload = @array($Model, (is_null($session->read('InstitutionSite.AdvancedSearch.siteType')) ? 0 : $session->read('InstitutionSite.AdvancedSearch.siteType')));
 
 $this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Advanced Search'));
+
+$this->start('contentActions');
+echo $this->Html->link(__('Back'), array('action' => 'index'), array('class' => 'divider'));
+echo $this->Html->link(__('Clear'), array('action' => 'advanced', 0), array('class' => 'divider'));
+$this->end();
 
 $this->start('contentBody');
 ?>
-<div id="institutions" class="content_wrapper search">
-    <h1>
-        <span><?php echo __('Advanced Search'); ?></span>
-        <?php
-        echo $this->Html->link(__('Back'), array('action' => 'index'), array('class' => 'divider'));
-        echo $this->Html->link(__('Clear'), array('action' => 'advanced', 0), array('class' => 'divider'));
-        ?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
+<div id="institutions" class="customFieldsWrapper search">
 
     <?php
     echo $this->Form->create('Search', array(
@@ -42,7 +40,7 @@ $this->start('contentBody');
     <h3><?php echo __('General'); ?></h3>
     <div class="row">
         <div class="label"><?php echo __('Area'); ?></div>
-        <div class="value"><?php echo $this->Form->input('area', array('id' => 'area', 'type' => 'text', 'onfocus' => 'this.select()', 'value' => $session->read('InstitutionSite.AdvancedSearch.Search.area'))); ?></div>
+        <div class="value"><?php echo $this->Form->input('area', array('id' => 'area', 'class' => 'form-control', 'type' => 'text', 'onfocus' => 'this.select()', 'value' => $session->read('InstitutionSite.AdvancedSearch.Search.area'))); ?></div>
     </div>
 
 
@@ -70,7 +68,7 @@ $this->start('contentBody');
 
                                             <div class="">
                                             <div class="field_value">
-                                                    <select name="data[siteType]" onChange="objCustomFieldSearch.getDataFields($(this).val());">';
+                                                    <select name="data[siteType]" class="form-control" onChange="objCustomFieldSearch.getDataFields($(this).val());">';
                             echo '   <option value="0">All</option>';
                             foreach ($types as $key => $val) {
                                 echo '   <option value="' . $key . '" ' . ($key == $typeSelected ? 'selected="selected"' : "") . '>' . __($val) . '</option>';
@@ -79,12 +77,12 @@ $this->start('contentBody');
                                             </div> 
                                             </div>
                                </div>
-                    </div> </div>';
+                    </div>';
                         }
                         if (count(@$dataFields[$arrdataFieldsVal]) > 0) {
                             foreach ($dataFields[$arrdataFieldsVal] as $arrVals) {
                                 if ($arrVals[$arrdataFieldsVal . 'CustomField']['type'] == 1) {//Label
-                                    echo '<fieldset class="custom_section_break">
+                                    echo '<fieldset class="section_break">
 								<legend>' . __($arrVals[$arrdataFieldsVal . 'CustomField']['name']) . '</legend>
 						</fieldset>';
                                 } else {
@@ -100,7 +98,7 @@ $this->start('contentBody');
 
                                                 $val = (isset($sessVal[$arrdataFieldsVal . 'CustomValue']['textbox'][$arrVals[$arrdataFieldsVal . 'CustomField']["id"]]['value'])) ?
                                                         $sessVal[$arrdataFieldsVal . 'CustomValue']['textbox'][$arrVals[$arrdataFieldsVal . 'CustomField']["id"]]['value'] : "";
-                                                echo '<input type="text" class="default" name="data[' . $arrdataFieldsVal . 'CustomValue' . '][textbox][' . $arrVals[$arrdataFieldsVal . 'CustomField']["id"] . '][value]" value="' . $val . '" >';
+                                                echo '<input type="text" class="default form-control" name="data[' . $arrdataFieldsVal . 'CustomValue' . '][textbox][' . $arrVals[$arrdataFieldsVal . 'CustomField']["id"] . '][value]" value="' . $val . '" >';
                                                 echo '</div>
                                                                </div>';
                                             } elseif ($arrVals[$arrdataFieldsVal . 'CustomField']['type'] == 3) {//DropDown
@@ -111,7 +109,7 @@ $this->start('contentBody');
                                                 if (count($arrVals[$arrdataFieldsVal . 'CustomFieldOption']) > 0) {
 
                                                     $arrDropDownVal = array_unshift($arrVals[$arrdataFieldsVal . 'CustomFieldOption'], array("id" => "", "value" => ""));
-                                                    echo '<select name="data[' . $arrdataFieldsVal . 'CustomValue][dropdown][' . $arrVals[$arrdataFieldsVal . 'CustomField']["id"] . '][value]">';
+                                                    echo '<select name="data[' . $arrdataFieldsVal . 'CustomValue][dropdown][' . $arrVals[$arrdataFieldsVal . 'CustomField']["id"] . '][value]" class="form-control">';
 
                                                     foreach ($arrVals[$arrdataFieldsVal . 'CustomFieldOption'] as $arrDropDownVal) {
 
@@ -154,7 +152,7 @@ $this->start('contentBody');
                                                     $val = ($sessVal[$arrdataFieldsVal . 'CustomValue']['textarea'][$arrVals[$arrdataFieldsVal . 'CustomField']["id"]]['value'] ? $sessVal[$arrdataFieldsVal . 'CustomValue']['textarea'][$arrVals[$arrdataFieldsVal . 'CustomField']["id"]]['value'] : "");
                                                 }
 
-                                                echo '<textarea name="data[' . $arrdataFieldsVal . 'CustomValue][textarea][' . $arrVals[$arrdataFieldsVal . 'CustomField']["id"] . '][value]">' . $val . '</textarea>';
+                                                echo '<textarea name="data[' . $arrdataFieldsVal . 'CustomValue][textarea][' . $arrVals[$arrdataFieldsVal . 'CustomField']["id"] . '][value]" class="form-control">' . $val . '</textarea>';
                                                 echo '</div>
                                                                </div>';
                                             }

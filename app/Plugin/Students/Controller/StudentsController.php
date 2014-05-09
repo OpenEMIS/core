@@ -179,6 +179,7 @@ class StudentsController extends StudentsAppController {
 
     public function advanced() {
         $key = 'Student.AdvancedSearch';
+		$this->set('header', __('Advanced Search'));
         if ($this->request->is('get')) {
             if ($this->request->is('ajax')) {
                 $this->autoRender = false;

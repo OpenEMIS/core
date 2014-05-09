@@ -54,9 +54,10 @@ class LabelHelper extends AppHelper {
 			'category' => 'Category',
 			'year' => 'Year',
 			'details' => 'Details',
+			'search' => 'Search',
+			'clear' => 'Clear',
 			'school_year' => 'School Year',
-			'location' => 'Location',
-			'openemisId' => 'OpenEMIS ID'
+			'location' => 'Location'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
