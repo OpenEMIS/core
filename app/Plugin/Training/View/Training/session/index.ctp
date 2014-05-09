@@ -47,7 +47,7 @@ $this->start('contentBody');
             	<td class="table_cell"><?php echo $val[$modelName]['start_date'] ?> - <?php echo $val[$modelName]['end_date'] ?></td>
                 <td class="table_cell"><?php echo $val[$modelName]['location']; ?></td>
                 <td class="table_cell"><?php echo $this->Html->link($val['TrainingCourse']['code'] . ' - ' . $val['TrainingCourse']['title'], array('action' => 'sessionView', $val[$modelName]['id']), array('escape' => false)); ?></td>
-                <td class="table_cell"><?php echo $val['TrainingStatus']['name'] ?></td>
+                <td class="table_cell"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$val[$modelName]['id'],$val['TrainingStatus']['name'],$val['TrainingStatus']['id'])); ?></td>
             </tr>
            <?php } ?>
         </tbody>
