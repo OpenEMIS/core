@@ -94,11 +94,15 @@ class FormUtilityHelper extends AppHelper {
 	}
         
         public function getFormWizardButtons($option = NULL) {
+			echo '<div class="form-group">';
             if (!$option['WizardMode']) {
-                echo '<div class="controls">'.$this->getFormButtons(array('cancelURL' => $option['cancelURL'])).'</div>';
+                echo '<div class="col-md-offset-4">'.$this->getFormButtons(array('cancelURL' => $option['cancelURL'])).'</div>';
             } else {
-                echo '<div class="add_more_controls">' . $this->Form->submit($this->Label->get('wizard.addmore'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div>';
-				echo '<div class="controls">';
+				if(!isset($option['addMoreBtn']) || $option['addMoreBtn'] == true){
+					echo '<div class="add_more_controls">' . $this->Form->submit($this->Label->get('wizard.addmore'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div><br/>';
+				}
+				
+				echo '<div class="col-md-offset-4">';
                 echo $this->Form->submit($this->Label->get('wizard.previous'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right"));
                 if (!$option['WizardEnd']) {
                     echo $this->Form->submit($this->Label->get('wizard.next'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
@@ -110,5 +114,6 @@ class FormUtilityHelper extends AppHelper {
                 }
 				echo '</div>';
             }
+			echo '</div>';
         }
 }

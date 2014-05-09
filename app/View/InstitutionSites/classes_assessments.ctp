@@ -23,9 +23,9 @@ $this->start('contentBody');
 			<table class="table table-striped table-hover table-bordered" action="InstitutionSites/classesResults/<?php echo $classId ?>/">
 				<thead>
 					<tr>
-						<td class="table_cell"><?php echo __('Grade'); ?></td>
-						<td class="table_cell"><?php echo __('Code'); ?></td>
-						<td class="table_cell"><?php echo __('Name'); ?></td>
+						<th class="table_cell"><?php echo __('Grade'); ?></th>
+						<th class="table_cell"><?php echo __('Code'); ?></th>
+						<th class="table_cell"><?php echo __('Name'); ?></th>
 					</tr>
 				</thead>
 				<tbody>

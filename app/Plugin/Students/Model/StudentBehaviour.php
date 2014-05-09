@@ -16,7 +16,10 @@
  */
 
 class StudentBehaviour extends StudentsAppModel {
-    public $actsAs = array('ControllerAction');
+    public $actsAs = array(
+		'ControllerAction',
+		'DatePicker' => array('date_of_behaviour')
+	);
 
     public $useTable = 'student_behaviours';
     public $validate = array(
@@ -27,6 +30,10 @@ class StudentBehaviour extends StudentsAppModel {
             )
         )
     );
+	
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
 
     public function getBehaviourData($studentId, $institutionSiteId = null) {
 
@@ -89,7 +96,7 @@ class StudentBehaviour extends StudentsAppModel {
 
             $categoryOptions = array();
             $categoryOptions = $controller->StudentBehaviourCategory->getCategory();
-            $institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1));
+            $institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1, 'conditions' => array('id' => $controller->institutionSiteId)));
             
             $institutionSiteId = $controller->institutionSiteId;
             
@@ -127,7 +134,7 @@ class StudentBehaviour extends StudentsAppModel {
             $categoryOptions = array();
             $categoryOptions = $controller->StudentBehaviourCategory->getCategory();
 
-            $institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1));
+            $institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1, 'conditions' => array('id' => $controller->institutionSiteId)));
             
             $institutionSiteId = $controller->institutionSiteId;
             $controller->Session->write('StudentBehavourId', $studentBehaviourId);
@@ -154,12 +161,14 @@ class StudentBehaviour extends StudentsAppModel {
                 $name = sprintf('%s %s', $data['Student']['first_name'], $data['Student']['last_name']);
                 $controller->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'studentsView', $studentId));
                 $controller->Navigation->addCrumb('Edit Behaviour Details');
+				
+				$institutionSiteId = $controller->institutionSiteId;
 
                 $categoryOptions = array();
                 $categoryOptions = $controller->StudentBehaviourCategory->getCategory();
-                $institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1));
+                $institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1, 'conditions' => array('id' => $controller->institutionSiteId)));
                 
-                $controller->set(compact('institutionSiteOptions', 'categoryOptions', 'studentBehaviourObj'));
+                $controller->set(compact('institutionSiteOptions', 'categoryOptions', 'studentBehaviourObj', 'institutionSiteId'));
             } else {
                 //$controller->redirect(array('action' => 'studentsBehaviour'));
             }
@@ -205,6 +214,20 @@ class StudentBehaviour extends StudentsAppModel {
         }
 
         return 'true';
+    }
+	
+	//Student Module
+	public function behaviour($controller, $params) {
+     //   extract($controller->studentsCustFieldYrInits());
+        $controller->Navigation->addCrumb('List of Behaviour');
+		$header = __('List of Behaviour');
+        $data = $this->getBehaviourData($controller->studentId);
+        if (empty($data)) {
+			$controller->Message->alert('general.noData');
+           // $controller->Utility->alert($controller->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
+
+        $controller->set(compact('data', 'header'));
     }
 
 }

@@ -27,10 +27,10 @@ $this->start('contentBody');
 	<table class="table table-striped table-hover table-bordered" style="margin-bottom: 20px;">
 		<thead>
 			<tr>
-				<td class="table_cell cell_year"><?php echo __('Year'); ?></td>
-				<td class="table_cell"><?php echo __('Grade'); ?></td>
-				<td class="table_cell"><?php echo __('Seats'); ?></td>
-				<td class="table_cell"><?php echo __('Shift'); ?></td>
+				<th class="table_cell cell_year"><?php echo __('Year'); ?></th>
+				<th class="table_cell"><?php echo __('Grade'); ?></th>
+				<th class="table_cell"><?php echo __('Seats'); ?></th>
+				<th class="table_cell"><?php echo __('Shift'); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -55,10 +55,10 @@ $this->start('contentBody');
         <table class="table table-striped table-hover table-bordered">
             <thead>
 				<tr>
-					<td class="table_cell cell_year"><?php echo __('Code'); ?></td>
-					<td class="table_cell"><?php echo __('Name'); ?></td>
-					<td class="table_cell cell_category"><?php echo __('Grade'); ?></td>
-					<td class="table_cell cell_delete"></td>
+					<th class="table_cell cell_year"><?php echo __('Code'); ?></th>
+					<th class="table_cell"><?php echo __('Name'); ?></th>
+					<th class="table_cell cell_category"><?php echo __('Grade'); ?></th>
+					<th class="table_cell cell_delete"></th>
 				</tr>
             </thead>
             <tbody url="InstitutionSites/classesSubjectAjax/<?php echo $classId; ?>">
@@ -85,9 +85,9 @@ $this->start('contentBody');
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<td class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></td>
-					<td class="table_cell"><?php echo __('Name'); ?></td>
-					<td class="table_cell cell_delete"></td>
+					<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
+					<th class="table_cell"><?php echo __('Name'); ?></th>
+					<th class="table_cell cell_delete"></th>
 				</tr>
 			</thead>
 			<tbody url="InstitutionSites/classesTeacherAjax/<?php echo $classId; ?>">
@@ -120,10 +120,10 @@ $this->start('contentBody');
 				<table class="table table-striped table-hover table-bordered">
 					<thead>
 						<tr>
-							<td class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></td>
-							<td class="table_cell"><?php echo __('Name'); ?></td>
-							<td class="table_cell cell_category"><?php echo __('Category'); ?></td>
-							<td class="table_cell cell_delete"></td>
+							<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
+							<th class="table_cell"><?php echo __('Name'); ?></th>
+							<th class="table_cell cell_category"><?php echo __('Category'); ?></th>
+							<th class="table_cell cell_delete"></th>
 						</tr>
 					</thead>
 

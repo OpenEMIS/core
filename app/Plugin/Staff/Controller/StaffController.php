@@ -81,6 +81,8 @@ class StaffController extends StaffAppController {
 		'employments' => 'Staff.StaffEmployment',
 		'salaries' => 'Staff.StaffSalary',
 		'behaviour' =>'Staff.StaffBehaviour',
+		'training' => 'Staff.StaffTraining',
+		'report' => 'Staff.StaffReport'
     );
 
     public $className = 'Staff';
@@ -178,6 +180,7 @@ class StaffController extends StaffAppController {
 
     public function advanced() {
         $key = 'Staff.AdvancedSearch';
+		$this->set('header', __('Advanced Search'));
         if ($this->request->is('get')) {
             if ($this->request->is('ajax')) {
                 $this->autoRender = false;
@@ -254,7 +257,7 @@ class StaffController extends StaffAppController {
         }
         $imgValidate = new ImageValidate();
         $data = $this->data;
-        if ($this->request->is('post')) {
+        if ($this->request->is(array('post', 'put'))) {
             if(isset($this->data['submit']) && $this->data['submit']==__('Cancel')){
                 $this->Navigation->exitWizard();
             }
@@ -294,6 +297,7 @@ class StaffController extends StaffAppController {
             }
         } else {
             $data = $this->Staff->find('first', array('conditions' => array('id' => $this->Session->read('StaffId'))));
+			$this->request->data = $data;
         }
 
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
