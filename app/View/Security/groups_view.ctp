@@ -59,7 +59,6 @@ $this->start('contentBody');
 		<table class="table table-striped table-hover table-bordered">
 			<thead class="table_head">
 				<tr>
-					<td class="table_cell cell_institution"><?php echo __('Institution'); ?></td>
 					<td class="table_cell"><?php echo __('Institution Site'); ?></td>
 				</tr>
 			</thead>
@@ -67,7 +66,6 @@ $this->start('contentBody');
 			<tbody class="table_body">
 				<?php foreach($data['SecurityGroup']['sites'] as $siteObj) { ?>
 				<tr class="table_row">
-					<td class="table_cell"><?php echo $siteObj['institution_name']; ?></td>
 					<td class="table_cell"><?php echo $siteObj['institution_site_name']; ?></td>
 				</tr>
 				<?php } ?>
