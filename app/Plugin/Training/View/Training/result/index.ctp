@@ -54,7 +54,7 @@ $this->start('contentBody');
                 }
             }   
              ?>
-            <td class="table_cell"><?php echo $val['TrainingStatus']['name'] ?></td>
+            <td class="table_cell"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$val[$modelName]['id'],$val['TrainingStatus']['name'],$val['TrainingStatus']['id'])); ?></td>
         </tr>
        <?php } ?>
     </tbody>

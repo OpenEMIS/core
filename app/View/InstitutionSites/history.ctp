@@ -13,7 +13,7 @@ $this->start('contentBody');
 ?>
 
 <?php if(!empty($data2)) : ?>
-<fieldset class="section_break">
+<fieldset class="section_break dataDisplay">
 	<legend><?php echo __('General'); ?></legend>
 	<div class="row">
 		<div class="label"><?php echo __('Site Name'); ?></div>
@@ -154,20 +154,20 @@ $this->start('contentBody');
 </fieldset>
 
 <?php if(@count($data2['area_id'])>0){ ?>
-<fieldset class="section_break">
+<fieldset class="section_break dataDisplay">
 	<legend><?php echo __('Area'); ?></legend>
 	<?php echo @$this->Utility->showAreaHistory($this->Form, 'area_id', array(), $data['InstitutionSite']['area_id'],$data2['area_id']);  ?>
 </fieldset>
 <?php } ?>
 
 <?php if(@count($data2['area_education_id'])>0){ ?>
-<fieldset class="section_break">
+<fieldset class="section_break dataDisplay">
 	<legend><?php echo __('Area').' ('.__('Education').')'; ?></legend>
 	<?php echo @$this->Utility->showAreaHistory($this->Form, 'area_education_id', array(), $data['InstitutionSite']['area_education_id'],$data2['area_education_id']);  ?>
 </fieldset>
 <?php } ?>
 
-<fieldset class="section_break">
+<fieldset class="section_break dataDisplay">
 	<legend><?php echo __('Location'); ?></legend>
 	<div class="row">
 		<div class="label"><?php echo __('Address'); ?></div>
@@ -269,7 +269,7 @@ $this->start('contentBody');
 	</div>
 </fieldset>
 
-<fieldset class="section_break">
+<fieldset class="section_break dataDisplay">
 	<legend><?php echo __('Contact'); ?></legend>
 	<div class="row">
 		<div class="label"><?php echo __('Contact Person '); ?></div>
