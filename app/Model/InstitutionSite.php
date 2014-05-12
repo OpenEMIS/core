@@ -729,7 +729,7 @@ AND
 			'InstitutionSite.code',
 			'InstitutionSite.name',
                         'InstitutionSiteType.name',
-                        'area.name'
+                        'Area.name'
 		);
 		if(strlen($conditions['SearchKey']) != 0) {
 			$fields[] = 'InstitutionSiteHistory.code';
