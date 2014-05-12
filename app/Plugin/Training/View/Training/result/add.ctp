@@ -11,7 +11,8 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		<?php
 		
             echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider'));
-        
+          	echo $this->Html->link(__('Download Template'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
+          	echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider'));
 		?>
 	</h1>
 	
@@ -29,7 +30,15 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 		<div class="label"><?php echo __('Course'); ?></div>
         <div class="value">
 		<?php 
-			echo $this->Form->input('TrainingCourse.training_course_id', array('options' => $trainingCourseOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingCourse']['id'])); 
+			echo $this->Form->input('TrainingCourse.training_course_id', array('options' => $trainingCourseCodeOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingCourse']['id'])); 
+		?>
+        </div>
+    </div>
+    <div class="row">
+		<div class="label"><?php echo __('Course'); ?></div>
+        <div class="value">
+		<?php 
+			echo $this->Form->input('TrainingCourse.training_course_name', array('options' => $trainingCourseOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingCourse']['id'])); 
 		?>
         </div>
     </div>

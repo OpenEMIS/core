@@ -55,12 +55,17 @@ class StudentsController extends StudentsAppController {
         'Students.StudentLanguage',
         'Students.StudentContact',
         'Students.StudentAward',
+        'Students.Guardian',
+        'Students.GuardianEducationLevel',
+        'Students.GuardianRelation',
+        'Students.StudentGuardian',
         'SchoolYear',
         'Country',
         'Language',
         'ConfigItem',
         'Students.StudentExtracurricular',
-        'ExtracurricularType'
+        'ExtracurricularType',
+        'Students.StudentAttendanceType'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -749,28 +754,80 @@ class StudentsController extends StudentsAppController {
     // STUDENT ATTENDANCE PART
     public function attendance() {
         $studentId = $this->studentId;
-        $data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
+        //$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
         $this->Navigation->addCrumb('Attendance');
 
-        $id = @$this->request->params['pass'][0];
+        //$id = @$this->request->params['pass'][0];
         $yearList = $this->SchoolYear->getYearList();
         $yearId = $this->getAvailableYearId($yearList);
         $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
-
-        $data = $this->StudentAttendance->getAttendanceData($studentId, isset($id) ? $id : $yearId);
-        foreach ($data as $id => $val) {
-            $class = $this->InstitutionSiteClass->getClass($data[$id]['StudentAttendance']['institution_site_class_id'], $data[$id]['StudentAttendance']['institution_site_id']);
-            $data[$id]['StudentAttendance']['name'] = $class['InstitutionSiteClass']['name'];
+        $attendanceTypes = $this->StudentAttendanceType->getAttendanceTypes();
+        
+        $dataAttendance = $this->StudentAttendance->getAttendanceByStudentAndYear($studentId, $yearId);
+        $attendanceCheckList = array();
+        $classesArr = array();
+        foreach($dataAttendance AS $rowAttendance){
+            $attendanceTypeId = $rowAttendance['StudentAttendance']['student_attendance_type_id'];
+            $attendanceValue = $rowAttendance['StudentAttendance']['value'];
+            $classId = $rowAttendance['InstitutionSiteClass']['id'];
+                
+            $attendanceCheckList[$classId][$attendanceTypeId] = $attendanceValue;
+            
+            $classesArr[$classId] = $rowAttendance['InstitutionSiteClass']['name'];
         }
+        
+        $attendanceData = array();
+        foreach($classesArr AS $classId => $className){
+            $tempRow = array();
+            $tempRow['classId'] = $classId;
+            $tempRow['className'] = $className;
+            
+            $tempRow['StudentAttendance'] = array();
+            foreach($attendanceTypes AS $attendanceType){
+                $attendanceTypeId = $attendanceType['StudentAttendanceType']['id'];
+                    
+                if(isset($attendanceCheckList[$classId][$attendanceTypeId])){
+                    $tempRow['StudentAttendance'][$attendanceTypeId] = $attendanceCheckList[$classId][$attendanceTypeId];
+                }else{
+                    $tempRow['StudentAttendance'][$attendanceTypeId] = 0;
+                }
+            }
+            $attendanceData[] = $tempRow;
+        }
+        
+        $legend = $this->generateAttendanceLegend();
 
-        if (empty($data)) {
+        if (empty($attendanceData)) {
             $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
         }
 
         $this->set('selectedYear', $yearId);
         $this->set('years', $yearList);
-        $this->set('data', $data);
+        $this->set('data', $attendanceData);
         $this->set('schoolDays', $schoolDays);
+        $this->set('attendanceTypes', $attendanceTypes);
+        $this->set('legend', $legend);
+    }
+    
+    public function generateAttendanceLegend(){
+        $data = $this->StudentAttendanceType->getAttendanceTypes();
+        
+        $indicator = 0;
+        $str = '';
+        foreach($data AS $row){
+            $code = $row['StudentAttendanceType']['national_code'];
+            $name = $row['StudentAttendanceType']['name'];
+            
+            if($indicator > 0){
+                $str .= '; ' . $code . ' = ' . $name;
+            }else{
+                $str .= $code . ' = ' . $name;
+            }
+            
+            $indicator++;
+        }
+        
+        return $str;
     }
 
     // Student behaviour part
@@ -1168,6 +1225,128 @@ class StudentsController extends StudentsAppController {
         $this->Navigation->addCrumb(__('Identities'));
         $data = $this->StudentIdentity->find('all', array('conditions' => array('StudentIdentity.student_id' => $this->studentId)));
         $this->set('list', $data);
+    }
+    
+    public function guardians() {
+        $this->Navigation->addCrumb(__('Guardians'));
+        $data = $this->StudentGuardian->getGuardians($this->studentId);
+        $this->set('list', $data);
+    }
+    
+    public function guardiansAdd() {
+        $this->Navigation->addCrumb(__('Add Guardian'));
+        if ($this->request->is('post')) {
+            $data = $this->data;
+            if(!empty($data['Guardian']['existing_id'])){
+                $data['StudentGuardian']['guardian_id'] = $data['Guardian']['existing_id'];
+                $data['StudentGuardian']['student_id'] = $this->studentId;
+
+                $this->StudentGuardian->create();
+                
+                if($this->StudentGuardian->saveAll($data, array('validate' => 'only'))){
+                    if($this->StudentGuardian->saveAll($data, array('validate' => false))){
+                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                        $this->redirect(array('action' => 'guardians'));
+                    }
+                }
+            }else{
+                $this->Guardian->create();
+                if($this->Guardian->saveAll($data, array('validate' => 'only'))){
+                    if($this->Guardian->saveAll($data, array('validate' => false))){
+                        $guardianId = $this->Guardian->getInsertID();
+                        $data['StudentGuardian']['guardian_id'] = $guardianId;
+                        $data['StudentGuardian']['student_id'] = $this->studentId;
+
+                        $this->StudentGuardian->create();
+
+                        if($this->StudentGuardian->saveAll($data, array('validate' => 'only'))){
+                            if($this->StudentGuardian->saveAll($data, array('validate' => false))){
+                                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                                $this->redirect(array('action' => 'guardians'));
+                            }
+                        }else{
+                            $this->request->data['Guardian']['existing_id'] = $guardianId;
+                        }
+                    }
+                }
+            }
+        }
+        
+        $genderOptions = array('M' => __('Male'), 'F' => __('Female'));
+        $relationshipOptions = $this->GuardianRelation->getOptions();
+        $educationOptions = $this->GuardianEducationLevel->getOptions();
+
+        $this->set('genderOptions', $genderOptions);
+        $this->set('relationshipOptions', $relationshipOptions);
+        $this->set('educationOptions', $educationOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function guardiansEdit() {
+        $guardianId = $this->params['pass'][0];
+        if ($this->request->is('get')) {
+            $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
+            
+            if (!empty($guardianObj)) {
+                $this->Navigation->addCrumb(__('Edit Guardian Details'));
+                $this->request->data = $guardianObj;
+            }
+        } else {
+            $data = $this->data;
+            
+            if($this->Guardian->saveAll($data, array('validate' => 'only'))){
+                if($this->Guardian->saveAll($data, array('validate' => false))){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                    $this->redirect(array('action' => 'guardiansView', $guardianId));
+                }
+            }
+        }
+
+        $genderOptions = array('M' => __('Male'), 'F' => __('Female'));
+        $relationshipOptions = $this->GuardianRelation->getOptions();
+        $educationOptions = $this->GuardianEducationLevel->getOptions();
+
+        $this->set('genderOptions', $genderOptions);
+        $this->set('relationshipOptions', $relationshipOptions);
+        $this->set('educationOptions', $educationOptions);
+
+        $this->set('guardianId', $guardianId);
+    }
+    
+    public function guardiansView() {
+        $guardianId = $this->params['pass'][0];
+        $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
+
+        if (!empty($guardianObj)) {
+            //$guardianObj = $guardianResult[0];
+            //pr($guardianObj);
+            $this->Navigation->addCrumb(__('Guardian Details'));
+
+            $this->Session->write('guardianId', $guardianId);
+            $this->set('guardianObj', $guardianObj);
+        }else{
+            $this->redirect(array('action' => 'guardians'));
+        }
+    }
+    
+    public function guardiansDelete() {
+        if ($this->Session->check('StudentId') && $this->Session->check('guardianId')) {
+            $guardianId = $this->Session->read('guardianId');
+            $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
+            //$guardianObj = $guardianResult[0];
+            $guardianName = $guardianObj['Guardian']['first_name'] . ' ' . $guardianObj['Guardian']['last_name'];
+            
+            $this->StudentGuardian->deleteAll(array('StudentGuardian.guardian_id' => $guardianId, 'StudentGuardian.student_id' => $this->studentId));
+            $this->Utility->alert($guardianName . __(' have been deleted successfully.'));
+            $this->redirect(array('action' => 'guardians'));
+        }
+    }
+    
+    public function guardianAutoComplete() {
+        $this->autoRender = false;
+        $search = $this->params->query['term'];
+        $result = $this->Guardian->getAutoCompleteList($search, $this->studentId);
+        return json_encode($result);
     }
 
     public function identitiesAdd() {
