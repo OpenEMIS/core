@@ -17,9 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStaff extends AppModel {
+	public $fteOptions = array(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
 	public $actsAs = array('ControllerAction');
 	public $useTable = 'institution_site_staff';
-	public $belongsTo = array('StaffStatus', 'StaffCategory', 'StaffPositionTitle', 'StaffPositionGrade', 'StaffPositionStep');
+	public $belongsTo = array('StaffStatus',/* 'StaffCategory',*/ 'InstitutionSitePosition'/*'StaffPositionTitle', 'StaffPositionGrade', 'StaffPositionStep'*/);
 	
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;
@@ -248,7 +249,7 @@ class InstitutionSiteStaff extends AppModel {
         $controller->set('_add_staff', $_add_staff);
         // End Access Control
 
-		$conditions->set(compact('page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data'));
+		$controller->set(compact('page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data'));
         /*$controller->set('page', $page);
         $controller->set('orderBy', $orderBy);
         $controller->set('order', $order);
@@ -260,19 +261,107 @@ class InstitutionSiteStaff extends AppModel {
 	
 	public function staffAdd($controller, $params) {
         $controller->Navigation->addCrumb('Add Staff');
-        $yearRange = $controller->SchoolYear->getYearRange();
-        $categoryOptions = $this->StaffCategory->findList(true);
-        $positionTitleptions = $this->StaffPositionTitle->findList(true);
-        $positionGradeOptions = $this->StaffPositionGrade->findList(true);
+		
+		
+		$positionOptions = $this->InstitutionSitePosition->getInstitutionSitePositionList();
+		$selectedPositionId = !empty($positionOptions)?key($positionOptions):0;
+		
+		$FTEOtpions = $this->getFTEOptions($selectedPositionId, array('date' => date("Y-m-d")));
+		
+		$statusOptions = $this->StaffStatus->findList(true);
+		
+		$controller->set(compact('positionOptions', 'FTEOtpions', 'statusOptions'));
+      //  $yearRange = $controller->SchoolYear->getYearRange();
+       // $categoryOptions = $this->StaffCategory->findList(true);
+       // $positionTitleptions = $this->StaffPositionTitle->findList(true);
+       // $positionGradeOptions = $this->StaffPositionGrade->findList(true);
       //  $positionStepOptions = $this->StaffPositionStep->findList(true);
-        $statusOptions = $this->StaffStatus->findList(true);
+       // $statusOptions = $this->StaffStatus->findList(true);
 
-        $this->set('minYear', current($yearRange));
-        $this->set('maxYear', array_pop($yearRange));
-        $this->set('categoryOptions', $categoryOptions);
-        $this->set('positionTitleptions', $positionTitleptions);
-        $this->set('positionGradeOptions', $positionGradeOptions);
+       // $this->set('minYear', current($yearRange));
+      //  $this->set('maxYear', array_pop($yearRange));
+        //$this->set('categoryOptions', $categoryOptions);
+       // $this->set('positionTitleptions', $positionTitleptions);
+       // $this->set('positionGradeOptions', $positionGradeOptions);
        // $this->set('positionStepOptions', $positionStepOptions);
-        $this->set('statusOptions', $statusOptions);
+      //  $this->set('statusOptions', $statusOptions);
+    }
+	
+	public function staffAjaxRetriveUpdatedFTE($controller, $params) {
+		$this->render = false;
+		if ($controller->request->is('ajax')) {
+			$positionId = empty($controller->request->query['positionId']) ? $params['pass'][0] : $controller->request->query['positionId'];
+
+			$selectedDate = empty($controller->request->query['selectedDate']) ? null : $controller->request->query['selectedDate'];
+		
+			$FTEOtpions = $this->getFTEOptions($positionId, array('date' => $selectedDate));
+			$returnString = '';
+
+			foreach ($FTEOtpions as $obj) {
+				$returnString .= '<option value="' . $obj . '">' . $obj . '</option>';
+			}
+			echo $returnString;
+		}
+	}
+
+	public function getFTEOptions($positionId, $options = array()){// $FTE_value = 0, $date = null, $includeSelfNum = false, $showAllFTE = false) {
+       
+        $options['showAllFTE'] = !empty($options['showAllFTE'])? $options['showAllFTE']: false;
+        $options['includeSelfNum'] = !empty($options['includeSelfNum'])? $options['includeSelfNum']: false;
+        $options['FTE_value'] = !empty($options['FTE_value'])? $options['FTE_value']: 0;
+        $options['date'] = !empty($options['date'])? $options['date']: null;
+       
+        if ($options['showAllFTE']) {
+            foreach ($this->fteOptions as $obj) {
+                $filterFTEOptions[$obj] = $obj;
+            }
+        } else {
+            $conditions = array('AND' => array('institution_site_position_id' => $positionId));
+            if(!empty($options['date'])){
+                $conditions['AND'][] = array('start_date <= ' => $options['date'], 'OR' => array('end_date >= ' => $options['date'], 'end_date is null'));
+            }
+            
+			$data = $this->find('all', array(
+				'conditions' =>$conditions,
+				'fields' => array('COALESCE(SUM(FTE),0) as totalFTE', 'institution_site_position_id'),
+				'group' => array('institution_site_position_id'),
+					)
+			);
+
+            $totalFTE = empty($data[0][0]['totalFTE'])? 0: $data[0][0]['totalFTE'] * 100;
+            $remainingFTE = 100 - intval($totalFTE);
+            $remainingFTE = ($remainingFTE < 0) ? 0 : $remainingFTE;
+
+            $highestFTE = (($remainingFTE > $options['FTE_value']) ? $remainingFTE : $options['FTE_value']);
+
+            $filterFTEOptions = array();
+
+            foreach ($this->fteOptions as $obj) {
+                if ($highestFTE >= $obj) {
+                    $filterFTEOptions[$obj] = $obj;
+                }
+            }
+
+            if ($totalFTE > 0 && $options['includeSelfNum']) {
+                $filterFTEOptions[$options['FTE_value']] = $options['FTE_value'];
+            }
+        }
+
+        return $filterFTEOptions;
+    }
+
+	
+	public function staffSearch($controller, $params) {
+        //$this->layout = 'ajax';
+		//$this->render = false;
+		//if($controller->request->is('ajax')){
+			$search = trim($params->query['searchString']);
+			$params = array('limit' => 100);
+			$Staff = ClassRegistry::init('Staff.Staff');
+			$data = $Staff->search($search, $params);
+			//pr($data);
+			$controller->set(compact('search','data'));
+		//}
+        
     }
 }

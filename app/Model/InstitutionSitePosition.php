@@ -84,36 +84,22 @@ class InstitutionSitePosition extends AppModel {
     }
 
     
-    /*public function getInstitutionSitePositionList() {
-        $options['recursive'] = -1;
-        $data = $this->find('all', $options);
-        $list = array();
-        if (!empty($data)) {
-            $StaffPositionTitle = ClassRegistry::init('StaffPositionTitle');
-            $TeacherPositionTitle = ClassRegistry::init('TeacherPositionTitle');
+    public function getInstitutionSitePositionList() {
+		$options['recursive'] = -1;
+		$data = $this->find('all', $options);
+		$list = array();
+		if (!empty($data)) {
+			$StaffPositionTitle = ClassRegistry::init('StaffPositionTitle');
+			$staffOptions = $StaffPositionTitle->findList(true);
+			foreach ($data as $obj) {
+				$posInfo = $obj['InstitutionSitePosition'];
+				$list[$posInfo['id']] = sprintf('%s - %s', $posInfo['position_no'], $staffOptions[$posInfo['staff_position_title_id']]);
+			}
+		}
 
-            $staffOptions = $StaffPositionTitle->findList(true);
-            $teacherOptions = $TeacherPositionTitle->findList(true);
-            
-            foreach ($data as $obj){
-                $posInfo = $obj['InstitutionSitePosition'];
-                //pr($posInfo);
-                
-                if($posInfo['staff_position_title_type'] == 't'){
-                   // pr($teacherOptions[$posInfo['staff_position_title_id']]);
-                    $list[$posInfo['id']] = sprintf('%s - %s',$posInfo['position_no'], $teacherOptions[$posInfo['staff_position_title_id']]);
-                }
-                else{
-                    //pr($staffOptions[$posInfo['staff_position_title_id']]);
-                    $list[$posInfo['id']] = sprintf('%s - %s',$posInfo['position_no'], $staffOptions[$posInfo['staff_position_title_id']]);
-                }
-            }
-        }
+		return $list;
+	}
 
-        return $list;
-       // pr($data);
-    }*/
-	
 	public function getDisplayFields($controller) {
         $fields = array(
             'model' => $this->alias,
