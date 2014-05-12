@@ -34,12 +34,41 @@ class TrainingSessionResult extends TrainingAppModel {
 		$statusOptions = $trainingStatus->find('list', array('fields'=>array('id', 'name')));
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 	
-
+		$conditions = array();
 		if(!empty($selectedStatus)){
-			$data = $this->find('all', array('order'=> array('TrainingSession.start_date'), 'conditions' => array('TrainingSessionResult.training_status_id' => $selectedStatus)));
+			$conditions['TrainingSessionResult.training_status_id'] = $selectedStatus;
 		}else{
-			$data = $this->find('all', array('order'=> array('TrainingSession.start_date')));
+			$conditions['NOT']['TrainingSessionResult.training_status_id'] = 4;
 		}
+
+		$data = $this->find('all', 
+			array(
+				'recursive' => -1, 
+				'fields' => array('TrainingSessionResult.*', 'TrainingCourse.*', 'TrainingSession.*', 'TrainingStatus.*'),
+				'joins' => array(
+					array(
+						'type' => 'INNER',
+						'table' => 'training_sessions',
+						'alias' => 'TrainingSession',
+						'conditions' => array('TrainingSession.id = TrainingSessionResult.training_session_id')
+					),
+					array(
+						'type' => 'INNER',
+						'table' => 'training_courses',
+						'alias' => 'TrainingCourse',
+						'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
+					),
+					array(
+						'type' => 'INNER',
+						'table' => 'training_statuses',
+						'alias' => 'TrainingStatus',
+						'conditions' => array('TrainingStatus.id = TrainingSessionResult.training_status_id')
+					)
+				),
+				'order'=> array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingSessionResult.training_status_id'), 
+				'conditions' => $conditions
+			)
+		);
 		$courseId = array();
 		foreach($data as $val){
 			$courseId[] = $val['TrainingSession']['training_course_id'];
