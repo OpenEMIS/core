@@ -51,6 +51,7 @@ class Navigation extends AppModel {
 			$attr['display'] = false;
 			$attr['selected'] = false;
 			$attr['controller'] = $obj['controller'];
+			$attr['plugin'] = $obj['plugin'];
 			$attr['action'] = $obj['action'];
 			$attr['pattern'] = $obj['pattern'];
 			$attr['wizard'] = $obj['is_wizard'];

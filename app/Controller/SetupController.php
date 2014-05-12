@@ -98,7 +98,12 @@ class SetupController extends AppController {
 		'TrainingPriority',
 		'TrainingProvider',
 		'TrainingRequirement',
-		'TrainingStatus'
+		'TrainingStatus',
+                'Students.GuardianEducationLevel',
+                'Students.GuardianRelation',
+                'Students.StudentAttendanceType',
+                'Teachers.TeacherAttendanceType',
+                'Staff.StaffAttendanceType'
 	);
 
 	
@@ -403,9 +408,8 @@ class SetupController extends AppController {
 		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Behaviour Category', 'items' => $this->StudentBehaviourCategory->getLookupVariables()));
-		
-		
-
+                $lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Attendance Type', 'items' => $this->StudentAttendanceType->getLookupVariables()));
+                
 		$lookup[] = array('Student' => array(
 			'viewMethod' => array('action' => 'customFields', 'StudentCustomField'),
 			'view' => 'customFields',
@@ -416,6 +420,11 @@ class SetupController extends AppController {
 		));
 		
 		// End Student
+                
+                // Guardian
+                $lookup[] = array('Guardian' => array('optgroup' => true, 'name' => 'RelationShip', 'items' => $this->GuardianRelation->getLookupVariables()));
+		$lookup[] = array('Guardian' => array('optgroup' => true, 'name' => 'Education Level', 'items' => $this->GuardianEducationLevel->getLookupVariables()));
+                // End Guardian
 		
 		// Teacher
 		$teacherOptions = array(
@@ -447,6 +456,11 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Behaviour Category',
 			'items' => $this->TeacherBehaviourCategory->getLookupVariables()
+		));
+                $lookup[] = array('Teacher' => array(
+			'optgroup' => true,
+			'name' => 'Attendance Type',
+			'items' => $this->TeacherAttendanceType->getLookupVariables()
 		));
 		// End Teacher
 		
@@ -480,6 +494,11 @@ class SetupController extends AppController {
 			'optgroup' => true,
 			'name' => 'Behaviour Category',
 			'items' => $this->StaffBehaviourCategory->getLookupVariables()
+		));
+                $lookup[] = array('Staff' => array(
+			'optgroup' => true,
+			'name' => 'Attendance Type',
+			'items' => $this->StaffAttendanceType->getLookupVariables()
 		));
 		// End Staff
 		

@@ -61,7 +61,7 @@ class QualityBatchReport extends QualityAppModel {
         $data = $dbo->fetchAll($queryFinal);
 
         $data = $qbr->generateQASchoolsReport($data);
-        //pr($data);die;
+        
         $settings['custom3LayerFormat'] = true;
     }
 
@@ -637,7 +637,7 @@ class QualityBatchReport extends QualityAppModel {
         $rubricsGrandTotal = 0;
 
         $rubricTemplateWeightingInfo = $this->getRubricTemplateWeightingInfo();
-       
+
         foreach ($data AS $num => $row) {
             $currentClassId = $row['InstitutionSiteClass']['ClassId'];
             $currentRubricName = $row['RubricTemplate']['RubricName'];
@@ -656,7 +656,7 @@ class QualityBatchReport extends QualityAppModel {
                             $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
                             $passFail = 'Fail';
                             $currentRubricScore = $rubricTotal;
-                            $rubricTotalPercent = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
+                            $rubricTotalPercent = ($rubricTotal == 0)? 0:round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
                             //pr('1 --> '.$selectedWeightingInfo['TotalWeighting']);
                             if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                                 $currentRubricScore = $rubricTotalPercent;
@@ -701,7 +701,6 @@ class QualityBatchReport extends QualityAppModel {
                 }
                 foreach ($row as $key => $value) {
                     if ($key == '0') {
-                       // pr($value);
                         $this->calculateRubricScore($value, $rubricTemplateWeightingInfo, $rubricHeaderCounter, $currentRubricId, $rubricItemCounter, $tempRubricTotal, $tempArray);
                        // pr('>> Score = '.$tempRubricTotal);
                     } else if ($key == 'InstitutionSiteClass') {
@@ -730,11 +729,13 @@ class QualityBatchReport extends QualityAppModel {
                     /*pr('2 --> prev ['.$rubricName.']');
                     pr('2 --> ['.$rubricId.'] || '.$currentRubricId);
                     pr('prev  rubricTotal = '.$rubricTotal);*/
+                  //  pr($rubricTemplateWeightingInfo);
+                   // pr('$rubricId = '.$rubricId);
                     $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
                     $passFail = 'Fail';
 
                     $currentRubricScore = $rubricTotal;
-                    $rubricTotalPercent = round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
+                    $rubricTotalPercent = ($rubricTotal == 0)? 0:round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
                    // pr('2 --> TotalWeighting ='.$selectedWeightingInfo['TotalWeighting']);
                     if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                         $currentRubricScore = $rubricTotalPercent;
@@ -882,6 +883,7 @@ class QualityBatchReport extends QualityAppModel {
             array(
                 'table' => 'rubrics_template_headers',
                 'alias' => 'RubricTemplateHeader',
+                'type' => 'LEFT',
                 'conditions' => array('RubricsTemplate.id = RubricTemplateHeader.rubric_template_id')
             ),
             array(
@@ -915,21 +917,26 @@ class QualityBatchReport extends QualityAppModel {
             $list[$obj['RubricsTemplate']['id']]['PassMark'] = $obj['RubricsTemplate']['pass_mark'];
             $list[$obj['RubricsTemplate']['id']]['TotalWeighting'] = $weighting * $obj[0]['totalQuestion'];
         }
-        
+
         return $list;
     }
 
     private function calculateRubricScore($value, $rubricTemplateWeightingInfo, $rubricHeaderCounter, $rubricId, $rubricItemCounter, &$rubricTotal, &$tempArray) {
+        //pr($value);
+        //pr($rubricTemplateWeightingInfo);
         foreach ($value as $sumValue) {
             $_sumValue = (empty($sumValue) ? 0 : $sumValue);
            // pr('process Score = '.$_sumValue);
             $rubricTotal += $_sumValue;
             $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
+            //pr($rubricTemplateWeightingInfo);
+            //pr('$rubricId ====>> '.$rubricId);
             // if ($selectedWeightingInfo['WeightingType'] == 'percent') {
-            $_sumValue = round(($_sumValue / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
+            $_sumValue = ($_sumValue == 0)?0:round(($_sumValue / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
             //}
             $tempArray[$rubricItemCounter]['total_' . $rubricHeaderCounter]['value'] = $_sumValue;
         }
+       // pr('----------');
     }
 
     public function getRubricHeader($institutionSiteId, $year) {

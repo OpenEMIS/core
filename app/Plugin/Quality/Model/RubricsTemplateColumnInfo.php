@@ -245,7 +245,7 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
     }
 
     public function getMaxWeighting() {
-        $data = $this->find('all', array('fields' => array($this->name.'.id', $this->name.'.rubric_template_id', 'MAX('.$this->name.'.weighting) as maxWeight'), 'group' => array($this->name.'.rubric_template_id')));
+        $data = $this->find('all', array('fields' => array('RubricsTemplateColumnInfo.id', 'RubricsTemplateColumnInfo.rubric_template_id', 'MAX(RubricsTemplateColumnInfo.weighting) as maxWeight'), 'group' => array('rubric_template_id')));
         $list = array();
         foreach ($data as $obj) {
             $list[$obj['RubricsTemplateColumnInfo']['rubric_template_id']] = $obj[0]['maxWeight'];
