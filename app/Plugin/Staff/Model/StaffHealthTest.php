@@ -16,10 +16,11 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StaffHealthTest extends StaffAppModel {
 	//public $useTable = 'staff_health_histories';
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Datepicker' => array('date'));
 	
 	public $belongsTo = array(
 		//'Staff',
+		'HealthTestType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -39,104 +40,98 @@ class StaffHealthTest extends StaffAppModel {
 			)
 		)
 	);
-	public $booleanOptions = array('No', 'Yes');
 	
-	public function healthTest($controller, $params) {
-	//	pr('aas');
-		$controller->Navigation->addCrumb('Health - Tests');
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
-		
-		$HealthTestType = ClassRegistry::init('HealthTestType');
-		$healthTestsOptions = $HealthTestType->find('list', array('fields'=> array('id', 'name')));
-		
-		
-		$controller->set('subheader', 'Health - Tests');
-		$controller->set('data', $data);
-		$controller->set('healthTestsOptions', $healthTestsOptions);
-		
-	}
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'date', 'type' => 'datepicker'),
+                array('field' => 'name', 'model' => 'HealthTestType', 'labelKey' => 'general.type'),
+                array('field' => 'result'),
+                array('field' => 'comment'),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
 
-	public function healthTestView($controller, $params){
-		$controller->Navigation->addCrumb('Health - View Test');
-		$controller->set('subheader', 'Health - View Test');
-		$controller->set('modelName', $this->name);
-		
-		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-		
-		if(empty($data)){
-			$controller->redirect(array('action'=>'healthTest'));
-		}
-		
-		$controller->Session->write('StaffHealthTestId', $id);
-		$HealthTestType = ClassRegistry::init('HealthTestType');
-		$healthTestsOptions = $HealthTestType->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('healthTestsOptions', $healthTestsOptions);
-	}
-	
-	public function healthTestDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthTestId')) {
+    public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+
+    public function healthTest($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Tests');
+        $header = __('Health - Tests');
+        $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+        $data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions' => array('staff_id' => $controller->staffId)));
+
+        $controller->set(compact('header', 'data'));
+    }
+
+    public function healthTestView($controller, $params) {
+        $controller->Navigation->addCrumb('Health - View Test');
+        $header = __('Health - View Test');
+
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+        $data = $this->findById($id); //('first',array('conditions' => array($this->name.'.id' => $id)));
+
+        if (empty($data)) {
+            $controller->Message->alert('general.noData');
+            return $controller->redirect(array('action' => 'healthTest'));
+        }
+
+        $controller->Session->write('StaffHealthTestId', $id);
+        $fields = $this->getDisplayFields($controller);
+        $controller->set(compact('header', 'data', 'fields', 'id'));
+    }
+
+    public function healthTestDelete($controller, $params) {
+        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthTestId')) {
             $id = $controller->Session->read('StaffHealthTestId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			$HealthTestType = ClassRegistry::init('HealthTestType');
-			$healthTestsOptions = $HealthTestType->find('first', array('conditions'=> array('id' => $data[$this->name]['health_test_type_id'])));
-		
-            $name = !empty($healthTestsOptions['HealthTestType']['name'])?$healthTestsOptions['HealthTestType']['name']:'';
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->Session->delete('StaffHealthTestId');
+            if ($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
+            $controller->Session->delete('StaffHealthTestId');
             $controller->redirect(array('action' => 'healthTest'));
         }
     }
-	
-	public function healthTestAdd($controller, $params) {
-		$controller->Navigation->addCrumb('Health - Add Test');
-		$controller->set('subheader', 'Health - Add Test');
-		$this->setup_add_edit_form($controller, $params);
-	}
-	
-	public function healthTestEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Health - Edit Test');
-		$controller->set('subheader', 'Health - Edit Test');
-		$this->setup_add_edit_form($controller, $params);
-		
-		
-		$this->render = 'add';
-	}
-	
-	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		$HealthTestType = ClassRegistry::init('HealthTestType');
-		$healthTestsOptions = $HealthTestType->find('list', array('fields'=> array('id', 'name')));
-		$controller->set('healthTestsOptions', $healthTestsOptions);
-		
-		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
-			$this->recursive = -1;
-			$data = $this->findById($id);
-			if(!empty($data)){
-				$controller->request->data = $data;
-			}
-		}
-		else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-				}
-				else{
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
-				return $controller->redirect(array('action' => 'healthTest'));
-			}
-		}
-	}
+
+    public function healthTestAdd($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Add Test');
+        $controller->set('header', __('Health - Add Test'));
+        $this->setup_add_edit_form($controller, $params);
+    }
+
+    public function healthTestEdit($controller, $params) {
+        $controller->Navigation->addCrumb('Health - Edit Test');
+        $controller->set('header', __('Health - Edit Test'));
+        $this->setup_add_edit_form($controller, $params);
+        $this->render = 'add';
+    }
+
+    function setup_add_edit_form($controller, $params) {
+        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+
+        if ($controller->request->is('post') || $controller->request->is('put')) {
+            $controller->request->data[$this->name]['staff_id'] = $controller->staffId;
+            if ($this->save($controller->request->data)) {
+                $controller->Message->alert('general.add.success');
+                return $controller->redirect(array('action' => 'healthTest'));
+            }
+        } else {
+            $this->recursive = -1;
+            $data = $this->findById($id);
+            if (!empty($data)) {
+                $controller->request->data = $data;
+            }
+        }
+
+        $healthTestsOptions = $this->HealthTestType->find('list', array('fields' => array('id', 'name')));
+        $controller->set(compact('healthTestsOptions'));
+    }
 }

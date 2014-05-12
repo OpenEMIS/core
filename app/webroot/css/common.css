@@ -22,9 +22,7 @@ a img{
 	border:none;
 	text-decoration:none;
 }
-input, textarea, select{
-	font-family:Arial, Helvetica, sans-serif;
-}
+
 input:focus, textarea:focus, select:focus{
 	outline:none;
 }
@@ -195,7 +193,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 /*body cotent*/
 .container{
-	width:960px;
+	width:980px;
 	margin:0 auto;
 	padding:104px 10px 0px 10px;
 	background-color:#ffffff;
@@ -208,6 +206,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	margin:-2px 6px 0 0;
 }
 
+.row { margin-left: 0 }
 
 
 /*footer*/
@@ -233,12 +232,29 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 
 
 /*bootstrap*/
-
-.accordion-heading {
-  border-bottom: 0;
+.panel-group .panel {
+	border: none;
+	border-radius: 0px;
+	box-shadow: none;
 }
 
-.accordion-heading .accordion-toggle {
+.panel-group .panel + .panel { margin-top: 0px; }
+
+.panel-heading {
+	padding: 0;
+	border: none;
+}
+
+.panel-default > .panel-heading + .panel-collapse .panel-body { 
+	border: none;
+	padding: 0px;
+}
+
+.panel-title {
+	border-bottom: 0;
+}
+
+.panel-title .accordion-toggle {
 	display: block;
 	padding: 6px 15px 8px 15px;
 	color: #007CBE;
@@ -248,7 +264,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	background-position: right 14px;
 	background-repeat: no-repeat;
 }
-.accordion-heading .accordion-toggle:hover{
+.panel-title .accordion-toggle:hover{
 	background-color:#5B8BAF;
 	color:#ffffff;
 	background-position: right -76px;
@@ -270,3 +286,4 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .collapse.in {
   height: auto;
 }
+

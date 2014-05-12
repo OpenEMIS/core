@@ -1,9 +1,18 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $this->Label->get('DataProcessing.process'));
+$this->start('contentActions');
+if($_execute) { ?>
+	<a class="void divider" href="javascript: void(0);" onclick="killallprocess();"><?php echo __('Abort All'); ?></a>
+	<a class="void divider" href="javascript: void(0);" onclick="clearallprocess();"><?php echo __('Clear All'); ?></a>
+<?php }
+$this->end(); ?>
+<?php
+$this->assign('contentId', 'indicators');
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
 <div id="indicators" class="content_wrapper">
 	<?php
 	echo $this->Form->create('DataProcessing', array(
@@ -52,3 +61,4 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 	
 	<?php echo $this->Form->end(); ?>
 </div>
+<?php $this->end(); ?> 

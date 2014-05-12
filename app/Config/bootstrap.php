@@ -25,6 +25,14 @@ error_reporting(0);
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
+// Enable the Dispatcher filters for plugin assets, and
+// CacheHelper.
+
+Configure::write('Dispatcher.filters', array(
+    'AssetDispatcher',
+    'CacheDispatcher'
+));
+
 /**
  * Cache Engine Configuration
  * Default settings provided below
@@ -184,3 +192,9 @@ Configure::write('ReportManager.labelFieldList',array(
     )
 ));
 // End
+
+if (!function_exists('T')) {
+   function T($string, $escape = FALSE) {
+      return ($escape == FALSE)?__($string):addslashes(__($string));
+   }
+}

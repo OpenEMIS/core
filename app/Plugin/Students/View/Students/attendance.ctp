@@ -1,4 +1,4 @@
-<?php
+<?php /*
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 ?>
@@ -59,3 +59,60 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
     </div>
     <?php } ?>
 </div>
+ * 
+ */?>
+
+<?php
+
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+
+$this->start('contentBody');
+?>
+<div class="row myyear">
+	<div class="col-md-2"><?php echo __('Year') ?></div>
+	<div class="col-md-3"><?php
+		echo $this->Form->input('school_year_id', array(
+			'label' => false,
+			'class' => 'form-control',
+			'options' => $yearOptions,
+			'default' => $selectedYearId,
+			'onchange' => 'jsForm.change(this)',
+			'url' => $this->params['controller'] . '/' . $this->action
+		));
+		?></div>
+</div>
+
+<div class="legendWrapper"><?php echo $legend; ?></div>
+<?php
+if(isset($data)) { 
+$attendanceTypesOptions = array();
+$attendanceTypesOptions[] = __('Classes');
+foreach($attendanceTypes AS $attendanceType){
+	$attendanceTypesOptions[] = __($attendanceType['StudentAttendanceType']['national_code']);
+}
+$attendanceTypesOptions[] = __('Total');
+
+$tableHeaders = $attendanceTypesOptions;
+
+$tableData = array();
+foreach($data as $val) {
+	$total = 0;
+	$classId = $val['classId'];
+	$row = array();
+	$row[] = $val['className'];
+	foreach($attendanceTypes AS $attendanceType){
+		$attendanceTypeId = $attendanceType['StudentAttendanceType']['id'];
+		$attendanceValue = $val['StudentAttendance'][$attendanceTypeId];
+		$total += $attendanceValue;
+		$row[] =  empty($attendanceValue) ? 0 : $attendanceValue;
+	}
+	$row[] = $total;
+	$tableData[] = $row;
+}
+echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
+}
+$this->end();
+?>

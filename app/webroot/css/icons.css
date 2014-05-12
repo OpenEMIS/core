@@ -15,10 +15,14 @@ a.icon_plus {
 
 .icon_up { background: url('../img/icons/up.png') top left no-repeat; }
 .icon_down { background: url('../img/icons/down.png') top left no-repeat; }
+.icon_first { background: url('../img/icons/first.png') top left no-repeat; }
+.icon_last { background: url('../img/icons/last.png') top left no-repeat; }
 
-.icon_up, .icon_down { float: left; width: 16px; height: 16px; cursor: pointer;	border: 1px solid transparent; }
+.icon_up, .icon_down, .icon_first, .icon_last { float: left; width: 16px; height: 16px; cursor: pointer; border: 1px solid transparent; }
 .icon_up:hover,
-.icon_down:hover {
+.icon_down:hover,
+.icon_first:hover,
+.icon_last:hover {
 	border-color: #5b8baf;
 	border-radius: 2px;
 	-moz-border-radius: 2px;

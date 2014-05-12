@@ -110,6 +110,7 @@ class WorkflowComponent extends Component {
             )
         );
 
+
         $step = 0;
         $new = false;
         if(!empty($workflowLog)){
@@ -122,7 +123,9 @@ class WorkflowComponent extends Component {
 
         if(!$new){
             $workflow = $this->getCurrentWorkflowStep($model, $step+1);
-            $this->controller->set('workflowStatus', $workflow['Workflow']['workflow_name']);
+            if(!empty($workflow)){
+                $this->controller->set('workflowStatus', $workflow['Workflow']['workflow_name']);
+            }
         }
         
         $this->getAllApprovalRights($model, $id);
@@ -303,7 +306,7 @@ class WorkflowComponent extends Component {
         }
 
         $workflow = $this->getCurrentWorkflowStep($model, $step+1);
-        $workflowStatus = $workflow['Workflow']['workflow_name'];
+        $workflowStatus = !empty($workflow) ? $workflow['Workflow']['workflow_name'] : NULL;
         return $workflowStatus;
     }
 
