@@ -1,15 +1,14 @@
 <?php
 //echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 //echo $this->Html->script('/Students/js/students', false);
-?>
-<?php $obj = $data[$modelName]; ?>
-<?php echo $this->element('breadcrumb'); ?>
 
-<div id="student" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-        <?php
-        echo $this->Html->link(__('List'), array('action' => 'qualityVisit'), array('class' => 'divider'));
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($subheader));
+
+$obj = $data[$modelName]; 
+
+$this->start('contentActions');
+echo $this->Html->link(__('List'), array('action' => 'qualityVisit'), array('class' => 'divider'));
         if ($_edit) {
             echo $this->Html->link(__('Edit'), array('action' => 'qualityVisitEdit', $obj['id']), array('class' => 'divider'));
         }
@@ -17,9 +16,12 @@
         if ($_delete) {
             echo $this->Html->link(__('Delete'), array('action' => 'qualityVisitDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
         }
-        ?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
+$this->end();
+
+$this->start('contentBody');
+?>
+
+<div id="student" class="content_wrapperv dataDisplay">
 
     <div class="row">
         <div class="label"><?php echo __('Date'); ?></div>
@@ -90,3 +92,4 @@
         <div class="value"><?php echo $obj['created']; ?></div>
     </div>
 </div>
+<?php $this->end(); ?>

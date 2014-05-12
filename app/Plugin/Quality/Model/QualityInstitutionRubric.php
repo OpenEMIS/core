@@ -264,7 +264,7 @@ class QualityInstitutionRubric extends QualityAppModel {
         $controller->set('modelName', $this->name);
 
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-        $data = $this->find('first', array('conditions' => array($this->name . '.id' => $id)));
+        $data = $this->findById($id);//('first', array('conditions' => array($this->name . '.id' => $id)));
 
         if (empty($data)) {
             $controller->redirect(array('action' => 'qualityVisit'));
