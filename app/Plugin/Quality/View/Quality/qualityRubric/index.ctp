@@ -17,10 +17,10 @@ $this->start('contentBody');
     <table class="table table-striped table-hover table-bordered" action="<?php echo $this->params['controller']; ?>/qualityRubricView/">
         <thead class="table_head">
             <tr>
-                <td class="table_cell"><?php echo __('Year'); ?></td>
-                <td class="table_cell"><?php echo __('Name'); ?></td>
-                <td class="table_cell"><?php echo __('Class'); ?></td>
-                <td class="table_cell"><?php echo __('Teacher'); ?></td>
+                <th class="table_cell"><?php echo __('Year'); ?></th>
+                <th class="table_cell"><?php echo __('Name'); ?></th>
+                <th class="table_cell"><?php echo __('Class'); ?></th>
+                <th class="table_cell"><?php echo __('Teacher'); ?></th>
             </tr>
         </thead>
 
@@ -28,7 +28,7 @@ $this->start('contentBody');
             <?php foreach ($data as $id => $val) { ?>
                 <tr class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
                     <td class="table_cell"><?php echo $schoolYearOptions[$val[$modelName]['school_year_id']]; ?></td>
-                    <td class="table_cell"><?php echo $rubricOptions[$val[$modelName]['rubric_template_id']]; ?></td>
+                    <td class="table_cell"><?php echo $this->Html->link($rubricOptions[$val[$modelName]['rubric_template_id']], array('action' => 'qualityRubricView', $val[$modelName]['id']), array('escape' => false)); ?></td>
                     <td class="table_cell"><?php echo $classOptions[$val[$modelName]['institution_site_class_id']]; ?></td>
                     <td class="table_cell"><?php echo $teacherOptions[$val[$modelName]['teacher_id']]; ?></td>
                 </tr>

@@ -11,6 +11,6 @@ $this->end();
 $this->start('contentBody');
 $modelOption = 'InstitutionSiteCustomFieldOption';
 $action = 'view';
-echo $this->element('customFields/index', compact('model', 'modelOption', 'action'));
+echo $this->element('customfields/index', compact('model', 'modelOption', 'action'));
 $this->end();
 ?>
