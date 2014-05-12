@@ -41,7 +41,7 @@ INSERT INTO `navigations` (`id`, `module`, `plugin`, `controller`, `header`, `ti
 (35, 'Administration', NULL, 'Education', 'SYSTEM SETUP', 'Education Structure', 'index', 'index$|setup', NULL, 34, 0, 35, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (36, 'Administration', NULL, 'Assessment', 'SYSTEM SETUP', 'National Assessments', 'index', '^index|assessment', NULL, 34, 0, 36, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (37, 'Administration', NULL, 'FieldOption', 'SYSTEM SETUP', 'Field Options', 'index', 'index|view|edit|add', NULL, 34, 0, 37, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(38, 'Administration', NULL, 'Config', 'SYSTEM SETUP', 'System Configurations', 'index', 'index$|edit$|^dashboard', NULL, 34, 0, 38, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(38, 'Administration', NULL, 'Config', 'SYSTEM SETUP', 'System Configurations', 'index', 'index$|edit$|^dashboard|view$', NULL, 34, 0, 38, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (39, 'Administration', NULL, 'Security', 'ACCOUNTS &amp; SECURITY', 'Users', 'users', 'users', NULL, 34, 0, 39, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (40, 'Administration', NULL, 'Security', 'ACCOUNTS &amp; SECURITY', 'Groups', 'groups', '^group', NULL, 34, 0, 40, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (41, 'Administration', NULL, 'Security', 'ACCOUNTS &amp; SECURITY', 'Roles', 'roles', '^role|^permissions', NULL, 34, 0, 41, NULL, NULL, 1, '0000-00-00 00:00:00'),
