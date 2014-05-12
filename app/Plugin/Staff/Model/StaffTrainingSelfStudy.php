@@ -231,7 +231,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             $controller->redirect(array('action' => 'trainingSelfStudy'));
         }
     }
-
+    /*
     public function trainingSelfStudyInactivate($controller, $params) {
         if($controller->Session->check('StaffTrainingSelfStudyId')) {
             $id = $controller->Session->read('StaffTrainingSelfStudyId');
@@ -246,7 +246,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             $controller->Utility->alert($name . ' have been inactivated successfully.');
             $controller->redirect(array('action' => 'trainingSelfStudy'));
         }
-    }
+    }*/
 	
 
 	public function trainingSelfStudyAdd($controller, $params) {
