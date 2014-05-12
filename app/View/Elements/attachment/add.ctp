@@ -1,27 +1,28 @@
 <?php
-$size = $params['size'];
-$fieldName = sprintf('data[%s][%s][%%s]', $_model, $size);
-?>
+echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
+echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
 
-<div class="table_row <?php echo ($size+1)%2==0 ? 'even' : ''; ?>">
-	<div class="table_cell cell_file">
-		<div class="input_wrapper">
-		<?php echo $this->Form->input('name', array('name' => sprintf($fieldName, 'name'), 'label' => false, 'div' => false)); ?>
-		</div>
-	</div>
-	<div class="table_cell cell_description">
-		<div class="input_wrapper">
-		<?php echo $this->Form->textarea('description', array('name' => sprintf($fieldName, 'description'), 'label' => false, 'div' => false)); ?>
-		</div>
-	</div>
-	<div class="table_cell">
-		<div class="file_input">
-			<input type="file" name="<?php echo 'files[' . $size . ']'; ?>" onchange="attachments.updateFile(this)" onmouseout="attachments.updateFile(this)" />
-			<div class="file">
-				<div class="input_wrapper"><input type="text" /></div>
-				<input type="button" class="btn" value="<?php echo __('Select File'); ?>" onclick="attachments.selectFile(this)" />
-			</div>
-		</div>
-	</div>
-	<div class="table_cell cell_delete"><span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="attachments.deleteRow(this)"></span></div>
-</div>
+$this->start('contentBody');
+
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'attachmentsAdd', 'plugin' => false));
+$formOptions['type'] = 'file';
+echo $this->Form->create($model, $formOptions);
+
+echo $this->Form->input('name');
+echo $this->Form->input('description', array('type' => 'textarea'));
+echo $this->Form->hidden('maxFileSize', array('name'=> 'MAX_FILE_SIZE','value'=>(2*1024*1024)));
+echo $this->element('templates/file_upload');
+//echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'attachments')));
+
+echo $this->FormUtility->getFormWizardButtons(array(
+    'cancelURL' => array('action' => 'attachments'),
+    'WizardMode' => $WizardMode,
+    'WizardEnd' => isset($wizardEnd)?$wizardEnd : NULL,
+    'WizardMandatory' => isset($mandatory)?$mandatory : NULL
+));
+echo $this->Form->end();
+
+$this->end();
+?>
