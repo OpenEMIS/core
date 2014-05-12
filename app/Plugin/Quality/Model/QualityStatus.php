@@ -18,7 +18,7 @@
 class QualityStatus extends QualityAppModel {
 
     //public $useTable = 'rubrics';
-    public $actsAs = array('ControllerAction');
+    public $actsAs = array('ControllerAction', 'DatePicker' => array('date_enabled', 'date_disabled'));
     public $belongsTo = array(
         //'Student',
         //'RubricsTemplateHeader',
