@@ -1,4 +1,4 @@
-<?php
+<?php /*
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
@@ -140,4 +140,60 @@ echo $this->Html->script('institution_site_staff', false);
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'staff'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
-</div>
+</div> */?>
+
+<?php 
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
+echo $this->Html->css('search', 'stylesheet', array('inline' => false));
+echo $this->Html->css('webkit_scrollbar', 'stylesheet', array('inline' => false));
+
+echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
+
+echo $this->Html->script('institution_site_staff', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Add Staff'));
+
+$this->start('contentBody');
+?>
+<fieldset class="section_group" id="search">
+	<legend><?php echo __('Search'); ?></legend>
+
+	<div class="row">
+		<div class="search_wrapper">
+			<?php 
+				echo $this->Form->input('SearchField', array(
+					'id' => 'SearchField',
+					'label' => false,
+					'div' => false,
+					'class' => 'default',
+					'placeholder' => __('OpenEMIS ID, First Name or Last Name'),
+					'onkeypress' => 'return InstitutionSiteStaff.search(this, event)'
+				));
+			?>
+			<span class="icon_clear" onClick="$('#SearchField').val('')">X</span>
+		</div>
+		<span class="left icon_search" url="InstitutionSites/staffSearch/" onClick="InstitutionSiteStaff.search(this)"></span>
+	</div>
+
+	<div class="table_scrollable">
+		<div class="table table_header">
+			<div class="table_head">
+				<div class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></div>
+				<div class="table_cell"><?php echo __('First Name'); ?></div>
+									<div class="table_cell"><?php echo __('Middle Name'); ?></div>
+				<div class="table_cell"><?php echo __('Last Name'); ?></div>
+			</div>
+		</div>
+		<div class="list_wrapper hidden" limit="4" style="height: 98px;">
+			<div class="table allow_hover">
+				<div class="table_body"></div>
+			</div>
+		</div>
+	</div>
+</fieldset>
+
+
+<?php $this->end(); ?>
