@@ -28,7 +28,7 @@ class Staff extends StaffAppModel {
 			)
 		),
 		'CustomReport',
-		'ControllerAction',
+	//	'ControllerAction',
 		'DatePicker' => array('date_of_birth')
 	);
 

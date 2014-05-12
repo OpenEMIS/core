@@ -258,12 +258,12 @@ class InstitutionSiteStaff extends AppModel {
 	
 	
 	public function staffAdd($controller, $params) {
-        $this->Navigation->addCrumb('Add Staff');
-        $yearRange = $this->SchoolYear->getYearRange();
+        $controller->Navigation->addCrumb('Add Staff');
+        $yearRange = $controller->SchoolYear->getYearRange();
         $categoryOptions = $this->StaffCategory->findList(true);
         $positionTitleptions = $this->StaffPositionTitle->findList(true);
         $positionGradeOptions = $this->StaffPositionGrade->findList(true);
-        $positionStepOptions = $this->StaffPositionStep->findList(true);
+      //  $positionStepOptions = $this->StaffPositionStep->findList(true);
         $statusOptions = $this->StaffStatus->findList(true);
 
         $this->set('minYear', current($yearRange));
@@ -271,7 +271,7 @@ class InstitutionSiteStaff extends AppModel {
         $this->set('categoryOptions', $categoryOptions);
         $this->set('positionTitleptions', $positionTitleptions);
         $this->set('positionGradeOptions', $positionGradeOptions);
-        $this->set('positionStepOptions', $positionStepOptions);
+       // $this->set('positionStepOptions', $positionStepOptions);
         $this->set('statusOptions', $statusOptions);
     }
 }
