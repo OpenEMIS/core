@@ -1,5 +1,7 @@
 <?php
 echo $this->Html->script('config', false);
+//echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
+echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 
 $this->extend('/Elements/layout/container');

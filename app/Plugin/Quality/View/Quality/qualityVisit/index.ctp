@@ -1,27 +1,26 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($subheader));
 
-<div id="health" class="content_wrapper">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-        <?php
-        if ($_add) {
+$this->start('contentActions');
+if ($_add) {
             echo $this->Html->link(__('Add'), array('action' => 'qualityVisitAdd'), array('class' => 'divider'));
         }
-        ?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
+$this->end();
+
+$this->start('contentBody');
+?>
+<div id="health" class="">
     <?php if (isset($data)) { ?>
-        <table class="table allow_hover full_width" action="<?php echo $this->params['controller']; ?>/qualityVisitView/">
+        <table class="table table-striped table-hover table-bordered" action="<?php echo $this->params['controller']; ?>/qualityVisitView/">
             <thead class="table_head">
                 <tr>
-                    <td class="table_cell"><?php echo __('Date'); ?></td>
-                    <td class="table_cell"><?php echo __('Grade'); ?></td>
-                    <td class="table_cell"><?php echo __('Class'); ?></td>
-                    <td class="table_cell"><?php echo __('Teacher'); ?></td>
+                    <th class="table_cell"><?php echo __('Date'); ?></th>
+                    <th class="table_cell"><?php echo __('Grade'); ?></th>
+                    <th class="table_cell"><?php echo __('Class'); ?></th>
+                    <th class="table_cell"><?php echo __('Teacher'); ?></th>
                 </tr>
             </thead>
 
@@ -30,7 +29,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
                     <tr class="table_row" row-id="<?php echo $val[$modelName]['id']; ?>">
                         <td class="table_cell"><?php echo $this->Utility->formatDate($val[$modelName]['date']); ?></td>
                         <td class="table_cell"><?php echo $gradeOptions[$val[$modelName]['education_grade_id']]; ?></td>
-                        <td class="table_cell"><?php echo $classOptions[$val[$modelName]['institution_site_class_id']]; ?></td>
+                        <td class="table_cell"><?php echo $this->Html->link($classOptions[$val[$modelName]['institution_site_class_id']], array('controller' => $this->params['controller'], 'action' => 'qualityVisitView', $val[$modelName]['id']), array('escape' => false)); ?></td>
                         <td class="table_cell"><?php echo $teacherOptions[$val[$modelName]['teacher_id']]; ?></td>
                     </tr>
                 <?php } ?>
@@ -38,3 +37,4 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         </table>
     <?php } ?>
 </div>
+<?php $this->end(); ?>

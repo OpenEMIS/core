@@ -18,7 +18,7 @@
 class QualityInstitutionVisit extends QualityAppModel {
 
     //public $useTable = 'rubrics';
-    public $actsAs = array('ControllerAction');
+    public $actsAs = array('ControllerAction', 'DatePicker' => array('date'));
     public $belongsTo = array(
         //'Student',
         //'RubricsTemplateHeader',
@@ -139,7 +139,7 @@ class QualityInstitutionVisit extends QualityAppModel {
         $teacher = $InstitutionSiteClassTeacher->getTeacher($data[$this->name]['teacher_id']);
 
         $QualityVisitType = ClassRegistry::init('QualityVisitType');
-        $visitType = $QualityVisitType->find('first', array('conditions' => array('id' => $data[$this->name]['quality_type_id'])));
+        $visitType = $QualityVisitType->find('first', array('conditions' => array('QualityVisitType.id' => $data[$this->name]['quality_type_id'])));
 
         //  $QualityVisitAttachment = ClassRegistry::init('QualityVisitType');
 
@@ -218,19 +218,29 @@ class QualityInstitutionVisit extends QualityAppModel {
                 $this->set($postData['QualityInstitutionVisit']);
                 if ($this->validates()) {
                     if ($this->save($postData['QualityInstitutionVisit'])) {
-                        $_modelName = 'QualityInstitutionVisitAttachment';
-                        $filesData = $postData[$_modelName]['files'];
+                        //$_modelName = 'QualityInstitutionVisitAttachment';
+						
+						//pr($postData);die;
+                        //$filesData = $postData[$_modelName]['files'];
                         //     pr($filesData); die;
                         //      $uploadComplete = false;
                         // if ($this->_checkMultiAttachmentsExist($filesData)) {
-                        $controller->FileUploader->fileSizeLimit = 2 * 1024 * 1024;
-                        $controller->FileUploader->fileModel = $_modelName; //$this->name;
-                        $controller->FileUploader->dbPrefix = 'file';
-                        $controller->FileUploader->allowEmptyUpload = true;
-                        $controller->FileUploader->fileVar = 'files';
-                        $controller->FileUploader->additionData = array('quality_institution_visit_id' => $this->id);
-                        $controller->FileUploader->additionalFileType();
-                        $controller->FileUploader->uploadFile();
+						
+//                        $controller->FileUploader->fileSizeLimit = 2 * 1024 * 1024;
+//                        $controller->FileUploader->fileModel = $_modelName; //$this->name;
+//                        $controller->FileUploader->dbPrefix = 'file';
+//                        $controller->FileUploader->allowEmptyUpload = true;
+//                        $controller->FileUploader->fileVar = 'files';
+//                        $controller->FileUploader->additionData = array('quality_institution_visit_id' => $this->id);
+//                        $controller->FileUploader->additionalFileType();
+//                        $controller->FileUploader->uploadFile();
+						
+						//$id = $this->getInsertID();
+						$postFileData = $controller->request->data[$this->alias]['files'];
+						
+						//$controller->FileUploader->additionData = array('staff_leave_id' => $id);
+						$controller->FileUploader->additionData = array('quality_institution_visit_id' => $this->id);
+						$controller->FileUploader->uploadFile(NULL, $postFileData);
 
                         if ($controller->FileUploader->success) {
                             if (empty($postData[$this->name]['id'])) {
@@ -389,6 +399,23 @@ class QualityInstitutionVisit extends QualityAppModel {
                 $QualityInstitutionVisitAttachment->delete($id);
             }
         }
+    }
+	
+	public function qualityVisitAjaxAddField($controller, $params) {
+		$this->render =false;
+		
+		$fileId = $controller->request->data['size'];
+		$multiple = true;
+		$controller->set(compact('fileId', 'multiple'));
+		$controller->render('/Elements/templates/file_upload_field');
+	}
+	
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+		$controller->FileUploader->fileVar = 'files';
+		$controller->FileUploader->fileModel = 'QualityInstitutionVisitAttachment';
+		$controller->FileUploader->allowEmptyUpload = true;
+		$controller->FileUploader->additionalFileType();
     }
 
 }
