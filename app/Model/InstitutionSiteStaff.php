@@ -248,12 +248,13 @@ class InstitutionSiteStaff extends AppModel {
         $controller->set('_add_staff', $_add_staff);
         // End Access Control
 
-        $controller->set('page', $page);
+		$conditions->set(compact('page', 'orderBy', 'order', 'yearOptions', 'selectedYear', 'data'));
+        /*$controller->set('page', $page);
         $controller->set('orderBy', $orderBy);
         $controller->set('order', $order);
         $controller->set('yearOptions', $yearOptions);
         $controller->set('selectedYear', $selectedYear);
-        $controller->set('data', $data);
+        $controller->set('data', $data);*/
     }
 	
 	
