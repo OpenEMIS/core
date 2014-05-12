@@ -60,7 +60,7 @@ UPDATE `navigations` SET `controller` = 'InstitutionSites'
 WHERE `module` LIKE 'Institution'
 AND `controller` LIKE 'Institutions'
 AND `title` LIKE 'List of Institutions';
-
+ 
 UPDATE `navigations` SET `controller` = 'InstitutionSites' 
 WHERE `module` LIKE 'Institution'
 AND `controller` LIKE 'Institutions'

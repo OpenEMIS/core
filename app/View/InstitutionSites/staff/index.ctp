@@ -112,9 +112,8 @@ echo $this->Html->script('search', false);
 echo $this->Html->script('institution_site_staff', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentId', 'staff_search');
-$this->assign('contentClass', 'search');
-$this->assign('contentHeader', __('List of Students'));
+$this->assign('contentId', 'staff');
+$this->assign('contentHeader', __('List of Staff'));
 $this->start('contentActions');
 if ($_add_staff) {
 	echo $this->Html->link($this->Label->get('general.add'), array('action' => 'staffAdd'), array('class' => 'divider'));
@@ -162,23 +161,23 @@ echo $this->Form->end();
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<th>
+					<th style="width:120px;">
 						<span class="left"><?php echo __('OpenEMIS ID'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy == 'Staff.identification_no') ? $orderSort : 'up'; ?>" orderBy="Staff.identification_no"></span>
 					</th>
-					<th class="table_cell">
+					<th style="width:120px;">
 						<span class="left"><?php echo __('First Name'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy == 'Staff.first_name') ? $orderSort : 'up'; ?>" orderBy="Staff.first_name"></span>
 					</th>
-					<th class="table_cell">
+					<th style="width:120px;">
 						<span class="left"><?php echo __('Middle Name'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy == 'Staff.middle_name') ? $orderSort : 'up'; ?>" orderBy="Staff.middle_name"></span>
 					</th>
-					<th class="table_cell">
+					<th style="width:120px;">
 						<span class="left"><?php echo __('Last Name'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy == 'Staff.last_name') ? $orderSort : 'up'; ?>" orderBy="Staff.last_name"></span>
 					</th>
-					<th class="table_cell">
+					<th style="width:120px;">
 						<span class="left"><?php echo __('Position'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy == 'StaffCategory.name') ? $orderSort : 'up'; ?>" orderBy="StaffCategory.name"></span>
 					</th>
@@ -188,16 +187,12 @@ echo $this->Form->end();
 		<tbody>
 			<?php 
 				foreach ($data as $obj) { 
-					$idNo = $this->Utility->highlight($searchField, $obj['Staff']['identification_no']);
-					$firstName = $this->Utility->highlight($searchField, $obj['Staff']['first_name']);
-					$middleName = $this->Utility->highlight($searchField, $obj['Staff']['middle_name']);
-					$lastName = $this->Utility->highlight($searchField, $obj['Staff']['last_name']);
 			?>
 				<tr>
-					<td><?php echo $this->Html->link($idNo, array('action' => 'staffView', $obj['Staff']['id']), array('escape' => false)); ?></td>
-					<td><?php echo $firstName; ?></td>
-					<td><?php echo $middleName; ?></td>
-					<td><?php echo $lastName; ?></td>
+					<td><?php echo $this->Html->link($obj['Staff']['identification_no'], array('action' => 'staffView', $obj['Staff']['id']), array('escape' => false)); ?></td>
+					<td><?php echo $obj['Staff']['first_name']; ?></td>
+					<td><?php echo $obj['Staff']['middle_name']; ?></td>
+					<td><?php echo $obj['Staff']['last_name']; ?></td>
 					<td class="table_cell"><?php echo $obj['StaffCategory']['name']; ?></td>
 				</tr>
 			<?php } ?>
