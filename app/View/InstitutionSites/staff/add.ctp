@@ -189,7 +189,7 @@ $this->start('contentBody');
 				</tr>
 			</thead>
 		</table>
-		<div class="list_wrapper hidden searchTableWrapper" limit="4" style="height: 98px;">
+		<div class="list_wrapper hidden searchTableWrapper" limit="3" style="height: 98px;">
 			<table class="table allow_hover table-striped table-hover table-bordered">
 				<tbody class="table_body"></tbody>
 			</table>
@@ -200,41 +200,55 @@ $this->start('contentBody');
 <?php
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => 'InstitutionSites', 'action' => 'staffSave'));
 $labelOptions = $formOptions['inputDefaults']['label'];
-
+$formOptions['id'] = 'staff_add' ;
 echo $this->Form->create('InstitutionSiteStudent', $formOptions);
 echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'autocomplete' => 'off'));
 ?>
 <div class="info dataDisplay">
 	<div class="form-group">
 		<label class="control-label col-md-3"><?php echo __('OpenEMIS ID'); ?></label>
-	<div class="col-md-4" id="IdentificationNo"></div>
-</div>
+		<div class="col-md-4" id="IdentificationNo"></div>
+	</div>
 
-<div class="form-group">
-	<label class="control-label col-md-3"><?php echo __('First Name'); ?></label>
-<div class="col-md-4" id="FirstName"></div>
-</div>
+	<div class="form-group">
+		<label class="control-label col-md-3"><?php echo __('First Name'); ?></label>
+		<div class="col-md-4" id="FirstName"></div>
+	</div>
 
-<div class="form-group">
-	<label class="control-label col-md-3"><?php echo __('Middle Name'); ?></label>
-<div class="col-md-4" id="MiddleName"></div>
-</div>
+	<div class="form-group">
+		<label class="control-label col-md-3"><?php echo __('Middle Name'); ?></label>
+		<div class="col-md-4" id="MiddleName"></div>
+	</div>
 
-<div class="form-group">
-	<label class="control-label col-md-3"><?php echo __('Last Name'); ?></label>
-<div class="col-md-4" id="LastName"></div>
-</div>
+	<div class="form-group">
+		<label class="control-label col-md-3"><?php echo __('Last Name'); ?></label>
+		<div class="col-md-4" id="LastName"></div>
+	</div>
 
-<div class="form-group">
-	<label class="control-label col-md-3"><?php echo __('Preferred Name'); ?></label>
-<div class="col-md-4" id="PreferredName"></div>
-</div>
+	<div class="form-group">
+		<label class="control-label col-md-3"><?php echo __('Preferred Name'); ?></label>
+		<div class="col-md-4" id="PreferredName"></div>
+	</div>
 
-<div class="form-group">
-	<label class="control-label col-md-3"><?php echo __('Gender'); ?></label>
-<div class="col-md-4" id="Gender"></div>
-</div>
+	<div class="form-group">
+		<label class="control-label col-md-3"><?php echo __('Gender'); ?></label>
+		<div class="col-md-4" id="Gender"></div>
+	</div>
 
+
+	<?php
+	
+	echo $this->Form->input('institution_site_position_id', array(
+					'options' => $positionOptions,
+					'id' => 'institutionSitePositionId',
+					'url'=> 'InstitutionSites/staffAjaxRetriveUpdatedFTE',
+					'onchange' => 'InstitutionSiteStaff.onPositioninfoChange(this)', 
+					'label' => array('text' => 'Position', 'class' =>$labelOptions)
+				));
+	echo $this->Form->input('staff_status_id', array('label' => array('text' => $this->Label->get('general.status'), 'class' =>$labelOptions),'options' => $statusOptions));
+	echo $this->FormUtility->datepicker('start_date', array('id' => 'startDate', 'onchange' => 'InstitutionSiteStaff.onPositioninfoChange(this)', 'url'=> 'InstitutionSites/staffAjaxRetriveUpdatedFTE'));
+	echo $this->Form->input('FTE', array('id'=> 'fte', 'label' => array('text' => 'FTE', 'class' =>$labelOptions),'options' => $FTEOtpions));
+	?>
 </div>
 
 <?php echo $this->Form->end(); ?>
