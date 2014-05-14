@@ -145,7 +145,8 @@ class InstitutionSitesController extends AppController {
         'Students.StudentAttendanceType',
         'Staff.StaffAttendanceType',
         'Teachers.TeacherAttendanceType',
-        'InstitutionSiteShift'
+        'InstitutionSiteShift',
+		'InstitutionSiteStudentAttendance'
     );
     public $helpers = array('Paginator');
     public $components = array(
@@ -170,6 +171,8 @@ class InstitutionSitesController extends AppController {
 		'shifts' => 'InstitutionSiteShift',
 		'positions' => 'InstitutionSitePosition',
 		'staff' => 'InstitutionSiteStaff',
+//		'attendanceStudent' => 'InstitutionSiteStudentAttendance',
+//		'attendanceStaff' => 'InstitutionSiteStaffAttendance'
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -6659,5 +6662,31 @@ class InstitutionSitesController extends AppController {
         
         return $str;
     }
+	
+	public function attendanceStudent(){
+		$this->Navigation->addCrumb('Attendance - Students');
+	}
+	
+	public function attendanceStudentAbsence(){
+		$this->Navigation->addCrumb('Absence - Students');
+	}
+	
+	public function attendanceStudentAbsenceAdd(){
+		$this->Navigation->addCrumb('Absence - Students', array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+		$this->Navigation->addCrumb('Add');
+		
+		if (!$this->request->is('get')) {
+			if ($this->InstitutionSiteStudentAttendance->validates()) {
+                $this->InstitutionSiteStudentAttendance->save($this->request->data);
+			}
+		}
+		
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($this->institutionSiteId);
+		$fullDayAbsentOptions = array('Yes' => __('Yes'), 'No' => __('No'));
+		$absenceReasonOptions =  $this->InstitutionSiteStudentAttendance->StudentAbsenceReason->getList();;
+		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
+		
+		$this->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions'));
+	}
 
 }

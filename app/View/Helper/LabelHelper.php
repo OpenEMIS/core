@@ -61,7 +61,8 @@ class LabelHelper extends AppHelper {
 			'grade' => 'Grade',
 			'history' => 'History',
 			'profile_image' => 'Profile Image',
-			'openemisId' =>'OpenEMIS ID'
+			'openemisId' =>'OpenEMIS ID',
+			'class' => 'Class'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
@@ -82,7 +83,8 @@ class LabelHelper extends AppHelper {
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
 			'name' => 'Institution Site',
-			'programme' => 'Programme'
+			'programme' => 'Programme',
+			'id_name' => 'ID / Name'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -192,6 +194,9 @@ class LabelHelper extends AppHelper {
 		'Position' => array(
 			'teaching' => 'Teaching',
 			'number' => 'Number'
+		),
+		'InstitutionSiteStudentAttendance' => array(
+			'reason' => 'Reason'
 		)
     );
 	

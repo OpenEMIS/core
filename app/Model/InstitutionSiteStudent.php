@@ -475,9 +475,9 @@ class InstitutionSiteStudent extends AppModel {
             if (isset($data['student_id'])) {
                 $date = $data['start_date'];
                 if (!empty($date)) {
-					
 					$startDate = new DateTime($date);//new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
 					
+					$data['start_date'] = $startDate->format('Y-m-d');
                     $data['start_year'] = $startDate->format('Y');
 //                    $yr = $date['year'];
 //                    $mth = $date['month'];
