@@ -200,8 +200,8 @@ $this->start('contentBody');
 <?php
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => 'InstitutionSites', 'action' => 'staffSave'));
 $labelOptions = $formOptions['inputDefaults']['label'];
-$formOptions['id'] = 'staff_add' ;
-echo $this->Form->create('InstitutionSiteStudent', $formOptions);
+$formOptions['id'] = 'staff_add';
+echo $this->Form->create('InstitutionSiteStaff', $formOptions);
 echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'autocomplete' => 'off'));
 ?>
 <div class="info dataDisplay">
@@ -235,22 +235,23 @@ echo $this->Form->hidden('staff_id', array('id' => 'StaffId', 'autocomplete' => 
 		<div class="col-md-4" id="Gender"></div>
 	</div>
 
-
 	<?php
-	
 	echo $this->Form->input('institution_site_position_id', array(
-					'options' => $positionOptions,
-					'id' => 'institutionSitePositionId',
-					'url'=> 'InstitutionSites/staffAjaxRetriveUpdatedFTE',
-					'onchange' => 'InstitutionSiteStaff.onPositioninfoChange(this)', 
-					'label' => array('text' => 'Position', 'class' =>$labelOptions)
-				));
-	echo $this->Form->input('staff_status_id', array('label' => array('text' => $this->Label->get('general.status'), 'class' =>$labelOptions),'options' => $statusOptions));
-	echo $this->FormUtility->datepicker('start_date', array('id' => 'startDate', 'onchange' => 'InstitutionSiteStaff.onPositioninfoChange(this)', 'url'=> 'InstitutionSites/staffAjaxRetriveUpdatedFTE'));
-	echo $this->Form->input('FTE', array('id'=> 'fte', 'label' => array('text' => 'FTE', 'class' =>$labelOptions),'options' => $FTEOtpions));
+		'options' => $positionOptions,
+		'default' => $selectedPositionId,
+		'id' => 'institutionSitePositionId',
+		'url' => 'InstitutionSites/staffAjaxRetriveUpdatedFTE',
+		'onchange' => 'InstitutionSiteStaff.onPositioninfoChange(this)',
+		'label' => array('text' => 'Position', 'class' => $labelOptions)
+	));
+	echo $this->Form->input('staff_status_id', array('label' => array('text' => $this->Label->get('general.status'), 'class' => $labelOptions), 'options' => $statusOptions));
+	echo $this->FormUtility->datepicker('start_date', array('id' => 'startDate', 'onchange' => 'InstitutionSiteStaff.onPositioninfoChange(this)', 'url' => 'InstitutionSites/staffAjaxRetriveUpdatedFTE'));
+	echo $this->Form->input('FTE', array('id' => 'fte', 'label' => array('text' => 'FTE', 'class' => $labelOptions), 'options' => $FTEOtpions));
+	echo $this->Form->input('staff_type_id', array('label' => array('text' => $this->Label->get('general.type'), 'class' => $labelOptions), 'options' => $staffTypeOptions, 'default' => $staffTypeDefault));
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'staff')));
 	?>
 </div>
-
-<?php echo $this->Form->end(); ?>
-</div>
-<?php $this->end(); ?>
+<?php
+echo $this->Form->end();
+$this->end();
+?>

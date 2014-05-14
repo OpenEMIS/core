@@ -1,0 +1,1 @@
+ALTER TABLE `institution_site_staff` ADD `staff_type_id` INT( 5 ) NOT NULL AFTER `institution_site_position_id` ;

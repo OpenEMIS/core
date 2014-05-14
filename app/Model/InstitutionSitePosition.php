@@ -19,8 +19,8 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSitePosition extends AppModel {
 	public $actsAs = array('ControllerAction');
-    public $status = array('Disabled', 'Enabled');
-    public $workType = array('Non-Teaching', 'Teaching');
+   // public $status = array('Disabled', 'Enabled');
+   // public $workType = array('Non-Teaching', 'Teaching');
     public $belongsTo = array(
         //'Student',
         /* 'RubricsTemplate' => array(
@@ -141,8 +141,8 @@ class InstitutionSitePosition extends AppModel {
 		$header = __('Positions');
         $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
         $data = $this->findAllByInstitutionSiteId($controller->institutionSiteId);
-
-        $controller->set(compact('header', 'data'));
+		$enableOptions = $controller->Option->get('enableOptions');
+        $controller->set(compact('header', 'data', 'enableOptions'));
     }
 
     public function positionsAdd($controller, $params) {
@@ -207,8 +207,6 @@ class InstitutionSitePosition extends AppModel {
 				$controller->request->data[$this->alias]['status'] = 1;
 			}
         }
-
-
         $positionTitleOptions = $this->StaffPositionTitle->findList(true);
         $positionGradeOptions = $this->StaffPositionGrade->findList(true);
 		$yesnoOptions = $controller->Option->get('yesno');
@@ -221,16 +219,84 @@ class InstitutionSitePosition extends AppModel {
 		$controller->Navigation->addCrumb('Position History');
 		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
 		$header = __('Position History');
-		
+
 		$this->recursive = 1;
 		$data = $this->findById($id);
 		if (empty($data)) {
 		   $controller->Message->alert('general.noData');
 		   return $controller->redirect(array('action' => 'leaves'));
-	   }
-	   
-	   $controller->Session->write('InstitutionSitePositionId', $id);
-        $fields = $this->getDisplayFieldsHistory($controller);
-        $controller->set(compact('data', 'header', 'fields', 'id'));
+		}
+		
+		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+		$staffList = $InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndInstitutionSiteId($id,$controller->institutionSiteId, array('Staff.first_name','Staff.middle_name','Staff.last_name','Staff.id','Staff.identification_no', 'InstitutionSiteStaff.id','InstitutionSiteStaff.start_date','InstitutionSiteStaff.end_date'));
+		//pr($id);
+
+		$controller->Session->write('InstitutionSitePositionId', $id);
+		$fields = $this->getDisplayFieldsHistory($controller);
+		$controller->set(compact('data', 'header', 'fields', 'id', 'staffList'));
     }
+	
+	public function positionsHistoryEdit($controller, $params) {
+		$controller->Navigation->addCrumb('Edit Position History');
+		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
+		$header = __('Edit Position History');
+
+		$this->recursive = 1;
+		$data = $this->findById($id);
+		if (empty($data)) {
+		   $controller->Message->alert('general.noData');
+		   return $controller->redirect(array('action' => 'positionsHistory'));
+		}
+		
+		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+		$staffList = $InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndInstitutionSiteId($id,$controller->institutionSiteId, array('Staff.first_name','Staff.middle_name','Staff.last_name','Staff.id','Staff.identification_no','InstitutionSiteStaff.start_date','InstitutionSiteStaff.end_date', 'InstitutionSiteStaff.id'));
+		
+		$controller->Session->write('InstitutionSitePositionId', $id);
+		$fields = $this->getDisplayFieldsHistory($controller);
+		$controller->set(compact('data', 'header', 'fields', 'id', 'staffList'));
+	}
+	
+	public function positionsStaffEdit($controller, $params) {
+		//$this->render = false;
+		$controller->Navigation->addCrumb('Edit Staff Position');
+		$id = isset($params['pass'][0]) ? $params['pass'][0] : 0;
+		$header = __('Edit Staff Position');
+
+		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+
+		$InstitutionSiteStaff->unbindModel(array('belongsTo' => array('StaffType', 'InstitutionSite', 'StaffStatus')));
+		$data = $InstitutionSiteStaff->findById($id, array('fields' => 'Staff.first_name,Staff.middle_name,Staff.last_name,Staff.identification_no,InstitutionSiteStaff.id,InstitutionSiteStaff.start_date,InstitutionSiteStaff.end_date,InstitutionSitePosition.id,InstitutionSitePosition.staff_position_title_id'));
+		$positionData = $this->StaffPositionTitle->findById($data['InstitutionSitePosition']['staff_position_title_id'], array('fields' => 'StaffPositionTitle.name'));
+		$data = array_merge($data, $positionData);
+
+		$controller->Session->write('InstitutionSiteStaffId', $id);
+				
+		if ($controller->request->is(array('post', 'put'))) {
+			$postData = $controller->request->data;
+
+			$InstitutionSiteStaff->validate = array_merge(
+					$InstitutionSiteStaff->validate, array(
+				'start_date' => array(
+					'ruleNotLater' => array(
+						'rule' => array('compareDate', 'end_date'),
+						'message' => 'Start Date cannot be later than Ended Date'
+					),
+				)
+					)
+			);
+
+			if ($InstitutionSiteStaff->saveAll($postData)) {
+				return $controller->redirect(array('action' => 'positionsHistory', $data['InstitutionSitePosition']['id']));
+			} else {
+				$controller->request->data = $data;
+				$controller->request->data['InstitutionSiteStaff']['start_date'] = $postData['InstitutionSiteStaff']['start_date'];
+				$controller->request->data['InstitutionSiteStaff']['end_date'] = $postData['InstitutionSiteStaff']['end_date'];
+			}
+		} else {
+			$controller->request->data = $data;
+		}
+
+		$controller->set(compact('header'));
+	}
+
 }
