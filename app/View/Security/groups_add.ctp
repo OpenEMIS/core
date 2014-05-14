@@ -62,10 +62,10 @@ echo $this->Form->create('SecurityGroup', array_merge($formOptions, array('onsub
 	</fieldset>
 	
 	<fieldset class="section_break">
-		<legend><?php echo __('Institution Sites'); ?></legend>
+		<legend><?php echo __('Institutions'); ?></legend>
 		<div class="table">
 			<div class="table_head">
-				<div class="table_cell"><?php echo __('Institution Site'); ?></div>
+				<div class="table_cell"><?php echo __('Institution'); ?></div>
 				<div class="table_cell cell_delete"></div>
 			</div>
 			
@@ -74,7 +74,7 @@ echo $this->Form->create('SecurityGroup', array_merge($formOptions, array('onsub
 		
 
 		<div class="row" style="margin-left: 0;">
-			<a class="void icon_plus" url="Security/groupsAddAccessOptions/sites" onclick="Security.addGroupAccessOptions(this)"><?php echo __('Add').' '.__('Institution Site'); ?></a>
+			<a class="void icon_plus" url="Security/groupsAddAccessOptions/sites" onclick="Security.addGroupAccessOptions(this)"><?php echo __('Add').' '.__('Institution'); ?></a>
 		</div>
 	</fieldset>
 </fieldset>

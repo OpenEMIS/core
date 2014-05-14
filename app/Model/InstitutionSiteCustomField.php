@@ -89,7 +89,8 @@ class InstitutionSiteCustomField extends AppModel {
 	
 	public function additional($controller, $params) {
         $controller->Navigation->addCrumb('More');
-
+		
+		$this->unbindModel(array('hasMany' => array('InstitutionSiteCustomValue')));
         $data = $this->find('all', array(
 			'conditions' => array(
 				'InstitutionSiteCustomField.visible' => 1, 
@@ -163,6 +164,7 @@ class InstitutionSiteCustomField extends AppModel {
             $controller->redirect(array('action' => 'additional'));
         }
 		
+		$this->unbindModel(array('hasMany' => array('InstitutionSiteCustomValue')));
         $data = $this->find('all', array('conditions' => array('InstitutionSiteCustomField.visible' => 1, 'InstitutionSiteCustomField.institution_site_type_id' => (array($controller->institutionSiteObj['InstitutionSite']['institution_site_type_id'], 0))), 'order' => array('InstitutionSiteCustomField.institution_site_type_id', 'InstitutionSiteCustomField.order')));
 
         $this->InstitutionSiteCustomValue->unbindModel(array('belongsTo' => array('InstitutionSite')));
