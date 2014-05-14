@@ -317,12 +317,12 @@ class StaffController extends StaffAppController {
             $result = array();
             $dataKey = '';
             foreach ($row as $key => $element) { // compact array
-                if (array_key_exists('institution', $element)) {
+                /*if (array_key_exists('institution', $element)) {
                     $dataKey .= $element['institution'];
                     continue;
-                }
+                }*/
                 if (array_key_exists('institution_site', $element)) {
-                    $dataKey .= ' - ' . $element['institution_site'];
+                    $dataKey .= /*' - ' .*/ $element['institution_site'];
                     continue;
                 }
 
