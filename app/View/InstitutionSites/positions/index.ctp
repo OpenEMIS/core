@@ -22,7 +22,7 @@ foreach ($data as $obj) {
 	$row[] = $obj['StaffPositionTitle']['name'];
 	$row[] = $obj['StaffPositionGrade']['name'];
 	$row[] = array($symbol, array('class' => 'center'));
-	$row[] = $obj[$model]['status'];
+	$row[] = $enableOptions[$obj[$model]['status']];
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));

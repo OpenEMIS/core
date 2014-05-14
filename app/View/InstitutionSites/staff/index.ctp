@@ -193,7 +193,7 @@ echo $this->Form->end();
 					<td><?php echo $obj['Staff']['first_name']; ?></td>
 					<td><?php echo $obj['Staff']['middle_name']; ?></td>
 					<td><?php echo $obj['Staff']['last_name']; ?></td>
-					<td class="table_cell"><?php echo $obj['StaffCategory']['name']; ?></td>
+					<td class="table_cell"><?php echo $obj['StaffPositionTitle']['name']; ?></td>
 				</tr>
 			<?php } ?>
 		</tbody>
