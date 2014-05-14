@@ -72,6 +72,9 @@ class FieldOptionValue extends AppModel {
 		$model = $this->getModel();
 		$model->recursive = -1;
 		$data = $model->findByDefault(1);
+		if(empty($data)){
+			return 0;
+		}
 		return $data[$model->alias]['id'];
 	}
 	
