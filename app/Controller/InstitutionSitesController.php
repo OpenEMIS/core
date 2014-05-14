@@ -6688,5 +6688,41 @@ class InstitutionSitesController extends AppController {
 		
 		$this->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions'));
 	}
+	
+	public function attendanceStudentAbsenceEdit(){
+		$this->Navigation->addCrumb('Absence - Students', array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+		$this->Navigation->addCrumb('Add');
+		
+		if (!$this->request->is('get')) {
+			if ($this->InstitutionSiteStudentAttendance->validates()) {
+                $this->InstitutionSiteStudentAttendance->save($this->request->data);
+			}
+		}
+		
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($this->institutionSiteId);
+		$fullDayAbsentOptions = array('Yes' => __('Yes'), 'No' => __('No'));
+		$absenceReasonOptions =  $this->InstitutionSiteStudentAttendance->StudentAbsenceReason->getList();;
+		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
+		
+		$this->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions'));
+	}
+	
+	public function attendanceStudentAbsenceView(){
+		$this->Navigation->addCrumb('Absence - Students', array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+		$this->Navigation->addCrumb('Add');
+		
+		if (!$this->request->is('get')) {
+			if ($this->InstitutionSiteStudentAttendance->validates()) {
+                $this->InstitutionSiteStudentAttendance->save($this->request->data);
+			}
+		}
+		
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($this->institutionSiteId);
+		$fullDayAbsentOptions = array('Yes' => __('Yes'), 'No' => __('No'));
+		$absenceReasonOptions =  $this->InstitutionSiteStudentAttendance->StudentAbsenceReason->getList();;
+		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
+		
+		$this->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions'));
+	}
 
 }
