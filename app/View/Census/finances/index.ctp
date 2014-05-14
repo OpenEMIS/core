@@ -44,10 +44,10 @@ echo $this->element('census/year_options');
                     <table class="table table-striped table-hover table-bordered">
                         <thead>
                             <tr>
-                                <td class="table_cell"><?php echo __('Source'); ?></td>
-                                <td class="table_cell"><?php echo __('Category'); ?></td>
-                                <td class="table_cell"><?php echo __('Description'); ?></td>
-                                <td class="table_cell"><?php echo __('Amount'); ?> (<?php echo $this->Session->read('configItem.currency'); ?>)</td>
+                                <th class="table_cell"><?php echo __('Source'); ?></th>
+                                <th class="table_cell"><?php echo __('Category'); ?></th>
+                                <th class="table_cell"><?php echo __('Description'); ?></th>
+                                <th class="table_cell"><?php echo __('Amount'); ?> (<?php echo $this->Session->read('configItem.currency'); ?>)</th>
                             </tr></thead>
                         <tbody>
                             <?php

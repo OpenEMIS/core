@@ -39,11 +39,11 @@ echo $this->element('census/year_options');
                                 <table class="table table-striped table-hover table-bordered">
 									<thead>
                                                                         <tr>
-										<td class="table_cell">'.__('Source').'</td>
-										<td class="table_cell">'.__('Category').'</td>
-										<td class="table_cell">'.__('Description').'</td>
-										<td class="table_cell">'.__('Amount').'</td>
-										<td class="table_cell cell_delete">&nbsp;</td>
+										<th class="table_cell">'.__('Source').'</th>
+										<th class="table_cell">'.__('Category').'</th>
+										<th class="table_cell">'.__('Description').'</th>
+										<th class="table_cell">'.__('Amount').'</th>
+										<th class="table_cell cell_delete">&nbsp;</th>
                                                                         </tr>
 									</thead>
 									<tbody>';
