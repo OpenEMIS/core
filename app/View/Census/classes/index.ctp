@@ -28,10 +28,10 @@ echo $this->element('census/year_options');
 
 
                     <tr>
-                        <td class="table_cell"><?php echo __('Programme'); ?></td>
-                        <td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-                        <td class="table_cell cell_classes"><?php echo __('Classes'); ?></td>
-                        <td class="table_cell cell_classes"><?php echo __('Seats'); ?></td>
+                        <th class="table_cell"><?php echo __('Programme'); ?></th>
+                        <th class="table_cell cell_grade"><?php echo __('Grade'); ?></th>
+                        <th class="table_cell cell_classes"><?php echo __('Classes'); ?></th>
+                        <th class="table_cell cell_classes"><?php echo __('Seats'); ?></th>
                     </tr>
                 </thead>
                 <tbody>

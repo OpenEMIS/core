@@ -33,11 +33,11 @@ echo $this->element('census/year_options');
             <table class="table table-striped table-hover table-bordered">
                 <thead>
                     <tr>
-                        <td class="table_cell cell_programme"><?php echo __('Programme'); ?></td>
-                        <td class="table_cell cell_certificate"><?php echo __('Certification'); ?></td>
-                        <td class="table_cell"><?php echo __('Male'); ?></td>
-                        <td class="table_cell"><?php echo __('Female'); ?></td>
-                        <td class="table_cell"><?php echo __('Total'); ?></td>
+                        <th class="table_cell cell_programme"><?php echo __('Programme'); ?></th>
+                        <th class="table_cell cell_certificate"><?php echo __('Certification'); ?></th>
+                        <th class="table_cell"><?php echo __('Male'); ?></th>
+                        <th class="table_cell"><?php echo __('Female'); ?></th>
+                        <th class="table_cell"><?php echo __('Total'); ?></th>
                     </tr>
                 </thead>
 

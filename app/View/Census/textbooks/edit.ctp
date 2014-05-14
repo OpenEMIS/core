@@ -32,9 +32,9 @@ echo $this->element('census/year_options');
             <table class="table table-striped table-hover table-bordered">
                 <thead>
                     <tr>
-                        <td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-                        <td class="table_cell"><?php echo __('Subject'); ?></td>
-                        <td class="table_cell"><?php echo __('Total'); ?></td>
+                        <th class="table_cell cell_grade"><?php echo __('Grade'); ?></th>
+                        <th class="table_cell"><?php echo __('Subject'); ?></th>
+                        <th class="table_cell"><?php echo __('Total'); ?></th>
                     </tr>
                 </thead>
 

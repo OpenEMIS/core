@@ -29,15 +29,15 @@ echo $this->element('census/year_options');
             <table class="table table-striped table-hover table-bordered page-controls">
                 <thead>
                     <tr>
-                        <td class="table_cell"><?php echo __('Programme'); ?></td>
-                        <td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-                        <td class="table_cell"><?php echo __('Classes'); ?></td>
+                        <th class="table_cell"><?php echo __('Programme'); ?></th>
+                        <th class="table_cell cell_grade"><?php echo __('Grade'); ?></th>
+                        <th class="table_cell"><?php echo __('Classes'); ?></th>
                         <?php
                         for ($i = 1; $i <= intval($noOfShifts); $i++) {
-                            echo '<td class="table_cell cell_shifts">' . __('Shift') . ' ' . $i . '</td>';
+                            echo '<th class="table_cell cell_shifts">' . __('Shift') . ' ' . $i . '</th>';
                         }
                         ?>
-                        <td class="table_cell"><?php echo __('Total'); ?></td>
+                        <th class="table_cell"><?php echo __('Total'); ?></th>
                     </tr>
                 </thead>
 
@@ -131,9 +131,9 @@ echo $this->element('census/year_options');
             <table class="table table-striped table-hover table-bordered page-controls">
                 <thead>
                     <tr>
-                        <td class="table_cell"><?php echo __('Programme'); ?></td>
-                        <td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-                        <td class="table_cell"><?php echo __('Classes'); ?></td>
+                        <th class="table_cell"><?php echo __('Programme'); ?></th>
+                        <th class="table_cell cell_grade"><?php echo __('Grade'); ?></th>
+                        <th class="table_cell"><?php echo __('Classes'); ?></th>
     <?php
     for ($i = 1; $i <= intval($noOfShifts); $i++) {
         echo '<td class="table_cell cell_shifts">' . __('Shift') . ' ' . $i . '</td>';
