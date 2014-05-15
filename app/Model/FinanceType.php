@@ -17,17 +17,37 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class FinanceType extends AppModel {
-	public $belongsTo = array('FinanceNature');
+	public $actsAs = array('FieldOption');
 	public $hasMany = array('FinanceCategory');
+	public $belongsTo = array(
+		'FinanceNature',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
 	
-	public function getLookupVariables() {
-		$parent = ClassRegistry::init('FinanceNature');
-		$list = $parent->findList();
-		$lookup = array();
-		
-		foreach($list as $id => $name) {
-			$lookup[$name] = array('model' => 'FinanceType', 'conditions' => array('finance_nature_id' => $id));
-		}
-		return $lookup;
+	public function getSubOptions() {
+		return $this->FinanceNature->findList();
+	}
+	
+	public function getOptionFields() {
+		$options = $this->getSubOptions();
+		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
+		$this->addOptionField($field, 'after', 'name');
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
+		return $fields;
+	}
+	
+	public function getConditionId() {
+		return 'finance_nature_id';
 	}
 }

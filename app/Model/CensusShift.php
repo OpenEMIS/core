@@ -17,6 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusShift extends AppModel {
+        public $actsAs = array(
+                'ControllerAction'
+	);
+    
 	public $belongsTo = array(
 		'CensusClass'
 	);
@@ -114,4 +118,120 @@ class CensusShift extends AppModel {
 		
 		return $data;
 	}
+        
+        public function shifts($controller, $params) {
+        $controller->Navigation->addCrumb('Shifts');
+
+        $yearList = $controller->SchoolYear->getYearList();
+        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+        $displayContent = true;
+
+        $programmeGrades = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $selectedYear);
+        $singleGradeClasses = $controller->CensusShift->getData($controller->institutionSiteId, $selectedYear);
+        $singleGradeData = $controller->CensusClass->getSingleGradeData($controller->institutionSiteId, $selectedYear);
+        $multiGradeData = $controller->CensusClass->getMultiGradeData($controller->institutionSiteId, $selectedYear);
+
+
+        if (empty($singleGradeData) && empty($multiGradeData)) {
+            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_CLASS'), array('type' => 'warn', 'dismissOnClick' => false));
+            $displayContent = false;
+        } else {
+            $controller->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+
+            $controller->CensusShift->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+            
+            $controller->set(compact('singleGradeData', 'multiGradeData'));
+        }
+
+        $noOfShifts = $controller->ConfigItem->getValue('no_of_shifts');
+        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+        
+        $controller->set(compact('noOfShifts', 'displayContent', 'selectedYear', 'yearList', 'isEditable'));
+    }
+
+    public function shiftsEdit($controller, $params) {
+
+        if ($controller->request->is('post')) {
+            if (!empty($controller->request->data)) {
+                $data = $controller->data['CensusShift'];
+                $yearId = $controller->data['CensusShift']['school_year_id'];
+                unset($controller->request->data['CensusShift']['school_year_id']);
+
+                $saveData = array();
+                $errorMsg = array();
+                $errorFlag = false;
+
+                foreach ($data as $key => $value) {
+                    if (is_array($value)) {
+                        $shiftTotal = 0;
+                        $classTotal = 0;
+                        foreach ($value as $key2 => $value2) {
+                            if ($key2 != 'shift_class_total' && $key2 != 'shift_total') {
+                                $shiftTotal += $value2;
+                            }
+                            $classTotal = $value['shift_class_total'];
+                        }
+
+                        if ($shiftTotal != $classTotal) {
+                            $errorFlag = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$errorFlag) {
+                    foreach ($data as $key => $value) {
+                        if (is_array($value)) {
+                            foreach ($value as $key2 => $value2) {
+                                if ($key2 != 'shift_class_total' && $key2 != 'shift_total') {
+                                    if (isset($value['shift_pk_' . str_replace("shift_value_", "", $key2)])) {
+                                        $saveData[] = array('CensusShift' => array('id' => $value['shift_pk_' . str_replace("shift_value_", "", $key2)], 'census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source' => '0'));
+                                    } else {
+                                        $saveData[] = array('CensusShift' => array('census_class_id' => $key, 'shift_id' => str_replace("shift_value_", "", $key2), 'value' => $value2, 'source' => '0'));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $controller->CensusShift->saveAll($saveData);
+
+                    $controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+                    $controller->redirect(array('action' => 'shifts', $yearId));
+                } else {
+                    $controller->Utility->alert($controller->Utility->getMessage('CENSUS_SHIFT_CLASS_MISMATCH'), array('type' => 'warn', 'dismissOnClick' => false));
+                    $controller->redirect(array('action' => 'shiftsEdit', $yearId));
+                }
+            }
+        }
+
+        $controller->Navigation->addCrumb('Edit Shifts');
+
+        $yearList = $controller->SchoolYear->getAvailableYears();
+        $selectedYear = $controller->getAvailableYearId($yearList);
+        $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+        if (!$editable) {
+            $controller->redirect(array('action' => 'shifts', $selectedYear));
+        } else {
+            $displayContent = true;
+            $programmeGrades = $controller->InstitutionSiteProgramme->getProgrammeList($controller->institutionSiteId, $selectedYear);
+            $singleGradeClasses = $controller->CensusShift->getData($controller->institutionSiteId, $selectedYear);
+            $singleGradeData = $controller->CensusClass->getSingleGradeData($controller->institutionSiteId, $selectedYear);
+            $multiGradeData = $controller->CensusClass->getMultiGradeData($controller->institutionSiteId, $selectedYear);
+
+            if (empty($singleGradeData) && empty($multiGradeData)) {
+                $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_CLASS'), array('type' => 'warn', 'dismissOnClick' => false));
+                $displayContent = false;
+            } else {
+                $controller->CensusShift->mergeSingleGradeData($singleGradeData, $singleGradeClasses);
+
+                $controller->CensusShift->mergeMultiGradeData($multiGradeData, $singleGradeClasses);
+                
+                $controller->set(compact('singleGradeData', 'multiGradeData', '', '', '', '', '', '', ''));
+            }
+
+            $noOfShifts = $controller->ConfigItem->getValue('no_of_shifts');
+            
+            $controller->set(compact('noOfShifts', 'displayContent', 'selectedYear', 'yearList'));
+        }
+    }
 }

@@ -4,41 +4,43 @@ echo $this->Html->css('setup_variables', 'stylesheet', array('inline' => false))
 
 echo $this->Html->script('setup_variables', false);
 echo $this->Html->script('/Sms/js/sms', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Messages'));
+$this->start('contentActions');
+if($_add) {
+    echo $this->Html->link(__('Add'), array('action' => 'messagesAdd'), array('class' => 'divider', 'id'=>'add'));
+}
+$this->end();
+
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="messages" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Messages'); ?></span>
+<?php echo $this->element('alert'); ?>
+	
+<div class="table-responsive">
+<table class="table table-striped table-hover table-bordered">
+	<thead action="Sms/messagesView/">
+		<tr class="table_head">
+			<td class="table_cell cell_order"><?php echo __('Enabled'); ?></td>
+			<td class="table_cell"><?php echo __('Message'); ?></td>
+			<td class="table_cell cell_order"><?php echo __('Order');?></td>
+		</tr>
+	</thead>
+	
+	<tbody class="table_body">
 		<?php
-		if($_add) {
-			echo $this->Html->link(__('Add'), array('action' => 'messagesAdd'), array('class' => 'divider', 'onclick' => 'return sms.confirmModifySmsMessage(this)'));
+		if(count($data) > 0){
+			foreach($data as $arrVal){ ?>
+			<tr class="table_row" row-id="<?php echo $arrVal['SmsMessage']['id'];?>">
+				<td class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($arrVal['SmsMessage']['enabled']==1); ?></td>
+				<td class="table_cell"><?php echo $this->Html->link($arrVal['SmsMessage']['message'], array('action' => 'messagesView', $arrVal['SmsMessage']['id']), array('escape' => false)); ?></td>
+				<td class="table_cell"><?php echo $arrVal['SmsMessage']['order'];?></td>
+			</tr>
+		<?php	}
 		}
 		?>
-	</h1>
- 	<?php echo $this->element('alert'); ?>
-		
-		
-	<div class="table allow_hover full_width" action="Sms/messagesView/">
-		<div class="table_head">
-			<div class="table_cell cell_order"><?php echo __('Enabled'); ?></div>
-			<div class="table_cell"><?php echo __('Message'); ?></div>
-			<div class="table_cell cell_order"><?php echo __('Order');?></div>
-		</div>
-		
-		<div class="table_body">
-			<?php
-			if(count($data) > 0){
-				foreach($data as $arrVal){ ?>
-				   <div class="table_row" row-id="<?php echo $arrVal['SmsMessage']['id'];?>">
-					<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($arrVal['SmsMessage']['enabled']==1); ?></div>
-					<div class="table_cell"><?php echo $arrVal['SmsMessage']['message'];?></div>
-					<div class="table_cell"><?php echo $arrVal['SmsMessage']['order'];?></div>
-					</div>
-			<?php	}
-			}
-			?>
-		</div>
-	</div>
+	</tbody>
+</table>
 </div>
+
+<?php $this->end(); ?>  

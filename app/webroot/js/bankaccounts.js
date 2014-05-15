@@ -18,12 +18,6 @@ var BankAccounts = {
     init : function(){
       this.getBankBranch();  
     },
-    show : function(id){
-        $('#'+id).css("visibility", "visible");
-    },
-    hide : function(id){
-        $('#'+id).css("visibility", "hidden");
-    },
     BacktoList : function(){
         window.location = getRootURL()+"InstitutionSites/bankAccounts";
     },

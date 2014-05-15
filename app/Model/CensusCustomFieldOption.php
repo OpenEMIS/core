@@ -17,8 +17,54 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusCustomFieldOption extends AppModel {
+	public $actsAs = array('FieldOption');
 	public $belongsTo = array(
-		'CensusCustomField'
+		'CensusCustomField',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
 	);
 	
+	public $validate = array(
+		'census_custom_field_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid custom field'
+			)
+		)
+	);
+	
+	public function getSubOptions() {
+		$conditions = array(
+			'OR' => array(
+				'CensusCustomField.type' => 3,
+				'CensusCustomField.type' => 4
+			)
+		);
+		$data = $this->CensusCustomField->findList(array('conditions' => $conditions));
+		return $data;
+	}
+	
+	public function getOptionFields() {
+		$options = $this->getSubOptions();
+		$value = array('field' => 'value', 'type' => 'text');
+		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
+		$this->removeOptionFields(array('name', 'international_code', 'national_code'));
+		$this->addOptionField($field, 'after', 'id');
+		$this->addOptionField($value, 'after', $this->getConditionId());
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
+		return $fields;
+	}
+	
+	public function getConditionId() {
+		return 'census_custom_field_id';
+	}
 }

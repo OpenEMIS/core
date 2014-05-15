@@ -18,47 +18,62 @@ $nameField = $this->Form->input('name', array(
 				'name' => sprintf($fieldName, 'name'),
 				'type' => 'text',
 				'label' => false,
+				'class'=> 'form-control',
 				'div' => false,
 				'maxlength' => 50,
-				'before' => '<div class="input_wrapper">',
-				'after' => '</div>'
 			));
 ?>
 
-<li data-id="<?php echo $index; ?>" class="new_row">
+<tr data-id="<?php echo $index; ?>" class="new_row">
 	<?php
-	echo $this->Utility->getIdInput($this->Form, $fieldName, 0);
-	echo $this->Utility->getOrderInput($this->Form, $fieldName, $index);
+	//echo $this->Utility->getIdInput($this->Form, $fieldName, 0);
+	//echo $this->Utility->getOrderInput($this->Form, $fieldName, $index);
 	
 	foreach($params as $key => $val) {
 		echo $this->Form->hidden($key, array('name' => sprintf($fieldName, $key), 'value' => $val));
 	}
 	
-	echo $this->Utility->getVisibleInput($this->Form, $fieldName, true, true);
+	//echo $this->Utility->getVisibleInput($this->Form, $fieldName, true, true);
+
+	echo '<td class="center">';
+	
+	$options = array(
+		'name' => sprintf($fieldName, 'visible'),
+		'type' => 'checkbox',
+		'value' => 1,
+		'autocomplete' => 'off',
+		'onchange' => 'jsList.activate(this)',
+	);
+	
+	$options['checked'] = 'checked';
+	$options['label'] = false;
+	$options['div'] = false;
+
+	echo $this->form->input('visible', $options);
+
+	echo '</td>';
 	
 	if($category === 'Subject' || $category === 'GradeSubject' || $category === 'Grade') {
-		echo '<div class="cell cell_subject_code">';
+		echo '<td class="cell cell_subject_code">';
 		if($category === 'Subject' || $category === 'Grade') {
 			echo $this->Form->input('code', array(
 				'name' => sprintf($fieldName, 'code'),
 				'label' => false,
 				'div' => false,
-				'before' => '<div class="input_wrapper">',
-				'after' => '</div>',
 				'maxlength' => '30'
 			));
 		} else {
 			echo '&nbsp;';
 		}
-		echo '</div>';
+		echo '</td>';
 	}
 	
 	if($category !== 'GradeSubject') {
-		echo sprintf('<div class="cell cell_name">%s</div>', $nameField);
+		echo sprintf('<td>%s</td>', $nameField);
 	}
 	
 	if($category === 'Level') {
-		echo '<div class="cell cell_isced">';
+		echo '<td class="cell cell_isced">';
 		echo $this->Form->select('education_level_isced_id', $isced,
 			array(
 				'name' => sprintf($fieldName, 'education_level_isced_id'),
@@ -68,24 +83,22 @@ $nameField = $this->Form->input('name', array(
 				'div' => false
 			)
 		);
-		echo '</div>';
+		echo '</td>';
 	}
 	
 	else if($category === 'Cycle') {
-		echo '<div class="cell cell_admission_age">';
+		echo '<td class="cell cell_admission_age">';
 		echo $this->Form->input('admission_age', array(
 			'name' => sprintf($fieldName, 'admission_age'),
 			'label' => false,
 			'div' => false,
-			'before' => '<div class="input_wrapper">',
-			'after' => '</div>',
 			'maxlength' => 2
 		));
-		echo '</div>';
+		echo '</td>';
 	} else if($category === 'Grade') {
-		echo '<div class="cell cell_subject_link">&nbsp;</div>';
+		echo '<td class="cell cell_subject_link">&nbsp;</td>';
 	} else if($category === 'GradeSubject') {
-		echo '<div class="cell cell_grade_subject">';
+		echo '<td class="cell cell_grade_subject">';
 		echo $this->Form->select('education_subject_id', $subjects,
 			array(
 				'class' => 'EducationSubjectId',
@@ -95,7 +108,7 @@ $nameField = $this->Form->input('name', array(
 				'div' => false
 			)
 		);
-		echo '</div>';
+		echo '</td>';
 		echo $this->Form->input('hours_required', array(
 			'div' => false,
 			'label' => false,
@@ -108,7 +121,7 @@ $nameField = $this->Form->input('name', array(
 			'onkeypress' => 'return utility.integerCheck(event)'
 		));
 	} else if($category === 'FieldOfStudy') {
-		echo '<div class="cell cell_orientation">';
+		echo '<td class="cell cell_orientation">';
 		echo $this->Form->select('education_programme_orientation_id', $orientation,
 			array(
 				'name' => sprintf($fieldName, 'education_programme_orientation_id'),
@@ -118,13 +131,15 @@ $nameField = $this->Form->input('name', array(
 				'div' => false
 			)
 		);
-		echo '</div>';
+		echo '</td>';
 	} 
 	?>
 
-	<div class="cell cell_order">
-		<span onclick="jsList.doSort(this)" class="icon_up"></span>
-		<span onclick="jsList.doSort(this)" class="icon_down"></span>
-		<span onclick="jsList.doRemove(this)" class="icon_cross"></span>
-	</div>
-</li>
+	<td class="action">
+	<?php
+	$size = $index;
+	echo $this->element('layout/reorder', compact('index', 'size'));
+	
+	?>
+	</td>
+</tr>

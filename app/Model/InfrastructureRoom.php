@@ -17,17 +17,19 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InfrastructureRoom extends AppModel {
-	public function getLookupVariables() {
-		$modelName = get_class($this);
-		$categoryModel = ClassRegistry::init('InfrastructureCategory');
-		$categoryId = $categoryModel->field('id', array('name' => 'Rooms'));
-		$lookup = array(
-			'Rooms' => array('model' => $modelName),
-			'Status' => array(
-				'model' => 'InfrastructureStatus',
-				'conditions' => array('infrastructure_category_id' => $categoryId)
-			)
-		);
-		return $lookup;
-	}
+	public $actsAs = array('FieldOption');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
 }
