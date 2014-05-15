@@ -2,20 +2,20 @@
 /**
  * XmlTest file
  *
+ * PHP 5
+ *
  * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Utility
  * @since         CakePHP(tm) v 1.2.0.5432
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
-
 App::uses('Xml', 'Utility');
 App::uses('CakeTestModel', 'TestSuite/Fixture');
 
@@ -29,7 +29,7 @@ class XmlArticle extends CakeTestModel {
 /**
  * name property
  *
- * @var string
+ * @var string 'Article'
  */
 	public $name = 'Article';
 
@@ -39,8 +39,8 @@ class XmlArticle extends CakeTestModel {
  * @var array
  */
 	public $belongsTo = array(
-		'User' => array(
-			'className' => 'XmlUser',
+		'XmlUser' => array(
+			'className' => 'XmlArticle',
 			'foreignKey' => 'user_id'
 		)
 	);
@@ -56,7 +56,7 @@ class XmlUser extends CakeTestModel {
 /**
  * name property
  *
- * @var string
+ * @var string 'User'
  */
 	public $name = 'User';
 
@@ -65,11 +65,7 @@ class XmlUser extends CakeTestModel {
  *
  * @var array
  */
-	public $hasMany = array(
-		'Article' => array(
-			'className' => 'XmlArticle'
-		)
-	);
+	public $hasMany = array('Article');
 }
 
 /**
@@ -82,7 +78,7 @@ class XmlTest extends CakeTestCase {
 /**
  * autoFixtures property
  *
- * @var boolean
+ * @var bool false
  */
 	public $autoFixtures = false;
 
@@ -177,7 +173,6 @@ class XmlTest extends CakeTestCase {
 			array(null),
 			array(false),
 			array(''),
-			array('http://localhost/notthere.xml'),
 		);
 	}
 
@@ -186,21 +181,10 @@ class XmlTest extends CakeTestCase {
  *
  * @dataProvider invalidDataProvider
  * @expectedException XmlException
- * @return void
+ * return void
  */
 	public function testBuildInvalidData($value) {
 		Xml::build($value);
-	}
-
-/**
- * Test that building SimpleXmlElement with invalid XML causes the right exception.
- *
- * @expectedException XmlException
- * @return void
- */
-	public function testBuildInvalidDataSimpleXml() {
-		$input = '<derp';
-		$xml = Xml::build($input, array('return' => 'simplexml'));
 	}
 
 /**
@@ -373,19 +357,6 @@ XML;
 		$obj = Xml::fromArray($xml, 'attributes');
 		$xmlText = '<' . '?xml version="1.0" encoding="UTF-8"?><tags><tag id="1">defect</tag></tags>';
 		$this->assertXmlStringEqualsXmlString($xmlText, $obj->asXML());
-
-		$xml = array(
-			'tag' => array(
-				'@' => 0,
-				'@test' => 'A test'
-			)
-		);
-		$obj = Xml::fromArray($xml);
-		$xmlText = <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<tag test="A test">0</tag>
-XML;
-		$this->assertXmlStringEqualsXmlString($xmlText, $obj->asXML());
 	}
 
 /**
@@ -423,87 +394,6 @@ XML;
 </Event>
 XML;
 		$this->assertXmlStringEqualsXmlString($expected, $obj->asXML());
-	}
-
-/**
- * testFromArrayPretty method
- *
- * @return void
- */
-	public function testFromArrayPretty() {
-		$xml = array(
-			'tags' => array(
-				'tag' => array(
-					array(
-						'id' => '1',
-						'name' => 'defect'
-					),
-					array(
-						'id' => '2',
-						'name' => 'enhancement'
-					)
-				)
-			)
-		);
-
-		$expected = <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<tags><tag><id>1</id><name>defect</name></tag><tag><id>2</id><name>enhancement</name></tag></tags>
-
-XML;
-		$xmlResponse = Xml::fromArray($xml, array('pretty' => false));
-		$this->assertTextEquals($expected, $xmlResponse->asXML());
-
-		$expected = <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<tags>
-  <tag>
-    <id>1</id>
-    <name>defect</name>
-  </tag>
-  <tag>
-    <id>2</id>
-    <name>enhancement</name>
-  </tag>
-</tags>
-
-XML;
-		$xmlResponse = Xml::fromArray($xml, array('pretty' => true));
-		$this->assertTextEquals($expected, $xmlResponse->asXML());
-
-				$xml = array(
-			'tags' => array(
-				'tag' => array(
-					array(
-						'id' => '1',
-						'name' => 'defect'
-					),
-					array(
-						'id' => '2',
-						'name' => 'enhancement'
-					)
-				)
-			)
-		);
-
-		$expected = <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<tags><tag id="1" name="defect"/><tag id="2" name="enhancement"/></tags>
-
-XML;
-		$xmlResponse = Xml::fromArray($xml, array('pretty' => false, 'format' => 'attributes'));
-		$this->assertTextEquals($expected, $xmlResponse->asXML());
-
-		$expected = <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<tags>
-  <tag id="1" name="defect"/>
-  <tag id="2" name="enhancement"/>
-</tags>
-
-XML;
-		$xmlResponse = Xml::fromArray($xml, array('pretty' => true, 'format' => 'attributes'));
-		$this->assertTextEquals($expected, $xmlResponse->asXML());
 	}
 
 /**
@@ -561,41 +451,6 @@ XML;
 		} catch (Exception $e) {
 			$this->assertTrue(true, 'Caught exception.');
 		}
-	}
-
-/**
- * Test that there are not unterminated errors when building xml
- *
- * @return void
- */
-	public function testFromArrayUnterminatedError() {
-		$data = array(
-			'product_ID' => 'GENERT-DL',
-			'deeplink' => 'http://example.com/deep',
-			'image_URL' => 'http://example.com/image',
-			'thumbnail_image_URL' => 'http://example.com/thumb',
-			'brand' => 'Malte Lange & Co',
-			'availability' => 'in stock',
-			'authors' => array(
-				'author' => array('Malte Lange & Co')
-			)
-		);
-		$xml = Xml::fromArray(array('products' => $data), 'tags');
-		$expected = <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-<products>
-	<product_ID>GENERT-DL</product_ID>
-	<deeplink>http://example.com/deep</deeplink>
-	<image_URL>http://example.com/image</image_URL>
-	<thumbnail_image_URL>http://example.com/thumb</thumbnail_image_URL>
-	<brand>Malte Lange &amp; Co</brand>
-	<availability>in stock</availability>
-	<authors>
-		<author>Malte Lange &amp; Co</author>
-	</authors>
-</products>
-XML;
-		$this->assertXmlStringEqualsXmlString($expected, $xml->asXML());
 	}
 
 /**
@@ -745,16 +600,6 @@ XML;
 			'root' => array(
 				'tag' => 'defect',
 				'cake:bug' => 1
-			)
-		);
-		$this->assertEquals($expected, Xml::toArray($obj));
-
-		$xml = '<tag type="myType">0</tag>';
-		$obj = Xml::build($xml);
-		$expected = array(
-			'tag' => array(
-				'@type' => 'myType',
-				'@' => 0
 			)
 		);
 		$this->assertEquals($expected, Xml::toArray($obj));
@@ -1170,7 +1015,7 @@ XML;
 </records>
 </data>
 XML;
-		$obj->asXML();
+		$result = $obj->asXML();
 		$this->assertXmlStringEqualsXmlString($expected, $obj->asXML());
 	}
 
@@ -1188,28 +1033,6 @@ XML;
 		$obj = Xml::build($data);
 		$result = $obj->asXml();
 		$this->assertContains('mark &amp; mark', $result);
-	}
-
-/**
- * Test that entity loading is disabled by default.
- *
- * @return void
- */
-	public function testNoEntityLoading() {
-		$file = CAKE . 'VERSION.txt';
-		$xml = <<<XML
-<!DOCTYPE cakephp [
-  <!ENTITY payload SYSTEM "file://$file" >]>
-<request>
-  <xxe>&payload;</xxe>
-</request>
-XML;
-		try {
-			$result = Xml::build($xml);
-			$this->assertEquals('', (string)$result->xxe);
-		} catch (Exception $e) {
-			$this->assertTrue(true, 'A warning was raised meaning external entities were not loaded');
-		}
 	}
 
 }

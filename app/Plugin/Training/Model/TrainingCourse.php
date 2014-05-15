@@ -222,34 +222,10 @@ class TrainingCourse extends TrainingAppModel {
 		$selectedStatus = empty($params['pass'][0])? null:$params['pass'][0];
 	
 		if(!empty($selectedStatus)){
-			$data = $this->find('all', array('order'=> array('code', 'title')));
+			$data = $this->find('all', array('order'=> array('code', 'title'), 'conditions' => array('TrainingCourse.training_status_id' => $selectedStatus)));
 		}else{
 			$data = $this->find('all', array('order'=> array('code', 'title')));
 		}
-
-		$conditions = array();
-		if(!empty($selectedStatus)){
-			$conditions['TrainingCourse.training_status_id'] = $selectedStatus;
-		}else{
-			$conditions['NOT']['TrainingCourse.training_status_id'] = 4;
-		}
-		
-		$data = $this->find('all', 
-			array(
-				'recursive' => -1, 
-				'fields' => array('TrainingCourse.*', 'TrainingStatus.*'),
-				'joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingStatus',
-						'conditions' => array('TrainingStatus.id = TrainingCourse.training_status_id')
-					)
-				),
-				'order'=> array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingCourse.training_status_id'), 
-				'conditions' => $conditions
-			)
-		);
 
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);

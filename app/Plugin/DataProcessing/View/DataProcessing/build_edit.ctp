@@ -1,47 +1,43 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->script("/{$controllerName}/js/buildDataProcess", false);
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Label->get('DataProcessing.custom_indicators'));
-
-$this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'build'), array('class' => 'divider')); 
-$this->end();
-
-$this->assign('contentId', 'report-list');
-$this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
+
+<?php echo $this->element('breadcrumb'); ?>
+
 <?php 
 $ctr = 0;
 ?>
- <span id="controller" class="none"><?php echo $controllerName; ?></span>
+    <div class="content_wrapper" id="report-list">
+        <span id="controller" class="none"><?php echo $controllerName; ?></span>
+      <h1>
+          <span><?php echo __('Custom Indicators'); ?></span>
+          <?php echo $this->Html->link(__('View'), array('action' => 'build'), array('class' => 'divider')); ?>
+      </h1>
+      <?php echo $this->Form->create('Report', array('type' => 'file')); ?>
 
-    <?php echo $this->Form->create('Report', array('type' => 'file')); ?>
-
-    <input id="mode" name="data[mode]" type="hidden" value="add"/>
-    <input name="data[id]" value="<?php echo $data['id'] ?>" id="reportId" type="hidden" />
+        <input id="mode" name="data[mode]" type="hidden" value="add"/>
+        <input name="data[id]" value="<?php echo $data['id'] ?>" id="reportId" type="hidden" />
       
-		<div class="row form-group">
-		  <label for="name" class="col-md-3 control-label">Name</label>
-		  <div class="col-md-4"><input id="name" class="form-control" name="data[name]" value="<?php echo $data['name']?>" type="text" maxlength="150"/></div>
+		<div class="row">
+		  <div class="label"><label for="name">Name</label></div>
+		  <div class="value"><input id="name" class="default" name="data[name]" value="<?php echo $data['name']?>" type="text" maxlength="150"/></div>
 		</div>
-		<div class="row form-group">
-		  <label for="description" class="col-md-3 control-label">Description</label>
-		  <div class="col-md-4"><textarea id="description" class="form-control" name="data[description]" cols="40" rows"7"><?php echo $data['description']?></textarea></div>
+		<div class="row">
+		  <div class="label"><label for="description" >Description</label></div>
+		  <div class="value"><textarea id="description" class="default" name="data[description]" cols="40" rows"7"><?php echo $data['description']?></textarea></div>
 		</div>
-		<div class="row form-group">
-		  <label for="file" class="col-md-3 control-label">File</label>
-		  <div class="col-md-4"><input type="file" class="form-control" name="data[doc_file]" value="" id="doc_file"></div>
+		<div class="row">
+		  <div class="label"><label for="file" >File</label></div>
+		  <div class="value"><input type="file" class="default" name="data[doc_file]" value="" id="doc_file"></div>
 		</div>
-    <div class="controls view_controls">
+      	<div class="controls view_controls">
             <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
 			<?php echo $this->Html->link(__('Cancel'), array('action' => 'Build'), array('class' => 'btn_cancel btn_left')); ?>
 		</div>
       <?php echo $this->Form->end(); ?>
+    </div>
 
-
+<?php echo $this->Html->script("/{$controllerName}/js/buildDataProcess", false); ?>
 <script>
 var maskId ;
 $(document).ready(function(){
@@ -60,4 +56,3 @@ $(document).ready(function(){
 
 });
 </script>
-<?php $this->end(); ?> 

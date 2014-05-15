@@ -5,12 +5,12 @@ foreach($data as $infraname => $arrval){
 $ctr = 1;
 $ctrModel = 1;
 foreach($arrval['types']  as $typeid => $typeVal){
-     echo '<tr class="table_row '.($ctr%2==0?'even':'').'">
-             <td class="col_age">'.$typeVal.'</td>';
+     echo '<div class="table_row '.($ctr%2==0?'even':'').'">
+             <div class="col_age">'.$typeVal.'</div>';
 
      foreach($arrval['status'] as $statids => $statVal){
 
-         echo '<td class="col_total">';
+         echo '<div class="col_total">';
          if($infraname == 'Buildings'){ //got 3 dimension
             if($is_edit){
                 echo '<input type="hidden" name="data[Census'.$infraname.']['.$ctrModel.'][infrastructure_material_id]" value="'.key($data[$infraname]['materials']).'">';
@@ -59,11 +59,11 @@ foreach($arrval['types']  as $typeid => $typeVal){
            }
          }   
 
-         echo '</td>';
-         //echo '<td class="col_total">'. $statids.'</td>';
+         echo '</div>';
+         //echo '<div class="col_total">'. $statids.'</div>';
          $ctrModel++;
      }       
-     echo '</tr>';
+     echo '</div>';
      $ctr++;
  }
 }

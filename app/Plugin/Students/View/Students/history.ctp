@@ -1,27 +1,23 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('history', 'stylesheet', array('inline' => false));
-
-
-$this->extend('/Elements/layout/container');
-
-$this->assign('contentId', 'student');
-$this->assign('contentHeader', __('Student History'));
-$this->assign('contentClass', 'edit add');
-$this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.details'), array('action' => 'view'), array('class' => 'divider'));
-$this->end();
-
-$this->start('contentBody');
 ?>
 
+<?php echo $this->element('breadcrumb'); ?>
+
+<div id="history" class="content_wrapper history">
+	<h1>
+		<span><?php echo __('Student History'); ?></span>
+		<?php echo $this->Html->link(__('Details'), array('action' => 'view'), array('class' => 'divider')); ?>
+	</h1>
+	<?php echo $this->element('alert'); ?>
 	
 	<?php if(!empty($data2)) : ?>
 	<fieldset class="section_break">
 		<legend><?php echo __('General'); ?></legend>
 		<div class="row">
-            <div class="col-md-2"><?php echo __('OpenEMIS ID'); ?></div>
-            <div class="col-md-6"><?php //pr($data); ?>
+            <div class="label"><?php echo __('OpenEMIS ID'); ?></div>
+            <div class="value"><?php //pr($data); ?>
 				<span><?php echo $data['Student']['identification_no']; ?></span>
 				<?php if(@sizeof($data2['identification_no'])>0){ // && ( sizeof($data2['identification_no']) != 1 && array_key_exists($data['Student']['identification_no'], $data2['identification_no']) ) ) { ?>
 				<div class="table">
@@ -39,8 +35,8 @@ $this->start('contentBody');
             </div>
         </div>
 		<div class="row">
-			<div class="col-md-2"><?php echo __('First Name'); ?></div>
-			<div class="col-md-6"><?php //pr($data); ?>
+			<div class="label"><?php echo __('First Name'); ?></div>
+			<div class="value"><?php //pr($data); ?>
 				<span><?php echo $data['Student']['first_name']; ?></span>
 				<?php //pr($data2['first_name']);?>
 				<?php if(@sizeof($data2['first_name'])>0){ //) { ?>
@@ -59,8 +55,8 @@ $this->start('contentBody');
 			</div>
 		</div>
                 <div class="row">
-			<div class="col-md-2"><?php echo __('Middle Name'); ?></div>
-			<div class="col-md-6"><?php //pr($data); ?>
+			<div class="label"><?php echo __('Middle Name'); ?></div>
+			<div class="value"><?php //pr($data); ?>
 				<span><?php echo $data['Student']['middle_name']; ?></span>
 				<?php //pr($data2['first_name']);?>
 				<?php if(@sizeof($data2['middle_name'])>0){ //) { ?>
@@ -79,8 +75,8 @@ $this->start('contentBody');
 			</div>
 		</div>
 		<div class="row">
-			<div class="col-md-2"><?php echo __('Last Name'); ?></div>
-			<div class="col-md-6">
+			<div class="label"><?php echo __('Last Name'); ?></div>
+			<div class="value">
 				<span><?php echo $data['Student']['last_name']; ?></span>
 				<?php if(@sizeof($data2['last_name'])>0){ // && ( sizeof($data2['last_name']) != 1 && array_key_exists($data['Student']['last_name'], $data2['last_name']) ) ) { ?>
 				<div class="table">
@@ -99,8 +95,8 @@ $this->start('contentBody');
 			</div>
 		</div>
                 <div class="row">
-			<div class="col-md-2"><?php echo __('Preferred Name'); ?></div>
-			<div class="col-md-6">
+			<div class="label"><?php echo __('Preferred Name'); ?></div>
+			<div class="value">
 				<span><?php echo $data['Student']['preferred_name']; ?></span>
 				<?php if(@sizeof($data2['preferred_name'])>0){ // && ( sizeof($data2['last_name']) != 1 && array_key_exists($data['Student']['last_name'], $data2['last_name']) ) ) { ?>
 				<div class="table">
@@ -119,8 +115,8 @@ $this->start('contentBody');
 			</div>
 		</div>
 		<div class="row">
-			<div class="col-md-2"><?php echo __('Gender'); ?></div>
-			<div class="col-md-6"><?php //pr($data);?>
+			<div class="label"><?php echo __('Gender'); ?></div>
+			<div class="value"><?php //pr($data);?>
 				<span><?php echo $data['Student']['gender']; ?></span>
 				<?php if(@sizeof($data2['gender'])>0){ // && ( sizeof($data2['gender']) != 1 && array_key_exists($data['Student']['gender'], $data2['gender']) ) ) { ?>
 				<div class="table">
@@ -139,8 +135,8 @@ $this->start('contentBody');
 			</div>
 		</div>
 		<div class="row">
-			<div class="col-md-2"><?php echo __('Date of Birth'); ?></div>
-			<div class="col-md-6">
+			<div class="label"><?php echo __('Date of Birth'); ?></div>
+			<div class="value">
                 <span><?php echo $this->Utility->formatDate($data['Student']['date_of_birth']); ?></span>
                 <?php if(@sizeof($data2['date_of_birth'])>0){ // && ( sizeof($data2['date_of_birth']) != 1 && array_key_exists($data['Student']['date_of_birth'], $data2['date_of_birth']) ) ) { ?>
                 <div class="table">
@@ -158,8 +154,8 @@ $this->start('contentBody');
 			</div>
 		</div>
                <?php /* <div class="row">
-			<div class="col-md-2"><?php echo __('Date of Death'); ?></div>
-			<div class="col-md-6">
+			<div class="label"><?php echo __('Date of Death'); ?></div>
+			<div class="value">
                 <span><?php echo $this->Utility->formatDate($data['Student']['date_of_death']); ?></span>
                 <?php if(@sizeof($data2['date_of_death'])>0){ ?>
                 <div class="table">
@@ -180,8 +176,8 @@ $this->start('contentBody');
 	<fieldset class="section_break">
 		<legend><?php echo __('Address'); ?></legend>
 		<div class="row">
-			<div class="col-md-2"><?php echo __('Address'); ?></div>
-			<div class="col-md-6">
+			<div class="label"><?php echo __('Address'); ?></div>
+			<div class="value">
                 <span><?php echo $data['Student']['address']; ?></span>
                 <?php if(@sizeof($data2['address'])>0){ // && ( sizeof($data2['address']) != 1 && array_key_exists($data['Student']['address'], $data2['address']) ) ) { ?>
                 <div class="table">
@@ -199,8 +195,8 @@ $this->start('contentBody');
 			</div>
 		</div>
 		<div class="row">
-			<div class="col-md-2"><?php echo __('Postal Code'); ?></div>
-			<div class="col-md-6">
+			<div class="label"><?php echo __('Postal Code'); ?></div>
+			<div class="value">
                 <span><?php echo $data['Student']['postal_code']; ?></span>
                 <?php if(@sizeof($data2['postal_code'])>0){ // && ( sizeof($data2['postal_code']) != 1 && array_key_exists($data['Student']['postal_code'], $data2['postal_code']) ) ) { ?>
                 <div class="table">
@@ -234,6 +230,7 @@ $this->start('contentBody');
     <?php } ?>
 
     <?php endif; ?>
+</div>
 <script type="text/javascript">
 var values;
 $('.table_body').each(function(i, obj){
@@ -243,5 +240,3 @@ $('.table_body').each(function(i, obj){
     }
 });
 </script>
-
-<?php $this->end(); ?>

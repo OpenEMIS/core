@@ -1,20 +1,9 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
-
-$this->extend('/Elements/layout/container');
-if(count($data) > 0){
-	$this->assign('contentHeader', __(ucwords(key($data))));
-}else{
-	$this->assign('contentHeader', __('Custom Reports'));
-}
-$this->start('contentActions');
-echo $this->Html->link(__('List'), array('action' => 'index'), array('class' => 'divider'));
-$this->end();
-$this->assign('contentId', 'report-list');
-$this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
+
+<?php echo $this->element('breadcrumb'); ?>
 
 <style type="text/css">
 .col_age { width: 90px; text-align: center; }
@@ -32,6 +21,39 @@ var Report = {
 	LimitPerRun : 0,
 	ProgressTpl : '<div id="prog_wrapper_{id}" >Complete <div id="prog_count_{id}" style="display:inline">0%</div> <img id="prog_img_{id}" style="vertical-align:middle" src="http://dev.openemis.org/demo/img/icons/loader.gif" ></div>',
 	init : function(){
+		/*$(':button').click(function(o){
+			objButton = this;
+			Report.id = $(this).attr('reportid');
+			$.ajax({
+				type: 'GET',
+				dataType: "json",
+				url: getRootURL()+"Reports/getCSVCount/" +Report.id,
+				beforeSend: function (jqXHR) {
+					//maskId = $.mask({});
+				},
+				success: function (data, textStatus) {
+					console.log($(objButton).closest('.col_name'));
+					Report.TotalRecords = parseInt(data.total);
+					Report.LimitPerRun = data.limit;
+					  //$(':button').attr('disabled','disabled');
+					//$(':button').attr('disabled','disabled')
+					$.dialog({
+						content:'<div id="progresswrapper" style="background:url(http://jimpunk.net/Loading/wp-content/uploads/loading130.gif); background-repeat:no-repeat; margin:auto;width:66px !important;height:66px;"><div id="progressbar" style=" height: 66px; line-height: 66px; text-align: center; width: 66px;">0%</div></div>',
+						title:$(objButton).parent().siblings('.col_name').html(),
+						showCloseBtn:false
+					})
+						
+					Report.genReport(0);
+					
+
+//$.closeDialog()
+					
+					
+					
+				}
+			});
+			
+		});*/
 	},
 	progressComplete:function(){
 		$("#progressbar").html('0%');
@@ -85,57 +107,60 @@ if(@$enabled === true){
 	if(count($data) > 0){
 		//pr($data);
 		?>
-			<?php foreach($data as $module => $arrVals) {?> 
-                <div id="alertError" title="Click to dismiss" class="alert alert-error" style="position:relative; margin-bottom: 10px;display: <?php echo ($msg !='')?'block':'none'; ?>; opacity: 0.891195;"><div class="alert-icon"></div><div class="alert-content"><?php echo __('The selected report is currently being processed.'); ?></div></div>
+		<div id="report-list" class="content_wrapper">
+				<?php foreach($data as $module => $arrVals) {?>
+			<h1>
+				<span><?php echo __(ucwords($module)); ?></span> 
+			</h1>
+                       
+                        <div id="alertError" title="Click to dismiss" class="alert alert-error" style="position:relative; margin-bottom: 10px;display: <?php echo ($msg !='')?'block':'none'; ?>; opacity: 0.891195;"><div class="alert-icon"></div><div class="alert-content"><?php echo __('The selected report is currently being processed.'); ?></div></div>
                        
 				<?php foreach($arrVals as $type => $arrTypVals) { ?>
 				<fieldset class="section_group">
-					<legend><?php echo __($type); ?></legend>
-					<div class="table-responsive">
-					<table class="table table-striped table-hover table-bordered">
-						<thead class="table_head">
-							<tr>
-								<td class="table_cell col_name"><?php echo __('Name'); ?></td>
-								<td class="table_cell col_desc"><?php echo __('Description'); ?></td>
-							</tr> 
-						</thead> 
+						<legend><?php echo __($type); ?></legend>
+						<div class="table allow_hover" action="Reports/<?php echo $this->action;?>/">
+							<div class="table_head">
+									<div class="table_cell col_name"><?php echo __('Name'); ?></div>
+									<div class="table_cell col_desc"><?php echo __('Description'); ?></div> 
+							</div> 
 
-						<tbody class="table_body">
-								<?php 
-									$ctr = 1;
-									foreach ($arrTypVals as $key => $value) { 
-								?>
-								<tr class="table_row" row-id="<?php echo $value['id']; ?>">
-									<td class="table_cell col_name"><?php echo $this->Html->link(__($value['name']), array('action' => $this->action, $value['id']), array('escape' => false)); ?></td>
-									<td class="table_cell col_desc"><?php echo __($value['description']);?></td>
-								</tr>
-								<?php  $ctr++;  } ?>
-						</tbody>
-					</table>
-					</div>
+							<div class="table_body">
+									<?php 
+										$ctr = 1;
+										foreach ($arrTypVals as $key => $value) { 
+									?>
+									<div class="table_row" row-id="<?php echo $value['id']; ?>">
+											<div class="table_cell col_name"><?php echo __($value['name']);?></div>
+											<div class="table_cell col_desc"><?php echo __($value['description']);?></div>
+									</div>
+									<?php  $ctr++;  } ?>
+							</div>
+						</div>
 				</fieldset>
 				<?php } ?>
 			<?php } ?>
+		</div>
 	<?php $ctr++; } else {?> 
-				<fieldset class="section_group">
-					<legend><?php echo __('Custom'); ?></legend>
-					<div class="table-responsive">
-					<table class="table table-striped table-hover table-bordered">
-						<thead class="table_head">
-							<tr>
-								<td class="table_cell col_name"><?php echo __('Name'); ?></td>
-								<td class="table_cell col_desc"><?php echo __('Description'); ?></td>
-							</tr>
-						</thead>
+	<div class="content_wrapper" id="report-list">
+							<h1>
+				<span><?php echo __('Custom Reports'); ?></span>
+			</h1>
+								<fieldset class="section_group">
+						<legend><?php echo __('Custom'); ?></legend>
+						<div class="table">
+							<div class="table_head">
+									<div class="table_cell col_name"><?php echo __('Name'); ?></div>
+									<div class="table_cell col_desc"><?php echo __('Description'); ?></div>
+							</div>
 
-					</table>	
-					</div>
-					<div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null,'controller'=>'Home','action'=>'support'))?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on Custom Reports.'); ?></div>
+							
+						</div>
+						<div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null,'controller'=>'Home','action'=>'support'))?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on Custom Reports.'); ?></div>
 				</fieldset>
+									</div>
 <?php	  }
 
 }else{ 
 	echo __('Report Feature disabled');
 	
  } ?>
-<?php $this->end(); ?>

@@ -33,16 +33,35 @@ class StudentsController extends StudentsAppController {
         'InstitutionSiteClass',
         'InstitutionSiteType',
         'InstitutionSiteClassGradeStudent',
+        'Bank',
+        'BankBranch',
+        'IdentityType',
+        'ContactOption',
+        'ContactType',
+        'Students.StudentBankAccount',
         'Students.Student',
         'Students.StudentHistory',
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-       // 'Students.StudentBehaviour',
-        //'Students.StudentBehaviourCategory',
+        'Students.StudentAttachment',
+        'Students.StudentBehaviour',
+        'Students.StudentBehaviourCategory',
         'Students.StudentAttendance',
         'Students.StudentAssessment',
+        'Students.StudentComment',
+        'Students.StudentNationality',
+        'Students.StudentIdentity',
+        'Students.StudentLanguage',
+        'Students.StudentContact',
+        'Students.StudentAward',
+        'Students.Guardian',
+        'Students.GuardianEducationLevel',
+        'Students.GuardianRelation',
+        'Students.StudentGuardian',
         'SchoolYear',
+        'Country',
+        'Language',
         'ConfigItem',
         'Students.StudentExtracurricular',
         'ExtracurricularType',
@@ -56,8 +75,6 @@ class StudentsController extends StudentsAppController {
             'model' => 'Students.StudentAttachment',
             'foreignKey' => 'student_id'
         ),
-		
-		'FileUploader',
         'AccessControl'
     );
     public $modules = array(
@@ -69,18 +86,8 @@ class StudentsController extends StudentsAppController {
         'healthTest' => 'Students.StudentHealthTest',
         'healthConsultation' => 'Students.StudentHealthConsultation',
         'health' => 'Students.StudentHealth',
-        'specialNeed' => 'Students.StudentSpecialNeed',
-        'award' => 'Students.StudentAward',
-        'bankAccounts' => 'Students.StudentBankAccount',
-        'comments' => 'Students.StudentComment',
-        'contacts' => 'Students.StudentContact',
-        'extracurricular' => 'Students.StudentExtracurricular',
-        'identities' => 'Students.StudentIdentity',
-        'languages' => 'Students.StudentLanguage',
-        'nationalities' => 'Students.StudentNationality',
-        'attachments' =>'Students.StudentAttachment',
-		'guardians' => 'Students.StudentGuardian',
-		'behaviour'=>'Students.StudentBehaviour',
+        'special_need' => 'Students.StudentSpecialNeed',
+        'award' => 'Students.StudentAward'
     );
 
     public $className = 'Student';
@@ -118,7 +125,7 @@ class StudentsController extends StudentsAppController {
                 $name = __('New Student');
                 $this->bodyTitle = $name;
             }
-        } 
+        }
     }
 
     public function index() {
@@ -179,7 +186,6 @@ class StudentsController extends StudentsAppController {
 
     public function advanced() {
         $key = 'Student.AdvancedSearch';
-		$this->set('header', __('Advanced Search'));
         if ($this->request->is('get')) {
             if ($this->request->is('ajax')) {
                 $this->autoRender = false;
@@ -259,7 +265,7 @@ class StudentsController extends StudentsAppController {
         $imgValidate = new ImageValidate();
         $data = $this->data;
 
-        if ($this->request->is(array('post', 'put'))) {//pr($this->data);die;
+        if ($this->request->is('post')) {
             if(isset($this->data['submit']) && $this->data['submit']==__('Cancel')){
                 $this->Navigation->exitWizard();
             }
@@ -297,20 +303,16 @@ class StudentsController extends StudentsAppController {
             }
         } else {
             $data = $this->Student->find('first', array('conditions' => array('id' => $this->Session->read('StudentId'))));
-			//pr($data);
-			$this->request->data = $data;
         }
-		//pr($this->Session->check('StudentId'));
+
         $gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
         $this->set('autoid', $this->getUniqueID());
         $this->set('gender', $gender);
         $this->set('data', $data);
-		$this->set('model', 'Student');
     }
 
     public function classes() {
         $this->Navigation->addCrumb(ucfirst($this->action));
-		$header = __(ucfirst($this->action));
         $studentId = $this->Session->read('StudentId');
         $data = array();
         $classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId);
@@ -320,10 +322,9 @@ class StudentsController extends StudentsAppController {
             $data[$key][] = $row;
         }
         if (empty($data)) {
-			$this->Message->alert('general.noData');
-            //$this->Utility->alert($this->Utility->getMessage('NO_CLASSES'), array('type' => 'info', 'dismissOnClick' => false));
+            $this->Utility->alert($this->Utility->getMessage('NO_CLASSES'), array('type' => 'info', 'dismissOnClick' => false));
         }
-        $this->set(compact('data', 'header'));
+        $this->set('data', $data);
     }
 
     public function fetchImage($id) {
@@ -429,22 +430,29 @@ class StudentsController extends StudentsAppController {
 
     public function additional() {
         $this->Navigation->addCrumb('More');
-		$header = __('More');
-        // get all student custom field in order
-        $data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
 
-        $this->StudentCustomValue->unbindModel(array('belongsTo' => array('Student')));
-        $cusValuesData = $this->StudentCustomValue->find('all', array(
+        // get all student custom field in order
+        $datafields = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
+
+        $this->StudentCustomValue->unbindModel(
+                array('belongsTo' => array('Student'))
+        );
+        $datavalues = $this->StudentCustomValue->find('all', array(
             'conditions' => array('StudentCustomValue.student_id' => $this->studentId))
         );
-        $dataValues = array();
-        foreach ($cusValuesData as $arrV) {
-            $dataValues[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
+
+        // pr($datafields);
+        // pr($datavalues);
+        $tmp = array();
+        foreach ($datavalues as $arrV) {
+            $tmp[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
             // pr($arrV);
         }
+        $datavalues = $tmp;
         // pr($tmp);die;
         $this->UserSession->readStatusSession($this->request->action);
-		$this->set(compact('header','data', 'dataValues'));
+        $this->set('datafields', $datafields);
+        $this->set('datavalues', $tmp);
     }
 
     public function additionalEdit() {
@@ -535,16 +543,87 @@ class StudentsController extends StudentsAppController {
                 )
             )
         ));
-        $data = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
-        $this->StudentCustomValue->unbindModel(array('belongsTo' => array('Student')));
-        $dataValues = $this->StudentCustomValue->find('all', array('conditions' => array('StudentCustomValue.student_id' => $this->studentId)));
+        $datafields = $this->StudentCustomField->find('all', array('conditions' => array('StudentCustomField.visible' => 1), 'order' => 'StudentCustomField.order'));
+        $this->StudentCustomValue->unbindModel(
+                array('belongsTo' => array('Student'))
+        );
+        $datavalues = $this->StudentCustomValue->find('all', array('conditions' => array('StudentCustomValue.student_id' => $this->studentId)));
         $tmp = array();
-        foreach ($dataValues as $arrV) {
+        foreach ($datavalues as $arrV) {
             $tmp[$arrV['StudentCustomField']['id']][] = $arrV['StudentCustomValue'];
         }
-        $dataValues = $tmp;
+        $datavalues = $tmp;
+        $this->set('datafields', $datafields);
+        $this->set('datavalues', $tmp);
+    }
+
+    public function attachments() {
+        $this->Navigation->addCrumb('Attachments');
+        $id = $this->Session->read('StudentId');
+        $data = $this->FileAttachment->getList($id);
         $this->set('data', $data);
-        $this->set('dataValues', $tmp);
+        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
+        $this->render('/Elements/attachment/view');
+    }
+
+    public function attachmentsEdit() {
+        $this->Navigation->addCrumb('Edit Attachments');
+        $id = $this->Session->read('StudentId');
+
+        if ($this->request->is('post')) { // save
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentAttachment');
+            }
+            if(!empty($_FILES)){
+                $errors = $this->FileAttachment->saveAll($this->data, $_FILES, $id);
+                if (sizeof($errors) == 0) {
+                    $this->Navigation->updateWizard($this->action, null);
+                    $this->Utility->alert(__('Files have been saved successfully.'));
+                    $this->redirect(array('action' => 'attachments'));
+                } else {
+                    $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
+                }
+            }else {
+                $this->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
+            }
+        }
+
+        $data = $this->FileAttachment->getList($id);
+        $this->set('data', $data);
+        $this->set('arrFileExtensions', $this->Utility->getFileExtensionList());
+        $this->render('/Elements/attachment/edit');
+    }
+
+    public function attachmentsAdd() {
+        $this->layout = 'ajax';
+        $this->set('params', $this->params->query);
+        $this->render('/Elements/attachment/add');
+    }
+
+    public function attachmentsDelete() {
+        $this->autoRender = false;
+        if ($this->request->is('post')) {
+            $result = array('alertOpt' => array());
+            $this->Utility->setAjaxResult('alert', $result);
+            $id = $this->params->data['id'];
+
+            if ($this->FileAttachment->delete($id)) {
+                $result['alertOpt']['text'] = __('File is deleted successfully.');
+            } else {
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
+            }
+
+            return json_encode($result);
+        }
+    }
+
+    public function attachmentsDownload($id) {
+        $this->FileAttachment->download($id);
     }
 
     public function history() {
@@ -583,7 +662,6 @@ class StudentsController extends StudentsAppController {
      */
     public function assessments() {
         $this->Navigation->addCrumb('Results');
-		$header = __('Results');
         if (is_null($this->studentId)) {
             //var_dump($this->name);
             $this->redirect(array('controller' => $this->name));
@@ -620,7 +698,6 @@ class StudentsController extends StudentsAppController {
         $this->set('programmeGrades', $programmeGrades);
         $this->set('selectedProgrammeGrade', $selectedProgrammeGrade);
         $this->set('data', $data);
-		$this->set('header',$header);
     }
 
     private function custFieldYrInits() {
@@ -645,10 +722,10 @@ class StudentsController extends StudentsAppController {
     }
 
     private function custFieldSites($institution_sites) {
-        $institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name'/*, 'Institution.name'*/), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
+        $institution_sites = $this->InstitutionSite->find('all', array('fields' => array('InstitutionSite.id', 'InstitutionSite.name', 'Institution.name'), 'conditions' => array('InstitutionSite.id' => $institution_sites)));
         $tmp = array('0' => '--');
         foreach ($institution_sites as $arrVal) {
-            $tmp[$arrVal['InstitutionSite']['id']] = /*$arrVal['Institution']['name'] . ' - ' . */$arrVal['InstitutionSite']['name'];
+            $tmp[$arrVal['InstitutionSite']['id']] = $arrVal['Institution']['name'] . ' - ' . $arrVal['InstitutionSite']['name'];
         }
         return $tmp;
     }
@@ -679,14 +756,14 @@ class StudentsController extends StudentsAppController {
         $studentId = $this->studentId;
         //$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
         $this->Navigation->addCrumb('Attendance');
-		$header = __('Attendance');
+
         //$id = @$this->request->params['pass'][0];
-        $yearOptions = $this->SchoolYear->getYearList();
-        $selectedYearId = $this->getAvailableYearId($yearOptions);
-        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYearId));
+        $yearList = $this->SchoolYear->getYearList();
+        $yearId = $this->getAvailableYearId($yearList);
+        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $yearId));
         $attendanceTypes = $this->StudentAttendanceType->getAttendanceTypes();
         
-        $dataAttendance = $this->StudentAttendance->getAttendanceByStudentAndYear($studentId, $selectedYearId);
+        $dataAttendance = $this->StudentAttendance->getAttendanceByStudentAndYear($studentId, $yearId);
         $attendanceCheckList = array();
         $classesArr = array();
         foreach($dataAttendance AS $rowAttendance){
@@ -699,7 +776,7 @@ class StudentsController extends StudentsAppController {
             $classesArr[$classId] = $rowAttendance['InstitutionSiteClass']['name'];
         }
         
-        $data = array();
+        $attendanceData = array();
         foreach($classesArr AS $classId => $className){
             $tempRow = array();
             $tempRow['classId'] = $classId;
@@ -715,23 +792,21 @@ class StudentsController extends StudentsAppController {
                     $tempRow['StudentAttendance'][$attendanceTypeId] = 0;
                 }
             }
-            $data[] = $tempRow;
+            $attendanceData[] = $tempRow;
         }
         
         $legend = $this->generateAttendanceLegend();
 
-        if (empty($data)) {
-			$this->Message->alert('general.noData');
-            //$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        if (empty($attendanceData)) {
+            $this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
         }
 
-		$this->set(compact('header', 'selectedYearId', 'yearOptions', 'data','schoolDays','attendanceTypes','legend'));
-       /* $this->set('selectedYear', $selectedYearId);
-        $this->set('years', $yearOptions);
-        $this->set('data', $data);
+        $this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+        $this->set('data', $attendanceData);
         $this->set('schoolDays', $schoolDays);
         $this->set('attendanceTypes', $attendanceTypes);
-        $this->set('legend', $legend);*/
+        $this->set('legend', $legend);
     }
     
     public function generateAttendanceLegend(){
@@ -756,7 +831,7 @@ class StudentsController extends StudentsAppController {
     }
 
     // Student behaviour part
-    /*public function behaviour() {
+    public function behaviour() {
         $this->Navigation->addCrumb('List of Behaviour');
 
         $data = $this->StudentBehaviour->getBehaviourData($this->studentId);
@@ -791,7 +866,7 @@ class StudentsController extends StudentsAppController {
         } else {
             $this->redirect(array('action' => 'behaviour'));
         }
-    }*/
+    }
 
     private function getAvailableYearId($yearList) {
         $yearId = 0;
@@ -832,5 +907,864 @@ class StudentsController extends StudentsAppController {
 
         return $generate_no;
     }
+
+    /*     * *BANK ACCOUNTS - sorry have to copy paste to othe modules too lazy already* */
+
+    public function bankAccounts() {
+        $this->Navigation->addCrumb('Bank Accounts');
+
+        $data = $this->StudentBankAccount->find('all', array('conditions' => array('StudentBankAccount.student_id' => $this->studentId)));
+        $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
+        $banklist = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
+        $this->set('data', $data);
+        $this->set('bank', $bank);
+        $this->set('banklist', $banklist);
+    }
+
+    public function bankAccountsView() {
+        $bankAccountId = $this->params['pass'][0];
+        $bankAccountObj = $this->StudentBankAccount->find('all', array('conditions' => array('StudentBankAccount.id' => $bankAccountId)));
+
+        if (!empty($bankAccountObj)) {
+            $this->Navigation->addCrumb('Bank Account Details');
+
+            $this->Session->write('StudentBankAccountId', $bankAccountId);
+            $this->set('bankAccountObj', $bankAccountObj);
+        }
+        $banklist = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
+        $this->set('banklist', $banklist);
+    }
+
+    public function bankAccountsAdd() {
+        $this->Navigation->addCrumb(__('Add Bank Accounts'));
+        if ($this->request->is('post')) { // save
+            $addMore = false;
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentBankAccount');
+            }
+            $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
+            $this->StudentBankAccount->create();
+            if ($this->StudentBankAccount->save($this->request->data)) {
+                $id = $this->StudentBankAccount->getLastInsertId();
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'bankAccounts'));
+            }
+        }
+        $bank = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
+
+        $bankId = isset($this->request->data['StudentBankAccount']['bank_id']) ? $this->request->data['StudentBankAccount']['bank_id'] : "";
+        if (!empty($bankId)) {
+            $bankBranches = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
+        } else {
+            $bankBranches = array();
+        }
+
+        $this->set('bankBranches', $bankBranches);
+        $this->set('selectedBank', $bankId);
+        $this->set('student_id', $this->studentId);
+        $this->set('bank', $bank);
+    }
+
+    public function bankAccountsEdit() {
+        $bankBranch = array();
+
+        $bankAccountId = $this->params['pass'][0];
+        $this->Navigation->addCrumb('Edit Bank Account Details');
+        if ($this->request->is('get')) {
+            $bankAccountObj = $this->StudentBankAccount->find('first', array('conditions' => array('StudentBankAccount.id' => $bankAccountId)));
+
+            if (!empty($bankAccountObj)) {
+                //$bankAccountObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
+                $this->request->data = $bankAccountObj;
+            }
+        } else {
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }
+            $this->request->data['StudentBankAccount']['student_id'] = $this->studentId;
+            if ($this->StudentBankAccount->save($this->request->data)) {
+                $this->Navigation->updateWizard($this->action,$bankAccountId);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'bankAccountsView', $this->request->data['StudentBankAccount']['id']));
+            }
+        }
+
+        $bankId = isset($this->request->data['StudentBankAccount']['bank_id']) ? $this->request->data['StudentBankAccount']['bank_id'] : $bankAccountObj['BankBranch']['bank_id'];
+        $this->set('selectedBank', $bankId);
+
+        $bankBranch = $this->BankBranch->find('list', array('conditions' => array('bank_id' => $bankId, 'visible' => 1), 'recursive' => -1));
+        $this->set('bankBranch', $bankBranch);
+
+        $bank = $this->Bank->find('list', array('conditions' => Array('Bank.visible' => 1)));
+        $this->set('bank', $bank);
+
+        $this->set('id', $bankAccountId);
+    }
+
+    public function bankAccountsDelete($id) {
+        if ($this->Session->check('StudentId') && $this->Session->check('StudentBankAccountId')) {
+            $id = $this->Session->read('StudentBankAccountId');
+
+            $studentId = $this->Session->read('StudentId');
+            $name = $this->StudentBankAccount->field('account_number', array('StudentBankAccount.id' => $id));
+            $this->StudentBankAccount->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'bankAccounts'));
+        }
+    }
+
+    public function bankAccountsBankBranches() {
+        $this->autoRender = false;
+        $bank = $this->Bank->find('all', array('conditions' => Array('Bank.visible' => 1)));
+        echo json_encode($bank);
+    }
+
+    public function comments() {
+        $this->Navigation->addCrumb('Comments');
+        $data = $this->StudentComment->find('all', array('conditions' => array('StudentComment.student_id' => $this->studentId), 'recursive' => -1, 'order' => 'StudentComment.comment_date'));
+
+        $this->set('list', $data);
+    }
+
+    public function commentsAdd() {
+        $this->Navigation->addCrumb(__('Add Comments'));
+        if ($this->request->is('post')) {
+            $addMore = false;
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentComment');
+            }
+            $this->StudentComment->create();
+            $this->request->data['StudentComment']['student_id'] = $this->studentId;
+
+            $data = $this->data['StudentComment'];
+
+            if ($this->StudentComment->save($data)) {
+                $id = $this->StudentComment->getLastInsertId();
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'comments'));
+            }
+        }
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function commentsView() {
+        $commentId = $this->params['pass'][0];
+        $commentObj = $this->StudentComment->find('all', array('conditions' => array('StudentComment.id' => $commentId)));
+        if (!empty($commentObj)) {
+            $this->Navigation->addCrumb('Comment Details');
+
+            $this->Session->write('StudentCommentId', $commentId);
+            $this->set('commentObj', $commentObj);
+        }
+    }
+
+    public function commentsEdit() {
+        $commentId = $this->params['pass'][0];
+        if ($this->request->is('get')) {
+            $commentObj = $this->StudentComment->find('first', array('conditions' => array('StudentComment.id' => $commentId)));
+
+            if (!empty($commentObj)) {
+                $this->Navigation->addCrumb('Edit Comment Details');
+                $this->request->data = $commentObj;
+            }
+        } else {
+            $commentData = $this->data['StudentComment'];
+
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }
+            $commentData['student_id'] = $this->studentId;
+
+            if ($this->StudentComment->save($commentData)) {
+                $this->Navigation->updateWizard($this->action,$commentId);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'commentsView', $commentData['id']));
+            }
+        }
+
+
+        $this->set('id', $commentId);
+    }
+
+    public function commentsDelete($id) {
+        if ($this->Session->check('StudentId') && $this->Session->check('StudentCommentId')) {
+            $id = $this->Session->read('StudentCommentId');
+            $studentId = $this->Session->read('StudentId');
+            $name = $this->StudentComment->field('title', array('StudentComment.id' => $id));
+            $this->StudentComment->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'comments', $studentId));
+        }
+    }
+
+    public function nationalities() {
+        $this->Navigation->addCrumb(__('Nationalities'));
+        $data = $this->StudentNationality->find('all', array('conditions' => array('StudentNationality.student_id' => $this->studentId)));
+        $this->set('list', $data);
+    }
+
+    public function nationalitiesAdd() {
+        $this->Navigation->addCrumb(__('Add Nationalities'));
+        if ($this->request->is('post')) {
+            $data = $this->data['StudentNationality'];
+            $addMore = false;
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentNationality');
+            }
+
+            $this->StudentNationality->create();
+            $data['student_id'] = $this->studentId;
+
+            if ($this->StudentNationality->save($data)) {
+                $id = $this->StudentNationality->getLastInsertId();
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalities'));
+            }
+        }
+
+        $defaultCountryId = $this->ConfigItem->field('ConfigItem.value', array('ConfigItem.name' => 'country_id'));
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+        $this->set('defaultCountryId', $defaultCountryId);
+		$this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function nationalitiesView() {
+        $nationalityId = $this->params['pass'][0];
+        $nationalityObj = $this->StudentNationality->find('all', array('conditions' => array('StudentNationality.id' => $nationalityId)));
+
+        if (!empty($nationalityObj)) {
+            $this->Navigation->addCrumb(__('Nationality Details'));
+
+            $this->Session->write('StudentNationalityId', $nationalityId);
+            $this->set('nationalityObj', $nationalityObj);
+        }
+    }
+
+    public function nationalitiesEdit() {
+        $nationalityId = $this->params['pass'][0];
+        if ($this->request->is('get')) {
+            $nationalityObj = $this->StudentNationality->find('first', array('conditions' => array('StudentNationality.id' => $nationalityId)));
+
+            if (!empty($nationalityObj)) {
+                $this->Navigation->addCrumb(__('Edit Nationality Details'));
+                $this->request->data = $nationalityObj;
+            }
+        } else {
+            $nationalityData = $this->data['StudentNationality'];
+
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }
+            
+            $nationalityData['student_id'] = $this->studentId;
+
+            if ($this->StudentNationality->save($nationalityData)) {
+                $this->Navigation->updateWizard($this->action,$nationalityId);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'nationalitiesView', $nationalityData['id']));
+            }
+        }
+
+        $countryOptions = $this->Country->getOptions();
+        $this->set('countryOptions', $countryOptions);
+
+        $this->set('id', $nationalityId);
+    }
+
+    public function nationalitiesDelete($id) {
+        if ($this->Session->check('StudentId') && $this->Session->check('StudentNationalityId')) {
+            $id = $this->Session->read('StudentNationalityId');
+            $studentId = $this->Session->read('StudentId');
+            $countryId = $this->StudentNationality->field('country_id', array('StudentNationality.id' => $id));
+            $name = $this->Country->field('name', array('Country.id' => $countryId));
+            $this->StudentNationality->delete($id);
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
+            $this->redirect(array('action' => 'nationalities', $studentId));
+        }
+    }
+
+    public function identities() {
+        $this->Navigation->addCrumb(__('Identities'));
+        $data = $this->StudentIdentity->find('all', array('conditions' => array('StudentIdentity.student_id' => $this->studentId)));
+        $this->set('list', $data);
+    }
+    
+    public function guardians() {
+        $this->Navigation->addCrumb(__('Guardians'));
+        $data = $this->StudentGuardian->getGuardians($this->studentId);
+        $this->set('list', $data);
+    }
+    
+    public function guardiansAdd() {
+        $this->Navigation->addCrumb(__('Add Guardian'));
+        if ($this->request->is('post')) {
+            $data = $this->data;
+            if(!empty($data['Guardian']['existing_id'])){
+                $data['StudentGuardian']['guardian_id'] = $data['Guardian']['existing_id'];
+                $data['StudentGuardian']['student_id'] = $this->studentId;
+
+                $this->StudentGuardian->create();
+                
+                if($this->StudentGuardian->saveAll($data, array('validate' => 'only'))){
+                    if($this->StudentGuardian->saveAll($data, array('validate' => false))){
+                        $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                        $this->redirect(array('action' => 'guardians'));
+                    }
+                }
+            }else{
+                $this->Guardian->create();
+                if($this->Guardian->saveAll($data, array('validate' => 'only'))){
+                    if($this->Guardian->saveAll($data, array('validate' => false))){
+                        $guardianId = $this->Guardian->getInsertID();
+                        $data['StudentGuardian']['guardian_id'] = $guardianId;
+                        $data['StudentGuardian']['student_id'] = $this->studentId;
+
+                        $this->StudentGuardian->create();
+
+                        if($this->StudentGuardian->saveAll($data, array('validate' => 'only'))){
+                            if($this->StudentGuardian->saveAll($data, array('validate' => false))){
+                                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                                $this->redirect(array('action' => 'guardians'));
+                            }
+                        }else{
+                            $this->request->data['Guardian']['existing_id'] = $guardianId;
+                        }
+                    }
+                }
+            }
+        }
+        
+        $genderOptions = array('M' => __('Male'), 'F' => __('Female'));
+        $relationshipOptions = $this->GuardianRelation->getOptions();
+        $educationOptions = $this->GuardianEducationLevel->getOptions();
+
+        $this->set('genderOptions', $genderOptions);
+        $this->set('relationshipOptions', $relationshipOptions);
+        $this->set('educationOptions', $educationOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+    
+    public function guardiansEdit() {
+        $guardianId = $this->params['pass'][0];
+        if ($this->request->is('get')) {
+            $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
+            
+            if (!empty($guardianObj)) {
+                $this->Navigation->addCrumb(__('Edit Guardian Details'));
+                $this->request->data = $guardianObj;
+            }
+        } else {
+            $data = $this->data;
+            
+            if($this->Guardian->saveAll($data, array('validate' => 'only'))){
+                if($this->Guardian->saveAll($data, array('validate' => false))){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                    $this->redirect(array('action' => 'guardiansView', $guardianId));
+                }
+            }
+        }
+
+        $genderOptions = array('M' => __('Male'), 'F' => __('Female'));
+        $relationshipOptions = $this->GuardianRelation->getOptions();
+        $educationOptions = $this->GuardianEducationLevel->getOptions();
+
+        $this->set('genderOptions', $genderOptions);
+        $this->set('relationshipOptions', $relationshipOptions);
+        $this->set('educationOptions', $educationOptions);
+
+        $this->set('guardianId', $guardianId);
+    }
+    
+    public function guardiansView() {
+        $guardianId = $this->params['pass'][0];
+        $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
+
+        if (!empty($guardianObj)) {
+            //$guardianObj = $guardianResult[0];
+            //pr($guardianObj);
+            $this->Navigation->addCrumb(__('Guardian Details'));
+
+            $this->Session->write('guardianId', $guardianId);
+            $this->set('guardianObj', $guardianObj);
+        }else{
+            $this->redirect(array('action' => 'guardians'));
+        }
+    }
+    
+    public function guardiansDelete() {
+        if ($this->Session->check('StudentId') && $this->Session->check('guardianId')) {
+            $guardianId = $this->Session->read('guardianId');
+            $guardianObj = $this->StudentGuardian->getGuardian($guardianId, $this->studentId);
+            //$guardianObj = $guardianResult[0];
+            $guardianName = $guardianObj['Guardian']['first_name'] . ' ' . $guardianObj['Guardian']['last_name'];
+            
+            $this->StudentGuardian->deleteAll(array('StudentGuardian.guardian_id' => $guardianId, 'StudentGuardian.student_id' => $this->studentId));
+            $this->Utility->alert($guardianName . __(' have been deleted successfully.'));
+            $this->redirect(array('action' => 'guardians'));
+        }
+    }
+    
+    public function guardianAutoComplete() {
+        $this->autoRender = false;
+        $search = $this->params->query['term'];
+        $result = $this->Guardian->getAutoCompleteList($search, $this->studentId);
+        return json_encode($result);
+    }
+
+    public function identitiesAdd() {
+        $this->Navigation->addCrumb(__('Add Identities'));
+        if ($this->request->is('post')) {
+            $data = $this->data['StudentIdentity'];
+            $addMore = false;
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentIdentity');
+            }
+
+            $this->StudentIdentity->create();
+            $data['student_id'] = $this->studentId;
+
+            if ($this->StudentIdentity->save($data)) {
+                $id = $this->StudentIdentity->getLastInsertId();
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identities'));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function identitiesView() {
+        $identityId = $this->params['pass'][0];
+        $identityObj = $this->StudentIdentity->find('all', array('conditions' => array('StudentIdentity.id' => $identityId)));
+
+        if (!empty($identityObj)) {
+            $this->Navigation->addCrumb(__('Identity Details'));
+
+            $this->Session->write('StudentIdentityId', $identityId);
+            $this->set('identityObj', $identityObj);
+        }
+    }
+
+    public function identitiesEdit() {
+        $identityId = $this->params['pass'][0];
+        if ($this->request->is('get')) {
+            $identityObj = $this->StudentIdentity->find('first', array('conditions' => array('StudentIdentity.id' => $identityId)));
+
+            if (!empty($identityObj)) {
+                $this->Navigation->addCrumb(__('Edit Identity Details'));
+                $this->request->data = $identityObj;
+            }
+        } else {
+            $identityData = $this->data['StudentIdentity'];
+
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }
+            $identityData['student_id'] = $this->studentId;
+
+            if ($this->StudentIdentity->save($identityData)) {
+                $this->Navigation->updateWizard($this->action,$identityId);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'identitiesView', $identityData['id']));
+            }
+        }
+
+        $identityTypeOptions = $this->IdentityType->getOptions();
+        $this->set('identityTypeOptions', $identityTypeOptions);
+
+        $this->set('id', $identityId);
+    }
+
+    public function identitiesDelete($id) {
+        if ($this->Session->check('StudentId') && $this->Session->check('StudentIdentityId')) {
+            $id = $this->Session->read('StudentIdentityId');
+            $studentId = $this->Session->read('StudentId');
+            $name = $this->StudentIdentity->field('number', array('StudentIdentity.id' => $id));
+            $this->StudentIdentity->delete($id);
+            $this->Utility->alert($name . __(' have been deleted successfully.'));
+            $this->redirect(array('action' => 'identities', $studentId));
+        }
+    }
+
+    public function languages() {
+        $this->Navigation->addCrumb('Languages');
+        $data = $this->StudentLanguage->find('all', array('conditions' => array('StudentLanguage.student_id' => $this->studentId)));
+        $this->set('list', $data);
+    }
+
+    public function languagesAdd() {
+        $this->Navigation->addCrumb(__('Add Languages'));
+        if ($this->request->is('post')) {
+            $addMore = false;
+            $data = $this->data['StudentLanguage'];
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentLanguage');
+            }
+            
+            $this->StudentLanguage->create();
+            $data['student_id'] = $this->studentId;
+
+            if ($this->StudentLanguage->save($data)) {
+                $id = $this->StudentLanguage->getLastInsertId();
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id,$addMore);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'languages'));
+            }
+        }
+
+        $gradeOptions = array();
+        for ($i = 0; $i < 6; $i++) {
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
+
+        $languageOptions = $this->Language->getOptions();
+        $this->set('languageOptions', $languageOptions);
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function languagesView() {
+        $languageId = $this->params['pass'][0];
+        $languageObj = $this->StudentLanguage->find('all', array('conditions' => array('StudentLanguage.id' => $languageId)));
+
+        if (!empty($languageObj)) {
+            $this->Navigation->addCrumb('Language Details');
+
+            $this->Session->write('StudentLanguageId', $languageId);
+            $this->set('languageObj', $languageObj);
+        }
+    }
+
+    public function languagesEdit() {
+        $languageId = $this->params['pass'][0];
+        if ($this->request->is('get')) {
+            $languageObj = $this->StudentLanguage->find('first', array('conditions' => array('StudentLanguage.id' => $languageId)));
+
+            if (!empty($languageObj)) {
+                $this->Navigation->addCrumb('Edit Language Details');
+                $this->request->data = $languageObj;
+            }
+        } else {
+            $languageData = $this->data['StudentLanguage'];
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }
+            $languageData['student_id'] = $this->studentId;
+
+            if ($this->StudentLanguage->save($languageData)) {
+                $this->Navigation->updateWizard($this->action,$languageId);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'languagesView', $languageData['id']));
+            }
+        }
+        $gradeOptions = array();
+        for ($i = 0; $i < 6; $i++) {
+            $gradeOptions[$i] = $i;
+        }
+        $this->set('gradeOptions', $gradeOptions);
+
+        $languageOptions = $this->Language->getOptions();
+        $this->set('languageOptions', $languageOptions);
+
+        $this->set('id', $languageId);
+    }
+
+    public function languagesDelete($id) {
+        if ($this->Session->check('StudentId') && $this->Session->check('StudentLanguageId')) {
+            $id = $this->Session->read('StudentLanguageId');
+            $studentId = $this->Session->read('StudentId');
+            $languageId = $this->StudentLanguage->field('language_id', array('StudentLanguage.id' => $id));
+            $name = $this->Language->field('name', array('Language.id' => $languageId));
+            $this->StudentLanguage->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'languages', $studentId));
+        }
+    }
+
+    public function contacts() {
+        $this->Navigation->addCrumb('Contacts');
+        $data = $this->StudentContact->find('all', array('conditions' => array('StudentContact.student_id' => $this->studentId), 'order' => array('ContactType.contact_option_id', 'StudentContact.preferred DESC')));
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $this->set('list', $data);
+    }
+
+    public function contactsAdd() {
+        $this->Navigation->addCrumb(__('Add Contacts'));
+        if ($this->request->is('post')) {
+            $contactData = $this->data['StudentContact'];
+            $addMore = false;
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }elseif(isset($this->data['submit']) && $this->data['submit']==__('Add More')){
+                $addMore = true;
+            }else{
+                $this->Navigation->validateModel($this->action,'StudentContact');
+            }
+            $this->StudentContact->create();
+            $contactData['student_id'] = $this->studentId;
+
+            if ($this->StudentContact->save($contactData)) {
+                if ($contactData['preferred'] == '1') {
+                    $this->StudentContact->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($this->StudentContact->getLastInsertId())))));
+                }
+                $id = $this->StudentContact->getLastInsertId();
+                if($addMore){
+                    $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                }
+                $this->Navigation->updateWizard($this->action,$id, $addMore);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'contacts'));
+            }
+        }
+
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $contactOptionId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($contactOptions);
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
+        $this->set('contactTypeOptions', $contactTypeOptions);
+        $this->set('selectedContactOptions', $contactOptionId);
+
+        $this->UserSession->readStatusSession($this->request->action);
+    }
+
+    public function contactsView() {
+        $contactId = $this->params['pass'][0];
+        $contactObj = $this->StudentContact->find('all', array('conditions' => array('StudentContact.id' => $contactId)));
+
+        if (!empty($contactObj)) {
+            $this->Navigation->addCrumb('Contact Details');
+
+            $this->Session->write('StudentContactId', $contactId);
+            $this->set('contactObj', $contactObj);
+        }
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+    }
+
+    public function contactsEdit() {
+        $contactId = $this->params['pass'][0];
+        $contactObj = array();
+        if ($this->request->is('get')) {
+            $contactObj = $this->StudentContact->find('first', array('conditions' => array('StudentContact.id' => $contactId)));
+
+            if (!empty($contactObj)) {
+                $this->Navigation->addCrumb('Edit Contact Details');
+                $this->request->data = $contactObj;
+            }
+        } else {
+            $contactData = $this->data['StudentContact'];
+            if(isset($this->data['submit']) && $this->data['submit']==__('Skip')){
+                $this->Navigation->skipWizardLink($this->action);
+            }else if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+                $this->Navigation->previousWizardLink($this->action);
+            }
+            $contactData['student_id'] = $this->studentId;
+
+            if ($this->StudentContact->save($contactData)) {
+                if ($contactData['preferred'] == '1') {
+                    $this->StudentContact->updateAll(array('StudentContact.preferred' => '0'), array('ContactType.contact_option_id' => $contactData['contact_option_id'], array('NOT' => array('StudentContact.id' => array($contactId)))));
+                }
+                $this->Navigation->updateWizard($this->action,$contactId);
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'contactsView', $contactData['id']));
+            }
+        }
+
+        $contactOptions = $this->ContactOption->getOptions();
+        $this->set('contactOptions', $contactOptions);
+
+        $contactOptionId = isset($this->params['pass'][1]) ? $this->params['pass'][1] : $contactObj['ContactType']['contact_option_id'];
+        $contactTypeOptions = $this->ContactType->find('list', array('conditions' => array('contact_option_id' => $contactOptionId, 'visible' => 1), 'recursive' => -1));
+        $this->set('contactTypeOptions', $contactTypeOptions);
+        $this->set('selectedContactOptions', $contactOptionId);
+
+        $this->set('id', $contactId);
+    }
+
+    public function contactsDelete($id) {
+        if ($this->Session->check('StudentId') && $this->Session->check('StudentContactId')) {
+            $id = $this->Session->read('StudentContactId');
+            $studentId = $this->Session->read('StudentId');
+
+            $name = $this->StudentContact->field('value', array('StudentContact.id' => $id));
+            $this->StudentContact->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'contacts', $studentId));
+        }
+    }
+
+    public function extracurricular() {
+        $this->Navigation->addCrumb('Extracurricular');
+        $data = $this->StudentExtracurricular->getAllList('student_id', $this->studentId);
+        $this->set('list', $data);
+    }
+
+    public function extracurricularView() {
+        $id = $this->params['pass'][0];
+        $data = $this->StudentExtracurricular->getAllList('id', $id);
+        if (!empty($data)) {
+            $this->Navigation->addCrumb('Extracurricular Details');
+
+            $this->Session->write('StudentExtracurricularId', $id);
+            $this->set('data', $data);
+        }
+    }
+
+    public function extracurricularAdd() {
+        $this->Navigation->addCrumb('Add Extracurricular');
+
+        $yearList = $this->SchoolYear->getYearList();
+        $yearId = $this->getAvailableYearId($yearList);
+        $typeList = $this->ExtracurricularType->findList(array('fields' => array('id', 'name'), 'conditions' => array('visible' => '1'), 'orderBy' => 'name'));
+
+
+        $this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+        $this->set('types', $typeList);
+        if ($this->request->isPost()) {
+            $data = $this->request->data;
+            $data['StudentExtracurricular']['student_id'] = $this->studentId;
+            if ($this->StudentExtracurricular->save($data)) {
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'extracurricular'));
+            }
+        }
+    }
+
+    public function extracurricularEdit() {
+        $id = $this->params['pass'][0];
+        $this->Navigation->addCrumb('Edit Extracurricular Details');
+
+        if ($this->request->is('get')) {
+            $data = $this->StudentExtracurricular->find('first', array('conditions' => array('StudentExtracurricular.id' => $id)));
+
+            if (!empty($data)) {
+                $this->request->data = $data;
+            }
+        } else {
+            $data = $this->data;
+            $data['StudentExtracurricular']['student_id'] = $this->studentId;
+            $data['StudentExtracurricular']['id'] = $id;
+            if ($this->StudentExtracurricular->save($data)) {
+                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
+                $this->redirect(array('action' => 'extracurricularView', $data['StudentExtracurricular']['id']));
+            }
+        }
+
+        $yearList = $this->SchoolYear->getYearList();
+        $yearId = $this->getAvailableYearId($yearList);
+        $typeList = $this->ExtracurricularType->findList(array('fields' => array('id', 'name'), 'conditions' => array('visible' => '1'), 'orderBy' => 'name'));
+
+        $this->set('selectedYear', $yearId);
+        $this->set('years', $yearList);
+        $this->set('types', $typeList);
+
+        $this->set('id', $id);
+    }
+
+    public function extracurricularDelete($id) {
+        if ($this->Session->check('StudentId') && $this->Session->check('StudentExtracurricularId')) {
+            $id = $this->Session->read('StudentExtracurricularId');
+            $studentId = $this->Session->read('StudentId');
+            $name = $this->StudentExtracurricular->field('name', array('StudentExtracurricular.id' => $id));
+
+            $this->StudentExtracurricular->delete($id);
+            $this->Utility->alert($name . ' have been deleted successfully.');
+            $this->redirect(array('action' => 'extracurricular'));
+        }
+    }
+
+    public function searchAutoComplete() {
+        if ($this->request->is('get')) {
+            if ($this->request->is('ajax')) {
+                $this->autoRender = false;
+                $search = $this->params->query['term'];
+                $result = $this->StudentExtracurricular->autocomplete($search);
+                return json_encode($result);
+            }
+        }
+    }
+
+    public function ajax_find_award($type) {
+        if ($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->StudentAward->autocomplete($search, $type);
+
+            return json_encode($data);
+        }
+    }
+
 
 }

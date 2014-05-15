@@ -4,17 +4,18 @@
  *
  * Long description for campaign_fixture.php
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
  * @link          http://www.cakephp.org
  * @package       Cake.Test.Fixture
  * @since         1.2
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 /**
@@ -23,6 +24,13 @@
  * @package       Cake.Test.Fixture
  */
 class CampaignFixture extends CakeTestFixture {
+
+/**
+ * name property
+ *
+ * @var string 'Campaign'
+ */
+	public $name = 'Campaign';
 
 /**
  * fields property

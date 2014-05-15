@@ -18,19 +18,9 @@ App::uses('AppModel', 'Model');
 
 class FinanceNature extends AppModel {
 	public $hasMany = array('FinanceType');
-	public $actsAs = array('FieldOption');
-	public $belongsTo = array(
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
-		)
-	);
+	
+	public function getLookupVariables() {
+		$lookup = array('Nature' => array('model' => 'FinanceNature'));
+		return $lookup;
+	}
 }

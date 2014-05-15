@@ -2,17 +2,18 @@
 /**
  * The DbConfig Task handles creating and updating the database.php
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @since         CakePHP(tm) v 1.2
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('AppShell', 'Console/Command');
@@ -75,7 +76,7 @@ class DbConfigTask extends AppShell {
 	public function execute() {
 		if (empty($this->args)) {
 			$this->_interactive();
-			return $this->_stop();
+			$this->_stop();
 		}
 	}
 
@@ -91,10 +92,10 @@ class DbConfigTask extends AppShell {
 		$done = false;
 		$dbConfigs = array();
 
-		while (!$done) {
+		while ($done == false) {
 			$name = '';
 
-			while (!$name) {
+			while ($name == '') {
 				$name = $this->in(__d('cake_console', "Name:"), null, 'default');
 				if (preg_match('/[^a-z0-9_]/i', $name)) {
 					$name = '';
@@ -108,85 +109,85 @@ class DbConfigTask extends AppShell {
 			$datasource = $this->in(__d('cake_console', 'Datasource:'), array('Mysql', 'Postgres', 'Sqlite', 'Sqlserver'), 'Mysql');
 
 			$persistent = $this->in(__d('cake_console', 'Persistent Connection?'), array('y', 'n'), 'n');
-			if (strtolower($persistent) === 'n') {
+			if (strtolower($persistent) == 'n') {
 				$persistent = 'false';
 			} else {
 				$persistent = 'true';
 			}
 
 			$host = '';
-			while (!$host) {
+			while ($host == '') {
 				$host = $this->in(__d('cake_console', 'Database Host:'), null, 'localhost');
 			}
 
 			$port = '';
-			while (!$port) {
+			while ($port == '') {
 				$port = $this->in(__d('cake_console', 'Port?'), null, 'n');
 			}
 
-			if (strtolower($port) === 'n') {
+			if (strtolower($port) == 'n') {
 				$port = null;
 			}
 
 			$login = '';
-			while (!$login) {
+			while ($login == '') {
 				$login = $this->in(__d('cake_console', 'User:'), null, 'root');
 			}
 			$password = '';
 			$blankPassword = false;
 
-			while (!$password && !$blankPassword) {
+			while ($password == '' && $blankPassword == false) {
 				$password = $this->in(__d('cake_console', 'Password:'));
 
-				if (!$password) {
+				if ($password == '') {
 					$blank = $this->in(__d('cake_console', 'The password you supplied was empty. Use an empty password?'), array('y', 'n'), 'n');
-					if ($blank === 'y') {
+					if ($blank == 'y') {
 						$blankPassword = true;
 					}
 				}
 			}
 
 			$database = '';
-			while (!$database) {
+			while ($database == '') {
 				$database = $this->in(__d('cake_console', 'Database Name:'), null, 'cake');
 			}
 
 			$prefix = '';
-			while (!$prefix) {
+			while ($prefix == '') {
 				$prefix = $this->in(__d('cake_console', 'Table Prefix?'), null, 'n');
 			}
-			if (strtolower($prefix) === 'n') {
+			if (strtolower($prefix) == 'n') {
 				$prefix = null;
 			}
 
 			$encoding = '';
-			while (!$encoding) {
+			while ($encoding == '') {
 				$encoding = $this->in(__d('cake_console', 'Table encoding?'), null, 'n');
 			}
-			if (strtolower($encoding) === 'n') {
+			if (strtolower($encoding) == 'n') {
 				$encoding = null;
 			}
 
 			$schema = '';
-			if ($datasource === 'postgres') {
-				while (!$schema) {
+			if ($datasource == 'postgres') {
+				while ($schema == '') {
 					$schema = $this->in(__d('cake_console', 'Table schema?'), null, 'n');
 				}
 			}
-			if (strtolower($schema) === 'n') {
+			if (strtolower($schema) == 'n') {
 				$schema = null;
 			}
 
 			$config = compact('name', 'datasource', 'persistent', 'host', 'login', 'password', 'database', 'prefix', 'encoding', 'port', 'schema');
 
-			while (!$this->_verify($config)) {
+			while ($this->_verify($config) == false) {
 				$this->_interactive();
 			}
 
 			$dbConfigs[] = $config;
 			$doneYet = $this->in(__d('cake_console', 'Do you wish to add another database configuration?'), null, 'n');
 
-			if (strtolower($doneYet === 'n')) {
+			if (strtolower($doneYet == 'n')) {
 				$done = true;
 			}
 		}
@@ -210,7 +211,7 @@ class DbConfigTask extends AppShell {
 		$this->out(__d('cake_console', 'The following database configuration will be created:'));
 		$this->hr();
 		$this->out(__d('cake_console', "Name:         %s", $name));
-		$this->out(__d('cake_console', "Datasource:   %s", $datasource));
+		$this->out(__d('cake_console', "Datasource:       %s", $datasource));
 		$this->out(__d('cake_console', "Persistent:   %s", $persistent));
 		$this->out(__d('cake_console', "Host:         %s", $host));
 
@@ -237,7 +238,7 @@ class DbConfigTask extends AppShell {
 		$this->hr();
 		$looksGood = $this->in(__d('cake_console', 'Look okay?'), array('y', 'n'), 'y');
 
-		if (strtolower($looksGood) === 'y') {
+		if (strtolower($looksGood) == 'y') {
 			return $config;
 		}
 		return false;
@@ -276,7 +277,11 @@ class DbConfigTask extends AppShell {
 					$info['port'] = null;
 				}
 
-				$info['persistent'] = var_export((bool)$info['persistent'], true);
+				if ($info['persistent'] === false) {
+					$info['persistent'] = 'false';
+				} else {
+					$info['persistent'] = ($info['persistent'] == true) ? 'true' : 'false';
+				}
 
 				$oldConfigs[] = array(
 					'name' => $configName,
@@ -295,7 +300,7 @@ class DbConfigTask extends AppShell {
 		}
 
 		foreach ($oldConfigs as $key => $oldConfig) {
-			foreach ($configs as $config) {
+			foreach ($configs as $k => $config) {
 				if ($oldConfig['name'] == $config['name']) {
 					unset($oldConfigs[$key]);
 				}
@@ -310,11 +315,8 @@ class DbConfigTask extends AppShell {
 			$config = array_merge($this->_defaultConfig, $config);
 			extract($config);
 
-			if (strpos($datasource, 'Database/') === false) {
-				$datasource = "Database/{$datasource}";
-			}
 			$out .= "\tpublic \${$name} = array(\n";
-			$out .= "\t\t'datasource' => '{$datasource}',\n";
+			$out .= "\t\t'datasource' => 'Database/{$datasource}',\n";
 			$out .= "\t\t'persistent' => {$persistent},\n";
 			$out .= "\t\t'host' => '{$host}',\n";
 

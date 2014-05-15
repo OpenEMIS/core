@@ -2,19 +2,19 @@
 /**
  * Connection Manager tests
  *
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * PHP 5
+ *
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Model
  * @since         CakePHP(tm) v 1.2.0.5550
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
-
 App::uses('ConnectionManager', 'Model');
 
 /**
@@ -62,7 +62,7 @@ class ConnectionManagerTest extends CakeTestCase {
 		$name = 'test_get_datasource';
 		$config = array('datasource' => 'Test2Source');
 
-		ConnectionManager::create($name, $config);
+		$connection = ConnectionManager::create($name, $config);
 		$connections = ConnectionManager::enumConnectionObjects();
 		$this->assertTrue((bool)(count(array_keys($connections) >= 1)));
 
@@ -190,6 +190,7 @@ class ConnectionManagerTest extends CakeTestCase {
  * @return void
  */
 	public function testGetSourceName() {
+		$connections = ConnectionManager::enumConnectionObjects();
 		$source = ConnectionManager::getDataSource('test');
 		$result = ConnectionManager::getSourceName($source);
 
@@ -227,7 +228,7 @@ class ConnectionManagerTest extends CakeTestCase {
  */
 	public function testLoadDataSourceException() {
 		$connection = array('classname' => 'NonExistentDataSource', 'filename' => 'non_existent');
-		ConnectionManager::loadDataSource($connection);
+		$loaded = ConnectionManager::loadDataSource($connection);
 	}
 
 /**

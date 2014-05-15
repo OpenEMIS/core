@@ -15,10 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentSpecialNeed extends StudentsAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('special_need_date'));
+	public $actsAs = array('ControllerAction');
 	
 	public $belongsTo = array(
-		'SpecialNeedType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -38,59 +37,60 @@ class StudentSpecialNeed extends StudentsAppModel {
 			)
 		)
 	);
+	public $booleanOptions = array('No', 'Yes');
+
 	public $headerDefault = 'Special Needs';
-	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
 	
-	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'special_need_date','labelKey' => 'general.date'),
-                array('field' => 'name', 'model' => 'SpecialNeedType','labelKey' => 'general.type' ),
-				array('field' => 'comment'),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
 	public function specialNeed($controller, $params) {
+	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
-		$header = $this->headerDefault;
-		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStudentId($controller->studentId);
-		$controller->set(compact('header', 'data'));
+		$controller->set('modelName', $this->name);
+		$data = $this->find('all', array('conditions'=> array('student_id'=> $controller->studentId)));
+		
+		$specialNeedType = ClassRegistry::init('SpecialNeedType');
+		$specialNeedTypeOptions = $specialNeedType->find('list', array('fields'=> array('id', 'name')));
+		
+		
+		$controller->set('subheader', $this->headerDefault);
+		$controller->set('data', $data);
+		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
+		
 	}
 
 	public function specialNeedView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-		$header = __($this->headerDefault . ' Details');
+		$controller->set('subheader', $this->headerDefault);
+		$controller->set('modelName', $this->name);
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->findById($id);//('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'specialNeed'));
 		}
 		
 		$controller->Session->write('StudentSpecialNeedId', $id);
-		$fields = $this->getDisplayFields($controller);
-        $controller->set(compact('header', 'data', 'fields', 'id'));
+		$specialNeedType = ClassRegistry::init('SpecialNeedType');
+		$specialNeedTypeOptions = $specialNeedType->find('list', array('fields'=> array('id', 'name')));
+		
+		$controller->set('data', $data);
+		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
 	}
 	
 	public function specialNeedDelete($controller, $params) {
         if($controller->Session->check('StudentId') && $controller->Session->check('StudentSpecialNeedId')) {
             $id = $controller->Session->read('StudentSpecialNeedId');
-            if($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
+            $studentId = $controller->Session->read('StudentId');
+			
+			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
+			
+			$specialNeedType = ClassRegistry::init('SpecialNeedType');
+			$specialNeedTypeOptions = $specialNeedType->find('list', array('fields'=> array('id', 'name')));
+
+            $name = $specialNeedTypeOptions[$data['StudentSpecialNeed']['special_need_type_id']];
+			
+            $this->delete($id);
+            $controller->Utility->alert($name . ' have been deleted successfully.');
 			$controller->Session->delete('StudentSpecialNeedId');
             $controller->redirect(array('action' => 'specialNeed'));
         }
@@ -98,19 +98,24 @@ class StudentSpecialNeed extends StudentsAppModel {
 	
 	public function specialNeedAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
-		$controller->set('header', __('Add ' . $this->headerDefault));
+		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
 	public function specialNeedEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault);
-		$controller->set('header', __('Edit ' . $this->headerDefault));
+		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
+		$controller->set('subheader', $this->headerDefault);
 		$this->setup_add_edit_form($controller, $params);
+		
 		$this->render = 'add';
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$specialNeedTypeOptions = $this->SpecialNeedType->find('list', array('fields'=> array('id', 'name')));
+		$controller->set('modelName', $this->name);
+		
+		$specialNeedType = ClassRegistry::init('SpecialNeedType');
+		$specialNeedTypeOptions = $specialNeedType->find('list', array('fields'=> array('id', 'name')));
+		
 		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
@@ -133,16 +138,17 @@ class StudentSpecialNeed extends StudentsAppModel {
             }
 			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
 			if($this->save($controller->request->data)){
-				$controller->Message->alert('general.add.success');
 				if(empty($controller->request->data[$this->name]['id'])){
 					$id = $this->getLastInsertId();
-					/*if($addMore){
+					if($addMore){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-					}*/
+					}
                 	$controller->Navigation->updateWizard($controller->action,$id,$addMore);
+                	$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 				}
 				else{
                		$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
+					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
 				return $controller->redirect(array('action' => 'specialNeed'));
 			}

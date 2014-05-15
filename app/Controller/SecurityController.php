@@ -117,6 +117,7 @@ class SecurityController extends AppController {
 					$result = $this->Auth->login();
 					//Error Message to be used if login false;
 					$errMsg = $this->Utility->getMessage("LOGIN_INVALID");
+
 				}
 				if($result) {
 					if($this->Auth->user('status') == 1) {
@@ -125,7 +126,7 @@ class SecurityController extends AppController {
 						$this->SecurityUser->updateLastLogin($userId);
 						$this->AccessControl->init($userId);
 						$this->registerSession();
-						$this->redirect($this->Auth->redirect(array('controller' => 'Home')));
+						$this->redirect($this->Auth->redirect('home'));
 					} else if ($this->Auth->user('status') == 0) {
 						$this->log('[' . $username . '] Account is not active.', 'security');
 						$this->Session->setFlash($this->Utility->getMessage("LOGIN_USER_INACTIVE"));
@@ -202,6 +203,7 @@ class SecurityController extends AppController {
 			}
 		}
 		$this->set('images', $imageData);
+
     }
 
     public function login_remote() {
@@ -347,6 +349,7 @@ class SecurityController extends AppController {
 		}
 	}
 	
+
 	public function usersAdd() {
 		$this->Navigation->addCrumb('Users', array('controller' => 'Security', 'action' => 'users'));
 		$this->Navigation->addCrumb('Add User');
@@ -528,12 +531,6 @@ class SecurityController extends AppController {
 		$this->set('type', $type);
 		$this->set('levelOptions', $levelOptions);
 		$this->set('valueOptions', $valueOptions);
-		
-		if($type==='areas'){
-			$this->render('groups_add_access_options');
-		}else if($type==='sites'){
-			$this->render('groups_add_institution_options');
-		}
 	}
 	
 	public function groupsLoadValueOptions() {
@@ -906,6 +903,7 @@ class SecurityController extends AppController {
 	
 	public function permissions() {
 		$this->Navigation->addCrumb('Permissions');
+		
 		if(isset($this->params['pass'][0])) {
 			$selectedRole = $this->params['pass'][0];
 			

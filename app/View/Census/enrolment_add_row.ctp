@@ -18,7 +18,7 @@
     </td>
     <td>M</td>
     <?php 
-        foreach($gradeList AS $gradeId => $gradeName){
+        foreach($grades AS $gradeId => $gradeName){
     ?>
         <td>
             <div class="input_wrapper" census_id="0" grade_id ="<?php echo $gradeId; ?>">
@@ -50,7 +50,7 @@
 <tr age="<?php echo $age; ?>" gender="female" type="input">
     <td>F</td>
     <?php 
-        foreach($gradeList AS $gradeId => $gradeName){
+        foreach($grades AS $gradeId => $gradeName){
     ?>
         <td>
             <div class="input_wrapper" census_id="0" grade_id ="<?php echo $gradeId; ?>">

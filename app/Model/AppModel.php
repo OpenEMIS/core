@@ -33,6 +33,34 @@ App::uses('Model', 'Model');
 class AppModel extends Model {
 	public $formatResult = false;
 	public $render = true; // ControllerActionBehaviour variable
+
+	public function describe() {
+		$columns = $this->query('DESCRIBE ' . $this->useTable);
+		
+		$colInfo = array();
+		foreach($columns as $obj) {
+			$col = $obj['COLUMNS'];
+			$type = $col['Type'];
+			$size = 0;
+			
+			if(strpos($type, 'int') !== false) {
+				preg_match("/(\d+)/", $type, $reg);
+				$type = 'int';
+				$size = $reg[0];
+			} else if(strpos($type, 'varchar') !== false) {
+				preg_match("/(\d+)/", $type, $reg);
+				$type = 'varchar';
+				$size = $reg[0];
+			}
+			
+			$colInfo[$col['Field']] = array(
+				'type' => $type,
+				'size' => $size
+			);
+		}
+		
+		return $colInfo;
+	}
 	
 	public function findList($options=array()) {
 		$class = $this->alias;
@@ -54,11 +82,7 @@ class AppModel extends Model {
 	}
 	
 	public function findOptions($options=array()) {
-		$class = $this->alias;
-		if(is_bool($options) && $options) {
-			$options = array();
-			$options['conditions'] = array($class.'.visible' => 1);
-		}
+		$class = get_class($this);
 		$conditions = !isset($options['conditions']) ? array() : $options['conditions'];
 		$order = !isset($options['order']) ? array($class . '.order') : $options['order'];
 		

@@ -48,11 +48,10 @@ var CensusTeachers = {
     },
 
     computeSubtotal: function(obj) {
-        var table = $(obj).closest('tbody');
-        var row = $(obj).closest('tr');
+        var table = $(obj).closest('.table_body');
+        var row = $(obj).closest('.table_row');
         var type = $(obj).attr('computeType');
         var subtotal = 0;
-        
 
         row.find('[computeType="' + type + '"]').each(function() {
             if($(this).val().isEmpty()||$(this).val()=='.'||$(this).val()=='0.0'||$(this).val()=='00') {
@@ -68,7 +67,6 @@ var CensusTeachers = {
             subtotal = subtotal.toFixed(1);
         }
         row.find('.cell_subtotal').html(subtotal);
-        
 
         var total = 0;
         table.find('.cell_subtotal').each(function() {
@@ -77,6 +75,6 @@ var CensusTeachers = {
         if(total>0){
             total = total.toFixed(1);
         }
-        table.siblings('tfoot').find('.' + type).html(total);
+        table.siblings('.table_foot').find('.' + type).html(total);
     }
 };

@@ -2,18 +2,19 @@
 /**
  * CommandListShellTest file
  *
+ * PHP 5
+ *
  * CakePHP :  Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
  * @link          http://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.Console.Command
  * @since         CakePHP v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('CommandListShell', 'Console/Command');
@@ -21,11 +22,7 @@ App::uses('ConsoleOutput', 'Console');
 App::uses('ConsoleInput', 'Console');
 App::uses('Shell', 'Console');
 
-/**
- * Class TestStringOutput
- *
- * @package       Cake.Test.Case.Console.Command
- */
+
 class TestStringOutput extends ConsoleOutput {
 
 	public $output = '';
@@ -36,11 +33,6 @@ class TestStringOutput extends ConsoleOutput {
 
 }
 
-/**
- * Class CommandListShellTest
- *
- * @package       Cake.Test.Case.Console.Command
- */
 class CommandListShellTest extends CakeTestCase {
 
 /**
@@ -90,16 +82,58 @@ class CommandListShellTest extends CakeTestCase {
 		$this->Shell->main();
 		$output = $this->Shell->stdout->output;
 
-		$expected = "/\[.*TestPlugin.*\] example/";
+		$expected = "/example \[.*TestPlugin, TestPluginTwo.*\]/";
 		$this->assertRegExp($expected, $output);
 
-		$expected = "/\[.*TestPluginTwo.*\] example, welcome/";
+		$expected = "/welcome \[.*TestPluginTwo.*\]/";
 		$this->assertRegExp($expected, $output);
 
-		$expected = "/\[.*CORE.*\] acl, api, bake, command_list, console, i18n, schema, server, test, testsuite, upgrade/";
+		$expected = "/acl \[.*CORE.*\]/";
 		$this->assertRegExp($expected, $output);
 
-		$expected = "/\[.*app.*\] sample/";
+		$expected = "/api \[.*CORE.*\]/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/bake \[.*CORE.*\]/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/console \[.*CORE.*\]/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/i18n \[.*CORE.*\]/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/schema \[.*CORE.*\]/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/testsuite \[.*CORE.*\]/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/sample \[.*app.*\]/";
+		$this->assertRegExp($expected, $output);
+	}
+
+/**
+ * Test the sort param
+ *
+ * @return void
+ */
+	public function testSortPlugin() {
+		$this->Shell->params['sort'] = true;
+		$this->Shell->main();
+
+		$output = $this->Shell->stdout->output;
+
+		$expected = "/\[.*App.*\]\\v*[ ]+sample/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/\[.*TestPluginTwo.*\]\\v*[ ]+example, welcome/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/\[.*TestPlugin.*\]\\v*[ ]+example/";
+		$this->assertRegExp($expected, $output);
+
+		$expected = "/\[.*Core.*\]\\v*[ ]+acl, api, bake, command_list, console, i18n, schema, test, testsuite/";
 		$this->assertRegExp($expected, $output);
 	}
 

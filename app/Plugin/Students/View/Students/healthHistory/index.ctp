@@ -1,5 +1,3 @@
-<?php /*
-
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 ?>
@@ -38,33 +36,4 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
         
     </div>
     <?php } ?>
-</div> */ ?>
-
-<?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $header);
-$this->start('contentActions');
-if ($_add) {
-    echo $this->Html->link($this->Label->get('general.add'), array('action' => 'healthHistoryAdd'), array('class' => 'divider'));
-}
-$this->end();
-
-$this->start('contentBody');
-$tableHeaders = array( __('Conditions'), __('Current'), __('Comment'));
-$tableData = array();
-
-
-foreach($data as $obj) {
-    $symbol = $this->Utility->checkOrCrossMarker($obj[$model]['current']==1);
-	$row = array();
-        $row[] = $this->Html->link($obj['HealthCondition']['name'], array('action' => 'healthHistoryView', $obj[$model]['id']), array('escape' => false));
-        $row[] = array($symbol, array('class' => 'center')) ;
-        $row[] = $obj[$model]['comment'] ;
-	$tableData[] = $row;
-}
-echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
-$this->end(); 
-
-?>
+</div>

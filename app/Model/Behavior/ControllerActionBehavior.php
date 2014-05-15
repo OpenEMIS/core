@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class ControllerActionBehavior extends ModelBehavior {
 	public function beforeAction(Model $model, $controller, $action) {
-		$controller->set('model', $model->alias);
+		
 	}
 	
 	public function afterAction(Model $model, $controller, $action) {

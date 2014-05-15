@@ -1,108 +1,108 @@
 <?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 echo $this->Html->css('finance', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('finance', false);
 
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Total Public Expenditure'));
-$this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'index'), array('id' => 'viewLink', 'class' => 'divider'));
-$this->end();
-$this->assign('contentId', 'finance');
-$this->assign('contentClass', 'edit');
-
 $currentYear = intval(date('Y'));
 $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 $currency = "({$this->Session->read('configItem.currency')})";
-
-$this->start('contentBody');
 ?>
 
-<?php
-echo $this->Form->create('Finance', array(
-		'url' => array('controller' => 'Finance','action' => 'index'),
-		'model' => 'Finance',
-        'inputDefaults' => array('label' => false, 'div' =>false)
-	)
-);
-?>
+<?php echo $this->element('breadcrumb'); ?>
 
-<input type="hidden" name="data[previousAction]" value="edit"/>
-<div class="row total_public_expenditure year">
-	<label class="col-md-3 control-label"><?php echo __('Year'); ?></label>
-	<?php 
-		echo $this->Utility->getYearList($this->Form,'data[year]',array(
-			'name' => "data[year]",
-			'id' => "year_id",
-			'maxlength' => 30,
-			'desc' => true,
-			'label' => false,
-			'default' => $selectedYear,
-			'div' => false), true);
+<div id="finance" class="content_wrapper edit">
+	
+	<h1>
+		<span><?php echo __('Total Public Expenditure'); ?></span>
+		<?php echo $this->Html->link(__('View'), array('action' => 'index'), array('id' => 'viewLink', 'class' => 'divider')); ?>
+	</h1>
+
+	<?php
+	echo $this->Form->create('Finance', array(
+			'url' => array('controller' => 'Finance','action' => 'index'),
+			'model' => 'Finance',
+            'inputDefaults' => array('label' => false, 'div' =>false)
+		)
+	);
 	?>
-</div>
-
-<div class="row total_public_expenditure">
-	<label class="col-md-3 control-label"><?php echo __('GNP'); ?> <?php echo $currency; ?></label>
-	<div class="col-md-4">
-		 <div class="input_wrapper">
-		 	<input type="text" id="gnp" name="data[gnp]" value="" maxlength="30" autocomplete="false" onkeypress="return utility.integerCheck(event)" onkeyup="Finance.checkEdited()" />
-		 </div>
-	</div>
-</div>
-
-
-	<fieldset id="area_section_group" class="section_group">
-    <legend id="area"><?php echo __('Area'); ?></legend>
-    <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
-</fieldset>
-
-<?php echo $this->Form->end(); ?>
-<fieldset d="data_section_group" class="section_group">
-	<legend><?php echo __('Total Public Expenditure'); ?></legend>
 	
-	<fieldset class="section_break" id="parent_section">
-	<legend id="parent_level">Country</legend>
-	<div id="parentlist">
-		<div class="table">
-			<div class="table_head">
-				<!-- <div class="table_cell cell cell_arealevel">Area Level</div> -->
-				<div class="table_cell cell_area"><?php echo __('Area'); ?></div>
-				<div class="table_cell"><?php echo __('Total Public Expenditure'); ?> <?php echo $currency; ?></div>
-				<div class="table_cell"><?php echo __('Total Public Expenditure For Education'); ?> <?php echo $currency; ?></div>
-			</div>
-
-			<div class="table_body">
-			</div>
+	<input type="hidden" name="data[previousAction]" value="edit"/>
+	<div class="row total_public_expenditure year">
+		<div class="label"><?php echo __('Year'); ?></div>
+		<?php 
+			echo $this->Utility->getYearList($this->Form,'data[year]',array(
+				'name' => "data[year]",
+				'id' => "year_id",
+				'maxlength' => 30,
+				'desc' => true,
+				'label' => false,
+				'default' => $selectedYear,
+				'div' => false), true);
+		?>
+	</div>
+	
+	<div class="row total_public_expenditure">
+		<div class="label"><?php echo __('GNP'); ?> <?php echo $currency; ?></div>
+		<div class="value"><!--<?php echo $this->Form->input('gnp', array('class' => 'default', 'id' => 'gnp', 'value' => '')); ?>-->
+			 <div class="input_wrapper">
+			 	<input type="text" id="gnp" name="data[gnp]" value="" maxlength="30" autocomplete="false" onkeypress="return utility.integerCheck(event)" onkeyup="Finance.checkEdited()" />
+			 </div>
 		</div>
 	</div>
-	</fieldset>
 
-	<fieldset class="section_break" id="children_section">
-	<legend id="children_level"></legend>
-	<div id="mainlist">
-		<div class="table">
-			<div class="table_head">
-				<!-- <div class="table_cell cell cell_arealevel">Area Level</div> -->
-				<div class="table_cell cell_area"><?php echo __('Area'); ?></div>
-				<div class="table_cell"><?php echo __('Total Public Expenditure'); ?> <?php echo $currency; ?></div>
-				<div class="table_cell"><?php echo __('Total Public Expenditure For Education'); ?> <?php echo $currency; ?></div>
-			</div>
 
-			<div class="table_body">
+ 	<fieldset id="area_section_group" class="section_group">
+        <legend id="area"><?php echo __('Area'); ?></legend>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
+    </fieldset>
+
+	<?php echo $this->Form->end(); ?>
+	<fieldset d="data_section_group" class="section_group">
+		<legend><?php echo __('Total Public Expenditure'); ?></legend>
+		
+		<fieldset class="section_break" id="parent_section">
+		<legend id="parent_level">Country</legend>
+		<div id="parentlist">
+			<div class="table">
+				<div class="table_head">
+					<!-- <div class="table_cell cell cell_arealevel">Area Level</div> -->
+					<div class="table_cell cell_area"><?php echo __('Area'); ?></div>
+					<div class="table_cell"><?php echo __('Total Public Expenditure'); ?> <?php echo $currency; ?></div>
+					<div class="table_cell"><?php echo __('Total Public Expenditure For Education'); ?> <?php echo $currency; ?></div>
+				</div>
+
+				<div class="table_body">
+				</div>
 			</div>
 		</div>
-	</div>
+		</fieldset>
+
+		<fieldset class="section_break" id="children_section">
+		<legend id="children_level"></legend>
+		<div id="mainlist">
+			<div class="table">
+				<div class="table_head">
+					<!-- <div class="table_cell cell cell_arealevel">Area Level</div> -->
+					<div class="table_cell cell_area"><?php echo __('Area'); ?></div>
+					<div class="table_cell"><?php echo __('Total Public Expenditure'); ?> <?php echo $currency; ?></div>
+					<div class="table_cell"><?php echo __('Total Public Expenditure For Education'); ?> <?php echo $currency; ?></div>
+				</div>
+
+				<div class="table_body">
+				</div>
+			</div>
+		</div>
+		</fieldset>
 	</fieldset>
-</fieldset>
-	
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onClick="return Finance.save();" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
-	</div>
-</fieldset>
+		
+		<div class="controls">
+			<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onClick="return Finance.save();" />
+			<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
+		</div>
+	</fieldset>
+</div>
 
 <script type="text/javascript">
 
@@ -145,6 +145,3 @@ $(document).ready(function(){
 });
 
 </script>
-
-
-<?php $this->end(); ?>

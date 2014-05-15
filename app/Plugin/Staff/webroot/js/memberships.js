@@ -22,7 +22,7 @@ var objStaffMemberships = {
     init: function() {
         var element = '#searchMembership';
         var table = $('#membership');
-        var url = getRootURL() + table.attr('selectMembershipUrl');
+        var url = getRootURL() + table.attr('url');
         objStaffMemberships.attachAutoComplete(element, url, objStaffMemberships.selectField);
     },
 

@@ -13,8 +13,6 @@ class TrainingController extends TrainingAppController {
         'Training.TrainingCourseProvider'
      );
 
-    public $helpers = array('Js' => array('Jquery'));
-
     public $modules = array(
         'course' => 'Training.TrainingCourse',
         'session' => 'Training.TrainingSession',

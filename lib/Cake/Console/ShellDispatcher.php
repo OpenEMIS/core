@@ -2,17 +2,18 @@
 /**
  * ShellDispatcher file
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @since         CakePHP(tm) v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 /**
@@ -47,10 +48,12 @@ class ShellDispatcher {
  */
 	public function __construct($args = array(), $bootstrap = true) {
 		set_time_limit(0);
-		$this->parseParams($args);
 
 		if ($bootstrap) {
 			$this->_initConstants();
+		}
+		$this->parseParams($args);
+		if ($bootstrap) {
 			$this->_initEnvironment();
 		}
 	}
@@ -63,7 +66,7 @@ class ShellDispatcher {
  */
 	public static function run($argv) {
 		$dispatcher = new ShellDispatcher($argv);
-		return $dispatcher->_stop($dispatcher->dispatch() === false ? 1 : 0);
+		$dispatcher->_stop($dispatcher->dispatch() === false ? 1 : 0);
 	}
 
 /**
@@ -112,24 +115,16 @@ class ShellDispatcher {
 	}
 
 /**
- * Initializes the environment and loads the CakePHP core.
+ * Initializes the environment and loads the Cake core.
  *
  * @return boolean Success.
  */
 	protected function _bootstrap() {
-		if (!defined('ROOT')) {
-			define('ROOT', $this->params['root']);
-		}
-		if (!defined('APP_DIR')) {
-			define('APP_DIR', $this->params['app']);
-		}
-		if (!defined('APP')) {
-			define('APP', $this->params['working'] . DS);
-		}
-		if (!defined('WWW_ROOT')) {
-			define('WWW_ROOT', APP . $this->params['webroot'] . DS);
-		}
-		if (!defined('TMP') && !is_dir(APP . 'tmp')) {
+		define('ROOT', $this->params['root']);
+		define('APP_DIR', $this->params['app']);
+		define('APP', $this->params['working'] . DS);
+		define('WWW_ROOT', APP . $this->params['webroot'] . DS);
+		if (!is_dir(ROOT . DS . APP_DIR . DS . 'tmp')) {
 			define('TMP', CAKE_CORE_INCLUDE_PATH . DS . 'Cake' . DS . 'Console' . DS . 'Templates' . DS . 'skel' . DS . 'tmp' . DS);
 		}
 		$boot = file_exists(ROOT . DS . APP_DIR . DS . 'Config' . DS . 'bootstrap.php');
@@ -139,42 +134,16 @@ class ShellDispatcher {
 			include_once CAKE_CORE_INCLUDE_PATH . DS . 'Cake' . DS . 'Console' . DS . 'Templates' . DS . 'skel' . DS . 'Config' . DS . 'core.php';
 			App::build();
 		}
-
-		$this->setErrorHandlers();
+		require_once CAKE . 'Console' . DS . 'ConsoleErrorHandler.php';
+		$ErrorHandler = new ConsoleErrorHandler();
+		set_exception_handler(array($ErrorHandler, 'handleException'));
+		set_error_handler(array($ErrorHandler, 'handleError'), Configure::read('Error.level'));
 
 		if (!defined('FULL_BASE_URL')) {
-			$url = Configure::read('App.fullBaseUrl');
-			define('FULL_BASE_URL', $url ? $url : 'http://localhost');
-			Configure::write('App.fullBaseUrl', FULL_BASE_URL);
+			define('FULL_BASE_URL', 'http://localhost');
 		}
 
 		return true;
-	}
-
-/**
- * Set the error/exception handlers for the console
- * based on the `Error.consoleHandler`, and `Exception.consoleHandler` values
- * if they are set. If they are not set, the default ConsoleErrorHandler will be
- * used.
- *
- * @return void
- */
-	public function setErrorHandlers() {
-		App::uses('ConsoleErrorHandler', 'Console');
-		$error = Configure::read('Error');
-		$exception = Configure::read('Exception');
-
-		$errorHandler = new ConsoleErrorHandler();
-		if (empty($error['consoleHandler'])) {
-			$error['consoleHandler'] = array($errorHandler, 'handleError');
-			Configure::write('Error', $error);
-		}
-		if (empty($exception['consoleHandler'])) {
-			$exception['consoleHandler'] = array($errorHandler, 'handleException');
-			Configure::write('Exception', $exception);
-		}
-		set_exception_handler($exception['consoleHandler']);
-		set_error_handler($error['consoleHandler'], Configure::read('Error.level'));
 	}
 
 /**
@@ -204,11 +173,12 @@ class ShellDispatcher {
 
 		if ($Shell instanceof Shell) {
 			$Shell->initialize();
+			$Shell->loadTasks();
 			return $Shell->runCommand($command, $this->args);
 		}
 		$methods = array_diff(get_class_methods($Shell), get_class_methods('Shell'));
 		$added = in_array($command, $methods);
-		$private = $command[0] === '_' && method_exists($Shell, $command);
+		$private = $command[0] == '_' && method_exists($Shell, $command);
 
 		if (!$private) {
 			if ($added) {
@@ -221,8 +191,7 @@ class ShellDispatcher {
 				return $Shell->main();
 			}
 		}
-
-		throw new MissingShellMethodException(array('shell' => $shell, 'method' => $command));
+		throw new MissingShellMethodException(array('shell' => $shell, 'method' => $arg));
 	}
 
 /**
@@ -282,11 +251,7 @@ class ShellDispatcher {
 		if (isset($params['working'])) {
 			$params['working'] = trim($params['working']);
 		}
-
-		if (!empty($params['working']) && (!isset($this->args[0]) || isset($this->args[0]) && $this->args[0][0] !== '.')) {
-			if ($params['working'][0] === '.') {
-				$params['working'] = realpath($params['working']);
-			}
+		if (!empty($params['working']) && (!isset($this->args[0]) || isset($this->args[0]) && $this->args[0]{0} !== '.')) {
 			if (empty($this->params['app']) && $params['working'] != $params['root']) {
 				$params['root'] = dirname($params['working']);
 				$params['app'] = basename($params['working']);
@@ -295,7 +260,7 @@ class ShellDispatcher {
 			}
 		}
 
-		if ($params['app'][0] === '/' || preg_match('/([a-z])(:)/i', $params['app'], $matches)) {
+		if ($params['app'][0] == '/' || preg_match('/([a-z])(:)/i', $params['app'], $matches)) {
 			$params['root'] = dirname($params['app']);
 		} elseif (strpos($params['app'], '/')) {
 			$params['root'] .= '/' . dirname($params['app']);
@@ -345,7 +310,7 @@ class ShellDispatcher {
 	}
 
 /**
- * Shows console help. Performs an internal dispatch to the CommandList Shell
+ * Shows console help.  Performs an internal dispatch to the CommandList Shell
  *
  * @return void
  */

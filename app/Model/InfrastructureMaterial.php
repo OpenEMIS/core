@@ -17,43 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InfrastructureMaterial extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $belongsTo = array(
-		'InfrastructureCategory',
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
-		)
+	public $belongsTo = array( 
+		'InfrastructureCategory'
 	);
 	
-	public function getSubOptions() {
-		$options = $this->InfrastructureCategory->find('list', array(
-			'conditions' => array('OR' => array(
-				array('InfrastructureCategory.name' => 'Buildings'),
-				array('InfrastructureCategory.name' => 'Sanitation')
-			)),
-			'order' => array('InfrastructureCategory.order')
-		));
-		return $options;
-	}
-	
-	public function getOptionFields() {
-		$options = $this->getSubOptions();
-		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
-		$this->addOptionField($field, 'after', 'name');
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
-	}
-	
-	public function getConditionId() {
-		return 'infrastructure_category_id';
+	public function getLookupVariables() {
+		$modelName = get_class($this);
+		$lookup = array('Materials' => array('model' => $modelName));
+		return $lookup;
 	}
 }

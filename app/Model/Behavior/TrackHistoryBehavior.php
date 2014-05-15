@@ -24,7 +24,7 @@ class TrackHistoryBehavior extends ModelBehavior {
 		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], (array)$settings);
 	}
 	
-	public function beforeSave(Model $model, $options = array()) {
+	public function beforeSave(Model $model) {
 		if($model->id > 0) {
 			$this->insertHistory($model, $model->id);
 		}

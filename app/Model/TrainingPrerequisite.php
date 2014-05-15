@@ -16,6 +16,11 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 class TrainingPrerequisite extends AppModel {
 	public $hasMany = array('TrainingCourse');
+	
+	public function getLookupVariables() {
+		$lookup = array('Conditions' => array('model' => 'TrainingPrerequisite'));
+		return $lookup;
+	}
 
 	public function getOptions(){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('TrainingPrerequisite.order')));

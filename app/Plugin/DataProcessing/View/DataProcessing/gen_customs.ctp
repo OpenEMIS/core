@@ -1,20 +1,10 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Label->get('DataProcessing.generate'));
-
-$this->start('contentActions');
-if($_execute) { ?>
-	<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('on')"><?php echo __('Select All'); ?></a>
-	<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('off')"><?php echo __('De-Select All'); ?></a>
-<?php } 
-$this->end();
-
-$this->assign('contentId', 'reports');
-$this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
+
+<?php echo $this->element('breadcrumb'); ?>
+
 <style type="text/css">
 .cell_name { width: 180px; }
 </style>
@@ -47,6 +37,10 @@ $this->start('contentBody');
 	}
 </script>
 
+
+
+<div id="reports" class="content_wrapper">
+	
 	<?php
 	echo $this->Form->create('DataProcessing', array(
 		'id' => 'submitForm',
@@ -55,6 +49,14 @@ $this->start('contentBody');
 		'onsubmit' => 'return jsForm.isSubmitDisabled(this)'
 	));
 	?>
+	<h1>
+		<span><?php echo __('Generate'); ?></span>
+		<?php if($_execute) { ?>
+		<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('on')"><?php echo __('Select All'); ?></a>
+		<a class="void divider" href="javascript: void(0);" onclick="turncheckboxes('off')"><?php echo __('De-Select All'); ?></a>
+		<?php } ?>
+	</h1>
+	<?php echo $this->element('alert'); ?>
 	<?php echo $this->element('select',array('plugin','DataProcessing')); ?>
 	<?php
 	foreach($data as $Nav => $arrModules){
@@ -63,19 +65,16 @@ $this->start('contentBody');
 		
 		<?php foreach($arrModules as $k => $arrv){ ?>
 			
-			<div class="table-responsive">
-            <table class="table table-striped table-hover table-bordered">
-				<thead class="table_head">
-					<tr>
-						<?php if($_execute) { ?>
-						<td class="table_cell cell_checkbox"><input type="checkbox" value="1" onChange="toggleSelect(this)" /></td>
-						<?php } ?>
-						<td class="table_cell cell_name"><?php echo __('Name'); ?></td>
-						<td class="table_cell cell_desc"><?php echo __('Description'); ?></td>
-					</tr>
-				</thead>
+			<div class="table full_width">
+				<div class="table_head">
+					<?php if($_execute) { ?>
+					<div class="table_cell cell_checkbox"><input type="checkbox" value="1" onChange="toggleSelect(this)" /></div>
+					<?php } ?>
+					<div class="table_cell cell_name"><?php echo __('Name'); ?></div>
+					<div class="table_cell cell_desc"><?php echo __('Description'); ?></div>
+				</div>
 				
-				<tbody class="table_body">
+				<div class="table_body">
 					<?php foreach($arrv as $arrValues){ //pr($arrValues);
                         $beingProc = 0;
 						$chkval = implode(',',array_keys($arrValues['file_kinds']));
@@ -99,16 +98,15 @@ $this->start('contentBody');
                                                 $arrExtra = ($beingProc == 1)?  array_merge($arrExtra,array('disabled'=>'disabled')):$arrExtra;
 					?>
 					
-					<tr class="table_row">
+					<div class="table_row">
 						<?php if($_execute) { ?>
-						<td class="table_cell cell_checkbox"><?php echo $this->Form->input('Reports',$arrExtra)?></td>
+						<div class="table_cell cell_checkbox"><?php echo $this->Form->input('Reports',$arrExtra)?></div>
 						<?php } ?>
-						<td class="table_cell cell_name"><?php echo __($arrValues['name']); ?></td>
-						<td class="table_cell cell_desc"><?php echo __($arrValues['description']); ?></td>
-					</tr>
+						<div class="table_cell cell_name"><?php echo __($arrValues['name']); ?></div>
+						<div class="table_cell cell_desc"><?php echo __($arrValues['description']); ?></div>
+					</div>
 					<?php } ?>
-				</tbody>
-				</table>
+				</div>
 			</div>
 		<?php	
 		}
@@ -122,4 +120,4 @@ $this->start('contentBody');
 	<?php } ?>
 	
 	<?php echo $this->Form->end(); ?>
-<?php $this->end(); ?> 
+</div>

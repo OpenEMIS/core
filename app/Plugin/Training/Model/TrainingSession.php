@@ -160,36 +160,6 @@ class TrainingSession extends TrainingAppModel {
 			$data = $this->find('all', array('order'=> array('start_date')));
 		}
 
-		$conditions = array();
-		if(!empty($selectedStatus)){
-			$conditions['TrainingSession.training_status_id'] = $selectedStatus;
-		}else{
-			$conditions['NOT']['TrainingSession.training_status_id'] = 4;
-		}
-
-		$data = $this->find('all', 
-			array(
-				'recursive' => -1, 
-				'fields' => array('TrainingCourse.*', 'TrainingSession.*', 'TrainingStatus.*'),
-				'joins' => array(
-					array(
-						'type' => 'INNER',
-						'table' => 'training_courses',
-						'alias' => 'TrainingCourse',
-						'conditions' => array('TrainingCourse.id = TrainingSession.training_course_id')
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingStatus',
-						'conditions' => array('TrainingStatus.id = TrainingSession.training_status_id')
-					)
-				),
-				'order'=> array('TrainingSession.start_date', 'TrainingSession.location', 'TrainingCourse.code', 'TrainingCourse.title',  'TrainingSession.training_status_id'), 
-				'conditions' => $conditions
-			)
-		);
-
 
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('data', $data);

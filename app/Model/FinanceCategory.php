@@ -17,47 +17,31 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class FinanceCategory extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $belongsTo = array(
-		'FinanceType',
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
-		)
-	);
+	public $belongsTo = array('FinanceType');
 	
-	public function getSubOptions() {
-		$data = $this->FinanceType->find('all', array(
-			'fields' => array('FinanceType.id', 'FinanceNature.name', 'FinanceType.name'),
-			'recursive' => 0,
-			'order' => array('FinanceNature.order', 'FinanceType.order')
-		));
-		$options = array();
-		foreach($data as $obj) {
-			$id = $obj['FinanceType']['id'];
-			$name = $obj['FinanceNature']['name'] . ' - ' . $obj['FinanceType']['name'];
-			$options[$id] = $name;
+	public function getLookupVariables() {
+		$Nature = ClassRegistry::init('FinanceNature');
+		$list = $Nature->findList();
+		$lookup = array();
+		
+		foreach($list as $id => $name) {
+			$lookup[$name] = array('model' => 'FinanceCategory', 'conditions' => array('finance_nature_id' => $id));
 		}
-		return $options;
+		return $lookup;
 	}
 	
-	public function getOptionFields() {
-		$options = $this->getSubOptions();
-		$field = array('field' => $this->getConditionId(), 'type' => 'select', 'options' => $options);
-		$this->addOptionField($field, 'after', 'name');
-		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
-		return $fields;
-	}
-	
-	public function getConditionId() {
-		return 'finance_type_id';
+	public function findOptions($options=array()) {
+		$Type = ClassRegistry::init('FinanceType');
+		$items = array();
+		
+		$typeList = $Type->findList($options);
+		foreach($typeList as $typeId => $typeName) {
+			$conditions = array('finance_type_id' => $typeId);
+			$items[$typeName] = array(
+				'conditions' => $conditions,
+				'options' => parent::findOptions(array('conditions' => $conditions))
+			);
+		}
+		return $items;
 	}
 }
