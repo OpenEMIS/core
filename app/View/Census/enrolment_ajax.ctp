@@ -1,5 +1,5 @@
 <?php
-$gradesCount = count($grades);
+$gradesCount = count($gradeList);
 ?>
 <table class="table">
     <tbody>
@@ -10,7 +10,7 @@ $gradesCount = count($grades);
             <td colspan="2"><?php echo __('Totals'); ?></td>
         </tr>
         <tr class="th_bg">
-            <?php foreach ($grades AS $gradeName) { ?>
+            <?php foreach ($gradeList AS $gradeName) { ?>
                 <td><?php echo $gradeName; ?></td>
             <?php } ?>
             <td></td>

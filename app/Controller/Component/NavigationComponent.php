@@ -135,7 +135,8 @@ class NavigationComponent extends Component {
 	public function getLinks() {
 		$nav = array();
 		$nav['Home'] = array('controller' => 'Home', 'links' => $this->getHomeLinks());
-		$nav['Institutions'] = array('controller' => 'Institutions', 'links' => $this->getInstitutionsLinks());
+		//$nav['Institutions'] = array('controller' => 'Institutions', 'links' => $this->getInstitutionsLinks());
+                $nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
 		
 		// Initialise navigations from plugins
 		$modules = $this->settings['modules'];
@@ -157,8 +158,8 @@ class NavigationComponent extends Component {
 		$links = $navigation->getByModule('Home', true);
 		return $links;
 	}
-	
-	public function getInstitutionsLinks() {
+        
+        public function getInstitutionsLinks() {
 		$navigation = ClassRegistry::init('Navigation');
 		$links = $navigation->getByModule('Institution', true);
 		return $links;
@@ -220,7 +221,7 @@ class NavigationComponent extends Component {
 		foreach($links as $link){
 			$chkAction = $link['Navigation']['action'] . 'Add';
 			
-			if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
+			if(/*$link['Navigation']['action'] == "attachments" ||*/ $link['Navigation']['action'] == "additional"){
 				$chkAction = $link['Navigation']['action'] . 'Edit';
 			}else if($link['Navigation']['action']=='view'){
 				$chkAction = 'edit';
@@ -247,7 +248,7 @@ class NavigationComponent extends Component {
 				$link['Navigation']['completed'] = '-1';
 				$link['Navigation']['multiple'] = false;
 			}else{
-				if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
+				if(/*$link['Navigation']['action'] == "attachments" ||*/ $link['Navigation']['action'] == "additional"){
 					$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Edit';
 					$link['Navigation']['multiple'] = false;
 				}else{
