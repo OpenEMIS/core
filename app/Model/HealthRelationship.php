@@ -15,10 +15,19 @@ have received a copy of the GNU General Public License along with this program. 
 */
 App::uses('AppModel', 'Model');
 class HealthRelationship extends AppModel {
-	
-	public function getLookupVariables() {
-		$lookup = array('Relationships' => array('model' => 'HealthRelationship'));
-		return $lookup;
-	}
-	
+	public $actsAs = array('FieldOption');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		)
+	);
 }

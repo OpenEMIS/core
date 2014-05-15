@@ -204,16 +204,16 @@ class HomeController extends AppController {
 	
 	public function systemInfo() {
 		$this->bodyTitle = 'Support';
-		$title = 'System Information';
+		$subTitle = 'System Information';
 		$this->Navigation->addCrumb('Help', array('controller' => 'Home', 'action' => 'support'));
-		$this->Navigation->addCrumb($title);
+		$this->Navigation->addCrumb($subTitle);
 		
 		$dbo = ConnectionManager::getDataSource('default');
-		$db_store = end(explode('/', $dbo->config['datasource']));
-		$db_version = $dbo->getVersion();
-		$this->set('db_store', $db_store);
-		$this->set('db_version', $db_version);
-		$this->set('subTitle', $title);
+		$temp = explode('/', $dbo->config['datasource']);
+		$dbStore = end($temp);
+		
+		$dbVersion = $dbo->getVersion();
+		$this->set(compact('dbStore', 'dbVersion', 'subTitle'));
 		$this->render('Help/system_info');
 	}
 	

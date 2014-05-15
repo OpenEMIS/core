@@ -26,6 +26,7 @@ var education = {
 		$('.btn_cancel').click(function() { window.location.href = $('#view').attr('href'); });
 		$('#education_setup .icon_plus').click(education.add);
 	},
+
 	
 	navigateTo: function(obj) {
 		var isEdit = $('#education_setup').hasClass('edit');
@@ -78,7 +79,7 @@ var education = {
 		});
 		
 		var list = parent.find('.table_view');
-		params['count'] = $('li').length;
+		params['count'] = $('tr').length;
 		
 		if(params['category'] === 'GradeSubject') {
 			var subjectIds = [];

@@ -20,12 +20,15 @@ class StaffTrainingResult extends AppModel {
 	public $useTable = false; // This model uses a database table 'exmp'
 
 	public $headerDefault = 'Training Results';
-		
+	
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+	
 	public function trainingResult($controller, $params) {
-
 		$controller->Navigation->addCrumb($this->headerDefault);
-		$controller->set('modelName', $this->name);
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+		$controller->set('modelName', 'TrainingSessionTrainee');
 		$data = $trainingSessionTrainee->find('all',
 			array(
 				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingStatus.*'),
@@ -70,7 +73,7 @@ class StaffTrainingResult extends AppModel {
 			)
 		);
 
-		$controller->set('subheader', $this->headerDefault);
+		$controller->set('header', __($this->headerDefault));
 		$controller->set('data', $data);
 		
 	}
@@ -78,6 +81,7 @@ class StaffTrainingResult extends AppModel {
 	
 	public function trainingResultView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
+		$header = __($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
 		$controller->set('modelName', 'TrainingSessionTrainee');
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
@@ -165,6 +169,7 @@ class StaffTrainingResult extends AppModel {
 		
 		$controller->Session->write('TeacherTrainingResultId', $id);
 		$controller->set('data', $data);
+		$controller->set('header', $header);
 	}
 	
 
