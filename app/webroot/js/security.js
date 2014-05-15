@@ -82,10 +82,8 @@ var Security = {
 								jsTable.tableScrollableAdd(parent, data);
 							} else {
 								alertOpt['parent'] = '#search';
-								//alertOpt['type'] = $(data).attr('type');
+								alertOpt['type'] = $(data).attr('type');
 								alertOpt['text'] = $(data).html();
-
-								console.log(alertOpt);
 								$.alert(alertOpt);
 							}
 						}

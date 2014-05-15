@@ -4,18 +4,19 @@
  *
  * Test the Acl Behavior
  *
+ * PHP 5
+ *
  * CakePHP : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
  * @link          http://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.Model.Behavior
  * @since         CakePHP v 1.2.0.4487
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('AclBehavior', 'Model/Behavior');
@@ -24,12 +25,20 @@ App::uses('Aro', 'Model');
 App::uses('AclNode', 'Model');
 App::uses('DbAcl', 'Model');
 
+
 /**
  * Test Person class - self joined model
  *
  * @package       Cake.Test.Case.Model.Behavior
  */
 class AclPerson extends CakeTestModel {
+
+/**
+ * name property
+ *
+ * @var string
+ */
+	public $name = 'AclPerson';
 
 /**
  * useTable property
@@ -85,8 +94,9 @@ class AclPerson extends CakeTestModel {
 		}
 		if (!$motherId) {
 			return null;
+		} else {
+			return array('AclPerson' => array('id' => $motherId));
 		}
-		return array('AclPerson' => array('id' => $motherId));
 	}
 
 }
@@ -201,7 +211,6 @@ class AclBehaviorTest extends CakeTestCase {
  * @return void
  */
 	public function setUp() {
-		parent::setUp();
 		Configure::write('Acl.database', 'test');
 
 		$this->Aco = new Aco();
@@ -214,7 +223,7 @@ class AclBehaviorTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		parent::tearDown();
+		ClassRegistry::flush();
 		unset($this->Aro, $this->Aco);
 	}
 
@@ -224,7 +233,6 @@ class AclBehaviorTest extends CakeTestCase {
  * @return void
  */
 	public function testSetup() {
-		parent::setUp();
 		$User = new AclUser();
 		$this->assertTrue(isset($User->Behaviors->Acl->settings['User']));
 		$this->assertEquals('requester', $User->Behaviors->Acl->settings['User']['type']);

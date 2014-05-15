@@ -4,18 +4,19 @@
  *
  * Test Case for plugin generation shell task
  *
+ * PHP 5
+ *
  * CakePHP : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
  * @link          http://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.Console.Command.Task
  * @since         CakePHP v 1.3.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('ShellDispatcher', 'Console');
@@ -49,8 +50,6 @@ class PluginTaskTest extends CakeTestCase {
 			array($this->out, $this->out, $this->in)
 		);
 		$this->Task->path = TMP . 'tests' . DS;
-		$this->Task->bootstrap = TMP . 'tests' . DS . 'bootstrap.php';
-		touch($this->Task->bootstrap);
 
 		$this->_paths = $paths = App::path('plugins');
 		foreach ($paths as $i => $p) {
@@ -60,18 +59,6 @@ class PluginTaskTest extends CakeTestCase {
 		}
 		$this->_testPath = array_push($paths, TMP . 'tests' . DS);
 		App::build(array('plugins' => $paths));
-	}
-
-/**
- * tearDown()
- *
- * @return void
- */
-	public function tearDown() {
-		if (file_exists($this->Task->bootstrap)) {
-			unlink($this->Task->bootstrap);
-		}
-		parent::tearDown();
 	}
 
 /**
@@ -185,9 +172,7 @@ class PluginTaskTest extends CakeTestCase {
 	public function testFindPathNonExistant() {
 		$paths = App::path('plugins');
 		$last = count($paths);
-
-		array_unshift($paths, '/fake/path');
-		$paths[] = '/fake/path2';
+		$paths[] = '/fake/path';
 
 		$this->Task = $this->getMock('PluginTask',
 			array('in', 'out', 'err', 'createFile', '_stop'),

@@ -1,4 +1,4 @@
-<?php /*
+<?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false));
 ?>
@@ -56,58 +56,3 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 		</div>
 	</div>
 </div>
- * 
- */?>
-
-<?php
-
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $header);
-
-$this->start('contentBody');
-?>
-<div class="row myyear">
-	<div class="col-md-2"><?php echo __('Year') ?></div>
-	<div class="col-md-3"><?php
-		echo $this->Form->input('school_year_id', array(
-			'label' => false,
-			'class' => 'form-control',
-			'options' => $yearOptions,
-			'default' => $selectedYearId,
-			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $this->action
-		));
-		?></div>
-</div>
-<div class="row school_days">
-	<div class="col-md-2"><?php echo __('School Days') ?></div>
-	<div class="col-md-3"><?php echo $this->Form->input('school_days', array('label' => false, 'class' => 'form-control', 'value' => $schoolDays, 'disabled' => true)); ?></div>
-</div>
-
-<div class="legendWrapper"><?php echo $legend; ?></div>
-<?php
-$attendanceTypesOptions = array();
-foreach($attendanceTypes AS $attendanceType){
-	$attendanceTypesOptions[] = __($attendanceType['StaffAttendanceType']['national_code']);
-}
-$attendanceTypesOptions[] = __('Total');
-
-$tableHeaders = $attendanceTypesOptions;
-
-$tableData = array();
-$row = array();
-$total = 0;
-foreach($attendanceTypes AS $attendanceType){
-	$attendanceTypeId = $attendanceType['StaffAttendanceType']['id'];
-	$attendanceValue = isset($data[$attendanceTypeId]) ? $data[$attendanceTypeId] : 0;
-	$total += $attendanceValue;
-	$row[] = $attendanceValue;
-}
-$row[] = $total;
-$tableData[] = $row;
-echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
-
-$this->end();
-?>

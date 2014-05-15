@@ -268,7 +268,7 @@ var CensusEnrolment = {
                     $.alert(alertOpt);
                     return false;
 		}
-                var yearId = $('#CensusStudentSchoolYearId').val();
+                var yearId = $('#SchoolYearId').val();
                 var id, age, male, female;
                 var obj, gradeId, data = [];
                 var objTrMale, inputFieldMale;

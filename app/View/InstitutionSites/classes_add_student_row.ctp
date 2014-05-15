@@ -1,9 +1,9 @@
 <?php if(!empty($data)) { ?>
 
-<tr student-id="0">
-	<td class="table_cell" attr="id"></td>
-	<td class="table_cell" attr="name">
-		<select class="full_width form-control" onchange="InstitutionSiteClasses.selectStudent(this)">
+<div class="table_row" student-id="0">
+	<div class="table_cell" attr="id"></div>
+	<div class="table_cell" attr="name">
+		<select class="full_width" onchange="InstitutionSiteClasses.selectStudent(this)">
 			<option value="">-- <?php echo __('Select Student'); ?> --</option>
 			<?php foreach($data as $student) {
 			$obj = $student['Student'];
@@ -12,23 +12,23 @@
 			echo sprintf($option, $obj['id'], $obj['identification_no'], $fullname, $obj['identification_no'], $fullname);
 			} ?>
 		</select>
-	</td>
-	<td class="table_cell" attr="category">
+	</div>
+	<div class="table_cell" attr="category">
 		<?php
 		echo $this->Form->input('student_category_id', array(
 			'label' => false,
-			'td' => false,
-			'class' => 'full_width form-control',
+			'div' => false,
+			'class' => 'full_width',
 			'empty' => '-- ' . __('Select Category') . ' --',
 			'options' => $categoryOptions,
 			'onchange' => 'InstitutionSiteClasses.selectStudent(this)'
 		));
 		?>
-	</td>
-	<td class="table_cell">
+	</div>
+	<div class="table_cell">
 		<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteStudent(this)', 'onDelete' => false)); ?>
-	</td>
-</tr>
+	</div>
+</div>
 
 <?php } else { ?>
 

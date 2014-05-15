@@ -1,26 +1,25 @@
 <?php 
 echo $this->Html->script('custom_field', false);
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Academic'));
-
-$this->start('contentActions');
-if($_edit) {
-			echo $this->Html->link(__('View'), array('action' => rtrim($this->action,'Edit').'View',$id),	array('class' => 'divider','onClick'=>'return custom.view.redirect(this)')); 
-		}
-$this->end();
-
-$this->start('contentBody');
 ?>
 
+<?php echo $this->element('breadcrumb'); ?>
+
 <div id="additional" class="content_wrapper edit">
-	<?php 
+	<h1>
+		<span><?php echo __('Academic'); ?></span>
+		<?php
+		if($_edit) {
+			echo $this->Html->link(__('View'), array('action' => rtrim($this->action,'Edit').'View',$id),	array('class' => 'divider','onClick'=>'return custom.view.redirect(this)')); 
+		}
+		?>
+	</h1>
+	<?php echo $this->element('alert'); 
 	
 	if(count(@$dataFields)) {
 	?>
 	<div class="row year"  style="margin-left:5px;">
-		<div class="col-md-2"><?php echo __('Year'); ?></div>
-		<div class="col-md-10">
+		<div class="label" style="width: 90px;"><?php echo __('Year'); ?></div>
+		<div class="value">
 			<?php
 				echo $this->Form->input('school_year_id', array(
 					'label' => false,
@@ -48,7 +47,7 @@ $this->start('contentBody');
 		foreach($dataFields as $arrVals){
 			if($arrVals[$arrMap['CustomField']]['type'] == 1){//Label
 				
-				 echo '<fieldset class="section_break">
+				 echo '<fieldset class="custom_section_break">
 							<legend>'.__($arrVals[$arrMap['CustomField']]['name']).'</legend>
 					   </fieldset>';
 			   
@@ -132,4 +131,3 @@ $this->start('contentBody');
 	<?php echo $this->Form->end(); 
 	} ?>
 </div>
-<?php 	$this->end();?>

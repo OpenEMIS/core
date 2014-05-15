@@ -178,12 +178,11 @@ class Institution extends AppModel {
 	// To get the list of institutions based on the security settings on areas
 	public function getQueryFromSecurityAreas($params) {
 		$joins = array(
-                    /*
 			array(
 				'table' => 'institution_sites',
 				'alias' => 'InstitutionSite',
 				'conditions' => array('InstitutionSite.institution_id = Institution.id')
-			),*/
+			),
 			array(
 				'table' => 'areas',
 				'alias' => 'Area',
@@ -210,7 +209,7 @@ class Institution extends AppModel {
 		);
 		$dbo = $this->getDataSource();
 		$query = $dbo->buildStatement(array(
-			'fields' => array('InstitutionSite.id'),
+			'fields' => array('Institution.id'),
 			'table' => $dbo->fullTableName($this),
 			'alias' => get_class($this),
 			'limit' => null, 
@@ -225,12 +224,11 @@ class Institution extends AppModel {
 	
 	public function getQueryFromSecuritySites($params) {
 		$joins = array(
-                        /*
 			array(
 				'table' => 'institution_sites',
 				'alias' => 'InstitutionSite',
 				'conditions' => array('InstitutionSite.institution_id = Institution.id')
-			),*/
+			),
 			array(
 				'table' => 'security_group_institution_sites',
 				'alias' => 'SecurityGroupInstitutionSite',
@@ -247,7 +245,7 @@ class Institution extends AppModel {
 		);
 		$dbo = $this->getDataSource();
 		$query = $dbo->buildStatement(array(
-			'fields' => array('InstitutionSite.id'),
+			'fields' => array('Institution.id'),
 			'table' => $dbo->fullTableName($this),
 			'alias' => get_class($this),
 			'limit' => null, 
@@ -492,7 +490,7 @@ AND
            
 		$dbo = $this->getDataSource();
 		$queries = array(
-			//$this->getQueryFromInstitutionsWithoutSites($conditions),
+			$this->getQueryFromInstitutionsWithoutSites($conditions),
 			$this->getQueryFromSecurityAreas($conditions),
 			$this->getQueryFromSecuritySites($conditions)
 		);

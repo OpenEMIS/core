@@ -17,21 +17,23 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InfrastructureSanitation extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $belongsTo = array(
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
-		)
-	);
+	public function getLookupVariables() {
+		$modelName = get_class($this);
+		$categoryModel = ClassRegistry::init('InfrastructureCategory');
+		$categoryId = $categoryModel->field('id', array('name' => 'Sanitation'));
+		$lookup = array(
+			'Sanitation' => array('model' => $modelName),
+			'Materials' => array(
+				'model' => 'InfrastructureMaterial',
+				'conditions' => array('infrastructure_category_id' => $categoryId)
+			),
+			'Status' => array(
+				'model' => 'InfrastructureStatus',
+				'conditions' => array('infrastructure_category_id' => $categoryId)
+			)
+		);
+		return $lookup;
+	}
 	
 	public function findListAsSubgroups() {
 		$categoryModel = ClassRegistry::init('InfrastructureCategory');

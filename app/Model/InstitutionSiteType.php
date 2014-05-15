@@ -17,22 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteType extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $hasMany = array('InstitutionsSite');
-	public $belongsTo = array(
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
-		)
-	);
+       
 	
     public function getSiteTypesList(){
         return $this->find('list',array('conditions'=>array('visible'=>1)));

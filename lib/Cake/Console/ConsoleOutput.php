@@ -2,19 +2,19 @@
 /**
  * ConsoleOutput file.
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @since         CakePHP(tm) v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
-
 /**
  * Object wrapper for outputting information from a shell application.
  * Can be connected to any stream resource that can be used with fopen()
@@ -37,38 +37,29 @@
  * `$this->out('<warning>Overwrite:</warning> foo.php was overwritten.');`
  *
  * This would create orange 'Overwrite:' text, while the rest of the text would remain the normal color.
- * See ConsoleOutput::styles() to learn more about defining your own styles. Nested styles are not supported
+ * See ConsoleOutput::styles() to learn more about defining your own styles.  Nested styles are not supported
  * at this time.
  *
  * @package       Cake.Console
  */
 class ConsoleOutput {
-
 /**
  * Raw output constant - no modification of output text.
- *
- * @var integer
  */
 	const RAW = 0;
 
 /**
  * Plain output - tags will be stripped.
- *
- * @var integer
  */
 	const PLAIN = 1;
 
 /**
  * Color output - Convert known tags in to ANSI color escape codes.
- *
- * @var integer
  */
 	const COLOR = 2;
 
 /**
  * Constant for a newline.
- *
- * @var string
  */
 	const LF = PHP_EOL;
 
@@ -82,7 +73,7 @@ class ConsoleOutput {
 /**
  * The current output type. Manipulated with ConsoleOutput::outputAs();
  *
- * @var integer
+ * @var integer.
  */
 	protected $_outputAs = self::COLOR;
 
@@ -137,17 +128,12 @@ class ConsoleOutput {
  * @var array
  */
 	protected static $_styles = array(
-		'emergency' => array('text' => 'red', 'underline' => true),
-		'alert' => array('text' => 'red', 'underline' => true),
-		'critical' => array('text' => 'red', 'underline' => true),
 		'error' => array('text' => 'red', 'underline' => true),
 		'warning' => array('text' => 'yellow'),
 		'info' => array('text' => 'cyan'),
-		'debug' => array('text' => 'yellow'),
 		'success' => array('text' => 'green'),
 		'comment' => array('text' => 'blue'),
-		'question' => array('text' => 'magenta'),
-		'notice' => array('text' => 'cyan')
+		'question' => array('text' => "magenta"),
 	);
 
 /**
@@ -161,7 +147,7 @@ class ConsoleOutput {
 	public function __construct($stream = 'php://stdout') {
 		$this->_output = fopen($stream, 'w');
 
-		if (DS === '\\' && !(bool)env('ANSICON')) {
+		if (DS == '\\' && !(bool)env('ANSICON')) {
 			$this->_outputAs = self::PLAIN;
 		}
 	}
@@ -170,7 +156,7 @@ class ConsoleOutput {
  * Outputs a single or multiple messages to stdout. If no parameters
  * are passed, outputs just a newline.
  *
- * @param string|array $message A string or a an array of strings to output
+ * @param mixed $message A string or a an array of strings to output
  * @param integer $newlines Number of newlines to append
  * @return integer Returns the number of bytes returned from writing to stdout.
  */
@@ -196,7 +182,7 @@ class ConsoleOutput {
 			return preg_replace('#</?(?:' . $tags . ')>#', '', $text);
 		}
 		return preg_replace_callback(
-			'/<(?P<tag>[a-z0-9-_]+)>(?P<text>.*?)<\/(\1)>/ims', array($this, '_replaceTags'), $text
+			'/<(?<tag>[a-z0-9-_]+)>(?<text>.*?)<\/(\1)>/ims', array($this, '_replaceTags'), $text
 		);
 	}
 
@@ -258,7 +244,7 @@ class ConsoleOutput {
  * `$this->output->styles('annoy', false);`
  *
  * @param string $style The style to get or create.
- * @param array $definition The array definition of the style to change or create a style
+ * @param mixed $definition The array definition of the style to change or create a style
  *   or false to remove a style.
  * @return mixed If you are getting styles, the style or null will be returned. If you are creating/modifying
  *   styles true will be returned.
@@ -279,9 +265,9 @@ class ConsoleOutput {
 	}
 
 /**
- * Get/Set the output type to use. The output type how formatting tags are treated.
+ * Get/Set the output type to use.  The output type how formatting tags are treated.
  *
- * @param integer $type The output type to use. Should be one of the class constants.
+ * @param integer $type The output type to use.  Should be one of the class constants.
  * @return mixed Either null or the value if getting.
  */
 	public function outputAs($type = null) {
@@ -292,7 +278,8 @@ class ConsoleOutput {
 	}
 
 /**
- * Clean up and close handles
+ * clean up and close handles
+ *
  */
 	public function __destruct() {
 		fclose($this->_output);

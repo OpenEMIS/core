@@ -1,10 +1,16 @@
-<?php
+<?php 
 echo $this->Html->script('custom_field', false);
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Academic'));
+//echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
-$this->start('contentActions');
-if(isset($myview)){
+?>
+
+<?php echo $this->element('breadcrumb'); ?>
+
+<div id="site" class="content_wrapper">
+	<h1>
+		<span><?php echo __('Academic'); ?></span>
+		<?php
+		    if(isset($myview)){
 		        echo $this->Html->link(__('Back'), array('controller' => $this->params['controller'], 'action' => $myview, $id), array('class' => 'divider'));
 		    }
 			if(@$displayEdit){
@@ -12,13 +18,14 @@ if(isset($myview)){
 					echo $this->Html->link(__('Edit'), array('action' => rtrim($this->action,'View').'Edit',$id),	array('class' => 'divider','onClick'=>'return custom.view.redirect(this)')); 
 				}
 			}
-$this->end();
-
-$this->start('contentBody');
-?>
-	<div class="row year">
-		<div class="col-md-2"><?php echo __('Year'); ?></div>
-		<div class="col-md-10">
+		
+		?>
+	</h1>
+	<?php echo $this->element('alert');	?>
+	
+	<div class="row year" style="margin-left:5px;">
+		<div class="label" style="width: 90px;"><?php echo __('Year'); ?></div>
+		<div class="value">
 			<?php
 				echo $this->Form->input('school_year_id', array(
 					'label' => false,
@@ -32,9 +39,9 @@ $this->start('contentBody');
 		</div>
 	</div>
 	<?php if(isset($institution_sites)) { ?>
-	<div class="row" >
-		<div class="col-md-3"><?php echo __('Institution Sites'); ?></div>
-		<div class="col-md-6" style="margin-bottom: 10px;">
+	<div class="row" style="margin-left:5px;">
+		<div class="label" style="width: 90px;"><?php echo __('Institution Sites'); ?></div>
+		<div class="value" style="margin-bottom: 10px;">
 			<?php
 				echo $this->Form->input('institution_site_id', array(
 					'label' => false,
@@ -52,7 +59,7 @@ $this->start('contentBody');
 		if(count(@$dataFields) > 0 ) {
             foreach($dataFields as $arrVals){
                 if($arrVals[$arrMap['CustomField']]['type'] == 1){//Label
-                    echo '<fieldset class="section_break">
+                    echo '<fieldset class="custom_section_break">
                                     <legend>'.__($arrVals[$arrMap['CustomField']]['name']).'</legend>
                             </fieldset>';
                 }elseif($arrVals[$arrMap['CustomField']]['type'] == 2) {//Text
@@ -123,4 +130,4 @@ $this->start('contentBody');
 		
 	}
 	?>
-<?php 	$this->end();?>
+</div>

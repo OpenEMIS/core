@@ -73,24 +73,22 @@ var Salary = {
         $('#'+id).css("visibility", "hidden");
     },
     addAddition: function(obj) {
-	//	alert(getRootURL() + $(obj).attr('addiconurl'));
         var table = $('#salary');
-        var size = $('#table-additions tbody tr').length;// + $('.deleteAddition input').length;
-	
+        var size = $('.additions div.table_row').length + $('.deleteAddition input').length;
         var maskId;
-        var url = getRootURL() + $(obj).attr('addiconurl');//"Staff/salaryAdditionAdd";
+        var url = getRootURL() + "Staff/salaryAdditionAdd";
         $.ajax({
-            type: 'POST',
+            type: 'GET',
             dataType: 'text',
             url: url,
-            data: {index: size},
+            data: {order: size},
             beforeSend: function(jqXHR) {
                 maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
             },
             success: function (data, textStatus) {
                 var callback = function() {
-                    $('#table-additions tbody').append(data);
-//alert(data);
+                    $('.additions').append(data);
+
                 };
                 $.unmask({id: maskId, callback: callback});
             }
@@ -98,24 +96,7 @@ var Salary = {
     },
 
     deleteAddition: function(obj) {
-		var row = $(obj).closest('tr');
-
-		var input = row.find($('.addition_amount'));
-		var additions = input.val();
-		var final_additions = parseFloat($('.total_salary_additions').text()) - parseFloat(additions);
-		if (isNaN(final_additions) || final_additions == "") {
-			final_additions = 0;
-		}
-		$('.total_salary_additions').text(final_additions);
-		row.remove();
-
-		var size = $('#table-additions tbody tr').length;
-
-		if (size == 0) {
-			$('#table-additions tbody').append('<tr class="even"></tr>');
-		}
-		
-       /* var row = $(obj).closest('.table_row');
+        var row = $(obj).closest('.table_row');
         var id = row.attr('data-id');
         if(id != undefined) {
             var div = $('.deleteAddition');
@@ -138,7 +119,7 @@ var Salary = {
             var input = row.find(controlId);
             div.append(input.attr('name', name));
         }
-        row.remove();*/
+        row.remove();
     },
 
 
@@ -146,20 +127,20 @@ var Salary = {
 
     addDeduction: function(obj) {
         var table = $('#salary');
-        var size = $('#table-deductions tbody tr').length;//$('.deductions div.table_row').length + $('.deleteDeduction input').length;
+        var size = $('.deductions div.table_row').length + $('.deleteDeduction input').length;
         var maskId;
-        var url = getRootURL() + $(obj).attr('addiconurl');//+ "Staff/salaryDeductionAdd";
+        var url = getRootURL() + "Staff/salaryDeductionAdd";
         $.ajax({
-            type: 'POST',
+            type: 'GET',
             dataType: 'text',
             url: url,
-            data: {index: size},
+            data: {order: size},
             beforeSend: function(jqXHR) {
                 maskId = $.mask({parent: '.content_wrapper', text: i18n.General.textAddingRow});
             },
             success: function (data, textStatus) {
                 var callback = function() {
-                    $('#table-deductions tbody').append(data);
+                    $('.deductions').append(data);
 
                 };
                 $.unmask({id: maskId, callback: callback});
@@ -168,23 +149,7 @@ var Salary = {
     },
 
     deleteDeduction: function(obj) {
-		var row = $(obj).closest('tr');
-
-		var input = row.find($('.deduction_amount'));
-		var deductions = input.val();
-		var final_deductions = parseFloat($('.total_salary_deductions').text()) - parseFloat(deductions);
-		if (isNaN(final_deductions) || final_deductions == "") {
-			final_deductions = 0;
-		}
-		$('.total_salary_deductions').text(final_deductions);
-		row.remove();
-
-		var size = $('#table-deductions tbody tr').length;
-
-		if (size == 0) {
-			$('#table-deductions tbody').append('<tr class="even"></tr>');
-		}
-        /*var row = $(obj).closest('.table_row');
+        var row = $(obj).closest('.table_row');
         var id = row.attr('data-id');
         if(id != undefined) {
             var div = $('.deleteDeduction');
@@ -207,6 +172,6 @@ var Salary = {
             var input = row.find(controlId);
             div.append(input.attr('name', name));
         }
-        row.remove();*/
+        row.remove();
     }
 }

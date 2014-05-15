@@ -17,20 +17,5 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStatus extends AppModel {
-	public $actsAs = array('FieldOption');
-	public $hasMany = array('InstitutionSite');
-	public $belongsTo = array(
-		'ModifiedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'modified_user_id',
-			'type' => 'LEFT'
-		),
-		'CreatedUser' => array(
-			'className' => 'SecurityUser',
-			'fields' => array('first_name', 'last_name'),
-			'foreignKey' => 'created_user_id',
-			'type' => 'LEFT'
-		)
-	);
+	var $hasMany = array('InstitutionSite');//,'InstitutionsSite'
 }

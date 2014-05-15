@@ -3,49 +3,245 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('config', false);
-echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
-echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
+?>
 
- echo $this->Html->charset();
+<?php echo $this->element('breadcrumb'); ?>
 
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Label->get('Config.name'));
+<div id="config" class="content_wrapper">
+	<h1>
+		<span><?php echo __('System Configurations'); ?></span>
+		<?php echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'index') , array('class' => 'divider link_view')); ?>
+		<?php echo $this->Html->link(__('Dashboard Image'), array('controller' => 'Config', 'action' => 'dashboard'), array('class' => 'divider')); ?>
+	</h1>
+        <?php echo $this->element('alert_array'); ?>
 
-$this->start('contentActions');
-echo $this->Html->link(__('View'),array('controller' => 'Config', 'action'=>'index', $type) , array('class' => 'divider link_view'));
-$this->end();
-
-$this->start('contentBody'); ?>
-
-<?php echo $this->element('alert'); ?>
-<?php
-	$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action));
-	echo $this->Form->create('ConfigItem', $formOptions);
-
-	echo $this->Form->input('id', array('type' => 'hidden'));
-	echo $this->Form->input('name', array('type' => 'hidden'));
-	echo $this->Form->input('field_type', array('type' => 'hidden'));
-	echo $this->Form->input('option_type', array('type' => 'hidden'));
-
-	echo $this->Form->input('type', array('value'=> $type, 'readonly' => 'readonly'));
-	echo $this->Form->input('label', array('value'=> $type, 'readonly' => 'readonly'));
-
-	if($fieldType=='Dropdown'){
-		echo $this->Form->input('value', array('options'=>$options));
-		echo $this->Form->input('default_value', array('value' => $options[$this->request->data['ConfigItem']['default_value']],'readonly' => 'readonly'));
-	}else if($fieldType=='Datepicker'){
-		echo $this->FormUtility->datepicker('value');
-		echo $this->Form->input('default_value', array('readonly' => 'readonly'));
-	}else{
-		echo $this->Form->input('value');
-		echo $this->Form->input('default_value', array('readonly' => 'readonly'));
-	}
-	
+	<?php
+	echo $this->Form->create('edit', array(
+		    'inputDefaults' => array(
+		        'label' => false,
+		        'div' => false
+		    ),
+			'url' => array(
+				'controller' => 'Config',
+				'action' => 'edit'
+			),
+			'id' => 'ConfigurationSaveEdit',
+			'type' => 'file'
+		)
+	);
 	?>
+	<!-- Items -->
+		<?php 
+		if(isset($items)) {
+			foreach($items as $key => $element){ 
+				if(isset($element) && sizeof($element) > 0) { 
+		?>
+	<fieldset class="section_break <?php echo (strtolower($key) == 'ldap configuration'?'ldap':'')?>">
+		<legend><?php echo __(ucwords($key)); ?></legend>
+		<?php
+		if($key == 'custom validation'){
+			$str = '';
+			foreach($element as $innerKey => $innerElement){ 
+				if($innerElement['name'] == 'special_characters'){
+					$str = $innerElement['value'];
+				}
+			}
+			echo "<div style='padding:5px 0 0 5px;'>";
+			echo '<div class="left">';
+			echo __('<b>N</b> ');
+			echo '</div>';
+			echo '<div class="left">';
+			echo __('(Numbers)&nbsp;|&nbsp;');
+			echo '</div>';
+			echo '<div class="left">';
+			echo __('<b>A</b> ');
+			echo '</div>';
+			echo '<div class="left">';
+			echo __('(Alpha Character)&nbsp;|&nbsp;');
+			echo '</div>';
+			echo '<div class="left">';
+			echo __('(Special Chars)');
+			echo '</div>';
+			echo '</div>';
+		}
+		?>
+		<div class="table">
+			<div class="table_body">
+		<?php 
+		$arrOptions = array('date_format' => array(
+								'Y-m-d' => date('Y-n-j'),
+								'd-M-Y' => date('j-M-Y'),
+								'd-m-Y' => date('j-n-Y'),
+								'd/m/Y' => date('j/n/Y'),
+								'm/d/Y' => date('n/d/Y'),
+								'F d, Y' => date('F j, Y'), 
+								'dS F Y' => date('jS F Y')
+							),
+							'authentication_type' => array('Local'=>'Local', 'LDAP'=>'LDAP')
+							,
+							'language' =>array(
+								'ara' => 'العربية',
+								'chi' => '中文',
+								'eng' => 'English',
+								'fre' => 'Français',
+								'rus' => 'русский',
+								'spa' => 'español'
+							),
+							'yearbook_orientation' => array(
+								'P' => 'Portrait',
+								'L' => 'Landscape'
+							),
+							'yearbook_school_year' => $school_years,
+							'school_year' => $school_years,
+							'country_id' => $countries,
+							'yesno' => array(0 => __('No'), 1 => __('Yes'))
+							);
+		foreach($element as $innerKey => $innerElement){ 
+				$item = $innerElement; 
+				
+				if($item['name'] == 'special_characters') continue;
+				$addClass = ($item['type'] == 'custom validation')?'custom_validation':'';
+		?>
+		
+			<div class="table_row <?php echo ($key+1)%2==0? 'even':''; ?>">
+			<?php if($item['visible']>0) echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id'])); ?>
+				<div class="table_cell cell_item_name"><?php echo __($item['label']); ?></div>
+				<div class="table_cell cell_item_value">
+
+				<?php 
+					if($item['visible']>0){
+						$options = array(
+							'value' => $item['value'],
+							'class' => 'default '.$addClass
+						);
+							$options['maxlength'] = 300;
+						if(stristr($item['name'], 'dashboard_notice')){
+							echo $this->Form->textarea('ConfigItem.'. $key . '.' . $innerKey . '.value', $options);
+						}elseif (stristr($item['name'], 'publication_date')) {
+							echo $this->Utility->getDatePicker($this->Form, 'publication_date', array('name' => 'data[ConfigItem]['.$key.']['.$innerKey.'][value]', 'order' => 'dmy', 'desc' => true, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));
+						}elseif (stristr($item['name'], 'yearbook_publication_date')) {
+
+							$publicationDateOptions = $options = array(
+								'value' => $item['value'],
+								'type' => 'date',
+								'dateFormat' => 'DMY'
+							);
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value', $publicationDateOptions);
+
+						}elseif (stristr($item['name'], 'yearbook_logo')) {
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.file_value', array('type' => 'file', 'class' => 'form-error'));
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.value', array('value'=> (empty($item['value']))?$item['default_value']:$item['value'] ));
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.reset_yearbook_logo', array('value'=>'0'));
+							echo "<span id=\"resetDefault\" class=\"icon_delete\"></span>";
+					        echo isset($imageUploadError) ? '<div class="error-message">'.$imageUploadError.'</div>' : '';
+					        echo "<br/>";
+					        echo "<div id=\"image_upload_info\"><em>";
+				            echo sprintf(__("Max Resolution: %s pixels"), '400 x 514')."<br/>";
+				            echo __("Max File Size:"). ' 200 KB' ."<br/>";
+				            echo __("Format Supported:"). " .jpg, .jpeg, .png, .gif".
+				            "</em>
+				            </div>";
+		
+						} elseif($item['name'] == 'yearbook_school_year'){
+							$options = $arrOptions[$item['name']];
+							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
+
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
+							
+						} elseif($item['name'] == 'student_prefix' || $item['name'] == 'teacher_prefix' || $item['name'] == 'staff_prefix'){
+							$itemsVal = explode(",", $item['value']);
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value.enable',
+													array('label'=>'Enabled', 'div' => false, 'type'=>'checkbox', 
+													 'style'=>'width: 30px;', 'checked' => $itemsVal[1]));
+							echo '&nbsp;&nbsp;';
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value.prefix', 
+													array('default' => $itemsVal[0], 'label'=>false, 'div' => false, 
+													'class' => 'default', 'style'=>'width: 100px;'));
+						}elseif(array_key_exists($item['name'], $arrOptions)){
+							$options = $arrOptions[$item['name']];
+							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
+							/*if($item['name'] == 'language'){
+								$arrCond['disabled'] = 'disabled';
+							}*/
+
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
+						}elseif(array_key_exists($item['name'], $arrOptions)){
+							$options = $arrOptions[$item['name']];
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']));
+						} elseif($item['name'] == 'test_connection'){
+							echo $this->Form->button('Connect',array('div' => false, 'type'=>'button', 'onclick'=>'Config.checkLDAPconn()'));
+						} elseif($item['name'] == 'country_id'){
+							$options = $arrOptions[$item['name']];
+							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
+
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
+						} elseif(stristr($item['type'], 'Wizard')){
+							$options = $wizardOptions;
+							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
+
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
+						} elseif(stristr($item['name'], 'language_menu')){
+							$options = $arrOptions['yesno'];
+							$arrCond = array('escape' => false, 'empty' => false, 'value' => (empty($item['value']))?$item['default_value']:$item['value']);
+
+							echo $this->Form->hidden('ConfigItem.'. $key . '.' . $innerKey . '.id', array('value' => $item['id']));
+							echo $this->Form->select('ConfigItem.'. $key . '.' . $innerKey . '.value', $options, $arrCond);
+						} else {
+							
+							if(strtolower($item['label']) == 'currency'){
+								$options = array_merge ($options,array('maxlength'=>'3'));
+								
+							}
+							
+							echo $this->Form->input('ConfigItem.'. $key . '.' . $innerKey . '.value', $options);	
+
+						}
+
+					}else{
+						echo $item['value'];
+					}
+					if(isset($errorCustomMsg[$innerElement['id']])){
+						echo '<div class="error-message">' . $errorCustomMsg[$innerElement['id']] . '</div>';
+					}
+				?>
+				</div>
+			</div>
+			<?php } ?>
+		
+			</div>
+		</div>
+	</fieldset>
+		<?php 
+				}
+			}
+		} 
+		?>
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view', $id), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'index'), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	<?php echo $this->Form->end(); ?>
+</div>
 
-<?php $this->end(); ?>
+<script type="text/javascript">
+$(document).ready(function() {
+
+    $('#resetDefault').click(function(e){
+        e.preventDefault();
+        var photoContent = $('input[id^="ConfigItemYearbook"][id$="FileValue"]');
+        var resetImage= $('input[id^="ConfigItemYearbook"][id$="ResetYearbookLogo"]');
+        
+
+        if (photoContent.attr('disabled')){
+            photoContent.removeAttr('disabled');
+            resetImage.attr('value', '0');
+        }else {
+            photoContent.attr('disabled', 'disabled');
+            resetImage.attr('value', '1');
+        }
+    });
+});
+</script>

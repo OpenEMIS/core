@@ -3,18 +3,19 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('Survey.survey', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Survey/js/survey', false);
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __($subheader));
-$this->start('contentActions');
-if($_add) {
-	echo $this->Html->link(__('Add'), array('action' => 'add'), array('class' => 'divider'));
-}
-$this->end();
-
-$this->start('contentBody');
-
 ?>
+
+<?php echo $this->element('breadcrumb'); ?>
+
+<div id="users" class="content_wrapper">
+	<h1>
+		<span><?php echo __('New Surveys'); ?></span>
+		<?php
+		if($_add) {
+			echo $this->Html->link(__('Add'), array('action' => 'add'), array('class' => 'divider'));
+		}
+		?>
+	</h1>
 	
 	<?php echo $this->Form->create('Survey',array('url'=>array('plugin'=>'Survey','controller'=>'Survey','action'=>'index')));?>
     <div class="row">

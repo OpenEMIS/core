@@ -3,22 +3,19 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
 echo $this->Html->script('app', false);
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __(ucwords("Indicator Reports")));
-
-$this->start('contentActions');
-echo $this->Html->link(__('List'), array('action' => 'index'), array('class' => 'divider'));
-$this->end();
-$this->assign('contentId', 'report-list');
-$this->start('contentBody');
+// echo $this->Html->script('/Reports/js/report', false);
 ?>
-<?php echo $this->element('alert'); ?>
 
+<?php echo $this->element('breadcrumb'); ?>
+
+<div id="report-list" class="content_wrapper">
+			<h1>
+				<span><?php echo __(ucwords("Indicator Reports")); ?></span>
+			</h1>
 <form id="sdmx-download" method="post" action="<?php echo $this->Html->url(array( "controller" => "Reports", "action" => "downloadIndicator"));?>" >
     <div id="indicator_selector" class="row">
-        <label class="col-md-3 control-label"><?php echo __("Indicator"); ?></label>
-        <div class="col-md-4">
+        <div class="label"><?php echo __("Indicator"); ?></div>
+        <div class="value">
             <select name="data[Sdmx][indicator]" class="default">
             <php? //pr($indicators); ?>
                 <option value="" >-- Select one --</option>
@@ -30,8 +27,8 @@ $this->start('contentBody');
 
     </div>
     <div id="format_selector" class="row">
-        <label class="col-md-3 control-label"><?php echo __("Format"); ?></label>
-        <div class="col-md-4">
+        <div class="label"><?php echo __("Format"); ?></div>
+        <div class="value">
         <select name="data[Sdmx][format]" class="default">
             <?php
             $optionElementTemplate = '<option value="{{ value }}" {{ selected }}>{{ text }}</option>';
@@ -46,8 +43,8 @@ $this->start('contentBody');
         </div>
     </div>
     <div id="sdmx-areas" class="row">
-        <label class="col-md-3 control-label"><?php echo __("Areas"); ?></label>
-        <div class="col-md-4">
+        <div class="label"><?php echo __("Areas"); ?></div>
+        <div class="value">
             <div class="custom_box">
                 <?php foreach($areas as $key=>$tmpAreas){ ?>
                     <div class="custom_label"><?php echo __(Inflector::humanize(Inflector::underscore($key))); ?></div>
@@ -68,8 +65,8 @@ $this->start('contentBody');
         </div>
     </div>
     <div id="sdmx-timeperiods" class="row">
-        <label class="col-md-3 control-label"><?php echo __("Time Periods"); ?></label>
-        <div class="col-md-4">
+        <div class="label"><?php echo __("Time Periods"); ?></div>
+        <div class="value">
             <div class="custom_box">
                 <div class="custom_value">
                 <ul>
@@ -91,6 +88,7 @@ $this->start('contentBody');
         <button id="generate" type="button" class="btn  btn_disabled" disabled>Export</button>
     </div>
 </form>
+</div>
 
 
 
@@ -164,4 +162,3 @@ $(document).ready(function(){
     }
 });
 </script>
-<?php $this->end(); ?>

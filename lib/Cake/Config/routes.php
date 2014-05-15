@@ -1,17 +1,20 @@
 <?php
 /**
+ * Default routes that CakePHP provides as catch all routes.
+ *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Config
  * @since         CakePHP(tm) v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 /**
@@ -22,6 +25,7 @@
  * created when your application has one or more plugins.
  *
  * - `/:prefix/:plugin` a plugin shortcut route.
+ * - `/:prefix/:plugin/:action/*` a plugin shortcut route.
  * - `/:prefix/:plugin/:controller`
  * - `/:prefix/:plugin/:controller/:action/*`
  * - `/:prefix/:controller`
@@ -30,6 +34,7 @@
  * If plugins are found in your application the following routes are created:
  *
  * - `/:plugin` a plugin shortcut route.
+ * - `/:plugin/:action/*` a plugin shortcut route.
  * - `/:plugin/:controller`
  * - `/:plugin/:controller/:action/*`
  *

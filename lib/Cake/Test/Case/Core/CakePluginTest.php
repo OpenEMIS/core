@@ -2,18 +2,19 @@
 /**
  * CakePluginTest file.
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Test.Case.Core
  * @since         CakePHP(tm) v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('CakePlugin', 'Core');
@@ -30,7 +31,6 @@ class CakePluginTest extends CakeTestCase {
  * @return void
  */
 	public function setUp() {
-		parent::setUp();
 		App::build(array(
 			'Plugin' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS)
 		), App::RESET);
@@ -43,8 +43,9 @@ class CakePluginTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		parent::tearDown();
+		App::build();
 		CakePlugin::unload();
+		Configure::delete('CakePluginTest');
 	}
 
 /**
@@ -175,20 +176,6 @@ class CakePluginTest extends CakeTestCase {
  */
 	public function testLoadMultipleWithDefaultsMissingFile() {
 		CakePlugin::load(array('TestPlugin', 'TestPluginTwo'), array('bootstrap' => true, 'routes' => true));
-		CakePlugin::routes();
-	}
-
-/**
- * Test ignoring missing bootstrap/routes file
- *
- * @return void
- */
-	public function testIgnoreMissingFiles() {
-		CakePlugin::loadAll(array(array(
-			'bootstrap' => true,
-			'routes' => true,
-			'ignoreMissing' => true
-		)));
 		CakePlugin::routes();
 	}
 

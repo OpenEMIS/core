@@ -1,79 +1,128 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('configuration', 'stylesheet', array('inline' => false));
+$arrOptions = array('date_format' => array(
+						'Y-m-d' => date('Y-n-j'),
+						'd-M-Y' => date('j-M-Y'),
+						'd-m-Y' => date('j-n-Y'),
+						'd/m/Y' => date('j/n/Y'),
+						'm/d/Y' => date('n/d/Y'),
+						'F d, Y' => date('F j, Y'), 
+						'dS F Y' => date('jS F Y')
+					),
+					'language' =>array(
+						'ara' => 'العربية',
+						'chi' => '中文',
+						'eng' => 'English',
+						'fre' => 'Français',
+						'rus' => 'русский',
+						'spa' => 'español'
+					),
+					'yearbook_orientation' => array(
+						'P' => 'Portrait',
+						'L' => 'Landscape'
+					),
+					'yesno' => array(0 => __('No'), 1 => __('Yes'))
+				);
+?>
 
-echo $this->Html->script('setup_variables', false);
+<?php echo $this->element('breadcrumb'); ?>
 
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Label->get('Config.name'));
-$this->start('contentActions');
-$this->end();
-
-$this->start('contentBody'); ?>
-
-<div class="row select_row form-group">
-    <div class="col-md-6">
-        <?php
-            echo $this->Form->input('type', array(
-                'options' => $typeOptions,
-                'default' => $selectedType,
-                'label' => false,
-                'url' => 'Config/index',
-                'class' => 'form-control',
-                'onchange' => 'jsForm.change(this)',
-                'div' => false
-            ));
-        ?>
-    </div>
-</div>
+<div id="config" class="content_wrapper">
+	<h1>
+		<span><?php echo __('System Configurations'); ?></span>
+		<?php 
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), '/Config/edit', array('class' => 'divider'));
+		}
+		if($_view_dashboard) {
+			echo $this->Html->link(__('Dashboard Image'), array('action' => 'dashboard'), array('class' => 'divider'));
+		}
+		?>
+	</h1>
+		
 	<!-- Items -->
 	<?php
 		if(isset($items)) {
+			// pr($items);
 			foreach($items as $key => $element){ 
+			// pr($element);
 				if(isset($element) && sizeof($element) > 0) { 
 	?>
-
-		<div class="table-responsive">
-		<table class="table table-striped table-hover table-bordered">
-			<thead>
-				<tr>
-					<td><?php echo __('No');?></td>
-					<td><?php echo __('Name');?></td>
-					<td><?php echo __('Value');?></td>
-				</tr>
-			</thead>
-
-			<tbody class="table_body">
-				<?php 
-				$i = 0;
-				foreach($element as $innerKey => $innerElement){
-					$item = $innerElement;
-				 ?>
-				<tr>
-					<td><?php echo ++$i;?></td>
-					<td><?php echo $this->Html->link($item['label'], array('action' => 'view', $item['id']), array('escape' => false));?></td>
-					<?php if($item['name']=='yearbook_logo'){ ?>
-					<td>
-						<?php 
-						if($item['hasYearbookLogoContent']){
-							echo $this->Html->image("/Config/fetchYearbookImage/{$item['value']}", array('class' => 'profile_image', 'alt' => '90x115')); 
-						}
-						?>
-					</td>
-					<?php }else{?>
-					<td><?php echo !empty($options[$item['id']])? $options[$item['id']][$item['value']] : $item['value'];?></td>
-					<?php } ?>
-				</tr>
-
-				<?php } ?>
-			</tbody>
+	<fieldset class="section_break">
+		<legend><?php echo __(ucwords($key)); ?></legend>
 		
-			</table>
+		<div class="table">
+			<div class="table_body">
+		<?php 
+		foreach($element as $innerKey => $innerElement){ 
+				$item = $innerElement;
+				if($item['name'] == 'test_connection') continue;
+		?>
+			<div class="table_row <?php echo ($key+1)%2==0? 'even':''; ?>">
+				<div class="table_cell cell_item_name"><?php echo __($item['label']); ?></div>
+		<?php if(stristr($item['name'], 'date_format')){ ?>
+				<div class="table_cell"><?php
+				echo date(empty($item['value'])? $item['default_value']:$item['value']); ?></div>
+		<?php }elseif(stristr($item['name'], 'time_format')){ ?>
+				<div class="table_cell"><?php echo date($item['value']); ?></div>
+		<?php }elseif($item['name'] == 'language'){ ?>
+				<div class="table_cell"><?php echo $arrOptions['language'][$item['value']]; ?></div>
+		<?php }elseif(stristr($item['name'], 'yearbook_school_year')){ ?>
+				<div class="table_cell"><?php echo $school_years[$item['value']]; ?></div>
+		<?php }elseif(stristr($item['name'], 'yearbook_orientation')){ ?>
+				<div class="table_cell"><?php echo $arrOptions['yearbook_orientation'][$item['value']]; ?></div>
+		<?php }elseif(stristr($item['name'], 'yearbook_publication_date')){ ?>
+				<div class="table_cell"><?php echo $this->Utility->formatDate($item['value']); ?></div>
+		<?php }elseif(stristr($item['name'], 'yearbook_logo')){ ?>
+				<div class="table_cell">
+				<?php 
+				if ($item['hasYearbookLogoContent']) {
+		    		echo $this->Html->image("/Config/fetchYearbookImage/{$item['value']}", array('class' => 'profile_image', 'alt' => '90x115')); 
+				}
+		    	?>
+				</div>	
+		<?php }elseif(stristr($item['name'], 'student_prefix') || stristr($item['name'], 'teacher_prefix') || stristr($item['name'], 'staff_prefix')){ ?>
+                <div class="table_cell">
+                <?php 
+				$val = '';
+                if(substr($item['value'], -1)>0) {
+                    $val = str_replace(",","",substr($item['value'],0,-1));
+					//echo __($val==''? 'Enabled' : 'Enabled ('.$val.')');
+					echo '<div>';
+					echo __('Enabled');
+					if($val!=''){
+						echo ' ';
+						echo __('('.$val.')');
+						echo '';
+					}
+                                        echo "</div>";
+                }
+                ?>
+                </div>		
+        <?php }elseif(stristr($item['name'], 'country_id')){ ?>
+				<div class="table_cell"><?php echo $countries[$item['value']]; ?></div>
+		<?php }elseif(stristr($item['type'], 'Wizard')){ ?>
+				<div class="table_cell"><?php echo $wizardOptions[$item['value']]; ?></div>
+		<?php }elseif(stristr($item['name'], 'language_menu')){ ?>
+				<div class="table_cell"><?php echo $arrOptions['yesno'][$item['value']]; ?></div>
+        <?php }else{ ?>
+				<div class="table_cell"><?php echo $item['value']; ?></div>
+		<?php } ?>
+			</div>
+		<!-- 
+		<div class="row">
+			<div class="label"><?php echo $item['name']; ?></div>
+			<div class="value" type="text" name="name"><?php echo $item['value']; ?></div>
+		</div> -->
+		<?php } ?>
+		
+			</div>
 		</div>
+	</fieldset>
 		<?php 
 				}
 			}
 		} 
 		?>
-
-<?php $this->end(); ?>  
+</div>

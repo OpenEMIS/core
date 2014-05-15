@@ -2,18 +2,19 @@
 /**
  * Javascript Generator class file.
  *
+ * PHP 5
+ *
  * CakePHP :  Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.View.Helper
  * @since         CakePHP(tm) v 1.2
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('AppHelper', 'View/Helper');
@@ -80,7 +81,7 @@ class JsHelper extends AppHelper {
  * Constructor - determines engine helper
  *
  * @param View $View the view object the helper is attached to.
- * @param string|array $settings Settings array contains name of engine helper.
+ * @param array $settings Settings array contains name of engine helper.
  */
 	public function __construct(View $View, $settings = array()) {
 		$className = 'Jquery';
@@ -90,7 +91,7 @@ class JsHelper extends AppHelper {
 			$className = $settings;
 		}
 		$engineName = $className;
-		list(, $className) = pluginSplit($className);
+		list($plugin, $className) = pluginSplit($className);
 
 		$this->_engineName = $className . 'Engine';
 		$engineClass = $engineName . 'Engine';
@@ -141,7 +142,7 @@ class JsHelper extends AppHelper {
 				$this->buffer($out);
 				return null;
 			}
-			if (is_object($out) && $out instanceof JsBaseEngineHelper) {
+			if (is_object($out) && is_a($out, 'JsBaseEngineHelper')) {
 				return $this;
 			}
 			return $out;
@@ -160,7 +161,7 @@ class JsHelper extends AppHelper {
  * @param boolean $quoteString If false, leaves string values unquoted
  * @return string a JavaScript-safe/JSON representation of $val
  * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/js.html#JsHelper::value
- */
+ **/
 	public function value($val = array(), $quoteString = null, $key = 'value') {
 		if ($quoteString === null) {
 			$quoteString = true;
@@ -170,8 +171,8 @@ class JsHelper extends AppHelper {
 
 /**
  * Writes all Javascript generated so far to a code block or
- * caches them to a file and returns a linked script. If no scripts have been
- * buffered this method will return null. If the request is an XHR(ajax) request
+ * caches them to a file and returns a linked script.  If no scripts have been
+ * buffered this method will return null.  If the request is an XHR(ajax) request
  * onDomReady will be set to false. As the dom is already 'ready'.
  *
  * ### Options
@@ -207,20 +208,18 @@ class JsHelper extends AppHelper {
 		$opts = $options;
 		unset($opts['onDomReady'], $opts['cache'], $opts['clear']);
 
-		if ($options['cache'] && $options['inline']) {
-			$filename = md5($script);
-			$path = WWW_ROOT . Configure::read('App.jsBaseUrl');
-			if (file_exists($path . $filename . '.js')
-				|| cache(str_replace(WWW_ROOT, '', $path) . $filename . '.js', $script, '+999 days', 'public')
-				) {
-				return $this->Html->script($filename);
-			}
+		if (!$options['cache'] && $options['inline']) {
+			return $this->Html->scriptBlock($script, $opts);
 		}
 
-		$return = $this->Html->scriptBlock($script, $opts);
-		if ($options['inline']) {
-			return $return;
+		if ($options['cache'] && $options['inline']) {
+			$filename = md5($script);
+			if (!file_exists(JS . $filename . '.js')) {
+				cache(str_replace(WWW_ROOT, '', JS) . $filename . '.js', $script, '+999 days', 'public');
+			}
+			return $this->Html->script($filename);
 		}
+		$this->Html->scriptBlock($script, $opts);
 		return null;
 	}
 
@@ -229,7 +228,7 @@ class JsHelper extends AppHelper {
  *
  * @param string $script Script string to add to the buffer.
  * @param boolean $top If true the script will be added to the top of the
- *   buffered scripts array. If false the bottom.
+ *   buffered scripts array.  If false the bottom.
  * @return void
  * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/js.html#JsHelper::buffer
  */
@@ -259,9 +258,9 @@ class JsHelper extends AppHelper {
 	}
 
 /**
- * Generates the object string for variables passed to javascript and adds to buffer
+ * Generates the object string for variables passed to javascript.
  *
- * @return void
+ * @return string Generated JSON object of all set vars
  */
 	protected function _createVars() {
 		if (!empty($this->_jsVars)) {
@@ -271,20 +270,20 @@ class JsHelper extends AppHelper {
 	}
 
 /**
- * Generate an 'Ajax' link. Uses the selected JS engine to create a link
- * element that is enhanced with Javascript. Options can include
+ * Generate an 'Ajax' link.  Uses the selected JS engine to create a link
+ * element that is enhanced with Javascript.  Options can include
  * both those for HtmlHelper::link() and JsBaseEngine::request(), JsBaseEngine::event();
  *
  * ### Options
  *
  * - `confirm` - Generate a confirm() dialog before sending the event.
  * - `id` - use a custom id.
- * - `htmlAttributes` - additional non-standard htmlAttributes. Standard attributes are class, id,
+ * - `htmlAttributes` - additional non-standard htmlAttributes.  Standard attributes are class, id,
  *    rel, title, escape, onblur and onfocus.
  * - `buffer` - Disable the buffering and return a script tag in addition to the link.
  *
  * @param string $title Title for the link.
- * @param string|array $url Mixed either a string URL or a CakePHP URL array.
+ * @param mixed $url Mixed either a string URL or an cake url array.
  * @param array $options Options for both the HTML element and Js::request()
  * @return string Completed link. If buffering is disabled a script tag will be returned as well.
  * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/js.html#JsHelper::link
@@ -318,12 +317,12 @@ class JsHelper extends AppHelper {
 	}
 
 /**
- * Pass variables into Javascript. Allows you to set variables that will be
+ * Pass variables into Javascript.  Allows you to set variables that will be
  * output when the buffer is fetched with `JsHelper::getBuffer()` or `JsHelper::writeBuffer()`
  * The Javascript variable used to output set variables can be controlled with `JsHelper::$setVariable`
  *
- * @param string|array $one Either an array of variables to set, or the name of the variable to set.
- * @param string|array $two If $one is a string, $two is the value for that key.
+ * @param mixed $one Either an array of variables to set, or the name of the variable to set.
+ * @param mixed $two If $one is a string, $two is the value for that key.
  * @return void
  * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/js.html#JsHelper::set
  */
@@ -338,7 +337,7 @@ class JsHelper extends AppHelper {
 		} else {
 			$data = array($one => $two);
 		}
-		if (!$data) {
+		if ($data == null) {
 			return false;
 		}
 		$this->_jsVars = array_merge($this->_jsVars, $data);
@@ -346,7 +345,7 @@ class JsHelper extends AppHelper {
 
 /**
  * Uses the selected JS engine to create a submit input
- * element that is enhanced with Javascript. Options can include
+ * element that is enhanced with Javascript.  Options can include
  * both those for FormHelper::submit() and JsBaseEngine::request(), JsBaseEngine::event();
  *
  * Forms submitting with this method, cannot send files. Files do not transfer over XmlHttpRequest

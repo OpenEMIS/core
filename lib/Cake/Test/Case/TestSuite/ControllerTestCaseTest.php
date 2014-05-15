@@ -4,18 +4,19 @@
  *
  * Test Case for ControllerTestCase class
  *
+ * PHP version 5
+ *
  * CakePHP : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
  * @link          http://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.TestSuite
  * @since         CakePHP v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('Controller', 'Controller');
@@ -25,6 +26,11 @@ App::uses('CakeHtmlReporter', 'TestSuite/Reporter');
 
 require_once dirname(dirname(__FILE__)) . DS . 'Model' . DS . 'models.php';
 
+/**
+ * AppController class
+ *
+ * @package       Cake.Test.Case.TestSuite
+ */
 if (!class_exists('AppController', false)) {
 /**
  * AppController class
@@ -37,6 +43,7 @@ if (!class_exists('AppController', false)) {
 	 * helpers property
 	 *
 	 * @var array
+	 * @access public
 	 */
 		public $helpers = array('Html');
 
@@ -44,6 +51,7 @@ if (!class_exists('AppController', false)) {
 	 * uses property
 	 *
 	 * @var array
+	 * @access public
 	 */
 		public $uses = array('ControllerPost');
 
@@ -51,6 +59,7 @@ if (!class_exists('AppController', false)) {
 	 * components property
 	 *
 	 * @var array
+	 * @access public
 	 */
 		public $components = array('Cookie');
 
@@ -63,12 +72,6 @@ if (!class_exists('AppController', false)) {
  * PostsController class
  */
 if (!class_exists('PostsController')) {
-
-/**
- * Class PostsController
- *
- * @package       Cake.Test.Case.TestSuite
- */
 	class PostsController extends AppController {
 
 	/**
@@ -86,8 +89,6 @@ if (!class_exists('PostsController')) {
 
 /**
  * ControllerTestCaseTest controller
- *
- * @package       Cake.Test.Case.TestSuite
  */
 class ControllerTestCaseTestController extends AppController {
 
@@ -209,28 +210,6 @@ class ControllerTestCaseTest extends CakeTestCase {
 	}
 
 /**
- * testGenerateWithComponentConfig
- */
-	public function testGenerateWithComponentConfig() {
-		$Tests = $this->Case->generate('TestConfigs', array(
-		));
-
-		$expected = array('some' => 'config');
-		$settings = array_intersect_key($Tests->RequestHandler->settings, array('some' => 'foo'));
-		$this->assertSame($expected, $settings, 'A mocked component should have the same config as an unmocked component');
-
-		$Tests = $this->Case->generate('TestConfigs', array(
-			'components' => array(
-				'RequestHandler' => array('isPut')
-			)
-		));
-
-		$expected = array('some' => 'config');
-		$settings = array_intersect_key($Tests->RequestHandler->settings, array('some' => 'foo'));
-		$this->assertSame($expected, $settings, 'A mocked component should have the same config as an unmocked component');
-	}
-
-/**
  * Tests ControllerTestCase::generate() using classes from plugins
  */
 	public function testGenerateWithPlugin() {
@@ -297,7 +276,7 @@ class ControllerTestCaseTest extends CakeTestCase {
  * @return void
  */
 	public function testTestActionWithPlugin() {
-		$this->Case->generate('TestPlugin.Tests');
+		$Controller = $this->Case->generate('TestPlugin.Tests');
 		$this->Case->testAction('/test_plugin/tests/index');
 		$this->assertEquals('It is a variable', $this->Case->controller->viewVars['test_value']);
 	}
@@ -333,7 +312,7 @@ class ControllerTestCaseTest extends CakeTestCase {
 		include CAKE . 'Test' . DS . 'test_app' . DS . 'Config' . DS . 'routes.php';
 
 		$this->Case->loadRoutes = false;
-		$this->Case->testAction('/tests_apps/missing_action.json', array('return' => 'view'));
+		$result = $this->Case->testAction('/tests_apps/missing_action.json', array('return' => 'view'));
 	}
 
 /**
@@ -541,7 +520,7 @@ class ControllerTestCaseTest extends CakeTestCase {
  * @return void
  */
 	public function testTestActionWithMultipleRedirect() {
-		$this->Case->generate('TestsApps');
+		$Controller = $this->Case->generate('TestsApps');
 
 		$options = array('method' => 'get');
 		$this->Case->testAction('/tests_apps/redirect_to', $options);
@@ -553,7 +532,7 @@ class ControllerTestCaseTest extends CakeTestCase {
  * will always have a fresh reference to those object available
  *
  * @return void
- * @see https://cakephp.lighthouseapp.com/projects/42648-cakephp/tickets/2705-requesthandler-weird-behavior
+ * @see http://cakephp.lighthouseapp.com/projects/42648-cakephp/tickets/2705-requesthandler-weird-behavior
  */
 	public function testComponentsSameRequestAndResponse() {
 		$this->Case->generate('TestsApps');

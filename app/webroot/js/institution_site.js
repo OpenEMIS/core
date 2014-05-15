@@ -25,16 +25,14 @@ var objInstitutionSite = {
 		var programmeId = $(obj).val();
 		var exclude = [];
 		$('.grades').each(function() {
-			if($(this).val() != ''){
-				exclude.push($(this).val());
-			}
+			exclude.push($(this).val());
 		});
 		var maskId;
 		var url = getRootURL() + $(obj).attr('url');
 		var ajaxParams = {programmeId: programmeId, exclude: exclude};
 		var ajaxSuccess = function(data, textStatus) {
 			var callback = function() {
-				$(obj).closest('tr').find('.grades').html(data);
+				$(obj).closest('.table_row').find('.grades').html(data);
 			};
 			$.unmask({id: maskId, callback: callback});
 		};
@@ -43,7 +41,7 @@ var objInstitutionSite = {
 			dataType: 'text',
 			url: url,
 			data: ajaxParams,
-			beforeSend: function (jqXHR) { maskId = $.mask({parent: '#grade_list'}); },
+			beforeSend: function (jqXHR) { maskId = $.mask({parent: '.content_wrapper'}); },
 			success: ajaxSuccess
 		});
 	},

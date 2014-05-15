@@ -2,20 +2,20 @@
 /**
  * DboMysqlTest file
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Test.Case.Model.Datasource.Database
  * @since         CakePHP(tm) v 1.2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
-
 App::uses('Model', 'Model');
 App::uses('AppModel', 'Model');
 App::uses('Mysql', 'Model/Datasource/Database');
@@ -33,7 +33,7 @@ class MysqlTest extends CakeTestCase {
 /**
  * autoFixtures property
  *
- * @var boolean
+ * @var bool false
  */
 	public $autoFixtures = false;
 
@@ -45,7 +45,7 @@ class MysqlTest extends CakeTestCase {
 	public $fixtures = array(
 		'core.apple', 'core.article', 'core.articles_tag', 'core.attachment', 'core.comment',
 		'core.sample', 'core.tag', 'core.user', 'core.post', 'core.author', 'core.data_test',
-		'core.binary_test', 'core.inno'
+		'core.binary_test'
 	);
 
 /**
@@ -60,7 +60,6 @@ class MysqlTest extends CakeTestCase {
  *
  */
 	public function setUp() {
-		parent::setUp();
 		$this->Dbo = ConnectionManager::getDataSource('test');
 		if (!($this->Dbo instanceof Mysql)) {
 			$this->markTestSkipped('The MySQL extension is not available.');
@@ -75,7 +74,6 @@ class MysqlTest extends CakeTestCase {
  *
  */
 	public function tearDown() {
-		parent::tearDown();
 		unset($this->model);
 		ClassRegistry::flush();
 		Configure::write('debug', $this->_debug);
@@ -149,9 +147,8 @@ class MysqlTest extends CakeTestCase {
 	public function testLocalizedFloats() {
 		$this->skipIf(DS === '\\', 'The locale is not supported in Windows and affect the others tests.');
 
-		$restore = setlocale(LC_NUMERIC, 0);
-
-		$this->skipIf(setlocale(LC_NUMERIC, 'de_DE') === false, "The German locale isn't available.");
+		$restore = setlocale(LC_ALL, 0);
+		setlocale(LC_ALL, 'de_DE');
 
 		$result = $this->Dbo->value(3.141593);
 		$this->assertEquals('3.141593', $result);
@@ -174,7 +171,7 @@ class MysqlTest extends CakeTestCase {
 		$result = $this->db->value(2.2E-54);
 		$this->assertEquals('2.2E-54', (string)$result);
 
-		setlocale(LC_NUMERIC, $restore);
+		setlocale(LC_ALL, $restore);
 	}
 
 /**
@@ -211,19 +208,19 @@ class MysqlTest extends CakeTestCase {
 
 		$this->assertTrue((bool)$this->model->save(array('bool' => 5, 'small_int' => 5)));
 		$result = $this->model->find('first');
-		$this->assertTrue($result['Tinyint']['bool']);
+		$this->assertSame($result['Tinyint']['bool'], true);
 		$this->assertSame($result['Tinyint']['small_int'], '5');
 		$this->model->deleteAll(true);
 
 		$this->assertTrue((bool)$this->model->save(array('bool' => 0, 'small_int' => 100)));
 		$result = $this->model->find('first');
-		$this->assertFalse($result['Tinyint']['bool']);
+		$this->assertSame($result['Tinyint']['bool'], false);
 		$this->assertSame($result['Tinyint']['small_int'], '100');
 		$this->model->deleteAll(true);
 
 		$this->assertTrue((bool)$this->model->save(array('bool' => true, 'small_int' => 0)));
 		$result = $this->model->find('first');
-		$this->assertTrue($result['Tinyint']['bool']);
+		$this->assertSame($result['Tinyint']['bool'], true);
 		$this->assertSame($result['Tinyint']['small_int'], '0');
 		$this->model->deleteAll(true);
 
@@ -271,13 +268,6 @@ class MysqlTest extends CakeTestCase {
 		$this->Dbo->rawQuery('DROP TABLE ' . $name);
 		$this->assertEquals($expected, $result);
 
-		$name = $this->Dbo->fullTableName('bigint');
-		$this->Dbo->rawQuery('CREATE TABLE ' . $name . ' (id bigint(20) AUTO_INCREMENT, bool tinyint(1), small_int tinyint(2), primary key(id));');
-		$expected = array('PRIMARY' => array('column' => 'id', 'unique' => 1));
-		$result = $this->Dbo->index('bigint', false);
-		$this->Dbo->rawQuery('DROP TABLE ' . $name);
-		$this->assertEquals($expected, $result);
-
 		$name = $this->Dbo->fullTableName('with_a_key');
 		$this->Dbo->rawQuery('CREATE TABLE ' . $name . ' (id int(11) AUTO_INCREMENT, bool tinyint(1), small_int tinyint(2), primary key(id), KEY `pointless_bool` ( `bool` ));');
 		$expected = array(
@@ -321,36 +311,6 @@ class MysqlTest extends CakeTestCase {
 			'other_way' => array('column' => array('small_int', 'bool'), 'unique' => 0),
 		);
 		$result = $this->Dbo->index('with_multiple_compound_keys', false);
-		$this->Dbo->rawQuery('DROP TABLE ' . $name);
-		$this->assertEquals($expected, $result);
-
-		$name = $this->Dbo->fullTableName('with_fulltext');
-		$this->Dbo->rawQuery('CREATE TABLE ' . $name . ' (id int(11) AUTO_INCREMENT, name varchar(255), description text, primary key(id), FULLTEXT KEY `MyFtIndex` ( `name`, `description` )) ENGINE=MyISAM;');
-		$expected = array(
-			'PRIMARY' => array('column' => 'id', 'unique' => 1),
-			'MyFtIndex' => array('column' => array('name', 'description'), 'type' => 'fulltext')
-		);
-		$result = $this->Dbo->index('with_fulltext', false);
-		$this->Dbo->rawQuery('DROP TABLE ' . $name);
-		$this->assertEquals($expected, $result);
-
-		$name = $this->Dbo->fullTableName('with_text_index');
-		$this->Dbo->rawQuery('CREATE TABLE ' . $name . ' (id int(11) AUTO_INCREMENT, text_field text, primary key(id), KEY `text_index` ( `text_field`(20) ));');
-		$expected = array(
-			'PRIMARY' => array('column' => 'id', 'unique' => 1),
-			'text_index' => array('column' => 'text_field', 'unique' => 0, 'length' => array('text_field' => 20)),
-		);
-		$result = $this->Dbo->index('with_text_index', false);
-		$this->Dbo->rawQuery('DROP TABLE ' . $name);
-		$this->assertEquals($expected, $result);
-
-		$name = $this->Dbo->fullTableName('with_compound_text_index');
-		$this->Dbo->rawQuery('CREATE TABLE ' . $name . ' (id int(11) AUTO_INCREMENT, text_field1 text, text_field2 text, primary key(id), KEY `text_index` ( `text_field1`(20), `text_field2`(20) ));');
-		$expected = array(
-			'PRIMARY' => array('column' => 'id', 'unique' => 1),
-			'text_index' => array('column' => array('text_field1', 'text_field2'), 'unique' => 0, 'length' => array('text_field1' => 20, 'text_field2' => 20)),
-		);
-		$result = $this->Dbo->index('with_compound_text_index', false);
 		$this->Dbo->rawQuery('DROP TABLE ' . $name);
 		$this->assertEquals($expected, $result);
 	}
@@ -517,10 +477,6 @@ class MysqlTest extends CakeTestCase {
 		$expected = 'integer';
 		$this->assertEquals($expected, $result);
 
-		$result = $this->Dbo->column('bigint(20)');
-		$expected = 'biginteger';
-		$this->assertEquals($expected, $result);
-
 		$result = $this->Dbo->column('tinyint(1)');
 		$expected = 'boolean';
 		$this->assertEquals($expected, $result);
@@ -592,9 +548,9 @@ class MysqlTest extends CakeTestCase {
 
 		$result = $this->Dbo->alterSchema($schemaB->compare($schemaA));
 		$this->assertContains("ALTER TABLE $table", $result);
-		$this->assertContains('ADD KEY `name_idx` (`name`),', $result);
-		$this->assertContains('ADD KEY `group_idx` (`group1`),', $result);
-		$this->assertContains('ADD KEY `compound_idx` (`group1`, `group2`),', $result);
+		$this->assertContains('ADD KEY name_idx (`name`),', $result);
+		$this->assertContains('ADD KEY group_idx (`group1`),', $result);
+		$this->assertContains('ADD KEY compound_idx (`group1`, `group2`),', $result);
 		$this->assertContains('ADD PRIMARY KEY  (`id`);', $result);
 
 		//Test that the string is syntactically correct
@@ -620,13 +576,13 @@ class MysqlTest extends CakeTestCase {
 		$result = $this->Dbo->alterSchema($schemaC->compare($schemaB));
 		$this->assertContains("ALTER TABLE $table", $result);
 		$this->assertContains('DROP PRIMARY KEY,', $result);
-		$this->assertContains('DROP KEY `name_idx`,', $result);
-		$this->assertContains('DROP KEY `group_idx`,', $result);
-		$this->assertContains('DROP KEY `compound_idx`,', $result);
-		$this->assertContains('ADD KEY `id_name_idx` (`id`, `name`),', $result);
-		$this->assertContains('ADD UNIQUE KEY `name_idx` (`name`),', $result);
-		$this->assertContains('ADD KEY `group_idx` (`group2`),', $result);
-		$this->assertContains('ADD KEY `compound_idx` (`group2`, `group1`);', $result);
+		$this->assertContains('DROP KEY name_idx,', $result);
+		$this->assertContains('DROP KEY group_idx,', $result);
+		$this->assertContains('DROP KEY compound_idx,', $result);
+		$this->assertContains('ADD KEY id_name_idx (`id`, `name`),', $result);
+		$this->assertContains('ADD UNIQUE KEY name_idx (`name`),', $result);
+		$this->assertContains('ADD KEY group_idx (`group2`),', $result);
+		$this->assertContains('ADD KEY compound_idx (`group2`, `group1`);', $result);
 
 		$query = $this->Dbo->getConnection()->prepare($result);
 		$this->assertEquals($query->queryString, $result);
@@ -638,10 +594,10 @@ class MysqlTest extends CakeTestCase {
 		$result = $this->Dbo->alterSchema($schemaA->compare($schemaC));
 
 		$this->assertContains("ALTER TABLE $table", $result);
-		$this->assertContains('DROP KEY `name_idx`,', $result);
-		$this->assertContains('DROP KEY `group_idx`,', $result);
-		$this->assertContains('DROP KEY `compound_idx`,', $result);
-		$this->assertContains('DROP KEY `id_name_idx`;', $result);
+		$this->assertContains('DROP KEY name_idx,', $result);
+		$this->assertContains('DROP KEY group_idx,', $result);
+		$this->assertContains('DROP KEY compound_idx,', $result);
+		$this->assertContains('DROP KEY id_name_idx;', $result);
 
 		$query = $this->Dbo->getConnection()->prepare($result);
 		$this->assertEquals($query->queryString, $result);
@@ -796,7 +752,7 @@ class MysqlTest extends CakeTestCase {
 	}
 
 /**
- * testGetCharsetName method
+ * testBuildTableParameters method
  *
  * @return void
  */
@@ -806,34 +762,6 @@ class MysqlTest extends CakeTestCase {
 		$this->assertEquals('utf8', $result);
 		$result = $this->Dbo->getCharsetName('cp1250_general_ci');
 		$this->assertEquals('cp1250', $result);
-	}
-
-/**
- * testGetCharsetNameCaching method
- *
- * @return void
- */
-	public function testGetCharsetNameCaching() {
-		$db = $this->getMock('Mysql', array('connect', '_execute', 'getVersion'));
-		$queryResult = $this->getMock('PDOStatement');
-
-		$db->expects($this->exactly(2))->method('getVersion')->will($this->returnValue('5.1'));
-
-		$db->expects($this->exactly(1))
-			->method('_execute')
-			->with('SELECT CHARACTER_SET_NAME FROM INFORMATION_SCHEMA.COLLATIONS WHERE COLLATION_NAME = ?', array('utf8_unicode_ci'))
-			->will($this->returnValue($queryResult));
-
-		$queryResult->expects($this->once())
-			->method('fetch')
-			->with(PDO::FETCH_ASSOC)
-			->will($this->returnValue(array('CHARACTER_SET_NAME' => 'utf8')));
-
-		$result = $db->getCharsetName('utf8_unicode_ci');
-		$this->assertEquals('utf8', $result);
-
-		$result = $db->getCharsetName('utf8_unicode_ci');
-		$this->assertEquals('utf8', $result);
 	}
 
 /**
@@ -908,91 +836,6 @@ class MysqlTest extends CakeTestCase {
 		$this->assertEquals('cp1250_general_ci', $result['stringy']['collate']);
 		$this->assertEquals('cp1250', $result['stringy']['charset']);
 		$this->assertEquals('Test Comment', $result['other_col']['comment']);
-	}
-
-/**
- * Test that two columns with key => primary doesn't create invalid sql.
- *
- * @return void
- */
-	public function testTwoColumnsWithPrimaryKey() {
-		$schema = new CakeSchema(array(
-			'connection' => 'test',
-			'roles_users' => array(
-				'role_id' => array(
-					'type' => 'integer',
-					'null' => false,
-					'default' => null,
-					'key' => 'primary'
-				),
-				'user_id' => array(
-					'type' => 'integer',
-					'null' => false,
-					'default' => null,
-					'key' => 'primary'
-				),
-				'indexes' => array(
-					'user_role_index' => array(
-						'column' => array('role_id', 'user_id'),
-						'unique' => 1
-					),
-					'user_index' => array(
-						'column' => 'user_id',
-						'unique' => 0
-					)
-				),
-			)
-		));
-
-		$result = $this->Dbo->createSchema($schema);
-		$this->assertContains('`role_id` int(11) NOT NULL,', $result);
-		$this->assertContains('`user_id` int(11) NOT NULL,', $result);
-	}
-
-/**
- * Test that the primary flag is handled correctly.
- *
- * @return void
- */
-	public function testCreateSchemaAutoPrimaryKey() {
-		$schema = new CakeSchema();
-		$schema->tables = array(
-			'no_indexes' => array(
-				'id' => array('type' => 'integer', 'null' => false, 'key' => 'primary'),
-				'data' => array('type' => 'integer', 'null' => false),
-				'indexes' => array(),
-			)
-		);
-		$result = $this->Dbo->createSchema($schema, 'no_indexes');
-		$this->assertContains('PRIMARY KEY  (`id`)', $result);
-		$this->assertNotContains('UNIQUE KEY', $result);
-
-		$schema->tables = array(
-			'primary_index' => array(
-				'id' => array('type' => 'integer', 'null' => false),
-				'data' => array('type' => 'integer', 'null' => false),
-				'indexes' => array(
-					'PRIMARY' => array('column' => 'id', 'unique' => 1),
-					'some_index' => array('column' => 'data', 'unique' => 1)
-				),
-			)
-		);
-		$result = $this->Dbo->createSchema($schema, 'primary_index');
-		$this->assertContains('PRIMARY KEY  (`id`)', $result);
-		$this->assertContains('UNIQUE KEY `some_index` (`data`)', $result);
-
-		$schema->tables = array(
-			'primary_flag_has_index' => array(
-				'id' => array('type' => 'integer', 'null' => false, 'key' => 'primary'),
-				'data' => array('type' => 'integer', 'null' => false),
-				'indexes' => array(
-					'some_index' => array('column' => 'data', 'unique' => 1)
-				),
-			)
-		);
-		$result = $this->Dbo->createSchema($schema, 'primary_flag_has_index');
-		$this->assertContains('PRIMARY KEY  (`id`)', $result);
-		$this->assertContains('UNIQUE KEY `some_index` (`data`)', $result);
 	}
 
 /**
@@ -1133,7 +976,7 @@ class MysqlTest extends CakeTestCase {
 				$linkModel = $this->Model->Category2->{$assoc};
 				$external = isset($assocData['external']);
 
-				if ($this->Model->Category2->alias == $linkModel->alias && $type !== 'hasAndBelongsToMany' && $type !== 'hasMany') {
+				if ($this->Model->Category2->alias == $linkModel->alias && $type != 'hasAndBelongsToMany' && $type != 'hasMany') {
 					$result = $this->Dbo->generateAssociationQuery($this->Model->Category2, $linkModel, $type, $assoc, $assocData, $queryData, $external, $null);
 					$this->assertFalse(empty($result));
 				} else {
@@ -1196,7 +1039,7 @@ class MysqlTest extends CakeTestCase {
 		$this->assertRegExp('/^SELECT\s+`TestModel4`\.`id`, `TestModel4`\.`name`, `TestModel4`\.`created`, `TestModel4`\.`updated`, `TestModel4Parent`\.`id`, `TestModel4Parent`\.`name`, `TestModel4Parent`\.`created`, `TestModel4Parent`\.`updated`\s+/', $result);
 		$this->assertRegExp('/FROM\s+\S+`test_model4` AS `TestModel4`\s+LEFT JOIN\s+\S+`test_model4` AS `TestModel4Parent`/', $result);
 		$this->assertRegExp('/\s+ON\s+\(`TestModel4`.`parent_id` = `TestModel4Parent`.`id`\)\s+WHERE/', $result);
-		$this->assertRegExp('/\s+WHERE\s+1 = 1$/', $result);
+		$this->assertRegExp('/\s+WHERE\s+1 = 1\s+$/', $result);
 
 		$params['assocData']['type'] = 'INNER';
 		$this->Model->belongsTo['TestModel4Parent']['type'] = 'INNER';
@@ -1208,12 +1051,12 @@ class MysqlTest extends CakeTestCase {
 /**
  * buildRelatedModels method
  *
- * @param Model $model
+ * @param mixed $model
  * @return void
  */
 	protected function _buildRelatedModels(Model $model) {
 		foreach ($model->associations() as $type) {
-			foreach ($model->{$type} as $assocData) {
+			foreach ($model->{$type} as $assoc => $assocData) {
 				if (is_string($assocData)) {
 					$className = $assocData;
 				} elseif (isset($assocData['className'])) {
@@ -1228,9 +1071,9 @@ class MysqlTest extends CakeTestCase {
 /**
  * &_prepareAssociationQuery method
  *
- * @param Model $model
- * @param array $queryData
- * @param array $binding
+ * @param mixed $model
+ * @param mixed $queryData
+ * @param mixed $binding
  * @return void
  */
 	protected function &_prepareAssociationQuery(Model $model, &$queryData, $binding) {
@@ -2023,8 +1866,8 @@ class MysqlTest extends CakeTestCase {
 		$expected = " WHERE SUM(`Post`.`comments_count`) > 500";
 		$this->assertEquals($expected, $result);
 
-		$result = $this->Dbo->conditions("(Post.created < '" . date('Y-m-d H:i') . "') GROUP BY YEAR(Post.created), MONTH(Post.created)");
-		$expected = " WHERE (`Post`.`created` < '" . date('Y-m-d H:i') . "') GROUP BY YEAR(`Post`.`created`), MONTH(`Post`.`created`)";
+		$result = $this->Dbo->conditions("(Post.created < '" . date('Y-m-d H:i:s') . "') GROUP BY YEAR(Post.created), MONTH(Post.created)");
+		$expected = " WHERE (`Post`.`created` < '" . date('Y-m-d H:i:s') . "') GROUP BY YEAR(`Post`.`created`), MONTH(`Post`.`created`)";
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions("score BETWEEN 90.1 AND 95.7");
@@ -2032,7 +1875,7 @@ class MysqlTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions(array('score' => array(2 => 1, 2, 10)));
-		$expected = " WHERE `score` IN (1, 2, 10)";
+		$expected = " WHERE score IN (1, 2, 10)";
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions("Aro.rght = Aro.lft + 1.1");
@@ -2135,25 +1978,6 @@ class MysqlTest extends CakeTestCase {
 		$result = $this->Dbo->conditions('Member.email = "mariano@cricava.com" AND Member.user LIKE "mariano.iglesias%"');
 		$expected = ' WHERE `Member`.`email` = "mariano@cricava.com" AND `Member`.`user` LIKE "mariano.iglesias%"';
 		$this->assertEquals($expected, $result);
-	}
-
-/**
- * test that - in conditions and field names works
- *
- * @return void
- */
-	public function testHypenInStringConditionsAndFieldNames() {
-		$result = $this->Dbo->conditions('I18n__title_pt-br.content = "test"');
-		$this->assertEquals(' WHERE `I18n__title_pt-br`.`content` = "test"', $result);
-
-		$result = $this->Dbo->conditions('Model.field=NOW()-3600');
-		$this->assertEquals(' WHERE `Model`.`field`=NOW()-3600', $result);
-
-		$result = $this->Dbo->conditions('NOW() - Model.created < 7200');
-		$this->assertEquals(' WHERE NOW() - `Model`.`created` < 7200', $result);
-
-		$result = $this->Dbo->conditions('NOW()-Model.created < 7200');
-		$this->assertEquals(' WHERE NOW()-`Model`.`created` < 7200', $result);
 	}
 
 /**
@@ -2279,12 +2103,6 @@ class MysqlTest extends CakeTestCase {
 		$expected = " WHERE `HardCandy`.`name` LIKE 'to be or%' AND `Candy`.`name` LIKE '%not to be%'";
 		$this->assertEquals($expected, $result);
 
-		$result = $this->Dbo->conditions(array(
-			"Person.name || ' ' || Person.surname ILIKE" => '%mark%'
-		));
-		$expected = " WHERE `Person`.`name` || ' ' || `Person`.`surname` ILIKE '%mark%'";
-		$this->assertEquals($expected, $result);
-
 		$result = $this->Dbo->conditions(array('score BETWEEN ? AND ?' => array(90.1, 95.7)));
 		$expected = " WHERE `score` BETWEEN 90.1 AND 95.7";
 		$this->assertEquals($expected, $result);
@@ -2318,7 +2136,7 @@ class MysqlTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions(array('score' => array(1, 2, 10)));
-		$expected = " WHERE `score` IN (1, 2, 10)";
+		$expected = " WHERE score IN (1, 2, 10)";
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions(array('score' => array()));
@@ -2406,10 +2224,10 @@ class MysqlTest extends CakeTestCase {
 		$this->assertEquals($expected, $result);
 
 		$result = $this->Dbo->conditions(array(
-			'NOT' => array('Course.id' => null, 'Course.vet' => 'N', 'level_of_education_id' => array(912, 999)),
+			'NOT' => array('Course.id' => null, 'Course.vet' => 'N', 'level_of_education_id' => array(912,999)),
 			'Enrollment.yearcompleted >' => '0')
 		);
-		$this->assertRegExp('/^\s*WHERE\s+\(NOT\s+\(`Course`\.`id` IS NULL\)\s+AND NOT\s+\(`Course`\.`vet`\s+=\s+\'N\'\)\s+AND NOT\s+\(`level_of_education_id` IN \(912, 999\)\)\)\s+AND\s+`Enrollment`\.`yearcompleted`\s+>\s+\'0\'\s*$/', $result);
+		$this->assertRegExp('/^\s*WHERE\s+\(NOT\s+\(`Course`\.`id` IS NULL\)\s+AND NOT\s+\(`Course`\.`vet`\s+=\s+\'N\'\)\s+AND NOT\s+\(level_of_education_id IN \(912, 999\)\)\)\s+AND\s+`Enrollment`\.`yearcompleted`\s+>\s+\'0\'\s*$/', $result);
 
 		$result = $this->Dbo->conditions(array('id <>' => '8'));
 		$this->assertRegExp('/^\s*WHERE\s+`id`\s+<>\s+\'8\'\s*$/', $result);
@@ -2445,12 +2263,7 @@ class MysqlTest extends CakeTestCase {
 
 		$conditions = array('id' => array(2, 5, 6, 9, 12, 45, 78, 43, 76));
 		$result = $this->Dbo->conditions($conditions);
-		$expected = " WHERE `id` IN (2, 5, 6, 9, 12, 45, 78, 43, 76)";
-		$this->assertEquals($expected, $result);
-
-		$conditions = array('`Correction`.`source` collate utf8_bin' => array('kiwi', 'pear'));
-		$result = $this->Dbo->conditions($conditions);
-		$expected = " WHERE `Correction`.`source` collate utf8_bin IN ('kiwi', 'pear')";
+		$expected = " WHERE id IN (2, 5, 6, 9, 12, 45, 78, 43, 76)";
 		$this->assertEquals($expected, $result);
 
 		$conditions = array('title' => 'user(s)');
@@ -2507,42 +2320,6 @@ class MysqlTest extends CakeTestCase {
 	}
 
 /**
- * test conditions() with replacements.
- *
- * @return void
- */
-	public function testConditionsWithReplacements() {
-		$result = $this->Dbo->conditions(array(
-			'score BETWEEN :0 AND :1' => array(90.1, 95.7)
-		));
-		$expected = " WHERE `score` BETWEEN 90.1 AND 95.7";
-		$this->assertEquals($expected, $result);
-
-		$result = $this->Dbo->conditions(array(
-			'score BETWEEN ? AND ?' => array(90.1, 95.7)
-		));
-		$expected = " WHERE `score` BETWEEN 90.1 AND 95.7";
-		$this->assertEquals($expected, $result);
-	}
-
-/**
- * Test that array conditions with only one element work.
- *
- * @return void
- */
-	public function testArrayConditionsOneElement() {
-		$conditions = array('id' => array(1));
-		$result = $this->Dbo->conditions($conditions);
-		$expected = " WHERE id = (1)";
-		$this->assertEquals($expected, $result);
-
-		$conditions = array('id NOT' => array(1));
-		$result = $this->Dbo->conditions($conditions);
-		$expected = " WHERE NOT (id = (1))";
-		$this->assertEquals($expected, $result);
-	}
-
-/**
  * testArrayConditionsParsingComplexKeys method
  *
  * @return void
@@ -2594,10 +2371,10 @@ class MysqlTest extends CakeTestCase {
  * @return void
  */
 	public function testConditionsOptionalArguments() {
-		$result = $this->Dbo->conditions(array('Member.name' => 'Mariano'), true, false);
+		$result = $this->Dbo->conditions( array('Member.name' => 'Mariano'), true, false);
 		$this->assertRegExp('/^\s*`Member`.`name`\s*=\s*\'Mariano\'\s*$/', $result);
 
-		$result = $this->Dbo->conditions(array(), true, false);
+		$result = $this->Dbo->conditions( array(), true, false);
 		$this->assertRegExp('/^\s*1\s*=\s*1\s*$/', $result);
 	}
 
@@ -2823,7 +2600,7 @@ class MysqlTest extends CakeTestCase {
  * @return void
  */
 	public function testDropSchemaNoSchema() {
-		$this->Dbo->dropSchema(null);
+		$result = $this->Dbo->dropSchema(null);
 	}
 
 /**
@@ -3021,27 +2798,6 @@ class MysqlTest extends CakeTestCase {
 		$result = $this->Dbo->buildIndex($data);
 		$expected = array('UNIQUE KEY `MyIndex` (`id`, `name`)');
 		$this->assertEquals($expected, $result);
-
-		$data = array(
-			'MyFtIndex' => array('column' => array('name', 'description'), 'type' => 'fulltext')
-		);
-		$result = $this->Dbo->buildIndex($data);
-		$expected = array('FULLTEXT KEY `MyFtIndex` (`name`, `description`)');
-		$this->assertEquals($expected, $result);
-
-		$data = array(
-			'MyTextIndex' => array('column' => 'text_field', 'length' => array('text_field' => 20))
-		);
-		$result = $this->Dbo->buildIndex($data);
-		$expected = array('KEY `MyTextIndex` (`text_field`(20))');
-		$this->assertEquals($expected, $result);
-
-		$data = array(
-			'MyMultiTextIndex' => array('column' => array('text_field1', 'text_field2'), 'length' => array('text_field1' => 20, 'text_field2' => 20))
-		);
-		$result = $this->Dbo->buildIndex($data);
-		$expected = array('KEY `MyMultiTextIndex` (`text_field1`(20), `text_field2`(20))');
-		$this->assertEquals($expected, $result);
 	}
 
 /**
@@ -3112,7 +2868,7 @@ class MysqlTest extends CakeTestCase {
 			'type' => 'timestamp',
 			'default' => 'current_timestamp',
 			'null' => false,
-		);
+ 		);
 		$result = $this->Dbo->buildColumn($data);
 		$expected = '`created` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL';
 		$this->assertEquals($expected, $result);
@@ -3285,7 +3041,7 @@ class MysqlTest extends CakeTestCase {
 		$expected = '(1 + 1) = 2';
 		$this->assertEquals($expected, $result);
 
-		$conditions = array('this_moment BETWEEN ? AND ?' => array(1, 2));
+		$conditions = array('this_moment BETWEEN ? AND ?' => array(1,2));
 		$expected = 'NOW() BETWEEN 1 AND 2';
 		$result = $this->Dbo->conditions($conditions, true, false, $Article);
 		$this->assertEquals($expected, $result);
@@ -3445,7 +3201,7 @@ class MysqlTest extends CakeTestCase {
 		);
 
 		$conditions = array('comment_count >' => 2);
-		$query = 'SELECT ' . implode(',', $this->Dbo->fields($Article, null, array('id', 'comment_count'))) .
+		$query = 'SELECT ' . join(',', $this->Dbo->fields($Article, null, array('id', 'comment_count'))) .
 				' FROM ' . $this->Dbo->fullTableName($Article) . ' Article ' . $this->Dbo->conditions($conditions, true, true, $Article);
 		$result = $this->Dbo->fetchAll($query);
 		$expected = array(array(
@@ -3719,7 +3475,7 @@ class MysqlTest extends CakeTestCase {
  * @return void
  */
 	public function testExceptionOnBrokenConnection() {
-		new Mysql(array(
+		$dbo = new Mysql(array(
 			'driver' => 'mysql',
 			'host' => 'imaginary_host',
 			'login' => 'mark',
@@ -3823,45 +3579,4 @@ class MysqlTest extends CakeTestCase {
 			->with("TRUNCATE TABLE `$schema`.`tbl_articles`");
 		$this->Dbo->truncate('articles');
 	}
-
-/**
- * Test nested transaction
- *
- * @return void
- */
-	public function testNestedTransaction() {
-		$nested = $this->Dbo->useNestedTransactions;
-		$this->Dbo->useNestedTransactions = true;
-		if ($this->Dbo->nestedTransactionSupported() === false) {
-			$this->Dbo->useNestedTransactions = $nested;
-			$this->skipIf(true, 'The MySQL server do not support nested transaction');
-		}
-
-		$this->loadFixtures('Inno');
-		$model = ClassRegistry::init('Inno');
-		$model->hasOne = $model->hasMany = $model->belongsTo = $model->hasAndBelongsToMany = array();
-		$model->cacheQueries = false;
-		$this->Dbo->cacheMethods = false;
-
-		$this->assertTrue($this->Dbo->begin());
-		$this->assertNotEmpty($model->read(null, 1));
-
-		$this->assertTrue($this->Dbo->begin());
-		$this->assertTrue($model->delete(1));
-		$this->assertEmpty($model->read(null, 1));
-		$this->assertTrue($this->Dbo->rollback());
-		$this->assertNotEmpty($model->read(null, 1));
-
-		$this->assertTrue($this->Dbo->begin());
-		$this->assertTrue($model->delete(1));
-		$this->assertEmpty($model->read(null, 1));
-		$this->assertTrue($this->Dbo->commit());
-		$this->assertEmpty($model->read(null, 1));
-
-		$this->assertTrue($this->Dbo->rollback());
-		$this->assertNotEmpty($model->read(null, 1));
-
-		$this->Dbo->useNestedTransactions = $nested;
-	}
-
 }

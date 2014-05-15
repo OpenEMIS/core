@@ -1,17 +1,16 @@
 <?php
 /**
  * CakePHP : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
  * @link          http://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.TestSuite
  * @since         CakePHP v 1.2.0.4487
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 /**
@@ -23,7 +22,7 @@ class CakeTestSuiteTest extends CakeTestCase {
 
 /**
  * testAddTestDirectory
- *
+ * 
  * @return void
  */
 	public function testAddTestDirectory() {
@@ -40,7 +39,7 @@ class CakeTestSuiteTest extends CakeTestCase {
 
 /**
  * testAddTestDirectoryRecursive
- *
+ * 
  * @return void
  */
 	public function testAddTestDirectoryRecursive() {
@@ -58,11 +57,11 @@ class CakeTestSuiteTest extends CakeTestCase {
 
 /**
  * testAddTestDirectoryRecursiveWithHidden
- *
+ * 
  * @return void
  */
 	public function testAddTestDirectoryRecursiveWithHidden() {
-		$this->skipIf(!is_writable(TMP), 'Cant addTestDirectoryRecursiveWithHidden unless the tmp folder is writable.');
+		$this->skipIf(!is_writeable(TMP), 'Cant addTestDirectoryRecursiveWithHidden unless the tmp folder is writable.');
 
 		$Folder = new Folder(TMP . 'MyTestFolder', true, 0777);
 		mkdir($Folder->path . DS . '.svn', 0777, true);
@@ -79,14 +78,14 @@ class CakeTestSuiteTest extends CakeTestCase {
 
 		$Folder->delete();
 	}
-
+	
 /**
  * testAddTestDirectoryRecursiveWithNonPhp
- *
+ * 
  * @return void
  */
 	public function testAddTestDirectoryRecursiveWithNonPhp() {
-		$this->skipIf(!is_writable(TMP), 'Cant addTestDirectoryRecursiveWithNonPhp unless the tmp folder is writable.');
+		$this->skipIf(!is_writeable(TMP), 'Cant addTestDirectoryRecursiveWithNonPhp unless the tmp folder is writable.');
 
 		$Folder = new Folder(TMP . 'MyTestFolder', true, 0777);
 		touch($Folder->path . DS . 'BackupTest.php~');

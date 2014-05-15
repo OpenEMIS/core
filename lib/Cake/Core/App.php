@@ -2,28 +2,27 @@
 /**
  * App class
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Core
  * @since         CakePHP(tm) v 1.2.0.6001
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
-
-App::uses('Inflector', 'Utility');
 
 /**
  * App is responsible for path management, class location and class loading.
  *
  * ### Adding paths
  *
- * You can add paths to the search indexes App uses to find classes using `App::build()`. Adding
+ * You can add paths to the search indexes App uses to find classes using `App::build()`.  Adding
  * additional controller paths for example would alter where CakePHP looks for controllers.
  * This allows you to split your application up across the filesystem.
  *
@@ -49,8 +48,8 @@ App::uses('Inflector', 'Utility');
  *
  * ### Locating plugins and themes
  *
- * Plugins and Themes can be located with App as well. Using App::pluginPath('DebugKit') for example, will
- * give you the full path to the DebugKit plugin. App::themePath('purple'), would give the full path to the
+ * Plugins and Themes can be located with App as well.  Using App::pluginPath('DebugKit') for example, will
+ * give you the full path to the DebugKit plugin.  App::themePath('purple'), would give the full path to the
  * `purple` theme.
  *
  * ### Inspecting known objects
@@ -66,28 +65,28 @@ class App {
 /**
  * Append paths
  *
- * @var string
+ * @constant APPEND
  */
 	const APPEND = 'append';
 
 /**
  * Prepend paths
  *
- * @var string
+ * @constant PREPEND
  */
 	const PREPEND = 'prepend';
 
 /**
  * Register package
  *
- * @var string
+ * @constant REGISTER
  */
 	const REGISTER = 'register';
 
 /**
  * Reset paths instead of merging
  *
- * @var boolean
+ * @constant RESET
  */
 	const RESET = true;
 
@@ -241,7 +240,7 @@ class App {
 
 /**
  * Get all the currently loaded paths from App. Useful for inspecting
- * or storing all paths App knows about. For a paths to a specific package
+ * or storing all paths App knows about.  For a paths to a specific package
  * use App::path()
  *
  * @return array An array of packages and their associated paths.
@@ -269,7 +268,7 @@ class App {
  * If reset is set to true, all loaded plugins will be forgotten and they will be needed to be loaded again.
  *
  * @param array $paths associative array with package names as keys and a list of directories for new search paths
- * @param boolean|string $mode App::RESET will set paths, App::APPEND with append paths, App::PREPEND will prepend paths (default)
+ * @param mixed $mode App::RESET will set paths, App::APPEND with append paths, App::PREPEND will prepend paths (default)
  * 	App::REGISTER will register new packages and their paths, %s in path will be replaced by APP path
  * @return void
  * @link http://book.cakephp.org/2.0/en/core-utility-libraries/app.html#App::build
@@ -366,7 +365,7 @@ class App {
 	}
 
 /**
- * Finds the path that a theme is on. Searches through the defined theme paths.
+ * Finds the path that a theme is on.  Searches through the defined theme paths.
  *
  * Usage:
  *
@@ -419,16 +418,12 @@ class App {
  * are commonly used by version control systems.
  *
  * @param string $type Type of object, i.e. 'Model', 'Controller', 'View/Helper', 'file', 'class' or 'plugin'
- * @param string|array $path Optional Scan only the path given. If null, paths for the chosen type will be used.
+ * @param mixed $path Optional Scan only the path given. If null, paths for the chosen type will be used.
  * @param boolean $cache Set to false to rescan objects of the chosen type. Defaults to true.
- * @return mixed Either false on incorrect / miss. Or an array of found objects.
+ * @return mixed Either false on incorrect / miss.  Or an array of found objects.
  * @link http://book.cakephp.org/2.0/en/core-utility-libraries/app.html#App::objects
  */
 	public static function objects($type, $path = null, $cache = true) {
-		if (empty(self::$_objects) && $cache === true) {
-			self::$_objects = (array)Cache::read('object_map', '_cake_core_');
-		}
-
 		$extension = '/\.php$/';
 		$includeDirectories = false;
 		$name = $type;
@@ -437,7 +432,7 @@ class App {
 			$type = 'plugins';
 		}
 
-		if ($type === 'plugins') {
+		if ($type == 'plugins') {
 			$extension = '/.*/';
 			$includeDirectories = true;
 		}
@@ -453,6 +448,10 @@ class App {
 		} elseif ($type === 'file') {
 			$extension = '/\.php$/';
 			$name = $type . str_replace(DS, '', $path);
+		}
+
+		if (empty(self::$_objects) && $cache === true) {
+			self::$_objects = Cache::read('object_map', '_cake_core_');
 		}
 
 		$cacheLocation = empty($plugin) ? 'app' : $plugin;
@@ -533,15 +532,11 @@ class App {
 		if (!isset(self::$_classMap[$className])) {
 			return false;
 		}
-		if (strpos($className, '..') !== false) {
-			return false;
-		}
 
 		$parts = explode('.', self::$_classMap[$className], 2);
 		list($plugin, $package) = count($parts) > 1 ? $parts : array(null, current($parts));
 
-		$file = self::_mapped($className, $plugin);
-		if ($file) {
+		if ($file = self::_mapped($className, $plugin)) {
 			return include $file;
 		}
 		$paths = self::path($package, $plugin);
@@ -556,10 +551,8 @@ class App {
 			$paths[] = $pluginPath . 'Lib' . DS . $package . DS;
 			$paths[] = $pluginPath . $package . DS;
 		}
-
-		$normalizedClassName = str_replace('\\', DS, $className);
 		foreach ($paths as $path) {
-			$file = $path . $normalizedClassName . '.php';
+			$file = $path . $className . '.php';
 			if (file_exists($file)) {
 				self::_map($file, $className, $plugin);
 				return include $file;
@@ -584,15 +577,15 @@ class App {
 	}
 
 /**
- * Finds classes based on $name or specific file(s) to search. Calling App::import() will
+ * Finds classes based on $name or specific file(s) to search.  Calling App::import() will
  * not construct any classes contained in the files. It will only find and require() the file.
  *
  * @link          http://book.cakephp.org/2.0/en/core-utility-libraries/app.html#including-files-with-app-import
- * @param string|array $type The type of Class if passed as a string, or all params can be passed as
+ * @param mixed $type The type of Class if passed as a string, or all params can be passed as
  *                    an single array to $type,
  * @param string $name Name of the Class or a unique name for the file
- * @param boolean|array $parent boolean true if Class Parent should be searched, accepts key => value
- *              array('parent' => $parent, 'file' => $file, 'search' => $search, 'ext' => '$ext');
+ * @param mixed $parent boolean true if Class Parent should be searched, accepts key => value
+ *              array('parent' => $parent ,'file' => $file, 'search' => $search, 'ext' => '$ext');
  *              $ext allows setting the extension of the file name
  *              based on Inflector::underscore($name) . ".$ext";
  * @param array $search paths to search for files, array('path 1', 'path 2', 'path 3');
@@ -612,7 +605,7 @@ class App {
 			extract($parent, EXTR_OVERWRITE);
 		}
 
-		if (!$name && !$file) {
+		if ($name == null && $file == null) {
 			return false;
 		}
 
@@ -641,11 +634,11 @@ class App {
 			return self::_loadClass($name, $plugin, $type, $originalType, $parent);
 		}
 
-		if ($originalType === 'file' && !empty($file)) {
+		if ($originalType == 'file' && !empty($file)) {
 			return self::_loadFile($name, $plugin, $search, $file, $return);
 		}
 
-		if ($originalType === 'vendor') {
+		if ($originalType == 'vendor') {
 			return self::_loadVendor($name, $plugin, $file, $ext);
 		}
 
@@ -664,7 +657,7 @@ class App {
  * @return boolean true indicating the successful load and existence of the class
  */
 	protected static function _loadClass($name, $plugin, $type, $originalType, $parent) {
-		if ($type === 'Console/Command' && $name === 'Shell') {
+		if ($type == 'Console/Command' && $name == 'Shell') {
 			$type = 'Console';
 		} elseif (isset(self::$types[$originalType]['suffix'])) {
 			$suffix = self::$types[$originalType]['suffix'];
@@ -772,6 +765,7 @@ class App {
  */
 	public static function init() {
 		self::$_map += (array)Cache::read('file_map', '_cake_core_');
+		self::$_objects += (array)Cache::read('object_map', '_cake_core_');
 		register_shutdown_function(array('App', 'shutdown'));
 	}
 
@@ -887,8 +881,7 @@ class App {
 /**
  * Object destructor.
  *
- * Writes cache file if changes have been made to the $_map. Also, check if a fatal
- * error happened and call the handler.
+ * Writes cache file if changes have been made to the $_map
  *
  * @return void
  */
@@ -899,34 +892,6 @@ class App {
 		if (self::$_objectCacheChange) {
 			Cache::write('object_map', self::$_objects, '_cake_core_');
 		}
-		self::_checkFatalError();
-	}
-
-/**
- * Check if a fatal error happened and trigger the configured handler if configured
- *
- * @return void
- */
-	protected static function _checkFatalError() {
-		$lastError = error_get_last();
-		if (!is_array($lastError)) {
-			return;
-		}
-
-		list(, $log) = ErrorHandler::mapErrorCode($lastError['type']);
-		if ($log !== LOG_ERR) {
-			return;
-		}
-
-		if (PHP_SAPI === 'cli') {
-			$errorHandler = Configure::read('Error.consoleHandler');
-		} else {
-			$errorHandler = Configure::read('Error.handler');
-		}
-		if (!is_callable($errorHandler)) {
-			return;
-		}
-		call_user_func($errorHandler, $lastError['type'], $lastError['message'], $lastError['file'], $lastError['line'], array());
 	}
 
 }

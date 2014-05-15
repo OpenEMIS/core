@@ -1,26 +1,20 @@
 <?php
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Core
  * @since         CakePHP(tm) v 1.0.0.2363
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
-App::uses('Hash', 'Utility');
-App::uses('ConfigReaderInterface', 'Configure');
-
-/**
- * Compatibility with 2.1, which expects Configure to load Set.
- */
 App::uses('Set', 'Utility');
+App::uses('ConfigReaderInterface', 'Configure');
 
 /**
  * Configuration class. Used for managing runtime configuration information.
@@ -67,17 +61,19 @@ class Configure {
  */
 	public static function bootstrap($boot = true) {
 		if ($boot) {
-			self::_appDefaults();
+			self::write('App', array(
+				'base' => false,
+				'baseUrl' => false,
+				'dir' => APP_DIR,
+				'webroot' => WEBROOT_DIR,
+				'www_root' => WWW_ROOT
+			));
 
 			if (!include APP . 'Config' . DS . 'core.php') {
-				trigger_error(__d('cake_dev',
-						"Can't find application core file. Please create %s, and make sure it is readable by PHP.",
-						APP . 'Config' . DS . 'core.php'),
-					E_USER_ERROR
-				);
+				trigger_error(__d('cake_dev', "Can't find application core file. Please create %score.php, and make sure it is readable by PHP.", APP . 'Config' . DS), E_USER_ERROR);
 			}
-			App::init();
 			App::$bootstrapping = false;
+			App::init();
 			App::build();
 
 			$exception = array(
@@ -90,11 +86,7 @@ class Configure {
 			self::_setErrorHandlers($error, $exception);
 
 			if (!include APP . 'Config' . DS . 'bootstrap.php') {
-				trigger_error(__d('cake_dev',
-						"Can't find application bootstrap file. Please create %s, and make sure it is readable by PHP.",
-						APP . 'Config' . DS . 'bootstrap.php'),
-					E_USER_ERROR
-				);
+				trigger_error(__d('cake_dev', "Can't find application bootstrap file. Please create %sbootstrap.php, and make sure it is readable by PHP.", APP . 'Config' . DS), E_USER_ERROR);
 			}
 			restore_error_handler();
 
@@ -102,27 +94,8 @@ class Configure {
 				self::$_values['Error'],
 				self::$_values['Exception']
 			);
-
-			// Preload Debugger + String in case of E_STRICT errors when loading files.
-			if (self::$_values['debug'] > 0) {
-				class_exists('Debugger');
-				class_exists('String');
-			}
+			unset($error, $exception);
 		}
-	}
-
-/**
- * Set app's default configs
- * @return void
- */
-	protected static function _appDefaults() {
-		self::write('App', (array)self::read('App') + array(
-			'base' => false,
-			'baseUrl' => false,
-			'dir' => APP_DIR,
-			'webroot' => WEBROOT_DIR,
-			'www_root' => WWW_ROOT
-		));
 	}
 
 /**
@@ -144,8 +117,7 @@ class Configure {
  * }}}
  *
  * @link http://book.cakephp.org/2.0/en/development/configuration.html#Configure::write
- * @param string|array $config The key to write, can be a dot notation value.
- * Alternatively can be an array containing key(s) and value(s).
+ * @param array $config Name of var to write
  * @param mixed $value Value to set for var
  * @return boolean True if write was successful
  */
@@ -155,7 +127,12 @@ class Configure {
 		}
 
 		foreach ($config as $name => $value) {
-			self::$_values = Hash::insert(self::$_values, $name, $value);
+			$pointer = &self::$_values;
+			foreach (explode('.', $name) as $key) {
+				$pointer = &$pointer[$key];
+			}
+			$pointer = $value;
+			unset($pointer);
 		}
 
 		if (isset($config['debug']) && function_exists('ini_set')) {
@@ -169,7 +146,7 @@ class Configure {
 	}
 
 /**
- * Used to read information stored in Configure. It's not
+ * Used to read information stored in Configure.  Its not
  * possible to store `null` values in Configure.
  *
  * Usage:
@@ -178,28 +155,26 @@ class Configure {
  * Configure::read('Name.key'); will return only the value of Configure::Name[key]
  * }}}
  *
- * @link http://book.cakephp.org/2.0/en/development/configuration.html#Configure::read
- * @param string $var Variable to obtain. Use '.' to access array elements.
+ * @linkhttp://book.cakephp.org/2.0/en/development/configuration.html#Configure::read
+ * @param string $var Variable to obtain.  Use '.' to access array elements.
  * @return mixed value stored in configure, or null.
  */
 	public static function read($var = null) {
 		if ($var === null) {
 			return self::$_values;
 		}
-		return Hash::get(self::$_values, $var);
-	}
-
-/**
- * Returns true if given variable is set in Configure.
- *
- * @param string $var Variable name to check for
- * @return boolean True if variable is there
- */
-	public static function check($var = null) {
-		if (empty($var)) {
-			return false;
+		if (isset(self::$_values[$var])) {
+			return self::$_values[$var];
 		}
-		return Hash::get(self::$_values, $var) !== null;
+		$pointer = &self::$_values;
+		foreach (explode('.', $var) as $key) {
+			if (isset($pointer[$key])) {
+				$pointer = &$pointer[$key];
+			} else {
+				return null;
+			}
+		}
+		return $pointer;
 	}
 
 /**
@@ -216,19 +191,25 @@ class Configure {
  * @return void
  */
 	public static function delete($var = null) {
-		self::$_values = Hash::remove(self::$_values, $var);
+		$keys = explode('.', $var);
+		$last = array_pop($keys);
+		$pointer = &self::$_values;
+		foreach ($keys as $key) {
+			$pointer = &$pointer[$key];
+		}
+		unset($pointer[$last]);
 	}
 
 /**
- * Add a new reader to Configure. Readers allow you to read configuration
- * files in various formats/storage locations. CakePHP comes with two built-in readers
- * PhpReader and IniReader. You can also implement your own reader classes in your application.
+ * Add a new reader to Configure.  Readers allow you to read configuration
+ * files in various formats/storage locations.  CakePHP comes with two built-in readers
+ * PhpReader and IniReader.  You can also implement your own reader classes in your application.
  *
  * To add a new reader to Configure:
  *
  * `Configure::config('ini', new IniReader());`
  *
- * @param string $name The name of the reader being configured. This alias is used later to
+ * @param string $name The name of the reader being configured.  This alias is used later to
  *   read values from a specific reader.
  * @param ConfigReaderInterface $reader The reader to append.
  * @return void
@@ -251,7 +232,7 @@ class Configure {
 	}
 
 /**
- * Remove a configured reader. This will unset the reader
+ * Remove a configured reader.  This will unset the reader
  * and make any future attempts to use it cause an Exception.
  *
  * @param string $name Name of the reader to drop.
@@ -266,7 +247,7 @@ class Configure {
 	}
 
 /**
- * Loads stored configuration information from a resource. You can add
+ * Loads stored configuration information from a resource.  You can add
  * config file resource readers with `Configure::config()`.
  *
  * Loaded configuration information will be merged with the current
@@ -275,7 +256,7 @@ class Configure {
  *
  * `Configure::load('Users.user', 'default')`
  *
- * Would load the 'user' config file using the default config reader. You can load
+ * Would load the 'user' config file using the default config reader.  You can load
  * app config files by giving the name of the resource you want loaded.
  *
  * `Configure::load('setup', 'default');`
@@ -291,80 +272,26 @@ class Configure {
  * @throws ConfigureException Will throw any exceptions the reader raises.
  */
 	public static function load($key, $config = 'default', $merge = true) {
-		$reader = self::_getReader($config);
-		if (!$reader) {
-			return false;
+		if (!isset(self::$_readers[$config])) {
+			if ($config === 'default') {
+				App::uses('PhpReader', 'Configure');
+				self::$_readers[$config] = new PhpReader();
+			} else {
+				return false;
+			}
 		}
-		$values = $reader->read($key);
+		$values = self::$_readers[$config]->read($key);
 
 		if ($merge) {
 			$keys = array_keys($values);
 			foreach ($keys as $key) {
 				if (($c = self::read($key)) && is_array($values[$key]) && is_array($c)) {
-					$values[$key] = Hash::merge($c, $values[$key]);
+					$values[$key] = Set::merge($c, $values[$key]);
 				}
 			}
 		}
 
 		return self::write($values);
-	}
-
-/**
- * Dump data currently in Configure into $key. The serialization format
- * is decided by the config reader attached as $config. For example, if the
- * 'default' adapter is a PhpReader, the generated file will be a PHP
- * configuration file loadable by the PhpReader.
- *
- * ## Usage
- *
- * Given that the 'default' reader is an instance of PhpReader.
- * Save all data in Configure to the file `my_config.php`:
- *
- * `Configure::dump('my_config.php', 'default');`
- *
- * Save only the error handling configuration:
- *
- * `Configure::dump('error.php', 'default', array('Error', 'Exception');`
- *
- * @param string $key The identifier to create in the config adapter.
- *   This could be a filename or a cache key depending on the adapter being used.
- * @param string $config The name of the configured adapter to dump data with.
- * @param array $keys The name of the top-level keys you want to dump.
- *   This allows you save only some data stored in Configure.
- * @return boolean success
- * @throws ConfigureException if the adapter does not implement a `dump` method.
- */
-	public static function dump($key, $config = 'default', $keys = array()) {
-		$reader = self::_getReader($config);
-		if (!$reader) {
-			throw new ConfigureException(__d('cake_dev', 'There is no "%s" adapter.', $config));
-		}
-		if (!method_exists($reader, 'dump')) {
-			throw new ConfigureException(__d('cake_dev', 'The "%s" adapter, does not have a %s method.', $config, 'dump()'));
-		}
-		$values = self::$_values;
-		if (!empty($keys) && is_array($keys)) {
-			$values = array_intersect_key($values, array_flip($keys));
-		}
-		return (bool)$reader->dump($key, $values);
-	}
-
-/**
- * Get the configured reader. Internally used by `Configure::load()` and `Configure::dump()`
- * Will create new PhpReader for default if not configured yet.
- *
- * @param string $config The name of the configured adapter
- * @return mixed Reader instance or false
- */
-	protected static function _getReader($config) {
-		if (!isset(self::$_readers[$config])) {
-			if ($config !== 'default') {
-				return false;
-			}
-			App::uses('PhpReader', 'Configure');
-			self::config($config, new PhpReader());
-		}
-		return self::$_readers[$config];
 	}
 
 /**
@@ -383,12 +310,12 @@ class Configure {
 	}
 
 /**
- * Used to write runtime configuration into Cache. Stored runtime configuration can be
- * restored using `Configure::restore()`. These methods can be used to enable configuration managers
+ * Used to write runtime configuration into Cache.  Stored runtime configuration can be
+ * restored using `Configure::restore()`.  These methods can be used to enable configuration managers
  * frontends, or other GUI type interfaces for configuration.
  *
  * @param string $name The storage name for the saved configuration.
- * @param string $cacheConfig The cache configuration to save into. Defaults to 'default'
+ * @param string $cacheConfig The cache configuration to save into.  Defaults to 'default'
  * @param array $data Either an array of data to store, or leave empty to store all values.
  * @return boolean Success
  */
@@ -400,7 +327,7 @@ class Configure {
 	}
 
 /**
- * Restores configuration data stored in the Cache into configure. Restored
+ * Restores configuration data stored in the Cache into configure.  Restored
  * values will overwrite existing ones.
  *
  * @param string $name Name of the stored config file to load.
@@ -416,17 +343,8 @@ class Configure {
 	}
 
 /**
- * Clear all values stored in Configure.
- *
- * @return boolean success.
- */
-	public static function clear() {
-		self::$_values = array();
-		return true;
-	}
-/**
  * Set the error and exception handlers.
- *
+ * 
  * @param array $error The Error handling configuration.
  * @param array $exception The exception handling configuration.
  * @return void

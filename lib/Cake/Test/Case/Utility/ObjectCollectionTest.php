@@ -2,18 +2,19 @@
 /**
  * ObjectCollectionTest file
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Utility
  * @since         CakePHP(tm) v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('ObjectCollection', 'Utility');
@@ -83,7 +84,7 @@ class GenericObjectCollection extends ObjectCollection {
  * @return array List of loaded objects
  */
 	public function load($object, $settings = array()) {
-		list(, $name) = pluginSplit($object);
+		list($plugin, $name) = pluginSplit($object);
 		if (isset($this->_loaded[$name])) {
 			return $this->_loaded[$name];
 		}
@@ -116,8 +117,8 @@ class ObjectCollectionTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		parent::tearDown();
 		unset($this->Objects);
+		parent::tearDown();
 	}
 
 /**
@@ -130,8 +131,8 @@ class ObjectCollectionTest extends CakeTestCase {
 		$this->assertInstanceOf('FirstGenericObject', $result);
 		$this->assertInstanceOf('FirstGenericObject', $this->Objects->First);
 
-		$result = $this->Objects->loaded();
-		$this->assertEquals(array('First'), $result, 'loaded() results are wrong.');
+		$result = $this->Objects->attached();
+		$this->assertEquals(array('First'), $result, 'attached() results are wrong.');
 
 		$this->assertTrue($this->Objects->enabled('First'));
 
@@ -148,17 +149,17 @@ class ObjectCollectionTest extends CakeTestCase {
 		$this->Objects->load('First');
 		$this->Objects->load('Second');
 
-		$result = $this->Objects->loaded();
+		$result = $this->Objects->attached();
 		$this->assertEquals(array('First', 'Second'), $result, 'loaded objects are wrong');
 
 		$this->Objects->unload('First');
 		$this->assertFalse(isset($this->Objects->First));
 		$this->assertTrue(isset($this->Objects->Second));
 
-		$result = $this->Objects->loaded();
+		$result = $this->Objects->attached();
 		$this->assertEquals(array('Second'), $result, 'loaded objects are wrong');
 
-		$result = $this->Objects->loaded();
+		$result = $this->Objects->enabled();
 		$this->assertEquals(array('Second'), $result, 'enabled objects are wrong');
 	}
 
@@ -170,7 +171,7 @@ class ObjectCollectionTest extends CakeTestCase {
 	public function testSet() {
 		$this->Objects->load('First');
 
-		$result = $this->Objects->loaded();
+		$result = $this->Objects->attached();
 		$this->assertEquals(array('First'), $result, 'loaded objects are wrong');
 
 		$result = $this->Objects->set('First', new SecondGenericObject($this->Objects));
@@ -353,7 +354,7 @@ class ObjectCollectionTest extends CakeTestCase {
 		$this->Objects->TriggerMockSecond->expects($this->never())
 			->method('callback');
 
-		$this->Objects->trigger(
+		$result = $this->Objects->trigger(
 			'callback',
 			array(array('value')),
 			array('modParams' => 2)

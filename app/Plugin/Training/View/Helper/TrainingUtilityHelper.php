@@ -49,8 +49,7 @@ class TrainingUtilityHelper extends AppHelper {
 				$status='Accredited';
 			}
 		}else if($value==2){
-			$newStatus = $workflow->getWorkflowStatus($module,$id);
-			$status = !empty($newStatus) ? $newStatus : $status;
+			$status = $workflow->getWorkflowStatus($module,$id);
 		}
 
 		return $status;

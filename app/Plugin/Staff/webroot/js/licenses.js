@@ -22,7 +22,7 @@ var objStaffLicenses = {
     init: function() {
         var element = '#searchIssuer';
         var table = $('#license');
-        var url = getRootURL() + table.attr('selectLicenseUrl');
+        var url = getRootURL() + table.attr('url');
         objStaffLicenses.attachAutoComplete(element, url, objStaffLicenses.selectField);
     },
 

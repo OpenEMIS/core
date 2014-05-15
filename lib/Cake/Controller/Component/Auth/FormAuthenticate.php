@@ -1,24 +1,23 @@
 <?php
 /**
- *
+ * PHP 5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('BaseAuthenticate', 'Controller/Component/Auth');
 
 /**
- * An authentication adapter for AuthComponent. Provides the ability to authenticate using POST
- * data. Can be used by configuring AuthComponent to use it via the AuthComponent::$authenticate setting.
+ * An authentication adapter for AuthComponent.  Provides the ability to authenticate using POST
+ * data.  Can be used by configuring AuthComponent to use it via the AuthComponent::$authenticate setting.
  *
  * {{{
  *	$this->Auth->authenticate = array(
@@ -36,7 +35,6 @@ App::uses('BaseAuthenticate', 'Controller/Component/Auth');
  * @see AuthComponent::$authenticate
  */
 class FormAuthenticate extends BaseAuthenticate {
-
 /**
  * Checks the fields to ensure they are supplied.
  *
@@ -57,15 +55,14 @@ class FormAuthenticate extends BaseAuthenticate {
 		}
 		return true;
 	}
-
 /**
- * Authenticates the identity contained in a request. Will use the `settings.userModel`, and `settings.fields`
- * to find POST data that is used to find a matching record in the `settings.userModel`. Will return false if
- * there is no post data, either username or password is missing, or if the scope conditions have not been met.
+ * Authenticates the identity contained in a request.  Will use the `settings.userModel`, and `settings.fields`
+ * to find POST data that is used to find a matching record in the `settings.userModel`.  Will return false if
+ * there is no post data, either username or password is missing, of if the scope conditions have not been met.
  *
  * @param CakeRequest $request The request that contains login information.
  * @param CakeResponse $response Unused response object.
- * @return mixed False on login failure. An array of User data on success.
+ * @return mixed.  False on login failure.  An array of User data on success.
  */
 	public function authenticate(CakeRequest $request, CakeResponse $response) {
 		$userModel = $this->settings['userModel'];

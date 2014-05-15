@@ -1,35 +1,33 @@
 <?php
 /**
+ * Validation Class.  Used for validation of model data
  *
+ * PHP Version 5.x
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
+ * @package       Cake.Utility
  * @since         CakePHP(tm) v 1.2.0.3830
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('Multibyte', 'I18n');
-App::uses('File', 'Utility');
-App::uses('CakeNumber', 'Utility');
-
 // Load multibyte if the extension is missing.
 if (!function_exists('mb_strlen')) {
 	class_exists('Multibyte');
 }
 
 /**
- * Validation Class. Used for validation of model data
- *
  * Offers different validation methods.
  *
  * @package       Cake.Utility
+ * @since         CakePHP v 1.2.0.3830
  */
 class Validation {
 
@@ -39,7 +37,7 @@ class Validation {
  * @var array
  */
 	protected static $_pattern = array(
-		'hostname' => '(?:[_\p{L}0-9][-_\p{L}0-9]*\.)*(?:[\p{L}0-9][-\p{L}0-9]{0,62})\.(?:(?:[a-z]{2}\.)?[a-z]{2,})'
+		'hostname' => '(?:[a-z0-9][-a-z0-9]*\.)*(?:[a-z0-9][-a-z0-9]{0,62})\.(?:(?:[a-z]{2}\.)?[a-z]{2,4}|museum|travel)'
 	);
 
 /**
@@ -58,7 +56,7 @@ class Validation {
  * $check can be passed as an array:
  * array('check' => 'valueToCheck');
  *
- * @param string|array $check Value to check
+ * @param mixed $check Value to check
  * @return boolean Success
  */
 	public static function notEmpty($check) {
@@ -80,7 +78,7 @@ class Validation {
  * $check can be passed as an array:
  * array('check' => 'valueToCheck');
  *
- * @param string|array $check Value to check
+ * @param mixed $check Value to check
  * @return boolean Success
  */
 	public static function alphaNumeric($check) {
@@ -91,7 +89,7 @@ class Validation {
 		if (empty($check) && $check != '0') {
 			return false;
 		}
-		return self::_check($check, '/^[\p{Ll}\p{Lm}\p{Lo}\p{Lt}\p{Lu}\p{Nd}]+$/Du');
+		return self::_check($check, '/^[\p{Ll}\p{Lm}\p{Lo}\p{Lt}\p{Lu}\p{Nd}]+$/mu');
 	}
 
 /**
@@ -110,13 +108,13 @@ class Validation {
 	}
 
 /**
- * Returns true if field is left blank -OR- only whitespace characters are present in its value
+ * Returns true if field is left blank -OR- only whitespace characters are present in it's value
  * Whitespace characters include Space, Tab, Carriage Return, Newline
  *
  * $check can be passed as an array:
  * array('check' => 'valueToCheck');
  *
- * @param string|array $check Value to check
+ * @param mixed $check Value to check
  * @return boolean Success
  */
 	public static function blank($check) {
@@ -130,8 +128,8 @@ class Validation {
  * Validation of credit card numbers.
  * Returns true if $check is in the proper credit card format.
  *
- * @param string|array $check credit card number to validate
- * @param string|array $type 'all' may be passed as a sting, defaults to fast which checks format of most major credit cards
+ * @param mixed $check credit card number to validate
+ * @param mixed $type 'all' may be passed as a sting, defaults to fast which checks format of most major credit cards
  *    if an array is used only the values of the array are checked.
  *    Example: array('amex', 'bankcard', 'maestro')
  * @param boolean $deep set to true this will check the Luhn algorithm of the credit card.
@@ -149,7 +147,7 @@ class Validation {
 			return false;
 		}
 
-		if ($regex !== null) {
+		if (!is_null($regex)) {
 			if (self::_check($check, $regex)) {
 				return self::luhn($check, $deep);
 			}
@@ -181,7 +179,7 @@ class Validation {
 					return self::luhn($check, $deep);
 				}
 			}
-		} elseif ($type === 'all') {
+		} elseif ($type == 'all') {
 			foreach ($cards['all'] as $value) {
 				$regex = $value;
 
@@ -202,7 +200,7 @@ class Validation {
 /**
  * Used to compare 2 numeric values.
  *
- * @param string|array $check1 if string is passed for a string must also be passed for $check2
+ * @param mixed $check1 if string is passed for a string must also be passed for $check2
  *    used as an array it must be passed as array('check1' => value, 'operator' => 'value', 'check2' -> value)
  * @param string $operator Can be either a word or operand
  *    is greater >, is less <, greater or equal >=
@@ -254,7 +252,8 @@ class Validation {
 				}
 				break;
 			default:
-				self::$errors[] = __d('cake_dev', 'You must define the $operator parameter for %s', 'Validation::comparison()');
+				self::$errors[] = __d('cake_dev', 'You must define the $operator parameter for Validation::comparison()');
+				break;
 		}
 		return false;
 	}
@@ -262,8 +261,8 @@ class Validation {
 /**
  * Used when a custom regular expression is needed.
  *
- * @param string|array $check When used as a string, $regex must also be a valid regular expression.
- *    As and array: array('check' => value, 'regex' => 'valid regular expression')
+ * @param mixed $check When used as a string, $regex must also be a valid regular expression.
+ *								As and array: array('check' => value, 'regex' => 'valid regular expression')
  * @param string $regex If $check is passed as a string, $regex must also be set to valid regular expression
  * @return boolean Success
  */
@@ -272,7 +271,7 @@ class Validation {
 			extract(self::_defaults($check));
 		}
 		if ($regex === null) {
-			self::$errors[] = __d('cake_dev', 'You must define a regular expression for %s', 'Validation::custom()');
+			self::$errors[] = __d('cake_dev', 'You must define a regular expression for Validation::custom()');
 			return false;
 		}
 		return self::_check($check, $regex);
@@ -282,57 +281,30 @@ class Validation {
  * Date validation, determines if the string passed is a valid date.
  * keys that expect full month, day and year will validate leap years
  *
- * ### Formats:
- *
- * - `dmy` 27-12-2006 or 27-12-06 separators can be a space, period, dash, forward slash
- * - `mdy` 12-27-2006 or 12-27-06 separators can be a space, period, dash, forward slash
- * - `ymd` 2006-12-27 or 06-12-27 separators can be a space, period, dash, forward slash
- * - `dMy` 27 December 2006 or 27 Dec 2006
- * - `Mdy` December 27, 2006 or Dec 27, 2006 comma is optional
- * - `My` December 2006 or Dec 2006
- * - `my` 12/2006 or 12/06 separators can be a space, period, dash, forward slash
- * - `ym` 2006/12 or 06/12 separators can be a space, period, dash, forward slash
- * - `y` 2006 just the year without any separators
- *
  * @param string $check a valid date string
- * @param string|array $format Use a string or an array of the keys above.
- *    Arrays should be passed as array('dmy', 'mdy', etc)
+ * @param mixed $format Use a string or an array of the keys below. Arrays should be passed as array('dmy', 'mdy', etc)
+ * 	      Keys: dmy 27-12-2006 or 27-12-06 separators can be a space, period, dash, forward slash
+ * 	            mdy 12-27-2006 or 12-27-06 separators can be a space, period, dash, forward slash
+ * 	            ymd 2006-12-27 or 06-12-27 separators can be a space, period, dash, forward slash
+ * 	            dMy 27 December 2006 or 27 Dec 2006
+ * 	            Mdy December 27, 2006 or Dec 27, 2006 comma is optional
+ * 	            My December 2006 or Dec 2006
+ * 	            my 12/2006 separators can be a space, period, dash, forward slash
  * @param string $regex If a custom regular expression is used this is the only validation that will occur.
  * @return boolean Success
  */
 	public static function date($check, $format = 'ymd', $regex = null) {
-		if ($regex !== null) {
+		if (!is_null($regex)) {
 			return self::_check($check, $regex);
 		}
-		$month = '(0[123456789]|10|11|12)';
-		$separator = '([- /.])';
-		$fourDigitYear = '(([1][9][0-9][0-9])|([2][0-9][0-9][0-9]))';
-		$twoDigitYear = '([0-9]{2})';
-		$year = '(?:' . $fourDigitYear . '|' . $twoDigitYear . ')';
 
-		$regex['dmy'] = '%^(?:(?:31(\\/|-|\\.|\\x20)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)' .
-			$separator . '(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29' .
-			$separator . '0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])' .
-			$separator . '(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$%';
-
-		$regex['mdy'] = '%^(?:(?:(?:0?[13578]|1[02])(\\/|-|\\.|\\x20)31)\\1|(?:(?:0?[13-9]|1[0-2])' .
-			$separator . '(?:29|30)\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:0?2' . $separator . '29\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:(?:0?[1-9])|(?:1[0-2]))' .
-			$separator . '(?:0?[1-9]|1\\d|2[0-8])\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$%';
-
-		$regex['ymd'] = '%^(?:(?:(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00)))' .
-			$separator . '(?:0?2\\1(?:29)))|(?:(?:(?:1[6-9]|[2-9]\\d)?\\d{2})' .
-			$separator . '(?:(?:(?:0?[13578]|1[02])\\2(?:31))|(?:(?:0?[1,3-9]|1[0-2])\\2(29|30))|(?:(?:0?[1-9])|(?:1[0-2]))\\2(?:0?[1-9]|1\\d|2[0-8]))))$%';
-
+		$regex['dmy'] = '%^(?:(?:31(\\/|-|\\.|\\x20)(?:0?[13578]|1[02]))\\1|(?:(?:29|30)(\\/|-|\\.|\\x20)(?:0?[1,3-9]|1[0-2])\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:29(\\/|-|\\.|\\x20)0?2\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\\d|2[0-8])(\\/|-|\\.|\\x20)(?:(?:0?[1-9])|(?:1[0-2]))\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$%';
+		$regex['mdy'] = '%^(?:(?:(?:0?[13578]|1[02])(\\/|-|\\.|\\x20)31)\\1|(?:(?:0?[13-9]|1[0-2])(\\/|-|\\.|\\x20)(?:29|30)\\2))(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$|^(?:0?2(\\/|-|\\.|\\x20)29\\3(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:(?:0?[1-9])|(?:1[0-2]))(\\/|-|\\.|\\x20)(?:0?[1-9]|1\\d|2[0-8])\\4(?:(?:1[6-9]|[2-9]\\d)?\\d{2})$%';
+		$regex['ymd'] = '%^(?:(?:(?:(?:(?:1[6-9]|[2-9]\\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00)))(\\/|-|\\.|\\x20)(?:0?2\\1(?:29)))|(?:(?:(?:1[6-9]|[2-9]\\d)?\\d{2})(\\/|-|\\.|\\x20)(?:(?:(?:0?[13578]|1[02])\\2(?:31))|(?:(?:0?[1,3-9]|1[0-2])\\2(29|30))|(?:(?:0?[1-9])|(?:1[0-2]))\\2(?:0?[1-9]|1\\d|2[0-8]))))$%';
 		$regex['dMy'] = '/^((31(?!\\ (Feb(ruary)?|Apr(il)?|June?|(Sep(?=\\b|t)t?|Nov)(ember)?)))|((30|29)(?!\\ Feb(ruary)?))|(29(?=\\ Feb(ruary)?\\ (((1[6-9]|[2-9]\\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))|(0?[1-9])|1\\d|2[0-8])\\ (Jan(uary)?|Feb(ruary)?|Ma(r(ch)?|y)|Apr(il)?|Ju((ly?)|(ne?))|Aug(ust)?|Oct(ober)?|(Sep(?=\\b|t)t?|Nov|Dec)(ember)?)\\ ((1[6-9]|[2-9]\\d)\\d{2})$/';
-
 		$regex['Mdy'] = '/^(?:(((Jan(uary)?|Ma(r(ch)?|y)|Jul(y)?|Aug(ust)?|Oct(ober)?|Dec(ember)?)\\ 31)|((Jan(uary)?|Ma(r(ch)?|y)|Apr(il)?|Ju((ly?)|(ne?))|Aug(ust)?|Oct(ober)?|(Sep)(tember)?|(Nov|Dec)(ember)?)\\ (0?[1-9]|([12]\\d)|30))|(Feb(ruary)?\\ (0?[1-9]|1\\d|2[0-8]|(29(?=,?\\ ((1[6-9]|[2-9]\\d)(0[48]|[2468][048]|[13579][26])|((16|[2468][048]|[3579][26])00)))))))\\,?\\ ((1[6-9]|[2-9]\\d)\\d{2}))$/';
-
-		$regex['My'] = '%^(Jan(uary)?|Feb(ruary)?|Ma(r(ch)?|y)|Apr(il)?|Ju((ly?)|(ne?))|Aug(ust)?|Oct(ober)?|(Sep(?=\\b|t)t?|Nov|Dec)(ember)?)' .
-			$separator . '((1[6-9]|[2-9]\\d)\\d{2})$%';
-
-		$regex['my'] = '%^(' . $month . $separator . $year . ')$%';
-		$regex['ym'] = '%^(' . $year . $separator . $month . ')$%';
-		$regex['y'] = '%^(' . $fourDigitYear . ')$%';
+		$regex['My'] = '%^(Jan(uary)?|Feb(ruary)?|Ma(r(ch)?|y)|Apr(il)?|Ju((ly?)|(ne?))|Aug(ust)?|Oct(ober)?|(Sep(?=\\b|t)t?|Nov|Dec)(ember)?)[ /]((1[6-9]|[2-9]\\d)\\d{2})$%';
+		$regex['my'] = '%^(((0[123456789]|10|11|12)([- /.])(([1][9][0-9][0-9])|([2][0-9][0-9][0-9]))))$%';
 
 		$format = (is_array($format)) ? array_values($format) : array($format);
 		foreach ($format as $key) {
@@ -345,11 +317,20 @@ class Validation {
 
 /**
  * Validates a datetime value
- *
  * All values matching the "date" core validation rule, and the "time" one will be valid
  *
- * @param string $check Value to check
- * @param string|array $dateFormat Format of the date part. See Validation::date for more information.
+ * @param array $check Value to check
+ * @param mixed $dateFormat Format of the date part
+ * Use a string or an array of the keys below. Arrays should be passed as array('dmy', 'mdy', etc)
+ * ## Keys:
+ *
+ *	- dmy 27-12-2006 or 27-12-06 separators can be a space, period, dash, forward slash
+ *	- mdy 12-27-2006 or 12-27-06 separators can be a space, period, dash, forward slash
+ *	- ymd 2006-12-27 or 06-12-27 separators can be a space, period, dash, forward slash
+ *  - dMy 27 December 2006 or 27 Dec 2006
+ *	- Mdy December 27, 2006 or Dec 27, 2006 comma is optional
+ *	- My December 2006 or Dec 2006
+ * 	- my 12/2006 separators can be a space, period, dash, forward slash
  * @param string $regex Regex for the date part. If a custom regular expression is used this is the only validation that will occur.
  * @return boolean True if the value is valid, false otherwise
  * @see Validation::date
@@ -390,47 +371,22 @@ class Validation {
 	}
 
 /**
- * Checks that a value is a valid decimal. Both the sign and exponent are optional.
+ * Checks that a value is a valid decimal. If $places is null, the $check is allowed to be a scientific float
+ * If no decimal point is found a false will be returned. Both the sign and exponent are optional.
  *
- * Valid Places:
- *
- * - null => Any number of decimal places, including none. The '.' is not required.
- * - true => Any number of decimal places greater than 0, or a float|double. The '.' is required.
- * - 1..N => Exactly that many number of decimal places. The '.' is required.
- *
- * @param float $check The value the test for decimal
- * @param integer $places
- * @param string $regex If a custom regular expression is used, this is the only validation that will occur.
+ * @param integer $check The value the test for decimal
+ * @param integer $places if set $check value must have exactly $places after the decimal point
+ * @param string $regex If a custom regular expression is used this is the only validation that will occur.
  * @return boolean Success
  */
 	public static function decimal($check, $places = null, $regex = null) {
-		if ($regex === null) {
-			$lnum = '[0-9]+';
-			$dnum = "[0-9]*[\.]{$lnum}";
-			$sign = '[+-]?';
-			$exp = "(?:[eE]{$sign}{$lnum})?";
-
-			if ($places === null) {
-				$regex = "/^{$sign}(?:{$lnum}|{$dnum}){$exp}$/";
-
-			} elseif ($places === true) {
-				if (is_float($check) && floor($check) === $check) {
-					$check = sprintf("%.1f", $check);
-				}
-				$regex = "/^{$sign}{$dnum}{$exp}$/";
-
-			} elseif (is_numeric($places)) {
-				$places = '[0-9]{' . $places . '}';
-				$dnum = "(?:[0-9]*[\.]{$places}|{$lnum}[\.]{$places})";
-				$regex = "/^{$sign}{$dnum}{$exp}$/";
+		if (is_null($regex)) {
+			if (is_null($places)) {
+				$regex = '/^[-+]?[0-9]*(\\.{1}[0-9]+(?:[eE][-+]?[0-9]+)?)?$/';
+			} else {
+				$regex = '/^[-+]?[0-9]*(\\.{1}[0-9]{' . $places . '})?$/';
 			}
 		}
-
-		// account for localized floats.
-		$data = localeconv();
-		$check = str_replace($data['thousands_sep'], '', $check);
-		$check = str_replace($data['decimal_point'], '.', $check);
-
 		return self::_check($check, $regex);
 	}
 
@@ -450,8 +406,8 @@ class Validation {
 			extract(self::_defaults($check));
 		}
 
-		if ($regex === null) {
-			$regex = '/^[\p{L}0-9!#$%&\'*+\/=?^_`{|}~-]+(?:\.[\p{L}0-9!#$%&\'*+\/=?^_`{|}~-]+)*@' . self::$_pattern['hostname'] . '$/ui';
+		if (is_null($regex)) {
+			$regex = '/^[a-z0-9!#$%&\'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+\/=?^_`{|}~-]+)*@' . self::$_pattern['hostname'] . '$/i';
 		}
 		$return = self::_check($check, $regex);
 		if ($deep === false || $deep === null) {
@@ -484,17 +440,18 @@ class Validation {
 /**
  * Check that value has a valid file extension.
  *
- * @param string|array $check Value to check
- * @param array $extensions file extensions to allow. By default extensions are 'gif', 'jpeg', 'png', 'jpg'
+ * @param mixed $check Value to check
+ * @param array $extensions file extensions to allow
  * @return boolean Success
  */
 	public static function extension($check, $extensions = array('gif', 'jpeg', 'png', 'jpg')) {
 		if (is_array($check)) {
 			return self::extension(array_shift($check), $extensions);
 		}
-		$extension = strtolower(pathinfo($check, PATHINFO_EXTENSION));
+		$pathSegments = explode('.', $check);
+		$extension = strtolower(array_pop($pathSegments));
 		foreach ($extensions as $value) {
-			if ($extension === strtolower($value)) {
+			if ($extension == strtolower($value)) {
 				return true;
 			}
 		}
@@ -510,14 +467,14 @@ class Validation {
  */
 	public static function ip($check, $type = 'both') {
 		$type = strtolower($type);
-		$flags = 0;
-		if ($type === 'ipv4') {
-			$flags = FILTER_FLAG_IPV4;
+		$flags = array();
+		if ($type === 'ipv4' || $type === 'both') {
+			$flags[] = FILTER_FLAG_IPV4;
 		}
-		if ($type === 'ipv6') {
-			$flags = FILTER_FLAG_IPV6;
+		if ($type === 'ipv6' || $type === 'both') {
+			$flags[] = FILTER_FLAG_IPV6;
 		}
-		return (bool)filter_var($check, FILTER_VALIDATE_IP, array('flags' => $flags));
+		return (boolean)filter_var($check, FILTER_VALIDATE_IP, array('flags' => $flags));
 	}
 
 /**
@@ -550,8 +507,8 @@ class Validation {
  * @return boolean Success
  */
 	public static function money($check, $symbolPosition = 'left') {
-		$money = '(?!0,?\d)(?:\d{1,3}(?:([, .])\d{3})?(?:\1\d{3})*|(?:\d+))((?!\1)[,.]\d{1,2})?';
-		if ($symbolPosition === 'right') {
+		$money = '(?!0,?\d)(?:\d{1,3}(?:([, .])\d{3})?(?:\1\d{3})*|(?:\d+))((?!\1)[,.]\d{2})?';
+		if ($symbolPosition == 'right') {
 			$regex = '/^' . $money . '(?<!\x{00a2})\p{Sc}?$/u';
 		} else {
 			$regex = '/^(?!\x{00a2})\p{Sc}?' . $money . '$/u';
@@ -568,12 +525,11 @@ class Validation {
  * - max => maximum number of non-zero choices that can be made
  * - min => minimum number of non-zero choices that can be made
  *
- * @param array $check Value to check
- * @param array $options Options for the check.
- * @param boolean $strict Defaults to true, set to false to disable strict type check
+ * @param mixed $check Value to check
+ * @param mixed $options Options for the check.
  * @return boolean Success
  */
-	public static function multiple($check, $options = array(), $strict = true) {
+	public static function multiple($check, $options = array()) {
 		$defaults = array('in' => null, 'max' => null, 'min' => null);
 		$options = array_merge($defaults, $options);
 		$check = array_filter((array)$check);
@@ -588,7 +544,7 @@ class Validation {
 		}
 		if ($options['in'] && is_array($options['in'])) {
 			foreach ($check as $val) {
-				if (!in_array($val, $options['in'], $strict)) {
+				if (!in_array($val, $options['in'], true)) {
 					return false;
 				}
 			}
@@ -607,22 +563,9 @@ class Validation {
 	}
 
 /**
- * Checks if a value is a natural number.
- *
- * @param string $check Value to check
- * @param boolean $allowZero Set true to allow zero, defaults to false
- * @return boolean Success
- * @see http://en.wikipedia.org/wiki/Natural_number
- */
-	public static function naturalNumber($check, $allowZero = false) {
-		$regex = $allowZero ? '/^(?:0|[1-9][0-9]*)$/' : '/^[1-9][0-9]*$/';
-		return self::_check($check, $regex);
-	}
-
-/**
  * Check that a value is a valid phone number.
  *
- * @param string|array $check Value to check (string or array)
+ * @param mixed $check Value to check (string or array)
  * @param string $regex Regular expression to use
  * @param string $country Country code (defaults to 'all')
  * @return boolean Success
@@ -632,29 +575,14 @@ class Validation {
 			extract(self::_defaults($check));
 		}
 
-		if ($regex === null) {
+		if (is_null($regex)) {
 			switch ($country) {
 				case 'us':
-				case 'ca':
-				case 'can': // deprecated three-letter-code
 				case 'all':
+				case 'can':
 					// includes all NANPA members.
 					// see http://en.wikipedia.org/wiki/North_American_Numbering_Plan#List_of_NANPA_countries_and_territories
-					$regex = '/^(?:(?:\+?1\s*(?:[.-]\s*)?)?';
-
-					// Area code 555, X11 is not allowed.
-					$areaCode = '(?![2-9]11)(?!555)([2-9][0-8][0-9])';
-					$regex .= '(?:\(\s*' . $areaCode . '\s*\)|' . $areaCode . ')';
-					$regex .= '\s*(?:[.-]\s*)?)';
-
-					// Exchange and 555-XXXX numbers
-					$regex .= '(?!(555(?:\s*(?:[.\-\s]\s*))(01([0-9][0-9])|1212)))';
-					$regex .= '(?!(555(01([0-9][0-9])|1212)))';
-					$regex .= '([2-9]1[02-9]|[2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s*(?:[.-]\s*)';
-
-					// Local number and extension
-					$regex .= '?([0-9]{4})';
-					$regex .= '(?:\s*(?:#|x\.?|ext\.?|extension)\s*(\d+))?$/';
+					$regex  = '/^(?:\+?1)?[-. ]?\\(?[2-9][0-8][0-9]\\)?[-. ]?[2-9][0-9]{2}[-. ]?[0-9]{4}$/';
 				break;
 			}
 		}
@@ -667,7 +595,7 @@ class Validation {
 /**
  * Checks that a given value is a valid postal code.
  *
- * @param string|array $check Value to check
+ * @param mixed $check Value to check
  * @param string $regex Regular expression to use
  * @param string $country Country to use for formatting
  * @return boolean Success
@@ -677,25 +605,23 @@ class Validation {
 			extract(self::_defaults($check));
 		}
 
-		if ($regex === null) {
+		if (is_null($regex)) {
 			switch ($country) {
 				case 'uk':
-					$regex = '/\\A\\b[A-Z]{1,2}[0-9][A-Z0-9]? [0-9][ABD-HJLNP-UW-Z]{2}\\b\\z/i';
+					$regex  = '/\\A\\b[A-Z]{1,2}[0-9][A-Z0-9]? [0-9][ABD-HJLNP-UW-Z]{2}\\b\\z/i';
 					break;
 				case 'ca':
-					$district = '[ABCEGHJKLMNPRSTVYX]';
-					$letters = '[ABCEGHJKLMNPRSTVWXYZ]';
-					$regex = "/\\A\\b{$district}[0-9]{$letters} [0-9]{$letters}[0-9]\\b\\z/i";
+					$regex  = '/\\A\\b[ABCEGHJKLMNPRSTVXY][0-9][A-Z] [0-9][A-Z][0-9]\\b\\z/i';
 					break;
 				case 'it':
 				case 'de':
-					$regex = '/^[0-9]{5}$/i';
+					$regex  = '/^[0-9]{5}$/i';
 					break;
 				case 'be':
-					$regex = '/^[1-9]{1}[0-9]{3}$/i';
+					$regex  = '/^[1-9]{1}[0-9]{3}$/i';
 					break;
 				case 'us':
-					$regex = '/\\A\\b[0-9]{5}(?:-[0-9]{4})?\\b\\z/i';
+					$regex  = '/\\A\\b[0-9]{5}(?:-[0-9]{4})?\\b\\z/i';
 					break;
 			}
 		}
@@ -728,7 +654,7 @@ class Validation {
 /**
  * Checks that a value is a valid Social Security Number.
  *
- * @param string|array $check Value to check
+ * @param mixed $check Value to check
  * @param string $regex Regular expression to use
  * @param string $country Country
  * @return boolean Success
@@ -738,16 +664,16 @@ class Validation {
 			extract(self::_defaults($check));
 		}
 
-		if ($regex === null) {
+		if (is_null($regex)) {
 			switch ($country) {
 				case 'dk':
-					$regex = '/\\A\\b[0-9]{6}-[0-9]{4}\\b\\z/i';
+					$regex  = '/\\A\\b[0-9]{6}-[0-9]{4}\\b\\z/i';
 					break;
 				case 'nl':
-					$regex = '/\\A\\b[0-9]{9}\\b\\z/i';
+					$regex  = '/\\A\\b[0-9]{9}\\b\\z/i';
 					break;
 				case 'us':
-					$regex = '/\\A\\b[0-9]{3}-[0-9]{2}-[0-9]{4}\\b\\z/i';
+					$regex  = '/\\A\\b[0-9]{3}-[0-9]{2}-[0-9]{4}\\b\\z/i';
 					break;
 			}
 		}
@@ -776,7 +702,7 @@ class Validation {
  */
 	public static function url($check, $strict = false) {
 		self::_populateIp();
-		$validChars = '([' . preg_quote('!"$&\'()*+,-.@_:;=~[]') . '\/0-9\p{L}\p{N}]|(%[0-9a-f]{2}))';
+		$validChars = '([' . preg_quote('!"$&\'()*+,-.@_:;=~[]') . '\/0-9a-z\p{L}\p{N}]|(%[0-9a-f]{2}))';
 		$regex = '/^(?:(?:https?|ftps?|sftp|file|news|gopher):\/\/)' . (!empty($strict) ? '' : '?') .
 			'(?:' . self::$_pattern['IPv4'] . '|\[' . self::$_pattern['IPv6'] . '\]|' . self::$_pattern['hostname'] . ')(?::[1-9][0-9]{0,4})?' .
 			'(?:\/?|\/' . $validChars . '*)?' .
@@ -790,17 +716,16 @@ class Validation {
  *
  * @param string $check Value to check
  * @param array $list List to check against
- * @param boolean $strict Defaults to true, set to false to disable strict type check
  * @return boolean Success
  */
-	public static function inList($check, $list, $strict = true) {
-		return in_array($check, $list, $strict);
+	public static function inList($check, $list) {
+		return in_array($check, $list, true);
 	}
 
 /**
  * Runs an user-defined validation.
  *
- * @param string|array $check value that will be validated in user-defined methods.
+ * @param mixed $check value that will be validated in user-defined methods.
  * @param object $object class that holds validation method
  * @param string $method class method name for validation to run
  * @param array $args arguments to send to method
@@ -811,19 +736,19 @@ class Validation {
 	}
 
 /**
- * Checks that a value is a valid UUID - http://tools.ietf.org/html/rfc4122
+ * Checks that a value is a valid uuid - http://tools.ietf.org/html/rfc4122
  *
  * @param string $check Value to check
  * @return boolean Success
  */
 	public static function uuid($check) {
-		$regex = '/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[0-5][a-fA-F0-9]{3}-[089aAbB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$/';
+		$regex = '/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i';
 		return self::_check($check, $regex);
 	}
 
 /**
  * Attempts to pass unhandled Validation locales to a class starting with $classPrefix
- * and ending with Validation. For example $classPrefix = 'nl', the class would be
+ * and ending with Validation.  For example $classPrefix = 'nl', the class would be
  * `NlValidation`.
  *
  * @param string $method The method to call on the other class.
@@ -848,15 +773,18 @@ class Validation {
 /**
  * Runs a regular expression match.
  *
- * @param string $check Value to check against the $regex expression
+ * @param mixed $check Value to check against the $regex expression
  * @param string $regex Regular expression
  * @return boolean Success of match
  */
 	protected static function _check($check, $regex) {
-		if (is_string($regex) && preg_match($regex, $check)) {
+		if (preg_match($regex, $check)) {
+			self::$errors[] = false;
 			return true;
+		} else {
+			self::$errors[] = true;
+			return false;
 		}
-		return false;
 	}
 
 /**
@@ -897,7 +825,7 @@ class Validation {
 		if ($deep !== true) {
 			return true;
 		}
-		if ((int)$check === 0) {
+		if ($check == 0) {
 			return false;
 		}
 		$sum = 0;
@@ -912,65 +840,7 @@ class Validation {
 			$sum += ($number < 10) ? $number : $number - 9;
 		}
 
-		return ($sum % 10 === 0);
-	}
-
-/**
- * Checks the mime type of a file
- *
- * @param string|array $check
- * @param array $mimeTypes to check for
- * @return boolean Success
- * @throws CakeException when mime type can not be determined.
- */
-	public static function mimeType($check, $mimeTypes = array()) {
-		if (is_array($check) && isset($check['tmp_name'])) {
-			$check = $check['tmp_name'];
-		}
-
-		$File = new File($check);
-		$mime = $File->mime();
-
-		if ($mime === false) {
-			throw new CakeException(__d('cake_dev', 'Can not determine the mimetype.'));
-		}
-		return in_array($mime, $mimeTypes);
-	}
-
-/**
- * Checks the filesize
- *
- * @param string|array $check
- * @param integer|string $size Size in bytes or human readable string like '5MB'
- * @param string $operator See `Validation::comparison()`
- * @return boolean Success
- */
-	public static function fileSize($check, $operator = null, $size = null) {
-		if (is_array($check) && isset($check['tmp_name'])) {
-			$check = $check['tmp_name'];
-		}
-
-		if (is_string($size)) {
-			$size = CakeNumber::fromReadableSize($size);
-		}
-		$filesize = filesize($check);
-
-		return self::comparison($filesize, $operator, $size);
-	}
-
-/**
- * Checking for upload errors
- *
- * @param string|array $check
- * @return boolean
- * @see http://www.php.net/manual/en/features.file-upload.errors.php
- */
-	public static function uploadError($check) {
-		if (is_array($check) && isset($check['error'])) {
-			$check = $check['error'];
-		}
-
-		return (int)$check === UPLOAD_ERR_OK;
+		return ($sum % 10 == 0);
 	}
 
 /**
@@ -980,7 +850,7 @@ class Validation {
  */
 	protected static function _populateIp() {
 		if (!isset(self::$_pattern['IPv6'])) {
-			$pattern = '((([0-9A-Fa-f]{1,4}:){7}(([0-9A-Fa-f]{1,4})|:))|(([0-9A-Fa-f]{1,4}:){6}';
+			$pattern  = '((([0-9A-Fa-f]{1,4}:){7}(([0-9A-Fa-f]{1,4})|:))|(([0-9A-Fa-f]{1,4}:){6}';
 			$pattern .= '(:|((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})';
 			$pattern .= '|(:[0-9A-Fa-f]{1,4})))|(([0-9A-Fa-f]{1,4}:){5}((:((25[0-5]|2[0-4]\d|[01]?\d{1,2})';
 			$pattern .= '(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})?)|((:[0-9A-Fa-f]{1,4}){1,2})))|(([0-9A-Fa-f]{1,4}:)';

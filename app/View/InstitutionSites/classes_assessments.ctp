@@ -2,43 +2,41 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('institution_site_results', false);
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Results'));
-
-$this->start('contentActions');
-if ($_edit) {
-	echo $this->Html->link(__('Back'), array('action' => 'classesView', $classId), array('class' => 'divider'));
-}
-$this->end();
-
-$this->start('contentBody');
 ?>
 
-<div id="assessment" class="content_wrapper">
-	<?php foreach ($data as $obj) { ?>
-		<fieldset class="section_group">
-			<legend><?php echo $obj['name']; ?></legend>
+<?php echo $this->element('breadcrumb'); ?>
 
-			<table class="table table-striped table-hover table-bordered" action="InstitutionSites/classesResults/<?php echo $classId ?>/">
-				<thead>
-					<tr>
-						<th class="table_cell"><?php echo __('Grade'); ?></th>
-						<th class="table_cell"><?php echo __('Code'); ?></th>
-						<th class="table_cell"><?php echo __('Name'); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach ($obj['items'] as $item) { ?>
-						<tr row-id="<?php echo $item['id']; ?>">
-							<td class="table_cell"><?php echo $item['grade']; ?></td>
-							<td class="table_cell"><?php echo $item['code']; ?></td>
-							<td class="table_cell"><?php echo $this->Html->link($item['name'], array('action' => 'classesResults', $classId, $item['id']), array('escape' => false)); ?></td>
-						</tr>
-					<?php } ?>
-				</tbody>
-			</table>
-		</fieldset>
+<div id="assessment" class="content_wrapper">
+	<h1>
+		<span><?php echo __('Results'); ?></span>
+		<?php
+		if($_edit) {
+			echo $this->Html->link(__('Back'), array('action' => 'classesView', $classId), array('class' => 'divider'));
+		}
+		?>
+	</h1>
+	<?php echo $this->element('alert'); ?>
+	
+	<?php foreach($data as $obj) { ?>
+	<fieldset class="section_group">
+		<legend><?php echo $obj['name']; ?></legend>
+		
+		<div class="table allow_hover" action="InstitutionSites/classesResults/<?php echo $classId ?>/">
+			<div class="table_head">
+				<div class="table_cell"><?php echo __('Grade'); ?></div>
+				<div class="table_cell"><?php echo __('Code'); ?></div>
+				<div class="table_cell"><?php echo __('Name'); ?></div>
+			</div>
+			<div class="table_body">
+				<?php foreach($obj['items'] as $item) { ?>
+				<div class="table_row" row-id="<?php echo $item['id']; ?>">
+					<div class="table_cell"><?php echo $item['grade']; ?></div>
+					<div class="table_cell"><?php echo $item['code']; ?></div>
+					<div class="table_cell"><?php echo $item['name']; ?></div>
+				</div>
+				<?php } ?>
+			</div>
+		</div>
+	</fieldset>
 	<?php } ?>
 </div>
-<?php $this->end(); ?>

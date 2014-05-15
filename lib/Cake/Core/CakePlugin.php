@@ -2,22 +2,23 @@
 /**
  * CakePlugin class
  *
+ * PHP 5
+ *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.Core
  * @since         CakePHP(tm) v 2.0.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 /**
- * CakePlugin is responsible for loading and unloading plugins. It also can
+ * CakePlugin is responsible for loading and unloading plugins. It also can 
  * retrieve plugin paths and load their bootstrap and routes files.
  *
  * @package       Cake.Core
@@ -60,7 +61,7 @@ class CakePlugin {
  *
  * Will only load the bootstrap for ApiGenerator and only the routes for DebugKit
  *
- * @param string|array $plugin name of the plugin to be loaded in CamelCase format or array or plugins to load
+ * @param mixed $plugin name of the plugin to be loaded in CamelCase format or array or plugins to load
  * @param array $config configuration options for the plugin
  * @throws MissingPluginException if the folder for the plugin to be loaded is not found
  * @return void
@@ -73,7 +74,7 @@ class CakePlugin {
 			}
 			return;
 		}
-		$config += array('bootstrap' => false, 'routes' => false, 'ignoreMissing' => false);
+		$config += array('bootstrap' => false, 'routes' => false);
 		if (empty($config['path'])) {
 			foreach (App::path('plugins') as $path) {
 				if (is_dir($path . $plugin)) {
@@ -161,18 +162,12 @@ class CakePlugin {
 
 		$path = self::path($plugin);
 		if ($config['bootstrap'] === true) {
-			return self::_includeFile(
-				$path . 'Config' . DS . 'bootstrap.php',
-				$config['ignoreMissing']
-			);
+			return include $path . 'Config' . DS . 'bootstrap.php';
 		}
 
 		$bootstrap = (array)$config['bootstrap'];
 		foreach ($bootstrap as $file) {
-			self::_includeFile(
-				$path . 'Config' . DS . $file . '.php',
-				$config['ignoreMissing']
-			);
+			include $path . 'Config' . DS . $file . '.php';
 		}
 
 		return true;
@@ -196,10 +191,7 @@ class CakePlugin {
 		if ($config['routes'] === false) {
 			return false;
 		}
-		return (bool)self::_includeFile(
-			self::path($plugin) . 'Config' . DS . 'routes.php',
-			$config['ignoreMissing']
-		);
+		return (bool)include self::path($plugin) . 'Config' . DS . 'routes.php';
 	}
 
 /**
@@ -226,25 +218,11 @@ class CakePlugin {
  * @return void
  */
 	public static function unload($plugin = null) {
-		if ($plugin === null) {
+		if (is_null($plugin)) {
 			self::$_plugins = array();
 		} else {
 			unset(self::$_plugins[$plugin]);
 		}
-	}
-
-/**
- * Include file, ignoring include error if needed if file is missing
- *
- * @param string $file File to include
- * @param boolean $ignoreMissing Whether to ignore include error for missing files
- * @return mixed
- */
-	protected static function _includeFile($file, $ignoreMissing = false) {
-		if ($ignoreMissing && !is_file($file)) {
-			return false;
-		}
-		return include $file;
 	}
 
 }

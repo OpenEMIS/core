@@ -1,22 +1,19 @@
 <?php
 /**
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.View
  * @since         CakePHP(tm) v 0.2.9
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('Router', 'Routing');
-App::uses('Hash', 'Utility');
-App::uses('Inflector', 'Utility');
 
 /**
  * Abstract base class for all other Helpers in CakePHP.
@@ -25,13 +22,6 @@ App::uses('Inflector', 'Utility');
  * @package       Cake.View
  */
 class Helper extends Object {
-
-/**
- * Settings for this helper.
- *
- * @var array
- */
-	public $settings = array();
 
 /**
  * List of helpers used by this helper
@@ -106,7 +96,7 @@ class Helper extends Object {
 
 /**
  * A list of strings that should be treated as suffixes, or
- * sub inputs for a parent input. This is used for date/time
+ * sub inputs for a parent input.  This is used for date/time
  * inputs primarily.
  *
  * @var array
@@ -147,7 +137,7 @@ class Helper extends Object {
 	protected $_minimizedAttributes = array(
 		'compact', 'checked', 'declare', 'readonly', 'disabled', 'selected',
 		'defer', 'ismap', 'nohref', 'noshade', 'nowrap', 'multiple', 'noresize',
-		'autoplay', 'controls', 'loop', 'muted', 'required', 'novalidate', 'formnovalidate'
+		'autoplay', 'controls', 'loop', 'muted'
 	);
 
 /**
@@ -173,9 +163,6 @@ class Helper extends Object {
 	public function __construct(View $View, $settings = array()) {
 		$this->_View = $View;
 		$this->request = $View->request;
-		if ($settings) {
-			$this->settings = Hash::merge($this->settings, $settings);
-		}
 		if (!empty($this->helpers)) {
 			$this->_helperMap = ObjectCollection::normalizeObjectArray($this->helpers);
 		}
@@ -197,7 +184,6 @@ class Helper extends Object {
  *
  * @param string $name Name of the property being accessed.
  * @return mixed Helper or property found at $name
- * @deprecated Accessing request properties through this method is deprecated and will be removed in 3.0.
  */
 	public function __get($name) {
 		if (isset($this->_helperMap[$name]) && !isset($this->{$name})) {
@@ -225,8 +211,7 @@ class Helper extends Object {
  *
  * @param string $name Name of the property being accessed.
  * @param mixed $value
- * @return void
- * @deprecated This method will be removed in 3.0
+ * @return mixed Return the $value
  */
 	public function __set($name, $value) {
 		switch ($name) {
@@ -234,13 +219,11 @@ class Helper extends Object {
 			case 'here':
 			case 'webroot':
 			case 'data':
-				$this->request->{$name} = $value;
-				return;
+				return $this->request->{$name} = $value;
 			case 'action':
-				$this->request->params['action'] = $value;
-				return;
+				return $this->request->params['action'] = $value;
 		}
-		$this->{$name} = $value;
+		return $this->{$name} = $value;
 	}
 
 /**
@@ -248,11 +231,11 @@ class Helper extends Object {
  *
  * Returns a URL pointing at the provided parameters.
  *
- * @param string|array $url Either a relative string url like `/products/view/23` or
- *    an array of URL parameters. Using an array for URLs will allow you to leverage
+ * @param mixed $url Either a relative string url like `/products/view/23` or
+ *    an array of url parameters.  Using an array for urls will allow you to leverage
  *    the reverse routing features of CakePHP.
  * @param boolean $full If true, the full base URL will be prepended to the result
- * @return string Full translated URL with base path.
+ * @return string  Full translated URL with base path.
  * @link http://book.cakephp.org/2.0/en/views/helpers.html
  */
 	public function url($url = null, $full = false) {
@@ -296,68 +279,63 @@ class Helper extends Object {
 	}
 
 /**
- * Generate URL for given asset file. Depending on options passed provides full URL with domain name.
+ * Generate url for given asset file. Depending on options passed provides full url with domain name.
  * Also calls Helper::assetTimestamp() to add timestamp to local files
  *
- * @param string|array Path string or URL array
+ * @param string|array Path string or url array
  * @param array $options Options array. Possible keys:
- *   `fullBase` Return full URL with domain name
- *   `pathPrefix` Path prefix for relative URLs
+ *   `fullBase` Return full url with domain name
+ *   `pathPrefix` Path prefix for relative urls
  *   `ext` Asset extension to append
  *   `plugin` False value will prevent parsing path as a plugin
- * @return string Generated URL
+ * @return string Generated url
  */
 	public function assetUrl($path, $options = array()) {
 		if (is_array($path)) {
-			return $this->url($path, !empty($options['fullBase']));
+			$path = $this->url($path, !empty($options['fullBase']));
+		} elseif (strpos($path, '://') === false) {
+			if (!array_key_exists('plugin', $options) || $options['plugin'] !== false) {
+				list($plugin, $path) = $this->_View->pluginSplit($path, false);
+			}
+			if (!empty($options['pathPrefix']) && $path[0] !== '/') {
+				$path = $options['pathPrefix'] . $path;
+			}
+			if (
+				!empty($options['ext']) &&
+				strpos($path, '?') === false &&
+				substr($path, -strlen($options['ext'])) !== $options['ext']
+			) {
+				$path .= $options['ext'];
+			}
+			if (isset($plugin)) {
+				$path = Inflector::underscore($plugin) . '/' . $path;
+			}
+			//$path = h($this->assetTimestamp($this->webroot($path)));
+                        $path = $this->_encodeUrl($this->assetTimestamp($this->webroot($path)));
+                        
+			if (!empty($options['fullBase'])) {
+				$path = $this->url('/', true) . $path;
+			}
 		}
-		if (strpos($path, '://') !== false) {
-			return $path;
-		}
-		if (!array_key_exists('plugin', $options) || $options['plugin'] !== false) {
-			list($plugin, $path) = $this->_View->pluginSplit($path, false);
-		}
-		if (!empty($options['pathPrefix']) && $path[0] !== '/') {
-			$path = $options['pathPrefix'] . $path;
-		}
-		if (
-			!empty($options['ext']) &&
-			strpos($path, '?') === false &&
-			substr($path, -strlen($options['ext'])) !== $options['ext']
-		) {
-			$path .= $options['ext'];
-		}
-		if (preg_match('|^([a-z0-9]+:)?//|', $path)) {
-			return $path;
-		}
-		if (isset($plugin)) {
-			$path = Inflector::underscore($plugin) . '/' . $path;
-		}
-		$path = $this->_encodeUrl($this->assetTimestamp($this->webroot($path)));
 
-		if (!empty($options['fullBase'])) {
-			$path = rtrim(Router::fullBaseUrl(), '/') . '/' . ltrim($path, '/');
-		}
 		return $path;
 	}
-
 /**
- * Encodes a URL for use in HTML attributes.
+ * Encodes an URL for use in HTML attributes.
  *
- * @param string $url The URL to encode.
- * @return string The URL encoded for both URL & HTML contexts.
+ * @param string $url The url to encode.
+ * @return string The url encoded for both URL & HTML contexts.
  */
 	protected function _encodeUrl($url) {
 		$path = parse_url($url, PHP_URL_PATH);
-		$parts = array_map('rawurldecode', explode('/', $path));
+		$parts = array_map('urldecode', explode('/', $path));
 		$parts = array_map('rawurlencode', $parts);
 		$encoded = implode('/', $parts);
 		return h(str_replace($path, $encoded, $url));
 	}
-
 /**
  * Adds a timestamp to a file based resource based on the value of `Asset.timestamp` in
- * Configure. If Asset.timestamp is true and debug > 0, or Asset.timestamp === 'force'
+ * Configure.  If Asset.timestamp is true and debug > 0, or Asset.timestamp == 'force'
  * a timestamp will be added.
  *
  * @param string $path The file path to timestamp, the path must be inside WWW_ROOT
@@ -367,33 +345,28 @@ class Helper extends Object {
 		$stamp = Configure::read('Asset.timestamp');
 		$timestampEnabled = $stamp === 'force' || ($stamp === true && Configure::read('debug') > 0);
 		if ($timestampEnabled && strpos($path, '?') === false) {
-			$filepath = preg_replace(
+			//$filepath = preg_replace('/^' . preg_quote($this->request->webroot, '/') . '/', '', $path);
+                        $filepath = preg_replace(
 				'/^' . preg_quote($this->request->webroot, '/') . '/',
 				'',
 				urldecode($path)
 			);
 			$webrootPath = WWW_ROOT . str_replace('/', DS, $filepath);
 			if (file_exists($webrootPath)) {
-				//@codingStandardsIgnoreStart
 				return $path . '?' . @filemtime($webrootPath);
-				//@codingStandardsIgnoreEnd
 			}
 			$segments = explode('/', ltrim($filepath, '/'));
 			if ($segments[0] === 'theme') {
 				$theme = $segments[1];
 				unset($segments[0], $segments[1]);
 				$themePath = App::themePath($theme) . 'webroot' . DS . implode(DS, $segments);
-				//@codingStandardsIgnoreStart
 				return $path . '?' . @filemtime($themePath);
-				//@codingStandardsIgnoreEnd
 			} else {
 				$plugin = Inflector::camelize($segments[0]);
 				if (CakePlugin::loaded($plugin)) {
 					unset($segments[0]);
 					$pluginPath = CakePlugin::path($plugin) . 'webroot' . DS . implode(DS, $segments);
-					//@codingStandardsIgnoreStart
 					return $path . '?' . @filemtime($pluginPath);
-					//@codingStandardsIgnoreEnd
 				}
 			}
 		}
@@ -401,13 +374,12 @@ class Helper extends Object {
 	}
 
 /**
- * Used to remove harmful tags from content. Removes a number of well known XSS attacks
- * from content. However, is not guaranteed to remove all possibilities. Escaping
+ * Used to remove harmful tags from content.  Removes a number of well known XSS attacks
+ * from content.  However, is not guaranteed to remove all possibilities.  Escaping
  * content is the best way to prevent all possible attacks.
  *
- * @param string|array $output Either an array of strings to clean or a single string to clean.
+ * @param mixed $output Either an array of strings to clean or a single string to clean.
  * @return string|array cleaned content for output
- * @deprecated This method will be removed in 3.0
  */
 	public function clean($output) {
 		$this->_reset();
@@ -426,8 +398,22 @@ class Helper extends Object {
 	}
 
 /**
- * Returns a space-delimited string with items of the $options array. If a key
- * of $options array happens to be one of those listed in `Helper::$_minimizedAttributes`
+ * Returns a space-delimited string with items of the $options array. If a
+ * key of $options array happens to be one of:
+ *
+ * - 'compact'
+ * - 'checked'
+ * - 'declare'
+ * - 'readonly'
+ * - 'disabled'
+ * - 'selected'
+ * - 'defer'
+ * - 'ismap'
+ * - 'nohref'
+ * - 'noshade'
+ * - 'nowrap'
+ * - 'multiple'
+ * - 'noresize'
  *
  * And its value is one of:
  *
@@ -440,7 +426,7 @@ class Helper extends Object {
  * If the value is not one of these 3, the parameter is not output.
  *
  * 'escape' is a special option in that it controls the conversion of
- *  attributes to their html-entity encoded equivalents. Set to false to disable html-encoding.
+ *  attributes to their html-entity encoded equivalents.  Set to false to disable html-encoding.
  *
  * If value for any option key is set to `null` or `false`, that option will be excluded from output.
  *
@@ -486,45 +472,27 @@ class Helper extends Object {
  * @deprecated This method will be moved to HtmlHelper in 3.0
  */
 	protected function _formatAttribute($key, $value, $escape = true) {
+		$attribute = '';
 		if (is_array($value)) {
-			$value = implode(' ', $value);
+			$value = implode(' ' , $value);
 		}
-		if (is_numeric($key)) {
-			return sprintf($this->_minimizedAttributeFormat, $value, $value);
-		}
-		$truthy = array(1, '1', true, 'true', $key);
-		$isMinimized = in_array($key, $this->_minimizedAttributes);
-		if ($isMinimized && in_array($value, $truthy, true)) {
-			return sprintf($this->_minimizedAttributeFormat, $key, $key);
-		}
-		if ($isMinimized) {
-			return '';
-		}
-		return sprintf($this->_attributeFormat, $key, ($escape ? h($value) : $value));
-	}
 
-/**
- * Returns a string to be used as onclick handler for confirm dialogs.
- *
- * @param string $message Message to be displayed
- * @param string $okCode Code to be executed after user chose 'OK'
- * @param string $cancelCode Code to be executed after user chose 'Cancel'
- * @param array $options Array of options
- * @return string onclick JS code
- */
-	protected function _confirm($message, $okCode, $cancelCode = '', $options = array()) {
-		$message = json_encode($message);
-		$confirm = "if (confirm({$message})) { {$okCode} } {$cancelCode}";
-		if (isset($options['escape']) && $options['escape'] === false) {
-			$confirm = h($confirm);
+		if (is_numeric($key)) {
+			$attribute = sprintf($this->_minimizedAttributeFormat, $value, $value);
+		} elseif (in_array($key, $this->_minimizedAttributes)) {
+			if ($value === 1 || $value === true || $value === 'true' || $value === '1' || $value == $key) {
+				$attribute = sprintf($this->_minimizedAttributeFormat, $key, $key);
+			}
+		} else {
+			$attribute = sprintf($this->_attributeFormat, $key, ($escape ? h($value) : $value));
 		}
-		return $confirm;
+		return $attribute;
 	}
 
 /**
  * Sets this helper's model and field properties to the dot-separated value-pair in $entity.
  *
- * @param string $entity A field name, like "ModelName.fieldName" or "ModelName.ID.fieldName"
+ * @param mixed $entity A field name, like "ModelName.fieldName" or "ModelName.ID.fieldName"
  * @param boolean $setScope Sets the view scope to the model specified in $tagValue
  * @return void
  */
@@ -535,7 +503,7 @@ class Helper extends Object {
 		if ($setScope === true) {
 			$this->_modelScope = $entity;
 		}
-		$parts = array_values(Hash::filter(explode('.', $entity)));
+		$parts = array_values(Set::filter(explode('.', $entity), true));
 		if (empty($parts)) {
 			return;
 		}
@@ -544,7 +512,7 @@ class Helper extends Object {
 
 		// Either 'body' or 'date.month' type inputs.
 		if (
-			($count === 1 && $this->_modelScope && !$setScope) ||
+			($count === 1 && $this->_modelScope && $setScope == false) ||
 			(
 				$count === 2 &&
 				in_array($lastPart, $this->_fieldSuffixes) &&
@@ -555,7 +523,7 @@ class Helper extends Object {
 			$entity = $this->_modelScope . '.' . $entity;
 		}
 
-		// 0.name, 0.created.month style inputs. Excludes inputs with the modelScope in them.
+		// 0.name, 0.created.month style inputs.  Excludes inputs with the modelScope in them.
 		if (
 			$count >= 2 &&
 			is_numeric($parts[0]) &&
@@ -570,11 +538,12 @@ class Helper extends Object {
 
 		$isHabtm = (
 			isset($this->fieldset[$this->_modelScope]['fields'][$parts[0]]['type']) &&
-			$this->fieldset[$this->_modelScope]['fields'][$parts[0]]['type'] === 'multiple'
+			$this->fieldset[$this->_modelScope]['fields'][$parts[0]]['type'] === 'multiple' &&
+			$count == 1
 		);
 
 		// habtm models are special
-		if ($count === 1 && $isHabtm) {
+		if ($count == 1 && $isHabtm) {
 			$this->_association = $parts[0];
 			$entity = $parts[0] . '.' . $parts[0];
 		} else {
@@ -632,11 +601,12 @@ class Helper extends Object {
  * Generates a DOM ID for the selected element, if one is not set.
  * Uses the current View::entity() settings to generate a CamelCased id attribute.
  *
- * @param array|string $options Either an array of html attributes to add $id into, or a string
+ * @param mixed $options Either an array of html attributes to add $id into, or a string
  *   with a view entity path to get a domId for.
  * @param string $id The name of the 'id' attribute.
- * @return mixed If $options was an array, an array will be returned with $id set. If a string
+ * @return mixed If $options was an array, an array will be returned with $id set.  If a string
  *   was supplied, a string will be returned.
+ * @todo Refactor this method to not have as many input/output options.
  */
 	public function domId($options = null, $id = 'id') {
 		if (is_array($options) && array_key_exists($id, $options) && $options[$id] === null) {
@@ -649,7 +619,7 @@ class Helper extends Object {
 
 		$entity = $this->entity();
 		$model = array_shift($entity);
-		$dom = $model . implode('', array_map(array('Inflector', 'camelize'), $entity));
+		$dom = $model . join('', array_map(array('Inflector', 'camelize'), $entity));
 
 		if (is_array($options) && !array_key_exists($id, $options)) {
 			$options[$id] = $dom;
@@ -663,12 +633,13 @@ class Helper extends Object {
  * Gets the input field name for the current tag. Creates input name attributes
  * using CakePHP's data[Model][field] formatting.
  *
- * @param array|string $options If an array, should be an array of attributes that $key needs to be added to.
+ * @param mixed $options If an array, should be an array of attributes that $key needs to be added to.
  *   If a string or null, will be used as the View entity.
  * @param string $field
  * @param string $key The name of the attribute to be set, defaults to 'name'
  * @return mixed If an array was given for $options, an array with $key set will be returned.
  *   If a string was supplied a string will be returned.
+ * @todo Refactor this method to not have as many input/output options.
  */
 	protected function _name($options = array(), $field = null, $key = 'name') {
 		if ($options === null) {
@@ -689,27 +660,30 @@ class Helper extends Object {
 		switch ($field) {
 			case '_method':
 				$name = $field;
-				break;
+			break;
 			default:
 				$name = 'data[' . implode('][', $this->entity()) . ']';
+			break;
 		}
 
 		if (is_array($options)) {
 			$options[$key] = $name;
 			return $options;
+		} else {
+			return $name;
 		}
-		return $name;
 	}
 
 /**
  * Gets the data for the current tag
  *
- * @param array|string $options If an array, should be an array of attributes that $key needs to be added to.
+ * @param mixed $options If an array, should be an array of attributes that $key needs to be added to.
  *   If a string or null, will be used as the View entity.
  * @param string $field
  * @param string $key The name of the attribute to be set, defaults to 'value'
  * @return mixed If an array was given for $options, an array with $key set will be returned.
  *   If a string was supplied a string will be returned.
+ * @todo Refactor this method to not have as many input/output options.
  */
 	public function value($options = array(), $field = null, $key = 'value') {
 		if ($options === null) {
@@ -730,8 +704,8 @@ class Helper extends Object {
 		$data = $this->request->data;
 
 		$entity = $this->entity();
-		if (!empty($data) && is_array($data) && !empty($entity)) {
-			$result = Hash::get($data, implode('.', $entity));
+		if (!empty($data) && !empty($entity)) {
+			$result = Set::extract(implode('.', $entity), $data);
 		}
 
 		$habtmKey = $this->field();
@@ -754,13 +728,15 @@ class Helper extends Object {
 		if (is_array($options)) {
 			$options[$key] = $result;
 			return $options;
+		} else {
+			return $result;
 		}
-		return $result;
 	}
 
 /**
- * Sets the defaults for an input tag. Will set the
- * name, value, and id attributes for an array of html attributes.
+ * Sets the defaults for an input tag.  Will set the
+ * name, value, and id attributes for an array of html attributes. Will also
+ * add a 'form-error' class if the field contains validation errors.
  *
  * @param string $field The field name to initialize.
  * @param array $options Array of options to use while initializing an input field.
@@ -781,12 +757,12 @@ class Helper extends Object {
  * Adds the given class to the element options
  *
  * @param array $options Array options/attributes to add a class to
- * @param string $class The class name being added.
+ * @param string $class The classname being added.
  * @param string $key the key to use for class.
  * @return array Array of options with $key set.
  */
 	public function addClass($options = array(), $class = null, $key = 'class') {
-		if (isset($options[$key]) && trim($options[$key])) {
+		if (isset($options[$key]) && trim($options[$key]) != '') {
 			$options[$key] .= ' ' . $class;
 		} else {
 			$options[$key] = $class;
@@ -819,7 +795,7 @@ class Helper extends Object {
 	}
 
 /**
- * After render callback. afterRender is called after the view file is rendered
+ * After render callback.  afterRender is called after the view file is rendered
  * but before the layout has been rendered.
  *
  * Overridden in subclasses.
@@ -831,7 +807,7 @@ class Helper extends Object {
 	}
 
 /**
- * Before layout callback. beforeLayout is called before the layout is rendered.
+ * Before layout callback.  beforeLayout is called before the layout is rendered.
  *
  * Overridden in subclasses.
  *
@@ -842,7 +818,7 @@ class Helper extends Object {
 	}
 
 /**
- * After layout callback. afterLayout is called after the layout has rendered.
+ * After layout callback.  afterLayout is called after the layout has rendered.
  *
  * Overridden in subclasses.
  *
@@ -861,7 +837,7 @@ class Helper extends Object {
  * @param string $viewFile The file about to be rendered.
  * @return void
  */
-	public function beforeRenderFile($viewFile) {
+	public function beforeRenderFile($viewfile) {
 	}
 
 /**
@@ -874,14 +850,14 @@ class Helper extends Object {
  * @param string $content The content that was rendered.
  * @return void
  */
-	public function afterRenderFile($viewFile, $content) {
+	public function afterRenderFile($viewfile, $content) {
 	}
 
 /**
  * Transforms a recordset from a hasAndBelongsToMany association to a list of selected
  * options for a multiple select element
  *
- * @param string|array $data
+ * @param mixed $data
  * @param string $key
  * @return array
  */
@@ -944,7 +920,7 @@ class Helper extends Object {
 		do {
 			$oldstring = $this->_cleaned;
 			$this->_cleaned = preg_replace('#</*(applet|meta|xml|blink|link|style|script|embed|object|iframe|frame|frameset|ilayer|layer|bgsound|title|base)[^>]*>#i', "", $this->_cleaned);
-		} while ($oldstring !== $this->_cleaned);
+		} while ($oldstring != $this->_cleaned);
 		$this->_cleaned = str_replace(array("&amp;", "&lt;", "&gt;"), array("&amp;amp;", "&amp;lt;", "&amp;gt;"), $this->_cleaned);
 	}
 

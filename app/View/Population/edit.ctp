@@ -8,111 +8,97 @@ $currentYear = intval(date('Y'));
 $selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
 ?>
 
-<?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
-echo $this->Html->css('population', 'stylesheet', array('inline' => false));
-
-echo $this->Html->script('population', false);
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Population'));
-$this->start('contentActions');
-echo $this->Html->link(__('View'), array('controller' => 'Population', 'action' => 'index'), array('id' => 'viewLink', 'class' => 'divider')); 
-$this->end();
-$this->assign('contentId', 'population');
-$this->assign('contentClass', 'edit');
-$this->start('contentBody');
-
-$currentYear = intval(date('Y'));
-$selectedYear = (isset($selectedYear))? $selectedYear : $currentYear;
-?>
-<?php echo $this->element('alert'); ?>
-
+<?php echo $this->element('breadcrumb'); ?>
 </script>
 
-<?php
-echo $this->Form->create('Population', array(
-		'url' => array(
-			'controller' => 'Population',
-			'action' => 'index'
-		),
-		'model' => 'Population',
-        'inputDefaults' => array('label' => false, 'div' =>false)
-	)
-);
+<div id="population" class="content_wrapper edit">
+	<h1>
+		<span><?php echo __('Population'); ?></span>
+		<?php echo $this->Html->link(__('View'), array('controller' => 'Population', 'action' => 'index'), array('id' => 'viewLink', 'class' => 'divider')); ?>
+	</h1>
 
-//echo $this->Form->hidden('action',array('value'=>'edit'));
+	<?php
+	echo $this->Form->create('Population', array(
+			'url' => array(
+				'controller' => 'Population',
+				'action' => 'index'
+			),
+			'model' => 'Population',
+            'inputDefaults' => array('label' => false, 'div' =>false)
+		)
+	);
 
-?>
-	<input type="hidden" name="data[previousAction]" value="edit"/>
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-	<?php 
-		echo $this->Utility->getYearList($this->Form,'data[year]',array(
-			'name' => "data[year]",
-			'id' => "year_id",
-			'class'=>'form-control',
-			'div' => 'col-md-4',
-			'maxlength' => 30,
-			'desc' => true,
-			'label' => false,
-			'default' => $selectedYear,
-			'div' => false), true);
+	//echo $this->Form->hidden('action',array('value'=>'edit'));
+
 	?>
-		<!-- <select name="data[year]" id="year_id" onSelect="">
-			<option value="0">--select--</option>
-			<!--option vallue="<?php echo $currentYear; ?>" selected="selected"><?php echo $currentYear; ?></option-->
-			<?php
-				// for ($i=$currentYear; $i >= 1970 ; $i--) { 
+		<input type="hidden" name="data[previousAction]" value="edit"/>
+		<div class="row year">
+			<div class="label"><?php echo __('Year'); ?></div>
+		<?php 
+			echo $this->Utility->getYearList($this->Form,'data[year]',array(
+				'name' => "data[year]",
+				'id' => "year_id",
+				'maxlength' => 30,
+				'desc' => true,
+				'label' => false,
+				'default' => $selectedYear,
+				'div' => false), true);
+		?>
+			<!-- <select name="data[year]" id="year_id" onSelect="">
+				<option value="0">--select--</option>
+				<!--option vallue="<?php echo $currentYear; ?>" selected="selected"><?php echo $currentYear; ?></option-->
+				<?php
+					// for ($i=$currentYear; $i >= 1970 ; $i--) { 
 
-				// 	if($i == $selectedYear){
-				// 		echo '<option value="'.$i.'" selected="selected">'.$i.'</option>';
-				// 	}else{
-				// 		echo '<option value="'.$i.'">'.$i.'</option>';
-				// 	} 
-				// }
-				
-			?>
-		<!-- </select> -->
-                    <?php echo $this->element('census_legend_population'); ?>
-	</div>
-<fieldset id="area_section_group" class="section_group">
-    <legend id="area"><?php echo __('Area'); ?></legend>
-    <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
-</fieldset>
-
-<?php echo $this->Form->end(); ?>
-<fieldset id="data_section_group" class="section_group edit">
-	<legend><?php echo __('Population'); ?></legend>
-	<div id="mainlist">
-		<div class="table">
-			<div class="table_head">
-					<!--div class="table_cell"><span class="left">Area Level</span><span class="icon_sort_down"></span></div-->
-					<div class="table_cell cell_source"><?php echo __('Source'); ?></div>
-					<div class="table_cell"><?php echo __('Age'); ?></div>
-					<div class="table_cell"><?php echo __('Male'); ?></div>
-					<div class="table_cell"><?php echo __('Female'); ?></div>
-					<div class="table_cell"><?php echo __('Total'); ?></div>
-					<div class="table_cell cell_delete">&nbsp;</div>
-			</div>
-			<div class="table_body" style="display:none;">&nbsp;</div>
-			
-			<div class="table_foot">
-				<div class="table_cell"></div>
-				<div class="table_cell"></div>
-				<div class="table_cell"></div>
-				<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
-				<div class="table_cell cell_value cell_number">0</div>
-				<div class="table_cell"></div>
-			</div>
+					// 	if($i == $selectedYear){
+					// 		echo '<option value="'.$i.'" selected="selected">'.$i.'</option>';
+					// 	}else{
+					// 		echo '<option value="'.$i.'">'.$i.'</option>';
+					// 	} 
+					// }
+					
+				?>
+			<!-- </select> -->
+                        <?php echo $this->element('census_legend_population'); ?>
 		</div>
-		<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Age'); ?></a></div>
-	</div>
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right btn_disabled" onClick="population.save()" />
-		<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
-	</div>
-</fieldset>
+	<fieldset id="area_section_group" class="section_group">
+        <legend id="area"><?php echo __('Area'); ?></legend>
+        <?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id',$initAreaSelection['area_id'], array()); ?>
+    </fieldset>
+
+	<?php echo $this->Form->end(); ?>
+	<fieldset id="data_section_group" class="section_group edit">
+		<legend><?php echo __('Population'); ?></legend>
+		<div id="mainlist">
+			<div class="table">
+				<div class="table_head">
+						<!--div class="table_cell"><span class="left">Area Level</span><span class="icon_sort_down"></span></div-->
+						<div class="table_cell cell_source"><?php echo __('Source'); ?></div>
+						<div class="table_cell"><?php echo __('Age'); ?></div>
+						<div class="table_cell"><?php echo __('Male'); ?></div>
+						<div class="table_cell"><?php echo __('Female'); ?></div>
+						<div class="table_cell"><?php echo __('Total'); ?></div>
+						<div class="table_cell cell_delete">&nbsp;</div>
+				</div>
+				<div class="table_body" style="display:none;">&nbsp;</div>
+				
+				<div class="table_foot">
+					<div class="table_cell"></div>
+					<div class="table_cell"></div>
+					<div class="table_cell"></div>
+					<div class="table_cell cell_label"><?php echo __('Total'); ?></div>
+					<div class="table_cell cell_value cell_number">0</div>
+					<div class="table_cell"></div>
+				</div>
+			</div>
+			<div class="row"><a class="void icon_plus link_add"><?php echo __('Add') .' '. __('Age'); ?></a></div>
+		</div>
+		<div class="controls">
+			<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right btn_disabled" onClick="population.save()" />
+			<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
+		</div>
+	</fieldset>
+</div>
 
 <script type="text/javascript">
 
@@ -159,5 +145,3 @@ $(document).ready(function(){
 });
 
 </script>
-
-<?php $this->end(); ?>

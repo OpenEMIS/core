@@ -1,31 +1,25 @@
 <?php
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 echo $this->Html->script('security', false);
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Roles'));
-$this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'roles', $selectedGroup), array('class' => 'divider'));
-$this->end();
-$this->assign('contentId', 'roles');
-$this->assign('contentClass', 'edit');
-
-$this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
 
+<?php echo $this->element('breadcrumb'); ?>
 
-
-<?php
+<div id="roles" class="content_wrapper edit">
+	<?php
 	echo $this->Form->create('SecurityGroup', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'Security', 'action' => 'rolesEdit', $selectedGroup)
 	));
 	?>
+	<h1>
+		<span><?php echo __('Roles'); ?></span>
+		<?php echo $this->Html->link(__('View'), array('action' => 'roles', $selectedGroup), array('class' => 'divider')); ?>
+	</h1>
 	
 	<?php if(AuthComponent::user('super_admin')==1) { ?>
 	<fieldset class="section_group">
@@ -138,4 +132,4 @@ $this->start('contentBody');
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
-<?php $this->end(); ?>
+</div>

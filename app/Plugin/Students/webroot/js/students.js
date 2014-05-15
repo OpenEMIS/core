@@ -17,7 +17,6 @@ $(document).ready(function() {
     objStudent.init();
 
     $('#resetDefault').click(function(e){
-		alert('click');
         e.preventDefault();
 //        console.info('click');
         var $photoContent = $('#StudentPhotoContent');

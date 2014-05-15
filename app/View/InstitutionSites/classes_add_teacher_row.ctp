@@ -1,9 +1,9 @@
 <?php if(!empty($data)) { ?>
 
-<tr teacher-id="0" subject-id="">
-	<td class="table_cell" attr="id"></td>
-	<td class="table_cell" attr="name">
-		<select class="teacher_select full_width form-control" onchange="InstitutionSiteClasses.selectTeacher(this)">
+<div class="table_row" teacher-id="0" subject-id="">
+	<div class="table_cell" attr="id"></div>
+	<div class="table_cell" attr="name">
+		<select class="teacher_select full_width" onchange="InstitutionSiteClasses.selectTeacher(this)">
 			<option value="">-- <?php echo __('Select Teacher'); ?> --</option>
 			<?php foreach($data as $teacher) {
 			$obj = $teacher['Teacher'];
@@ -12,11 +12,11 @@
 			echo sprintf($option, $obj['id'], $obj['identification_no'], $fullname, $obj['identification_no'], $fullname);
 			} ?>
 		</select>
-	</td>
-	<td class="table_cell">
+	</div>
+	<div class="table_cell">
 		<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteTeacher(this)', 'onDelete' => false)); ?>
-	</td>
-</tr>
+	</div>
+</div>
 
 <?php } else { ?>
 

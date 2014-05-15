@@ -4,18 +4,19 @@
  *
  * Test Case for Shell
  *
+ * PHP 5
+ *
  * CakePHP :  Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc.
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc.
  * @link          http://cakephp.org CakePHP Project
  * @package       Cake.Test.Case.Console.Command
  * @since         CakePHP v 1.2.0.7726
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('ShellDispatcher', 'Console');
@@ -44,13 +45,6 @@ class ShellTestShell extends Shell {
 	public $stopped;
 
 /**
- * testMessage property
- *
- * @var string
- */
-	public $testMessage = 'all your base are belong to us';
-
-/**
  * stop method
  *
  * @param integer $status
@@ -69,18 +63,10 @@ class ShellTestShell extends Shell {
 
 	protected function no_access() {
 	}
-
-	public function log_something() {
-		$this->log($this->testMessage);
-	}
 	//@codingStandardsIgnoreEnd
 
 	public function mergeVars($properties, $class, $normalize = true) {
 		return $this->_mergeVars($properties, $class, $normalize);
-	}
-
-	public function useLogger($enable = true) {
-		$this->_useLogger($enable);
 	}
 
 }
@@ -177,7 +163,7 @@ class ShellTest extends CakeTestCase {
 		$this->assertEquals($expected, $this->Shell->tasks);
 
 		$expected = array('Fixture' => null, 'DbConfig' => array('one', 'two'));
-		$this->assertEquals($expected, Hash::normalize($this->Shell->tasks), 'Normalized results are wrong.');
+		$this->assertEquals($expected, Set::normalize($this->Shell->tasks), 'Normalized results are wrong.');
 		$this->assertEquals(array('Comment', 'Posts'), $this->Shell->uses, 'Merged models are wrong.');
 	}
 
@@ -193,7 +179,6 @@ class ShellTest extends CakeTestCase {
 		), App::RESET);
 
 		CakePlugin::load('TestPlugin');
-		$this->Shell->tasks = array('DbConfig' => array('one', 'two'));
 		$this->Shell->uses = array('TestPlugin.TestPluginPost');
 		$this->Shell->initialize();
 
@@ -207,33 +192,6 @@ class ShellTest extends CakeTestCase {
 		$this->assertTrue(isset($this->Shell->Comment));
 		$this->assertInstanceOf('Comment', $this->Shell->Comment);
 		$this->assertEquals('Comment', $this->Shell->modelClass);
-		$this->assertInstanceOf('DbConfigTask', $this->Shell->DbConfig);
-
-		App::build();
-	}
-
-/**
- * testLoadModel method
- *
- * @return void
- */
-	public function testLoadModel() {
-		App::build(array(
-			'Plugin' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS),
-			'Model' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Model' . DS)
-		), App::RESET);
-
-		$Shell = new TestMergeShell();
-		$this->assertEquals('Comment', $Shell->Comment->alias);
-		$this->assertInstanceOf('Comment', $Shell->Comment);
-		$this->assertEquals('Comment', $Shell->modelClass);
-
-		CakePlugin::load('TestPlugin');
-		$this->Shell->loadModel('TestPlugin.TestPluginPost');
-		$this->assertTrue(isset($this->Shell->TestPluginPost));
-		$this->assertInstanceOf('TestPluginPost', $this->Shell->TestPluginPost);
-		$this->assertEquals('TestPluginPost', $this->Shell->modelClass);
-		CakePlugin::unload('TestPlugin');
 
 		App::build();
 	}
@@ -572,7 +530,7 @@ class ShellTest extends CakeTestCase {
 		$path = TMP . 'shell_test';
 		$file = $path . DS . 'file1.php';
 
-		new Folder($path, true);
+		$Folder = new Folder($path, true);
 
 		$this->Shell->interactive = false;
 
@@ -586,7 +544,7 @@ class ShellTest extends CakeTestCase {
 		$result = $this->Shell->createFile($file, $contents);
 		$this->assertTrue($result);
 		$this->assertTrue(file_exists($file));
-		$this->assertTextEquals(file_get_contents($file), $contents);
+		$this->assertEquals(file_get_contents($file), $contents);
 	}
 
 /**
@@ -599,7 +557,7 @@ class ShellTest extends CakeTestCase {
 
 		$path = TMP . 'shell_test';
 		$file = $path . DS . 'file1.php';
-		new Folder($path, true);
+		$Folder = new Folder($path, true);
 
 		$this->Shell->interactive = true;
 
@@ -638,14 +596,10 @@ class ShellTest extends CakeTestCase {
  * @return void
  */
 	public function testCreateFileNoPermissions() {
-		$this->skipIf(DIRECTORY_SEPARATOR === '\\', 'Cant perform operations using permissions on windows.');
-
 		$path = TMP . 'shell_test';
 		$file = $path . DS . 'no_perms';
 
-		if (!is_dir($path)) {
-			mkdir($path);
-		}
+		mkdir($path);
 		chmod($path, 0444);
 
 		$this->Shell->createFile($file, 'testing');
@@ -690,6 +644,7 @@ class ShellTest extends CakeTestCase {
  * @return void
  */
 	public function testRunCommandMain() {
+		$methods = get_class_methods('Shell');
 		$Mock = $this->getMock('Shell', array('main', 'startup'), array(), '', false);
 
 		$Mock->expects($this->once())->method('main')->will($this->returnValue(true));
@@ -703,6 +658,7 @@ class ShellTest extends CakeTestCase {
  * @return void
  */
 	public function testRunCommandWithMethod() {
+		$methods = get_class_methods('Shell');
 		$Mock = $this->getMock('Shell', array('hit_me', 'startup'), array(), '', false);
 
 		$Mock->expects($this->once())->method('hit_me')->will($this->returnValue(true));
@@ -725,7 +681,7 @@ class ShellTest extends CakeTestCase {
 		$Mock->expects($this->never())->method('hr');
 		$Mock->expects($this->once())->method('out');
 
-		$Mock->runCommand('hr', array());
+		$result = $Mock->runCommand('hr', array());
 	}
 
 /**
@@ -734,6 +690,7 @@ class ShellTest extends CakeTestCase {
  * @return void
  */
 	public function testRunCommandMissingMethod() {
+		$methods = get_class_methods('Shell');
 		$Mock = $this->getMock('Shell', array('startup', 'getOptionParser', 'out'), array(), '', false);
 		$Parser = $this->getMock('ConsoleOptionParser', array(), array(), '', false);
 
@@ -786,7 +743,7 @@ class ShellTest extends CakeTestCase {
 
 		$Shell->RunCommand = $task;
 
-		$Shell->runCommand('run_command', array('run_command', 'one', 'value'));
+		$result = $Shell->runCommand('run_command', array('run_command', 'one', 'value'));
 	}
 
 /**
@@ -802,7 +759,7 @@ This is the song that never ends.
 This is the song that never ends.
 This is the song that never ends.
 TEXT;
-		$this->assertTextEquals($expected, $result, 'Text not wrapped.');
+		$this->assertEquals($expected, $result, 'Text not wrapped.');
 
 		$result = $this->Shell->wrapText($text, array('indent' => '  ', 'width' => 33));
 		$expected = <<<TEXT
@@ -810,7 +767,7 @@ TEXT;
   This is the song that never ends.
   This is the song that never ends.
 TEXT;
-		$this->assertTextEquals($expected, $result, 'Text not wrapped.');
+		$this->assertEquals($expected, $result, 'Text not wrapped.');
 	}
 
 /**
@@ -836,64 +793,6 @@ TEXT;
 		$parser = $this->Shell->getOptionParser();
 
 		$this->assertEquals('plugin.test', $parser->command());
-	}
-
-/**
- * Test file and console and logging
- */
-	public function testFileAndConsoleLogging() {
-		// file logging
-		$this->Shell->log_something();
-		$this->assertTrue(file_exists(LOGS . 'error.log'));
-
-		unlink(LOGS . 'error.log');
-		$this->assertFalse(file_exists(LOGS . 'error.log'));
-
-		// both file and console logging
-		require_once CORE_TEST_CASES . DS . 'Log' . DS . 'Engine' . DS . 'ConsoleLogTest.php';
-		$mock = $this->getMock('ConsoleLog', array('write'), array(
-			array('types' => 'error'),
-		));
-		TestCakeLog::config('console', array(
-			'engine' => 'Console',
-			'stream' => 'php://stderr',
-			));
-		TestCakeLog::replace('console', $mock);
-		$mock->expects($this->once())
-			->method('write')
-			->with('error', $this->Shell->testMessage);
-		$this->Shell->log_something();
-		$this->assertTrue(file_exists(LOGS . 'error.log'));
-		$contents = file_get_contents(LOGS . 'error.log');
-		$this->assertContains($this->Shell->testMessage, $contents);
-	}
-
-/**
- * Tests that _useLogger works properly
- *
- * @return void
- */
-	public function testProtectedUseLogger() {
-		CakeLog::drop('stdout');
-		CakeLog::drop('stderr');
-		$this->Shell->useLogger(true);
-		$this->assertNotEmpty(CakeLog::stream('stdout'));
-		$this->assertNotEmpty(CakeLog::stream('stderr'));
-		$this->Shell->useLogger(false);
-		$this->assertFalse(CakeLog::stream('stdout'));
-		$this->assertFalse(CakeLog::stream('stderr'));
-	}
-
-/**
- * Test file and console and logging quiet output
- */
-	public function testQuietLog() {
-		$output = $this->getMock('ConsoleOutput', array(), array(), '', false);
-		$error = $this->getMock('ConsoleOutput', array(), array(), '', false);
-		$in = $this->getMock('ConsoleInput', array(), array(), '', false);
-		$this->Shell = $this->getMock('ShellTestShell', array('_useLogger'), array($output, $error, $in));
-		$this->Shell->expects($this->once())->method('_useLogger')->with(false);
-		$this->Shell->runCommand('foo', array('--quiet'));
 	}
 
 }

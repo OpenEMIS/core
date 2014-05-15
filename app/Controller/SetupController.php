@@ -38,16 +38,16 @@ class SetupController extends AppController {
 		'Teachers.Teacher',
 		'Teachers.TeacherStatus',
 		'Teachers.TeacherCategory',
-		'Teachers.TeacherPositionTitle',
-		'Teachers.TeacherPositionGrade',
-		'Teachers.TeacherPositionStep',
+                'Teachers.TeacherPositionTitle',
+                'Teachers.TeacherPositionGrade',
+                'Teachers.TeacherPositionStep',
 		'Teachers.TeacherTrainingCategory',
 		'Teachers.TeacherLeaveType',
 		'Teachers.TeacherBehaviourCategory',
 		'Staff.Staff',
-		'Staff.StaffPositionTitle',
-		'Staff.StaffPositionGrade',
-		'Staff.StaffPositionStep',
+                'Staff.StaffPositionTitle',
+                'Staff.StaffPositionGrade',
+                'Staff.StaffPositionStep',
 		'Staff.StaffStatus',
 		'SchoolYear',
 		'Students.StudentCustomFieldOption',
@@ -88,7 +88,7 @@ class SetupController extends AppController {
 		'HealthAllergyType',
 		'HealthConsultationType',
 		'HealthTestType',
-		'QualityVisitType',
+                'QualityVisitType',
 		'SpecialNeedType',
 		'LicenseType',
 		'TrainingCourseType',
@@ -105,6 +105,7 @@ class SetupController extends AppController {
                 'Teachers.TeacherAttendanceType',
                 'Staff.StaffAttendanceType'
 	);
+
 	
 	private $CustomFieldModelLists = array(
 		'InstitutionCustomField' => array('hasSiteType' => false, 'label' => 'Institution Custom Fields'),
@@ -118,8 +119,6 @@ class SetupController extends AppController {
 		'StaffDetailsCustomField' => array('hasSiteType' => false, 'label' => 'Staff Details Custom Fields'),
 		'CensusGrid' => array('hasSiteType' => true, 'label' => 'Census Custom Tables')
 	);
-	
-	public $components = array('FieldOption');
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -189,8 +188,8 @@ class SetupController extends AppController {
 			'name' => 'Staff Custom Fields (Academic)'
 		));
                 
-		//Quality
-		$lookup[] = array('Quality' => array(
+                //Quality
+                $lookup[] = array('Quality' => array(
 			'optgroup' => true,
 			'name' => 'Visit Types',
 			'items' => $this->QualityVisitType->getLookupVariables()
@@ -305,6 +304,7 @@ class SetupController extends AppController {
 			'edit' => 'contact_types_edit',
 		));
 
+
 		$lookup[] = array('Employment Types' => array(
 			'items' => $this->EmploymentType->getLookupVariables(),
 		));
@@ -402,6 +402,8 @@ class SetupController extends AppController {
 			'items' => $this->TrainingStatus->getLookupVariables()
 		));
 		
+
+
 		// Student
 		//$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Status', 'items' => $this->StudentStatus->getLookupVariables()));
 		$lookup[] = array('Student' => array('optgroup' => true, 'name' => 'Category', 'items' => $this->StudentCategory->getLookupVariables()));
@@ -428,9 +430,9 @@ class SetupController extends AppController {
 		$teacherOptions = array(
 			'Status' => $this->TeacherStatus,
 			'Position Types' => $this->TeacherCategory,
-			'Position Titles' => $this->TeacherPositionTitle,
-			'Position Grades' => $this->TeacherPositionGrade,
-			'Position Steps' => $this->TeacherPositionStep,
+                        'Position Titles' => $this->TeacherPositionTitle,
+                        'Position Grades' => $this->TeacherPositionGrade,
+                        'Position Steps' => $this->TeacherPositionStep,
 			'Qualification Levels' => $this->QualificationLevel,
 			'Qualification Specialisation' => $this->QualificationSpecialisation,
 			'Qualification Institutions' => $this->QualificationInstitution,
@@ -466,9 +468,9 @@ class SetupController extends AppController {
 		$staffOptions = array(
 			'Status' => $this->StaffStatus,
 			'Position Types' => $this->Staff,
-			'Position Titles' => $this->StaffPositionTitle,
-			'Position Grades' => $this->StaffPositionGrade,
-			'Position Steps' => $this->StaffPositionStep,
+                        'Position Titles' => $this->StaffPositionTitle,
+                        'Position Grades' => $this->StaffPositionGrade,
+                        'Position Steps' => $this->StaffPositionStep,
 			'Qualification Levels' => $this->QualificationLevel,
 			'Qualification Specialisation' => $this->QualificationSpecialisation,
 			'Qualification Institutions' => $this->QualificationInstitution,
@@ -499,6 +501,7 @@ class SetupController extends AppController {
 			'items' => $this->StaffAttendanceType->getLookupVariables()
 		));
 		// End Staff
+		
                 
 		$categoryList = array();
 		
@@ -528,6 +531,7 @@ class SetupController extends AppController {
 	}
 	
 	public function setupVariables() {
+		
 		$this->Navigation->addCrumb('Field Options');
 		
 		$categoryId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : 0;

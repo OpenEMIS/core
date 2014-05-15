@@ -3,67 +3,52 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
 echo $this->Html->script('dashboard', false);
 ?>
-<?php
-echo $this->Html->script('setup_variables', false);
 
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Label->get('Config.name'));
+<?php echo $this->element('breadcrumb'); ?>
 
-$this->start('contentActions');
-echo $this->Html->link($this->Label->get('general.back'), array('action' => 'index', 'Dashboard'), array('class' => 'divider'));
-if($_edit) {
-	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'dashboardEdit', $id), array('class' => 'divider'));
-}
-if($_delete) {
-	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'dashboardDelete', $id), array('class' => 'divider'));
-}
-$this->end();
-
-$this->start('contentBody'); ?>
-<?php echo $this->element('alert'); ?>
-
-<?php
-$obj = $data['ConfigAttachment'];
-$fileext = strtolower(pathinfo($obj['file_name'], PATHINFO_EXTENSION));
-
-	$ext = array_key_exists($fileext, $arrFileExtensions) ? $arrFileExtensions[$fileext] : $fileext;
-?>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('Config.file');?></div>
-	<div class="col-md-6"><?php echo $obj['name'];?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('Config.default');?></div>
-	<div class="col-md-6">
-		<?php if($obj['active'] > 0){ ?>
-			<?php echo $this->Label->get('general.yes');?>
-		<?php }else{ ?>
-			<?php echo $this->Label->get('general.no');?>
-		<?php } ?>
+<div id="attachments" class="content_wrapper">
+	<h1>
+		<span><?php echo __('Dashboard Image'); ?></span>
+		<?php
+		if($_edit) {
+			echo $this->Html->link(__('Edit'), array('action' => 'dashboardEdit'), array('class' => 'divider'));
+		}
+		echo $this->Html->link(__('Back to Config'), array('controller' => 'Config', 'action' => 'index'), array('class' => 'divider', 'id' => 'back_to_config'));
+		?>
+	</h1>
+	
+	<?php echo $this->element('alert'); ?>
+	<span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
+		
+	<div class="table full_width">
+		<div class="table_head">
+			<div class="table_cell" style="width:35px;"><?php echo __('Active'); ?></div>
+			<div class="table_cell" style="width:240px;"><?php echo __('File'); ?></div>
+			<!-- <div class="table_cell cell_description"><?php echo __('Description'); ?></div> -->
+			<div class="table_cell"><?php echo __('File Type'); ?></div>
+			<div class="table_cell cell_date"><?php echo __('Uploaded On'); ?></div>
+		</div>
+					
+		<div class="table_body">
+			<?php
+			foreach($data as $value) {
+				$obj = $value[$_model];
+				$fileext = strtolower(pathinfo($obj['file_name'], PATHINFO_EXTENSION));
+				$ext = array_key_exists($fileext, $arrFileExtensions) ? $arrFileExtensions[$fileext] : $fileext;
+				$link = $this->Html->link($obj['name'], array('action' => 'dashboardImage', $obj['id']));
+			?>
+			<div class="table_row">
+				<div class="table_cell" style="text-align:center;"> 
+					<?php if($obj['active'] > 0){ ?>
+					<span class="green">✓</span>
+					<?php } ?>
+				</div>
+				<div class="table_cell"><?php echo $link; ?></div>
+				<!-- <div class="table_cell"><?php // echo $obj['description']; ?></div> -->
+				<div class="table_cell center"><?php echo ($fileext == 'jpg')? __('JPEG'): strtoupper(__($fileext));//array_key_exists($fileext, $arrFileExtensions) ? $arrFileExtensions[$fileext] : $fileext; ?></div>
+				<div class="table_cell center"><?php echo $obj['created']; ?></div>
+			</div>
+			<?php }	?>
+		</div>
 	</div>
 </div>
-<div class="row">
-	<div style="overflow:hidden;width:<?php echo $image['width']; ?>px;height:<?php echo $image['height']; ?>px;" >
-        <?php 
-             // echo $this->Html->image($image['imagePath'], array(
-            $leftPos = "-" . $image['x'];
-            if($lang_dir=='rtl'){
-                $leftPos = $image['x'];
-            }
-             echo $this->Html->image(array("controller" => "Config", "action" => "fetchImage", $obj["id"]), array(
-                'style' => "width:initial;height:initial;position:relative;top:-{$image['y']}px;left:{$leftPos}px;"
-            ));
-        ?>
-	</div>
-</div>
-
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('Config.file_type');?></div>
-	<div class="col-md-6"><?php echo ($fileext == 'jpg')? __('JPEG'): strtoupper(__($fileext)); ?></div>
-</div>
-
-<div class="row">
-	<div class="col-md-3"><?php echo $this->Label->get('Config.uploaded_on');?></div>
-	<div class="col-md-6"><?php echo $obj['created'];?></div>
-</div>
-<?php $this->end(); ?>

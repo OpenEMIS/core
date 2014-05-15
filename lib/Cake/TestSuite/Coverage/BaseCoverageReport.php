@@ -6,17 +6,16 @@
  * PHP5
  *
  * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @package       Cake.TestSuite.Coverage
  * @since         CakePHP(tm) v 2.0
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 /**
@@ -49,7 +48,7 @@ abstract class BaseCoverageReport {
 	public $pluginTest = false;
 
 /**
- * Array of test case file names. Used to do basename() matching with
+ * Array of test case file names.  Used to do basename() matching with
  * files that have coverage to decide which results to show on page load.
  *
  * @var array
@@ -61,6 +60,7 @@ abstract class BaseCoverageReport {
  *
  * @param array $coverage Array of coverage data from PHPUnit_Test_Result
  * @param CakeBaseReporter $reporter A reporter to use for the coverage report.
+ * @return void
  */
 	public function __construct($coverage, CakeBaseReporter $reporter) {
 		$this->_rawCoverage = $coverage;
@@ -110,7 +110,7 @@ abstract class BaseCoverageReport {
 	}
 
 /**
- * Filters the coverage data by path. Files not in the provided path will be removed.
+ * Filters the coverage data by path.  Files not in the provided path will be removed.
  *
  * @param string $path Path to filter files by.
  * @return array Array of coverage data for files that match the given path.
@@ -136,7 +136,7 @@ abstract class BaseCoverageReport {
  *
  * @param array $fileLines
  * @param array $coverageData
- * @return array Array of covered, total lines.
+ * @return array. Array of covered, total lines.
  */
 	protected function _calculateCoveredLines($fileLines, $coverageData) {
 		$covered = $total = 0;

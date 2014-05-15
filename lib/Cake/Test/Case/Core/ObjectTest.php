@@ -2,18 +2,19 @@
 /**
  * ObjectTest file
  *
+ * PHP 5
+ *
  * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Core
  * @since         CakePHP(tm) v 1.2.0.5432
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 
 App::uses('Object', 'Core');
@@ -29,9 +30,16 @@ App::uses('Model', 'Model');
 class RequestActionPost extends CakeTestModel {
 
 /**
+ * name property
+ *
+ * @var string 'ControllerPost'
+ */
+	public $name = 'RequestActionPost';
+
+/**
  * useTable property
  *
- * @var string
+ * @var string 'posts'
  */
 	public $useTable = 'posts';
 }
@@ -47,12 +55,14 @@ class RequestActionController extends Controller {
  * uses property
  *
  * @var array
+ * @access public
  */
 	public $uses = array('RequestActionPost');
 
 /**
  * test_request_action method
  *
+ * @access public
  * @return void
  */
 	public function test_request_action() {
@@ -64,6 +74,7 @@ class RequestActionController extends Controller {
  *
  * @param mixed $id
  * @param mixed $other
+ * @access public
  * @return void
  */
 	public function another_ra_test($id, $other) {
@@ -94,7 +105,7 @@ class RequestActionController extends Controller {
  * @return void
  */
 	public function paginate_request_action() {
-		$this->paginate();
+		$data = $this->paginate();
 		return true;
 	}
 
@@ -137,14 +148,14 @@ class TestObject extends Object {
 /**
  * firstName property
  *
- * @var string
+ * @var string 'Joel'
  */
 	public $firstName = 'Joel';
 
 /**
  * lastName property
  *
- * @var string
+ * @var string 'Moss'
  */
 	public $lastName = 'Moss';
 
@@ -270,6 +281,8 @@ class ObjectTestModel extends CakeTestModel {
 
 	public $useTable = false;
 
+	public $name = 'ObjectTestModel';
+
 }
 
 /**
@@ -292,7 +305,6 @@ class ObjectTest extends CakeTestCase {
  * @return void
  */
 	public function setUp() {
-		parent::setUp();
 		$this->object = new TestObject();
 	}
 
@@ -302,7 +314,7 @@ class ObjectTest extends CakeTestCase {
  * @return void
  */
 	public function tearDown() {
-		parent::tearDown();
+		App::build();
 		CakePlugin::unload();
 		unset($this->object);
 	}
@@ -453,9 +465,7 @@ class ObjectTest extends CakeTestCase {
 		$expected = 'This is a test';
 		$this->assertEquals($expected, $result);
 
-		$result = $this->object->requestAction(
-			Configure::read('App.fullBaseUrl') . '/request_action/test_request_action'
-		);
+		$result = $this->object->requestAction(FULL_BASE_URL . '/request_action/test_request_action');
 		$expected = 'This is a test';
 		$this->assertEquals($expected, $result);
 
@@ -598,7 +608,7 @@ class ObjectTest extends CakeTestCase {
 		$this->assertEquals(null, $result['plugin']);
 
 		$result = $this->object->requestAction('/request_action/params_pass/sort:desc/limit:5');
-		$expected = array('sort' => 'desc', 'limit' => 5);
+		$expected = array('sort' => 'desc', 'limit' => 5,);
 		$this->assertEquals($expected, $result['named']);
 
 		$result = $this->object->requestAction(
@@ -606,24 +616,6 @@ class ObjectTest extends CakeTestCase {
 			array('named' => array('sort' => 'desc', 'limit' => 5))
 		);
 		$this->assertEquals($expected, $result['named']);
-	}
-
-/**
- * Test that requestAction handles get parameters correctly.
- *
- * @return void
- */
-	public function testRequestActionGetParameters() {
-		$result = $this->object->requestAction(
-			'/request_action/params_pass?get=value&limit=5'
-		);
-		$this->assertEquals('value', $result->query['get']);
-
-		$result = $this->object->requestAction(
-			array('controller' => 'request_action', 'action' => 'params_pass'),
-			array('url' => array('get' => 'value', 'limit' => 5))
-		);
-		$this->assertEquals('value', $result->query['get']);
 	}
 
 /**
@@ -639,6 +631,7 @@ class ObjectTest extends CakeTestCase {
 			'item' => 'value'
 		));
 		$result = $this->object->requestAction(array('controller' => 'request_action', 'action' => 'post_pass'));
+		$expected = null;
 		$this->assertEmpty($result);
 
 		$result = $this->object->requestAction(

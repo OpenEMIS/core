@@ -5,100 +5,88 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->script('security', false);
 ?>
 
-<?php
-echo $this->Html->css('security', 'stylesheet', array('inline' => false));
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
+<?php echo $this->element('breadcrumb'); ?>
 
-echo $this->Html->script('security', false);
-
-$this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Permissions'));
-$this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'permissions', $selectedRole), array('class' => 'divider'));
-$this->end();
-$this->assign('contentId', 'permissions');
-$this->assign('contentClass', 'edit');
-$this->start('contentBody');
-?>
-<?php echo $this->element('alert'); ?>
-
-<?php
-echo $this->Form->create('Security', array(
-	'inputDefaults' => array('label' => false, 'div' => false),	
-	'url' => array('controller' => 'Security', 'action' => 'permissionsEdit', $selectedRole)
-));
-?>
-
-
-<?php if(!empty($group)) { ?>
-<div class="row">
-	<label class="col-md-3 control-label"><?php echo __('Group Name'); ?></label>
-	<div class="col-md-4"><?php echo $group['name']; ?></div>
-</div>
-<?php } ?>
-
-<div class="row input" style="margin-bottom: 15px;">
-	<label class="col-md-3 control-label"><?php echo __('Roles'); ?></label>
-	<div class="col-md-4">
+<div id="permissions" class="content_wrapper edit">
+	<?php
+	echo $this->Form->create('Security', array(
+		'inputDefaults' => array('label' => false, 'div' => false),	
+		'url' => array('controller' => 'Security', 'action' => 'permissionsEdit', $selectedRole)
+	));
+	?>
+	<h1>
+		<span><?php echo __('Permissions'); ?></span>
 		<?php
-		echo $this->Form->input('security_role_id', array(
-			'label' => false,
-			'div' => false,
-			'options' => $roles,
-			'default' => $selectedRole,
-			'class' => 'form-control',
-			'url' => $this->params['controller'] . '/' . $this->params['action'],
-			'onchange' => 'jsForm.change(this)'
-		));
+		echo $this->Html->link(__('View'), array('action' => 'permissions', $selectedRole), array('class' => 'divider'));
 		?>
+	</h1>
+	
+	<?php if(!empty($group)) { ?>
+	<div class="row">
+		<div class="label" style="width: 100px;"><?php echo __('Group Name'); ?></div>
+		<div class="value"><?php echo $group['name']; ?></div>
 	</div>
-</div>
-
-<?php 
-$index = 0;
-foreach($permissions as $module => $func) {
-	$enabled = $func['enabled'] ? 'checked="checked"' : '';
-	unset($func['enabled']);
-?>
-
-<fieldset class="section_group">
-	<legend><input type="checkbox" class="module_checkbox" autocomplete="off" <?php echo $enabled; ?> /><?php echo __($module); ?></legend>
-	<div class="table">
-		<div class="table_head">
-			<div class="table_cell cell_function"><?php echo __('Function'); ?></div>
-			<div class="table_cell"><?php echo __('View'); ?></div>
-			<div class="table_cell"><?php echo __('Edit'); ?></div>
-			<div class="table_cell"><?php echo __('Add'); ?></div>
-			<div class="table_cell"><?php echo __('Delete'); ?></div>
-			<div class="table_cell"><?php echo __('Execute'); ?></div>
+	<?php } ?>
+	
+	<div class="row input" style="margin-bottom: 15px;">
+		<div class="label" style="width: 100px;"><?php echo __('Roles'); ?></div>
+		<div class="value">
+			<?php
+			echo $this->Form->input('security_role_id', array(
+				'options' => $roles,
+				'default' => $selectedRole,
+				'url' => $this->params['controller'] . '/' . $this->params['action'],
+				'onchange' => 'jsForm.change(this)'
+			));
+			?>
 		</div>
-		
-		<div class="table_body">
-			<?php foreach($func as $obj) { $fieldName = sprintf('data[SecurityRoleFunction][%s][%%s]', $index++); ?>
-			<div class="table_row <?php echo $obj['visible'] == 0 ? 'none' : ''; ?>" parent-id="<?php echo $obj['parent_id']; ?>" function-id="<?php echo $obj['security_function_id']; ?>">
-				<?php
-				echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
-				echo $this->Form->hidden('security_function_id', array('name' => sprintf($fieldName, 'security_function_id'), 'value' => $obj['security_function_id']));
-				echo $this->Form->hidden('security_role_id', array('name' => sprintf($fieldName, 'security_role_id'), 'value' => $selectedRole)); 
-				?>
-				<div class="table_cell"><?php echo __($obj['name']); ?></div>
-				<?php
-				foreach($_operations as $op) {
-					echo $this->Utility->getPermissionInput($this->Form, $fieldName, $op, $obj[$op]);
-				}
-				?>
+	</div>
+	
+	<?php 
+	$index = 0;
+	foreach($permissions as $module => $func) {
+		$enabled = $func['enabled'] ? 'checked="checked"' : '';
+		unset($func['enabled']);
+	?>
+	
+	<fieldset class="section_group">
+		<legend><input type="checkbox" class="module_checkbox" autocomplete="off" <?php echo $enabled; ?> /><?php echo __($module); ?></legend>
+		<div class="table">
+			<div class="table_head">
+				<div class="table_cell cell_function"><?php echo __('Function'); ?></div>
+				<div class="table_cell"><?php echo __('View'); ?></div>
+				<div class="table_cell"><?php echo __('Edit'); ?></div>
+				<div class="table_cell"><?php echo __('Add'); ?></div>
+				<div class="table_cell"><?php echo __('Delete'); ?></div>
+				<div class="table_cell"><?php echo __('Execute'); ?></div>
 			</div>
-			<?php } ?>
+			
+			<div class="table_body">
+				<?php foreach($func as $obj) { $fieldName = sprintf('data[SecurityRoleFunction][%s][%%s]', $index++); ?>
+				<div class="table_row <?php echo $obj['visible'] == 0 ? 'none' : ''; ?>" parent-id="<?php echo $obj['parent_id']; ?>" function-id="<?php echo $obj['security_function_id']; ?>">
+					<?php
+					echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']);
+					echo $this->Form->hidden('security_function_id', array('name' => sprintf($fieldName, 'security_function_id'), 'value' => $obj['security_function_id']));
+					echo $this->Form->hidden('security_role_id', array('name' => sprintf($fieldName, 'security_role_id'), 'value' => $selectedRole)); 
+					?>
+					<div class="table_cell"><?php echo __($obj['name']); ?></div>
+					<?php
+					foreach($_operations as $op) {
+						echo $this->Utility->getPermissionInput($this->Form, $fieldName, $op, $obj[$op]);
+					}
+					?>
+				</div>
+				<?php } ?>
+			</div>
 		</div>
+	</fieldset>
+	
+	<?php } ?>
+	
+	<div class="controls">
+		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'permissions', $selectedRole), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
-</fieldset>
-
-<?php } ?>
-
-<div class="controls">
-	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-	<?php echo $this->Html->link(__('Cancel'), array('action' => 'permissions', $selectedRole), array('class' => 'btn_cancel btn_left')); ?>
+	
+	<?php echo $this->Form->end(); ?>
 </div>
-
-<?php echo $this->Form->end(); ?>
-<?php $this->end(); ?>

@@ -4,22 +4,24 @@
  *
  * InflectorTest is used to test cases on the Inflector class
  *
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * PHP 5
  *
- * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
+ * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
+ * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ *
+ * Licensed under The Open Group Test Suite License
  * Redistributions of files must retain the above copyright notice.
  *
- * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://book.cakephp.org/2.0/en/development/testing.html
  * @package       Cake.Test.Case.Utility
  * @since         CakePHP(tm) v 1.2.0.4206
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       Open Group Test Suite License (http://www.opensource.org/licenses/opengroup.php)
  */
 
 /**
  * Included libraries.
+ *
  */
 App::uses('Inflector', 'Utility');
 
@@ -107,22 +109,7 @@ class InflectorTest extends CakeTestCase {
 		$this->assertEquals(Inflector::singularize('roofs'), 'roof');
 		$this->assertEquals(Inflector::singularize('foes'), 'foe');
 		$this->assertEquals(Inflector::singularize('databases'), 'database');
-		$this->assertEquals(Inflector::singularize('cookies'), 'cookie');
-		$this->assertEquals(Inflector::singularize('thieves'), 'thief');
-		$this->assertEquals(Inflector::singularize('potatoes'), 'potato');
-		$this->assertEquals(Inflector::singularize('heroes'), 'hero');
-		$this->assertEquals(Inflector::singularize('buffalos'), 'buffalo');
-		$this->assertEquals(Inflector::singularize('babies'), 'baby');
-		$this->assertEquals(Inflector::singularize('teeth'), 'tooth');
-		$this->assertEquals(Inflector::singularize('geese'), 'goose');
-		$this->assertEquals(Inflector::singularize('feet'), 'foot');
-		$this->assertEquals(Inflector::singularize('objectives'), 'objective');
-		$this->assertEquals(Inflector::singularize('archives'), 'archive');
-		$this->assertEquals(Inflector::singularize('briefs'), 'brief');
-		$this->assertEquals(Inflector::singularize('quotas'), 'quota');
-		$this->assertEquals(Inflector::singularize('curves'), 'curve');
-		$this->assertEquals(Inflector::singularize('body_curves'), 'body_curve');
-		$this->assertEquals(Inflector::singularize('metadata'), 'metadata');
+
 		$this->assertEquals(Inflector::singularize(''), '');
 	}
 
@@ -173,21 +160,6 @@ class InflectorTest extends CakeTestCase {
 		$this->assertEquals(Inflector::pluralize('cafe'), 'cafes');
 		$this->assertEquals(Inflector::pluralize('roof'), 'roofs');
 		$this->assertEquals(Inflector::pluralize('foe'), 'foes');
-		$this->assertEquals(Inflector::pluralize('cookie'), 'cookies');
-		$this->assertEquals(Inflector::pluralize('wolf'), 'wolves');
-		$this->assertEquals(Inflector::pluralize('thief'), 'thieves');
-		$this->assertEquals(Inflector::pluralize('potato'), 'potatoes');
-		$this->assertEquals(Inflector::pluralize('hero'), 'heroes');
-		$this->assertEquals(Inflector::pluralize('buffalo'), 'buffalo');
-		$this->assertEquals(Inflector::pluralize('tooth'), 'teeth');
-		$this->assertEquals(Inflector::pluralize('goose'), 'geese');
-		$this->assertEquals(Inflector::pluralize('foot'), 'feet');
-		$this->assertEquals(Inflector::pluralize('objective'), 'objectives');
-		$this->assertEquals(Inflector::pluralize('brief'), 'briefs');
-		$this->assertEquals(Inflector::pluralize('quota'), 'quotas');
-		$this->assertEquals(Inflector::pluralize('curve'), 'curves');
-		$this->assertEquals(Inflector::pluralize('body_curve'), 'body_curves');
-		$this->assertEquals(Inflector::pluralize('metadata'), 'metadata');
 		$this->assertEquals(Inflector::pluralize(''), '');
 	}
 
@@ -252,9 +224,6 @@ class InflectorTest extends CakeTestCase {
 		$result = Inflector::slug('posts/view/한국어/page:1/sort:asc');
 		$expected = 'posts_view_한국어_page_1_sort_asc';
 		$this->assertEquals($expected, $result);
-
-		$result = Inflector::slug("non\xc2\xa0breaking\xc2\xa0space");
-		$this->assertEquals('non_breaking_space', $result);
 	}
 
 /**
