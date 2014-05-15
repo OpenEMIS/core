@@ -7,13 +7,13 @@ foreach ($customfields as $arrdataFieldsVal){
         
         if($arrdataFieldsVal == 'InstitutionSite'){
             echo '<div class="row">
-                            <div class="label"> Site Type:</div>
-                            <div class="value">
+                            <div class="col-md-3"> Site Type:</div>
+                            <div class="col-md-4">
                             
 
                                             <div class="">
                                             <div class="field_value">
-                                                    <select name="data[siteType]" onChange="objCustomFieldSearch.getDataFields($(this).val());">';
+                                                    <select name="data[siteType]" class="form-control" onChange="objCustomFieldSearch.getDataFields($(this).val());">';
                                                     echo '   <option value="0">All</option>';
                                                     foreach($types as $key => $val){
                                                         echo '   <option value="'.$key.'" '.($key == $typeSelected?'selected="selected"':"").'>'.__($val).'</option>';
@@ -28,14 +28,14 @@ foreach ($customfields as $arrdataFieldsVal){
         if(count(@$dataFields[$arrdataFieldsVal]) > 0){
                 foreach ($dataFields[$arrdataFieldsVal] as $arrVals){
                     if($arrVals[$arrdataFieldsVal.'CustomField']['type'] == 1){//Label
-                                              echo '<fieldset class="custom_section_break">
+                                              echo '<fieldset class="section_break">
 								<legend>'.__($arrVals[$arrdataFieldsVal.'CustomField']['name']).'</legend>
 						</fieldset>';
                                        }else{
 ?>
                     <div class="row">
-                            <div class="label"><?php echo __($arrVals[$arrdataFieldsVal.'CustomField']['name']); ?></div>
-                            <div class="value">
+                            <div class="col-md-3"><?php echo __($arrVals[$arrdataFieldsVal.'CustomField']['name']); ?></div>
+                            <div class="col-md-4">
                                 <?php 
                                     if($arrVals[$arrdataFieldsVal.'CustomField']['type'] == 2) {//Text
                                                 echo '<div class="">
@@ -44,7 +44,7 @@ foreach ($customfields as $arrdataFieldsVal){
                                                 
                                                                                $val = (isset($sessVal[$arrdataFieldsVal.'CustomValue']['textbox'][$arrVals[$arrdataFieldsVal.'CustomField']["id"]]['value']))?
                                                                                       $sessVal[$arrdataFieldsVal.'CustomValue']['textbox'][$arrVals[$arrdataFieldsVal.'CustomField']["id"]]['value']:"";
-                                                                               echo '<input type="text" class="default" name="data['.$arrdataFieldsVal.'CustomValue'.'][textbox]['.$arrVals[$arrdataFieldsVal.'CustomField']["id"].'][value]" value="'.$val.'" >';
+                                                                               echo '<input type="text" class="form-control" name="data['.$arrdataFieldsVal.'CustomValue'.'][textbox]['.$arrVals[$arrdataFieldsVal.'CustomField']["id"].'][value]" value="'.$val.'" >';
                                                                  echo '</div>
                                                                </div>';
                                        }elseif($arrVals[$arrdataFieldsVal.'CustomField']['type'] == 3) {//DropDown
@@ -54,8 +54,8 @@ foreach ($customfields as $arrdataFieldsVal){
                                                                                         
                                                                                        if(count($arrVals[$arrdataFieldsVal.'CustomFieldOption'])> 0){
                                                                                            
-                                                                                                $arrDropDownVal= array_unshift( $arrVals[$arrdataFieldsVal.'CustomFieldOption'], array("id"=>"","value"=>""));
-                                                                                               echo '<select name="data['.$arrdataFieldsVal.'CustomValue][dropdown]['.$arrVals[$arrdataFieldsVal.'CustomField']["id"].'][value]">';
+                                                                                                $arrDropDownVal= array_unshift( $arrVals[$arrdataFieldsVal.'CustomFieldOption'], array("id"=>"","col-md-4"=>""));
+                                                                                               echo '<select name="data['.$arrdataFieldsVal.'CustomValue][dropdown]['.$arrVals[$arrdataFieldsVal.'CustomField']["id"].'][value]"  class="form-control">';
                                                                                                
                                                                                                foreach($arrVals[$arrdataFieldsVal.'CustomFieldOption'] as $arrDropDownVal){
                                                                                                    
@@ -88,7 +88,7 @@ foreach ($customfields as $arrdataFieldsVal){
                                                                                                                }
                                                                                                                
                                                                                                        }
-                                                                                                       echo '<input name="data['.$arrdataFieldsVal.'CustomValue][checkbox]['.$arrVals[$arrdataFieldsVal.'CustomField']["id"].'][value][]" type="checkbox" '.(in_array($arrDropDownVal['id'], $defaults) ?'checked':"").' value="'.$arrDropDownVal['id'].'"> <label>'.$arrDropDownVal['value'].'</label> ';
+                                                                                                       echo '<input name="data['.$arrdataFieldsVal.'CustomValue][checkbox]['.$arrVals[$arrdataFieldsVal.'CustomField']["id"].'][value][]"  type="checkbox" '.(in_array($arrDropDownVal['id'], $defaults) ?'checked':"").' value="'.$arrDropDownVal['id'].'"> <label>'.$arrDropDownVal['value'].'</label> ';
 
                                                                                                }
 
@@ -104,7 +104,7 @@ foreach ($customfields as $arrdataFieldsVal){
                                                                                        $val = ($sessVal[$arrdataFieldsVal.'CustomValue']['textarea'][$arrVals[$arrdataFieldsVal.'CustomField']["id"]]['value']?$sessVal[$arrdataFieldsVal.'CustomValue']['textarea'][$arrVals[$arrdataFieldsVal.'CustomField']["id"]]['value']:""); 
                                                                                }
 
-                                                                               echo '<textarea name="data['.$arrdataFieldsVal.'CustomValue][textarea]['.$arrVals[$arrdataFieldsVal.'CustomField']["id"].'][value]">'.$val.'</textarea>';
+                                                                               echo '<textarea name="data['.$arrdataFieldsVal.'CustomValue][textarea]['.$arrVals[$arrdataFieldsVal.'CustomField']["id"].'][value]" class="form-control">'.$val.'</textarea>';
                                                                  echo '</div>
                                                                </div>';
                                        }

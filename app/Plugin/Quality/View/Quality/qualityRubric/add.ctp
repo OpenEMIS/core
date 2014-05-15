@@ -4,14 +4,16 @@
 echo $this->Html->script('app.date', false);
 echo $this->Html->script('config', false);
 echo $this->Html->script('Quality.quality.rubric', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($subheader));
+$this->start('contentActions');
+
+$this->end();
+$this->start('contentBody');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
 
-<div id="quality_visit" class="content_wrapper edit add">
-    <h1>
-        <span><?php echo __($subheader); ?></span>
-    </h1>
     <?php echo $this->element('alert'); ?>
     <?php
     $actionName = $this->action;
@@ -155,5 +157,6 @@ echo $this->Html->script('Quality.quality.rubric', false);
         ?>
     </div>
 
-    <?php echo $this->Form->end(); ?>
-</div>
+<?php echo $this->Form->end(); ?>
+
+<?php $this->end(); ?>  

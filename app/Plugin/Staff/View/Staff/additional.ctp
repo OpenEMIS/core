@@ -1,4 +1,4 @@
-<?php
+<?php /*
 // echo $this->Html->script('/Staff/js/staff', false);
 ?>
 
@@ -37,21 +37,6 @@
                     echo '<div class="custom_field">
                     <div class="field_label">'.$arrVals['StaffCustomField']['name'].'</div>
                     <div class="field_value">';
-                                        /*
-                                         if(count($arrVals['StaffCustomFieldOption'])> 0){
-                                            echo '<select>';
-                                            foreach($arrVals['StaffCustomFieldOption'] as $arrDropDownVal){
-
-                                                if(isset($datavalues[$arrVals['StaffCustomField']['id']][0]['value'])){
-                                                    $defaults =  $datavalues[$arrVals['StaffCustomField']['id']][0]['value'];
-                                                }
-                                                echo '<option '.($defaults == $arrDropDownVal['id']?'selected="selected"':"").'>'.$arrDropDownVal['value'].'</option>';
-
-                                            }
-                                            echo '</select>';
-
-                                        }
-                                         */
                                         if(count($arrVals['StaffCustomFieldOption'])> 0){
                                             $defaults = '';
                                             foreach($arrVals['StaffCustomFieldOption'] as $arrDropDownVal){
@@ -109,3 +94,27 @@
                                 ?>
 
                             </div>
+ * 
+ */
+?>
+
+<?php
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+
+$this->start('contentActions');
+if ($_edit) {
+	echo $this->Html->link(__('Edit'), array('action' => 'additionalEdit'), array('class' => 'divider'));
+}
+echo $this->Html->link(__('Academic'), array('action' => 'custFieldYrView'), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
+$model = 'StaffCustomField';
+$modelOption = 'StaffCustomFieldOption';
+$action = 'view';
+echo $this->element('customFields/index', compact('model', 'modelOption', 'action'));
+$this->end();
+?>
+

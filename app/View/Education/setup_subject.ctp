@@ -3,11 +3,21 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('education', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('education', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($pageTitle));
+$this->start('contentActions');
+echo $this->Html->link(__('Structure'), array('action' => 'index'), array('class' => 'divider'));
+if($_edit) {
+	echo $this->Html->link(__('Edit'), array('action' => 'setupEdit', $selectedOption), array('class' => 'divider'));
+}
+$this->end();
+$this->assign('contentId', 'education_setup');
+
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="education_setup" class="content_wrapper">
+<?php echo $this->element('alert'); ?>
+	
 	<?php
 	echo $this->Form->create('Education', array(
 			'id' => 'submitForm',
@@ -16,45 +26,40 @@ echo $this->Html->script('education', false);
 		)
 	);
 	?>
-	<h1>
-		<span><?php echo __($pageTitle); ?></span>
-		<?php
-		echo $this->Html->link(__('Structure'), array('action' => 'index'), array('class' => 'divider'));
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'setupEdit', $selectedOption), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-	<?php echo $this->element('alert'); ?>
-	
 	<div class="row category">
 		<?php
 		echo $this->Form->input('category', array(
 			'id' => 'category',
 			'options' => $setupOptions,
 			'default' => $selectedOption,
+			'div' => 'col-md-4',
+			'class' => 'form-control',
 			'autocomplete' => 'off',
 			'onchange' => 'education.navigateTo(this)'
 		));
 		?>
 	</div>
 	
-	<div class="table full_width">
-		<div class="table_head">
-			<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-			<div class="table_cell cell_subject_code"><?php echo __('Code'); ?></div>
-			<div class="table_cell"><?php echo __($pageTitle); ?></div>
-		</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-hover table-bordered">
+		<thead class="table_head">
+			<tr>
+				<td class="table_cell cell_visible"><?php echo __('Visible'); ?></td>
+				<td class="table_cell cell_subject_code"><?php echo __('Code'); ?></td>
+				<td class="table_cell"><?php echo __($pageTitle); ?></td>
+			</tr>
+		</thead>
 		
-		<div class="table_body">
+		<tbody class="table_body">
 			<?php foreach($list as $obj) { ?>
-			<div class="table_row<?php echo $obj['visible']!=1 ? ' inactive' : ''; ?>">
-				<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']); ?></div>
-				<div class="table_cell"><?php echo $obj['code']; ?></div>
-				<div class="table_cell"><?php echo $obj['name']; ?></div>
-			</div>
+			<tr class="table_row<?php echo $obj['visible']!=1 ? ' inactive' : ''; ?>">
+				<td class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']); ?></td>
+				<td class="table_cell"><?php echo $obj['code']; ?></td>
+				<td class="table_cell"><?php echo $obj['name']; ?></td>
+			</tr>
 			<?php } ?>
-		</div>
+		</tbody>
+		</table>
 	</div>
 	<?php echo $this->Form->end(); ?>
-</div>
+<?php $this->end(); ?>

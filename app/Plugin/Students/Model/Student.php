@@ -24,7 +24,8 @@ class Student extends StudentsAppModel {
 				'Students.StudentCustomValue'
 			)
 		),
-		'CustomReport'
+		'CustomReport',
+		'DatePicker' => array('date_of_birth')
 	);
 	
 	public $validate = array(

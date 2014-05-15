@@ -17,6 +17,10 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusFinance extends AppModel {
+        public $actsAs = array(
+                'ControllerAction'
+	);
+    
 	public $belongsTo = array(
 		'FinanceSource'=> array('foreignKey' => 'finance_source_id'),
 		'FinanceCategory' => array('foreignKey' => 'finance_category_id'),
@@ -47,4 +51,78 @@ class CensusFinance extends AppModel {
             
             return $data;
         }
+        
+        public function finances($controller, $params) {
+        $controller->Navigation->addCrumb('Finances');
+
+        if ($controller->request->is('post')) {
+            $yearId = $controller->data['CensusFinance']['school_year_id'];
+            $controller->request->data['CensusFinance']['institution_site_id'] = $controller->institutionSiteId;
+            $controller->CensusFinance->save($controller->request->data['CensusFinance']);
+
+            $controller->redirect(array('action' => 'finances', $yearId));
+        }
+
+        $yearList = $controller->SchoolYear->getYearList();
+        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+        $data = $controller->CensusFinance->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $controller->institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
+        $newSort = array();
+        //pr($data);
+        foreach ($data as $k => $arrv) {
+            //$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
+            $newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
+        }
+        
+        $data = $newSort;
+        
+        $natures = $controller->FinanceNature->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
+        $sources = $controller->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
+        
+        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+        
+        $controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources', 'isEditable'));
+    }
+
+    public function financesEdit($controller, $params) {
+        $controller->Navigation->addCrumb('Edit Finances');
+
+        if ($controller->request->is('post')) {
+            $data = $controller->data['CensusFinance'];
+            $yearId = $data['school_year_id'];
+            unset($data['school_year_id']);
+            foreach ($data as &$val) {
+                $val['institution_site_id'] = $controller->institutionSiteId;
+                $val['school_year_id'] = $yearId;
+            }
+            //pr($controller->request->data);die;
+            $controller->CensusFinance->saveMany($data);
+
+            $controller->redirect(array('action' => 'finances', $yearId));
+        }
+
+        $yearList = $controller->SchoolYear->getAvailableYears();
+        $selectedYear = $controller->getAvailableYearId($yearList);
+        $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+        if (!$editable) {
+            $controller->redirect(array('action' => 'finances', $selectedYear));
+        } else {
+            $data = $controller->CensusFinance->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $controller->institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
+            $newSort = array();
+            //pr($data);
+            foreach ($data as $k => $arrv) {
+                //$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
+
+
+                $arrv['CategoryTypes'] = $controller->getFinanceCatByFinanceType($arrv['FinanceCategory']['FinanceType']['id']);
+                $newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
+            }
+            
+            $data = $newSort;
+
+            $natures = $controller->FinanceNature->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
+            $sources = $controller->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
+
+            $controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources'));
+        }
+    }
 }

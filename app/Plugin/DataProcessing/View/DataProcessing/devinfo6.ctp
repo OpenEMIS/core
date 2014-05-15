@@ -1,66 +1,15 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $this->Label->get('DataProcessing.export'));
+$this->start('contentActions');
+$this->end();
+
+$this->assign('contentId', 'indicators');
+$this->start('contentBody');
 ?>
-
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="indicators" class="content_wrapper">
-	<?php
-	echo $this->Form->create('DataProcessing', array(
-		'inputDefaults' => array('label' => false, 'div' => false),
-		'url' => array('plugin' => 'DataProcessing', 'controller' => 'DataProcessing', 'action' => 'export'),
-		'onsubmit' => 'return jsForm.isSubmitDisabled(this)'
-	));
-	?>
-	<h1>
-		<span><?php echo __("Export"); ?></span>
-	</h1>
-	<?php echo $this->element('alert'); ?>
-	<div class="row input" style="margin-left: 5px;">
-		<div class="label" style="width: 60px;"><?php echo __('Format'); ?></div>
-		<div class="value">
-			<?php
-			echo $this->Form->input('export_format', array(
-				'options' => $exportOptions
-			));
-			?>
-		</div>
-	</div>
-			<?php foreach($list as $key => $groupItems) { ?>
-
-
-    <fieldset class="section_group">
-        <legend><?php echo ucfirst($key); ?></legend>
-        <div class="table full_width">
-            <div class="table_head">
-                <div class="table_cell cell_checkbox"><input type="checkbox" value="1" onchange="toggleSelect(this)"><!--input type="checkbox" onchange="jsForm.toggleSelect(this);" checked="checked" /--></div>
-                <div class="table_cell"><?php echo __('Indicator'); ?></div>
-            </div>
-
-            <div class="table_body">
-			<?php foreach($groupItems as $item) {
-			    $obj = $item['BatchIndicator']; ?>
-
-			<div class="table_row">
-				<div class="table_cell">
-					<?php //$attr = $obj['enabled']==1 ? 'checked="checked"' : ''; ?>
-					<input type="checkbox" name="data[BatchIndicator][<?php echo $obj['id']; ?>]" <?php echo ($obj['enabled']==1)?'': 'disabled="disabled"'?>  value="<?php echo $obj['id']; ?>" />
-				</div>
-				<div class="table_cell"><?php echo __($obj['name']); ?></div>
-			</div>
-			<?php   } ?>
-		</div>
-    </fieldset>
-			<?php } ?>
-	</div>
-	
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Export'); ?>" class="btn_save <?php echo ($isBackupRunning)?"btn_disabled":"";?>" />
-	</div>
-	
-	<?php echo $this->Form->end(); ?>
-</div>
-
+<?php echo $this->element('alert'); ?>
 <script type="text/javascript" charset="utf-8">
 $(document).ready(function(){
     var url = '<?php echo $this->Html->url($url); ?>';
@@ -84,3 +33,60 @@ $(document).ready(function(){
 	}
 
 </script>
+<?php
+echo $this->Form->create('DataProcessing', array(
+	'inputDefaults' => array('label' => false, 'div' => false),
+	'url' => array('plugin' => 'DataProcessing', 'controller' => 'DataProcessing', 'action' => 'export'),
+	'onsubmit' => 'return jsForm.isSubmitDisabled(this)'
+));
+?>
+<div class="row form-group input">
+	<label class="col-md-3 control-label"><?php echo __('Format'); ?></label>
+	<div class="col-md-4">
+		<?php
+		echo $this->Form->input('export_format', array(
+			'class'=>'form-control',
+			'options' => $exportOptions
+		));
+		?>
+	</div>
+</div>
+<?php foreach($list as $key => $groupItems) { ?>
+
+
+<fieldset class="section_group">
+    <legend><?php echo ucfirst($key); ?></legend>
+    <div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+        <thead class="table_head">
+        	<tr>
+	            <td class="table_cell cell_checkbox"><input type="checkbox" value="1" onchange="toggleSelect(this)"></td>
+	            <td class="table_cell"><?php echo __('Indicator'); ?></td>
+	        </tr>
+        </thead>
+
+        <tbody class="table_body">
+		<?php foreach($groupItems as $item) {
+		    $obj = $item['BatchIndicator']; ?>
+
+			<tr class="table_row">
+				<td class="table_cell">
+					<input type="checkbox" name="data[BatchIndicator][<?php echo $obj['id']; ?>]" <?php echo ($obj['enabled']==1)?'': 'disabled="disabled"'?>  value="<?php echo $obj['id']; ?>" />
+				</td>
+				<td class="table_cell"><?php echo __($obj['name']); ?></td>
+			</tr>
+		<?php  } ?>
+		</tbody>
+	</table>
+	</div>
+</fieldset>
+<?php } ?>
+</div>
+
+<div class="controls">
+	<input type="submit" value="<?php echo __('Export'); ?>" class="btn_save <?php echo ($isBackupRunning)?"btn_disabled":"";?>" />
+</div>
+
+<?php echo $this->Form->end(); ?>
+
+<?php $this->end(); ?> 

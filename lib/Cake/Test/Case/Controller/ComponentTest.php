@@ -2,19 +2,18 @@
 /**
  * ComponentTest file
  *
- * PHP 5
- *
  * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Controller
  * @since         CakePHP(tm) v 1.2.0.5436
- * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
+ * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('Controller', 'Controller');
@@ -26,13 +25,6 @@ App::uses('Component', 'Controller');
  * @package       Cake.Test.Case.Controller
  */
 class ParamTestComponent extends Component {
-
-/**
- * name property
- *
- * @var string 'ParamTest'
- */
-	public $name = 'ParamTest';
 
 /**
  * components property
@@ -48,13 +40,6 @@ class ParamTestComponent extends Component {
  * @package       Cake.Test.Case.Controller
  */
 class ComponentTestController extends Controller {
-
-/**
- * name property
- *
- * @var string 'ComponentTest'
- */
-	public $name = 'ComponentTest';
 
 /**
  * uses property
@@ -89,7 +74,7 @@ class AppleComponent extends Component {
 /**
  * startup method
  *
- * @param mixed $controller
+ * @param Controller $controller
  * @return void
  */
 	public function startup(Controller $controller) {
@@ -115,7 +100,7 @@ class OrangeComponent extends Component {
 /**
  * initialize method
  *
- * @param mixed $controller
+ * @param Controller $controller
  * @return void
  */
 	public function initialize(Controller $controller) {
@@ -145,7 +130,7 @@ class BananaComponent extends Component {
 /**
  * testField property
  *
- * @var string 'BananaField'
+ * @var string
  */
 	public $testField = 'BananaField';
 
@@ -206,7 +191,6 @@ class SomethingWithEmailComponent extends Component {
 	public $components = array('Email');
 }
 
-
 /**
  * ComponentTest class
  *
@@ -220,20 +204,11 @@ class ComponentTest extends CakeTestCase {
  * @return void
  */
 	public function setUp() {
+		parent::setUp();
 		$this->_pluginPaths = App::path('plugins');
 		App::build(array(
 			'Plugin' => array(CAKE . 'Test' . DS . 'test_app' . DS . 'Plugin' . DS)
 		));
-	}
-
-/**
- * tearDown method
- *
- * @return void
- */
-	public function tearDown() {
-		App::build();
-		ClassRegistry::flush();
 	}
 
 /**

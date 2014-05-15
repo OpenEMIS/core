@@ -50,7 +50,9 @@ class AppController extends Controller {
 			'logoutRedirect' => array('controller' => 'Security', 'action' => 'login'),
 			'authenticate' => array('Form' => array('userModel' => 'SecurityUser'))
 		),
-		'Workflow'
+		'Workflow',
+		'Message',
+		'Option'
 	);
 	
 	public function beforeFilter() {
@@ -104,22 +106,7 @@ class AppController extends Controller {
 	}
 	
 	public function processAction() {
-           /* if(strpos(strtolower(substr($this->action, 0,6)), 'health') !== false){
-                $action = Inflector::underscore($this->action);
-            }
-            else */if(strpos(strtolower(substr($this->action, 0,8)), 'training') !== false){
-                $action = Inflector::underscore($this->action);
-            } 
-            else if(strpos(strtolower(substr($this->action, 0,7)), 'special') !== false){
-                $action = Inflector::underscore($this->action);
-            } 
-            else if(strpos(strtolower(substr($this->action, 0,4)), 'olap') !== false){
-                $action = Inflector::underscore($this->action);
-            }
-            else{
-                $action = strtolower($this->action); 
-            }
-            
+		$action = strtolower($this->action);
 		if(!empty($this->modules)) { // for modules / plugin 
 		//search for exact match
 			foreach($this->modules as $name => $module) {
@@ -145,6 +132,8 @@ class AppController extends Controller {
 				}
 			}
 		}
+		
+		/*
 		if(!empty($this->components)) { // for components
 			$actionCamel = Inflector::camelize($action);
 			$name = '';
@@ -160,5 +149,6 @@ class AppController extends Controller {
 				}
 			}
 		}
+		*/
 	}
 }

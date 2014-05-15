@@ -1,82 +1,88 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-//echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $this->Label->get('DataProcessing.custom_indicators'));
+
+$this->start('contentActions');
+if($_add) {
+    echo $this->Html->link(__('Add'), array('action' => 'BuildAdd'),    array('class' => 'divider'));
+}
+$this->end();
+
+$this->assign('contentId', 'report-list');
+$this->start('contentBody');
 ?>
+<?php echo $this->element('alert'); ?>
 <style type="text/css">
 .col_action > a { margin-right: 7px;}
 .col_action > img { margin-left:0; margin-right: 5px;}
 </style>
-
-<?php echo $this->element('breadcrumb'); ?>
 
 <?php 
 $ctr = 0;
 //if(@$enabled === true){
 if(true){
 ?>
-    <div class="content_wrapper" id="report-list">
-        <h1>
-            <span><?php echo __('Custom Indicators'); ?></span>
-            <?php
-                if($_add) {
-                    echo $this->Html->link(__('Add'), array('action' => 'BuildAdd'),	array('class' => 'divider'));
-                }
-            ?>
-        </h1>
-            <span id="controller" class="none"><?php echo $controllerName; ?></span>
-            <div class="table full_width">
-                <div class="table_head">
-                    <div class="table_cell col_name"><?php echo __('Name'); ?></div>
-                    <div class="table_cell col_desc"><?php echo __('Description'); ?></div>
-                    <div class="table_cell col_action" style="width:70px;"><?php echo __('Action'); ?></div>
-                </div>
-                <div class="table_body">
-                <?php if(count($data) > 0) {
-                    foreach($data as $row){ ?>
+   
+        <span id="controller" class="none"><?php echo $controllerName; ?></span>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-bordered">
+            <thead class="table_head">
+                <tr>
+                    <td class="table_cell col_name"><?php echo __('Name'); ?></td>
+                    <td class="table_cell col_desc"><?php echo __('Description'); ?></td>
+                    <td class="table_cell col_action" style="width:70px;"><?php echo __('Action'); ?></td>
+                </tr>
+            </thead>
+            <tbody class="table_body">
+            <?php if(count($data) > 0) {
+                foreach($data as $row){ ?>
 
-                    <div id="<?php echo 'report_'.$row['id']; ?>" class="table_row" enabled="<?php echo $row['enabled']?>" row-id="<?php echo $row['id']?>">
-                        <div class="table_cell col_name">
-                            <?php echo $row['name']; ?>
-                        </div>
-                        <div class="table_cell col_desc">
-                            <?php echo $row['metadata']; ?>
-                        </div>
-                        <div class="table_cell col_action">
-                            <?php
-				if($_edit) {
-                    		     echo $this->Html->link(
-                                	$this->Html->image('icons/edit.png', array("alt" => "Edit")),
-                                	"/{$controllerName}/BuildEdit/{$row['id']}",
-                                	array('escape' => false)
-                            	     );
-				}
-				if($_execute) {
-                	            echo $this->Html->link(
-                     	        	$this->Html->image('icons/download.png', array("alt" => "Download")),
-               	        	        "/{$controllerName}/BuildDownload/{$row['id']}",
-        	       		        array('escape' => false)
-              		            );
-				}
-				if($_delete) {
-              		              echo $this->Html->link(
-                       		         $this->Html->image('icons/delete.png', array("alt" => "Delete", "class" => "delete_icon", "row-id" =>$row['id'])),
-                       		         "#",
-                        	        array('escape' => false)
-                           		 );
-				}
-                            ?>
-                            <?php //echo $this->Html->image('icons/delete.png', array("alt" => "Delete", "class" => "delete_icon", "row-id" =>$row['id']));?>
-                        </div>
-                    </div>
-                <?php } ?>
-                    <!--div class="table_row more">
-                        <div class="col_full">More</div>
-                    </div-->
-                <?php } ?>
-                </div>
-            </div>
-            <div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null,'controller'=>'Home','action'=>'support'))?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on building Custom Indicators.'); ?></div>
-    </div>
+                <tr id="<?php echo 'report_'.$row['id']; ?>" class="table_row" enabled="<?php echo $row['enabled']?>" row-id="<?php echo $row['id']?>">
+                    <td class="table_cell col_name">
+                        <?php echo $row['name']; ?>
+                    </td>
+                    <td class="table_cell col_desc">
+                        <?php echo $row['metadata']; ?>
+                    </td>
+                    <td class="table_cell col_action" style="width:100px;">
+                        <?php
+			if($_edit) {
+                		     echo $this->Html->link(
+                            	$this->Html->image('icons/edit.png', array("alt" => "Edit")),
+                            	"/{$controllerName}/BuildEdit/{$row['id']}",
+                            	array('escape' => false)
+                        	     );
+			}
+			if($_execute) {
+            	            echo $this->Html->link(
+                 	        	$this->Html->image('icons/download.png', array("alt" => "Download")),
+           	        	        "/{$controllerName}/BuildDownload/{$row['id']}",
+    	       		        array('escape' => false)
+          		            );
+			}
+			if($_delete) {
+          		              echo $this->Html->link(
+                   		         $this->Html->image('icons/delete.png', array("alt" => "Delete", "class" => "delete_icon", "row-id" =>$row['id'])),
+                   		         "#",
+                    	        array('escape' => false)
+                       		 );
+			}
+                        ?>
+                        <?php //echo $this->Html->image('icons/delete.png', array("alt" => "Delete", "class" => "delete_icon", "row-id" =>$row['id']));?>
+                    </td>
+                </tr>
+            <?php } ?>
+                <!--div class="table_row more">
+                    <div class="col_full">More</div>
+                </div-->
+            <?php } ?>
+            </tbody>
+            </table>
+        </div>
+        <div style="width:100%;margin:15px 5px;"><?php echo __('Please contact'); ?> <a href="<?php echo $this->Html->url(array('plugin' => null,'controller'=>'Home','action'=>'support'))?>"> <?php echo __('support'); ?> </a> <?php echo __('for more information on building Custom Indicators.'); ?></div>
+</div>
 <?php
 }else{ 
     echo __('Report Feature disabled');
@@ -117,3 +123,4 @@ $(document).ready(function(){
 
 });
 </script>
+<?php $this->end(); ?> 

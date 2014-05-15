@@ -33,7 +33,10 @@ class CascadeDeleteBehavior extends ModelBehavior {
 				$cascadeModel->deleteAll(array($foreignKey => $model->id), false, false);
 			}
 		} catch(Exception $ex) {
-			$this->log($ex->getMessage(), 'error');
+			$this->log($ex->getMessage(), 'debug');
+			if(isset($ex->queryString)) {
+				$this->log($ex->queryString, 'debug');
+			}
 			$continue = false;
 		}
 		return $continue;

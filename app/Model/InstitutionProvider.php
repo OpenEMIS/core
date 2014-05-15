@@ -17,9 +17,19 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionProvider extends AppModel {
-        
-	var $hasMany = array('Institution');
-
+	public $hasMany = array('Institution');
+	public $actsAs = array('FieldOption');
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Option'
+			)
+		)
+	);
+	
     public function findListAsSubgroups() {
         return $this->findList(true);
     }

@@ -43,7 +43,7 @@ var objSearch = {
 			var maskId;
 			$.ajax({ 
 				type: "post",
-				url: getRootURL() + $(this).closest('.table_head').attr('url'),
+				url: getRootURL() + $(this).closest('thead').attr('url'),
 				data: {order:order,sortdir : sort},
 				beforeSend: function (jqXHR) {
 					maskId = $.mask({parent: '.content_wrapper', text: i18n.Search.textSorting});

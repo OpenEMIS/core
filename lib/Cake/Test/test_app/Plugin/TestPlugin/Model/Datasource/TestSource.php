@@ -1,4 +1,5 @@
 <?php
+
 App::uses('DataSource', 'Model/Datasource');
 
 class TestSource extends DataSource {
@@ -15,11 +16,11 @@ class TestSource extends DataSource {
 		return compact('model', 'fields', 'values');
 	}
 
-	public function read(Model $model, $queryData = array()) {
+	public function read(Model $model, $queryData = array(), $recursive = null) {
 		return compact('model', 'queryData');
 	}
 
-	public function update(Model $model, $fields = array(), $values = array()) {
+	public function update(Model $model, $fields = array(), $values = array(), $conditions = null) {
 		return compact('model', 'fields', 'values');
 	}
 

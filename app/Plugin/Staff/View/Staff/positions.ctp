@@ -1,6 +1,9 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentId', 'employment');
+$this->assign('contentHeader', $header);
 ?>
 
 <style type="text/css">
@@ -8,14 +11,9 @@ echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 .cell_salary { width: 100px; }
 </style>
 
-<?php echo $this->element('breadcrumb'); ?>
+<?php $this->start('contentBody'); ?>
 
-<div id="employment" class="content_wrapper">
-    <h1>
-        <span><?php echo __('Positions'); ?></span>
-    </h1>
-    <?php echo $this->element('alert'); ?>
-	
+
     <?php foreach($data as $key => $classes){ ?>
 	<fieldset class="section_group">
 		<legend><?php echo $key; ?></legend>
@@ -45,4 +43,4 @@ echo $this->Html->css('fieldset', 'stylesheet', array('inline' => false));
 		</div>
 	</fieldset>
     <?php } ?>
-</div>
+<?php $this->end(); ?>

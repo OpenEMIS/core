@@ -15,9 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffLicense extends StaffAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Datepicker' => array('issue_date', 'expiry_date'));
 	
 	public $belongsTo = array(
+		'LicenseType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -51,60 +52,74 @@ class StaffLicense extends StaffAppModel {
 			)
 		),
 	);
-	public $booleanOptions = array('No', 'Yes');
 
 	public $headerDefault = 'Licenses';
+	
+	public function compareDate($field = array(), $compareField = null) {
+        $startDate = new DateTime(current($field));
+        $endDate = new DateTime($this->data[$this->name][$compareField]);
+        return $endDate >= $startDate;
+    }
+	
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+    }
+	
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'issue_date', 'type' => 'datepicker'),
+				array('field' => 'name',  'model' =>'LicenseType', 'labelKey' => 'general.type'),
+				array('field' => 'issuer'),
+				array('field' => 'license_number'),
+                array('field' => 'expiry_date', 'type' => 'datepicker'),
+				
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
 	
 	public function license($controller, $params) {
 	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
-		$controller->set('modelName', $this->name);
-		$data = $this->find('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
+		$header = __($this->headerDefault);
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser','CreatedUser')));
+		$data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
 		
-		$licenseType = ClassRegistry::init('LicenseType');
-		$licenseTypeOptions = $licenseType->find('list', array('fields'=> array('id', 'name')));
-		
-		
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('data', $data);
-		$controller->set('licenseTypeOptions', $licenseTypeOptions);
-		
+		$controller->set(compact('header', 'data'));
 	}
 
 	public function licenseView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
-		$controller->set('modelName', $this->name);
+		$header = __($this->headerDefault . ' Details');
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->findById($id);//('first',array('conditions' => array($this->name.'.id' => $id)));
 		
 		if(empty($data)){
-			$controller->redirect(array('action'=>'license'));
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action'=>'license'));
 		}
 		
 		$controller->Session->write('StaffLicenseId', $id);
-		$licenseType = ClassRegistry::init('LicenseType');
-		$licenseTypeOptions = $licenseType->find('list', array('fields'=> array('id', 'name')));
-		
-		$controller->set('data', $data);
-		$controller->set('licenseTypeOptions', $licenseTypeOptions);
+		$fields = $this->getDisplayFields($controller);
+        $controller->set(compact('data', 'header', 'fields', 'id'));
 	}
 	
 	public function licenseDelete($controller, $params) {
         if($controller->Session->check('StaffId') && $controller->Session->check('StaffLicenseId')) {
             $id = $controller->Session->read('StaffLicenseId');
-            $staffId = $controller->Session->read('StaffId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-			
-			$licenseType = ClassRegistry::init('LicenseType');
-			$licenseTypeOptions = $licenseType->find('list', array('fields'=> array('id', 'name')));
-
-            $name = $licenseTypeOptions[$data['StaffLicense']['license_type_id']] . ' - ' . $data['StaffLicense']['license_number'];
-			
-            $this->delete($id);
-            $controller->Utility->alert($name . ' have been deleted successfully.');
+            if($this->delete($id)) {
+                $controller->Message->alert('general.delete.success');
+            } else {
+                $controller->Message->alert('general.delete.failed');
+            }
 			$controller->Session->delete('StaffLicenseId');
             $controller->redirect(array('action' => 'license'));
         }
@@ -112,27 +127,25 @@ class StaffLicense extends StaffAppModel {
 	
 	public function licenseAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
-		$controller->set('subheader', $this->headerDefault);
+		$controller->set('header', __('Add ' . $this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 	}
 	
 	public function licenseEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
-		$controller->set('subheader', $this->headerDefault);
+		$controller->set('header', __('Edit ' . $this->headerDefault));
 		$this->setup_add_edit_form($controller, $params);
 		
 		$this->render = 'add';
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$controller->set('modelName', $this->name);
-		
-		$licenseType = ClassRegistry::init('LicenseType');
-		$licenseTypeOptions = $licenseType->find('list', array('fields'=> array('id', 'name')));
+		$id = empty($params['pass'][0])? 0:$params['pass'][0];
+		$licenseTypeOptions = $this->LicenseType->find('list', array('fields'=> array('id', 'name')));
 		
 		$controller->set('licenseTypeOptions', $licenseTypeOptions);
 		if($controller->request->is('get')){
-			$id = empty($params['pass'][0])? 0:$params['pass'][0];
+			
 			$this->recursive = -1;
 			$data = $this->findById($id);
 			if(!empty($data)){
@@ -152,17 +165,18 @@ class StaffLicense extends StaffAppModel {
             }
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
 			if($this->save($controller->request->data)){
+				$controller->Message->alert('general.add.success');
 				if(empty($controller->request->data[$this->name]['id'])){
 					$id = $this->getLastInsertId();
-                	if($addMore){
+                	/*if($addMore){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-                	}
+                	}*/
                 	$controller->Navigation->updateWizard($controller->action,$id,$addMore);
-                	$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
+                	//$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 				}
 				else{
                 	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+					//$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 				}
 				return $controller->redirect(array('action' => 'license'));
 			}
@@ -186,11 +200,21 @@ class StaffLicense extends StaffAppModel {
 			$staffLicenseField = $obj['StaffLicense'][$field];
 			
 			$data[] = array(
-				'label' => trim(sprintf('%s', $staffLicenseField)),
+				'label' => trim($staffLicenseField),
 				'value' => array($field => $staffLicenseField)
 			);
 		}
 
 		return $data;
 	}
+	
+	public function licenseAjaxFindLicense($controller, $params){
+        if ($controller->request->is('ajax')) {
+            $this->render = false;
+            $search = $params->query['term'];
+            $data = $this->autocomplete($search);
+
+            return json_encode($data);
+        }
+    }
 }

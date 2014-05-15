@@ -17,7 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSector extends AppModel {
-	var $hasMany = array('Institution');
+	public $hasMany = array('Institution');
+	public $actsAs = array('FieldOption');
 	
 	public function findListAsSubgroups() {
 		return $this->findList(true);
