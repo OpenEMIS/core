@@ -85,7 +85,8 @@ class StaffTrainingNeed extends StaffAppModel {
         $controller->set(compact('header', 'data', 'trainingRequirementOptions', 'id'));
 
 		//APROVAL
-		$controller->Workflow->getApprovalWorkflow($this->name, $id);
+		$pending = $data['StaffTrainingNeed']['training_status_id']=='2' ? 'true' : 'false';
+		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
 		$controller->set('approvalMethod', 'trainingNeed');
 		$controller->set('controller', 'Staff');
 		$controller->set('plugin', '');

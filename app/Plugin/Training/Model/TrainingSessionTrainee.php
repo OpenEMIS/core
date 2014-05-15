@@ -83,7 +83,6 @@ class TrainingSessionTrainee extends TrainingAppModel {
 				$staffConditions = ' WHERE Staff.id NOT IN (' . ltrim($excludedStaffID, ',') . ')';
 			}
 		}
-		pr($staffConditions);
 		/*
 		if(!empty($teacherPositionID)){
 			$teacherConditions = ' INNER JOIN institution_site_teachers AS InstitutionSiteTeacher ON Teacher.id = InstitutionSiteTeacher.teacher_id 
@@ -112,7 +111,6 @@ class TrainingSessionTrainee extends TrainingAppModel {
 			WHERE first_name LIKE '" . $search . "' OR last_name LIKE '" . $search  . "' OR  identification_no LIKE '" . $search . "'
 			order by identification_no, first_name, last_name;");
 
-		pr($list);
 		$data = array();
 		
 		foreach($list as $obj) {
