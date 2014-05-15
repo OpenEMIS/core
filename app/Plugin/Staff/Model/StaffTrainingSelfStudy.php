@@ -144,7 +144,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
         return $fields;
     }
 	
-	public $headerDefault = 'Training Achievements';
+	public $headerDefault = 'Achievements';
 		
 
 	public function trainingSelfStudy($controller, $params) {
