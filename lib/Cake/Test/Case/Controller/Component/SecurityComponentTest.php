@@ -2,19 +2,18 @@
 /**
  * SecurityComponentTest file
  *
- * PHP 5
- *
  * CakePHP(tm) Tests <http://book.cakephp.org/2.0/en/development/testing.html>
- * Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  *
  * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
  * Redistributions of files must retain the above copyright notice
  *
- * @copyright     Copyright 2005-2012, Cake Software Foundation, Inc. (http://cakefoundation.org)
+ * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://book.cakephp.org/2.0/en/development/testing.html CakePHP(tm) Tests
  * @package       Cake.Test.Case.Controller.Component
  * @since         CakePHP(tm) v 1.2.0.5435
- * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
+ * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
 App::uses('SecurityComponent', 'Controller/Component');
@@ -45,13 +44,6 @@ class TestSecurityComponent extends SecurityComponent {
  * @package       Cake.Test.Case.Controller.Component
  */
 class SecurityTestController extends Controller {
-
-/**
- * name property
- *
- * @var string 'SecurityTest'
- */
-	public $name = 'SecurityTest';
 
 /**
  * components property
@@ -86,7 +78,7 @@ class SecurityTestController extends Controller {
 /**
  * redirect method
  *
- * @param mixed $option
+ * @param string|array $url
  * @param mixed $code
  * @param mixed $exit
  * @return void
@@ -103,6 +95,20 @@ class SecurityTestController extends Controller {
  */
 	public function header($status) {
 		$this->testHeaders[] = $status;
+	}
+
+}
+
+class BrokenCallbackController extends Controller {
+
+	public $name = 'UncallableCallback';
+
+	public $components = array('Session', 'TestSecurity');
+
+	public function index() {
+	}
+
+	protected function _fail() {
 	}
 
 }
@@ -159,6 +165,41 @@ class SecurityComponentTest extends CakeTestCase {
 		unset($this->Controller->Security);
 		unset($this->Controller->Component);
 		unset($this->Controller);
+	}
+
+/**
+ * Test that requests are still blackholed when controller has incorrect
+ * visibility keyword in the blackhole callback
+ *
+ * @expectedException BadRequestException
+ */
+	public function testBlackholeWithBrokenCallback() {
+		$request = new CakeRequest('posts/index', false);
+		$request->addParams(array(
+			'controller' => 'posts', 'action' => 'index')
+		);
+		$this->Controller = new BrokenCallbackController($request);
+		$this->Controller->Components->init($this->Controller);
+		$this->Controller->Security = $this->Controller->TestSecurity;
+		$this->Controller->Security->blackHoleCallback = '_fail';
+		$this->Controller->Security->startup($this->Controller);
+		$this->Controller->Security->blackHole($this->Controller, 'csrf');
+	}
+
+/**
+ * Ensure that directly requesting the blackholeCallback as the controller
+ * action results in an exception.
+ *
+ * @return void
+ */
+	public function testExceptionWhenActionIsBlackholeCallback() {
+		$this->Controller->request->addParams(array(
+			'controller' => 'posts',
+			'action' => 'fail'
+		));
+		$this->assertFalse($this->Controller->failed);
+		$this->Controller->Security->startup($this->Controller);
+		$this->assertTrue($this->Controller->failed, 'Request was blackholed.');
 	}
 
 /**
@@ -566,7 +607,7 @@ class SecurityComponentTest extends CakeTestCase {
 		$fields = '69f493434187b867ea14b901fdf58b55d27c935d%3A';
 		$unlocked = '';
 
-		$this->Controller->request->data = $data = array(
+		$this->Controller->request->data = array(
 			'Model' => array('username' => '', 'password' => ''),
 			'_Token' => compact('key', 'fields', 'unlocked')
 		);
@@ -683,7 +724,7 @@ class SecurityComponentTest extends CakeTestCase {
 		$this->Controller->Security->startup($this->Controller);
 		$key = $this->Controller->request->params['_Token']['key'];
 
-		$this->Controller->request->data = $data = array(
+		$this->Controller->request->data = array(
 			'Model' => array('username' => '', 'password' => '', 'valid' => '0'),
 			'_Token' => compact('key', 'fields', 'unlocked')
 		);
@@ -1049,7 +1090,7 @@ class SecurityComponentTest extends CakeTestCase {
  * the params.
  *
  * @return void
- * @see http://cakephp.lighthouseapp.com/projects/42648/tickets/68
+ * @see https://cakephp.lighthouseapp.com/projects/42648/tickets/68
  */
 	public function testSettingTokenForRequestAction() {
 		$this->Controller->Security->startup($this->Controller);
@@ -1066,7 +1107,7 @@ class SecurityComponentTest extends CakeTestCase {
  * test that blackhole doesn't delete the _Token session key so repeat data submissions
  * stay blackholed.
  *
- * @link http://cakephp.lighthouseapp.com/projects/42648/tickets/214
+ * @link https://cakephp.lighthouseapp.com/projects/42648/tickets/214
  * @return void
  */
 	public function testBlackHoleNotDeletingSessionInformation() {
@@ -1125,7 +1166,7 @@ class SecurityComponentTest extends CakeTestCase {
 
 		$token = $this->Security->Session->read('_Token');
 		$this->assertEquals(2, count($token['csrfTokens']), 'Missing the csrf token.');
-		foreach ($token['csrfTokens'] as $key => $expires) {
+		foreach ($token['csrfTokens'] as $expires) {
 			$diff = $csrfExpires - $expires;
 			$this->assertTrue($diff === 0 || $diff === 1, 'Token expiry does not match');
 		}
@@ -1145,7 +1186,7 @@ class SecurityComponentTest extends CakeTestCase {
 
 		$this->Controller->request = $this->getMock('CakeRequest', array('is'));
 		$this->Controller->request->expects($this->once())->method('is')
-			->with('post')
+			->with(array('post', 'put'))
 			->will($this->returnValue(true));
 
 		$this->Controller->request->params['action'] = 'index';
@@ -1197,7 +1238,7 @@ class SecurityComponentTest extends CakeTestCase {
 
 		$this->Controller->request = $this->getMock('CakeRequest', array('is'));
 		$this->Controller->request->expects($this->once())->method('is')
-			->with('post')
+			->with(array('post', 'put'))
 			->will($this->returnValue(true));
 
 		$this->Controller->request->params['action'] = 'index';
@@ -1227,7 +1268,7 @@ class SecurityComponentTest extends CakeTestCase {
 
 		$this->Controller->request = $this->getMock('CakeRequest', array('is'));
 		$this->Controller->request->expects($this->once())->method('is')
-			->with('post')
+			->with(array('post', 'put'))
 			->will($this->returnValue(true));
 
 		$this->Controller->request->params['action'] = 'index';
@@ -1283,7 +1324,7 @@ class SecurityComponentTest extends CakeTestCase {
 
 		$this->Controller->request = $this->getMock('CakeRequest', array('is'));
 		$this->Controller->request->expects($this->once())->method('is')
-			->with('post')
+			->with(array('post', 'put'))
 			->will($this->returnValue(true));
 
 		$this->Controller->request->params['action'] = 'index';
@@ -1338,5 +1379,19 @@ class SecurityComponentTest extends CakeTestCase {
 		$this->assertFalse(isset($result['3']));
 		$this->assertTrue(isset($result['4']));
 		$this->assertTrue(isset($result['5']));
+	}
+
+/**
+ * Test unlocked actions
+ *
+ * @return void
+ */
+	public function testUnlockedActions() {
+		$_SERVER['REQUEST_METHOD'] = 'POST';
+		$this->Controller->request->data = array('data');
+		$this->Controller->Security->unlockedActions = 'index';
+		$this->Controller->Security->blackHoleCallback = null;
+		$result = $this->Controller->Security->startup($this->Controller);
+		$this->assertNull($result);
 	}
 }

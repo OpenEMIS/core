@@ -268,7 +268,9 @@ jQuery.dialog = function(opt) {
 	
 	$(dialog).width(w);
 	// need fixing
-	if($.browser.msie) $(dialog).css('background-color', '#969696');
+        
+	//if($.browser.msie) $(dialog).css('background-color', '#969696');
+        if(navigator.userAgent.match(/msie/i)) $(dialog).css('background-color', '#969696');
 	
 	// to initialise onclick function for custom buttons
 	for(var i in btnFunc) {

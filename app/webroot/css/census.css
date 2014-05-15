@@ -1,13 +1,3 @@
-.year { margin-bottom: 10px; }
-.year .label { width: 30px; line-height: 25px; }
-
-/* Enrolment */
-#enrolment .label.grade { width: 35px; line-height: 25px; font-size: 11px; }
-#enrolment .value.grade select { width: 90px; }
-#enrolment .label.category { width: 50px; line-height: 25px; margin-left: 25px; font-size: 11px; }
-#enrolment .value.category select { width: 180px; }
-/* End Enrolment */
-
 /* Teachers */
 #teachers .label.grade { width: 35px; line-height: 25px; font-size: 11px; }
 #teachers .value.grade select { width: 90px; }
@@ -51,10 +41,9 @@
 /* End Table styles */
 
 /* legend styles */
-.row_item_legend {float:right;}
-.legend { list-style: none; }
+.legend { float: right; margin-top: 15px; }
 .legend li { float: left; margin-right: 10px;  display:inline-block; margin-top:-7px;  }
-.legend span { border: 1px solid #ccc; float: left; width: 8px; height: 8px; margin: 4px 2px; }
+.legend span { border: 1px solid #ccc; float: left; width: 8px; height: 8px; margin: 4px 3px; }
 .legend .dataentry { background-color: #666666; }
 .legend .external { background-color: #5B8BAF; }
 .legend .estimate { background-color: #FF0000; }
@@ -64,3 +53,7 @@
 .row_estimate { color: #FF0000; }
 .row_internal { color: #809800; }
 /* End legend styles */
+#infrastructure fieldset.section_group select.form-control{
+	width: 30%;
+	display: inline-block;
+}

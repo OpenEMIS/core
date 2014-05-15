@@ -3,58 +3,62 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('education', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('education', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __($pageTitle));
+$this->start('contentActions');
+echo $this->Html->link(__('Structure'), array('action' => 'index'), array('class' => 'divider'));
+if($_edit) {
+	echo $this->Html->link(__('Edit'), array('action' => 'setupEdit', $selectedOption), array('class' => 'divider'));
+}
+$this->end();
+$this->assign('contentId', 'education_setup');
+$this->start('contentBody');
+?>
+<?php echo $this->element('alert'); ?>
+<?php
+echo $this->Form->create('Education', array(
+		'id' => 'submitForm',
+		'inputDefaults' => array('label' => false, 'div' => false),	
+		'url' => array('controller' => 'Education', 'action' => 'setup')
+	)
+);
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="education_setup" class="content_wrapper">
+<div class="row category">
 	<?php
-	echo $this->Form->create('Education', array(
-			'id' => 'submitForm',
-			'inputDefaults' => array('label' => false, 'div' => false),	
-			'url' => array('controller' => 'Education', 'action' => 'setup')
-		)
-	);
+	echo $this->Form->input('category', array(
+		'id' => 'category',
+		'options' => $setupOptions,
+		'default' => $selectedOption,
+		'class' => 'form-control',
+		'div' => 'col-md-4',
+		'autocomplete' => 'off',
+		'onchange' => 'education.navigateTo(this)'
+	));
 	?>
-	<h1>
-		<span><?php echo __($pageTitle); ?></span>
-		<?php
-		echo $this->Html->link(__('Structure'), array('action' => 'index'), array('class' => 'divider'));
-		if($_edit) {
-			echo $this->Html->link(__('Edit'), array('action' => 'setupEdit', $selectedOption), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-	<?php echo $this->element('alert'); ?>
-	
-	<div class="row category">
-		<?php
-		echo $this->Form->input('category', array(
-			'id' => 'category',
-			'options' => $setupOptions,
-			'default' => $selectedOption,
-			'autocomplete' => 'off',
-			'onchange' => 'education.navigateTo(this)'
-		));
-		?>
-	</div>
-	
-	<div class="table full_width">
-		<div class="table_head">
-			<div class="table_cell cell_visible"><?php echo __('Visible'); ?></div>
-			<div class="table_cell"><?php echo __($pageTitle); ?></div>
-			<div class="table_cell"><?php echo __('Programme Orientation'); ?></div>
-		</div>
-		
-		<div class="table_body">
-			<?php foreach($list as $obj) { ?>
-			<div class="table_row<?php echo $obj['visible']!=1 ? ' inactive' : ''; ?>">
-				<div class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']); ?></div>
-				<div class="table_cell"><?php echo $obj['name']; ?></div>
-				<div class="table_cell"><?php echo $orientation[$obj['education_programme_orientation_id']]; ?></div>
-			</div>
-			<?php } ?>
-		</div>
-	</div>
-	<?php echo $this->Form->end(); ?>
 </div>
+
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+	<thead class="table_head">
+		<tr>
+			<td class="table_cell cell_visible"><?php echo __('Visible'); ?></td>
+			<td class="table_cell"><?php echo __($pageTitle); ?></td>
+			<td class="table_cell"><?php echo __('Programme Orientation'); ?></td>
+		</tr>
+	</thead>
+	
+	<tboduy class="table_body">
+		<?php foreach($list as $obj) { ?>
+		<tr class="table_row<?php echo $obj['visible']!=1 ? ' inactive' : ''; ?>">
+			<td class="table_cell cell_visible"><?php echo $this->Utility->checkOrCrossMarker($obj['visible']); ?></td>
+			<td class="table_cell"><?php echo $obj['name']; ?></td>
+			<td class="table_cell"><?php echo $orientation[$obj['education_programme_orientation_id']]; ?></td>
+		</tr>
+		<?php } ?>
+	</tbody>
+	</table>
+</div>
+<?php echo $this->Form->end(); ?>
+<?php $this->end(); ?>

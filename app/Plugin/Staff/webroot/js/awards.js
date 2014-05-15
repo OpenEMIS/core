@@ -47,7 +47,6 @@ var objStaffAwards = {
         var element;
         for(var i in val) {
             element = $('.' + i);
-            console.log(element.get(0));
             if(element.get(0).tagName.toUpperCase() === 'INPUT' && element.get(0).id == 'searchIssuer') {
                 element.val(val[i]);
             } else {

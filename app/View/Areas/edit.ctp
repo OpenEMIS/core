@@ -1,26 +1,19 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
 echo $this->Html->css('area', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 echo $this->Html->script('area', false);
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Administrative Boundaries'));
+$this->start('contentActions');
+echo $this->Html->link(__('View'), array('action' => 'index'), array('class' => 'divider', 'id' => 'view')); 
+$this->end();
 
-<div class="content_wrapper" style="min-height: 650px;">
-	<h1>
-		<span><?php echo __('Administrative Boundaries'); ?></span>
-		<?php 
-			echo $this->Html->link(__('View'), array('action' => 'index'), array('class' => 'divider', 'id' => 'view')); 
-			
-			// if($_view_levels) {
-			//echo $this->Html->link(__('Area Levels'), array('action' => 'levels'), array('class' => 'divider')); 
-			
-			// }
-		?>
-	</h1>
+$this->start('contentBody'); ?>
+
 	<?php echo $this->element('area_categories'); ?>
 	<?php
 	echo $this->Form->create('Area', array(
@@ -69,8 +62,6 @@ echo $this->Html->script('area', false);
 			<input type="button" value="<?php echo __('Cancel'); ?>" class="btn_cancel btn_left" />
 		</div>
 	</fieldset>
-</div>
-
 
 
 <script type="text/javascript">
@@ -119,4 +110,4 @@ $(document).ready(function(){
 });
 
 </script>
-	
+<?php $this->end(); ?>		

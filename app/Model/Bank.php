@@ -17,11 +17,27 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class Bank extends AppModel {
+	public $actsAs = array('FieldOption');
 	public $hasMany = array('BankBranch');
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
 	
-	public function getLookupVariables() {
-		$lookup = array('Banks' => array('model' => 'Bank'));
-		return $lookup;
+	public function getOptionFields() {
+		$codeField = array('field' => 'code');
+		$this->removeOptionFields(array('international_code', 'national_code'));
+		$this->addOptionField($codeField, 'after', 'name'); // add code after name
+		$fields = $this->Behaviors->dispatchMethod($this, 'getOptionFields');
+		return $fields;
 	}
 }
 ?>
