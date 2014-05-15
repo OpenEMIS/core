@@ -10,10 +10,11 @@ echo $this->Form->create($model, $formOptions);
 	<?php echo $this->Form->input('WorkflowLog.record_id', array('type'=> 'hidden','value'=>$data[$model]['id']));?>
 	<?php echo $this->Form->input('WorkflowLog.workflow_step_id', array('type'=>'hidden','value'=>$workflowStepId));?>
 	<?php echo $this->Form->input('WorkflowLog.step', array('type'=>'hidden','value'=>$workflowStep));?>
+	<?php echo $this->Form->input('Workflow.action', array('type'=>'hidden','value'=>$workflowAction));?>
  	<?php echo $this->Form->input('WorkflowLog.comments', array('type'=>'textarea'));  ?>
 
     <div class="controls view_controls center">
-		<input type="submit" value="<?php echo __("Approve"); ?>" name='approve' class="btn_save btn_right" />
+		<input type="submit" value="<?php echo isset($this->request->data['Workflow']['workflowAction']) ? $this->request->data['Workflow']['workflowAction'] : $workflowAction;?>" name='approve' class="btn_save btn_right" />
 		<input type="submit" value="<?php echo __("Reject"); ?>" name='reject' class="btn_save btn_right" />
 	</div>
 </p>
@@ -27,7 +28,7 @@ echo $this->Form->create($model, $formOptions);
 		foreach ($workflowLogs as $obj) {
 			$row = array();
 			$row[] = $obj['SecurityUser']['first_name'].", ".$obj['SecurityUser']['last_name'];
-			$row[] = ($obj['WorkflowLog']['approve']==1) ? __('Approved') : __('Rejected');
+			$row[] = ($obj['WorkflowLog']['approve']==1) ? $obj['Workflow']['action'] : __('Rejected');
 			$row[] = $obj['WorkflowLog']['comments'];
 			$row[] = $obj['WorkflowLog']['created'];
 			$tableData[] = $row;
