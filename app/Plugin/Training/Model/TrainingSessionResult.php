@@ -121,7 +121,7 @@ class TrainingSessionResult extends TrainingAppModel {
             $controller->redirect(array('action' => 'result'));
         }
     }
-
+    /*
     public function resultInactivate($controller, $params) {
         if($controller->Session->check('TrainingResultId')) {
             $id = $controller->Session->read('TrainingResultId');
@@ -140,7 +140,7 @@ class TrainingSessionResult extends TrainingAppModel {
             $controller->Utility->alert($name . ' have been inactivated successfully.');
             $controller->redirect(array('action' => 'result'));
         }
-    }
+    }*/
 	
 	
 	public function resultEdit($controller, $params) {
