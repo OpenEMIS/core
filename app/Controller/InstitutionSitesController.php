@@ -6676,9 +6676,28 @@ class InstitutionSitesController extends AppController {
 		$this->Navigation->addCrumb('Add');
 		
 		if (!$this->request->is('get')) {
-			if ($this->InstitutionSiteStudentAttendance->validates()) {
-                $this->InstitutionSiteStudentAttendance->save($this->request->data);
+			
+			$this->InstitutionSiteStudentAttendance->create();
+			$absenceData = $this->request->data['InstitutionSiteStudentAttendance'];
+			$absenceData['student_id'] = $absenceData['hidden_student_id'];
+			unset($this->request->data['InstitutionSiteStudentAttendance']['hidden_student_id']);
+			
+			if($this->InstitutionSiteClassGradeStudent->isStudentInClass($this->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
+				if($this->InstitutionSiteStudentAttendance->save($absenceData)){
+					$this->Message->alert('general.add.success');
+					return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+				}
+			}else{
+				$this->Message->alert('institutionSiteAttendance.student.add.failed');
 			}
+			
+			
+			
+//			if ($this->InstitutionSiteStudentAttendance->validates()) {
+//				if ($this->save($controller->request->data)) {
+//					return $controller->redirect(array('action' => 'bankAccounts'));
+//				}
+//			}
 		}
 		
 		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($this->institutionSiteId);
@@ -6687,6 +6706,22 @@ class InstitutionSitesController extends AppController {
 		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		
 		$this->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions'));
+	}
+	
+	public function attendanceStudentSearchStudent(){
+		$this->autoRender = false;
+        $search = $this->params->query['term'];
+		$classId = intval($this->params->query['classId']);
+		
+		if(empty($classId)){
+			$result = $this->InstitutionSiteStudent->getAutoCompleteList($search, $this->institutionSiteId);
+			
+		}else{
+			$result = $this->InstitutionSiteClassGradeStudent->getAutoCompleteList($search, $classId);
+		}
+        
+		//$result = array();
+        return json_encode($result);
 	}
 	
 	public function attendanceStudentAbsenceEdit(){

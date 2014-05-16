@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright � 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -68,6 +68,18 @@ class MessageComponent extends Component {
 				'saving' => array('type' => 'error', 'msg' => 'The record is not added due to errors encountered.')
 			)
 		),
+		'institutionSiteAttendance' => array(
+			'student' => array(
+				'add' => array(
+					'failed' => array('type' => 'error', 'msg' => 'Class and student do not match.')
+				)
+			),
+			'staff' => array(
+				'add' => array(
+					'failed' => array('type' => 'error', 'msg' => 'Class and staff do not match.')
+				)
+			)
+		)
 	);
 	
 	public function get($code) {

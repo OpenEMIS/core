@@ -1,6 +1,10 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
+echo $this->Html->script('jquery-ui.min', false);
+echo $this->Html->script('search', false);
+echo $this->Html->script('institution_site', false);
 echo $this->Html->script('institution_site_classes', false);
 
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
@@ -24,10 +28,11 @@ echo $this->Form->create('InstitutionSiteStudentAttendance', $formOptions);
 	<?php 
 	
 	$labelOptions['text'] = $this->Label->get('general.class');
-	echo $this->Form->input('institution_site_class_id', array('empty' => __('--Select--'), 'options' => $classOptions, 'label' => $labelOptions));
+	echo $this->Form->input('institution_site_class_id', array('empty' => __('--Select--'), 'options' => $classOptions, 'label' => $labelOptions, 'id' => 'classId'));
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.id_name');
-	echo $this->Form->input('student_id', array('type' => 'text', 'label' => $labelOptions));
+	echo $this->Form->hidden('hidden_student_id', array('label' => false, 'div' => false, 'id' => 'hiddenStudentId'));
+	echo $this->Form->input('student_id', array('type' => 'text', 'label' => $labelOptions, 'id' => 'studentName'));
 	
 	echo $this->FormUtility->datepicker('first_date_absent', array('id' => 'firstDateAbsent'));
 	
