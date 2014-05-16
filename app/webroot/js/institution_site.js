@@ -15,6 +15,28 @@ have received a copy of the GNU General Public License along with this program. 
 
 $(document).ready(function() {
 	objInstitutionSite.init();
+	
+	$("#studentName").autocomplete({
+		source: function(request, response) {
+			$.ajax({
+				url: 'attendanceStudentSearchStudent',
+				dataType: "json",
+				data: {
+					term: request.term,
+					classId: $('select#classId').val()
+				},
+				success: function(data) {
+					response(data);
+				}
+			});
+		},
+        minLength: 2,
+        select: function(event, ui) {
+			$('#studentName').val(ui.item.label);
+			$('#hiddenStudentId').val(ui.item.value);
+            return false;
+        }
+    });
 });
 
 var objInstitutionSite = {
