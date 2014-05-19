@@ -199,7 +199,16 @@ class TrainingSession extends TrainingAppModel {
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
 			array(
-				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)
+				'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
+				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id),
+				'joins' => array(
+					array(
+						'type' => 'INNER',
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'conditions' => array('Staff.id = TrainingSessionTrainee.staff_id')
+					)
+				)
 			)
 		);
 
@@ -342,14 +351,24 @@ class TrainingSession extends TrainingAppModel {
 				$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 				$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
 					array(
+						'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
 						'recursive' => -1, 
-						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)
+						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id),
+						'joins' => array(
+							array(
+								'type' => 'INNER',
+								'table' => 'staff',
+								'alias' => 'Staff',
+								'conditions' => array('Staff.id = TrainingSessionTrainee.staff_id')
+							)
+						)
 					)
 				);
-
 				$trainingSessionTraineesVal = null;
 				if(!empty($trainingSessionTrainees)){
 					foreach($trainingSessionTrainees as $val){
+						$val['TrainingSessionTrainee']['first_name'] = $val['Staff']['first_name'];
+						$val['TrainingSessionTrainee']['last_name'] = $val['Staff']['last_name'];
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 					}
 				}
@@ -359,11 +378,15 @@ class TrainingSession extends TrainingAppModel {
 		}
 		else{
 			if ($this->saveAll($controller->request->data, array('validate' => 'only'))){
-				if (isset($controller->request->data['save'])) {
+
+				if(!isset($controller->request->data['TrainingSession']['sessionEditable']) || $controller->request->data['TrainingSession']['sessionEditable'] == '1'){
+					if (isset($controller->request->data['save'])) {
 				   	$controller->request->data['TrainingSession']['training_status_id'] = 1; 
-				} else if (isset($controller->request->data['submitForApproval'])) {
-			      	$controller->request->data['TrainingSession']['training_status_id'] = 2; 
+					} else if (isset($controller->request->data['submitForApproval'])) {
+				      	$controller->request->data['TrainingSession']['training_status_id'] = 2; 
+					}
 				}
+				
 				if($this->saveAll($controller->request->data)){
 					if(isset($controller->request->data['DeleteTrainee'])){
 						$deletedId = array();
