@@ -14,7 +14,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Absence') . ' - '. __('Students'));
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'attendanceStudentAbsence'), array('class' => 'divider'));
+echo $this->Html->link(__('Back'), array('action' => 'attendanceStudentAbsence'), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
@@ -32,17 +32,20 @@ echo $this->Form->create('InstitutionSiteStudentAttendance', $formOptions);
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.id_name');
 	echo $this->Form->hidden('hidden_student_id', array('label' => false, 'div' => false, 'id' => 'hiddenStudentId'));
-	echo $this->Form->input('student_id', array('type' => 'text', 'label' => $labelOptions, 'id' => 'studentName'));
+	echo $this->Form->input('student_id', array('type' => 'text', 'label' => $labelOptions, 'id' => 'studentNameAutoComplete'));
 	
 	echo $this->FormUtility->datepicker('first_date_absent', array('id' => 'firstDateAbsent'));
 	
-	echo $this->Form->input('full_day_absent', array('options' => $fullDayAbsentOptions));
+	$labelOptions['text'] = $this->Label->get('InstitutionSiteStudentAttendance.full_day_absent');
+	echo $this->Form->input('full_day_absent', array('options' => $fullDayAbsentOptions, 'label' => $labelOptions));
 
 	echo $this->FormUtility->datepicker('last_date_absent', array('id' => 'lastDateAbsent'));
 	
-	echo $this->Form->input('start_time_absent', array('type' => 'text'));
+	$labelOptions['text'] = $this->Label->get('InstitutionSiteStudentAttendance.start_time_absent');
+	echo $this->Form->input('start_time_absent', array('type' => 'text', 'label' => $labelOptions));
 	
-	echo $this->Form->input('end_time_absent', array('type' => 'text'));
+	$labelOptions['text'] = $this->Label->get('InstitutionSiteStudentAttendance.end_time_absent');
+	echo $this->Form->input('end_time_absent', array('type' => 'text', 'label' => $labelOptions));
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSiteStudentAttendance.reason');
 	echo $this->Form->input('student_absence_reason_id', array('empty' => __('--Select--'), 'options' => $absenceReasonOptions, 'label' => $labelOptions));

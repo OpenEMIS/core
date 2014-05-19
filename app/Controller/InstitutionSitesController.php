@@ -6669,6 +6669,25 @@ class InstitutionSitesController extends AppController {
 	
 	public function attendanceStudentAbsence(){
 		$this->Navigation->addCrumb('Absence - Students');
+		
+		$yearList = $this->SchoolYear->getYearList();
+		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($this->institutionSiteId);
+		
+		if (isset($this->params['pass'][0])) {
+            $classId = $this->params['pass'][0];
+		}else if(!empty($classOptions[0]['id'])){
+			$classId = $classOptions[0]['id'];
+		}else{
+			$classId = 0;
+		}
+		
+		$startDate = '2011-05-16';
+		$endDate = '2016-05-16';
+		
+		$data = $this->InstitutionSiteStudentAttendance->getAbsenceData($this->institutionSiteId, $classId, $startDate, $endDate);
+		//pr($data);
+		
+		$this->set(compact('yearList', 'classOptions', 'data'));
 	}
 	
 	public function attendanceStudentAbsenceAdd(){
@@ -6682,22 +6701,16 @@ class InstitutionSitesController extends AppController {
 			$absenceData['student_id'] = $absenceData['hidden_student_id'];
 			unset($this->request->data['InstitutionSiteStudentAttendance']['hidden_student_id']);
 			
-			if($this->InstitutionSiteClassGradeStudent->isStudentInClass($this->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
-				if($this->InstitutionSiteStudentAttendance->save($absenceData)){
-					$this->Message->alert('general.add.success');
-					return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+			if ($this->InstitutionSiteStudentAttendance->validates()) {
+				if($this->InstitutionSiteClassGradeStudent->isStudentInClass($this->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
+					if($this->InstitutionSiteStudentAttendance->save($absenceData)){
+						$this->Message->alert('general.add.success');
+						return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+					}
+				}else{
+					$this->Message->alert('institutionSiteAttendance.student.add.failed');
 				}
-			}else{
-				$this->Message->alert('institutionSiteAttendance.student.add.failed');
 			}
-			
-			
-			
-//			if ($this->InstitutionSiteStudentAttendance->validates()) {
-//				if ($this->save($controller->request->data)) {
-//					return $controller->redirect(array('action' => 'bankAccounts'));
-//				}
-//			}
 		}
 		
 		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($this->institutionSiteId);
@@ -6726,12 +6739,40 @@ class InstitutionSitesController extends AppController {
 	
 	public function attendanceStudentAbsenceEdit(){
 		$this->Navigation->addCrumb('Absence - Students', array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
-		$this->Navigation->addCrumb('Add');
+		$this->Navigation->addCrumb('Absence Details');
+		
+		if (isset($this->params['pass'][0])) {
+            $absenceId = $this->params['pass'][0];
+            $obj = $this->InstitutionSiteStudentAttendance->getAbsenceById($absenceId);
+
+            if (!$obj) {
+               return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+            }
+        }else {
+            return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+        }
 		
 		if (!$this->request->is('get')) {
-			if ($this->InstitutionSiteStudentAttendance->validates()) {
-                $this->InstitutionSiteStudentAttendance->save($this->request->data);
+			$absenceData = $this->request->data['InstitutionSiteStudentAttendance'];
+			$absenceData['student_id'] = $absenceData['hidden_student_id'];
+			unset($this->request->data['InstitutionSiteStudentAttendance']['hidden_student_id']);
+			
+			if($this->InstitutionSiteClassGradeStudent->isStudentInClass($this->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
+				if($this->InstitutionSiteStudentAttendance->save($absenceData)){
+					$this->Message->alert('general.edit.success');
+					return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsenceView', $absenceId));
+				}else{
+					$this->Message->alert('institutionSiteAttendance.student.add.failed');
+				}
+			}else{
+				$this->Message->alert('institutionSiteAttendance.student.add.failed');
 			}
+			
+//			if ($this->InstitutionSiteStudentAttendance->validates()) {
+//				if ($this->save($controller->request->data)) {
+//					return $controller->redirect(array('action' => 'bankAccounts'));
+//				}
+//			}
 		}
 		
 		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($this->institutionSiteId);
@@ -6739,25 +6780,31 @@ class InstitutionSitesController extends AppController {
 		$absenceReasonOptions =  $this->InstitutionSiteStudentAttendance->StudentAbsenceReason->getList();;
 		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		
-		$this->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions'));
+		$this->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'absenceId', 'obj'));
 	}
 	
 	public function attendanceStudentAbsenceView(){
 		$this->Navigation->addCrumb('Absence - Students', array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
-		$this->Navigation->addCrumb('Add');
+		$this->Navigation->addCrumb('Absence Details');
 		
-		if (!$this->request->is('get')) {
-			if ($this->InstitutionSiteStudentAttendance->validates()) {
-                $this->InstitutionSiteStudentAttendance->save($this->request->data);
-			}
-		}
+		if (isset($this->params['pass'][0])) {
+            $absenceId = $this->params['pass'][0];
+            $obj = $this->InstitutionSiteStudentAttendance->getAbsenceById($absenceId);
+
+            if ($obj) {
+                $this->Session->write('InstitutionStudentAbsenceId', $absenceId);
+            } else {
+                return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+            }
+        }else if ($this->Session->check('InstitutionStudentAbsenceId')){
+            $absenceId = $this->Session->read('InstitutionStudentAbsenceId');
+            $obj = $this->InstitutionSiteStudentAttendance->getAbsenceById($absenceId);
+        } else {
+            return $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+        }
+		//pr($obj);
 		
-		$classOptions = $this->InstitutionSiteClass->getClassListByInstitution($this->institutionSiteId);
-		$fullDayAbsentOptions = array('Yes' => __('Yes'), 'No' => __('No'));
-		$absenceReasonOptions =  $this->InstitutionSiteStudentAttendance->StudentAbsenceReason->getList();;
-		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
-		
-		$this->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions'));
+		$this->set(compact('obj', 'absenceId'));
 	}
 
 }

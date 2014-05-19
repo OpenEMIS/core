@@ -62,7 +62,8 @@ class LabelHelper extends AppHelper {
 			'history' => 'History',
 			'profile_image' => 'Profile Image',
 			'openemisId' =>'OpenEMIS ID',
-			'class' => 'Class'
+			'class' => 'Class',
+			'comment' => 'Comment'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
@@ -196,7 +197,12 @@ class LabelHelper extends AppHelper {
 			'number' => 'Number'
 		),
 		'InstitutionSiteStudentAttendance' => array(
-			'reason' => 'Reason'
+			'reason' => 'Reason',
+			'first_date_absent' => 'First Date Absent',
+			'full_day_absent' => 'Full Day Absent',
+			'last_date_absent' => 'Last Date Absent',
+			'start_time_absent' => 'Start Time Absent',
+			'end_time_absent' => 'End Time Absent'
 		)
     );
 	
