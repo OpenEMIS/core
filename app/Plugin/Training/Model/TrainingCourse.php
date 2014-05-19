@@ -56,11 +56,6 @@ class TrainingCourse extends TrainingAppModel {
 			'foreignKey' => 'training_course_id',
 			'dependent' => true
 		),
-		'TeacherTrainingNeed' => array(
-			'className' => 'TeacherTrainingNeed',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
-		),
 		'StaffTrainingNeed' => array(
 			'className' => 'StaffTrainingNeed',
 			'foreignKey' => 'training_course_id',

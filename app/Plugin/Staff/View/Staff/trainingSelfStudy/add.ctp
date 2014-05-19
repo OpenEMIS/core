@@ -210,7 +210,7 @@ echo $this->element('templates/file_list', compact('tableHeaders', 'tableData'))
 ?>
 <div class="form-group">
 	<div class="col-md-offset-4">
-		<?php if (!isset($this->request->data['TeacherTrainingSelfStudy']['training_status_id']) || $this->request->data['TeacherTrainingSelfStudy']['training_status_id'] == 1) { ?>
+		<?php if (!isset($this->request->data['StaffTrainingSelfStudy']['training_status_id']) || $this->request->data['StaffTrainingSelfStudy']['training_status_id'] == 1) { ?>
 			<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="js:if(objTrainingSelfStudies.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
 			<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="js:if(objTrainingSelfStudies.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
 		<?php } ?>
