@@ -20,9 +20,23 @@ class InstitutionSiteStudentAttendance extends AppModel {
     public $actsAs = array('DatePicker' => array('first_date_absent', 'last_date_absent'));
     
 	public $belongsTo = array(
+		'Student',
+		'InstitutionSiteClass',
 		'StudentAbsenceReason' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'student_absence_reason_id'
+		),
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+        'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
 		)
 	);
 	
@@ -56,6 +70,89 @@ class InstitutionSiteStudentAttendance extends AppModel {
 			)
 		)
 	);
+	
+	public function getAbsenceData($institutionSiteId, $classId, $startDate='', $endDate=''){
+		if(!empty($classId)){
+			$conditions = array(
+				'InstitutionSiteStudentAttendance.institution_site_class_id' => $classId
+			);
+		}else{
+			$conditions = array();
+		}
+		
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'InstitutionSiteStudentAttendance.id', 
+				'InstitutionSiteStudentAttendance.absence_type', 
+				'InstitutionSiteStudentAttendance.first_date_absent', 
+				'InstitutionSiteStudentAttendance.last_date_absent', 
+				'InstitutionSiteStudentAttendance.full_day_absent', 
+				'InstitutionSiteStudentAttendance.start_time_absent', 
+				'InstitutionSiteStudentAttendance.end_time_absent', 
+				'Student.id',
+				'Student.identification_no',
+				'Student.first_name',
+				'Student.middle_name',
+				'Student.last_name',
+				'Student.preferred_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteStudentAttendance.student_id = Student.id')
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteStudentAttendance.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+					)
+				)
+			),
+			'conditions' => $conditions,
+			'order' => array('InstitutionSiteStudentAttendance.first_date_absent', 'InstitutionSiteStudentAttendance.last_date_absent')
+		));
+		
+		return $data;
+	}
+	
+	public function getAbsenceById($absenceId){
+		$data = $this->find('first', array(
+			'fields' => array(
+				'InstitutionSiteClass.name', 
+				'InstitutionSiteStudentAttendance.id', 
+				'InstitutionSiteStudentAttendance.absence_type', 
+				'InstitutionSiteStudentAttendance.first_date_absent', 
+				'InstitutionSiteStudentAttendance.last_date_absent', 
+				'InstitutionSiteStudentAttendance.full_day_absent', 
+				'InstitutionSiteStudentAttendance.start_time_absent', 
+				'InstitutionSiteStudentAttendance.end_time_absent', 
+				'InstitutionSiteStudentAttendance.comment', 
+				'InstitutionSiteStudentAttendance.created', 
+				'InstitutionSiteStudentAttendance.modified', 
+				'InstitutionSiteStudentAttendance.institution_site_class_id', 
+				'InstitutionSiteStudentAttendance.student_id',
+				'InstitutionSiteStudentAttendance.student_absence_reason_id', 
+				'Student.id',
+				'Student.identification_no',
+				'Student.first_name',
+				'Student.middle_name',
+				'Student.last_name',
+				'Student.preferred_name',
+				'StudentAbsenceReason.name',
+				'CreatedUser.*', 
+				'ModifiedUser.*'
+			),
+			'conditions' => array(
+				'InstitutionSiteStudentAttendance.id' => $absenceId
+			)
+		));
+		
+		return $data;
+	}
 	
 //	public function index($controller, $params) {
 //		return null;

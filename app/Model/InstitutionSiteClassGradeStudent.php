@@ -329,7 +329,8 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 					'Student.first_name LIKE' => $search,
 					'Student.last_name LIKE' => $search,
 					'Student.middle_name LIKE' => $search,
-					'Student.preferred_name LIKE' => $search
+					'Student.preferred_name LIKE' => $search,
+					'Student.identification_no LIKE' => $search
 				)
 			),
 			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name')
@@ -339,7 +340,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
         foreach ($list as $obj) {
             $student = $obj['Student'];
             $data[] = array(
-                'label' => sprintf('%s %s %s %s', $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']),
+                'label' => sprintf('%s - %s %s %s %s',  $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']),
                 'value' => $student['id']
             );
         }
