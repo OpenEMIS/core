@@ -69,7 +69,7 @@ $this->start('contentBody'); ?>
 		<?php 
 		if (!empty($trainingSessionTrainees)){ 
 			foreach($trainingSessionTrainees as $val){
-				echo $val['TrainingSessionTrainee']['identification_first_name'] . ', ' . $val['TrainingSessionTrainee']['identification_last_name'] . '<br />';
+				echo $val['Staff']['first_name'] . ', ' . $val['Staff']['last_name'] . '<br />';
 			}
 		}else{
 			echo "-";

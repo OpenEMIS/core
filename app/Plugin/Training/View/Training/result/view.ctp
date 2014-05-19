@@ -81,7 +81,7 @@ $this->start('contentBody'); ?>
 			        <tbody>
 			        	<?php foreach($trainingSessionTrainees as $val){ ?>
 			            <tr class="table_row">
-			            	<td class="table_cell"><?php echo $val['TrainingSessionTrainee']['identification_first_name'] ?>, <?php echo $val['TrainingSessionTrainee']['identification_last_name'] ?></td>
+			            	<td class="table_cell"><?php echo $val['Staff']['first_name'] ?>, <?php echo $val['Staff']['last_name'] ?></td>
 			                <td class="table_cell"><?php echo $val['TrainingSessionTrainee']['result']; ?></td>
 			                <td class="table_cell">
 			                <?php if(!isset($val['TrainingSessionTrainee']['pass'])){

@@ -22,6 +22,7 @@ echo $this->Form->create($model, $formOptions);
 
 <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 <?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
+
 <?php  echo $this->Form->input('provider', array('type'=> 'hidden', 'class'=>'provider', 'default'=>$provider)); ?>
 <?php  echo $this->Form->input('sessionEditable', array('type'=> 'hidden', 'default'=>$this->request->data['TrainingSession']['sessionEditable'])); ?>
 <?php
@@ -72,11 +73,11 @@ if(isset($this->data[$model]['end_date'])){
 					$i = 0;  
 					foreach($this->request->data['TrainingSessionTrainee'] as $key=>$val){?>
 					<?php if(!empty($val['staff_id'])){ ?>
-					<div class="table_row " row-id="<?php echo $i;?>">
-						<div class="table_cell cell_description" style="width:90%">
+					<tr class="table_row " row-id="<?php echo $i;?>">
+						<td class="table_cell cell_description" style="width:90%">
 							<div class="input_wrapper">
 						 	<div class="training-course-title-<?php echo $i;?>">
-								<?php echo $val['identification_first_name'] . ', ' . $val['identification_last_name'];?>
+								<?php echo $val['first_name'] . ', ' . $val['last_name'];?>
 							</div>
 							<?php if(isset($val['id'])){ ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.id', array('value'=>$val['id'], 
@@ -84,16 +85,16 @@ if(isset($this->data[$model]['end_date'])){
 							<?php } ?>
 							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.staff_id', array('class' => 'trainee-id-'.$i,
 								'value'=>$val['staff_id'])); ?>
-								<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_first_name', array('value'=>$val['identification_first_name'])); ?>
-								<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_last_name', array('value'=>$val['identification_last_name'])); ?>
+								<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.first_name', array('value'=>$val['first_name'])); ?>
+								<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.last_name', array('value'=>$val['last_name'])); ?>
 								<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_validate', array('class' => 'trainee-validate-'.$i . ' validate-trainee', 'value'=>$val['staff_id'])); ?>
 							</div>
-					    </div>
+					    </td>
 					 
-						<div class="table_cell cell_delete">
+						<td class="table_cell cell_delete">
 					    	<span class="icon_delete" title="Delete" onclick="objTrainingSessions.deleteTrainee(this)"></span>
-					    </div>
-					</div>
+					    </td>
+					</tr>
 					<?php } ?>
 			<?php 
 				$i++;
@@ -110,7 +111,9 @@ if(isset($this->data[$model]['end_date'])){
 <div class="controls view_controls">
 	<?php if($this->request->data['TrainingSession']['sessionEditable']!='0'){ ?>
 	<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="js:if(objTrainingSessions.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
+	<?php if($this->request->data['TrainingSession']['sessionEditable']=='1'){ ?>
 	<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="js:if(objTrainingSessions.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
+	<?php } ?>
 	<?php } ?>
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'session'), array('class' => 'btn_cancel btn_left')); ?>
 </div>

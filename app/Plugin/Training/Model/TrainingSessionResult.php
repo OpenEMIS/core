@@ -69,7 +69,16 @@ class TrainingSessionResult extends TrainingAppModel {
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 		$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
 			array(
-				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$data['TrainingSessionResult']['training_session_id'])
+				'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
+				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$data['TrainingSessionResult']['training_session_id']),
+				'joins' => array(
+					array(
+						'type' => 'INNER',
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'conditions' => array('Staff.id = TrainingSessionTrainee.staff_id')
+					)
+				)
 			)
 		);
 
@@ -376,8 +385,17 @@ class TrainingSessionResult extends TrainingAppModel {
 				$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 				$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
 					array(
+						'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
 						'recursive' => -1, 
-						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$data['TrainingSessionResult']['training_session_id'])
+						'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$data['TrainingSessionResult']['training_session_id']),
+						'joins' => array(
+							array(
+								'type' => 'INNER',
+								'table' => 'staff',
+								'alias' => 'Staff',
+								'conditions' => array('Staff.id = TrainingSessionTrainee.staff_id')
+							)
+						)
 					)
 				);
 
@@ -401,6 +419,8 @@ class TrainingSessionResult extends TrainingAppModel {
 				$trainingSessionTraineesVal = null;
 				if(!empty($trainingSessionTrainees)){
 					foreach($trainingSessionTrainees as $val){
+						$val['TrainingSessionTrainee']['first_name'] = $val['Staff']['first_name'];
+						$val['TrainingSessionTrainee']['last_name'] = $val['Staff']['last_name'];
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 					}
 				}
