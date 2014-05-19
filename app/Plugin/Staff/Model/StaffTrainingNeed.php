@@ -228,8 +228,7 @@ class StaffTrainingNeed extends StaffAppModel {
 							'alias' => 'TrainingSessionTrainee',
 							'conditions' => array(
 								'TrainingSession.id = TrainingSessionTrainee.training_session_id',
-								'TrainingSessionTrainee.identification_id' => $staffId,
-								'TrainingSessionTrainee.identification_table' => 'staff',
+								'TrainingSessionTrainee.staff_id' => $staffId
 							)
 					)
 				),
