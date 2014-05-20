@@ -21,7 +21,7 @@ $this->start('contentBody');
             echo $this->Form->input('training_status_id', array(
                 'options' => $statusOptions,
                 'default' => $selectedStatus,
-                'empty' => __('All'),
+                'empty' => __('Current'),
                 'class'=>'form-control',
                 'label' => false,
                 'url' => 'Training/session',

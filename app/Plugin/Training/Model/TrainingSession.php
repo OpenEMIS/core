@@ -157,7 +157,7 @@ class TrainingSession extends TrainingAppModel {
 		if(!empty($selectedStatus)){
 			$data = $this->find('all', array('order'=> array('start_date'), 'conditions' => array('TrainingSession.training_status_id' => $selectedStatus)));
 		}else{
-			$data = $this->find('all', array('order'=> array('start_date')));
+			$data = $this->find('all', array('order'=> array('start_date'), 'conditions' => array('NOT' => array('TrainingSession.training_status_id' => '4'))));
 		}
 
 		$conditions = array();
