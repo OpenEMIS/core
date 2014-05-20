@@ -30,19 +30,19 @@ $this->start('contentBody');
 				<tbody>
 					<?php
 					foreach ($data as $arrItems):
-						$id = $arrItems['InstitutionSiteStudentAttendance']['id'];
+						$id = $arrItems['InstitutionSiteStudentAbsence']['id'];
 						$student = $arrItems['Student'];
 						
 						$studentName = sprintf('%s %s %s %s', $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']);
 						
-						$firstDateAbsent = $this->Utility->formatDate($arrItems['InstitutionSiteStudentAttendance']['first_date_absent'], null, false);
-						$lastDateAbsent = $this->Utility->formatDate($arrItems['InstitutionSiteStudentAttendance']['last_date_absent'], null, false);
-						$fullDayAbsent = $arrItems['InstitutionSiteStudentAttendance']['full_day_absent'];
-						$startTimeAbsent = $arrItems['InstitutionSiteStudentAttendance']['start_time_absent'];
-						$endTimeAbsent = $arrItems['InstitutionSiteStudentAttendance']['end_time_absent'];
+						$firstDateAbsent = $this->Utility->formatDate($arrItems['InstitutionSiteStudentAbsence']['first_date_absent'], null, false);
+						$lastDateAbsent = $this->Utility->formatDate($arrItems['InstitutionSiteStudentAbsence']['last_date_absent'], null, false);
+						$fullDayAbsent = $arrItems['InstitutionSiteStudentAbsence']['full_day_absent'];
+						$startTimeAbsent = $arrItems['InstitutionSiteStudentAbsence']['start_time_absent'];
+						$endTimeAbsent = $arrItems['InstitutionSiteStudentAbsence']['end_time_absent'];
 						
 						if($fullDayAbsent == 'Yes'){
-							$dateStr = sprintf('%s (%s)', $firstDateAbsent, $this->Label->get('InstitutionSiteStudentAttendance.full_day_absent'));
+							$dateStr = sprintf('%s (%s)', $firstDateAbsent, $this->Label->get('InstitutionSiteStudentAbsence.full_day_absent'));
 						}else{
 							$dateStr = sprintf('%s (%s - %s)', $firstDateAbsent, $startTimeAbsent, $endTimeAbsent);
 						}
@@ -52,7 +52,7 @@ $this->start('contentBody');
 							<td><?php echo $this->Html->link($arrItems['Student']['identification_no'], array('action' => 'attendanceStudentAbsenceView', $id), array('escape' => false)); ?></td>
 
 							<td><?php echo $studentName; ?></td>
-							<td><?php echo $arrItems['InstitutionSiteStudentAttendance']['absence_type']; ?></td>
+							<td><?php echo $arrItems['InstitutionSiteStudentAbsence']['absence_type']; ?></td>
 						</tr>
 					<?php endforeach; ?>
 				</tbody>

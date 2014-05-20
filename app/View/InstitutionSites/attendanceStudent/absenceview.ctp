@@ -40,36 +40,36 @@ $dataCreatedUser = $obj['CreatedUser'];
 		<div class="col-md-6"><?php echo $studentIdName; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAttendance.first_date_absent'); ?></div>
-		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['InstitutionSiteStudentAttendance']['first_date_absent']); ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAbsence.first_date_absent'); ?></div>
+		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['InstitutionSiteStudentAbsence']['first_date_absent']); ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAttendance.full_day_absent'); ?></div>
-		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAttendance']['full_day_absent']; ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAbsence.full_day_absent'); ?></div>
+		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAbsence']['full_day_absent']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAttendance.last_date_absent'); ?></div>
-		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['InstitutionSiteStudentAttendance']['last_date_absent']); ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAbsence.last_date_absent'); ?></div>
+		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['InstitutionSiteStudentAbsence']['last_date_absent']); ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAttendance.start_time_absent'); ?></div>
-		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAttendance']['start_time_absent']; ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAbsence.start_time_absent'); ?></div>
+		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAbsence']['start_time_absent']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAttendance.end_time_absent'); ?></div>
-		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAttendance']['end_time_absent']; ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAbsence.end_time_absent'); ?></div>
+		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAbsence']['end_time_absent']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAttendance.reason'); ?></div>
+		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteStudentAbsence.reason'); ?></div>
 		<div class="col-md-6"><?php echo $obj['StudentAbsenceReason']['name']; ?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo $this->Label->get('general.type'); ?></div>
-		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAttendance']['absence_type']; ?></div>
+		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAbsence']['absence_type']; ?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo $this->Label->get('general.comment'); ?></div>
-		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAttendance']['comment']; ?></div>
+		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAbsence']['comment']; ?></div>
 	</div>
 	<div class="row">
         <div class="col-md-3"><?php echo __('Modified by'); ?></div>
@@ -77,7 +77,7 @@ $dataCreatedUser = $obj['CreatedUser'];
     </div>
     <div class="row">
         <div class="col-md-3"><?php echo __('Modified on'); ?></div>
-        <div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAttendance']['modified']; ?></div>
+        <div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAbsence']['modified']; ?></div>
     </div>
 
     <div class="row">
@@ -87,7 +87,7 @@ $dataCreatedUser = $obj['CreatedUser'];
 
     <div class="row">
         <div class="col-md-3"><?php echo __('Created on'); ?></div>
-        <div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAttendance']['created']; ?></div>
+        <div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAbsence']['created']; ?></div>
     </div>
 </div>
 <?php
