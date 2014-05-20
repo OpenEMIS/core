@@ -224,7 +224,7 @@ class TrainingCourse extends TrainingAppModel {
 		if(!empty($selectedStatus)){
 			$data = $this->find('all', array('order'=> array('code', 'title'), 'conditions' => array('TrainingCourse.training_status_id' => $selectedStatus)));
 		}else{
-			$data = $this->find('all', array('order'=> array('code', 'title')));
+			$data = $this->find('all', array('order'=> array('code', 'title'), 'conditions' => array('NOT' => array('TrainingCourse.training_status_id' => '4'))));
 		}
 
 		$controller->set('subheader', $this->headerDefault);
