@@ -1,4 +1,4 @@
-<?php
+<?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->script('institution_site_classes', false);

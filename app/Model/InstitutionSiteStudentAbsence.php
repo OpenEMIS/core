@@ -197,10 +197,10 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				if($controller->InstitutionSiteClassGradeStudent->isStudentInClass($controller->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
 					if($this->save($absenceData)){
 						$newId = $this->getInsertID();
+						//pr($newId);
 						$postFileData = $controller->request->data[$this->alias]['files'];
-						$controller->FileUploader->additionData = array('institution_site_student_attendance_id' => $newId);
+						$controller->FileUploader->additionData = array('institution_site_student_absence_id' => $newId);
 						$controller->FileUploader->uploadFile(NULL, $postFileData);
-						
 						
 						if($controller->FileUploader->success){
 							$controller->Message->alert('general.add.success');
@@ -300,8 +300,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
             return $controller->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
         }
 		//pr($obj);
-		
-		$controller->set(compact('obj', 'absenceId'));
+		$attachments = $controller->FileUploader->getList(array('conditions' => array('InstitutionSiteStudentAbsenceAttachment.institution_site_student_absence_id' => $absenceId)));
+		//pr($attachments);
+		$controller->set(compact('obj', 'absenceId', 'attachments'));
 	}
 	
 	public function attendanceStudentAbsenceDelete($controller, $params){
@@ -334,5 +335,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$controller->set(compact('fileId', 'multiple'));
 		$controller->render('/Elements/templates/file_upload_field');
 	}
+	
+	public function attendanceStudentAttachmentsDownload($controller, $params) {
+		$id = $params['pass'][0];
+		$this->render = false;
+		$controller->FileUploader->downloadFile($id);
+    }
 	
 }
