@@ -23,8 +23,15 @@ $this->end();
 $this->start('contentBody');
 
 $student = $obj['Student'];
-
 $studentIdName = sprintf('%s - %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']);
+
+$filesList = '';
+foreach($attachments AS $objItem){
+	$fileName = $objItem['InstitutionSiteStudentAbsenceAttachment']['file_name'];
+	$fileId = $objItem['InstitutionSiteStudentAbsenceAttachment']['id'];
+	$linkOptions = array('action' => 'attendanceStudentAttachmentsDownload', $fileId);
+	$filesList .= '<div>'.$this->Html->link($fileName, $linkOptions).'</div>';
+}
 
 $dataModifiedUser = $obj['ModifiedUser'];
 $dataCreatedUser = $obj['CreatedUser'];
@@ -70,6 +77,10 @@ $dataCreatedUser = $obj['CreatedUser'];
 	<div class="row">
 		<div class="col-md-3"><?php echo $this->Label->get('general.comment'); ?></div>
 		<div class="col-md-6"><?php echo $obj['InstitutionSiteStudentAbsence']['comment']; ?></div>
+	</div>
+	<div class="row">
+		<div class="col-md-3"><?php echo $this->Label->get('general.attachments'); ?></div>
+		<div class="col-md-6"><?php echo $filesList; ?></div>
 	</div>
 	<div class="row">
         <div class="col-md-3"><?php echo __('Modified by'); ?></div>
