@@ -156,6 +156,13 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	
 	public function attendanceStudent($controller, $params){
 		$controller->Navigation->addCrumb('Attendance - Students');
+		
+		$yearList = $controller->SchoolYear->getYearList();
+		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitution($controller->institutionSiteId);
+		pr($yearList);
+		pr($classOptions);
+		
+		$controller->set(compact('yearList', 'classOptions'));
 	}
 	
 	public function attendanceStudentAbsence($controller, $params){
@@ -190,7 +197,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			
 			$absenceData = $controller->request->data['InstitutionSiteStudentAbsence'];
 			$absenceData['student_id'] = $absenceData['hidden_student_id'];
-			unset($controller->request->data['InstitutionSiteStudentAbsence']['hidden_student_id']);
+			unset($absenceData['hidden_student_id']);
 			
 			$this->set($absenceData);
 			if ($this->validates()) {
@@ -206,7 +213,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 							$controller->Message->alert('general.add.success');
 							return $controller->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
 						}
-						
 					}
 				}else{
 					$controller->Message->alert('institutionSiteAttendance.student.add.failed');
@@ -258,13 +264,20 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$obj = $controller->request->data;
 			$absenceData = $controller->request->data['InstitutionSiteStudentAbsence'];
 			$absenceData['student_id'] = $absenceData['hidden_student_id'];
-			unset($controller->request->data['InstitutionSiteStudentAbsence']['hidden_student_id']);
+			unset($absenceData['hidden_student_id']);
 			
 			if ($this->save($absenceData, array('validate' => 'only'))) {
 				if($controller->InstitutionSiteClassGradeStudent->isStudentInClass($controller->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
 					if($this->save($absenceData)){
-						$controller->Message->alert('general.edit.success');
-						return $controller->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsenceView', $absenceId));
+						
+						$postFileData = $controller->request->data[$this->alias]['files'];
+						$controller->FileUploader->additionData = array('institution_site_student_absence_id' => $absenceId);
+						$controller->FileUploader->uploadFile(NULL, $postFileData);
+						
+						if($controller->FileUploader->success){
+							$controller->Message->alert('general.edit.success');
+							return $controller->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsenceView', $absenceId));
+						}
 					}
 				}else{
 					$controller->Message->alert('institutionSiteAttendance.student.add.failed');
@@ -277,7 +290,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$absenceReasonOptions =  $this->StudentAbsenceReason->getList();;
 		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		
-		$controller->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'absenceId', 'obj'));
+		$attachments = $controller->FileUploader->getList(array('conditions' => array('InstitutionSiteStudentAbsenceAttachment.institution_site_student_absence_id' => $absenceId)));
+		
+		$controller->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'absenceId', 'obj', 'attachments'));
 	}
 	
 	public function attendanceStudentAbsenceView($controller, $params){
@@ -340,6 +355,27 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$id = $params['pass'][0];
 		$this->render = false;
 		$controller->FileUploader->downloadFile($id);
+    }
+	
+	public function attendanceStudentAttachmentDelete($controller, $params) {
+        $this->render = false;
+        if (!$controller->request->is('get')) {
+            $result = array('alertOpt' => array());
+            $controller->Utility->setAjaxResult('alert', $result);
+            $id = $params->data['id'];
+
+			$studentAbsenceAttachment = ClassRegistry::init('InstitutionSiteStudentAbsenceAttachment');
+            if ($studentAbsenceAttachment->delete($id)) {
+				$msgData  = $controller->Message->get('FileUplaod.success.delete');
+                $result['alertOpt']['text'] = $msgData['msg'];// __('File is deleted successfully.');
+            } else {
+				$msgData  = $controller->Message->get('FileUplaod.error.delete');
+                $result['alertType'] = $this->Utility->getAlertType('alert.error');
+                $result['alertOpt']['text'] = $msgData;//__('Error occurred while deleting file.');
+            }
+			
+            return json_encode($result);
+        }
     }
 	
 }
