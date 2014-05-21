@@ -5,7 +5,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 echo $this->Html->script('jquery-ui.min', false);
 echo $this->Html->script('search', false);
 echo $this->Html->script('institution_site', false);
-echo $this->Html->script('institution_site_classes', false);
+echo $this->Html->script('institution_attendance', false);
 
 echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
 echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);

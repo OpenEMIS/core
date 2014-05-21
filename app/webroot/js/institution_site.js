@@ -16,30 +16,6 @@ have received a copy of the GNU General Public License along with this program. 
 $(document).ready(function() {
 	objInstitutionSite.init();
 	
-	if($("#studentNameAutoComplete").length == 1){
-		$("#studentNameAutoComplete").autocomplete({
-			source: function(request, response) {
-				$.ajax({
-					url: getRootURL() + 'InstitutionSites/attendanceStudentSearchStudent',
-					dataType: "json",
-					data: {
-						term: request.term,
-						classId: $('select#classId').val()
-					},
-					success: function(data) {
-						response(data);
-					}
-				});
-			},
-			minLength: 2,
-			select: function(event, ui) {
-				$('#studentNameAutoComplete').val(ui.item.label);
-				$('#hiddenStudentId').val(ui.item.value);
-				return false;
-			}
-		});
-	}
-	
 });
 
 var objInstitutionSite = {
@@ -85,5 +61,22 @@ var objInstitutionSite = {
 		if(input.val().isEmpty()) {
 			input.val(input.attr('empty')).addClass('grey');
 		}
+	},
+			
+	filterAttendance: function(obj){
+		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldClass = $("select#classId");
+		var fieldWeek = $("select#weekId");
+
+		if(fieldSchoolYear.length !== 1 || fieldClass.length !== 1 || fieldWeek.length !== 1){
+			return false;
+		}
+		
+		var url = getRootURL() + '/' + $(obj).parent('div').attr('url');
+		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldClass.val();
+		url += '/' + fieldWeek.val();
+		
+		window.location.href = url;
 	}
 }

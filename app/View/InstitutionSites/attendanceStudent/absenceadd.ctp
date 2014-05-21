@@ -5,7 +5,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 echo $this->Html->script('jquery-ui.min', false);
 echo $this->Html->script('search', false);
 echo $this->Html->script('institution_site', false);
-echo $this->Html->script('institution_site_classes', false);
+echo $this->Html->script('institution_attendance', false);
 
 echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
 echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);
@@ -32,7 +32,7 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', $formOptions);
 	<?php 
 	
 	$labelOptions['text'] = $this->Label->get('general.class');
-	echo $this->Form->input('institution_site_class_id', array('empty' => __('--Select--'), 'options' => $classOptions, 'label' => $labelOptions, 'id' => 'classId'));
+	echo $this->Form->input('institution_site_class_id', array('empty' => __('--Select--'), 'options' => $classOptions, 'value' => $classId, 'label' => $labelOptions, 'id' => 'classId'));
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.id_name');
 	echo $this->Form->hidden('hidden_student_id', array('label' => false, 'div' => false, 'id' => 'hiddenStudentId'));
@@ -41,15 +41,15 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', $formOptions);
 	echo $this->FormUtility->datepicker('first_date_absent', array('id' => 'firstDateAbsent'));
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSiteStudentAbsence.full_day_absent');
-	echo $this->Form->input('full_day_absent', array('options' => $fullDayAbsentOptions, 'label' => $labelOptions));
+	echo $this->Form->input('full_day_absent', array('options' => $fullDayAbsentOptions, 'label' => $labelOptions, 'id' => 'fullDayAbsent'));
 
 	echo $this->FormUtility->datepicker('last_date_absent', array('id' => 'lastDateAbsent'));
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSiteStudentAbsence.start_time_absent');
-	echo $this->Form->input('start_time_absent', array('type' => 'text', 'label' => $labelOptions));
+	echo $this->Form->input('start_time_absent', array('type' => 'text', 'label' => $labelOptions, 'id' => 'startTimeAbsent'));
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSiteStudentAbsence.end_time_absent');
-	echo $this->Form->input('end_time_absent', array('type' => 'text', 'label' => $labelOptions));
+	echo $this->Form->input('end_time_absent', array('type' => 'text', 'label' => $labelOptions, 'id' => 'endTimeAbsent'));
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSiteStudentAbsence.reason');
 	echo $this->Form->input('student_absence_reason_id', array('empty' => __('--Select--'), 'options' => $absenceReasonOptions, 'label' => $labelOptions));
