@@ -71,7 +71,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		)
 	);
 	
-	public function getAbsenceData($institutionSiteId, $classId, $startDate='', $endDate=''){
+	public function getAbsenceData($institutionSiteId, $school_year_id, $classId, $startDate='', $endDate=''){
 		if(!empty($classId)){
 			$conditions = array(
 				'InstitutionSiteStudentAbsence.institution_site_class_id' => $classId
@@ -80,10 +80,14 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$conditions = array();
 		}
 		
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$schoolYear = $SchoolYear->getSchoolYearById($school_year_id);
+		$conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = ' . $schoolYear;
+		
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
-				'InstitutionSiteStudentAbsence.id', 
+				'DISTINCT InstitutionSiteStudentAbsence.id', 
 				'InstitutionSiteStudentAbsence.absence_type', 
 				'InstitutionSiteStudentAbsence.first_date_absent', 
 				'InstitutionSiteStudentAbsence.last_date_absent', 
@@ -108,7 +112,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					'alias' => 'InstitutionSiteClass',
 					'conditions' => array(
 						'InstitutionSiteStudentAbsence.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+						'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
+						'InstitutionSiteClass.school_year_id' => $school_year_id
 					)
 				)
 			),
@@ -156,36 +161,106 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	
 	public function attendanceStudent($controller, $params){
 		$controller->Navigation->addCrumb('Attendance - Students');
-		
+
 		$yearList = $controller->SchoolYear->getYearList();
-		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitution($controller->institutionSiteId);
-		pr($yearList);
-		pr($classOptions);
+		//pr($yearList);
+		$yearId = 0;
+		if (isset($controller->params['pass'][0])) {
+			$yearId = $controller->params['pass'][0];
+			if (!array_key_exists($yearId, $yearList)) {
+                $yearId = key($yearList);
+            }
+		}else{
+			$yearId = key($yearList);
+		}
+		//pr($yearId);
 		
-		$controller->set(compact('yearList', 'classOptions'));
+		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitution($controller->institutionSiteId);
+		//pr($classOptions);
+		$classId = 0;
+		if (isset($controller->params['pass'][1])) {
+			$classId = $controller->params['pass'][1];
+			if (!array_key_exists($classId, $classOptions)) {
+                $classId = key($classOptions);
+            }
+		}else{
+			$classId = key($classOptions);
+		}
+		//pr($classId);
+		
+		$weekList = array(
+			'1' => 'Week 1 (April 01, 2014 - April 05, 2014)',
+			'2' => 'Week 2 (April 01, 2014 - April 05, 2014)'
+		);
+		$weekId = 0;
+		if (isset($controller->params['pass'][2])) {
+			$weekId = $controller->params['pass'][2];
+			if (!array_key_exists($weekId, $weekList)) {
+                $weekId = key($weekList);
+            }
+		}else{
+			$weekId = key($weekList);
+		}
+		//pr($weekId);
+		
+		
+		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId'));
 	}
 	
 	public function attendanceStudentAbsence($controller, $params){
 		$controller->Navigation->addCrumb('Absence - Students');
 		
 		$yearList = $controller->SchoolYear->getYearList();
-		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitution($controller->institutionSiteId);
-		
+		//pr($yearList);
+		$yearId = 0;
 		if (isset($controller->params['pass'][0])) {
-            $classId = $controller->params['pass'][0];
-		}else if(!empty($classOptions[0]['id'])){
-			$classId = $classOptions[0]['id'];
+			$yearId = $controller->params['pass'][0];
+			if (!array_key_exists($yearId, $yearList)) {
+                $yearId = key($yearList);
+            }
 		}else{
-			$classId = 0;
+			$yearId = key($yearList);
 		}
+		//pr($yearId);
+		
+		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitutionSchoolYear($controller->institutionSiteId, $yearId);
+		//pr($classOptions);
+		$classId = 0;
+		if (isset($controller->params['pass'][1])) {
+			$classId = $controller->params['pass'][1];
+			if (!array_key_exists($classId, $classOptions)) {
+                $classId = key($classOptions);
+            }
+		}else{
+			$classId = key($classOptions);
+		}
+		//pr($classId);
+		
+		$weekList = array(
+			'1' => 'Week 1 (April 01, 2014 - April 05, 2014)',
+			'2' => 'Week 2 (April 01, 2014 - April 05, 2014)'
+		);
+		$weekId = 0;
+		if (isset($controller->params['pass'][2])) {
+			$weekId = $controller->params['pass'][2];
+			if (!array_key_exists($weekId, $weekList)) {
+                $weekId = key($weekList);
+            }
+		}else{
+			$weekId = key($weekList);
+		}
+		//pr($weekId);
 		
 		$startDate = '2011-05-16';
 		$endDate = '2016-05-16';
 		
-		$data = $this->getAbsenceData($controller->institutionSiteId, $classId, $startDate, $endDate);
+		$data = $this->getAbsenceData($controller->institutionSiteId, $yearId, $classId, $startDate, $endDate);
+		if(empty($data)){
+			$controller->Message->alert('institutionSiteAttendance.no_data');
+		}
 		//pr($data);
 		
-		$controller->set(compact('yearList', 'classOptions', 'data'));
+		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'data'));
 	}
 	
 	public function attendanceStudentAbsenceAdd($controller, $params){
@@ -199,23 +274,35 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$absenceData['student_id'] = $absenceData['hidden_student_id'];
 			unset($absenceData['hidden_student_id']);
 			
+			$firstDateAbsent = $absenceData['first_date_absent'];
+			$classIdInput = $absenceData['institution_site_class_id'];
+			$firstDateAbsentData = new DateTime($firstDateAbsent);
+			$firstDateYear = $firstDateAbsentData->format('Y');
+			$firstDateYearId = $controller->SchoolYear->getSchoolYearId($firstDateYear);
+			$classExists= $controller->InstitutionSiteClass->getClassByIdSchoolYear($classIdInput, $firstDateYearId);
+
 			$this->set($absenceData);
 			if ($this->validates()) {
 				if($controller->InstitutionSiteClassGradeStudent->isStudentInClass($controller->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
-					if($this->save($absenceData)){
-						$newId = $this->getInsertID();
-						//pr($newId);
-						$postFileData = $controller->request->data[$this->alias]['files'];
-						$controller->FileUploader->additionData = array('institution_site_student_absence_id' => $newId);
-						$controller->FileUploader->uploadFile(NULL, $postFileData);
-						
-						if($controller->FileUploader->success){
-							$controller->Message->alert('general.add.success');
-							return $controller->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+					if($classExists){
+						if($this->save($absenceData)){
+							$newId = $this->getInsertID();
+							//pr($newId);
+							$postFileData = $controller->request->data[$this->alias]['files'];
+							$controller->FileUploader->additionData = array('institution_site_student_absence_id' => $newId);
+							$controller->FileUploader->uploadFile(NULL, $postFileData);
+
+							if($controller->FileUploader->success){
+								$controller->Message->alert('general.add.success');
+								return $controller->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
+							}
 						}
+					}else{
+						$controller->Message->alert('institutionSiteAttendance.student.failed.class_first_date_not_match');
 					}
+					
 				}else{
-					$controller->Message->alert('institutionSiteAttendance.student.add.failed');
+					$controller->Message->alert('institutionSiteAttendance.student.failed.class_student_not_match');
 				}
 			}
 		}
@@ -225,7 +312,16 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$absenceReasonOptions =  $this->StudentAbsenceReason->getList();;
 		$absenceTypeOptions = array('Excused' => __('Excused'), 'Unexcused' => __('Unexcused'));
 		
-		$controller->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions'));
+		if (isset($controller->params['pass'][0])) {
+			$classId = $controller->params['pass'][0];
+			if (!array_key_exists($classId, $classOptions)) {
+                $classId = key($classOptions);
+            }
+		}else{
+			$classId = key($classOptions);
+		}
+		
+		$controller->set(compact('classOptions', 'fullDayAbsentOptions', 'absenceReasonOptions', 'absenceTypeOptions', 'classId'));
 	}
 	
 	public function attendanceStudentSearchStudent($controller, $params){
@@ -266,21 +362,32 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$absenceData['student_id'] = $absenceData['hidden_student_id'];
 			unset($absenceData['hidden_student_id']);
 			
+			$firstDateAbsent = $absenceData['first_date_absent'];
+			$classIdInput = $absenceData['institution_site_class_id'];
+			$firstDateAbsentData = new DateTime($firstDateAbsent);
+			$firstDateYear = $firstDateAbsentData->format('Y');
+			$firstDateYearId = $controller->SchoolYear->getSchoolYearId($firstDateYear);
+			$classExists= $controller->InstitutionSiteClass->getClassByIdSchoolYear($classIdInput, $firstDateYearId);
+			
 			if ($this->save($absenceData, array('validate' => 'only'))) {
 				if($controller->InstitutionSiteClassGradeStudent->isStudentInClass($controller->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
-					if($this->save($absenceData)){
-						
-						$postFileData = $controller->request->data[$this->alias]['files'];
-						$controller->FileUploader->additionData = array('institution_site_student_absence_id' => $absenceId);
-						$controller->FileUploader->uploadFile(NULL, $postFileData);
-						
-						if($controller->FileUploader->success){
-							$controller->Message->alert('general.edit.success');
-							return $controller->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsenceView', $absenceId));
+					if($classExists){
+						if($this->save($absenceData)){
+							$postFileData = $controller->request->data[$this->alias]['files'];
+							$controller->FileUploader->additionData = array('institution_site_student_absence_id' => $absenceId);
+							$controller->FileUploader->uploadFile(NULL, $postFileData);
+
+							if($controller->FileUploader->success){
+								$controller->Message->alert('general.edit.success');
+								return $controller->redirect(array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsenceView', $absenceId));
+							}
 						}
+					}else{
+						$controller->Message->alert('institutionSiteAttendance.student.failed.class_first_date_not_match');
 					}
+					
 				}else{
-					$controller->Message->alert('institutionSiteAttendance.student.add.failed');
+					$controller->Message->alert('institutionSiteAttendance.student.failed.class_student_not_match');
 				}
 			}
 		}

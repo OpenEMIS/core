@@ -127,4 +127,9 @@ class SchoolYear extends AppModel {
 		));
 		return $data;
 	}
+	
+	public function getSchoolYearById($yearId) {
+		$data = $this->findById($yearId);	
+		return $data['SchoolYear']['name'];
+	}
 }
