@@ -20,7 +20,7 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 ));
 ?>
 
-<div id="classes" class="content_wrapper institutionAttendance">
+<div id="classes" class=" institutionAttendance">
 	<div class="topDropDownWrapper page-controls"  url="InstitutionSites/attendanceStudentAbsence">
 		<?php 
 			echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));

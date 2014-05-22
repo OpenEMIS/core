@@ -206,8 +206,16 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		//pr($weekId);
 		
+		$startEndDates = $controller->getStartEndDateByYearWeek($yearId, $weekId);
+		$startDate = $startEndDates['start_date'];
+		$endDate = $startEndDates['end_date'];
 		
-		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId'));
+		$header = $controller->generateAttendanceHeaders($startDate, $endDate);
+		//pr($header);
+		
+		$data = array();
+		
+		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'header', 'data'));
 	}
 	
 	public function attendanceStudentAbsence($controller, $params){
