@@ -100,11 +100,11 @@ td .table_cell_row .label{
 	display: inline-block;
 }
 .topDropDownWrapper select#schoolYearId{
-	width: 20%;
+	width: 15%;
 	margin-right: 10px;
 }
 .topDropDownWrapper select#weekId{
-	width: 40%;
+	width: 45%;
 	margin-right: 10px;
 }
 .topDropDownWrapper select#classId{
