@@ -72,7 +72,7 @@ var objInstitutionSite = {
 			return false;
 		}
 		
-		var url = getRootURL() + '/' + $(obj).parent('div').attr('url');
+		var url = getRootURL() + $(obj).parent('div').attr('url');
 		url += '/' + fieldSchoolYear.val();
 		url += '/' + fieldClass.val();
 		url += '/' + fieldWeek.val();

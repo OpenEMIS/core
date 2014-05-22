@@ -72,12 +72,15 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	);
 	
 	public function getAbsenceData($institutionSiteId, $school_year_id, $classId, $startDate='', $endDate=''){
+		$conditions = array();
+		
 		if(!empty($classId)){
-			$conditions = array(
-				'InstitutionSiteStudentAbsence.institution_site_class_id' => $classId
-			);
-		}else{
-			$conditions = array();
+			$conditions[] = 'InstitutionSiteStudentAbsence.institution_site_class_id = ' . $classId;
+		}
+		
+		if(!empty($startDate) && !empty($endDate)){
+			$conditions[] = 'InstitutionSiteStudentAbsence.first_date_absent >= "' . $startDate . '"';
+			$conditions[] = 'InstitutionSiteStudentAbsence.first_date_absent <= "' . $endDate . '"';
 		}
 		
 		$SchoolYear = ClassRegistry::init('SchoolYear');
@@ -164,62 +167,15 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 		$yearList = $controller->SchoolYear->getYearList();
 		//pr($yearList);
+		$currentYearId = $controller->SchoolYear->getSchoolYearId(date('Y'));
 		$yearId = 0;
 		if (isset($controller->params['pass'][0])) {
 			$yearId = $controller->params['pass'][0];
 			if (!array_key_exists($yearId, $yearList)) {
-                $yearId = key($yearList);
+                $yearId = $currentYearId;
             }
 		}else{
-			$yearId = key($yearList);
-		}
-		//pr($yearId);
-		
-		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitution($controller->institutionSiteId);
-		//pr($classOptions);
-		$classId = 0;
-		if (isset($controller->params['pass'][1])) {
-			$classId = $controller->params['pass'][1];
-			if (!array_key_exists($classId, $classOptions)) {
-                $classId = key($classOptions);
-            }
-		}else{
-			$classId = key($classOptions);
-		}
-		//pr($classId);
-		
-		$weekList = array(
-			'1' => 'Week 1 (April 01, 2014 - April 05, 2014)',
-			'2' => 'Week 2 (April 01, 2014 - April 05, 2014)'
-		);
-		$weekId = 0;
-		if (isset($controller->params['pass'][2])) {
-			$weekId = $controller->params['pass'][2];
-			if (!array_key_exists($weekId, $weekList)) {
-                $weekId = key($weekList);
-            }
-		}else{
-			$weekId = key($weekList);
-		}
-		//pr($weekId);
-		
-		
-		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId'));
-	}
-	
-	public function attendanceStudentAbsence($controller, $params){
-		$controller->Navigation->addCrumb('Absence - Students');
-		
-		$yearList = $controller->SchoolYear->getYearList();
-		//pr($yearList);
-		$yearId = 0;
-		if (isset($controller->params['pass'][0])) {
-			$yearId = $controller->params['pass'][0];
-			if (!array_key_exists($yearId, $yearList)) {
-                $yearId = key($yearList);
-            }
-		}else{
-			$yearId = key($yearList);
+			$yearId = $currentYearId;
 		}
 		//pr($yearId);
 		
@@ -236,23 +192,71 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		//pr($classId);
 		
-		$weekList = array(
-			'1' => 'Week 1 (April 01, 2014 - April 05, 2014)',
-			'2' => 'Week 2 (April 01, 2014 - April 05, 2014)'
-		);
+		$weekList = $controller->getWeekListByYearId($yearId);
+		//pr($weekList);
+		$currentWeekId = $controller->getCurrentWeekId($yearId);
 		$weekId = 0;
 		if (isset($controller->params['pass'][2])) {
 			$weekId = $controller->params['pass'][2];
 			if (!array_key_exists($weekId, $weekList)) {
-                $weekId = key($weekList);
+                $weekId = $currentWeekId;
             }
 		}else{
-			$weekId = key($weekList);
+			$weekId = $currentWeekId;
 		}
 		//pr($weekId);
 		
-		$startDate = '2011-05-16';
-		$endDate = '2016-05-16';
+		
+		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId'));
+	}
+	
+	public function attendanceStudentAbsence($controller, $params){
+		$controller->Navigation->addCrumb('Absence - Students');
+		
+		$yearList = $controller->SchoolYear->getYearList();
+		//pr($yearList);
+		$currentYearId = $controller->SchoolYear->getSchoolYearId(date('Y'));
+		$yearId = 0;
+		if (isset($controller->params['pass'][0])) {
+			$yearId = $controller->params['pass'][0];
+			if (!array_key_exists($yearId, $yearList)) {
+                $yearId = $currentYearId;
+            }
+		}else{
+			$yearId = $currentYearId;
+		}
+		//pr($yearId);
+		
+		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitutionSchoolYear($controller->institutionSiteId, $yearId);
+		//pr($classOptions);
+		$classId = 0;
+		if (isset($controller->params['pass'][1])) {
+			$classId = $controller->params['pass'][1];
+			if (!array_key_exists($classId, $classOptions)) {
+                $classId = key($classOptions);
+            }
+		}else{
+			$classId = key($classOptions);
+		}
+		//pr($classId);
+		
+		$weekList = $controller->getWeekListByYearId($yearId);
+		//pr($weekList);
+		$currentWeekId = $controller->getCurrentWeekId($yearId);
+		$weekId = 0;
+		if (isset($controller->params['pass'][2])) {
+			$weekId = $controller->params['pass'][2];
+			if (!array_key_exists($weekId, $weekList)) {
+                $weekId = $currentWeekId;
+            }
+		}else{
+			$weekId = $currentWeekId;
+		}
+		//pr($weekId);
+		
+		$startEndDates = $controller->getStartEndDateByYearWeek($yearId, $weekId);
+		$startDate = $startEndDates['start_date'];
+		$endDate = $startEndDates['end_date'];
 		
 		$data = $this->getAbsenceData($controller->institutionSiteId, $yearId, $classId, $startDate, $endDate);
 		if(empty($data)){
