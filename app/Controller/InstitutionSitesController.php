@@ -6752,5 +6752,19 @@ class InstitutionSitesController extends AppController {
 		
 		return $currentWeekId;
 	}
+	
+	public function generateAttendanceHeaders($startDate, $endDate){
+		$header = array(__('ID'), __('Name'));
+		
+		$firstDate = $startDate;
+		while($firstDate <= $endDate){
+			$stampStartDate = strtotime($firstDate);
+			$header[] = __(date('D', $stampStartDate));
+			$stampStartDateNew = strtotime('+1 day', $stampStartDate);
+			$firstDate = date("Y-m-d", $stampStartDateNew);
+		}
+		
+		return $header;
+	}
 
 }
