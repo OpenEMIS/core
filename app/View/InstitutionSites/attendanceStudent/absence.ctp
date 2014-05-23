@@ -47,14 +47,20 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 						
 						$studentName = sprintf('%s %s %s %s', $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']);
 						
-						$firstDateAbsent = $this->Utility->formatDate($arrItems['InstitutionSiteStudentAbsence']['first_date_absent'], null, false);
-						$lastDateAbsent = $this->Utility->formatDate($arrItems['InstitutionSiteStudentAbsence']['last_date_absent'], null, false);
+						$firstDateAbsentOriginal = $arrItems['InstitutionSiteStudentAbsence']['first_date_absent'];
+						$lastDateAbsentOriginal = $arrItems['InstitutionSiteStudentAbsence']['last_date_absent'];
+						$firstDateAbsent = $this->Utility->formatDate($firstDateAbsentOriginal, null, false);
+						$lastDateAbsent = $this->Utility->formatDate($lastDateAbsentOriginal, null, false);
 						$fullDayAbsent = $arrItems['InstitutionSiteStudentAbsence']['full_day_absent'];
 						$startTimeAbsent = $arrItems['InstitutionSiteStudentAbsence']['start_time_absent'];
 						$endTimeAbsent = $arrItems['InstitutionSiteStudentAbsence']['end_time_absent'];
 						
 						if($fullDayAbsent == 'Yes'){
-							$dateStr = sprintf('%s (%s)', $firstDateAbsent, $this->Label->get('InstitutionSiteStudentAbsence.full_day_absent'));
+							if(!empty($lastDateAbsentOriginal) && strtotime($lastDateAbsentOriginal) > strtotime($firstDateAbsentOriginal)){
+								$dateStr = sprintf('%s - %s (%s)', $firstDateAbsent, $lastDateAbsent, __('full day'));
+							}else{
+								$dateStr = sprintf('%s (%s)', $firstDateAbsent, __('full day'));
+							}
 						}else{
 							$dateStr = sprintf('%s (%s - %s)', $firstDateAbsent, $startTimeAbsent, $endTimeAbsent);
 						}

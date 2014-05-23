@@ -178,7 +178,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}else{
 			$yearId = $currentYearId;
 		}
-		//pr($yearId);
 		
 		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitutionSchoolYear($controller->institutionSiteId, $yearId);
 		//pr($classOptions);
@@ -191,7 +190,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}else{
 			$classId = key($classOptions);
 		}
-		//pr($classId);
 		
 		$weekList = $controller->getWeekListByYearId($yearId);
 		//pr($weekList);
@@ -205,7 +203,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}else{
 			$weekId = $currentWeekId;
 		}
-		//pr($weekId);
 		
 		$startEndDates = $controller->getStartEndDateByYearWeek($yearId, $weekId);
 		$startDate = $startEndDates['start_date'];
@@ -213,10 +210,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$header = $controller->generateAttendanceHeader($startDate, $endDate);
 		$weekDayIndex = $controller->generateAttendanceWeekDayIndex($startDate, $endDate);
-		//pr($dateIndex);
 		
 		$absenceData = $this->getAbsenceData($controller->institutionSiteId, $yearId, $classId, $startDate, $endDate);
-		//pr($absenceData);
 		$absenceCheckList = array();
 		foreach($absenceData AS $absenceUnit){
 			$absenceStudent = $absenceUnit['Student'];
@@ -240,11 +235,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 				}
 			}
 		}
-		//pr($absenceCheckList);
 		
 		$studentList = $controller->InstitutionSiteClassGradeStudent->getStudentsByClass($classId);
-		//pr($studentList);
-		
+		if(empty($studentList)){
+			$controller->Message->alert('institutionSiteAttendance.no_student');
+		}
 		
 		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'studentList', 'absenceCheckList'));
 	}
