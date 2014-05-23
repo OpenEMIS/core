@@ -62,3 +62,7 @@ div.gen-chart-render + div.gen-chart-render{
     font-size: 12px;
     font-weight: normal;
 }
+
+.dashboard_wrapper a.btn_save{
+	text-decoration: none;
+}
