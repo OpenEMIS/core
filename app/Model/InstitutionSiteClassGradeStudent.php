@@ -380,4 +380,38 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 			return false;
 		}
 	}
+	
+	public function getStudentsByClass($classId) {
+		$conditions = array();
+		
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'DISTINCT Student.id',
+				'Student.identification_no',
+				'Student.first_name',
+				'Student.middle_name',
+				'Student.last_name',
+				'Student.preferred_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
+					)
+				)
+			),
+			'conditions' => $conditions
+		));
+		
+		return $data;
+	}
 }

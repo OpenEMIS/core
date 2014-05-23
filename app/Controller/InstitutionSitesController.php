@@ -6753,7 +6753,7 @@ class InstitutionSitesController extends AppController {
 		return $currentWeekId;
 	}
 	
-	public function generateAttendanceHeaders($startDate, $endDate){
+	public function generateAttendanceHeader($startDate, $endDate){
 		$header = array(__('ID'), __('Name'));
 		
 		$firstDate = $startDate;
@@ -6765,6 +6765,20 @@ class InstitutionSitesController extends AppController {
 		}
 		
 		return $header;
+	}
+	
+	public function generateAttendanceWeekDayIndex($startDate, $endDate){
+		$index = array();
+		
+		$firstDate = $startDate;
+		while($firstDate <= $endDate){
+			$stampStartDate = strtotime($firstDate);
+			$index[] = date('Ymd', $stampStartDate);
+			$stampStartDateNew = strtotime('+1 day', $stampStartDate);
+			$firstDate = date("Y-m-d", $stampStartDateNew);
+		}
+		
+		return $index;
 	}
 
 }
