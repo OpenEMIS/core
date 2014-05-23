@@ -74,6 +74,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	public function getAbsenceData($institutionSiteId, $school_year_id, $classId, $startDate='', $endDate=''){
 		$conditions = array();
 		
+		// if $classId is not present, then $institutionSiteId and $school_year_id are necessary for data filter
 		if(!empty($classId)){
 			$conditions[] = 'InstitutionSiteStudentAbsence.institution_site_class_id = ' . $classId;
 		}
@@ -210,12 +211,42 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 		
-		$header = $controller->generateAttendanceHeaders($startDate, $endDate);
-		//pr($header);
+		$header = $controller->generateAttendanceHeader($startDate, $endDate);
+		$weekDayIndex = $controller->generateAttendanceWeekDayIndex($startDate, $endDate);
+		//pr($dateIndex);
 		
-		$data = array();
+		$absenceData = $this->getAbsenceData($controller->institutionSiteId, $yearId, $classId, $startDate, $endDate);
+		//pr($absenceData);
+		$absenceCheckList = array();
+		foreach($absenceData AS $absenceUnit){
+			$absenceStudent = $absenceUnit['Student'];
+			$studentId = $absenceStudent['id'];
+			$absenceRecord = $absenceUnit['InstitutionSiteStudentAbsence'];
+			$indexAbsenceDate = date('Ymd', strtotime($absenceRecord['first_date_absent']));
+			
+			$absenceCheckList[$studentId][$indexAbsenceDate] = $absenceUnit;
+			
+			if(!empty($absenceRecord['last_date_absent']) && $absenceRecord['last_date_absent'] > $absenceRecord['first_date_absent']){
+				$tempStartDate = date("Y-m-d", strtotime($absenceRecord['first_date_absent']));
+				$formatedLastDate = date("Y-m-d", strtotime($absenceRecord['last_date_absent']));
+				while($tempStartDate <= $formatedLastDate){
+					$stampTempDate = strtotime($tempStartDate);
+					$tempIndex = date('Ymd', $stampTempDate);
+					
+					$absenceCheckList[$studentId][$tempIndex] = $absenceUnit;
+					
+					$stampTempDateNew = strtotime('+1 day', $stampTempDate);
+					$tempStartDate = date("Y-m-d", $stampTempDateNew);
+				}
+			}
+		}
+		//pr($absenceCheckList);
 		
-		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'header', 'data'));
+		$studentList = $controller->InstitutionSiteClassGradeStudent->getStudentsByClass($classId);
+		//pr($studentList);
+		
+		
+		$controller->set(compact('yearList', 'yearId', 'classOptions', 'classId', 'weekList', 'weekId', 'header', 'weekDayIndex', 'studentList', 'absenceCheckList'));
 	}
 	
 	public function attendanceStudentAbsence($controller, $params){
