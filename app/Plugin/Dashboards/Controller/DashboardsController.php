@@ -41,7 +41,10 @@ class DashboardsController extends DashboardsAppController {
 			$this->Navigation->addCrumb('Reports', array('controller' => 'Reports', 'action' => 'index', 'plugin' => 'Reports'));
 			$this->Navigation->addCrumb('Dashboards', array('controller' => 'Dashboards', 'action' => 'dashboardReport', 'plugin' => 'Dashboards'));
 		}
-		else if($this->action == 'InstitutionQA'){
+		else if($this->action == 'InstitutionQA' || $this->action == 'general'){
+			if($this->action == 'general'){
+				$this->bodyTitle = 'InstitutionSite';
+			}
 			if ($this->Session->check('InstitutionId')) {
 				$institutionId = $this->Session->read('InstitutionId');
                 $Institution = ClassRegistry::init('Institution');
@@ -104,6 +107,23 @@ class DashboardsController extends DashboardsAppController {
 		}
 		else{
 			return '';
+		}
+	}
+	
+	public function general() {
+        $this->Navigation->addCrumb('Reports - Dashboard');
+        $data = array('Reports - Dashboard' => array(
+               // array('name' => 'Overview', 'types' => array('HTML')),
+                array('name' => 'Quality Assurance', 'types' => array('HTML')),
+                //array('name' => 'More', 'types' => array('CSV'))
+        ));
+        $this->set('data', $data);
+        $this->set('actionName', 'dashboards');
+    }
+	
+	public function dashboards($name, $type) {
+		if($type == "HTML"){
+			return $this->redirect(array('controller'=> 'Dashboards', 'action' => 'InstitutionQA', 'plugin' => 'Dashboards'));
 		}
 	}
 	
