@@ -128,6 +128,34 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		return $data;
 	}
 	
+	public function getStudentAbsenceDataByMonth($studentId, $school_year_id, $monthId){
+		$SchoolYear = ClassRegistry::init('SchoolYear');
+		$schoolYear = $SchoolYear->getSchoolYearById($school_year_id);
+		
+		$conditions = array(
+			'Student.id = ' . $studentId,
+			'MONTH(InstitutionSiteStudentAbsence.first_date_absent) = ' . $monthId,
+			'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = ' . $schoolYear
+		);
+		
+		$data = $this->find('all', array(
+			'fields' => array(
+				'DISTINCT InstitutionSiteStudentAbsence.id', 
+				'InstitutionSiteStudentAbsence.absence_type', 
+				'InstitutionSiteStudentAbsence.first_date_absent', 
+				'InstitutionSiteStudentAbsence.last_date_absent', 
+				'InstitutionSiteStudentAbsence.full_day_absent', 
+				'InstitutionSiteStudentAbsence.start_time_absent', 
+				'InstitutionSiteStudentAbsence.end_time_absent',
+				'StudentAbsenceReason.name'
+			),
+			'conditions' => $conditions,
+			'order' => array('InstitutionSiteStudentAbsence.first_date_absent', 'InstitutionSiteStudentAbsence.last_date_absent')
+		));
+		
+		return $data;
+	}
+	
 	public function getAbsenceById($absenceId){
 		$data = $this->find('first', array(
 			'fields' => array(
@@ -169,7 +197,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$yearList = $controller->SchoolYear->getYearList();
 		//pr($yearList);
 		$currentYearId = $controller->SchoolYear->getSchoolYearId(date('Y'));
-		$yearId = 0;
 		if (isset($controller->params['pass'][0])) {
 			$yearId = $controller->params['pass'][0];
 			if (!array_key_exists($yearId, $yearList)) {
@@ -181,7 +208,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitutionSchoolYear($controller->institutionSiteId, $yearId);
 		//pr($classOptions);
-		$classId = 0;
 		if (isset($controller->params['pass'][1])) {
 			$classId = $controller->params['pass'][1];
 			if (!array_key_exists($classId, $classOptions)) {
@@ -194,7 +220,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$weekList = $controller->getWeekListByYearId($yearId);
 		//pr($weekList);
 		$currentWeekId = $controller->getCurrentWeekId($yearId);
-		$weekId = 0;
 		if (isset($controller->params['pass'][2])) {
 			$weekId = $controller->params['pass'][2];
 			if (!array_key_exists($weekId, $weekList)) {
@@ -250,7 +275,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$yearList = $controller->SchoolYear->getYearList();
 		//pr($yearList);
 		$currentYearId = $controller->SchoolYear->getSchoolYearId(date('Y'));
-		$yearId = 0;
 		if (isset($controller->params['pass'][0])) {
 			$yearId = $controller->params['pass'][0];
 			if (!array_key_exists($yearId, $yearList)) {
@@ -263,7 +287,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitutionSchoolYear($controller->institutionSiteId, $yearId);
 		//pr($classOptions);
-		$classId = 0;
 		if (isset($controller->params['pass'][1])) {
 			$classId = $controller->params['pass'][1];
 			if (!array_key_exists($classId, $classOptions)) {
@@ -277,7 +300,6 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		$weekList = $controller->getWeekListByYearId($yearId);
 		//pr($weekList);
 		$currentWeekId = $controller->getCurrentWeekId($yearId);
-		$weekId = 0;
 		if (isset($controller->params['pass'][2])) {
 			$weekId = $controller->params['pass'][2];
 			if (!array_key_exists($weekId, $weekList)) {
@@ -318,6 +340,13 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$firstDateYear = $firstDateAbsentData->format('Y');
 			$firstDateYearId = $controller->SchoolYear->getSchoolYearId($firstDateYear);
 			$classExists= $controller->InstitutionSiteClass->getClassByIdSchoolYear($classIdInput, $firstDateYearId);
+			
+			if($absenceData['full_day_absent'] == 'Yes'){
+				$absenceData['start_time_absent'] = '';
+				$absenceData['end_time_absent'] = '';
+			}else{
+				$absenceData['last_date_absent'] = null;
+			}
 
 			$this->set($absenceData);
 			if ($this->validates()) {
@@ -399,6 +428,13 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$absenceData = $controller->request->data['InstitutionSiteStudentAbsence'];
 			$absenceData['student_id'] = $absenceData['hidden_student_id'];
 			unset($absenceData['hidden_student_id']);
+			
+			if($absenceData['full_day_absent'] == 'Yes'){
+				$absenceData['start_time_absent'] = '';
+				$absenceData['end_time_absent'] = '';
+			}else{
+				$absenceData['last_date_absent'] = null;
+			}
 			
 			$firstDateAbsent = $absenceData['first_date_absent'];
 			$classIdInput = $absenceData['institution_site_class_id'];

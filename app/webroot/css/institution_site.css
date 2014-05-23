@@ -93,20 +93,3 @@ td .table_cell_row .label{
 .form-group .text.col-md-4{
 	padding-top: 7px;
 }
-.institutionAttendance .topDropDownWrapper{
-	margin-bottom: 12px;
-}
-.institutionAttendance .topDropDownWrapper select.form-control{
-	display: inline-block;
-}
-.topDropDownWrapper select#schoolYearId{
-	width: 15%;
-	margin-right: 10px;
-}
-.topDropDownWrapper select#weekId{
-	width: 45%;
-	margin-right: 10px;
-}
-.topDropDownWrapper select#classId{
-	width: 30%;
-}

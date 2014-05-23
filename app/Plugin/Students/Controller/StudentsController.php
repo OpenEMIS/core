@@ -46,7 +46,8 @@ class StudentsController extends StudentsAppController {
         'ConfigItem',
         'Students.StudentExtracurricular',
         'ExtracurricularType',
-        'Students.StudentAttendanceType'
+        'Students.StudentAttendanceType',
+		'InstitutionSiteStudentAbsence'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -678,81 +679,42 @@ class StudentsController extends StudentsAppController {
     public function attendance() {
         $studentId = $this->studentId;
         //$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-        $this->Navigation->addCrumb('Attendance');
-		$header = __('Attendance');
-        //$id = @$this->request->params['pass'][0];
-        $yearOptions = $this->SchoolYear->getYearList();
-        $selectedYearId = $this->getAvailableYearId($yearOptions);
-        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYearId));
-        $attendanceTypes = $this->StudentAttendanceType->getAttendanceTypes();
-        
-        $dataAttendance = $this->StudentAttendance->getAttendanceByStudentAndYear($studentId, $selectedYearId);
-        $attendanceCheckList = array();
-        $classesArr = array();
-        foreach($dataAttendance AS $rowAttendance){
-            $attendanceTypeId = $rowAttendance['StudentAttendance']['student_attendance_type_id'];
-            $attendanceValue = $rowAttendance['StudentAttendance']['value'];
-            $classId = $rowAttendance['InstitutionSiteClass']['id'];
-                
-            $attendanceCheckList[$classId][$attendanceTypeId] = $attendanceValue;
-            
-            $classesArr[$classId] = $rowAttendance['InstitutionSiteClass']['name'];
-        }
-        
-        $data = array();
-        foreach($classesArr AS $classId => $className){
-            $tempRow = array();
-            $tempRow['classId'] = $classId;
-            $tempRow['className'] = $className;
-            
-            $tempRow['StudentAttendance'] = array();
-            foreach($attendanceTypes AS $attendanceType){
-                $attendanceTypeId = $attendanceType['StudentAttendanceType']['id'];
-                    
-                if(isset($attendanceCheckList[$classId][$attendanceTypeId])){
-                    $tempRow['StudentAttendance'][$attendanceTypeId] = $attendanceCheckList[$classId][$attendanceTypeId];
-                }else{
-                    $tempRow['StudentAttendance'][$attendanceTypeId] = 0;
-                }
+        $this->Navigation->addCrumb('Absence');
+		$header = __('Absence');
+		
+		$yearList = $this->SchoolYear->getYearList();
+		//pr($yearList);
+		$currentYearId = $this->SchoolYear->getSchoolYearId(date('Y'));
+		if (isset($this->params['pass'][0])) {
+			$yearId = $this->params['pass'][0];
+			if (!array_key_exists($yearId, $yearList)) {
+                $yearId = $currentYearId;
             }
-            $data[] = $tempRow;
-        }
+		}else{
+			$yearId = $currentYearId;
+		}
+		
+		$monthOptions = $this->generateMonthOptions();
+		$currentMonthId = $this->getCurrentMonthId();
+		if (isset($this->params['pass'][1])) {
+			$monthId = $this->params['pass'][1];
+			if (!array_key_exists($monthId, $monthOptions)) {
+                $monthId = $currentMonthId;
+            }
+		}else{
+			$monthId = $currentMonthId;
+		}
+		
+		$absenceData = $this->InstitutionSiteStudentAbsence->getStudentAbsenceDataByMonth($studentId, $yearId, $monthId);
+		//pr($absenceData);
+		$data = $absenceData;
         
-        $legend = $this->generateAttendanceLegend();
-
         if (empty($data)) {
 			$this->Message->alert('general.noData');
             //$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
         }
 
-		$this->set(compact('header', 'selectedYearId', 'yearOptions', 'data','schoolDays','attendanceTypes','legend'));
-       /* $this->set('selectedYear', $selectedYearId);
-        $this->set('years', $yearOptions);
-        $this->set('data', $data);
-        $this->set('schoolDays', $schoolDays);
-        $this->set('attendanceTypes', $attendanceTypes);
-        $this->set('legend', $legend);*/
-    }
-    
-    public function generateAttendanceLegend(){
-        $data = $this->StudentAttendanceType->getAttendanceTypes();
-        
-        $indicator = 0;
-        $str = '';
-        foreach($data AS $row){
-            $code = $row['StudentAttendanceType']['national_code'];
-            $name = $row['StudentAttendanceType']['name'];
-            
-            if($indicator > 0){
-                $str .= '; ' . $code . ' = ' . $name;
-            }else{
-                $str .= $code . ' = ' . $name;
-            }
-            
-            $indicator++;
-        }
-        
-        return $str;
+		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId'));
     }
 
     // Student behaviour part
@@ -832,5 +794,29 @@ class StudentsController extends StudentsAppController {
 
         return $generate_no;
     }
+	
+	public function generateMonthOptions(){
+		$options = array();
+		for ($i = 1; $i <= 12; $i++)
+        {
+                $options[$i] = date("F", mktime(0, 0, 0, $i+1, 0, 0, 0));
+        }
+		
+		return $options;
+	}
+	
+	public function getCurrentMonthId(){
+		$options = $this->generateMonthOptions();
+		$currentMonth = date("F");
+		$monthId = 1;
+		foreach($options AS $id => $month){
+			if($currentMonth === $month){
+				$monthId = $id;
+				break;
+			}
+		}
+		
+		return $monthId;
+	}
 
 }
