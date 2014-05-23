@@ -80,7 +80,8 @@ class MessageComponent extends Component {
 					'failed' => array('type' => 'error', 'msg' => 'Class and staff do not match.')
 				)
 			),
-			'no_data' => array('type' => 'info', 'msg' => 'There is no data matched.')
+			'no_data' => array('type' => 'info', 'msg' => 'There is no data matched.'),
+			'no_student' => array('type' => 'info', 'msg' => 'There is no student matched.')
 		)
 	);
 	
