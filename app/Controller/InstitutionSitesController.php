@@ -7117,23 +7117,7 @@ class InstitutionSitesController extends AppController {
         $this->Mpdf->Output($arrData['name'] . '.pdf', 'I');
     }
 
-	public function reportsDashboard() {
-        $this->Navigation->addCrumb('Reports - Dashboard');
-        $data = array('Reports - General' => array(
-               // array('name' => 'Overview', 'types' => array('HTML')),
-                array('name' => 'Quality Assurance', 'types' => array('HTML')),
-                //array('name' => 'More', 'types' => array('CSV'))
-        ));
-        $this->set('data', $data);
-        $this->set('actionName', 'dashboards');
-		$this->render('Reports/general');
-    }
 	
-	public function dashboards($name, $type) {
-		if($type == "HTML"){
-			return $this->redirect(array('controller'=> 'Dashboards', 'action' => 'InstitutionQA', 'plugin' => 'Dashboards'));
-		}
-	}
 	
     public function reportsGeneral() {
         $this->Navigation->addCrumb('Reports - General');
