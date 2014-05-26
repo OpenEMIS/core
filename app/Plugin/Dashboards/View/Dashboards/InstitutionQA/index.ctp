@@ -10,7 +10,7 @@ echo $this->Html->script('Dashboards.dashboards', false);
 	<h1>
 		<span><?php echo $header; ?></span>
 		<?php
-        echo $this->Html->link(__('Back'), array('controller' => 'InstitutionSites','action' => 'reportsDashboard', 'plugin' => false), array('class' => 'divider'));
+        echo $this->Html->link(__('Back'), array('controller' => 'Dashboards','action' => 'general', 'plugin' => false), array('class' => 'divider'));
 		?>
 	</h1>
 
