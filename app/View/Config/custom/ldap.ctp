@@ -13,8 +13,8 @@ $this->assign('contentHeader', $this->Label->get('Config.name'));
 $this->end();
 
 $this->start('contentBody'); ?>
-<div class="row select_row form-group">
-    <div class="col-md-6">
+<div class="row select_row page-controls">
+    <div class="col-md-4">
         <?php
             echo $this->Form->input('type', array(
                 'options' => $typeOptions,
@@ -39,15 +39,14 @@ $this->start('contentBody'); ?>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<td><?php echo __('Host');?></td>
-					<td><?php echo __('Port');?></td>
-					<td><?php echo __('Version');?></td>
-					<td><?php echo __('Base Dn');?></td>
+					<th><?php echo __('Host');?></th>
+					<th><?php echo __('Port');?></th>
+					<th><?php echo __('Version');?></th>
+					<th><?php echo __('Base Dn');?></th>
 				</tr>
 			</thead>
 
-			<tbody class="table_body">
-
+			<tbody>
 				<tr>
 				<?php 
 				$i = 0;
