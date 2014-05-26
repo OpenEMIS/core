@@ -677,7 +677,10 @@ class StudentsController extends StudentsAppController {
 
     // STUDENT ATTENDANCE PART
     public function attendance() {
-        $studentId = $this->studentId;
+        $studentId = !empty($this->studentId) ? $this->studentId : $this->Session->read('StudentId');
+		if(empty($studentId)){
+			return $this->redirect(array('controller' => 'Students', 'action' => 'index'));
+		}
         //$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
         $this->Navigation->addCrumb('Absence');
 		$header = __('Absence');

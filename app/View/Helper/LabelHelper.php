@@ -203,6 +203,14 @@ class LabelHelper extends AppHelper {
 			'last_date_absent' => 'Last Date Absent',
 			'start_time_absent' => 'Start Time Absent',
 			'end_time_absent' => 'End Time Absent'
+		),
+		'InstitutionSiteStaffAbsence' => array(
+			'reason' => 'Reason',
+			'first_date_absent' => 'First Date Absent',
+			'full_day_absent' => 'Full Day Absent',
+			'last_date_absent' => 'Last Date Absent',
+			'start_time_absent' => 'Start Time Absent',
+			'end_time_absent' => 'End Time Absent'
 		)
     );
 	

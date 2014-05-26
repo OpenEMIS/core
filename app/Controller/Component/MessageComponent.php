@@ -75,13 +75,9 @@ class MessageComponent extends Component {
 					'class_first_date_not_match' => array('type' => 'error', 'msg' => 'Class and First Date Absent do not match.')
 				)
 			),
-			'staff' => array(
-				'add' => array(
-					'failed' => array('type' => 'error', 'msg' => 'Class and staff do not match.')
-				)
-			),
 			'no_data' => array('type' => 'info', 'msg' => 'There is no data matched.'),
-			'no_student' => array('type' => 'info', 'msg' => 'There is no student matched.')
+			'no_student' => array('type' => 'info', 'msg' => 'There is no student matched.'),
+			'no_staff' => array('type' => 'info', 'msg' => 'There is no staff matched.')
 		)
 	);
 	

@@ -171,8 +171,8 @@ class InstitutionSitesController extends AppController {
 		'shifts' => 'InstitutionSiteShift',
 		'positions' => 'InstitutionSitePosition',
 		'staff' => 'InstitutionSiteStaff',
-		'attendanceStudent' => 'InstitutionSiteStudentAbsence'
-//		'attendanceStaff' => 'InstitutionSiteStaffAttendance'
+		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
+		'attendanceStaff' => 'InstitutionSiteStaffAbsence'
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -6663,9 +6663,69 @@ class InstitutionSitesController extends AppController {
         return $str;
     }
 	
+	public function getFirstWeekdayBySetting(){
+		$weekdaysArr = array(
+			1 => 'monday',
+			2 => 'tuesday',
+			3 => 'wednesday',
+			4 => 'thursday',
+			5 => 'friday',
+			6 => 'saturday',
+			7 => 'sunday'
+		);
+		
+		$settingFirstWeekDay = $this->ConfigItem->getValue('first_day_of_week');
+		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){
+			$settingFirstWeekDay = 'monday';
+		}
+		
+		$lastWeekday = $settingFirstWeekDay;
+		
+		return $lastWeekday;
+	}
+	
+	public function getLastWeekdayBySetting(){
+		$weekdaysArr = array(
+			1 => 'monday',
+			2 => 'tuesday',
+			3 => 'wednesday',
+			4 => 'thursday',
+			5 => 'friday',
+			6 => 'saturday',
+			7 => 'sunday'
+		);
+		
+		$settingFirstWeekDay = $this->ConfigItem->getValue('first_day_of_week');
+		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){
+			$settingFirstWeekDay = 'monday';
+		}
+		
+		$settingDaysPerWek = intval($this->ConfigItem->getValue('days_per_week'));
+		if(empty($settingDaysPerWek)){
+			$settingDaysPerWek = 5;
+		}
+		
+		foreach($weekdaysArr AS $index => $weekday){
+			if($weekday == $settingFirstWeekDay){
+				$firstWeekdayIndex = $index;
+				break;
+			}
+		}
+		
+		$newIndex = ($firstWeekdayIndex + $settingDaysPerWek - 1) % 7;
+		
+		if($newIndex == 0){
+			$lastWeekday = $weekdaysArr[7];
+		}else{
+			$lastWeekday = $weekdaysArr[$newIndex];
+		}
+		
+		return $lastWeekday;
+	}
+	
 	public function getWeekListByYearId($yearId, $forOptions=true){
-		$settingFirstWeekDay = 'monday';
-		$settingLastWeekDay = 'friday';
+		$settingFirstWeekDay = $this->getFirstWeekdayBySetting();
+		$lastWeekDay = $this->getLastWeekdayBySetting();
 		
 		$currentDate = date("Y-m-d");
 		
@@ -6673,7 +6733,7 @@ class InstitutionSitesController extends AppController {
 		$stampFirstDayOfYear = mktime(0, 0, 0, 1, 1, $yearName);
 		
 		$stampFirstWeekDay = strtotime($settingFirstWeekDay, $stampFirstDayOfYear);
-		$stampLastWeekDay = strtotime($settingLastWeekDay, $stampFirstWeekDay);
+		$stampLastWeekDay = strtotime($lastWeekDay, $stampFirstWeekDay);
 		
 		//$dateFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampFirstWeekDay));
 		//$dateLastWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampLastWeekDay));
@@ -6728,7 +6788,7 @@ class InstitutionSitesController extends AppController {
 			$stampNextLastWeekDay = strtotime('+1 week', $stampNextLastWeekDay);
 			$startingIndexWeek ++;
 		}
-		
+
 		return $weekList;
 	}
 	
