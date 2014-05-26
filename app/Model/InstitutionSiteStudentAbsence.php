@@ -80,13 +80,21 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		}
 		
 		if(!empty($startDate) && !empty($endDate)){
-			$conditions[] = 'InstitutionSiteStudentAbsence.first_date_absent >= "' . $startDate . '"';
-			$conditions[] = 'InstitutionSiteStudentAbsence.first_date_absent <= "' . $endDate . '"';
+			$conditions['OR'] = array(
+					array(
+						'InstitutionSiteStudentAbsence.first_date_absent >= "' . $startDate . '"',
+						'InstitutionSiteStudentAbsence.first_date_absent <= "' . $endDate . '"'
+					),
+					array(
+						'InstitutionSiteStudentAbsence.last_date_absent >= "' . $startDate . '"',
+						'InstitutionSiteStudentAbsence.last_date_absent <= "' . $endDate . '"'
+					)
+			);
 		}
 		
 		$SchoolYear = ClassRegistry::init('SchoolYear');
 		$schoolYear = $SchoolYear->getSchoolYearById($school_year_id);
-		$conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = ' . $schoolYear;
+		$conditions[] = 'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $schoolYear . '"';
 		
 		$data = $this->find('all', array(
 			'recursive' => -1,
@@ -134,8 +142,17 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		
 		$conditions = array(
 			'Student.id = ' . $studentId,
-			'MONTH(InstitutionSiteStudentAbsence.first_date_absent) = ' . $monthId,
-			'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = ' . $schoolYear
+		);
+		
+		$conditions['OR'] = array(
+			array(
+				'MONTH(InstitutionSiteStudentAbsence.first_date_absent) = "' . $monthId . '"',
+				'YEAR(InstitutionSiteStudentAbsence.first_date_absent) = "' . $schoolYear . '"'
+			),
+			array(
+				'MONTH(InstitutionSiteStudentAbsence.last_date_absent) = "' . $monthId . '"',
+				'YEAR(InstitutionSiteStudentAbsence.last_date_absent) = "' . $schoolYear . '"'
+			)
 		);
 		
 		$data = $this->find('all', array(

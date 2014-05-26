@@ -40,6 +40,29 @@ $(document).ready(function() {
 		});
 	}
 	
+	if($("#staffNameAutoComplete").length === 1){
+		$("#staffNameAutoComplete").autocomplete({
+			source: function(request, response) {
+				$.ajax({
+					url: getRootURL() + 'InstitutionSites/attendanceStaffSearchStaff',
+					dataType: "json",
+					data: {
+						term: request.term,
+					},
+					success: function(data) {
+						response(data);
+					}
+				});
+			},
+			minLength: 2,
+			select: function(event, ui) {
+				$('#staffNameAutoComplete').val(ui.item.label);
+				$('#hiddenStaffId').val(ui.item.value);
+				return false;
+			}
+		});
+	}
+	
 	if($("#fullDayAbsent").length === 1){
 		var valFullDayAbsent = $("#fullDayAbsent").val();
 		var lastDateAbsent = $("input#lastDateAbsent");

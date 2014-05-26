@@ -308,7 +308,7 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		
 		$list = $this->find('all', array(
 			'recursive' => -1,
-			'fields' => array('Student.*'),
+			'fields' => array('DISTINCT Student.id', 'Student.*'),
 			'joins' => array(
 				array(
 					'table' => 'students',
