@@ -449,18 +449,32 @@ class QADashboardComponent extends Component {
 				}
 			}
 			$tempData = array();
-			foreach($filtedData as $year){
-				foreach($year as $key =>$obj){
-					$tempData['value'] = $obj['Percent'];
-					$tempData['tooltext'] = sprintf("%s%%, %s", $obj['Percent'], $obj['Number']);
-					$finalData['data'][]=$tempData;
+			foreach ($filtedData as $year) {
+				foreach ($yearOptions as $defaultYear) {
+				if(array_key_exists($defaultYear, $year)){
+					foreach ($year as $key => $obj) {
+						$tempData['value'] = $obj['Percent'];
+						$tempData['tooltext'] = sprintf("%s%%, %s", $obj['Percent'], $obj['Number']);
+						$finalData['data'][] = $tempData;
+					}
+				}
+				else{
+					$tempData['value'] = 0;
+					$tempData['tooltext'] = sprintf("%s%%, %s", 0, 0);
+					$finalData['data'][] = $tempData;
+				}
+					/*
+						foreach ($year as $key => $obj) {
+							$tempData['value'] = $obj['Percent'];
+							$tempData['tooltext'] = sprintf("%s%%, %s", $obj['Percent'], $obj['Number']);
+							$finalData['data'][] = $tempData;
+						}
+					}*/
 				}
 			}
-			
 			$returnData[] = $finalData;
 			$counter++;
 		}
-		
 		
 		return $returnData;
 	}

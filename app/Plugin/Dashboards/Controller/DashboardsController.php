@@ -201,7 +201,7 @@ class DashboardsController extends DashboardsAppController {
 			'break',
 		);
 		
-		$this->set(compact('header', 'countryId', 'areaId', 'FDId','yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', /*'totalKGInfo',*/ 'displayChartData', 'QATableData', 'tableTitle'));
+		$this->set(compact('header', 'regionId', 'areaId', 'FDId','yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', /*'totalKGInfo',*/ 'displayChartData', 'QATableData', 'tableTitle'));
 		
     }
 	

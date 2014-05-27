@@ -16,9 +16,12 @@ var Dashboards = {
                     maskId = $.mask({parent: '.dashboard_wrapper', text: i18n.General.textLoadAreas});
                 },
                 success: function (data, textStatus) {
-					$('#DashboardsAreaLevelId').html(data);
 					
-					$.ajax({
+					var callback = function(data) {
+						$('#DashboardsAreaLevelId').html(data);
+					};
+					$.unmask({ id: maskId,callback: callback(data)});
+					/*$.ajax({
 						type: 'GET',
 						url: getRootURL()+$('#DashboardsFdLevelId').attr('url'),
 						data: {countryId: $(obj).val(), prependBlank:true},
@@ -28,7 +31,7 @@ var Dashboards = {
 							};
 							$.unmask({ id: maskId,callback: callback(data)});
 						}
-					});
+					});*/
                 }
             });
 	},
