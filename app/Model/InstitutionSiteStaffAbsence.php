@@ -317,6 +317,14 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		if($controller->request->is('get')){
 			$controller->Navigation->addCrumb('Absence - Staff', array('controller' => 'InstitutionSites', 'action' => 'attendanceStaffAbsence'));
 			$controller->Navigation->addCrumb('Add');
+			
+			$settingStartTime = $controller->ConfigItem->getValue('start_time');
+			$obj = array(
+				'InstitutionSiteStaffAbsence' => array(
+					'start_time_absent' => $settingStartTime
+				)
+			);
+			$controller->request->data = $obj;
 		}else{
 			//$this->create();
 			
