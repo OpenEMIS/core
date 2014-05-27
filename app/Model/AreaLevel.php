@@ -17,37 +17,68 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class AreaLevel extends AppModel {
+	public $actsAs = array('ControllerAction');
 	public $hasMany = array('Area');
-
-	public function saveAreaLevelData($data) {
-		$keys = array();
-		$levels = array();
+	
+	public function beforeAction($controller, $action) {
+        parent::beforeAction($controller, $action);
+		$controller->Navigation->addCrumb('Area Levels');
+		$controller->set('header', __('Area Levels'));
+    }
+	
+	public function getDisplayFields($controller) {
+        $fields = array(
+            'model' => $this->alias,
+            'fields' => array(
+                array('field' => 'id', 'type' => 'hidden'),
+                array('field' => 'name', 'labelKey' => ''),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created', 'edit' => false)
+            )
+        );
+        return $fields;
+    }
+	
+	public function levels($controller, $params) {
+		$data = $this->find('all', array('order' => array('level')));
+		$controller->set(compact('data'));
+	}
+	
+	public function levelsAdd($controller, $params) {
+		if($controller->request->is('post') || $controller->request->is('put')) {
+			$controller->request->data[$this->alias]['level'] = $this->field('level', array(), 'level DESC') + 1;
+			if ($this->save($controller->request->data)) {
+				$controller->Message->alert('general.edit.success');
+				return $controller->redirect(array('action' => 'levels'));
+			}
+		}
+	}
+	
+	public function levelsView($controller, $params) {
+		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+		$data = $this->findById($id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('data', 'fields'));
+	}
+	
+	public function levelsEdit($controller, $params) {
+		$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+		$data = $this->findById($id);
 		
-		if(isset($data['deleted'])) {
-			 unset($data['deleted']);
-		}
-
-		// foreach($deleted as $id) {
-		// 	$this->delete($id);
-		// }
-		// pr($data);
-
-		for($i=0; $i<sizeof($data); $i++) {
-			$row = $data[$i];
-            $name = isset($row['name'])? trim($row['name']): '';
-			if(!empty($name)) {
-				if($row['id'] == 0) {
-				 	$this->create();
-				 }
-				$save = $this->save(array('AreaLevel' => $row));
-				
-				if($row['id'] == 0) {
-					$keys[strval($i+1)] = $save['AreaLevel']['id'];
+		if(!empty($data)) {
+			if($controller->request->is('post') || $controller->request->is('put')) {
+				if ($this->save($controller->request->data)) {
+					$controller->Message->alert('general.edit.success');
+					return $controller->redirect(array('action' => 'levelsView', $id));
 				}
-			} /*else if($row['id'] > 0 && $row['male'] == 0 && $row['female'] == 0) {
-				$this->delete($row['id']);
-			}*/
+			} else {
+				$controller->request->data = $data;
+			}
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'levels'));
 		}
-		return $keys;
 	}
 }

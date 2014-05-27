@@ -50,7 +50,7 @@ class Area extends AppModel {
 	public function beforeAction($controller, $action) {
         parent::beforeAction($controller, $action);
 		$controller->Navigation->addCrumb('Areas');
-		$controller->set('header', 'Areas');
+		$controller->set('header', __('Areas'));
     }
 	
 	public function getDisplayFields($controller) {

@@ -49,7 +49,7 @@ class AreaEducation extends AppModel {
 	public function beforeAction($controller, $action) {
         parent::beforeAction($controller, $action);
 		$controller->Navigation->addCrumb('Areas (Education)');
-		$controller->set('header', 'Areas (Education)');
+		$controller->set('header', __('Areas (Education)'));
     }
 	
 	public function getDisplayFields($controller) {
