@@ -44,7 +44,8 @@ class StaffController extends StaffAppController {
         'SalaryAdditionType',
         'SalaryDeductionType',
         'TrainingCourse',
-        'Staff.StaffAttendanceType'
+        'Staff.StaffAttendanceType',
+		'InstitutionSiteStaffAbsence'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
     public $components = array(
@@ -638,20 +639,47 @@ class StaffController extends StaffAppController {
 
     // Staff ATTENDANCE PART
     public function attendance() {
-        $staffId = $this->staffId;
-        $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-        $this->Navigation->addCrumb('Attendance');
-		$header = __('Attendance');
-        $id = @$this->request->params['pass'][0];
-        $yearOptions = $this->SchoolYear->getYearList();
-        $selectedYearId = $this->getAvailableYearId($yearOptions);
-        $schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYearId));
+        $staffId = !empty($this->staffId) ? $this->staffId : $this->Session->read('StaffId');
+		if(empty($staffId)){
+			return $this->redirect(array('controller' => 'Staff', 'action' => 'index'));
+		}
 
-        $data = $this->StaffAttendance->getAttendanceData($this->Session->read('InstitutionSiteStaffId'), isset($id) ? $id : $selectedYearId);
-		$legend = $this->generateAttendanceLegend();
-		$attendanceTypes = $this->StaffAttendanceType->getAttendanceTypes();
+        $this->Navigation->addCrumb('Absence');
+		$header = __('Absence');
 		
-		$this->set(compact('header', 'attendanceTypes','legend','data','schoolDays', 'selectedYearId', 'yearOptions'));
+		$yearList = $this->SchoolYear->getYearList();
+		//pr($yearList);
+		$currentYearId = $this->SchoolYear->getSchoolYearId(date('Y'));
+		if (isset($this->params['pass'][0])) {
+			$yearId = $this->params['pass'][0];
+			if (!array_key_exists($yearId, $yearList)) {
+                $yearId = $currentYearId;
+            }
+		}else{
+			$yearId = $currentYearId;
+		}
+		
+		$monthOptions = $this->generateMonthOptions();
+		$currentMonthId = $this->getCurrentMonthId();
+		if (isset($this->params['pass'][1])) {
+			$monthId = $this->params['pass'][1];
+			if (!array_key_exists($monthId, $monthOptions)) {
+                $monthId = $currentMonthId;
+            }
+		}else{
+			$monthId = $currentMonthId;
+		}
+		
+		$absenceData = $this->InstitutionSiteStaffAbsence->getStaffAbsenceDataByMonth($staffId, $yearId, $monthId);
+		//pr($absenceData);
+		$data = $absenceData;
+        
+        if (empty($data)) {
+			$this->Message->alert('general.noData');
+            //$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
+        }
+
+		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId'));
     }
 
 	public function generateAttendanceLegend(){
@@ -797,5 +825,29 @@ class StaffController extends StaffAppController {
             echo json_encode($courseData);
         }
     }
+	
+	public function generateMonthOptions(){
+		$options = array();
+		for ($i = 1; $i <= 12; $i++)
+        {
+                $options[$i] = date("F", mktime(0, 0, 0, $i+1, 0, 0, 0));
+        }
+		
+		return $options;
+	}
+	
+	public function getCurrentMonthId(){
+		$options = $this->generateMonthOptions();
+		$currentMonth = date("F");
+		$monthId = 1;
+		foreach($options AS $id => $month){
+			if($currentMonth === $month){
+				$monthId = $id;
+				break;
+			}
+		}
+		
+		return $monthId;
+	}
 
 }

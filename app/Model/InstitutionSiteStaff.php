@@ -403,18 +403,24 @@ class InstitutionSiteStaff extends AppModel {
     }
 	
 	public function getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate) {
+		//$startYear = date('Y', strtotime($startDate));
+		//$endYear = date('Y', strtotime($endDate));
+		
 		$conditions = array(
-			'OR' => array(
-				array(
-					'InstitutionSiteStaff.start_date >= "' . $startDate . '"',
-					'InstitutionSiteStaff.start_date <= "' . $endDate . '"'
-				),
-				array(
-					'InstitutionSiteStaff.end_date >= "' . $startDate . '"',
-					'InstitutionSiteStaff.end_date <= "' . $endDate . '"'
-				)
-			)
+			'InstitutionSiteStaff.institution_site_id = ' . $institutionSiteId
 		);
+		
+//		$conditions['OR'] = array(
+//				array(
+//					'InstitutionSiteStaff.start_year <= "' . $endYear . '"',
+//					'InstitutionSiteStaff.end_year IS NULL'
+//				),
+//				array(
+//					'InstitutionSiteStaff.start_year <= "' . $endYear . '"',
+//					'InstitutionSiteStaff.end_year >= "' . $startYear . '"',
+//					'InstitutionSiteStaff.end_year IS NOT NULL'
+//				)
+//		);
 		
 		$data = $this->find('all', array(
 			'recursive' => -1,
