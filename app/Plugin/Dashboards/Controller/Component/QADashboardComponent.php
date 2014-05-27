@@ -282,7 +282,7 @@ class QADashboardComponent extends Component {
 	//	Setup Chart Data
 	// ======================
 	public function setupChartInfo($caption){
-		$data['chart']['caption'] = $caption;//"Administrative and Technical Aspects";
+		$data['chart']['caption'] = __($caption);//"Administrative and Technical Aspects";
 		$data['chart']['rotatenames'] = 0;
 		$data['chart']['animation'] = 1;
 		$data['chart']['numdivlines'] = 4;
@@ -306,7 +306,7 @@ class QADashboardComponent extends Component {
 	}
 	
 	public function setupChartDataset($name, $color, $indData, $unitIndData, $data, $compareKey = 'Indicator_NId'){
-		$finalData['seriesname'] = $name;
+		$finalData['seriesname'] = __($name);
 		$finalData['color'] = $color;
 		$finalData['alpha'] = "90";
 		$finalData['showvalues'] = "0";
@@ -337,7 +337,7 @@ class QADashboardComponent extends Component {
 	//	Setup Scatter Chart Data
 	// ======================
 	public function setupScatterChartInfo($caption, $xaxisname, $yaxisname){
-		$data['chart']['caption'] = $caption;//"Administrative and Technical Aspects";
+		$data['chart']['caption'] = __($caption);//"Administrative and Technical Aspects";
 		$data['chart']['xaxisname'] = $xaxisname;
 		$data['chart']['yaxisname'] = $yaxisname;
 		$data['chart']['xaxislabelmode'] = 'auto';
@@ -409,7 +409,7 @@ class QADashboardComponent extends Component {
 	//	Setup Scatter Chart Data
 	// ======================
 	public function setupLineChartInfo($caption){
-		$data['chart']['caption'] = $caption;//"Administrative and Technical Aspects";
+		$data['chart']['caption'] = __($caption);//"Administrative and Technical Aspects";
 		$data['chart']['xaxislabelmode'] = 'auto';
 		$data['chart']['numbersuffix'] = '%';
 		$data['chart']['yaxismaxvalue'] = '100';

@@ -140,9 +140,6 @@ class DashboardsController extends DashboardsAppController {
 		
 		$countryData = $this->QADashboard->getAreaByGID();
 		$countryId = $countryData['JORArea']['Area_NId'];
-			
-
-		
 		
 		$regionId = empty($this->params['pass'][1])? 0: $this->params['pass'][1]; //Country ID/Geo Level Id
 		$areaId = empty($this->params['pass'][2])? 0: $this->params['pass'][2]; //Area Id 
