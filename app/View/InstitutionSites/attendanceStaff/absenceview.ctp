@@ -40,10 +40,6 @@ $dataCreatedUser = $obj['CreatedUser'];
 
 <div id="staffAbsenceAdd" class="">
 	<div class="row">
-		<div class="col-md-3"><?php echo $this->Label->get('general.class'); ?></div>
-		<div class="col-md-6"><?php echo $obj['InstitutionSiteClass']['name']; ?></div>
-	</div>
-	<div class="row">
 		<div class="col-md-3"><?php echo $this->Label->get('InstitutionSite.id_name'); ?></div>
 		<div class="col-md-6"><?php echo $staffIdName; ?></div>
 	</div>

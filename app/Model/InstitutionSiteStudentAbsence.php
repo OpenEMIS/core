@@ -17,10 +17,17 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStudentAbsence extends AppModel {
-    public $actsAs = array('DatePicker' => array('first_date_absent', 'last_date_absent'), 'ControllerAction');
+    //public $hasMany = array('InstitutionSiteStudentAbsenceAttachment');
+	
+	public $actsAs = array(
+		'DatePicker' => array(
+			'first_date_absent', 'last_date_absent'
+		), 
+		'ControllerAction'
+	);
     
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'InstitutionSiteClass',
 		'StudentAbsenceReason' => array(
 			'className' => 'FieldOptionValue',
@@ -524,9 +531,14 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$obj = $this->getAbsenceById($absenceId);
 			$studentName = $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name'];
 
-			$this->deleteAll(array('InstitutionSiteStudentAbsence.id' => $absenceId));
-			$controller->Utility->alert($studentName . __(' have been deleted successfully.'));
-			$controller->redirect(array('action' => 'attendanceStudentAbsence'));
+			if($this->delete($absenceId)){
+				$InstitutionSiteStudentAbsenceAttachment = ClassRegistry::init('InstitutionSiteStudentAbsenceAttachment');
+				$InstitutionSiteStudentAbsenceAttachment->deleteAll(array('InstitutionSiteStudentAbsenceAttachment.institution_site_student_absence_id' => $absenceId)); 
+				
+				$controller->Utility->alert($studentName . __(' have been deleted successfully.'));
+				$controller->redirect(array('action' => 'attendanceStudentAbsence'));
+			}
+			
 		} else {
 			$controller->redirect(array('action' => 'attendanceStudentAbsence'));
 		}
