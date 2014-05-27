@@ -19,10 +19,10 @@ class JORData extends DashboardsAppModel {
 	public $useTable = 'ut_data';
 	
 	
-	public function getData($areaId, $filter = array()){
-		$options['conditions'] = array('Area_NId' => $areaId );
+	public function getData( $filter = array()){
+		$options = array();
 		if(!empty($filter)){
-			$options['conditions'] = array_merge($options['conditions'], $filter);
+			$options['conditions'] = $filter;//array_merge($options['conditions'], $filter);
 		}
 		$data = $this->find('all', $options);
 		
