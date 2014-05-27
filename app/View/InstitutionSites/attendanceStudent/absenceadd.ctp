@@ -25,7 +25,7 @@ $this->end();
 
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'attendanceStudentAbsenceAdd'));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'attendanceStudentAbsenceAdd', $classId));
 $formOptions['type'] = 'file';
 $labelOptions = $formOptions['inputDefaults']['label'];
 echo $this->Form->create('InstitutionSiteStudentAbsence', $formOptions);
