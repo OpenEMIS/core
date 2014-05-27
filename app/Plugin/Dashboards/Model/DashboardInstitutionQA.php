@@ -22,7 +22,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
     
 
     public function beforeAction($controller, $action) {
-		$this->areaId = 2239;//$controller->institutionSiteId;
+		$this->areaId = $controller->institutionSiteAreaId;//$controller->institutionSiteId;
         if ($action != 'qualityRubric') {
             // $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
         }
