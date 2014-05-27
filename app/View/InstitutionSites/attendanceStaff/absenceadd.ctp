@@ -13,6 +13,9 @@ echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 
+echo $this->Html->css('../js/plugins/timepicker/bootstrap-timepicker', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/timepicker/bootstrap-timepicker', false);
+
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Absence') . ' - '. __('Staff'));
 
@@ -42,11 +45,13 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', $formOptions);
 
 	echo $this->FormUtility->datepicker('last_date_absent', array('id' => 'lastDateAbsent'));
 	
-	$labelOptions['text'] = $this->Label->get('InstitutionSiteStaffAbsence.start_time_absent');
-	echo $this->Form->input('start_time_absent', array('type' => 'text', 'label' => $labelOptions, 'id' => 'startTimeAbsent'));
+	//$labelOptions['text'] = $this->Label->get('InstitutionSiteStaffAbsence.start_time_absent');
+	//echo $this->Form->input('start_time_absent', array('type' => 'text', 'label' => $labelOptions, 'id' => 'startTimeAbsent'));
+	echo $this->FormUtility->timepicker('start_time_absent', array('id' => 'startTimeAbsent'));
 	
-	$labelOptions['text'] = $this->Label->get('InstitutionSiteStaffAbsence.end_time_absent');
-	echo $this->Form->input('end_time_absent', array('type' => 'text', 'label' => $labelOptions, 'id' => 'endTimeAbsent'));
+	//$labelOptions['text'] = $this->Label->get('InstitutionSiteStaffAbsence.end_time_absent');
+	//echo $this->Form->input('end_time_absent', array('type' => 'text', 'label' => $labelOptions, 'id' => 'endTimeAbsent'));
+	echo $this->FormUtility->timepicker('end_time_absent', array('id' => 'endTimeAbsent'));
 	
 	$labelOptions['text'] = $this->Label->get('InstitutionSiteStaffAbsence.reason');
 	echo $this->Form->input('staff_absence_reason_id', array('empty' => __('--Select--'), 'options' => $absenceReasonOptions, 'label' => $labelOptions));

@@ -94,13 +94,15 @@ foreach($data as $val) {
 	
 	if($absenceObj['full_day_absent'] == 'Yes'){
 		if(!empty($absenceObj['last_date_absent']) && $stampLastDateAbsent > $stampFirstDateAbsent){
-			$noOfDays = ceil(($stampLastDateAbsent - $stampFirstDateAbsent) / (60*60*24)) + 1;
+			$lastDateFormatted = $this->Utility->formatDate($absenceObj['last_date_absent'], null, false);
+			$totalWeekdays = $this->Utility->getAbsenceDaysBySettings($absenceObj['first_date_absent'], $absenceObj['last_date_absent'], $settingWeekdays);
+			$noOfDays = sprintf('%s (to %s)', $totalWeekdays, $lastDateFormatted);
 		}else{
 			$noOfDays = 1;
 		}
-		$timeStr = '';
+		$timeStr = __('full day');
 	}else{
-		$noOfDays = '';
+		$noOfDays = 1;
 		$timeStr = sprintf('%s - %s', $absenceObj['start_time_absent'], $absenceObj['end_time_absent']);
 	}
 	$reason = $val['StaffAbsenceReason']['name'];

@@ -454,6 +454,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		if($controller->request->is('get')){
 			$controller->Navigation->addCrumb('Absence - Students', array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
 			$controller->Navigation->addCrumb('Absence Details');
+			
+			$controller->request->data = $obj;
 		}else{
 			$obj = $controller->request->data;
 			$absenceData = $controller->request->data['InstitutionSiteStudentAbsence'];

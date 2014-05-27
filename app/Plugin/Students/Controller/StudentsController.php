@@ -716,8 +716,10 @@ class StudentsController extends StudentsAppController {
 			$this->Message->alert('general.noData');
             //$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
         }
+		
+		$settingWeekdays = $this->getWeekdaysBySetting();
 
-		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId'));
+		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
     }
 
     // Student behaviour part
@@ -820,6 +822,48 @@ class StudentsController extends StudentsAppController {
 		}
 		
 		return $monthId;
+	}
+	
+	public function getWeekdaysBySetting(){
+		$weekdaysArr = array(
+			1 => 'monday',
+			2 => 'tuesday',
+			3 => 'wednesday',
+			4 => 'thursday',
+			5 => 'friday',
+			6 => 'saturday',
+			7 => 'sunday'
+		);
+		
+		$settingFirstWeekDay = $this->ConfigItem->getValue('first_day_of_week');
+		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){
+			$settingFirstWeekDay = 'monday';
+		}
+		
+		$settingDaysPerWek = intval($this->ConfigItem->getValue('days_per_week'));
+		if(empty($settingDaysPerWek)){
+			$settingDaysPerWek = 5;
+		}
+		
+		foreach($weekdaysArr AS $index => $weekday){
+			if($weekday == $settingFirstWeekDay){
+				$firstWeekdayIndex = $index;
+				break;
+			}
+		}
+		
+		$newIndex = $firstWeekdayIndex + $settingDaysPerWek;
+		
+		$weekdays = array();
+		for($i=$firstWeekdayIndex; $i<$newIndex; $i++){
+			if($i<=7){
+				$weekdays[] = $weekdaysArr[$i];
+			}else{
+				$weekdays[] = $weekdaysArr[$i%7];
+			}
+		}
+		
+		return $weekdays;
 	}
 
 }
