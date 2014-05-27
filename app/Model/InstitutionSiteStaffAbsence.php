@@ -61,6 +61,10 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please select First Date Absent'
+			),
+			'ruleNotLater' => array(
+				'rule' => array('compareDate', 'last_date_absent'),
+				'message' => 'First Date Absent cannot be later than Last Date Absent'
 			)
 		),
 		'staff_absence_reason_id' => array(
@@ -78,6 +82,12 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			)
 		)
 	);
+	
+	public function compareDate($field = array(), $compareField = null) {
+		$startDate = new DateTime(current($field));
+		$endDate = new DateTime($this->data[$this->name][$compareField]);
+		return $endDate >= $startDate;
+	}
 	
 	public function getAbsenceData($institutionSiteId, $school_year_id, $startDate='', $endDate=''){
 		$conditions = array();
