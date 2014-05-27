@@ -56,6 +56,13 @@ class InstitutionSiteStaffAbsence extends AppModel {
 				'message' => 'Please select a Staff'
 			)
 		),
+		'first_date_absent' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select First Date Absent'
+			)
+		),
 		'staff_absence_reason_id' => array(
 			'ruleRequired' => array(
 				'rule' => 'notEmpty',

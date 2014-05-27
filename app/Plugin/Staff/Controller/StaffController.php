@@ -638,7 +638,7 @@ class StaffController extends StaffAppController {
     }
 
     // Staff ATTENDANCE PART
-    public function attendance() {
+    public function absence() {
         $staffId = !empty($this->staffId) ? $this->staffId : $this->Session->read('StaffId');
 		if(empty($staffId)){
 			return $this->redirect(array('controller' => 'Staff', 'action' => 'index'));
