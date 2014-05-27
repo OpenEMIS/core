@@ -17,126 +17,50 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppController', 'Controller');
 
 class AreasController extends AppController {
-	public $uses = array('Area', 'AreaLevel','AreaEducation', 'AreaEducationLevel');
-
-    /**
-     * Created by: Eugene Wong
-     * @return [type] [description]
-     */
+	public $uses = array('Area', 'AreaLevel', 'AreaEducation', 'AreaEducationLevel');
+	
+	public $modules = array(
+		'areasEducation' => 'AreaEducation',
+        'areas' => 'Area',
+		//'levels' => 'AreaLevel',
+		
+		//'areaEducationLevel' => 'AreaEducationLevel'
+    );
+	
     public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
 		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
 		$this->Navigation->addCrumb('Administrative Boundaries', array('controller' => 'Areas', 'action' => 'index'));
+		
+		$areaOptions = array(
+			'areas' => __('Areas'),
+			'levels' => __('Area Levels'),
+			'areasEducation' => __('Areas (Education)'),
+			'areaEducationLevel' => __('Area Levels (Education)')
+		);
+		
+		if(array_key_exists($this->action, $areaOptions)) {
+			$this->set('selectedAction', $this->action);
+		}
+		$this->set('areaOptions', $areaOptions);
     }
 	
-    /**
-     * Updated by: Eugene
-     * @return [type] [description]
-     */
-	public function index() {
-		$this->Navigation->addCrumb('Areas');
-
-		$areas = array();
-        $levels = $this->AreaLevel->find('list', array('order'=>array('AreaLevel.level ASC')));
-        $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1')));
-        $this->unshift_array($topArea, array('0'=>__('--Select--')));
-        $areas[] = $topArea;
-        $areaId = 0;
-
-        if($this->request->is('post')) {
-            if(isset($this->request->data['Area'])){
-                for ($i = 0; $i < count($this->request->data['Area'])-1; $i++) {
-                    $area = $this->Area->find('list',array(
-                                                    'conditions' => array(
-                                                        'Area.parent_id' => $this->request->data['Area']['area_level_'.$i]
-                                                    )
-                                                )
-                                            );
-                    
-                    $this->unshift_array($area, array('0'=>__('--Select--')));
-                    $areas[] = $area;
-                }
-                if(end($this->request->data['Area']) == 0 ){
-                    array_pop($this->request->data['Area']);
-                }
-            }
-
-            $this->set('initAreaSelection', (isset($this->request->data['Area']) && count($this->request->data['Area']) > 0)?$this->request->data['Area']: null);
-
-            foreach($this->request->data['Area'] as $id=>$val){
-                if($id!='area_id' && $val > 0){
-                    $areaId = $val;
-                }
-            }
-        }
-
-        if(count($topArea)<2) $this->Utility->alert($this->Utility->getMessage('AREAS_NO_AREA_LEVEL'));
-
-		// Checking if user has access to _view for area levels
-		$_view_levels = false;
-		if($this->AccessControl->newCheck($this->params['controller'], 'levels')) {
-			$_view_levels = true;
+	public function recover($i) {
+		$this->autoRender = false;
+		$model = 'Area';
+		if($i == 2) {
+			$model = 'AreaEducation';
 		}
-		$this->set('_view_levels', $_view_levels);
-		// End Access Control
-        $this->set('topArea', $topArea);
-		$this->set('levels', $levels);
-        $this->set('highestLevel',$areas);
-        $this->set('areaId',$areaId);
-    }
-
-    /**
-     * Create by: Eugene Wong
-     * @return [type] [description]
-     */
-    public function edit() {
-		$this->Navigation->addCrumb('Edit Areas');
-		
-        $areas = array();
-        $levels = $this->AreaLevel->find('list');
-        $topArea = $this->Area->find('list',array('conditions'=>array('Area.parent_id' => '-1')));
-        $this->unshift_array($topArea, array('0'=>__('--Select--')));
-        $areas[] = $topArea;
-        $areaId = 0;
-
-        if($this->request->is('post')) {
-            if(isset($this->request->data['Area'])){
-                for ($i = 0; $i < count($this->request->data['Area'])-1; $i++) {
-                    $area = $this->Area->find('list',array(
-                            'conditions'=> array(
-                                'Area.parent_id' => $this->request->data['Area']['area_level_'.$i]
-                            )
-                        )
-                    );
-                    
-                    $this->unshift_array($area, array('0'=>__('--Select--')));
-                    $areas[] = $area;
-                }
-                
-            }
-
-            if(isset($this->request->data['Area']) &&  end($this->request->data['Area']) == 0 ){
-                array_pop($this->request->data['Area']);
-            }
-            $this->set('initAreaSelection', (isset($this->request->data['Area']))?$this->request->data['Area']: null);
-            foreach($this->request->data['Area'] as $id=>$val){
-                if($id!='area_id' && $val > 0){
-                    $areaId = $val;
-                }
-            }
-
-        }
-
-        $this->set('levels', $levels);
-        $this->set('highestLevel',$areas);
-        $this->set('areaId',$areaId);
-    }
-
-    /**
-     * Created by Eugene Wong
-     * @return [type] [description]
-     */
+		$modelObj = ClassRegistry::init($model);
+		$this->Area->recover('parent', -1);
+		return $this->redirect(array('action' => 'index'));
+	}
+	
+	public function index() {
+		return $this->redirect(array('action' => 'areas'));
+	}
+	
     public function levels() {
 		$this->Navigation->addCrumb('Area Levels');
 
@@ -152,11 +76,7 @@ class AreasController extends AppController {
         
         $this->render('/AreaLevels/index');
     }
-
-    /**
-     * Created by Eugene Wong
-     * @return [type] [description]
-     */
+	
 	public function levelsEdit() {
 		$this->Navigation->addCrumb('Edit Area Levels');
 
@@ -391,12 +311,6 @@ class AreasController extends AppController {
         //throw new NotFoundException('Could not find that post');
     }
 
-    /**
-     * Created by: Eugene Wong
-     * @param  [type] $origArray [description]
-     * @param  array  $newArray  [description]
-     * @return [type]            [description]
-     */
     private function unshift_array(&$origArray,$newArray = array()){
         $tmpArray = array(); 
         foreach($newArray as $key => $val){
@@ -448,107 +362,4 @@ class AreasController extends AppController {
         $this->render('/AreaEducationLevels/edit');
 
 	}
-	
-	public function AreaEducation() {
-		$this->Navigation->addCrumb('Areas');
-
-		$areas = array();
-        $levels = $this->AreaEducationLevel->find('list', array('order'=>array('AreaEducationLevel.level ASC')));
-        $topArea = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => '-1')));
-        $this->unshift_array($topArea, array('0'=>__('--Select--')));
-        $areas[] = $topArea;
-        $areaId = 0;
-
-        if($this->request->is('post')) {
-            if(isset($this->request->data['AreaEducation'])){
-                for ($i = 0; $i < count($this->request->data['AreaEducation'])-1; $i++) {
-                    $area = $this->AreaEducation->find('list',array(
-                                                    'conditions' => array(
-                                                        'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_education_level_'.$i]
-                                                    )
-                                                )
-                                            );
-                    
-                    $this->unshift_array($area, array('0'=>__('--Select--')));
-                    $areas[] = $area;
-                }
-                if(end($this->request->data['AreaEducation']) == 0 ){
-                    array_pop($this->request->data['AreaEducation']);
-                }
-            }
-            $this->set('initAreaSelection', (isset($this->request->data['AreaEducation']) && count($this->request->data['AreaEducation']) > 0)?$this->request->data['AreaEducation']: null);
-
-            foreach($this->request->data['AreaEducation'] as $id=>$val){
-                if($id!='area_education_id' && $val > 0){
-                    $areaId = $val;
-                }
-            }
-        }
-
-        if(count($topArea)<2)  $this->Utility->alert($this->Utility->getMessage('AREAS_NO_AREA_LEVEL'));
-
-		// Checking if user has access to _view for area levels
-		$_view_levels = false;
-		if($this->AccessControl->newCheck($this->params['controller'], 'levels')) {
-			$_view_levels = true;
-		}
-
-        if(isset($initAreaSelection['area_id'])){
-            pr($initAreaSelection['area_id']);
-        }
-
-		$this->set('_view_levels', $_view_levels);
-		// End Access Control
-        $this->set('topArea', $topArea);
-		$this->set('levels', $levels);
-        $this->set('highestLevel',$areas);
-        $this->set('areaId',$areaId);
-		$this->render('/AreaEducation/index');
-	}
-
-    public function AreaEducationEdit() {
-		
-		$this->Navigation->addCrumb('Edit Areas (Education)');
-		
-        $areas = array();
-        $levels = $this->AreaEducationLevel->find('list');
-        $topArea = $this->AreaEducation->find('list',array('conditions'=>array('AreaEducation.parent_id' => '-1')));
-        $this->unshift_array($topArea, array('0'=>__('--Select--')));
-        $areas[] = $topArea;
-        $areaId = 0;
-
-        if($this->request->is('post')) {
-            if(isset($this->request->data['AreaEducation'])){
-                for ($i = 0; $i < count($this->request->data['AreaEducation'])-1; $i++) {
-                    $area = $this->AreaEducation->find('list',array(
-                            'conditions'=> array(
-                                'AreaEducation.parent_id' => $this->request->data['AreaEducation']['area_education_level_'.$i]
-                            )
-                        )
-                    );
-                    
-                    $this->unshift_array($area, array('0'=>__('--Select--')));
-                    $areas[] = $area;
-                }
-                
-            }
-
-            if(isset($this->request->data['AreaEducation']) &&  end($this->request->data['AreaEducation']) == 0 ){
-                array_pop($this->request->data['AreaEducation']);
-            }
-            $this->set('initAreaSelection', (isset($this->request->data['AreaEducation']))?$this->request->data['AreaEducation']: null);
-
-            foreach($this->request->data['AreaEducation'] as $id=>$val){
-
-                if($id!='area_education_id' && $val > 0){
-                    $areaId = $val;
-                }
-            }
-        }
-
-        $this->set('levels', $levels);
-        $this->set('highestLevel',$areas);
-        $this->set('areaId',$areaId);
-		$this->render('/AreaEducation/edit');
-    }
 }

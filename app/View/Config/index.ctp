@@ -42,7 +42,7 @@ $this->start('contentBody'); ?>
 				</tr>
 			</thead>
 
-			<tbody class="table_body">
+			<tbody>
 				<?php 
 				$i = 0;
 				foreach($element as $innerKey => $innerElement){
