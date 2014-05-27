@@ -6679,9 +6679,9 @@ class InstitutionSitesController extends AppController {
 			$settingFirstWeekDay = 'monday';
 		}
 		
-		$lastWeekday = $settingFirstWeekDay;
+		$firstWeekday = $settingFirstWeekDay;
 		
-		return $lastWeekday;
+		return $firstWeekday;
 	}
 	
 	public function getLastWeekdayBySetting(){
