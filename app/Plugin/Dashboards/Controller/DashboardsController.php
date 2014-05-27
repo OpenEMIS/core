@@ -17,7 +17,7 @@
 
 
 class DashboardsController extends DashboardsAppController {
-	public $institutionSiteId;
+	public $institutionSiteId,$institutionSiteAreaId;
 	public $uses = array();
     public $helpers = array('Js' => array('Jquery'));
     public $components = array('UserSession', 'Dashboards.QADashboard' );
@@ -54,6 +54,7 @@ class DashboardsController extends DashboardsAppController {
 				if ($this->Session->check('InstitutionSiteId')) {
 					$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
 					$InstitutionSite = ClassRegistry::init('InstitutionSite');
+					$this->institutionSiteAreaId = $InstitutionSite->field('area_id', array('InstitutionSite.id' => $this->institutionSiteId));
 					$institutionSiteName = $InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
 					$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view', 'plugin' => false));
 					//$this->Navigation->addCrumb('Quality', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin'=> 'Quality'));
