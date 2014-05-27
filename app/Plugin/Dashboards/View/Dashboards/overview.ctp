@@ -29,11 +29,11 @@ echo $this->Html->script('Dashboards.dashboards', false);
 	?>
 	<div class="row left">
         <div class="label"><?php echo __('Geographical Level'); ?></div>
-        <div class="value"><?php echo $this->Form->input('geo_level_id', array('options' => $geoLvlOptions, 'default' => $countryId, 'class' => 'dash_options', 'url' => 'Dashboards/dashboardsAjaxGetArea', 'onchange' => 'Dashboards.areaChange(this)')); ?></div>
+        <div class="value"><?php echo $this->Form->input('geo_level_id', array('options' => $geoLvlOptions, 'default' => $regionId, 'class' => 'dash_options', 'url' => 'Dashboards/dashboardsAjaxGetArea', 'onchange' => 'Dashboards.areaChange(this)')); ?></div>
     </div>
 	<div class="row left">
         <div class="label"><?php echo __('Area'); ?></div>
-        <div class="value"><?php echo $this->Form->input('area_level_id', array('options' => $areaLvlOptions, 'default' => $areaId, 'class' => 'dash_options', 'url' => 'Dashboards/dashboardsAjaxGetArea', 'onchange' => 'Dashboards.FDChange(this)')); ?></div>
+        <div class="value"><?php echo $this->Form->input('area_level_id', array('options' => $areaLvlOptions, 'default' => $areaId, 'class' => 'dash_options', 'url' => 'Dashboards/dashboardsAjaxGetArea'/*, 'onchange' => 'Dashboards.FDChange(this)'*/)); ?></div>
     </div>
 	<?php /*<div class="row left">
         <div class="label"><?php echo __('Field Directorate'); ?></div>

@@ -47,11 +47,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$yearId = (empty($yearId))? key($yearsOptions): $yearId;
 		
 		$displayChartData = array(
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_ATAspectJSON', $yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_TrendLineJSON', $yearId, $yearsOptions[$yearId]), 'swfUrl' => 'MSLine.swf'),
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_ATAspectJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_TrendLineJSON', $this->areaId,$yearId, $yearsOptions[$yearId]), 'swfUrl' => 'MSLine.swf'),
 			'break',
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_AdminBreakdownJSON', $yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_TechBreakdownJSON', $yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_AdminBreakdownJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
+			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_TechBreakdownJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
 			'break',
 			/*array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_ATAspectPassFailJSON', $yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
 			'break',*/
@@ -61,12 +61,16 @@ class DashboardInstitutionQA extends DashboardsAppModel {
    }
    
    public function InstitutionQA_ATAspectJSON($controller, $params){
+	   //pr($controller);
 		$this->render = false;
-		$yearId = $params['pass'][0];
+		
+		$areaId = $params['pass'][0];
+		$yearId = $params['pass'][1];
+		
 		$countryId = $controller->Session->read('Dashboard.InstitutionSite.CountryId');
 		
-		$parentAreaData = $controller->QADashboard->getAreaParentData($this->areaId);
-		$areaName = $controller->QADashboard->getAreaName($this->areaId);
+		$parentAreaData = $controller->QADashboard->getAreaParentData($areaId);
+		$areaName = $controller->QADashboard->getAreaName($areaId);
 		
 		$data = $controller->QADashboard->setupChartInfo("Administrative and Technical Aspects");
 		$indData = $controller->QADashboard->getIndicatorByGID($controller->QADashboard->indicators['QA_AdminTechBoth_Score']);//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
@@ -74,7 +78,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		
 		$data = array_merge($data, $controller->QADashboard->setupChartCategory($indData));
 		$setupOptions = array(
-			'areaIds' => $this->areaId,
+			'areaIds' => $areaId,
 			'TimePeriod_Nid' => $yearId,
 			'indicators' => $indData,
 			'UnitIds' => $unitIndData,//array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']),
@@ -110,8 +114,8 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$yearId = $params['pass'][0];
 		$countryId = $controller->Session->read('Dashboard.InstitutionSite.CountryId');
 		
-		$parentAreaData = $controller->QADashboard->getAreaParentData($this->areaId);
-		$areaName = $controller->QADashboard->getAreaName($this->areaId);
+		$parentAreaData = $controller->QADashboard->getAreaParentData($areaId);
+		$areaName = $controller->QADashboard->getAreaName($areaId);
 		
 		$data = $controller->QADashboard->setupChartInfo("Administrative and Technical Aspects");
 		$indData = $controller->QADashboard->getIndicatorByGID($controller->QADashboard->indicators['QA_AdminTechBoth_PassFail']);//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
@@ -119,7 +123,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		
 		$data = array_merge($data, $controller->QADashboard->setupChartCategory($indData));
 		$setupOptions = array(
-			'areaIds' => $this->areaId,
+			'areaIds' => $areaId,
 			'TimePeriod_Nid' => $yearId,
 			'indicators' => $indData,
 			'UnitIds' => $unitIndData,//array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']),
@@ -154,8 +158,9 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$this->render = false;
 		
 		//$selectedAreaId = !empty($FDId)?$FDId :$areaId;
-		$yearId = $params['pass'][0];
-		$year = $params['pass'][1];
+		$areaId = $params['pass'][0];
+		$yearId = $params['pass'][1];
+		$year = $params['pass'][2];
 		$data = $controller->QADashboard->setupLineChartInfo("Trends");
 		$yearOptions = $controller->QADashboard->getYears(10,$year);
 		
@@ -165,7 +170,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$unitIndData = $controller->QADashboard->getUnitIndicatorByGID(array($controller->QADashboard->indicators['Unit']['Percent'],$controller->QADashboard->indicators['Unit']['Number']));
 		
 		$setupOptions = array(
-			'areaIds' => $this->areaId,
+			'areaIds' => $areaId,
 			'years' => $yearOptions,
 			'indicators' => $indData,
 			'UnitIds' => $unitIndData,//array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']),
@@ -173,7 +178,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		);
 		$tempAreaData = $controller->QADashboard->getSummaryTrendJorData($setupOptions);
 		$data['dataset'][] = $controller->QADashboard->setupLineChartDataset($tempAreaData, $indData, $unitIndData,$yearOptions );
-		/*$tempAreaData = $controller->QADashboard->getSummaryTrendJorData($this->areaId,$yearOptions);
+		/*$tempAreaData = $controller->QADashboard->getSummaryTrendJorData($areaId,$yearOptions);
 		$data['dataset'][] = $controller->QADashboard->setupLineChartDataset('Admin', array('color' => '9ACCF6', 'anchorSides' =>3),  $yearOptions, $tempAreaData,array('compareKey' => 'TimePeriod_NId', 'filterDataBy' => array('key' => 'IUSNId', 'value' => 8)));
 		$data['dataset'][] = $controller->QADashboard->setupLineChartDataset('Tech', array('color' => '82CF27', 'anchorSides' =>4),  $yearOptions, $tempAreaData,array('compareKey' => 'TimePeriod_NId', 'filterDataBy' => array('key' => 'IUSNId', 'value' => 15)));
 		$data['dataset'][] = $controller->QADashboard->setupLineChartDataset('Both', array('color' => 'CF5227', 'anchorSides' =>20),  $yearOptions, $tempAreaData,array('compareKey' => 'TimePeriod_NId', 'filterDataBy' => array('key' => 'IUSNId', 'value' => 18)));
@@ -183,12 +188,13 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 	
 	public function InstitutionQA_AdminBreakdownJSON($controller, $params){
 		$this->render = false;
-		$yearId = $params['pass'][0];
+		$areaId = $params['pass'][0];
+		$yearId = $params['pass'][1];
 		$countryId = $controller->Session->read('Dashboard.InstitutionSite.CountryId');
 		
 		//$selectedAreaId = !empty($FDId)?$FDId :$areaId;
-		$parentAreaData = $controller->QADashboard->getAreaParentData($this->areaId);
-		$areaName = $controller->QADashboard->getAreaName($this->areaId);
+		$parentAreaData = $controller->QADashboard->getAreaParentData($areaId);
+		$areaName = $controller->QADashboard->getAreaName($areaId);
 		$data = $controller->QADashboard->setupChartInfo("Administrative Domains");
 		
 		$indData = $controller->QADashboard->getIndicatorByGID($controller->QADashboard->indicators['QA_AdminBreakdown_Score']);//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
@@ -197,7 +203,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$data = array_merge($data, $controller->QADashboard->setupChartCategory($indData));
 		
 		$setupOptions = array(
-			'areaIds' => $this->areaId,
+			'areaIds' => $areaId,
 			'TimePeriod_Nid' => $yearId,
 			'indicators' => $indData,
 			'UnitIds' => $unitIndData,
@@ -237,7 +243,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 				);
 		$data = array_merge($data, $controller->QADashboard->setupChartCategory($catData));
 		
-		$tempAreaData = $controller->QADashboard->getSummaryAdminBreakdownJorData($this->areaId,$yearId);
+		$tempAreaData = $controller->QADashboard->getSummaryAdminBreakdownJorData($areaId,$yearId);
 		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9ACCF6',  $catData, $tempAreaData);
 		
 		$tempAreaData = $controller->QADashboard->getSummaryAdminBreakdownJorData($parentAreaData['JORArea']['Area_NId'],$yearId);
@@ -252,10 +258,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 	public function InstitutionQA_TechBreakdownJSON($controller, $params){
 		$this->render = false;
 		//$selectedAreaId = !empty($FDId)?$FDId :$areaId;
-		$yearId = $params['pass'][0];
+		$areaId = $params['pass'][0];
+		$yearId = $params['pass'][1];
 		$countryId = $controller->Session->read('Dashboard.Overview.CountryId');
-		$parentAreaData = $controller->QADashboard->getAreaParentData($this->areaId);
-		$areaName = $controller->QADashboard->getAreaName($this->areaId);
+		$parentAreaData = $controller->QADashboard->getAreaParentData($areaId);
+		$areaName = $controller->QADashboard->getAreaName($areaId);
 		$data = $controller->QADashboard->setupChartInfo("Technical Domains");
 		
 		$indData = $controller->QADashboard->getIndicatorByGID($controller->QADashboard->indicators['QA_TechBreakdown_Score']);//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
@@ -264,7 +271,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$data = array_merge($data, $controller->QADashboard->setupChartCategory($indData));
 		
 		$setupOptions = array(
-			'areaIds' => $this->areaId,
+			'areaIds' => $areaId,
 			'TimePeriod_Nid' => $yearId,
 			'indicators' => $indData,
 			'UnitIds' => $unitIndData,
@@ -302,7 +309,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 				);
 		$data = array_merge($data, $controller->QADashboard->setupChartCategory($catData));
 		
-		$tempAreaData = $controller->QADashboard->getSummaryTechBreakdownJorData($this->areaId,$yearId);
+		$tempAreaData = $controller->QADashboard->getSummaryTechBreakdownJorData($areaId,$yearId);
 		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9ACCF6',  $catData, $tempAreaData);
 		
 		$tempAreaData = $controller->QADashboard->getSummaryTechBreakdownJorData($parentAreaData['JORArea']['Area_NId'],$yearId);

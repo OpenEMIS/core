@@ -26,6 +26,7 @@ class JORArea extends DashboardsAppModel {
 		}
 
 		$options['conditions'] = array('Area_GId' => $gid);
+		$options['order'] = array('Area_ID');
 		$data = $this->find('first', $options);
 
 		return $data;
@@ -33,6 +34,7 @@ class JORArea extends DashboardsAppModel {
 
 	public function getChildLevel($mode = 'all', $id = -1){
 		$options['conditions'] = array('Area_Parent_NId' => $id);
+		$options['order'] = array('Area_ID');
 		$data = $this->find('all', $options);
 		
 		if($mode == 'list'){
