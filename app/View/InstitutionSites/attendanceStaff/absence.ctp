@@ -9,7 +9,9 @@ $this->assign('contentHeader', __('Absence') . ' - ' . __('Staff'));
 
 $this->start('contentActions');
 echo $this->Html->link(__('Attendance'), array('action' => 'attendanceStaff'), array('class' => 'divider'));
-echo $this->Html->link(__('Add'), array('action' => 'attendanceStaffAbsenceAdd'), array('class' => 'divider'));
+if($_add) {
+	echo $this->Html->link(__('Add'), array('action' => 'attendanceStaffAbsenceAdd'), array('class' => 'divider'));
+}
 $this->end();
 
 $this->start('contentBody');
