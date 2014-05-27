@@ -17,7 +17,20 @@ have received a copy of the GNU General Public License along with this program. 
 class JORArea extends DashboardsAppModel {
 	public $useDbConfig = 'dashboardJor';
 	public $useTable = 'ut_area_en';
+	public $countryIndicator = array('Jordan' => '2ed8e897-7d7f-4970-a3ae-4c2e40277fdc');
 	
+	
+	public function getAreaByAreaGId($gid = NULL) {
+		if (empty($gid)) {
+			$gid = $this->countryIndicator['Jordan'];
+		}
+
+		$options['conditions'] = array('Area_GId' => $gid);
+		$data = $this->find('first', $options);
+
+		return $data;
+	}
+
 	public function getChildLevel($mode = 'all', $id = -1){
 		$options['conditions'] = array('Area_Parent_NId' => $id);
 		$data = $this->find('all', $options);
