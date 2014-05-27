@@ -63,7 +63,8 @@ class LabelHelper extends AppHelper {
 			'profile_image' => 'Profile Image',
 			'openemisId' =>'OpenEMIS ID',
 			'code' => 'Code',
-			'action' => 'Action'
+			'action' => 'Action',
+			'level' => 'Level'
         ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
