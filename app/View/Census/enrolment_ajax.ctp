@@ -1,7 +1,7 @@
 <?php
 $gradesCount = count($gradeList);
 ?>
-<table class="table">
+<table class="table  table-bordered">
     <tbody>
         <tr class="th_bg">
             <td rowspan="2"><?php echo __('Age'); ?></td>
