@@ -30,10 +30,9 @@ class JORData extends DashboardsAppModel {
 	}
 	
 	public function getFDData($areaId,$yearId, $filter = array()){
-		
 		$options['joins'] = array(
 			array(
-				'table' => 'ut_area_en',
+				'table' => 'ut_area_'.$this->setupUseTableLang(),
 				'alias' => 'JORArea',
 				'type' => 'LEFT',
 				'conditions' => array(
@@ -60,7 +59,7 @@ class JORData extends DashboardsAppModel {
 		
 		$options['joins'] = array(
 			array(
-				'table' => 'ut_indicator_en',
+				'table' => 'ut_indicator_'.$this->setupUseTableLang(),
 				'alias' => 'JORIndicator',
 				'type' => 'LEFT',
 				'conditions' => array(

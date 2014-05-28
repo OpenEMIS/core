@@ -23,9 +23,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 
     public function beforeAction($controller, $action) {
 		$this->areaId = $controller->institutionSiteAreaId;//$controller->institutionSiteId;
-        if ($action != 'qualityRubric') {
-            // $controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin' => 'Quality'));
-        }
+        
     }
 
    public function InstitutionQA($controller, $params){
@@ -39,8 +37,10 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		
 		$countryData = $controller->QADashboard->getAreaByGID();
 		$countryId = $countryData['JORArea']['Area_NId'];
+		$countryName = $countryData['JORArea']['Area_Name'];
 		
-		$controller->Session->write('Dashboard.InstitutionSite.CountryId', $countryId);
+		$controller->Session->write('Dashboard.Overview.CountryId', $countryId);
+		$controller->Session->write('Dashboard.Overview.CountryName', $countryName);
 		
 		$yearsOptions = $controller->QADashboard->getYears();
 		$yearId = empty($params['pass'][0])? 0: $params['pass'][0]; //year Id 
@@ -67,7 +67,8 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$areaId = $params['pass'][0];
 		$yearId = $params['pass'][1];
 		
-		$countryId = $controller->Session->read('Dashboard.InstitutionSite.CountryId');
+		$countryId = $controller->Session->read('Dashboard.Overview.CountryId');
+		$countryName = $controller->Session->read('Dashboard.Overview.CountryName');
 		
 		$parentAreaData = $controller->QADashboard->getAreaParentData($areaId);
 		$areaName = $controller->QADashboard->getAreaName($areaId);
@@ -85,7 +86,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempAreaData = $controller->QADashboard->getSummaryJorData($setupOptions);
-		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9ACCF6',  $indData,$unitIndData, $tempAreaData);
+		$chartDataSetup = array(
+			'caption' => $areaName,
+			'color' => 'blue'
+		);
+		$data['dataset'][] = $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempAreaData);
 		
 		$setupOptions = array(
 			'areaIds' => $parentAreaData['JORArea']['Area_NId'],
@@ -95,7 +100,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempNationalData = $controller->QADashboard->getSummaryJorData($setupOptions); 
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($parentAreaData['JORArea']['Area_Name'], '9A22F6',  $indData,$unitIndData, $tempNationalData);
+		$chartDataSetup = array(
+			'caption' => $parentAreaData['JORArea']['Area_Name'],
+			'color' => 'purple'
+		);
+		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempNationalData);
 		
 		$setupOptions = array(
 			'areaIds' => $countryId,
@@ -105,7 +114,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempNationalData = $controller->QADashboard->getSummaryJorData($setupOptions); 
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset('National', '82CF27',  $indData,$unitIndData, $tempNationalData);
+		$chartDataSetup = array(
+			'caption' => $countryName,
+			'color' => 'green'
+		);
+		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempNationalData);
 		return json_encode($data);
 	}
 	
@@ -150,7 +163,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempNationalData = $controller->QADashboard->getSummaryJorData($setupOptions); 
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset('National', '82CF27',  $indData,$unitIndData, $tempNationalData);
+		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($countryName, '82CF27',  $indData,$unitIndData, $tempNationalData);
 		return json_encode($data);
 	}*/
 	
@@ -165,6 +178,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$yearOptions = $controller->QADashboard->getYears(10,$year);
 		
 		$data = array_merge($data, $controller->QADashboard->setupChartCategory($yearOptions));
+		
 	
 		$indData = $controller->QADashboard->getIndicatorByGID($controller->QADashboard->indicators['QA_AdminTechBoth_Score']);
 		$unitIndData = $controller->QADashboard->getUnitIndicatorByGID(array($controller->QADashboard->indicators['Unit']['Percent'],$controller->QADashboard->indicators['Unit']['Number']));
@@ -178,11 +192,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		);
 		$tempAreaData = $controller->QADashboard->getSummaryTrendJorData($setupOptions);
 		$data['dataset'][] = $controller->QADashboard->setupLineChartDataset($tempAreaData, $indData, $unitIndData,$yearOptions );
-		/*$tempAreaData = $controller->QADashboard->getSummaryTrendJorData($areaId,$yearOptions);
-		$data['dataset'][] = $controller->QADashboard->setupLineChartDataset('Admin', array('color' => '9ACCF6', 'anchorSides' =>3),  $yearOptions, $tempAreaData,array('compareKey' => 'TimePeriod_NId', 'filterDataBy' => array('key' => 'IUSNId', 'value' => 8)));
-		$data['dataset'][] = $controller->QADashboard->setupLineChartDataset('Tech', array('color' => '82CF27', 'anchorSides' =>4),  $yearOptions, $tempAreaData,array('compareKey' => 'TimePeriod_NId', 'filterDataBy' => array('key' => 'IUSNId', 'value' => 15)));
-		$data['dataset'][] = $controller->QADashboard->setupLineChartDataset('Both', array('color' => 'CF5227', 'anchorSides' =>20),  $yearOptions, $tempAreaData,array('compareKey' => 'TimePeriod_NId', 'filterDataBy' => array('key' => 'IUSNId', 'value' => 18)));
-*/
+		
 		return json_encode($data);
 	}
 	
@@ -190,8 +200,8 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$this->render = false;
 		$areaId = $params['pass'][0];
 		$yearId = $params['pass'][1];
-		$countryId = $controller->Session->read('Dashboard.InstitutionSite.CountryId');
-		
+		$countryId = $controller->Session->read('Dashboard.Overview.CountryId');
+		$countryName = $controller->Session->read('Dashboard.Overview.CountryName');
 		//$selectedAreaId = !empty($FDId)?$FDId :$areaId;
 		$parentAreaData = $controller->QADashboard->getAreaParentData($areaId);
 		$areaName = $controller->QADashboard->getAreaName($areaId);
@@ -210,7 +220,12 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempAreaData = $controller->QADashboard->getSummaryJorData($setupOptions);
-		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9ACCF6',  $indData,$unitIndData, $tempAreaData);
+		
+		$chartDataSetup = array(
+			'caption' => $areaName,
+			'color' => 'blue'
+		);
+		$data['dataset'][] = $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempAreaData);
 		
 		$setupOptions = array(
 			'areaIds' => $parentAreaData['JORArea']['Area_NId'],
@@ -220,7 +235,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempNationalData = $controller->QADashboard->getSummaryJorData($setupOptions); 
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($parentAreaData['JORArea']['Area_Name'], '9A22F6',  $indData,$unitIndData, $tempNationalData);
+		$chartDataSetup = array(
+			'caption' => $parentAreaData['JORArea']['Area_Name'],
+			'color' => 'purple'
+		);
+		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempNationalData);
 		
 		
 		$setupOptions = array(
@@ -231,27 +250,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempNationalData = $controller->QADashboard->getSummaryJorData($setupOptions); 
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset('National', '82CF27',  $indData,$unitIndData, $tempNationalData);
-		/*$catData = array(
-			1 => 'Management and leadership',
-			2 => 'Health, nutrition and protection',
-			3 => 'Physical environment',
-			4 => 'Teacher',
-			5 => 'Evaluation',
-			6 => 'KG relationship with parents and local community',
-			7 => 'Children with challenges and disability',
-				);
-		$data = array_merge($data, $controller->QADashboard->setupChartCategory($catData));
-		
-		$tempAreaData = $controller->QADashboard->getSummaryAdminBreakdownJorData($areaId,$yearId);
-		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9ACCF6',  $catData, $tempAreaData);
-		
-		$tempAreaData = $controller->QADashboard->getSummaryAdminBreakdownJorData($parentAreaData['JORArea']['Area_NId'],$yearId);
-		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9A22F6',  $catData, $tempAreaData);
-		
-		$tempNationalData = $controller->QADashboard->getSummaryAdminBreakdownJorData(1,$yearId);
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset('National Average', '82CF27',  $catData, $tempNationalData);*/
-		
+		$chartDataSetup = array(
+			'caption' => $countryName,
+			'color' => 'green'
+		);
+		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempNationalData);
 		return json_encode($data);
 	}
 	
@@ -261,6 +264,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$areaId = $params['pass'][0];
 		$yearId = $params['pass'][1];
 		$countryId = $controller->Session->read('Dashboard.Overview.CountryId');
+		$countryName = $controller->Session->read('Dashboard.Overview.CountryName');
 		$parentAreaData = $controller->QADashboard->getAreaParentData($areaId);
 		$areaName = $controller->QADashboard->getAreaName($areaId);
 		$data = $controller->QADashboard->setupChartInfo("Technical Domains");
@@ -278,7 +282,12 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempAreaData = $controller->QADashboard->getSummaryJorData($setupOptions);
-		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9ACCF6',  $indData,$unitIndData, $tempAreaData);
+		
+		$chartDataSetup = array(
+			'caption' => $areaName,
+			'color' => 'blue'
+		);
+		$data['dataset'][] = $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempAreaData);
 		
 		$setupOptions = array(
 			'areaIds' => $parentAreaData['JORArea']['Area_NId'],
@@ -288,7 +297,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempNationalData = $controller->QADashboard->getSummaryJorData($setupOptions); 
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($parentAreaData['JORArea']['Area_Name'], '9A22F6',  $indData,$unitIndData, $tempNationalData);
+		$chartDataSetup = array(
+			'caption' => $parentAreaData['JORArea']['Area_Name'],
+			'color' => 'purple'
+		);
+		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempNationalData);
 		
 		
 		$setupOptions = array(
@@ -299,24 +312,11 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 			'Subgroup_Val_GId' => $controller->QADashboard->indicators['SubgrpVal']['Total'],
 		);
 		$tempNationalData = $controller->QADashboard->getSummaryJorData($setupOptions); 
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset('National', '82CF27',  $indData,$unitIndData, $tempNationalData);
-		/*
-		$catData = array(
-			11 => 'Planning',
-			12 => 'Implementation',
-			13 => 'Evaluation',
-			14 => 'Professionalism',
-				);
-		$data = array_merge($data, $controller->QADashboard->setupChartCategory($catData));
-		
-		$tempAreaData = $controller->QADashboard->getSummaryTechBreakdownJorData($areaId,$yearId);
-		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9ACCF6',  $catData, $tempAreaData);
-		
-		$tempAreaData = $controller->QADashboard->getSummaryTechBreakdownJorData($parentAreaData['JORArea']['Area_NId'],$yearId);
-		$data['dataset'][] = $controller->QADashboard->setupChartDataset($areaName, '9A22F6',  $catData, $tempAreaData);
-		
-		$tempNationalData = $controller->QADashboard->getSummaryTechBreakdownJorData(1,$yearId);
-		$data['dataset'][] =  $controller->QADashboard->setupChartDataset('National Average', '82CF27',  $catData, $tempNationalData);*/
+		$chartDataSetup = array(
+			'caption' => $countryName,
+			'color' => 'green'
+		);
+		$data['dataset'][] =  $controller->QADashboard->setupChartDataset($chartDataSetup,  $indData,$unitIndData, $tempNationalData);
 		
 		return json_encode($data);
 	}

@@ -15,4 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class DashboardsAppModel extends AppModel {
+	
+	public function setupUseTableLang(){
+		$lang = ($_COOKIE['language'] == 'ara' && !empty($_COOKIE['language']))? 'ar':'en';
+		return $lang;
+	}
 }

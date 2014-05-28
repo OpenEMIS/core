@@ -16,11 +16,11 @@ have received a copy of the GNU General Public License along with this program. 
 
 class JORArea extends DashboardsAppModel {
 	public $useDbConfig = 'dashboardJor';
-	public $useTable = 'ut_area_en';
+	//public $useTable = 'ut_area_en';
 	public $countryIndicator = array('Jordan' => '2ed8e897-7d7f-4970-a3ae-4c2e40277fdc');
 	
-	
 	public function getAreaByAreaGId($gid = NULL) {
+		$this->setSource('ut_area_'.$this->setupUseTableLang());
 		if (empty($gid)) {
 			$gid = $this->countryIndicator['Jordan'];
 		}
@@ -32,7 +32,8 @@ class JORArea extends DashboardsAppModel {
 		return $data;
 	}
 
-	public function getChildLevel($mode = 'all', $id = -1){
+	public function getChildLevel($mode = 'all', $id = -1, $withCode){
+		$this->setSource('ut_area_'.$this->setupUseTableLang());
 		$options['conditions'] = array('Area_Parent_NId' => $id);
 		$options['order'] = array('Area_ID');
 		$data = $this->find('all', $options);
@@ -41,7 +42,12 @@ class JORArea extends DashboardsAppModel {
 			$listData = array();
 			foreach($data as $item){
 				$item = $item['JORArea'];
-				$listData[$item['Area_NId']] = sprintf('%s - %s', $item['Area_ID'],$item['Area_Name']);
+				if($withCode){
+					$listData[$item['Area_NId']] = sprintf('%s - %s', $item['Area_ID'],$item['Area_Name']);
+				}
+				else{
+					$listData[$item['Area_NId']] = $item['Area_Name'];
+				}
 			}
 			
 			$data = $listData;
@@ -50,11 +56,13 @@ class JORArea extends DashboardsAppModel {
 	}
 	
 	public function getAreaName($id){
+		$this->setSource('ut_area_'.$this->setupUseTableLang());
 		$data = $this->find('first', array( 'conditions' => array('Area_NId' => $id), 'fields' => array('Area_Name')));
 		return $data['JORArea']['Area_Name'];
 	}
 	
 	public function getParentInfo($id){
+		$this->setSource('ut_area_'.$this->setupUseTableLang());
 		$parentData = $this->find('first', array( 'conditions' => array('Area_NId' => $id), 'fields' => array('Area_Parent_NId')));
 		$parentID = $parentData['JORArea']['Area_Parent_NId'];
 		$data = $this->find('first', array( 'conditions' => array('Area_NId' => $parentID)));

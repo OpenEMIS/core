@@ -18,27 +18,15 @@ App::uses('Component', 'Controller');
 
 class QADashboardComponent extends Component {
 	private $controller;
-	public $indicators;
-	//called before Controller::beforeFilter()
-	public function initialize(Controller $controller) {
-		$this->controller =& $controller;
-		$this->init();
-	}
 	
-	//called after Controller::beforeFilter()
-	public function startup(Controller $controller) { }
+	private $colorCodes = array(
+		'blue' => '9ACCF6',
+		'purple' => '9A22F6',
+		'green' => '82CF27',
+		'red' => '82CF27'
+	);
 	
-	//called after Controller::beforeRender()
-	public function beforeRender(Controller $controller) { }
-	
-	//called after Controller::render()
-	public function shutdown(Controller $controller) { }
-	
-	//called before Controller::redirect()
-	public function beforeRedirect(Controller $controller, $url, $status = null, $exit = true) { }
-	
-	public function init() {
-		$this->indicators = array(
+	public $indicators = array(
 			'SubgrpVal' => array(
 				'Total' => 'aac52507-016f-4218-9975-e31c399ff717',
 				'Urban' => '7a5835ba-62cc-41df-b7d8-4b1272a06544',
@@ -56,6 +44,10 @@ class QADashboardComponent extends Component {
 				'Admin' => '083d3156-1e2b-4db7-ab35-79c19662b4ee',
 				'Tech' => 'c687cf37-f8d1-4ce4-8151-6460d30da63c',
 				'Both' => '17ea0dea-4277-4bc6-b08f-1ef0777c6987',
+			),
+			'QA_AdminTech_Score' => array(
+				'Admin' => '083d3156-1e2b-4db7-ab35-79c19662b4ee',
+				'Tech' => 'c687cf37-f8d1-4ce4-8151-6460d30da63c',
 			),
 			'QA_AdminTechBoth_PassFail' => array(
 				'Admin' => '2cd08c6f-5990-4bf5-9854-2921c8b889e6',
@@ -78,6 +70,27 @@ class QADashboardComponent extends Component {
 				'Professionalism  ' => 'c48e4f93-bd6c-45a7-9c9b-ac9b1a5bfc99',
 			),
 		);
+	
+	//called before Controller::beforeFilter()
+	public function initialize(Controller $controller) {
+		$this->controller =& $controller;
+		$this->init();
+	}
+	
+	//called after Controller::beforeFilter()
+	public function startup(Controller $controller) { }
+	
+	//called after Controller::beforeRender()
+	public function beforeRender(Controller $controller) { }
+	
+	//called after Controller::render()
+	public function shutdown(Controller $controller) { }
+	
+	//called before Controller::redirect()
+	public function beforeRedirect(Controller $controller, $url, $status = null, $exit = true) { }
+	
+	public function init() {
+		$lang = $_COOKIE['language'];
 	}
 	
 	private function return_flat_array($data, $type = 'key'){
@@ -156,9 +169,16 @@ class QADashboardComponent extends Component {
 		return $data;
 	}
 	
-	public function getAreaChildLevel($id){
+	public function getAreaChildLevel($id, $withCode = true, $level = 1){
 		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
-		$data = $jorAreaData->getChildLevel('list', $id);
+		$data = $jorAreaData->getChildLevel('list', $id, $withCode);
+		
+		if($level > 1){
+			$areaId = $this->return_flat_array($data);
+			$level--;
+			$data = $this->getAreaChildLevel($areaId, $withCode, $level);
+		}
+		
 		return $data;
 	}
 	
@@ -207,23 +227,6 @@ class QADashboardComponent extends Component {
 		return $data;
 	}
 	
-	/*public function getSummaryAdminBreakdownJorData($areaId,$yearId){
-		$conditions = array('IUSNId' => array(1,2,3,4,5,6,7),'TimePeriod_NId' => $yearId);
-		$jorMainData = ClassRegistry::init('Dashboards.JORData');
-		$data = $jorMainData->getData($areaId,$conditions);
-		
-		return $data;
-	}
-	
-	public function getSummaryTechBreakdownJorData($areaId,$yearId){
-		$conditions = array('IUSNId' => array(11,12,13,14),'TimePeriod_NId' => $yearId);
-		
-		$jorMainData = ClassRegistry::init('Dashboards.JORData');
-		$data = $jorMainData->getData($areaId,$conditions);
-		
-		return $data;
-	}*/
-	
 	public function getSummaryTrendJorData($options){
 		$jorIndicatorUnitSubgroupData = ClassRegistry::init('Dashboards.JORIndicatorUnitSubgroup');
 		$indicators = $this->return_flat_array($options['indicators']);
@@ -239,26 +242,6 @@ class QADashboardComponent extends Component {
 		$data = $jorMainData->getData($conditions);
 		return $data;
 	}
-	
-	//Combine info
-	/*public function getSummaryBothFDBreakdownJorData($areaId,$yearId){
-		$conditions =  array('JORData.IUSNId' => 18);
-		
-		$jorMainData = ClassRegistry::init('Dashboards.JORData');
-		$data = $jorMainData->getFDData($areaId,$yearId, $conditions);
-		
-		return $data;
-	}*/
-	
-	//Saperated Info
-	/*public function getSummaryTechAdminFDBreakdownJorData($areaId,$yearId){
-		$conditions =  array('JORData.IUSNId' => array(8,15));
-		
-		$jorMainData = ClassRegistry::init('Dashboards.JORData');
-		$data = $jorMainData->getFDData($areaId,$yearId, $conditions);
-		
-		return $data;
-	}*/
 	
 	public function getSummaryAllFDBreakdownJorData($areaId,$yearId){
 		$jorMainData = ClassRegistry::init('Dashboards.JORData');
@@ -305,12 +288,14 @@ class QADashboardComponent extends Component {
 		return $finalData;
 	}
 	
-	public function setupChartDataset($name, $color, $indData, $unitIndData, $data, $compareKey = 'Indicator_NId'){
-		$finalData['seriesname'] = __($name);
-		$finalData['color'] = $color;
+	public function setupChartDataset($chartDataSetup, $indData, $unitIndData, $data){
+		$compareKey = empty($chartDataSetup['compareKey'])? 'Indicator_NId':$chartDataSetup['compareKey'];
+		
+		$finalData['seriesname'] = __($chartDataSetup['caption']);
+		$finalData['color'] = $this->colorCodes[$chartDataSetup['color']];
 		$finalData['alpha'] = "90";
 		$finalData['showvalues'] = "0";
-	//	pr($indData);die;
+		
 		$filtedData = array();
 		foreach($unitIndData as $uKey => $unit){
 			foreach($indData as $key => $indName){
@@ -318,17 +303,53 @@ class QADashboardComponent extends Component {
 					$item = $item['JORData'];
 					if($item[$compareKey] == $key && $item['Unit_NId'] == $uKey){
 						$filtedData[$item[$compareKey]][$unit] = $item['Data_Value'];
-						//$finalData['data'][]['value'] = $item['Data_Value'];
 						continue;
 					}
 				}
 			}
 		}
+		
 		//Process Data to fusion chart format
 		foreach($filtedData as $key =>$obj){
 			$tempData['value'] = $obj['Percent'];
+			$tempData['number'] = $obj['Number'];
 			$tempData['tooltext'] = sprintf("%s%%, %s", $obj['Percent'], $obj['Number']);
 			$finalData['data'][]=$tempData;
+		}
+		return $finalData;
+	}
+	
+	public function sumDataForChart($chartDataSetup, $data){
+		$finalData['seriesname'] = __($chartDataSetup['caption']);
+		$finalData['color'] = $this->colorCodes[$chartDataSetup['color']];
+		$finalData['alpha'] = "90";
+		$finalData['showvalues'] = "0";
+		
+		$sumData = array();
+		
+		
+		foreach ($data as $item) {
+			if (!empty($item['data'])) {
+				foreach ($item['data'] as $key => $score) {
+					if (empty($sumData[$key])) {
+						$sumData[$key]['tempSum'] = $score['value'] * $score['number'];
+						$sumData[$key]['number'] = $score['number'];
+					} else {
+						$sumData[$key]['tempSum'] += $score['value'] * $score['number'];
+						$sumData[$key]['number'] += $score['number'];
+					}
+				}
+			}
+		}
+
+		if(!empty($sumData)){
+			foreach($sumData as $key => $finaloItem){
+				$tempValue = round(ceil(($sumData[$key]['tempSum']/ $sumData[$key]['number'])*100)/100, 2);
+				$sumData[$key]['value'] = $tempValue;
+				$sumData[$key]['tooltext'] = sprintf("%s%%, %s", $tempValue, $finaloItem['number']);
+			}
+
+			$finalData['data']=$sumData;
 		}
 		return $finalData;
 	}
@@ -336,23 +357,44 @@ class QADashboardComponent extends Component {
 	// ======================
 	//	Setup Scatter Chart Data
 	// ======================
-	public function setupScatterChartInfo($caption, $xaxisname, $yaxisname){
+	public function setupScatterChartInfo($caption, $indData){
 		$data['chart']['caption'] = __($caption);//"Administrative and Technical Aspects";
-		$data['chart']['xaxisname'] = $xaxisname;
-		$data['chart']['yaxisname'] = $yaxisname;
+		$i = 0;
+		foreach($indData as $name){
+			if($i == 0){
+				$data['chart']['xaxisname'] = $name." (X)";
+			}
+			else{
+				$data['chart']['yaxisname'] = $name." (Y)";
+			}
+			$i++;
+		}
 		$data['chart']['xaxislabelmode'] = 'auto';
+	
+		//$data['chart']['numdivlines'] = 6;
+		$data['chart']['adjustVDiv'] = 0;
 		$data['chart']['numbersuffix'] = '%';
 		$data['chart']['yaxismaxvalue'] = '100';
 		$data['chart']['xaxismaxvalue'] = '100';
 		$data['chart']['canvasBorderThickness'] = 1;
 		
+		//$categoryData = $this->setupScatterChartCategory(4,10);
+		
+		//$data = array_merge($data, $categoryData);
+		return $data;
+	}
+	
+	private function setupScatterChartCategory($no, $multiplyer){
+		$data = array();
+		for($i = 0; $i < $no; $i++){
+			$data['categories'][0]['category'][$i]['label'] = $multiplyer*($i+1);
+			$data['categories'][0]['category'][$i]['x'] = $multiplyer*($i+1);
+			$data['categories'][0]['category'][$i]['showverticalline'] = 1;
+		}
 		return $data;
 	}
 	
 	public function setupScatterChartDataset($data,$indData, $unitIndData, $areaData){
-		//pr($data);
-		//pr($indData);
-		
 		$finalData = array();
 		$finalData['anchorcolor'] = '9ACCF6';
 		$finalData['anchorradius'] = '4';
@@ -377,28 +419,20 @@ class QADashboardComponent extends Component {
 				}
 			}
 		}
-		//pr($dataSet);
 		
 		$scatterPlotData = array();
+		$resetUnitIndData = array_values($unitIndData);
 		foreach($dataSet as $key => $item){
 			$loopCounter = 0;
 			$finalPlotObj = array();
-			foreach($item as $plotObj){
+			foreach($indData as $iKey => $indValue){
+				$plotXY = ($loopCounter == 0)? 'x': 'y';
+				$finalPlotObj[$plotXY] = empty($item[$iKey])? 0 :$item[$iKey][$resetUnitIndData[0]];
 				
-				if($loopCounter == 0){
-					$finalPlotObj['x'] = $plotObj['Percent'];
-					//$finalPlotObj['x_num'] = $plotObj['Number'];
-				}
-				else{
-					$finalPlotObj['y'] = $plotObj['Percent'];
-					//$finalPlotObj['y_num'] = $plotObj['Number'];
-				}
 				$loopCounter++;
-				//$item['tooltext'] = sprintf($areaData[$pKey]." TA:%s, AA:%s", $item['Percent'], $item['x']);
 			}
-			$finalPlotObj['tooltext'] = sprintf($areaData[$key]." TA:%s%%, AA:%s%%", $finalPlotObj['y'], $finalPlotObj['x']);
+			$finalPlotObj['tooltext'] = sprintf($areaData[$key]." X:%s%%, Y:%s%%", $finalPlotObj['x'], $finalPlotObj['y']);
 			$scatterPlotData[] = $finalPlotObj;
-			
 		}
 		$finalData['data'][] = $scatterPlotData;
 		
@@ -409,7 +443,7 @@ class QADashboardComponent extends Component {
 	//	Setup Scatter Chart Data
 	// ======================
 	public function setupLineChartInfo($caption){
-		$data['chart']['caption'] = __($caption);//"Administrative and Technical Aspects";
+		$data['chart']['caption'] = __($caption);
 		$data['chart']['xaxislabelmode'] = 'auto';
 		$data['chart']['numbersuffix'] = '%';
 		$data['chart']['yaxismaxvalue'] = '100';
@@ -422,27 +456,27 @@ class QADashboardComponent extends Component {
 	}
 	
 	//public function setupLineChartDataset($name, $achorOptions , $catData, $data, $filterArr = array('compareKey' => 'TimePeriod_NId', 'filterDataBy' => array('key' => 'IUSNId', 'value' => 0))){
-	public function setupLineChartDataset($data, $indData, $unitIndData, $yearOptions){	
+	public function setupLineChartDataset($data, $indData, $unitIndData, $yearOptions) {
 		$colorArr = array('9ACCF6', '82CF27', 'CF5227');
-		$anchorSides = array(3,4,20);
+		$anchorSides = array(3, 4, 20);
 		$counter = 0;
 		$returnData = array();
-		foreach($indData as $indKey =>  $indName){
+		foreach ($indData as $indKey => $indName) {
 			$finalData = array();
 			$finalData['seriesname'] = $indName;
 			$finalData['color'] = $colorArr[$counter];
 			$finalData['alpha'] = "90";
 			$finalData['showvalues'] = 0;
-			$finalData['anchorBorderThickness'] = 1;//$color;
-			$finalData['anchorSides'] = $anchorSides[$counter];//$color;
-			$finalData['anchorRadius'] = 4;//$color;
+			$finalData['anchorBorderThickness'] = 1; //$color;
+			$finalData['anchorSides'] = $anchorSides[$counter]; //$color;
+			$finalData['anchorRadius'] = 4; //$color;
 			$filtedData = array();
-			foreach ($yearOptions as $yKey => $year){
-				foreach($unitIndData as $uKey => $unit){
-					foreach($data as $i => $item){
+			foreach ($yearOptions as $yKey => $year) {
+				foreach ($unitIndData as $uKey => $unit) {
+					foreach ($data as $i => $item) {
 						$item = $item['JORData'];
 
-						if($item['TimePeriod_NId'] == $yKey && $item['Indicator_NId'] == $indKey && $item['Unit_NId'] == $uKey){
+						if ($item['TimePeriod_NId'] == $yKey && $item['Indicator_NId'] == $indKey && $item['Unit_NId'] == $uKey) {
 							$filtedData[$item['Indicator_NId']][$year][$unit] = $item['Data_Value'];
 						}
 					}
@@ -451,32 +485,25 @@ class QADashboardComponent extends Component {
 			$tempData = array();
 			foreach ($filtedData as $year) {
 				foreach ($yearOptions as $defaultYear) {
-				if(array_key_exists($defaultYear, $year)){
-					foreach ($year as $key => $obj) {
-						$tempData['value'] = $obj['Percent'];
-						$tempData['tooltext'] = sprintf("%s%%, %s", $obj['Percent'], $obj['Number']);
-						$finalData['data'][] = $tempData;
-					}
-				}
-				else{
-					$tempData['value'] = 0;
-					$tempData['tooltext'] = sprintf("%s%%, %s", 0, 0);
-					$finalData['data'][] = $tempData;
-				}
-					/*
+					if (array_key_exists($defaultYear, $year)) {
 						foreach ($year as $key => $obj) {
 							$tempData['value'] = $obj['Percent'];
 							$tempData['tooltext'] = sprintf("%s%%, %s", $obj['Percent'], $obj['Number']);
 							$finalData['data'][] = $tempData;
 						}
-					}*/
+					} else {
+						$tempData['value'] = 0;
+						$tempData['tooltext'] = sprintf("%s%%, %s", 0, 0);
+						$finalData['data'][] = $tempData;
+					}
 				}
 			}
 			$returnData[] = $finalData;
 			$counter++;
 		}
-		
+
 		return $returnData;
 	}
+
 }
 ?>

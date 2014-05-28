@@ -16,10 +16,10 @@ have received a copy of the GNU General Public License along with this program. 
 
 class JORIndicator extends DashboardsAppModel {
 	public $useDbConfig = 'dashboardJor';
-	public $useTable = 'ut_indicator_en';
+	//public $useTable = 'ut_indicator_en';
 	
 	public function getIndicatorByAreaGId($gid) {
-
+		$this->setSource('ut_indicator_'.$this->setupUseTableLang());
 		$options['conditions'] = array('Indicator_GId' => $gid);
 		$data = $this->find('all', $options);
 
