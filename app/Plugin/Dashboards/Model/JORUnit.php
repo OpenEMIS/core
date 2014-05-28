@@ -19,7 +19,7 @@ class JORUnit extends DashboardsAppModel {
 	public $useTable = 'ut_unit_en';
 	
 	public function getUnitIndicatorByGId($gid) {
-
+		//$this->setSource('ut_unit_'.$this->setupUseTableLang());
 		$options['conditions'] = array('Unit_GId' => $gid);
 		$data = $this->find('all', $options);
 

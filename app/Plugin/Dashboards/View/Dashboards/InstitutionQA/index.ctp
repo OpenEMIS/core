@@ -29,11 +29,11 @@ echo $this->Html->script('Dashboards.dashboards', false);
 	?>
 	
 	<div class="row left">
-        <div class="label"><?php echo __('Time'); ?></div>
+        <div class="label"><?php echo __('Year'); ?></div>
         <div class="value"><?php echo $this->Form->input('year_id', array('options' => $yearsOptions, 'default' =>$yearId, 'class' => 'dash_options')); ?></div>
     </div>
 	<div class="row left">
-		<input type="submit" value="<?php echo __("Apply"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
+		<input type="submit" value="<?php echo __("Update"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
 	</div>
 	<div class="clear_both underline"></div>
 	<?php echo $this->Form->end(); ?>
