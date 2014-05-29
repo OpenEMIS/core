@@ -44,7 +44,7 @@ echo $this->element('../Areas/breadcrumbs');
 				</td>
 				<td><?php echo $obj[$model]['code']; ?></td>
 				<td><?php echo $obj['AreaEducationLevel']['name']; ?></td>
-				<td class="center"><?php echo $this->Html->link('<i class="fa fa-file-o fa-2x">', array('action' => 'areasEducationView', 'parent' => $parentId, $obj[$model]['id']), array('escape' => false)); ?></td>
+				<td class="center"><?php echo $this->Html->link($this->Icon->get('details'), array('action' => 'areasEducationView', 'parent' => $parentId, $obj[$model]['id']), array('escape' => false)); ?></td>
 			</tr>
 			<?php } ?>
 		</tbody>
