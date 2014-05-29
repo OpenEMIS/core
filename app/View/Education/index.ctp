@@ -1,14 +1,8 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-//echo $this->Html->css('education', 'stylesheet', array('inline' => false));
-
-//echo $this->Html->script('education', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
-$this->start('contentActions');
-	echo $this->Html->link(__('Setup'), array('action' => 'setup'), array('class' => 'divider'));
-$this->end();
 
 $this->start('contentBody');
 echo $this->element('../Education/controls');

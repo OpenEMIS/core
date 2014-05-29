@@ -39,7 +39,7 @@ class EducationController extends AppController {
 		$this->Navigation->addCrumb('Education', array('controller' => 'Education', 'action' => 'index'));
 		
 		$actionOptions = array(
-			'index' => __('Education Structure'),
+			//'index' => __('Education Structure'),
 			'systems' => __('Education Systems'),
 			'subjects' => __('Education Subjects'),
 			'certifications' => __('Certifications'),
@@ -50,77 +50,8 @@ class EducationController extends AppController {
 	}
 	
 	public function index() {
-		$conditions = array('conditions' => array('visible' => 1));
-		$systemList = $this->EducationSystem->findList($conditions);
-		$this->set('header', __('Education Structure'));
-		$this->set('selectedAction', 'index');
-		if(sizeof($systemList) > 0) {
-			$systemId = isset($this->params['pass'][0]) ? $this->params['pass'][0] : key($systemList);
-			
-			$levelConditions = $conditions;
-			$levelConditions['conditions']['education_system_id'] = $systemId;
-			$levelList = $this->EducationLevel->findList($levelConditions);
-			$orientationList = $this->EducationProgrammeOrientation->findList($conditions);
-			
-			$structure = array();
-			
-			foreach($levelList as $levelId => $levelName) {
-				$programmes = $this->EducationProgramme->find('all', array(
-						'recursive' => 0,
-						'fields' => array(
-							'EducationProgramme.id', 'EducationProgramme.name', 'EducationProgramme.duration',
-							'EducationCycle.name', 'EducationFieldOfStudy.name', 'EducationCertification.name',
-							'EducationFieldOfStudy.education_programme_orientation_id'
-						),
-						'conditions' => array(
-							'EducationCycle.education_level_id' => $levelId,
-							'EducationCycle.visible' => 1,
-							'EducationProgramme.visible' => 1
-						),
-						'order' => array('EducationCycle.order', 'EducationProgramme.order')
-					)
-				);
-				
-				foreach($programmes as $list) {
-					$programme = $list['EducationProgramme'];
-					$programmeId = $programme['id'];
-					$gradeConditions = array('conditions' => array('EducationGrade.education_programme_id' => $programmeId));
-					$gradeList = $this->EducationGrade->findList($gradeConditions);
-					
-					$subjectList = $this->EducationGradeSubject->findSubjectsByGrades(array_keys($gradeList));
-					$gradeSubjects = $this->EducationGradeSubject->groupSubjectsByGrade($subjectList);
-					
-					foreach($gradeList as $key => $val) {
-						if(!isset($gradeSubjects[$key])) {
-							$gradeSubjects[$key] = array();
-						}
-					}
-					
-					$structure[$levelName][] = array(
-						'id' => $programmeId,
-						'name' => $programme['name'],
-						'cycle_name' => $list['EducationCycle']['name'],
-						'orientation' => $orientationList[$list['EducationFieldOfStudy']['education_programme_orientation_id']],
-						'field' => $list['EducationFieldOfStudy']['name'],
-						'duration' => $programme['duration'],
-						'certificate' => $list['EducationCertification']['name'],
-						'grades' => $gradeList,
-						'subjects' => $gradeSubjects
-					);
-				}
-			}
-			
-			if(empty($levelList)) {
-				$this->Utility->alert($this->Utility->getMessage('EDUCATION_NO_LEVEL'), array('type' => 'info', 'dismissOnClick' => false));
-			}
-			
-			$this->set('systems', $systemList);
-			$this->set('levels', $levelList);
-			$this->set('structure', $structure);
-			$this->set('selectedSystem', $systemId);
-		} else {
-			$this->Utility->alert($this->Utility->getMessage('EDUCATION_NO_SYSTEM'), array('type' => 'info', 'dismissOnClick' => false));
-		}
+		return $this->redirect(array('action' => 'systems'));
+		//$this->Navigation->addCrumb('Education Structure');
 	}
 	
 	public function reorder() {
