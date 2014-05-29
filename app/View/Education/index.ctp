@@ -1,62 +1,18 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('education', 'stylesheet', array('inline' => false));
+//echo $this->Html->css('education', 'stylesheet', array('inline' => false));
 
-echo $this->Html->script('education', false);
+//echo $this->Html->script('education', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Education Structure'));
+$this->assign('contentHeader', $header);
 $this->start('contentActions');
-if($_view_setup) {
 	echo $this->Html->link(__('Setup'), array('action' => 'setup'), array('class' => 'divider'));
-}
 $this->end();
-$this->assign('contentId', 'education');
+
 $this->start('contentBody');
+echo $this->element('../Education/controls');
 ?>
-<?php echo $this->element('alert'); ?>
-<?php
-echo $this->Form->create('Education', array(
-		'id' => 'submitForm',
-		'onsubmit' => 'return false',
-		'inputDefaults' => array('label' => false, 'div' => false),	
-		'url' => array('controller' => 'Education', 'action' => 'index')
-	)
-);
-?>
-
-<?php if(isset($systems)) { ?>
-<div class="row select_row">
-	<label class="col-md-3 control-label"><?php echo __('Education System'); ?></label>
-	<div class="col-md-4">
-		<?php
-			echo $this->Form->input('education_system_id', array(
-				'id' => 'EducationSystemId',
-				'class'=>'form-control',
-				'options' => $systems,
-				'default' => $selectedSystem,
-				'url' => 'Education/index',
-				'onchange' => 'jsForm.change(this)'
-			));
-		?>
-	</div>
-</div>
-<?php } ?>
-
-<?php if(!empty($levels)) { ?>
-<div class="row select_row">
-	<label class="col-md-3 control-label"><?php echo __('Education Level'); ?></label>
-	<div class="col-md-4">
-		<?php
-			echo $this->Form->input('education_level_id', array(
-				'id' => 'EducationLevelId',
-				'class'=>'form-control',
-				'options' => $levels,
-				'onchange' => 'education.switchLevel(this)'
-			));
-		?>
-	</div>
-</div>
 
 <?php 
 $allIndex = 0;
@@ -122,7 +78,7 @@ $level = reset($levels);
 	<?php } ?>
 </div>
 <?php }
-} ?>
+?>
 
 <?php echo $this->Form->end(); ?>
 

@@ -17,33 +17,174 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class EducationProgramme extends AppModel {
-	/*
+	public $actsAs = array('ControllerAction', 'Reorder');
+	public $belongsTo = array('EducationCycle', 'EducationFieldOfStudy', 'EducationCertification');
+	public $hasMany = array('EducationGrade', 'InstitutionSiteProgramme');
+	
 	public $validate = array(
+		'code' => array(
+			'rule' => 'notEmpty',
+			'required' => true,
+			'message' => 'Please enter a code'
+		),
 		'name' => array(
 			'rule' => 'notEmpty',
 			'required' => true,
-			'message' => 'Please enter a name for the programme.'
+			'message' => 'Please enter a name'
 		),
 		'education_field_of_study_id' => array(
 			'rule' => 'notEmpty',
 			'required' => true,
-			'message' => 'Please choose a field of study.'
+			'message' => 'Please choose a field of study'
 		),
 		'education_certification_id' => array(
 			'rule' => 'notEmpty',
 			'required' => true,
-			'message' => 'Please select a certification.'
+			'message' => 'Please select a certification'
 		),
 		'duration' => array(
-			'rule' => 'notEmpty',
-			'required' => true,
-			'message' => 'Please enter the duration.'
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter the duration'
+			),
+			'numeric' => array(
+				'rule' => 'numeric',
+				'message' => 'Please enter a numeric value'
+			)
 		)
 	);
-	*/
 	
-	public $belongsTo = array('EducationCycle', 'EducationFieldOfStudy', 'EducationCertification');
-	public $hasMany = array('EducationGrade', 'InstitutionSiteProgramme');
+	public $_action = 'programmes';
+	public $_header = 'Education Programmes';
+	public $_condition = 'education_cycle_id';
+	
+	public function beforeAction($controller, $action) {
+		parent::beforeAction($controller, $action);
+		$controller->Navigation->addCrumb($this->_header);
+		$controller->set('header', __($this->_header));
+		$controller->set('_action', $this->_action);
+		$controller->set('selectedAction', $this->_action);
+		$controller->set('_condition', $this->_condition);
+	}
+	
+	public function getDisplayFields($controller) {
+		$yesnoOptions = $controller->Option->get('yesno');
+		$cycleOptions = $this->EducationCycle->find('list', array('order' => 'order'));
+		$fieldOfStudyOptions = $this->EducationFieldOfStudy->getList();
+		$certificateOptions = $this->EducationCertification->find('list', array('order' => 'order'));
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'code'),
+				array('field' => 'name'),
+				array('field' => 'duration'),
+				array('field' => 'education_cycle_id', 'type' => 'select', 'options' => $cycleOptions, 'edit' => false),
+				array('field' => 'education_field_of_study_id', 'type' => 'select', 'options' => $fieldOfStudyOptions),
+				array('field' => 'education_certification_id', 'type' => 'select', 'options' => $certificateOptions),
+				array('field' => 'visible', 'type' => 'select', 'options' => $yesnoOptions),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
+	
+	public function programmes($controller, $params) {
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		if($this->EducationCycle->exists($conditionId)) {
+			$data = $this->findAllByEducationCycleId($conditionId, array(), array($this->alias.'.order' => 'ASC'));
+			$cycleObj = $this->EducationCycle->findById($conditionId);
+			$systemObj = ClassRegistry::init('EducationSystem')->findById($cycleObj['EducationLevel']['education_system_id']);
+			$paths = array();
+			$paths[] = array(
+				'name' => $systemObj['EducationSystem']['name'],
+				'url' => array('action' => 'systems')
+			);
+			$paths[] = array(
+				'name' => $cycleObj['EducationLevel']['name'],
+				'url' => array('action' => 'levels', 'education_system_id' => $systemObj['EducationSystem']['id'])
+			);
+			$paths[] = array(
+				'name' => $cycleObj['EducationCycle']['name'],
+				'url' => array('action' => 'cycles', 'education_level_id' => $cycleObj['EducationLevel']['id'])
+			);
+			$paths[] = array(
+				'name' => '(' . __($this->_header) . ')'
+			);
+			$controller->set(compact('data', 'paths', 'conditionId'));
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'systems'));
+		}
+	}
+	
+	public function programmesAdd($controller, $params) {
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		if($this->EducationCycle->exists($conditionId)) {
+			$cycleName = $this->EducationCycle->field('name', array('EducationCycle.id' => $conditionId));
+			$cycleOptions = array($conditionId => $cycleName);
+			$fieldOfStudyOptions = $this->EducationFieldOfStudy->getList(1);
+			$certificateOptions = $this->EducationCertification->find('list', array('conditions' => array('visible' => 1), 'order' => 'order'));
+			$controller->set(compact('cycleOptions', 'conditionId', 'fieldOfStudyOptions', 'certificateOptions', 'orientationOptions'));
+			if($controller->request->is('post') || $controller->request->is('put')) {
+				$controller->request->data[$this->alias]['education_cycle_id'] = $conditionId;
+				$controller->request->data[$this->alias]['order'] = $this->field('order', array(), 'order DESC') + 1;
+				if ($this->save($controller->request->data)) {
+					$controller->Message->alert('general.edit.success');
+					return $controller->redirect(array('action' => $this->_action, $this->_condition => $conditionId));
+				}
+			}
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'systems'));
+		}
+	}
+	
+	public function programmesView($controller, $params) {
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		if($this->EducationCycle->exists($conditionId)) {
+			$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+			$data = $this->findById($id);
+			$fields = $this->getDisplayFields($controller);
+			$controller->set(compact('data', 'fields', 'conditionId'));
+			$this->render = '../template/view';
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'systems'));
+		}
+	}
+	
+	public function programmesEdit($controller, $params) {
+		$conditionId = isset($params->named[$this->_condition]) ? $params->named[$this->_condition] : 0;
+		if($this->EducationCycle->exists($conditionId)) {
+			$id = isset($params->pass[0]) ? $params->pass[0] : 0;
+			$data = $this->findById($id);
+			
+			if(!empty($data)) {
+				$fields = $this->getDisplayFields($controller);
+				$controller->set(compact('fields', 'conditionId'));
+				if($controller->request->is('post') || $controller->request->is('put')) {
+					if ($this->save($controller->request->data)) {
+						$controller->Message->alert('general.edit.success');
+						return $controller->redirect(array('action' => $this->_action.'View', $this->_condition => $conditionId, $id));
+					}
+				} else {
+					$controller->request->data = $data;
+				}
+				$this->render = '../template/edit';
+			} else {
+				$controller->Message->alert('general.notExists');
+				return $controller->redirect(array('action' => $this->_action, $this->_condition => $conditionId));
+			}
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'systems'));
+		}
+	}
 	
 	public function getDurationBySiteProgramme($siteProgrammeId) {
 		$obj = $this->find('first', array(
@@ -184,7 +325,7 @@ class EducationProgramme extends AppModel {
 			$data[$system['id']][] = array(
 				'system' => $system['name'],
 				'level' => $item['EducationLevel']['name'],
-				'cycle' => $item['EducationCycle']['name'],
+				$this->_condition => $item['EducationCycle']['name'],
 				'programme' => $item['EducationProgramme']['name'],
 				'field' => $item['EducationFieldOfStudy']['name'],
 				'orientation' => $item['EducationProgrammeOrientation']['name'],
@@ -194,15 +335,15 @@ class EducationProgramme extends AppModel {
 		}
 		return $data;
 	}
-        
-        public function getProgrammeById($programmeId) {
+		
+	public function getProgrammeById($programmeId) {
 		$this->formatResult = true;
 		$data = $this->find('first', array(
 			'recursive' => -1,
 			'fields' => array(
 				'EducationSystem.name AS education_system_name',
 				'EducationCycle.name AS education_cycle_name',
-                                'EducationCycle.admission_age AS admission_age',
+				'EducationCycle.admission_age AS admission_age',
 				'EducationProgramme.name AS education_programme_name'
 			),
 			'joins' => array(
