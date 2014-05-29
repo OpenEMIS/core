@@ -11,7 +11,7 @@ echo $this->Html->script('search', false);
         <span><?php echo __('Behaviour Details'); ?></span>
 		<?php
 		$data = $staffBehaviourObj[0]['StaffBehaviour'];
-		echo $this->Html->link(__('List'), array('action' => 'staffBehaviour', $data['staff_id']), array('class' => 'divider'));
+		echo $this->Html->link(__('List'), array('action' => 'staffsBehaviour', $data['staff_id']), array('class' => 'divider'));
         if($institution_site_id == $data['institution_site_id']){
     		if($_edit) {
     			echo $this->Html->link(__('Edit'), array('action' => 'staffBehaviourEdit', $data['id']), array('class' => 'divider'));

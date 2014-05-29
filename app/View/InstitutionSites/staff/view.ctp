@@ -21,7 +21,7 @@ echo $this->Html->css('/Staff/css/staff', 'stylesheet', array('inline' => false)
 			echo $this->Html->link(__('Attendance'), array('action' => 'staffAttendance'), array('class' => 'divider'));
 		}
 		if($_accessControl->check($this->params['controller'], 'staffBehaviour')) {
-			echo $this->Html->link(__('Behaviour'), array('action' => 'staffBehaviour', $obj['id']), array('class' => 'divider'));
+			echo $this->Html->link(__('Behaviour'), array('action' => 'staffsBehaviour', $obj['id']), array('class' => 'divider'));
 		}
 		?>
 	</h1>
@@ -134,7 +134,7 @@ if($_accessControl->check($this->params['controller'], 'staffAttendance')) {
 	echo $this->Html->link(__('Attendance'), array('action' => 'staffAttendance'), array('class' => 'divider'));
 }
 if($_accessControl->check($this->params['controller'], 'staffBehaviour')) {
-	echo $this->Html->link(__('Behaviour'), array('action' => 'staffBehaviour', $obj['id']), array('class' => 'divider'));
+	echo $this->Html->link(__('Behaviour'), array('action' => 'staffsBehaviour', $obj['id']), array('class' => 'divider'));
 }
 $this->end();
 

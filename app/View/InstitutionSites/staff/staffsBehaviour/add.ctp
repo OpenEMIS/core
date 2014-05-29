@@ -63,7 +63,7 @@ echo $this->Html->script('institution_site_student_behaviour', false);
 	<div class="controls">
     	<input type="hidden" name="data[InstitutionSiteStaffBehaviour][staff_id]" id="staff_id" value="<?php echo $id; ?>" />
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return InstitutionSiteStudentBehaviour.validateBehaviourAdd()"  />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'staffBehaviour', $id), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'staffsBehaviour', $id), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
 	
 	<?php echo $this->Form->end(); ?>
