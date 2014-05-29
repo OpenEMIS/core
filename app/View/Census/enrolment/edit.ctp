@@ -18,7 +18,7 @@ echo $this->Form->create('CensusStudent', array(
 ));
 echo $this->element('census/year_options');
 ?>
-<div id="enrolment" class="content_wrapper edit">
+<div id="enrolment" class=" edit">
 <?php foreach($data as $key => $obj) : ?>
 
 <fieldset class="section_group report" url="Census/enrolmentAjax/<?php echo $selectedYear; ?>" programme_id="<?php echo $obj['education_programme_id'];?>" admission_age="<?php echo $obj['admission_age'];?>">
@@ -40,8 +40,6 @@ echo $this->element('census/year_options');
 	
 	<?php 
 	$gradesCount = count($obj['grades']);
-	
-	pr($source_type);
 	?>
 	
 	<div class="table-responsive ajaxContentHolder">
@@ -107,7 +105,7 @@ echo $this->element('census/year_options');
 								<td rowspan="2"><?php echo $dataValue; ?></td>
 							<?php } else if ($dataKey == 'age') { ?>
 								<?php if(isset($row['ageEditable']) && $row['ageEditable'] == 'yes'){?>
-									<td rowspan="2">
+									<td rowspan="2" class="inputField">
 										<div class="input_wrapper">
 														<?php
 														$record_tag = "";

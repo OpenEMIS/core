@@ -61,7 +61,7 @@ $gradesCount = count($gradeList);
                         <td rowspan="2"><?php echo $dataValue; ?></td>
                     <?php } else if ($dataKey == 'age') { ?>
                         <?php if(isset($row['ageEditable']) && $row['ageEditable'] == 'yes'){?>
-                            <td rowspan="2">
+                            <td rowspan="2"  class="inputField">
                                 <div class="input_wrapper">
                                                 <?php
                                                 $record_tag = "";
