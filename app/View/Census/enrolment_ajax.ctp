@@ -25,8 +25,15 @@ $gradesCount = count($gradeList);
                 <?php } ?>
                 <?php foreach ($row['data'] AS $dataKey => $dataValue) { ?>
                     <?php if ($dataKey == 'grades') { ?>
-                        <?php foreach ($dataValue AS $gradeId => $censusValue) { ?>
-                            <td><?php echo $censusValue['value']; ?></td>
+                        <?php foreach ($dataValue AS $gradeId => $censusValue) {
+							$record_tag="";
+							foreach ($source_type as $k => $v) {
+								if (isset($censusValue['source']) && $censusValue['source'] == $v) {
+										$record_tag = "row_" . $k;
+								}
+							}
+						?>
+                            <td class="<?php echo $record_tag; ?>"><?php echo $censusValue['value']; ?></td>
                         <?php } ?>
                     <?php }else if($dataKey == 'firstColumn' || $dataKey == 'lastColumn' || $dataKey == 'age'){?>
                         <td rowspan="2"><?php echo $dataValue; ?></td>
