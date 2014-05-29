@@ -21,8 +21,8 @@ class CensusController extends AppController {
 	public $source_type=array(
 						"dataentry" => 0,
 						"external" => 1,
-						"internal" => 3,
-						"estimate" => 2
+						"internal" => 2,
+						"estimate" => 3
 						);
 
 	public $uses = array(
