@@ -17,7 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 class DashboardsAppModel extends AppModel {
 	
 	public function setupUseTableLang(){
-		$lang = empty($_COOKIE['language'])? 'en':$_COOKIE['language'];
+		App::uses('CakeSession', 'Model/Datasource');
+		$lang = CakeSession::read('configItem.language');
 		$lang = ($lang== 'ara')? 'ar':'en';
 		return $lang;
 	}
