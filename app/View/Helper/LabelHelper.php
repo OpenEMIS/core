@@ -19,38 +19,38 @@ App::uses('AppHelper', 'View/Helper');
 class LabelHelper extends AppHelper {
 	public $messages = array(
 		'general' => array(
-            'add' => 'Add',
-            'edit' => 'Edit',
-            'delete' => 'Delete',
-            'order' => 'Order',
-            'visible' => 'Visible',
-            'reorder' => 'Reorder',
-            'back' => 'Back',
-            'list' => 'List',
-            'save' => 'Save',
-            'cancel' => 'Cancel',
-            'option' => 'Option',
-            'description' => 'Description',
-            'value' => 'Value',
-            'modified' => 'Modified On',
-            'created' => 'Created On',
-            'type' => 'Type',
-            'title' => 'Title',
-            'activate' => 'Activate',
-            'inactivate' => 'Inactivate',
+			'add' => 'Add',
+			'edit' => 'Edit',
+			'delete' => 'Delete',
+			'order' => 'Order',
+			'visible' => 'Visible',
+			'reorder' => 'Reorder',
+			'back' => 'Back',
+			'list' => 'List',
+			'save' => 'Save',
+			'cancel' => 'Cancel',
+			'option' => 'Option',
+			'description' => 'Description',
+			'value' => 'Value',
+			'modified' => 'Modified On',
+			'created' => 'Created On',
+			'type' => 'Type',
+			'title' => 'Title',
+			'activate' => 'Activate',
+			'inactivate' => 'Inactivate',
 			'name' => 'Name',
 			'date' => 'Date',
 			'attachments' => 'Attachments',
 			'status' => 'Status',
-            'yes' => 'Yes',
-            'no' => 'No',
+			'yes' => 'Yes',
+			'no' => 'No',
 			'general' => 'General',
-            'label' => 'Label',
-            'default' => 'Default',
-            'modified_by' => 'Modified By',
-            'created_by' => 'Created By',
-            'enabled' => 'Enabled',
-            'disabled' => 'Disabled',
+			'label' => 'Label',
+			'default' => 'Default',
+			'modified_by' => 'Modified By',
+			'created_by' => 'Created By',
+			'enabled' => 'Enabled',
+			'disabled' => 'Disabled',
 			'category' => 'Category',
 			'year' => 'Year',
 			'details' => 'Details',
@@ -65,23 +65,44 @@ class LabelHelper extends AppHelper {
 			'code' => 'Code',
 			'action' => 'Action',
 			'level' => 'Level'
-        ),
+		),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permited on single upload. Each file size should not be larger than 2MB.',
 		),
-        'wizard' => array(
-            'previous' => 'Previous',
-            'next' => 'Next',
-            'finish' => 'Finish',
-            'skip' => 'Skip',
-            'addmore' => 'Add More'
-        ),
+		'wizard' => array(
+			'previous' => 'Previous',
+			'next' => 'Next',
+			'finish' => 'Finish',
+			'skip' => 'Skip',
+			'addmore' => 'Add More'
+		),
 		'AreaLevel' => array(
 			'name' => 'Area Level'
 		),
 		'AreaEducationLevel' => array(
 			'name' => 'Area Level'
+		),
+		'EducationSystem' => array(
+			'name' => 'Education System'
+		),
+		'EducationLevel' => array(
+			'education_level_isced_id' => 'ISCED'
+		),
+		'EducationCycle' => array(
+			'admission_age' => 'Admission Age',
+			'education_level_id' => 'Education Level'
+		),
+		'EducationProgramme' => array(
+			'education_cycle_id' => 'Education Cycle',
+			'education_field_of_study_id' => 'Field of Study',
+			'education_certification_id' => 'Certification'
+		),
+		'EducationGradeSubject' => array(
+			'hours_required' => 'Hours Required'
+		),
+		'EducationFieldOfStudy' => array(
+			'education_programme_orientation_id' => 'Programme Orientation'
 		),
 		'InstitutionSite' => array(
 			'institution_site_provider_id' => 'Provider',
@@ -107,10 +128,10 @@ class LabelHelper extends AppHelper {
 		'CensusCustomFieldOption' => array(
 			'census_custom_field_id' => 'Custom Field'
 		),
-        'BankBranch' => array(
-            'bank_id' => 'Bank',
-            'name' => 'Branch'
-        ),
+		'BankBranch' => array(
+			'bank_id' => 'Bank',
+			'name' => 'Branch'
+		),
 		'InfrastructureMaterial' => array(
 			'infrastructure_category_id' => 'Category'
 		),
@@ -123,63 +144,63 @@ class LabelHelper extends AppHelper {
 		'ContactType' => array(
 			'contact_option_id' => 'Contact Option'
 		),
-        'SchoolYear' => array(
-            'name' => 'School Year'
-        ),
-        'Country' => array(
-            'name' => 'Country'
-        ),
-        'HealthRelationships' => array(
-            'name' => 'Relationship'
-        ),
-        'HealthCondition' => array(
-            'name' => 'Condition'
-        ),
-        'HealthImmunization' => array(
-            'name' => 'Immunization'
-        ),
-        'HealthMedication' => array(
-            'start_date' => 'Commenced Date',
-            'end_date' => 'Ended Date',
-        ),
-        'Config' => array(
-            'name' => 'System Configurations',
-            'host'=>'LDAP Server',
-            'port'=>'Port',
-            'version'=>'Version',
-            'base_dn'=>'Base DN',
-            'file' => 'File',
-            'file_type' => 'File Type',
-            'default' => 'Default',
-            'uploaded_on' => 'Uploaded On'
-        ),
-        'Identities' => array(
-            'issue_location' => 'Issuer'
-        ),
+		'SchoolYear' => array(
+			'name' => 'School Year'
+		),
+		'Country' => array(
+			'name' => 'Country'
+		),
+		'HealthRelationships' => array(
+			'name' => 'Relationship'
+		),
+		'HealthCondition' => array(
+			'name' => 'Condition'
+		),
+		'HealthImmunization' => array(
+			'name' => 'Immunization'
+		),
+		'HealthMedication' => array(
+			'start_date' => 'Commenced Date',
+			'end_date' => 'Ended Date',
+		),
+		'Config' => array(
+			'name' => 'System Configurations',
+			'host'=>'LDAP Server',
+			'port'=>'Port',
+			'version'=>'Version',
+			'base_dn'=>'Base DN',
+			'file' => 'File',
+			'file_type' => 'File Type',
+			'default' => 'Default',
+			'uploaded_on' => 'Uploaded On'
+		),
+		'Identities' => array(
+			'issue_location' => 'Issuer'
+		),
 		'QualificationLevel' => array(
-            'name' => 'Level'
-        ),
+			'name' => 'Level'
+		),
 		'QualificationInstitution' => array(
-            'name' => 'Institution'
-        ),
+			'name' => 'Institution'
+		),
 		'QualificationSpecialisation' => array(
-            'name' => 'Major/Specialisation'
-        ),
+			'name' => 'Major/Specialisation'
+		),
 		'StaffQualification' => array(
-            'qualification_institution_country' => 'Institution Country',
+			'qualification_institution_country' => 'Institution Country',
 			'gpa' => 'Grade/Score',
 			'file_name' => 'Attachment'
-        ),
-        'Database' => array(
-            'backup' => 'Backup',
-            'restore' => 'Restore'
-        ),
-        'DataProcessing' => array(
-            'process' => 'Processes',
-            'export' => 'Export',
-            'generate' => 'Generate',
-            'custom_indicators' => 'Custom Indicators'
-        ),
+		),
+		'Database' => array(
+			'backup' => 'Backup',
+			'restore' => 'Restore'
+		),
+		'DataProcessing' => array(
+			'process' => 'Processes',
+			'export' => 'Export',
+			'generate' => 'Generate',
+			'custom_indicators' => 'Custom Indicators'
+		),
 		'StaffLeave' => array(
 			'date_from' => 'First Day',
 			'date_to' => 'Last Day',
@@ -202,7 +223,7 @@ class LabelHelper extends AppHelper {
 			'teaching' => 'Teaching',
 			'number' => 'Number'
 		)
-    );
+	);
 	
 	public function get($code) {
 		$index = explode('.', $code);
