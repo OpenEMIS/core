@@ -18,7 +18,7 @@ class DashboardsAppModel extends AppModel {
 	
 	public function setupUseTableLang(){
 		$lang = empty($_COOKIE['language'])? 'en':$_COOKIE['language'];
-		$lang = ($lang== 'ara')? 'ar':$lang;
+		$lang = ($lang== 'ara')? 'ar':'en';
 		return $lang;
 	}
 }
