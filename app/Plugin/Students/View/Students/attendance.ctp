@@ -71,9 +71,9 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentBody');
 ?>
-<div class="row myyear">
-	<div class="col-md-2"><?php echo __('Year') ?></div>
-	<div class="col-md-3"><?php
+<div class="row page-controls">
+	<div class="col-md-3">
+	<?php
 		echo $this->Form->input('school_year_id', array(
 			'label' => false,
 			'class' => 'form-control',
@@ -82,7 +82,8 @@ $this->start('contentBody');
 			'onchange' => 'jsForm.change(this)',
 			'url' => $this->params['controller'] . '/' . $this->action
 		));
-		?></div>
+		?>
+	</div>
 </div>
 
 <div class="legendWrapper"><?php echo $legend; ?></div>
