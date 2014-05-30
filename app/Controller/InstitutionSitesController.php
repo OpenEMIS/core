@@ -2793,7 +2793,7 @@ class InstitutionSitesController extends AppController {
 
     // END TEACHER BEHAVIOUR PART
     // STAFF ATTENDANCE PART
-    public function staffAttendance() {
+    /*public function staffAttendance() {
         if ($this->Session->check('InstitutionSiteStaffId')) {
             $staffId = $this->Session->read('InstitutionSiteStaffId');
             $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
@@ -2909,7 +2909,7 @@ class InstitutionSitesController extends AppController {
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'staffAttendance', $yearId));
             }
         }
-    }
+    }*/
 
     // END STAFF ATTENDANCE PART
 

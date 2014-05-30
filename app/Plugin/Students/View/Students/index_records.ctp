@@ -94,17 +94,17 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
                 <span class="icon_sort_<?php echo ($sortedcol =='Student.identification_no')?$sorteddir:'up'; ?>"  order="Student.identification_no"></span>
         </div>
         <td class="table_cell cell_code">
-            <span class="left"><?php echo __('First Name'); ?></span>
+            <span class="left"><?php echo __('Name'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Student.first_name')?$sorteddir:'up'; ?>" order="Student.first_name"></span>
         </td>
-        <td class="table_cell cell_code">
+       <?php /* <td class="table_cell cell_code">
             <span class="left"><?php echo __('Middle Name'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Student.middle_name')?$sorteddir:'up'; ?>" order="Student.middle_name"></span>
         </td>
         <td class="table_cell cell_code">
             <span class="left"><?php echo __('Last Name'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Student.last_name')?$sorteddir:'up'; ?>" order="Student.last_name"></span>
-        </td>
+        </td> */ ?>
         <td class="table_cell cell_code">
             <span class="left"><?php echo __('Gender'); ?></span>
             <span class="icon_sort_<?php echo ($sortedcol =='Student.gender')?$sorteddir:'up'; ?>" order="Student.gender"></span>
@@ -132,9 +132,9 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
     ?>
             <tr row-id="<?php echo $id ?>" class="table_row table_row_selection <?php echo ((($ctr++%2) != 0)?'odd':'even');?>">
                 <td class="table_cell"><?php echo $identificationNo; ?></td>
-                <td class="table_cell"><?php echo $this->Html->link($firstName, array('action' => 'view', $id), array('escape' => false)); ?></td>
-                <td class="table_cell"><?php echo $middleName; ?></td>
-                <td class="table_cell"><?php echo $lastName; ?></td>
+                <td class="table_cell"><?php echo $this->Html->link($firstName.' '.$lastName, array('action' => 'view', $id), array('escape' => false)); ?></td>
+                <?php /*<td class="table_cell"><?php echo $middleName; ?></td>
+                <td class="table_cell"><?php echo $lastName; ?></td>*/ ?>
                 <td class="table_cell"><?php echo $gender; ?></td>
                 <td class="table_cell"><?php echo $this->Utility->formatDate($birthday); ?></td>
             </tr>

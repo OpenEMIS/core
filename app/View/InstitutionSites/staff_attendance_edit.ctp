@@ -1,25 +1,24 @@
 <?php 
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Edit Attendance'));
+
+$this->start('contentActions');
+echo $this->Html->link(__('View'), array('action' => 'StaffAttendance', $selectedYear), array('class' => 'divider'));
+$this->end();
+
+$this->start('contentBody');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="staffAttendanceEdit" class="content_wrapper">
+<div id="staffAttendanceEdit" class="content_wrapper dataDisplay">
 	<?php
 	echo $this->Form->create('StaffAttendance', array(
 		'inputDefaults' => array('label' => false, 'div' => false),	
 		'url' => array('controller' => 'InstitutionSites', 'action' => 'staffAttendanceEdit')
 	));
 	?>
-    <h1>
-        <span><?php echo __('Edit Attendance'); ?></span>
-		<?php
-			echo $this->Html->link(__('View'), array('action' => 'StaffAttendance', $selectedYear), array('class' => 'divider'));
-		?>
-    </h1>
-    
-    <?php echo $this->element('alert'); ?>
     <?php echo $this->Form->hidden('Attendance.staffId', array('value' => $staffid)); ?>
     <?php echo $this->Form->hidden('Attendance.institutionSiteId', array('value' => $institutionSiteId)); ?>
     
@@ -29,6 +28,7 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 			<?php
 			echo $this->Form->input('Attendance.school_year_id', array(
 				'options' => $years,
+				'class' => 'form-control',
 				'default' => $selectedYear,
 				'onchange' => 'jsForm.change(this)',
 				'url' => $this->params['controller'] . '/' . $this->action
@@ -40,32 +40,34 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
     <div class="row school_days">
 		<div class="label"><?php echo __('School Days'); ?></div>
 		<div class="value">
-        <input type="text" class="default" value="<?php echo $schoolDays; ?>" disabled="disabled" />
+        <input type="text" class="default form-control" value="<?php echo $schoolDays; ?>" disabled="disabled" />
         <input type="hidden" id="schoolDays" name="schoolDays" class="default" value="<?php echo $schoolDays; ?>"/>
         </div>
 	</div>
     <div class="legendWrapper"><?php echo $legend; ?></div>
-    <div class="table full_width">
-		<div class="table_head">
+    <table class="table table-striped table-hover table-bordered">
+		<thead class="table_head">
+			<tr>
                     <?php foreach($attendanceTypes AS $attendanceType): ?>
-                        <div class="table_cell"><?php echo __($attendanceType['StaffAttendanceType']['national_code']); ?></div>
+                        <th class="table_cell"><?php echo __($attendanceType['StaffAttendanceType']['national_code']); ?></th>
                     <?php endforeach; ?>
-             <div class="table_cell"><?php echo __('Total'); ?></div>
-		</div>
+             <th class="table_cell"><?php echo __('Total'); ?></th>
+			 </tr>
+		</thead>
 		
         <?php
 			$total = 0;
 		?>
 		
-		<div class="table_body">
-			<div class="table_row">
+		<tbody class="table_body">
+			<tr class="table_row">
                         <?php $cnt = 0; ?>
                         <?php foreach($attendanceTypes AS $attendanceType): ?>
                             <?php $attendanceTypeId = $attendanceType['StaffAttendanceType']['id']; ?>
                             <?php echo $this->Form->hidden('StaffAttendance.'.$cnt.'.id', array('value' => $data[$attendanceTypeId]['id'])); ?>
                             <?php echo $this->Form->hidden('StaffAttendance.'.$cnt.'.staff_attendance_type_id', array('value' => $attendanceTypeId)); ?>
                             <?php $total += $data[$attendanceTypeId]['value']; ?>
-                            <div class="table_cell cell_totals">
+                            <td class="table_cell cell_totals">
                                 <div class="input_wrapper">
                                 <?php
                                 echo $this->Form->input('StaffAttendance.'.$cnt.'.value', array(
@@ -79,13 +81,13 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
                                 ));
                                 ?>
                                 </div>
-                            </div>
+                            </td>
                             <?php $cnt++; ?>
                         <?php endforeach; ?>
-                <div class="table_cell cell_subtotal cell_number"><?php echo $total; ?></div>
-			</div>
-		</div>
-	</div>
+                <td class="table_cell cell_subtotal cell_number"><?php echo $total; ?></td>
+			</tr>
+		</tbody>
+	</table>
 	
 	<div class="controls">
 		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
@@ -93,3 +95,4 @@ echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false)
 	</div>
 	<?php echo $this->Form->end(); ?>
 </div>
+<?php $this->end(); ?>

@@ -16,9 +16,8 @@ if ($data !== false) {
 			?>
 			<tr class="table_row" row-id="<?php echo $id; ?>" id-no="<?php echo $id_no; ?>" first-name="<?php echo $firstName; ?>" middle-name="<?php echo $middleName; ?>" last-name="<?php echo $lastName; ?>" preferred-name="<?php echo $preferredName; ?>" gender="<?php echo $gender; ?>" onclick="InstitutionSiteStaff.addStaff(this)">
 				<td class="table_cell cell_id_no"><?php echo $this->Utility->highlight($search, $id_no); ?></td>
-				<td class="table_cell first_name"><?php echo $this->Utility->highlight($search, $firstName); ?></td>
-				<td class="table_cell middle_name"><?php echo $this->Utility->highlight($search, $middleName); ?></td>
-				<td class="table_cell"><?php echo $this->Utility->highlight($search, $lastName); ?></td>
+				<td class="table_cell"><?php echo $this->Utility->highlight($search, $firstName.' '.$lastName); ?></td>
+				
 			</tr>
 			<?php
 		}
