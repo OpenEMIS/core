@@ -3,7 +3,6 @@ echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => 
 echo $this->Html->script('/Students/js/students', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentId', 'student');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
 if($_edit) {
@@ -21,37 +20,37 @@ $obj = $data['Student'];
 
 <fieldset class="section_break" id="general">
 	<legend><?php echo __('Information'); ?></legend>
+	<?php
+		$path = (isset($obj['photo_content']) && !empty($obj['photo_content']) && !stristr($obj['photo_content'], 'null'))? "/Students/fetchImage/{$obj['id']}":"/Students/img/default_student_profile.jpg";
+		echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
+	?>
 	<div class="row">
-		<?php
-			$path = (isset($obj['photo_content']) && !empty($obj['photo_content']) && !stristr($obj['photo_content'], 'null'))? "/Students/fetchImage/{$obj['id']}":"/Students/img/default_student_profile.jpg";
-			echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
-		?>
-		<div class="col-md-2"><?php echo __('OpenEMIS ID'); ?></div>
+		<div class="col-md-3"><?php echo __('OpenEMIS ID'); ?></div>
 		<div class="col-md-6"><?php echo $obj['identification_no']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-2"><?php echo __('First Name'); ?></div>
+		<div class="col-md-3"><?php echo __('First Name'); ?></div>
 		<div class="col-md-6"><?php echo $obj['first_name']; ?></div>
 	</div>
-			<div class="row">
-		<div class="col-md-2"><?php echo __('Middle Name'); ?></div>
+	<div class="row">
+		<div class="col-md-3"><?php echo __('Middle Name'); ?></div>
 		<div class="col-md-6"><?php echo $obj['middle_name']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-2"><?php echo __('Last Name'); ?></div>
+		<div class="col-md-3"><?php echo __('Last Name'); ?></div>
 		<div class="col-md-6"><?php echo $obj['last_name']; ?></div>
 	</div>
-			<div class="row">
-		<div class="col-md-2"><?php echo __('Preferred Name'); ?></div>
+	<div class="row">
+		<div class="col-md-3"><?php echo __('Preferred Name'); ?></div>
 		<div class="col-md-6"><?php echo $obj['preferred_name']; ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-2"><?php echo __('Gender'); ?></div>
+		<div class="col-md-3"><?php echo __('Gender'); ?></div>
 		<div class="col-md-6"><?php echo $this->Utility->formatGender($obj['gender']); ?></div>
 	</div>
 
 	<div class="row">
-		<div class="col-md-2"><?php echo __('Date of Birth'); ?></div>
+		<div class="col-md-3"><?php echo __('Date of Birth'); ?></div>
 		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
 	</div>
 </fieldset>
@@ -59,11 +58,11 @@ $obj = $data['Student'];
 <fieldset class="section_break">
 	<legend><?php echo __('Address'); ?></legend>
 	<div class="row">
-		<div class="col-md-2"><?php echo __('Address'); ?></div>
-		<div class="value address"><?php echo nl2br($obj['address']); ?></div>
+		<div class="col-md-3"><?php echo __('Address'); ?></div>
+		<div class="col-md-6 address"><?php echo nl2br($obj['address']); ?></div>
 	</div>
 	<div class="row">
-		<div class="col-md-2"><?php echo __('Postal Code'); ?></div>
+		<div class="col-md-3"><?php echo __('Postal Code'); ?></div>
 		<div class="col-md-6"><?php echo $obj['postal_code']; ?></div>
 	</div>
 </fieldset>
