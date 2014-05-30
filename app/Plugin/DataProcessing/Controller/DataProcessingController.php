@@ -558,7 +558,6 @@ class DataProcessingController extends DataProcessingAppController {
 	public function genDashboard(){
 		$this->Navigation->addCrumb('Generate');
 		$data = array();
-		
 		$this->ReportGenDashboard->getQAList();
 		
 		$this->set(compact('data'));

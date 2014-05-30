@@ -1,6 +1,5 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 ?>
 
 <?php echo $this->element('breadcrumb'); ?>
