@@ -29,7 +29,7 @@ class DataProcessingController extends DataProcessingAppController {
 		'SecurityUser'
 	);
 	
-	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6');
+	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6', 'Dashboards.ReportGenDashboard');
 	
 	private function getLogPath(){
 		//return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results/logs/';
@@ -475,7 +475,7 @@ class DataProcessingController extends DataProcessingAppController {
             }*/
             $this->processGenerate($this->data['Reports']);
 		}
-		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est','cus'))), 'order' => array('Report.order')));
+		$data = $this->Report->find('all',array('conditions'=>array('Report.visible' => 1, 'NOT'=>array('file_type'=>array('ind','est','cus','html'))), 'order' => array('Report.order')));
 		$QR = $this->Report->getQueuedRunningReport();
 
 		foreach($QR as $arrV){
@@ -553,6 +553,15 @@ class DataProcessingController extends DataProcessingAppController {
 		//pr($tmp);die;
 		$this->set('data',$tmp);
 		$this->set('queued',$q);
+	}
+	
+	public function genDashboard(){
+		$this->Navigation->addCrumb('Generate');
+		$data = array();
+		
+		$this->ReportGenDashboard->getQAList();
+		
+		$this->set(compact('data'));
 	}
 	
 	public function export($option='DevInfo6') {
