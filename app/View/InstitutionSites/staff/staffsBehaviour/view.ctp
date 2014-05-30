@@ -2,27 +2,31 @@
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
 echo $this->Html->script('search', false);
-?>
 
-<?php echo $this->element('breadcrumb'); ?>
+echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 
-<div id="staffBehaviourView" class="content_wrapper">
-    <h1>
-        <span><?php echo __('Behaviour Details'); ?></span>
-		<?php
-		$data = $staffBehaviourObj[0]['StaffBehaviour'];
-		echo $this->Html->link(__('List'), array('action' => 'staffsBehaviour', $data['staff_id']), array('class' => 'divider'));
-        if($institution_site_id == $data['institution_site_id']){
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Behaviour Details'));
+
+$data = $staffBehaviourObj[0]['StaffBehaviour'];
+
+$this->start('contentActions');
+echo $this->Html->link(__('List'), array('action' => 'staffsBehaviour', $data['staff_id']), array('class' => 'divider'));
+        if($institutionSiteId == $data['institution_site_id']){
     		if($_edit) {
-    			echo $this->Html->link(__('Edit'), array('action' => 'staffBehaviourEdit', $data['id']), array('class' => 'divider'));
+    			echo $this->Html->link(__('Edit'), array('action' => 'staffsBehaviourEdit', $data['id']), array('class' => 'divider'));
     		}
     		if($_delete) {
-    			echo $this->Html->link(__('Delete'), array('action' => 'staffBehaviourDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+    			echo $this->Html->link(__('Delete'), array('action' => 'staffsBehaviourDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
     		}
         }
-		?>
-    </h1>
-    <?php echo $this->element('alert'); ?>
+$this->end();
+
+$this->start('contentBody');
+?>
+
+<div id="staffBehaviourView" class="content_wrapper dataDisplay">
 
     <div class="row edit">
         <div class="label"><?php echo __('Institution Site'); ?></div>
@@ -44,35 +48,26 @@ echo $this->Html->script('search', false);
 	<div class="row edit">
     		<div class="label"><?php echo __('Title'); ?></div>
     		<div class="value">
-    		<?php echo $this->Form->input('title', array('id' => 'title',
-    		                                             'class' => 'default',
-    		                                             'label' => false,
-    		                                             'disabled' => true,
-    		                                             'default' => $data['title'])); ?>
+    		<?php
+			echo $data['title'];
+			?>
     		</div>
     	</div>
 
     	<div class="row edit">
     		<div class="label"><?php echo __('Description'); ?></div>
     		<div class="value">
-    		<?php echo $this->Form->input('description', array('class' => 'default',
-    		                                                   'label' => false,
-    		                                                   'disabled' => true,
-    		                                                   'type' => 'textarea',
-    		                                                   'onkeyup' => 'utility.charLimit(this)',
-    		'default' => $data['description'])); ?>
+    		<?php
+			echo $data['description'];
+			?>
     		</div>
     	</div>
 
         <div class="row edit">
     		<div class="label"><?php echo __('Action'); ?></div>
     		<div class="value">
-    		<?php echo $this->Form->input('action', array('class' => 'default',
-    		                                              'label' => false,
-    		                                              'disabled' => true,
-    		                                              'type' => 'textarea',
-    		                                              'onkeyup' => 'utility.charLimit(this)',
-    		'default'=>$data['action'])); ?>
+    		<?php echo $data['action']; ?>
     		</div>
     	</div>
 </div>
+<?php $this->end(); ?>
