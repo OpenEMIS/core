@@ -86,6 +86,7 @@ class HomeController extends AppController {
 		$this->bodyTitle = 'Account';
 		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('My Details');
+		$header = __('My Details');
 		$userId = $this->Auth->user('id');
 		$this->SecurityUser->id = $userId;
 		$obj = $this->SecurityUser->read();
@@ -98,12 +99,13 @@ class HomeController extends AppController {
 		));
 		$obj['SecurityUser']['roles'] = $this->SecurityRoleFunction->getModules($roleIds);
 		*/
-		$this->set('obj', $obj);
+		$this->set(compact('obj','header'));
 	}
 	public function detailsEdit() {
 		$this->bodyTitle = 'Account';
 		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('Edit My Details');
+		$header = __('Edit My Details');
 		$userId = $this->Auth->user('id');
 		$this->SecurityUser->formatResult = true;
 		$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
@@ -120,7 +122,7 @@ class HomeController extends AppController {
 				$data = array_merge($data, $postData);
 			}
 		}
-		$this->set('data', $data);
+		$this->set(compact('data', 'header'));
 		$this->set('statusOptions', $this->SecurityUser->status);
 	}
 	
@@ -128,7 +130,7 @@ class HomeController extends AppController {
 		$this->bodyTitle = 'Account';
 		$this->Navigation->addCrumb('Account', array('controller' => 'Home', 'action' => 'details'));
 		$this->Navigation->addCrumb('Change Password');
-		
+		$header = __('Change Password');
 		$allowChangePassword = (bool) $this->ConfigItem->getValue('change_password');
 		
 		if(!$allowChangePassword) {
@@ -164,6 +166,8 @@ class HomeController extends AppController {
 			//$this->Utility->alert($status['status'], $status['msg']);
 			$this->Utility->alert($status['msg'],array('type'=>$status['status']));
 		}
+		
+		$this->set(compact('header'));
 	}
 
 	private function validateChangePassword($currentPassword, $newPassword, $retypePassword) {
