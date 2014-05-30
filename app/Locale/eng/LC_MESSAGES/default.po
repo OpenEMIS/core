@@ -2474,3 +2474,49 @@ msgstr ""
 
 msgid "Max Resolution"
 msgstr ""
+
+# ###########################################################################
+# Dashboard
+# ###########################################################################
+
+msgid "Dashboards"
+msgstr ""
+
+msgid "Dashboard Reports"
+msgstr ""
+
+msgid "ECE QA Dashbaord"
+msgstr "
+
+msgid "Early Childhood Education Quality Assurance Data"
+msgstr ""
+
+msgid "Geographical Level"
+msgstr ""
+
+msgid “Apply”
+msgstr ""
+
+msgid "Administrative and Technical Aspects"
+msgstr ""
+
+msgid "Trends"
+msgstr ""
+
+msgid "Administrative Domains"
+msgstr ""
+
+msgid "Technical Domains"
+msgstr ""
+
+msgid "Distribution of Both Aspects"
+msgstr ""
+
+msgid "Scatterplot of Administrative and Technical and Aspects"
+msgstr ""
+
+msgid "Appointment"
+msgstr ""
+
+msgid "Reports - Dashboard"
+msgstr ""

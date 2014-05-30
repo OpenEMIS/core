@@ -66,17 +66,17 @@ $this->start('contentBody');
 							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.identification_no') ? $sorteddir : 'up'; ?>"  order="Staff.identification_no"></span>
 						</th>
 						<th>
-							<span class="left"><?php echo __('First Name'); ?></span>
+							<span class="left"><?php echo __('Name'); ?></span>
 							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.first_name') ? $sorteddir : 'up'; ?>" order="Staff.first_name"></span>
 						</th>
-						<th>
+						<?php /*<th>
 							<span class="left"><?php echo __('Middle Name'); ?></span>
 							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.middle_name') ? $sorteddir : 'up'; ?>" order="Staff.middle_name"></span>
 						</th>
 						<th>
 							<span class="left"><?php echo __('Last Name'); ?></span>
 							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.last_name') ? $sorteddir : 'up'; ?>" order="Staff.last_name"></span>
-						</th>
+						</th> */ ?>
 						<th>
 							<span class="left"><?php echo __('Gender'); ?></span>
 							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.gender') ? $sorteddir : 'up'; ?>" order="Staff.gender"></span>
@@ -100,9 +100,9 @@ $this->start('contentBody');
 						?>
 						<tr row-id="<?php echo $id ?>">
 							<td><?php echo $identificationNo; ?></td>
-							<td><?php echo $this->Html->link($firstName, array('action' => 'viewStaff', $id), array('escape' => false)); ?></td>
-							<td><?php echo $middleName; ?></td>
-							<td><?php echo $lastName; ?></td>
+							<td><?php echo $this->Html->link($firstName.' '.$lastName, array('action' => 'viewStaff', $id), array('escape' => false)); ?></td>
+							<?php /*<td><?php echo $middleName; ?></td>
+							<td><?php echo $lastName; ?></td> */ ?>
 							<td><?php echo $gender; ?></td>
 							<td><?php echo $this->Utility->formatDate($birthday); ?></td>
 						</tr>

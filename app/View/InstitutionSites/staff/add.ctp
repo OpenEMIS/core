@@ -183,9 +183,7 @@ $this->start('contentBody');
 			<thead class="table_head">
 				<tr>
 					<td class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></td>
-					<td class="table_cell first_name"><?php echo __('First Name'); ?></td>
-					<td class="table_cell middle_name"><?php echo __('Middle Name'); ?></td>
-					<td class="table_cell"><?php echo __('Last Name'); ?></td>
+					<td class="table_cell"><?php echo __('Name'); ?></td>
 				</tr>
 			</thead>
 		</table>
