@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class ReorderBehavior extends ModelBehavior {
-	public function moveOrder(Model $model, $data, $conditions=array()) {//pr($data);die;
+	public function moveOrder(Model $model, $data, $conditions=array()) {
 		$id = $data[$model->alias]['id'];
 		$idField = $model->alias . '.id';
 		$orderField = $model->alias . '.order';

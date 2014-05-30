@@ -169,7 +169,8 @@ class InstitutionSitesController extends AppController {
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
 		'positions' => 'InstitutionSitePosition',
-		'staff' => 'InstitutionSiteStaff',
+		'staffsBehaviour' => 'Staff.StaffBehaviour',
+		'staff' => 'InstitutionSiteStaff'
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -2354,7 +2355,7 @@ class InstitutionSitesController extends AppController {
 
     //STUDENTS CUSTOM FIELD PER YEAR - ENDS - 
     //STAFF CUSTOM FIELD PER YEAR - STARTS - 
-    private function staffCustFieldYrInits() {
+    public function staffCustFieldYrInits() {
         $action = $this->action;
         $siteid = $this->institutionSiteId;
         $id = @$this->request->params['pass'][0];
@@ -2911,150 +2912,6 @@ class InstitutionSitesController extends AppController {
     }*/
 
     // END STAFF ATTENDANCE PART
-    // STAFF BEHAVIOUR PART
-    public function staffBehaviour() {
-        extract($this->staffCustFieldYrInits());
-        $this->Navigation->addCrumb('List of Behaviour');
-
-        $data = $this->StaffBehaviour->getBehaviourData($id);
-        if (empty($data)) {
-            $this->Utility->alert($this->Utility->getMessage('TEACHER_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
-        }
-
-        $this->set('id', $id);
-        $this->set('data', $data);
-    }
-
-    public function staffBehaviourAdd() {
-        if ($this->request->is('get')) {
-            $staffId = $this->params['pass'][0];
-            $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-            $name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
-            $this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
-            $this->Navigation->addCrumb('Add Behaviour');
-
-            $yearOptions = array();
-            $yearOptions = $this->SchoolYear->getYearList();
-
-            $categoryOptions = array();
-            $categoryOptions = $this->StaffBehaviourCategory->getCategory();
-            $institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive' => -1));
-            $this->set('institution_site_id', $this->institutionSiteId);
-            $this->set('institutionSiteOptions', $institutionSiteOptions);
-            $this->set('id', $staffId);
-            $this->set('categoryOptions', $categoryOptions);
-            $this->set('yearOptions', $yearOptions);
-        } else {
-            $staffBehaviourData = $this->data['InstitutionSiteStaffBehaviour'];
-            $staffBehaviourData['institution_site_id'] = $this->institutionSiteId;
-
-            $this->StaffBehaviour->create();
-            if (!$this->StaffBehaviour->save($staffBehaviourData)) {
-                
-            } else {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-            }
-
-            $this->redirect(array('action' => 'staffBehaviour', $staffBehaviourData['staff_id']));
-        }
-    }
-
-    public function staffBehaviourView() {
-        $staffBehaviourId = $this->params['pass'][0];
-        $staffBehaviourObj = $this->StaffBehaviour->find('all', array('conditions' => array('StaffBehaviour.id' => $staffBehaviourId)));
-
-        if (!empty($staffBehaviourObj)) {
-            $staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
-            $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-            $name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
-            $this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
-            $this->Navigation->addCrumb('Behaviour Details');
-
-            $yearOptions = array();
-            $yearOptions = $this->SchoolYear->getYearList();
-            $categoryOptions = array();
-            $categoryOptions = $this->StaffBehaviourCategory->getCategory();
-            $institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive' => -1));
-            $this->set('institution_site_id', $this->institutionSiteId);
-            $this->set('institutionSiteOptions', $institutionSiteOptions);
-            $this->Session->write('StaffBehaviourId', $staffBehaviourId);
-            $this->set('categoryOptions', $categoryOptions);
-            $this->set('yearOptions', $yearOptions);
-            $this->set('staffBehaviourObj', $staffBehaviourObj);
-        } else {
-            //$this->redirect(array('action' => 'classesList'));
-        }
-    }
-
-    public function staffBehaviourEdit() {
-        if ($this->request->is('get')) {
-            $staffBehaviourId = $this->params['pass'][0];
-            $staffBehaviourObj = $this->StaffBehaviour->find('all', array('conditions' => array('StaffBehaviour.id' => $staffBehaviourId)));
-
-            if (!empty($staffBehaviourObj)) {
-                $staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
-                if ($staffBehaviourObj[0]['StaffBehaviour']['institution_site_id'] != $this->institutionSiteId) {
-                    $this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
-                    $this->redirect(array('action' => 'staffBehaviourView', $staffBehaviourId));
-                }
-                $data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
-                $name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
-                $this->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
-                $this->Navigation->addCrumb('Edit Behaviour Details');
-
-                $categoryOptions = array();
-                $categoryOptions = $this->StaffBehaviourCategory->getCategory();
-                $institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive' => -1));
-                $this->set('institution_site_id', $this->institutionSiteId);
-                $this->set('institutionSiteOptions', $institutionSiteOptions);
-                $this->set('categoryOptions', $categoryOptions);
-                $this->set('staffBehaviourObj', $staffBehaviourObj);
-            } else {
-                //$this->redirect(array('action' => 'studentsBehaviour'));
-            }
-        } else {
-            $staffBehaviourData = $this->data['InstitutionSiteStaffBehaviour'];
-            $staffBehaviourData['institution_site_id'] = $this->institutionSiteId;
-
-            $this->StaffBehaviour->create();
-            if (!$this->StaffBehaviour->save($staffBehaviourData)) {
-                
-            } else {
-                $this->Utility->alert($this->Utility->getMessage('SAVE_SUCCESS'));
-            }
-
-            $this->redirect(array('action' => 'staffBehaviourView', $staffBehaviourData['id']));
-        }
-    }
-
-    public function staffBehaviourDelete() {
-        if ($this->Session->check('InstitutionSiteStaffId') && $this->Session->check('StaffBehaviourId')) {
-            $id = $this->Session->read('StaffBehaviourId');
-            $staffId = $this->Session->read('InstitutionSiteStaffId');
-            $name = $this->StaffBehaviour->field('title', array('StaffBehaviour.id' => $id));
-            $institution_site_id = $this->StaffBehaviour->field('institution_site_id', array('StaffBehaviour.id' => $id));
-            if ($institution_site_id != $this->institutionSiteId) {
-                $this->Utility->alert($this->Utility->getMessage('SECURITY_NO_ACCESS'));
-                $this->redirect(array('action' => 'staffsBehaviourView', $id));
-            }
-            $this->StaffBehaviour->delete($id);
-            $this->Utility->alert($name . ' have been deleted successfully.');
-            $this->redirect(array('action' => 'staffBehaviour', $staffId));
-        }
-    }
-
-    public function staffBehaviourCheckName() {
-        $this->autoRender = false;
-        $title = trim($this->params->query['title']);
-
-        if (strlen($title) == 0) {
-            return $this->Utility->getMessage('SITE_STUDENT_BEHAVIOUR_EMPTY_TITLE');
-        }
-
-        return 'true';
-    }
-
-    // END STAFF BEHAVIOUR PART
 
     private function getAvailableYearId($yearList) {
         $yearId = 0;

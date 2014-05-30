@@ -447,4 +447,15 @@ class InstitutionSiteProgramme extends AppModel {
 		}
 		return $data;
 	}
+	
+	public function programmesOptions($controller, $params) {
+        $controller->layout = 'ajax';
+		$this->render = false;
+
+        $yearId = $controller->params->query['yearId'];
+        $programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($controller->institutionSiteId, $yearId, false);
+        
+        $controller->set(compact('programmeOptions'));
+        $controller->render('/Elements/programmes/programmes_options');
+    }
 }
