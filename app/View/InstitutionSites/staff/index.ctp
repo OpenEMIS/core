@@ -166,16 +166,8 @@ echo $this->Form->end();
 						<span class="icon_sort_<?php echo ($orderBy == 'Staff.identification_no') ? $orderSort : 'up'; ?>" orderBy="Staff.identification_no"></span>
 					</th>
 					<th style="width:120px;">
-						<span class="left"><?php echo __('First Name'); ?></span>
+						<span class="left"><?php echo __('Name'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy == 'Staff.first_name') ? $orderSort : 'up'; ?>" orderBy="Staff.first_name"></span>
-					</th>
-					<th style="width:120px;">
-						<span class="left"><?php echo __('Middle Name'); ?></span>
-						<span class="icon_sort_<?php echo ($orderBy == 'Staff.middle_name') ? $orderSort : 'up'; ?>" orderBy="Staff.middle_name"></span>
-					</th>
-					<th style="width:120px;">
-						<span class="left"><?php echo __('Last Name'); ?></span>
-						<span class="icon_sort_<?php echo ($orderBy == 'Staff.last_name') ? $orderSort : 'up'; ?>" orderBy="Staff.last_name"></span>
 					</th>
 					<th style="width:120px;">
 						<span class="left"><?php echo __('Position'); ?></span>
@@ -190,9 +182,7 @@ echo $this->Form->end();
 			?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['Staff']['identification_no'], array('action' => 'staffView', $obj['Staff']['id']), array('escape' => false)); ?></td>
-					<td><?php echo $obj['Staff']['first_name']; ?></td>
-					<td><?php echo $obj['Staff']['middle_name']; ?></td>
-					<td><?php echo $obj['Staff']['last_name']; ?></td>
+					<td><?php echo $obj['Staff']['first_name'].' '.$obj['Staff']['last_name']; ?></td>
 					<td class="table_cell"><?php echo $obj['StaffPositionTitle']['name']; ?></td>
 				</tr>
 			<?php } ?>
