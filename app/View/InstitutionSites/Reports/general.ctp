@@ -3,13 +3,14 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Reports/css/reports', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
+$this->assign('contentHeader', key($data));
 
 $this->start('contentBody');
+
 ?>
 <?php if (count($data) > 0) { ?>
-	<div class="content_wrapper">
-		<?php foreach ($data as $module => $arrVals) { ?>
-			<h1><span><?php echo __(ucwords($module)); ?></span></h1>
+	<?php foreach ($data as $module => $arrVals) { ?>
+		<div class="table-responsive">
 			<table class="table table-striped table-hover table-bordered" action="Reports/<?php echo $this->action; ?>/">
 				<thead>
 					<tr>
@@ -32,8 +33,8 @@ $this->start('contentBody');
 					<?php } ?>
 				</tbody>
 			</table>
-		<?php } ?>
-	</div>
+		</div>
+	<?php } ?>
 <?php
 }
 $this->end();
