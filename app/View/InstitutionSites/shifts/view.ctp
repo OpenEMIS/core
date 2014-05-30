@@ -23,47 +23,43 @@ $this->end();
 
 $this->start('contentBody');
 ?>
-<div id="shiftsView" class="content_wrapper dataDisplay">
-    <div class="row">
-        <div class="label"><?php echo __('Shift Name'); ?></div>
-        <div class="value"><?php echo $dataShift['name']; ?></div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('School Year'); ?></div>
-        <div class="value"><?php echo $dataSchoolYear['name']; ?></div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Start Time'); ?></div>
-        <div class="value"><?php echo $dataShift['start_time']; ?></div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('End Time'); ?></div>
-        <div class="value"><?php echo $dataShift['end_time']; ?></div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Location'); ?></div>
-        <div class="value">
-			<?php echo $dataLocationSite['name']; ?>
-
-        </div>
-    </div>
-<!--    <div class="row">
-        <div class="label"><?php echo __('Modified by'); ?></div>
-        <div class="value"><?php echo trim($dataModifiedUser['first_name'] . ' ' . $dataModifiedUser['last_name']); ?></div>
-    </div>
-    <div class="row">
-        <div class="label"><?php echo __('Modified on'); ?></div>
-        <div class="value"><?php echo $dataShift['modified']; ?></div>
-    </div>
 
     <div class="row">
-        <div class="label"><?php echo __('Created by'); ?></div>
-        <div class="value"><?php echo trim($dataCreatedUser['first_name'] . ' ' . $dataCreatedUser['last_name']); ?></div>
+        <div class="col-md-3"><?php echo __('Shift Name'); ?></div>
+        <div class="col-md-6"><?php echo $dataShift['name']; ?></div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"><?php echo __('School Year'); ?></div>
+        <div class="col-md-6"><?php echo $dataSchoolYear['name']; ?></div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"><?php echo __('Start Time'); ?></div>
+        <div class="col-md-6"><?php echo $dataShift['start_time']; ?></div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"><?php echo __('End Time'); ?></div>
+        <div class="col-md-6"><?php echo $dataShift['end_time']; ?></div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"><?php echo __('Location'); ?></div>
+        <div class="col-md-6"><?php echo $dataLocationSite['name']; ?></div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"><?php echo __('Modified by'); ?></div>
+        <div class="col-md-6"><?php echo trim($dataModifiedUser['first_name'] . ' ' . $dataModifiedUser['last_name']); ?></div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"><?php echo __('Modified on'); ?></div>
+        <div class="col-md-6"><?php echo $dataShift['modified']; ?></div>
+    </div>
+    <div class="row">
+        <div class="col-md-3"><?php echo __('Created by'); ?></div>
+        <div class="col-md-6"><?php echo trim($dataCreatedUser['first_name'] . ' ' . $dataCreatedUser['last_name']); ?></div>
     </div>
 
     <div class="row">
-        <div class="label"><?php echo __('Created on'); ?></div>
-        <div class="value"><?php echo $dataShift['created']; ?></div>
-    </div>-->
+        <div class="col-md-3"><?php echo __('Created on'); ?></div>
+        <div class="col-md-6"><?php echo $dataShift['created']; ?></div>
+    </div>
 </div>
 <?php $this->end(); ?>
