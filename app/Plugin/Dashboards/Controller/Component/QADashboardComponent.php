@@ -90,7 +90,7 @@ class QADashboardComponent extends Component {
 	public function beforeRedirect(Controller $controller, $url, $status = null, $exit = true) { }
 	
 	public function init() {
-		$lang = $_COOKIE['language'];
+		//$lang = $_COOKIE['language'];
 	}
 	
 	private function return_flat_array($data, $type = 'key'){
