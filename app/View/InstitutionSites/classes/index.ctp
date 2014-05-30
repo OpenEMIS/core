@@ -14,24 +14,20 @@ $this->end();
 
 $this->start('contentBody');
 echo $this->element('templates/year_options', array('url' => 'classes'));
+echo $this->Form->create('InstitutionSite', array(
+	'url' => array('controller' => 'InstitutionSites', 'action' => 'classes'),
+	'inputDefaults' => array('label' => false, 'div' => false)
+));
 ?>
 
-<div id="classes" class="content_wrapper">
-
-	<?php
-	echo $this->Form->create('InstitutionSite', array(
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'classes'),
-		'inputDefaults' => array('label' => false, 'div' => false)
-	));
-	?>
-
-	<table class="table table-striped table-hover table-bordered" action="InstitutionSites/classesView/">
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th class="table_cell cell_class"><?php echo __('Class'); ?></th>
-				<th class="table_cell"><?php echo __('Grade'); ?></th>
-				<th class="table_cell cell_gender"><?php echo __('Male'); ?></th>
-				<th class="table_cell cell_gender"><?php echo __('Female'); ?></th>
+				<th class="cell_class"><?php echo __('Class'); ?></th>
+				<th><?php echo __('Grade'); ?></th>
+				<th class="cell_gender"><?php echo __('Male'); ?></th>
+				<th class="cell_gender"><?php echo __('Female'); ?></th>
 			</tr>
 		</thead>
 

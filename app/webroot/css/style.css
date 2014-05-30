@@ -7,11 +7,12 @@
 .form-control {
 	font-size: 11px;
     height: 25px;
-    padding: 4px 6px;
+    padding: 5px 6px;
 }
 .form-horizontal .control-label { padding-top: 5px; font-size: 11px; }
 
 .table-checkable .checkbox-column { width: 36px; }
+.input-group-addon { font-size: 12px; padding: 5px 8px; }
 /* end bootstrap */
 
 textarea { resize: none; }
@@ -142,7 +143,6 @@ input.default { width: 240px; }
 /* styles for Additional Info */
 .custom_field {
 	overflow: hidden;
-	margin: 0 15px 15px 10px;
 	border: 1px solid #CCCCCC;
 }
 

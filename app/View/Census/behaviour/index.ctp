@@ -17,8 +17,7 @@ $this->start('contentBody');
 echo $this->element('census/year_options');
 ?>
 
-<div id="behaviour" class="content_wrapper">
-
+<div class="table-responsive">
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
