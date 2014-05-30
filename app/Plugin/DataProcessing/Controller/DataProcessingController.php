@@ -29,7 +29,7 @@ class DataProcessingController extends DataProcessingAppController {
 		'SecurityUser'
 	);
 	
-	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6', 'Dashboards.ReportGenDashboard');
+	public $components = array('DataProcessing.Indicator', 'DevInfo6.DevInfo6');
 	
 	private function getLogPath(){
 		//return ROOT.DS.'app'.DS.'Plugin'.DS.'Reports'.DS.'webroot'.DS.'results/logs/';
@@ -553,14 +553,6 @@ class DataProcessingController extends DataProcessingAppController {
 		//pr($tmp);die;
 		$this->set('data',$tmp);
 		$this->set('queued',$q);
-	}
-	
-	public function genDashboard(){
-		$this->Navigation->addCrumb('Generate');
-		$data = array();
-		$this->ReportGenDashboard->getQAList();
-		
-		$this->set(compact('data'));
 	}
 	
 	public function export($option='DevInfo6') {
