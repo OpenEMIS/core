@@ -6,7 +6,7 @@ echo $this->Html->script('census', false);
 echo $this->Html->script('census_finance', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Finances'));
+$this->assign('contentHeader', $header);
 
 $this->start('contentActions');
 echo $this->Html->link(__('View'), array('action' => 'finances', $selectedYear), array('class' => 'divider'));

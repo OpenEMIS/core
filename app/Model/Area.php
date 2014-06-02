@@ -132,7 +132,7 @@ class Area extends AppModel {
 			$controller->request->data[$this->alias]['parent_id'] = $parentId;
 			$controller->request->data[$this->alias]['order'] = $this->field('order', array('parent_id' => $parentId), 'order DESC') + 1;
 			if ($this->save($controller->request->data)) {
-				$controller->Message->alert('general.edit.success');
+				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'areasView', 'parent' => $parentId, $this->id));
 			}
 		}

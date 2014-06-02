@@ -134,7 +134,7 @@ class EducationProgramme extends AppModel {
 				$controller->request->data[$this->alias]['education_cycle_id'] = $conditionId;
 				$controller->request->data[$this->alias]['order'] = $this->field('order', array(), 'order DESC') + 1;
 				if ($this->save($controller->request->data)) {
-					$controller->Message->alert('general.edit.success');
+					$controller->Message->alert('general.add.success');
 					return $controller->redirect(array('action' => $this->_action, $this->_condition => $conditionId));
 				}
 			}
