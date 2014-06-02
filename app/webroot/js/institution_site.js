@@ -63,7 +63,7 @@ var objInstitutionSite = {
 		}
 	},
 			
-	filterAttendance: function(obj){
+	filterStudentAttendance: function(obj){
 		var fieldSchoolYear = $("select#schoolYearId");
 		var fieldClass = $("select#classId");
 		var fieldWeek = $("select#weekId");
@@ -75,6 +75,21 @@ var objInstitutionSite = {
 		var url = getRootURL() + $(obj).parent('div').attr('url');
 		url += '/' + fieldSchoolYear.val();
 		url += '/' + fieldClass.val();
+		url += '/' + fieldWeek.val();
+		
+		window.location.href = url;
+	},
+			
+	filterStaffAttendance: function(obj){
+		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldWeek = $("select#weekId");
+
+		if(fieldSchoolYear.length !== 1 || fieldWeek.length !== 1){
+			return false;
+		}
+		
+		var url = getRootURL() + $(obj).parent('div').attr('url');
+		url += '/' + fieldSchoolYear.val();
 		url += '/' + fieldWeek.val();
 		
 		window.location.href = url;
