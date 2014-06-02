@@ -29,49 +29,55 @@ echo $this->Form->create($model, $formOptions);
 	echo $this->Form->input('TrainingSession.trainer', array('label'=>array('text'=>__('Trainer'), 'class'=>'col-md-3 control-label'), 'id' => 'searchTrainer', 'disabled' => 'disabled', 'class'=>'form-control trainer', 'placeholder' => __('Identification No, First Name or Last Name'), 'value'=>$this->request->data['TrainingSession']['trainer']));
 
 	?>
- <div class="row">
-	<div class="label"><?php echo __('Trainees'); ?></div>
-	<div class="value">
-	<div class="table trainee" style="width:240px;" url="Training/ajax_find_trainee/">
+ <div class="form-group">
+	<label class="col-md-3 control-label"><?php echo __('Trainees'); ?></label>
+	<div class="col-md-6">
+	<div class="table trainee"  url="Training/ajax_find_trainee/">
 		<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
-		<div class="table_body" style="display:table;">
+		<table class="table_body" style="display:table;">
+	 	<thead class="table_head">
+        	<tr>
+	       		<td class="table_cell"><?php echo __('Name'); ?></td>
+	            <td class="table_cell"><?php echo __('Result'); ?></td>
+	            <td class="table_cell"><?php echo __('Completed'); ?></td>
+	        </tr>
+        </thead>
 		<?php 
 		if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->request->data['TrainingSessionTrainee'])){ ?>
 			<?php 
 			$i = 0;  
 			foreach($this->request->data['TrainingSessionTrainee'] as $key=>$val){  ?>
-			<div class="table_row " row-id="<?php echo $i;?>">
-				<div class="table_cell cell_description">
+			<tr class="table_row " row-id="<?php echo $i;?>">
+				<td class="table_cell cell_description">
 					<div class="input_wrapper">
 				 	<div class="training-course-title-<?php echo $i;?>">
-						<?php echo $val['identification_first_name'] . ', ' . $val['identification_last_name'];?>
+						<?php echo $val['first_name'] . ', ' . $val['last_name'];?>
 					</div>
 					<?php if(isset($val['id'])){ ?>
 					<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.id', array('value'=>$val['id'], 
 					'class' => 'control-id')); ?>
 					<?php } ?>
-					<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_id', array('value'=>$val['identification_id'])); ?>
-						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_first_name', array('value'=>$val['identification_first_name'])); ?>
-						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_last_name', array('value'=>$val['identification_last_name'])); ?>
-						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_table', array('value'=>$val['identification_table'])); ?>
+					<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.staff_id', array('value'=>$val['staff_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.first_name', array('value'=>$val['first_name'])); ?>
+						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.last_name', array('value'=>$val['last_name'])); ?>
 					</div>
-			    </div>
+			    </td>
 			 
-				<div class="table_cell cell_delete">
+				<td class="table_cell">
 			    	<?php 
-					echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('value'=>$val['result'], 'style'=>'width:25px;')); ?>
-			    </div>
-			    <div class="table_cell" style="padding:5px;">
+					echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('label'=>false,'value'=>$val['result'], 'style'=>'width:50px;')); ?>
+			    </td>
+			    <td class="table_cell" style="padding:5px;">
 			    	<?php 
-					echo $this->Form->input('TrainingSessionTrainee.'. $i .'.pass', array('default'=>$val['pass'], 'empty'=>array('-1'=>''),
+					echo $this->Form->input('TrainingSessionTrainee.'. $i .'.pass', array('label'=>false,'default'=>$val['pass'], 'empty'=>array('-1'=>''),
 					 'options' => array(1=>__('Passed'), 0 => __('Failed')), 'style'=>'width:70px;padding:0')); ?>
-			    </div>
-			</div>
+			    </td>
+			</tr>
 		<?php 
 			$i++;
 		} ?>
 		<?php } ?>
-		</div>
+		</table>
 	</div>
 	</div>
 </div>

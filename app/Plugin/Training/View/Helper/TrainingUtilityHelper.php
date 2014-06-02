@@ -36,12 +36,6 @@ class TrainingUtilityHelper extends AppHelper {
 			if($module=='TrainingSessionResult'){
 				$status='Posted';
 			}
-			if($module=='TeacherTrainingNeed'){
-				$status='Approved';
-			}
-			if($module=='TeacherTrainingSelfStudy'){
-				$status='Accredited';
-			}
 			if($module=='StaffTrainingNeed'){
 				$status='Approved';
 			}
