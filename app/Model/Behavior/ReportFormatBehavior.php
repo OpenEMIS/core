@@ -42,7 +42,9 @@ class ReportFormatBehavior extends ModelBehavior {
 	}
 	
 	public function generateCSV(Model $model, $index) {
+		$header = $model->reportsGetHeader($index);
 		$data = $model->reportsGetData($index);
+		
 		return $data;
 	}
 	
