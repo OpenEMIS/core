@@ -17,112 +17,177 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusFinance extends AppModel {
-        public $actsAs = array(
-                'ControllerAction'
+	public $actsAs = array(
+		'ControllerAction'
 	);
-    
+	
 	public $belongsTo = array(
-		'FinanceSource'=> array('foreignKey' => 'finance_source_id'),
-		'FinanceCategory' => array('foreignKey' => 'finance_category_id'),
-		'SchoolYear' => array('foreignKey' => 'school_year_id')
+		'FinanceSource',
+		'FinanceCategory',
+		'SchoolYear'
 	);
-        
-        public function getYearsHaveData($institutionSiteId){
-            $data = $this->find('all', array(
-                    'recursive' => -1,
-                    'fields' => array(
-                        'SchoolYear.id',
-                        'SchoolYear.name'
-                    ),
-                    'joins' => array(
-                            array(
-                                'table' => 'school_years',
-                                'alias' => 'SchoolYear',
-                                'conditions' => array(
-                                    'CensusFinance.school_year_id = SchoolYear.id'
-                                )
-                            )
-                    ),
-                    'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId),
-                    'group' => array('CensusFinance.school_year_id'),
-                    'order' => array('SchoolYear.name DESC')
-                )
-            );
-            
-            return $data;
-        }
-        
-        public function finances($controller, $params) {
-        $controller->Navigation->addCrumb('Finances');
+	
+	public $validate = array(
+		'finance_category_id' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a category'
+			)
+		),
+		'finance_source_id' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a source'
+			)
+		),
+		'amount' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter an amount'
+			),
+			'numeric' => array(
+				'rule' => 'numeric',
+				'message' => 'Please enter a numeric value'
+			)
+		)
+	);
+	
+	public $_action = 'finances';
+	public $_header = 'Finances';
+	
+	public function beforeAction($controller, $action) {
+		parent::beforeAction($controller, $action);
+		$controller->Navigation->addCrumb($this->_header);
+		$controller->set('header', __($this->_header));
+		$controller->set('_action', $this->_action);
+	}
+	
+	public function finances($controller, $params) {
+		if ($controller->request->is('post')) {
+			$yearId = $controller->data['CensusFinance']['school_year_id'];
+			$controller->request->data['CensusFinance']['institution_site_id'] = $controller->institutionSiteId;
+			$this->save($controller->request->data['CensusFinance']);
 
-        if ($controller->request->is('post')) {
-            $yearId = $controller->data['CensusFinance']['school_year_id'];
-            $controller->request->data['CensusFinance']['institution_site_id'] = $controller->institutionSiteId;
-            $controller->CensusFinance->save($controller->request->data['CensusFinance']);
+			$controller->redirect(array('action' => 'finances', $yearId));
+		}
 
-            $controller->redirect(array('action' => 'finances', $yearId));
-        }
+		$yearList = $this->SchoolYear->getYearList();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$data = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $controller->institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
+		$newSort = array();
+		foreach ($data as $k => $arrv) {
+			$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
+		}
+		
+		$data = $newSort;
+		
+		$natures = ClassRegistry::init('FinanceNature')->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
+		$sources = $this->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
+		
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->institutionSiteId, $selectedYear);
+		
+		$controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources', 'isEditable'));
+	}
+	
+	public function financesAdd($controller, $params) {
+		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : null;
+		if(!is_null($selectedYear)) {
+			$year = $this->SchoolYear->field('name', array('id' => $selectedYear));
+			$natureId = 0;
+			$typeId = 0;
+			$categoryId = 0;
+			$natureOptions = ClassRegistry::init('FinanceNature')->find('list', array('conditions' => array('visible' => 1)));
+			$typeOptions = array();
+			$categoryOptions = array();
+			if(!empty($natureOptions)) {
+				$natureId = isset($params->pass[1]) ? $params->pass[1] : key($natureOptions);
+				$typeOptions = ClassRegistry::init('FinanceType')->find('list', array('conditions' => array('visible' => 1, 'finance_nature_id' => $natureId)));
+				if(!empty($typeOptions)) {
+					$typeId = isset($params->pass[2]) ? $params->pass[2] : key($typeOptions);
+					$categoryOptions = ClassRegistry::init('FinanceCategory')->find('list', array('conditions' => array('visible' => 1, 'finance_type_id' => $typeId)));
+				}
+			}
+			$sourceOptions = ClassRegistry::init('FinanceSource')->find('list', array('conditions' => array('visible' => 1)));
+			$controller->set(compact('selectedYear', 'year', 'natureOptions', 'natureId', 'typeId', 'typeOptions', 'categoryId', 'categoryOptions', 'sourceOptions'));
+			
+			if($controller->request->is('post') || $controller->request->is('put')) {
+				$controller->request->data[$this->alias]['school_year_id'] = $selectedYear;
+				$controller->request->data[$this->alias]['institution_site_id'] = $controller->institutionSiteId;
+				$controller->request->data[$this->alias]['source'] = 0;
+				
+				if ($this->save($controller->request->data)) {
+					$controller->Message->alert('general.add.success');
+					return $controller->redirect(array('action' => $this->_action));
+				}
+			}
+		} else {
+			return $controller->redirect(array('action' => $this->_action));
+		}
+	}
 
-        $yearList = $controller->SchoolYear->getYearList();
-        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-        $data = $controller->CensusFinance->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $controller->institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
-        $newSort = array();
-        //pr($data);
-        foreach ($data as $k => $arrv) {
-            //$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
-            $newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
-        }
-        
-        $data = $newSort;
-        
-        $natures = $controller->FinanceNature->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
-        $sources = $controller->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
-        
-        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-        
-        $controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources', 'isEditable'));
-    }
+	public function financesEdit($controller, $params) {
+		if ($controller->request->is('post')) {
+			$data = $controller->data['CensusFinance'];
+			$yearId = $data['school_year_id'];
+			unset($data['school_year_id']);
+			foreach ($data as &$val) {
+				$val['institution_site_id'] = $controller->institutionSiteId;
+				$val['school_year_id'] = $yearId;
+			}
+			//pr($controller->request->data);die;
+			$this->saveMany($data);
 
-    public function financesEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Edit Finances');
+			$controller->redirect(array('action' => $this->_action, $yearId));
+		}
 
-        if ($controller->request->is('post')) {
-            $data = $controller->data['CensusFinance'];
-            $yearId = $data['school_year_id'];
-            unset($data['school_year_id']);
-            foreach ($data as &$val) {
-                $val['institution_site_id'] = $controller->institutionSiteId;
-                $val['school_year_id'] = $yearId;
-            }
-            //pr($controller->request->data);die;
-            $controller->CensusFinance->saveMany($data);
+		$yearList = $this->SchoolYear->getAvailableYears();
+		$selectedYear = $controller->getAvailableYearId($yearList);
+		$editable = ClassRegistry::init('CensusVerification')->isEditable($controller->institutionSiteId, $selectedYear);
+		if (!$editable) {
+			$controller->redirect(array('action' => 'finances', $selectedYear));
+		} else {
+			$data = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $controller->institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
+			$newSort = array();
+			foreach ($data as $k => $arrv) {
+				$arrv['CategoryTypes'] = $this->FinanceCategory->find('list', array(
+					'conditions' => array('FinanceCategory.finance_type_id' => $arrv['FinanceCategory']['FinanceType']['id'])
+				));
+				$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
+			}
+			
+			$data = $newSort;
 
-            $controller->redirect(array('action' => 'finances', $yearId));
-        }
+			$natures = ClassRegistry::init('FinanceNature')->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
+			$sources = $this->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
 
-        $yearList = $controller->SchoolYear->getAvailableYears();
-        $selectedYear = $controller->getAvailableYearId($yearList);
-        $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-        if (!$editable) {
-            $controller->redirect(array('action' => 'finances', $selectedYear));
-        } else {
-            $data = $controller->CensusFinance->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $controller->institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
-            $newSort = array();
-            //pr($data);
-            foreach ($data as $k => $arrv) {
-                //$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][$arrv['FinanceCategory']['name']][] = $arrv;
-
-
-                $arrv['CategoryTypes'] = $controller->getFinanceCatByFinanceType($arrv['FinanceCategory']['FinanceType']['id']);
-                $newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
-            }
-            
-            $data = $newSort;
-
-            $natures = $controller->FinanceNature->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
-            $sources = $controller->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
-
-            $controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources'));
-        }
-    }
+			$controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources'));
+		}
+	}
+	
+	public function getYearsHaveData($institutionSiteId){
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'SchoolYear.id',
+				'SchoolYear.name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array(
+						'CensusFinance.school_year_id = SchoolYear.id'
+					)
+				)
+			),
+			'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId),
+			'group' => array('CensusFinance.school_year_id'),
+			'order' => array('SchoolYear.name DESC')
+		));
+		
+		return $data;
+	}
 }

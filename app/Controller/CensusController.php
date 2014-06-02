@@ -19,14 +19,13 @@ App::uses('AppController', 'Controller');
 class CensusController extends AppController {
 	public $institutionSiteId;
 	public $source_type=array(
-						"dataentry" => 0,
-						"external" => 1,
-						"internal" => 2,
-						"estimate" => 3
-						);
+		"dataentry" => 0,
+		"external" => 1,
+		"internal" => 2,
+		"estimate" => 3
+	);
 
 	public $uses = array(
-		'Institution',
 		'InstitutionSite',
 		'InstitutionSiteProgramme',
 		'EducationCycle',
@@ -60,10 +59,6 @@ class CensusController extends AppController {
 		'CensusGridYCategory',
 		'CensusCustomField',
 		'CensusCustomValue',
-		'FinanceSource',
-		'FinanceNature',
-		'FinanceType',
-		'FinanceCategory',
 		'InfrastructureCategory',
 		'InfrastructureBuilding',
 		'InfrastructureResource',
@@ -75,42 +70,42 @@ class CensusController extends AppController {
 		'InfrastructureStatus',
 		'InfrastructureMaterial',
 		'Students.StudentCategory',
-                'EducationProgramme'
+		'EducationProgramme'
 	);
-        
-        public $modules = array(
-            'enrolment' => 'CensusStudent',
-            'teachers' => 'CensusTeacher',
-            'staff' => 'CensusStaff',
-            'classes' => 'CensusClass',
-            'shifts' => 'CensusShift',
-            'graduates' => 'CensusGraduate',
-            'assessments' => 'CensusAssessment',
-            'behaviour' => 'CensusBehaviour',
-            'textbooks' => 'CensusTextbook',
-            'finances' => 'CensusFinance',
-			'attendance' => 'CensusAttendance',
-			'otherforms' => 'CensusCustomField'
-        );
+		
+	public $modules = array(
+		'enrolment' => 'CensusStudent',
+		'teachers' => 'CensusTeacher',
+		'staff' => 'CensusStaff',
+		'classes' => 'CensusClass',
+		'shifts' => 'CensusShift',
+		'graduates' => 'CensusGraduate',
+		'assessments' => 'CensusAssessment',
+		'behaviour' => 'CensusBehaviour',
+		'textbooks' => 'CensusTextbook',
+		'finances' => 'CensusFinance',
+		'attendance' => 'CensusAttendance',
+		'otherforms' => 'CensusCustomField'
+	);
 	
 	public function beforeFilter() {
-                parent::beforeFilter();
+		parent::beforeFilter();
 
-                if ($this->Session->check('InstitutionSiteId')) {
-                    //$institutionId = $this->Session->read('InstitutionId');
-                    //$institutionName = $this->Institution->field('name', array('Institution.id' => $institutionId));
-                    $this->institutionSiteId = $this->Session->read('InstitutionSiteId');
-                    $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
+		if ($this->Session->check('InstitutionSiteId')) {
+			//$institutionId = $this->Session->read('InstitutionId');
+			//$institutionName = $this->Institution->field('name', array('Institution.id' => $institutionId));
+			$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
+			$institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
 
-                    $this->bodyTitle = $institutionSiteName;
-                    $this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-                    //$this->Navigation->addCrumb($institutionName, array('controller' => 'Institutions', 'action' => 'view'));
-                    $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
-                } else {
-                    $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
-                }
-                $this->set('source_type', $this->source_type);
-        }
+			$this->bodyTitle = $institutionSiteName;
+			$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
+			//$this->Navigation->addCrumb($institutionName, array('controller' => 'Institutions', 'action' => 'view'));
+			$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+		} else {
+			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
+		$this->set('source_type', $this->source_type);
+	}
 	
 	public function getAvailableYearId($yearList) {
 		$yearId = 0;
@@ -222,11 +217,11 @@ class CensusController extends AppController {
 		$this->set('yearList', $yearList);
 		$this->set('isEditable', $this->CensusVerification->isEditable($this->institutionSiteId, $selectedYear));
 	}
-        
+		
 	public function infrastructureEdit() {
 		$this->Navigation->addCrumb('Edit Infrastructure');
 		$data = $this->InfrastructureCategory->find('list',array('conditions'=>array('InfrastructureCategory.visible'=>1),'order'=>'InfrastructureCategory.order'));
-                
+				
 		if($this->request->is('post')) {
 			//pr($this->request->data);die;
 			$sanitationGender = $this->request->data['CensusSanitation']['gender'];
@@ -355,7 +350,7 @@ class CensusController extends AppController {
 		return $ret = array_merge(array('data'=>$data),array('types'=>$types));
 	   
 	}
-        
+		
 	private function energy($yr){
 		$data =  $this->CensusEnergy->find('all',array('conditions'=>array('CensusEnergy.school_year_id'=>$yr,'CensusEnergy.institution_site_id'=>$this->institutionSiteId)));
 		$types =  $this->InfrastructureEnergy->find('list',array('conditions'=>array('InfrastructureEnergy.visible'=>1)));
@@ -415,36 +410,4 @@ class CensusController extends AppController {
 	public function getFinanceCatByFinanceType($typeid){
 		return $cat = $this->FinanceCategory->find('list',array('conditions'=>array('FinanceCategory.finance_type_id'=>$typeid)));
 	}
-	
-	public function financesDelete($id) {
-		if ($this->request->is('get')) {
-			throw new MethodNotAllowedException();
-		}
-		$this->CensusFinance->id = $id;
-		$info = $this->CensusFinance->read();
-		if ($this->CensusFinance->delete($id)) {
-			$message = __('Record Deleted!', true);
-		}else{
-			$message = __('Error Occured. Please, try again.', true);
-		}
-		if($this->RequestHandler->isAjax()){
-			$this->autoRender = false;
-			$this->layout = 'ajax';
-			echo json_encode(compact('message'));
-		}
-	}
-
-	public function financeSource() {
-		$this->autoRender = false;
-		$data = $this->FinanceSource->find('all',array('conditions'=>array('FinanceSource.visible'=>1)));
-		echo json_encode($data);
-	}
-
-	public function financeData() {
-		$this->autoRender = false;
-		$data = $this->FinanceNature->find('all',array('recursive'=>2,'conditions'=>array('FinanceNature.visible'=>1)));
-		echo json_encode($data);
-	}
-        
-	
 }
