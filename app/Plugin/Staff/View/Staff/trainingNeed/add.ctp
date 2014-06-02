@@ -111,13 +111,13 @@ echo $this->Form->hidden('id');
 echo $this->Form->hidden('training_status_id');
 echo $this->Form->input('training_course_id', array(
 	'options' => $trainingCourseOptions,
-	'label' => array('text' => $this->Label->get('StaffTrainingNeed.course_title'), 'class' => 'col-md-3 control-label'),
+	'label' => array('text' => $this->Label->get('StaffTraining.course_title'), 'class' => 'col-md-3 control-label'),
 	'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
 	'onchange' => 'objTrainingNeeds.getDetailsAfterChangeCourse(this)'
 ));
-echo $this->Form->input('code', array('disabled' => 'disabled', 'class' => 'form-control training_course_code', 'label' => array('text' => $this->Label->get('StaffTrainingNeed.code'), 'class' => 'col-md-3 control-label')));
+echo $this->Form->input('code', array('disabled' => 'disabled', 'class' => 'form-control training_course_code', 'label' => array('text' => $this->Label->get('StaffTraining.code'), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input('description', array('disabled' => 'disabled', 'class' => 'form-control training_course_description', 'type' => 'textarea'));
-echo $this->Form->input('requirement', array('disabled' => 'disabled', 'class' => 'form-control training_course_requirement', 'label' => array('text' => $this->Label->get('StaffTrainingNeed.requirement'), 'class' => 'col-md-3 control-label')));
+echo $this->Form->input('requirement', array('disabled' => 'disabled', 'class' => 'form-control training_course_requirement', 'label' => array('text' => $this->Label->get('StaffTraining.requirement'), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input('training_priority_id', array('options' => $trainingPriorityOptions));
 echo $this->Form->input('comments');
 

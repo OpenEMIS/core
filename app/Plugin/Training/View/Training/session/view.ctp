@@ -7,7 +7,7 @@ $obj = $data[$modelName];
 $this->start('contentActions');
 echo $this->Html->link($this->Label->get('general.list'), array('action' => 'session'), array('class' => 'divider'));
 if($_edit) {
-	if($obj['training_status_id'] == 1){
+	if($sessionEditable){
 	    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'sessionEdit', $obj['id']), array('class' => 'divider'));
 	}
 }
@@ -69,7 +69,7 @@ $this->start('contentBody'); ?>
 		<?php 
 		if (!empty($trainingSessionTrainees)){ 
 			foreach($trainingSessionTrainees as $val){
-				echo $val['TrainingSessionTrainee']['identification_first_name'] . ', ' . $val['TrainingSessionTrainee']['identification_last_name'] . '<br />';
+				echo $val['Staff']['first_name'] . ', ' . $val['Staff']['last_name'] . '<br />';
 			}
 		}else{
 			echo "-";
