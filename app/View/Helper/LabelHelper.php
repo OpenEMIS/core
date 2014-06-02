@@ -66,6 +66,10 @@ class LabelHelper extends AppHelper {
 			'action' => 'Action',
 			'level' => 'Level'
 		),
+		'password'=> array(
+			'oldPassword' => 'Current Password',
+			'retypePassword' => 'Retype New Password',
+		),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permited on single upload. Each file size should not be larger than 2MB.',
