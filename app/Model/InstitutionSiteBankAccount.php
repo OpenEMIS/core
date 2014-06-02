@@ -17,7 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteBankAccount extends AppModel {
-    public $actsAs = array('ControllerAction');
+    public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
     public $belongsTo = array(
 		'BankBranch',
         'InstitutionSite',
@@ -167,4 +172,21 @@ class InstitutionSiteBankAccount extends AppModel {
 			return $controller->redirect(array('action' => 'bankAccounts'));
         }
     }
+	
+	public function reportsGetData($index) {
+		$options['recursive'] = -1;
+		$options['joins'] = array(
+			array(
+				'table' => 'bank_branches',
+				'alias' => 'BankBranch',
+				'conditions' => array($this->alias.'.bank_branch_id = BankBranch.id')
+			),
+			array(
+				'table' => 'banks',
+				'alias' => 'Bank',
+				'conditions' => array('BankBranch.bank_id = Bank.id')
+			)
+		);
+		return $options;
+	}
 }
