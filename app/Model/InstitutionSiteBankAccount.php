@@ -173,7 +173,13 @@ class InstitutionSiteBankAccount extends AppModel {
         }
     }
 	
+	public function reportsGetHeader($index) {
+		$fields = array();
+		return $fields;
+	}
+	
 	public function reportsGetData($index) {
+		$options = array();
 		$options['recursive'] = -1;
 		$options['joins'] = array(
 			array(
@@ -187,6 +193,9 @@ class InstitutionSiteBankAccount extends AppModel {
 				'conditions' => array('BankBranch.bank_id = Bank.id')
 			)
 		);
-		return $options;
+		
+		$data = $this->find($options);
+		
+		return $data;
 	}
 }
