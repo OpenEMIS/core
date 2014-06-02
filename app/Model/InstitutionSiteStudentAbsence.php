@@ -515,6 +515,11 @@ class InstitutionSiteStudentAbsence extends AppModel {
 					$controller->Message->alert('institutionSiteAttendance.student.failed.class_student_not_match');
 				}
 			}
+			
+			if($absenceData['full_day_absent'] !== 'Yes'){
+				$obj['InstitutionSiteStudentAbsence']['last_date_absent'] = '';
+			}
+			
 		}
 		
 		$classOptions = $controller->InstitutionSiteClass->getClassListByInstitution($controller->institutionSiteId);

@@ -22,9 +22,9 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 <div id="institutionStudentAttendance" class=" institutionAttendance">
 	<div class="topDropDownWrapper page-controls" url="InstitutionSites/attendanceStudent">
 		<?php
-		echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
-		echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
-		echo $this->Form->input('class_id', array('options' => $classOptions, 'value' => $classId, 'id' => 'classId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
+		echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStudentAttendance(this)'));
+		echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStudentAttendance(this)'));
+		echo $this->Form->input('class_id', array('options' => $classOptions, 'value' => $classId, 'id' => 'classId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStudentAttendance(this)'));
 		?>
 	</div>
 	<div id="mainlist">
@@ -67,7 +67,7 @@ echo $this->Form->create('InstitutionSiteStudentAbsence', array(
 								}else{
 									if($index <= $todayIndex){
 										?>
-											<td><?php echo __('present'); ?></td>
+											<td class="present"><?php echo "&#10003"; ?></td>
 										<?php 
 									}else{
 										?>

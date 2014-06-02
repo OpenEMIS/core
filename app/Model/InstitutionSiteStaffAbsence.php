@@ -438,6 +438,10 @@ class InstitutionSiteStaffAbsence extends AppModel {
 							}
 						}
 			}
+			
+			if($absenceData['full_day_absent'] !== 'Yes'){
+				$obj['InstitutionSiteStudentAbsence']['last_date_absent'] = '';
+			}
 		}
 		
 		$fullDayAbsentOptions = array('Yes' => __('Yes'), 'No' => __('No'));

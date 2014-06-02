@@ -6804,7 +6804,7 @@ class InstitutionSitesController extends AppController {
 		foreach($weekList AS $id => $week){
 			$startDate = $week['start_date'];
 			$endDate = $week['end_date'];
-			if($currentDate >= $startDate && $currentDate <= $endDate){
+			if(($currentDate >= $startDate && $currentDate <= $endDate) || ($currentDate <= $startDate)){
 				$currentWeekId = $id;
 				break;
 			}

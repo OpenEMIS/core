@@ -22,8 +22,8 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 <div id="institutionStaffAttendance" class=" institutionAttendance">
 	<div class="topDropDownWrapper page-controls" url="InstitutionSites/attendanceStaff">
 		<?php
-		echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
-		echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
+		echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStaffAttendance(this)'));
+		echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStaffAttendance(this)'));
 		?>
 	</div>
 	<div id="mainlist">
@@ -66,7 +66,7 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 								}else{
 									if($index <= $todayIndex){
 										?>
-											<td><?php echo __('present'); ?></td>
+											<td class="present"><?php echo "&#10003"; ?></td>
 										<?php 
 									}else{
 										?>
