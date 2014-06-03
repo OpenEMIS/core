@@ -10,9 +10,6 @@ if ($isEditable) {
     if ($_add) {
         echo $this->Html->link(__('Add'), array('action' => 'financesAdd', $selectedYear), array('class' => 'divider'));
     }
-    if ($_edit) {
-        echo $this->Html->link(__('Edit'), array('action' => 'financesEdit', $selectedYear), array('class' => 'divider'));
-    }
 }
 $this->end();
 
@@ -39,21 +36,13 @@ foreach ($data as $nature => $arrFinanceType) {
 					<tbody>
 						<?php
 						foreach ($arrCategories as $arrValues) {
-							$record_tag = "";
-							switch ($arrValues['CensusFinance']['source']) {
-								case 1:
-									$record_tag.="row_external";
-									break;
-								case 2:
-									$record_tag.="row_estimate";
-									break;
-							}
+							$recordClass = $this->FormUtility->getSourceClass($arrValues['CensusFinance']['source']);
 							?>
 							<tr>
-								<td class="<?php echo $record_tag; ?>"><?php echo $arrValues['FinanceSource']['name']; ?></td>
-								<td class="<?php echo $record_tag; ?>"><?php echo $arrValues['FinanceCategory']['name']; ?></td>
-								<td class="<?php echo $record_tag; ?>"><?php echo $arrValues['CensusFinance']['description']; ?></td>
-								<td class="<?php echo $record_tag; ?>"><?php echo $arrValues['CensusFinance']['amount']; ?></td>
+								<td class="<?php echo $recordClass; ?>"><?php echo $this->Html->link($arrValues['FinanceSource']['name'], array('action' => 'financesEdit', $arrValues['CensusFinance']['id'])); ?></td>
+								<td class="<?php echo $recordClass; ?>"><?php echo $arrValues['FinanceCategory']['name']; ?></td>
+								<td class="<?php echo $recordClass; ?>"><?php echo $arrValues['CensusFinance']['description']; ?></td>
+								<td class="<?php echo $recordClass; ?>"><?php echo $arrValues['CensusFinance']['amount']; ?></td>
 							</tr>
 						<?php } ?>   
 					</tbody>

@@ -19,13 +19,13 @@ if(!empty($typeId)) {
 $formOptions = $this->FormUtility->getFormOptions($action);
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->input('year', array('value' => $year, 'disabled'));
-echo $this->Form->input('finance_nature', array(
+echo $this->Form->input(__('Finance Nature'), array(
 	'options' => $natureOptions,
 	'url' => $url,
 	'value' => $natureId,
 	'onchange' => 'jsForm.change(this)'
 ));
-echo $this->Form->input('finance_type', array(
+echo $this->Form->input(__('Finance Type'), array(
 	'options' => $typeOptions,
 	'url' => $this->params['controller'] . '/financesAdd/' . $selectedYear . '/' . $natureId,
 	'value' => $typeId,

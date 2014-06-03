@@ -17,9 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusFinance extends AppModel {
-	public $actsAs = array(
-		'ControllerAction'
-	);
+	public $actsAs = array('ControllerAction');
 	
 	public $belongsTo = array(
 		'FinanceSource',
@@ -129,41 +127,42 @@ class CensusFinance extends AppModel {
 	}
 
 	public function financesEdit($controller, $params) {
-		if ($controller->request->is('post')) {
-			$data = $controller->data['CensusFinance'];
-			$yearId = $data['school_year_id'];
-			unset($data['school_year_id']);
-			foreach ($data as &$val) {
-				$val['institution_site_id'] = $controller->institutionSiteId;
-				$val['school_year_id'] = $yearId;
-			}
-			//pr($controller->request->data);die;
-			$this->saveMany($data);
-
-			$controller->redirect(array('action' => $this->_action, $yearId));
-		}
-
-		$yearList = $this->SchoolYear->getAvailableYears();
-		$selectedYear = $controller->getAvailableYearId($yearList);
-		$editable = ClassRegistry::init('CensusVerification')->isEditable($controller->institutionSiteId, $selectedYear);
-		if (!$editable) {
-			$controller->redirect(array('action' => 'finances', $selectedYear));
-		} else {
-			$data = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $controller->institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
-			$newSort = array();
-			foreach ($data as $k => $arrv) {
-				$arrv['CategoryTypes'] = $this->FinanceCategory->find('list', array(
-					'conditions' => array('FinanceCategory.finance_type_id' => $arrv['FinanceCategory']['FinanceType']['id'])
-				));
-				$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
-			}
+		$id = isset($params->pass[0]) ? $params->pass[0] : null;
+		$data = $this->findById($id);
+		if(!empty($data)) {
+			$yearList = $this->SchoolYear->getYearList();
+			$selectedYear = $data['SchoolYear']['id'];
+			$year = $data['SchoolYear']['name'];
+			$financeType = ClassRegistry::init('FinanceType')->findById($data['FinanceCategory']['finance_type_id']);
+			$financeNature = $financeType['FinanceNature'];
+			$financeCategory = $data['FinanceCategory'];
+			$sourceOptions = ClassRegistry::init('FinanceSource')->find('list', array('conditions' => array('visible' => 1)));
 			
-			$data = $newSort;
-
-			$natures = ClassRegistry::init('FinanceNature')->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
-			$sources = $this->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
-
-			$controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources'));
+			if($controller->request->is('post') || $controller->request->is('put')) {
+				if ($this->save($controller->request->data)) {
+					$controller->Message->alert('general.edit.success');
+					return $controller->redirect(array('action' => $this->_action, $selectedYear));
+				}
+			} else {
+				$controller->Session->write('Census.finance.id', $id);
+				$controller->request->data = $data;
+			}
+			$controller->set(compact('data', 'selectedYear', 'year', 'yearList', 'financeType', 'financeNature', 'financeCategory', 'sourceOptions'));
+		} else {
+			return $controller->redirect(array('action' => $this->_action));
+		}
+	}
+	
+	public function financesDelete($controller, $params) {
+		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : null;
+		if($controller->Session->check('Census.finance.id')) {
+			$id = $controller->Session->read('Census.finance.id');
+			if($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			return $controller->redirect(array('action' => $this->_action, $selectedYear)); 
 		}
 	}
 	
