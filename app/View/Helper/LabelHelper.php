@@ -64,15 +64,14 @@ class LabelHelper extends AppHelper {
 			'openemisId' =>'OpenEMIS ID',
 			'code' => 'Code',
 			'action' => 'Action',
-			'level' => 'Level'
+			'level' => 'Level',
+			'class' => 'Class',
+			'comment' => 'Comment'
 		),
 		'password'=> array(
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
 		),
-		'class' => 'Class',
-			'comment' => 'Comment'
-        ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permited on single upload. Each file size should not be larger than 2MB.',
