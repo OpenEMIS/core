@@ -3094,6 +3094,7 @@ class InstitutionSitesController extends AppController {
                     )
                 );
             }
+			pr($options);
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
 
