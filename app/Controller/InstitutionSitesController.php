@@ -3097,7 +3097,7 @@ class InstitutionSitesController extends AppController {
                     )
                 );
             }
-			pr($options);
+			//pr($options);
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
 
@@ -3487,6 +3487,7 @@ class InstitutionSitesController extends AppController {
                     $data = $this->getReportDataAcademic($name);
                     $this->genCSVAcademic($data, $name);
                 } else {
+					
                     $data = $this->getReportData($name);
                     $this->genCSV($data, $this->ReportData['name']);
                 }
@@ -5285,7 +5286,7 @@ class InstitutionSitesController extends AppController {
         header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
 
         $header_row = $this->getHeader($name);
-        //  pr($header_row);
+        //pr($header_row);
         fputcsv($csv_file, $header_row, ',', '"');
 
         // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column

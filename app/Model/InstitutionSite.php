@@ -221,7 +221,7 @@ class InstitutionSite extends AppModel {
 				'InstitutionSiteCustomField' => array(
 				)
 			),
-			'FileName' => 'Report_General_Overview'
+			'fileName' => 'Report_General_Overview'
 		)
 	);
     
@@ -856,6 +856,8 @@ AND
 	}
 	
 	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
 		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
 	}
 
@@ -864,7 +866,7 @@ AND
 		$index = $args[1];
 
 		// General > Overview and More
-		if ($index === 1) {
+		if ($index == 1) {
 			$options = array();
 			//$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
@@ -930,8 +932,9 @@ AND
 			$this->reportMapping[$index]['fields'] = $reportFields;
 
 			$newData = array();
-
-			$institutionSiteCustomFields = $customFieldModel->find('all', array(
+			$dateFormat = 'd F, Y';
+			
+			$institutionSiteCustomFields2 = $customFieldModel->find('all', array(
 				'recursive' => -1,
 				'fields' => array('InstitutionSiteCustomField.id', 'InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
 				'joins' => array(
@@ -974,6 +977,8 @@ AND
 				'group' => array('InstitutionSiteCustomField.id')
 					)
 			);
+			
+			
 
 			foreach ($data AS $row) {
 				if ($row['InstitutionSite2']['date_opened'] == '0000-00-00') {
@@ -989,7 +994,7 @@ AND
 					$originalDate = new DateTime($row['InstitutionSite2']['date_closed']);
 					$row['InstitutionSite2']['date_closed'] = $originalDate->format($dateFormat);
 				}
-				foreach ($institutionSiteCustomFields as $val) {
+				foreach ($institutionSiteCustomFields2 as $val) {
 					if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
 						$row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
 					}
@@ -1006,13 +1011,14 @@ AND
 
 				$newData[] = $sortRow;
 			}
+			
+			return $newData;
 		}
-
-pr($newData);
-		return $newData;
 	}
 	
-	public function reportsGetFileName(){
+	public function reportsGetFileName($args){
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
 		return $this->reportMapping[$index]['fileName'];
 	}
 }
