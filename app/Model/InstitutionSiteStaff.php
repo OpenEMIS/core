@@ -498,5 +498,84 @@ class InstitutionSiteStaff extends AppModel {
             $controller->redirect(array('action' => 'positionsHistory', $InstitutionSitePositionId));
         }
 	}
+	
+	public function getAutoCompleteList($search,  $institutionSiteId) {
+        $search = sprintf('%%%s%%', $search);
+		
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT Staff.id', 'Staff.*'),
+			'joins' => array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
+				)
+			),
+			'conditions' => array(
+				'OR' => array(
+					'Staff.first_name LIKE' => $search,
+					'Staff.last_name LIKE' => $search,
+					'Staff.middle_name LIKE' => $search,
+					'Staff.preferred_name LIKE' => $search,
+					'Staff.identification_no LIKE' => $search
+				),
+				'InstitutionSiteStaff.institution_site_id' => $institutionSiteId
+			),
+			'order' => array('Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.preferred_name')
+		));
 
+        $data = array();
+        foreach ($list as $obj) {
+            $staff = $obj['Staff'];
+            $data[] = array(
+                'label' => sprintf('%s - %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['last_name'], $staff['preferred_name']),
+                'value' => $staff['id']
+            );
+        }
+        return $data;
+    }
+	
+	public function getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate) {
+		//$startYear = date('Y', strtotime($startDate));
+		//$endYear = date('Y', strtotime($endDate));
+		
+		$conditions = array(
+			'InstitutionSiteStaff.institution_site_id = ' . $institutionSiteId
+		);
+		
+//		$conditions['OR'] = array(
+//				array(
+//					'InstitutionSiteStaff.start_year <= "' . $endYear . '"',
+//					'InstitutionSiteStaff.end_year IS NULL'
+//				),
+//				array(
+//					'InstitutionSiteStaff.start_year <= "' . $endYear . '"',
+//					'InstitutionSiteStaff.end_year >= "' . $startYear . '"',
+//					'InstitutionSiteStaff.end_year IS NOT NULL'
+//				)
+//		);
+		
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'DISTINCT Staff.id',
+				'Staff.identification_no',
+				'Staff.first_name',
+				'Staff.middle_name',
+				'Staff.last_name',
+				'Staff.preferred_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('InstitutionSiteStaff.Staff_id = Staff.id')
+				)
+			),
+			'conditions' => $conditions
+		));
+		
+		return $data;
+	}
 }

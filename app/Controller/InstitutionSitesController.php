@@ -125,7 +125,8 @@ class InstitutionSitesController extends AppController {
         'Quality.QualityInstitutionVisit',
         'Students.StudentAttendanceType',
         'Staff.StaffAttendanceType',
-        'InstitutionSiteShift'
+        'InstitutionSiteShift',
+		'InstitutionSiteStudentAbsence'
     );
 	public $helpers = array('Paginator');
 	public $components = array(
@@ -150,7 +151,9 @@ class InstitutionSitesController extends AppController {
 		'shifts' => 'InstitutionSiteShift',
 		'positions' => 'InstitutionSitePosition',
 		'staffsBehaviour' => 'Staff.StaffBehaviour',
-		'staff' => 'InstitutionSiteStaff'
+		'staff' => 'InstitutionSiteStaff',
+		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
+		'attendanceStaff' => 'InstitutionSiteStaffAbsence'
     );
     
 	private $ReportData = array(); //param 1 name ; param2 type
@@ -5575,5 +5578,183 @@ class InstitutionSitesController extends AppController {
         
         return $str;
     }
+	
+	public function getFirstWeekdayBySetting(){
+		$weekdaysArr = array(
+			1 => 'monday',
+			2 => 'tuesday',
+			3 => 'wednesday',
+			4 => 'thursday',
+			5 => 'friday',
+			6 => 'saturday',
+			7 => 'sunday'
+		);
+		
+		$settingFirstWeekDay = $this->ConfigItem->getValue('first_day_of_week');
+		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){
+			$settingFirstWeekDay = 'monday';
+		}
+		
+		$firstWeekday = $settingFirstWeekDay;
+		
+		return $firstWeekday;
+	}
+	
+	public function getLastWeekdayBySetting(){
+		$weekdaysArr = array(
+			1 => 'monday',
+			2 => 'tuesday',
+			3 => 'wednesday',
+			4 => 'thursday',
+			5 => 'friday',
+			6 => 'saturday',
+			7 => 'sunday'
+		);
+		
+		$settingFirstWeekDay = $this->ConfigItem->getValue('first_day_of_week');
+		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){
+			$settingFirstWeekDay = 'monday';
+		}
+		
+		$settingDaysPerWek = intval($this->ConfigItem->getValue('days_per_week'));
+		if(empty($settingDaysPerWek)){
+			$settingDaysPerWek = 5;
+		}
+		
+		foreach($weekdaysArr AS $index => $weekday){
+			if($weekday == $settingFirstWeekDay){
+				$firstWeekdayIndex = $index;
+				break;
+			}
+		}
+		
+		$newIndex = ($firstWeekdayIndex + $settingDaysPerWek - 1) % 7;
+		
+		if($newIndex == 0){
+			$lastWeekday = $weekdaysArr[7];
+		}else{
+			$lastWeekday = $weekdaysArr[$newIndex];
+		}
+		
+		return $lastWeekday;
+	}
+	
+	public function getWeekListByYearId($yearId, $forOptions=true){
+		$settingFirstWeekDay = $this->getFirstWeekdayBySetting();
+		$lastWeekDay = $this->getLastWeekdayBySetting();
+		
+		$currentDate = date("Y-m-d");
+		
+		$yearName = $this->SchoolYear->getSchoolYearById($yearId);
+		$stampFirstDayOfYear = mktime(0, 0, 0, 1, 1, $yearName);
+		
+		$stampFirstWeekDay = strtotime($settingFirstWeekDay, $stampFirstDayOfYear);
+		$stampLastWeekDay = strtotime($lastWeekDay, $stampFirstWeekDay);
+		
+		//$dateFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampFirstWeekDay));
+		//$dateLastWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampLastWeekDay));
+		
+		$stampNextFirstWeekDay = $stampFirstWeekDay;
+		$stampNextLastWeekDay = $stampLastWeekDay;
+
+		$weekList = array();
+		if($stampFirstDayOfYear === $stampFirstWeekDay){
+			$startingIndexWeek = 1;
+		}else{
+			$stampPrevFirstWeekDay = strtotime('-1 week', $stampNextFirstWeekDay);
+			$stampPrevLastWeekDay = strtotime('-1 week', $stampNextLastWeekDay);
+			$datePrevFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampPrevFirstWeekDay));
+			$datePrevLastWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampPrevLastWeekDay));
+			
+			if(date('Y', $stampPrevLastWeekDay) === $yearName){
+				$startingIndexWeek = 2;
+				if($forOptions){
+					if($currentDate >= date("Y-m-d", $stampPrevFirstWeekDay) && $currentDate <= date("Y-m-d", $stampPrevLastWeekDay)){
+						$weekList[1] = sprintf('Current Week (%s - %s)', $datePrevFirstWeekDay, $datePrevLastWeekDay);
+					}else{
+						$weekList[1] = sprintf('Week 1 (%s - %s)', $datePrevFirstWeekDay, $datePrevLastWeekDay);
+					}
+				}else{
+					$weekList[1]['start_date'] = date("Y-m-d", $stampPrevFirstWeekDay);
+					$weekList[1]['end_date'] = date("Y-m-d", $stampPrevLastWeekDay);
+					$weekList[1]['label'] = sprintf('Week 1 (%s - %s)', $datePrevFirstWeekDay, $datePrevLastWeekDay);
+				}
+			}else{
+				$startingIndexWeek = 1;
+			}
+		}
+		
+		while(date('Y', $stampNextFirstWeekDay) == $yearName){
+			$dateNextFirstWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampNextFirstWeekDay));
+			$dateNextLastWeekDay = $this->DateTime->formatDateByConfig(date("Y-m-d", $stampNextLastWeekDay));
+			
+			if($forOptions){
+				if($currentDate >= date("Y-m-d", $stampNextFirstWeekDay) && $currentDate <= date("Y-m-d", $stampNextLastWeekDay)){
+					$weekList[$startingIndexWeek] = sprintf('Current Week (%s - %s)', $dateNextFirstWeekDay, $dateNextLastWeekDay);
+				}else{
+					$weekList[$startingIndexWeek] = sprintf('Week %d (%s - %s)', $startingIndexWeek, $dateNextFirstWeekDay, $dateNextLastWeekDay);
+				}
+			}else{
+				$weekList[$startingIndexWeek]['start_date'] = date("Y-m-d", $stampNextFirstWeekDay);
+				$weekList[$startingIndexWeek]['end_date'] = date("Y-m-d", $stampNextLastWeekDay);
+				$weekList[$startingIndexWeek]['label'] = sprintf('Week %d (%s - %s)', $startingIndexWeek, $dateNextFirstWeekDay, $dateNextLastWeekDay);
+			}
+			
+			$stampNextFirstWeekDay = strtotime('+1 week', $stampNextFirstWeekDay);
+			$stampNextLastWeekDay = strtotime('+1 week', $stampNextLastWeekDay);
+			$startingIndexWeek ++;
+		}
+
+		return $weekList;
+	}
+	
+	public function getStartEndDateByYearWeek($yearId, $weekId){
+		$weekList = $this->getWeekListByYearId($yearId, false);
+		return $weekList[$weekId];
+	}
+	
+	public function getCurrentWeekId($yearId){
+		$weekList = $this->getWeekListByYearId($yearId, false);
+		$currentDate = date("Y-m-d");
+		$currentWeekId = 0;
+		foreach($weekList AS $id => $week){
+			$startDate = $week['start_date'];
+			$endDate = $week['end_date'];
+			if(($currentDate >= $startDate && $currentDate <= $endDate) || ($currentDate <= $startDate)){
+				$currentWeekId = $id;
+				break;
+			}
+		}
+		
+		return $currentWeekId;
+	}
+	
+	public function generateAttendanceHeader($startDate, $endDate){
+		$header = array(__('ID'), __('Name'));
+		
+		$firstDate = $startDate;
+		while($firstDate <= $endDate){
+			$stampStartDate = strtotime($firstDate);
+			$header[] = __(date('D', $stampStartDate));
+			$stampStartDateNew = strtotime('+1 day', $stampStartDate);
+			$firstDate = date("Y-m-d", $stampStartDateNew);
+		}
+		
+		return $header;
+	}
+	
+	public function generateAttendanceWeekDayIndex($startDate, $endDate){
+		$index = array();
+		
+		$firstDate = $startDate;
+		while($firstDate <= $endDate){
+			$stampStartDate = strtotime($firstDate);
+			$index[] = date('Ymd', $stampStartDate);
+			$stampStartDateNew = strtotime('+1 day', $stampStartDate);
+			$firstDate = date("Y-m-d", $stampStartDateNew);
+		}
+		
+		return $index;
+	}
 
 }

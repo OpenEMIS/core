@@ -93,6 +93,38 @@ class FormUtilityHelper extends AppHelper {
 		return $html;
 	}
 	
+	public function timepicker($field, $options=array()) {
+		$id = isset($options['id']) ? $options['id'] : 'time';
+		$wrapper = '<div class="input-group bootstrap-timepicker">';
+		$icon = '<span class="input-group-addon"><i class="fa fa-clock-o"></i></span></div>';
+		$defaults = $this->Form->inputDefaults();
+		$inputOptions = array(
+			'id' => $id,
+			'type' => 'text',
+			'between' => $defaults['between'] . $wrapper,
+			'after' => $icon . $defaults['after']
+		);
+
+		if(isset($options['class'])){
+			$inputOptions['class'] = $options['class'];
+		}
+		if(isset($options['label'])){
+			$inputOptions['label'] = $options['label'];
+		}
+		if(isset($options['default'])){
+			$inputOptions['default'] = $options['default'];
+		}
+		$html = $this->Form->input($field, $inputOptions);
+		if(!is_null($this->_View->get('timepicker'))) {
+			$timepickers = $this->_View->get('timepicker');
+			$timepickers[] = $options['id'];
+			$this->_View->set('timepicker', $timepickers);
+		} else {
+			$this->_View->set('timepicker', array($options['id']));
+		}
+		return $html;
+	}
+	
 	public function getFormWizardButtons($option = NULL) {
 		echo '<div class="form-group">';
 		if (!$option['WizardMode']) {

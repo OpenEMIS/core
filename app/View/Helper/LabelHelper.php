@@ -70,6 +70,9 @@ class LabelHelper extends AppHelper {
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
 		),
+		'class' => 'Class',
+			'comment' => 'Comment'
+        ),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
 			'multi' => '*Maximum 5 files are permited on single upload. Each file size should not be larger than 2MB.',
@@ -116,7 +119,8 @@ class LabelHelper extends AppHelper {
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
 			'name' => 'Institution Site',
-			'programme' => 'Programme'
+			'programme' => 'Programme',
+			'id_name' => 'ID / Name'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -226,6 +230,22 @@ class LabelHelper extends AppHelper {
 		'Position' => array(
 			'teaching' => 'Teaching',
 			'number' => 'Number'
+		),
+		'InstitutionSiteStudentAbsence' => array(
+			'reason' => 'Reason',
+			'first_date_absent' => 'First Date Absent',
+			'full_day_absent' => 'Full Day Absent',
+			'last_date_absent' => 'Last Date Absent',
+			'start_time_absent' => 'Start Time Absent',
+			'end_time_absent' => 'End Time Absent'
+		),
+		'InstitutionSiteStaffAbsence' => array(
+			'reason' => 'Reason',
+			'first_date_absent' => 'First Date Absent',
+			'full_day_absent' => 'Full Day Absent',
+			'last_date_absent' => 'Last Date Absent',
+			'start_time_absent' => 'Start Time Absent',
+			'end_time_absent' => 'End Time Absent'
 		)
 	);
 	

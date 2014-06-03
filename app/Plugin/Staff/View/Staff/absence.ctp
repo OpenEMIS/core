@@ -67,47 +67,58 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
 $this->start('contentBody');
+echo $this->Form->create('InstitutionSiteStaffAbsence', array(
+    'inputDefaults' => array('label' => false, 'div' => false, 'autocomplete' => 'off'),
+    'url' => array('controller' => $this->params['controller'], 'action' => 'attendanceStaffAbsence')
+));
 ?>
-<div class="row myyear">
-	<div class="col-md-2"><?php echo __('Year') ?></div>
-	<div class="col-md-3"><?php
-		echo $this->Form->input('school_year_id', array(
-			'label' => false,
-			'class' => 'form-control',
-			'options' => $yearOptions,
-			'default' => $selectedYearId,
-			'onchange' => 'jsForm.change(this)',
-			'url' => $this->params['controller'] . '/' . $this->action
-		));
-		?></div>
+<div class="topDropDownWrapper page-controls" url="Staff/absence">
+	<?php 
+	echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'jsForm.filterAbsenceByMonth(this)'));
+	echo $this->Form->input('month_id', array('options' => $monthOptions, 'value' => $monthId, 'id' => 'monthId', 'class' => 'form-control', 'onchange' => 'jsForm.filterAbsenceByMonth(this)'));
+	?>
 </div>
-<div class="row school_days">
-	<div class="col-md-2"><?php echo __('School Days') ?></div>
-	<div class="col-md-3"><?php echo $this->Form->input('school_days', array('label' => false, 'class' => 'form-control', 'value' => $schoolDays, 'disabled' => true)); ?></div>
-</div>
-
-<div class="legendWrapper"><?php echo $legend; ?></div>
 <?php
-$attendanceTypesOptions = array();
-foreach($attendanceTypes AS $attendanceType){
-	$attendanceTypesOptions[] = __($attendanceType['StaffAttendanceType']['national_code']);
-}
-$attendanceTypesOptions[] = __('Total');
+if(isset($data)) { 
 
-$tableHeaders = $attendanceTypesOptions;
+$tableHeaders = array(__('First Day'), __('Days'), __('Time'), __('Reason'), __('Type'));
 
 $tableData = array();
-$row = array();
-$total = 0;
-foreach($attendanceTypes AS $attendanceType){
-	$attendanceTypeId = $attendanceType['StaffAttendanceType']['id'];
-	$attendanceValue = isset($data[$attendanceTypeId]) ? $data[$attendanceTypeId] : 0;
-	$total += $attendanceValue;
-	$row[] = $attendanceValue;
+foreach($data as $val) {
+	$tempRow = array();
+	$absenceObj = $val['InstitutionSiteStaffAbsence'];
+	$firstDateFormatted = $this->Utility->formatDate($absenceObj['first_date_absent'], null, false);
+	
+	$stampFirstDateAbsent = strtotime($absenceObj['first_date_absent']);
+	$stampLastDateAbsent = strtotime($absenceObj['last_date_absent']);
+	
+	if($absenceObj['full_day_absent'] == 'Yes'){
+		if(!empty($absenceObj['last_date_absent']) && $stampLastDateAbsent > $stampFirstDateAbsent){
+			$lastDateFormatted = $this->Utility->formatDate($absenceObj['last_date_absent'], null, false);
+			$totalWeekdays = $this->Utility->getAbsenceDaysBySettings($absenceObj['first_date_absent'], $absenceObj['last_date_absent'], $settingWeekdays);
+			$noOfDays = sprintf('%s (to %s)', $totalWeekdays, $lastDateFormatted);
+		}else{
+			$noOfDays = 1;
+		}
+		$timeStr = __('full day');
+	}else{
+		$noOfDays = 1;
+		$timeStr = sprintf('%s - %s', $absenceObj['start_time_absent'], $absenceObj['end_time_absent']);
+	}
+	$reason = $val['StaffAbsenceReason']['name'];
+	$type = $absenceObj['absence_type'];
+	
+	$tempRow[] = $firstDateFormatted;
+	$tempRow[] = $noOfDays;
+	$tempRow[] = $timeStr;
+	$tempRow[] = $reason;
+	$tempRow[] = $type;
+	
+	$tableData[] = $tempRow;
 }
-$row[] = $total;
-$tableData[] = $row;
+
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
 
+}
 $this->end();
 ?>
