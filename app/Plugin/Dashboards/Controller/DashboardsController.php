@@ -54,7 +54,7 @@ class DashboardsController extends DashboardsAppController {
 				if ($this->Session->check('InstitutionSiteId')) {
 					$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
 					$InstitutionSite = ClassRegistry::init('InstitutionSite');
-					$this->institutionSiteAreaId = $InstitutionSite->field('area_id', array('InstitutionSite.id' => $this->institutionSiteId));
+					$this->institutionSiteAreaId = $InstitutionSite->field('institution_site_area_id', array('InstitutionSite.id' => $this->institutionSiteId));
 					$institutionSiteName = $InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
 					$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view', 'plugin' => false));
 					//$this->Navigation->addCrumb('Quality', array('controller' => 'Quality', 'action' => 'qualityRubric', 'plugin'=> 'Quality'));
@@ -139,11 +139,14 @@ class DashboardsController extends DashboardsAppController {
 			return $this->redirect(array('controller' => 'Dashboards', 'action' => 'overview',$id,$temp_geo_id,$temp_area_id,/*$temp_fd_id,*/$temp_year_id));
 		}
 		
-		$countryData = $this->QADashboard->getAreaByGID();
+		$countryData = $this->QADashboard->getCountry();
 		$countryId = $countryData['JORArea']['Area_NId'];
 		$countryName = $countryData['JORArea']['Area_Name'];
 		
-		$regionId = empty($this->params['pass'][1])? 0: $this->params['pass'][1]; //Country ID/Geo Level Id
+		$this->Session->write('Dashboard.Overview.CountryId', $countryId);
+		$this->Session->write('Dashboard.Overview.CountryName', $countryName);
+		
+		$geoLvlId = empty($this->params['pass'][1])? 0: $this->params['pass'][1]; //Country ID/Geo Level Id
 		$areaId = empty($this->params['pass'][2])? 0: $this->params['pass'][2]; //Area Id 
 		//$FDId = empty($this->params['pass'][3])? 0: $this->params['pass'][3]; //FD Id 
 		$yearId = empty($this->params['pass'][3])? 0: $this->params['pass'][3]; //year Id 
@@ -158,13 +161,10 @@ class DashboardsController extends DashboardsAppController {
 		$header = $this->getHeader($id);
 		
 		$this->Navigation->addCrumb($crumbTitle);
-		$geoLvlOptions = $this->QADashboard->getAreaChildLevel($countryId);
-		$regionId = (empty($regionId))? key($geoLvlOptions): $regionId;
+		$geoLvlOptions = $this->QADashboard->getAreaLevel(4);
+		$geoLvlId = (empty($geoLvlId))? key($geoLvlOptions): $geoLvlId;
 		
-		$this->Session->write('Dashboard.Overview.CountryId', $countryId);
-		$this->Session->write('Dashboard.Overview.CountryName', $countryName);
-		
-		$areaLvlOptions = $this->QADashboard->getAreaChildLevel($regionId);
+		$areaLvlOptions = $this->QADashboard->getAreasByLevel($geoLvlId);
 		$areaId = (empty($areaId))? key($areaLvlOptions): $areaId;
 		$FDId = 0;
 		/*$FDLvlOptions = $this->QADashboard->getAreaChildLevel($areaId);
@@ -203,16 +203,16 @@ class DashboardsController extends DashboardsAppController {
 			'break',
 		);
 		
-		$this->set(compact('header', 'regionId', 'areaId', 'FDId','yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', /*'totalKGInfo',*/ 'displayChartData', 'QATableData', 'tableTitle'));
+		$this->set(compact('header', 'geoLvlId', 'areaId', 'FDId','yearId', 'geoLvlOptions', 'areaLvlOptions', 'FDLvlOptions', 'yearsOptions', /*'totalKGInfo',*/ 'displayChartData', 'QATableData', 'tableTitle'));
 		
     }
 	
 	public function dashboardsAjaxGetArea($firstBlank = false){
 		$this->autoRender = false;
 		if($this->request->is('ajax')){
-			$countryId = $this->request->query['countryId'];
+			$levelId = $this->request->query['levelId'];
 			$prependBlank = !empty($this->request->query['prependBlank'])? $this->request->query['prependBlank']:false;
-			$data = $this->QADashboard->getAreaChildLevel($countryId);
+			$data = $this->QADashboard->getAreasByLevel($levelId);
 			
 			$listStr = '';
 			if($prependBlank !== false){
@@ -388,7 +388,7 @@ class DashboardsController extends DashboardsAppController {
 		$this->autoRender = false;
 		$data = $this->QADashboard->setupChartInfo("Distribution of Both Aspects");
 		$childAreaOptions = $this->QADashboard->getAreaChildLevel($selectedAreaId, false);
-		//pr($childAreaOptions);
+		
 		$areaName = $this->QADashboard->getAreaName($selectedAreaId);
 		
 		$indData = $this->QADashboard->getIndicatorByGID($this->QADashboard->indicators['QA_AdminTechBoth_Score']['Both']);//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
@@ -411,6 +411,7 @@ class DashboardsController extends DashboardsAppController {
 			'compareKey' => 'Area_NId'
 		);
 		$data['dataset'][] = $this->QADashboard->setupChartDataset($chartDataSetup,  $childAreaOptions, $unitIndData, $tempAreaData);
+		
 		return json_encode($data);
 	}
 	
@@ -422,7 +423,7 @@ class DashboardsController extends DashboardsAppController {
 		//$yaxisName = 'Technical Aspects';
 		
 		
-		$childAreaOptions = $this->QADashboard->getAreaChildLevel($selectedAreaId, false,2);
+		$childAreaOptions = $this->QADashboard->getAllAreaChildByLevel($selectedAreaId, 5, false);
 		
 		$indData = $this->QADashboard->getIndicatorByGID(array($this->QADashboard->indicators['QA_AdminTechBoth_Score']['Admin'],$this->QADashboard->indicators['QA_AdminTechBoth_Score']['Tech']) );//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
 		$unitIndData = $this->QADashboard->getUnitIndicatorByGID(array($this->QADashboard->indicators['Unit']['Percent']));

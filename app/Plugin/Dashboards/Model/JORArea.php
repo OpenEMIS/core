@@ -16,28 +16,25 @@ have received a copy of the GNU General Public License along with this program. 
 
 class JORArea extends DashboardsAppModel {
 	public $useDbConfig = 'dashboardJor';
+	public $actsAs = array('Tree');
 	//public $useTable = 'ut_area_en';
 	public $countryIndicator = array('Jordan' => '2ed8e897-7d7f-4970-a3ae-4c2e40277fdc');
 	
-	public function getAreaByAreaGId($gid = NULL) {
+	public function getCountry(){
 		$this->setSource('ut_area_'.$this->setupUseTableLang());
-		if (empty($gid)) {
-			$gid = $this->countryIndicator['Jordan'];
-		}
-
-		$options['conditions'] = array('Area_GId' => $gid);
-		$options['order'] = array('Area_ID');
+		
+		$options['conditions'] = array('Area_Parent_NId' => -1);
 		$data = $this->find('first', $options);
 
 		return $data;
 	}
-
-	public function getChildLevel($mode = 'all', $id = -1, $withCode){
+	
+	public function getAreasByLevel($level, $mode = 'all', $withCode = true){
 		$this->setSource('ut_area_'.$this->setupUseTableLang());
-		$options['conditions'] = array('Area_Parent_NId' => $id);
-		$options['order'] = array('Area_ID');
-		$data = $this->find('all', $options);
 		
+		$options['conditions'] = array('Area_Level' => $level);
+		
+		$data = $this->find('all', $options);
 		if($mode == 'list'){
 			$listData = array();
 			foreach($data as $item){
@@ -51,6 +48,44 @@ class JORArea extends DashboardsAppModel {
 			}
 			
 			$data = $listData;
+		}
+		return $data;
+	}
+	
+	public function getAreaByAreaGId($gid = NULL) {
+		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		if (empty($gid)) {
+			$gid = $this->countryIndicator['Jordan'];
+		}
+
+		$options['conditions'] = array('Area_GId' => $gid);
+		$data = $this->find('first', $options);
+
+		return $data;
+	}
+
+	public function getAllChildByLevel($id, $lvl, $mode = 'all', $withCode){
+		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		$options['conditions'] = array('Area_NId' => $id);
+		$parentData = $this->find('first', $options);
+		
+		$options = array();
+		$options['conditions'] = array('lft > ' => $parentData['JORArea']['lft'], 'rght < '=> $parentData['JORArea']['rght'], 'Area_Level' => $lvl);
+		$data = $this->find('all', $options);
+		if($mode == 'list'){
+			$data = $this->processAreaData($data, $withCode);
+		}
+		return $data;
+	}
+	
+	public function getChildLevel($mode = 'all', $id = -1, $withCode){
+		$this->setSource('ut_area_'.$this->setupUseTableLang());
+		$options['conditions'] = array('Area_Parent_NId' => $id);
+		$options['order'] = array('Area_ID');
+		$data = $this->find('all', $options);
+		
+		if($mode == 'list'){
+			$data = $this->processAreaData($data, $withCode);
 		}
 		return $data;
 	}
@@ -69,21 +104,19 @@ class JORArea extends DashboardsAppModel {
 		return $data;
 	}
 
+	
+	private function processAreaData($data, $withCode){
+		$listData = array();
+		foreach($data as $item){
+			$item = $item['JORArea'];
+			if($withCode){
+				$listData[$item['Area_NId']] = sprintf('%s - %s', $item['Area_ID'],$item['Area_Name']);
+			}
+			else{
+				$listData[$item['Area_NId']] = $item['Area_Name'];
+			}
+		}
 
-	/*public function createRecord($data) {
-		$model = array(
-			'Data' => array(
-				'Start_Date' => null,
-				'End_Date' => null,
-				'Data_Denominator' => 0,
-				'FootNote_NId' => -1,
-				'IC_IUS_Order' => null
-			)
-		);
-		
-		$model['Data'] = array_merge($model['Data'], $data);
-		
-		$this->create();
-		$this->save($model);
-	}*/
+		return $listData;
+	}
 }

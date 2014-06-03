@@ -10,7 +10,7 @@ var Dashboards = {
 		$.ajax({
                 type: 'GET',
                 url: getRootURL()+$(obj).attr('url'),
-				data: {countryId: $(obj).val()},
+				data: {levelId: $(obj).val()},
                 beforeSend: function (jqXHR) {
                     // maskId = $.mask({parent: '.content_wrapper'});
                     maskId = $.mask({parent: '.dashboard_wrapper', text: i18n.General.textLoadAreas});

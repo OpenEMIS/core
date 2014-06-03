@@ -26,6 +26,8 @@ echo $this->Html->script('Dashboards.dashboards', false);
 		'type' => 'file',
 		'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
 	));
+	
+	if(!empty($displayChartData)):
 	?>
 	
 	<div class="row left">
@@ -39,12 +41,7 @@ echo $this->Html->script('Dashboards.dashboards', false);
 	<?php echo $this->Form->end(); ?>
 	
 	
-	<?php /*
-	echo '<div style="padding-top:10px;"></div>';
-	foreach ($totalKGInfo as $item) {
-		echo sprintf('%s = %s <br/>', $item['JORIndicator']['Indicator_Name'], $item['JORData']['Data_Value']);
-	}*/
-	?>
+	<?php endif;?>
 	
 	<div style="padding-top:10px;"></div>
 	<?php 

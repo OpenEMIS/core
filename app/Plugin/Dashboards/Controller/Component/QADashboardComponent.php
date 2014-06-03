@@ -151,6 +151,18 @@ class QADashboardComponent extends Component {
 		return $finalData;
 	}
 	
+	public function getCountry(){
+		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$data = $jorAreaData->getCountry();
+		return $data;
+	}
+	
+	public function getAreasByLevel($lvl){
+		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$data = $jorAreaData->getAreasByLevel($lvl, 'list');
+		return $data;
+	}
+	
 	public function getAreaByGID($gid = NULL){
 		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
 		$data = $jorAreaData->getAreaByAreaGId($gid);
@@ -169,15 +181,28 @@ class QADashboardComponent extends Component {
 		return $data;
 	}
 	
-	public function getAreaChildLevel($id, $withCode = true, $level = 1){
+	public function getAreaChildLevel($id, $withCode = true){
 		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
 		$data = $jorAreaData->getChildLevel('list', $id, $withCode);
+		return $data;
+	}
+	
+	public function getAllAreaChildByLevel($id, $lvl, $withCode = true){
+		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$data = $jorAreaData->getAllChildByLevel($id, $lvl,'list', $withCode);
+		return $data;
+	}
+	
+	public function getAreaAllChildLevel($id, $withCode = true){
+		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$data = $jorAreaData->getAllChildLevel('list', $id, $withCode);
+		return $data;
+	}
+	
+	public function getAreaLevel($maxLvl = NULL){
+		$jorAreaLevel = ClassRegistry::init('Dashboards.JORAreaLevel');
 		
-		if($level > 1){
-			$areaId = $this->return_flat_array($data);
-			$level--;
-			$data = $this->getAreaChildLevel($areaId, $withCode, $level);
-		}
+		$data = $jorAreaLevel->getAreaLevel($maxLvl);
 		
 		return $data;
 	}
@@ -243,7 +268,7 @@ class QADashboardComponent extends Component {
 		return $data;
 	}
 	
-	public function getSummaryAllFDBreakdownJorData($areaId,$yearId){
+/*	public function getSummaryAllFDBreakdownJorData($areaId,$yearId){
 		$jorMainData = ClassRegistry::init('Dashboards.JORData');
 		$conditions = array('JORData.IUSNId' => array(8,15,18));
 		$data = $jorMainData->getFDData($areaId,$yearId, $conditions);
@@ -258,7 +283,7 @@ class QADashboardComponent extends Component {
 		$data = $jorMainData->getTotalKGData($areaId, $conditions);
 		
 		return $data;
-	}
+	}*/
 	
 	
 	// ======================
@@ -401,38 +426,21 @@ class QADashboardComponent extends Component {
 		$finalData['anchorsides'] = '4';
 		$finalData['anchorbgcolor'] = '9ACCF6';
 		$finalData['showplotborder'] = '0';
-		
+		//pr($areaData);
+		$xaxisKey = key($indData);
 		$dataSet = array();
-		foreach($areaData as $aKey => $areaObj){
-			foreach($indData as $iKey => $indObj){
-				foreach($unitIndData as $uKey => $unit){
-					foreach($data as $item){
-						$item = $item['JORData'];
-
-						if($item['Area_NId'] == $aKey && $item['Indicator_NId'] == $iKey && $item['Unit_NId'] == $uKey){
-							$dataSet[$aKey][$iKey]['name']= $indObj;
-							$dataSet[$aKey][$iKey][$unit]= $item['Data_Value'];
-							continue;
-							
-						}
-					}
-				}
-			}
+		foreach($data as $item){
+			$item = $item['JORData'];
+			$plotXY = ($xaxisKey == $item['Indicator_NId'])? 'x': 'y';
+			$dataSet[$item['Area_NId']][$plotXY] = $item['Data_Value'];
 		}
-		
+
 		$scatterPlotData = array();
-		$resetUnitIndData = array_values($unitIndData);
 		foreach($dataSet as $key => $item){
-			$loopCounter = 0;
-			$finalPlotObj = array();
-			foreach($indData as $iKey => $indValue){
-				$plotXY = ($loopCounter == 0)? 'x': 'y';
-				$finalPlotObj[$plotXY] = empty($item[$iKey])? 0 :$item[$iKey][$resetUnitIndData[0]];
-				
-				$loopCounter++;
-			}
-			$finalPlotObj['tooltext'] = sprintf($areaData[$key]." X:%s%%, Y:%s%%", $finalPlotObj['x'], $finalPlotObj['y']);
-			$scatterPlotData[] = $finalPlotObj;
+			$item['x'] = isset($item['x'])?$item['x']:0;
+			$item['y'] = isset($item['y'])?$item['y']:0;
+			$item['tooltext'] = sprintf($areaData[$key]." X:%s%%, Y:%s%%", $item['x'], $item['y']);
+			$scatterPlotData[] = $item;
 		}
 		$finalData['data'][] = $scatterPlotData;
 		
