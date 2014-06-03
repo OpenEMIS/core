@@ -19,21 +19,29 @@ App::uses('Sanitize', 'Utility');
 
 class InstitutionReportsController extends AppController {
 	public $options = array();
+	public $institutionSiteId;
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Institutions';
 		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
 		$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
+		
+		if ($this->Session->check('InstitutionSiteId')) {
+			$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
+		} else {
+			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+		}
     }
 	
 	public function generate($model, $format, $index=false) {
-		$this->render = false;
+		$this->autoRender = false;
 		$modelObj = ClassRegistry::init($model);
 		$method = $modelObj->getFormatFunction($format);
 		if($method !== false) {
-			$result = call_user_func_array(array($modelObj, $method), array($index));
-			pr($result);die;
+			$args = array($this->institutionSiteId, $index);
+			$result = call_user_func_array(array($modelObj, $method), $args);
+			//pr($result);
 		}
 	}
 	
@@ -46,7 +54,7 @@ class InstitutionReportsController extends AppController {
 		$this->Navigation->addCrumb($header);
 		
 		$data = array(
-			array('name' => 'Bank Accounts', 'model' => 'InstitutionSiteBankAccount')
+			array('name' => 'Bank Accounts', 'model' => 'InstitutionSiteBankAccount', 'params' => array('csv' => 1))
 		);
 		
 		foreach($data as $i => $obj) {
@@ -58,4 +66,5 @@ class InstitutionReportsController extends AppController {
 		$this->set(compact('data', 'header'));
 		$this->render('index');
 	}
+	
 }	
