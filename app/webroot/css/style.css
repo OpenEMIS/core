@@ -399,4 +399,27 @@ fieldset.area .label{
 	font-size: 15px;
 	color: #666;
 }
+.topDropDownWrapper{
+	margin-bottom: 12px;
+}
+.topDropDownWrapper select.form-control{
+	display: inline-block;
+}
+.topDropDownWrapper select#schoolYearId{
+	width: 15%;
+	margin-right: 10px;
+}
+.topDropDownWrapper select#weekId{
+	width: 45%;
+	margin-right: 10px;
+}
+.topDropDownWrapper select#classId{
+	width: 30%;
+}
+.topDropDownWrapper select#monthId{
+	width: 15%;
+}
+td.present{
+	color: green;
+}
 

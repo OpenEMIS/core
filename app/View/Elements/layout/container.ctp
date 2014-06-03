@@ -19,4 +19,7 @@
 if(isset($datepicker) && !empty($datepicker)) {
 	echo $this->element('layout/datepicker');
 }
+if(isset($timepicker) && !empty($timepicker)) {
+	echo $this->element('layout/timepicker');
+}
 ?>
