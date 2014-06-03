@@ -302,4 +302,116 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 
 		return $data;
 	}
+	
+	public function getAutoCompleteList($search, $classId) {
+        $search = sprintf('%%%s%%', $search);
+		
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT Student.id', 'Student.*'),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
+					)
+				)
+			),
+			'conditions' => array(
+				'OR' => array(
+					'Student.first_name LIKE' => $search,
+					'Student.last_name LIKE' => $search,
+					'Student.middle_name LIKE' => $search,
+					'Student.preferred_name LIKE' => $search,
+					'Student.identification_no LIKE' => $search
+				)
+			),
+			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name')
+		));
+
+        $data = array();
+        foreach ($list as $obj) {
+            $student = $obj['Student'];
+            $data[] = array(
+                'label' => sprintf('%s - %s %s %s %s',  $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']),
+                'value' => $student['id']
+            );
+        }
+        return $data;
+    }
+	
+	public function isStudentInClass($institutionSiteId, $classId, $studentId) {
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT InstitutionSiteClassGradeStudent.id'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
+					)
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+					)
+				)
+			),
+			'conditions' => array(
+				'InstitutionSiteClassGradeStudent.student_id' => $studentId
+			)
+		));
+		
+		if(count($data) > 0){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public function getStudentsByClass($classId) {
+		$conditions = array();
+		
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'DISTINCT Student.id',
+				'Student.identification_no',
+				'Student.first_name',
+				'Student.middle_name',
+				'Student.last_name',
+				'Student.preferred_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
+					)
+				)
+			),
+			'conditions' => $conditions
+		));
+		
+		return $data;
+	}
 }
