@@ -46,8 +46,9 @@ class ReportFormatBehavior extends ModelBehavior {
 	public function generateCSV(Model $model) {
 		$args = func_get_args();
 		array_shift($args);
-		$header = $model->reportsGetHeader($args);
+		
 		$data = $model->reportsGetData($args);
+		$header = $model->reportsGetHeader($args);
 		$fileName = $model->reportsGetFileName($args);
 
 		$downloadedFile = $fileName . '.csv';
