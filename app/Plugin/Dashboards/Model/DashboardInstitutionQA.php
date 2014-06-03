@@ -35,7 +35,7 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$controller->Navigation->addCrumb('Report - Dashboard');
 		$header = __('Report - Dashboard');
 		
-		$countryData = $controller->QADashboard->getAreaByGID();
+		$countryData = $controller->QADashboard->getCountry();
 		$countryId = $countryData['JORArea']['Area_NId'];
 		$countryName = $countryData['JORArea']['Area_Name'];
 		
@@ -46,16 +46,22 @@ class DashboardInstitutionQA extends DashboardsAppModel {
 		$yearId = empty($params['pass'][0])? 0: $params['pass'][0]; //year Id 
 		$yearId = (empty($yearId))? key($yearsOptions): $yearId;
 		
-		$displayChartData = array(
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_ATAspectJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_TrendLineJSON', $this->areaId,$yearId, $yearsOptions[$yearId]), 'swfUrl' => 'MSLine.swf'),
-			'break',
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_AdminBreakdownJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
-			array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_TechBreakdownJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
-			'break',
-			/*array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_ATAspectPassFailJSON', $yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
-			'break',*/
-		);
+		$displayChartData = array();
+		if(!empty($this->areaId)){
+			$displayChartData = array(
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_ATAspectJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_TrendLineJSON', $this->areaId,$yearId, $yearsOptions[$yearId]), 'swfUrl' => 'MSLine.swf'),
+				'break',
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_AdminBreakdownJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
+				array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_TechBreakdownJSON', $this->areaId,$yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
+				'break',
+				/*array('chartURLdata' => array('controller' => 'Dashboards', 'action' => 'InstitutionQA_ATAspectPassFailJSON', $yearId), 'swfUrl' => 'ScrollColumn2D.swf'),
+				'break',*/
+			);
+		}
+		else{
+			$controller->Utility->alert($controller->Utility->getMessage('NO_RECORD'));
+		}
 		
 		$controller->set(compact('header', 'areaId','yearId',  'yearsOptions', /*'totalKGInfo',*/ 'displayChartData'));
    }

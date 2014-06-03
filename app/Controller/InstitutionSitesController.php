@@ -1077,14 +1077,14 @@ class InstitutionSitesController extends AppController {
                 $institutionSiteId = $newInstitutionSiteRec['InstitutionSite']['id'];
 
                 //** Reinitialize the Site Session by adding the newly added site **/
-                $tmp = $this->Session->read('AccessControl.sites');
-                array_push($tmp, $institutionSiteId);
-                $this->Session->write('AccessControl.sites', $tmp);
+                //$tmp = $this->Session->read('AccessControl.sites');
+                //array_push($tmp, $institutionSiteId);
+                //$this->Session->write('AccessControl.sites', $tmp);
 
                 //** Reinitialize the Institution + Site Session by adding the newly added site **/
-                $sites = $this->Session->read('AccessControl.institutions');
-                $sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][] = $institutionSiteId;
-                $this->Session->write('AccessControl.institutions', $sites);
+                //$sites = $this->Session->read('AccessControl.institutions');
+                //$sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][] = $institutionSiteId;
+                //$this->Session->write('AccessControl.institutions', $sites);
                 $this->Session->write('InstitutionSiteId', $institutionSiteId);
 
                 $this->redirect(array('controller' => 'Institutions', 'action' => 'listSites'));
