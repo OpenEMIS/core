@@ -34,6 +34,10 @@ class InstitutionSite extends AppModel {
 		)
 	);
 	
+	public $hasMany = array(
+		'InstitutionSiteCustomField'
+	);
+	
 	public $actsAs = array(
 		'TrackHistory',
 		'CascadeDelete' => array(
@@ -176,6 +180,48 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please select a Sector'
 			)
 		)
+	);
+	
+	public $reportMapping = array(
+		'fields' => array(
+			'InstitutionSite' => array(
+				'name' => 'Institution Name',
+				'code' => 'Institution Code'
+			),
+			'InstitutionSiteType' => array(
+				'name' => 'Institution Type'
+			),
+			'InstitutionSiteOwnership' => array(
+				'name' => 'Institution Ownership'
+			),
+			'InstitutionSiteStatus' => array(
+				'name' => 'Institution Status'
+			),
+			'InstitutionSite2' => array(
+				'date_opened' => 'Date Opened',
+				'date_closed' => 'Date Closed',
+			),
+			'Area' => array(
+				'name' => 'Area'
+			),
+			'AreaEducation' => array(
+				'name' => 'Area (Education)'
+			),
+			'InstitutionSite3' => array(
+				'address' => 'Address',
+				'postal_code' => 'Postal Code',
+				'longitude' => 'Longitude',
+				'latitude' => 'Latitude',
+				'contact_person' => 'Contact Person',
+				'telephone' => 'Telephone',
+				'fax' => 'Fax',
+				'email' => 'Email',
+				'website' => 'Website'
+			),
+			'InstitutionSiteCustomField' => array(
+			)
+		),
+		'FileName' => 'Report_General_Overview'
 	);
     
 	public function checkNumeric($arrVal){
@@ -806,5 +852,51 @@ AND
 		));
 		
 		return $data;
+	}
+	
+	public function reportsGetHeader($institutionSiteId, $index) {
+		return $this->getCSVHeader($this->reportMapping['fields']);
+	}
+
+	public function reportsGetData($institutionSiteId, $index) {
+		$options = array();
+		//$options['recursive'] = -1;
+		$options['fields'] = $this->getCSVFields($this->reportMapping['fields']);
+		$options['joins'] = array(
+			array(
+				'table' => 'area_educations',
+				'alias' => 'AreaEducation',
+				'type' => 'left',
+				'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+			),
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite2',
+				'type' => 'inner',
+				'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+			),
+			array(
+				'table' => 'institution_sites',
+				'alias' => 'InstitutionSite3',
+				'type' => 'inner',
+				'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
+			)
+		);
+		$options['conditions'] = array('InstitutionSiteBankAccount.institution_site_id' => $institutionSiteId);
+
+		$data = $this->find('all', $options);
+
+		$newData = array();
+
+		foreach ($data AS $row) {
+			$row['InstitutionSiteBankAccount']['active'] = $row['InstitutionSiteBankAccount']['active'] == 1 ? 'Yes' : 'No';
+			$newData[] = $row;
+		}
+
+		return $newData;
+	}
+	
+	public function reportsGetFileName(){
+		return $this->reportMapping['fileName'];
 	}
 }
