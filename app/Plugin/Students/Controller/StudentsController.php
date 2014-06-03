@@ -669,123 +669,51 @@ class StudentsController extends StudentsAppController {
 	}
 
 	// STUDENT ATTENDANCE PART
-	public function attendance() {
-		$studentId = $this->studentId;
+	public function absence() {
+		$studentId = !empty($this->studentId) ? $this->studentId : $this->Session->read('StudentId');
+		if(empty($studentId)){
+			return $this->redirect(array('controller' => 'Students', 'action' => 'index'));
+		}
 		//$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-		$this->Navigation->addCrumb('Attendance');
-		$header = __('Attendance');
-		//$id = @$this->request->params['pass'][0];
-		$yearOptions = $this->SchoolYear->getYearList();
-		$selectedYearId = $this->getAvailableYearId($yearOptions);
-		$schoolDays = $this->SchoolYear->field('school_days', array('SchoolYear.id' => $selectedYearId));
-		$attendanceTypes = $this->StudentAttendanceType->getAttendanceTypes();
+		$this->Navigation->addCrumb('Absence');
+		$header = __('Absence');
 		
-		$dataAttendance = $this->StudentAttendance->getAttendanceByStudentAndYear($studentId, $selectedYearId);
-		$attendanceCheckList = array();
-		$classesArr = array();
-		foreach($dataAttendance AS $rowAttendance){
-			$attendanceTypeId = $rowAttendance['StudentAttendance']['student_attendance_type_id'];
-			$attendanceValue = $rowAttendance['StudentAttendance']['value'];
-			$classId = $rowAttendance['InstitutionSiteClass']['id'];
-				
-			$attendanceCheckList[$classId][$attendanceTypeId] = $attendanceValue;
-			
-			$classesArr[$classId] = $rowAttendance['InstitutionSiteClass']['name'];
-		}
-		
-		$data = array();
-		foreach($classesArr AS $classId => $className){
-			$tempRow = array();
-			$tempRow['classId'] = $classId;
-			$tempRow['className'] = $className;
-			
-			$tempRow['StudentAttendance'] = array();
-			foreach($attendanceTypes AS $attendanceType){
-				$attendanceTypeId = $attendanceType['StudentAttendanceType']['id'];
-					
-				if(isset($attendanceCheckList[$classId][$attendanceTypeId])){
-					$tempRow['StudentAttendance'][$attendanceTypeId] = $attendanceCheckList[$classId][$attendanceTypeId];
-				}else{
-					$tempRow['StudentAttendance'][$attendanceTypeId] = 0;
-				}
+		$yearList = $this->SchoolYear->getYearList();
+		//pr($yearList);
+		$currentYearId = $this->SchoolYear->getSchoolYearId(date('Y'));
+		if (isset($this->params['pass'][0])) {
+			$yearId = $this->params['pass'][0];
+			if (!array_key_exists($yearId, $yearList)) {
+				$yearId = $currentYearId;
 			}
-			$data[] = $tempRow;
+		}else{
+			$yearId = $currentYearId;
 		}
 		
-		$legend = $this->generateAttendanceLegend();
-
+		$monthOptions = $this->generateMonthOptions();
+		$currentMonthId = $this->getCurrentMonthId();
+		if (isset($this->params['pass'][1])) {
+			$monthId = $this->params['pass'][1];
+			if (!array_key_exists($monthId, $monthOptions)) {
+				$monthId = $currentMonthId;
+			}
+		}else{
+			$monthId = $currentMonthId;
+		}
+		
+		$absenceData = $this->InstitutionSiteStudentAbsence->getStudentAbsenceDataByMonth($studentId, $yearId, $monthId);
+		//pr($absenceData);
+		$data = $absenceData;
+		
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
 			//$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
 		}
-
-		$this->set(compact('header', 'selectedYearId', 'yearOptions', 'data','schoolDays','attendanceTypes','legend'));
-	   /* $this->set('selectedYear', $selectedYearId);
-		$this->set('years', $yearOptions);
-		$this->set('data', $data);
-		$this->set('schoolDays', $schoolDays);
-		$this->set('attendanceTypes', $attendanceTypes);
-		$this->set('legend', $legend);*/
-	}
-	
-	public function generateAttendanceLegend(){
-		$data = $this->StudentAttendanceType->getAttendanceTypes();
 		
-		$indicator = 0;
-		$str = '';
-		foreach($data AS $row){
-			$code = $row['StudentAttendanceType']['national_code'];
-			$name = $row['StudentAttendanceType']['name'];
-			
-			if($indicator > 0){
-				$str .= '; ' . $code . ' = ' . $name;
-			}else{
-				$str .= $code . ' = ' . $name;
-			}
-			
-			$indicator++;
-		}
-		
-		return $str;
+		$settingWeekdays = $this->getWeekdaysBySetting();
+
+		$this->set(compact('header', 'data','yearList','yearId', 'monthOptions', 'monthId', 'settingWeekdays'));
 	}
-
-	// Student behaviour part
-	/*public function behaviour() {
-		$this->Navigation->addCrumb('List of Behaviour');
-
-		$data = $this->StudentBehaviour->getBehaviourData($this->studentId);
-		if (empty($data)) {
-			$this->Utility->alert($this->Utility->getMessage('CUSTOM_FIELDS_NO_RECORD'));
-		}
-
-		$this->set('data', $data);
-	}
-
-	public function behaviourView() {
-		$studentBehaviourId = $this->params['pass'][0];
-		$studentBehaviourObj = $this->StudentBehaviour->find('all', array('conditions' => array('StudentBehaviour.id' => $studentBehaviourId)));
-
-		if (!empty($studentBehaviourObj)) {
-			$studentId = $studentBehaviourObj[0]['StudentBehaviour']['student_id'];
-			$data = $this->Student->find('first', array('conditions' => array('Student.id' => $studentId)));
-			$this->Navigation->addCrumb('Behaviour Details');
-
-			$yearOptions = array();
-			$yearOptions = $this->SchoolYear->getYearList();
-			$categoryOptions = array();
-			$categoryOptions = $this->StudentBehaviourCategory->getCategory();
-
-			$institutionSiteOptions = $this->InstitutionSite->find('list', array('recursive' => -1));
-			$this->set('institution_site_id', $studentBehaviourObj[0]['StudentBehaviour']['institution_site_id']);
-			$this->set('institutionSiteOptions', $institutionSiteOptions);
-			$this->Session->write('StudentBehavourId', $studentBehaviourId);
-			$this->set('categoryOptions', $categoryOptions);
-			$this->set('yearOptions', $yearOptions);
-			$this->set('studentBehaviourObj', $studentBehaviourObj);
-		} else {
-			$this->redirect(array('action' => 'behaviour'));
-		}
-	}*/
 
 	private function getAvailableYearId($yearList) {
 		$yearId = 0;
@@ -825,6 +753,72 @@ class StudentsController extends StudentsAppController {
 		}
 
 		return $generate_no;
+	}
+	
+	public function generateMonthOptions(){
+		$options = array();
+		for ($i = 1; $i <= 12; $i++)
+		{
+				$options[$i] = date("F", mktime(0, 0, 0, $i+1, 0, 0, 0));
+		}
+		
+		return $options;
+	}
+	
+	public function getCurrentMonthId(){
+		$options = $this->generateMonthOptions();
+		$currentMonth = date("F");
+		$monthId = 1;
+		foreach($options AS $id => $month){
+			if($currentMonth === $month){
+				$monthId = $id;
+				break;
+			}
+		}
+		
+		return $monthId;
+	}
+	
+	public function getWeekdaysBySetting(){
+		$weekdaysArr = array(
+			1 => 'monday',
+			2 => 'tuesday',
+			3 => 'wednesday',
+			4 => 'thursday',
+			5 => 'friday',
+			6 => 'saturday',
+			7 => 'sunday'
+		);
+		
+		$settingFirstWeekDay = $this->ConfigItem->getValue('first_day_of_week');
+		if(empty($settingFirstWeekDay) || !in_array($settingFirstWeekDay, $weekdaysArr)){
+			$settingFirstWeekDay = 'monday';
+		}
+		
+		$settingDaysPerWek = intval($this->ConfigItem->getValue('days_per_week'));
+		if(empty($settingDaysPerWek)){
+			$settingDaysPerWek = 5;
+		}
+		
+		foreach($weekdaysArr AS $index => $weekday){
+			if($weekday == $settingFirstWeekDay){
+				$firstWeekdayIndex = $index;
+				break;
+			}
+		}
+		
+		$newIndex = $firstWeekdayIndex + $settingDaysPerWek;
+		
+		$weekdays = array();
+		for($i=$firstWeekdayIndex; $i<$newIndex; $i++){
+			if($i<=7){
+				$weekdays[] = $weekdaysArr[$i];
+			}else{
+				$weekdays[] = $weekdaysArr[$i%7];
+			}
+		}
+		
+		return $weekdays;
 	}
 
 }

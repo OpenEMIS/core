@@ -475,7 +475,6 @@ class InstitutionSiteStudent extends AppModel {
             if (isset($data['student_id'])) {
                 $date = $data['start_date'];
                 if (!empty($date)) {
-					
 					$startDate = new DateTime($date);//new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
 					
 					$data['start_date'] = $startDate->format('Y-m-d');
@@ -612,5 +611,54 @@ class InstitutionSiteStudent extends AppModel {
         } else {
             $controller->redirect(array('action' => 'students'));
         }
+    }
+	
+	public function getAutoCompleteList($search,  $institutionSiteId) {
+        $search = sprintf('%%%s%%', $search);
+		
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT Student.id', 'Student.*'),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array('InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+						'InstitutionSiteProgramme.institution_site_id = InstitutionSite.id',
+						'InstitutionSite.id' => $institutionSiteId
+					)
+				)
+			),
+			'conditions' => array(
+				'OR' => array(
+					'Student.first_name LIKE' => $search,
+					'Student.last_name LIKE' => $search,
+					'Student.middle_name LIKE' => $search,
+					'Student.preferred_name LIKE' => $search,
+					'Student.identification_no LIKE' => $search
+				)
+			),
+			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name')
+		));
+
+        $data = array();
+        foreach ($list as $obj) {
+            $student = $obj['Student'];
+            $data[] = array(
+                'label' => sprintf('%s - %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']),
+                'value' => $student['id']
+            );
+        }
+        return $data;
     }
 }
