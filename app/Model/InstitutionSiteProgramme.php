@@ -17,7 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteProgramme extends AppModel {
-    public $actsAs = array('ControllerAction');
+    public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
     
 	public $belongsTo = array(
 		'SchoolYear',
@@ -27,6 +32,23 @@ class InstitutionSiteProgramme extends AppModel {
 	
 	public $virtualFields = array(
 		'name' => "SELECT name from `education_programmes` WHERE id = InstitutionSiteProgramme.education_programme_id"
+	);
+	
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+                'SchoolYear' => array(
+                    'name' => 'School Year'
+                ),
+                'EducationProgramme' => array(
+                    'name' => 'Programme'
+                ),
+                'InstitutionSiteProgramme' => array(
+                    'system_cycle' => 'System - Cycle'
+                )
+            ),
+            'fileName' => 'Report_Programme_List'
+		)
 	);
 	
 	public function getProgrammeOptions($institutionSiteId, $yearId=null) {
@@ -458,4 +480,76 @@ class InstitutionSiteProgramme extends AppModel {
         $controller->set(compact('programmeOptions'));
         $controller->render('/Elements/programmes/programmes_options');
     }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		// General > Overview and More
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('SchoolYear.name', 'EducationSystem.order', 'EducationLevel.order', 'EducationCycle.order', 'EducationProgramme.order');
+			$options['conditions'] = array('InstitutionSiteProgramme.institution_site_id' => $institutionSiteId);
+
+			$options['joins'] = array(
+                    array(
+                        'table' => 'school_years',
+                        'alias' => 'SchoolYear',
+                        'conditions' => array(
+                            'InstitutionSiteProgramme.school_year_id = SchoolYear.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'education_programmes',
+                        'alias' => 'EducationProgramme',
+                        'conditions' => array(
+                            'InstitutionSiteProgramme.education_programme_id = EducationProgramme.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'education_cycles',
+                        'alias' => 'EducationCycle',
+                        'conditions' => array(
+                            'EducationProgramme.education_cycle_id = EducationCycle.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'education_levels',
+                        'alias' => 'EducationLevel',
+                        'conditions' => array(
+                            'EducationCycle.education_level_id = EducationLevel.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'education_systems',
+                        'alias' => 'EducationSystem',
+                        'conditions' => array(
+                            'EducationLevel.education_system_id = EducationSystem.id'
+                        )
+                    )
+                );
+			
+			$this->virtualFields = array(
+                    'system_cycle' => 'CONCAT(EducationSystem.name, " - ", EducationCycle.name)'
+            );
+
+			$data = $this->find('all', $options);
+			
+			return $data;
+		}
+	}
+	
+	public function reportsGetFileName($args){
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
+	}
 }

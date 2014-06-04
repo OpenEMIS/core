@@ -13,15 +13,15 @@ $this->start('contentBody');
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
-					<td><?php echo __('Name'); ?></td>
-					<td style="width:100px"><?php echo __('Types'); ?></td> 
+					<th><?php echo __('Name'); ?></th>
+					<th style="width:100px"><?php echo __('Types'); ?></th> 
 				</tr>
 			</thead> 
 			<tbody>
 				<?php foreach ($data as $i => $obj) : ?>
 					<tr>
 						<td><?php echo __($obj['name']); ?></td>
-						<td class="center" style="width:100px;">
+						<td class="" style="width:100px;">
 							<?php foreach ($obj['formats'] as $name => $action) {
 								$url = array('action' => 'generate', $obj['model'], $name);
 								if(isset($obj['params']) && isset($obj['params'][$name])) {

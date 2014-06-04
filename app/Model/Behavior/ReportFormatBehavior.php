@@ -46,8 +46,9 @@ class ReportFormatBehavior extends ModelBehavior {
 	public function generateCSV(Model $model) {
 		$args = func_get_args();
 		array_shift($args);
-		$header = $model->reportsGetHeader($args);
+		
 		$data = $model->reportsGetData($args);
+		$header = $model->reportsGetHeader($args);
 		$fileName = $model->reportsGetFileName($args);
 
 		$downloadedFile = $fileName . '.csv';
@@ -124,6 +125,32 @@ class ReportFormatBehavior extends ModelBehavior {
 			}
 		}
 		return $new;
+	}
+	
+	// copied from DatetimeComponent
+	public function getConfigDateFormat() {
+		$format = '';
+		if (isset($_SESSION['Config.DateFormat'])) {
+			$format = $_SESSION['Config.DateFormat'];
+		} else {
+			$configItem = ClassRegistry::init('ConfigItem');
+			$format = $configItem->getValue('date_format');
+			$_SESSION['Config.DateFormat'] = $format;
+		}
+		return $format;
+	}
+
+	// copied from DatetimeComponent
+	public function formatDateByConfig(Model $model, $date) {
+		$format = $this->getConfigDateFormat();
+		$output = null;
+		if ($date == '0000-00-00' || $date == '') {
+			$output = '';
+		} else {
+			$date = new DateTime($date);
+			$output = $date->format($format);
+		}
+		return $output;
 	}
 
 }
