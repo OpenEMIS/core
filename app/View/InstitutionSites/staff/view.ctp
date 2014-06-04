@@ -223,7 +223,7 @@ $this->start('contentBody');
 							</div>
 						</div>
 					</td>
-					<td class="center"><?php echo $obj['InstitutionSiteStaff']['FTE']; ?></td>
+					<td class="center"><?php echo ($obj['InstitutionSiteStaff']['FTE']*100); ?></td>
 					<td class="center"><?php echo $obj['StaffStatus']['name']; ?></td>
 				</tr>
 			<?php } ?>
