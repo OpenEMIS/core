@@ -25,8 +25,8 @@ class InstitutionSiteStaff extends AppModel {
 	public $belongsTo = array(
 		'InstitutionSite',
 		'Staff.Staff',
-		'StaffStatus', /* 'StaffCategory', */
-		'InstitutionSitePosition', /* 'StaffPositionTitle', 'StaffPositionGrade', 'StaffPositionStep' */
+		'StaffStatus',
+		'InstitutionSitePosition',
 		'StaffType' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'staff_type_id'
@@ -104,17 +104,15 @@ class InstitutionSiteStaff extends AppModel {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSitePosition')));
 
 		$fields = array(
-			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.position_no', 'InstitutionSiteStaff.FTE',
+			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.FTE',
 			'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date', 'InstitutionSiteStaff.staff_status_id', 'StaffType.name',
-			/* 'StaffCategory.name', */ 'StaffStatus.name', 'InstitutionSitePosition.id', 'InstitutionSitePosition.position_no', 'StaffPositionTitle.name', 'StaffPositionGrade.name'
-				/* 'StaffPositionTitle.name', 'StaffPositionGrade.name', 'StaffPositionStep.name' */
+			'StaffStatus.name', 'InstitutionSitePosition.id', 'InstitutionSitePosition.position_no', 'StaffPositionTitle.name', 'StaffPositionGrade.name'
 		);
 
 		$joins = array(
 			array(
 				'table' => 'institution_site_positions',
 				'alias' => 'InstitutionSitePosition',
-				//'type' => 'LEFT',
 				'conditions' => array('InstitutionSitePosition.id = InstitutionSiteStaff.institution_site_position_id')
 			),
 			array(
@@ -328,7 +326,7 @@ class InstitutionSiteStaff extends AppModel {
 
 	public function staffAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add Staff');
-		$positionOptions = $this->InstitutionSitePosition->getInstitutionSitePositionList();
+		$positionOptions = $this->InstitutionSitePosition->getInstitutionSitePositionList($controller->institutionSiteId);
 		$selectedPositionId = !empty($positionOptions) ? key($positionOptions) : 0;
 		$FTEOtpions = $this->getFTEOptions($selectedPositionId, array('date' => date("Y-m-d")));
 		$statusOptions = $this->StaffStatus->findList(true);
