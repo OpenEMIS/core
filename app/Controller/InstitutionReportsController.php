@@ -73,4 +73,22 @@ class InstitutionReportsController extends AppController {
 		$this->render('index');
 	}
 	
+	public function details() {
+		$header = __('Details');
+		$this->Navigation->addCrumb($header);
+		
+		$data = array(
+			array('name' => 'Programme List', 'model' => 'InstitutionSiteProgramme', 'params' => array('csv' => 1))
+		);
+		
+		foreach($data as $i => $obj) {
+			$model = ClassRegistry::init($obj['model']);
+			$formats = $model->getSupportedFormats();
+			$data[$i]['formats'] = $formats;
+		}
+		
+		$this->set(compact('data', 'header'));
+		$this->render('index');
+	}
+	
 }	
