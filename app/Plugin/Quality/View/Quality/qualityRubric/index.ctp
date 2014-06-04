@@ -20,7 +20,7 @@ $this->start('contentBody');
                 <th class="table_cell"><?php echo __('Year'); ?></th>
                 <th class="table_cell"><?php echo __('Name'); ?></th>
                 <th class="table_cell"><?php echo __('Class'); ?></th>
-                <th class="table_cell"><?php echo __('Teacher'); ?></th>
+                <th class="table_cell"><?php echo __('Staff'); ?></th>
             </tr>
         </thead>
 
@@ -30,7 +30,7 @@ $this->start('contentBody');
                     <td class="table_cell"><?php echo $schoolYearOptions[$val[$modelName]['school_year_id']]; ?></td>
                     <td class="table_cell"><?php echo $this->Html->link($rubricOptions[$val[$modelName]['rubric_template_id']], array('action' => 'qualityRubricView', $val[$modelName]['id']), array('escape' => false)); ?></td>
                     <td class="table_cell"><?php echo $classOptions[$val[$modelName]['institution_site_class_id']]; ?></td>
-                    <td class="table_cell"><?php echo $teacherOptions[$val[$modelName]['teacher_id']]; ?></td>
+                    <td class="table_cell"><?php echo $staffOptions[$val[$modelName]['staff_id']]; ?></td>
                 </tr>
             <?php } ?>
         </tbody>

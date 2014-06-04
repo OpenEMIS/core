@@ -64,7 +64,8 @@ class LabelHelper extends AppHelper {
 			'openemisId' =>'OpenEMIS ID',
 			'code' => 'Code',
 			'action' => 'Action',
-			'level' => 'Level'
+			'level' => 'Level',
+			'class' => 'Class'
 		),
 		'password'=> array(
 			'oldPassword' => 'Current Password',

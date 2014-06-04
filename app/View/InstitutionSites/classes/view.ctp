@@ -79,7 +79,7 @@ $this->start('contentBody');
 	</fieldset>
 
 	<fieldset class="section_group">
-		<legend><?php echo __('Teachers'); ?></legend>
+		<legend><?php echo __('Staff'); ?></legend>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
@@ -88,10 +88,10 @@ $this->start('contentBody');
 				</tr>
 			</thead>
 			<tbody>
-				<?php foreach ($teachers as $obj) { ?>
+				<?php foreach ($staffs as $obj) { ?>
 					<tr>
-						<td class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></td>
-						<td class="table_cell"><?php echo $obj['Teacher']['first_name'] . ' ' . $obj['Teacher']['last_name']; ?></td>
+						<td class="table_cell"><?php echo $obj['Staff']['identification_no']; ?></td>
+						<td class="table_cell"><?php echo $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']; ?></td>
 					</tr>
 				<?php } ?>
 			</tbody>

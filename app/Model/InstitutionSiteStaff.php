@@ -499,4 +499,39 @@ class InstitutionSiteStaff extends AppModel {
         }
 	}
 
+	public function getStaffSelectList($year, $institutionSiteId, $classId) {
+        // Filtering section
+		
+        $InstitutionSiteClassStaff = ClassRegistry::init('InstitutionSiteClassStaff');
+        $staffsExclude = $InstitutionSiteClassStaff->getStaffs($classId);
+        $ids = '';
+        foreach($staffsExclude as $obj){
+            $ids .= $obj['Staff']['id'].',';
+        }
+        $ids = rtrim($ids,',');
+        if($ids!=''){
+            $conditions = 'Staff.id NOT IN (' . $ids . ')';
+        }else{
+            $conditions = '';
+        }
+        // End filtering
+
+		$data = $this->find('all', array(
+			'fields' => array(
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 
+				'Staff.last_name', 'Staff.gender'
+			),
+			'conditions' => array(
+				'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteStaff.start_year <=' => $year,
+				'OR' => array(
+					'InstitutionSiteStaff.end_year >=' => $year,
+					'InstitutionSiteStaff.end_year IS NULL'
+				)
+			),
+			'group' => array('Staff.id'),
+			'order' => array('Staff.first_name')
+		));
+		return $data;
+	}
 }

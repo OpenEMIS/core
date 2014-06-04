@@ -24,7 +24,7 @@ class InstitutionSiteClass extends AppModel {
 		'CascadeDelete' => array(
 			'cascade' => array(
 				'InstitutionSiteClassGrade',
-				'InstitutionSiteClassTeacher'
+				'InstitutionSiteClassStaff'
 			)
 		),
                 'ControllerAction'
@@ -209,7 +209,7 @@ class InstitutionSiteClass extends AppModel {
 
             $grades = $controller->InstitutionSiteClassGrade->getGradesByClass($classId);
             $students = $controller->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
-            $teachers = $controller->InstitutionSiteClassTeacher->getTeachers($classId);
+            $staffs = $controller->InstitutionSiteClassStaff->getStaffs($classId);
             $subjects = $controller->InstitutionSiteClassSubject->getSubjects($classId);
 
             $yearId = $classObj['SchoolYear']['id'];
@@ -217,7 +217,7 @@ class InstitutionSiteClass extends AppModel {
             $noOfSeats = $classObj['InstitutionSiteClass']['no_of_seats'];
             $noOfShifts = $classObj['InstitutionSiteClass']['no_of_shifts'];
             
-            $controller->set(compact('classId', 'className', 'yearId', 'year', 'grades', 'students', 'teachers', 'noOfSeats', 'noOfShifts', 'subjects'));
+            $controller->set(compact('classId', 'className', 'yearId', 'year', 'grades', 'students', 'staffs', 'noOfSeats', 'noOfShifts', 'subjects'));
         } else {
             $controller->redirect(array('action' => 'classesList'));
         }
@@ -241,7 +241,7 @@ class InstitutionSiteClass extends AppModel {
 
             $grades = $controller->InstitutionSiteClassGrade->getGradesByClass($classId);
             $students = $controller->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
-            $teachers = $controller->InstitutionSiteClassTeacher->getTeachers($classId);
+            $staffs = $controller->InstitutionSiteClassStaff->getStaffs($classId);
             $subjects = $controller->InstitutionSiteClassSubject->getSubjects($classId);
             $studentCategoryOptions = $controller->StudentCategory->findList(true);
             
@@ -260,7 +260,7 @@ class InstitutionSiteClass extends AppModel {
             }
             //pr($shiftOptions);
             
-            $controller->set(compact('classId', 'className', 'year', 'grades', 'students', 'teachers', 'noOfSeats', 'noOfShifts', 'studentCategoryOptions', 'subjects', 'shiftOptions'));
+            $controller->set(compact('classId', 'className', 'year', 'grades', 'students', 'staffs', 'noOfSeats', 'noOfShifts', 'studentCategoryOptions', 'subjects', 'shiftOptions'));
         } else {
             $controller->redirect(array('action' => 'classesList'));
         }
@@ -272,5 +272,85 @@ class InstitutionSiteClass extends AppModel {
         $controller->InstitutionSiteClass->delete($id);
         $controller->Utility->alert($name . ' have been deleted successfully.');
         $controller->redirect(array('action' => 'classes'));
+    }
+	
+	
+	
+	public function classesAddStaffRow($controller, $params) {
+        if (sizeof($params['pass']) == 2) {
+            $year = $params['pass'][0];
+            $classId = $params['pass'][1];
+            $index = $params->query['index'];
+			
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+			$data = $InstitutionSiteStaff->getStaffSelectList($year, $controller->institutionSiteId, $classId);
+
+            $controller->set('index', $index);
+            $controller->set('data', $data);
+        }
+    }
+
+	public function classesStaffAjax($controller, $params)  {
+        //$this->autoRender = false;
+		$this->render = false;
+        if (sizeof($params['pass']) == 1) {
+			
+            $classId = $params['pass'][0];
+            $staffId = $params->query['staffId'];
+            $action = $params->query['action'];
+
+            $result = false;
+			$InstitutionSiteClassStaff = ClassRegistry::init('InstitutionSiteClassStaff');
+            if ($action === 'add') {
+                $data = array('staff_id' => $staffId, 'institution_site_class_id' => $classId);
+				
+				if (!$InstitutionSiteClassStaff->hasAny($data)){
+					//do something
+					$InstitutionSiteClassStaff->create();
+					$result = $InstitutionSiteClassStaff->save($data);
+				}
+				else{
+					return json_encode($controller->Message->get('general.add.failed'));
+				}
+                
+            } else {
+                $result = $InstitutionSiteClassStaff->deleteAll(array(
+                    'InstitutionSiteClassStaff.staff_id' => $staffId,
+                    'InstitutionSiteClassStaff.institution_site_class_id' => $classId
+                        ), false);
+            }
+
+            $return = array();
+            if ($result) {
+                $controller->Utility->setAjaxResult('success', $return);
+            } else {
+                $return = $controller->Message->get('general.add.error');
+            }
+            return json_encode($return);
+        }
+    }
+
+	public function classesDeleteStaff($controller, $params)  {
+       // $this->autoRender = false;
+		$this->render = false;
+        if (sizeof($params['pass']) == 1) {
+            $gradeId = $params['pass'][0];
+            $studentId = $params->query['studentId'];
+
+            $data = array('student_id' => $studentId, 'institution_site_class_grade_id' => $gradeId);
+			
+			$InstitutionSiteClassGradeStudent = ClassRegistry::init('InstitutionSiteClassGradeStudent');
+            $InstitutionSiteClassGradeStudent->create();
+            $obj = $InstitutionSiteClassGradeStudent->save($data);
+
+            $result = array();
+            if ($obj) {
+                $controller->Utility->setAjaxResult('success', $result);
+            } else {
+                $controller->Utility->setAjaxResult('error', $result);
+                $result['msg'] = $controller->Utility->getMessage('ERROR_UNEXPECTED');
+            }
+            return json_encode($result);
+        }
     }
 }

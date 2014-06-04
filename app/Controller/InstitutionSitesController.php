@@ -55,7 +55,7 @@ class InstitutionSitesController extends AppController {
         'InstitutionSiteSector',
         'InstitutionSiteStatus',
         'InstitutionSiteProgramme',
-        
+        'InstitutionSiteClassStaff',
         'InstitutionSiteType',
         'InstitutionSiteStudent',
         'InstitutionSiteStaff',
@@ -432,7 +432,7 @@ class InstitutionSitesController extends AppController {
             ),
             'FileName' => 'Report_Student_Behaviour'
         ),
-        'Teacher List' => array(
+       /* 'Teacher List' => array(
             'Model' => 'InstitutionSiteTeacher',
             'fields' => array(
                 'Teacher' => array(
@@ -549,7 +549,7 @@ class InstitutionSitesController extends AppController {
                 )
             ),
             'FileName' => 'Report_Teacher_Behaviour'
-        ),
+        ),*/
         'Staff List' => array(
             'Model' => 'InstitutionSiteStaff',
             'fields' => array(
@@ -1568,72 +1568,7 @@ class InstitutionSitesController extends AppController {
         $this->redirect(array('action' => 'classes'));
     }
 
-	public function classesAddTeacherRow() {
-        $this->layout = 'ajax';
-
-        if (sizeof($this->params['pass']) == 2) {
-            $year = $this->params['pass'][0];
-            $classId = $this->params['pass'][1];
-            $index = $this->params->query['index'];
-            $data = $this->InstitutionSiteTeacher->getTeacherSelectList($year, $this->institutionSiteId, $classId);
-
-            $this->set('index', $index);
-            $this->set('data', $data);
-        }
-    }
-
-	public function classesTeacherAjax() {
-        $this->autoRender = false;
-
-        if (sizeof($this->params['pass']) == 1) {
-            $classId = $this->params['pass'][0];
-            $teacherId = $this->params->query['teacherId'];
-            $action = $this->params->query['action'];
-
-            $result = false;
-            if ($action === 'add') {
-                $data = array('teacher_id' => $teacherId, 'institution_site_class_id' => $classId);
-                $this->InstitutionSiteClassTeacher->create();
-                $result = $this->InstitutionSiteClassTeacher->save($data);
-            } else {
-                $result = $this->InstitutionSiteClassTeacher->deleteAll(array(
-                    'InstitutionSiteClassTeacher.teacher_id' => $teacherId,
-                    'InstitutionSiteClassTeacher.institution_site_class_id' => $classId
-                        ), false);
-            }
-
-            $return = array();
-            if ($result) {
-                $this->Utility->setAjaxResult('success', $return);
-            } else {
-                $this->Utility->setAjaxResult('error', $return);
-                $return['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
-            }
-            return json_encode($return);
-        }
-    }
-
-	public function classesDeleteTeacher() {
-        $this->autoRender = false;
-
-        if (sizeof($this->params['pass']) == 1) {
-            $gradeId = $this->params['pass'][0];
-            $studentId = $this->params->query['studentId'];
-
-            $data = array('student_id' => $studentId, 'institution_site_class_grade_id' => $gradeId);
-            $this->InstitutionSiteClassGradeStudent->create();
-            $obj = $this->InstitutionSiteClassGradeStudent->save($data);
-
-            $result = array();
-            if ($obj) {
-                $this->Utility->setAjaxResult('success', $result);
-            } else {
-                $this->Utility->setAjaxResult('error', $result);
-                $result['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
-            }
-            return json_encode($result);
-        }
-    }
+	
 
 	public function classesAssessments() {
         if (isset($this->params['pass'][0])) {
@@ -2522,7 +2457,7 @@ class InstitutionSitesController extends AppController {
                         'table' => 'teachers',
                         'alias' => 'Teacher',
                         'conditions' => array(
-                            'InstitutionSiteTeacher.teacher_id = Teacher.id',
+                            'InstitutionSiteTeacher.staff_id = Teacher.id',
                             'InstitutionSiteTeacher.institution_site_id' => $this->institutionSiteId
                             )
                     ),
@@ -2578,19 +2513,19 @@ class InstitutionSitesController extends AppController {
                         'table' => 'teacher_nationalities',
                         'alias' => 'TeacherNationality',
                         'type' => 'left',
-                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherNationality.teacher_id')
+                        'conditions' => array('InstitutionSiteTeacher.staff_id = TeacherNationality.staff_id')
                     ),
                     array(
                         'table' => 'teacher_contacts',
                         'alias' => 'TeacherContact',
                         'type' => 'left',
-                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherContact.teacher_id')
+                        'conditions' => array('InstitutionSiteTeacher.staff_id = TeacherContact.staff_id')
                     ),
                     array(
-                        'table' => 'teacher_identities',
+                        'table' => 'staff_identities',
                         'alias' => 'TeacherIdentity',
                         'type' => 'left',
-                        'conditions' => array('InstitutionSiteTeacher.teacher_id = TeacherIdentity.teacher_id')
+                        'conditions' => array('InstitutionSiteTeacher.staff_id = TeacherIdentity.staff_id')
                     ),
                     array(
                         'table' => 'countries',
@@ -2687,7 +2622,7 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'teachers',
                         'alias' => 'Teacher',
-                        'conditions' => array('TeacherAttendance.teacher_id = Teacher.id')
+                        'conditions' => array('TeacherAttendance.staff_id = Teacher.id')
                     ),
                     array(
                         'table' => 'school_years',
@@ -2719,7 +2654,7 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'teachers',
                         'alias' => 'Teacher',
-                        'conditions' => array('TeacherBehaviour.teacher_id = Teacher.id')
+                        'conditions' => array('TeacherBehaviour.staff_id = Teacher.id')
                     )
                 );
 
@@ -3080,7 +3015,7 @@ class InstitutionSitesController extends AppController {
                     array(
                         'table' => 'teachers',
                         'alias' => 'Teacher',
-                        'conditions' => array('Teacher.id = QualityInstitutionVisit.teacher_id')
+                        'conditions' => array('Teacher.id = QualityInstitutionVisit.staff_id')
                     ),
                     array(
                         'table' => 'security_users',
@@ -3275,7 +3210,7 @@ class InstitutionSitesController extends AppController {
             $teachersYears = $this->TeacherDetailsCustomValue->find('all', array(
                 'recursive' => -1,
                 'fields' => array(
-                    'TeacherDetailsCustomValue.teacher_id',
+                    'TeacherDetailsCustomValue.staff_id',
                     'Teacher.identification_no',
                     'Teacher.first_name',
                     'Teacher.middle_name',
@@ -3289,7 +3224,7 @@ class InstitutionSitesController extends AppController {
                         'table' => 'teachers',
                         'alias' => 'Teacher',
                         'conditions' => array(
-                            'TeacherDetailsCustomValue.teacher_id = Teacher.id'
+                            'TeacherDetailsCustomValue.staff_id = Teacher.id'
                         )
                     ),
                     array(
@@ -3301,7 +3236,7 @@ class InstitutionSitesController extends AppController {
                     )
                 ),
                 'conditions' => array('TeacherDetailsCustomValue.institution_site_id' => $this->institutionSiteId),
-                'group' => array('TeacherDetailsCustomValue.teacher_id', 'TeacherDetailsCustomValue.school_year_id')
+                'group' => array('TeacherDetailsCustomValue.staff_id', 'TeacherDetailsCustomValue.school_year_id')
                     )
             );
 
@@ -3334,7 +3269,7 @@ class InstitutionSitesController extends AppController {
                     ),
                     'conditions' => array(
                         'TeacherDetailsCustomValue.institution_site_id' => $this->institutionSiteId,
-                        'TeacherDetailsCustomValue.teacher_id' => $rowValue['TeacherDetailsCustomValue']['teacher_id'],
+                        'TeacherDetailsCustomValue.staff_id' => $rowValue['TeacherDetailsCustomValue']['staff_id'],
                         'TeacherDetailsCustomValue.school_year_id' => $rowValue['TeacherDetailsCustomValue']['school_year_id']
                     )
                         )
@@ -5038,7 +4973,7 @@ class InstitutionSitesController extends AppController {
                          array(
                             'table' => 'institution_site_teachers',
                             'alias' => 'InstitutionSiteTeacher',
-                            'conditions' => array('InstitutionSiteTeacher.teacher_id = Teacher.id')
+                            'conditions' => array('InstitutionSiteTeacher.staff_id = Teacher.id')
                         )
                     ),
                     'conditions' => array('InstitutionSiteTeacher.institution_site_id = ' . $this->institutionSiteId),
@@ -5061,7 +4996,7 @@ class InstitutionSitesController extends AppController {
 	                            'type' => 'left',
 	                            'conditions' => array(
 	                                'TeacherCustomField.id = TeacherCustomValue.teacher_custom_field_id',
-                                    'TeacherCustomValue.teacher_id' => array_shift(array_slice($teachers,$r,1))
+                                    'TeacherCustomValue.staff_id' => array_shift(array_slice($teachers,$r,1))
                                 )
 	                        ),
 	                        array(

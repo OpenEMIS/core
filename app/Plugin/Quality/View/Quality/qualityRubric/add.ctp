@@ -100,16 +100,16 @@ if (!empty($this->data[$modelName]['id'])) {
 
 
 <div class="form-group">
-	<label class="col-md-3 control-label"><?php echo __('Teacher'); ?></label>
+	<label class="col-md-3 control-label"><?php echo __('Staff'); ?></label>
 	<div class="col-md-4">
 		<?php
 		if ($type == 'add') {
-			echo $this->Form->input('teacher_id', array('id' => 'institutionSiteTeacherId', 'options' => $teacherOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
+			echo $this->Form->input('staff_id', array('id' => 'institutionSitestaffId', 'options' => $staffOptions, 'onChange' => 'QualityRubric.updateURL(this)', 'class' => 'form-control'));
 		} else {
-			if (isset($teacherOptions[$this->data['QualityInstitutionRubric']['teacher_id']])) {
-				echo $teacherOptions[$this->data['QualityInstitutionRubric']['teacher_id']];
+			if (isset($staffOptions[$this->data['QualityInstitutionRubric']['staff_id']])) {
+				echo $staffOptions[$this->data['QualityInstitutionRubric']['staff_id']];
 			} else {
-				echo $teacherOptions[0];
+				echo $staffOptions[0];
 			}
 		}
 		?>
