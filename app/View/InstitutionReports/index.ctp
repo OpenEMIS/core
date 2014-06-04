@@ -25,7 +25,7 @@ $this->start('contentBody');
 							<?php foreach ($obj['formats'] as $name => $action) {
 								$url = array('action' => 'generate', $obj['model'], $name);
 								if(isset($obj['params']) && isset($obj['params'][$name])) {
-									$url[] = $obj['params'][$name];
+									$url = array_merge($url, $obj['params'][$name]);
 								}
 								echo $this->Html->link(strtoupper($name), $url);
 							}
