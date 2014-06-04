@@ -543,7 +543,10 @@ var jsForm = {
 								var successHandler = function() {
 									$('[file-id=' + id + ']').parent().fadeOut(600, function() {
 										$(this).remove();
-										attachments.renderTable();
+										if (typeof attachments !== 'undefined') {
+											attachments.renderTable();
+										}
+										
 									});
 								};
 								jsAjax.result({data: data, callback: successHandler});
