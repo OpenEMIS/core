@@ -65,7 +65,8 @@ class LabelHelper extends AppHelper {
 			'code' => 'Code',
 			'action' => 'Action',
 			'level' => 'Level',
-			'class' => 'Class'
+			'class' => 'Class',
+			'comment' => 'Comment'
 		),
 		'password'=> array(
 			'oldPassword' => 'Current Password',
@@ -117,7 +118,8 @@ class LabelHelper extends AppHelper {
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
 			'name' => 'Institution Site',
-			'programme' => 'Programme'
+			'programme' => 'Programme',
+			'id_name' => 'ID / Name'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -227,6 +229,22 @@ class LabelHelper extends AppHelper {
 		'Position' => array(
 			'teaching' => 'Teaching',
 			'number' => 'Number'
+		),
+		'InstitutionSiteStudentAbsence' => array(
+			'reason' => 'Reason',
+			'first_date_absent' => 'First Date Absent',
+			'full_day_absent' => 'Full Day Absent',
+			'last_date_absent' => 'Last Date Absent',
+			'start_time_absent' => 'Start Time Absent',
+			'end_time_absent' => 'End Time Absent'
+		),
+		'InstitutionSiteStaffAbsence' => array(
+			'reason' => 'Reason',
+			'first_date_absent' => 'First Date Absent',
+			'full_day_absent' => 'Full Day Absent',
+			'last_date_absent' => 'Last Date Absent',
+			'start_time_absent' => 'Start Time Absent',
+			'end_time_absent' => 'End Time Absent'
 		)
 	);
 	

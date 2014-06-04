@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 $(document).ready(function() {
 	objInstitutionSite.init();
+	
 });
 
 var objInstitutionSite = {
@@ -60,5 +61,37 @@ var objInstitutionSite = {
 		if(input.val().isEmpty()) {
 			input.val(input.attr('empty')).addClass('grey');
 		}
+	},
+			
+	filterStudentAttendance: function(obj){
+		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldClass = $("select#classId");
+		var fieldWeek = $("select#weekId");
+
+		if(fieldSchoolYear.length !== 1 || fieldClass.length !== 1 || fieldWeek.length !== 1){
+			return false;
+		}
+		
+		var url = getRootURL() + $(obj).parent('div').attr('url');
+		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldClass.val();
+		url += '/' + fieldWeek.val();
+		
+		window.location.href = url;
+	},
+			
+	filterStaffAttendance: function(obj){
+		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldWeek = $("select#weekId");
+
+		if(fieldSchoolYear.length !== 1 || fieldWeek.length !== 1){
+			return false;
+		}
+		
+		var url = getRootURL() + $(obj).parent('div').attr('url');
+		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldWeek.val();
+		
+		window.location.href = url;
 	}
 }

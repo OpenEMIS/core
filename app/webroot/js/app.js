@@ -568,6 +568,20 @@ var jsForm = {
 
 		$.dialog(dlgOpt);
 	},
+	
+	filterAbsenceByMonth: function(obj){
+		var fieldSchoolYear = $("select#schoolYearId");
+		var fieldMonth = $("select#monthId");
+		if(fieldSchoolYear.length !== 1 || fieldMonth.length !== 1){
+			return false;
+		}
+		
+		var url = getRootURL() + $(obj).parent('div').attr('url');
+		url += '/' + fieldSchoolYear.val();
+		url += '/' + fieldMonth.val();
+		
+		window.location.href = url;
+	}
 };
 
 var jsList = {

@@ -690,4 +690,21 @@ class UtilityHelper extends AppHelper {
 		return $input;
 	}
 	// end permissions
+	
+	public function getAbsenceDaysBySettings($firstDateAbsent, $lastDateAbsent, $settingWeekdays){
+		$stampFirstDateAbsent = strtotime($firstDateAbsent);
+		$stampLastDateAbsent = strtotime($lastDateAbsent);
+		
+		$totalWeekdays = 0;
+		while($stampFirstDateAbsent <= $stampLastDateAbsent){
+			$weekday = strtolower(date('l', $stampFirstDateAbsent));
+			if(in_array($weekday, $settingWeekdays)){
+				$totalWeekdays++;
+			}
+			
+			$stampFirstDateAbsent = strtotime('+1 day', $stampFirstDateAbsent);
+		}
+		
+		return $totalWeekdays;
+	}
 }

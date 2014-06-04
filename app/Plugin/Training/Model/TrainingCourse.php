@@ -56,11 +56,6 @@ class TrainingCourse extends TrainingAppModel {
 			'foreignKey' => 'training_course_id',
 			'dependent' => true
 		),
-		'TeacherTrainingNeed' => array(
-			'className' => 'TeacherTrainingNeed',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
-		),
 		'StaffTrainingNeed' => array(
 			'className' => 'StaffTrainingNeed',
 			'foreignKey' => 'training_course_id',
@@ -326,7 +321,8 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('_model','TrainingCourseAttachment');
 
 		//APROVAL
-		$controller->Workflow->getApprovalWorkflow($this->name, $id);
+		$pending = $data['TrainingCourse']['training_status_id']=='2' ? 'true' : 'false';
+		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
 		$controller->set('approvalMethod', 'course');
 		$controller->set('controller', 'Training');
 		$controller->set('plugin', 'Training');
