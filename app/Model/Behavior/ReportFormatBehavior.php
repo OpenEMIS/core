@@ -43,9 +43,12 @@ class ReportFormatBehavior extends ModelBehavior {
 		return $mapping;
 	}
 
-	public function generateCSV(Model $model) {
-		$args = func_get_args();
-		array_shift($args);
+	public function generateCSV(Model $model, $args=array()) {
+		if(isset($args['dataFormatted'])){
+			$dataFormatted = $args['dataFormatted'];
+		}else{
+			$dataFormatted = false;
+		}
 		
 		$data = $model->reportsGetData($args);
 		$header = $model->reportsGetHeader($args);
@@ -62,17 +65,23 @@ class ReportFormatBehavior extends ModelBehavior {
         $header_row = $header;
         fputcsv($csv_file, $header_row, ',', '"');
 
-        foreach ($data as $arrSingleResult) {
-            $row = array();
-            foreach ($arrSingleResult as $table => $arrFields) {
+		if($dataFormatted){
+			foreach ($data as $row) {
+				fputcsv($csv_file, $row, ',', '"');
+			}
+		}else{
+			foreach ($data as $arrSingleResult) {
+				$row = array();
+				foreach ($arrSingleResult as $table => $arrFields) {
 
-                foreach ($arrFields as $col) {
-                    $row[] = $col;
-                }
-            }
+					foreach ($arrFields as $col) {
+						$row[] = $col;
+					}
+				}
 
-            fputcsv($csv_file, $row, ',', '"');
-        }
+				fputcsv($csv_file, $row, ',', '"');
+			}
+		}
        
         $footer = array("Report Generated: " . date("Y-m-d H:i:s"));
         fputcsv($csv_file, array(), ',', '"');
