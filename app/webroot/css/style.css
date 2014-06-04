@@ -144,6 +144,7 @@ input.default { width: 240px; }
 .custom_field {
 	overflow: hidden;
 	border: 1px solid #CCCCCC;
+	margin-bottom: 10px;
 }
 
 .custom_section_break {
