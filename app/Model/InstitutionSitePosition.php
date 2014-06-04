@@ -84,8 +84,11 @@ class InstitutionSitePosition extends AppModel {
     }
 
     
-    public function getInstitutionSitePositionList() {
+    public function getInstitutionSitePositionList($institutionId = false) {
 		$options['recursive'] = -1;
+		if($institutionId != false) {
+			$options['conditions'] = array('institution_site_id' => $institutionId);
+		}
 		$data = $this->find('all', $options);
 		$list = array();
 		if (!empty($data)) {

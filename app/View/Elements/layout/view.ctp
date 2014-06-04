@@ -8,7 +8,7 @@ foreach($fields['fields'] as $field) {
 		$label = $this->Label->getLabel($model, $field);
 		$multiRecords = (isset($field['multi_records']) && is_bool($field['multi_records']))? $field['multi_records']: false;
 		$multiRecordsField = isset($field['multi_record_field'])? $field['multi_record_field']: 'multi_records';
-		
+		$displayFormat = isset($field['format'])?$field['format']: NULL;
 		if($multiRecords){
 			//Setup Label
 			$multiValue = ''; 
@@ -55,7 +55,14 @@ foreach($fields['fields'] as $field) {
 				echo '</div>';
 			
 		} else {
-			if($key == 'modified_by' || $key == 'created_by') {
+			if($displayFormat == 'name'){
+				$value = trim($data[$model]['first_name'] . ' ' . $data[$model]['last_name']);
+				echo '<div class="row">';
+				echo '<div class="col-md-3">' . $label . '</div>';
+				echo '<div class="col-md-6">' . $value . '</div>';
+				echo '</div>';
+			}
+			else if($key == 'modified_by' || $key == 'created_by') {
 				$value = trim($data[$model]['first_name'] . ' ' . $data[$model]['last_name']);
 				echo '<div class="row">';
 				echo '<div class="col-md-3">' . $label . '</div>';

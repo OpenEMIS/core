@@ -13,6 +13,7 @@
 
 .table-checkable .checkbox-column { width: 36px; }
 .input-group-addon { font-size: 12px; padding: 5px 8px; }
+.fileupload .btn { font-size: 12px; padding: 4px 12px; }
 /* end bootstrap */
 
 textarea { resize: none; }
@@ -144,6 +145,7 @@ input.default { width: 240px; }
 .custom_field {
 	overflow: hidden;
 	border: 1px solid #CCCCCC;
+	margin-bottom: 10px;
 }
 
 .custom_section_break {

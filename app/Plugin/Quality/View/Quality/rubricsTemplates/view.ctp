@@ -39,10 +39,12 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
     <div class="col-md-3"><?php echo __('Target Grades'); ?></div>
-    <div class="value"><?php
+    <div class="col-md-6"><?php
         if (!empty($rubricGradesOptions)) {
             foreach ($rubricGradesOptions as $rubricGrade) {
+				if(!empty($rubricGrade)){
                 echo $rubricGrade . '<br/>';
+				}
             }
         }
         ?></div>

@@ -20,7 +20,7 @@ echo $this->Form->create('CensusTextbook', array(
 echo $this->element('census/year_options');
 ?>
 
-<div id="textbooks" class="content_wrapper edit">
+<div class="table-responsive">
 
     <?php
     $index = 0;
