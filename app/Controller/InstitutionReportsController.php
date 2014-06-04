@@ -78,7 +78,8 @@ class InstitutionReportsController extends AppController {
 		$this->Navigation->addCrumb($header);
 		
 		$data = array(
-			array('name' => 'Programme List', 'model' => 'InstitutionSiteProgramme', 'params' => array('csv' => 1))
+			array('name' => 'Programme List', 'model' => 'InstitutionSiteProgramme', 'params' => array('csv' => 1)),
+			array('name' => 'Student List', 'model' => 'InstitutionSiteStudent', 'params' => array('csv' => 1))
 		);
 		
 		foreach($data as $i => $obj) {
