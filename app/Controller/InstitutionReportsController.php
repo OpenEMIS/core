@@ -23,12 +23,17 @@ class InstitutionReportsController extends AppController {
 	
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->bodyTitle = 'Institutions';
 		$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-		$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
 		
 		if ($this->Session->check('InstitutionSiteId')) {
 			$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
+			
+			$InstitutionSiteModel = ClassRegistry::init('InstitutionSite');
+			$institutionSiteName = $InstitutionSiteModel->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
+			$this->bodyTitle = $institutionSiteName;
+			
+			$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
+			$this->Navigation->addCrumb('Reports', array('controller' => 'InstitutionReports', 'action' => 'index'));
 		} else {
 			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
 		}
@@ -54,7 +59,30 @@ class InstitutionReportsController extends AppController {
 		$this->Navigation->addCrumb($header);
 		
 		$data = array(
-			array('name' => 'Bank Accounts', 'model' => 'InstitutionSiteBankAccount', 'params' => array('csv' => 1))
+			array('name' => 'Overview and More', 'model' => 'InstitutionSite', 'params' => array('csv' => 1)),
+			array('name' => 'Bank Accounts', 'model' => 'InstitutionSiteBankAccount')
+		);
+		
+		foreach($data as $i => $obj) {
+			$model = ClassRegistry::init($obj['model']);
+			$formats = $model->getSupportedFormats();
+			$data[$i]['formats'] = $formats;
+		}
+		
+		$this->set(compact('data', 'header'));
+		$this->render('index');
+	}
+	
+	public function details() {
+		$header = __('Details');
+		$this->Navigation->addCrumb($header);
+		
+		$data = array(
+			array('name' => 'Programme List', 'model' => 'InstitutionSiteProgramme', 'params' => array('csv' => 1)),
+			array('name' => 'Student List', 'model' => 'InstitutionSiteStudent', 'params' => array('csv' => 1)),
+			array('name' => 'Student Result', 'model' => 'InstitutionSiteClassGradeStudent', 'params' => array('csv' => 1)),
+			array('name' => 'Student Attendance', 'model' => 'InstitutionSiteClassGradeStudent', 'params' => array('csv' => 2)),
+			array('name' => 'Student Behaviour', 'model' => 'Students.StudentBehaviour', 'params' => array('csv' => 1))
 		);
 		
 		foreach($data as $i => $obj) {
