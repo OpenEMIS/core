@@ -81,7 +81,7 @@ $this->start('contentBody');
     </fieldset>
 
 	<fieldset class="section_group">
-		<legend><?php echo __('Teachers'); ?></legend>
+		<legend><?php echo __('Staff'); ?></legend>
 		<table class="table table-striped table-hover table-bordered">
 			<thead>
 				<tr>
@@ -90,21 +90,21 @@ $this->start('contentBody');
 					<th class="table_cell cell_delete"></th>
 				</tr>
 			</thead>
-			<tbody url="InstitutionSites/classesTeacherAjax/<?php echo $classId; ?>">
-				<?php foreach ($teachers as $obj) { ?>
-					<tr teacher-id="<?php echo $obj['Teacher']['id']; ?>" subject-id="<?php echo $obj['InstitutionSiteClassTeacher']['education_subject_id']; ?>">
-						<td class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></td>
-						<td class="table_cell"><?php echo $obj['Teacher']['first_name'] . ' ' . $obj['Teacher']['last_name']; ?></td>
+			<tbody url="InstitutionSites/classesStaffAjax/<?php echo $classId; ?>">
+				<?php foreach ($staffs as $obj) { ?>
+					<tr staff-id="<?php echo $obj['Staff']['id']; ?>" subject-id="<?php echo $obj['InstitutionSiteClassStaff']['education_subject_id']; ?>">
+						<td class="table_cell"><?php echo $obj['Staff']['identification_no']; ?></td>
+						<td class="table_cell"><?php echo $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']; ?></td>
 						<td class="table_cell">
-							<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteTeacher(this)', 'onDelete' => false)); ?>
+							<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteStaff(this)', 'onDelete' => false)); ?>
 						</td>
 					</tr>
 				<?php } ?>
 			</tbody>
 		</table>
 		<div class="row">
-			<?php $url = 'InstitutionSites/classesAddTeacherRow/' . $year . '/' . $classId . '/'; ?>
-			<a class="void icon_plus teachers" url="<?php echo $url; ?>"><?php echo __('Add') . ' ' . __('Teacher'); ?></a>
+			<?php $url = 'InstitutionSites/classesAddStaffRow/' . $year . '/' . $classId . '/'; ?>
+			<a class="void icon_plus staffs" url="<?php echo $url; ?>"><?php echo __('Add') . ' ' . __('Staff'); ?></a>
 		</div>
 	</fieldset>
 

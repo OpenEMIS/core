@@ -1,21 +1,21 @@
-<?php
+<?php/*
 //echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
 //echo $this->Html->script('/Students/js/students', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 
-$obj = $data[$modelName]; 
+$obj = $data[$modelName];
 
 $this->start('contentActions');
-echo $this->Html->link(__('List'), array('action' => 'qualityVisit'), array('class' => 'divider'));
-        if ($_edit) {
-            echo $this->Html->link(__('Edit'), array('action' => 'qualityVisitEdit', $obj['id']), array('class' => 'divider'));
-        }
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'qualityVisit'), array('class' => 'divider'));
+if ($_edit) {
+	echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'qualityVisitEdit', $obj['id']), array('class' => 'divider'));
+}
 
-        if ($_delete) {
-            echo $this->Html->link(__('Delete'), array('action' => 'qualityVisitDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
-        }
+if ($_delete) {
+	echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'qualityVisitDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+}
 $this->end();
 
 $this->start('contentBody');
@@ -40,8 +40,8 @@ $this->start('contentBody');
         <div class="value"><?php echo $class; ?></div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Teacher'); ?></div>
-        <div class="value"><?php echo trim($teacher); ?></div>
+        <div class="label"><?php echo __('Staff'); ?></div>
+        <div class="value"><?php echo trim($staff); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Evaluator'); ?></div>
@@ -59,18 +59,17 @@ $this->start('contentBody');
     <div class="row">
         <div class="label"><?php echo __('Attachment'); ?></div>
         <div class="value"><?php
-        
-            foreach($data['QualityInstitutionVisitAttachment'] as $file){
-                if (!empty($file['file_name'])) {
-                    echo $this->Html->link($file['file_name'], array(
-                        'controller' => $this->params['controller'],
-                        'action' => 'qualityVisitAttachmentDownload',
-                        $file['id']
-                            ), array('target' => '_self', 'escape' => false)
-                    ). "<br/>";
-                }
-            }
-            ?></div>
+			foreach ($data['QualityInstitutionVisitAttachment'] as $file) {
+				if (!empty($file['file_name'])) {
+					echo $this->Html->link($file['file_name'], array(
+						'controller' => $this->params['controller'],
+						'action' => 'qualityVisitAttachmentDownload',
+						$file['id']
+							), array('target' => '_self', 'escape' => false)
+					) . "<br/>";
+				}
+			}
+			?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Modified by'); ?></div>
@@ -93,3 +92,24 @@ $this->start('contentBody');
     </div>
 </div>
 <?php $this->end(); ?>
+ *  ?>
+ */
+
+<?php
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', $header);
+
+$this->start('contentActions');
+echo $this->Html->link($this->Label->get('general.list'), array('action' => 'qualityVisit'), array('class' => 'divider'));
+if($_edit) {
+    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'qualityVisitEdit', $id), array('class' => 'divider'));
+}
+if($_delete) {
+    echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'qualityVisitDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+}
+$this->end();
+
+$this->start('contentBody');
+echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+$this->end();
+?>

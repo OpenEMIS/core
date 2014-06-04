@@ -45,8 +45,8 @@ $this->start('contentBody');
         <div class="value"><?php echo $class; ?></div>
     </div>
     <div class="row">
-        <div class="label"><?php echo __('Teacher'); ?></div>
-        <div class="value"><?php echo trim($teacher); ?></div>
+        <div class="label"><?php echo __('Staff'); ?></div>
+        <div class="value"><?php echo trim($staff); ?></div>
     </div>
     <div class="row">
         <div class="label"><?php echo __('Evaluator'); ?></div>

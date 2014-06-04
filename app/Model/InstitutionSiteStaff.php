@@ -25,20 +25,19 @@ class InstitutionSiteStaff extends AppModel {
 	public $belongsTo = array(
 		'InstitutionSite',
 		'Staff.Staff',
-		'StaffStatus', /* 'StaffCategory', */
-		'InstitutionSitePosition', /* 'StaffPositionTitle', 'StaffPositionGrade', 'StaffPositionStep' */
+		'StaffStatus',
+		'InstitutionSitePosition',
 		'StaffType' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'staff_type_id'
 		)
 	);
-	
-	
+
 	public function compareDate($field = array(), $compareField = null) {
-        $startDate = new DateTime(current($field));
-        $endDate = new DateTime($this->data[$this->name][$compareField]);
-        return $endDate >= $startDate;
-    }
+		$startDate = new DateTime(current($field));
+		$endDate = new DateTime($this->data[$this->name][$compareField]);
+		return $endDate >= $startDate;
+	}
 
 	public function isPositionNumberExists($positionNo, $startDate) {
 		$this->formatResult = true;
@@ -53,7 +52,7 @@ class InstitutionSiteStaff extends AppModel {
 		$data = $this->find('first', array(
 			'fields' => array(
 				'Staff.first_name AS first_name', 'Staff.middle_name AS middle_name', 'Staff.last_name AS last_name',
-				/*'Institution.name AS institution_name',*/ 'InstitutionSite.name AS institution_site_name'
+				/* 'Institution.name AS institution_name', */ 'InstitutionSite.name AS institution_site_name'
 			),
 			'recursive' => -1,
 			/* 'joins' => array(
@@ -103,19 +102,17 @@ class InstitutionSiteStaff extends AppModel {
 
 	public function getPositions($staffId, $institutionSiteId = 0) {
 		$this->unbindModel(array('belongsTo' => array('InstitutionSitePosition')));
-		
+
 		$fields = array(
-			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.position_no', 'InstitutionSiteStaff.FTE',
+			'InstitutionSiteStaff.id', 'InstitutionSiteStaff.FTE',
 			'InstitutionSiteStaff.start_date', 'InstitutionSiteStaff.end_date', 'InstitutionSiteStaff.staff_status_id', 'StaffType.name',
-			/* 'StaffCategory.name', */ 'StaffStatus.name', 'InstitutionSitePosition.id', 'InstitutionSitePosition.position_no', 'StaffPositionTitle.name', 'StaffPositionGrade.name'
-			/*'StaffPositionTitle.name', 'StaffPositionGrade.name', 'StaffPositionStep.name'*/
+			'StaffStatus.name', 'InstitutionSitePosition.id', 'InstitutionSitePosition.position_no', 'StaffPositionTitle.name', 'StaffPositionGrade.name'
 		);
 
 		$joins = array(
 			array(
 				'table' => 'institution_site_positions',
 				'alias' => 'InstitutionSitePosition',
-				//'type' => 'LEFT',
 				'conditions' => array('InstitutionSitePosition.id = InstitutionSiteStaff.institution_site_position_id')
 			),
 			array(
@@ -136,7 +133,7 @@ class InstitutionSiteStaff extends AppModel {
 		if ($institutionSiteId == 0) {
 			//$fields[] = 'Institution.name AS institution';
 			$fields[] = 'InstitutionSite.name as institution_site';
-			
+
 			/* $joins[] = array(
 			  'table' => 'institution_sites',
 			  'alias' => 'InstitutionSite',
@@ -161,41 +158,41 @@ class InstitutionSiteStaff extends AppModel {
 		return $data;
 	}
 
-	/*public function getData($id) {
-		$options['joins'] = array(
-			array('table' => 'institution_sites',
-				'alias' => 'InstitutionSite',
-				'type' => 'LEFT',
-				'conditions' => array(
-					'InstitutionSite.id = InstitutionSiteStaff.institution_site_id'
-				)
-			),
-			array('table' => 'institutions',
-				'alias' => 'Institution',
-				'type' => 'LEFT',
-				'conditions' => array(
-					'Institution.id = InstitutionSite.institution_id'
-				)
-			)
-		);
+	/* public function getData($id) {
+	  $options['joins'] = array(
+	  array('table' => 'institution_sites',
+	  'alias' => 'InstitutionSite',
+	  'type' => 'LEFT',
+	  'conditions' => array(
+	  'InstitutionSite.id = InstitutionSiteStaff.institution_site_id'
+	  )
+	  ),
+	  array('table' => 'institutions',
+	  'alias' => 'Institution',
+	  'type' => 'LEFT',
+	  'conditions' => array(
+	  'Institution.id = InstitutionSite.institution_id'
+	  )
+	  )
+	  );
 
-		$options['conditions'] = array('InstitutionSiteStaff.staff_id' => $id);
+	  $options['conditions'] = array('InstitutionSiteStaff.staff_id' => $id);
 
-		$options['fields'] = array(
-			'InstitutionSite.name',
-			'Institution.id',
-			'Institution.name',
-			'Institution.code',
-			'InstitutionSiteStaff.id',
-			'InstitutionSiteStaff.institution_site_id',
-			'InstitutionSiteStaff.start_date',
-			'InstitutionSiteStaff.end_date',
-		);
+	  $options['fields'] = array(
+	  'InstitutionSite.name',
+	  'Institution.id',
+	  'Institution.name',
+	  'Institution.code',
+	  'InstitutionSiteStaff.id',
+	  'InstitutionSiteStaff.institution_site_id',
+	  'InstitutionSiteStaff.start_date',
+	  'InstitutionSiteStaff.end_date',
+	  );
 
-		$list = $this->find('all', $options);
+	  $list = $this->find('all', $options);
 
-		return $list;
-	}*/
+	  return $list;
+	  } */
 
 	public function getInstitutionSelectionValues($list) {
 		$InstitutionSite = ClassRegistry::init('InstitutionSite');
@@ -310,15 +307,15 @@ class InstitutionSiteStaff extends AppModel {
 			$staffId = $params['pass'][0];
 			$controller->Session->write('InstitutionSiteStaffId', $staffId);
 			$data = $this->Staff->findById($staffId); //('first', array('conditions' => array('Staff.id' => $staffId)));
-			
+
 			$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
-			
+
 			$controller->Navigation->addCrumb($name);
 			$header = __('Staff Information');
 			$positions = $this->getPositions($staffId, $controller->institutionSiteId);
 			//pr($controller->institutionSiteId);
 			//if (!empty($positions)) {
-				$controller->set(compact('data', 'positions', 'header'));
+			$controller->set(compact('data', 'positions', 'header'));
 			//} else {
 			//	return $controller->redirect(array('action' => 'staff'));
 			//}
@@ -329,7 +326,7 @@ class InstitutionSiteStaff extends AppModel {
 
 	public function staffAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add Staff');
-		$positionOptions = $this->InstitutionSitePosition->getInstitutionSitePositionList();
+		$positionOptions = $this->InstitutionSitePosition->getInstitutionSitePositionList($controller->institutionSiteId);
 		$selectedPositionId = !empty($positionOptions) ? key($positionOptions) : 0;
 		$FTEOtpions = $this->getFTEOptions($selectedPositionId, array('date' => date("Y-m-d")));
 		$statusOptions = $this->StaffStatus->findList(true);
@@ -346,42 +343,42 @@ class InstitutionSiteStaff extends AppModel {
 			$data = $controller->request->data['InstitutionSiteStaff'];
 			if (isset($data['staff_id'])) {
 				//if (!empty($data['start_date']['day']) && !empty($data['start_date']['month']) && !empty($data['start_date']['year'])) {
-					$data['institution_site_id'] = $controller->institutionSiteId;
-					$selectedDate = strtotime($data['start_date']);
-					$data['start_year'] = date('Y',$selectedDate);
-					$data['FTE'] = !empty($data['FTE'])?$data['FTE']/100 : '';
-					/*$yr = $data['start_year'];//$data['start_date']['year'];
-					$mth = date('m',$selectedDate);//$data['start_date']['month'];
-					$day = date('d',$selectedDate);//$data['start_date']['day'];
+				$data['institution_site_id'] = $controller->institutionSiteId;
+				$selectedDate = strtotime($data['start_date']);
+				$data['start_year'] = date('Y', $selectedDate);
+				$data['FTE'] = !empty($data['FTE']) ? $data['FTE'] / 100 : '';
+				/* $yr = $data['start_year'];//$data['start_date']['year'];
+				  $mth = date('m',$selectedDate);//$data['start_date']['month'];
+				  $day = date('d',$selectedDate);//$data['start_date']['day'];
 
-					while (!checkdate($mth, $day, $yr)) {
-						$day--;
-					}*/
-					//$data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
-					$insert = true;
-					if (!empty($data['position_no'])) {
-						$obj = $this->isPositionNumberExists($data['position_no'], $data['start_date']);
-						/*if (!$obj) {
-							$obj = $this->isPositionNumberExists($data['position_no'], $data['start_date']);
-						}*/
-						if ($obj) {
-							$staffObj = $this->Staff->find('first', array(
-								'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.gender'),
-								'conditions' => array('Staff.id' => $data['staff_id'])
-							));
-							$position = $data['position_no'];
-							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
-							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
-							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
-							$msg .= '<br>' . __('Please choose another position number.');
-							$controller->Utility->alert($msg, array('type' => 'warn'));
-							$insert = false;
-						}
+				  while (!checkdate($mth, $day, $yr)) {
+				  $day--;
+				  } */
+				//$data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
+				$insert = true;
+				if (!empty($data['position_no'])) {
+					$obj = $this->isPositionNumberExists($data['position_no'], $data['start_date']);
+					/* if (!$obj) {
+					  $obj = $this->isPositionNumberExists($data['position_no'], $data['start_date']);
+					  } */
+					if ($obj) {
+						$staffObj = $this->Staff->find('first', array(
+							'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.gender'),
+							'conditions' => array('Staff.id' => $data['staff_id'])
+						));
+						$position = $data['position_no'];
+						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
+						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+						$msg .= '<br>' . __('Please choose another position number.');
+						$controller->Utility->alert($msg, array('type' => 'warn'));
+						$insert = false;
 					}
-				/*} else {
-					$insert = false;
-					$controller->Utility->alert($controller->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
-				}*/
+				}
+				/* } else {
+				  $insert = false;
+				  $controller->Utility->alert($controller->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
+				  } */
 				if (isset($insert) && $insert) {
 					$this->save($data);
 					$controller->Message->alert('general.add.success');
@@ -431,7 +428,7 @@ class InstitutionSiteStaff extends AppModel {
 				'group' => array('institution_site_position_id'),
 					)
 			);
-			
+
 			$totalFTE = empty($data[0][0]['totalFTE']) ? 0 : $data[0][0]['totalFTE'] * 100;
 			$remainingFTE = 100 - intval($totalFTE);
 			$remainingFTE = ($remainingFTE < 0) ? 0 : $remainingFTE;
@@ -468,40 +465,40 @@ class InstitutionSiteStaff extends AppModel {
 	}
 
 	public function staffPositionDelete($controller, $params) {
-		/*$this->render = false;
-		if ($controller->request->is('post')) {
-			$result = array('alertOpt' => array());
-			$controller->Utility->setAjaxResult('alert', $result);
-			$id = $params->data['id'];
+		/* $this->render = false;
+		  if ($controller->request->is('post')) {
+		  $result = array('alertOpt' => array());
+		  $controller->Utility->setAjaxResult('alert', $result);
+		  $id = $params->data['id'];
 
-			if ($this->delete($id)) {
-				$msgData = $controller->Message->get('general.delete.success');
-				$result['alertOpt']['text'] = $msgData['msg']; // __('File is deleted successfully.');
-			} else {
-				$msgData = $controller->Message->get('general.delete.failed');
-				$result['alertType'] = $this->Utility->getAlertType('alert.error');
-				$result['alertOpt']['text'] = $msgData; //__('Error occurred while deleting file.');
-			}
-			return json_encode($result);
-		}*/
+		  if ($this->delete($id)) {
+		  $msgData = $controller->Message->get('general.delete.success');
+		  $result['alertOpt']['text'] = $msgData['msg']; // __('File is deleted successfully.');
+		  } else {
+		  $msgData = $controller->Message->get('general.delete.failed');
+		  $result['alertType'] = $this->Utility->getAlertType('alert.error');
+		  $result['alertOpt']['text'] = $msgData; //__('Error occurred while deleting file.');
+		  }
+		  return json_encode($result);
+		  } */
 		$this->render = false;
-		
+
 		if ($controller->Session->check('InstitutionSiteStaffId')) {
 			$InstitutionSitePositionId = isset($params['pass'][0]) ? $params['pass'][0] : 0;
-            $id = $controller->Session->read('InstitutionSiteStaffId');
-            if ($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-            $controller->Session->delete('InstitutionSiteStaffId');
-            $controller->redirect(array('action' => 'positionsHistory', $InstitutionSitePositionId));
-        }
+			$id = $controller->Session->read('InstitutionSiteStaffId');
+			if ($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			$controller->Session->delete('InstitutionSiteStaffId');
+			$controller->redirect(array('action' => 'positionsHistory', $InstitutionSitePositionId));
+		}
 	}
-	
-	public function getAutoCompleteList($search,  $institutionSiteId) {
-        $search = sprintf('%%%s%%', $search);
-		
+
+	public function getAutoCompleteList($search, $institutionSiteId) {
+		$search = sprintf('%%%s%%', $search);
+
 		$list = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array('DISTINCT Staff.id', 'Staff.*'),
@@ -525,25 +522,25 @@ class InstitutionSiteStaff extends AppModel {
 			'order' => array('Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.preferred_name')
 		));
 
-        $data = array();
-        foreach ($list as $obj) {
-            $staff = $obj['Staff'];
-            $data[] = array(
-                'label' => sprintf('%s - %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['last_name'], $staff['preferred_name']),
-                'value' => $staff['id']
-            );
-        }
-        return $data;
-    }
-	
+		$data = array();
+		foreach ($list as $obj) {
+			$staff = $obj['Staff'];
+			$data[] = array(
+				'label' => sprintf('%s - %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['last_name'], $staff['preferred_name']),
+				'value' => $staff['id']
+			);
+		}
+		return $data;
+	}
+
 	public function getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate) {
 		//$startYear = date('Y', strtotime($startDate));
 		//$endYear = date('Y', strtotime($endDate));
-		
+
 		$conditions = array(
 			'InstitutionSiteStaff.institution_site_id = ' . $institutionSiteId
 		);
-		
+
 //		$conditions['OR'] = array(
 //				array(
 //					'InstitutionSiteStaff.start_year <= "' . $endYear . '"',
@@ -555,7 +552,7 @@ class InstitutionSiteStaff extends AppModel {
 //					'InstitutionSiteStaff.end_year IS NOT NULL'
 //				)
 //		);
-		
+
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
@@ -575,7 +572,44 @@ class InstitutionSiteStaff extends AppModel {
 			),
 			'conditions' => $conditions
 		));
-		
+
 		return $data;
 	}
+
+	public function getStaffSelectList($year, $institutionSiteId, $classId) {
+		// Filtering section
+
+		$InstitutionSiteClassStaff = ClassRegistry::init('InstitutionSiteClassStaff');
+		$staffsExclude = $InstitutionSiteClassStaff->getStaffs($classId);
+		$ids = '';
+		foreach ($staffsExclude as $obj) {
+			$ids .= $obj['Staff']['id'] . ',';
+		}
+		$ids = rtrim($ids, ',');
+		if ($ids != '') {
+			$conditions = 'Staff.id NOT IN (' . $ids . ')';
+		} else {
+			$conditions = '';
+		}
+		// End filtering
+
+		$data = $this->find('all', array(
+			'fields' => array(
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.middle_name',
+				'Staff.last_name', 'Staff.gender'
+			),
+			'conditions' => array(
+				'InstitutionSiteStaff.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteStaff.start_year <=' => $year,
+				'OR' => array(
+					'InstitutionSiteStaff.end_year >=' => $year,
+					'InstitutionSiteStaff.end_year IS NULL'
+				)
+			),
+			'group' => array('Staff.id'),
+			'order' => array('Staff.first_name')
+		));
+		return $data;
+	}
+
 }

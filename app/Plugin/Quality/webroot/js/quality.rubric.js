@@ -13,7 +13,7 @@ var QualityRubric = {
         var rubricsTemplateId = $('#rubricsTemplateId').val();
         var institutionSiteClassGradeId = $('#institutionSiteClassGradeId').val();
         var institutionSiteClassId = $('#institutionSiteClassId').val();
-        var institutionSiteTeacherId = $('#institutionSiteTeacherId').val();
+        var institutionSitestaffId = $('#institutionSitestaffId').val();
         //var qualityTypeId = $('#qualityTypeId').val();
 
         //url += '/'+ selectedDate;
@@ -31,8 +31,8 @@ var QualityRubric = {
             case 'rubricsTemplateId':
                 url += '/' + schoolYearId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId;
                 break;
-            case 'institutionSiteTeacherId':
-                url += '/' + schoolYearId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId + '/' + institutionSiteTeacherId;
+            case 'institutionSitestaffId':
+                url += '/' + schoolYearId + '/' + institutionSiteClassGradeId + '/' + institutionSiteClassId + '/' + rubricsTemplateId + '/' + institutionSitestaffId;
                 break;
 
         }

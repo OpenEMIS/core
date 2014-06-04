@@ -1,10 +1,10 @@
 <?php
 $customElement = array(
-	1 => 'customFields/label',
-	2 => 'customFields/text',
-	3 => 'customFields/dropdown',
-	4 => 'customFields/multiple',
-	5 => 'customFields/textarea'
+	1 => 'customfields/label',
+	2 => 'customfields/text',
+	3 => 'customfields/dropdown',
+	4 => 'customfields/multiple',
+	5 => 'customfields/textarea'
 );
 
 $elementOptions = compact('model', 'modelOption', 'action');
