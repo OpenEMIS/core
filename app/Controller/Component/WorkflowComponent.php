@@ -93,7 +93,7 @@ class WorkflowComponent extends Component {
         return $workflows;
     }
 
-    public function getApprovalWorkflow($model, $id){
+    public function getApprovalWorkflow($model, $pending, $id){
         $workflowLog = $this->WorkflowLog->find('first',
             array(
                 'fields'=>array('WorkflowLog.workflow_step_id', 'WorkflowLog.approve', 'WorkflowStep.step'),
@@ -111,6 +111,8 @@ class WorkflowComponent extends Component {
         );
 
 
+        $modelName = ClassRegistry::init($model);
+
         $step = 0;
         $new = false;
         if(!empty($workflowLog)){
@@ -121,7 +123,9 @@ class WorkflowComponent extends Component {
             }
         }
 
-        if(!$new){
+
+
+        if(!$new && !$pending){
             $workflow = $this->getCurrentWorkflowStep($model, $step+1);
             if(!empty($workflow)){
                 $this->controller->set('workflowStatus', $workflow['Workflow']['workflow_name']);

@@ -92,28 +92,70 @@ class FormUtilityHelper extends AppHelper {
 		}
 		return $html;
 	}
-        
-        public function getFormWizardButtons($option = NULL) {
-			echo '<div class="form-group">';
-            if (!$option['WizardMode']) {
-                echo '<div class="col-md-offset-4">'.$this->getFormButtons(array('cancelURL' => $option['cancelURL'])).'</div>';
-            } else {
-				if(!isset($option['addMoreBtn']) || $option['addMoreBtn'] == true){
-					echo '<div class="add_more_controls">' . $this->Form->submit($this->Label->get('wizard.addmore'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div><br/>';
-				}
-				
-				echo '<div class="col-md-offset-4">';
-                echo $this->Form->submit($this->Label->get('wizard.previous'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right"));
-                if (!$option['WizardEnd']) {
-                    echo $this->Form->submit($this->Label->get('wizard.next'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
-                } else {
-                    echo $this->Form->submit($this->Label->get('wizard.finish'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
-                }
-                if ($option['WizardMandatory'] != '1' && !$option['WizardEnd']) {
-                    echo $this->Form->submit($this->Label->get('wizard.skip'), array('div' => false, 'name' => 'submit', 'class' => "btn_cancel btn_cancel_button btn_left"));
-                }
-				echo '</div>';
-            }
+	
+	public function timepicker($field, $options=array()) {
+		$id = isset($options['id']) ? $options['id'] : 'time';
+		$wrapper = '<div class="input-group bootstrap-timepicker">';
+		$icon = '<span class="input-group-addon"><i class="fa fa-clock-o"></i></span></div>';
+		$defaults = $this->Form->inputDefaults();
+		$inputOptions = array(
+			'id' => $id,
+			'type' => 'text',
+			'between' => $defaults['between'] . $wrapper,
+			'after' => $icon . $defaults['after']
+		);
+
+		if(isset($options['class'])){
+			$inputOptions['class'] = $options['class'];
+		}
+		if(isset($options['label'])){
+			$inputOptions['label'] = $options['label'];
+		}
+		if(isset($options['default'])){
+			$inputOptions['default'] = $options['default'];
+		}
+		$html = $this->Form->input($field, $inputOptions);
+		if(!is_null($this->_View->get('timepicker'))) {
+			$timepickers = $this->_View->get('timepicker');
+			$timepickers[] = $options['id'];
+			$this->_View->set('timepicker', $timepickers);
+		} else {
+			$this->_View->set('timepicker', array($options['id']));
+		}
+		return $html;
+	}
+	
+	public function getFormWizardButtons($option = NULL) {
+		echo '<div class="form-group">';
+		if (!$option['WizardMode']) {
+			echo '<div class="col-md-offset-4">'.$this->getFormButtons(array('cancelURL' => $option['cancelURL'])).'</div>';
+		} else {
+			if(!isset($option['addMoreBtn']) || $option['addMoreBtn'] == true){
+				echo '<div class="add_more_controls">' . $this->Form->submit($this->Label->get('wizard.addmore'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div><br/>';
+			}
+			
+			echo '<div class="col-md-offset-4">';
+			echo $this->Form->submit($this->Label->get('wizard.previous'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right"));
+			if (!$option['WizardEnd']) {
+				echo $this->Form->submit($this->Label->get('wizard.next'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
+			} else {
+				echo $this->Form->submit($this->Label->get('wizard.finish'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
+			}
+			if ($option['WizardMandatory'] != '1' && !$option['WizardEnd']) {
+				echo $this->Form->submit($this->Label->get('wizard.skip'), array('div' => false, 'name' => 'submit', 'class' => "btn_cancel btn_cancel_button btn_left"));
+			}
 			echo '</div>';
-        }
+		}
+		echo '</div>';
+	}
+	
+	public function getSourceClass($tag) {
+		$classes = array(
+			0 => 'row_dataentry',
+			1 => 'row_external',
+			2 => 'row_internal',
+			3 => 'row_estimate'
+		);
+		return $classes[$tag];
+	}
 }

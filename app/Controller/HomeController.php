@@ -26,14 +26,12 @@ class HomeController extends AppController {
 			'Institution' => 'institutions',
 			'InstitutionSite' => 'institution_sites',
 			'Student' => 'students',
-			'Teacher' => 'teachers',
 			'Staff' => 'staff'
 		),
 		'Edited' => array(
 			'InstitutionHistory' => 'institution_history',
 			'InstitutionSiteHistory' => 'institution_site_history',
 			'StudentHistory' => 'student_history',
-			'TeacherHistory' => 'teacher_history',
 			'StaffHistory' => 'staff_history'
 		)
 	);
@@ -43,12 +41,10 @@ class HomeController extends AppController {
 		'Institution',
 		'InstitutionSite',
 		'Students.Student',
-		'Teachers.Teacher',
 		'Staff.Staff',
 		'InstitutionHistory',
 		'InstitutionSiteHistory',
 		'Students.StudentHistory',
-		'Teachers.TeacherHistory',
 		'Staff.StaffHistory',
 		'SecurityUser',
 		'SecurityRoleFunction',

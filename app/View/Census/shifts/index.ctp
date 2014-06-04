@@ -17,7 +17,7 @@ $this->start('contentBody');
 echo $this->element('census/year_options');
 ?>
 
-<div id="shifts" class="content_wrapper">
+<div class="table-responsive">
 
     <?php if ($displayContent) { ?>
         <fieldset class="section_group">

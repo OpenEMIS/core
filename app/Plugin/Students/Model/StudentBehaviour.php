@@ -18,7 +18,10 @@
 class StudentBehaviour extends StudentsAppModel {
     public $actsAs = array(
 		'ControllerAction',
-		'DatePicker' => array('date_of_behaviour')
+		'DatePicker' => array('date_of_behaviour'),
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
 
     public $useTable = 'student_behaviours';
@@ -30,6 +33,33 @@ class StudentBehaviour extends StudentsAppModel {
             )
         )
     );
+	
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+                'InstitutionSite' => array(
+                    'name' => 'Institution'
+                ),
+                'Student' => array(
+                    'identification_no' => 'Student OpenEMIS ID',
+                    'first_name' => '',
+                    'middle_name' => '',
+                    'last_name' => '',
+                    'preferred_name' => ''
+                ),
+                'StudentBehaviourCategory' => array(
+                    'name' => 'Category'
+                ),
+                'StudentBehaviour' => array(
+                    'date_of_behaviour' => 'Date',
+                    'title' => 'Title',
+                    'description' => 'Description',
+                    'action' => 'Action'
+                )
+            ),
+            'fileName' => 'Report_Student_Behaviour'
+		)
+	);
 	
 	public function beforeAction($controller, $action) {
         $controller->set('model', $this->alias);
@@ -229,5 +259,62 @@ class StudentBehaviour extends StudentsAppModel {
 
         $controller->set(compact('data', 'header'));
     }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		// General > Overview and More
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('Student.identification_no', 'StudentBehaviour.date_of_behaviour', 'StudentBehaviour.id');
+			$options['conditions'] = array('StudentBehaviour.institution_site_id' => $institutionSiteId);
+
+			$options['joins'] = array(
+				array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite',
+                        'conditions' => array(
+                            'StudentBehaviour.institution_site_id = InstitutionSite.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'student_behaviour_categories',
+                        'alias' => 'StudentBehaviourCategory',
+                        'conditions' => array('StudentBehaviour.student_behaviour_category_id = StudentBehaviourCategory.id')
+                    ),
+                    array(
+                        'table' => 'students',
+                        'alias' => 'Student',
+                        'conditions' => array('StudentBehaviour.student_id = Student.id')
+                    )
+			);
+
+			$data = $this->find('all', $options);
+			
+			$newData = array();
+			
+			foreach ($data AS $row) {
+                $row['StudentBehaviour']['date_of_behaviour'] = $this->formatDateByConfig($row['StudentBehaviour']['date_of_behaviour']);
+                $newData[] = $row;
+            }
+
+			return $newData;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
+	}
 
 }

@@ -21,7 +21,7 @@ echo $this->Form->create('CensusShift', array(
 echo $this->element('census/year_options');
 ?>
 
-<div id="classes" class="content_wrapper edit">
+<div class="table-responsive edit">
 
     <?php if ($displayContent) { ?>
         <fieldset class="section_group">

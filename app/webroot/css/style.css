@@ -144,6 +144,7 @@ input.default { width: 240px; }
 .custom_field {
 	overflow: hidden;
 	border: 1px solid #CCCCCC;
+	margin-bottom: 10px;
 }
 
 .custom_section_break {
@@ -398,5 +399,28 @@ fieldset.area .label{
 .customFieldsWrapper h3{
 	font-size: 15px;
 	color: #666;
+}
+.topDropDownWrapper{
+	margin-bottom: 12px;
+}
+.topDropDownWrapper select.form-control{
+	display: inline-block;
+}
+.topDropDownWrapper select#schoolYearId{
+	width: 15%;
+	margin-right: 10px;
+}
+.topDropDownWrapper select#weekId{
+	width: 45%;
+	margin-right: 10px;
+}
+.topDropDownWrapper select#classId{
+	width: 30%;
+}
+.topDropDownWrapper select#monthId{
+	width: 15%;
+}
+td.present{
+	color: green;
 }
 

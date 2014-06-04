@@ -67,8 +67,7 @@ class StaffTrainingResult extends AppModel {
 					)
 				),
 				'conditions'=> array(
-					'identification_id'=> $controller->staffId,
-					'identification_table'=> 'staff'
+					'staff_id'=> $controller->staffId
 				)
 			)
 		);

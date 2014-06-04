@@ -114,6 +114,27 @@ class InstitutionSiteClass extends AppModel {
             
             return $data;
         }
+		
+		public function getClassListByInstitutionSchoolYear($institutionSiteId, $yearId){
+			if(empty($yearId)){
+				$conditions = array(
+                    'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+                );
+			}else{
+				$conditions = array(
+                    'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
+					'InstitutionSiteClass.school_year_id' => $yearId
+                );
+			}
+			
+            $data = $this->find('list', array(
+                'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+                'conditions' => $conditions,
+                'order' => array('InstitutionSiteClass.name')
+            ));
+            
+            return $data;
+        }
         
         public function classes($controller, $params) {
         $controller->Navigation->addCrumb('List of Classes');
@@ -274,8 +295,6 @@ class InstitutionSiteClass extends AppModel {
         $controller->redirect(array('action' => 'classes'));
     }
 	
-	
-	
 	public function classesAddStaffRow($controller, $params) {
         if (sizeof($params['pass']) == 2) {
             $year = $params['pass'][0];
@@ -353,4 +372,16 @@ class InstitutionSiteClass extends AppModel {
             return json_encode($result);
         }
     }
+		
+	public function getClassByIdSchoolYear($classId, $schoolYearId){
+		$data = $this->find('first', array(
+			'recursive' => -1,
+			'conditions' => array(
+				'InstitutionSiteClass.id' => $classId,
+				'InstitutionSiteClass.school_year_id' => $schoolYearId
+			)
+		));
+		
+		return $data;
+	}
 }
