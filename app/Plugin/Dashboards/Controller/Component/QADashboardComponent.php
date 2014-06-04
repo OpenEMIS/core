@@ -304,12 +304,18 @@ class QADashboardComponent extends Component {
 		return $data;
 	}
 	
-	public function setupChartCategory($data = array()){
+	public function setupChartCategory($data = array(), $defaultVal = ''){
 		$finalData = array();
-		foreach($data as $item){
-			$finalData['categories']['category'][]['label'] = $item;
-		}
 		
+		
+		if(empty($data)){
+			$finalData['categories']['category'][]['label'] = $defaultVal;
+		}
+		else{
+			foreach($data as $item){
+				$finalData['categories']['category'][]['label'] = $item;
+			}
+		}
 		return $finalData;
 	}
 	
@@ -334,13 +340,21 @@ class QADashboardComponent extends Component {
 			}
 		}
 		
-		//Process Data to fusion chart format
-		foreach($filtedData as $key =>$obj){
-			$tempData['value'] = $obj['Percent'];
-			$tempData['number'] = $obj['Number'];
-			$tempData['tooltext'] = sprintf("%s%%, %s", $obj['Percent'], $obj['Number']);
-			$finalData['data'][]=$tempData;
+		
+		
+		if(empty($filtedData)){
+			$finalData['data'][] = array('empty'=>'');
 		}
+		else{
+			//Process Data to fusion chart format
+			foreach($filtedData as $key =>$obj){
+				$tempData['value'] = $obj['Percent'];
+				$tempData['number'] = $obj['Number'];
+				$tempData['tooltext'] = sprintf("%s%%, %s", $obj['Percent'], $obj['Number']);
+				$finalData['data'][]=$tempData;
+			}
+		}
+		
 		return $finalData;
 	}
 	
@@ -352,16 +366,17 @@ class QADashboardComponent extends Component {
 		
 		$sumData = array();
 		
-		
 		foreach ($data as $item) {
 			if (!empty($item['data'])) {
 				foreach ($item['data'] as $key => $score) {
-					if (empty($sumData[$key])) {
-						$sumData[$key]['tempSum'] = $score['value'] * $score['number'];
-						$sumData[$key]['number'] = $score['number'];
-					} else {
-						$sumData[$key]['tempSum'] += $score['value'] * $score['number'];
-						$sumData[$key]['number'] += $score['number'];
+					if(!isset($score['empty'])){
+						if (empty($sumData[$key])) {
+							$sumData[$key]['tempSum'] = $score['value'] * $score['number'];
+							$sumData[$key]['number'] = $score['number'];
+						} else {
+							$sumData[$key]['tempSum'] += $score['value'] * $score['number'];
+							$sumData[$key]['number'] += $score['number'];
+						}
 					}
 				}
 			}
@@ -442,8 +457,12 @@ class QADashboardComponent extends Component {
 			$item['tooltext'] = sprintf($areaData[$key]." X:%s%%, Y:%s%%", $item['x'], $item['y']);
 			$scatterPlotData[] = $item;
 		}
-		$finalData['data'][] = $scatterPlotData;
-		
+		if(empty($scatterPlotData)){
+			$finalData['data'] = array('empty'=>'');
+		}
+		else{
+			$finalData['data'][] = $scatterPlotData;
+		}
 		return $finalData;
 	}
 	

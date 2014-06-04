@@ -421,7 +421,23 @@ class DashboardsController extends DashboardsAppController {
 		$title = "Scatterplot of Administrative and Technical and Aspects";
 		//$xaxisName = 'Administrative Aspects';
 		//$yaxisName = 'Technical Aspects';
-		
+	/*	$data = '
+
+{
+  "chart":{
+    "caption":"Portfolio of Investments in Equities",
+    "subcaption":"(diameter of bubble indicates quantity of equities held)",
+    "xaxisname":"Acquisition Price",
+    "yaxisname":"Current Price"
+  },
+  "dataset":[{
+      "data":[{}
+      ]
+    }
+  ]
+}
+
+';return  $data;*/
 		
 		$childAreaOptions = $this->QADashboard->getAllAreaChildByLevel($selectedAreaId, 5, false);
 		
@@ -498,7 +514,7 @@ class DashboardsController extends DashboardsAppController {
 		$indData = $this->QADashboard->getIndicatorByGID($this->QADashboard->indicators['QA_AdminTechBoth_Score']);//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
 		$unitIndData = $this->QADashboard->getUnitIndicatorByGID(array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']));
 		
-		$data = array_merge($data, $this->QADashboard->setupChartCategory($indData));
+		$data = array_merge($data, $this->QADashboard->setupChartCategory($indData, 'Both'));
 		
 		$setupOptions = array(
 			'areaIds' => $selectedAreaId,
