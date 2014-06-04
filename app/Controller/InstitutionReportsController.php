@@ -79,7 +79,9 @@ class InstitutionReportsController extends AppController {
 		
 		$data = array(
 			array('name' => 'Programme List', 'model' => 'InstitutionSiteProgramme', 'params' => array('csv' => 1)),
-			array('name' => 'Student List', 'model' => 'InstitutionSiteStudent', 'params' => array('csv' => 1))
+			array('name' => 'Student List', 'model' => 'InstitutionSiteStudent', 'params' => array('csv' => 1)),
+			array('name' => 'Student Result', 'model' => 'InstitutionSiteClassGradeStudent', 'params' => array('csv' => 1)),
+			array('name' => 'Student Attendance', 'model' => 'InstitutionSiteClassGradeStudent', 'params' => array('csv' => 2))
 		);
 		
 		foreach($data as $i => $obj) {
