@@ -135,8 +135,7 @@ class NavigationComponent extends Component {
 	public function getLinks() {
 		$nav = array();
 		$nav['Home'] = array('controller' => 'Home', 'links' => $this->getHomeLinks());
-		//$nav['Institutions'] = array('controller' => 'Institutions', 'links' => $this->getInstitutionsLinks());
-                $nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
+		$nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
 		
 		// Initialise navigations from plugins
 		$modules = $this->settings['modules'];
