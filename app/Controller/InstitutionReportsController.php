@@ -92,6 +92,7 @@ class InstitutionReportsController extends AppController {
 			array('name' => 'Student Attendance', 'model' => 'InstitutionSiteClassGradeStudent', 'params' => array('csv' => array(2))),
 			array('name' => 'Student Behaviour', 'model' => 'Students.StudentBehaviour', 'params' => array('csv' => array(1))),
 			array('name' => 'Student Academic', 'model' => 'Students.StudentDetailsCustomValue', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Staff List', 'model' => 'InstitutionSiteStaff', 'params' => array('csv' => array(1))),
 			array('name' => 'Staff Academic', 'model' => 'Staff.StaffDetailsCustomValue', 'params' => array('csv' => array(1, 'dataFormatted' => true)))
 		);
 		

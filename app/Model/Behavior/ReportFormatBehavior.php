@@ -161,5 +161,9 @@ class ReportFormatBehavior extends ModelBehavior {
 		}
 		return $output;
 	}
+	
+	public function formatGender($value) {
+		return ($value == 'F') ? __('Female') : __('Male');
+	}
 
 }
