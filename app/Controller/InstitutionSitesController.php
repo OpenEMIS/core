@@ -1194,6 +1194,8 @@ class InstitutionSitesController extends AppController {
 		$this->Utility->unshiftArray($providerOptions, array('0' => '--' . __('Select') . '--'));
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
         $this->Utility->unshiftArray($sectorOptions, array('0' => '--' . __('Select') . '--'));
+		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
+		$this->Utility->unshiftArray($genderOptions, array('0' => '--' . __('Select') . '--'));
 
         $this->set('filterArea', $filterArea);
         $this->set('typeOptions', $type);
@@ -1211,7 +1213,7 @@ class InstitutionSitesController extends AppController {
 		
 		$this->set('providerOptions', $providerOptions);
 		$this->set('sectorOptions', $sectorOptions);
-
+		$this->set('genderOptions', $genderOptions);
         $this->set('highestLevel', $topArea);
     }
 
@@ -1309,11 +1311,13 @@ class InstitutionSitesController extends AppController {
 		
 		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
+		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
 
         $this->set('filterArea', $filterArea);
         $this->set('typeOptions', $type);
         $this->set('ownershipOptions', $ownership);
         $this->set('localityOptions', $locality);
+		$this->set('genderOptions', $genderOptions);
         $this->set('statusOptions', $status);
         //$this->set('institutionId', $institutionId);
         $this->set('arealevel', $areaLevel);
