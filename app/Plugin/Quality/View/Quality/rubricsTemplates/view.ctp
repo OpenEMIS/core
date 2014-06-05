@@ -4,13 +4,13 @@ $this->assign('contentHeader', __($subheader));
 $obj = $data[$modelName];
 $this->start('contentActions');
 
-echo $this->Html->link(__('List'), array('action' => 'rubricsTemplates'), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'rubricsTemplates'), array('class' => 'divider'));
 if ($_edit) {
-    echo $this->Html->link(__('Edit'), array('action' => 'rubricsTemplatesEdit', $obj['id']), array('class' => 'divider'));
+    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'rubricsTemplatesEdit', $obj['id']), array('class' => 'divider'));
 }
 
 if ($_delete && !$disableDelete) {
-    echo $this->Html->link(__('Delete'), array('action' => 'rubricsTemplatesDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+    echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'rubricsTemplatesDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
 

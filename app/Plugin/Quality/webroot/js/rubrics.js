@@ -82,7 +82,7 @@ var rubricsTemplate = {
     },
     addRubricTemplateGrade: function(obj) {
         var parent = $('.content_wrapper ');//.parent();
-        var index = $('#gradeWraper tr:last-child').attr('row-id');//find('.table_row').length;// + $('.delete-trainee input').length;
+        var index = $('#gradeWraper tbody tr:last-child').attr('row-id');//find('.table_row').length;// + $('.delete-trainee input').length;
 
         if (typeof index === "undefined") {
             index = 0;
