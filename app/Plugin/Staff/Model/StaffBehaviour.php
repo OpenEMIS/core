@@ -17,7 +17,13 @@
 
 class StaffBehaviour extends StaffAppModel {
 
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('date_of_behaviour'));
+	public $actsAs = array(
+		'ControllerAction', 
+		'Datepicker' => array('date_of_behaviour'),
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
 	public $useTable = 'staff_behaviours';
 	public $belongsTo = array(
 		'Staff.Staff',
@@ -30,6 +36,33 @@ class StaffBehaviour extends StaffAppModel {
 				'rule' => 'notEmpty',
 				'message' => 'Please enter a valid title'
 			)
+		)
+	);
+	
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+                'InstitutionSite' => array(
+                    'name' => 'Institution'
+                ),
+                'Staff' => array(
+                    'identification_no' => 'Staff OpenEMIS ID',
+                    'first_name' => '',
+                    'middle_name' => '',
+                    'last_name' => '',
+                    'preferred_name' => ''
+                ),
+                'StaffBehaviourCategory' => array(
+                    'name' => 'Category'
+                ),
+                'StaffBehaviour' => array(
+                    'date_of_behaviour' => 'Date',
+                    'title' => 'Title',
+                    'description' => 'Description',
+                    'action' => 'Action'
+                )
+            ),
+            'fileName' => 'Report_Staff_Behaviour'
 		)
 	);
 
@@ -290,6 +323,62 @@ class StaffBehaviour extends StaffAppModel {
 		}
 
 		return 'true';
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('Staff.identification_no', 'StaffBehaviour.date_of_behaviour', 'StaffBehaviour.id');
+			$options['conditions'] = array('StaffBehaviour.institution_site_id' => $institutionSiteId);
+
+			$options['joins'] = array(
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite',
+                        'conditions' => array(
+                            'StaffBehaviour.institution_site_id = InstitutionSite.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'staff_behaviour_categories',
+                        'alias' => 'StaffBehaviourCategory',
+                        'conditions' => array('StaffBehaviour.staff_behaviour_category_id = StaffBehaviourCategory.id')
+                    ),
+                    array(
+                        'table' => 'staff',
+                        'alias' => 'Staff',
+                        'conditions' => array('StaffBehaviour.staff_id = Staff.id')
+                    )
+                );
+
+			$data = $this->find('all', $options);
+			
+			$newData = array();
+			
+			foreach ($data AS $row) {
+                $row['StaffBehaviour']['date_of_behaviour'] = $this->formatDateByConfig($row['StaffBehaviour']['date_of_behaviour']);
+                $newData[] = $row;
+            }
+
+			return $newData;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
 	}
 
 }
