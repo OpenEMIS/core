@@ -15,6 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('AppHelper', 'View/Helper');
+App::uses('AreaHandlerComponent', 'Controller/Component');
 
 class FormUtilityHelper extends AppHelper {
 	public $helpers = array('Html', 'Form', 'Label');
@@ -122,6 +123,57 @@ class FormUtilityHelper extends AppHelper {
 		} else {
 			$this->_View->set('timepicker', array($options['id']));
 		}
+		return $html;
+	}
+	
+	public function areapicker($field, $options=array()) {
+		$_options = array(
+			'id' => 'areapicker',
+			'model' => 'Area'
+		);
+		$inputDefaults = $this->Form->inputDefaults();
+		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$_options = array_merge($_options, $options);
+		$value = isset($_options['value']) && $_options['value'] != false ? $_options['value'] : null;
+		$model = $_options['model'];
+		
+		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		
+		$html = '';
+		$path = !is_null($value) ? $AreaHandler->{$model}->getPath($value) : $AreaHandler->{$model}->findAllByParentId(-1);
+		$inputOptions = array();
+		$inputOptions['autocomplete'] = 'off';
+		$inputOptions['onchange'] = 'Area.getList(this)';
+		foreach($path as $i => $obj) {
+			$options = $AreaHandler->{$model}->find('list', array(
+				'conditions' => array('parent_id' => $obj[$model]['parent_id']),
+				'order' => array('order')
+			));
+			$options = array($this->Label->get('Area.select')) + $options;
+			$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
+			$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
+			
+			if(count($path) != 1) {
+				$inputOptions['default'] = $obj[$model]['id'];
+			}
+			$inputOptions['options'] = $options;
+			$label = $inputDefaults['label'];
+			$label['text'] = $levelName;
+			$inputOptions['label'] = $label;
+			$html .= $this->Form->input($i==0 ? $field.'_select' : $levelName, $inputOptions);
+			$value = $obj[$model]['id'];
+		}
+		
+		$levels = $AreaHandler->{$levelModels[$model]}->find('list', array('limit' => -1, 'offset' => count($path), 'order' => 'level'));
+		
+		foreach($levels as $id => $name) {
+			$html .= $this->Form->input($name, array('options' => array(), 'onchange' => 'Area.getList(this)', 'disabled'));
+		}
+		
+		$url = 'Areas/ajaxGetAreaOptions/' . $model . '/';
+		$html .= $this->Form->hidden($field, array('value' => $value));
+		$html = $this->Html->div('areapicker', $html, array('id' => $_options['id'], 'url' => $url));
+		
 		return $html;
 	}
 	

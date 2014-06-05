@@ -59,4 +59,17 @@ class AreasController extends AppController {
 	public function index() {
 		return $this->redirect(array('action' => 'areas'));
 	}
+	
+	public function ajaxGetAreaOptions($model='Area', $parentId=0) {
+		$this->layout = 'ajax';
+		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModel = $levelModels[$model];
+		if($parentId > 0) {
+			$data = $this->{$model}->find('all', array(
+				'conditions' => array('parent_id' => $parentId, 'visible' => 1),
+				'order' => array('order')
+			));
+			$this->set(compact('data', 'model', 'levelModel'));
+		}
+	}
 }

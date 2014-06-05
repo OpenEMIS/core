@@ -51,7 +51,7 @@ class MessageComponent extends Component {
 		'search' => array(
 			'no_result' => array('type' => 'info', 'msg' => 'No result returned from the search.')
 		),
-		'FileUplaod' => array(
+		'FileUpload' => array(
 			'success' => array(
 				'singular' =>  array('type' => 'ok', 'msg' => 'The file has been uploaded.'),
 				'plural' =>  array('type' => 'ok', 'msg' => 'The files has been uploaded.'),
