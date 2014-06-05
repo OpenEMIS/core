@@ -20,7 +20,13 @@ App::uses('AppModel', 'Model');
 class InstitutionSiteStaff extends AppModel {
 
 	public $fteOptions = array(10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100);
-	public $actsAs = array('ControllerAction', 'DatePicker' => array('start_date', 'end_date'));
+	public $actsAs = array(
+		'ControllerAction', 
+		'DatePicker' => array('start_date', 'end_date'),
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
 	public $useTable = 'institution_site_staff';
 	public $belongsTo = array(
 		'InstitutionSite',
@@ -30,6 +36,73 @@ class InstitutionSiteStaff extends AppModel {
 		'StaffType' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'staff_type_id'
+		)
+	);
+	
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+				'Staff' => array(
+					'identification_no' => 'OpenEMIS ID',
+					'first_name' => 'First Name',
+					'middle_name' => 'Middle Name',
+					'last_name' => 'Last Name',
+					'preferred_name' => 'Preferred Name',
+					'gender' => 'Gender',
+					'date_of_birth' => 'Date of Birth'
+				),
+				'StaffContact' => array(
+					'GROUP_CONCAT(DISTINCT CONCAT(ContactType.name, "-", StaffContact.value))' => 'Contacts'
+				),
+				'StaffIdentity' => array(
+					'GROUP_CONCAT(DISTINCT CONCAT(IdentityType.name, "-", StaffIdentity.number))' => 'Identities'
+				),
+				'StaffNationality' => array(
+					'GROUP_CONCAT(DISTINCT Country.name)' => 'Nationality'
+				),
+				'StaffStatus' => array(
+					'name' => 'Status'
+				),
+				'StaffCustomField' => array(
+				),
+				'InstitutionSite' => array(
+					'name' => 'Institution Name',
+					'code' => 'Institution Code'
+				),
+				'InstitutionSiteType' => array(
+					'name' => 'Institution Type'
+				),
+				'InstitutionSiteOwnership' => array(
+					'name' => 'Institution Ownership'
+				),
+				'InstitutionSiteStatus' => array(
+					'name' => 'Institution Status'
+				),
+				'InstitutionSite2' => array(
+					'date_opened' => 'Date Opened',
+					'date_closed' => 'Date Closed',
+				),
+				'Area' => array(
+					'name' => 'Area'
+				),
+				'AreaEducation' => array(
+					'name' => 'Area (Education)'
+				),
+				'InstitutionSite3' => array(
+					'address' => 'Address',
+					'postal_code' => 'Postal Code',
+					'longitude' => 'Longitude',
+					'latitude' => 'Latitude',
+					'contact_person' => 'Contact Person',
+					'telephone' => 'Telephone',
+					'fax' => 'Fax',
+					'email' => 'Email',
+					'website' => 'Website'
+				),
+				'InstitutionSiteCustomField' => array(
+				)
+			),
+			'fileName' => 'Report_Staff_List'
 		)
 	);
 
@@ -610,6 +683,306 @@ class InstitutionSiteStaff extends AppModel {
 			'order' => array('Staff.first_name')
 		));
 		return $data;
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('Staff.first_name');
+			$options['group'] = array('Staff.id');
+
+			$options['joins'] = array(
+				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array(
+						'InstitutionSiteStaff.staff_id = Staff.id',
+						'InstitutionSiteStaff.institution_site_id' => $institutionSiteId
+					)
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array('InstitutionSiteStaff.institution_site_id = InstitutionSite.id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite2',
+					'type' => 'inner',
+					'conditions' => array('InstitutionSite.id = InstitutionSite2.id')
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite3',
+					'type' => 'inner',
+					'conditions' => array('InstitutionSite.id = InstitutionSite3.id')
+				),
+				array(
+					'table' => 'institution_site_statuses',
+					'alias' => 'InstitutionSiteStatus',
+					'conditions' => array('InstitutionSiteStatus.id = InstitutionSite.institution_site_status_id')
+				),
+				array(
+					'table' => 'institution_site_types',
+					'alias' => 'InstitutionSiteType',
+					'conditions' => array('InstitutionSiteType.id = InstitutionSite.institution_site_type_id')
+				),
+				array(
+					'table' => 'institution_site_ownership',
+					'alias' => 'InstitutionSiteOwnership',
+					'conditions' => array('InstitutionSiteOwnership.id = InstitutionSite.institution_site_ownership_id')
+				),
+				array(
+					'table' => 'areas',
+					'alias' => 'Area',
+					'conditions' => array('InstitutionSite.area_id = Area.id')
+				),
+				array(
+					'table' => 'area_educations',
+					'alias' => 'AreaEducation',
+					'type' => 'left',
+					'conditions' => array('InstitutionSite.area_education_id = AreaEducation.id')
+				),
+				array(
+					'table' => 'staff_nationalities',
+					'alias' => 'StaffNationality',
+					'type' => 'left',
+					'conditions' => array('InstitutionSiteStaff.staff_id = StaffNationality.staff_id')
+				),
+				array(
+					'table' => 'staff_contacts',
+					'alias' => 'StaffContact',
+					'type' => 'left',
+					'conditions' => array('InstitutionSiteStaff.staff_id = StaffContact.staff_id')
+				),
+				array(
+					'table' => 'staff_identities',
+					'alias' => 'StaffIdentity',
+					'type' => 'left',
+					'conditions' => array('InstitutionSiteStaff.staff_id = StaffIdentity.staff_id')
+				),
+				array(
+					'table' => 'countries',
+					'alias' => 'Country',
+					'type' => 'left',
+					'conditions' => array('Country.id = StaffNationality.country_id')
+				),
+				array(
+					'table' => 'contact_types',
+					'alias' => 'ContactType',
+					'type' => 'left',
+					'conditions' => array('ContactType.id = StaffContact.contact_type_id')
+				),
+				array(
+					'table' => 'identity_types',
+					'alias' => 'IdentityType',
+					'type' => 'left',
+					'conditions' => array('IdentityType.id = StaffIdentity.identity_type_id')
+				),
+				array(
+					'table' => 'staff_statuses',
+					'alias' => 'StaffStatus',
+					'type' => 'left',
+					'conditions' => array('InstitutionSiteStaff.staff_status_id = StaffStatus.id')
+				)
+			);
+
+			$data = $this->find('all', $options);
+
+			$siteCustomFieldModel = ClassRegistry::init('InstitutionSiteCustomField');
+
+			$institutionSiteCustomFields = $siteCustomFieldModel->find('all', array(
+				'recursive' => -1,
+				'fields' => array('InstitutionSiteCustomField.name as FieldName', 'InstitutionSiteCustomField.type'),
+				'joins' => array(
+					array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+							'OR' => array(
+								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+								'InstitutionSiteCustomField.institution_site_type_id' => 0
+							)
+						)
+					)
+				),
+				'conditions' => array(
+					'InstitutionSiteCustomField.visible' => 1,
+					'InstitutionSiteCustomField.type != 1',
+					'InstitutionSite.id' => $institutionSiteId
+				),
+				'order' => array('InstitutionSiteCustomField.order')
+					)
+			);
+
+			$reportFields = $this->reportMapping[$index]['fields'];
+
+			$StaffCustomFieldModel = ClassRegistry::init('StaffCustomField');
+			$staffCustomFields = $StaffCustomFieldModel->find('all', array(
+				'recursive' => -1,
+				'fields' => array('StaffCustomField.name as FieldName'),
+				'conditions' => array('StaffCustomField.visible' => 1, 'StaffCustomField.type != 1'),
+				'order' => array('StaffCustomField.order')
+					)
+			);
+
+
+			foreach ($staffCustomFields as $val) {
+				if (!empty($val['StaffCustomField']['FieldName'])) {
+					$reportFields['StaffCustomField'][$val['StaffCustomField']['FieldName']] = '';
+				}
+			}
+
+			foreach ($institutionSiteCustomFields as $val) {
+				if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
+					$reportFields['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = '';
+				}
+			}
+
+			$this->reportMapping[$index]['fields'] = $reportFields;
+
+			$newData = array();
+
+			$institutionSiteCustomFields2 = $siteCustomFieldModel->find('all', array(
+				'recursive' => -1,
+				'fields' => array('InstitutionSiteCustomField.id', 'InstitutionSiteCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(InstitutionSiteCustomFieldOption.value),InstitutionSiteCustomValue.value) as FieldValue'),
+				'joins' => array(
+					array(
+						'table' => 'institution_sites',
+						'alias' => 'InstitutionSite',
+						'conditions' => array(
+							'InstitutionSite.id' => $institutionSiteId,
+							'OR' => array(
+								'InstitutionSiteCustomField.institution_site_type_id = InstitutionSite.institution_site_type_id',
+								'InstitutionSiteCustomField.institution_site_type_id' => 0
+							)
+						)
+					),
+					array(
+						'table' => 'institution_site_custom_values',
+						'alias' => 'InstitutionSiteCustomValue',
+						'type' => 'left',
+						'conditions' => array(
+							'InstitutionSiteCustomField.id = InstitutionSiteCustomValue.institution_site_custom_field_id',
+							'InstitutionSiteCustomValue.institution_site_id = InstitutionSite.id'
+						)
+					),
+					array(
+						'table' => 'institution_site_custom_field_options',
+						'alias' => 'InstitutionSiteCustomFieldOption',
+						'type' => 'left',
+						'conditions' => array(
+							'InstitutionSiteCustomField.id = InstitutionSiteCustomFieldOption.institution_site_custom_field_id',
+							'InstitutionSiteCustomField.type' => array(3, 4),
+							'InstitutionSiteCustomValue.value = InstitutionSiteCustomFieldOption.id'
+						)
+					),
+				),
+				'conditions' => array(
+					'InstitutionSiteCustomField.visible' => 1,
+					'InstitutionSiteCustomField.type !=1',
+				),
+				'order' => array('InstitutionSiteCustomField.order'),
+				'group' => array('InstitutionSiteCustomField.id')
+					)
+			);
+
+			$StaffModel = ClassRegistry::init('Staff');
+			$staff = $StaffModel->find('list', array(
+				'recursive' => -1,
+				'fields' => array('Staff.id'),
+				'joins' => array(
+					array(
+						'table' => 'institution_site_staff',
+						'alias' => 'InstitutionSiteStaff',
+						'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
+					)
+				),
+				'conditions' => array('InstitutionSiteStaff.institution_site_id = ' . $institutionSiteId),
+				'order' => array('Staff.first_name')
+					)
+			);
+
+			$r = 0;
+			foreach ($data AS $row) {
+				$row['Staff']['gender'] = $this->formatGender($row['Staff']['gender']);
+				$row['Staff']['date_of_birth'] = $this->formatDateByConfig($row['Staff']['date_of_birth']);
+
+
+				$staffCustomFields = $StaffCustomFieldModel->find('all', array(
+					'recursive' => -1,
+					'fields' => array('StaffCustomField.name as FieldName', 'IFNULL(GROUP_CONCAT(StaffCustomFieldOption.value),StaffCustomValue.value) as FieldValue'),
+					'joins' => array(
+						array(
+							'table' => 'staff_custom_values',
+							'alias' => 'StaffCustomValue',
+							'type' => 'left',
+							'conditions' => array(
+								'StaffCustomField.id = StaffCustomValue.staff_custom_field_id',
+								'StaffCustomValue.staff_id' => array_shift(array_slice($staff, $r, 1))
+							)
+						),
+						array(
+							'table' => 'staff_custom_field_options',
+							'alias' => 'StaffCustomFieldOption',
+							'type' => 'left',
+							'conditions' => array(
+								'StaffCustomField.id = StaffCustomFieldOption.staff_custom_field_id',
+								'StaffCustomField.type' => array(3, 4),
+								'StaffCustomValue.value = StaffCustomFieldOption.id'
+							)
+						),
+					),
+					'conditions' => array('StaffCustomField.visible' => 1, 'StaffCustomField.type !=1'),
+					'order' => array('StaffCustomField.order'),
+					'group' => array('StaffCustomField.id')
+						)
+				);
+
+
+				foreach ($staffCustomFields as $val) {
+					if (!empty($val['StaffCustomField']['FieldName'])) {
+						$row['StaffCustomField'][$val['StaffCustomField']['FieldName']] = $val[0]['FieldValue'];
+					}
+				}
+
+				foreach ($institutionSiteCustomFields2 as $val) {
+					if (!empty($val['InstitutionSiteCustomField']['FieldName'])) {
+						$row['InstitutionSiteCustomField'][$val['InstitutionSiteCustomField']['FieldName']] = $val[0]['FieldValue'];
+					}
+				}
+
+				$sortRow = array();
+				foreach ($this->reportMapping[$index]['fields'] as $key => $value) {
+					if (isset($row[$key])) {
+						$sortRow[$key] = $row[$key];
+					} else {
+						$sortRow[0] = $row[0];
+					}
+				}
+				$newData[] = $sortRow;
+				$r++;
+			}
+
+			return $newData;
+		}
+	}
+	
+	public function reportsGetFileName($args){
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
 	}
 
 }
