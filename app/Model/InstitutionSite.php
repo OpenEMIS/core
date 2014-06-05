@@ -31,6 +31,10 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteSector' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'institution_site_sector_id'
+		),
+		'InstitutionSiteGender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'institution_site_gender_id'
 		)
 	);
 	
@@ -129,13 +133,13 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please select an Ownership'
 			)
 		),
-//		'area_id' => array(
-//			'ruleRequired' => array(
-//				'rule' => array('comparison', '>', 0),
-//				'required' => true,
-//				'message' => 'Please select an Area'
-//			)
-//		),
+		'area_id_select' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', '>', 0),
+				'required' => true,
+				'message' => 'Please select a valid Area'
+			)
+		),
 		'email' => array(
 			'ruleRequired' => array(
 				'rule' => 'email',
@@ -143,18 +147,24 @@ class InstitutionSite extends AppModel {
 				'message' => 'Please enter a valid Email'
 			)
 		),
-//		'date_opened' => array(
-//			'ruleRequired' => array(
-//				'rule' => 'notEmpty',
-//				'required' => true,
-//				'message' => 'Please select the Date Opened'
-//			),
-//			'ruleCompare' => array(
-//				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
-//				'required' => true,
-//				'message' => 'Please select the Date Opened'
-//			)
-//		),
+		'date_opened' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select the Date Opened'
+			),
+			'ruleCompare' => array(
+				'rule' => array('comparison', 'NOT EQUAL', '0000-00-00'),
+				'required' => true,
+				'message' => 'Please select the Date Opened'
+			)
+		),
+		'date_closed' => array(
+			'ruleCompare' => array(
+				'rule' => 'compareDates',
+				'message' => 'Date Closed cannot be earlier than Date Opened'
+			)
+		),
 		'longitude' => array(
 				'rule' => array('checkLongitude'),
 				'allowEmpty' => true,
@@ -177,6 +187,13 @@ class InstitutionSite extends AppModel {
 				'rule' => array('comparison', '>', 0),
 				'required' => true,
 				'message' => 'Please select a Sector'
+			)
+		),
+		'institution_site_gender_id' => array(
+			'ruleRequired' => array(
+				'rule' => array('comparison', '>', 0),
+				'required' => true,
+				'message' => 'Please select a Gender'
 			)
 		)
 	);
@@ -224,6 +241,17 @@ class InstitutionSite extends AppModel {
 			'fileName' => 'Report_General_Overview'
 		)
 	);
+	
+	public function compareDates() {
+		if(!empty($this->data[$this->alias]['date_closed'])) {
+			$startDate = $this->data[$this->alias]['date_opened'];
+			$startTimestamp = strtotime($startDate);
+			$endDate = $this->data[$this->alias]['date_closed'];
+			$endTimestamp = strtotime($endDate);
+			return $endTimestamp > $startTimestamp;
+		}
+		return true;
+	}
     
 	public function checkNumeric($arrVal){
 		$o = array_values($arrVal);

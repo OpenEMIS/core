@@ -15,21 +15,18 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('AppController', 'Controller');
-// App::uses('String', 'Utility');
 
 class HomeController extends AppController {
-    private $debug = false;
+	private $debug = false;
 	public $helpers = array('Number');
 	private $tableCounts = array(
 		'Added' => array(
 			// Model => db table
-			'Institution' => 'institutions',
 			'InstitutionSite' => 'institution_sites',
 			'Student' => 'students',
 			'Staff' => 'staff'
 		),
 		'Edited' => array(
-			'InstitutionHistory' => 'institution_history',
 			'InstitutionSiteHistory' => 'institution_site_history',
 			'StudentHistory' => 'student_history',
 			'StaffHistory' => 'staff_history'
@@ -38,11 +35,9 @@ class HomeController extends AppController {
 	public $uses = array(
 		'ConfigItem',
 		'ConfigAttachment',
-		'Institution',
 		'InstitutionSite',
 		'Students.Student',
 		'Staff.Staff',
-		'InstitutionHistory',
 		'InstitutionSiteHistory',
 		'Students.StudentHistory',
 		'Staff.StaffHistory',
@@ -261,68 +256,68 @@ class HomeController extends AppController {
 		}
 		return $rawData[0]['Institution']['name'];
 	}
-        
-        public function getLatestStatistics(){
-                $this->autoLayout = false;
-                foreach($this->tableCounts['Added'] as $key => $val){
-                    $rec = $this->{$key}->query('SELECT count(*) as count FROM '.$val.';');
-                    $total[$key] = (isset($rec[0][0]['count']))?$rec[0][0]['count']:'0';
-                }
-                $this->set('tableCounts', $total);
-                $this->set('SeparateThousandsFormat', array(
+		
+	public function getLatestStatistics(){
+		$this->autoLayout = false;
+		foreach($this->tableCounts['Added'] as $key => $val){
+			$rec = $this->{$key}->query('SELECT count(*) as count FROM '.$val.';');
+			$total[$key] = (isset($rec[0][0]['count']))?$rec[0][0]['count']:'0';
+		}
+		$this->set('tableCounts', $total);
+		$this->set('SeparateThousandsFormat', array(
 			'before' => '',
 			'places' => 0,
-		    'thousands' => ',',
+			'thousands' => ',',
 		));
-        }
+	}
 	public function getLatestActivities(){
-                $this->autoLayout = false;
+		$this->autoLayout = false;
 		$query = '';
-               
+			   
 		$dbo = ConnectionManager::getDataSource('default');//$this->Institution->getDataSource();
 		// $dbo = $this->getDataSource();
 		
 		$limit = 7;
-                $data = array();
-                foreach ($this->tableCounts as $key => $element) {
-                    foreach($element as $Model => $tablename){
-                        $this->logtimer('Start '.$Model);
-                        $sql = 'SELECT * FROM '.$tablename.' t LEFT JOIN security_users su ON (su.id = t.created_user_id) ORDER BY t.id DESC LIMIT '.$limit;
-                        if($this->debug) echo "<br><br>".$sql;
-                        $recs = $this->{$Model}->query($sql);
-                        $data[$Model] = $recs;
-                        $this->logtimer('End '.$Model);
-                    }
-                    
-                }
-                $activities = array();
-                
-                foreach($data as $tableName => &$arrVal){
-                    $action =  (isset($this->tableCounts['Added'][$tableName]))?'Added':'Edited';
-                    
-                    foreach($arrVal as $krec => &$vrec ){
-                        if($action == 'Edited'){
-                            $parentTable = str_replace('History','',$tableName);
-                            $foreignKey = strtolower(Inflector::underscore($parentTable)).'_id';
-                            $rec = $this->{$parentTable}->find('first',array('conditions'=>array( $parentTable.'.id' => $vrec['t'][$foreignKey])));
-                            if(!$rec) $action = 'Deleted';
-                        }
-                        $vrec['t']['user_first_name'] = $vrec['su']['first_name'];
-                        $vrec['t']['user_last_name'] = $vrec['su']['last_name'];
-                        $vrec['t']['action'] = $action;
-                        $tableName = str_ireplace('history','', $tableName);
-                        $vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
-                        $vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
-                        $vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
-                        $activities[strtotime($vrec['t']['created'])] = $vrec['t'];
-                    }
-                }
-                krsort($activities);
-                $activities = array_slice($activities, 0, $limit);
-                $this->logtimer('END');
-                $this->logtimer('Start lastest Activities');
+				$data = array();
+				foreach ($this->tableCounts as $key => $element) {
+					foreach($element as $Model => $tablename){
+						$this->logtimer('Start '.$Model);
+						$sql = 'SELECT * FROM '.$tablename.' t LEFT JOIN security_users su ON (su.id = t.created_user_id) ORDER BY t.id DESC LIMIT '.$limit;
+						if($this->debug) echo "<br><br>".$sql;
+						$recs = $this->{$Model}->query($sql);
+						$data[$Model] = $recs;
+						$this->logtimer('End '.$Model);
+					}
+					
+				}
+				$activities = array();
+				
+				foreach($data as $tableName => &$arrVal){
+					$action =  (isset($this->tableCounts['Added'][$tableName]))?'Added':'Edited';
+					
+					foreach($arrVal as $krec => &$vrec ){
+						if($action == 'Edited'){
+							$parentTable = str_replace('History','',$tableName);
+							$foreignKey = strtolower(Inflector::underscore($parentTable)).'_id';
+							$rec = $this->{$parentTable}->find('first',array('conditions'=>array( $parentTable.'.id' => $vrec['t'][$foreignKey])));
+							if(!$rec) $action = 'Deleted';
+						}
+						$vrec['t']['user_first_name'] = $vrec['su']['first_name'];
+						$vrec['t']['user_last_name'] = $vrec['su']['last_name'];
+						$vrec['t']['action'] = $action;
+						$tableName = str_ireplace('history','', $tableName);
+						$vrec['t']['module'] = ucfirst(Inflector::underscore($tableName));
+						$vrec['t']['module'] = ( $vrec['t']['module'] == 'Institution_site')?'Institution Site':$vrec['t']['module'];
+						$vrec['t']['name'] = (isset($vrec['t']['name']))?$vrec['t']['name']:$vrec['t']['first_name'].' '.$vrec['t']['last_name'];
+						$activities[strtotime($vrec['t']['created'])] = $vrec['t'];
+					}
+				}
+				krsort($activities);
+				$activities = array_slice($activities, 0, $limit);
+				$this->logtimer('END');
+				$this->logtimer('Start lastest Activities');
 		$this->set('latestActivities', $activities);
-                $this->logtimer('End lastest Activities');
+				$this->logtimer('End lastest Activities');
 	}
 
 	private function checkActivityDeleteStatus($obj) {
@@ -330,14 +325,12 @@ class HomeController extends AppController {
 		if($obj['parent_table_id']){
 			$parentTable = str_ireplace('history', '', $table);
 			$numOfRecords = $this->{$parentTable}->find('count', array(
-		        'conditions' => array("{$parentTable}.id" => $obj['parent_table_id'])
-		    ));
-		    if($numOfRecords < 1){
-		    	return true;
-		    }
+				'conditions' => array("{$parentTable}.id" => $obj['parent_table_id'])
+			));
+			if($numOfRecords < 1){
+				return true;
+			}
 		}
 		return false;
 	}
-
 }
-

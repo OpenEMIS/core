@@ -16,10 +16,10 @@ have received a copy of the GNU General Public License along with this program. 
 
 class AreaHandlerComponent extends Component {
 	private $controller;
-	private $Area;
-	private $AreaLevel;
-    private $AreaEducation;
-    private $AreaEducationLevel;
+	public $Area;
+	public $AreaLevel;
+    public $AreaEducation;
+    public $AreaEducationLevel;
 	
 	//public $components = array('Auth', 'Session');
 	public function __construct(ComponentCollection $collection, $settings = array()) {
