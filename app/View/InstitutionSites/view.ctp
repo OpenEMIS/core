@@ -44,6 +44,10 @@ $obj = $data['InstitutionSite'];
 		<div class="col-md-6"><?php echo $data['InstitutionSiteOwnership']['name']; ?></div>
 	</div>
 	<div class="row">
+		<div class="col-md-2"><?php echo __('Gender'); ?></div>
+		<div class="col-md-6"><?php echo $data['InstitutionSiteGender']['name']; ?></div>
+	</div>
+	<div class="row">
 		<div class="col-md-2"><?php echo __('Status'); ?></div>
 		<div class="col-md-6"><?php echo $data['InstitutionSiteStatus']['name']; ?></div>
 	</div>
