@@ -31,6 +31,10 @@ class InstitutionSite extends AppModel {
 		'InstitutionSiteSector' => array(
 			'className' => 'FieldOptionValue',
 			'foreignKey' => 'institution_site_sector_id'
+		),
+		'InstitutionSiteGender' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'institution_site_gender_id'
 		)
 	);
 	
