@@ -1218,121 +1218,53 @@ class InstitutionSitesController extends AppController {
     }
 
 	public function add() {
-
         $this->Navigation->addCrumb('Add New Institution');
-        //$institutionId = $this->Session->read('InstitutionId');
-        $areadropdowns = array('0' => '--' . __('Select') . '--');
-        $adminareadropdowns = array('0' => '--' . __('Select') . '--');
-        $areaLevel = array();
-        
+		$areaId = false;
+		$areaEducationId = false;
         if ($this->request->is('post')) {
-
-            $last_area_id = 0;
-			$last_area_education_id = 0;
-            //this key sort is impt so that the lowest area level will be saved correctly
-            ksort($this->request->data['InstitutionSite']);
-            foreach ($this->request->data['InstitutionSite'] as $key => $arrValSave) {
-                if (stristr($key, 'area_level_') == true && ($arrValSave != '' && $arrValSave != 0)) {
-                    $last_area_id = $arrValSave;
-                }
-                if (stristr($key, 'area_level_') == true) {
-                    unset($this->request->data['InstitutionSite'][$key]);
-                }
-				
-				if (stristr($key, 'area_education_level_') == true && ($arrValSave != '' && $arrValSave != 0)) {
-                    $last_area_education_id = $arrValSave;
-                }
-                if (stristr($key, 'area_education_level_') == true) {
-                    unset($this->request->data['InstitutionSite'][$key]);
-                }
-            }
-            $this->request->data['InstitutionSite']['area_id'] = $last_area_id;
-			$this->request->data['InstitutionSite']['area_education_id'] = $last_area_education_id;
-			
+			$dateOpened = $this->request->data['InstitutionSite']['date_opened'];
+			$dateClosed = $this->request->data['InstitutionSite']['date_closed'];
+			if(!empty($dateOpened)) {
+				$this->request->data['InstitutionSite']['year_opened'] = date('Y', strtotime($dateOpened));
+			}
+			if(!empty($dateClosed)) {
+				$this->request->data['InstitutionSite']['year_closed'] = date('Y', strtotime($dateClosed));
+			}
             $this->InstitutionSite->set($this->request->data);
 			
             if ($this->InstitutionSite->validates()) {
                 $newInstitutionSiteRec = $this->InstitutionSite->save($this->request->data);
-
+				
                 $institutionSiteId = $newInstitutionSiteRec['InstitutionSite']['id'];
-
-                //** Reinitialize the Site Session by adding the newly added site **/
-//                $tmp = $this->Session->read('AccessControl.sites');
-//                array_push($tmp, $institutionSiteId);
-//                $this->Session->write('AccessControl.sites', $tmp);
-
-                //** Reinitialize the Institution + Site Session by adding the newly added site **/
-                //$sites = $this->Session->read('AccessControl.institutions');
-//                $sites[$newInstitutionSiteRec['InstitutionSite']['institution_id']][] = $institutionSiteId;
-//                $this->Session->write('AccessControl.institutions', $sites);
                 $this->Session->write('InstitutionSiteId', $institutionSiteId);
-
-                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
+                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view', $institutionSiteId));
             }
-            /**
-             * preserve the dropdown values on error
-             */
-            if ($last_area_id != 0) {
-
-                $areaLevel = $this->AreaHandler->getAreatoParent($last_area_id);
-                $areaLevel = array_reverse($areaLevel);
-                $areadropdowns = array();
-                foreach ($areaLevel as $index => &$arrVals) {
-                    $siblings = $this->Area->find('list', array('conditions' => array('Area.parent_id' => $arrVals['parent_id'])));
-                    $this->Utility->unshiftArray($siblings, array('0' => '--' . __('Select') . '--'));
-                    $areadropdowns['area_level_' . $index]['options'] = $siblings;
-                }
-                $maxAreaIndex = max(array_keys($areaLevel)); //starts with 0
-                $totalAreaLevel = $this->AreaLevel->find('count'); //starts with 1
-                for ($i = $maxAreaIndex; $i <= $totalAreaLevel; $i++) {
-                    $areadropdowns['area_level_' . ($i + 1)]['options'] = array('0' => '--' . __('Select') . '--');
-                }
-            }
+			$areaId = $this->request->data['InstitutionSite']['area_id'];
+			$areaEducationId = $this->request->data['InstitutionSite']['area_education_id'];
         }
-        $visible = true;
-        $type = $this->InstitutionSiteType->findList($visible);
-        $ownership = $this->InstitutionSiteOwnership->findList($visible);
-        $locality = $this->InstitutionSiteLocality->findList($visible);
-        $status = $this->InstitutionSiteStatus->findList($visible);
-
-        $levels = $this->AreaLevel->find('list');
-        $topArea = $this->Area->find('list', array('conditions' => array('Area.parent_id' => '-1', 'Area.visible' => 1)));
-
-        $topAdminArea = $this->AreaEducation->find('list', array('conditions' => array('AreaEducation.parent_id' => '-1', 'AreaEducation.visible' => 1)));
-
-        $this->Utility->unshiftArray($topArea, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($topAdminArea, array('0' => '--' . __('Select') . '--'));
-
-        $adminlevels = $this->AreaEducationLevel->find('list');
-
         // Get security group area
         $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
         $filterArea = $this->SecurityGroupArea->getAreas($groupId);
-		
+
+		$visible = true;
+        $typeOptions = $this->InstitutionSiteType->findList($visible);
+        $ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
+        $localityOptions = $this->InstitutionSiteLocality->findList($visible);
+        $statusOptions = $this->InstitutionSiteStatus->findList($visible);
 		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
-
-        $this->set('filterArea', $filterArea);
-        $this->set('typeOptions', $type);
-        $this->set('ownershipOptions', $ownership);
-        $this->set('localityOptions', $locality);
-		$this->set('genderOptions', $genderOptions);
-        $this->set('statusOptions', $status);
-        //$this->set('institutionId', $institutionId);
-        $this->set('arealevel', $areaLevel);
-        $this->set('levels', $levels);
-
-        $this->set('adminarealevel', $areaLevel);
-        $this->set('adminlevels', $adminlevels);
-
-        $this->set('areadropdowns', $areadropdowns);
-        $this->set('adminareadropdowns', $adminareadropdowns);
-        $this->set('highestLevel', $topArea);
-        $this->set('highestAdminLevel', $topAdminArea);
 		
+		//$this->set('filterArea', $filterArea);
+		$this->set('areaId', $areaId);
+		$this->set('areaEducationId', $areaEducationId);
+        $this->set('typeOptions', $typeOptions);
+        $this->set('ownershipOptions', $ownershipOptions);
+        $this->set('localityOptions', $localityOptions);
+        $this->set('statusOptions', $statusOptions);	
 		$this->set('providerOptions', $providerOptions);
 		$this->set('sectorOptions', $sectorOptions);
+		$this->set('genderOptions', $genderOptions);
     }
 
 	public function delete() {
