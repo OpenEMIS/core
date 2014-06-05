@@ -15,7 +15,7 @@
   <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
  */
 
-class StudentDetailsCustomValue extends StudentsAppModel {
+class StaffDetailsCustomValue extends StaffAppModel {
     public $actsAs = array(
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -64,17 +64,17 @@ class StudentDetailsCustomValue extends StudentsAppModel {
 				'year' => 'Year'
 			);
 
-			$StaffDetailsCustomFieldModel = ClassRegistry::init('StaffDetailsCustomField');
+			$StudentDetailsCustomFieldModel = ClassRegistry::init('StudentDetailsCustomField');
 
-			$customFields = $StaffDetailsCustomFieldModel->find('list', array(
-                'fields' => array('id', 'name'),
-                'conditions' => array(
-                    'visible' => 1,
-                    'type > ' => 1
-                ),
-                'order' => array('order')
-                    )
-            );
+			$customFields = $StudentDetailsCustomFieldModel->find('list', array(
+				'fields' => array('id', 'name'),
+				'conditions' => array(
+					'visible' => 1,
+					'type > ' => 1
+				),
+				'order' => array('order')
+					)
+			);
 
 			foreach ($commonFields AS &$value) {
 				$value = __($value);
@@ -106,100 +106,100 @@ class StudentDetailsCustomValue extends StudentsAppModel {
 			//pr($rowTpl);
 			$data = array();
 			
-			$StudentDetailsCustomValueModel = ClassRegistry::init('StudentDetailsCustomValue');
+			$StaffDetailsCustomValueModel = ClassRegistry::init('StaffDetailsCustomValue');
 			
-			$studentsYears = $StudentDetailsCustomValueModel->find('all', array(
+			$staffYears = $StaffDetailsCustomValueModel->find('all', array(
                 'recursive' => -1,
                 'fields' => array(
-                    'StudentDetailsCustomValue.student_id',
-                    'Student.identification_no',
-                    'Student.first_name',
-                    'Student.middle_name',
-                    'Student.last_name',
-                    'Student.preferred_name',
-                    'StudentDetailsCustomValue.school_year_id',
+                    'StaffDetailsCustomValue.staff_id',
+                    'Staff.identification_no',
+                    'Staff.first_name',
+                    'Staff.middle_name',
+                    'Staff.last_name',
+                    'Staff.preferred_name',
+                    'StaffDetailsCustomValue.school_year_id',
                     'SchoolYear.name'
                 ),
                 'joins' => array(
                     array(
-                        'table' => 'students',
-                        'alias' => 'Student',
+                        'table' => 'staff',
+                        'alias' => 'Staff',
                         'conditions' => array(
-                            'StudentDetailsCustomValue.student_id = Student.id'
+                            'StaffDetailsCustomValue.staff_id = Staff.id'
                         )
                     ),
                     array(
                         'table' => 'school_years',
                         'alias' => 'SchoolYear',
                         'conditions' => array(
-                            'StudentDetailsCustomValue.school_year_id = SchoolYear.id'
+                            'StaffDetailsCustomValue.school_year_id = SchoolYear.id'
                         )
                     )
                 ),
-                'conditions' => array('StudentDetailsCustomValue.institution_site_id' => $institutionSiteId),
-                'group' => array('StudentDetailsCustomValue.student_id', 'StudentDetailsCustomValue.school_year_id')
+                'conditions' => array('StaffDetailsCustomValue.institution_site_id' => $institutionSiteId),
+                'group' => array('StaffDetailsCustomValue.staff_id', 'StaffDetailsCustomValue.school_year_id')
                     )
             );
 
-            foreach ($studentsYears AS $rowValue) {
-                $fieldValues = $StudentDetailsCustomValueModel->find('all', array(
+            foreach ($staffYears AS $rowValue) {
+                $fieldValues = $StaffDetailsCustomValueModel->find('all', array(
                     'recursive' => -1,
                     'fields' => array(
-                        'StudentDetailsCustomField.id',
-                        'StudentDetailsCustomField.name',
-                        'StudentDetailsCustomField.type',
-                        'StudentDetailsCustomValue.value',
-                        'StudentDetailsCustomFieldOption.value'
+                        'StaffDetailsCustomField.id',
+                        'StaffDetailsCustomField.name',
+                        'StaffDetailsCustomField.type',
+                        'StaffDetailsCustomValue.value',
+                        'StaffDetailsCustomFieldOption.value'
                     ),
                     'joins' => array(
                         array(
-                            'table' => 'student_details_custom_fields',
-                            'alias' => 'StudentDetailsCustomField',
+                            'table' => 'staff_details_custom_fields',
+                            'alias' => 'StaffDetailsCustomField',
                             'conditions' => array(
-                                'StudentDetailsCustomValue.student_details_custom_field_id = StudentDetailsCustomField.id'
+                                'StaffDetailsCustomValue.staff_details_custom_field_id = StaffDetailsCustomField.id'
                             )
                         ),
                         array(
-                            'table' => 'student_details_custom_field_options',
-                            'alias' => 'StudentDetailsCustomFieldOption',
+                            'table' => 'staff_details_custom_field_options',
+                            'alias' => 'StaffDetailsCustomFieldOption',
                             'type' => 'LEFT',
                             'conditions' => array(
-                                'StudentDetailsCustomValue.value = StudentDetailsCustomFieldOption.id'
+                                'StaffDetailsCustomValue.value = StaffDetailsCustomFieldOption.id'
                             )
                         )
                     ),
                     'conditions' => array(
-                        'StudentDetailsCustomValue.institution_site_id' => $institutionSiteId,
-                        'StudentDetailsCustomValue.student_id' => $rowValue['StudentDetailsCustomValue']['student_id'],
-                        'StudentDetailsCustomValue.school_year_id' => $rowValue['StudentDetailsCustomValue']['school_year_id']
+                        'StaffDetailsCustomValue.institution_site_id' => $institutionSiteId,
+                        'StaffDetailsCustomValue.staff_id' => $rowValue['StaffDetailsCustomValue']['staff_id'],
+                        'StaffDetailsCustomValue.school_year_id' => $rowValue['StaffDetailsCustomValue']['school_year_id']
                     )
                         )
                 );
 
                 $row = $rowTpl;
                 $row['institution_site'] = $institutionSiteObj['InstitutionSite']['name'];
-                $row['openemis_id'] = $rowValue['Student']['identification_no'];
-                $row['first_name'] = $rowValue['Student']['first_name'];
-                $row['middle_name'] = $rowValue['Student']['middle_name'];
-                $row['last_name'] = $rowValue['Student']['last_name'];
-                $row['preferred_name'] = $rowValue['Student']['preferred_name'];
+                $row['openemis_id'] = $rowValue['Staff']['identification_no'];
+                $row['first_name'] = $rowValue['Staff']['first_name'];
+                $row['middle_name'] = $rowValue['Staff']['middle_name'];
+                $row['last_name'] = $rowValue['Staff']['last_name'];
+                $row['preferred_name'] = $rowValue['Staff']['preferred_name'];
                 $row['year'] = $rowValue['SchoolYear']['name'];
 
                 foreach ($fieldValues AS $fieldValueRow) {
-                    $fieldId = $fieldValueRow['StudentDetailsCustomField']['id'];
-                    $fieldName = $fieldValueRow['StudentDetailsCustomField']['name'];
-                    $fieldType = $fieldValueRow['StudentDetailsCustomField']['type'];
+                    $fieldId = $fieldValueRow['StaffDetailsCustomField']['id'];
+                    $fieldName = $fieldValueRow['StaffDetailsCustomField']['name'];
+                    $fieldType = $fieldValueRow['StaffDetailsCustomField']['type'];
 
                     if ($fieldType == 3) {
-                        $row[$fieldId] = $fieldValueRow['StudentDetailsCustomFieldOption']['value'];
+                        $row[$fieldId] = $fieldValueRow['StaffDetailsCustomFieldOption']['value'];
                     } else if ($fieldType == 4) {
                         if (empty($row[$fieldId])) {
-                            $row[$fieldId] = $fieldValueRow['StudentDetailsCustomFieldOption']['value'];
+                            $row[$fieldId] = $fieldValueRow['StaffDetailsCustomFieldOption']['value'];
                         } else {
-                            $row[$fieldId] .= ', ' . $fieldValueRow['StudentDetailsCustomFieldOption']['value'];
+                            $row[$fieldId] .= ', ' . $fieldValueRow['StaffDetailsCustomFieldOption']['value'];
                         }
                     } else {
-                        $row[$fieldId] = $fieldValueRow['StudentDetailsCustomValue']['value'];
+                        $row[$fieldId] = $fieldValueRow['StaffDetailsCustomValue']['value'];
                     }
                 }
                 //pr($row);
@@ -214,7 +214,7 @@ class StudentDetailsCustomValue extends StudentsAppModel {
 		//$institutionSiteId = $args[0];
 		$index = $args[1];
 		if($index == 1){
-			return 'Report_Student_Academic';
+			return 'Report_Staff_Academic';
 		}
 	}
 
