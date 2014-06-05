@@ -58,6 +58,9 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_ownership_id');
 	echo $this->Form->input('institution_site_ownership_id', array('options' => $ownershipOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_ownership_id']));
 
+	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_gender_id');
+	echo $this->Form->input('institution_site_gender_id', array('options' => $genderOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_gender_id']));
+	
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_status_id');
 	echo $this->Form->input('institution_site_status_id', array('options' => $statusOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_status_id']));
 

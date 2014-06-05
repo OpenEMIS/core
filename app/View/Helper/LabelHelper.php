@@ -115,6 +115,7 @@ class LabelHelper extends AppHelper {
 			'institution_site_sector_id' => 'Sector',
 			'institution_site_type_id' => 'Type',
 			'institution_site_ownership_id' => 'Ownership',
+			'institution_site_gender_id' => 'Gender',
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
 			'name' => 'Institution Site',
