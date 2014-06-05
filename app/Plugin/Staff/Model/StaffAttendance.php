@@ -17,6 +17,39 @@ have received a copy of the GNU General Public License along with this program. 
 class StaffAttendance extends StaffAppModel {
 	public $useTable = 'staff_attendances';
 	
+	public $actsAs = array(
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
+	
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+                'InstitutionSite' => array(
+                    'name' => 'Institution'
+                ),
+                'Staff' => array(
+                    'identification_no' => 'OpenEMIS ID',
+                    'first_name' => 'First Name',
+                    'middle_name' => 'Middle Name',
+                    'last_name' => 'Last Name',
+                    'preferred_name' => 'Preferred Name'
+                ),
+                'SchoolYear' => array(
+                    'name' => 'School Year',
+                    'school_days' => 'School Days'
+                ),
+                'StaffAttendance' => array(
+                    'total_no_attend' => 'Total Days Attended',
+                    'total_no_absence' => 'Total Days Absent',
+                    'total' => 'Total'
+                )
+            ),
+            'fileName' => 'Report_Staff_Attendance'
+		)
+	);
+	
 	public function getAttendanceData($id,$yearId,$institutionSiteId=null) {
                 if(empty($institutionSiteId)){
                     $list = $this->find('all',array(
@@ -39,5 +72,58 @@ class StaffAttendance extends StaffAppModel {
         }
         return $myid;
     }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('Staff.identification_no', 'SchoolYear.name');
+			$options['conditions'] = array('StaffAttendance.institution_site_id' => $institutionSiteId);
+
+			$options['joins'] = array(
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite',
+                        'conditions' => array(
+                            'StaffAttendance.institution_site_id = InstitutionSite.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'staff',
+                        'alias' => 'Staff',
+                        'conditions' => array('StaffAttendance.staff_id = Staff.id')
+                    ),
+                    array(
+                        'table' => 'school_years',
+                        'alias' => 'SchoolYear',
+                        'conditions' => array('StaffAttendance.school_year_id = SchoolYear.id')
+                    ),
+                );
+			
+			$this->virtualFields = array(
+                    'total' => 'StaffAttendance.total_no_attend + StaffAttendance.total_no_absence'
+                );
+
+			$data = $this->find('all', $options);
+
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
+	}
 
 }
