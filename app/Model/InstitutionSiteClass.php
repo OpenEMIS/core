@@ -27,7 +27,52 @@ class InstitutionSiteClass extends AppModel {
 				'InstitutionSiteClassStaff'
 			)
 		),
-		'ControllerAction'
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
+	
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+                'InstitutionSite' => array(
+                    'name' => 'Institution'
+                ),
+                'SchoolYear' => array(
+                    'name' => 'School Year'
+                ),
+                'InstitutionSiteClass' => array(
+                    'name' => 'Class Name',
+                    'no_of_seats' => 'Seats',
+                    'no_of_shifts' => 'Shift'
+                )
+            ),
+            'fileName' => 'Report_Class_List'
+		),
+		2 => array(
+			'fields' => array(
+                'SchoolYear' => array(
+                    'name' => 'School Year'
+                ),
+                'InstitutionSiteClass' => array(
+                    'name' => 'Class Name'
+                ),
+                'EducationGrade' => array(
+                    'name' => 'Grade'
+                ),
+                'Student' => array(
+                    'identification_no' => 'OpenEMIS ID',
+                    'first_name' => 'First Name',
+                    'middle_name' => 'Middle Name',
+                    'last_name' => 'Last Name'
+                ),
+                'StudentCategory' => array(
+                    'name' => 'Category'
+                )
+            ),
+            'fileName' => 'Report_Details_Classes_Students'
+		)
 	);
 	
 	public function isNameExists($name, $institutionSiteId, $yearId) {
@@ -383,5 +428,92 @@ class InstitutionSiteClass extends AppModel {
 		));
 		
 		return $data;
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name');
+			$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
+
+			$options['joins'] = array(
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+						'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
+					)
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				)
+			);
+
+			$data = $this->find('all', $options);
+
+			return $data;
+		} else if ($index == 2) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'Student.first_name');
+			$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
+
+			$options['joins'] = array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+				),
+				array(
+					'table' => 'institution_site_class_grade_students',
+					'alias' => 'InstitutionSiteClassGradeStudent',
+					'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
+				),
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+				),
+				array(
+					'table' => 'student_categories',
+					'alias' => 'StudentCategory',
+					'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+				)
+			);
+
+			$data = $this->find('all', $options);
+
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
 	}
 }
