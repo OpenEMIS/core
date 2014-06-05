@@ -242,10 +242,10 @@ class UtilityHelper extends AppHelper {
             if($mylevel===''){
                 $display = 'display:none;';
             }
-            echo '<div class="form-group row" style="'.$display.'">
+            echo '<div class="form-group" style="'.$display.'">
                     <label class="col-md-3 control-label">'.$mylevel.'</label>
                     '. $form->input($arealevelfk.'_'.$ctr,
-                                                        array('class'=>'areapicker default form-control',
+                                                        array('class'=>'areapicker form-control',
                                                         'style'=>'float:left;',
 														'div' => false,
 														'label' => false,

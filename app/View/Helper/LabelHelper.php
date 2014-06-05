@@ -83,6 +83,9 @@ class LabelHelper extends AppHelper {
 			'skip' => 'Skip',
 			'addmore' => 'Add More'
 		),
+		'Area' => array(
+			'select' => '-- Select Area --'
+		),
 		'AreaLevel' => array(
 			'name' => 'Area Level'
 		),

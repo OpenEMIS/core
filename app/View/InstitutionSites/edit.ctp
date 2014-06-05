@@ -1,5 +1,6 @@
 <?php
 echo $this->Html->script('app.date', false);
+echo $this->Html->script('app.area', false);
 echo $this->Html->script('institution_site', false);
 echo $this->Html->script('config', false);
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
@@ -25,13 +26,6 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 		Config.applyRule();
 	});
 </script>
-
-<?php
-//echo $this->Form->create('InstitutionSite', array(
-//	'url' => array('controller' => 'InstitutionSites', 'action' => 'edit'),
-//	'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-//));
-?>
 
 <?php $obj = @$data['InstitutionSite']; ?>
 
@@ -93,14 +87,14 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	?>
 </fieldset>
 
-<fieldset class="section_break area">
-	<legend id="area"><?php echo __('Area'); ?></legend>
-	<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id', $obj['area_id'], array(), $filterArea); ?>
+<fieldset class="section_break">
+	<legend><?php echo __('Area'); ?></legend>
+	<?php echo $this->FormUtility->areapicker('area_id', array('value' => $obj['area_id'])); ?>
 </fieldset>
 
-<fieldset class="section_break area">
-	<legend id="education"><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
-	<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id', $obj['area_education_id'], array()); ?>
+<fieldset class="section_break">
+	<legend><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
+	<?php echo $this->FormUtility->areapicker('area_education_id', array('model' => 'AreaEducation', 'value' => $obj['area_education_id'])); ?>
 </fieldset>
 
 <fieldset class="section_break">
