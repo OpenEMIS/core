@@ -270,7 +270,6 @@ class StudentBehaviour extends StudentsAppModel {
 		$institutionSiteId = $args[0];
 		$index = $args[1];
 
-		// General > Overview and More
 		if ($index == 1) {
 			$options = array();
 			$options['recursive'] = -1;
