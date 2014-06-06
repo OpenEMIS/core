@@ -66,7 +66,8 @@ class LabelHelper extends AppHelper {
 			'action' => 'Action',
 			'level' => 'Level',
 			'class' => 'Class',
-			'comment' => 'Comment'
+			'comment' => 'Comment',
+			'view_details' => 'View Details'
 		),
 		'password'=> array(
 			'oldPassword' => 'Current Password',
@@ -249,6 +250,12 @@ class LabelHelper extends AppHelper {
 			'last_date_absent' => 'Last Date Absent',
 			'start_time_absent' => 'Start Time Absent',
 			'end_time_absent' => 'End Time Absent'
+		),
+		'Quality' => array(
+			'add_section_header' => 'Add Section Header',
+			'header' => 'Header',
+			'section_header' => 'Section Header',
+			'view_rubric' => 'View Rubric'
 		)
 	);
 	

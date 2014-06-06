@@ -16,7 +16,7 @@
  */
 
 class RubricsTemplate extends QualityAppModel {
-	public $actsAs = array('ControllerAction', 'Quality.RubricsSetup');
+	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -215,13 +215,12 @@ class RubricsTemplate extends QualityAppModel {
 					$RubricsTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
 					$RubricsTemplateColumnInfo->saveAll($columnData);
 
-					$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-					return $controller->redirect(array('action' => 'rubricsTemplates'));
+					$rediectAction = array('action' => 'rubricsTemplates', 'plugin' => 'Quality');
 				} else {
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));
-					return $controller->redirect(array('action' => 'rubricsTemplatesView', $this->id));
+					$rediectAction = array('action' => 'rubricsTemplatesView', $this->id, 'plugin' => 'Quality');
 				}
-				//pr($controller->request->data);
+				$controller->Message->alert('general.delete.success');
+				return $controller->redirect($rediectAction);
 			}
 		}
 	}
@@ -230,30 +229,24 @@ class RubricsTemplate extends QualityAppModel {
 		if ($controller->Session->check('RubricsTemplate.id')) {
 			$this->unbindModel(array('hasMany' => array('RubricsTemplateHeader', 'RubricsTemplateColumnInfo')));
 			$id = $controller->Session->read('RubricsTemplate.id');
-
-			$data = $this->find('first', array('conditions' => array($this->name . '.id' => $id)));
-
-
-			$name = $data[$this->name]['name'];
-
-
-			//Delete Header
-			$RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
-			$RubricsTemplateHeader->rubricsTemplatesHeaderDeleteAll($id);
+			if ($this->delete($id)) {
+				//Delete Header
+				$RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
+				$RubricsTemplateHeader->rubricsTemplatesHeaderDeleteAll($id);
 
 
-			//Delete ColumnInfo
-			$RubricsTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
-			$RubricsTemplateColumnInfo->rubricsTemplatesCriteriaDeleteAll($id);
+				//Delete ColumnInfo
+				$RubricsTemplateColumnInfo = ClassRegistry::init('Quality.RubricsTemplateColumnInfo');
+				$RubricsTemplateColumnInfo->rubricsTemplatesCriteriaDeleteAll($id);
 
-			//Delete Grades
-			$RubricsTemplateGrade = ClassRegistry::init('Quality.RubricsTemplateGrade');
-			$RubricsTemplateGrade->rubricsTemplatesGradesDeleteAll($id);
+				//Delete Grades
+				$RubricsTemplateGrade = ClassRegistry::init('Quality.RubricsTemplateGrade');
+				$RubricsTemplateGrade->rubricsTemplatesGradesDeleteAll($id);
 
-
-			$this->delete($id);
-
-			$controller->Utility->alert($name . ' have been deleted successfully.');
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
 			$controller->Session->delete('RubricsTemplate.id');
 			$controller->redirect(array('action' => 'rubricsTemplates'));
 		}
