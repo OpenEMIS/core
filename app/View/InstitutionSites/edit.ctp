@@ -59,19 +59,13 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	echo $this->Form->input('institution_site_status_id', array('options' => $statusOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_status_id']));
 
 	echo $this->FormUtility->datepicker('date_opened', array('id' => 'dateOpened', 'data-date' => $obj['date_opened']));
-
 	echo $this->FormUtility->datepicker('date_closed', array('id' => 'dateClosed', 'data-date' => $obj['date_closed']));
 	?>
 </fieldset>
 <fieldset class="section_break">
 	<legend><?php echo __('Location'); ?></legend>
 	<?php
-	echo $this->Form->input('address', array(
-		'onkeyup' => 'utility.charLimit(this)',
-		'type' => 'textarea',
-		'value' => $obj['address']
-	));
-
+	echo $this->Form->input('address', array('type' => 'textarea', 'value' => $obj['address'], 'onkeyup' => 'utility.charLimit(this)'));
 	echo $this->Form->input('postal_code', array(
 		'onkeyup' => 'updateHiddenField(this, "validate_institution_site_postal_code")',
 		'value' => $obj['postal_code']
@@ -80,9 +74,7 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_locality_id');
 	echo $this->Form->input('institution_site_locality_id', array('options' => $localityOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_locality_id']));
-
 	echo $this->Form->input('latitude', array('value' => $obj['latitude']));
-
 	echo $this->Form->input('longitude', array('value' => $obj['longitude']));
 	?>
 </fieldset>
@@ -113,15 +105,13 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 		'value' => $obj['fax']
 	));
 	echo $this->Form->input('validate_institution_site_fax', array('type' => 'hidden', 'id' => 'validate_institution_site_fax', 'value' => $obj['fax']));
-
 	echo $this->Form->input('email', array('value' => $obj['email']));
-
 	echo $this->Form->input('website', array('value' => $obj['website']));
 	?>
 </fieldset>
 
 <div class="controls view_controls">
-	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if (jsDate.checkValidDateClosed() && Config.checkValidate()) {
+	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if (Config.checkValidate()) {
 			return true;
 		} else {
 			return false;
