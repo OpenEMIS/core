@@ -74,7 +74,7 @@ echo $this->Form->end();
 				foreach ($data as $obj) { 
 			?>
 				<tr>
-					<td><?php echo $this->Html->link($obj['Staff']['identification_no'], array('action' => 'staffView', $obj['Staff']['id']), array('escape' => false)); ?></td>
+					<td><?php echo $this->Html->link($obj['Staff']['identification_no'], array('action' => 'staffView', $obj['Staff']['id'])); ?></td>
 					<td><?php echo $obj['Staff']['first_name'].' '.$obj['Staff']['last_name']; ?></td>
 					<td class="table_cell"><?php echo $obj['StaffPositionTitle']['name']; ?></td>
 				</tr>

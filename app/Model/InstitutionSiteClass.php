@@ -36,152 +36,89 @@ class InstitutionSiteClass extends AppModel {
 	public $reportMapping = array(
 		1 => array(
 			'fields' => array(
-                'InstitutionSite' => array(
-                    'name' => 'Institution'
-                ),
-                'SchoolYear' => array(
-                    'name' => 'School Year'
-                ),
-                'InstitutionSiteClass' => array(
-                    'name' => 'Class Name',
-                    'no_of_seats' => 'Seats',
-                    'no_of_shifts' => 'Shift'
-                )
-            ),
-            'fileName' => 'Report_Class_List'
+				'InstitutionSite' => array(
+					'name' => 'Institution'
+				),
+				'SchoolYear' => array(
+					'name' => 'School Year'
+				),
+				'InstitutionSiteClass' => array(
+					'name' => 'Class Name',
+					'no_of_seats' => 'Seats',
+					'no_of_shifts' => 'Shift'
+				)
+			),
+			'fileName' => 'Report_Class_List'
 		),
 		2 => array(
 			'fields' => array(
-                'SchoolYear' => array(
-                    'name' => 'School Year'
-                ),
-                'InstitutionSiteClass' => array(
-                    'name' => 'Class Name'
-                ),
-                'EducationGrade' => array(
-                    'name' => 'Grade'
-                ),
-                'Student' => array(
-                    'identification_no' => 'OpenEMIS ID',
-                    'first_name' => 'First Name',
-                    'middle_name' => 'Middle Name',
-                    'last_name' => 'Last Name'
-                ),
-                'StudentCategory' => array(
-                    'name' => 'Category'
-                )
-            ),
-            'fileName' => 'Report_Details_Classes_Students'
+				'SchoolYear' => array(
+					'name' => 'School Year'
+				),
+				'InstitutionSiteClass' => array(
+					'name' => 'Class Name'
+				),
+				'EducationGrade' => array(
+					'name' => 'Grade'
+				),
+				'Student' => array(
+					'identification_no' => 'OpenEMIS ID',
+					'first_name' => 'First Name',
+					'middle_name' => 'Middle Name',
+					'last_name' => 'Last Name'
+				),
+				'StudentCategory' => array(
+					'name' => 'Category'
+				)
+			),
+			'fileName' => 'Report_Details_Classes_Students'
 		)
 	);
 	
-	public function isNameExists($name, $institutionSiteId, $yearId) {
-		$count = $this->find('count', array(
-			'conditions' => array(
-				'InstitutionSiteClass.name LIKE' => $name,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.school_year_id' => $yearId
+	public $_action = 'classes';
+	
+	public function beforeAction($controller, $action) {
+		parent::beforeAction($controller, $action);
+		//$controller->Navigation->addCrumb($this->_header);
+		//$controller->set('header', __($this->_header));
+		$controller->set('_action', $this->_action);
+		$controller->set('selectedAction', $this->_action . 'View');
+	}
+	
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'name', 'model' => 'SchoolYear'),
+				array('field' => 'name'),
+				array('field' => 'no_of_seats'),
+				array('field' => 'no_of_shifts'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
 			)
-		));
-		return $count>0;
-	}
-	
-	public function getClass($classId, $institutionSiteId=0) {
-		$conditions = array('InstitutionSiteClass.id' => $classId);
-		
-		if($institutionSiteId > 0) {
-			$conditions['InstitutionSiteClass.institution_site_id'] = $institutionSiteId;
-		}
-		
-		$obj = $this->find('first', array('conditions' => $conditions));
-		return $obj;
-	}
-	
-	public function getListOfClasses($yearId, $institutionSiteId) {
-		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
-		$InstitutionSiteClassGradeStudent = ClassRegistry::init('InstitutionSiteClassGradeStudent');
-		
-		$classes = $this->find('list', array(
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
-			'conditions' => array(
-				'InstitutionSiteClass.school_year_id' => $yearId,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-			),
-			'order' => array('InstitutionSiteClass.name')
-		));
-		
-		$data = array();
-		foreach($classes as $id => $name) {
-			$data[$id] = array(
-				'name' => $name,
-				'grades' => $InstitutionSiteClassGrade->getGradesByClass($id),
-				'gender' => $InstitutionSiteClassGradeStudent->getGenderTotalByClass($id)
-			);
-		}
-		return $data;
-	}
-	
-	public function getClassOptions($yearId, $institutionSiteId, $gradeId=false) {
-		$options = array(
-			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
-			'conditions' => array(
-				'InstitutionSiteClass.school_year_id' => $yearId,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-			),
-			'order' => array('InstitutionSiteClass.name')
 		);
-		
-		if($gradeId!==false) {
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId
-					)
-				)
-			);
-			$options['group'] = array('InstitutionSiteClass.id');
-		}
-		$data = $this->find('list', $options);
-		return $data;
+		return $fields;
 	}
-		
-		public function getClassListByInstitution($institutionSiteId){
-			$data = $this->find('list', array(
-				'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
-				'conditions' => array(
-					'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-				),
-				'order' => array('InstitutionSiteClass.name')
-			));
-			
-			return $data;
+	
+	public function getClassActions($controller, $id=0) {
+		if($id==0) {
+			$id = $controller->Session->read($this->alias.'.id');
 		}
-		
-		public function getClassListByInstitutionSchoolYear($institutionSiteId, $yearId){
-			if(empty($yearId)){
-				$conditions = array(
-					'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-				);
-			}else{
-				$conditions = array(
-					'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-					'InstitutionSiteClass.school_year_id' => $yearId
-				);
-			}
-			
-			$data = $this->find('list', array(
-				'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
-				'conditions' => $conditions,
-				'order' => array('InstitutionSiteClass.name')
-			));
-			
-			return $data;
-		}
-		
-		public function classes($controller, $params) {
+		$options = array(
+			'classesView/'.$id => __('Class Details'),
+			'classesStudents' => __('Students'),
+			'classesStaff' => __('Staff'),
+			'classesSubjects' => __('Subjects'),
+			'classesAttendance' => __('Attendance'),
+			'classesResult' => __('Result')
+		);
+		return $options;
+	}
+	
+	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('List of Classes');
 		$yearOptions = $controller->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearOptions);
@@ -263,29 +200,22 @@ class InstitutionSiteClass extends AppModel {
 			$controller->redirect(array('action' => 'classesEdit', $classId));
 		}
 	}
-
+	
 	public function classesView($controller, $params) {
-		$classId = $controller->params['pass'][0];
-		$controller->Session->write('InstitutionSiteClassId', $classId);
-		$classObj = $controller->InstitutionSiteClass->getClass($classId);
-
-		if (!empty($classObj)) {
-			$className = $classObj['InstitutionSiteClass']['name'];
+		$id = $controller->params['pass'][0];
+		$controller->Session->write('InstitutionSiteClassId', $id);
+		$controller->Session->write($this->alias.'.id', $id);
+		$data = $this->findById($id);
+		
+		if (!empty($data)) {
+			$className = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($className);
-
-			$grades = $controller->InstitutionSiteClassGrade->getGradesByClass($classId);
-			$students = $controller->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
-			$staffs = $controller->InstitutionSiteClassStaff->getStaffs($classId);
-			$subjects = $controller->InstitutionSiteClassSubject->getSubjects($classId);
-
-			$yearId = $classObj['SchoolYear']['id'];
-			$year = $classObj['SchoolYear']['name'];
-			$noOfSeats = $classObj['InstitutionSiteClass']['no_of_seats'];
-			$noOfShifts = $classObj['InstitutionSiteClass']['no_of_shifts'];
-			
-			$controller->set(compact('classId', 'className', 'yearId', 'year', 'grades', 'students', 'staffs', 'noOfSeats', 'noOfShifts', 'subjects'));
+			$fields = $this->getDisplayFields($controller);
+			$controller->set(compact('data', 'fields'));
+			$controller->set('actionOptions', $this->getClassActions($controller, $id));
 		} else {
-			$controller->redirect(array('action' => 'classesList'));
+			$controller->Message->alert('general.notExists');
+			$controller->redirect(array('action' => $this->_action));
 		}
 	}
 
@@ -338,6 +268,112 @@ class InstitutionSiteClass extends AppModel {
 		$controller->InstitutionSiteClass->delete($id);
 		$controller->Utility->alert($name . ' have been deleted successfully.');
 		$controller->redirect(array('action' => 'classes'));
+	}
+	
+	public function isNameExists($name, $institutionSiteId, $yearId) {
+		$count = $this->find('count', array(
+			'conditions' => array(
+				'InstitutionSiteClass.name LIKE' => $name,
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteClass.school_year_id' => $yearId
+			)
+		));
+		return $count>0;
+	}
+	
+	public function getClass($classId, $institutionSiteId=0) {
+		$conditions = array('InstitutionSiteClass.id' => $classId);
+		
+		if($institutionSiteId > 0) {
+			$conditions['InstitutionSiteClass.institution_site_id'] = $institutionSiteId;
+		}
+		
+		$obj = $this->find('first', array('conditions' => $conditions));
+		return $obj;
+	}
+	
+	public function getListOfClasses($yearId, $institutionSiteId) {
+		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
+		$InstitutionSiteClassGradeStudent = ClassRegistry::init('InstitutionSiteClassGradeStudent');
+		
+		$classes = $this->find('list', array(
+			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+			'conditions' => array(
+				'InstitutionSiteClass.school_year_id' => $yearId,
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+			),
+			'order' => array('InstitutionSiteClass.name')
+		));
+		
+		$data = array();
+		foreach($classes as $id => $name) {
+			$data[$id] = array(
+				'name' => $name,
+				'grades' => $InstitutionSiteClassGrade->getGradesByClass($id),
+				'gender' => $InstitutionSiteClassGradeStudent->getGenderTotalByClass($id)
+			);
+		}
+		return $data;
+	}
+	
+	public function getClassOptions($yearId, $institutionSiteId, $gradeId=false) {
+		$options = array(
+			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+			'conditions' => array(
+				'InstitutionSiteClass.school_year_id' => $yearId,
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+			),
+			'order' => array('InstitutionSiteClass.name')
+		);
+		
+		if($gradeId!==false) {
+			$options['joins'] = array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId
+					)
+				)
+			);
+			$options['group'] = array('InstitutionSiteClass.id');
+		}
+		$data = $this->find('list', $options);
+		return $data;
+	}
+		
+	public function getClassListByInstitution($institutionSiteId){
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+			'conditions' => array(
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+			),
+			'order' => array('InstitutionSiteClass.name')
+		));
+		
+		return $data;
+	}
+		
+	public function getClassListByInstitutionSchoolYear($institutionSiteId, $yearId){
+		if(empty($yearId)){
+			$conditions = array(
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+			);
+		}else{
+			$conditions = array(
+				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteClass.school_year_id' => $yearId
+			);
+		}
+		
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
+			'conditions' => $conditions,
+			'order' => array('InstitutionSiteClass.name')
+		));
+		
+		return $data;
 	}
 	
 	public function classesAddStaffRow($controller, $params) {
