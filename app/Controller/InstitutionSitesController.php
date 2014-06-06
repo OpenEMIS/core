@@ -954,6 +954,7 @@ class InstitutionSitesController extends AppController {
 	    return array_splice($source_array, array_search($key_name, array_keys($source_array)), $length, $replacement);
 	}
 
+	// for future reference - PDF report -  start
 	public function genReport($name, $type) { //$this->genReport('Site Details','CSV');
         $this->autoRender = false;
         $this->ReportData['name'] = $name;
@@ -996,45 +997,7 @@ class InstitutionSitesController extends AppController {
         $this->Mpdf->WriteHTML($arrData['html']);
         $this->Mpdf->Output($arrData['name'] . '.pdf', 'I');
     }
-    
-	public function generateAttendanceLegend($module){
-        if($module == 'student'){
-            $data = $this->StudentAttendanceType->getAttendanceTypes();
-        }else if($module == 'teacher'){
-            $data = $this->TeacherAttendanceType->getAttendanceTypes();
-        }
-        else if($module == 'staff'){
-            $data = $this->StaffAttendanceType->getAttendanceTypes();
-        }else{
-            return null;
-        }
-        
-        $indicator = 0;
-        $str = '';
-        foreach($data AS $row){
-            if($module == 'student'){
-                $code = $row['StudentAttendanceType']['national_code'];
-                $name = $row['StudentAttendanceType']['name'];
-            }else if($module == 'teacher'){
-                $code = $row['TeacherAttendanceType']['national_code'];
-                $name = $row['TeacherAttendanceType']['name'];
-            }
-            else if($module == 'staff'){
-                $code = $row['StaffAttendanceType']['national_code'];
-                $name = $row['StaffAttendanceType']['name'];
-            }
-            
-            if($indicator > 0){
-                $str .= '; ' . $code . ' = ' . $name;
-            }else{
-                $str .= $code . ' = ' . $name;
-            }
-            
-            $indicator++;
-        }
-        
-        return $str;
-    }
+	// for future reference - PDF report -  end
 	
 	public function getFirstWeekdayBySetting(){
 		$weekdaysArr = array(
