@@ -17,7 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusFinance extends AppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
 	
 	public $belongsTo = array(
 		'FinanceSource',
@@ -188,5 +193,75 @@ class CensusFinance extends AppModel {
 		));
 		
 		return $data;
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+
+			$header = array(__('Year'), __('Nature'), __('Type'), __('Source'), __('Category'), __('Description'), __('Amount (PM)'));
+
+			$dataYears = $this->getYearsHaveData($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$dataFinances = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId, 'CensusFinance.school_year_id' => $yearId)));
+				$newSort = array();
+				foreach ($dataFinances as $k => $arrv) {
+					$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
+				}
+
+				if (count($newSort) > 0) {
+					foreach ($newSort as $nature => $dataNature) {
+						foreach ($dataNature as $type => $dataType) {
+							$totalByType = 0;
+							$data[] = $header;
+							foreach ($dataType as $arrValues) {
+								$financeNature = $nature;
+								$financeType = $type;
+								$financeSource = $arrValues['FinanceSource']['name'];
+								$financeCategory = $arrValues['FinanceCategory']['name'];
+								$financeDescription = $arrValues['CensusFinance']['description'];
+								$financeAmount = $arrValues['CensusFinance']['amount'];
+
+								$data[] = array(
+									$yearName,
+									$financeNature,
+									$financeType,
+									$financeSource,
+									$financeCategory,
+									$financeDescription,
+									$financeAmount
+								);
+
+								$totalByType += $financeAmount;
+							}
+							$data[] = array('', '', '', '', '', __('Total'), $totalByType);
+							$data[] = array();
+						}
+					}
+				}
+			}
+
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Finances';
 	}
 }
