@@ -3602,6 +3602,9 @@ msgstr "ECE QA لوحة القيادة"
 msgid "Early Childhood Education Quality Assurance Data"
 msgstr "التعليم في مرحلة الطفولة المبكرة لضمان جودة البيانات"
 
+msgid "Early Childhood Education Quality Assurance"
+msgstr "الطفولة المبكرة ضمان جودة التعليم"
+
 msgid "Geographical Level"
 msgstr "المستوى الجغرافي"
 
@@ -3624,7 +3627,37 @@ msgid "Scatterplot of Administrative and Technical and Aspects"
 msgstr "مخطط التشتت من الجوانب الإدارية والفنية و"
 
 msgid "Appointment"
-msgstr "موعد"
+msgstr "توظيف"
 
-msgid "Reports - Dashboard"
-msgstr "تقارير - لوحة القيادة"
+msgid "Report - Dashboard"
+msgstr "تقرير - لوحة القيادة"
+
+msgid "Owned"
+msgstr "ملك"
+
+msgid "Rented"
+msgstr "مستأجر"
+
+msgid "Both"
+msgstr "كلا"
+
+msgid "Permanent"
+msgstr "دائم"
+
+msgid "Contract"
+msgstr "عقد"
+
+msgid "Urban"
+msgstr "الحضرية"
+
+msgid "Rural"
+msgstr "قرية"
+
+msgid "Administrative"
+msgstr "إداري"
+
+msgid "Technical"
+msgstr "تقني"
+
+msgid "Download CSV"
+msgstr "تحميل CSV"
