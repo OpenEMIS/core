@@ -1066,155 +1066,41 @@ class InstitutionSitesController extends AppController {
     }
 
 	public function edit() {
+		$this->Navigation->addCrumb('Edit');
         $id = $this->Session->read('InstitutionSiteId');
-
-        $this->InstitutionSite->id = $id;
-        $this->Navigation->addCrumb('Edit');
-
+		$this->InstitutionSite->id = $id;
+		$data = $this->InstitutionSite->findById($id);
+		
         if ($this->request->is('post')) {
-            /**
-             * need to sort the Area to get the the lowest level
-             */
-            $last_area_id = 0;
-            $last_adminarea_id = 0;
-            //this key sort is impt so that the lowest area level will be saved correctly
-            ksort($this->request->data['InstitutionSite']);
-            foreach ($this->request->data['InstitutionSite'] as $key => $arrValSave) {
-                if (stristr($key, 'area_level_') == true && ($arrValSave != '' && $arrValSave != 0)) {
-                    $last_area_id = $arrValSave;
-                }
-                if (stristr($key, 'area_education_level_') == true && ($arrValSave != '' && $arrValSave != 0)) {
-                    $last_adminarea_id = $arrValSave;
-                }
-            }
-
-            if ($last_area_id == 0) {
-                $last_area_id = '';
-            }
-            $this->request->data['InstitutionSite']['area_id'] = $last_area_id;
-            $this->request->data['InstitutionSite']['area_education_id'] = $last_adminarea_id;
-
-
-            $this->InstitutionSite->set($this->request->data);
-            if ($this->InstitutionSite->validates()) {
-                $this->request->data['InstitutionSite']['latitude'] = trim($this->request->data['InstitutionSite']['latitude']);
-                $this->request->data['InstitutionSite']['longitude'] = trim($this->request->data['InstitutionSite']['longitude']);
-
-                $rec = $this->InstitutionSite->save($this->request->data);
-				//pr($this->request->data);
-
-                $this->redirect(array('action' => 'view'));
+			$dateOpened = $this->request->data['InstitutionSite']['date_opened'];
+			$dateClosed = $this->request->data['InstitutionSite']['date_closed'];
+			if(!empty($dateOpened)) {
+				$this->request->data['InstitutionSite']['year_opened'] = date('Y', strtotime($dateOpened));
 			}
-
-            /**
-             * preserve the dropdown values on error
-             */
-            if ($last_area_id != 0) {
-                $areaLevel = $this->AreaHandler->getAreatoParent($last_area_id);
-
-                $areaLevel = array_reverse($areaLevel);
-                $areadropdowns = array();
-                foreach ($areaLevel as $index => &$arrVals) {
-                    $siblings = $this->Area->find('list', array('conditions' => array('Area.parent_id' => $arrVals['parent_id'])));
-                    $this->Utility->unshiftArray($siblings, array('0' => '--' . __('Select') . '--'));
-                    $areadropdowns['area_level_' . $index]['options'] = $siblings;
-                }
-                $maxAreaIndex = max(array_keys($areaLevel)); //starts with 0
-                $totalAreaLevel = $this->AreaLevel->find('count'); //starts with 1
-                for ($i = $maxAreaIndex; $i <= $totalAreaLevel; $i++) {
-                    $areadropdowns['area_level_' . ($i + 1)]['options'] = array('0' => '--' . __('Select') . '--');
-                }
+			if(!empty($dateClosed)) {
+				$this->request->data['InstitutionSite']['year_closed'] = date('Y', strtotime($dateClosed));
+			}
+			$this->request->data['InstitutionSite']['latitude'] = trim($this->request->data['InstitutionSite']['latitude']);
+			$this->request->data['InstitutionSite']['longitude'] = trim($this->request->data['InstitutionSite']['longitude']);
+            $this->InstitutionSite->set($this->request->data);
+			
+            if ($this->InstitutionSite->validates()) {
+                $result = $this->InstitutionSite->save($this->request->data);
+				$this->Message->alert('general.edit.success');
+                $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'view'));
             }
-
-            if ($last_adminarea_id != 0) {
-                $adminareaLevel = $this->AreaHandler->getAreatoParent($last_adminarea_id, array('AreaEducation', 'AreaEducationLevel'));
-
-                $adminareaLevel = array_reverse($adminareaLevel);
-
-                $adminareadropdowns = array();
-                foreach ($adminareaLevel as $index => &$arrVals) {
-                    $siblings = $this->AreaEducation->find('list', array('conditions' => array('AreaEducation.parent_id' => $arrVals['parent_id'])));
-                    $this->Utility->unshiftArray($siblings, array('0' => '--' . __('Select') . '--'));
-                    $adminareadropdowns['area_education_level_' . $index]['options'] = $siblings;
-                }
-
-
-                $maxAreaIndex = max(array_keys($adminareaLevel)); //starts with 0
-                $totalAreaLevel = $this->AreaEducationLevel->find('count'); //starts with 1
-                for ($i = $maxAreaIndex; $i <= $totalAreaLevel; $i++) {
-                    $adminareadropdowns['area_education_level_' . ($i + 1)]['options'] = array('0' => '--' . __('Select') . '--');
-                }
-            }
-        } else {
-
-            $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $id)));
-            $this->set('data', $data);
-
-            $areaLevel = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_id']);
-            $areaLevel = array_reverse($areaLevel);
-
-            $adminareaLevel = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_education_id'], array('AreaEducation', 'AreaEducationLevel'));
-            $adminareaLevel = array_reverse($adminareaLevel);
-
-            $areadropdowns = $this->AreaHandler->getAllSiteAreaToParent($data['InstitutionSite']['area_id']);
-            //pr($areadropdowns);
-            //pr($data['InstitutionSite']);
-            if (!is_null($data['InstitutionSite']['area_education_id'])) {
-                $adminareadropdowns = $this->AreaHandler->getAllSiteAreaToParent($data['InstitutionSite']['area_education_id'], array('AreaEducation', 'AreaEducationLevel'));
-            } else {
-                $topEdArea = $this->AreaEducation->find('list', array('conditions' => array('parent_id' => -1)));
-                $arr[] = '--' . __('Select') . '--';
-                foreach ($topEdArea as $k => $v) {
-                    $arr[] = array('name' => $v, 'value' => $k);
-                }
-                $adminareadropdowns = array('area_education_level_0' => array('options' => $arr));
-            }
+			$data = $this->request->data;
         }
-
-        $topArea = $this->Area->find('list', array('conditions' => array('Area.parent_id' => '-1')));
-        $disabledAreas = $this->Area->find('list', array('conditions' => array('Area.visible' => '0')));
-        $this->Utility->unshiftArray($topArea, array('0' => '--' . __('Select') . '--'));
-        $levels = $this->AreaLevel->find('list');
-        $adminlevels = $this->AreaEducationLevel->find('list');
-        $visible = true;
-        $type = $this->InstitutionSiteType->findList($visible);
-        $ownership = $this->InstitutionSiteOwnership->findList($visible);
-        $locality = $this->InstitutionSiteLocality->findList($visible);
-        $status = $this->InstitutionSiteStatus->findList($visible);
-        $this->Utility->unshiftArray($type, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($ownership, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($locality, array('0' => '--' . __('Select') . '--'));
-        $this->Utility->unshiftArray($status, array('0' => '--' . __('Select') . '--'));
-
-        // Get security group area
-        $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
-        $filterArea = $this->SecurityGroupArea->getAreas($groupId);
-		
+		$visible = true;
+        $typeOptions = $this->InstitutionSiteType->findList($visible);
+        $ownershipOptions = $this->InstitutionSiteOwnership->findList($visible);
+        $localityOptions = $this->InstitutionSiteLocality->findList($visible);
+        $statusOptions = $this->InstitutionSiteStatus->findList($visible);
 		$providerOptions = $this->InstitutionSite->InstitutionSiteProvider->getList();
-		$this->Utility->unshiftArray($providerOptions, array('0' => '--' . __('Select') . '--'));
 		$sectorOptions = $this->InstitutionSite->InstitutionSiteSector->getList();
-        $this->Utility->unshiftArray($sectorOptions, array('0' => '--' . __('Select') . '--'));
 		$genderOptions = $this->InstitutionSite->InstitutionSiteGender->getList();
-		$this->Utility->unshiftArray($genderOptions, array('0' => '--' . __('Select') . '--'));
 
-        $this->set('filterArea', $filterArea);
-        $this->set('typeOptions', $type);
-        $this->set('ownershipOptions', $ownership);
-        $this->set('localityOptions', $locality);
-        $this->set('statusOptions', $status);
-        //$this->set('arealevel',$areaLevel);
-        //$this->set('adminarealevel',$adminareaLevel);
-        //$this->set('levels',$levels);
-        //$this->set('adminlevels',$adminlevels);
-        //$this->set('areadropdowns',$areadropdowns);
-        //$this->set('adminareadropdowns',$adminareadropdowns);
-
-        $this->set('disabledAreas', $disabledAreas);
-		
-		$this->set('providerOptions', $providerOptions);
-		$this->set('sectorOptions', $sectorOptions);
-		$this->set('genderOptions', $genderOptions);
-        $this->set('highestLevel', $topArea);
+		$this->set(compact('data', 'typeOptions', 'ownershipOptions', 'localityOptions', 'statusOptions', 'providerOptions', 'sectorOptions', 'genderOptions'));
     }
 
 	public function add() {
@@ -1243,8 +1129,8 @@ class InstitutionSitesController extends AppController {
 			$areaEducationId = $this->request->data['InstitutionSite']['area_education_id'];
         }
         // Get security group area
-        $groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
-        $filterArea = $this->SecurityGroupArea->getAreas($groupId);
+		//$groupId = $this->SecurityGroupUser->getGroupIdsByUserId($this->Auth->user('id'));
+		//$filterArea = $this->SecurityGroupArea->getAreas($groupId);
 
 		$visible = true;
         $typeOptions = $this->InstitutionSiteType->findList($visible);
