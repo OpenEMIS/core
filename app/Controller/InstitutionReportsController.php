@@ -115,7 +115,19 @@ class InstitutionReportsController extends AppController {
 		$this->Navigation->addCrumb($header);
 		
 		$data = array(
-			array('name' => 'Students', 'model' => 'CensusStudent', 'params' => array('csv' => array(1, 'dataFormatted' => true)))
+			array('name' => 'Students', 'model' => 'CensusStudent', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Teachers', 'model' => 'CensusTeacher', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Staff', 'model' => 'CensusStaff', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Classes', 'model' => 'CensusClass', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Shifts', 'model' => 'CensusShift', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Graduates', 'model' => 'CensusGraduate', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Attendance', 'model' => 'CensusAttendance', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Results', 'model' => 'CensusAssessment', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Behaviour', 'model' => 'CensusBehaviour', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Textbooks', 'model' => 'CensusTextbook', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Infrastructure', 'model' => 'InfrastructureCategory', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'Finances', 'model' => 'CensusFinance', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
+			array('name' => 'More', 'model' => 'CensusCustomField', 'params' => array('csv' => array(1, 'dataFormatted' => true)))
 		);
 		
 		foreach($data as $i => $obj) {

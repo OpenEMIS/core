@@ -19,7 +19,13 @@ App::uses('AppModel', 'Model');
 
 class CensusCustomField extends AppModel {
 
-	public $actsAs = array('FieldOption', 'ControllerAction');
+	public $actsAs = array(
+		'FieldOption', 
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
 	public $hasMany = array('CensusCustomFieldOption' => array('order' => 'order'));
 	public $belongsTo = array(
 		'InstitutionSiteType',
@@ -267,6 +273,183 @@ class CensusCustomField extends AppModel {
 			$controller->set('selectedYear', $selectedYear);
 			$controller->set('yearList', $yearList);
 		}
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+			
+			$CensusGridValueModel = ClassRegistry::init('CensusGridValue');
+			
+			$dataYears = $CensusGridValueModel->getYearsHaveValues($institutionSiteId);
+			
+			$InstitutionSiteModel = ClassRegistry::init('InstitutionSite');
+			$institutionSiteObj = $InstitutionSiteModel->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
+			
+			$institutionSiteTypeId = $institutionSiteObj['InstitutionSite']['institution_site_type_id'];
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$CensusGridModel = ClassRegistry::init('CensusGrid');
+				$dataGrid = $CensusGridModel->find('all', array(
+					'conditions' => array(
+						'CensusGrid.institution_site_type_id' => array($institutionSiteTypeId, 0),
+						'CensusGrid.visible' => 1
+					),
+					'order' => array('CensusGrid.institution_site_type_id', 'CensusGrid.order')
+						)
+				);
+
+				foreach ($dataGrid AS $rowGrid) {
+					$data[] = array(__($yearName));
+					$data[] = array(__($rowGrid['CensusGrid']['name']));
+					$data[] = array();
+					$header = array('');
+					foreach ($rowGrid['CensusGridXCategory'] AS $rowX) {
+						$header[] = __($rowX['name']);
+					}
+					$data[] = $header;
+
+					$dataGridValue = $CensusGridValueModel->find('all', array(
+						'recursive' => -1,
+						'conditions' => array(
+							'CensusGridValue.institution_site_id' => $institutionSiteId,
+							'CensusGridValue.census_grid_id' => $rowGrid['CensusGrid']['id'],
+							'CensusGridValue.school_year_id' => $yearId
+						)
+							)
+					);
+
+					$valuesCheckSource = array();
+					foreach ($dataGridValue AS $rowGridValue) {
+						$census_grid_x_category_id = $rowGridValue['CensusGridValue']['census_grid_x_category_id'];
+						$census_grid_y_category_id = $rowGridValue['CensusGridValue']['census_grid_y_category_id'];
+						$valuesCheckSource[$census_grid_x_category_id][$census_grid_y_category_id] = $rowGridValue['CensusGridValue'];
+					}
+
+					foreach ($rowGrid['CensusGridYCategory'] AS $rowY) {
+						$idY = $rowY['id'];
+						$nameY = $rowY['name'];
+						$rowCsv = array(__($nameY));
+						//$totalRow = 0;
+						foreach ($rowGrid['CensusGridXCategory'] AS $rowX) {
+							$idX = $rowX['id'];
+							//$nameX = $rowX['name'];
+							if (isset($valuesCheckSource[$idX][$idY]['value'])) {
+								$valueCell = !empty($valuesCheckSource[$idX][$idY]['value']) ? $valuesCheckSource[$idX][$idY]['value'] : 0;
+							} else {
+								$valueCell = 0;
+							}
+							$rowCsv[] = $valueCell;
+							//$totalRow += $valueCell;
+						}
+						//$rowCsv[] = $totalRow;
+						$data[] = $rowCsv;
+					}
+					$data[] = array();
+				}
+
+				$dataFields = $this->find('all', array(
+					'recursive' => -1,
+					'fields' => array(
+						'CensusCustomField.id',
+						'CensusCustomField.type',
+						'CensusCustomField.name',
+						'CensusCustomValue.value'
+					),
+					'joins' => array(
+						array(
+							'table' => 'census_custom_values',
+							'alias' => 'CensusCustomValue',
+							'type' => 'LEFT',
+							'conditions' => array(
+								'CensusCustomField.id = CensusCustomValue.census_custom_field_id'
+							)
+						)
+					),
+					'conditions' => array(
+						'CensusCustomField.institution_site_type_id' => array($institutionSiteTypeId, 0),
+						'CensusCustomField.visible' => 1,
+						'CensusCustomValue.institution_site_id' => $institutionSiteId,
+						'CensusCustomValue.school_year_id' => $yearId
+					),
+					'order' => array('CensusCustomField.institution_site_type_id', 'CensusCustomField.order'),
+					'group' => array('CensusCustomField.id')
+						)
+				);
+
+				foreach ($dataFields AS $rowFields) {
+					$fieldId = $rowFields['CensusCustomField']['id'];
+					$fieldType = $rowFields['CensusCustomField']['type'];
+					$fieldName = $rowFields['CensusCustomField']['name'];
+					$fieldValue = $rowFields['CensusCustomValue']['value'];
+
+					$data[] = array(__($yearName));
+					$data[] = array($fieldName);
+					$answer = '';
+					if ($fieldType == 3 || $fieldType == 4) {
+						$CensusCustomValueModel = ClassRegistry::init('CensusCustomValue');
+						$dataValue = $CensusCustomValueModel->find('all', array(
+							'recursive' => -1,
+							'fields' => array('CensusCustomFieldOption.value'),
+							'joins' => array(
+								array(
+									'table' => 'census_custom_field_options',
+									'alias' => 'CensusCustomFieldOption',
+									'type' => 'LEFT',
+									'conditions' => array(
+										'CensusCustomValue.value = CensusCustomFieldOption.id'
+									)
+								)
+							),
+							'conditions' => array(
+								'CensusCustomValue.census_custom_field_id' => $fieldId,
+								'CensusCustomValue.institution_site_id' => $institutionSiteId,
+								'CensusCustomValue.school_year_id' => $yearId
+							)
+								)
+						);
+
+						$countValue = 1;
+						foreach ($dataValue AS $rowValue) {
+							if ($countValue == 1) {
+								$answer .= $rowValue['CensusCustomFieldOption']['value'];
+							} else {
+								$answer .= ', ';
+								$answer .= $rowValue['CensusCustomFieldOption']['value'];
+							}
+							$countValue++;
+						}
+					} else {
+						if (!is_null($fieldValue)) {
+							$answer = $fieldValue;
+						}
+					}
+
+					$data[] = array($answer);
+					$data[] = array();
+				}
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_More';
 	}
 
 }
