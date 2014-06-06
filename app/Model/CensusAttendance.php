@@ -20,7 +20,10 @@ App::uses('AppModel', 'Model');
 class CensusAttendance extends AppModel {
 
 	public $actsAs = array(
-		'ControllerAction'
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
 	public $belongsTo = array(
 		'SchoolYear',
@@ -141,6 +144,76 @@ class CensusAttendance extends AppModel {
 			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
 			$controller->redirect(array('controller' => 'Census', 'action' => 'attendance', $yearId));
 		}
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+			$header = array(__('Year'), __('School Days'), __('Programme'), __('Grade'), __('Days Attended (Male)'), __('Days Attended (Female)'), __('Days Absent (Male)'), __('Days Absent (Female)'), __('Total'));
+
+			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
+			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$programmes = $InstitutionSiteProgrammeModel->getSiteProgrammes($institutionSiteId, $yearId);
+				
+				$SchoolYearModel = ClassRegistry::init('SchoolYear');
+				$schoolDays = $SchoolYearModel->field('school_days', array('SchoolYear.id' => $yearId));
+
+				if (count($programmes) > 0) {
+					foreach ($programmes as $obj) {
+						$data[] = $header;
+						$programmeId = $obj['education_programme_id'];
+						$dataCensus = $this->getCensusData($institutionSiteId, $yearId, $programmeId);
+						$programmeName = $obj['education_cycle_name'] . ' - ' . $obj['education_programme_name'];
+						$total = 0;
+						foreach ($dataCensus AS $rowCensus) {
+							$gradeName = $rowCensus['education_grade_name'];
+							$attendedMale = empty($rowCensus['attended_male']) ? 0 : $rowCensus['attended_male'];
+							$attendedFemale = empty($rowCensus['attended_female']) ? 0 : $rowCensus['attended_female'];
+							$absentMale = empty($rowCensus['absent_male']) ? 0 : $rowCensus['absent_male'];
+							$absentFemale = empty($rowCensus['absent_female']) ? 0 : $rowCensus['absent_female'];
+							$totalRow = $attendedMale + $attendedFemale + $absentMale + $absentFemale;
+							$data[] = array(
+								$yearName,
+								$schoolDays,
+								$programmeName,
+								$gradeName,
+								$attendedMale,
+								$attendedFemale,
+								$absentMale,
+								$absentFemale,
+								$totalRow
+							);
+
+							$total += $totalRow;
+						}
+						$data[] = array('', '', '', '', '', '', '', __('Total'), $total);
+						$data[] = array();
+					}
+				}
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Attendance';
 	}
 
 }
