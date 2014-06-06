@@ -14,3 +14,4 @@ ALTER TABLE `quality_institution_visits` DROP INDEX `teacher_id`, ADD INDEX `sta
 
 ALTER TABLE `quality_institution_visit_attachments` ADD `visible` INT( 1 ) NOT NULL DEFAULT '1' AFTER `file_content` ;
 
+ALTER TABLE `institution_site_class_staff` ADD `status` INT( 1 ) NOT NULL AFTER `id` ;
