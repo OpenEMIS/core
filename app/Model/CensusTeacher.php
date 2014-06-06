@@ -17,8 +17,11 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusTeacher extends AppModel {
-        public $actsAs = array(
-                'ControllerAction'
+    public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
     
 	public $belongsTo = array(
@@ -497,4 +500,179 @@ class CensusTeacher extends AppModel {
         $data = array('programmes' => $programmesHtml, 'grades' => $gradesHtml);
         return json_encode($data);
     }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+
+			$headerFTE = array(__('Year'), __('Teacher Type'), __('Education Level'), __('Male'), __('Female'), __('Total'));
+			$headerTraining = $headerFTE;
+			$headerSingleGrade = array(__('Year'), __('Teacher Type'), __('Programme'), __('Grade'), __('Male'), __('Female'));
+			$headerMultiGrade = $headerSingleGrade;
+
+			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
+			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				// FTE teachers data start
+				$CensusTeacherFteModel = ClassRegistry::init('CensusTeacherFte');
+				$dataFTE = $CensusTeacherFteModel->getCensusData($institutionSiteId, $yearId);
+				if (count($dataFTE) > 0) {
+					$data[] = $headerFTE;
+					$totalFTE = 0;
+					foreach ($dataFTE AS $rowFTE) {
+						$maleFTE = empty($rowFTE['male']) ? 0 : $rowFTE['male'];
+						$femaleFTE = empty($rowFTE['female']) ? 0 : $rowFTE['female'];
+
+						$data[] = array(
+							$yearName,
+							'Full Time Equivalent Teachers',
+							$rowFTE['education_level_name'],
+							$maleFTE,
+							$femaleFTE,
+							$maleFTE + $femaleFTE
+						);
+
+						$totalFTE += $maleFTE;
+						$totalFTE += $femaleFTE;
+					}
+
+					$data[] = array('', '', '', '', __('Total'), $totalFTE);
+					$data[] = array();
+				}
+				// FTE teachers data end
+				// trained teachers data start
+				$CensusTeacherTrainingModel = ClassRegistry::init('CensusTeacherTraining');
+				$dataTraining = $CensusTeacherTrainingModel->getCensusData($institutionSiteId, $yearId);
+				if (count($dataTraining) > 0) {
+					$data[] = $headerTraining;
+					$totalTraining = 0;
+					foreach ($dataTraining AS $rowTraining) {
+						$maleTraining = empty($rowTraining['male']) ? 0 : $rowTraining['male'];
+						$femaleTraining = empty($rowTraining['female']) ? 0 : $rowTraining['female'];
+
+						$data[] = array(
+							$yearName,
+							'Trained Teachers',
+							$rowTraining['education_level_name'],
+							$maleTraining,
+							$femaleTraining,
+							$maleTraining + $femaleTraining
+						);
+
+						$totalTraining += $maleTraining;
+						$totalTraining += $femaleTraining;
+					}
+
+					$data[] = array('', '', '', '', __('Total'), $totalTraining);
+					$data[] = array();
+				}
+				// trained teachers data end
+				// single grade teachers data start
+				$programmeGrades = $InstitutionSiteProgrammeModel->getProgrammeList($institutionSiteId, $yearId);
+				$singleGradeData = $programmeGrades;
+				$singleGradeTeachers = $this->getSingleGradeData($institutionSiteId, $yearId);
+				$this->mergeSingleGradeData($singleGradeData, $singleGradeTeachers);
+
+				if (count($singleGradeData) > 0) {
+					$data[] = $headerSingleGrade;
+					$totalMaleSingleGrade = 0;
+					$totalFemaleSingleGrade = 0;
+					foreach ($singleGradeData AS $programmeName => $programmeData) {
+						foreach ($programmeData['education_grades'] AS $gradeId => $gradeData) {
+							$maleSingleGrade = empty($gradeData['male']) ? 0 : $gradeData['male'];
+							$femaleSingleGrade = empty($gradeData['female']) ? 0 : $gradeData['female'];
+
+							$data[] = array(
+								$yearName,
+								'Single Grade Teachers Only',
+								$programmeName,
+								$gradeData['name'],
+								$gradeData['male'],
+								$gradeData['female']
+							);
+
+							$totalMaleSingleGrade += $maleSingleGrade;
+							$totalFemaleSingleGrade += $femaleSingleGrade;
+						}
+					}
+
+					$data[] = array('', '', '', __('Total'), $totalMaleSingleGrade, $totalFemaleSingleGrade);
+					$data[] = array();
+				}
+				// single grade teachers data end
+				// multi grades teachers data start
+				$multiGradesData = $this->getMultiGradeData($institutionSiteId, $yearId);
+
+				if (count($multiGradesData) > 0) {
+					$data[] = $headerMultiGrade;
+					$totalMaleMultiGrades = 0;
+					$totalFemaleMultiGrades = 0;
+					foreach ($multiGradesData AS $rowMultiGrades) {
+						$maleMultiGrades = empty($rowMultiGrades['male']) ? 0 : $rowMultiGrades['male'];
+						$femaleMultiGrades = empty($rowMultiGrades['female']) ? 0 : $rowMultiGrades['female'];
+						$multiProgrammes = '';
+						$multiProgrammeCount = 0;
+						foreach ($rowMultiGrades['programmes'] AS $multiProgramme) {
+							if ($multiProgrammeCount > 0) {
+								$multiProgrammes .= "\n\r";
+								$multiProgrammes .= $multiProgramme;
+							} else {
+								$multiProgrammes .= $multiProgramme;
+							}
+							$multiProgrammeCount++;
+						}
+
+						$multiGrades = '';
+						$multiGradeCount = 0;
+						foreach ($rowMultiGrades['grades'] AS $multiGrade) {
+							if ($multiGradeCount > 0) {
+								$multiGrades .= "\n\r";
+								$multiGrades .= $multiGrade;
+							} else {
+								$multiGrades .= $multiGrade;
+							}
+							$multiGradeCount++;
+						}
+
+						$data[] = array(
+							$yearName,
+							'Multi Grade Teachers',
+							$multiProgrammes,
+							$multiGrades,
+							$maleMultiGrades,
+							$femaleMultiGrades
+						);
+
+						$totalMaleMultiGrades += $maleMultiGrades;
+						$totalFemaleMultiGrades += $femaleMultiGrades;
+					}
+
+					$data[] = array('', '', '', __('Total'), $totalMaleMultiGrades, $totalFemaleMultiGrades);
+					$data[] = array();
+				}
+				// multi grades teachers data end
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Teachers';
+	}
 }
