@@ -46,7 +46,7 @@
                     echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_right",'onclick'=>"return Config.checkValidate();")); 
                 }
                 if($mandatory!='1' && !$wizardEnd){
-                    echo $this->Form->submit(__('Skip'(, array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_left"));
+                    echo $this->Form->submit(__('Skip'), array('div'=>false, 'name'=>'submit','class'=>"btn_cancel btn_cancel_button btn_left"));
                 } 
       } ?>
 	</div>

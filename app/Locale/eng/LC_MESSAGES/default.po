@@ -2491,10 +2491,13 @@ msgstr "
 msgid "Early Childhood Education Quality Assurance Data"
 msgstr ""
 
-msgid "Geographical Level"
+msgid “Apply”
 msgstr ""
 
-msgid “Apply”
+msgid "Early Childhood Education Quality Assurance"
+msgstr ""
+
+msgid "Geographical Level"
 msgstr ""
 
 msgid "Administrative and Technical Aspects"
@@ -2519,4 +2522,34 @@ msgid "Appointment"
 msgstr ""
 
 msgid "Reports - Dashboard"
+msgstr ""
+
+msgid "Owned"
+msgstr ""
+
+msgid "Rented"
+msgstr ""
+
+msgid "Both"
+msgstr ""
+
+msgid "Urban"
+msgstr ""
+
+msgid "Rural"
+msgstr ""
+
+msgid "Permanent"
+msgstr ""
+
+msgid "Contract"
+msgstr ""
+
+msgid "Administrative"
+msgstr ""
+
+msgid "Technical"
+msgstr ""
+
+msgid "Download CSV"
 msgstr ""
