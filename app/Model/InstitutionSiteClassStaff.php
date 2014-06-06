@@ -31,7 +31,7 @@ class InstitutionSiteClassStaff extends AppModel {
 		parent::beforeAction($controller, $action);
 		$id = $controller->Session->read('InstitutionSiteClass.id');
 		
-		if($this->InstitutionSiteClass->exists($id)) {//pr($id);die;
+		if($this->InstitutionSiteClass->exists($id)) {
 			$header = $this->InstitutionSiteClass->field('name', array('id' => $id));
 			$controller->Navigation->addCrumb($header);
 			$controller->set('header', $header);

@@ -109,9 +109,9 @@ class InstitutionSiteClass extends AppModel {
 		}
 		$options = array(
 			'classesView/'.$id => __('Class Details'),
-			'classesStudents' => __('Students'),
+			'classesStudent' => __('Students'),
 			'classesStaff' => __('Staff'),
-			'classesSubjects' => __('Subjects'),
+			'classesSubject' => __('Subjects'),
 			'classesAttendance' => __('Attendance'),
 			'classesResult' => __('Result')
 		);
