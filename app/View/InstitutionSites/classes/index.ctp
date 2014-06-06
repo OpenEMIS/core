@@ -1,7 +1,5 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
-echo $this->Html->script('institution_site_classes', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('List of Classes'));
@@ -14,20 +12,16 @@ $this->end();
 
 $this->start('contentBody');
 echo $this->element('templates/year_options', array('url' => 'classes'));
-echo $this->Form->create('InstitutionSite', array(
-	'url' => array('controller' => 'InstitutionSites', 'action' => 'classes'),
-	'inputDefaults' => array('label' => false, 'div' => false)
-));
 ?>
 
 <div class="table-responsive">
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th class="cell_class"><?php echo __('Class'); ?></th>
+				<th><?php echo __('Class'); ?></th>
 				<th><?php echo __('Grade'); ?></th>
-				<th class="cell_gender"><?php echo __('Male'); ?></th>
-				<th class="cell_gender"><?php echo __('Female'); ?></th>
+				<th><?php echo __('Male'); ?></th>
+				<th><?php echo __('Female'); ?></th>
 			</tr>
 		</thead>
 
@@ -36,8 +30,8 @@ echo $this->Form->create('InstitutionSite', array(
 			foreach ($data as $id => $obj) {
 				$i = 0;
 				?>
-				<tr row-id="<?php echo $id; ?>">
-					<td class="table_cell"><?php echo $this->Html->link($obj['name'], array('action' => 'classesView', $id), array('escape' => false)); ?></td>
+				<tr>
+					<td><?php echo $this->Html->link($obj['name'], array('action' => 'classesView', $id), array('escape' => false)); ?></td>
 
 					<td class="table_cell">
 						<?php
@@ -48,8 +42,8 @@ echo $this->Form->create('InstitutionSite', array(
 						<?php } ?>
 					</td>
 
-					<td class="table_cell cell_number"><?php echo $obj['gender']['M']; ?></td>
-					<td class="table_cell cell_number"><?php echo $obj['gender']['F']; ?></td>
+					<td class="cell-number"><?php echo $obj['gender']['M']; ?></td>
+					<td class="cell-number"><?php echo $obj['gender']['F']; ?></td>
 				</tr>
 			<?php } // end for (multigrade)    ?>
 		</tbody>
