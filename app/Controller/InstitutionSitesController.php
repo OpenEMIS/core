@@ -942,45 +942,28 @@ class InstitutionSitesController extends AppController {
         if (isset($this->params['pass'][0])) {
             $institutionSiteId = $this->params['pass'][0];
             $obj = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
-
             if ($obj) {
                 $this->Session->write('InstitutionSiteId', $institutionSiteId);
                 $this->Session->write('InstitutionSiteObj', $obj);
             } else {
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
             }
-        }else if ($this->Session->check('InstitutionSiteId')){
+        } else if ($this->Session->check('InstitutionSiteId')){
             $institutionSiteId = $this->Session->read('InstitutionSiteId');
             $obj = $this->Session->read('InstitutionSiteObj');
         } else {
             $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
         }
-        
         $this->institutionSiteId = $institutionSiteId;
         $this->institutionSiteObj = $obj;
         
         $institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $institutionSiteId));
         $this->bodyTitle = $institutionSiteName;
         $this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
-        
         $this->Navigation->addCrumb('Overview');
 
-        $levels = $this->AreaLevel->find('list', array('recursive' => 0));
-        $adminarealevels = $this->AreaEducationLevel->find('list', array('recursive' => 0));
-        $data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
-
-        $areaLevel = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_id']);
-        $areaLevel = array_reverse($areaLevel);
-
-        $adminarea = $this->AreaHandler->getAreatoParent($data['InstitutionSite']['area_education_id'], array('AreaEducation', 'AreaEducationLevel'));
-        $adminarea = array_reverse($adminarea);
-
+		$data = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
         $this->set('data', $data);
-        $this->set('levels', $levels);
-        $this->set('adminarealevel', $adminarealevels);
-
-        $this->set('arealevel', $areaLevel);
-        $this->set('adminarea', $adminarea);
     }
 
 	public function viewMap($id = false) {

@@ -17,8 +17,11 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusGraduate extends AppModel {
-        public $actsAs = array(
-                'ControllerAction'
+    public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
     
 	public $belongsTo = array(
@@ -164,4 +167,62 @@ class CensusGraduate extends AppModel {
         
         $controller->set(compact('selectedYear', 'yearList', 'data'));
     }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+			$header = array(__('Year'), __('Education Level'), __('Education Programme'), __('Certification'), __('Male'), __('Female'), __('Total'));
+
+			$InstitutionSiteProgrammeModel = ClassRegistry::init('InstitutionSiteProgramme');
+			$dataYears = $InstitutionSiteProgrammeModel->getYearsHaveProgrammes($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$dataCensus = $this->getCensusData($institutionSiteId, $yearId);
+
+				if (count($dataCensus) > 0) {
+					foreach ($dataCensus AS $levelName => $dataByLevel) {
+						$data[] = $header;
+						foreach ($dataByLevel AS $rowCensus) {
+							$programme = $rowCensus['education_programme_name'];
+							$certificationName = $rowCensus['education_certification_name'];
+							$male = empty($rowCensus['male']) ? 0 : $rowCensus['male'];
+							$female = empty($rowCensus['female']) ? 0 : $rowCensus['female'];
+							$total = $male + $female;
+
+							$data[] = array(
+								$yearName,
+								$levelName,
+								$programme,
+								$certificationName,
+								$male,
+								$female,
+								$total
+							);
+						}
+						$data[] = array();
+					}
+				}
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Graduates';
+	}
 }

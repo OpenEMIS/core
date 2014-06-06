@@ -84,18 +84,19 @@ $obj = $data['InstitutionSite'];
 	</div>
 </fieldset>
 
-<?php if ($obj['area_id'] > 0) { ?>
-	<fieldset class="section_break">
-		<legend id="area"><?php echo __('Area'); ?></legend>
-		<?php echo @$this->Utility->showArea($this->Form, 'area_id', $obj['area_id'], array()); ?>
-	</fieldset>
-<?php } ?>
-<?php if ($obj['area_education_id'] > 0) { ?>
-	<fieldset class="section_break">
-		<legend id="education"><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
-		<?php echo @$this->Utility->showArea($this->Form, 'area_education_id', $obj['area_education_id'], array()); ?>
-	</fieldset>
-<?php } ?>
+<?php if ($obj['area_id'] > 0) : ?>
+<fieldset class="section_break">
+	<legend><?php echo __('Area'); ?></legend>
+	<?php echo $this->FormUtility->areas($obj['area_id']); ?>
+</fieldset>
+<?php endif; ?>
+
+<?php if ($obj['area_education_id'] > 0) : ?>
+<fieldset class="section_break">
+	<legend><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
+	<?php echo $this->FormUtility->areas($obj['area_education_id'], 'AreaEducation'); ?>
+</fieldset>
+<?php endif; ?>
 
 <fieldset class="section_break">
 	<legend><?php echo __('Contact'); ?></legend>

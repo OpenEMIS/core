@@ -177,6 +177,24 @@ class FormUtilityHelper extends AppHelper {
 		return $html;
 	}
 	
+	public function areas($value, $model='Area') {
+		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$foreignKey = Inflector::underscore($levelModels[$model]).'_id';
+		
+		$html = '';
+		$row = '<div class="row">%s</div>';
+		$labelCol = '<div class="col-md-2">%s</div>';
+		$valueCol = '<div class="col-md-6">%s</div>';
+		
+		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
+		$path = $AreaHandler->{$model}->getPath($value);
+		foreach($path as $i => $obj) {
+			$levelName = $AreaHandler->{$levelModels[$model]}->field('name', array('id' => $obj[$model][$foreignKey]));
+			$html .= sprintf($row, sprintf($labelCol, $levelName) . sprintf($valueCol, $obj[$model]['name']));
+		}
+		return $html;
+	}
+	
 	public function getFormWizardButtons($option = NULL) {
 		echo '<div class="form-group">';
 		if (!$option['WizardMode']) {
