@@ -17,8 +17,11 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusStaff extends AppModel {
-        public $actsAs = array(
-                'ControllerAction'
+    public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
     
 	public $useTable = 'census_staff';
@@ -198,4 +201,62 @@ class CensusStaff extends AppModel {
             $controller->redirect(array('controller' => 'Census', 'action' => 'staff', $yearId));
         }
     }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+
+			$header = array(__('Year'), __('Position Type'), __('Male'), __('Female'), __('Total'));
+
+			$dataYears = $this->getYearsHaveData($institutionSiteId);
+
+			foreach ($dataYears AS $rowYear) {
+				$yearId = $rowYear['SchoolYear']['id'];
+				$yearName = $rowYear['SchoolYear']['name'];
+
+				$censusData = $this->getCensusData($institutionSiteId, $yearId);
+				if (count($censusData) > 0) {
+					$data[] = $header;
+					$total = 0;
+					foreach ($censusData AS $row) {
+						if ($row['staff_category_visible'] == 1) {
+							$male = empty($row['male']) ? 0 : $row['male'];
+							$female = empty($row['female']) ? 0 : $row['female'];
+
+							$data[] = array(
+								$yearName,
+								$row['staff_category_name'],
+								$male,
+								$female,
+								$male + $female
+							);
+
+							$total += $male;
+							$total += $female;
+						}
+					}
+
+					$data[] = array('', '', '', __('Total'), $total);
+					$data[] = array();
+				}
+			}
+			//pr($data);
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Staff';
+	}
 }
