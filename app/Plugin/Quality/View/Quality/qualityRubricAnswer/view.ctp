@@ -6,23 +6,14 @@ echo $this->Html->script('/Quality/js/quality.rubric', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Utility->ellipsis(__($subheader), 50));
+$this->assign('contentId', 'student');
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
 ?>
-<?php //$obj = $data[$modelName];      ?>
 
-<div id="student" class="content_wrapper">
-    <?php
-    /*echo $this->Form->create($modelName, array(
-        //'url' => array('controller' => 'Quality','plugin'=>'Quality'),
-        //'type' => 'file',
-        'novalidate' => true,
-        'inputDefaults' => array('label' => false, 'div' => array('class' => 'input_wrapper'), 'autocomplete' => 'off')
-    ));*/
-    ?>
     <table class='rubric-table'>
         <?php
         $this->RubricsView->defaultNoOfColumns = $totalColumns;
@@ -41,12 +32,5 @@ $this->start('contentBody');
         }
         ?>
     </table>
-    <!--<div class="controls ">
-        <?php if($editable === 'true'){ ?>
-        <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-        <?php } ?>
-        <?php echo $this->Html->link(__('Cancel'), array('action' => 'qualityRubricHeader', $selectedQualityRubricId, $rubricTemplateId), array('class' => 'btn_cancel btn_left')); ?>
-    </div>
-    <?php echo $this->Form->end(); ?> -->
-</div>
+   
 <?php $this->end(); ?>  

@@ -9,14 +9,14 @@ table.rubric-table{
 }
 
 table.rubric-table td {
-    border:1px solid #CCC;	
+    border:1px solid #DDD;	
     vertical-align:middle;
     text-align: left;
     padding:8px;
 }
 
 table.rubric-table td.rubric-left-col-nav {
-    background-color:#efefef;
+    background-color:#F9F9F9;
     vertical-align:top;
     text-align: left;
 }
@@ -26,7 +26,7 @@ table.rubric-table td.rubric-row-header{
 }
 
 table.rubric-table td.rubric-col-header{
-    background-color:#efefef;
+    background-color:#F9F9F9;
     text-align: center;
 }
 
@@ -66,7 +66,7 @@ table td.answer-options:hover{
 
 .cell-rubric-row.input{
     /*padding: 5px 8px !important;*/
-    
+    border-bottom: 1px solid #CCC !important;
     height:45px !important
 }
 
@@ -76,8 +76,10 @@ table td.answer-options:hover{
     box-sizing:border-box; 
 
     border: 1px solid #CCC !important;
-  //  border-top: none !important;
-    height: 37px  !important;
+	border-bottom: none !important;
+  /*  border-top: none !important;
+    height: 37px  !important;*/
+	padding: 8px;
     width: 607px;
 }
 
@@ -121,19 +123,23 @@ table td.answer-options:hover{
 }
 
 .cell-rubric-row-height{
-    height: 273px !important;
+    height: auto !important;
 }
 
 .cell-rubric-col-textarea-height{
-    height: 125px !important;
+    height: auto !important;
 }
+
+.cell-rubric-row-height-action{
+    height: 289px !important;
+}
+
 .cell-rubric-order{
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing:border-box; 
 
-   
-    min-height: 37px;
+	padding: 8px;
     width: 77px;
 }
 

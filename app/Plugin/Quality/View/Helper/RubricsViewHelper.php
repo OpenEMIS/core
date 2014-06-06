@@ -71,7 +71,7 @@ class RubricsViewHelper extends AppHelper {
 
 
         if ($mode == 'edit') {
-            $display .= $this->getOrderFormat($key, false, array('class'=>array('input')));
+            $display .= $this->getOrderFormat($key,array('class'=>array('input')));
         }
         //$display .= '</tr>';
 
@@ -139,14 +139,14 @@ class RubricsViewHelper extends AppHelper {
 
         $display .= '</div>';
         if ($mode == 'edit') {
-            $display .= $this->getOrderFormat($key, true);
+            $display .= $this->getOrderFormat($key, array('class' => array('cell-rubric-row-height-action')));
         }
         return $display;
     }
 
-    private function getOrderFormat($key, $expandHeight = false, $options = array()) {
+    private function getOrderFormat($key, $options = array()) {
         $classArr = array('cell','cell-rubric-order','default');
-        ($expandHeight) ? array_push($classArr, 'cell-rubric-row-height') : "";
+     //   ($expandHeight) ? array_push($classArr, 'cell-rubric-row-height') : "";
         
         if(isset($options['class'])){
             $classArr = array_merge($classArr ,$options['class']);

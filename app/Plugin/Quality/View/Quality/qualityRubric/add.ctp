@@ -6,8 +6,14 @@ echo $this->Html->script('config', false);
 echo $this->Html->script('Quality.quality.rubric', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __($subheader));
+$this->assign('contentHeader', $header);
 $this->start('contentActions');
+if ($type == 'add') {
+	$redirectAction = array('action' => 'qualityRubric');
+} else {
+	$redirectAction = array('action' => 'qualityRubricView', $this->data[$model]['id']);
+}
+echo $this->Html->link($this->Label->get('general.back'),$redirectAction, array('class' => 'divider', 'id' => 'back'));
 
 $this->end();
 $this->start('contentBody');
@@ -15,8 +21,8 @@ $this->start('contentBody');
 $actionName = $this->action;
 $formOptions = array('controller' => 'Quality', 'action' => $actionName, 'plugin' => 'Quality');
 $formOptions = array_merge($formOptions, $this->params['pass']);
-$pathId = !empty($this->data[$modelName]['id']) ? '/' . $this->data[$modelName]['id'] : '';
-echo $this->Form->create($modelName, array(
+$pathId = !empty($this->data[$model]['id']) ? '/' . $this->data[$model]['id'] : '';
+echo $this->Form->create($model, array(
 	'url' => $formOptions,
 	'link' => 'Quality/' . $this->action . $pathId,
 	'class' => 'form-horizontal',
@@ -25,7 +31,7 @@ echo $this->Form->create($modelName, array(
 ));
 ?>
 <?php
-if (!empty($this->data[$modelName]['id'])) {
+if (!empty($this->data[$model]['id'])) {
 	echo $this->Form->input('id', array('type' => 'hidden'));
 }
 ?>
@@ -141,19 +147,11 @@ if (!empty($this->data[$modelName]['id'])) {
 			</div>
 		</div>
 	</div>       
-<?php endif; ?>
-<div class="controls view_controls">
+<?php
+endif;
 
-	<input type="submit" value="<?php echo ($type == 'add') ? __("Start") : __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-	<?php
-	if ($type == 'add') {
-		echo $this->Html->link(__('Cancel'), array('action' => 'qualityRubric'), array('class' => 'btn_cancel btn_left'));
-	} else {
-		echo $this->Html->link(__('Cancel'), array('action' => 'qualityRubricView', $this->data[$modelName]['id']), array('class' => 'btn_cancel btn_left'));
-	}
-	?>
-</div>
+echo $this->FormUtility->getFormButtons(array('cancelURL' => $redirectAction));
 
-<?php echo $this->Form->end(); ?>
-
-<?php $this->end(); ?>  
+echo $this->Form->end();
+$this->end();
+?>  

@@ -26,6 +26,7 @@ class MessageComponent extends Component {
 	public $messages = array(
 		'general' => array(
 			'notExists' => array('type' => 'info', 'msg' => 'The Record does not exist.'),
+			'exists' => array('type' => 'info', 'msg' => 'Please ensure no data duplication.'),
 			'noData' => array('type' => 'info', 'msg' => 'There are no records.'),
 			'error' => array('type' => 'error', 'msg' => 'An unexpected error has been encounted. Please contact the administrator for assistance.'),
 			'add' => array(
@@ -78,6 +79,12 @@ class MessageComponent extends Component {
 			'no_data' => array('type' => 'info', 'msg' => 'There is no data matched.'),
 			'no_student' => array('type' => 'info', 'msg' => 'There is no student matched.'),
 			'no_staff' => array('type' => 'info', 'msg' => 'There is no staff matched.')
+		),
+		'Quality' => array(
+			'rubric' => array(
+				'addRow' => array('type' => 'info', 'msg' => 'New row has been added at the bottom of the rubric table.'),
+				'headerFirst' => array('type' => 'info', 'msg' => 'Please ensure the header is at the 1st position.')
+			)
 		)
 	);
 	

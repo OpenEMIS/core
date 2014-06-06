@@ -93,6 +93,8 @@ class QualityInstitutionRubricHeader extends QualityAppModel {
         $QualityStatus = ClassRegistry::init('Quality.QualityStatus');
         $dataExist = $QualityStatus->getRubricStatus($year['SchoolYear']['name'], $rubricHeaderData['QualityInstitutionRubric']['rubric_template_id']);
 
+		
+		
         $editiable = false;
         if ($dataExist) {
             $SecurityGroupUser = ClassRegistry::init('SecurityGroupUser');

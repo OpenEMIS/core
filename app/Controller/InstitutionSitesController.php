@@ -121,8 +121,6 @@ class InstitutionSitesController extends AppController {
         'CensusGridValue',
         'CensusCustomField',
         'CensusCustomValue',
-        'Quality.QualityInstitutionRubric',
-        'Quality.QualityInstitutionVisit',
         'Students.StudentAttendanceType',
         'Staff.StaffAttendanceType',
         'InstitutionSiteShift',
@@ -688,72 +686,6 @@ class InstitutionSitesController extends AppController {
             ),
             'FileName' => 'Report_Class_List'
         ),
-        'QA Report' => array(
-            'Model' => 'InstitutionSite',
-            'fields' => array(
-                'SchoolYear' => array(
-                    'name AS Year' => ''
-                ),
-                'InstitutionSite' => array(
-                    'name AS InstitutionSiteName' => 'Institution Name',
-                    'code AS InstitutionSiteCode' => 'Institution Code',
-                    'id AS InstitutionSiteId' => 'Institution ID'
-                ),
-                'InstitutionSiteClass' => array(
-                    'name AS Class' => '',
-                    'id AS ClassId' => ''
-                ),
-                'EducationGrade' => array(
-                    'name AS Grade' => ''
-                ),
-                'RubricTemplate' => array(
-                    'name AS RubricName' => '',
-                    'id AS RubricId' => ''
-                ),
-                'RubricTemplateHeader' => array(
-                    'title AS RubricHeader' => ''
-                ),
-                'RubricTemplateColumnInfo' => array(
-                    'COALESCE(SUM(weighting),0)' => ''
-                ),
-            ),
-            'FileName' => 'Report_Quality_Assurance'
-        ),
-        'Visit Report' => array(
-            'Model' => 'QualityInstitutionVisit',
-            'fields' => array(
-                'SchoolYear' => array(
-                    'name' => 'Year'
-                ),
-                'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => ''
-                ),
-                'InstitutionSiteClass' => array(
-                    'name' => 'Class',
-                ),
-                'EducationGrade' => array(
-                    'name' => 'Grade'
-                ),
-                'QualityVisitTypes' => array(
-                    'name' => 'Quality Type'
-                ),
-                'QualityInstitutionVisit' => array(
-                    'date' => 'Visit Date',
-                    'comment' => 'Comment'
-                ),
-                'Teacher' => array(
-                    'first_name' => 'Teacher First Name',
-                    'middle_name' => 'Teacher Middle Name',
-                    'last_name' => 'Teacher Last Name'
-                ),
-                'SecurityUser' => array(
-                    'first_name' => 'Evaluator First Name',
-                    'last_name' => 'Evaluator Last Name'
-                )
-            ),
-            'FileName' => 'Report_Quality_Visit'
-        )
     );
 	private $reportMappingCensus = array(
         'Students' => array(
@@ -2709,157 +2641,11 @@ class InstitutionSitesController extends AppController {
                 );
 
                 $options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name');
-            } else if ($name == 'QA Report') {
-                $options['recursive'] = -1;
-                $options['joins'] = array(
-                    array(
-                        'table' => 'institution_site_classes',
-                        'alias' => 'InstitutionSiteClass',
-                        'conditions' => array('InstitutionSiteClass.institution_site_id = InstitutionSite.id')
-                    ),
-                    array(
-                        'table' => 'institution_site_class_grades',
-                        'alias' => 'InstitutionSiteClassGrade',
-                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-                    ),
-                    array(
-                        'table' => 'education_grades',
-                        'alias' => 'EducationGrade',
-                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
-                    ),
-                    array(
-                        'table' => 'school_years',
-                        'alias' => 'SchoolYear',
-                        'type' => 'LEFT',
-                        'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
-                    ),
-                    array(
-                        'table' => 'quality_statuses',
-                        'alias' => 'QualityStatus',
-                        'conditions' => array('QualityStatus.year = SchoolYear.name')
-                    ),
-                    array(
-                        'table' => 'rubrics_templates',
-                        'alias' => 'RubricTemplate',
-                        'type' => 'LEFT',
-                        'conditions' => array('RubricTemplate.id = QualityStatus.rubric_template_id')
-                    ),
-                    array(
-                        'table' => 'quality_institution_rubrics',
-                        'alias' => 'QualityInstitutionRubric',
-                        'type' => 'LEFT',
-                        'conditions' => array(
-                            'QualityInstitutionRubric.institution_site_class_id = InstitutionSiteClass.id',
-                            'RubricTemplate.id = QualityInstitutionRubric.rubric_template_id',
-                            'SchoolYear.id = QualityInstitutionRubric.school_year_id'
-                        )
-                    ),
-                    array(
-                        'table' => 'rubrics_template_headers',
-                        'alias' => 'RubricTemplateHeader',
-                        'type' => 'LEFT',
-                        'conditions' => array('RubricTemplate.id = RubricTemplateHeader.rubric_template_id')
-                    ),
-                    array(
-                        'table' => 'rubrics_template_subheaders',
-                        'alias' => 'RubricTemplateSubheader',
-                        'type' => 'LEFT',
-                        'conditions' => array('RubricTemplateSubheader.rubric_template_header_id = RubricTemplateHeader.id')
-                    ),
-                    array(
-                        'table' => 'rubrics_template_items',
-                        'alias' => 'RubricTemplateItem',
-                        'type' => 'LEFT',
-                        'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
-                    ),
-                    array(
-                        'table' => 'rubrics_template_answers',
-                        'alias' => 'RubricTemplateAnswer',
-                        'type' => 'LEFT',
-                        'conditions' => array('RubricTemplateAnswer.rubric_template_item_id = RubricTemplateItem.id')
-                    ),
-                    array(
-                        'table' => 'quality_institution_rubrics_answers',
-                        'alias' => 'QualityInstitutionRubricAnswer',
-                        'type' => 'LEFT',
-                        'conditions' => array(
-                            'QualityInstitutionRubricAnswer.quality_institution_rubric_id = QualityInstitutionRubric.id',
-                            'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id',
-                            'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
-                            'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
-                            'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id'
-                        )
-                    ),
-                    array(
-                        'table' => 'rubrics_template_column_infos',
-                        'alias' => 'RubricTemplateColumnInfo',
-                        'type' => 'LEFT',
-                        'conditions' => array(
-                            'RubricTemplateAnswer.rubrics_template_column_info_id = RubricTemplateColumnInfo.id',
-                            'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
-                        ),
-                    )
-                );
-
-
-                $options['order'] = array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
-                $options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
-
-                //  pr('in if statement');
-            } else if ($name == 'Visit Report') {
-                $options['recursive'] = -1;
-
-                $options['joins'] = array(
-                    array(
-                        'table' => 'school_years',
-                        'alias' => 'SchoolYear',
-                        'conditions' => array('QualityInstitutionVisit.school_year_id = SchoolYear.id')
-                    ),
-                    array(
-                        'table' => 'institution_sites',
-                        'alias' => 'InstitutionSite',
-                        'conditions' => array('QualityInstitutionVisit.institution_site_id = InstitutionSite.id')
-                    ),
-                    array(
-                        'table' => 'institution_site_classes',
-                        'alias' => 'InstitutionSiteClass',
-                        'conditions' => array(
-                            'QualityInstitutionVisit.institution_site_class_id = InstitutionSiteClass.id',
-                        )
-                    ),
-                    array(
-                        'table' => 'institution_site_class_grades',
-                        'alias' => 'InstitutionSiteClassGrade',
-                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-                    ),
-                    array(
-                        'table' => 'education_grades',
-                        'alias' => 'EducationGrade',
-                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
-                    ),
-                    array(
-                        'table' => 'teachers',
-                        'alias' => 'Teacher',
-                        'conditions' => array('Teacher.id = QualityInstitutionVisit.staff_id')
-                    ),
-                    array(
-                        'table' => 'security_users',
-                        'alias' => 'SecurityUser',
-                        'conditions' => array('SecurityUser.id = QualityInstitutionVisit.created_user_id')
-                    ),
-                    array(
-                        'table' => 'quality_visit_types',
-                        'alias' => 'QualityVisitTypes',
-                        'conditions' => array('QualityVisitTypes.id = QualityInstitutionVisit.quality_type_id')
-                    )
-                );
             }
 			//pr($options);
             $data = $this->{$this->reportMapping[$name]['Model']}->find('all', $options);
         }
 
-        // pr($this->reportMapping[$name]);
-        //pr($data); die;
         return $data;
     }
 
@@ -4470,13 +4256,7 @@ class InstitutionSitesController extends AppController {
 
 	private function getHeader($name, $humanize = false) {
         if (array_key_exists($name, $this->reportMapping)) {
-            if ($name == 'QA Report') {
-                $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-                $header = $RubricsTemplate->getInstitutionQAReportHeader($this->institutionSiteId);
-                //   return $header;
-            } else {
-                $header = $this->reportMapping[$name]['fields'];
-            }
+             $header = $this->reportMapping[$name]['fields'];
         }
         $new = array();
         foreach ($header as $model => &$arrcols) {
@@ -5000,13 +4780,6 @@ class InstitutionSitesController extends AppController {
                 $row['StaffBehaviour']['date_of_behaviour'] = $this->DateTime->formatDateByConfig($row['StaffBehaviour']['date_of_behaviour']);
                 $newData[] = $row;
             }
-        } else if ($name == 'QA Report') {
-            //$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-            //$newData = $RubricsTemplate->processDataToCSVFormat($data);
-            $QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
-            $newData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
-            $header = array(array('Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
-            $newData = $QualityBatchReport->breakReportByYear($newData, 'no', $header);
         }
 
         if (!empty($newData)) {
@@ -5284,18 +5057,6 @@ class InstitutionSitesController extends AppController {
         );
         $this->set('data', $data);
         $this->set('actionName', 'genReportCensus');
-        $this->render('Reports/general');
-    }
-
-	public function reportsQuality() {
-        $this->Navigation->addCrumb('Reports - Quality');
-        $data = array('Reports - Quality' => array(
-                array('name' => 'QA Report', 'types' => array('CSV')),
-                array('name' => 'Visit Report', 'types' => array('CSV'))/* ,
-              array('name' => 'More', 'types' => array('CSV')) */
-        ));
-        $this->set('data', $data);
-        $this->set('actionName', 'genReport');
         $this->render('Reports/general');
     }
     
