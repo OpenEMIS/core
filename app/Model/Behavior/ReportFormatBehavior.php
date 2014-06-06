@@ -63,7 +63,9 @@ class ReportFormatBehavior extends ModelBehavior {
         header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
 
         $header_row = $header;
-        fputcsv($csv_file, $header_row, ',', '"');
+		if(!empty($header_row)){
+			fputcsv($csv_file, $header_row, ',', '"');
+		}
 
 		if($dataFormatted){
 			foreach ($data as $row) {

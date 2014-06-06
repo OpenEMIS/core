@@ -110,12 +110,30 @@ class InstitutionReportsController extends AppController {
 		$this->render('index');
 	}
 	
+	public function totals() {
+		$header = __('Totals');
+		$this->Navigation->addCrumb($header);
+		
+		$data = array(
+			array('name' => 'Students', 'model' => 'CensusStudent', 'params' => array('csv' => array(1, 'dataFormatted' => true)))
+		);
+		
+		foreach($data as $i => $obj) {
+			$model = ClassRegistry::init($obj['model']);
+			$formats = $model->getSupportedFormats();
+			$data[$i]['formats'] = $formats;
+		}
+		
+		$this->set(compact('data', 'header'));
+		$this->render('index');
+	}
+	
 	public function quality() {
 		$header = __('Quality');
 		$this->Navigation->addCrumb($header);
 		$data = array(
-			array('name' => 'QA Report', 'model' => 'Quality.QualityInstitutionRubric', 'params' => array('csv' => 1)),
-			array('name' => 'Visit Report', 'model' => 'Quality.QualityInstitutionVisit', 'params' => array('csv' => 1)),
+			array('name' => 'QA Report', 'model' => 'Quality.QualityInstitutionRubric', 'params' => array('csv' => array(1))),
+			array('name' => 'Visit Report', 'model' => 'Quality.QualityInstitutionVisit', 'params' => array('csv' => array(1))),
 		);
 		
 		foreach($data as $i => $obj) {
