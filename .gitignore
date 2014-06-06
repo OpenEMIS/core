@@ -58,3 +58,4 @@ app/webroot/logs/*
 *.pdf
 *.kml
 # *.xls*
+/nbproject/private/

@@ -4892,8 +4892,8 @@ class InstitutionSitesController extends AppController {
         $this->Mpdf->WriteHTML($arrData['html']);
         $this->Mpdf->Output($arrData['name'] . '.pdf', 'I');
     }
-
-	public function reportsGeneral() {
+	
+    public function reportsGeneral() {
         $this->Navigation->addCrumb('Reports - General');
         $data = array('Reports - General' => array(
                 array('name' => 'Overview and More', 'types' => array('CSV')),
