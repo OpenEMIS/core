@@ -5,7 +5,7 @@ echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
 echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Edit') . ' ' . $name);
+$this->assign('contentHeader', $this->data[$model]['name']);
 
 $this->start('contentActions');
 echo $this->Html->link(__('View'), array('action' => $_action . 'View', $this->data[$model]['id']), array('class' => 'divider'));
