@@ -5,11 +5,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_edit) {
-	$params = array('action' => $_action.'Edit');
-	if(isset($selectedGrade)) {
-		$params[] = $selectedGrade;
-	}
-	echo $this->Html->link($this->Label->get('general.edit'), $params, array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.edit'), array('action' => $_action.'Edit'), array('class' => 'divider'));
 }
 $this->end();
 
@@ -22,16 +18,18 @@ if(!empty($data)) :
 	<table class="table table-striped table-hover table-bordered">
 		<thead>
 			<tr>
-				<th><?php echo $this->Label->get('general.openemisId'); ?></th>
-				<th><?php echo $this->Label->get('general.name'); ?></th>
+				<th><?php echo $this->Label->get('EducationGrade.name'); ?></th>
+				<th><?php echo $this->Label->get('EducationSubject.name'); ?></th>
+				<th><?php echo $this->Label->get('EducationSubject.code'); ?></th>
 			</tr>
 		</thead>
 
 		<tbody>
 			<?php foreach($data as $obj) { ?>
 			<tr>
-				<td><?php echo $obj['Student']['identification_no']; ?></td>
-				<td><?php echo $obj['Student']['first_name'] . ' ' . $obj['Student']['last_name']; ?></td>
+				<td><?php echo $obj['EducationGrade']['name']; ?></td>
+				<td><?php echo $obj['EducationSubject']['name']; ?></td>
+				<td><?php echo $obj['EducationSubject']['code']; ?></td>
 			</tr>
 			<?php } ?>
 		</tbody>
