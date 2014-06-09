@@ -52,7 +52,7 @@ class AreasController extends AppController {
 			$model = 'AreaEducation';
 		}
 		$modelObj = ClassRegistry::init($model);
-		$this->Area->recover('parent', -1);
+		$modelObj->recover('parent', -1);
 		return $this->redirect(array('action' => 'index'));
 	}
 	
