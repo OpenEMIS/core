@@ -21,8 +21,10 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		'DatePicker' => array(
 			'first_date_absent', 'last_date_absent'
 		), 
-		'ControllerAction'
-		
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
 	
 	//public $hasMany = array('InstitutionSiteStaffAbsenceAttachment');
@@ -539,5 +541,95 @@ class InstitutionSiteStaffAbsence extends AppModel {
             return json_encode($result);
         }
     }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		$header = array(
+			__('First Date Absent'),
+			__('Last Date Absent'),
+			__('Full Day Absent'),
+			__('Start Time Absent'),
+			__('End Time Absent'),
+			__('Staff OpenEMIS ID'),
+			__('First Name'),
+			__('Middle Name'),
+			__('Last Name'),
+			__('Preferred Name'),
+			__('Absent Type'),
+			__('Absent Reason'),
+			__('Comment')
+		);
+
+		return $header;
+	}
+	
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			//$options['recursive'] = -1;
+			$options['fields'] = array(
+				'InstitutionSiteStaffAbsence.first_date_absent', 
+				'InstitutionSiteStaffAbsence.last_date_absent', 
+				'InstitutionSiteStaffAbsence.full_day_absent', 
+				'InstitutionSiteStaffAbsence.start_time_absent', 
+				'InstitutionSiteStaffAbsence.end_time_absent', 
+				
+				'Staff.identification_no',
+				'Staff.first_name',
+				'Staff.middle_name',
+				'Staff.last_name',
+				'Staff.preferred_name',
+				
+				'InstitutionSiteStaffAbsence.absence_type', 
+				'StaffAbsenceReason.name',
+				'InstitutionSiteStaffAbsence.comment'
+			);
+			$options['order'] = array('InstitutionSiteStaffAbsence.first_date_absent', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name');
+			$options['conditions'] = array('InstitutionSiteStaffAbsence.institution_site_id' => $institutionSiteId);
+			
+			$this->unbindModel(array('belongsTo' => array('InstitutionSite', 'ModifiedUser', 'CreatedUser')));
+
+			$data = $this->find('all', $options);
+			
+			$newData = array();
+			foreach($data AS $row){
+				$tempRow = array();
+				
+				$absence = $row['InstitutionSiteStaffAbsence'];
+				$staff = $row['Staff'];
+				$reason = $row['StaffAbsenceReason'];
+				
+				$tempRow[] = $this->formatDateByConfig($absence['first_date_absent']);
+				$tempRow[] = $this->formatDateByConfig($absence['last_date_absent']);
+				$tempRow[] = $absence['full_day_absent'];
+				$tempRow[] = $absence['start_time_absent'];
+				$tempRow[] = $absence['end_time_absent'];
+				
+				$tempRow[] = $staff['identification_no'];
+				$tempRow[] = $staff['first_name'];
+				$tempRow[] = $staff['middle_name'];
+				$tempRow[] = $staff['last_name'];
+				$tempRow[] = $staff['preferred_name'];
+				
+				$tempRow[] = $absence['absence_type'];
+				$tempRow[] = $reason['name'];
+				$tempRow[] = $absence['comment'];
+				
+				$newData[] = $tempRow;
+			}
+
+			return $newData;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return 'Report_Staff_Attendance';
+	}
 	
 }
