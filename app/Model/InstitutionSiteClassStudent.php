@@ -158,4 +158,30 @@ class InstitutionSiteClassStudent extends AppModel {
 			return $controller->redirect(array('action' => $this->_action));
 		}
 	}
+	
+	// used by InstitutionSiteClass.classes
+	public function getGenderTotalByClass($classId) {
+		$joins = array(
+			array(
+				'table' => 'institution_site_class_grades',
+				'alias' => 'InstitutionSiteClassGrade',
+				'conditions' => array(
+					'InstitutionSiteClassGrade.education_grade_id = InstitutionSiteClassStudent.education_grade_id',
+					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClassStudent.institution_site_class_id',
+					'InstitutionSiteClassGrade.institution_site_class_id = ' . $classId
+				)
+			),
+			array('table' => 'students', 'alias' => 'Student')
+		);
+
+		$gender = array('M' => 0, 'F' => 0);
+		$studentConditions = array('Student.id = InstitutionSiteClassStudent.student_id');
+		
+		foreach ($gender as $i => $val) {
+			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
+			$joins[1]['conditions'] = $studentConditions;
+			$gender[$i] = $this->find('count', array('recursive' => -1, 'joins' => $joins));
+		}
+		return $gender;
+	}
 }

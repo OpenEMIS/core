@@ -14,7 +14,7 @@
 		?>
 	</div>
 	
-	<?php if(isset($studentActionOptions)) : ?>
+	<?php if(isset($studentActionOptions) && !empty($studentActionOptions)) : ?>
 		<div class="col-md-6">
 			<?php
 				echo $this->Form->input('education_grade_id', array(
