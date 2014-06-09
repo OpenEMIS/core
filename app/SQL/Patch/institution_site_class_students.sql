@@ -17,3 +17,5 @@ CREATE TABLE IF NOT EXISTS `institution_site_class_students` (
   KEY `institution_site_class_id` (`institution_site_class_id`),
   KEY `education_grade_id` (`education_grade_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+ALTER TABLE `institution_site_class_subjects` ADD `status` INT( 1 ) NOT NULL ;
