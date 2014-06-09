@@ -237,10 +237,8 @@ class InstitutionSiteClass extends AppModel {
 		$data = $this->findById($id);
 
 		if (!empty($data)) {
-			if ($controller->request->is('post')) {//pr($controller->request->data);die;
-				//$data = $controller->data['InstitutionSiteClass'];
+			if ($controller->request->is('post')) {
 				$this->saveAll($controller->request->data);
-				//ClassRegistry::init('InstitutionSiteClassGrade')->saveAll($data['InstitutionSiteClassGrade']);
 				$controller->Message->alert('general.edit.success');
 				$controller->redirect(array('action' => $this->_action . 'View', $id));
 			} else {
@@ -278,7 +276,7 @@ class InstitutionSiteClass extends AppModel {
 			}
 			
 			$name = $data['InstitutionSiteClass']['name'];
-			$controller->Navigation->addCrumb(__('Edit') . ' ' . $name);
+			$controller->Navigation->addCrumb($name);
 			
 			$shiftMax = intval($controller->ConfigItem->getValue('no_of_shifts'));
 			$shiftOptions = array();
