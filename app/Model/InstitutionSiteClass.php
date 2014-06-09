@@ -111,9 +111,7 @@ class InstitutionSiteClass extends AppModel {
 			'classesView/'.$id => __('Class Details'),
 			'classesStudent' => __('Students'),
 			'classesStaff' => __('Staff'),
-			'classesSubject' => __('Subjects'),
-			'classesAttendance' => __('Attendance'),
-			'classesResult' => __('Result')
+			'classesSubject' => __('Subjects')
 		);
 		return $options;
 	}
