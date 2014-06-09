@@ -108,6 +108,9 @@ class LabelHelper extends AppHelper {
 			'education_field_of_study_id' => 'Field of Study',
 			'education_certification_id' => 'Certification'
 		),
+		'EducationProgramme' => array(
+			'name' => 'Education Programme'
+		),
 		'EducationGrade' => array(
 			'name' => 'Education Grade'
 		),
