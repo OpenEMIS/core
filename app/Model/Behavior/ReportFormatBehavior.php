@@ -51,7 +51,9 @@ class ReportFormatBehavior extends ModelBehavior {
 		}
 		
 		$data = $model->reportsGetData($args);
+		//pr($data);
 		$header = $model->reportsGetHeader($args);
+		//pr($header);die;
 		$fileName = $model->reportsGetFileName($args);
 
 		$downloadedFile = $fileName . '.csv';

@@ -25,8 +25,8 @@ echo $this->Form->create('InstitutionSiteStaffAbsence', array(
 <div id="classes" class=" institutionAttendance">
 	<div class="topDropDownWrapper page-controls"  url="InstitutionSites/attendanceStaffAbsence">
 		<?php 
-			echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
-			echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterAttendance(this)'));
+			echo $this->Form->input('school_year_id', array('options' => $yearList, 'value' => $yearId, 'id' => 'schoolYearId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStaffAttendance(this)'));
+			echo $this->Form->input('week_id', array('options' => $weekList, 'value' => $weekId, 'id' => 'weekId', 'class' => 'form-control', 'onchange' => 'objInstitutionSite.filterStaffAttendance(this)'));
 		?>
 	</div>
 	<div id="mainlist">
