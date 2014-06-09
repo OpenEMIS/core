@@ -14,6 +14,49 @@ $this->end();
 
 $this->start('contentBody');
 echo $this->element('../InstitutionSites/classes/controls');
-echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+?>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('SchoolYear.name'); ?></div>
+	<div class="col-md-6"><?php echo $data['SchoolYear']['name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.no_of_seats'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['no_of_seats']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.no_of_shifts'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['no_of_shifts']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('EducationGrade.name'); ?></div>
+	<div class="col-md-6">
+		<?php
+		foreach($grades as $g) {
+			echo $g . '<br />';
+		}
+		?>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.modified_by'); ?></div>
+	<div class="col-md-6"><?php echo $data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.modified'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['modified']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.created_by'); ?></div>
+	<div class="col-md-6"><?php echo $data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.created'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['created']; ?></div>
+</div>
+<?php
 $this->end();
 ?>

@@ -23,7 +23,7 @@ class InstitutionSiteClassGrade extends AppModel {
 		)
 	);
 	
-	// used by InstitutionSite classes, InstitutionSiteClassStudent
+	// used by InstitutionSite classes
 	public function getGradesByClass($classId) {
 		$data = $this->find('all', array(
 			'fields' => array('InstitutionSiteClassGrade.id', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name'),
@@ -44,7 +44,10 @@ class InstitutionSiteClassGrade extends AppModel {
 					'conditions' => array('EducationCycle.id = EducationProgramme.education_cycle_id')
 				)
 			),
-			'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id' => $classId),
+			'conditions' => array(
+				'InstitutionSiteClassGrade.institution_site_class_id' => $classId,
+				'InstitutionSiteClassGrade.status' => 1
+			),
 			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
 		));
 		
