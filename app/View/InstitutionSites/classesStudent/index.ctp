@@ -5,7 +5,11 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_edit) {
-	echo $this->Html->link($this->Label->get('general.edit'), array('action' => $_action.'Edit', $selectedGrade), array('class' => 'divider'));
+	$params = array('action' => $_action.'Edit');
+	if(isset($selectedGrade)) {
+		$params[] = $selectedGrade;
+	}
+	echo $this->Html->link($this->Label->get('general.edit'), $params, array('class' => 'divider'));
 }
 $this->end();
 
