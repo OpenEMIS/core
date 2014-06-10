@@ -47,7 +47,7 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	public function classesStudent($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id);
+		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
 		if(!empty($studentActionOptions)) {
 			$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
 			$data = $this->find('all', array(
@@ -70,7 +70,7 @@ class InstitutionSiteClassStudent extends AppModel {
 	public function classesStudentEdit($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
 		$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : 0;
-		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id);
+		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
 		if($controller->request->is('get')) {
 			$categoryOptions = $this->StudentCategory->findList(true);
 			$data = $this->Student->find('all', array(

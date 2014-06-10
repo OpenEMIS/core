@@ -69,6 +69,9 @@ class MessageComponent extends Component {
 				'saving' => array('type' => 'error', 'msg' => 'The record is not added due to errors encountered.')
 			)
 		),
+		'SchoolYear' => array(
+			'noAvailableYear' => array('type' => 'warn', 'msg' => 'There are no school years available')
+		),
 		'institutionSiteAttendance' => array(
 			'student' => array(
 				'failed' => array(

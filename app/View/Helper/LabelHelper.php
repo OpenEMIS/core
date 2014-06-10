@@ -69,6 +69,10 @@ class LabelHelper extends AppHelper {
 			'comment' => 'Comment',
 			'view_details' => 'View Details'
 		),
+		'gender' => array(
+			'm' => 'Male',
+			'f' => 'Female'
+		),
 		'password'=> array(
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',

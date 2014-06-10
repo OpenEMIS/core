@@ -30,7 +30,7 @@ class SchoolYear extends AppModel {
 		return true;
 	}
 	
-	public function getAvailableYears($list = true, $order='DESC') {
+	public function getAvailableYears($list = true, $order='ASC') {
 		if($list) {
 			$result = $this->find('list', array(
 				'fields' => array('SchoolYear.id', 'SchoolYear.name'),
