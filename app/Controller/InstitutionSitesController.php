@@ -167,7 +167,9 @@ class InstitutionSitesController extends AppController {
         'classes' => 'InstitutionSiteClass',
 		'attachments' => 'InstitutionSiteAttachment',
 		'additional' => 'InstitutionSiteCustomField',
-		'shifts' => 'InstitutionSiteShift'
+		'shifts' => 'InstitutionSiteShift',
+		'positions' => 'InstitutionSitePosition',
+		'staff' => 'InstitutionSiteStaff',
     );
     
     private $ReportData = array(); //param 1 name ; param2 type
@@ -2028,7 +2030,7 @@ class InstitutionSitesController extends AppController {
         $this->set('statusOptions', $statusOptions);
     }
 
-    public function staff() {
+    /*public function staff() {
         $this->Navigation->addCrumb('List of Staff');
         $page = isset($this->params->named['page']) ? $this->params->named['page'] : 1;
         $model = 'Staff';
@@ -2220,7 +2222,7 @@ class InstitutionSitesController extends AppController {
             $this->redirect(array('action' => 'staff'));
         }
     }
-
+*/
     public function staffAddPosition() {
         $this->layout = 'ajax';
 

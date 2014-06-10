@@ -20,6 +20,8 @@ class OptionComponent extends Component {
 			'yesno' => array(1 => __('Yes'), 0 => __('No')),
 			'bloodtype' => array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-'),
 			'passfail' => array(1 => __('Passed'), 0 => __('Failed')),
+			'enableOptions' => array(0 => __('Disabled'),1 => __('Enabled')),
+			'teachOptions' => array(0 => __('Non-Teaching'), 1 => __('Teaching')),
 		);
 		
 		$index = explode('.', $code);
