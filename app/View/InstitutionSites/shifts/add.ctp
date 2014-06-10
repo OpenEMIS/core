@@ -6,6 +6,9 @@ echo $this->Html->script('jquery-ui.min', false);
 echo $this->Html->script('shift', false);
 echo $this->Html->script('app.date', false);
 
+echo $this->Html->css('../js/plugins/timepicker/bootstrap-timepicker', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/timepicker/bootstrap-timepicker', false);
+
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Add Shift'));
 
@@ -32,9 +35,11 @@ $this->start('contentBody');
 	$labelOptions['text'] = $this->Label->get('general.school_year');
 	echo $this->Form->input('school_year_id', array('options' => $yearOptions, 'label' => $labelOptions));
 
-	echo $this->Form->input('start_time');
+	//echo $this->Form->input('start_time');
+	echo $this->FormUtility->timepicker('start_time', array('id' => 'startTime'));
 
-	echo $this->Form->input('end_time');
+	//echo $this->Form->input('end_time');
+	echo $this->FormUtility->timepicker('end_time', array('id' => 'endTime'));
 
 	$labelOptions['text'] = $this->Label->get('general.location');
 	echo $this->Form->input('location_institution_site_name', array('value' => $institutionSiteName, 'id' => 'locationName', 'label' => $labelOptions));
