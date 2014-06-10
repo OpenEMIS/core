@@ -31,7 +31,7 @@ $this->start('contentBody');
 <div class="table-responsive">
 <table class="table table-striped table-hover table-bordered">
     <thead url="<?php echo $this->params['controller'];?>/resultView">
-        <tr class="table_head">
+        <tr>
        		<td class="table_cell"><?php echo __('Date'); ?></td>
             <td class="table_cell"><?php echo __('Location'); ?></td>
             <td class="table_cell"><?php echo __('Course'); ?></td>

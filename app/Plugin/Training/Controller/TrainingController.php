@@ -123,13 +123,13 @@ class TrainingController extends TrainingAppController {
     }
 
     public function ajax_find_trainee($index,$trainingCourseID) {
-       if($this->request->is('ajax')) {
+        //if($this->request->is('ajax')) {
             $this->autoRender = false;
             $search = $this->params->query['term'];
             $data = $this->TrainingSessionTrainee->autocomplete($search,$index,$trainingCourseID);
  
             return json_encode($data);
-       }
+       //}
     }  
 
     //----------------------------------------------------------------------------
