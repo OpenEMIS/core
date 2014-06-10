@@ -305,7 +305,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			}
 		}
 		
-		$studentList = $controller->InstitutionSiteClassGradeStudent->getStudentsByClass($classId);
+		$InstitutionSiteClassStudentModel = ClassRegistry::init('InstitutionSiteClassStudent');
+		
+		$studentList = $InstitutionSiteClassStudentModel->getStudentsByClass($classId);
 		if(empty($studentList)){
 			$controller->Message->alert('institutionSiteAttendance.no_student');
 		}

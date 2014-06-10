@@ -230,6 +230,34 @@ class InstitutionSiteClassStudent extends AppModel {
 		return $gender;
 	}
 	
+	public function getStudentsByClass($classId) {
+		$conditions = array(
+			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+		);
+
+		$data = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array(
+				'DISTINCT Student.id',
+				'Student.identification_no',
+				'Student.first_name',
+				'Student.middle_name',
+				'Student.last_name',
+				'Student.preferred_name'
+			),
+			'joins' => array(
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
+				)
+			),
+			'conditions' => $conditions
+		));
+
+		return $data;
+	}
+	
 	public function reportsGetHeader($args) {
 		//$institutionSiteId = $args[0];
 		$index = $args[1];
