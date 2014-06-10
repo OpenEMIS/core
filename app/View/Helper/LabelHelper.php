@@ -69,6 +69,10 @@ class LabelHelper extends AppHelper {
 			'comment' => 'Comment',
 			'view_details' => 'View Details'
 		),
+		'gender' => array(
+			'm' => 'Male',
+			'f' => 'Female'
+		),
 		'password'=> array(
 			'oldPassword' => 'Current Password',
 			'retypePassword' => 'Retype New Password',
@@ -107,6 +111,16 @@ class LabelHelper extends AppHelper {
 			'education_cycle_id' => 'Education Cycle',
 			'education_field_of_study_id' => 'Field of Study',
 			'education_certification_id' => 'Certification'
+		),
+		'EducationProgramme' => array(
+			'name' => 'Education Programme'
+		),
+		'EducationGrade' => array(
+			'name' => 'Education Grade'
+		),
+		'EducationSubject' => array(
+			'name' => 'Subject',
+			'code' => 'Subject Code'
 		),
 		'EducationGradeSubject' => array(
 			'hours_required' => 'Hours Required'
