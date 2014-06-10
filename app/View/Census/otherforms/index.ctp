@@ -3,39 +3,25 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->css('census', 'stylesheet', array('inline' => false));
 
 echo $this->Html->script('census', false);
+
+$this->extend('/Elements/layout/container');
+$this->assign('contentHeader', __('Other Forms'));
+
+$this->start('contentActions');
+if($_edit && $isEditable) {
+			echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit', $selectedYear), array('class' => 'divider'));
+}
+$this->end();
+
+$this->start('contentBody');
+echo $this->element('census/year_options');
 ?>
 
-<?php echo $this->element('breadcrumb'); ?>
-
-<div id="grid" class="content_wrapper">
-	<h1>
-		<span><?php echo __('Other Forms'); ?></span>
-		<?php
-		if($_edit && $isEditable) {
-			echo $this->Html->link(__('Edit'), array('action' => 'otherformsEdit', $selectedYear), array('class' => 'divider'));
-		}
-		?>
-	</h1>
-	
-	<div class="row year">
-		<div class="label"><?php echo __('Year'); ?></div>
-		<div class="value">
-			<?php
-			echo $this->Form->input('school_year_id', array(
-				'label' => false,
-				'div' => false,
-				'options' => $years,
-				'default' => $selectedYear,
-				'onchange' => 'Census.navigateYear(this)',
-				'url' => 'Census/' . $this->action
-			));
-			?>
-		</div>
-	</div>
+<div id="grid" class="">
 
 	<?php foreach($data as $arrval) { ?>
 	<div class="custom_grid">
-		<fieldset class="custom_section_break">
+		<fieldset class="section_break">
 			<legend><?php echo $arrval['CensusGrid']['name']; ?></legend>
 		</fieldset>
 		
@@ -43,23 +29,25 @@ echo $this->Html->script('census', false);
 		<div class="x_title"><?php echo $arrval['CensusGrid']['x_title']; ?></div>
 		
 		<div class="table_wrapper">
-			<div class="table">
-				<div class="table_head">
-					<div class="table_cell y_col">&nbsp;</div>
+			<table class="table table-striped table-hover table-bordered">
+				<thead>
+					<tr>
+					<th class="table_cell y_col">&nbsp;</th>
 					<?php foreach($arrval['CensusGridXCategory'] as $statVal) { ?>
-					<div class="table_cell"><?php echo $statVal['name'] ?></div>
+					<th class="table_cell"><?php echo $statVal['name'] ?></th>
 					<?php } ?>
-				</div>
+					</tr>
+				</thead>
 				
-				<div class="table_body" id="<?php echo $statVal['name']; ?>_section">
+				<tbody id="<?php echo $statVal['name']; ?>_section">
 				<?php
 				$ctr = 1;
 				foreach($arrval['CensusGridYCategory']  as $yCatId => $yCatName) {
 				?>
-					<div class="table_row<?php echo $ctr++%2==0? ' even' : ''; ?>">
-						<div class="table_cell"><?php echo $yCatName['name']; ?></div>
+					<tr class="table_row<?php echo $ctr++%2==0? ' even' : ''; ?>">
+						<td class="table_cell"><?php echo $yCatName['name']; ?></td>
 						<?php foreach($arrval['CensusGridXCategory'] as $xCatId => $xCatName) { ?>
-						<div class="table_cell">
+						<td class="table_cell">
 							<?php 
 							$val = isset($arrval['answer'][$xCatName['id']][$yCatName['id']]['value'])
 								 ? $arrval['answer'][$xCatName['id']][$yCatName['id']]['value']
@@ -67,12 +55,12 @@ echo $this->Html->script('census', false);
 							
 							echo $val;
 							?>
-						</div>
+						</td>
 						<?php } ?>
-					</div>
+					</tr>
 				<?php } ?>
-				</div>
-			</div>
+				</tbody>
+			</table>
 		</div>
 	</div>
 	<?php }	?>
@@ -80,7 +68,7 @@ echo $this->Html->script('census', false);
 	<?php		
 		foreach($datafields as $arrVals){
 			if($arrVals['CensusCustomField']['type'] == 1){//Label
-				echo '<fieldset class="custom_section_break">
+				echo '<fieldset class="section_break">
 							<legend>'.$arrVals['CensusCustomField']['name'].'</legend>
 					  </fieldset>';
 			}elseif($arrVals['CensusCustomField']['type'] == 2) {//Text
@@ -165,3 +153,4 @@ echo $this->Html->script('census', false);
 		}
 	?>
 </div>
+<?php $this->end(); ?>

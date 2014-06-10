@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteStaff extends AppModel {
+	public $actsAs = array('ControllerAction');
 	public $useTable = 'institution_site_staff';
 	public $belongsTo = array('StaffStatus', 'StaffCategory', 'StaffPositionTitle', 'StaffPositionGrade', 'StaffPositionStep');
 	
@@ -210,4 +211,67 @@ class InstitutionSiteStaff extends AppModel {
 		));
 		return $count;
 	}
+	
+	
+	
+	 public function staff($controller, $params) {
+        $controller->Navigation->addCrumb('List of Staff');
+        $page = isset($params->named['page']) ? $params->named['page'] : 1;
+        $model = 'Staff';
+        $orderBy = $model . '.first_name';
+        $order = 'asc';
+        $yearOptions = $controller->SchoolYear->getYearListValues('start_year');
+        $selectedYear = isset($params['pass'][0]) ? $params['pass'][0] : '';
+        $prefix = sprintf('InstitutionSite%s.List.%%s', $model);
+        if ($controller->request->is('post')) {
+            $selectedYear = $controller->request->data[$model]['school_year'];
+            $orderBy = $controller->request->data[$model]['orderBy'];
+            $order = $controller->request->data[$model]['order'];
+
+            $controller->Session->write(sprintf($prefix, 'order'), $order);
+            $controller->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
+        } else {
+            if ($controller->Session->check(sprintf($prefix, 'orderBy'))) {
+                $orderBy = $controller->Session->read(sprintf($prefix, 'orderBy'));
+            }
+            if ($controller->Session->check(sprintf($prefix, 'order'))) {
+                $order = $controller->Session->read(sprintf($prefix, 'order'));
+            }
+        }
+        $conditions = array('year' => $selectedYear, 'InstitutionSiteStaff.institution_site_id' => $controller->institutionSiteId);
+
+        $controller->paginate = array('limit' => 15, 'maxLimit' => 100, 'order' => sprintf('%s %s', $orderBy, $order));
+        $data = $controller->paginate('InstitutionSiteStaff', $conditions);
+
+        // Checking if user has access to add
+        $_add_staff = $controller->AccessControl->check('InstitutionSites', 'staffAdd');
+        $controller->set('_add_staff', $_add_staff);
+        // End Access Control
+
+        $controller->set('page', $page);
+        $controller->set('orderBy', $orderBy);
+        $controller->set('order', $order);
+        $controller->set('yearOptions', $yearOptions);
+        $controller->set('selectedYear', $selectedYear);
+        $controller->set('data', $data);
+    }
+	
+	
+	public function staffAdd($controller, $params) {
+        $controller->Navigation->addCrumb('Add Staff');
+        $yearRange = $controller->SchoolYear->getYearRange();
+        $categoryOptions = $this->StaffCategory->findList(true);
+        $positionTitleptions = $this->StaffPositionTitle->findList(true);
+        $positionGradeOptions = $this->StaffPositionGrade->findList(true);
+      //  $positionStepOptions = $this->StaffPositionStep->findList(true);
+        $statusOptions = $this->StaffStatus->findList(true);
+
+        $this->set('minYear', current($yearRange));
+        $this->set('maxYear', array_pop($yearRange));
+        $this->set('categoryOptions', $categoryOptions);
+        $this->set('positionTitleptions', $positionTitleptions);
+        $this->set('positionGradeOptions', $positionGradeOptions);
+       // $this->set('positionStepOptions', $positionStepOptions);
+        $this->set('statusOptions', $statusOptions);
+    }
 }

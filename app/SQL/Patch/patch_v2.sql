@@ -42,26 +42,26 @@ DELETE
 FROM `navigations`
 WHERE `module` LIKE 'Institution'
 AND `controller` LIKE 'Institutions'
-AND `header` LIKE 'GENERAL'
+AND `header` LIKE 'GENERAL';
 
 DELETE 
 FROM `navigations`
 WHERE `module` LIKE 'Institution'
 AND `controller` LIKE 'Institutions'
-AND `header` LIKE 'INSTITUTION SITE'
+AND `header` LIKE 'INSTITUTION SITE';
 
 DELETE 
 FROM `navigations`
 WHERE `module` LIKE 'Institution'
 AND `controller` LIKE 'InstitutionSites'
-AND `header` LIKE 'INSTITUTION SITE'
+AND `header` LIKE 'INSTITUTION SITE';
 
 UPDATE `navigations` SET `controller` = 'InstitutionSites' 
 WHERE `module` LIKE 'Institution'
 AND `controller` LIKE 'Institutions'
-AND `title` LIKE 'List of Institutions'
-
+AND `title` LIKE 'List of Institutions';
+ 
 UPDATE `navigations` SET `controller` = 'InstitutionSites' 
 WHERE `module` LIKE 'Institution'
 AND `controller` LIKE 'Institutions'
-AND `title` LIKE 'Add new Institution'
+AND `title` LIKE 'Add new Institution';

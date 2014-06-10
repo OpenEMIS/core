@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SchoolYear extends AppModel {
+	public $actsAs = array('FieldOption');
 	public function beforeSave($options = array()) {
 		$attr = array('start_date' => 'start_year', 'end_date' => 'end_year');
 		foreach($attr as $date => $year) {

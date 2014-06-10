@@ -54,12 +54,12 @@ $this->start('contentBody');
 	</fieldset>
 	
 	<fieldset class="section_break">
-		<legend><?php echo __('Institution Sites'); ?></legend>
+		<legend><?php echo __('Institutions'); ?></legend>
 		<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead class="table_head">
 				<tr>
-					<td class="table_cell"><?php echo __('Institution Site'); ?></td>
+					<td class="table_cell"><?php echo __('Institution'); ?></td>
 				</tr>
 			</thead>
 			
