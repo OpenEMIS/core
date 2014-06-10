@@ -17,8 +17,65 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteClass extends AppModel {
-	public $belongsTo = array('SchoolYear');
-	//public $hasMany = array('InstitutionSiteClassStaff');
+	public $belongsTo = array(
+		'SchoolYear',
+		'InstitutionSite',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id'
+		)
+	);
+	public $hasMany = array(
+		'InstitutionSiteClassGrade',
+		'InstitutionSiteClassStaff',
+		'InstitutionSiteClassStudent',
+		'InstitutionSiteClassSubject'
+	);
+	
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid name'
+			)
+		),
+		'school_year_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid school year'
+			)
+		),
+		'no_of_seats' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter the number of seats'
+			),
+			'numeric' => array(
+				'rule' => 'numeric',
+				'message' => 'Please enter a numeric value'
+			)
+		),
+		'no_of_shifts' => array(
+			'notEmpty' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter the number of shifts'
+			),
+			'numeric' => array(
+				'rule' => 'numeric',
+				'message' => 'Please select a numeric value'
+			)
+		)
+	);
 	
 	public $actsAs = array(
 		'CascadeDelete' => array(
@@ -79,8 +136,6 @@ class InstitutionSiteClass extends AppModel {
 	
 	public function beforeAction($controller, $action) {
 		parent::beforeAction($controller, $action);
-		//$controller->Navigation->addCrumb($this->_header);
-		//$controller->set('header', __($this->_header));
 		$controller->set('_action', $this->_action);
 		$controller->set('selectedAction', $this->_action . 'View');
 	}
@@ -111,107 +166,68 @@ class InstitutionSiteClass extends AppModel {
 			'classesView/'.$id => __('Class Details'),
 			'classesStudent' => __('Students'),
 			'classesStaff' => __('Staff'),
-			'classesSubject' => __('Subjects'),
-			'classesAttendance' => __('Attendance'),
-			'classesResult' => __('Result')
+			'classesSubject' => __('Subjects')
 		);
 		return $options;
 	}
 	
 	public function classes($controller, $params) {
 		$controller->Navigation->addCrumb('List of Classes');
-		$yearOptions = $controller->SchoolYear->getYearList();
-		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearOptions);
-		$data = $controller->InstitutionSiteClass->getListOfClasses($selectedYear, $controller->institutionSiteId);
-
-		// Checking if user has access to add
-		$_add_class = $controller->AccessControl->check('InstitutionSites', 'classesAdd');
-		// End Access Control
+		$yearOptions = $this->SchoolYear->getYearList();
+		$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+		$data = $this->getListOfClasses($selectedYear, $controller->institutionSiteId);
 		
-		$controller->set(compact('yearOptions', 'selectedYear', 'data', '_add_class'));
+		$controller->set(compact('yearOptions', 'selectedYear', 'data'));
 	}
-
+	
 	public function classesAdd($controller, $params) {
-		if ($controller->request->is('get')) {
-			$controller->Navigation->addCrumb('Add Class');
-			$years = $controller->SchoolYear->getYearList();
-			$yearOptions = array();
-
-			$programmeOptions = array();
-			foreach ($years as $yearId => $year) {
-				$programmes = $controller->InstitutionSiteProgramme->getProgrammeOptions($controller->institutionSiteId, $yearId);
-				if (!empty($programmes)) {
-					$yearOptions[$yearId] = $year;
-					if (empty($programmeOptions)) {
-						$programmeOptions = $programmes;
-					}
-				}
+		$controller->Navigation->addCrumb('Add Class');
+		$shiftMax = intval(ClassRegistry::init('ConfigItem')->getValue('no_of_shifts'));
+		$shiftOptions = array();
+		if($shiftMax > 1){
+			for($i=1; $i <= $shiftMax; $i++){
+				$shiftOptions[$i] = $i;
 			}
-			$displayContent = !empty($programmeOptions);
-
-			if ($displayContent) {
-				$gradeOptions = array();
-				$selectedProgramme = false;
-				// loop through the programme list until a valid list of grades is found
-				foreach ($programmeOptions as $programmeId => $name) {
-					$gradeOptions = $controller->EducationGrade->getGradeOptions($programmeId, array(), true);
-					if (!empty($gradeOptions)) {
-						$selectedProgramme = $programmeId;
-						break;
-					}
-				}
-				
-				$shiftMax = intval($controller->ConfigItem->getValue('no_of_shifts'));
-				$shiftOptions = array();
-				if($shiftMax > 1){
-					for($i=1; $i <= $shiftMax; $i++){
-						$shiftOptions[$i] = $i;
-					}
-				}else{
-					$shiftOptions[1] = 1;
-				}
-				//pr($shiftOptions);
-				
-				$controller->set(compact('yearOptions', 'programmeOptions', 'selectedProgramme', 'gradeOptions', 'shiftOptions'));
-			} else {
-				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-			}
-			
-			$controller->set(compact('displayContent'));
-		} else {
-			$classData = $controller->data['InstitutionSiteClass'];
-			$classData['institution_site_id'] = $controller->institutionSiteId;
-			$controller->InstitutionSiteClass->create();
-			$classObj = $controller->InstitutionSiteClass->save($classData);
-			if ($classObj) {
-				$classId = $classObj['InstitutionSiteClass']['id'];
-				$gradesData = $controller->data['InstitutionSiteClassGrade'];
-				$grades = array();
-				foreach ($gradesData as $obj) {
-					$gradeId = $obj['education_grade_id'];
-					if ($gradeId > 0 && !in_array($gradeId, $grades)) {
-						$grades[] = $obj['education_grade_id'];
-						$obj['institution_site_class_id'] = $classId;
-						$controller->InstitutionSiteClassGrade->create();
-						$controller->InstitutionSiteClassGrade->save($obj);
-					}
-				}
-			}
-			$controller->redirect(array('action' => 'classesEdit', $classId));
+		}else{
+			$shiftOptions[1] = 1;
 		}
+		$institutionSiteId = $controller->Session->read('InstitutionSiteId');
+		$yearOptions = $this->SchoolYear->getAvailableYears();
+		if(!empty($yearOptions)) {
+			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
+			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
+			$controller->set(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
+			
+			if($controller->request->is('post') || $controller->request->is('put')) {
+				$data = $controller->request->data;
+				if(isset($data['InstitutionSiteClassGrade'])) {
+					foreach($data['InstitutionSiteClassGrade'] as $i => $obj) {
+						if(empty($obj['status'])) {
+							unset($data['InstitutionSiteClassGrade'][$i]);
+						}
+					}
+				}
+				$result = $this->saveAll($data);
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => $this->_action, $selectedYear));
+			}
+		} else {
+			$controller->Message->alert('SchoolYear.noAvailableYear');
+			return $controller->redirect(array('action' => $this->_action));
+		}
+		
 	}
 	
 	public function classesView($controller, $params) {
 		$id = $controller->params['pass'][0];
-		$controller->Session->write('InstitutionSiteClassId', $id);
 		$controller->Session->write($this->alias.'.id', $id);
 		$data = $this->findById($id);
 		
 		if (!empty($data)) {
 			$className = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($className);
-			$fields = $this->getDisplayFields($controller);
-			$controller->set(compact('data', 'fields'));
+			$grades = $this->InstitutionSiteClassGrade->getGradesByClass($id);
+			$controller->set(compact('data', 'grades'));
 			$controller->set('actionOptions', $this->getClassActions($controller, $id));
 		} else {
 			$controller->Message->alert('general.notExists');
@@ -220,32 +236,27 @@ class InstitutionSiteClass extends AppModel {
 	}
 
 	public function classesEdit($controller, $params) {
-		$classId = $controller->params['pass'][0];
-		$classObj = $controller->InstitutionSiteClass->getClass($classId);
+		$id = $params->pass[0];
+		$data = $this->findById($id);
 
-		if (!empty($classObj)) {
-			if ($controller->request->is('post')) {
-				$data = $controller->data['InstitutionSiteClass'];
-				$data['id'] = $classId;
-				//pr($data);
-				$controller->InstitutionSiteClass->save($data);
-				$controller->redirect(array('action' => 'classesView', $classId));
+		if (!empty($data)) {
+			if($controller->request->is('post') || $controller->request->is('put')) {
+				if($this->saveAll($controller->request->data)) {
+					$controller->Message->alert('general.edit.success');
+				} else {
+					$controller->Message->alert('general.edit.failed');
+				}
+				$controller->redirect(array('action' => $this->_action . 'View', $id));
+			} else {
+				$controller->request->data = $data;
+				$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForClass($id);
+				$controller->set('grades', $grades);
 			}
 			
-			$className = $classObj['InstitutionSiteClass']['name'];
-			$controller->Navigation->addCrumb(__('Edit') . ' ' . $className);
-
-			$grades = $controller->InstitutionSiteClassGrade->getGradesByClass($classId);
-			$students = $controller->InstitutionSiteClassGradeStudent->getStudentsByGrade(array_keys($grades));
-			$staffs = $controller->InstitutionSiteClassStaff->getStaffs($classId);
-			$subjects = $controller->InstitutionSiteClassSubject->getSubjects($classId);
-			$studentCategoryOptions = $controller->StudentCategory->findList(true);
+			$name = $data[$this->alias]['name'];
+			$controller->Navigation->addCrumb($name);
 			
-			$year = $classObj['SchoolYear']['name'];
-			$noOfSeats = $classObj['InstitutionSiteClass']['no_of_seats'];
-			$noOfShifts = $classObj['InstitutionSiteClass']['no_of_shifts'];
-			
-			$shiftMax = intval($controller->ConfigItem->getValue('no_of_shifts'));
+			$shiftMax = intval(ClassRegistry::init('ConfigItem')->getValue('no_of_shifts'));
 			$shiftOptions = array();
 			if($shiftMax > 1){
 				for($i=1; $i <= $shiftMax; $i++){
@@ -254,31 +265,19 @@ class InstitutionSiteClass extends AppModel {
 			}else{
 				$shiftOptions[1] = 1;
 			}
-			//pr($shiftOptions);
-			
-			$controller->set(compact('classId', 'className', 'year', 'grades', 'students', 'staffs', 'noOfSeats', 'noOfShifts', 'studentCategoryOptions', 'subjects', 'shiftOptions'));
+			$controller->set(compact('shiftOptions'));
 		} else {
-			$controller->redirect(array('action' => 'classesList'));
+			$controller->Message->alert('general.notExists');
+			$controller->redirect(array('action' => $this->_action));
 		}
 	}
 
 	public function classesDelete($controller, $params) {
-		$id = $controller->params['pass'][0];
-		$name = $controller->InstitutionSiteClass->field('name', array('InstitutionSiteClass.id' => $id));
-		$controller->InstitutionSiteClass->delete($id);
-		$controller->Utility->alert($name . ' have been deleted successfully.');
-		$controller->redirect(array('action' => 'classes'));
-	}
-	
-	public function isNameExists($name, $institutionSiteId, $yearId) {
-		$count = $this->find('count', array(
-			'conditions' => array(
-				'InstitutionSiteClass.name LIKE' => $name,
-				'InstitutionSiteClass.institution_site_id' => $institutionSiteId,
-				'InstitutionSiteClass.school_year_id' => $yearId
-			)
-		));
-		return $count>0;
+		$id = $params->pass[0];
+		$obj = $this->findById($id);
+		$this->delete($id);
+		$controller->Message->alert('general.delete.success');
+		$controller->redirect(array('action' => $this->_action, $obj[$this->alias]['school_year_id']));
 	}
 	
 	public function getClass($classId, $institutionSiteId=0) {
@@ -293,9 +292,6 @@ class InstitutionSiteClass extends AppModel {
 	}
 	
 	public function getListOfClasses($yearId, $institutionSiteId) {
-		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
-		$InstitutionSiteClassGradeStudent = ClassRegistry::init('InstitutionSiteClassGradeStudent');
-		
 		$classes = $this->find('list', array(
 			'fields' => array('InstitutionSiteClass.id', 'InstitutionSiteClass.name'),
 			'conditions' => array(
@@ -309,8 +305,8 @@ class InstitutionSiteClass extends AppModel {
 		foreach($classes as $id => $name) {
 			$data[$id] = array(
 				'name' => $name,
-				'grades' => $InstitutionSiteClassGrade->getGradesByClass($id),
-				'gender' => $InstitutionSiteClassGradeStudent->getGenderTotalByClass($id)
+				'grades' => $this->InstitutionSiteClassGrade->getGradesByClass($id),
+				'gender' => $this->InstitutionSiteClassStudent->getGenderTotalByClass($id)
 			);
 		}
 		return $data;
@@ -375,84 +371,6 @@ class InstitutionSiteClass extends AppModel {
 		
 		return $data;
 	}
-	
-	public function classesAddStaffRow($controller, $params) {
-		if (sizeof($params['pass']) == 2) {
-			$year = $params['pass'][0];
-			$classId = $params['pass'][1];
-			$index = $params->query['index'];
-			
-			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-			$data = $InstitutionSiteStaff->getStaffSelectList($year, $controller->institutionSiteId, $classId);
-
-			$controller->set('index', $index);
-			$controller->set('data', $data);
-		}
-	}
-
-	public function classesStaffAjax($controller, $params)  {
-		//$this->autoRender = false;
-		$this->render = false;
-		if (sizeof($params['pass']) == 1) {
-			
-			$classId = $params['pass'][0];
-			$staffId = $params->query['staffId'];
-			$action = $params->query['action'];
-
-			$result = false;
-			$InstitutionSiteClassStaff = ClassRegistry::init('InstitutionSiteClassStaff');
-			if ($action === 'add') {
-				$data = array('staff_id' => $staffId, 'institution_site_class_id' => $classId);
-				
-				if (!$InstitutionSiteClassStaff->hasAny($data)){
-					//do something
-					$InstitutionSiteClassStaff->create();
-					$result = $InstitutionSiteClassStaff->save($data);
-				}
-				else{
-					return json_encode($controller->Message->get('general.add.failed'));
-				}
-				
-			} else {
-				$result = $InstitutionSiteClassStaff->deleteAll(array(
-					'InstitutionSiteClassStaff.staff_id' => $staffId,
-					'InstitutionSiteClassStaff.institution_site_class_id' => $classId
-						), false);
-			}
-
-			$return = array();
-			if ($result) {
-				$controller->Utility->setAjaxResult('success', $return);
-			} else {
-				$return = $controller->Message->get('general.add.error');
-			}
-			return json_encode($return);
-		}
-	}
-
-	public function classesDeleteStaff($controller, $params)  {
-	   // $this->autoRender = false;
-		$this->render = false;
-		if (sizeof($params['pass']) == 1) {
-			$gradeId = $params['pass'][0];
-			$studentId = $params->query['studentId'];
-
-			$data = array('student_id' => $studentId, 'institution_site_class_grade_id' => $gradeId);
-			
-			$InstitutionSiteClassGradeStudent = ClassRegistry::init('InstitutionSiteClassGradeStudent');
-			$InstitutionSiteClassGradeStudent->create();
-			$obj = $InstitutionSiteClassGradeStudent->save($data);
-
-			$result = array();
-			if ($obj) {
-				$controller->Utility->setAjaxResult('success', $result);
-			} else {
-				$controller->Utility->setAjaxResult('error', $result);
-				$result['msg'] = $controller->Utility->getMessage('ERROR_UNEXPECTED');
-			}
-			return json_encode($result);
-		}
-	}
 		
 	public function getClassByIdSchoolYear($classId, $schoolYearId){
 		$data = $this->find('first', array(
@@ -467,7 +385,6 @@ class InstitutionSiteClass extends AppModel {
 	}
 	
 	public function reportsGetHeader($args) {
-		//$institutionSiteId = $args[0];
 		$index = $args[1];
 		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
 	}
@@ -548,7 +465,6 @@ class InstitutionSiteClass extends AppModel {
 	}
 
 	public function reportsGetFileName($args) {
-		//$institutionSiteId = $args[0];
 		$index = $args[1];
 		return $this->reportMapping[$index]['fileName'];
 	}
