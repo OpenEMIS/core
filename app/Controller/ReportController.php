@@ -78,7 +78,7 @@ class ReportController extends AppController {
             }
             $this->set('files',$this->listReports());
             $this->set('models',$models);
-        } else {
+        } else {pr($this->data);
             if (isset($this->data['Report']['new'])) {
                 $reportButton = 'new';
                 $modelClass = $this->data['Report']['model'];
