@@ -11,7 +11,7 @@ $this->end();
 $this->start('contentBody');
 echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
 
-$tableHeaders = array(__('OpenEMIS ID'), __('Name'), __('From'), __('To'));
+$tableHeaders = array(__('OpenEMIS ID'), __('Name'),__('FTE'), __('From'), __('To'));
 $tableData = array();
 
 foreach($staffList as $obj) {
@@ -19,6 +19,7 @@ foreach($staffList as $obj) {
 	$name = $obj['Staff']['first_name'].' '.$obj['Staff']['middle_name'].' '.$obj['Staff']['last_name'] ;
 	$row[] = $obj['Staff']['identification_no'];
 	$row[] = $this->Html->link($name, array('action' => 'positionsStaffEdit', $obj['InstitutionSiteStaff']['id']), array('escape' => false)) ;
+	$row[] = $obj['InstitutionSiteStaff']['FTE']*100;
 	$row[] = $obj['InstitutionSiteStaff']['start_date'];
 	$row[] = empty($obj['InstitutionSiteStaff']['end_date'])? 'Current':$obj['InstitutionSiteStaff']['end_date'];
 	$tableData[] = $row;

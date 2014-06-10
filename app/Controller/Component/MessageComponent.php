@@ -40,7 +40,8 @@ class MessageComponent extends Component {
 			'delete' => array(
 				'success' => array('type' => 'ok', 'msg' => 'The record has been deleted successfully.'),
 				'failed' => array('type' => 'error', 'msg' => 'The record is not deleted due to errors encountered.'),
-			)
+			),
+			'invalidDate'  => array('type' => 'error', 'msg' => 'You have entered an invalid date.'),
 		),
 		'security' => array(
 			'login' => array(
@@ -84,6 +85,12 @@ class MessageComponent extends Component {
 			'rubric' => array(
 				'addRow' => array('type' => 'info', 'msg' => 'New row has been added at the bottom of the rubric table.'),
 				'headerFirst' => array('type' => 'info', 'msg' => 'Please ensure the header is at the 1st position.')
+			)
+		),
+		'InstitutionSite' => array(
+			'student' => array(
+				'student_already_exists_in_other_site' => array('type' => 'info', 'msg' => 'This student is already exists in other institution site.'),
+				'notExist' => array('type' => 'error', 'msg' => 'The Student Record does not exist.')
 			)
 		)
 	);
