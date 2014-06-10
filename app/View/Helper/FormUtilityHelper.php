@@ -83,13 +83,21 @@ class FormUtilityHelper extends AppHelper {
 			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
 		}
 		$html = $this->Form->input($field, $inputOptions);
-		
+	
+		$_datepickerOptions = array();
+		$_datepickerOptions['id'] = $_options['id'];
+		if(!empty($_options['startDate'])){
+			$_datepickerOptions['startDate'] = $_options['startDate'];
+		}
+		if(!empty($_options['endDate'])){
+			$_datepickerOptions['endDate'] = $_options['endDate'];
+		}
 		if(!is_null($this->_View->get('datepicker'))) {
 			$datepickers = $this->_View->get('datepicker');
-			$datepickers[] = $_options['id'];
+			$datepickers[] = $_datepickerOptions;
 			$this->_View->set('datepicker', $datepickers);
 		} else {
-			$this->_View->set('datepicker', array($_options['id']));
+			$this->_View->set('datepicker', array($_datepickerOptions));
 		}
 		return $html;
 	}
