@@ -6,7 +6,8 @@ class TrainingSessionTrainee extends TrainingAppModel {
 		'TrainingSession' => array(
 			'className' => 'TrainingSession',
 			'foreignKey' => 'training_session_id'
-		)
+		),
+		'Staff'
 	);
 
 	public function autocomplete($search, $index, $trainingCourseID) {
@@ -29,14 +30,14 @@ class TrainingSessionTrainee extends TrainingAppModel {
 			)
 		);
 		$staffPositionID = '';
-		$teacherPositionID = '';
+		//$teacherPositionID = '';
 		foreach($positions as $position){
 			if($position['TrainingCourseTargetPopulation']['position_title_table']=='staff_position_titles'){
 				$staffPositionID .= ','.$position['TrainingCourseTargetPopulation']['position_title_id'];
 			}
-			if($position['TrainingCourseTargetPopulation']['position_title_table']=='teacher_position_titles'){
+			/*if($position['TrainingCourseTargetPopulation']['position_title_table']=='teacher_position_titles'){
 				$teacherPositionID .= ','.$position['TrainingCourseTargetPopulation']['position_title_id'];
-			}
+			}*/
 		}
 		
 		$completed = $trainingCourse->find('all', 
@@ -61,18 +62,16 @@ class TrainingSessionTrainee extends TrainingAppModel {
 		);
 
 		$excludedStaffID = '';
-		$excludedTeacherID = '';
+		//$excludedTeacherID = '';
 		foreach($completed as $val){
-			if($val['TrainingSessionTrainee']['identification_table']=='staff'){
-				$excludedStaffID .= ','.$val['TrainingSessionTrainee']['identification_id'];
-			}
+			$excludedStaffID .= ','.$val['TrainingSessionTrainee']['staff_id'];
+			/*
 			if($val['TrainingSessionTrainee']['identification_table']=='teachers'){
 				$excludedTeacherID .= ','.$val['TrainingSessionTrainee']['identification_id'];
-			}
+			}*/
 		}
-		
 		$staffConditions = '';
-		$teacherConditions = '';
+		//$teacherConditions = '';
 		if(!empty($staffPositionID)){
 			$staffConditions = ' INNER JOIN institution_site_staff AS InstitutionSiteStaff ON Staff.id = InstitutionSiteStaff.staff_id 
 			WHERE InstitutionSiteStaff.staff_position_title_id IN (' . ltrim($staffPositionID, ',') . ')';
@@ -84,6 +83,7 @@ class TrainingSessionTrainee extends TrainingAppModel {
 				$staffConditions = ' WHERE Staff.id NOT IN (' . ltrim($excludedStaffID, ',') . ')';
 			}
 		}
+		/*
 		if(!empty($teacherPositionID)){
 			$teacherConditions = ' INNER JOIN institution_site_teachers AS InstitutionSiteTeacher ON Teacher.id = InstitutionSiteTeacher.teacher_id 
 			WHERE InstitutionSiteTeacher.teacher_position_title_id IN (' . ltrim($teacherPositionID, ',') . ')';
@@ -94,34 +94,38 @@ class TrainingSessionTrainee extends TrainingAppModel {
 			if(!empty($excludedTeacherID)){
 				$teacherConditions = ' WHERE Teacher.id NOT IN (' . ltrim($excludedTeacherID, ',') . ')';
 			}
-		}
-
-		$list = $this->query(
+		}*/
+		/*$list = $this->query(
 			"SELECT * FROM(
 			SELECT Staff.*, 'staff' as identification_table FROM staff as Staff " . $staffConditions . " UNION 
 			Select Teacher.*, 'teachers' as identification_table from teachers as Teacher " . $teacherConditions . "
 			)as TrainingSessionTrainee
 			WHERE first_name LIKE '" . $search . "' OR last_name LIKE '" . $search  . "' OR  identification_no LIKE '" . $search . "'
 			order by identification_no, first_name, last_name;");
-		
-		
+		*/
+
+		$list = $this->query(
+			"SELECT * FROM(
+			SELECT Staff.* FROM staff as Staff " . $staffConditions . " 
+			)as TrainingSessionTrainee
+			WHERE first_name LIKE '" . $search . "' OR last_name LIKE '" . $search  . "' OR  identification_no LIKE '" . $search . "'
+			order by identification_no, first_name, last_name;");
+
 		$data = array();
 		
 		foreach($list as $obj) {
 			$id = $obj['TrainingSessionTrainee']['id'];
 			$firstName = $obj['TrainingSessionTrainee']['first_name'];
 			$lastName = $obj['TrainingSessionTrainee']['last_name'];
-			$table = $obj['TrainingSessionTrainee']['identification_table'];
 			
 			$data[] = array(
 				'label' => trim(sprintf('%s,  %s', $firstName, $lastName)),
 				'value' => array(
 					'trainee-id-'.$index => $id, 
-					'trainee-table-'.$index => $table,
 					'trainee-first-name-'.$index => $firstName,
 					'trainee-last-name-'.$index => $lastName,
 					'trainee-name-'.$index => trim(sprintf('%s, %s', $firstName, $lastName)),
-					'trainee-validate-'.$index => $table . '_' . $id
+					'trainee-validate-'.$index => $id
 					)
 			);
 		}
