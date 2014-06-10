@@ -241,8 +241,11 @@ class InstitutionSiteClass extends AppModel {
 
 		if (!empty($data)) {
 			if($controller->request->is('post') || $controller->request->is('put')) {
-				$this->saveAll($controller->request->data);
-				$controller->Message->alert('general.edit.success');
+				if($this->saveAll($controller->request->data)) {
+					$controller->Message->alert('general.edit.success');
+				} else {
+					$controller->Message->alert('general.edit.failed');
+				}
 				$controller->redirect(array('action' => $this->_action . 'View', $id));
 			} else {
 				$controller->request->data = $data;
