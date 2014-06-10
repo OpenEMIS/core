@@ -27,6 +27,22 @@ class InstitutionSiteStaff extends AppModel {
 			'supportedFormats' => array('csv')
 		)
 	);
+	public $validate = array(
+		'search' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a OpenEMIS ID or name.'
+			)
+		),
+		'institution_site_position_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a Position.'
+			)
+		)
+		);
 	public $useTable = 'institution_site_staff';
 	public $belongsTo = array(
 		'InstitutionSite',
@@ -401,63 +417,52 @@ class InstitutionSiteStaff extends AppModel {
 		$controller->Navigation->addCrumb('Add Staff');
 		$positionOptions = $this->InstitutionSitePosition->getInstitutionSitePositionList($controller->institutionSiteId);
 		$selectedPositionId = !empty($positionOptions) ? key($positionOptions) : 0;
-		$FTEOtpions = $this->getFTEOptions($selectedPositionId, array('date' => date("Y-m-d")));
+		$FTEOtpions = $this->getFTEOptions($selectedPositionId, array('startDate' => date("Y-m-d")));
 		$statusOptions = $this->StaffStatus->findList(true);
 
 		//Create 1 more field options "Staff Type"=> "full time / part time"
 		$staffTypeOptions = $this->StaffType->getList();
 		$staffTypeDefault = $this->StaffType->getDefaultValue();
+		
+		$this->staffSave($controller, $params);
 		$controller->set(compact('positionOptions', 'FTEOtpions', 'statusOptions', 'staffTypeOptions', 'selectedPositionId', 'staffTypeDefault'));
 	}
 
-	public function staffSave($controller, $params) {
-		$this->render = false;
-		if ($controller->request->is('post')) { //pr($controller->request->data);die;
-			$data = $controller->request->data['InstitutionSiteStaff'];
-			if (isset($data['staff_id'])) {
-				//if (!empty($data['start_date']['day']) && !empty($data['start_date']['month']) && !empty($data['start_date']['year'])) {
-				$data['institution_site_id'] = $controller->institutionSiteId;
-				$selectedDate = strtotime($data['start_date']);
-				$data['start_year'] = date('Y', $selectedDate);
-				$data['FTE'] = !empty($data['FTE']) ? $data['FTE'] / 100 : '';
-				/* $yr = $data['start_year'];//$data['start_date']['year'];
-				  $mth = date('m',$selectedDate);//$data['start_date']['month'];
-				  $day = date('d',$selectedDate);//$data['start_date']['day'];
-
-				  while (!checkdate($mth, $day, $yr)) {
-				  $day--;
-				  } */
-				//$data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
-				$insert = true;
-				if (!empty($data['position_no'])) {
-					$obj = $this->isPositionNumberExists($data['position_no'], $data['start_date']);
-					/* if (!$obj) {
-					  $obj = $this->isPositionNumberExists($data['position_no'], $data['start_date']);
-					  } */
-					if ($obj) {
-						$staffObj = $this->Staff->find('first', array(
-							'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.gender'),
-							'conditions' => array('Staff.id' => $data['staff_id'])
-						));
-						$position = $data['position_no'];
-						$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
-						$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
-						$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
-						$msg .= '<br>' . __('Please choose another position number.');
-						$controller->Utility->alert($msg, array('type' => 'warn'));
-						$insert = false;
+	private function staffSave($controller, $params) {
+	//	$this->render = false;
+	if ($controller->request->is('post')) { //pr($controller->request->data);die;
+			$this->set($controller->request->data);
+			if ($this->validates()) {
+				$data = $controller->request->data['InstitutionSiteStaff'];
+				if (isset($data['staff_id'])) {
+					$data['institution_site_id'] = $controller->institutionSiteId;
+					$selectedDate = strtotime($data['start_date']);
+					$data['start_year'] = date('Y', $selectedDate);
+					$data['FTE'] = !empty($data['FTE']) ? $data['FTE'] / 100 : '';
+					$insert = true;
+					if (!empty($data['position_no'])) {
+						$obj = $this->isPositionNumberExists($data['position_no'], $data['start_date']);
+						if ($obj) {
+							$staffObj = $this->Staff->find('first', array(
+								'fields' => array('Staff.identification_no', 'Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.gender'),
+								'conditions' => array('Staff.id' => $data['staff_id'])
+							));
+							$position = $data['position_no'];
+							$name = '<b>' . trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']) . '</b>';
+							$school = '<b>' . trim($obj['institution_name'] . ' - ' . $obj['institution_site_name']) . '</b>';
+							$msg = __('Position Number') . ' (' . $position . ') ' . __('is already being assigned to ') . $name . ' from ' . $school . '. ';
+							$msg .= '<br>' . __('Please choose another position number.');
+							$controller->Utility->alert($msg, array('type' => 'warn'));
+							$insert = false;
+						}
 					}
+					if (isset($insert) && $insert) {
+						$this->save($data);
+						$controller->Message->alert('general.add.success');
+						return $controller->redirect(array('action' => 'staff'));
+					}
+					
 				}
-				/* } else {
-				  $insert = false;
-				  $controller->Utility->alert($controller->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
-				  } */
-				if (isset($insert) && $insert) {
-					$this->save($data);
-					$controller->Message->alert('general.add.success');
-					//$controller->Utility->alert($controller->Utility->getMessage('CREATE_SUCCESS'));
-				}
-				return $controller->redirect(array('action' => 'staffAdd'));
 			}
 		}
 	}
@@ -469,7 +474,7 @@ class InstitutionSiteStaff extends AppModel {
 
 			$selectedDate = empty($controller->request->query['selectedDate']) ? null : $controller->request->query['selectedDate'];
 
-			$FTEOtpions = $this->getFTEOptions($positionId, array('date' => $selectedDate));
+			$FTEOtpions = $this->getFTEOptions($positionId, array('startDate' => $selectedDate));
 			$returnString = '';
 
 			foreach ($FTEOtpions as $obj) {
@@ -483,7 +488,8 @@ class InstitutionSiteStaff extends AppModel {
 		$options['showAllFTE'] = !empty($options['showAllFTE']) ? $options['showAllFTE'] : false;
 		$options['includeSelfNum'] = !empty($options['includeSelfNum']) ? $options['includeSelfNum'] : false;
 		$options['FTE_value'] = !empty($options['FTE_value']) ? $options['FTE_value'] : 0;
-		$options['date'] = !empty($options['date']) ? $options['date'] : null;
+		$options['startDate'] = !empty($options['startDate']) ? date('Y-m-d', strtotime($options['startDate'])) : null;
+		$options['endDate'] = !empty($options['endDate']) ? date('Y-m-d', strtotime($options['endDate'])) : null;
 
 		if ($options['showAllFTE']) {
 			foreach ($this->fteOptions as $obj) {
@@ -491,13 +497,21 @@ class InstitutionSiteStaff extends AppModel {
 			}
 		} else {
 			$conditions = array('AND' => array('institution_site_position_id' => $positionId));
-			if (!empty($options['date'])) {
-				$conditions['AND'][] = array('start_date >= ' => $options['date'], 'OR' => array('end_date > ' => $options['date'], 'end_date is null'));
+			if (!empty($options['startDate'])) {
+				$conditions['AND']['OR'] = array('end_date >= ' => $options['startDate'], 'end_date is null');
+				//$conditions['AND'] = array_merge($conditions['AND'], array('start_date >= ' => $options['date']));
+				//$conditions['AND'][] = array('start_date >= ' => $options['date']/*, 'OR' => array('end_date >= ' => $options['date'], 'end_date is null')*/);
 			}
-
+			if (!empty($options['endDate'])) {
+				$conditions['AND'] = array_merge($conditions['AND'],array('start_date <= ' => $options['endDate']));
+				//$conditions['AND'] = array('start_date <= ' => $options['endDate']);
+				//$conditions['AND'] = array_merge($conditions['AND'], array('start_date >= ' => $options['date']));
+				//$conditions['AND'][] = array('start_date >= ' => $options['date']/*, 'OR' => array('end_date >= ' => $options['date'], 'end_date is null')*/);
+			}
 			$data = $this->find('all', array(
+				'recursive' => -1,
 				'conditions' => $conditions,
-				'fields' => array('COALESCE(SUM(FTE),0) as totalFTE', 'institution_site_position_id'),
+				'fields' => array('COALESCE(SUM(FTE),0) as totalFTE', 'InstitutionSiteStaff.institution_site_position_id'),
 				'group' => array('institution_site_position_id'),
 					)
 			);
@@ -506,6 +520,9 @@ class InstitutionSiteStaff extends AppModel {
 			$remainingFTE = 100 - intval($totalFTE);
 			$remainingFTE = ($remainingFTE < 0) ? 0 : $remainingFTE;
 
+			if ($options['includeSelfNum']) {
+				$remainingFTE +=  $options['FTE_value'];
+			}
 			$highestFTE = (($remainingFTE > $options['FTE_value']) ? $remainingFTE : $options['FTE_value']);
 
 			$filterFTEOptions = array();
@@ -516,25 +533,28 @@ class InstitutionSiteStaff extends AppModel {
 				}
 			}
 
-			if ($totalFTE > 0 && $options['includeSelfNum']) {
+		/*	if ($totalFTE > 0 && $options['includeSelfNum']) {
 				$filterFTEOptions[$options['FTE_value']] = $options['FTE_value'];
-			}
+			}*/
 		}
 
 		return $filterFTEOptions;
 	}
 
-	public function staffSearch($controller, $params) {
-		//$this->layout = 'ajax';
-		//$this->render = false;
-		//if($controller->request->is('ajax')){
-		$search = trim($params->query['searchString']);
+	private function staffSearch($search) {
 		$params = array('limit' => 100);
 		$Staff = ClassRegistry::init('Staff.Staff');
-		$data = $Staff->search($search, $params);
-		//pr($data);
-		$controller->set(compact('search', 'data'));
-		//}
+		$list = $Staff->search($search, $params);
+		
+		$data = array();
+		foreach ($list as $obj) {
+			$staff = $obj['Staff'];
+			$data[] = array(
+				'label' => sprintf('%s - %s %s %s %s', $staff['identification_no'], $staff['first_name'], $staff['middle_name'], $staff['last_name'], $staff['preferred_name']),
+				'value' => $staff['id']
+			);
+		}
+		return $data;
 	}
 
 	public function staffPositionDelete($controller, $params) {
@@ -569,31 +589,35 @@ class InstitutionSiteStaff extends AppModel {
 		}
 	}
 
-	public function getAutoCompleteList($search, $institutionSiteId) {
+	public function getAutoCompleteList($search, $institutionSiteId = NULL, $limit = NULL) {
 		$search = sprintf('%%%s%%', $search);
 
-		$list = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('DISTINCT Staff.id', 'Staff.*'),
-			'joins' => array(
-				array(
-					'table' => 'staff',
-					'alias' => 'Staff',
-					'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
-				)
-			),
-			'conditions' => array(
-				'OR' => array(
-					'Staff.first_name LIKE' => $search,
-					'Staff.last_name LIKE' => $search,
-					'Staff.middle_name LIKE' => $search,
-					'Staff.preferred_name LIKE' => $search,
-					'Staff.identification_no LIKE' => $search
-				),
-				'InstitutionSiteStaff.institution_site_id' => $institutionSiteId
-			),
-			'order' => array('Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.preferred_name')
+		$options['recursive'] = -1;
+		$options['fields'] = array('DISTINCT Staff.id', 'Staff.*');
+		$options['order'] = array('Staff.first_name', 'Staff.middle_name', 'Staff.last_name', 'Staff.preferred_name');
+		$options['joins'] = array(
+			array(
+				'table' => 'staff',
+				'alias' => 'Staff',
+				'conditions' => array('InstitutionSiteStaff.staff_id = Staff.id')
 		));
+		$options['conditions'] = array(
+			'OR' => array(
+				'Staff.first_name LIKE' => $search,
+				'Staff.last_name LIKE' => $search,
+				'Staff.middle_name LIKE' => $search,
+				'Staff.preferred_name LIKE' => $search,
+				'Staff.identification_no LIKE' => $search
+			)
+		);
+
+		if (!empty($institutionSiteId)) {
+			$options['conditions']['InstitutionSiteStaff.institution_site_id'] = $institutionSiteId;
+		}
+		if (!empty($limit)) {
+			$options['limit'] = $limit;
+		}
+		$list = $this->find('all', $options);
 
 		$data = array();
 		foreach ($list as $obj) {
@@ -606,6 +630,19 @@ class InstitutionSiteStaff extends AppModel {
 		return $data;
 	}
 
+	//Ajax method
+	public function staffAjaxFind($controller, $params) {
+        if ($controller->request->is('ajax')) {
+			$this->render = false;
+            $search = $params->query['term'];
+			
+            $data = $this->staffSearch($search);
+
+            return json_encode($data);
+        }
+    }
+	
+	
 	public function getStaffByInstitutionSite($institutionSiteId, $startDate, $endDate) {
 		//$startYear = date('Y', strtotime($startDate));
 		//$endYear = date('Y', strtotime($endDate));

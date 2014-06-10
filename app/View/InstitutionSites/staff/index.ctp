@@ -72,10 +72,11 @@ echo $this->Form->end();
 		<tbody>
 			<?php 
 				foreach ($data as $obj) { 
+					$fullName = trim($obj['Staff']['first_name'].' '.$obj['Staff']['middle_name']). ' '.$obj['Staff']['last_name'];
 			?>
 				<tr>
 					<td><?php echo $this->Html->link($obj['Staff']['identification_no'], array('action' => 'staffView', $obj['Staff']['id'])); ?></td>
-					<td><?php echo $obj['Staff']['first_name'].' '.$obj['Staff']['last_name']; ?></td>
+					<td><?php echo $fullName; ?></td>
 					<td class="table_cell"><?php echo $obj['StaffPositionTitle']['name']; ?></td>
 				</tr>
 			<?php } ?>
