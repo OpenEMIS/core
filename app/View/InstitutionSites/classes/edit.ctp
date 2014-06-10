@@ -1,176 +1,70 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
-
-echo $this->Html->script('institution_site_classes', false);
+echo $this->Html->css('../js/plugins/icheck/skins/minimal/blue', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
+echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Edit') . ' ' . $className);
+$this->assign('contentHeader', $this->data[$model]['name']);
 
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'classesView', $classId), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => $_action . 'View', $this->data[$model]['id']), array('class' => 'divider'));
 $this->end();
 
 $this->start('contentBody');
+
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action . 'Edit', $this->data[$model]['id']));
+echo $this->Form->create($model, $formOptions);
+echo $this->Form->hidden('id');
+echo $this->Form->hidden('school_year_id');
+echo $this->Form->input('year', array('value' => $this->data['SchoolYear']['name'], 'disabled' => 'disabled'));
+echo $this->Form->input('name');
+echo $this->Form->input('no_of_seats');
+echo $this->Form->input('no_of_shifts', array('options' => $shiftOptions));
 ?>
 
-<div id="classes" class="content_wrapper edit">
-
-	<?php
-	echo $this->Form->create('InstitutionSiteClass', array(
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'classesEdit', $classId),
-		'inputDefaults' => array('label' => false, 'div' => false)
-	));
-	$i = 0;
-	?>
-
-	<table class="table table-striped table-hover table-bordered" style="margin-bottom: 20px;">
-		<thead>
-			<tr>
-				<th class="table_cell cell_year"><?php echo __('Year'); ?></th>
-				<th class="table_cell"><?php echo __('Grade'); ?></th>
-				<th class="table_cell"><?php echo __('Seats'); ?></th>
-				<th class="table_cell"><?php echo __('Shift'); ?></th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td class="table_cell cell_year"><?php echo $year; ?></td>
-				<td class="table_cell">
-					<?php
-					foreach ($grades as $id => $name) {
-						$i++;
-						?>
-						<div class="table_cell_row <?php echo $i == sizeof($grades) ? 'last' : ''; ?>"><?php echo $name; ?></div>
-					<?php } ?>
-				</td>
-				<td class="table_cell"><?php echo $this->Form->input('no_of_seats', array('id' => 'NoOfSeats', 'value' => $noOfSeats, 'class' => 'default inlineShortField form-control')); ?></td>
-				<td class="table_cell"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'options' => $shiftOptions, 'value' => $noOfShifts, 'class' => 'default inlineShortField form-control')); ?></td>
-			</tr>
-		</tbody>
-	</table>
-
-	<fieldset class="section_group">
-        <legend><?php echo __('Subjects'); ?></legend>
-        <table class="table table-striped table-hover table-bordered">
-            <thead>
-				<tr>
-					<th class="table_cell cell_year"><?php echo __('Code'); ?></th>
-					<th class="table_cell"><?php echo __('Name'); ?></th>
-					<th class="table_cell cell_category"><?php echo __('Grade'); ?></th>
-					<th class="table_cell cell_delete"></th>
-				</tr>
-            </thead>
-            <tbody url="InstitutionSites/classesSubjectAjax/<?php echo $classId; ?>">
-				<?php foreach ($subjects as $obj) { ?>
-					<tr subject-id="<?php echo $obj['InstitutionSiteClassSubject']['education_grade_subject_id']; ?>">
-						<td class="table_cell"><?php echo $obj['EducationSubject']['code']; ?></td>
-						<td class="table_cell"><?php echo $obj['EducationSubject']['name']; ?></td>
-						<td class="table_cell"><?php echo $obj['EducationGrade']['name']; ?></td>
-						<td class="table_cell">
-							<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteSubject(this)', 'onDelete' => false)); ?>
-						</td>
+<div class="form-group">
+	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>
+	<div class="col-md-8">
+		<div class="table-responsive">
+			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+				<thead>
+					<tr>
+						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+						<th><?php echo $this->Label->get('EducationProgramme.name'); ?></th>
+						<th><?php echo $this->Label->get('EducationGrade.name'); ?></th>
 					</tr>
-				<?php } ?>
-            </tbody>
-        </table>
-        <div class="row">
-			<?php $url = 'InstitutionSites/classesAddSubjectRow/' . $year . '/' . $classId . '/'; ?>
-            <a class="void icon_plus subjects" url="<?php echo $url; ?>"><?php echo __('Add') . ' ' . __('Subject'); ?></a>
-        </div>
-    </fieldset>
-
-	<fieldset class="section_group">
-		<legend><?php echo __('Staff'); ?></legend>
-		<table class="table table-striped table-hover table-bordered">
-			<thead>
-				<tr>
-					<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
-					<th class="table_cell"><?php echo __('Name'); ?></th>
-					<th class="table_cell cell_delete"></th>
-				</tr>
-			</thead>
-			<tbody url="InstitutionSites/classesStaffAjax/<?php echo $classId; ?>">
-				<?php foreach ($staffs as $obj) { ?>
-					<tr staff-id="<?php echo $obj['Staff']['id']; ?>" subject-id="<?php echo $obj['InstitutionSiteClassStaff']['education_subject_id']; ?>">
-						<td class="table_cell"><?php echo $obj['Staff']['identification_no']; ?></td>
-						<td class="table_cell"><?php echo $obj['Staff']['first_name'] . ' ' . $obj['Staff']['last_name']; ?></td>
-						<td class="table_cell">
-							<?php echo $this->Utility->getDeleteControl(array('onclick' => 'InstitutionSiteClasses.deleteStaff(this)', 'onDelete' => false)); ?>
+				</thead>
+				
+				<tbody>
+					<?php 
+					$i = 0;
+					foreach($grades as $obj) :
+						$checked = $obj['InstitutionSiteClassGrade']['status'];
+					?>
+					<tr>
+						<td class="checkbox-column">
+							<?php
+							echo $this->Form->hidden('InstitutionSiteClassGrade.' . $i . '.id', array('value' => $obj['InstitutionSiteClassGrade']['id']));
+							echo $this->Form->hidden('InstitutionSiteClassGrade.' . $i . '.institution_site_class_id', array('value' => $this->data[$model]['id']));
+							echo $this->Form->hidden('InstitutionSiteClassGrade.' . $i . '.education_grade_id', array('value' => $obj['EducationGrade']['id']));
+							echo $this->Form->checkbox('InstitutionSiteClassGrade.' . $i++ . '.status', array('class' => 'icheck-input', 'checked' => $checked));
+							?>
 						</td>
+						<td><?php echo $obj['EducationProgramme']['name']; ?></td>
+						<td><?php echo $obj['EducationGrade']['name']; ?></td>
 					</tr>
-				<?php } ?>
-			</tbody>
-		</table>
-		<div class="row">
-			<?php $url = 'InstitutionSites/classesAddStaffRow/' . $year . '/' . $classId . '/'; ?>
-			<a class="void icon_plus staffs" url="<?php echo $url; ?>"><?php echo __('Add') . ' ' . __('Staff'); ?></a>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
 		</div>
-	</fieldset>
 
-	<fieldset class="section_group students">
-		<legend><?php echo __('Students'); ?></legend>
-		<?php foreach ($grades as $id => $name) { ?>
-
-			<fieldset class="section_break">
-				<legend>
-					<span><?php echo $name ?></span>
-				</legend>
-
-				<table class="table table-striped table-hover table-bordered">
-					<thead>
-						<tr>
-							<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
-							<th class="table_cell"><?php echo __('Name'); ?></th>
-							<th class="table_cell cell_category"><?php echo __('Category'); ?></th>
-							<th class="table_cell cell_delete"></th>
-						</tr>
-					</thead>
-
-					<tbody url="InstitutionSites/classesStudentAjax/<?php echo $id; ?>">
-						<?php if (isset($students[$id])) { ?>
-							<?php foreach ($students[$id] as $obj) { ?>
-								<tr student-id="<?php echo $obj['id']; ?>">
-									<td class="table_cell"><?php echo $obj['identification_no']; ?></td>
-									<td class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']; ?></td>
-									<td class="table_cell" attr="category">
-										<?php
-										echo $this->Form->input('student_category_id', array(
-											'label' => false,
-											'div' => false,
-											'class' => 'full_width form-control',
-											'options' => $studentCategoryOptions,
-											'onchange' => 'InstitutionSiteClasses.changeStudentCategory(this)',
-											'default' => $obj['category_id']
-										));
-										?>
-									</td>
-									<td class="table_cell">
-										<?php
-										echo $this->Utility->getDeleteControl(array(
-											'onclick' => 'InstitutionSiteClasses.deleteStudent(this)',
-											'onDelete' => false
-										));
-										?>
-									</td>
-								</tr>
-							<?php } // end for ?>
-						<?php } // end if   ?>
-					</tbody>
-				</table>
-
-				<div class="row">
-					<?php $url = 'InstitutionSites/classesAddStudentRow/' . $year . '/' . $id; ?>
-					<a class="void icon_plus students" url="<?php echo $url; ?>"><?php echo __('Add') . ' ' . __('Student'); ?></a>
-				</div>
-			</fieldset>
-		<?php } ?>
-	</fieldset>
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classesView', $classId), array('class' => 'btn_cancel btn_left')); ?>
 	</div>
-
-	<?php echo $this->Form->end(); ?>
 </div>
-<?php $this->end(); ?>
+
+<?php
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $_action . 'View', $this->data[$model]['id'])));
+echo $this->Form->end();
+
+$this->end(); 
+?>

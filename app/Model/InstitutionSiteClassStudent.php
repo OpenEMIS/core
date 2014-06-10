@@ -17,7 +17,12 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class InstitutionSiteClassStudent extends AppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array(
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
 	
 	public $belongsTo = array(
 		'Students.Student',
@@ -27,6 +32,46 @@ class InstitutionSiteClassStudent extends AppModel {
 	);
 	
 	public $_action = 'classesStudent';
+	
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+				'InstitutionSite' => array(
+					'name' => 'Institution'
+				),
+				'SchoolYear' => array(
+					'name' => 'School Year'
+				),
+				'InstitutionSiteClass' => array(
+					'name' => 'Class'
+				),
+				'EducationGrade' => array(
+					'name' => 'Grade'
+				),
+				'AssessmentItemType' => array(
+					'name' => 'Assessment'
+				),
+				'Student' => array(
+					'identification_no' => 'Student OpenEMIS ID',
+					'first_name' => '',
+					'middle_name' => '',
+					'last_name' => '',
+					'preferred_name' => ''
+				),
+				'EducationSubject' => array(
+					'Name' => 'Subject Name',
+					'code' => 'Subject Code'
+				),
+				'AssessmentItemResult' => array(
+					'marks' => 'Marks'
+				),
+				'AssessmentResultType' => array(
+					'name' => 'Grading'
+				)
+			),
+			'fileName' => 'Report_Student_Result'
+		)
+	);
 	
 	public function beforeAction($controller, $action) {
 		parent::beforeAction($controller, $action);
@@ -47,7 +92,7 @@ class InstitutionSiteClassStudent extends AppModel {
 	
 	public function classesStudent($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
-		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id);
+		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
 		if(!empty($studentActionOptions)) {
 			$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : key($studentActionOptions);
 			$data = $this->find('all', array(
@@ -70,7 +115,7 @@ class InstitutionSiteClassStudent extends AppModel {
 	public function classesStudentEdit($controller, $params) {
 		$id = $controller->Session->read('InstitutionSiteClass.id');
 		$selectedGrade = isset($params->pass[0]) ? $params->pass[0] : 0;
-		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id);
+		$studentActionOptions = ClassRegistry::init('InstitutionSiteClassGrade')->getGradeOptions($id, true);
 		if($controller->request->is('get')) {
 			$categoryOptions = $this->StudentCategory->findList(true);
 			$data = $this->Student->find('all', array(
@@ -157,5 +202,137 @@ class InstitutionSiteClassStudent extends AppModel {
 			$controller->Message->alert('general.edit.success');
 			return $controller->redirect(array('action' => $this->_action));
 		}
+	}
+	
+	// used by InstitutionSiteClass.classes
+	public function getGenderTotalByClass($classId) {
+		$joins = array(
+			array(
+				'table' => 'institution_site_class_grades',
+				'alias' => 'InstitutionSiteClassGrade',
+				'conditions' => array(
+					'InstitutionSiteClassGrade.education_grade_id = InstitutionSiteClassStudent.education_grade_id',
+					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClassStudent.institution_site_class_id',
+					'InstitutionSiteClassGrade.institution_site_class_id = ' . $classId
+				)
+			),
+			array('table' => 'students', 'alias' => 'Student')
+		);
+
+		$gender = array('M' => 0, 'F' => 0);
+		$studentConditions = array('Student.id = InstitutionSiteClassStudent.student_id');
+		
+		foreach ($gender as $i => $val) {
+			$studentConditions[1] = sprintf("Student.gender = '%s'", $i);
+			$joins[1]['conditions'] = $studentConditions;
+			$gender[$i] = $this->find('count', array('recursive' => -1, 'joins' => $joins));
+		}
+		return $gender;
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'EducationGrade.name', 'AssessmentItemType.name', 'EducationSubject.name', 'Student.identification_no');
+			$options['conditions'] = array();
+
+			$options['joins'] = array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array('InstitutionSiteClassStudent.education_grade_id = InstitutionSiteClassGrade.education_grade_id')
+				),
+				array(
+					'table' => 'education_grades',
+					'alias' => 'EducationGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
+					)
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClassStudent.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
+					)
+				),
+				array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+						'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
+					)
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				),
+				array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteClassStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'assessment_item_types',
+					'alias' => 'AssessmentItemType',
+					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
+				),
+				array(
+					'table' => 'assessment_items',
+					'alias' => 'AssessmentItem',
+					'conditions' => array('AssessmentItem.assessment_item_type_id = AssessmentItemType.id')
+				),
+				array(
+					'table' => 'education_grades_subjects',
+					'alias' => 'EducationGradeSubject',
+					'conditions' => array('AssessmentItem.education_grade_subject_id = EducationGradeSubject.id')
+				),
+				array(
+					'table' => 'education_subjects',
+					'alias' => 'EducationSubject',
+					'conditions' => array('EducationGradeSubject.education_subject_id = EducationSubject.id')
+				),
+				array(
+					'table' => 'assessment_item_results',
+					'alias' => 'AssessmentItemResult',
+					'type' => 'LEFT',
+					'conditions' => array(
+						'AssessmentItemResult.student_id = Student.id',
+						'AssessmentItemResult.institution_site_id = InstitutionSiteClass.institution_site_id',
+						'AssessmentItemResult.school_year_id = InstitutionSiteClass.school_year_id',
+						'AssessmentItemResult.assessment_item_id = AssessmentItem.id'
+					)
+				),
+				array(
+					'table' => 'assessment_result_types',
+					'alias' => 'AssessmentResultType',
+					'type' => 'LEFT',
+					'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
+				)
+			);
+
+			$data = $this->find('all', $options);
+
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
 	}
 }

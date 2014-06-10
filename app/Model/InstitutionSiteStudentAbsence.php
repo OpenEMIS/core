@@ -23,7 +23,10 @@ class InstitutionSiteStudentAbsence extends AppModel {
 		'DatePicker' => array(
 			'first_date_absent', 'last_date_absent'
 		), 
-		'ControllerAction'
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
     
 	public $belongsTo = array(
@@ -619,5 +622,129 @@ class InstitutionSiteStudentAbsence extends AppModel {
             return json_encode($result);
         }
     }
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		$header = array(
+			__('School Year'),
+			
+			__('Class'),
+			
+			__('First Date Absent'),
+			__('Last Date Absent'),
+			__('Full Day Absent'),
+			__('Start Time Absent'),
+			__('End Time Absent'),
+			
+			__('Student OpenEMIS ID'),
+			__('First Name'),
+			__('Middle Name'),
+			__('Last Name'),
+			__('Preferred Name'),
+			
+			__('Absent Type'),
+			__('Absent Reason'),
+			__('Comment')
+		);
+
+		return $header;
+	}
+	
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass', 'ModifiedUser', 'CreatedUser')));
+			
+			$options = array();
+			//$options['recursive'] = -1;
+			$options['fields'] = array(
+				'SchoolYear.name', 
+				
+				'InstitutionSiteClass.name', 
+				
+				'InstitutionSiteStudentAbsence.first_date_absent', 
+				'InstitutionSiteStudentAbsence.last_date_absent', 
+				'InstitutionSiteStudentAbsence.full_day_absent', 
+				'InstitutionSiteStudentAbsence.start_time_absent', 
+				'InstitutionSiteStudentAbsence.end_time_absent', 
+				
+				'Student.identification_no',
+				'Student.first_name',
+				'Student.middle_name',
+				'Student.last_name',
+				'Student.preferred_name',
+				
+				'InstitutionSiteStudentAbsence.absence_type', 
+				'StudentAbsenceReason.name',
+				'InstitutionSiteStudentAbsence.comment'
+			);
+			$options['order'] = array('SchoolYear.name', 'InstitutionSiteStudentAbsence.first_date_absent', 'Student.first_name', 'Student.middle_name', 'Student.last_name');
+			//$options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId);
+			
+			$options['joins'] = array(
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteStudentAbsence.institution_site_class_id = InstitutionSiteClass.id',
+						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
+					)
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'type' => 'LEFT',
+					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				)
+			);
+			
+			
+
+			$data = $this->find('all', $options);
+			
+			$newData = array();
+			foreach($data AS $row){
+				$tempRow = array();
+				
+				$schoolYear = $row['SchoolYear'];
+				$class = $row['InstitutionSiteClass'];
+				$absence = $row['InstitutionSiteStudentAbsence'];
+				$student = $row['Student'];
+				$reason = $row['StudentAbsenceReason'];
+				
+				$tempRow[] = $schoolYear['name'];
+				$tempRow[] = $class['name'];
+				
+				$tempRow[] = $this->formatDateByConfig($absence['first_date_absent']);
+				$tempRow[] = $this->formatDateByConfig($absence['last_date_absent']);
+				$tempRow[] = $absence['full_day_absent'];
+				$tempRow[] = $absence['start_time_absent'];
+				$tempRow[] = $absence['end_time_absent'];
+				
+				$tempRow[] = $student['identification_no'];
+				$tempRow[] = $student['first_name'];
+				$tempRow[] = $student['middle_name'];
+				$tempRow[] = $student['last_name'];
+				$tempRow[] = $student['preferred_name'];
+				
+				$tempRow[] = $absence['absence_type'];
+				$tempRow[] = $reason['name'];
+				$tempRow[] = $absence['comment'];
+				
+				$newData[] = $tempRow;
+			}
+
+			return $newData;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Student_Attendance';
+	}
 	
 }

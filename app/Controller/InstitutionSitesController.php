@@ -142,6 +142,7 @@ class InstitutionSitesController extends AppController {
         'programmes' => 'InstitutionSiteProgramme',
         'studentsBehaviour' => 'Students.StudentBehaviour',
         'students' => 'InstitutionSiteStudent',
+		'classesSubject' => 'InstitutionSiteClassSubject',
 		'classesStudent' => 'InstitutionSiteClassStudent',
 		'classesStaff' => 'InstitutionSiteClassStaff',
         'classes' => 'InstitutionSiteClass',
