@@ -88,7 +88,7 @@ class InstitutionReportsController extends AppController {
 		$data = array(
 			array('name' => 'Programme List', 'model' => 'InstitutionSiteProgramme', 'params' => array('csv' => array(1))),
 			array('name' => 'Student List', 'model' => 'InstitutionSiteStudent', 'params' => array('csv' => array(1))),
-			array('name' => 'Student Result', 'model' => 'InstitutionSiteClassGradeStudent', 'params' => array('csv' => array(1))),
+			array('name' => 'Student Result', 'model' => 'InstitutionSiteClassStudent', 'params' => array('csv' => array(1))),
 			array('name' => 'Student Attendance', 'model' => 'InstitutionSiteStudentAbsence', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
 			array('name' => 'Student Behaviour', 'model' => 'Students.StudentBehaviour', 'params' => array('csv' => array(1))),
 			array('name' => 'Student Academic', 'model' => 'Students.StudentDetailsCustomValue', 'params' => array('csv' => array(1, 'dataFormatted' => true))),
