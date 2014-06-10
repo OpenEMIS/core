@@ -16,6 +16,7 @@ $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action . 'Edit', $this->data[$model]['id']));
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
+echo $this->Form->hidden('school_year_id');
 echo $this->Form->input('year', array('value' => $this->data['SchoolYear']['name'], 'disabled' => 'disabled'));
 echo $this->Form->input('name');
 echo $this->Form->input('no_of_seats');
