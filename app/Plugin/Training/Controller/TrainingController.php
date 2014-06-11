@@ -27,6 +27,9 @@ class TrainingController extends TrainingAppController {
         'award' => 'Students.StudentAward'
     ); 
 
+     public $components = array(
+        'FileUploader',
+    );
 
     public function beforeFilter() {
         parent::beforeFilter();
@@ -102,6 +105,15 @@ class TrainingController extends TrainingAppController {
         $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
 
         $FileAttachment->download($id);
+    }
+
+    public function trainingCourseAjaxAddField($controller, $params) {
+        $this->render =false;
+        
+        $fileId = $controller->request->data['size'];
+        $multiple = true;
+        $controller->set(compact('fileId', 'multiple'));
+        $controller->render('/Elements/templates/file_upload_field');
     }
 
     //----------------------------------------------------------------------------

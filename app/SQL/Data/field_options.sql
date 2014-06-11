@@ -62,4 +62,4 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 (59, 'PositionTitle', 'Titles', 'Position', '{"model":"Staff.StaffPositionTitle"}', 59, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (60, 'PositionGrade', 'Grades', 'Position', '{"model":"Staff.StaffPositionGrade"}', 60, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (61, 'PositionStep', 'Steps', 'Position', '{"model":"Staff.StaffPositionStep"}', 61, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(62, 'StaffTrainingCategory', 'Training Categories', 'Staff', NULL, 62, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(62, 'TrainingNeedCategory', 'Need Categories', 'Training', '{"model":"TrainingNeedCategory"}', 62, 1, NULL, NULL, 1, '0000-00-00 00:00:00');

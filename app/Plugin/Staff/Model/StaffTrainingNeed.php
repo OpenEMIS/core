@@ -26,7 +26,16 @@ class StaffTrainingNeed extends StaffAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
-		'TrainingCourse',
+		'TrainingCourse' => array(
+            'className' => 'TrainingCourse',
+            'foreignKey' => 'ref_course_id',
+            'conditions' => array('ref_course_table' => 'TrainingCourse'),
+        ),
+		'TrainingNeedCategory' => array(
+            'className' => 'TrainingNeedCategory',
+            'foreignKey' => 'ref_course_id',
+            'conditions' => array('ref_course_table' => 'TrainingNeedCategory'),
+        ),
 		'TrainingPriority',
 		'TrainingStatus',
 	);
@@ -77,6 +86,8 @@ class StaffTrainingNeed extends StaffAppModel {
 			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'trainingNeed'));
 		}
+
+		pr($data);
 
 		$trainingRequirement = ClassRegistry::init('TrainingRequirement');
 		$trainingRequirementOptions = $trainingRequirement->find('list', array('fields'=> array('id', 'name')));

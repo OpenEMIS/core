@@ -330,11 +330,11 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		else{
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
 			$saveData = $controller->request->data;
+
 			$postFileData = $saveData['StaffTrainingSelfStudy']['files'];
 			unset($saveData['StaffTrainingSelfStudy']['files']);
 			
-			$this->set($saveData);
-			if ($this->validates()){
+			if ($this->save($saveData, array('validate' => 'only'))){
 				if (isset($saveData['save'])) {
 				   	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 1; 
 				} else if (isset($saveData['submitForApproval'])) {
@@ -349,9 +349,16 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 					if(empty($id)){
 						$id = $this->getInsertID();
 					}
+					pr('test');
+
 					$controller->FileUploader->additionData = array('staff_training_self_study_id' => $id);
+					pr('test2');
 					$controller->FileUploader->uploadFile(NULL, $postFileData);
+					pr('test3');
+					pr($controller->FileUploader);
 					if ($controller->FileUploader->success) {
+
+
 						$controller->Message->alert('general.add.success');
 						return $controller->redirect(array('action' => 'trainingSelfStudy'));
 					}
