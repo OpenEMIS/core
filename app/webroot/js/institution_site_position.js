@@ -40,5 +40,16 @@ var InstitutionSitePosition = {
 			},
 			success: ajaxSuccess
 		});
+	},
+	
+	checkboxChange : function(obj){
+		if($(obj).prop('checked')){
+			$('input#endDate').removeAttr('disabled');
+			$('#endDate').datepicker();
+		}
+		else{
+			$('input#endDate').attr('disabled', 'disabled');
+			$('#endDate').datepicker('remove');
+		}
 	}
 }
