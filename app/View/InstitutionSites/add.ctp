@@ -46,7 +46,6 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	echo $this->Form->input('institution_site_status_id', array('options' => $statusOptions, 'label' => $labelOptions));
 
 	echo $this->FormUtility->datepicker('date_opened', array('id' => 'dateOpened'));
-
 	echo $this->FormUtility->datepicker('date_closed', array('id' => 'dateClosed', 'data-date' => false));
 	?>
 </fieldset>
@@ -63,22 +62,12 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 <fieldset class="section_break">
 	<legend><?php echo __('Location'); ?></legend>
 	<?php
-	echo $this->Form->input('address', array(
-		'onkeyup' => 'utility.charLimit(this)',
-		'type' => 'textarea'
-	));
-
-	echo $this->Form->input('postal_code', array(
-		'onkeyup' => 'updateHiddenField(this, "validate_institution_site_postal_code")'
-	));
-
+	echo $this->Form->input('address', array('onkeyup' => 'utility.charLimit(this)', 'type' => 'textarea'));
+	echo $this->Form->input('postal_code', array('onkeyup' => 'updateHiddenField(this, "validate_institution_site_postal_code")'));
 	echo $this->Form->input('validate_institution_site_postal_code', array('type' => 'hidden', 'id' => 'validate_institution_site_postal_code'));
-
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_locality_id');
 	echo $this->Form->input('institution_site_locality_id', array('options' => $localityOptions, 'label' => $labelOptions));
-
 	echo $this->Form->input('latitude');
-
 	echo $this->Form->input('longitude');
 	?>
 </fieldset>
@@ -87,21 +76,11 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	<legend><?php echo __('Contact'); ?></legend>
 	<?php
 	echo $this->Form->input('contact_person');
-
-	echo $this->Form->input('telephone', array(
-		'onkeyup' => 'updateHiddenField(this, "validate_institution_site_telephone")'
-	));
-
+	echo $this->Form->input('telephone', array('onkeyup' => 'updateHiddenField(this, "validate_institution_site_telephone")'));
 	echo $this->Form->input('validate_institution_site_telephone', array('type' => 'hidden', 'id' => 'validate_institution_site_telephone'));
-
-	echo $this->Form->input('fax', array(
-		'onkeyup' => 'updateHiddenField(this, "validate_institution_site_fax")'
-	));
-
+	echo $this->Form->input('fax', array('onkeyup' => 'updateHiddenField(this, "validate_institution_site_fax")'));
 	echo $this->Form->input('validate_institution_site_fax', array('type' => 'hidden', 'id' => 'validate_institution_site_fax'));
-
 	echo $this->Form->input('email');
-
 	echo $this->Form->input('website');
 	?>
 
