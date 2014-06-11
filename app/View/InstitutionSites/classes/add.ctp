@@ -14,6 +14,8 @@ $this->end();
 $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action . 'Add', $selectedYear));
+$labelOptions = $formOptions['inputDefaults']['label'];
+
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
 echo $this->Form->input('school_year_id', array(
@@ -23,8 +25,12 @@ echo $this->Form->input('school_year_id', array(
 	'onchange' => 'jsForm.change(this)'
 ));
 echo $this->Form->input('name');
-echo $this->Form->input('no_of_seats');
-echo $this->Form->input('no_of_shifts', array('options' => $shiftOptions));
+
+$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.seats');
+echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
+
+$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
+echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 ?>
 
 <div class="form-group">
