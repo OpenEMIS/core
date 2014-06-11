@@ -281,6 +281,11 @@ class InstitutionSitePosition extends AppModel {
 				
 		if ($controller->request->is(array('post', 'put'))) {
 			$postData = $controller->request->data;
+		//	pr($postData);die;
+			$enabledEndDate = $postData['InstitutionSiteStaff']['enable_end_date'];
+			if(!$enabledEndDate){
+				$postData['InstitutionSiteStaff']['end_date'] = null;
+			}
 			$postData['InstitutionSiteStaff']['FTE'] = $postData['InstitutionSiteStaff']['FTE']/100;
 			$InstitutionSiteStaff->validate = array_merge(
 					$InstitutionSiteStaff->validate, array(
