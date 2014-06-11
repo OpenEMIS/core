@@ -185,7 +185,6 @@ class TrainingCourse extends TrainingAppModel {
 	}
 
 
-
 	public function autocompletePosition($search, $index) {
 		$search = sprintf('%%%s%%', $search);
 
@@ -547,8 +546,9 @@ class TrainingCourse extends TrainingAppModel {
 		}
 		else{
 			$saveData = $controller->request->data;
-			$postFileData = $saveData['TrainingCourseAttachment']['files'];
-			unset($saveData['TrainingCourseAttachment']['files']);
+			$postFileData = $saveData['TrainingCourse']['files'];
+			unset($saveData['TrainingCourse']['files']);
+
 
 			if ($this->saveAll($saveData, array('validate' => 'only'))){
 				if (isset($saveData['save'])) {
@@ -556,9 +556,7 @@ class TrainingCourse extends TrainingAppModel {
 				} else if (isset($saveData['submitForApproval'])) {
 			      	$saveData['TrainingCourse']['training_status_id'] = 2; 
 				}
-				$controller->FileUploader->additionData = array('training_course_id' => $id);
-				$controller->FileUploader->uploadFile(NULL, $postFileData);
-				if($this->saveAll($saveData) && $controller->FileUploader->success){
+				if($this->saveAll($saveData)){
 					$id = null;
 					if(isset($saveData['TrainingCourse']['id'])){
 						$id = $saveData['TrainingCourse']['id'];
@@ -566,18 +564,10 @@ class TrainingCourse extends TrainingAppModel {
 					if(empty($id)){
 						$id = $this->getInsertID();
 					}
-					
-					$staffTrainingNeed = ClassRegistry::init('StaffTrainingNeed');
-					$staffTrainingNeed->updateAll(
-		    			array(
-		    				'StaffTrainingNeed.ref_course_code' => $saveData['TrainingCourse']['code'], 
-		    				'StaffTrainingNeed.ref_course_title' => $saveData['TrainingCourse']['title'], 
-		    				'StaffTrainingNeed.ref_course_description' => $saveData['TrainingCourse']['description'], 
-		    				'StaffTrainingNeed.ref_course_requirement' => $trainingRequirementOptions[$saveData['TrainingCourse']['training_requirement_id']], 
-		    			),
-		    			array('StaffTrainingNeed.ref_course_id '=> $id, 'StaffTrainingNeed.ref_course_table'=> 'TrainingCourse')
-					);
 
+					$controller->FileUploader->additionData = array('training_course_id' => $id);
+					$controller->FileUploader->uploadFile(NULL, $postFileData);
+					
 					if(isset($controller->request->data['DeleteTargetPopulation'])){
 						$deletedId = array();
 						foreach($controller->request->data['DeleteTargetPopulation'] as $key=>$value){

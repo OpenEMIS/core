@@ -107,13 +107,13 @@ class TrainingController extends TrainingAppController {
         $FileAttachment->download($id);
     }
 
-    public function trainingCourseAjaxAddField($controller, $params) {
+    public function trainingCourseAjaxAddField() {
         $this->render =false;
-        
-        $fileId = $controller->request->data['size'];
+        $this->set('model', 'TrainingCourse');
+        $fileId = $this->request->data['size'];
         $multiple = true;
-        $controller->set(compact('fileId', 'multiple'));
-        $controller->render('/Elements/templates/file_upload_field');
+        $this->set(compact('fileId', 'multiple'));
+        $this->render('/Elements/templates/file_upload_field');
     }
 
     //----------------------------------------------------------------------------

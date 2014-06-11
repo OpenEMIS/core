@@ -19,14 +19,25 @@ $(document).ready(function() {
 
 var objTrainingNeeds = {
     init: function() {
-        objTrainingNeeds.getDetailsAfterChangeCourse($("#StaffTrainingNeedTrainingCourseId"));
+        objTrainingNeeds.getDetailsAfterChangeCourse($("#StaffTrainingNeedRefCourseId"));
+    },
+    getTrainingNeedTypeSelection: function(obj){
+        if($(obj).val()== "1"){
+            $('.divCourse').removeClass('hide');
+            $('.divNeed').addClass('hide');
+        }else{
+            $('.divNeed').removeClass('hide');
+            $('.divCourse').addClass('hide');
+        }
     },
     getDetailsAfterChangeCourse: function(obj){
         var trainingCourseId = $(obj).val();
-        var code = $('.training_course_code');
-        var description = $('.training_course_description');
-        var requirement = $('.training_course_requirement');
+        var title = $('.ref_course_title');
+        var code = $('.ref_course_code');
+        var description = $('.ref_course_description');
+        var requirement = $('.ref_course_requirement');
         if(trainingCourseId === ""){
+            title.val("");
             code.val("");
             description.val("");
             requirement.val("");
@@ -36,6 +47,7 @@ var objTrainingNeeds = {
                 dataType: "json",
                 url: getRootURL()+"Staff/getTrainingCoursesById/"+trainingCourseId+"/1",
                 success: function(data){
+                    var newTitle = '';
                     var newCode = '';
                     var newDescription = '';
                     var newRequirement = '';
@@ -45,11 +57,13 @@ var objTrainingNeeds = {
                     }
                     
                     $.each(data, function(i,v){
+                        newTitle = v.TrainingCourse.title;
                         newCode = v.TrainingCourse.code;
                         newDescription = v.TrainingCourse.description;
                         newRequirement = v.TrainingRequirement.name;
                     });
 
+                    title.val(newTitle);
                     code.val(newCode);
                     description.val(newDescription);
                     requirement.val(newRequirement);
