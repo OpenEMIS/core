@@ -31,7 +31,7 @@ class StudentsController extends StudentsAppController {
 		'InstitutionSiteClass',
 		'InstitutionSiteType',
 		'InstitutionSiteStudentAbsence',
-		'InstitutionSiteClassGradeStudent',
+		'InstitutionSiteClassStudent',
 		'Students.Student',
 		'Students.StudentHistory',
 		'Students.StudentCustomField',
@@ -82,7 +82,7 @@ class StudentsController extends StudentsAppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->Navigation->addCrumb('Students', array('controller' => 'Students', 'action' => 'index'));
-		$actions = array('index', 'advanced', 'add', 'viewStudent');
+		$actions = array('index', 'advanced', 'add', 'view');
 		$this->set('WizardMode', false);
 		//$this->Session->write('WizardMode', false);
 		if (in_array($this->action, $actions)) {
@@ -224,21 +224,26 @@ class StudentsController extends StudentsAppController {
 		$this->render('/Elements/customfields/search');
 	}
 
-	public function viewStudent($id) {
-		$this->Session->write('StudentId', $id);
-		$obj = $this->Student->find('first', array('conditions' => array('Student.id' => $id)));
-		$this->Session->write('StudentObj', $obj);
-		$this->DateTime->getConfigDateFormat();
-
-		$this->redirect(array('action' => 'view'));
-	}
-
-	public function view() {
+	public function view($id=0) {
 		$this->Navigation->addCrumb('Overview');
-		$this->Student->id = $this->Session->read('StudentId');
-		$data = $this->Student->read();
-
-		$this->UserSession->readStatusSession($this->request->action);
+		if($id > 0) {
+			if($this->Student->exists($id)) {
+				$this->DateTime->getConfigDateFormat();
+				$this->Session->write('StudentId', $id);
+			} else {
+				$this->Message->alert('general.notExists');
+				return $this->redirect(array('action' => 'index'));
+			}
+		} else {
+			if($this->Session->check('StudentId')) {
+				$id = $this->Session->read('StudentId');
+			} else {
+				$this->Message->alert('general.notExists');
+				return $this->redirect(array('action' => 'index'));
+			}
+		}
+		$data = $this->Student->findById($id);
+		$this->Session->write('StudentObj', $data);
 		$this->set('data', $data);
 	}
 
@@ -272,45 +277,8 @@ class StudentsController extends StudentsAppController {
 					$id = $this->Session->read('StudentId');
 				}
 				$this->Navigation->updateWizard('view', $id);
-				$this->redirect(array('action' => 'view'));
-			} else {
-				//pr($this->Student->data);
-				//pr($this->Student->validationErrors);
+				return $this->redirect(array('action' => 'view'));
 			}
-			
-			/*
-			$img = new ImageMeta($this->request->data['Student']['photo_content']);
-			unset($data['Student']['photo_content']);
-
-			if ($reset_image == 0) {
-				$validated = $imgValidate->validateImage($img);
-
-				if ($img->getFileUploadError() !== 4 && $validated['error'] < 1) {
-					$data['Student']['photo_content'] = $img->getContent();
-					$img->setContent('');
-					$data['Student']['photo_name'] = $img->getFilename();
-				}
-			} else {
-				$data['Student']['photo_content'] = '';
-				$data['Student']['photo_name'] = '';
-			}
-			
-			$this->Student->set($data);
-			if ($this->Student->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
-				unset($data['Student']['reset_image']);
-				$rec = $this->Student->save($data);
-				if(!$this->Session->check('StudentId')){
-					$id = $this->Student->getLastInsertId();
-				}else{
-					$id = $this->Session->read('StudentId');
-				}
-				$this->Navigation->updateWizard('view', $id);
-				$this->redirect(array('action' => 'view'));
-			} else {
-				// display message of validation error
-				//$this->set('imageUploadError', __(array_shift($validated['message'])));
-			}
-			*/
 		} else {
 			if(!empty($studentId)) {
 				$data = $this->Student->findById($studentId);
@@ -333,19 +301,19 @@ class StudentsController extends StudentsAppController {
 		$header = __(ucfirst($this->action));
 		$studentId = $this->Session->read('StudentId');
 		$data = array();
-		$classes = $this->InstitutionSiteClassGradeStudent->getListOfClassByStudent($studentId);
+		$classes = $this->InstitutionSiteClassStudent->getListOfClassByStudent($studentId);
 
 		foreach ($classes as $row) {
-			$key = $row['Institution']['name'] . ' - ' . $row['InstitutionSite']['name'];
+			$key = $row['InstitutionSite']['name'];
 			$data[$key][] = $row;
 		}
 		if (empty($data)) {
 			$this->Message->alert('general.noData');
-			//$this->Utility->alert($this->Utility->getMessage('NO_CLASSES'), array('type' => 'info', 'dismissOnClick' => false));
 		}
 		$this->set(compact('data', 'header'));
 	}
-
+	
+	/*
 	public function add() {
 		$this->Navigation->addCrumb('Add new Student');
 		$imgValidate = new ImageValidate();
@@ -406,18 +374,12 @@ class StudentsController extends StudentsAppController {
 		$this->set('data', $this->request->data);
 		$this->render('edit');
 	}
+	*/
 
 	public function delete() {
 		$id = $this->Session->read('StudentId');
-		$name = $this->Student->field('first_name', array('Student.id' => $id));
-		if ($name !== false) {
-			$this->Student->delete($id);
-			// $this->Utility->alert($name . __(' have been deleted successfully.'));
-			$this->Utility->alert(sprintf(__("%s have been deleted successfully."), $name));
-		} else {
-			$this->Utility->alert(__($this->Utility->getMessage('DELETED_ALREADY')));
-		}
-
+		$this->Student->delete($id);
+		$this->Message->alert('general.delete.success');
 		$this->redirect(array('action' => 'index'));
 	}
 
