@@ -25,7 +25,7 @@ echo $this->Form->create($model, $formOptions);
 
 <?php  echo $this->Form->input('provider', array('type'=> 'hidden', 'class'=>'provider', 'default'=>$provider)); ?>
 <?php  echo $this->Form->input('sessionEditable', array('type'=> 'hidden', 'default'=>$this->request->data['TrainingSession']['sessionEditable'])); ?>
-<?php
+<?php 
 
 $startDate = date('Y-m-d');
 $endDate = date('Y-m-d');
@@ -55,9 +55,9 @@ if(isset($this->data[$model]['end_date'])){
 		echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate', 'data-date' => $startDate));
 		echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'data-date' => $endDate));
 
-	 	echo $this->Form->input('location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'class'=>'form-control location', 'placeholder' => __('Location')));
+	 	echo $this->Form->input('location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'class'=>'form-control location', 'url'=>'Training/ajax_find_session/', 'placeholder' => __('Location')));
     	echo $this->Form->input('comments', array('label'=>array('text'=>__('Comments'), 'class'=>'col-md-3 control-label'),'type'=>'textarea'));
-    	echo $this->Form->input('trainer', array('label'=>array('text'=>__('Trainer'), 'class'=>'col-md-3 control-label'), 'id' => 'searchTrainer', 'class'=>'form-control trainer', 'placeholder' => __('Identification No, First Name or Last Name')));
+    	echo $this->Form->input('trainer', array('label'=>array('text'=>__('Trainer'), 'class'=>'col-md-3 control-label'), 'id' => 'searchTrainer', 'class'=>'form-control trainer', 'url'=>'Training/ajax_find_session/', 'placeholder' => __('Identification No, First Name or Last Name')));
     ?>
 
     <?php if($this->request->data['TrainingSession']['sessionEditable']!='0'){ ?>
