@@ -24,6 +24,22 @@ class InstitutionSiteStudent extends AppModel {
 		)
 	);
     
+	public $validate = array(
+		'search' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a OpenEMIS ID or name.'
+			)
+		),
+		'institution_site_programme_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a Programme.'
+			)
+		)
+	);
 	public $belongsTo = array('StudentStatus');
 	
 	public $reportMapping = array(
@@ -516,78 +532,95 @@ class InstitutionSiteStudent extends AppModel {
         $controller->set(compact('_add_student', 'searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data'));
     }
 
-    public function studentsSearch($controller, $params) {
-        $controller->layout = 'ajax';
-        $search = trim($controller->params->query['searchString']);
+    private function studentsSearch($search) {
         $params = array('limit' => 100);
-        $data = $controller->Student->search($search, $params);
-        
-        $controller->set(compact('search', 'data'));
+		$Student = ClassRegistry::init('Students.Student');
+        $list = $Student->search($search, $params);
+	
+        $data = array();
+		foreach ($list as $obj) {
+			$studentInfo = $obj['Student'];
+			$data[] = array(
+				'label' => sprintf('%s - %s %s %s %s', $studentInfo['identification_no'], $studentInfo['first_name'], $studentInfo['middle_name'], $studentInfo['last_name'], $studentInfo['preferred_name']),
+				'value' => $studentInfo['id']
+			);
+		}
+		return $data;
     }
 
     public function studentsAdd($controller, $params) {
+		$formData = isset($controller->request->data['InstitutionSiteStudent'])? $controller->request->data['InstitutionSiteStudent']: array();
         $controller->Navigation->addCrumb('Add Student');
         $yearOptions = $controller->SchoolYear->getYearList();
         $yearRange = $controller->SchoolYear->getYearRange();
         $statusOptions = $controller->StudentStatus->findList(true);
         $programmeOptions = array();
-        $selectedYear = '';
+        $selectedYear = !empty($formData['school_year_id'])?$formData['school_year_id']:key($yearOptions);
+	
         if (!empty($yearOptions)) {
-            $selectedYear = key($yearOptions);
+			$yearData = $controller->SchoolYear->findById($selectedYear, array('start_date', 'end_date'));
             $programmeOptions = $controller->InstitutionSiteProgramme->getSiteProgrammeForSelection($controller->institutionSiteId, $selectedYear);
         }
+		
         $minYear = current($yearRange);
         $maxYear = array_pop($yearRange);
-        
-        $controller->set(compact('yearOptions', 'minYear', 'maxYear', 'programmeOptions', 'statusOptions'));
+		
+		$this->studentsSave($controller, $params);
+		
+        $controller->set(compact('yearOptions', 'minYear', 'maxYear', 'programmeOptions', 'statusOptions', 'yearData'));
     }
 
-    public function studentsSave($controller, $params) {
+    private function studentsSave($controller, $params) {
         if ($controller->request->is('post')) {
             $data = $controller->data['InstitutionSiteStudent'];
-            if (isset($data['student_id'])) {
-                $date = $data['start_date'];
-                if (!empty($date)) {
-					$startDate = new DateTime($date);//new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
-					
-					$data['start_date'] = $startDate->format('Y-m-d');
-                    $data['start_year'] = $startDate->format('Y');
-//                    $yr = $date['year'];
-//                    $mth = $date['month'];
-//                    $day = $date['day'];
+			
+			$this->set($controller->request->data);
+			if ($this->validates()) {
 
-//                    while (!checkdate($mth, $day, $yr)) {
-//                        $day--;
-//                    }
-                    //$data['start_date'] = sprintf('%d-%d-%d', $yr, $mth, $day);
-                    //$date = $data['start_date'];
-                    $student = $controller->Student->find('first', array('conditions' => array('Student.id' => $data['student_id'])));
-                    $name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
-                    $siteProgrammeId = $data['institution_site_programme_id'];
-                    $exists = $controller->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
-                    $checkCurrentSite = $controller->InstitutionSiteStudent->checkWithinCurrentSite($data['student_id'], $data['start_year'], $controller->institutionSiteId);
-                    $checkOtherSite = $controller->InstitutionSiteStudent->checkWithinOtherSite($data['student_id'], $data['start_year'], $controller->institutionSiteId);
+				if (isset($data['student_id']) && !empty($data['student_id'])) {
+					if (isset($data['search'])) {
+						unset($data['search']);
+					}
 
-                    
-                    if (!$checkCurrentSite) {
-                        $controller->Utility->alert($name . ' ' . $controller->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
-                    } else if(!$checkOtherSite){
-                        $controller->Utility->alert($name . ' ' . $controller->Utility->getMessage('STUDENT_ALREADY_EXISTS_IN_OTHER_SITE'), array('type' => 'error'));
-                    }else {
-                        $duration = $controller->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
-                        
-                        $endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
-                        $endYear = $endDate->format('Y');
-                        $data['end_date'] = $endDate->format('Y-m-d');
-                        $data['end_year'] = $endYear;
-                        $controller->InstitutionSiteStudent->save($data);
-                        $controller->Utility->alert($controller->Utility->getMessage('CREATE_SUCCESS'));
-                    }
-                } else {
-                    $controller->Utility->alert($controller->Utility->getMessage('INVALID_DATE'), array('type' => 'error'));
-                }
-                $controller->redirect(array('action' => 'studentsAdd'));
-            }
+					$date = $data['start_date'];
+					if (!empty($date)) {
+						$startDate = new DateTime($date); //new DateTime(sprintf('%d-%d-%d', $date['year'], $date['month'], $date['day']));
+
+						//$data['start_date'] = $startDate->format('Y-m-d');
+						$data['start_year'] = $startDate->format('Y');
+						$student = $controller->Student->find('first', array('conditions' => array('Student.id' => $data['student_id'])));
+						$name = $student['Student']['first_name'] . ' ' . $student['Student']['last_name'];
+						$siteProgrammeId = $data['institution_site_programme_id'];
+						$exists = $controller->InstitutionSiteStudent->isStudentExistsInProgramme($data['student_id'], $siteProgrammeId, $data['start_year']);
+						$checkCurrentSite = $controller->InstitutionSiteStudent->checkWithinCurrentSite($data['student_id'], $data['start_year'], $controller->institutionSiteId);
+						$checkOtherSite = $controller->InstitutionSiteStudent->checkWithinOtherSite($data['student_id'], $data['start_year'], $controller->institutionSiteId);
+
+
+						if (!$checkCurrentSite) {
+							$controller->Message->alert('general.exists');
+							//  $controller->Utility->alert($name . ' ' . $controller->Utility->getMessage('STUDENT_ALREADY_ADDED'), array('type' => 'error'));
+						} else if (!$checkOtherSite) {
+							$controller->Message->alert('InstitutionSite.student.student_already_exists_in_other_site');
+							//   $controller->Utility->alert($name . ' ' . $controller->Utility->getMessage('STUDENT_ALREADY_EXISTS_IN_OTHER_SITE'), array('type' => 'error'));
+						} else {
+							$duration = $controller->EducationProgramme->getDurationBySiteProgramme($siteProgrammeId);
+
+							$endDate = $startDate->add(new DateInterval('P' . $duration . 'Y'));
+							$endYear = $endDate->format('Y');
+							$data['end_date'] = $endDate->format('Y-m-d');
+							$data['end_year'] = $endYear;
+							if ($this->save($data)) {
+								$controller->Message->alert('general.add.success');
+								return $controller->redirect(array('action' => 'students'));
+							}
+						}
+					} else {
+						$controller->Message->alert('InstitutionSite.invalidDate');
+					}
+				} else {
+					$controller->Message->alert('InstitutionSite.student.notExist');
+				}
+			}
         }
     }
 
@@ -607,7 +640,7 @@ class InstitutionSiteStudent extends AppModel {
             
             $controller->set(compact('_view_details', 'data', 'classes', 'results', 'details'));
         } else {
-            $controller->redirect(array('action' => 'students'));
+           return $controller->redirect(array('action' => 'students'));
         }
     }
 
@@ -649,9 +682,9 @@ class InstitutionSiteStudent extends AppModel {
 
 
             $controller->Utility->alert($controller->Utility->getMessage('DELETE_SUCCESS'));
-            $controller->redirect(array('action' => 'students'));
+           return $controller->redirect(array('action' => 'students'));
         } else {
-            $controller->redirect(array('action' => 'students'));
+           return $controller->redirect(array('action' => 'students'));
         }
     }
 
@@ -686,10 +719,47 @@ class InstitutionSiteStudent extends AppModel {
         }
     }
 	
-	public function getAutoCompleteList($search,  $institutionSiteId) {
+	public function getAutoCompleteList($search,  $institutionSiteId = NULL, $limit = NULL) {
         $search = sprintf('%%%s%%', $search);
 		
-		$list = $this->find('all', array(
+		$options['recursive'] = -1;
+		$options['fields'] = array('DISTINCT Student.id', 'Student.*');
+		$options['joins'] = array(array(
+					'table' => 'students',
+					'alias' => 'Student',
+					'conditions' => array('InstitutionSiteStudent.student_id = Student.id')
+				),
+				array(
+					'table' => 'institution_site_programmes',
+					'alias' => 'InstitutionSiteProgramme',
+					'conditions' => array('InstitutionSiteStudent.institution_site_programme_id = InstitutionSiteProgramme.id')
+				));
+		if(!empty($institutionSiteId)){
+			$options['joins'][] = array(
+					'table' => 'institution_sites',
+					'alias' => 'InstitutionSite',
+					'conditions' => array(
+						'InstitutionSiteProgramme.institution_site_id = InstitutionSite.id',
+						'InstitutionSite.id' => $institutionSiteId
+					)
+				);
+		}
+		$options['conditions'] = array(
+				'OR' => array(
+					'Student.first_name LIKE' => $search,
+					'Student.last_name LIKE' => $search,
+					'Student.middle_name LIKE' => $search,
+					'Student.preferred_name LIKE' => $search,
+					'Student.identification_no LIKE' => $search
+				)
+			);
+		$options['order'] = array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name');
+		if(!empty($limit)){
+			$options['limit'] = $limit;
+		}
+		
+		$list = $this->find('all', $options);
+		/*$list = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array('DISTINCT Student.id', 'Student.*'),
 			'joins' => array(
@@ -722,8 +792,8 @@ class InstitutionSiteStudent extends AppModel {
 				)
 			),
 			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name')
-		));
-
+		));*/
+	
         $data = array();
         foreach ($list as $obj) {
             $student = $obj['Student'];
@@ -734,6 +804,32 @@ class InstitutionSiteStudent extends AppModel {
         }
         return $data;
     }
+	
+	//Ajax method
+	public function studentsAjaxFind($controller, $params) {
+        if ($controller->request->is('ajax')) {
+			$this->render = false;
+            $search = $params->query['term'];
+			
+            $data = $this->studentsSearch($search);
+
+            return json_encode($data);
+        }
+    }
+	
+	public function studentsAjaxStartDate($controller, $params) {
+        if ($controller->request->is('ajax')) {
+			$this->render = false;
+			$returnData = array();
+			$yearData = $controller->SchoolYear->findById($controller->request->query['yearId'], array('start_date', 'end_date'));
+			if(!empty($yearData)){
+				$returnData['dateData'] = array('startDate'=>date('d-m-Y',  strtotime($yearData['SchoolYear']['start_date']) ), 'endDate' => date('d-m-Y',  strtotime($yearData['SchoolYear']['end_date'])));
+			}
+			
+			return json_encode($returnData);
+		}
+		
+	}
 	
 	public function reportsGetHeader($args) {
 		//$institutionSiteId = $args[0];

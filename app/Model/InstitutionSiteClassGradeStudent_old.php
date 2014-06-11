@@ -19,82 +19,6 @@ App::uses('AppModel', 'Model');
 
 class InstitutionSiteClassGradeStudent extends AppModel {
 
-	public $actsAs = array(
-		'ReportFormat' => array(
-			'supportedFormats' => array('csv')
-		)
-	);
-	public $reportMapping = array(
-		1 => array(
-			'fields' => array(
-				'InstitutionSite' => array(
-					'name' => 'Institution'
-				),
-				'SchoolYear' => array(
-					'name' => 'School Year'
-				),
-				'InstitutionSiteClass' => array(
-					'name' => 'Class'
-				),
-				'EducationGrade' => array(
-					'name' => 'Grade'
-				),
-				'AssessmentItemType' => array(
-					'name' => 'Assessment'
-				),
-				'Student' => array(
-					'identification_no' => 'Student OpenEMIS ID',
-					'first_name' => '',
-					'middle_name' => '',
-					'last_name' => '',
-					'preferred_name' => ''
-				),
-				'EducationSubject' => array(
-					'Name' => 'Subject Name',
-					'code' => 'Subject Code'
-				),
-				'AssessmentItemResult' => array(
-					'marks' => 'Marks'
-				),
-				'AssessmentResultType' => array(
-					'name' => 'Grading'
-				)
-			),
-			'fileName' => 'Report_Student_Result'
-		),
-		2 => array(
-			'fields' => array(
-				'InstitutionSite' => array(
-					'name' => 'Institution'
-				),
-				'SchoolYear' => array(
-					'name' => 'School Year'
-				),
-				'InstitutionSiteClass' => array(
-					'name' => 'Class'
-				),
-				'EducationGrade' => array(
-					'name' => 'Grade'
-				),
-				'Student' => array(
-					'identification_no' => 'Student OpenEMIS ID',
-					'first_name' => '',
-					'middle_name' => '',
-					'last_name' => '',
-					'preferred_name' => ''
-				),
-				'StudentAttendance' => array(
-					'total_no_attend' => 'Attended',
-					'total_no_absence' => 'Absent'
-				),
-				'InstitutionSiteClassGradeStudent' => array(
-					'total' => 'Total'
-				)
-			),
-			'fileName' => 'Report_Student_Attendance'
-		)
-	);
-
 	// used by InstitutionSite classes
 	public function getStudentsByGrade($gradeIds) {
 		$data = $this->find('all', array(
@@ -130,65 +54,65 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 		return $list;
 	}
 
-	public function getStudentsForAttendance($siteClassGradeIds) {
-		$data = $this->find('all', array(
-			'fields' => array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
-				'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
-				'StudentCategory.name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
-				),
-				array(
-					'table' => 'student_categories',
-					'alias' => 'StudentCategory',
-					'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
-				)
-			),
-			'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $siteClassGradeIds),
-			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name')
-		));
-
-		return $data;
-	}
-
-	public function getStudentAttendance($siteClassGradeIds) {
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
-				'StudentAttendance.id', 'StudentAttendance.student_attendance_type_id', 'StudentAttendance.value'
-			),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
-				),
-				array(
-					'table' => 'student_attendances',
-					'alias' => 'StudentAttendance',
-					'conditions' => array(
-						'InstitutionSiteClassGradeStudent.student_id = StudentAttendance.student_id',
-						'InstitutionSiteClassGrade.institution_site_class_id = StudentAttendance.institution_site_class_id'
-					)
-				)
-			),
-			'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $siteClassGradeIds),
-			'order' => array('Student.id')
-		));
-
-		return $data;
-	}
+//	public function getStudentsForAttendance($siteClassGradeIds) {
+//		$data = $this->find('all', array(
+//			'fields' => array(
+//				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
+//				'InstitutionSiteClassGradeStudent.institution_site_class_grade_id',
+//				'StudentCategory.name'
+//			),
+//			'joins' => array(
+//				array(
+//					'table' => 'students',
+//					'alias' => 'Student',
+//					'conditions' => array('Student.id = InstitutionSiteClassGradeStudent.student_id')
+//				),
+//				array(
+//					'table' => 'student_categories',
+//					'alias' => 'StudentCategory',
+//					'conditions' => array('StudentCategory.id = InstitutionSiteClassGradeStudent.student_category_id')
+//				)
+//			),
+//			'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $siteClassGradeIds),
+//			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name')
+//		));
+//
+//		return $data;
+//	}
+//
+//	public function getStudentAttendance($siteClassGradeIds) {
+//		$data = $this->find('all', array(
+//			'recursive' => -1,
+//			'fields' => array(
+//				'Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name',
+//				'StudentAttendance.id', 'StudentAttendance.student_attendance_type_id', 'StudentAttendance.value'
+//			),
+//			'joins' => array(
+//				array(
+//					'table' => 'students',
+//					'alias' => 'Student',
+//					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
+//				),
+//				array(
+//					'table' => 'institution_site_class_grades',
+//					'alias' => 'InstitutionSiteClassGrade',
+//					'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
+//				),
+//				array(
+//					'table' => 'student_attendances',
+//					'alias' => 'StudentAttendance',
+//					'conditions' => array(
+//						'InstitutionSiteClassGradeStudent.student_id = StudentAttendance.student_id',
+//						'InstitutionSiteClassGrade.institution_site_class_id = StudentAttendance.institution_site_class_id'
+//					)
+//				)
+//			),
+//			'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $siteClassGradeIds),
+//			'order' => array('Student.id')
+//		));
+//
+//		return $data;
+//	}
 
 	public function getListOfClassByStudent($studentId, $institutionSiteId = 0) {
 		$fields = array('SchoolYear.name', 'EducationCycle.name', 'EducationProgramme.name', 'EducationGrade.name', 'InstitutionSiteClass.name');
@@ -379,296 +303,118 @@ class InstitutionSiteClassGradeStudent extends AppModel {
 
 		return $data;
 	}
+	// following function has been shifted to model InstitutionSiteClassStudent
+//	public function getAutoCompleteList($search, $classId) {
+//		$search = sprintf('%%%s%%', $search);
+//
+//		$list = $this->find('all', array(
+//			'recursive' => -1,
+//			'fields' => array('DISTINCT Student.id', 'Student.*'),
+//			'joins' => array(
+//				array(
+//					'table' => 'students',
+//					'alias' => 'Student',
+//					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
+//				),
+//				array(
+//					'table' => 'institution_site_class_grades',
+//					'alias' => 'InstitutionSiteClassGrade',
+//					'conditions' => array(
+//						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+//						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
+//					)
+//				)
+//			),
+//			'conditions' => array(
+//				'OR' => array(
+//					'Student.first_name LIKE' => $search,
+//					'Student.last_name LIKE' => $search,
+//					'Student.middle_name LIKE' => $search,
+//					'Student.preferred_name LIKE' => $search,
+//					'Student.identification_no LIKE' => $search
+//				)
+//			),
+//			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name')
+//		));
+//
+//		$data = array();
+//		foreach ($list as $obj) {
+//			$student = $obj['Student'];
+//			$data[] = array(
+//				'label' => sprintf('%s - %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']),
+//				'value' => $student['id']
+//			);
+//		}
+//		return $data;
+//	}
 
-	public function getAutoCompleteList($search, $classId) {
-		$search = sprintf('%%%s%%', $search);
+	// following function has been shifted to model InstitutionSiteClassStudent
+//	public function isStudentInClass($institutionSiteId, $classId, $studentId) {
+//		$data = $this->find('all', array(
+//			'recursive' => -1,
+//			'fields' => array('DISTINCT InstitutionSiteClassGradeStudent.id'),
+//			'joins' => array(
+//				array(
+//					'table' => 'institution_site_class_grades',
+//					'alias' => 'InstitutionSiteClassGrade',
+//					'conditions' => array(
+//						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+//						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
+//					)
+//				),
+//				array(
+//					'table' => 'institution_site_classes',
+//					'alias' => 'InstitutionSiteClass',
+//					'conditions' => array(
+//						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+//						'InstitutionSiteClass.institution_site_id' => $institutionSiteId
+//					)
+//				)
+//			),
+//			'conditions' => array(
+//				'InstitutionSiteClassGradeStudent.student_id' => $studentId
+//			)
+//		));
+//
+//		if (count($data) > 0) {
+//			return true;
+//		} else {
+//			return false;
+//		}
+//	}
 
-		$list = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('DISTINCT Student.id', 'Student.*'),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
-						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
-					)
-				)
-			),
-			'conditions' => array(
-				'OR' => array(
-					'Student.first_name LIKE' => $search,
-					'Student.last_name LIKE' => $search,
-					'Student.middle_name LIKE' => $search,
-					'Student.preferred_name LIKE' => $search,
-					'Student.identification_no LIKE' => $search
-				)
-			),
-			'order' => array('Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name')
-		));
-
-		$data = array();
-		foreach ($list as $obj) {
-			$student = $obj['Student'];
-			$data[] = array(
-				'label' => sprintf('%s - %s %s %s %s', $student['identification_no'], $student['first_name'], $student['middle_name'], $student['last_name'], $student['preferred_name']),
-				'value' => $student['id']
-			);
-		}
-		return $data;
-	}
-
-	public function isStudentInClass($institutionSiteId, $classId, $studentId) {
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array('DISTINCT InstitutionSiteClassGradeStudent.id'),
-			'joins' => array(
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
-						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
-					)
-				),
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClass.institution_site_id' => $institutionSiteId
-					)
-				)
-			),
-			'conditions' => array(
-				'InstitutionSiteClassGradeStudent.student_id' => $studentId
-			)
-		));
-
-		if (count($data) > 0) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	public function getStudentsByClass($classId) {
-		$conditions = array();
-
-		$data = $this->find('all', array(
-			'recursive' => -1,
-			'fields' => array(
-				'DISTINCT Student.id',
-				'Student.identification_no',
-				'Student.first_name',
-				'Student.middle_name',
-				'Student.last_name',
-				'Student.preferred_name'
-			),
-			'joins' => array(
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
-						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
-					)
-				)
-			),
-			'conditions' => $conditions
-		));
-
-		return $data;
-	}
-
-	public function reportsGetHeader($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
-	}
-
-	public function reportsGetData($args) {
-		$institutionSiteId = $args[0];
-		$index = $args[1];
-
-		if ($index == 1) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'EducationGrade.name', 'AssessmentItemType.name', 'EducationSubject.name', 'Student.identification_no');
-			$options['conditions'] = array();
-
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
-					)
-				),
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
-					)
-				),
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array(
-						'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
-					)
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
-				),
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'assessment_item_types',
-					'alias' => 'AssessmentItemType',
-					'conditions' => array('InstitutionSiteClassGrade.education_grade_id = AssessmentItemType.education_grade_id')
-				),
-				array(
-					'table' => 'assessment_items',
-					'alias' => 'AssessmentItem',
-					'conditions' => array('AssessmentItem.assessment_item_type_id = AssessmentItemType.id')
-				),
-				array(
-					'table' => 'education_grades_subjects',
-					'alias' => 'EducationGradeSubject',
-					'conditions' => array('AssessmentItem.education_grade_subject_id = EducationGradeSubject.id')
-				),
-				array(
-					'table' => 'education_subjects',
-					'alias' => 'EducationSubject',
-					'conditions' => array('EducationGradeSubject.education_subject_id = EducationSubject.id')
-				),
-				array(
-					'table' => 'assessment_item_results',
-					'alias' => 'AssessmentItemResult',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'AssessmentItemResult.student_id = Student.id',
-						'AssessmentItemResult.institution_site_id = InstitutionSiteClass.institution_site_id',
-						'AssessmentItemResult.school_year_id = InstitutionSiteClass.school_year_id',
-						'AssessmentItemResult.assessment_item_id = AssessmentItem.id'
-					)
-				),
-				array(
-					'table' => 'assessment_result_types',
-					'alias' => 'AssessmentResultType',
-					'type' => 'LEFT',
-					'conditions' => array('AssessmentResultType.id = AssessmentItemResult.assessment_result_type_id')
-				)
-			);
-
-			$data = $this->find('all', $options);
-
-			return $data;
-		} else if ($index == 2) {
-			$options = array();
-			$options['recursive'] = -1;
-			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
-			$options['order'] = array('SchoolYear.name', 'InstitutionSiteClass.name', 'EducationGrade.name', 'Student.identification_no');
-			$options['conditions'] = array();
-
-			$options['joins'] = array(
-				array(
-					'table' => 'institution_site_class_grades',
-					'alias' => 'InstitutionSiteClassGrade',
-					'conditions' => array('InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id')
-				),
-				array(
-					'table' => 'education_grades',
-					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.education_grade_id = EducationGrade.id'
-					)
-				),
-				array(
-					'table' => 'institution_site_classes',
-					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId
-					)
-				),
-				array(
-					'table' => 'institution_sites',
-					'alias' => 'InstitutionSite',
-					'conditions' => array(
-						'InstitutionSiteClass.institution_site_id = InstitutionSite.id'
-					)
-				),
-				array(
-					'table' => 'school_years',
-					'alias' => 'SchoolYear',
-					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
-				),
-				array(
-					'table' => 'students',
-					'alias' => 'Student',
-					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
-				),
-				array(
-					'table' => 'student_attendances',
-					'alias' => 'StudentAttendance',
-					'type' => 'LEFT',
-					'conditions' => array(
-						'StudentAttendance.student_id = Student.id',
-						'StudentAttendance.institution_site_class_id = InstitutionSiteClassGrade.institution_site_class_id',
-						'StudentAttendance.school_year_id = InstitutionSiteClass.school_year_id'
-					)
-				)
-			);
-
-			$this->virtualFields = array(
-				'total' => 'StudentAttendance.total_no_attend + StudentAttendance.total_no_absence'
-			);
-
-			$data = $this->find('all', $options);
-
-			$newData = array();
-
-			foreach ($data AS $row) {
-				$row['StudentAttendance']['total_no_attend'] = $row['StudentAttendance']['total_no_attend'] == NULL ? 0 : $row['StudentAttendance']['total_no_attend'];
-				$row['StudentAttendance']['total_no_absence'] = $row['StudentAttendance']['total_no_absence'] == NULL ? 0 : $row['StudentAttendance']['total_no_absence'];
-				$row['InstitutionSiteClassGradeStudent']['total'] = $row['InstitutionSiteClassGradeStudent']['total'] == NULL ? 0 : $row['InstitutionSiteClassGradeStudent']['total'];
-				$newData[] = $row;
-			}
-
-			return $newData;
-		}
-	}
-
-	public function reportsGetFileName($args) {
-		//$institutionSiteId = $args[0];
-		$index = $args[1];
-		return $this->reportMapping[$index]['fileName'];
-	}
-
+	// following function has been shifted to model InstitutionSiteClassStudent
+//	public function getStudentsByClass($classId) {
+//		$conditions = array();
+//
+//		$data = $this->find('all', array(
+//			'recursive' => -1,
+//			'fields' => array(
+//				'DISTINCT Student.id',
+//				'Student.identification_no',
+//				'Student.first_name',
+//				'Student.middle_name',
+//				'Student.last_name',
+//				'Student.preferred_name'
+//			),
+//			'joins' => array(
+//				array(
+//					'table' => 'students',
+//					'alias' => 'Student',
+//					'conditions' => array('InstitutionSiteClassGradeStudent.student_id = Student.id')
+//				),
+//				array(
+//					'table' => 'institution_site_class_grades',
+//					'alias' => 'InstitutionSiteClassGrade',
+//					'conditions' => array(
+//						'InstitutionSiteClassGradeStudent.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
+//						'InstitutionSiteClassGrade.institution_site_class_id' => $classId
+//					)
+//				)
+//			),
+//			'conditions' => $conditions
+//		));
+//
+//		return $data;
+//	}
 }

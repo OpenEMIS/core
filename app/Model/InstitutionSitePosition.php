@@ -231,7 +231,7 @@ class InstitutionSitePosition extends AppModel {
 		}
 		
 		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-		$staffList = $InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndInstitutionSiteId($id,$controller->institutionSiteId, array('Staff.first_name','Staff.middle_name','Staff.last_name','Staff.id','Staff.identification_no', 'InstitutionSiteStaff.id','InstitutionSiteStaff.start_date','InstitutionSiteStaff.end_date'));
+		$staffList = $InstitutionSiteStaff->findAllByInstitutionSitePositionIdAndInstitutionSiteId($id,$controller->institutionSiteId, array('Staff.first_name','Staff.middle_name','Staff.last_name','Staff.id','Staff.identification_no', 'InstitutionSiteStaff.id','InstitutionSiteStaff.FTE','InstitutionSiteStaff.start_date','InstitutionSiteStaff.end_date'));
 		//pr($id);
 
 		$controller->Session->write('InstitutionSitePositionId', $id);
@@ -268,15 +268,25 @@ class InstitutionSitePosition extends AppModel {
 		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 
 		$InstitutionSiteStaff->unbindModel(array('belongsTo' => array('StaffType', 'InstitutionSite', 'StaffStatus')));
-		$data = $InstitutionSiteStaff->findById($id, array('fields' => 'Staff.first_name,Staff.middle_name,Staff.last_name,Staff.identification_no,InstitutionSiteStaff.id,InstitutionSiteStaff.start_date,InstitutionSiteStaff.end_date,InstitutionSitePosition.id,InstitutionSitePosition.staff_position_title_id'));
+		$data = $InstitutionSiteStaff->findById($id, array('fields' => 'Staff.first_name,Staff.middle_name,Staff.last_name,Staff.identification_no,InstitutionSiteStaff.id,InstitutionSiteStaff.start_date,InstitutionSiteStaff.FTE,InstitutionSiteStaff.end_date,InstitutionSitePosition.id,InstitutionSitePosition.staff_position_title_id'));
 		$positionData = $this->StaffPositionTitle->findById($data['InstitutionSitePosition']['staff_position_title_id'], array('fields' => 'StaffPositionTitle.name'));
+
+		$calFTE = $data['InstitutionSiteStaff']['FTE']*100;
+		
+		$FTEOtpions = $InstitutionSiteStaff->getFTEOptions($data['InstitutionSitePosition']['id'], array('startDate' => $data['InstitutionSiteStaff']['start_date'], 'endDate' => $data['InstitutionSiteStaff']['end_date'], 'FTE_value'=> $calFTE,'includeSelfNum'=> true));
+		$controller->set(compact('FTEOtpions'));
 		$data = array_merge($data, $positionData);
 
 		$controller->Session->write('InstitutionSiteStaffId', $id);
 				
 		if ($controller->request->is(array('post', 'put'))) {
 			$postData = $controller->request->data;
-
+		//	pr($postData);die;
+			$enabledEndDate = $postData['InstitutionSiteStaff']['enable_end_date'];
+			if(!$enabledEndDate){
+				$postData['InstitutionSiteStaff']['end_date'] = null;
+			}
+			$postData['InstitutionSiteStaff']['FTE'] = $postData['InstitutionSiteStaff']['FTE']/100;
 			$InstitutionSiteStaff->validate = array_merge(
 					$InstitutionSiteStaff->validate, array(
 				'start_date' => array(
@@ -287,8 +297,10 @@ class InstitutionSitePosition extends AppModel {
 				)
 					)
 			);
-
+			$InstitutionSiteStaff->validator()->remove('search');
+			$InstitutionSiteStaff->validator()->remove('institution_site_position_id');
 			if ($InstitutionSiteStaff->saveAll($postData)) {
+				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'positionsHistory', $data['InstitutionSitePosition']['id']));
 			} else {
 				$controller->request->data = $data;
@@ -296,10 +308,35 @@ class InstitutionSitePosition extends AppModel {
 				$controller->request->data['InstitutionSiteStaff']['end_date'] = $postData['InstitutionSiteStaff']['end_date'];
 			}
 		} else {
+			$data['InstitutionSiteStaff']['FTE'] = $calFTE;
 			$controller->request->data = $data;
 		}
 
 		$controller->set(compact('header'));
 	}
 
+	public function positionsAjaxGetFTE($controller, $params) {
+		if ($controller->request->is('ajax')) {
+			$this->render = false;
+			
+			$id =  $controller->request->query['InstitutionSiteStaffId'];
+			pr($id);
+			$startDate = $controller->request->query['startDate'];
+			$endDate = $controller->request->query['endDate'];
+
+			$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
+
+			$InstitutionSiteStaff->unbindModel(array('belongsTo' => array('StaffType', 'InstitutionSite', 'StaffStatus')));
+			$data = $InstitutionSiteStaff->findById($id, array('fields' => 'InstitutionSitePosition.id'));
+
+			$FTEOtpions = $InstitutionSiteStaff->getFTEOptions($data['InstitutionSitePosition']['id'], array('startDate' => $startDate, 'endDate' =>$endDate));
+		
+			$returnString = '';
+
+			foreach ($FTEOtpions as $obj) {
+				$returnString .= '<option value="' . $obj . '">' . $obj . '</option>';
+			}
+			echo $returnString;
+		}
+	}
 }

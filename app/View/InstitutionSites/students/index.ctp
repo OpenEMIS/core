@@ -86,17 +86,17 @@ echo $this->Form->end();
 						<span class="icon_sort_<?php echo ($orderBy =='Student.identification_no')?$orderSort:'up'; ?>" orderBy="Student.identification_no"></span>
 					</th>
 					<th>
-						<span class="left"><?php echo __('First Name'); ?></span>
+						<span class="left"><?php echo __('Name'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy =='Student.first_name')?$orderSort:'up'; ?>" orderBy="Student.first_name"></span>
 					</th>
-					<th>
+					<?php /*<th>
 						<span class="left"><?php echo __('Middle Name'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy =='Student.middle_name')?$orderSort:'up'; ?>" orderBy="Student.middle_name"></span>
 					</th>
 					<th>
 						<span class="left"><?php echo __('Last Name'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy =='Student.last_name')?$orderSort:'up'; ?>" orderBy="Student.last_name"></span>
-					</th>
+					</th> */ ?>
 					<th>
 						<span class="left"><?php echo __('Programme'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy =='EducationProgramme.name')?$orderSort:'up'; ?>" orderBy="EducationProgramme.name"></span>
@@ -111,12 +111,11 @@ echo $this->Form->end();
 				$firstName = $this->Utility->highlight($searchField, $obj['Student']['first_name']);
 				$middleName = $this->Utility->highlight($searchField, $obj['Student']['middle_name']);
 				$lastName = $this->Utility->highlight($searchField, $obj['Student']['last_name']);
+				$fullName = trim($firstName.' '.$middleName). ' '.$lastName;
 				?>
 				<tr>
 					<td><?php echo $this->Html->link($idNo, array('action' => 'studentsView', $obj['Student']['id']), array('escape' => false)); ?></td>
-					<td><?php echo $firstName; ?></td>
-					<td><?php echo $middleName; ?></td>
-					<td><?php echo $lastName; ?></td>
+					<td><?php echo trim($fullName); ?></td>
 					<td><?php echo $obj['EducationProgramme']['name']; ?></td>
 				</tr>
 				<?php } ?>
