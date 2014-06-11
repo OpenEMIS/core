@@ -63,13 +63,17 @@ class FormUtilityHelper extends AppHelper {
 			'data-date' => date('d-m-Y'),
 			'data-date-format' => $dateFormat,
 			'data-date-autoclose' => 'true',
-			'label' => false
+			'label' => false,
+			'disabled' => false
 		);
 		if(!empty($options)) {
 			$_options = array_merge($_options, $options);
 		}
+		
 		$label = $_options['label'];
 		unset($_options['label']);
+		$disabled = $_options['disabled'];
+		unset($_options['disabled']);
 		$wrapper = $this->Html->div('input-group date', null, $_options);
 		$defaults = $this->Form->inputDefaults();
 		$inputOptions = array(
@@ -82,14 +86,29 @@ class FormUtilityHelper extends AppHelper {
 		if($label !== false) {
 			$inputOptions['label'] = array('text' => $label, 'class' => $defaults['label']['class']);
 		}
-		$html = $this->Form->input($field, $inputOptions);
 		
+		if($disabled !== false) {
+			$inputOptions['disabled'] = $disabled;
+		}
+		$html = $this->Form->input($field, $inputOptions);
+	
+		$_datepickerOptions = array();
+		$_datepickerOptions['id'] = $_options['id'];
+		if(!empty($_options['startDate'])){
+			$_datepickerOptions['startDate'] = $_options['startDate'];
+		}
+		if(!empty($_options['endDate'])){
+			$_datepickerOptions['endDate'] = $_options['endDate'];
+		}
+		if($disabled !== false) {
+			$_datepickerOptions['disabled'] = $disabled;
+		}
 		if(!is_null($this->_View->get('datepicker'))) {
 			$datepickers = $this->_View->get('datepicker');
-			$datepickers[] = $_options['id'];
+			$datepickers[] = $_datepickerOptions;
 			$this->_View->set('datepicker', $datepickers);
 		} else {
-			$this->_View->set('datepicker', array($_options['id']));
+			$this->_View->set('datepicker', array($_datepickerOptions));
 		}
 		return $html;
 	}
@@ -229,5 +248,23 @@ class FormUtilityHelper extends AppHelper {
 			3 => 'row_estimate'
 		);
 		return $classes[$tag];
+	}
+	
+	public function getCheckbox($options = array()){
+		$label = empty($options['label']['text'])? 'checkbox' : __($options['label']['text']);
+		$clabelClass = empty($options['label']['class'])? array('col-md-4'):$options['label']['class'];
+		$checkboxName = empty($options['checkbox']['name'])? 'chcekbox':$options['checkbox']['name'];
+		
+		$isCheck = (!empty($options['enabledChecked']) && $options['enabledChecked'])? 'checked' : '';
+		$checkBoxSetting = array('class' => 'icheck-input', $isCheck);
+		
+		if($options['checkbox']['options']){
+			$checkBoxSetting = array_merge($checkBoxSetting, $options['checkbox']['options']);
+		}
+		
+		$checkBoxDiv = $this->Html->div('col-md-1', $this->Form->checkbox($checkboxName, $checkBoxSetting));
+		$checkBoxDiv = $this->Html->div('col-md-offset-3',$checkBoxDiv.$this->Form->label('clabel', $label, $clabelClass));
+		$checkBoxDiv = $this->Html->div('form-group',$checkBoxDiv);
+		echo $checkBoxDiv;
 	}
 }
