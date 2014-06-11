@@ -142,7 +142,9 @@ class LabelHelper extends AppHelper {
 		),
 		'InstitutionSiteClass' => array(
 			'no_of_seats' => 'Seats',
-			'no_of_shifts' => 'Shifts'
+			'no_of_shifts' => 'Shifts',
+			'shift' => 'Shift',
+			'seats' => 'Seats'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',

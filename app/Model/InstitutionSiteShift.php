@@ -85,6 +85,19 @@ class InstitutionSiteShift extends AppModel {
 
 		return $result;
 	}
+	
+	public function getShiftOptions($institutionSiteId, $schoolYearId) {
+		$result = $this->find('list', array(
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteShift.id', 'InstitutionSiteShift.name'),
+			'conditions' => array(
+				'InstitutionSiteShift.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteShift.school_year_id' => $schoolYearId
+			)
+		));
+
+		return $result;
+	}
 
 	public function getShiftById($shiftId) {
 		$data = $this->find('first', array(
