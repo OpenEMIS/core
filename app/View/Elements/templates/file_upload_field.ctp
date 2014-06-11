@@ -1,9 +1,10 @@
 <?php 
 $fileId = (!isset($fileId))? '1': $fileId; 
 $fileId = (isset($multiple))? $fileId : '';
+$label = $label . ' ' . $fileId;
 ?>
 <div id="file-upload-wrapper-<?php echo $fileId;?>" class="form-group">
-	<label class="col-md-3 control-label"><?php echo __('File').' '.$fileId; ?></label>
+	<label class="col-md-3 control-label"><?php echo $label; ?></label>
 	<div class="col-md-6">
 		<div class="fileupload fileupload-new" data-provides="fileupload">
 			<div class="input-group">

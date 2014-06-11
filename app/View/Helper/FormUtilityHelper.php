@@ -183,7 +183,7 @@ class FormUtilityHelper extends AppHelper {
 		
 		$html = '';
 		$row = '<div class="row">%s</div>';
-		$labelCol = '<div class="col-md-2">%s</div>';
+		$labelCol = '<div class="col-md-3">%s</div>';
 		$valueCol = '<div class="col-md-6">%s</div>';
 		
 		$AreaHandler = new AreaHandlerComponent(new ComponentCollection);
@@ -196,23 +196,25 @@ class FormUtilityHelper extends AppHelper {
 	}
 	
 	public function getFormWizardButtons($option = NULL) {
+		$btnOptions = array('div' => false, 'name' => 'submit', 'class' => 'btn_save btn_right');
 		echo '<div class="form-group">';
 		if (!$option['WizardMode']) {
 			echo '<div class="col-md-offset-4">'.$this->getFormButtons(array('cancelURL' => $option['cancelURL'])).'</div>';
 		} else {
 			if(!isset($option['addMoreBtn']) || $option['addMoreBtn'] == true){
-				echo '<div class="add_more_controls">' . $this->Form->submit($this->Label->get('wizard.addmore'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right")) . '</div><br/>';
+				echo '<div class="add_more_controls">' . $this->Form->submit($this->Label->get('wizard.addmore'), $btnOptions) . '</div><br/>';
 			}
 			
 			echo '<div class="col-md-offset-4">';
-			echo $this->Form->submit($this->Label->get('wizard.previous'), array('div' => false, 'name' => 'submit', 'class' => "btn_save btn_right"));
+			echo $this->Form->submit($this->Label->get('wizard.previous'), $btnOptions);
 			if (!$option['WizardEnd']) {
-				echo $this->Form->submit($this->Label->get('wizard.next'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
+				echo $this->Form->submit($this->Label->get('wizard.next'), $btnOptions);
 			} else {
-				echo $this->Form->submit($this->Label->get('wizard.finish'), array('div' => false, 'name' => 'submit', 'name' => 'submit', 'class' => "btn_save btn_right"));
+				echo $this->Form->submit($this->Label->get('wizard.finish'), $btnOptions);
 			}
 			if ($option['WizardMandatory'] != '1' && !$option['WizardEnd']) {
-				echo $this->Form->submit($this->Label->get('wizard.skip'), array('div' => false, 'name' => 'submit', 'class' => "btn_cancel btn_cancel_button btn_left"));
+				$btnOptions['class'] = 'btn_cancel btn_cancel_button btn_left';
+				echo $this->Form->submit($this->Label->get('wizard.skip'), $btnOptions);
 			}
 			echo '</div>';
 		}
