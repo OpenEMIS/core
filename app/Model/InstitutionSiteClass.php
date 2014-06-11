@@ -20,6 +20,7 @@ class InstitutionSiteClass extends AppModel {
 	public $belongsTo = array(
 		'SchoolYear',
 		'InstitutionSite',
+		'InstitutionSiteShift',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -63,17 +64,6 @@ class InstitutionSiteClass extends AppModel {
 				'rule' => 'numeric',
 				'message' => 'Please enter a numeric value'
 			)
-		),
-		'no_of_shifts' => array(
-			'notEmpty' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please enter the number of shifts'
-			),
-			'numeric' => array(
-				'rule' => 'numeric',
-				'message' => 'Please select a numeric value'
-			)
 		)
 	);
 	
@@ -101,8 +91,10 @@ class InstitutionSiteClass extends AppModel {
 				),
 				'InstitutionSiteClass' => array(
 					'name' => 'Class Name',
-					'no_of_seats' => 'Seats',
-					'no_of_shifts' => 'Shift'
+					'no_of_seats' => 'Seats'
+				),
+				'InstitutionSiteShift' => array(
+					'name' => 'Shift'
 				)
 			),
 			'fileName' => 'Report_Class_List'
@@ -182,20 +174,16 @@ class InstitutionSiteClass extends AppModel {
 	
 	public function classesAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add Class');
-		$shiftMax = intval(ClassRegistry::init('ConfigItem')->getValue('no_of_shifts'));
-		$shiftOptions = array();
-		if($shiftMax > 1){
-			for($i=1; $i <= $shiftMax; $i++){
-				$shiftOptions[$i] = $i;
-			}
-		}else{
-			$shiftOptions[1] = 1;
-		}
+		
 		$institutionSiteId = $controller->Session->read('InstitutionSiteId');
 		$yearOptions = $this->SchoolYear->getAvailableYears();
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
+			
+			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($controller->institutionSiteId, $selectedYear);
+			
 			$controller->set(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
 			
 			if($controller->request->is('post') || $controller->request->is('put')) {
@@ -241,6 +229,7 @@ class InstitutionSiteClass extends AppModel {
 
 		if (!empty($data)) {
 			if($controller->request->is('post') || $controller->request->is('put')) {
+				//pr($controller->request->data);die;
 				if($this->saveAll($controller->request->data)) {
 					$controller->Message->alert('general.edit.success');
 				} else {
@@ -256,15 +245,9 @@ class InstitutionSiteClass extends AppModel {
 			$name = $data[$this->alias]['name'];
 			$controller->Navigation->addCrumb($name);
 			
-			$shiftMax = intval(ClassRegistry::init('ConfigItem')->getValue('no_of_shifts'));
-			$shiftOptions = array();
-			if($shiftMax > 1){
-				for($i=1; $i <= $shiftMax; $i++){
-					$shiftOptions[$i] = $i;
-				}
-			}else{
-				$shiftOptions[1] = 1;
-			}
+			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
+			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($controller->institutionSiteId, $data['InstitutionSiteClass']['school_year_id']);
+			
 			$controller->set(compact('shiftOptions'));
 		} else {
 			$controller->Message->alert('general.notExists');
@@ -412,6 +395,12 @@ class InstitutionSiteClass extends AppModel {
 					'table' => 'school_years',
 					'alias' => 'SchoolYear',
 					'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
+				),
+				array(
+					'table' => 'institution_site_shifts',
+					'alias' => 'InstitutionSiteShift',
+					'type' => 'LEFT',
+					'conditions' => array('InstitutionSiteClass.institution_site_shift_id = InstitutionSiteShift.id')
 				)
 			);
 

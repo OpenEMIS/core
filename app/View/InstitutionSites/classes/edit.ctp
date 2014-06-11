@@ -14,13 +14,19 @@ $this->end();
 $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action . 'Edit', $this->data[$model]['id']));
+$labelOptions = $formOptions['inputDefaults']['label'];
+
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->Form->hidden('school_year_id');
 echo $this->Form->input('year', array('value' => $this->data['SchoolYear']['name'], 'disabled' => 'disabled'));
 echo $this->Form->input('name');
-echo $this->Form->input('no_of_seats');
-echo $this->Form->input('no_of_shifts', array('options' => $shiftOptions));
+
+$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.seats');
+echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
+
+$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
+echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 ?>
 
 <div class="form-group">
