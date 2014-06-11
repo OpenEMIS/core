@@ -25,7 +25,15 @@ class Student extends StudentsAppModel {
 			)
 		),
 		'CustomReport',
-		'DatePicker' => array('date_of_birth')
+		'DatePicker' => array('date_of_birth'),
+		'FileUpload' => array(
+			array(
+				'name' => 'photo_name',
+				'content' => 'photo_content',
+				'size' => '1MB',
+				'allowEmpty' => true
+			)
+		)
 	);
 	
 	public $validate = array(

@@ -192,8 +192,8 @@ class StudentsController extends StudentsAppController {
 				}
 			}
 		} else {
-			//$search = $this->data['Search'];
-			$search = $this->data;
+			//$search = $this->request->data['Search'];
+			$search = $this->request->data;
 			if (!empty($search)) {
 				$this->Session->write($key, $search);
 			}
@@ -213,7 +213,7 @@ class StudentsController extends StudentsAppController {
 			$arrSettings = array_merge(array('institutionSiteTypeId'=>$sitetype),$arrSettings);
 		}
 		$arrCustFields = array($customfields => $arrSettings);
-		 
+		
 		$instituionSiteCustField = $this->Components->load('CustomField',$arrCustFields[$customfields]);
 		$dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
 		$types = $this->InstitutionSiteType->findList(1);
@@ -243,23 +243,43 @@ class StudentsController extends StudentsAppController {
 	}
 
 	public function edit() {
-		$this->Student->id = null;
-		if($this->Session->check('StudentId')){
-			$this->Student->id = $this->Session->read('StudentId');
+		$studentId = null;
+		$addressAreaId = false;
+		$birthplaceAreaId = false;
+		if($this->Session->check('StudentId')) {
+			$studentId = $this->Session->read('StudentId');
+			$this->Student->id = $studentId;
 			$this->Navigation->addCrumb('Edit');
 		}else{
-			 $this->Navigation->addCrumb('Add');
+			$this->Navigation->addCrumb('Add');
 		}
 		$imgValidate = new ImageValidate();
-		$data = $this->data;
+		$data = $this->request->data;
 
-		if ($this->request->is(array('post', 'put'))) {//pr($this->data);die;
-			if(isset($this->data['submit']) && $this->data['submit']==__('Cancel')){
+		if ($this->request->is(array('post', 'put'))) {
+			if (isset($this->data['submit']) && $this->request->data['submit']==__('Cancel')){
 				$this->Navigation->exitWizard();
 			}
-			$reset_image = $data['Student']['reset_image'];
-
-			$img = new ImageMeta($this->data['Student']['photo_content']);
+			$this->Student->set($data);
+			$addressAreaId = $this->request->data['Student']['address_area_id'];
+			$birthplaceAreaId = $this->request->data['Student']['birthplace_area_id'];
+			if ($this->Student->validates()) {
+				$this->Student->save();
+				$this->Message->alert('general.edit.success');
+				if(!$this->Session->check('StudentId')){
+					$id = $this->Student->getLastInsertId();
+				}else{
+					$id = $this->Session->read('StudentId');
+				}
+				$this->Navigation->updateWizard('view', $id);
+				$this->redirect(array('action' => 'view'));
+			} else {
+				//pr($this->Student->data);
+				//pr($this->Student->validationErrors);
+			}
+			
+			/*
+			$img = new ImageMeta($this->request->data['Student']['photo_content']);
 			unset($data['Student']['photo_content']);
 
 			if ($reset_image == 0) {
@@ -274,6 +294,7 @@ class StudentsController extends StudentsAppController {
 				$data['Student']['photo_content'] = '';
 				$data['Student']['photo_name'] = '';
 			}
+			
 			$this->Student->set($data);
 			if ($this->Student->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
 				unset($data['Student']['reset_image']);
@@ -287,19 +308,24 @@ class StudentsController extends StudentsAppController {
 				$this->redirect(array('action' => 'view'));
 			} else {
 				// display message of validation error
-				$this->set('imageUploadError', __(array_shift($validated['message'])));
+				//$this->set('imageUploadError', __(array_shift($validated['message'])));
 			}
+			*/
 		} else {
-			$data = $this->Student->find('first', array('conditions' => array('id' => $this->Session->read('StudentId'))));
-			//pr($data);
-			$this->request->data = $data;
+			if(!empty($studentId)) {
+				$data = $this->Student->findById($studentId);
+				$this->request->data = $data;
+				$addressAreaId = $this->request->data['Student']['address_area_id'];
+				$birthplaceAreaId = $this->request->data['Student']['birthplace_area_id'];
+			}
 		}
-		//pr($this->Session->check('StudentId'));
-		$gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
+		$genderOptions = $this->Option->get('gender');
 		$this->set('autoid', $this->getUniqueID());
-		$this->set('gender', $gender);
+		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
 		$this->set('model', 'Student');
+		$this->set('addressAreaId', $addressAreaId);
+		$this->set('birthplaceAreaId', $birthplaceAreaId);
 	}
 
 	public function classes() {
@@ -320,40 +346,14 @@ class StudentsController extends StudentsAppController {
 		$this->set(compact('data', 'header'));
 	}
 
-	public function fetchImage($id) {
-		$this->autoRender = false;
-
-		$url = Router::url('/Students/img/default_student_profile.jpg', true);
-		$mime_types = ImageMeta::mimeTypes();
-
-		$imageRawData = $this->Student->findById($id);
-		$imageFilename = $imageRawData['Student']['photo_name'];
-		$fileExt = pathinfo(strtolower($imageFilename), PATHINFO_EXTENSION);
-
-
-		if (empty($imageRawData['Student']['photo_content']) || empty($imageRawData['Student']['photo_name']) || !in_array($mime_types[$fileExt], $mime_types)) {
-			if ($this->Session->check('Student.defaultImg')) {
-				$imageContent = $this->Session->read('Student.defaultImg');
-			} else {
-				$imageContent = file_get_contents($url);
-				$this->Session->write('Student.defaultImg', $imageContent);
-			}
-			echo $imageContent;
-		} else {
-			$imageContent = $imageRawData['Student']['photo_content'];
-			header("Content-type: " . $mime_types[$fileExt]);
-			echo $imageContent;
-		}
-	}
-
 	public function add() {
 		$this->Navigation->addCrumb('Add new Student');
 		$imgValidate = new ImageValidate();
-		$data = $this->data;
+		$data = $this->request->data;
 		if ($this->request->is('post')) {
 			$reset_image = $data['Student']['reset_image'];
 
-			$img = new ImageMeta($this->data['Student']['photo_content']);
+			$img = new ImageMeta($this->request->data['Student']['photo_content']);
 			unset($data['Student']['photo_content']);
 
 			if ($reset_image == 0) {
@@ -403,7 +403,7 @@ class StudentsController extends StudentsAppController {
 		$gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
 		$this->set('autoid', $this->getUniqueID());
 		$this->set('gender', $gender);
-		$this->set('data', $this->data);
+		$this->set('data', $this->request->data);
 		$this->render('edit');
 	}
 
@@ -445,17 +445,17 @@ class StudentsController extends StudentsAppController {
 		$this->Navigation->addCrumb('Edit More');
 
 		if ($this->request->is('post')) {
-			if(isset($this->data['submit']) && $this->data['submit']==__('Previous')){
+			if(isset($this->request->data['submit']) && $this->request->data['submit']==__('Previous')){
 				$this->Navigation->previousWizardLink($this->action);
 			}
 			$mandatory = $this->Navigation->getMandatoryWizard($this->action);
 			$error = false;
-			//pr($this->data);
+			//pr($this->request->data);
 			//die();
 			$arrFields = array('textbox', 'dropdown', 'checkbox', 'textarea');
 			/**
-			 * Note to Preserve the Primary Key to avoid exhausting the max PK limit
-			 */
+			* Note to Preserve the Primary Key to avoid exhausting the max PK limit
+			*/
 			foreach ($arrFields as $fieldVal) {
 				// pr($fieldVal);
 				// pr($this->request->data['StudentCustomValue']);
@@ -572,9 +572,9 @@ class StudentsController extends StudentsAppController {
 	}
 
 	/**
-	 * Assessments that the student has achieved till date
-	 * @return [type] [description]
-	 */
+	* Assessments that the student has achieved till date
+	* @return [type] [description]
+	*/
 	public function assessments() {
 		$this->Navigation->addCrumb('Results');
 		$header = __('Results');
@@ -755,11 +755,10 @@ class StudentsController extends StudentsAppController {
 		return $generate_no;
 	}
 	
-	public function generateMonthOptions(){
+	public function generateMonthOptions() {
 		$options = array();
-		for ($i = 1; $i <= 12; $i++)
-		{
-				$options[$i] = date("F", mktime(0, 0, 0, $i+1, 0, 0, 0));
+		for ($i = 1; $i <= 12; $i++) {
+			$options[$i] = date("F", mktime(0, 0, 0, $i+1, 0, 0, 0));
 		}
 		
 		return $options;
