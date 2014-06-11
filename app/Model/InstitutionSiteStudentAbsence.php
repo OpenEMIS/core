@@ -305,7 +305,9 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			}
 		}
 		
-		$studentList = $controller->InstitutionSiteClassGradeStudent->getStudentsByClass($classId);
+		$InstitutionSiteClassStudentModel = ClassRegistry::init('InstitutionSiteClassStudent');
+		
+		$studentList = $InstitutionSiteClassStudentModel->getStudentsByClass($classId);
 		if(empty($studentList)){
 			$controller->Message->alert('institutionSiteAttendance.no_student');
 		}
@@ -368,6 +370,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	}
 	
 	public function attendanceStudentAbsenceAdd($controller, $params){
+		$InstitutionSiteClassStudentModel = ClassRegistry::init('InstitutionSiteClassStudent');
+		
 		if($controller->request->is('get')){
 			$controller->Navigation->addCrumb('Absence - Students', array('controller' => 'InstitutionSites', 'action' => 'attendanceStudentAbsence'));
 			$controller->Navigation->addCrumb('Add');
@@ -402,7 +406,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 
 			$this->set($absenceData);
 			if ($this->validates()) {
-				if($controller->InstitutionSiteClassGradeStudent->isStudentInClass($controller->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
+				if($InstitutionSiteClassStudentModel->isStudentInClass($controller->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
 					if($classExists){
 						if($this->save($absenceData)){
 							$newId = $this->getInsertID();
@@ -449,11 +453,13 @@ class InstitutionSiteStudentAbsence extends AppModel {
         $search = $controller->params->query['term'];
 		$classId = intval($controller->params->query['classId']);
 		
+		$InstitutionSiteClassStudentModel = ClassRegistry::init('InstitutionSiteClassStudent');
+		
 		if(empty($classId)){
 			$result = $controller->InstitutionSiteStudent->getAutoCompleteList($search, $controller->institutionSiteId);
 			
 		}else{
-			$result = $controller->InstitutionSiteClassGradeStudent->getAutoCompleteList($search, $classId);
+			$result = $InstitutionSiteClassStudentModel->getAutoCompleteList($search, $classId);
 		}
         
 		//$result = array();
@@ -461,6 +467,8 @@ class InstitutionSiteStudentAbsence extends AppModel {
 	}
 	
 	public function attendanceStudentAbsenceEdit($controller, $params){
+		$InstitutionSiteClassStudentModel = ClassRegistry::init('InstitutionSiteClassStudent');
+		
 		if (isset($controller->params['pass'][0])) {
             $absenceId = $controller->params['pass'][0];
             $obj = $this->getAbsenceById($absenceId);
@@ -498,7 +506,7 @@ class InstitutionSiteStudentAbsence extends AppModel {
 			$classExists= $controller->InstitutionSiteClass->getClassByIdSchoolYear($classIdInput, $firstDateYearId);
 			
 			if ($this->save($absenceData, array('validate' => 'only'))) {
-				if($controller->InstitutionSiteClassGradeStudent->isStudentInClass($controller->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
+				if($InstitutionSiteClassStudentModel->isStudentInClass($controller->institutionSiteId, $absenceData['institution_site_class_id'], $absenceData['student_id'])){
 					if($classExists){
 						if($this->save($absenceData)){
 							$postFileData = $controller->request->data[$this->alias]['files'];
