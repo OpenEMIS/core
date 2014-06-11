@@ -30,10 +30,8 @@ var objTrainingSessions = {
     init: function() {
         var elementLocation = '#searchLocation';
         var elementTrainer = '#searchTrainer';
-        var table = $('#training_session');
-        var url = getRootURL() + table.attr('url');
-        objTrainingSessions.attachAutoComplete(elementLocation, url + '1/', objTrainingSessions.selectLocationField);
-        objTrainingSessions.attachAutoComplete(elementTrainer, url + '2/', objTrainingSessions.selectTrainerField);
+        objTrainingSessions.attachAutoComplete(elementLocation, getRootURL() + $(elementLocation).attr('url') + '1/', objTrainingSessions.selectLocationField);
+        objTrainingSessions.attachAutoComplete(elementTrainer,  getRootURL() + $(elementTrainer).attr('url') + '2/', objTrainingSessions.selectTrainerField);
         objTrainingSessions.getDetailsAfterChangeCourse($("#TrainingSessionTrainingCourseId"));
     },
 
