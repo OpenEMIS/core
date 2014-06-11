@@ -27,20 +27,30 @@ $this->end();
 $this->start('contentBody');
 ?>
 <div class="row">
+	<div class="col-md-3"><?php echo __('Need Type'); ?></div>
+	<div class="col-md-6"><?php echo $trainingNeedTypes[$data[$model]['ref_course_table']];?></div>
+</div>
+<?php if($data[$model]['ref_course_table']=='TrainingNeedCategory'){ ?>
+<div class="row">
+	<div class="col-md-3"><?php echo __('Need Category'); ?></div>
+	<div class="col-md-6"><?php echo $trainingNeedCategoryOptions[$data[$model]['ref_course_id']];?></div>
+</div>
+<?php } ?>
+<div class="row">
 	<div class="col-md-3"><?php echo __('Course Title'); ?></div>
-	<div class="col-md-6"><?php echo $data['TrainingCourse']['title'];?></div>
+	<div class="col-md-6"><?php echo $data[$model]['ref_course_title'];?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Course Code'); ?></div>
-	<div class="col-md-6"><?php echo $data['TrainingCourse']['code']; ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['ref_course_code']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Course Description'); ?></div>
-	<div class="col-md-6"><?php echo $data['TrainingCourse']['description']; ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['ref_course_description']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Training Requirement'); ?></div>
-	<div class="col-md-6"><?php echo $trainingRequirementOptions[$data['TrainingCourse']['training_requirement_id']]; ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['ref_course_requirement']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Priority'); ?></div>

@@ -333,7 +333,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 
 			$postFileData = $saveData['StaffTrainingSelfStudy']['files'];
 			unset($saveData['StaffTrainingSelfStudy']['files']);
-			
+
 			if ($this->save($saveData, array('validate' => 'only'))){
 				if (isset($saveData['save'])) {
 				   	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 1; 
@@ -349,16 +349,10 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 					if(empty($id)){
 						$id = $this->getInsertID();
 					}
-					pr('test');
-
 					$controller->FileUploader->additionData = array('staff_training_self_study_id' => $id);
-					pr('test2');
 					$controller->FileUploader->uploadFile(NULL, $postFileData);
-					pr('test3');
-					pr($controller->FileUploader);
+				
 					if ($controller->FileUploader->success) {
-
-
 						$controller->Message->alert('general.add.success');
 						return $controller->redirect(array('action' => 'trainingSelfStudy'));
 					}

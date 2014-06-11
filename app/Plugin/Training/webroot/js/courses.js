@@ -1,6 +1,6 @@
 
 $(document).ready(function() {
-    //objTrainingCourses.init();
+    objTrainingCourses.init();
 });
 
 function in_array (needle, haystack, argStrict) {
@@ -42,13 +42,19 @@ function in_array (needle, haystack, argStrict) {
 
 var objTrainingCourses = {
     init: function() {
-        $(".icon_plus").unbind( "click" );
-        $('.icon_plus').click(objTrainingCourses.addRow);
+        //$(".icon_plus").unbind( "click");
+        //$('.icon_plus').click(jsForm.insertNewInputFile, validateFileSize);
+        //$('#TrainingCourseFiles').bind("onchange", objTrainingCourses.validateFileSize(this));
+        //$(".icon_plus").removeAttr('onclick');
+        //$(".icon_plus").attr('onclick', 'jsForm.insertNewInputFile;objTrainingCourses.getFileInput(this);');
     },
+
 
     validateFileSize: function(obj) {
       //this.files[0].size gets the size of your file.
-      var fileSize = obj.files[0].size;
+      var fileSize = objfiles[0].size;
+      //console.log(fileSize);
+      //files[0].size
       var fileAttr = $(obj).attr('index');
       if(fileSize/1024 > 2050){
         $('.table_row ' + fileAttr).parent().append('<div id="fileinput_message_' + fileAttr + '" class="error-message custom-file-msg">Invalid File Size</div>');
@@ -57,9 +63,6 @@ var objTrainingCourses = {
     
       }
     },
-
-
-
 
     validateTargetPopulation: function() {
           var val = new Array();
