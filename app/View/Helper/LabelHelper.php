@@ -246,7 +246,9 @@ class LabelHelper extends AppHelper {
 			'credit_hours' => 'Credit',
 			'completed' => 'Completed',
 			'requirement' => 'Training Requirement',
-			'inactivate' => 'Inactivate'
+			'inactivate' => 'Inactivate',
+			'need_category' => 'Need Category',
+			'need_type' => 'Need Type'
 		),
 		'Shift' => array(
 			'name' => 'Shift Name'
