@@ -35,11 +35,11 @@ class StaffTrainingNeed extends StaffAppModel {
             'foreignKey' => 'ref_course_id',
             'conditions' => array('ref_course_table' => 'TrainingCourse'),
         ),
-		'TrainingNeedCategory' => array(
-            'className' => 'TrainingNeedCategory',
-            'foreignKey' => 'ref_course_id',
+        'TrainingNeedCategory' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'ref_course_id',
             'conditions' => array('ref_course_table' => 'TrainingNeedCategory'),
-        ),
+		),
 		'TrainingPriority',
 		'TrainingStatus',
 	);
@@ -131,7 +131,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'trainingNeed'));
 		}
-		$trainingNeedCategoryOptions = array_map('__', $trainingNeedCategory->getOptions());
+		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
 		$trainingNeedTypes = array_map('__', $this->trainingNeedTypes);
 		$controller->Session->write('StaffTrainingNeedId', $id);
         $controller->set(compact('header', 'data', 'id', 'trainingNeedTypes', 'trainingNeedCategoryOptions'));
@@ -297,8 +297,7 @@ class StaffTrainingNeed extends StaffAppModel {
       //  $trainingCourseId = isset($controller->request->data['StaffTrainingNeed']['training_course_id']) ? $controller->request->data['StaffTrainingNeed']['training_course_id'] : "";
       //	$controller->set('selectedCourse', $trainingCourseId);
 		
-		$trainingNeedCategory = ClassRegistry::init('TrainingNeedCategory');
-		$trainingNeedCategoryOptions = array_map('__', $trainingNeedCategory->getOptions());
+		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
 		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
 
 		if($controller->request->is('get')){
