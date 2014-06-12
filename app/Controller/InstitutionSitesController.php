@@ -1205,7 +1205,7 @@ class InstitutionSitesController extends AppController {
 				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hour', strtotime($settingStartTime));
 			}
 
-			$endTime = date('g:i A', $endTimeStamp);
+			$endTime = date('h:i A', $endTimeStamp);
 
 			$defaultShift = array();
 			$defaultShift['InstitutionSiteShift'] = array(
