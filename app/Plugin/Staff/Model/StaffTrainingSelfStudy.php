@@ -26,7 +26,6 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
-		'TrainingProvider',
 		'TrainingStatus',
 	);
 
@@ -119,7 +118,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 				array('field' => 'description',  'labelKey' => 'StaffTraining.description'),
 				array('field' => 'objective',  'labelKey' => 'StaffTraining.objective'),
 				array('field' => 'location'),
-				array('field' => 'name', 'model'=>'TrainingProvider', 'labelKey' => 'StaffTraining.provider' ),
+				array('field' => 'training_provider'),
 				array('field' => 'hours'),
 				array('field' => 'credit_hours', 'labelKey' => 'StaffTraining.credit_hours'),
                 array('field' => 'result'),
@@ -145,7 +144,33 @@ class StaffTrainingSelfStudy extends StaffAppModel {
     }
 	
 	public $headerDefault = 'Achievements';
+
+	public function autocompleteTrainingProvider($search) {
+		$search = sprintf('%%%s%%', $search);
+
+		$list = $this->query(
+			"SELECT * FROM(
+			SELECT training_provider as 'name' FROM staff_training_self_studies as StaffTrainingSelfStudy UNION Select name as 'name' from training_providers as TrainingProvider where visible = 1 
+			)as TrainingProvider
+			WHERE name LIKE '" . $search . "'
+			order by 'name';");
 		
+
+		
+		$data = array();
+		
+		foreach($list as $obj) {
+			$trainingProvider = $obj['TrainingProvider']['name'];
+			
+			$data[] = array(
+				'label' => trim(sprintf('%s', $trainingProvider)),
+				'value' => array('training-provider' => $trainingProvider)
+			);
+		}
+
+		return $data;
+	}
+
 
 	public function trainingSelfStudy($controller, $params) {
 		$controller->Navigation->addCrumb($this->headerDefault);
@@ -167,18 +192,11 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			$controller->redirect(array('action'=>'trainingSelfStudy'));
 		}
 
-		//$arrMap = array('model'=>'Staff.StaffTrainingSelfStudyAttachment', 'foreignKey' => 'staff_training_self_study_id');
-        //$FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
 
-       // $attachments = $FileAttachment->getList($id);
-		
 		$controller->Session->write('StaffTrainingSelfStudyId', $id);
-		//$controller->set('data', $data);
-		//$controller->set('attachments', $attachments);
-		//$controller->set('_model','StaffTrainingSelfStudyAttachment');
-
+	
 		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffTrainingSelfStudyAttachment.staff_training_self_study_id'=>$id)));
-	   $data['multi_records'] = $attachments;
+	   	$data['multi_records'] = $attachments;
 	   
 		$fields = $this->getDisplayFields($controller);
 		$fields2 = $this->getDisplayFields2($controller);
@@ -232,23 +250,6 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             $controller->redirect(array('action' => 'trainingSelfStudy'));
         }
     }
-    /*
-    public function trainingSelfStudyInactivate($controller, $params) {
-        if($controller->Session->check('StaffTrainingSelfStudyId')) {
-            $id = $controller->Session->read('StaffTrainingSelfStudyId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
-
-			$name = $data['StaffTrainingSelfStudy']['title'];
-          	$this->updateAll(
-    			array('StaffTrainingSelfStudy.training_status_id' => 4),
-    			array('StaffTrainingSelfStudy.id '=> $id)
-			);
-            $controller->Utility->alert($name . ' have been inactivated successfully.');
-            $controller->redirect(array('action' => 'trainingSelfStudy'));
-        }
-    }*/
-	
 
 	public function trainingSelfStudyAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
