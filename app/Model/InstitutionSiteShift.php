@@ -143,41 +143,6 @@ class InstitutionSiteShift extends AppModel {
 		$controller->Navigation->addCrumb('Shifts');
 
 		$data = $this->getAllShiftsByInstitutionSite($controller->institutionSiteId);
-		
-		if(empty($data)){
-			$this->create();
-			
-			$SchoolYearModel = ClassRegistry::init('SchoolYear');
-			//$currentYearId = $SchoolYearModel->getSchoolYearId(date('Y'));
-			$yearOptions = $SchoolYearModel->getYearList();
-			$schoolYearId = key($yearOptions);
-			
-			$settingStartTime = $controller->ConfigItem->getValue('start_time');
-			$hoursPerDay = intval($controller->ConfigItem->getValue('hours_per_day'));
-			if($hoursPerDay > 1){
-				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hours', strtotime($settingStartTime));
-			}else{
-				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hour', strtotime($settingStartTime));
-			}
-			
-			$endTime = date('g:i A', $endTimeStamp);
-			
-			$defaultShift = array();
-			$defaultShift['InstitutionSiteShift'] = array(
-				'name' => 'Default Shift',
-				'school_year_id' => $schoolYearId,
-				'start_time' => $settingStartTime,
-				'end_time' => $endTime,
-				'institution_site_id' => $controller->institutionSiteId,
-				'location_institution_site_id' => $controller->institutionSiteId,
-				'location_institution_site_name' => 'Institution Site Name'
-				
-			);
-
-			$this->save($defaultShift);
-			
-			$data = $this->getAllShiftsByInstitutionSite($controller->institutionSiteId);
-		}
 
 		$controller->set('data', $data);
 	}
