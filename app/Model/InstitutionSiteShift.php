@@ -155,9 +155,9 @@ class InstitutionSiteShift extends AppModel {
 			$settingStartTime = $controller->ConfigItem->getValue('start_time');
 			$hoursPerDay = intval($controller->ConfigItem->getValue('hours_per_day'));
 			if($hoursPerDay > 1){
-				$endTimeStamp = strtotime('+' . $hoursPerDay . 'hours', strtotime($settingStartTime));
+				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hours', strtotime($settingStartTime));
 			}else{
-				$endTimeStamp = strtotime('+' . $hoursPerDay . 'hour', strtotime($settingStartTime));
+				$endTimeStamp = strtotime('+' . $hoursPerDay . ' hour', strtotime($settingStartTime));
 			}
 			
 			$endTime = date('g:i A', $endTimeStamp);
