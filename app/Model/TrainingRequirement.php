@@ -30,7 +30,16 @@ class TrainingRequirement extends AppModel {
 			'type' => 'LEFT'
 		)
 	);
-	public $hasMany = array('TrainingCourse');
+	public $hasMany = array(
+		'TrainingCourse' => array(
+            'dependent' => true
+        ),
+        'StaffTrainingNeed' => array(
+    	 	'foreignKey' => 'ref_course_id',
+            'conditions' => array('ref_course_table' => 'TrainingCourse'),
+            'dependent' => true
+        )
+	);
 
 	public function getOptions(){
 		$data = $this->find('all', array('recursive' => -1, 'conditions'=>array('visible'=>1), 'order' => array('TrainingRequirement.order')));
