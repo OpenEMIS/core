@@ -57,10 +57,10 @@ class TrainingCourse extends TrainingAppModel {
 			'dependent' => true
 		),
 		'StaffTrainingNeed' => array(
-			'className' => 'StaffTrainingNeed',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
-		),
+    	 	'foreignKey' => 'ref_course_id',
+            'conditions' => array('ref_course_table' => 'TrainingCourse'),
+            'dependent' => true
+        ),
 		'TrainingSession' => array(
 			'className' => 'TrainingSession',
 			'foreignKey' => 'training_course_id',
@@ -143,6 +143,15 @@ class TrainingCourse extends TrainingAppModel {
 		
 	public $headerDefault = 'Courses';
 
+	public function beforeAction($controller, $action) {
+        $controller->set('model', $this->alias);
+		$controller->FileUploader->fileVar = 'files';
+		$controller->FileUploader->fileModel = 'TrainingCourseAttachment';
+		$controller->FileUploader->allowEmptyUpload = true;
+		$controller->FileUploader->additionalFileType();
+    }
+	
+
 	public function autocomplete($search,$index) {
 		$search = sprintf('%%%s%%', $search);
 		$list = $this->find('all', array(
@@ -174,7 +183,6 @@ class TrainingCourse extends TrainingAppModel {
 
 		return $data;
 	}
-
 
 
 	public function autocompletePosition($search, $index) {
@@ -479,15 +487,10 @@ class TrainingCourse extends TrainingAppModel {
  			$trainingCreditHourOptions[$i] = $i;
 	 	}
 
-		$controller->set('trainingCreditHourOptions', $trainingCreditHourOptions);
-		$controller->set('trainingFieldStudyOptions', $trainingFieldStudyOptions);
-		$controller->set('trainingModeDeliveryOptions', $trainingModeDeliveryOptions);
-		$controller->set('trainingProviderOptions', $trainingProviderOptions);
-		$controller->set('trainingRequirementOptions', $trainingRequirementOptions);
-		$controller->set('trainingLevelOptions', $trainingLevelOptions);
-		$controller->set('teacherPositionTitles', $teacherPositionTitles);
-		$controller->set('staffPositionTitles', $staffPositionTitles);
-		$controller->set('trainingCourseTypeOptions', $trainingCourseTypeOptions);
+	 	
+		$controller->set(compact('trainingFieldStudyOptions', 'trainingModeDeliveryOptions', 'trainingProviderOptions', 
+		'trainingRequirementOptions', 'trainingLevelOptions', 'teacherPositionTitles', 'staffPositionTitles', 'trainingCourseTypeOptions', 'trainingCreditHourOptions'));
+	
 
 		$controller->set('modelName', $this->name);
 
@@ -499,6 +502,11 @@ class TrainingCourse extends TrainingAppModel {
 
 			$this->recursive = -1;
 			$data = $this->findById($id);
+
+			$attachments = $controller->FileUploader->getList(array('conditions' => array('TrainingCourseAttachment.training_course_id'=>$id)));
+		
+			$controller->set('attachments', $attachments);
+
 			if(!empty($data)){
 				if($data['TrainingCourse']['training_status_id']!=1){
 					return $controller->redirect(array('action' => 'courseView', $id));
@@ -562,7 +570,9 @@ class TrainingCourse extends TrainingAppModel {
 		}
 		else{
 			$saveData = $controller->request->data;
-			unset($saveData['TrainingCourseAttachment']);
+			$postFileData = $saveData['TrainingCourse']['files'];
+			unset($saveData['TrainingCourse']['files']);
+
 
 			if ($this->saveAll($saveData, array('validate' => 'only'))){
 				if (isset($saveData['save'])) {
@@ -570,7 +580,6 @@ class TrainingCourse extends TrainingAppModel {
 				} else if (isset($saveData['submitForApproval'])) {
 			      	$saveData['TrainingCourse']['training_status_id'] = 2; 
 				}
-
 				if($this->saveAll($saveData)){
 					$id = null;
 					if(isset($saveData['TrainingCourse']['id'])){
@@ -579,15 +588,10 @@ class TrainingCourse extends TrainingAppModel {
 					if(empty($id)){
 						$id = $this->getInsertID();
 					}
-					
-	                $arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
-	                $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
-	          
-	               	$fileData = $params['form'];
-	                if(!empty($fileData)){
-	                    $errors = $FileAttachment->saveAll($controller->request->data, $fileData, $id);
-	                }
 
+					$controller->FileUploader->additionData = array('training_course_id' => $id);
+					$controller->FileUploader->uploadFile(NULL, $postFileData);
+					
 					if(isset($controller->request->data['DeleteTargetPopulation'])){
 						$deletedId = array();
 						foreach($controller->request->data['DeleteTargetPopulation'] as $key=>$value){
