@@ -1,14 +1,12 @@
 
-<div class="table_row <?php echo ($index+1)%2==0 ? 'li_even' : ''; ?>" row-id="<?php echo $index;?>">
-	<div class="table_cell cell_description" style="width:90%">
-		<div class="input_wrapper">
+<tr class="table_row <?php echo ($index+1)%2==0 ? 'li_even' : ''; ?>" row-id="<?php echo $index;?>">
+	<td class="table_cell cell_description" style="width:90%">
 	 	<?php 
-			echo $this->Form->input('TrainingCourseProvider.' . $index . '.training_provider_id', array('options'=>$trainingProviderOptions, 'label'=>false, 'div'=>false)); 
+			echo $this->Form->input('TrainingCourseProvider.' . $index . '.training_provider_id', array('options'=>$trainingProviderOptions, 'label'=>false, 'between'=>false, 'div'=>false, 'class'=>'form-control')); 
 		?>
-		</div>
-    </div>
+    </td>
  
-	<div class="table_cell cell_delete">
+	<td class="table_cell cell_delete">
     	<span class="icon_delete" title="<?php echo __("Delete"); ?>" onclick="objTrainingCourses.deleteProvider(this)"></span>
-    </div>
-</div >
+    </td>
+</tr >

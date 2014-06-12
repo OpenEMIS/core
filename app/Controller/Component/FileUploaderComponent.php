@@ -235,14 +235,18 @@ class FileUploaderComponent extends Component {
 			}
 			$selectedData[$this->dbPrefix . '_content'] = file_get_contents($selectedFile['tmp_name']);
 			$selectedData[$this->dbPrefix . '_name'] = $selectedFile['name'];
+			$selectedData['name'] = $selectedFile['name'];
+			$selectedData['description'] = '';
 			//pr($this->additionData);
 			if (!empty($this->additionData)) {
 				$selectedData = array_merge($selectedData, $this->additionData);
 			}
-
-			array_push($fileData, array($this->fileModel => $selectedData));
+			if ($this->fileVar == 'files') {
+				$fileData[] = $selectedData;
+			}else{
+				array_push($fileData, array($this->fileModel => $selectedData));
+			}
 		}
-
 		if (!empty($fileData) && !empty($model)) {
 			if ($model->saveAll($fileData, array('validate' => false))) {
 				$this->success = true;
@@ -340,5 +344,3 @@ class FileUploaderComponent extends Component {
 	}
 
 }
-
-?>
