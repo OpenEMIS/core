@@ -95,9 +95,6 @@ class TeachersController extends TeachersAppController {
         'award' => 'Teachers.TeacherAward',
         'membership' => 'Teachers.TeacherMembership',
         'license' => 'Teachers.TeacherLicense',
-        'training_need' => 'Teachers.TeacherTrainingNeed',
-        'training_result' => 'Teachers.TeacherTrainingResult',
-        'training_self_study' => 'Teachers.TeacherTrainingSelfStudy',
         'report' => 'Teachers.TeacherReport'
     );
 
