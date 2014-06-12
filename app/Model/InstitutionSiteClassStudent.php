@@ -312,6 +312,32 @@ class InstitutionSiteClassStudent extends AppModel {
 		return $data;
 	}
 	
+	// used by InstitutionSiteStudent
+	public function getRecordIdsByStudentIdAndSiteId($studentId, $InstitutionSiteId) {
+		$data = $this->find('list', array(
+			'fields' => array('InstitutionSiteClassStudent.id'),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array(
+						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClassStudent.institution_site_class_id'
+					)
+				),
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id',
+						'InstitutionSiteClass.institution_site_id = ' . $InstitutionSiteId
+					)
+				)
+			),
+			'conditions' => array('InstitutionSiteClassStudent.student_id = ' . $studentId)
+		));
+		return $data;
+	}
+	
 	public function getAutoCompleteList($search, $classId) {
 		$search = sprintf('%%%s%%', $search);
 
