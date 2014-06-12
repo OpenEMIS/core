@@ -45,7 +45,7 @@ class StaffController extends StaffAppController {
         'SalaryDeductionType',
         'TrainingCourse',
         'Staff.StaffAttendanceType',
-		'InstitutionSiteStaffAbsence'
+		'InstitutionSiteStaffAbsence',
         'Staff.StaffTrainingSelfStudy'
     );
     public $helpers = array('Js' => array('Jquery'), 'Paginator');
