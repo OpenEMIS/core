@@ -268,23 +268,32 @@ class InstitutionSitePosition extends AppModel {
 		$InstitutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 
 		$InstitutionSiteStaff->unbindModel(array('belongsTo' => array('StaffType', 'InstitutionSite', 'StaffStatus')));
-		$data = $InstitutionSiteStaff->findById($id, array('fields' => 'Staff.first_name,Staff.middle_name,Staff.last_name,Staff.identification_no,InstitutionSiteStaff.id,InstitutionSiteStaff.start_date,InstitutionSiteStaff.FTE,InstitutionSiteStaff.end_date,InstitutionSitePosition.id,InstitutionSitePosition.staff_position_title_id'));
+		$data = $InstitutionSiteStaff->findById($id, array('fields' => 'Staff.first_name,Staff.middle_name,Staff.last_name,Staff.identification_no,InstitutionSiteStaff.id,InstitutionSiteStaff.staff_status_id,InstitutionSiteStaff.start_date,InstitutionSiteStaff.FTE,InstitutionSiteStaff.end_date,InstitutionSitePosition.id,InstitutionSitePosition.staff_position_title_id'));
 		$positionData = $this->StaffPositionTitle->findById($data['InstitutionSitePosition']['staff_position_title_id'], array('fields' => 'StaffPositionTitle.name'));
 
 		$calFTE = $data['InstitutionSiteStaff']['FTE']*100;
 		
 		$FTEOtpions = $InstitutionSiteStaff->getFTEOptions($data['InstitutionSitePosition']['id'], array('startDate' => $data['InstitutionSiteStaff']['start_date'], 'endDate' => $data['InstitutionSiteStaff']['end_date'], 'FTE_value'=> $calFTE,'includeSelfNum'=> true));
-		$controller->set(compact('FTEOtpions'));
 		$data = array_merge($data, $positionData);
 
+		$StaffStatus = ClassRegistry::init('StaffStatus');
+		$statusOptions = $StaffStatus->findList(true);
+		//$staffTypeDefault = $this->StaffType->getDefaultValue();
+		//pr($staffTypeOptions);
 		$controller->Session->write('InstitutionSiteStaffId', $id);
 				
 		if ($controller->request->is(array('post', 'put'))) {
 			$postData = $controller->request->data;
-		//	pr($postData);die;
+
+			$postData['InstitutionSiteStaff']['start_year'] = date('Y', strtotime($postData['InstitutionSiteStaff']['start_date']));
+			
 			$enabledEndDate = $postData['InstitutionSiteStaff']['enable_end_date'];
 			if(!$enabledEndDate){
 				$postData['InstitutionSiteStaff']['end_date'] = null;
+				$postData['InstitutionSiteStaff']['end_year'] = null;
+			}
+			else{
+				$postData['InstitutionSiteStaff']['end_year'] = date('Y', strtotime($postData['InstitutionSiteStaff']['end_date']));
 			}
 			$postData['InstitutionSiteStaff']['FTE'] = $postData['InstitutionSiteStaff']['FTE']/100;
 			$InstitutionSiteStaff->validate = array_merge(
@@ -312,7 +321,7 @@ class InstitutionSitePosition extends AppModel {
 			$controller->request->data = $data;
 		}
 
-		$controller->set(compact('header'));
+		$controller->set(compact('header', 'FTEOtpions','statusOptions'));
 	}
 
 	public function positionsAjaxGetFTE($controller, $params) {

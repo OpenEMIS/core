@@ -480,6 +480,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 
 			$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
 			$newData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
+			$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
 			$lineBreakHeaders = $RubricsTemplate->getInstitutionQAReportHeader($institutionSiteId);
 			$newData = $QualityBatchReport->breakReportByYear($newData, 'no', $lineBreakHeaders);
 
