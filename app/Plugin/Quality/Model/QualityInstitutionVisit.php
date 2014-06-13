@@ -309,7 +309,11 @@ class QualityInstitutionVisit extends QualityAppModel {
         $selectedYearId = !empty($selectedYearId) ? $selectedYearId : key($schoolYearOptions);
         $selectedYearId = !empty($params['pass'][1 + $paramsLocateCounter]) ? $params['pass'][1 + $paramsLocateCounter] : $selectedYearId;
 
-        $gradesOptions = array();
+		
+		$InstitutionSiteClassGrade = ClassRegistry::init('InstitutionSiteClassGrade');
+		$gradesOptions = $InstitutionSiteClassGrade->getGradesByInstitutionSiteId($institutionSiteId,$selectedYearId);
+	
+        /*$gradesOptions = array();
         $InstitutionSiteProgramme = ClassRegistry::init('InstitutionSiteProgramme');
         $institutionProgramData = $InstitutionSiteProgramme->getProgrammeList($institutionSiteId, $selectedYearId);
 
@@ -323,7 +327,7 @@ class QualityInstitutionVisit extends QualityAppModel {
 
                 //$gradesOptions = array_merge($gradesOptions, $itemData['education_grades']);
             }
-        }
+        }*/
         $classOptions = array();
         if (!empty($gradesOptions)) {
             $selectedGradeId = !empty($selectedGradeId) ? $selectedGradeId : key($gradesOptions);
