@@ -143,17 +143,21 @@ class ConfigController extends AppController {
 
 	}
 
-	private function renderView($selectedType, $selectedName =null, $selectedAction=null){
-		if($selectedType=='LDAP Configuration'){
-			$this->render('/Config/custom/ldap');
-		}else if($selectedType=='Dashboard'){
-			$this->render('/Config/custom/dashboard');
-		}else if($selectedType=='Year Book Report' && $selectedName=='yearbook_logo'){
-			$this->render('/Config/custom/yearbook_logo');
-		}else if($selectedType=='Custom Validation'){
-			$this->render('/Config/custom/custom_validation');
-		}else if($selectedType=='Auto Generated OpenEMIS ID'){
-			$this->render('/Config/custom/auto_generated');
+	private function renderView($selectedType, $selectedName=null, $selectedAction=null){
+		$views = array(
+			'LDAP Configuration' => 'ldap',
+			'Dashboard' => 'dashboard',
+			'Year Book Report' => 'yearbook_logo',
+			'Custom Validation' => 'custom_validation',
+			'Auto Generated OpenEMIS ID' => 'auto_generated'
+		);
+		if (array_key_exists($selectedType, $views)) {
+			$view = $views[$selectedType];
+			
+			if ($selectedType!='Year Book Report' 
+			|| ($selectedType=='Year Book Report' && $selectedName=='yearbook_logo')) {
+				$this->render('/Config/custom/' . $view);
+			}
 		}
 	}
 
@@ -309,7 +313,7 @@ class ConfigController extends AppController {
 		$this->Navigation->addCrumb('Edit System Configurations');
 		$id = empty($this->params['pass'][0])? 0:$this->params['pass'][0];
 
-		if($this->request->is('post')){
+		if ($this->request->is('post')) {
 			$data = $this->request->data;
 
 			if($id == 'LDAP Configuration'){
@@ -325,18 +329,17 @@ class ConfigController extends AppController {
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action'=>'index', $data['ConfigItem']['type']));
 				}
-			}else{     
+			} else {
 				if($this->ConfigItem->save($data)){
 					$this->Message->alert('general.add.success');
 					return $this->redirect(array('action'=>'index', $data['ConfigItem']['type']));
 				}
 			}
-		}else{
+		} else {
 			$data = $this->getData($id);
 
 			$this->request->data = $data;
 		}
-
 
 		$type = $this->request->data['ConfigItem']['type'];
 		$name = $this->request->data['ConfigItem']['name'];
@@ -349,7 +352,6 @@ class ConfigController extends AppController {
 
 		$this->set('action', $this->action);
 		$this->renderView($type, $name);
-				
 	}
 
 	################# Start Yearbook #################
@@ -361,7 +363,7 @@ class ConfigController extends AppController {
 		if($this->request->is('get')){
 			$data = $this->getData('yearbook_logo');
 
-			pr($data);
+			//pr($data);
 
 			$this->request->data = $data;
 			

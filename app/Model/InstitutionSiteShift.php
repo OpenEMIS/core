@@ -85,6 +85,19 @@ class InstitutionSiteShift extends AppModel {
 
 		return $result;
 	}
+	
+	public function getShiftOptions($institutionSiteId, $schoolYearId) {
+		$result = $this->find('list', array(
+			'recursive' => -1,
+			'fields' => array('InstitutionSiteShift.id', 'InstitutionSiteShift.name'),
+			'conditions' => array(
+				'InstitutionSiteShift.institution_site_id' => $institutionSiteId,
+				'InstitutionSiteShift.school_year_id' => $schoolYearId
+			)
+		));
+
+		return $result;
+	}
 
 	public function getShiftById($shiftId) {
 		$data = $this->find('first', array(
@@ -129,14 +142,17 @@ class InstitutionSiteShift extends AppModel {
 	public function shifts($controller, $params) {
 		$controller->Navigation->addCrumb('Shifts');
 
-		$data = $controller->InstitutionSiteShift->getAllShiftsByInstitutionSite($controller->institutionSiteId);
+		$data = $this->getAllShiftsByInstitutionSite($controller->institutionSiteId);
 
 		$controller->set('data', $data);
 	}
 
 	public function shiftsView($controller, $params) {
 		$shiftId = $controller->params['pass'][0];
-		$shiftObj = $controller->InstitutionSiteShift->getShiftById($shiftId);
+		$shiftObj = $this->getShiftById($shiftId);
+		
+		$controller->Navigation->addCrumb('Shift Details');
+		
 		if (!empty($shiftObj)) {
 			$controller->Session->write('shiftId', $shiftId);
 			$controller->set('shiftObj', $shiftObj);
@@ -152,9 +168,9 @@ class InstitutionSiteShift extends AppModel {
 		if ($controller->request->is('post')) { // save
 			$data = $controller->request->data;
 			$data['InstitutionSiteShift']['institution_site_id'] = $controller->institutionSiteId;
-			$controller->InstitutionSiteShift->create();
+			$this->create();
 
-			if ($controller->InstitutionSiteShift->save($data, array('validate' => 'only'))) {
+			if ($this->save($data, array('validate' => 'only'))) {
 				if (empty($data['InstitutionSiteShift']['location_institution_site_id'])) {
 					$controller->Utility->alert($controller->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
 				} else {
@@ -162,7 +178,7 @@ class InstitutionSiteShift extends AppModel {
 					if (empty($testLocationId)) {
 						$controller->Utility->alert($controller->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
 					} else {
-						$controller->InstitutionSiteShift->save($data, array('validate' => 'false'));
+						$this->save($data, array('validate' => 'false'));
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 						$controller->redirect(array('action' => 'shifts'));
 					}
@@ -179,7 +195,7 @@ class InstitutionSiteShift extends AppModel {
 
 	public function shiftsEdit($controller, $params) {
 		$shiftId = $controller->params['pass'][0];
-		$shiftObj = $controller->InstitutionSiteShift->getShiftById($shiftId);
+		$shiftObj = $this->getShiftById($shiftId);
 		if (empty($shiftObj)) {
 			$controller->redirect(array('action' => 'shifts'));
 		}
@@ -194,7 +210,7 @@ class InstitutionSiteShift extends AppModel {
 			$data = $controller->request->data;
 			$data['InstitutionSiteShift']['institution_site_id'] = $controller->institutionSiteId;
 
-			if ($controller->InstitutionSiteShift->save($data, array('validate' => 'only'))) {
+			if ($this->save($data, array('validate' => 'only'))) {
 				if (empty($data['InstitutionSiteShift']['location_institution_site_id'])) {
 					$controller->Utility->alert($controller->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
 				} else {
@@ -202,7 +218,7 @@ class InstitutionSiteShift extends AppModel {
 					if (empty($testLocationId)) {
 						$controller->Utility->alert($controller->Utility->getMessage('SHIFT_WITHOUT_LOCATION'), array('type' => 'error', 'dismissOnClick' => true));
 					} else {
-						$controller->InstitutionSiteShift->save($data, array('validate' => 'false'));
+						$this->save($data, array('validate' => 'false'));
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 						$controller->redirect(array('action' => 'shiftsView', $shiftId));
 					}
@@ -227,10 +243,10 @@ class InstitutionSiteShift extends AppModel {
 	public function shiftsDelete($controller, $params) {
 		if ($controller->Session->check('shiftId')) {
 			$shiftId = $controller->Session->read('shiftId');
-			$shiftObj = $controller->InstitutionSiteShift->getShiftById($shiftId);
+			$shiftObj = $this->getShiftById($shiftId);
 			$shiftName = $shiftObj['InstitutionSiteShift']['name'];
 
-			$controller->InstitutionSiteShift->deleteAll(array('InstitutionSiteShift.id' => $shiftId));
+			$this->deleteAll(array('InstitutionSiteShift.id' => $shiftId));
 			$controller->Utility->alert($shiftName . __(' have been deleted successfully.'));
 			$controller->redirect(array('action' => 'shifts'));
 		} else {

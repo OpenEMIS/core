@@ -1,7 +1,4 @@
-<?php 
-echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
-echo $this->Html->script('/Students/js/students', false);
-
+<?php
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
@@ -18,12 +15,15 @@ $this->start('contentBody');
 $obj = $data['Student'];
 ?>
 
-<fieldset class="section_break" id="general">
+<fieldset class="section_break">
 	<legend><?php echo __('Information'); ?></legend>
 	<?php
-		$path = (isset($obj['photo_content']) && !empty($obj['photo_content']) && !stristr($obj['photo_content'], 'null'))? "/Students/fetchImage/{$obj['id']}":"/Students/img/default_student_profile.jpg";
-		echo $this->Html->image($path, array('class' => 'profile_image', 'alt' => '90x115'));
+		$src = $this->Image->getBase64($obj['photo_name'], $obj['photo_content']);
+		if(is_null($src)) {
+			$src = $this->webroot . 'Students/img/default_student_profile.jpg';
+		}
 	?>
+	<img src="<?php echo $src ?>" class="profile-image" alt="90x115" />
 	<div class="row">
 		<div class="col-md-3"><?php echo __('OpenEMIS ID'); ?></div>
 		<div class="col-md-6"><?php echo $obj['identification_no']; ?></div>
@@ -59,7 +59,7 @@ $obj = $data['Student'];
 	<legend><?php echo __('Address'); ?></legend>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Address'); ?></div>
-		<div class="col-md-6 address"><?php echo nl2br($obj['address']); ?></div>
+		<div class="col-md-6"><?php echo nl2br($obj['address']); ?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Postal Code'); ?></div>
@@ -70,15 +70,15 @@ $obj = $data['Student'];
 <?php if($obj['address_area_id']>0){ ?>
 </fieldset>
 	<fieldset class="section_break">
-	<legend><?php echo __('Address Area'); ?></legend>   
-	<?php echo @$this->Utility->showArea($this->Form, 'address_area_id',$obj['address_area_id'], array()); ?>
+	<legend><?php echo __('Address Area'); ?></legend>
+	<?php echo $this->FormUtility->areas($obj['address_area_id']); ?>
 </fieldset>
 <?php } ?>
 
 <?php if($obj['birthplace_area_id']>0){ ?>
 <fieldset class="section_break">
-	<legend><?php echo __('Birth Place Area'); ?></legend>   
-	<?php echo @$this->Utility->showArea($this->Form, 'birthplace_area_id',$obj['birthplace_area_id'], array()); ?>
+	<legend><?php echo __('Birth Place Area'); ?></legend>
+	<?php echo $this->FormUtility->areas($obj['birthplace_area_id']); ?>
 </fieldset>
 <?php } ?>
 
