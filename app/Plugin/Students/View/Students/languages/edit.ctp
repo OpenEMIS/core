@@ -20,12 +20,11 @@ echo $this->Form->input('speaking', array('options'=>$gradeOptions));
 echo $this->Form->input('reading', array('options'=>$gradeOptions));
 echo $this->Form->input('writing', array('options'=>$gradeOptions));
 
-echo $this->FormUtility->getFormWizardButtons(array(
-    'cancelURL' => array('action' => 'languagesView',$id),
-    'WizardMode' => $WizardMode,
-    'WizardEnd' => isset($wizardEnd)?$wizardEnd : NULL,
-    'WizardMandatory' => isset($mandatory)?$mandatory : NULL
-));
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'languagesView', $id)));
+} else {
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
 
 echo $this->Form->end();
 $this->end();
