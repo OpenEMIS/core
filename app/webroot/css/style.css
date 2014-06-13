@@ -14,6 +14,8 @@
 .table-checkable .checkbox-column { width: 36px; }
 .input-group-addon { font-size: 12px; padding: 5px 8px; }
 .fileupload .btn { font-size: 12px; padding: 4px 12px; }
+.form-buttons { margin-top: 15px; }
+.form-buttons input:first-child { margin-left: 15px; }
 /* end bootstrap */
 
 textarea { resize: none; }

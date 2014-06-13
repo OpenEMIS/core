@@ -99,30 +99,39 @@ echo $this->Form->create('Student', $formOptions);
 </fieldset>
 
 <fieldset class="section_break">
-	<legend id="area"><?php echo __('Address Area'); ?></legend>
+	<legend><?php echo __('Address Area'); ?></legend>
 	<?php echo $this->FormUtility->areapicker('address_area_id', array('model' => 'Area', 'value' => $addressAreaId)); ?>
 </fieldset>
 
 <fieldset class="section_break">
-	<legend id="area"><?php echo __('Birth Place Area'); ?></legend>
+	<legend><?php echo __('Birth Place Area'); ?></legend>
 	<?php echo $this->FormUtility->areapicker('birthplace_area_id', array('model' => 'Area', 'value' => $birthplaceAreaId)); ?>
 </fieldset>
 
-<div class="controls">
-	<?php if(!$WizardMode){ ?>
+<?php 
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
+} else {
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
+?>
+
+<!--div class="controls">
+	<?php if(true){ ?>
 	<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
 	<?php }else{?>
-		<?php if(!$this->Session->check('StudentId')){ 
+		<?php if(!$this->Session->check('Student.id')){
 		   echo $this->Form->submit(__('Cancel'), array('div'=>false, 'name'=>'submit', 'class'=>"btn_cancel btn_cancel_button btn_right"));
 		 }
-		if(!$wizardEnd){
-			echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
+		//if(!$wizardEnd){
+		if(true) {
+			echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'next', 'class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
 		}else{
-			echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
+			echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
 		}
 	}?>
-</div>
+</div-->
 
 <?php echo $this->Form->end(); ?>
 <?php $this->end(); ?>

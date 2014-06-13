@@ -28,12 +28,12 @@ echo $this->Form->input('contact_type_id', array(
 echo $this->Form->input('value');
 echo $this->Form->input('preferred', array('options' => $yesnoOptions));
 
-echo $this->FormUtility->getFormWizardButtons(array(
-    'cancelURL' => array('action' => 'contactsView', $id),
-    'WizardMode' => $WizardMode,
-    'WizardEnd' => isset($wizardEnd)?$wizardEnd : NULL,
-    'WizardMandatory' => isset($mandatory)?$mandatory : NULL
-));
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'contactsView', $id)));
+} else {
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
+
 echo $this->Form->end();
 
 $this->end();

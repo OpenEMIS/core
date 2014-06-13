@@ -22,3 +22,4 @@ ALTER TABLE `institution_site_class_subjects` ADD `status` INT( 1 ) NOT NULL AFT
 ALTER TABLE `institution_site_class_subjects` ADD `modified_user_id` INT( 11 ) NULL AFTER `education_grade_subject_id` ;
 ALTER TABLE `institution_site_class_subjects` ADD `modified` DATETIME NULL AFTER `modified_user_id` ;
 ALTER TABLE `institution_site_class_grades` ADD `status` INT( 1 ) NOT NULL AFTER `id` ;
+ALTER TABLE `institution_site_class_staff` ADD `status` INT( 1 ) NOT NULL AFTER `id` ;
