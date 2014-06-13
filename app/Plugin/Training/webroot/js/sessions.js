@@ -29,9 +29,7 @@ var objTrainingSessions = {
 
     init: function() {
         var elementLocation = '#searchLocation';
-        var elementTrainer = '#searchTrainer';
-        objTrainingSessions.attachAutoComplete(elementLocation, getRootURL() + $(elementLocation).attr('url') + '1/', objTrainingSessions.selectLocationField);
-        objTrainingSessions.attachAutoComplete(elementTrainer,  getRootURL() + $(elementTrainer).attr('url') + '2/', objTrainingSessions.selectTrainerField);
+        objTrainingSessions.attachAutoComplete(elementLocation, getRootURL() + $(elementLocation).attr('url'), objTrainingSessions.selectLocationField);
         objTrainingSessions.getDetailsAfterChangeCourse($("#TrainingSessionTrainingCourseId"));
     },
 
@@ -49,8 +47,6 @@ var objTrainingSessions = {
 
         var selProvider = $('.provider');
         defaultVal = $(selProvider).val();
-
-        
 
         if(trainingCourseId === ""){
             provider[0].options.length = 0;
@@ -186,7 +182,76 @@ var objTrainingSessions = {
         objTrainingSessions.validateTrainee();
     },
 
+    addTrainer: function(obj) {
+        var table = $('.trainer');
+        var index = table.find('.table_row').length + $('.delete-trainer input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body').append(data);
+                var element = '#searchTrainer' + index;
+                var url = getRootURL() + table.attr('url') + '/' + index;
+                //objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainer);
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
     
+     selectTrainer: function(event, ui) {
+        var val = ui.item.value;
+        var element;
+        for(var i in val) {
+            element = $('.' + i);
+            if(element.get(0).tagName.toUpperCase() === 'INPUT') {
+                element.val(val[i]);
+            } else {
+                element.html(val[i]);
+            }
+        }
+        objTrainingSessions.validateTrainer();
+        return false;
+    },
+    
+    deleteTrainer: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-trainer');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
+        objTrainingSessions.validateTrainer();
+    },
+
+    validateTrainer: function() {
+          var val = new Array();
+          var c = 0;
+          $("#trainer_message").remove();
+          $('.validate-trainer').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.trainer').prepend('<div id="trainer_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Trainer</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
 
     attachAutoComplete: function(element, url, callback) {
         $(element).autocomplete({

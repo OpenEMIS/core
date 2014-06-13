@@ -53,29 +53,21 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 			<?php 
 			$i = 0;   
 			foreach($this->request->data['TrainingCourseTargetPopulation'] as $val){?>
-			<?php if(!empty($val['position_title_table'])){ ?>
+			<?php if(!empty($val['staff_position_title_id'])){ ?>
 			<tr class="table_row " row-id="<?php echo $i;?>">
 					<td class="table_cell cell_description" style="width:90%">
 						<div class="input_wrapper">
 					 	<div class="position-title-name-<?php echo $i;?>">
-							<?php 
-							if($val['position_title_table']=='teacher_position_titles'){
-								echo $teacherPositionTitles[$val['position_title_id']];
-							}else{
-								echo $staffPositionTitles[$val['position_title_id']];
-							}?>
+							<?php echo $staffPositionTitles[$val['staff_position_title_id']];?>
 						</div>		
-						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_id', array('class' => 'position-title-id-'.$i . 
-						' validate-target-population', 'value'=>$val['position_title_id'])); ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.staff_position_title_id', array('class' => 'position-title-id-'.$i, 'value'=>$val['staff_position_title_id'])); ?>
 						<?php if(isset($val['id'])){ ?>
 						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.id', array('value'=>$val['id'], 
 						'class' => 'control-id')); ?>
 						<?php } ?>
-						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_table', array('class' => 'position-title-table-'.$i, 
-						'value'=>$val['position_title_table'])); ?>
-						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_validate', array('class' => 'position-title-validate-'. 
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_validate', array('class' => 'position-title-validate-'. $i .
 							' validate-target-population', 
-						'value'=>$val['position_title_table'] . '_' . $val['position_title_id'])); ?>
+						'value'=> $val['staff_position_title_id'])); ?>
 					
 						</div>
 				    </td>
@@ -116,7 +108,7 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 			<tr class="table_row " row-id="<?php echo $i;?>">
 				<td class="table_cell cell_description" style="width:90%">
 					<?php echo $this->Form->input('TrainingCourseProvider.' . $i . '.training_provider_id', array(
-						'options'=>$trainingProviderOptions,'value'=>$val['training_provider_id'], 'label'=>false, 'between'=>false, 'div'=>false)); ?>
+						'options'=>$trainingProviderOptions,'value'=>$val['training_provider_id'], 'class'=>'form-control validate-provider', 'label'=>false, 'between'=>false, 'div'=>false, 'onchange'=>'objTrainingCourses.validateProvider();')); ?>
 					<?php if(isset($val['id'])){ ?>
 					<?php echo $this->Form->hidden('TrainingCourseProvider.' . $i . '.id', array('value'=>$val['id'], 
 					'class' => 'control-id')); ?>

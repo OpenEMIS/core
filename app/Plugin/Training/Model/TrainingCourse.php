@@ -188,26 +188,28 @@ class TrainingCourse extends TrainingAppModel {
 	public function autocompletePosition($search, $index) {
 		$search = sprintf('%%%s%%', $search);
 
-		$list = $this->query(
-			"SELECT * FROM(
-			SELECT *, 'staff_position_titles' as position_table FROM staff_position_titles as StaffPositionTitle UNION Select *, 'teacher_position_titles' as position_table from teacher_position_titles as TeacherPositionTitle 
-			)as TrainingPosition
-			WHERE name LIKE '" . $search . "' and visible = 1
-			order by 'order';");
-		
+		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
 
+		$list = $staffPositionTitle->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT StaffPositionTitle.name', 'StaffPositionTitle.id'),
+			'conditions' => array(
+				'StaffPositionTitle.name LIKE' => $search,
+				'StaffPositionTitle.visible' => 1
+			),
+			'order' => array('StaffPositionTitle.name')
+		));
 		
 		$data = array();
 		
 		foreach($list as $obj) {
-			$positionTitleId = $obj['TrainingPosition']['id'];
-			$positionTitleName = $obj['TrainingPosition']['name'];
-			$positionTitleTable= $obj['TrainingPosition']['position_table'];
+			$positionTitleId = $obj['StaffPositionTitle']['id'];
+			$positionTitleName = $obj['StaffPositionTitle']['name'];
 			
 			$data[] = array(
 				'label' => trim(sprintf('%s', $positionTitleName)),
-				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName, 'position-title-table-'.$index => $positionTitleTable,
-				'position-title-validate-'.$index => $positionTitleTable . '_' . $positionTitleId)
+				'value' => array('position-title-id-'.$index => $positionTitleId, 'position-title-name-'.$index => $positionTitleName,
+				'position-title-validate-'.$index => $positionTitleId)
 			);
 		}
 
@@ -262,36 +264,6 @@ class TrainingCourse extends TrainingAppModel {
 	}
 
 
-  
-    public function coursePrequisiteDelete() {
-        $this->autoRender = false;
-        if($this->request->is('post')) {
-            $result = array('alertOpt' => array());
-            $this->Utility->setAjaxResult('alert', $result);
-            $id = $this->params->data['id'];
-
-            $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-            $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-            
-            if($FileAttachment->delete($id)) {
-                $result['alertOpt']['text'] = __('File is deleted successfully.');
-            } else {
-                $result['alertType'] = $this->Utility->getAlertType('alert.error');
-                $result['alertOpt']['text'] = __('Error occurred while deleting file.');
-            }
-            
-            return json_encode($result);
-        }
-    }
-        
-    public function attachmentsLeaveDownload($id) {
-        $arrMap = array('model'=>'Staff.StaffLeaveAttachment', 'foreignKey' => 'staff_leave_id');
-        $FileAttachment = $this->Components->load('FileAttachment', $arrMap);
-
-        $FileAttachment->download($id);
-    }
-       
-
 
 	public function courseView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
@@ -309,11 +281,8 @@ class TrainingCourse extends TrainingAppModel {
 		$trainingCourseTargetPopulation = ClassRegistry::init('TrainingCourseTargetPopulation');
 		$trainingCourseTargetPopulations = $trainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
 
-		$teacherPositionTitle = ClassRegistry::init('TeacherPositionTitle');
-		$teacherPositionTitles = $teacherPositionTitle->find('list', array('fields'=>array('id', 'name')));
-		
 		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
-		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
+		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name'), 'conditions'=>array('StaffPositionTitle.visible'=>1)));
 
 		$trainingCoursePrerequisite = ClassRegistry::init('TrainingCoursePrerequisite');
 		$trainingCoursePrerequisites = $trainingCoursePrerequisite->find('all',  
@@ -344,7 +313,6 @@ class TrainingCourse extends TrainingAppModel {
 
 		$controller->set('data', $data);
 		$controller->set('trainingCourseTargetPopulations', $trainingCourseTargetPopulations);
-		$controller->set('teacherPositionTitles', $teacherPositionTitles);
 		$controller->set('staffPositionTitles', $staffPositionTitles);
 		$controller->set('trainingCoursePrerequisites', $trainingCoursePrerequisites);
 		$controller->set('trainingCourseProviders', $trainingCourseProviders);
@@ -493,7 +461,7 @@ class TrainingCourse extends TrainingAppModel {
 	
 
 		$controller->set('modelName', $this->name);
-
+		$attachments = array();
 		
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
@@ -505,8 +473,7 @@ class TrainingCourse extends TrainingAppModel {
 
 			$attachments = $controller->FileUploader->getList(array('conditions' => array('TrainingCourseAttachment.training_course_id'=>$id)));
 		
-			$controller->set('attachments', $attachments);
-
+	
 			if(!empty($data)){
 				if($data['TrainingCourse']['training_status_id']!=1){
 					return $controller->redirect(array('action' => 'courseView', $id));
@@ -554,13 +521,6 @@ class TrainingCourse extends TrainingAppModel {
 						$trainingCourseProvidersVal[] = $val['TrainingCourseProvider'];
 					}
 				}
-
-			  	$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
-	            $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
-
-	            $attachments = $FileAttachment->getList($id);
-	            $controller->set('attachments',$attachments);
-	            $controller->set('_model','TrainingCourseAttachment');
 
 
 				$merge = array_merge(array('TrainingCourseTargetPopulation'=>$trainingCourseTargetPopulationsVal), array('TrainingCoursePrerequisite'=>$trainingCoursePrerequisitesVal)
@@ -623,5 +583,6 @@ class TrainingCourse extends TrainingAppModel {
 				}
 			}
 		}
+		$controller->set('attachments', $attachments);
 	}
 }

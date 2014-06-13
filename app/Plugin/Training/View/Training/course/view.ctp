@@ -59,11 +59,7 @@ $this->start('contentBody'); ?>
 		<?php 
 		if (!empty($trainingCourseTargetPopulations)){ 
 			foreach($trainingCourseTargetPopulations as $val){
-				if($val['TrainingCourseTargetPopulation']['position_title_table']=='teacher_position_titles'){
-					echo $teacherPositionTitles[$val['TrainingCourseTargetPopulation']['position_title_id']] . '<br />';
-				}else{
-					echo $staffPositionTitles[$val['TrainingCourseTargetPopulation']['position_title_id']] . '<br />';
-				}
+				echo $staffPositionTitles[$val['TrainingCourseTargetPopulation']['staff_position_title_id']] . '<br />';
 			}
 		}else{
 			echo "-";
