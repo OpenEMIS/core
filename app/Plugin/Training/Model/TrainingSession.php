@@ -17,6 +17,11 @@ have received a copy of the GNU General Public License along with this program. 
 class TrainingSession extends TrainingAppModel {
 	//public $useTable = 'student_health_histories';
 	public $actsAs = array('ControllerAction');
+
+	public $trainerTypeOptions = array('1'=>'Internal', '2'=>'External');
+
+	public $trainerTypes = array('Staff'=>'Internal', '1'=>'External');
+
 	
 	public $belongsTo = array(
 		'TrainingCourse',
@@ -95,51 +100,26 @@ class TrainingSession extends TrainingAppModel {
 	public $headerDefault = 'Sessions';
 
 
-	public function autocomplete($search, $type='1') {
+	public function autocomplete($search) {
 		$search = sprintf('%%%s%%', $search);
 		$data = array();
-		if($type==1){
-			$list = $this->find('all', array(
-				'recursive' => -1,
-				'fields' => array('DISTINCT TrainingSession.location'),
-				'conditions' => array('TrainingSession.location LIKE' => $search
-				),
-				'order' => array('TrainingSession.location')
-			));
-			
-			foreach($list as $obj) {
-				$valField = $obj['TrainingSession']['location'];
-				
-				$data[] = array(
-					'label' => trim(sprintf('%s', $valField)),
-					'value' => array('location' => $valField)
-				);
-			}
-		}else if($type==2){
-			$securityUser = ClassRegistry::init('SecurityUser');
-			$list = $securityUser->find('all', array(
-				'recursive' => -1,
-				'fields' => array('DISTINCT SecurityUser.first_name', 'SecurityUser.last_name'),
-				'conditions' => array(
-					'OR' => array(
-						'SecurityUser.first_name LIKE' => $search,
-						'SecurityUser.last_name LIKE' => $search,
-						'SecurityUser.identification_no LIKE' => $search
-					)
-				),
-				'order' => array('SecurityUser.identification_no', 'SecurityUser.first_name', 'SecurityUser.last_name')
-			));
-			
-			$data = array();
-			
-			foreach($list as $obj) {
-				$data[] = array(
-					'label' => trim(sprintf('%s, %s', $obj['SecurityUser']['first_name'], $obj['SecurityUser']['last_name'])),
-					'value' => array('trainer' => trim(sprintf('%s, %s', $obj['SecurityUser']['first_name'], $obj['SecurityUser']['last_name'])))
-				);
-			}
-		}
+	
+		$list = $this->find('all', array(
+			'recursive' => -1,
+			'fields' => array('DISTINCT TrainingSession.location'),
+			'conditions' => array('TrainingSession.location LIKE' => $search
+			),
+			'order' => array('TrainingSession.location')
+		));
 		
+		foreach($list as $obj) {
+			$valField = $obj['TrainingSession']['location'];
+			
+			$data[] = array(
+				'label' => trim(sprintf('%s', $valField)),
+				'value' => array('location' => $valField)
+			);
+		}
 
 		return $data;
 	}
@@ -361,6 +341,9 @@ class TrainingSession extends TrainingAppModel {
 		$trainingCourseOptions = $trainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
 	
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
+
+		$trainerTypeOptions = array_map('__', $this->trainerTypeOptions);
+		$controller->set('trainerTypeOptions', $trainerTypeOptions);
 
 		$controller->set('modelName', $this->name);
 		

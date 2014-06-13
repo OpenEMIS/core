@@ -265,8 +265,7 @@ class StaffTrainingNeed extends StaffAppModel {
 							'alias' => 'TrainingCourseTargetPopulation',
 							'conditions' => array(
 								'TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id',
-							     'TrainingCourseTargetPopulation.position_title_id' => $staffPositionTitleId,
-							     'TrainingCourseTargetPopulation.position_title_table' => 'staff_position_titles'
+							     'TrainingCourseTargetPopulation.staff_position_title_id' => $staffPositionTitleId
 							)
 					),
 					array(
