@@ -150,6 +150,9 @@ class InstitutionSiteShift extends AppModel {
 	public function shiftsView($controller, $params) {
 		$shiftId = $controller->params['pass'][0];
 		$shiftObj = $this->getShiftById($shiftId);
+		
+		$controller->Navigation->addCrumb('Shift Details');
+		
 		if (!empty($shiftObj)) {
 			$controller->Session->write('shiftId', $shiftId);
 			$controller->set('shiftObj', $shiftObj);

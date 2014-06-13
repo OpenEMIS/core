@@ -122,10 +122,12 @@ class InstitutionSiteClassGrade extends AppModel {
 		return $list;
 	}
 	
-	public function getGradeOptions($classId, $status=null) {
-		$conditions = array(
-			'InstitutionSiteClassGrade.institution_site_class_id' => $classId
-		);
+	public function getGradeOptions($classId=null, $status=null) {
+		$conditions = array();
+		
+		if(!is_null($classId)){
+			$conditions['InstitutionSiteClassGrade.institution_site_class_id'] = $classId;
+		}
 		if(!is_null($status)) {
 			$conditions['InstitutionSiteClassGrade.status'] = $status;
 		}
@@ -209,7 +211,13 @@ class InstitutionSiteClassGrade extends AppModel {
 		return $data;
 	}
         
-	public function getGradesByInstitutionSiteId($institutionSiteId) {
+	public function getGradesByInstitutionSiteId($institutionSiteId, $year = null) {
+		$conditions = array('InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id', 'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId); 
+		if(!is_null($year)){
+			$conditions[] = 'InstitutionSiteClass.school_year_id = '.$year;
+		}
+		
+		$this->unbindModel(array('belongsTo' => array('EducationGrade', 'InstitutionSiteClass')));
 		$data = $this->find('all', array(
 			'fields' => array('InstitutionSiteClassGrade.id', 'EducationCycle.name', 'EducationProgramme.name',  'EducationGrade.id', 'EducationGrade.name'),
 			'joins' => array(
@@ -231,15 +239,12 @@ class InstitutionSiteClassGrade extends AppModel {
 				array(
 					'table' => 'institution_site_classes',
 					'alias' => 'InstitutionSiteClass',
-					'conditions' => array(
-						'InstitutionSiteClass.institution_site_id = ' . $institutionSiteId,
-						'InstitutionSiteClass.id = InstitutionSiteClassGrade.institution_site_class_id'
-					)
+					'conditions' => $conditions
 				),
 			),
-			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order')
+			'order' => array('EducationCycle.order', 'EducationProgramme.order', 'EducationGrade.order'),
+			'conditions' => array('InstitutionSiteClassGrade.status' => 1)
 		));
-		
 		$list = array();
 		foreach($data as $obj) {
 			$id = $obj['EducationGrade']['id'];

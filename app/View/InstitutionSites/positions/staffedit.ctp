@@ -33,6 +33,7 @@ $name = $this->data['Staff']['first_name'] . ' ' . $this->data['Staff']['middle_
 echo $this->Form->input('StaffPositionTitle.name', array('disabled' => 'disabled', 'label' => array('text' => $this->Label->get('general.title'), 'class' => "col-md-3 control-label")));
 echo $this->Form->input('Staff.name', array('disabled' => 'disabled', 'value' => $name));
 echo $this->Form->input('InstitutionSiteStaff.FTE', array('id' => 'fte', 'label' => array('text' => 'FTE', 'class' => $labelOptions), 'options' => $FTEOtpions));
+echo $this->Form->input('InstitutionSiteStaff.staff_status_id', array('label' => array('text' => $this->Label->get('general.status'), 'class' => $labelOptions), 'options' => $statusOptions));
 echo $this->FormUtility->datepicker('InstitutionSiteStaff.start_date', $startDate);
 echo $this->FormUtility->datepicker('InstitutionSiteStaff.end_date', $endDate);
 

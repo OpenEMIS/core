@@ -47,11 +47,14 @@ $this->start('contentBody');
 	echo $this->Form->input('institution_site_id', array('type' => 'hidden'));
 
 	echo $this->FormUtility->datepicker('date', array('id' => 'date'));
-	echo $this->Form->input('school_year_id', array('id' => 'schoolYearId', 'options' => $schoolYearOptions, 'label' => $labelOptions, 'onChange' => 'QualityVisit.updateURL(this)'));
+	echo $this->Form->input('school_year_id', array('id' => 'schoolYearId', 'options' => $schoolYearOptions,'onChange' => 'QualityVisit.updateURL(this)'));
+	$labelOptions['text'] = $this->Label->get('general.grade');
 	echo $this->Form->input('education_grade_id', array('id' => 'educationGradeId', 'options' => $gradesOptions, 'label' => $labelOptions, 'onChange' => 'QualityVisit.updateURL(this)'));
+	$labelOptions['text'] = $this->Label->get('general.class');
 	echo $this->Form->input('institution_site_class_id', array('id' => 'institutionSiteClassId', 'options' => $classOptions, 'label' => $labelOptions, 'onChange' => 'QualityVisit.updateURL(this)'));
-	echo $this->Form->input('staff_id', array('id' => 'staffId', 'options' => $staffOptions, 'label' => $labelOptions, 'onChange' => 'QualityVisit.updateURL(this)'));
+	echo $this->Form->input('staff_id', array('id' => 'staffId', 'options' => $staffOptions,'onChange' => 'QualityVisit.updateURL(this)'));
 	echo $this->Form->input('evaluator', array('disabled' => true));
+	$labelOptions['text'] = $this->Label->get('general.type');
 	echo $this->Form->input('quality_type_id', array('id' => 'qualityTypeId', 'options' => $visitOptions, 'label' => $labelOptions, 'onChange' => 'QualityVisit.updateURL(this)'));
 	echo $this->Form->input('comment', array('type' => 'textarea'));
 	?>
