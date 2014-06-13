@@ -71,24 +71,28 @@ class WorkflowComponent extends Component {
 
         $this->Session->write('workflowGroupUsers', $groupUsers);
 
-        $workflows = array();
+        $securityRoleId = array();
         foreach($groupUsers as $groupUser){
-            $workflows = $this->Workflow->find('all',
-                array(
-                    'fields'=>array('Workflow.model_name', 'Workflow.id', 'Workflow.workflow_name', 'WorkflowStep.id', 'WorkflowStep.step', 'WorkflowStep.security_role_id'),
-                    'joins' => array(
-                        array(
-                            'type' => 'LEFT',
-                            'table' => 'workflow_steps',
-                            'alias' => 'WorkflowStep',
-                            'conditions' => array('Workflow.id = WorkflowStep.workflow_id')
-                        )
-                    ),
-                    'conditions'=>array('security_role_id'=>$groupUser['SecurityGroupUser']['RoleID']),
-                    'order'=>array('Workflow.id, WorkflowStep.step')
-                )
-            );
+           $securityRoleId[] = $groupUser['SecurityGroupUser']['RoleID'];
         }
+
+
+
+        $workflows = $this->Workflow->find('all',
+            array(
+                'fields'=>array('Workflow.model_name', 'Workflow.id', 'Workflow.workflow_name', 'WorkflowStep.id', 'WorkflowStep.step', 'WorkflowStep.security_role_id'),
+                'joins' => array(
+                    array(
+                        'type' => 'LEFT',
+                        'table' => 'workflow_steps',
+                        'alias' => 'WorkflowStep',
+                        'conditions' => array('Workflow.id = WorkflowStep.workflow_id')
+                    )
+                ),
+                'conditions'=>array('security_role_id'=>$securityRoleId),
+                'order'=>array('Workflow.id, WorkflowStep.step')
+            )
+        );
 
         return $workflows;
     }
