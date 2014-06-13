@@ -329,12 +329,14 @@ class InstitutionSiteClass extends AppModel {
 					'alias' => 'InstitutionSiteClassGrade',
 					'conditions' => array(
 						'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
-						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId
+						'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId,
+						'InstitutionSiteClassGrade.status = 1'
 					)
 				)
 			);
 			$options['group'] = array('InstitutionSiteClass.id');
 		}
+		
 		$data = $this->find('list', $options);
 		return $data;
 	}
