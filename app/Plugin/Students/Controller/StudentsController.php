@@ -15,15 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 App::uses('Sanitize', 'Utility');
-App::uses('DateTime', 'Component');
-App::uses('ImageMeta', 'Image');
-App::uses('ImageValidate', 'Image');
 
 class StudentsController extends StudentsAppController {
-
 	public $studentId;
 	public $studentObj;
-	private $debug = false;
 	public $uses = array(
 		'Area',
 		'Institution',
@@ -45,14 +40,14 @@ class StudentsController extends StudentsAppController {
 	
 	public $helpers = array('Js' => array('Jquery'), 'Paginator');
 	public $components = array(
-		'UserSession',
 		'Paginator',
 		'FileAttachment' => array(
 			'model' => 'Students.StudentAttachment',
 			'foreignKey' => 'student_id'
 		),
 		'FileUploader',
-		'AccessControl'
+		'AccessControl',
+		'Wizard'
 	);
 	public $modules = array(
 		'healthHistory' => 'Students.StudentHealthHistory',
@@ -74,7 +69,7 @@ class StudentsController extends StudentsAppController {
 		'nationalities' => 'Students.StudentNationality',
 		'attachments' =>'Students.StudentAttachment',
 		'guardians' => 'Students.StudentGuardian',
-		'behaviour'=>'Students.StudentBehaviour',
+		'behaviour'=>'Students.StudentBehaviour'
 	);
 
 	public $className = 'Student';
@@ -82,9 +77,17 @@ class StudentsController extends StudentsAppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->Navigation->addCrumb('Students', array('controller' => 'Students', 'action' => 'index'));
+		$this->Wizard->setModule('Student');
+		$this->bodyTitle = 'Students';
+		/*
+		if($this->Session->check('Student.wizard.mode')) {
+			
+		}
+		*/
+		/*
 		$actions = array('index', 'advanced', 'add', 'view');
-		$this->set('WizardMode', false);
-		//$this->Session->write('WizardMode', false);
+		$this->set('Student.wizard.mode', false);
+		
 		if (in_array($this->action, $actions)) {
 			$this->bodyTitle = 'Students';
 			if($this->action=='add'){
@@ -102,10 +105,11 @@ class StudentsController extends StudentsAppController {
 			if ($this->Session->check('StudentId') && $this->action !== 'Home') {
 				$this->studentId = $this->Session->read('StudentId');
 				$this->studentObj = $this->Session->read('StudentObj');
-				$studentFirstName = $this->Student->field('first_name', array('Student.id' => $this->studentId));
-				$studentMiddleName = $this->Student->field('middle_name', array('Student.id' => $this->studentId));
-				$studentLastName = $this->Student->field('last_name', array('Student.id' => $this->studentId));
-				$name = $studentFirstName . " " . $studentMiddleName . " " . $studentLastName;
+				$obj = $this->Session->read('Student.data');
+				$firstName = $obj['first_name'];
+				$middleName = $obj['middle_name'];
+				$lastName = $obj['last_name'];
+				$name = $firstName . " " . $middleName . " " . $lastName;
 				$this->bodyTitle = $name;
 				$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
 			}else if (!$this->Session->check('StudentId') && $this->action !== 'Home') {
@@ -113,11 +117,13 @@ class StudentsController extends StudentsAppController {
 				$this->bodyTitle = $name;
 			}
 		} 
+		*/
 	}
 
 	public function index() {
 		$this->Navigation->addCrumb('List of Students');
-
+		$this->Session->delete('Student');
+		
 		if ($this->request->is('post')) {
 			if (isset($this->request->data['Student']['SearchField'])) {
 				$this->request->data['Student']['SearchField'] = Sanitize::escape($this->request->data['Student']['SearchField']);
@@ -160,7 +166,7 @@ class StudentsController extends StudentsAppController {
 			}
 		}
 		if (empty($data) && !$this->request->is('ajax')) {
-			$this->Utility->alert($this->Utility->getMessage('NO_RECORD'), array('type' => 'info'));
+			$this->Message->alert('general.noData');
 		}
 		$this->set('students', $data);
 		$this->set('sortedcol', $fieldordername);
@@ -218,7 +224,7 @@ class StudentsController extends StudentsAppController {
 		$dataFields[$customfields] = $instituionSiteCustField->getCustomFields();
 		$types = $this->InstitutionSiteType->findList(1);
 		$this->set("customfields",array($customfields));
-		$this->set('types',  $types);		
+		$this->set('types',  $types);	
 		$this->set('typeSelected',  $sitetype);
 		$this->set('dataFields',  $dataFields);
 		$this->render('/Elements/customfields/search');
@@ -226,61 +232,77 @@ class StudentsController extends StudentsAppController {
 
 	public function view($id=0) {
 		$this->Navigation->addCrumb('Overview');
+		
+		if($id == 0 && $this->Wizard->isActive()) {
+			return $this->redirect(array('action' => 'add'));
+		}
+		
 		if($id > 0) {
 			if($this->Student->exists($id)) {
 				$this->DateTime->getConfigDateFormat();
-				$this->Session->write('StudentId', $id);
+				$this->Session->write('Student.id', $id);
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => 'index'));
 			}
 		} else {
-			if($this->Session->check('StudentId')) {
-				$id = $this->Session->read('StudentId');
+			if($this->Session->check('Student.id')) {
+				$id = $this->Session->read('Student.id');
 			} else {
 				$this->Message->alert('general.notExists');
 				return $this->redirect(array('action' => 'index'));
 			}
 		}
 		$data = $this->Student->findById($id);
-		$this->Session->write('StudentObj', $data);
+		$obj = $data['Student'];
+		$name = trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']);
+		$this->bodyTitle = $name;
+		$this->Session->write('Student.data', $obj);
 		$this->set('data', $data);
+	}
+	
+	public function add() {
+		$this->Wizard->start();
+		return $this->redirect(array('action' => 'edit'));
 	}
 
 	public function edit() {
 		$studentId = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
-		if($this->Session->check('StudentId')) {
-			$studentId = $this->Session->read('StudentId');
+		if ($this->Session->check('Student.id')) {
+			$studentId = $this->Session->read('Student.id');
 			$this->Student->id = $studentId;
 			$this->Navigation->addCrumb('Edit');
-		}else{
+		} else {
 			$this->Navigation->addCrumb('Add');
+			$this->bodyTitle = __('New Student');
 		}
-		$imgValidate = new ImageValidate();
-		$data = $this->request->data;
-
+		$data = array();
 		if ($this->request->is(array('post', 'put'))) {
-			if (isset($this->data['submit']) && $this->request->data['submit']==__('Cancel')){
-				$this->Navigation->exitWizard();
-			}
+			$data = $this->request->data;
 			$this->Student->set($data);
 			$addressAreaId = $this->request->data['Student']['address_area_id'];
 			$birthplaceAreaId = $this->request->data['Student']['birthplace_area_id'];
-			if ($this->Student->validates()) {
-				$this->Student->save();
-				$this->Message->alert('general.edit.success');
-				if(!$this->Session->check('StudentId')){
-					$id = $this->Student->getLastInsertId();
-				}else{
-					$id = $this->Session->read('StudentId');
+			
+			if ($this->Student->validates() && $this->Student->save()) {
+				if($this->Wizard->isActive()) {
+					if(is_null($studentId)) {
+						$this->Message->alert('Student.add.success');
+						$studentId = $this->Student->getLastInsertId();
+						$this->Session->write('Student.id', $studentId);
+					}
+					$this->Session->write('Student.data', $this->Student->findById($studentId));
+					// unset wizard so it will not auto redirect from WizardComponent
+					unset($this->request->data['wizard']['next']);
+					$this->Wizard->next();
+				} else {
+					$this->Message->alert('general.edit.success');
+					return $this->redirect(array('action' => 'view'));
 				}
-				$this->Navigation->updateWizard('view', $id);
-				return $this->redirect(array('action' => 'view'));
 			}
 		} else {
-			if(!empty($studentId)) {
+			if (!empty($studentId)) {
 				$data = $this->Student->findById($studentId);
 				$this->request->data = $data;
 				$addressAreaId = $this->request->data['Student']['address_area_id'];
@@ -312,69 +334,6 @@ class StudentsController extends StudentsAppController {
 		}
 		$this->set(compact('data', 'header'));
 	}
-	
-	/*
-	public function add() {
-		$this->Navigation->addCrumb('Add new Student');
-		$imgValidate = new ImageValidate();
-		$data = $this->request->data;
-		if ($this->request->is('post')) {
-			$reset_image = $data['Student']['reset_image'];
-
-			$img = new ImageMeta($this->request->data['Student']['photo_content']);
-			unset($data['Student']['photo_content']);
-
-			if ($reset_image == 0) {
-				$validated = $imgValidate->validateImage($img);
-
-				if ($img->getFileUploadError() !== 4 && $validated['error'] < 1) {
-					$data['Student']['photo_content'] = $img->getContent();
-					$img->setContent('');
-					$data['Student']['photo_name'] = $img->getFilename();
-				}
-			} else {
-				$data['Student']['photo_content'] = '';
-				$data['Student']['photo_name'] = '';
-			}
-			$this->Student->set($data);
-			if ($this->Student->validates() && ($reset_image == 1 || $validated['error'] < 1)) {
-				unset($data['Student']['reset_image']);
-
-				$newStudentRec = $this->Student->save($data);
-				// create the session for successfully adding of student
-				$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
-				$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
-			} else {
-				$this->set('imageUploadError', __(array_shift($validated['message'])));
-				$errors = $this->Student->validationErrors;
-
-				if ($this->getUniqueID() != '') { // If Auto id
-					if (isset($errors["identification_no"])) { // If its ID error
-						if (sizeof($errors) < 2) { // If only 1 faulty
-							$this->Student->set($this->request->data);
-							do {
-								$this->request->data["Student"]["identification_no"] = $this->getUniqueID();
-								$conditions = array(
-									'Student.identification_no' => $this->request->data["Student"]["identification_no"]
-								);
-							} while ($this->Student->hasAny($conditions));
-							$this->Student->set($this->request->data);
-							$newStudentRec = $this->Student->save($this->request->data);
-							// create the session for successfully adding of student
-							$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'view');
-							$this->redirect(array('action' => 'viewStudent', $newStudentRec['Student']['id']));
-						}
-					}
-				}
-			}
-		}
-		$gender = array(0 => __('--Select--'), 'M' => __('Male'), 'F' => __('Female'));
-		$this->set('autoid', $this->getUniqueID());
-		$this->set('gender', $gender);
-		$this->set('data', $this->request->data);
-		$this->render('edit');
-	}
-	*/
 
 	public function delete() {
 		$id = $this->Session->read('StudentId');
@@ -399,7 +358,7 @@ class StudentsController extends StudentsAppController {
 			// pr($arrV);
 		}
 		// pr($tmp);die;
-		$this->UserSession->readStatusSession($this->request->action);
+		//$this->UserSession->readStatusSession($this->request->action);
 		$this->set(compact('header','data', 'dataValues'));
 	}
 
@@ -476,7 +435,7 @@ class StudentsController extends StudentsAppController {
 			}
 			if(!$error){
 				$this->Navigation->updateWizard($this->action, null);
-				$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
+				//$this->UserSession->writeStatusSession('ok', __('Records have been added/updated successfully.'), 'additional');
 				$this->redirect(array('action' => 'additional'));
 			}
 		}

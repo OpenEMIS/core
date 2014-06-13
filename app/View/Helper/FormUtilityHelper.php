@@ -46,13 +46,26 @@ class FormUtilityHelper extends AppHelper {
 	}
 	
 	public function getFormButtons($option = NULL) {
+		$html = '';
 		$cancelURL = $option['cancelURL'];
-		echo '<div class="form-group">';
-		echo '<div class="col-md-offset-4">';
-		echo $this->Form->submit($this->Label->get('general.save'), array('class' => 'btn_save btn_right', 'div' => false));
-		echo $this->Html->link($this->Label->get('general.cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
-		echo '</div>';
-		echo '</div>';
+		$html .= '<div class="form-group form-buttons">';
+		$html .= '<div class="col-md-offset-3">';
+		$html .= $this->Form->submit($this->Label->get('general.save'), array('class' => 'btn_save btn_right', 'div' => false));
+		$html .= $this->Html->link($this->Label->get('general.cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
+		$html .= '</div>';
+		$html .= '</div>';
+		return $html;
+	}
+	
+	public function getWizardButtons($buttons) {
+		$html = '<div class="form-group form-buttons">';
+		$html .= '<div class="col-md-offset-3">';
+		foreach($buttons as $btn) {
+			$html .= $this->Form->submit($btn['name'], $btn['options']);
+		}
+		$html .= '</div>';
+		$html .= '</div>';
+		return $html;
 	}
 	
 	public function datepicker($field, $options=array()) {
