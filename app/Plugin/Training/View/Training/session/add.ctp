@@ -55,11 +55,70 @@ if(isset($this->data[$model]['end_date'])){
 		echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate', 'data-date' => $startDate));
 		echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'data-date' => $endDate));
 
-	 	echo $this->Form->input('location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'class'=>'form-control location', 'url'=>'Training/ajax_find_session/', 'placeholder' => __('Location')));
+	 	echo $this->Form->input('location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'class'=>'form-control location', 'url'=>'Training/ajax_find_location/', 'placeholder' => __('Location')));
     	echo $this->Form->input('comments', array('label'=>array('text'=>__('Comments'), 'class'=>'col-md-3 control-label'),'type'=>'textarea'));
-    	echo $this->Form->input('trainer', array('label'=>array('text'=>__('Trainer'), 'class'=>'col-md-3 control-label'), 'id' => 'searchTrainer', 'class'=>'form-control trainer', 'url'=>'Training/ajax_find_session/', 'placeholder' => __('Identification No, First Name or Last Name')));
     ?>
 
+	 <div class="row form-group" style="min-height:45px;">
+		<label class="col-md-3 control-label"><?php echo __('Trainer'); ?></label>
+		<div class="col-md-4">
+		<div class="table trainer" style="width:247px;" url="Training/ajax_find_trainer/">
+			<div class="delete-trainer" name="data[DeleteTrainer][{index}][id]"></div>
+			<table class="table_body">
+				<?php 
+				if(isset($this->request->data['TrainingSessionTrainer']) && !empty($this->request->data['TrainingSessionTrainer'])){ ?>
+					<?php 
+					$i = 0;  
+					foreach($this->request->data['TrainingSessionTrainer'] as $key=>$val){?>
+					<?php if(!empty($val['ref_trainer_id'])){ ?>
+					<tr class="table_row " row-id="<?php echo $i;?>">
+						<td class="table_cell cell_description" style="width:90%">
+							<div class="input_wrapper">
+						 	<div class="trainer-name-<?php echo $i;?>">
+								<?php echo $val['ref_trainer_name'];?>
+							</div>
+							<?php if(isset($val['id'])){ ?>
+							<?php echo $this->Form->hidden('TrainingSessionTrainer.' . $i . '.id', array('value'=>$val['id'], 
+							'class' => 'control-id')); ?>
+							<?php } ?>
+							<?php echo $this->Form->hidden('TrainingSessionTrainer.' . $i . '.ref_trainer_id', array('class' => 'trainer-id-'.$i,
+								'value'=>$val['ref_trainer_id'])); ?>
+								<?php echo $this->Form->hidden('TrainingSessionTrainer.' . $i . '.ref_trainer_name', array('value'=>$val['ref_trainer_name'])); ?>
+								<?php echo $this->Form->hidden('TrainingSessionTrainer.' . $i . '.ref_trainer_table', array('value'=>$val['ref_trainer_table'])); ?>
+								<?php echo $this->Form->hidden('TrainingSessionTrainer.' . $i . '.trainer_validate', array('class' => 'trainer-validate-'.$i . ' validate-trainer', 'value'=>$val['ref_trainer_table'].'_'.$val['ref_trainer_id'])); ?>
+							</div>
+					    </td>
+					 
+						<td class="table_cell cell_delete">
+					    	<span class="icon_delete" title="Delete" onclick="objTrainingSessions.deleteTrainer(this)"></span>
+					    </td>
+					</tr>
+					<?php } ?>
+			<?php 
+				$i++;
+			} ?>
+			<?php } ?>
+		</table>
+		<div class="row">
+			<div class="col-md-6" style="padding-left:0px">
+			<?php echo $this->Form->input('trainer_type', array(
+				'options' => $trainerTypeOptions,
+				'class' => 'trainer_type form-control',
+				'label' => false,
+				'between' => false,
+				'after'=>false,
+				'div' => false
+			));?>
+			</div>
+			<div class="col-md-6" style="min-height:20px;padding-top:5px;padding-left:0px;">
+				<a class="void icon_plus" onclick="objTrainingSessions.addTrainer(this)" url="Training/ajax_add_trainer"  href="javascript: void(0)"><?php echo __('Add Trainer');?></a>
+			</div>
+		</div>
+	</div>
+
+		
+	</div>
+	</div>
     <?php if($this->request->data['TrainingSession']['sessionEditable']!='0'){ ?>
 	 <div class="row form-group" style="min-height:45px;">
 		<label class="col-md-3 control-label"><?php echo __('Trainees'); ?></label>

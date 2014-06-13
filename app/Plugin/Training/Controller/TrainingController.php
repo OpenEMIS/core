@@ -8,6 +8,7 @@ class TrainingController extends TrainingAppController {
         'Teachers.TeacherPositionTitle', 
         'Training.TrainingSession',
         'Training.TrainingSessionTrainee',
+        'Training.TrainingSessionTrainer',
         'Training.TrainingCourseAttachment',
         'TrainingProvider',
         'Training.TrainingCourseProvider'
@@ -118,11 +119,11 @@ class TrainingController extends TrainingAppController {
 
     //----------------------------------------------------------------------------
 
-    public function ajax_find_session($type) {
+    public function ajax_find_location() {
         if($this->request->is('ajax')) {
             $this->autoRender = false;
             $search = $this->params->query['term'];
-            $data = $this->TrainingSession->autocomplete($search,$type);
+            $data = $this->TrainingSession->autocomplete($search);
  
             return json_encode($data);
         }
@@ -135,13 +136,29 @@ class TrainingController extends TrainingAppController {
     }
 
     public function ajax_find_trainee($index,$trainingCourseID) {
-        //if($this->request->is('ajax')) {
+        if($this->request->is('ajax')) {
             $this->autoRender = false;
             $search = $this->params->query['term'];
             $data = $this->TrainingSessionTrainee->autocomplete($search,$index,$trainingCourseID);
  
             return json_encode($data);
-       //}
+       }
+    }  
+
+    public function ajax_add_trainer() {
+        $this->layout = 'ajax';
+        $this->set('index', $this->params->query['index']);
+        $this->render('/Elements/trainer');
+    }
+
+    public function ajax_find_trainer($index) {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->TrainingSessionTrainer->autocomplete($search,$index);
+ 
+            return json_encode($data);
+       }
     }  
 
     //----------------------------------------------------------------------------

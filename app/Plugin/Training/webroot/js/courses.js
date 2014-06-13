@@ -215,6 +215,7 @@ var objTrainingCourses = {
         var success = function(data, status) {
             var callback = function() {
                 table.find('.table_body tbody').append(data);
+                 objTrainingCourses.validateProvider();
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -241,7 +242,23 @@ var objTrainingCourses = {
             div.append(input);
         }
         row.remove();
-        //objTrainingCourses.validateTargetPopulation();
+        objTrainingCourses.validateProvider();
+    },
+
+     validateProvider: function() {
+          var val = new Array();
+          var c = 0;
+          $("#provider_message").remove();
+          $('.validate-provider').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.provider').prepend('<div id="provider_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Provider</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
     },
 
     attachAutoComplete: function(element, url, callback) {
