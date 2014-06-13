@@ -32,13 +32,13 @@ class CensusStudent extends AppModel {
 		'SchoolYear' => array('foreignKey' => 'school_year_id'),
 		'EducationGrade' => array('foreignKey' => 'education_grade_id'),
 		'StudentCategory'=>array('foreignKey' => 'student_category_id'),
-		'InstitutionSite' => array('foreignKey' => 'institution_site_id'),
+		'InstitutionSite' => array('foreignKey' => 'institution_site_id')/*,
 		'Institution' =>
             array(
                 'joinTable'  => 'institutions',
 				'foreignKey' => false,
                 'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
-            )
+            )*/
 	);
 	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {

@@ -235,38 +235,37 @@ class FileUploaderComponent extends Component {
 			}
 			$selectedData[$this->dbPrefix . '_content'] = file_get_contents($selectedFile['tmp_name']);
 			$selectedData[$this->dbPrefix . '_name'] = $selectedFile['name'];
+			$selectedData['name'] = $selectedFile['name'];
+			$selectedData['description'] = '';
 			//pr($this->additionData);
 			if (!empty($this->additionData)) {
 				$selectedData = array_merge($selectedData, $this->additionData);
 			}
-
-			array_push($fileData, array($this->fileModel => $selectedData));
+			if ($this->fileVar == 'files') {
+				$fileData[] = $selectedData;
+			}else{
+				array_push($fileData, array($this->fileModel => $selectedData));
+			}
 		}
-
 		if (!empty($fileData) && !empty($model)) {
 			if ($model->saveAll($fileData, array('validate' => false))) {
 				$this->success = true;
 				if (count($fileData) > 1) {
-					$this->Message->alert('FileUplaod.success.singular');
-					//$this->Utility->alert(__(sprintf($this->alertMessage['success'], 's')), array('type' => 'ok'));
+					$this->Message->alert('FileUpload.success.singular');
 				} else {
-					$this->Message->alert('FileUplaod.success.plural');
-					//$this->Utility->alert(__(sprintf($this->alertMessage['success'], '')), array('type' => 'ok'));
+					$this->Message->alert('FileUpload.success.plural');
 				}
 			} else {
 				$this->success = false;
-				$this->Message->alert('FileUplaod.error.saving');
-				//$this->Utility->alert(__($this->alertMessage['error']['saving']), array('type' => 'error'));
+				$this->Message->alert('FileUpload.error.saving');
 			}
 		} else {
 			if ($this->allowEmptyUpload) {
 				$this->success = true;
 			} else {
 				$this->success = false;
-				$this->Message->alert('FileUplaod.error.general');
-				//$this->Utility->alert(__($this->alertMessage['error']['general']), array('type' => 'error'));
+				$this->Message->alert('FileUpload.error.general');
 			}
-			//	$this->message = __($this->alertMessage['error']['general']);//'An error has occur. Please contact the system administrator.';
 		}
 	}
 
@@ -296,36 +295,24 @@ class FileUploaderComponent extends Component {
 	function _checkFile() {
 		foreach ($this->uploadedFile as $key => $selectedFile) {
 			if ($selectedFile['size'] > $this->fileSizeLimit) {
-				//$message = __(sprintf($this->alertMessage['error']['uploadSizeError']));
-				//$this->Utility->alert(__($message), array('type' => 'error'));
-				$this->Message->alert('FileUplaod.error.uploadSizeError');
+				$this->Message->alert('FileUpload.error.uploadSizeError');
 				return false;
 			} else if ($selectedFile['error'] == UPLOAD_ERR_OK) {
-				//$this->message = "";
-				//return true;
 			} else if ($selectedFile['error'] == UPLOAD_ERR_INI_SIZE) {
-				//$message = __(sprintf($this->alertMessage['error']['UPLOAD_ERR_INI_SIZE']));
-				//$this->Utility->alert(__($message), array('type' => 'error'));
-				$this->Message->alert('FileUplaod.error.UPLOAD_ERR_INI_SIZE');
+				$this->Message->alert('FileUpload.error.UPLOAD_ERR_INI_SIZE');
 				return false;
 			} else if ($selectedFile['error'] == UPLOAD_ERR_FORM_SIZE) {
-				//$message = __(sprintf($this->alertMessage['error']['UPLOAD_ERR_FORM_SIZE']));
-				//$this->Utility->alert(__($message), array('type' => 'error'));
-				$this->Message->alert('FileUplaod.error.UPLOAD_ERR_FORM_SIZE');
+				$this->Message->alert('FileUpload.error.UPLOAD_ERR_FORM_SIZE');
 				return false;
 			} else if ($selectedFile['error'] == UPLOAD_ERR_NO_FILE) {
 				if (!$this->allowEmptyUpload) {
-					//$message = __($this->alertMessage['error']['UPLOAD_ERR_NO_FILE']);
-					//$this->Utility->alert(__($message), array('type' => 'info'));
-					$this->Message->alert('FileUplaod.error.UPLOAD_ERR_NO_FILE');
+					$this->Message->alert('FileUpload.error.UPLOAD_ERR_NO_FILE');
 					return false;
 				} else {
 					unset($this->uploadedFile[$key]);
 				}
 			} else {
-				//$message = __($this->alertMessage['error']['general']);
-				//$this->Utility->alert(__($message), array('type' => 'error'));
-				$this->Message->alert('FileUplaod.error.general');
+				$this->Message->alert('FileUpload.error.general');
 				return false;
 			}
 		}
@@ -345,9 +332,7 @@ class FileUploaderComponent extends Component {
 			}
 
 			if (!$isSameFileType) {
-				//$message = sprintf($this->alertMessage['error']['invalidFileFormat'], $selectedFile['name']);
-				//$this->Utility->alert(__($message), array('type' => 'error'));
-				$this->Message->alert('FileUplaod.error.invalidFileFormat');
+				$this->Message->alert('FileUpload.error.invalidFileFormat');
 				return false;
 			}
 		}
@@ -359,5 +344,3 @@ class FileUploaderComponent extends Component {
 	}
 
 }
-
-?>
