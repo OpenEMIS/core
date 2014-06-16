@@ -26,21 +26,22 @@ class WizardComponent extends Component {
 	}
 	
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
-	public function startup(Controller $controller) {//pr($controller->request->data);die;
+	public function startup(Controller $controller) {
 		if ($this->isActive()) {
-			if($controller->request->is(array('post', 'put'))) {
+			if ($controller->request->is(array('post', 'put'))) {
 				$data = $controller->request->data;
-				if(isset($data['wizard'])) {
+				if (isset($data['wizard'])) {
 					$wizard = $data['wizard'];
-					if(isset($wizard['cancel'])) {
+					if (isset($wizard['cancel'])) {
 						$this->stop();
-					} else if(isset($wizard['previous'])) {
+					} else if (isset($wizard['previous'])) {
 						$this->previous();
-					} else if(isset($wizard['skip'])) {
+					} else if (isset($wizard['skip'])) {
 						$this->skip();
+					} else if (isset($wizard['finish'])) {
+						$this->end();
 					}
 				}
-				//pr($controller->request->data);die;
 			} else {
 				$controllerName = $controller->name;
 				$action = $controller->action;
@@ -80,7 +81,7 @@ class WizardComponent extends Component {
 				if(isset($data['wizard'])) {
 					$wizard = $data['wizard'];
 					if(isset($wizard['next'])) {
-						$controller->Message->stopAlert();
+						$controller->Message->stopAlert(); // prevent alert from showing
 						$this->next();
 					}
 				}
@@ -99,7 +100,7 @@ class WizardComponent extends Component {
 				'div' => false,
 				'name' => 'wizard[next]',
 				'class' => 'btn_save btn_right',
-				//'onclick' => 'return Config.checkValidate()'
+				'onclick' => 'return Config.checkValidate()'
 			)
 		);
 		
@@ -124,11 +125,12 @@ class WizardComponent extends Component {
 		);
 		
 		$btn = array();
-		if($this->getCurrent() == 0 && !$this->isCompleted(0)) { // first link
+		// if this is the first link in the wizard, add the cancel button
+		if($this->getCurrent() == 0 && !$this->isCompleted(0)) {
 			$btn[] = $cancelBtn;
 		}
 		
-		if($this->getCurrent() > 0) {
+		if($this->getCurrent() != 0) {
 			$btn[] = $prevBtn;
 		}
 		
@@ -147,26 +149,29 @@ class WizardComponent extends Component {
 	
 	public function setModule($module) {
 		$this->module = $module;
-		$links = $this->getLinks($module);
-		$this->Session->write($this->module . '.wizard.links', $links);
 		//pr($this->links);//die;
 	}
 	
-	public function getLinks($module) {
-		$conditions = array('Navigation.module' => $module, 'Navigation.is_wizard' => true);
-		$data = ClassRegistry::init('Navigation')->find('all', array(
-			'fields' => array('*'),
-			'joins' => array(
-				array(
-					'table' => 'config_items',
-					'alias' => 'ConfigItem',
-					'type' => 'LEFT',
-					'conditions' => array("ConfigItem.name = " . sprintf("CONCAT('%s_', Navigation.action)", strtolower($module)))
-				)
-			),
-			'conditions' => $conditions,
-			'order' => array('Navigation.order')
-		));
+	public function getLinks($module=null) {
+		$data = array();
+		if (is_null($module)) {
+			$data = $this->Session->read($this->module . '.wizard.links');
+		} else {
+			$conditions = array('Navigation.module' => $module, 'Navigation.is_wizard' => true);
+			$data = ClassRegistry::init('Navigation')->find('all', array(
+				'fields' => array('*'),
+				'joins' => array(
+					array(
+						'table' => 'config_items',
+						'alias' => 'ConfigItem',
+						'type' => 'LEFT',
+						'conditions' => array("ConfigItem.name = " . sprintf("CONCAT('%s_', Navigation.action)", strtolower($module)))
+					)
+				),
+				'conditions' => $conditions,
+				'order' => array('Navigation.order')
+			));
+		}
 		return $data;
 	}
 	
@@ -191,6 +196,8 @@ class WizardComponent extends Component {
 	}
 	
 	public function start() {
+		$links = $this->getLinks($this->module);
+		$this->Session->write($this->module . '.wizard.links', $links);
 		$this->Session->write($this->module . '.wizard.mode', true);
 		$this->setCurrent(0);
 	}
@@ -201,7 +208,9 @@ class WizardComponent extends Component {
 	}
 	
 	public function end() {
-		
+		$url = $this->getURL(-1);
+		$this->Session->delete($this->module . '.wizard');
+		return $this->controller->redirect($url);
 	}
 	
 	public function next() {
@@ -243,15 +252,15 @@ class WizardComponent extends Component {
 	}
 	
 	public function redirect($index) {
-		$links = $this->Session->read($this->module . '.wizard.links');
+		$links = $this->getLinks();
 		$url = isset($links[$index]) ? $this->getURL($index) : $this->getURL($index-1);
 		$this->setCurrent($index);
 		return $this->controller->redirect($url);
 	}
 	
-	public function getURL($index) {
-		$links = $this->Session->read($this->module . '.wizard.links');
-		$link = $links[$index];
+	public function getURL($index, $action='add') {
+		$links = $this->getLinks();
+		$link = $index != -1 ? $links[$index] : $links[0];
 		
 		$navigation = $link['Navigation'];
 		$url = array('controller' => $navigation['controller']);
@@ -260,9 +269,11 @@ class WizardComponent extends Component {
 		}
 		
 		if($index == 0) {
-			$url['action'] = 'add';
+			$url['action'] = $action;
+		} else if ($index == -1) {
+			$url['action'] = $navigation['action'];
 		} else {
-			$url['action'] = $navigation['action'] . 'Add';
+			$url['action'] = $navigation['action'] . ucfirst($action);
 		}
 		return $url;
 	}
@@ -310,7 +321,6 @@ class WizardComponent extends Component {
 	}
 	
 	public function isEnd() {
-		$links = $this->Session->read($this->module . '.wizard.links');
-		return false;
+		return ($this->getNoOfLinks()-1 == $this->getCurrent());
 	}
 }
