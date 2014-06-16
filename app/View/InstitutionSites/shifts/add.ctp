@@ -17,38 +17,19 @@ echo $this->Html->link(__('Back'), array('action' => 'shifts'), array('class' =>
 $this->end();
 
 $this->start('contentBody');
+
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'InstitutionSites', 'action' => 'shiftsAdd'));
+$labelOptions = $formOptions['inputDefaults']['label'];
+echo $this->Form->create('InstitutionSiteShift', $formOptions);
+echo $this->Form->input('name');
+echo $this->Form->input('school_year_id', array('options' => $yearOptions));
+echo $this->FormUtility->timepicker('start_time', array('id' => 'startTime'));
+echo $this->FormUtility->timepicker('end_time', array('id' => 'endTime'));
+
+$labelOptions['text'] = $this->Label->get('general.location');
+echo $this->Form->input('location_institution_site_name', array('value' => $institutionSiteName, 'id' => 'locationName', 'label' => $labelOptions));
+echo $this->Form->input('location_institution_site_id', array('value' => $institutionSiteId, 'type' => 'hidden', 'id' => 'locationInstitutionSiteId'));
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'shifts')));
+echo $this->Form->end();
+$this->end();
 ?>
-<div id="shifts" class="content_wrapper edit add">
-	<?php
-	$formOptions = $this->FormUtility->getFormOptions(array('controller' => 'InstitutionSites', 'action' => 'shiftsAdd'));
-	$labelOptions = $formOptions['inputDefaults']['label'];
-	echo $this->Form->create('InstitutionSiteShift', $formOptions);
-
-//    echo $this->Form->create('InstitutionSiteShift', array(
-//        'url' => array('controller' => 'InstitutionSites', 'action' => 'shiftsAdd'),
-//        'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-//    ));
-
-	$labelOptions['text'] = $this->Label->get('Shift.name');
-	echo $this->Form->input('name', array('label' => $labelOptions));
-
-	$labelOptions['text'] = $this->Label->get('general.school_year');
-	echo $this->Form->input('school_year_id', array('options' => $yearOptions, 'label' => $labelOptions));
-
-	//echo $this->Form->input('start_time');
-	echo $this->FormUtility->timepicker('start_time', array('id' => 'startTime'));
-
-	//echo $this->Form->input('end_time');
-	echo $this->FormUtility->timepicker('end_time', array('id' => 'endTime'));
-
-	$labelOptions['text'] = $this->Label->get('general.location');
-	echo $this->Form->input('location_institution_site_name', array('value' => $institutionSiteName, 'id' => 'locationName', 'label' => $labelOptions));
-	echo $this->Form->input('location_institution_site_id', array('value' => $institutionSiteId, 'type' => 'hidden', 'id' => 'locationInstitutionSiteId'));
-	?>
-    <div class="controls">
-        <input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'shifts'), array('class' => 'btn_cancel btn_left')); ?>
-    </div>
-	<?php echo $this->Form->end(); ?>
-</div>
-<?php $this->end(); ?>
