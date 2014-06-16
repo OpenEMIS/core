@@ -1,140 +1,137 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 class StudentHealthTest extends StudentsAppModel {
+	public $actsAs = array('ControllerAction', 'Datepicker' => array('date'));
+	public $belongsTo = array(
+		'HealthTestType',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		)
+	);
+	public $validate = array(
+		'health_test_type_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid Test.'
+			)
+		)
+	);
 
-    //public $useTable = 'student_health_histories';
-    public $actsAs = array('ControllerAction', 'Datepicker' => array('date'));
-    public $belongsTo = array(
-        //'Student',
-        'HealthTestType',
-        'ModifiedUser' => array(
-            'className' => 'SecurityUser',
-            'foreignKey' => 'modified_user_id'
-        ),
-        'CreatedUser' => array(
-            'className' => 'SecurityUser',
-            'foreignKey' => 'created_user_id'
-        )
-    );
-    public $validate = array(
-        'health_test_type_id' => array(
-            'ruleRequired' => array(
-                'rule' => 'notEmpty',
-                'required' => true,
-                'message' => 'Please select a valid Test.'
-            )
-        )
-    );
+	public function getDisplayFields($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'date', 'type' => 'datepicker'),
+				array('field' => 'name', 'model' => 'HealthTestType', 'labelKey' => 'general.type'),
+				array('field' => 'result'),
+				array('field' => 'comment'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 
-    //public $booleanOptions = array('No', 'Yes');
+	public function beforeAction($controller, $params) {
+		parent::beforeAction($controller, $params);
+		if (!$controller->Session->check('Student.id')) {
+			return $controller->redirect(array('action' => 'index'));
+		}
+	}
 
-    public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'date', 'type' => 'datepicker'),
-                array('field' => 'name', 'model' => 'HealthTestType', 'labelKey' => 'general.type'),
-                array('field' => 'result'),
-                array('field' => 'comment'),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
+	public function healthTest($controller, $params) {
+		$controller->Navigation->addCrumb('Health - Tests');
+		$header = __('Health - Tests');
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		$data = $this->findAllByStudentId($controller->Session->read('Student.id'));
 
-    public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
+		$controller->set(compact('header', 'data'));
+	}
 
-    public function healthTest($controller, $params) {
-        $controller->Navigation->addCrumb('Health - Tests');
-        $header = __('Health - Tests');
-        $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-        $data = $this->findAllByStudentId($controller->studentId);//('all', array('conditions' => array('student_id' => $controller->studentId)));
+	public function healthTestView($controller, $params) {
+		$controller->Navigation->addCrumb('Health - View Test');
+		$header = __('Health - View Test');
 
-        $controller->set(compact('header', 'data'));
-    }
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+		$data = $this->findById($id);
 
-    public function healthTestView($controller, $params) {
-        $controller->Navigation->addCrumb('Health - View Test');
-        $header = __('Health - View Test');
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			$controller->redirect(array('action' => 'healthTest'));
+		}
 
-        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-        $data = $this->findById($id); //('first',array('conditions' => array($this->name.'.id' => $id)));
+		$controller->Session->write('StudentHealthTest.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
+	}
 
-        if (empty($data)) {
-            $controller->Message->alert('general.noData');
-            $controller->redirect(array('action' => 'healthTest'));
-        }
+	public function healthTestDelete($controller, $params) {
+		if ($controller->Session->check('StudentHealthTest.id')) {
+			$id = $controller->Session->read('StudentHealthTest.id');
+			if ($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			$controller->Session->delete('StudentHealthTest.id');
+			$controller->redirect(array('action' => 'healthTest'));
+		}
+	}
 
-        $controller->Session->write('StudentHealthTestId', $id);
-        $fields = $this->getDisplayFields($controller);
-        $controller->set(compact('header', 'data', 'fields', 'id'));
-    }
+	public function healthTestAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Health - Add Test');
+		$controller->set('header', __('Health - Add Test'));
+		$this->setup_add_edit_form($controller, $params);
+	}
 
-    public function healthTestDelete($controller, $params) {
-        if ($controller->Session->check('StudentId') && $controller->Session->check('StudentHealthTestId')) {
-            $id = $controller->Session->read('StudentHealthTestId');
-            if ($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-            $controller->Session->delete('StudentHealthTestId');
-            $controller->redirect(array('action' => 'healthTest'));
-        }
-    }
+	public function healthTestEdit($controller, $params) {
+		$controller->Navigation->addCrumb('Health - Edit Test');
+		$controller->set('header', __('Health - Edit Test'));
+		$this->setup_add_edit_form($controller, $params);
+		$this->render = 'add';
+	}
 
-    public function healthTestAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Health - Add Test');
-        $controller->set('header', __('Health - Add Test'));
-        $this->setup_add_edit_form($controller, $params);
-    }
+	function setup_add_edit_form($controller, $params) {
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
 
-    public function healthTestEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Health - Edit Test');
-        $controller->set('header', __('Health - Edit Test'));
-        $this->setup_add_edit_form($controller, $params);
-        $this->render = 'add';
-    }
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$controller->request->data[$this->name]['student_id'] = $controller->Session->read('Student.id');
+			if ($this->save($controller->request->data)) {
+				$controller->Message->alert('general.add.success');
+				return $controller->redirect(array('action' => 'healthTest'));
+			}
+		} else {
+			$this->recursive = -1;
+			$data = $this->findById($id);
+			if (!empty($data)) {
+				$controller->request->data = $data;
+			}
+		}
 
-    function setup_add_edit_form($controller, $params) {
-        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-
-        if ($controller->request->is('post') || $controller->request->is('put')) {
-            $controller->request->data[$this->name]['student_id'] = $controller->studentId;
-            if ($this->save($controller->request->data)) {
-                $controller->Message->alert('general.add.success');
-                return $controller->redirect(array('action' => 'healthTest'));
-            }
-        } else {
-            $this->recursive = -1;
-            $data = $this->findById($id);
-            if (!empty($data)) {
-                $controller->request->data = $data;
-            }
-        }
-
-        $healthTestsOptions = $this->HealthTestType->find('list', array('fields' => array('id', 'name')));
-        $controller->set(compact('healthTestsOptions'));
-    }
+		$healthTestsOptions = $this->HealthTestType->find('list', array('fields' => array('id', 'name')));
+		$controller->set(compact('healthTestsOptions'));
+	}
 
 }

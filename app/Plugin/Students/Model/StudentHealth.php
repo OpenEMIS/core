@@ -1,26 +1,22 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 class StudentHealth extends StudentsAppModel {
-
-	//public $useTable = 'student_healths';
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		//'Student',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -30,24 +26,7 @@ class StudentHealth extends StudentsAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-
-	/* public $validate = array(
-	  'doctor_name' => array(
-	  'ruleRequired' => array(
-	  'rule' => 'notEmpty',
-	  'required' => true,
-	  'message' => 'Please enter a valid Name.'
-	  )
-	  ),
-	  'doctor_contact' => array(
-	  'ruleRequired' => array(
-	  'rule' => 'notEmpty',
-	  'required' => true,
-	  'message' => 'Please enter a valid Contact Number.'
-	  )
-	  )
-	  ); */
-
+	
 	public function getDisplayFields($controller) {
 		$fields = array(
 			'model' => $this->alias,
@@ -66,9 +45,12 @@ class StudentHealth extends StudentsAppModel {
 		);
 		return $fields;
 	}
-
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
+	
+	public function beforeAction($controller, $params) {
+		parent::beforeAction($controller, $params);
+		if (!$controller->Session->check('Student.id')) {
+			return $controller->redirect(array('action' => 'index'));
+		}
 	}
 
 	public function health($controller, $params) {
@@ -79,7 +61,7 @@ class StudentHealth extends StudentsAppModel {
 	public function healthView($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Overview');
 		$header = __('Health - Overview');
-		$data = $this->findByStudentId($controller->studentId);
+		$data = $this->findByStudentId($controller->Session->read('Student.id'));
 
 		$fields = $this->getDisplayFields($controller);
 		$controller->set(compact('header', 'fields', 'data'));
@@ -89,19 +71,16 @@ class StudentHealth extends StudentsAppModel {
 		$controller->Navigation->addCrumb('Health - Edit Overview');
 		$header = __('Health - Edit Overview');
 
+		$studentId = $controller->Session->read('Student.id');
 		if ($controller->request->is('post') || $controller->request->is('put')) {
-			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
-			if (empty($controller->studentId)) {
-				return $controller->redirect(array('action' => 'view'));
-			}
-
+			$controller->request->data[$this->name]['student_id'] = $studentId;
 			if ($this->save($controller->request->data)) {
 				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'healthView'));
 			}
 		} else {
 			$this->recursive = -1;
-			$data = $this->findByStudentId($controller->studentId);
+			$data = $this->findByStudentId($studentId);
 			if (!empty($data)) {
 				$controller->request->data = $data;
 			}
