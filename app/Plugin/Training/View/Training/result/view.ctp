@@ -55,7 +55,41 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Trainer'); ?></div>
-	<div class="col-md-6"><?php echo $data['TrainingSession']['trainer']; ?></div>
+	<div class="col-md-6">
+		<?php 
+		if (!empty($trainingSessionTrainers)){ ?>
+
+				<div class="table-responsive">
+					<table class="table table-striped table-hover table-bordered">
+			        <thead class="table_head">
+			        	<tr>
+				       		<td class="table_cell"><?php echo __('Name'); ?></td>
+				            <td class="table_cell"><?php echo __('Type'); ?></td>
+				        </tr>
+			        </thead>
+			       
+			        <tbody>
+			        	<?php foreach($trainingSessionTrainers as $val){ ?>
+			            <tr class="table_row">
+			            	<td class="table_cell"><?php echo $val['TrainingSessionTrainer']['ref_trainer_name'] ?></td>
+			                <td class="table_cell">
+			                <?php if($val['TrainingSessionTrainer']['ref_trainer_table']=='Staff'){
+			                		echo __('Internal');
+			                 }else{
+			                 		echo __('Exernal');
+			                 }
+			                 ?>
+			                </td>
+			            </tr>
+			           <?php } ?>
+			        </tbody>
+			    	</table>
+			    </div>
+			<?php
+		}else{
+			echo "-";
+		} ?>
+	</div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Trainees'); ?></div>
@@ -99,7 +133,6 @@ $this->start('contentBody'); ?>
 		}else{
 			echo "-";
 		} ?>
-
 	</div>
 </div>
 <div class="row">

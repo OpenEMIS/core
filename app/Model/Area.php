@@ -44,6 +44,14 @@ class Area extends AppModel {
 			)
 		)
 	);
+
+	public $hasMany = array(
+		'TrainingSession' => array(
+			'className' => 'TrainingSession',
+			'foreignKey' => 'area_id',
+			'dependent' => true
+		)
+	);
 	
 	public $belongsTo = array('AreaLevel');
 	

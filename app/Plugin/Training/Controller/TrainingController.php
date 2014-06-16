@@ -148,6 +148,7 @@ class TrainingController extends TrainingAppController {
     public function ajax_add_trainer() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
+        $this->set('trainerType', $this->params->query['trainer_type']);
         $this->render('/Elements/trainer');
     }
 

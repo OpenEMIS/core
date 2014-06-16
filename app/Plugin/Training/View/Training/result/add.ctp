@@ -26,15 +26,50 @@ echo $this->Form->create($model, $formOptions);
 	echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate', 'readonly' => 'readonly', 'data-date' => $this->request->data['TrainingSession']['start_date']));
 	echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'readonly' => 'readonly', 'data-date' => $this->request->data['TrainingSession']['end_date']));
 	echo $this->Form->input('TrainingSession.location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'disabled' => 'disabled', 'class'=>'form-control location', 'placeholder' => __('Location'), 'value'=>$this->request->data['TrainingSession']['location']));
-	echo $this->Form->input('TrainingSession.trainer', array('label'=>array('text'=>__('Trainer'), 'class'=>'col-md-3 control-label'), 'id' => 'searchTrainer', 'disabled' => 'disabled', 'class'=>'form-control trainer', 'placeholder' => __('Identification No, First Name or Last Name'), 'value'=>$this->request->data['TrainingSession']['trainer']));
-
 	?>
+ <div class="form-group">
+	<label class="col-md-3 control-label"><?php echo __('Trainers'); ?></label>
+	<div class="col-md-6">
+	<div class="table trainer">
+		<table class="table table-striped table-hover table-bordered">
+	 	<thead class="table_head">
+        	<tr>
+	       		<td class="table_cell"><?php echo __('Name'); ?></td>
+	            <td class="table_cell"><?php echo __('Type'); ?></td>
+	        </tr>
+        </thead>
+		<?php 
+		if(isset($this->request->data['TrainingSessionTrainer']) && !empty($this->request->data['TrainingSessionTrainer'])){ ?>
+			<?php 
+			$i = 0;  
+			foreach($this->request->data['TrainingSessionTrainer'] as $key=>$val){  ?>
+			<tr class="table_row " row-id="<?php echo $i;?>">
+				<td class="table_cell cell_description">
+					<?php echo $val['ref_trainer_name'];?>
+			    </td>
+			    <td class="table_cell cell_description">
+			    	<?php if($val['ref_trainer_table']=='Staff'){
+		 			 	echo __('Internal');
+			 		}else{
+			 			echo __('External');
+			 		}
+			 		?>
+			    </td>
+			</tr>
+		<?php 
+			$i++;
+		} ?>
+		<?php } ?>
+		</table>
+	</div>
+	</div>
+</div>
  <div class="form-group">
 	<label class="col-md-3 control-label"><?php echo __('Trainees'); ?></label>
 	<div class="col-md-6">
 	<div class="table trainee"  url="Training/ajax_find_trainee/">
 		<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
-		<table class="table_body" style="display:table;">
+		<table class="table_body table-striped table-hover table-bordered">
 	 	<thead class="table_head">
         	<tr>
 	       		<td class="table_cell"><?php echo __('Name'); ?></td>

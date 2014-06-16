@@ -27,6 +27,7 @@ class TrainingSession extends TrainingAppModel {
 		'TrainingCourse',
 		'TrainingStatus',
 		'TrainingProvider',
+		'Area',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -45,6 +46,11 @@ class TrainingSession extends TrainingAppModel {
 		),
 		'TrainingSessionResult' => array(
 			'className' => 'TrainingSessionResult',
+			'foreignKey' => 'training_session_id',
+			'dependent' => true
+		),
+		'TrainingSessionTrainer' => array(
+			'className' => 'TrainingSessionTrainer',
 			'foreignKey' => 'training_session_id',
 			'dependent' => true
 		)
@@ -77,13 +83,6 @@ class TrainingSession extends TrainingAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please enter a valid Location.'
-			)
-		),
-		'trainer' => array(
-			'ruleRequired' => array(
-				'rule' => 'notEmpty',
-				'required' => true,
-				'message' => 'Please select a valid Trainer.'
 			)
 		)
 	);
@@ -206,8 +205,7 @@ class TrainingSession extends TrainingAppModel {
 			$controller->redirect(array('action'=>'session'));
 		}
 		
-		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
-		$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
+		$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
 			array(
 				'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
 				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id),
@@ -222,10 +220,18 @@ class TrainingSession extends TrainingAppModel {
 			)
 		);
 
+		$trainingSessionTrainers = $this->TrainingSessionTrainer->find('all',  
+			array(
+				'fields' => array('TrainingSessionTrainer.*'),
+				'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$id)
+			)
+		);
+
 		$sessionEditable = $this->getSessionResultStatus($id);
 		
 		$controller->Session->write('TrainingSessionId', $id);
 		$controller->set('trainingSessionTrainees', $trainingSessionTrainees);
+		$controller->set('trainingSessionTrainers', $trainingSessionTrainers);
 		$controller->set('data', $data);
 		$controller->set('sessionEditable', $sessionEditable);
 
@@ -337,10 +343,11 @@ class TrainingSession extends TrainingAppModel {
 	
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingCourse = ClassRegistry::init('TrainingCourse');
-		$trainingCourseOptions = $trainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
-	
+		$trainingCourseOptions = $this->TrainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
+		$areaOptions = $this->Area->find('list', array('fields'=> array('id', 'name'), 'conditions'=>array('area_level_id'=>2, 'visible'=>1), 'order'=>array('order')));
+
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
+		$controller->set('areaOptions', $areaOptions);
 
 		$trainerTypeOptions = array_map('__', $this->trainerTypeOptions);
 		$controller->set('trainerTypeOptions', $trainerTypeOptions);
@@ -361,7 +368,6 @@ class TrainingSession extends TrainingAppModel {
 				}
 
 				$provider = $data['TrainingSession']['training_provider_id'];
-				$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 				$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all',  
 					array(
 						'fields' => array('TrainingSessionTrainee.*', 'Staff.first_name', 'Staff.last_name'),
@@ -385,7 +391,21 @@ class TrainingSession extends TrainingAppModel {
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 					}
 				}
-				$controller->request->data = array_merge($data, array('TrainingSessionTrainee'=>$trainingSessionTraineesVal));
+
+				$trainingSessionTrainers = $this->TrainingSessionTrainer->find('all',  
+					array(
+						'fields' => array('TrainingSessionTrainer.*'),
+						'recursive' => -1, 
+						'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$id),
+					)
+				);
+				$trainingSessionTrainersVal = null;
+				if(!empty($trainingSessionTrainers)){
+					foreach($trainingSessionTrainers as $val){
+						$trainingSessionTrainersVal[] = $val['TrainingSessionTrainer'];
+					}
+				}
+				$controller->request->data = array_merge($data, array('TrainingSessionTrainee'=>$trainingSessionTraineesVal, 'TrainingSessionTrainer'=>$trainingSessionTrainersVal));
 			}
 			$controller->request->data['TrainingSession']['sessionEditable'] = $sessionEditable;
 		}
@@ -399,22 +419,46 @@ class TrainingSession extends TrainingAppModel {
 				      	$controller->request->data['TrainingSession']['training_status_id'] = 2; 
 					}
 				}
-				
-				if($this->saveAll($controller->request->data)){
-					if(isset($controller->request->data['DeleteTrainee'])){
-						$deletedId = array();
-						foreach($controller->request->data['DeleteTrainee'] as $key=>$value){
-							$deletedId[] = $value['id'];
+				$data = $controller->request->data;
+				if($data['TrainingSession']['sessionEditable']=='2'){
+					foreach($data['TrainingSessionTrainee'] as $key=>$value){
+						$data['TrainingSessionTrainee'][$key]['training_session_id'] = $data['TrainingSession']['id'];
+					}
+					if($this->TrainingSessionTrainee->saveAll($data['TrainingSessionTrainee'])){
+						if(isset($data['DeleteTrainee'])){
+							$deletedId = array();
+							foreach($data['DeleteTrainee'] as $key=>$value){
+								$deletedId[] = $value['id'];
+							}
+							$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id' => $deletedId), false);
 						}
-						$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id' => $deletedId), false);
-					}
-					if(empty($controller->request->data[$this->name]['id'])){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
-					}
-					else{
 						$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+						return $controller->redirect(array('action' => 'session'));
 					}
-					return $controller->redirect(array('action' => 'session'));
+				}else{
+					if($this->saveAll($data)){
+						if(isset($data['DeleteTrainee'])){
+							$deletedId = array();
+							foreach($data['DeleteTrainee'] as $key=>$value){
+								$deletedId[] = $value['id'];
+							}
+							$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id' => $deletedId), false);
+						}
+						if(isset($data['DeleteTrainer'])){
+							$deletedId = array();
+							foreach($data['DeleteTrainer'] as $key=>$value){
+								$deletedId[] = $value['id'];
+							}
+							$this->TrainingSessionTrainer->deleteAll(array('TrainingSessionTrainer.id' => $deletedId), false);
+						}
+						if(empty($controller->request->data[$this->name]['id'])){
+							$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
+						}
+						else{
+							$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+						}
+						return $controller->redirect(array('action' => 'session'));
+					}
 				}
 			}
 		}
