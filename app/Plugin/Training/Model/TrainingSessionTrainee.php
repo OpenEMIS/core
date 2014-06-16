@@ -9,6 +9,16 @@ class TrainingSessionTrainee extends TrainingAppModel {
 		'Staff'
 	);
 
+	public $hasAndBelongsToMany = array(
+        'TrainingSessionTraineeResult' => array(
+            'className' => 'TrainingSessionTraineeResult',
+         	'joinTable' => 'training_session_trainee_results',
+	        'foreignKey' => 'trainining_session_trainee_id',
+	        'associationForeignKey' => 'training_session_result_id',
+         	'dependent' => true 
+        )
+    );
+
 	public function autocomplete($search, $index, $trainingCourseID) {
 		$search = sprintf('%%%s%%', $search);
 		$data = array();

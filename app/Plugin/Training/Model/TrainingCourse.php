@@ -50,6 +50,11 @@ class TrainingCourse extends TrainingAppModel {
 			'foreignKey' => 'training_course_id',
 			'dependent' => true
 		),
+		'TrainingCourseResultType' => array(
+			'className' => 'TrainingCourseResultType',
+			'foreignKey' => 'training_course_id',
+			'dependent' => true
+		),
 		'TrainingCourseProvider' => array(
 			'className' => 'TrainingCourseProvider',
 			'foreignKey' => 'training_course_id',
@@ -129,13 +134,6 @@ class TrainingCourse extends TrainingAppModel {
 				'rule' => 'notEmpty',
 				'required' => true,
 				'message' => 'Please select a valid Training Level.'
-			)
-		),
-		'pass_result' => array(
-			'ruleRequired' => array(
-				'rule' => 'numeric',
-				'required' => true,
-				'message' => 'Please enter a valid Pass Result.'
 			)
 		)
 	);
@@ -277,14 +275,12 @@ class TrainingCourse extends TrainingAppModel {
 		}
 		
 		$controller->Session->write('TrainingCourseId', $id);
-		$trainingCourseTargetPopulation = ClassRegistry::init('TrainingCourseTargetPopulation');
-		$trainingCourseTargetPopulations = $trainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
+		$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
 
 		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
 		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name'), 'conditions'=>array('StaffPositionTitle.visible'=>1)));
 
-		$trainingCoursePrerequisite = ClassRegistry::init('TrainingCoursePrerequisite');
-		$trainingCoursePrerequisites = $trainingCoursePrerequisite->find('all',  
+		$trainingCoursePrerequisites = $this->TrainingCoursePrerequisite->find('all',  
 					array(
 						'fields' => array('TrainingPrerequisiteCourse.*', 'TrainingCoursePrerequisite.*'),
 						'joins' => array(
@@ -299,11 +295,22 @@ class TrainingCourse extends TrainingAppModel {
 					)
 				);
 
-		$trainingCourseProvider = ClassRegistry::init('TrainingCourseProvider');
-		$trainingCourseProviders = $trainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
+		$trainingCourseProviders = $this->TrainingCourseProvider->find('all', array('conditions'=>array('TrainingCourseProvider.training_course_id'=>$id)));
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
 		$trainingProviders = $trainingProvider->find('list', array('fields'=>array('id', 'name')));
+
+		$this->TrainingCourseResultType->bindModel(
+	        array('belongsTo' => array(
+	                'TrainingResultType' => array(
+						'className' => 'FieldOptionValue',
+						'foreignKey' => 'training_result_type_id'
+					)
+	            )
+	        )
+	    );
+
+		$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)));
 
 		$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
         $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
@@ -316,6 +323,7 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('trainingCoursePrerequisites', $trainingCoursePrerequisites);
 		$controller->set('trainingCourseProviders', $trainingCourseProviders);
 		$controller->set('trainingProviders', $trainingProviders);
+		$controller->set('trainingCourseResultTypes', $trainingCourseResultTypes);
 		$controller->set('attachments', $attachments);
 		$controller->set('_model','TrainingCourseAttachment');
 
@@ -420,32 +428,22 @@ class TrainingCourse extends TrainingAppModel {
 	}
 	
 	function setup_add_edit_form($controller, $params){
-		$trainingFieldStudy = ClassRegistry::init('TrainingFieldStudy');
-		$trainingFieldStudyOptions = $trainingFieldStudy->find('list', array('fields'=> array('id', 'name')));
+		$trainingFieldStudyOptions = $this->TrainingFieldStudy->find('list', array('fields'=> array('id', 'name')));
 		
-		$trainingModeDelivery = ClassRegistry::init('TrainingModeDelivery');
-		$trainingModeDeliveryOptions = $trainingModeDelivery->find('list', array('fields'=> array('id', 'name')));
+		$trainingModeDeliveryOptions = $this->TrainingModeDelivery->find('list', array('fields'=> array('id', 'name')));
 		
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
 		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=> array('id', 'name')));
 		
-		$trainingRequirement = ClassRegistry::init('TrainingRequirement');
-		$trainingRequirementOptions = $trainingRequirement->find('list', array('fields'=> array('id', 'name')));
+		$trainingRequirementOptions = $this->TrainingRequirement->find('list', array('fields'=> array('id', 'name')));
 
-		$trainingLevel = ClassRegistry::init('TrainingLevel');
-		$trainingLevelOptions = $trainingLevel->find('list', array('fields'=> array('id', 'name')));
-
-
-		$teacherPositionTitle = ClassRegistry::init('TeacherPositionTitle');
-		$teacherPositionTitles = $teacherPositionTitle->find('list', array('fields'=>array('id', 'name')));
+		$trainingLevelOptions = $this->TrainingLevel->find('list', array('fields'=> array('id', 'name')));
 
 		$staffPositionTitle = ClassRegistry::init('StaffPositionTitle');
 		$staffPositionTitles = $staffPositionTitle->find('list', array('fields'=>array('id', 'name')));
 
-		$trainingCourseType = ClassRegistry::init('TrainingCourseType');
-		$trainingCourseTypeOptions = $trainingCourseType->find('list', array('fields'=> array('id', 'name')));
+		$trainingCourseTypeOptions = $this->TrainingCourseType->find('list', array('fields'=> array('id', 'name')));
 	
-
 		$configItem = ClassRegistry::init('ConfigItem');
 	 	$credit_hours = $configItem->field('ConfigItem.value', array('ConfigItem.name' => 'training_credit_hour'));
 
@@ -456,7 +454,7 @@ class TrainingCourse extends TrainingAppModel {
 
 	 	
 		$controller->set(compact('trainingFieldStudyOptions', 'trainingModeDeliveryOptions', 'trainingProviderOptions', 
-		'trainingRequirementOptions', 'trainingLevelOptions', 'teacherPositionTitles', 'staffPositionTitles', 'trainingCourseTypeOptions', 'trainingCreditHourOptions'));
+		'trainingRequirementOptions', 'trainingLevelOptions', 'staffPositionTitles', 'trainingCourseTypeOptions', 'trainingCreditHourOptions', 'trainingResultTypeOptions'));
 	
 
 		$controller->set('modelName', $this->name);
@@ -480,8 +478,7 @@ class TrainingCourse extends TrainingAppModel {
 				$controller->request->data = $data;
 				$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
 
-				$trainingCoursePrerequisite = ClassRegistry::init('TrainingCoursePrerequisite');
-				$trainingCoursePrerequisites = $trainingCoursePrerequisite->find('all',  
+				$trainingCoursePrerequisites = $this->TrainingCoursePrerequisite->find('all',  
 					array(
 						'fields' => array('TrainingPrerequisiteCourse.*', 'TrainingCoursePrerequisite.*'),
 						'joins' => array(
@@ -521,9 +518,31 @@ class TrainingCourse extends TrainingAppModel {
 					}
 				}
 
+				$this->TrainingCourseResultType->bindModel(
+			        array('belongsTo' => array(
+			                'TrainingResultType' => array(
+								'className' => 'FieldOptionValue',
+								'foreignKey' => 'training_result_type_id'
+							)
+			            )
+			        )
+			    );
+
+			   $trainingCourseResultTypes = $this->TrainingCourseResultType->find('all',  
+					array(
+						'conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)
+					)
+				);
+
+				$trainingCourseResultTypesVal = null;
+				if(!empty($trainingCourseResultTypes)){
+					foreach($trainingCourseResultTypes as $val){
+						$trainingCourseResultTypesVal[] = array_merge(array('result_type'=>$val['TrainingResultType']['name']), $val['TrainingCourseResultType']);
+					}
+				}
 
 				$merge = array_merge(array('TrainingCourseTargetPopulation'=>$trainingCourseTargetPopulationsVal), array('TrainingCoursePrerequisite'=>$trainingCoursePrerequisitesVal)
-					, array('TrainingCourseProvider'=>$trainingCourseProvidersVal));
+					, array('TrainingCourseProvider'=>$trainingCourseProvidersVal), array('TrainingCourseResultType'=>$trainingCourseResultTypesVal));
 				$controller->request->data = array_merge($data, $merge);
 			}
 		}
@@ -571,6 +590,13 @@ class TrainingCourse extends TrainingAppModel {
 							$deletedId[] = $value['id'];
 						}
 						$this->TrainingCourseProvider->deleteAll(array('TrainingCourseProvider.id' => $deletedId), false);
+					}
+					if(isset($controller->request->data['DeleteResultType'])){
+						$deletedId = array();
+						foreach($controller->request->data['DeleteResultType'] as $key=>$value){
+							$deletedId[] = $value['id'];
+						}
+						$this->TrainingCourseResultType->deleteAll(array('TrainingCourseResultType.id' => $deletedId), false);
 					}
 					if(empty($controller->request->data[$this->name]['id'])){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
