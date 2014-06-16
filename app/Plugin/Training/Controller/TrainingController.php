@@ -11,7 +11,8 @@ class TrainingController extends TrainingAppController {
         'Training.TrainingSessionTrainer',
         'Training.TrainingCourseAttachment',
         'TrainingProvider',
-        'Training.TrainingCourseProvider'
+        'Training.TrainingCourseProvider',
+        'Training.TrainingCourseResultType'
      );
 
     public $helpers = array('Js' => array('Jquery'));
@@ -74,6 +75,7 @@ class TrainingController extends TrainingAppController {
      public function ajax_add_result_type() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
+        $this->set('trainingResultTypeOptions', $this->TrainingCourseResultType->TrainingResultType->getList());
         $this->render('/Elements/result_type');
     }
 

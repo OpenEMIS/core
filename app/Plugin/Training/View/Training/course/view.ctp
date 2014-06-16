@@ -96,7 +96,7 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Training Level'); ?></div>
-	<div class="col-md-6"><?php echo $obj['training_level_id']; ?></div>
+	<div class="col-md-6"><?php echo $data['TrainingLevel']['name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Prerequisite'); ?></div>
@@ -111,8 +111,16 @@ $this->start('contentBody'); ?>
 	</div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo __('Pass Result'); ?></div>
-	<div class="col-md-6"><?php echo $obj['pass_result']; ?></div>
+	<div class="col-md-3"><?php echo __('Result Type'); ?></div>
+	<div class="col-md-6">
+		<?php if (!empty($trainingCourseResultTypes)){ 
+			foreach($trainingCourseResultTypes as $val){
+				echo $val['TrainingResultType']['name']  . '<br />';
+			}
+		}else{
+			echo "-";
+		} ?>
+	</div>
 </div>
 <div class="row">
     <div class="col-md-3"><?php echo __('Attachments'); ?></div>

@@ -22,6 +22,15 @@ class TrainingSessionResult extends TrainingAppModel {
 		)
 	);
 
+	public $hasAndBelongsToMany = array(
+        'TrainingSessionTraineeResult' => array(
+            'className' => 'TrainingSessionTraineeResult',
+         	'joinTable' => 'training_session_trainee_results',
+	        'foreignKey' => 'training_session_result_id',
+	        'associationForeignKey' => 'training_session_trainee_id',
+            'dependent' => true 
+        )
+    );
 
 	public $headerDefault = 'Results';
 	

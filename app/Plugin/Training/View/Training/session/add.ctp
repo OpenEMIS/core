@@ -111,11 +111,11 @@ if(isset($this->data[$model]['end_date'])){
 					 		}
 					 		?>
 					 	</td>
+				 		<?php if($this->request->data['TrainingSession']['sessionEditable']!='2'){ ?>
 						<td class="table_cell cell_delete">
-							<?php if($this->request->data['TrainingSession']['sessionEditable']!='2'){ ?>
 					    	<span class="icon_delete" title="Delete" onclick="objTrainingSessions.deleteTrainer(this)"></span>
-					    	<?php } ?>
 					    </td>
+					    <?php } ?>
 					</tr>
 					<?php } ?>
 			<?php 

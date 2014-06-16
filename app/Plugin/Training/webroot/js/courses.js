@@ -268,7 +268,7 @@ var objTrainingCourses = {
           $("#result_type_message").remove();
           $('.validate-result-type').each(function(i, obj) {
              if(in_array(obj.value, val)){
-                $('.result_type').prepend('<div id="result_type_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Trainee</div>');
+                $('.result_type').prepend('<div id="result_type_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Result Type</div>');
                 return false;
              }else{
                 val[c] = obj.value;
@@ -285,10 +285,10 @@ var objTrainingCourses = {
         var params = {index: index};
         var success = function(data, status) {
             var callback = function() {
-                table.find('.table_body').append(data);
-                /*$("#searchTrainer"+index).on("keydown", function(event){
-                     objTrainingSessions.autoFill(index);
-                });*/
+                table.find('.table_body tbody').append(data);
+                $("#searchResultType"+index).on("change", function(event){
+                     objTrainingCourses.validateResultType();
+                });
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -316,7 +316,7 @@ var objTrainingCourses = {
             div.append(input);
         }
         row.remove();
-        objTrainingSessions.validateResultType();
+        objTrainingCourses.validateResultType();
     },
 
     attachAutoComplete: function(element, url, callback) {
