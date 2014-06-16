@@ -261,6 +261,64 @@ var objTrainingCourses = {
           
     },
 
+    
+   validateResultType: function() {
+          var val = new Array();
+          var c = 0;
+          $("#result_type_message").remove();
+          $('.validate-result-type').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.result_type').prepend('<div id="result_type_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Trainee</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    addResultType: function(obj) {
+        var table = $('.result_type');
+        var index = table.find('.table_row').length + $('.delete-result-type input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body').append(data);
+                /*$("#searchTrainer"+index).on("keydown", function(event){
+                     objTrainingSessions.autoFill(index);
+                });*/
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
+
+    
+    deleteResultType: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-result-type');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
+        objTrainingSessions.validateResultType();
+    },
+
     attachAutoComplete: function(element, url, callback) {
         $(element).autocomplete({
             source: url,

@@ -45,7 +45,7 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
  <div class="row form-group row_target_population" style="min-height:45px;">
 	<label class="col-md-3 control-label"><?php echo __('Target Population'); ?></label>
 	<div class="col-md-4">
-	<div class="table target_population" style="width:247px;" url="Training/ajax_find_target_population/">
+	<div class="table target_population" url="Training/ajax_find_target_population/">
 		<div class="delete-target-population" name="data[DeleteTargetPopulation][{index}][id]"></div>
 		<table class="table table-striped table-hover table-bordered table_body">
 		<tbody>
@@ -137,7 +137,7 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 <div class="row form-group row_prerequisite" style="min-height:45px;">
 	<label class="col-md-3 control-label"><?php echo __('Prerequisite'); ?></label>
 	<div class="col-md-4">
-	<div class="table prerequisite" style="width:247px;" url="Training/ajax_find_prerequisite/">
+	<div class="table prerequisite" url="Training/ajax_find_prerequisite/">
 		<div class="delete-prerequisite" name="data[DeletePrerequisite][{index}][id]"></div>
 		<table class="table table-striped table-hover table-bordered table_body">
 		<tbody>
@@ -178,9 +178,48 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
 	</div>
 </div> 
-<?php 
-	echo $this->Form->input('pass_result'); 
-?>
+<div class="row form-group row_result_type" style="min-height:45px;">
+	<label class="col-md-3 control-label"><?php echo __('Result Type'); ?></label>
+	<div class="col-md-4">
+	<div class="table result_type">
+		<div class="delete-result-type" name="data[DeleteResultType][{index}][id]"></div>
+		<table class="table table-striped table-hover table-bordered table_body">
+		<tbody>
+		<?php if(isset($this->request->data['TrainingCourseResultType']) && !empty($this->request->data['TrainingCourseResultType'])){ ?>
+			<?php 
+			$i = 0;   
+			foreach($this->request->data['TrainingCourseResultType'] as $val){ ?>
+			<?php if(!empty($val['training_result_type_id'])){ ?>
+			<tr class="table_row " row-id="<?php echo $i;?>">
+				<td class="table_cell cell_description" style="width:90%">
+					<div class="input_wrapper">
+				 	<div class="training-result-type-<?php echo $i;?>">
+						<?php echo $val['code'] . ' - ' . $val['title'];?>
+					</div>		
+					<?php echo $this->Form->hidden('TrainingCourseResultType.' . $i . '.training_result_type_id', array('class' => 'training-result-type-id-'.$i . ' validate-result-type', 'value'=>$val['training_prerequisite_course_id'])); ?>
+					<?php if(isset($val['id'])){ ?>
+					<?php echo $this->Form->hidden('TrainingCourseResultType.' . $i . '.id', array('value'=>$val['id'], 
+					'class' => 'control-id')); ?>
+					<?php } ?>
+					</div>
+			    </td>
+			 
+				<td class="table_cell cell_delete">
+			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteResultType(this)"></span>
+			    </td>
+			</tr>
+			<?php } ?>
+		<?php 
+			$i++;
+		} ?>
+		<?php } ?>
+		</tbody>
+		</table>
+	</div>
+	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addResultType(this)" url="Training/ajax_add_result_type"  
+		href="javascript: void(0)"><?php echo __('Add Result Type');?></a></div>
+	</div>
+</div> 
 <?php 
 $multiple = array('multipleURL' => $this->params['controller']."/trainingCourseAjaxAddField/");
 echo $this->Form->hidden('maxFileSize', array('name'=> 'MAX_FILE_SIZE','value'=>(2*1024*1024)));
