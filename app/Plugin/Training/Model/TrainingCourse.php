@@ -15,7 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TrainingCourse extends TrainingAppModel {
-	//public $useTable = 'student_health_histories';
 	public $actsAs = array('ControllerAction');
 	
 	public $belongsTo = array(
