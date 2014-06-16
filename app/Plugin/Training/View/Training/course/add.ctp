@@ -10,7 +10,11 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
 if($_edit) {
-	echo $this->Html->link(__('Back'), array('action' => 'course'), array('class' => 'divider', 'id'=>'back'));
+	if(!empty($this->data[$modelName]['id'])){
+		echo $this->Html->link(__('Back'), array('action' => 'courseView', $this->data[$modelName]['id']), array('class' => 'divider'));
+	}else{
+		echo $this->Html->link(__('Back'), array('action' => 'course'), array('class' => 'divider'));
+	}
 }
 $this->end();
 $this->start('contentBody');
@@ -194,9 +198,9 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 				<td class="table_cell cell_description" style="width:90%">
 					<div class="input_wrapper">
 				 	<div class="training-result-type-<?php echo $i;?>">
-						<?php echo $val['code'] . ' - ' . $val['title'];?>
+						<?php echo $val['result_type'];?>
 					</div>		
-					<?php echo $this->Form->hidden('TrainingCourseResultType.' . $i . '.training_result_type_id', array('class' => 'training-result-type-id-'.$i . ' validate-result-type', 'value'=>$val['training_prerequisite_course_id'])); ?>
+					<?php echo $this->Form->hidden('TrainingCourseResultType.' . $i . '.training_result_type_id', array('class' => 'training-result-type-id-'.$i . ' validate-result-type', 'value'=>$val['training_result_type_id'])); ?>
 					<?php if(isset($val['id'])){ ?>
 					<?php echo $this->Form->hidden('TrainingCourseResultType.' . $i . '.id', array('value'=>$val['id'], 
 					'class' => 'control-id')); ?>
