@@ -1,15 +1,14 @@
 <?php
-class TrainingSessionTrainer extends TrainingAppModel {
+class TrainingCourseResultType extends TrainingAppModel {
 	
 	public $belongsTo = array(
-		'TrainingSession' => array(
-			'className' => 'TrainingSession',
-			'foreignKey' => 'training_session_id'
+		'TrainingResultType' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'training_result_type_id'
 		),
-		'Staff' => array(
-			'className' => 'Staff',
-			'foreignKey' => 'ref_trainer_id',
-		  	'conditions' => array('ref_trainer_table' => 'Staff'),
+		'TrainingCourse' => array(
+			'className' => 'TrainingCourse',
+		  	'foreignKey' => 'training_course_id'
 		),
 	);
 

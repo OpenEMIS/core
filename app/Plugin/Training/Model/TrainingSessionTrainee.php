@@ -1,6 +1,5 @@
 <?php
 class TrainingSessionTrainee extends TrainingAppModel {
-	//public $useTable = 'student_health_histories';
 	
 	public $belongsTo = array(
 		'TrainingSession' => array(
