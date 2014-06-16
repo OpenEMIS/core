@@ -1,6 +1,5 @@
 <?php
 class TrainingSessionResult extends TrainingAppModel {
-	//public $useTable = 'student_health_histories';
 
 	public $actsAs = array('ControllerAction');
 	
@@ -111,6 +110,14 @@ class TrainingSessionResult extends TrainingAppModel {
 			)
 		);
 
+		$trainingSessionTrainer = ClassRegistry::init('TrainingSessionTrainer');
+		$trainingSessionTrainers = $trainingSessionTrainer->find('all',  
+			array(
+				'fields' => array('TrainingSessionTrainer.*'),
+				'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$data['TrainingSessionResult']['training_session_id']),
+			)
+		);
+
 		$trainingCourse = ClassRegistry::init('TrainingCourse');
 		$trainingCourses = $trainingCourse->find('first',  
 			array(
@@ -128,6 +135,7 @@ class TrainingSessionResult extends TrainingAppModel {
 		$controller->Session->write('TrainingResultId', $id);
 		$controller->set('trainingCourses', $trainingCourses);
 		$controller->set('trainingSessionTrainees', $trainingSessionTrainees);
+		$controller->set('trainingSessionTrainers', $trainingSessionTrainers);
 		$controller->set('trainingProviders', $trainingProviders);
 		$controller->set('data', $data);
 
@@ -160,28 +168,7 @@ class TrainingSessionResult extends TrainingAppModel {
             $controller->redirect(array('action' => 'result'));
         }
     }
-    /*
-    public function resultInactivate($controller, $params) {
-        if($controller->Session->check('TrainingResultId')) {
-            $id = $controller->Session->read('TrainingResultId');
-			
-			$data = $this->find('first',array('conditions' => array($this->name.'.id' => $id)));
 
-            $trainingCourse = ClassRegistry::init('TrainingCourse');
-			$trainingCourses = $trainingCourse->find('first', array('conditions'=> array('id' => $data['TrainingSession']['training_course_id'])));
-
-            $name = $trainingCourses['TrainingCourse']['code'] . ' - ' . $trainingCourses['TrainingCourse']['title'];
-			
-          	$this->updateAll(
-    			array('TrainingSessionResult.training_status_id' => 4),
-    			array('TrainingSessionResult.id '=> $id)
-			);
-            $controller->Utility->alert($name . ' have been inactivated successfully.');
-            $controller->redirect(array('action' => 'result'));
-        }
-    }*/
-	
-	
 	public function resultEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
@@ -204,6 +191,21 @@ class TrainingSessionResult extends TrainingAppModel {
 					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
 						$this->id =  $saveData['WorkflowLog']['record_id'];
 						$this->saveField('training_status_id', 3);
+
+						$trainingSessionResult = $this->find('first', array('conditions'=> array($this->name.'.id' => $saveData['WorkflowLog']['record_id'])));
+						$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+						$trainingSessionTrainees = $trainingSessionTrainee->find('list', array('fields'=>array('TrainingSessionTrainee.staff_id'),'conditions'=> array('TrainingSessionTrainee.training_session_id' => $trainingSessionResult['TrainingSession']['id'])));
+						$staffTrainingNeed = ClassRegistry::init('StaffTrainingNeed');
+						
+						$staffTrainingNeed->updateAll(
+						    array('StaffTrainingNeed.training_status_id' => '4'),
+						    array(
+						    	'StaffTrainingNeed.ref_course_table'=>'TrainingCourse', 
+						    	'StaffTrainingNeed.staff_id'=> $trainingSessionTrainees,
+						    	'StaffTrainingNeed.ref_course_id'=>$trainingSessionResult['TrainingSession']['training_course_id'],
+						    	'StaffTrainingNeed.training_status_id'=>'3'
+					    	)
+						);
 					}
 				}else{
 					$this->id =  $saveData['WorkflowLog']['record_id'];
@@ -453,10 +455,26 @@ class TrainingSessionResult extends TrainingAppModel {
 						$trainingSessionTraineesVal[] = $val['TrainingSessionTrainee'];
 					}
 				}
+
+				$trainingSessionTrainer = ClassRegistry::init('TrainingSessionTrainer');
+				$trainingSessionTrainers = $trainingSessionTrainer->find('all',  
+					array(
+						'fields' => array('TrainingSessionTrainer.*'),
+						'recursive' => -1, 
+						'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$data['TrainingSessionResult']['training_session_id']),
+					)
+				);
+				$trainingSessionTrainersVal = null;
+				if(!empty($trainingSessionTrainers)){
+					foreach($trainingSessionTrainers as $val){
+						$trainingSessionTrainersVal[] = $val['TrainingSessionTrainer'];
+					}
+				}
+
 				$merge = $trainingCourses;
 
 				if(!empty($trainingSessionTraineesVal)){
-					$merge = array_merge(array('TrainingSessionTrainee'=>$trainingSessionTraineesVal), $trainingCourses);
+					$merge = array_merge(array('TrainingSessionTrainee'=>$trainingSessionTraineesVal, 'TrainingSessionTrainer'=>$trainingSessionTrainersVal), $trainingCourses);
 				}
 				$controller->request->data = array_merge($data, $merge);
 			}else{

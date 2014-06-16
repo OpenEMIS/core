@@ -244,16 +244,14 @@ class StaffTrainingNeed extends StaffAppModel {
 		if($controller->Session->check('StaffId')){
 		 	$staffId = $controller->Session->read('StaffId');
 		 	$institutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-		 	$staffData = $institutionSiteStaff->findAllByStaffId($staffId);//('all', array('recursive'=>-1,'conditions'=>array('staff_id' => $staffId)));
-		 	$staffPositionTitleId = array();
-		 	foreach($staffData as $val){
-		 		if(!empty($val['InstitutionSiteStaff']['position_title_id'])){
-		 			$staffPositionTitleId[] = $val['InstitutionSiteStaff']['position_title_id'];
-		 		}
-		 	}
+		 	$staffPositionID = $institutionSiteStaff->find('list', 
+				array(
+					'fields'=>array('institutionSiteStaff.staff_position_title_id'),
+					'conditions'=>array('institutionSiteStaff.staff_id'=>$staffId)
+				)
+			);
 
 		 	$trainingNeedTypeOptions = $this->trainingNeedTypeOptions;
-		 	
 
 			$trainingCourseOptions = $this->TrainingCourse->find('list', 
 				array(
@@ -265,7 +263,7 @@ class StaffTrainingNeed extends StaffAppModel {
 							'alias' => 'TrainingCourseTargetPopulation',
 							'conditions' => array(
 								'TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id',
-							     'TrainingCourseTargetPopulation.staff_position_title_id' => $staffPositionTitleId
+							     'TrainingCourseTargetPopulation.staff_position_title_id' => $staffPositionID
 							)
 					),
 					array(
@@ -293,9 +291,7 @@ class StaffTrainingNeed extends StaffAppModel {
 				))
 			);
 		}
-      //  $trainingCourseId = isset($controller->request->data['StaffTrainingNeed']['training_course_id']) ? $controller->request->data['StaffTrainingNeed']['training_course_id'] : "";
-      //	$controller->set('selectedCourse', $trainingCourseId);
-		
+
 		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
 		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
 
