@@ -14,6 +14,16 @@ class TrainingSessionTrainer extends TrainingAppModel {
 		),
 	);
 
+	public $validate = array(
+		'ref_trainer_name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Trainer.'
+			)
+		)
+	);
+
 	public function autocomplete($search, $index) {
 		$search = sprintf('%%%s%%', $search);
 		$data = array();
@@ -44,9 +54,9 @@ class TrainingSessionTrainer extends TrainingAppModel {
 				'value' => array(
 					'trainer-id-'.$index => $id, 
 					'trainer-name-'.$index => trim(sprintf('%s, %s', $firstName, $lastName)),
-					'trainer-table'.$index => 'Staff',
-					'trainer-validate-'.$index => 'Staff_'.$id,
-					'trainer-type-'.$index => __('Internal')
+					'trainer-full-name-'.$index => trim(sprintf('%s, %s', $firstName, $lastName)),
+					'trainer-table-'.$index => 'Staff',
+					'trainer-validate-'.$index => 'Staff_'.$id
 					)
 			);
 		}

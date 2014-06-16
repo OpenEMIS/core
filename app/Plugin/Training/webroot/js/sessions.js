@@ -185,14 +185,21 @@ var objTrainingSessions = {
     addTrainer: function(obj) {
         var table = $('.trainer');
         var index = table.find('.table_row').length + $('.delete-trainer input').length;
+        var trainer_type = $('.trainer_type :selected').text(); 
         var maskId;
-        var params = {index: index};
+        var params = {index: index, trainer_type: trainer_type};
         var success = function(data, status) {
             var callback = function() {
                 table.find('.table_body').append(data);
                 var element = '#searchTrainer' + index;
                 var url = getRootURL() + table.attr('url') + '/' + index;
-                //objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainer);
+                if($('.trainer_type').val()=='1'){
+                    objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainer);
+                }else{
+                    $("#searchTrainer"+index).on("keydown", function(event){
+                         objTrainingSessions.autoFill(index);
+                    });
+                }
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -204,6 +211,13 @@ var objTrainingSessions = {
             beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
             success: success
         });
+    },
+    
+    autoFill:function(index){
+        $('.trainer-id-'+index).val('0');
+        $('.trainer-table-'+index).val('');
+        $('.trainer-validate-'+index).val('_'+$('#searchTrainer'+index).val());
+        objTrainingSessions.validateTrainer();
     },
     
      selectTrainer: function(event, ui) {
