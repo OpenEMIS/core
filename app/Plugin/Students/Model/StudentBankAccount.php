@@ -76,6 +76,13 @@ class StudentBankAccount extends AppModel {
 		);
 		return $fields;
 	}
+	
+	public function beforeAction($controller, $params) {
+		parent::beforeAction($controller, $params);
+		if (!$controller->Session->check('Student.id')) {
+			return $controller->redirect(array('action' => 'index'));
+		}
+	}
 
 	public function bankAccounts($controller, $params) {
 		$controller->Navigation->addCrumb('Bank Accounts');
