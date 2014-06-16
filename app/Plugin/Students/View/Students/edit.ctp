@@ -13,7 +13,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentId', 'student');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if(!$WizardMode){
+if (!$WizardMode) {
 	echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
 	echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
 }
@@ -34,14 +34,14 @@ echo $this->Form->create('Student', $formOptions);
 		$openEmisIdLabel = $labelOptions;
 		$openEmisIdLabel['text'] = $this->Label->get('general.openemisId');
 		
-		if($autoid==''){
+		if ($autoid=='') {
 			echo $this->Form->input('identification_no', array(
 				'label' => $openEmisIdLabel,
 				'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');"));
 			$tempIdNo = isset($this->data['Student']['identification_no'])?$this->data['Student']['identification_no'] : '';
 			echo $this->Form->hidden(null, array('id'=>'validate_student_identification', 'name' => 'validate_student_identification', 'value'=>$tempIdNo));
-		}else{
-			if($this->Session->check('StudentId')){ 
+		} else {
+			if ($this->Session->check('Student.id')) {
 				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel));
 			}
 			else{
@@ -63,7 +63,7 @@ echo $this->Form->create('Student', $formOptions);
 		$imgOptions['width'] = '90';
 		$imgOptions['height'] = '115';
 		$imgOptions['label'] = __('Profile Image');
-		if(isset($this->data['Student']['photo_name']) && isset($this->data['Student']['photo_content'])) {
+		if (isset($this->data['Student']['photo_name']) && isset($this->data['Student']['photo_content'])) {
 			$imgOptions['src'] = $this->Image->getBase64($this->data['Student']['photo_name'], $this->data['Student']['photo_content']);
 		}
 		echo $this->element('templates/file_upload_preview', $imgOptions);
@@ -114,24 +114,6 @@ if (!$WizardMode) {
 } else {
 	echo $this->FormUtility->getWizardButtons($WizardButtons);
 }
+echo $this->Form->end();
+$this->end();
 ?>
-
-<!--div class="controls">
-	<?php if(true){ ?>
-	<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-	<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
-	<?php }else{?>
-		<?php if(!$this->Session->check('Student.id')){
-		   echo $this->Form->submit(__('Cancel'), array('div'=>false, 'name'=>'submit', 'class'=>"btn_cancel btn_cancel_button btn_right"));
-		 }
-		//if(!$wizardEnd){
-		if(true) {
-			echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'next', 'class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
-		}else{
-			echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
-		}
-	}?>
-</div-->
-
-<?php echo $this->Form->end(); ?>
-<?php $this->end(); ?>

@@ -64,6 +64,13 @@ class InstitutionSiteClass extends AppModel {
 				'rule' => 'numeric',
 				'message' => 'Please enter a numeric value'
 			)
+		),
+		'institution_site_shift_id' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid shift'
+			)
 		)
 	);
 	
@@ -180,9 +187,7 @@ class InstitutionSiteClass extends AppModel {
 		if(!empty($yearOptions)) {
 			$selectedYear = isset($params->pass[0]) ? $params->pass[0] : key($yearOptions);
 			$grades = $this->InstitutionSiteClassGrade->getAvailableGradesForNewClass($institutionSiteId, $selectedYear);
-			
-			$InstitutionSiteShiftModel = ClassRegistry::init('InstitutionSiteShift');
-			$shiftOptions = $InstitutionSiteShiftModel->getShiftOptions($controller->institutionSiteId, $selectedYear);
+			$shiftOptions = $this->InstitutionSiteShift->getShiftOptions($controller->institutionSiteId, $selectedYear);
 			
 			$controller->set(compact('grades', 'selectedYear', 'yearOptions', 'shiftOptions', 'institutionSiteId'));
 			
@@ -196,14 +201,15 @@ class InstitutionSiteClass extends AppModel {
 					}
 				}
 				$result = $this->saveAll($data);
-				$controller->Message->alert('general.add.success');
-				return $controller->redirect(array('action' => $this->_action, $selectedYear));
+				if ($result) {
+					$controller->Message->alert('general.add.success');
+					return $controller->redirect(array('action' => $this->_action, $selectedYear));
+				}
 			}
 		} else {
 			$controller->Message->alert('SchoolYear.noAvailableYear');
 			return $controller->redirect(array('action' => $this->_action));
 		}
-		
 	}
 	
 	public function classesView($controller, $params) {
