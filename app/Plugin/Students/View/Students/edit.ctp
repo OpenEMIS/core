@@ -13,7 +13,7 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentId', 'student');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if(!$WizardMode){
+if (!$WizardMode) {
 	echo $this->Html->link(__('View'), array('action' => 'view'), array('class' => 'divider'));
 	echo $this->Html->link(__('History'), array('action' => 'history'), array('class' => 'divider'));
 }
@@ -34,14 +34,14 @@ echo $this->Form->create('Student', $formOptions);
 		$openEmisIdLabel = $labelOptions;
 		$openEmisIdLabel['text'] = $this->Label->get('general.openemisId');
 		
-		if($autoid==''){
+		if ($autoid=='') {
 			echo $this->Form->input('identification_no', array(
 				'label' => $openEmisIdLabel,
 				'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');"));
 			$tempIdNo = isset($this->data['Student']['identification_no'])?$this->data['Student']['identification_no'] : '';
 			echo $this->Form->hidden(null, array('id'=>'validate_student_identification', 'name' => 'validate_student_identification', 'value'=>$tempIdNo));
-		}else{
-			if($this->Session->check('StudentId')){ 
+		} else {
+			if ($this->Session->check('Student.id')) {
 				echo $this->Form->input('identification_no', array('label' => $openEmisIdLabel));
 			}
 			else{
@@ -63,7 +63,7 @@ echo $this->Form->create('Student', $formOptions);
 		$imgOptions['width'] = '90';
 		$imgOptions['height'] = '115';
 		$imgOptions['label'] = __('Profile Image');
-		if(isset($this->data['Student']['photo_name']) && isset($this->data['Student']['photo_content'])) {
+		if (isset($this->data['Student']['photo_name']) && isset($this->data['Student']['photo_content'])) {
 			$imgOptions['src'] = $this->Image->getBase64($this->data['Student']['photo_name'], $this->data['Student']['photo_content']);
 		}
 		echo $this->element('templates/file_upload_preview', $imgOptions);
@@ -99,30 +99,21 @@ echo $this->Form->create('Student', $formOptions);
 </fieldset>
 
 <fieldset class="section_break">
-	<legend id="area"><?php echo __('Address Area'); ?></legend>
+	<legend><?php echo __('Address Area'); ?></legend>
 	<?php echo $this->FormUtility->areapicker('address_area_id', array('model' => 'Area', 'value' => $addressAreaId)); ?>
 </fieldset>
 
 <fieldset class="section_break">
-	<legend id="area"><?php echo __('Birth Place Area'); ?></legend>
+	<legend><?php echo __('Birth Place Area'); ?></legend>
 	<?php echo $this->FormUtility->areapicker('birthplace_area_id', array('model' => 'Area', 'value' => $birthplaceAreaId)); ?>
 </fieldset>
 
-<div class="controls">
-	<?php if(!$WizardMode){ ?>
-	<input type="submit" value="<?php echo __("Save"); ?>" class="btn_save btn_right" onclick="return Config.checkValidate();"/>
-	<?php echo $this->Html->link(__('Cancel'), array('action' => 'view'), array('class' => 'btn_cancel btn_left')); ?>
-	<?php }else{?>
-		<?php if(!$this->Session->check('StudentId')){ 
-		   echo $this->Form->submit(__('Cancel'), array('div'=>false, 'name'=>'submit', 'class'=>"btn_cancel btn_cancel_button btn_right"));
-		 }
-		if(!$wizardEnd){
-			echo $this->Form->submit(__('Next'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
-		}else{
-			echo $this->Form->submit(__('Finish'), array('div'=>false, 'name'=>'submit', 'name'=>'submit','class'=>"btn_save btn_left",'onclick'=>"return Config.checkValidate();")); 
-		}
-	}?>
-</div>
-
-<?php echo $this->Form->end(); ?>
-<?php $this->end(); ?>
+<?php 
+if (!$WizardMode) {
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view')));
+} else {
+	echo $this->FormUtility->getWizardButtons($WizardButtons);
+}
+echo $this->Form->end();
+$this->end();
+?>

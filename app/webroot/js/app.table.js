@@ -13,12 +13,15 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
+$(document).ready(function() {	
+	jsTable.init();
+});
+
 var jsTable = {
 	init: function() {
-		this.fixTable();
+		//this.fixTable();
 		this.initICheck();
 		this.initTableCheckable();
-		//this.attachHoverOnClickEvent();
 	},
 	
 	initICheck: function() {
