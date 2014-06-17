@@ -22,7 +22,7 @@ $this->end();
 $this->start('contentBody'); 
 ?>
     <div class="row">
-        <div class="col-md-3"><?php echo __('Criteria Name'); ?></div>
+        <div class="col-md-3"><?php echo __('Name'); ?></div>
         <div class="col-md-6"><?php echo $obj['name']; ?></div>
     </div>
     <div class="row">

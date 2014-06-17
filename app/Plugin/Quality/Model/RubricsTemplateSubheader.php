@@ -73,7 +73,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
 			$rubricTemplateData = $RubricsTemplate->getRubric($this->rubricId);
 			$rubricName = trim($rubricTemplateData['RubricsTemplate']['name']);
 
-			$controller->Navigation->addCrumb('Rubric', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
+			$controller->Navigation->addCrumb('Rubrics', array('controller' => 'Quality', 'action' => 'rubricsTemplates', 'plugin' => 'Quality'));
 			$controller->Navigation->addCrumb($rubricName, array('controller' => 'Quality', 'action' => 'rubricsTemplatesHeader', $this->rubricId, 'plugin' => 'Quality'));
 
 			$controller->set('modelName', $this->name);
@@ -89,7 +89,7 @@ class RubricsTemplateSubheader extends QualityAppModel {
 	}
 
 	public function rubricsTemplatesSubheaderEdit($controller, $params) {
-		$controller->Navigation->addCrumb('Edit - ' . $this->rubricTemplateHeaderData['RubricsTemplateHeader']['title']);
+		$controller->Navigation->addCrumb(__('Edit').' - ' . $this->rubricTemplateHeaderData['RubricsTemplateHeader']['title']);
 		$controller->set('modelName', $this->name);
 
 		$this->_setupRubricsTemplateDetail($controller, $params, 'edit');

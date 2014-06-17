@@ -63,6 +63,19 @@ class JORArea extends DashboardsAppModel {
 
 		return $data;
 	}
+	
+	public function getAreaById($id, $mode = 'all') {
+		$this->setSource('ut_area_'.$this->setupUseTableLang());
+
+		$options['conditions'] = array('Area_Nid' => $id);
+		$data = $this->find('all', $options);
+
+		if($mode == 'list'){
+			$data = $this->processAreaData($data, false);
+		}
+		
+		return $data;
+	}
 
 	public function getAllChildByLevel($id, $lvl, $mode = 'all', $withCode){
 		$this->setSource('ut_area_'.$this->setupUseTableLang());
@@ -87,6 +100,7 @@ class JORArea extends DashboardsAppModel {
 		if($mode == 'list'){
 			$data = $this->processAreaData($data, $withCode);
 		}
+		
 		return $data;
 	}
 	

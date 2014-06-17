@@ -152,7 +152,7 @@ class DashboardsController extends DashboardsAppController {
 		$header = $this->getHeader($id);
 		
 		$this->Navigation->addCrumb($crumbTitle);
-		$geoLvlOptions = $this->QADashboard->getAreaLevel(4);
+		$geoLvlOptions = $this->QADashboard->getAreaLevel(5);
 		$geoLvlId = (empty($geoLvlId))? key($geoLvlOptions): $geoLvlId;
 		
 		$areaLvlOptions = $this->QADashboard->getAreasByLevel($geoLvlId);
@@ -379,6 +379,9 @@ class DashboardsController extends DashboardsAppController {
 		$this->autoRender = false;
 		$data = $this->QADashboard->setupChartInfo("Distribution of Both Aspects");
 		$childAreaOptions = $this->QADashboard->getAreaChildLevel($selectedAreaId, false);
+		if(empty($childAreaOptions)){
+			$childAreaOptions = $this->QADashboard->getAreaById($selectedAreaId, 'list');
+		}
 		
 		$areaName = $this->QADashboard->getAreaName($selectedAreaId);
 		
@@ -431,6 +434,9 @@ class DashboardsController extends DashboardsAppController {
 ';return  $data;*/
 		
 		$childAreaOptions = $this->QADashboard->getAllAreaChildByLevel($selectedAreaId, 5, false);
+		if(empty($childAreaOptions)){
+			$childAreaOptions = $this->QADashboard->getAreaById($selectedAreaId, 'list');
+		}
 		
 		$indData = $this->QADashboard->getIndicatorByGID(array($this->QADashboard->indicators['QA_AdminTechBoth_Score']['Admin'],$this->QADashboard->indicators['QA_AdminTechBoth_Score']['Tech']) );//array(8 => 'Administrative', 15 => 'Technical', 18 => 'Both');
 		$unitIndData = $this->QADashboard->getUnitIndicatorByGID(array($this->QADashboard->indicators['Unit']['Percent']));
@@ -615,6 +621,9 @@ class DashboardsController extends DashboardsAppController {
 	
 	public function setupQATableData($areaId,$yearId){
 		$areaBreakdownOptions = $this->QADashboard->getAreaChildLevel($areaId);
+		if(empty($areaBreakdownOptions)){
+			$areaBreakdownOptions = $this->QADashboard->getAreaById($areaId, 'list');
+		}
 		$indData = $this->QADashboard->getIndicatorByGID($this->QADashboard->indicators['QA_AdminTechBoth_Score']);//array(8 => 'Administrative', 15 => 'Technical', 18 => __('Both'));
 		$unitIndData = $this->QADashboard->getUnitIndicatorByGID(array($this->QADashboard->indicators['Unit']['Percent'],$this->QADashboard->indicators['Unit']['Number']));
 		

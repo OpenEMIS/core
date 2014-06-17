@@ -169,6 +169,12 @@ class QADashboardComponent extends Component {
 		return $data;
 	}
 	
+	public function getAreaById($id, $mode){
+		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
+		$data = $jorAreaData->getAreaById($id, $mode);
+		return $data;
+	}
+	
 	public function getAreaName($id){
 		$jorAreaData = ClassRegistry::init('Dashboards.JORArea');
 		$data = $jorAreaData->getAreaName($id);
