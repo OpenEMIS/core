@@ -31,7 +31,7 @@ class InstitutionSiteProgramme extends AppModel {
 	);
 	
 	public $virtualFields = array(
-		'name' => "SELECT name from `education_programmes` WHERE id = InstitutionSiteProgramme.education_programme_id"
+		'name' => "SELECT `education_programmes`.`name` from `education_programmes` WHERE `education_programmes`.`id` = InstitutionSiteProgramme.education_programme_id"
 	);
 	
 	public $reportMapping = array(
@@ -273,10 +273,7 @@ class InstitutionSiteProgramme extends AppModel {
 				array(
 					'table' => 'education_grades',
 					'alias' => 'EducationGrade',
-					'conditions' => array(
-						'EducationGrade.education_programme_id = EducationProgramme.id',
-						'EducationGrade.visible = 1'
-					)
+					'conditions' => array('EducationGrade.education_programme_id = EducationProgramme.id')
 				)
 			),
 			'conditions' => array(
