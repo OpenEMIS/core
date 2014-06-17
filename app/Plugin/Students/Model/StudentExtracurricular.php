@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StudentExtracurricular extends StudentsAppModel {
 
-	public $actsAs = array('ControllerAction','Datepicker' => 'start_date');
+	public $actsAs = array('ControllerAction', 'DatePicker' => 'start_date');
 	public $belongsTo = array(
 		'Student',
 		'SchoolYear',
