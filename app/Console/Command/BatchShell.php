@@ -49,7 +49,7 @@ class BatchShell extends AppShell {
 			   $name = pathinfo($name2, PATHINFO_FILENAME);*/
 			   
                //DOUBLE CHECK if Status was Aborted or what - else just proceed with the Next QUEUE
-               $check = $this->BatchProcess->find('first',array('conditions'=>array('id'=>$id)));
+               $check = $this->BatchProcess->find('first',array('conditions'=>array('BatchProcess.id'=>$id)));
                if($check['BatchProcess']['status'] != 1) continue;
 
                // Update the status for the one Being Processed to (2) Processing
@@ -64,7 +64,7 @@ class BatchShell extends AppShell {
 			   $this->genReport($ReportRec,$id);
 			   
 			   //DOUBLE CHECK if Status was Aborted while report is being process - else just proceed with the Next QUEUE
-               $check = $this->BatchProcess->find('first',array('conditions'=>array('id'=>$id)));
+               $check = $this->BatchProcess->find('first',array('conditions'=>array('BatchProcess.id'=>$id)));
                if($check === false) continue;
 			   
                // Update the status for the Processed item to (3) Complete
