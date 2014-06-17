@@ -18,7 +18,6 @@ class WizardComponent extends Component {
 	private $controller;
 	public $components = array('Session');
 	public $module;
-	public $links;
 	
 	// Is called before the controller's beforeFilter method.
 	public function initialize(Controller $controller) {
@@ -142,14 +141,12 @@ class WizardComponent extends Component {
 		} else {
 			$btn[] = $finishBtn;
 		}
-		//$cancelBtn, $nextBtn);
 		
 		$controller->set('WizardButtons', $btn);
 	}
 	
 	public function setModule($module) {
 		$this->module = $module;
-		//pr($this->links);//die;
 	}
 	
 	public function getLinks($module=null) {

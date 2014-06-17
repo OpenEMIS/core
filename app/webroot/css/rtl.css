@@ -123,6 +123,21 @@
 	float:right;
 }
 
+/* bootstrap calendar */
+.input-group.date .form-control {
+	border-radius: 4px;
+	border-bottom-left-radius: 0;
+	border-top-left-radius: 0;
+}
+
+.input-group.date .input-group-addon {
+	border-radius: 4px;
+	border-right: 0;
+	border-left: 1px solid #CCCCCC;
+	border-bottom-right-radius: 0;
+	border-top-right-radius: 0;
+}
+
 /*table*/
 .left{
 	float:right;
@@ -130,12 +145,12 @@
 .icon_sort_up, .icon_sort_down{
 	float:left;
 }
-.label{
+.row .col-md-3, .form-group .col-md-3 {
 	float:right;
 	margin-right:0;
 	margin-left:10px;
 }
-.value{
+.row .col-md-6, .form-group .col-md-4 {
 	float:right;
 }
 fieldset.section_break > legend{
@@ -144,7 +159,7 @@ fieldset.section_break > legend{
 }
 .view_controls{
 	text-align:right;
-	padding:14px 160px 0 0;
+	padding:14px 200px 0 0;
 }
 .btn_right{
 	margin-right:0;
