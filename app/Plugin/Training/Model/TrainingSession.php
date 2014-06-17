@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TrainingSession extends TrainingAppModel {
-	public $actsAs = array('ControllerAction');
+	public $actsAs = array('ControllerAction', 'Containable');
 
 	public $trainerTypeOptions = array('1'=>'Internal', '2'=>'External');
 
@@ -37,6 +37,7 @@ class TrainingSession extends TrainingAppModel {
 		)
 	);
 
+	
 	public $hasMany = array(
 		'TrainingSessionTrainee' => array(
 			'className' => 'TrainingSessionTrainee',
@@ -123,20 +124,20 @@ class TrainingSession extends TrainingAppModel {
 	}
 
 	private function getSessionResultStatus($sessionId){
-		$trainingSessionResult = ClassRegistry::init('TrainingSessionResult');
-
-		$trainingSessionResults = $trainingSessionResult->find('first', array('conditions'=>array('TrainingSessionResult.training_session_id'=>$sessionId)));
-
-
-		if(!empty($trainingSessionResults)){
-			if($trainingSessionResults['TrainingSessionResult']['training_status_id']!='1'){
-				return '0';
-			}else{
-				return '2';
+		$trainingSessions = $this->find('first', array('recursive'=>-1,'conditions'=>array('TrainingSession.id'=>$sessionId)));
+		
+		if($trainingSessions['TrainingSession']['training_status_id']=='1'){
+			return '1';
+		}else if($trainingSessions['TrainingSession']['training_status_id']=='3'){
+			$trainingSessionResults = $this->TrainingSessionResult->find('first', array('recursive'=>-1,'conditions'=>array('TrainingSessionResult.training_session_id'=>$sessionId)));
+		
+			if(!empty($trainingSessionResults)){
+				if($trainingSessionResults['TrainingSessionResult']['training_status_id']=='1'){
+					return '2';
+				}
 			}
 		}
-
-		return '1';
+		return '0';
 	}
 
 	
@@ -350,7 +351,7 @@ class TrainingSession extends TrainingAppModel {
 						$trainingSessionTraineeResults = array();
 						foreach($trainingSessions['TrainingSessionTrainee'] as $key=>$val){
 							foreach($trainingCourseResultTypes as $key2=>$val2){
-								$trainingSessionTraineeResults[] = array('training_session_trainee_id'=>$val['id'], 'training_session_result_id'=>$this->TrainingSessionResult->getLastInsertId(), 'training_result_type_id'=>$val2['TrainingCourseResultType']['training_result_type_id']);
+								$trainingSessionTraineeResults[] = array('training_session_trainee_id'=>$val['id'], 'training_result_type_id'=>$val2['TrainingCourseResultType']['training_result_type_id']);
 							}
 						}
 						
@@ -446,35 +447,62 @@ class TrainingSession extends TrainingAppModel {
 				}
 				$data = $controller->request->data;
 				if($data['TrainingSession']['sessionEditable']=='2'){
+					$this->TrainingSessionTrainee->bindModel(
+				        array('hasMany' => array(
+			                 	'TrainingSessionTraineeResult' => array(
+									'className' => 'TrainingSessionTraineeResult',
+									'foreignKey' => 'training_session_trainee_id',
+									'dependent' => true,
+									'exclusive' => true
+								),
+				            )
+				        ),
+				        false
+				    );
+
+					
+					$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
+					$trainingCourseResultType->bindModel(
+				        array('belongsTo' => array(
+				                'TrainingResultType' => array(
+									'className' => 'FieldOptionValue',
+									'foreignKey' => 'training_result_type_id'
+								)
+				            )
+				        )
+				    );
+
+				    $trainingCourseResultTypes = $trainingCourseResultType->find('all', array('recursive'=>-1,'conditions'=>array('TrainingCourseResultType.training_course_id'=>$data['TrainingSession']['training_course_id'])));
+						
 					if(!empty($data['TrainingSessionTrainee'])){
+						$trainingSessionTraineeResults = array();
 						foreach($data['TrainingSessionTrainee'] as $key=>$value){
 							$data['TrainingSessionTrainee'][$key]['training_session_id'] = $data['TrainingSession']['id'];
+							if(!isset($data['TrainingSessionTrainee'][$key]['id'])){
+								$this->TrainingSessionTrainee->create();
+								$this->TrainingSessionTrainee->save($data['TrainingSessionTrainee'][$key]);
+								$insertId = $this->TrainingSessionTrainee->getLastInsertId();
+								unset($data['TrainingSessionTrainee'][$key]);
+								foreach($trainingCourseResultTypes as $key=>$val){
+									$trainingSessionTraineeResults[] = array('training_session_trainee_id'=>$insertId, 'training_result_type_id'=>$val['TrainingCourseResultType']['training_result_type_id']);
+								}
+							}
 						}
 						$this->TrainingSessionTrainee->saveAll($data['TrainingSessionTrainee']);
+						$this->TrainingSessionTrainee->TrainingSessionTraineeResult->saveAll($trainingSessionTraineeResults);
 					}
-					
+
 					if(isset($data['DeleteTrainee'])){
 						$deletedId = array();
 						foreach($data['DeleteTrainee'] as $key=>$value){
 							$deletedId[] = $value['id'];
 						}
-						$this->TrainingSessionTrainee->bindModel(
-					        array('hasAndBelongsToMany' => array(
-					                'TrainingSessionTraineeResult' => array(
-							            'className' => 'TrainingSessionTraineeResult',
-							         	'joinTable' => 'training_session_trainee_results',
-								        'foreignKey' => 'training_session_result_id',
-								        'associationForeignKey' => 'training_session_trainee_id',
-							            'dependent' => true 
-							        )
-					            )
-					        )
-					    );
-						$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id' => $deletedId), true);
+						
+					 	$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id'=>$deletedId));
 					}
 					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
 					return $controller->redirect(array('action' => 'session'));
-				
+					
 				}else{
 					if($this->saveAll($data)){
 						if(isset($data['DeleteTrainee'])){

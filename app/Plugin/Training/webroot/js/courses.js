@@ -286,9 +286,7 @@ var objTrainingCourses = {
         var success = function(data, status) {
             var callback = function() {
                 table.find('.table_body tbody').append(data);
-                $("#searchResultType"+index).on("change", function(event){
-                     objTrainingCourses.validateResultType();
-                });
+                objTrainingCourses.validateResultType();
             };
             $.unmask({id: maskId, callback: callback});
         };
