@@ -186,7 +186,7 @@ class RubricsTemplateColumnInfo extends QualityAppModel {
 
     public function rubricsTemplatesCriteriaEdit($controller, $params) {
         $controller->Navigation->addCrumb('Edit Criteria');
-        $controller->set('subheader', 'Edit Criteria');
+        $controller->set('subheader', __('Edit Criteria'));
 
         $this->_setupRubricCriteria($controller, $params, 'edit');
         $this->render = 'add';

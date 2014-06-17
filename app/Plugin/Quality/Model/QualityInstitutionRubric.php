@@ -31,16 +31,20 @@ class QualityInstitutionRubric extends QualityAppModel {
 					'name AS Year' => ''
 				),
 				'InstitutionSite' => array(
-					'name AS InstitutionSiteName' => 'Institution Name',
-					'code AS InstitutionSiteCode' => 'Institution Code',
-					'id AS InstitutionSiteId' => 'Institution ID'
+				//	'name AS InstitutionSiteName' => 'Institution Name',
+				//	'code AS InstitutionSiteCode' => 'Institution Code',
+					'id AS InstitutionSiteId' => ''
 				),
 				'InstitutionSiteClass' => array(
 					'name AS Class' => '',
 					'id AS ClassId' => ''
 				),
 				'EducationGrade' => array(
-					'name AS Grade' => ''
+					'name AS Grade' => '',
+					'id AS GradeId' => ''
+				),
+				'QualityInstitutionRubric' => array(
+					'full_name' =>''
 				),
 				'RubricTemplate' => array(
 					'name AS RubricName' => '',
@@ -50,6 +54,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 					'title AS RubricHeader' => ''
 				),
 				'RubricTemplateColumnInfo' => array(
+					//'weighting' => '',
 					'COALESCE(SUM(weighting),0)' => ''
 				),
 			),
@@ -356,12 +361,40 @@ class QualityInstitutionRubric extends QualityAppModel {
 	 * For Report Generation at InstitutionSites Only
 	 * 
 	 * ================================================= */
-
+	public $reportDefaultHeader = array(array('Year'), array('Class'), array('Staff Name'),array('Grade'));
 	public function reportsGetHeader($args) {
 		$institutionSiteId = $args[0];
 		$index = $args[1];
-		$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-		$headers = $RubricsTemplate->getInstitutionQAReportHeader($institutionSiteId);
+
+		$this->unbindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteClass','Staff')));
+		$data = $this->find('first', array(
+			//'fields' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
+			'order' => array('SchoolYear.name DESC', ),
+			'fields' => array('SchoolYear.*', 'QualityInstitutionRubric.*', 'InstitutionSiteClass.*','InstitutionSiteClassGrade.*'),
+			'group' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'/*, 'InstitutionSiteClassGrade.education_grade_id'*/),
+			'conditions' => array('QualityInstitutionRubric.institution_site_id' => $institutionSiteId),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array('InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id')
+				),
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+				)
+			)
+		));
+
+		$year = !empty($data['SchoolYear']['name'])?$data['SchoolYear']['name'] : NULL;
+		$gradeId = !empty($data['InstitutionSiteClassGrade']['education_grade_id'])?$data['InstitutionSiteClassGrade']['education_grade_id'] : NULL;
+
+		$this->bindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteClass','Staff.Staff')));
+		
+		$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
+		$headerOptions = array('year' => $year, 'gradeId' => $gradeId, 'header' => $this->reportDefaultHeader);
+		$headers = $QualityBatchReport->getInstitutionQAReportHeader($institutionSiteId, $headerOptions);
 		return $this->getCSVHeader($headers);
 	}
 
@@ -389,6 +422,11 @@ class QualityInstitutionRubric extends QualityAppModel {
 					'conditions' => array('InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id')
 				),
 				array(
+					'table' => 'staff',
+					'alias' => 'Staff',
+					'conditions' => array('Staff.id = QualityInstitutionRubric.staff_id')
+				),
+				array(
 					'table' => 'institution_site_class_grades',
 					'alias' => 'InstitutionSiteClassGrade',
 					'conditions' => array('InstitutionSiteClassGrade.id = QualityInstitutionRubric.institution_site_class_grade_id')
@@ -413,7 +451,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 				array(
 					'table' => 'quality_statuses',
 					'alias' => 'QualityStatus',
-					'conditions' => array('QualityStatus.rubric_template_id = RubricTemplate.id')
+					'conditions' => array('QualityStatus.rubric_template_id = RubricTemplate.id','QualityStatus.year = SchoolYear.name')
 				),
 				/* array(
 				  'table' => 'quality_institution_rubrics',
@@ -443,12 +481,7 @@ class QualityInstitutionRubric extends QualityAppModel {
 					'type' => 'LEFT',
 					'conditions' => array('RubricTemplateItem.rubric_template_subheader_id = RubricTemplateSubheader.id')
 				),
-				array(
-					'table' => 'rubrics_template_answers',
-					'alias' => 'RubricTemplateAnswer',
-					'type' => 'LEFT',
-					'conditions' => array('RubricTemplateAnswer.rubric_template_item_id = RubricTemplateItem.id')
-				),
+				
 				array(
 					'table' => 'quality_institution_rubrics_answers',
 					'alias' => 'QualityInstitutionRubricAnswer',
@@ -457,33 +490,55 @@ class QualityInstitutionRubric extends QualityAppModel {
 						'QualityInstitutionRubricAnswer.quality_institution_rubric_id = QualityInstitutionRubric.id',
 						'QualityInstitutionRubricAnswer.rubric_template_header_id = RubricTemplateHeader.id',
 						'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
-						'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
-						'InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id'
+						//'QualityInstitutionRubricAnswer.rubric_template_answer_id = RubricTemplateAnswer.id',
+						
 					)
+				),
+				
+				array(
+					'table' => 'rubrics_template_answers',
+					'alias' => 'RubricTemplateAnswer',
+					'type' => 'LEFT',
+					'conditions' => array('RubricTemplateAnswer.id = QualityInstitutionRubricAnswer.rubric_template_answer_id')
+					//'conditions' => array('RubricTemplateAnswer.rubric_template_item_id = RubricTemplateItem.id')
 				),
 				array(
 					'table' => 'rubrics_template_column_infos',
 					'alias' => 'RubricTemplateColumnInfo',
 					'type' => 'LEFT',
 					'conditions' => array(
-						'RubricTemplateAnswer.rubrics_template_column_info_id = RubricTemplateColumnInfo.id',
-						'QualityInstitutionRubricAnswer.rubric_template_item_id = RubricTemplateItem.id',
+						//'RubricTemplateColumnInfo.rubric_template_id = RubricTemplate.id',
+						'RubricTemplateColumnInfo.id = RubricTemplateAnswer.rubrics_template_column_info_id'
 					),
-				)
+				),
+				
 			);
 
 
 			$options['order'] = array('SchoolYear.name DESC', 'InstitutionSite.name', 'EducationGrade.name', 'InstitutionSiteClass.name', 'RubricTemplate.id', 'RubricTemplateHeader.order');
-			$options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
-
+			//$options['group'] = array('InstitutionSiteClass.id', 'RubricTemplate.id', 'RubricTemplateHeader.id');
+			$options['group'] = array('SchoolYear.name', 'InstitutionSite.id', 'InstitutionSiteClass.id', 'EducationGrade.id','RubricTemplate.id', 'RubricTemplateHeader.id');
+			
+			$options['contain'] = array('QualityInstitutionRubric' => array('full_name'));
+			
+			$this->virtualFields['full_name'] = "CONCAT(Staff.first_name,' ',Staff.last_name)";
 			$data = $this->find('all', $options);
-
+		//	pr($options);
+		//	pr($this->getLastQueries());
+		//pr($data);
 			$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
+			$data = $QualityBatchReport->reorderDataColumns($data, $this->reportMapping[$index]['fields']);
+			die;
 			$newData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
-			$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-			$lineBreakHeaders = $RubricsTemplate->getInstitutionQAReportHeader($institutionSiteId);
-			$newData = $QualityBatchReport->breakReportByYear($newData, 'no', $lineBreakHeaders);
-
+		
+		
+		//$headerOptions = array('year' => $year, 'gradeId' => $gradeId, 'header' => $this->reportDefaultHeader);
+		//$headers = $QualityBatchReport->getInstitutionQAReportHeader($institutionSiteId, $headerOptions);
+		//	$RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
+		//	$lineBreakHeaders = $RubricsTemplate->getInstitutionQAReportHeader($institutionSiteId);
+			
+			$newData = $QualityBatchReport->breakReportByYear($newData, 'no', $this->reportDefaultHeader);
+pr($newData);die;	
 			return $newData;
 		}
 	}

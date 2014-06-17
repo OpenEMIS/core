@@ -639,10 +639,11 @@ class QualityBatchReport extends QualityAppModel {
         $rubricTemplateWeightingInfo = $this->getRubricTemplateWeightingInfo();
 
         foreach ($data AS $num => $row) {
+			//pr('-------------->>>>>>> '.$rubricTotal);
             $currentClassId = $row['InstitutionSiteClass']['ClassId'];
             $currentRubricName = $row['RubricTemplate']['RubricName'];
             $currentRubricId = $row['RubricTemplate']['RubricId'];
-
+//pr($row);
             // pr($classId. " || ".$currentClassId );
             //pr($currentRubricName. " || ".$rubricName );
             if (!empty($classId) && !empty($rubricName) && $classId == $currentClassId /* && $rubricName == $currentRubricName */) {
@@ -650,14 +651,18 @@ class QualityBatchReport extends QualityAppModel {
                 foreach ($row as $key => $value) {
                     if ($key == 'RubricTemplate') {
                         if ($rubricName != $currentRubricName) {
-                         /*   pr('1 --> ['.$rubricName.']');
+                           /* pr('1 --> ['.$rubricName.']');
                             pr('1 --> ['.$rubricId.'] || '.$currentRubricId);
                             pr('prev rubricTotal = '.$rubricTotal);*/
                             $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
                             $passFail = 'Fail';
                             $currentRubricScore = $rubricTotal;
                             $rubricTotalPercent = ($rubricTotal == 0)? 0:round(($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
-                            //pr('1 --> '.$selectedWeightingInfo['TotalWeighting']);
+							
+							/*pr($currentRubricScore);
+					pr($rubricTotalPercent);
+					pr('1 -->> passmark : '.$selectedWeightingInfo['PassMark']);
+                            pr('1 --> TotalWeighting : '.$selectedWeightingInfo['TotalWeighting']);*/
                             if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                                 $currentRubricScore = $rubricTotalPercent;
                             }
@@ -665,6 +670,7 @@ class QualityBatchReport extends QualityAppModel {
                                 $passFail = 'Pass';
                             }
 
+							
                             $rubricsGrandTotal += $rubricTotalPercent;
 
                             $tempArray[$rubricItemCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotalPercent;
@@ -686,7 +692,7 @@ class QualityBatchReport extends QualityAppModel {
                     }
                     else */if ($key == '0') {
                         $this->calculateRubricScore($value, $rubricTemplateWeightingInfo, $rubricHeaderCounter, $rubricId, $rubricItemCounter - 1, $rubricTotal, $tempArray);
-                       // pr('Score = '.$rubricTotal);
+                       // pr('1-->>> Score = '.$rubricTotal);
                     }
                 }
             } else {
@@ -700,9 +706,11 @@ class QualityBatchReport extends QualityAppModel {
                     $rubricId = $currentRubricId;
                 }
                 foreach ($row as $key => $value) {
+					//pr($key);
+					//pr($value);
                     if ($key == '0') {
                         $this->calculateRubricScore($value, $rubricTemplateWeightingInfo, $rubricHeaderCounter, $currentRubricId, $rubricItemCounter, $tempRubricTotal, $tempArray);
-                       // pr('>> Score = '.$tempRubricTotal);
+                      //  pr('2 ---- >> Score = '.$tempRubricTotal);
                     } else if ($key == 'InstitutionSiteClass') {
                         $tempArray[$rubricItemCounter][$key]['name'] = $value['Class'];
                     } else if ($key == 'RubricTemplate') {
@@ -740,6 +748,10 @@ class QualityBatchReport extends QualityAppModel {
                     if ($selectedWeightingInfo['WeightingType'] == 'percent') {
                         $currentRubricScore = $rubricTotalPercent;
                     }
+					
+					/*pr($currentRubricScore);
+					pr($rubricTotalPercent);
+					pr('passmark : '.$selectedWeightingInfo['PassMark']);*/
                     if ($currentRubricScore >= $selectedWeightingInfo['PassMark']) {
                         $passFail = 'Pass';
                     }
@@ -750,7 +762,7 @@ class QualityBatchReport extends QualityAppModel {
                     $tempArray[$rubricItemCounter - 1]['TotalRubric' . '_' . $prevRubricHeaderCounter]['value'] = $rubricTotalPercent;
                     $tempArray[$rubricItemCounter - 1]['PassFail' . '_' . $prevRubricHeaderCounter]['value'] = $passFail;
                     $tempArray[$rubricItemCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
-                    /*pr($rubricsGrandTotal);
+                  /*  pr($rubricsGrandTotal);
                 pr(count($rubricTemplateWeightingInfo));
                 pr($numOfRubricPerSch);
                 pr('----');*/
@@ -758,7 +770,8 @@ class QualityBatchReport extends QualityAppModel {
                     $tempRubricTotal = 0;
                     $rubricsGrandTotal = 0;
                     $numOfRubricPerSch = 0;
-                   /* pr('/////////////////////');
+					/*pr($tempRubricTotal);
+                    pr('/////////////////////');
                     pr('2 --> current = '.$currentRubricName);*/
                 }
                 $rubricName = $currentRubricName;
@@ -767,14 +780,17 @@ class QualityBatchReport extends QualityAppModel {
             }
             $rubricHeaderCounter ++;
 
-            if ($num == $dataCount - 1) {
+            if ($num == $dataCount - 1) {//pr('last');
                 $numOfRubricPerSch ++;
-                /*pr('3 --> '.$rubricName);
+               /* pr('3 --> '.$rubricName);
                 pr('3 --> current = '.$currentRubricName);
                 pr('rubricTotal = '.$rubricTotal);*/
                 $passFail = 'Fail';
                 $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
 
+				/*pr('$currentRubricScore :'.$currentRubricScore);
+				pr('$rubricTotal :'.$rubricTotal);
+				pr('$selectedWeightingInfo["TotalWeighting"] :'.$selectedWeightingInfo['TotalWeighting']);*/
                 $currentRubricScore = $rubricTotal;
                 $rubricTotalPercent = ($rubricTotal / $selectedWeightingInfo['TotalWeighting']) * 100;
 
@@ -784,10 +800,11 @@ class QualityBatchReport extends QualityAppModel {
                 if ($currentRubricScore >= $selectedWeightingInfo['PassMark']) {
                     $passFail = 'Pass';
                 }
-
+				/*pr('before grandtotal : '.$rubricsGrandTotal);
+				pr($rubricTotalPercent);*/
                 $rubricsGrandTotal += $rubricTotalPercent;
                 $rubricsGrandTotal = round($rubricsGrandTotal / $numOfRubricPerSch, 2);
-                /*pr($rubricsGrandTotal);
+                /*pr('after grandtotal : '.$rubricsGrandTotal);
                 pr(count($rubricTemplateWeightingInfo));
                 pr($numOfRubricPerSch);
                 pr('----');*/
@@ -796,25 +813,43 @@ class QualityBatchReport extends QualityAppModel {
                 $tempArray[$rubricItemCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
             }
         }
-
+//die;
         return $tempArray;
     }
 
+	public function reorderDataColumns($data, $order){
+		$finalData = array();
+		//pr($order);
+		//pr($data);
+		foreach($data as $item){
+			
+			foreach($item as $key => $obj){
+				pr($key);
+			}
+		}
+	}
+	
     public function breakReportByYear($data, $autoGenerateFirstHeader = 'no', $header = NULL) {
         $tempArray = array();
         $selectedYear = '';
         foreach ($data as $obj) {
 
             if ($obj['SchoolYear']['Year'] != $selectedYear) {
+				$options = array('year' =>$obj['SchoolYear']['Year'], 'header' => $header);
+				if(!empty($obj['EducationGrade']['GradeId'])){
+					$options['gradeId'] = $obj['EducationGrade']['GradeId'];
+					unset($obj['EducationGrade']['GradeId']);
+				}
+				
                 if (!empty($selectedYear)) {
                     //   pr($obj['SchoolYear']['name']);
                     $tempArray[] = array();
                     $tempArray[] = array();
                     $tempArray[] = array();
                     $tempArray[] = array();
-                    $tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['InstitutionSiteId'], $obj['SchoolYear']['Year'], $header);
+                    $tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['InstitutionSiteId'], $options);
                 } else if (empty($selectedYear) && $autoGenerateFirstHeader == 'yes') {
-                    $tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['InstitutionSiteId'], $obj['SchoolYear']['Year'], $header);
+                    $tempArray[] = $this->getInstitutionQAReportHeader($obj['InstitutionSite']['InstitutionSiteId'], $options);
                 }
 
                 $selectedYear = $obj['SchoolYear']['Year'];
@@ -823,6 +858,7 @@ class QualityBatchReport extends QualityAppModel {
             unset($obj['InstitutionSite']['InstitutionSiteId']);
             $tempArray[] = $obj;
         }
+		
         return $tempArray;
     }
 
@@ -832,7 +868,12 @@ class QualityBatchReport extends QualityAppModel {
      * e.g $header = array(array('School Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
      * =================================================================================== */
 
-    public function getInstitutionQAReportHeader($institutionSiteId, $year = NULL, $header = array()) {
+    public function getInstitutionQAReportHeader($institutionSiteId,  $options) {
+	
+		$header = !empty($options['header'])?$options['header'] : array();
+		$year = !empty($options['year'])?$options['year'] : NULL;
+		$gradeId = !empty($options['gradeId'])?$options['gradeId'] : NULL;
+		
         if(!empty($institutionSiteId)){
             $RubricsTemplateHeader = ClassRegistry::init('Quality.RubricsTemplateHeader');
             if (empty($year)) {
@@ -843,7 +884,7 @@ class QualityBatchReport extends QualityAppModel {
                 $rubricYear = $year;
             }
 
-            $rubricOptions = $this->getRubricHeader($institutionSiteId, $rubricYear);
+            $rubricOptions = $this->getRubricHeader($institutionSiteId, $rubricYear, $gradeId);
 
             if (!empty($rubricOptions)) {
                 foreach ($rubricOptions as $key => $item) {
@@ -924,52 +965,75 @@ class QualityBatchReport extends QualityAppModel {
     }
 
     private function calculateRubricScore($value, $rubricTemplateWeightingInfo, $rubricHeaderCounter, $rubricId, $rubricItemCounter, &$rubricTotal, &$tempArray) {
-        //pr($value);
-        //pr($rubricTemplateWeightingInfo);
+		/*pr('========================================================');
+        pr($value);
+        pr($rubricTemplateWeightingInfo);*/
         foreach ($value as $sumValue) {
+			/*pr('before : '.$rubricTotal);
+			pr('sum value : '.$sumValue);*/
             $_sumValue = (empty($sumValue) ? 0 : $sumValue);
-           // pr('process Score = '.$_sumValue);
+            //pr('process Score = '.$_sumValue);
             $rubricTotal += $_sumValue;
+			//pr('after $rubricTotal = '.$rubricTotal);
             $selectedWeightingInfo = $rubricTemplateWeightingInfo[$rubricId];
-            //pr($rubricTemplateWeightingInfo);
-            //pr('$rubricId ====>> '.$rubricId);
+            /*pr($rubricTemplateWeightingInfo);
+            pr('$rubricId ====>> '.$rubricId);*/
             // if ($selectedWeightingInfo['WeightingType'] == 'percent') {
             $_sumValue = ($_sumValue == 0)?0:round(($_sumValue / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
             //}
             $tempArray[$rubricItemCounter]['total_' . $rubricHeaderCounter]['value'] = $_sumValue;
         }
        // pr('----------');
+		//pr('========================================================');
     }
 
-    public function getRubricHeader($institutionSiteId, $year) {
+    public function getRubricHeader($institutionSiteId, $year, $gradeId) {
         $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
 
         $options['order'] = array('RubricsTemplate.id');
         $options['group'] = array('RubricsTemplate.id');
         $options['recursive'] = -1;
         $options['joins'] = array(
+			array(
+                'table' => 'quality_institution_rubrics',
+                'alias' => 'QualityInstitutionRubrics',
+                'conditions' => array(
+					'QualityInstitutionRubrics.rubric_template_id = RubricsTemplate.id'
+				)
+            ),
             array(
                 'table' => 'institution_site_classes',
                 'alias' => 'InstitutionSiteClass',
-                'conditions' => array('InstitutionSiteClass.institution_site_id =' . $institutionSiteId)
+                'conditions' => array(
+					//'InstitutionSiteClass.institution_site_id =' . $institutionSiteId,
+					'InstitutionSiteClass.id = QualityInstitutionRubrics.institution_site_class_id'
+				)
             ),
-            array(
+			array(
+				'table' => 'institution_site_class_grades',
+				'alias' => 'InstitutionSiteClassGrade',
+				'conditions' => array(
+					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+				//	'InstitutionSiteClassGrade.education_grade_id = '.$gradeId
+					)
+			),
+           /* array(
                 'table' => 'school_years',
                 'alias' => 'SchoolYear',
                 'conditions' => array('InstitutionSiteClass.school_year_id = SchoolYear.id')
-            ),
+            ),*/
             array(
                 'table' => 'quality_statuses',
                 'alias' => 'QualityStatus',
                 //  'type' => 'LEFT',
-                'conditions' => array('QualityStatus.year = SchoolYear.name',
-                    'QualityStatus.year =' . $year,
-                    'RubricsTemplate.id = QualityStatus.rubric_template_id')
+                'conditions' => array(//'QualityStatus.year = SchoolYear.name',
+                  //  'QualityStatus.year = ' . $year,
+                    'QualityStatus.rubric_template_id = RubricsTemplate.id')
             ),
         );
-        //$options['conditions'] = array('RubricTemplate.id' => 'QualityStatus.rubric_template_id');
+        $options['conditions'] = array('InstitutionSiteClass.institution_site_id' => $institutionSiteId, 'InstitutionSiteClassGrade.education_grade_id' => $gradeId, 'QualityStatus.year' => $year);
         $data = $RubricsTemplate->find('list', $options);
-//pr($data);//die;
+
         return $data;
     }
 
