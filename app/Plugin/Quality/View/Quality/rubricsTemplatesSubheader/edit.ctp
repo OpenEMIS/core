@@ -5,7 +5,7 @@ echo $this->Html->script('/Quality/js/rubrics', false);
 echo $this->Html->script('jquery.quicksand', false);
 echo $this->Html->script('jquery.sort', false);
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $this->Utility->ellipsis(__($subheader), 50));
+$this->assign('contentHeader', $this->Utility->ellipsis($subheader, 50));
 $this->start('contentActions');
 if ($_accessControl->check($this->params['controller'], 'rubricsTemplatesAdd')) {
 	echo $this->Html->link(__('Add Header'), 'javascript:void(0)', array('class' => 'divider', 'onclick' => 'rubricsTemplate.addHeader(' . $rubricTemplateHeaderId . ')'));
@@ -47,7 +47,8 @@ if (!empty($this->data['RubricsTemplateDetail'])) {
 		echo $this->Utility->getListRowEnd();
 	}
 }
-echo $this->Utility->getListEnd();
+
+echo $this->Utility->getListEnd();echo '<br/>';
 ?>
 
 <div class="controls">

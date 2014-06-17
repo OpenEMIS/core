@@ -76,8 +76,8 @@ table td.answer-options:hover{
     box-sizing:border-box; 
 
     border: 1px solid #CCC !important;
-	border-bottom: none !important;
-  /*  border-top: none !important;
+	/*border-bottom: none !important;
+    border-top: none !important;
     height: 37px  !important;*/
 	padding: 8px;
     width: 607px;
@@ -92,9 +92,13 @@ table td.answer-options:hover{
     padding:0px  !important;
 }
 
-.cell-rubric-col.first{
+html[dir="ltr"] .cell-rubric-col.first{
     border-left: none !important;
 }
+.cell-rubric-col.bottom{
+    border-bottom: none !important;
+}
+
 
 .cell-rubric-col{
     -moz-box-sizing: border-box;
@@ -118,14 +122,18 @@ table td.answer-options:hover{
 
 .cell-rubric-col.input.first{
     position: relative;
+	padding-top:15px  !important;
    // padding:0px  !important;
-    top:5px;
+   // top:5px;
 }
 
 .cell-rubric-row-height{
     height: auto !important;
 }
+.cell-rubric-row-height.default{
+	border-bottom: 1px solid #CCC;
 
+}
 .cell-rubric-col-textarea-height{
     height: auto !important;
 }
@@ -143,7 +151,7 @@ table td.answer-options:hover{
     width: 77px;
 }
 
-.cell-rubric-order.default{
+html[dir="ltr"] .cell-rubric-order.default{
     border-left:none !important;
     //border-top:none !important;
 }
@@ -173,6 +181,44 @@ ul.table_view li:first-child .cell{
 ul.table_view li:first-child{
     margin-top:0 !important;
 }
+
+//right to left
+html[dir="rtl"] .cell-rubric-col.first{
+    border-left: 1px solid #CCC !important;
+}
+
+html[dir="rtl"] .cell-rubric-order.default{
+    border-right:none !important;
+    //border-top:none !important;
+}
+
+/*
+
+html[dir="rtl"] .cell-rubric-col{
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing:border-box; 
+
+	border-left: none;
+    border-right: 1px solid #CCC;
+    border-bottom: 1px solid #CCC;
+    display: inline-block;
+    height: 37px;
+    padding: 10px 8px;
+
+    text-align: center;
+    vertical-align:middle !important;
+}
+
+html[dir="rtl"] .cell-rubric-order.default{
+    border-right:none !important;
+    //border-top:none !important;
+}
+
+html[dir="rtl"] .cell-rubric-order.first{
+    border-right:none !important;
+    border-top:1px solid #CCC !important;
+}*/
 
 /* Font Color */
 

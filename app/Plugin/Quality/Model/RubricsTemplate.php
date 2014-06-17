@@ -263,10 +263,11 @@ class RubricsTemplate extends QualityAppModel {
 		return $data;
 	}
 
-	public function getRubricHeader($institutionSiteId, $year) {
+	public function getRubricHeader($institutionSiteId, $year, $gradeId = NULL) {
 		$options['order'] = array('RubricsTemplate.id');
 		$options['group'] = array('RubricsTemplate.id');
 		$options['recursive'] = -1;
+		$options['fields'] = array('RubricsTemplate.*');
 		$options['joins'] = array(
 			array(
 				'table' => 'institution_site_classes',
@@ -287,9 +288,26 @@ class RubricsTemplate extends QualityAppModel {
 					'RubricsTemplate.id = QualityStatus.rubric_template_id')
 			),
 		);
+		
+		/*if (!is_null($gradeId)) {
+			$options['joins'][] = array(
+				'table' => 'institution_site_class_grades',
+				'alias' => 'InstitutionSiteClassGrade',
+				'conditions' => array(
+					'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+					'InstitutionSiteClassGrade.education_grade_id = ' . $gradeId
+				)
+			);
+
+
+			$options['fields'][] = 'InstitutionSiteClass.*';
+
+			$options['group'][] = 'InstitutionSiteClass.id';
+		}*/
+//pr($options);
 		//$options['conditions'] = array('RubricTemplate.id' => 'QualityStatus.rubric_template_id');
-		$data = $this->find('list', $options);
-//pr($data);//die;
+		$data = $this->find('all', $options);
+//pr($data);die;
 		return $data;
 	}
 
@@ -373,7 +391,7 @@ class RubricsTemplate extends QualityAppModel {
 		}
 		// echo 'return data';
 	}
-
+/*
 	public function getInstitutionQAReportHeader($institutionSiteId, $year = NULL, $includeArea = NULL) {
 		if ($includeArea === 'yes') {
 			$header = array(array('Year'), array('Area Name'), array('Area Code'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
@@ -389,10 +407,8 @@ class RubricsTemplate extends QualityAppModel {
 				$rubricYear = $year;
 			}
 
-			//   pr($rubricYear);
 			$rubricOptions = $this->getRubricHeader($institutionSiteId, $rubricYear);
-			// pr($rubricOptions);
-			// die;
+			
 			if (!empty($rubricOptions)) {
 				foreach ($rubricOptions as $key => $item) {
 					$headerOptions = $RubricsTemplateHeader->getRubricHeaders($key, 'all');
@@ -418,5 +434,5 @@ class RubricsTemplate extends QualityAppModel {
 		}
 		// pr($header); die;
 		return $header;
-	}
+	}*/
 }
