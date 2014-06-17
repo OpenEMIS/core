@@ -26,7 +26,6 @@ $(document).ajaxComplete(function() {
 
 $(document).ready(function() {	
 	jsForm.init();
-	jsTable.init();
 	jsList.init();
 });
 

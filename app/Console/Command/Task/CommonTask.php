@@ -125,7 +125,7 @@ class CommonTask extends AppTask {
 	
     public function updateStatus($id,$status = 1){
         $this->BatchProcess->id = $id; 
-		$cond = array('status'=>$status,'id'=>$id);
+		$cond = array('status'=>$status,'BatchProcess.id'=>$id);
 		if($status == 2){
 			$cond = array_merge($cond,array('start_date'=>date('Y-m-d H:i:s')));
 		}elseif($status == 3 ){
