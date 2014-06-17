@@ -238,16 +238,19 @@ class CensusStudent extends AppModel {
 			$joins[] = array(
 				'table' => 'institution_sites',
 				'alias' => 'InstitutionSite',
-				'conditions' => array('InstitutionSite.id = CensusStudent.institution_site_id')
-			);
-			$joins[] = array(
-				'table' => 'institutions',
-				'alias' => 'Institution',
 				'conditions' => array(
-					'Institution.id = InstitutionSite.institution_id',
-					'Institution.institution_provider_id = ' . $extras['providerId']
+					'InstitutionSite.id = CensusStudent.institution_site_id',
+					'InstitutionSite.institution_site_provider_id' => $extras['providerId']
 				)
 			);
+//			$joins[] = array(
+//				'table' => 'institutions',
+//				'alias' => 'Institution',
+//				'conditions' => array(
+//					'Institution.id = InstitutionSite.institution_id',
+//					'Institution.institution_provider_id = ' . $extras['providerId']
+//				)
+//			);
 		}
 		$options['joins'] = $joins;
 		$options['conditions'] = array('CensusStudent.school_year_id' => $yearId);
