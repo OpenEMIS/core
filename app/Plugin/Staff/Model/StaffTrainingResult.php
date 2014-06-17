@@ -86,6 +86,7 @@ class StaffTrainingResult extends AppModel {
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+
 		$data = $trainingSessionTrainee->find('first',
 			array(
 				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingSession.*', 'TrainingSessionStatus.*', 'TrainingProvider.*', 
@@ -162,11 +163,57 @@ class StaffTrainingResult extends AppModel {
 				)
 			)
 		);
+		
 		if(empty($data)){
 			$controller->redirect(array('action'=>'trainingResult'));
 		}
+
+		$trainingSessionTrainee->bindModel(
+	        array('hasMany' => array(
+                 	'TrainingSessionTraineeResult' => array(
+						'className' => 'TrainingSessionTraineeResult',
+						'foreignKey' => 'training_session_trainee_id',
+						'dependent' => true
+					),
+	            )
+	        ), false
+	    );
+
+
+		$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
+			array(
+				'fields' => array('*'),
+				'conditions'=>array('TrainingSessionTrainee.id'=>$id)
+			)
+		);
+
+
+		$trainingSessionTrainer = ClassRegistry::init('TrainingSessionTrainer');
+		$trainingSessionTrainers = $trainingSessionTrainer->find('all',  
+			array(
+				'fields' => array('TrainingSessionTrainer.*'),
+				'conditions'=>array('TrainingSessionTrainer.training_session_id'=>$data['TrainingSession']['id']),
+			)
+		);
+
+		$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
+		$trainingCourseResultType->bindModel(
+		        array('belongsTo' => array(
+		                'TrainingResultType' => array(
+							'className' => 'FieldOptionValue',
+							'foreignKey' => 'training_result_type_id'
+						)
+		            )
+		        )
+	    );
+
+		$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$data['TrainingCourse']['id'])));	
+		$controller->set('trainingCourseResultTypes', $trainingCourseResultTypes);
+	
 		
 		$controller->Session->write('TeacherTrainingResultId', $id);
+		$controller->set('trainingSessionTrainees', $trainingSessionTrainees);
+		$controller->set('trainingSessionTrainers', $trainingSessionTrainers);
 		$controller->set('data', $data);
 		$controller->set('header', $header);
 	}

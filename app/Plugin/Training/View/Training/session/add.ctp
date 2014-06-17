@@ -26,7 +26,7 @@ echo $this->Form->create($model, $formOptions);
 <?php  echo $this->Form->input('provider', array('type'=> 'hidden', 'class'=>'provider', 'default'=>$provider)); ?>
 <?php  echo $this->Form->input('sessionEditable', array('type'=> 'hidden', 'default'=>$this->request->data['TrainingSession']['sessionEditable'])); ?>
 <?php 
-$readonly = array();;
+$readonly = array();
 if($this->request->data['TrainingSession']['sessionEditable']=='2'){
 	$readonly['readonly'] = 'readonly';
 }
