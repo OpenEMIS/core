@@ -11,13 +11,12 @@ if ($_add) {
 $this->end();
 
 $this->start('contentBody');
-$tableHeaders = array(__('Code'), __('Title'), __('Credit'), __('Status'));
+$tableHeaders = array(__('Code'), __('Title'), __('Status'));
 $tableData = array();
 foreach ($data as $obj) {
 	$row = array();
 	$row[] = $obj['StaffTrainingNeed']['ref_course_code'];
 	$row[] = $this->Html->link($obj['StaffTrainingNeed']['ref_course_title'] , array('action' => 'trainingNeedView', $obj[$model]['id']), array('escape' => false));
-	$row[] = $obj['TrainingCourse']['credit_hours'];
 	$status = $this->TrainingUtility->getTrainingStatus($model, $obj[$model]['id'], $obj['TrainingStatus']['name'], $obj[$model]['training_status_id']);
 	$row[] = $status;
 	

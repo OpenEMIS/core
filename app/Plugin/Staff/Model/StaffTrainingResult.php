@@ -31,7 +31,7 @@ class StaffTrainingResult extends AppModel {
 		$controller->set('modelName', 'TrainingSessionTrainee');
 		$data = $trainingSessionTrainee->find('all',
 			array(
-				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingStatus.*'),
+				'fields' => array('TrainingSessionResult.id','TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingStatus.*'),
 				'joins' => array(
 					array(
 						'type' => 'INNER',
@@ -89,7 +89,7 @@ class StaffTrainingResult extends AppModel {
 
 		$data = $trainingSessionTrainee->find('first',
 			array(
-				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingSession.*', 'TrainingSessionStatus.*', 'TrainingProvider.*', 
+				'fields' => array('TrainingSessionTrainee.*', 'TrainingCourse.*', 'TrainingResultStatus.*', 'TrainingSession.*',  'TrainingProvider.*', 
 					'TrainingSessionResult.*', 'CreatedUser.*', 'ModifiedUser.*'
 					),
 				'joins' => array(
@@ -131,14 +131,6 @@ class StaffTrainingResult extends AppModel {
 						'alias' => 'TrainingResultStatus',
 						'conditions' => array(
 							'TrainingResultStatus.id = TrainingSessionResult.training_status_id'
-						)
-					),
-					array(
-						'type' => 'INNER',
-						'table' => 'training_statuses',
-						'alias' => 'TrainingSessionStatus',
-						'conditions' => array(
-							'TrainingSessionStatus.id = TrainingSession.training_status_id'
 						)
 					),
 					array(
