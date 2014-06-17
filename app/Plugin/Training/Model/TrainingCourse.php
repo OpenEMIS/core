@@ -36,39 +36,34 @@ class TrainingCourse extends TrainingAppModel {
 
 	public $hasMany = array(
 		'TrainingCourseAttachment' => array(
-			'className' => 'TrainingCourseAttachment',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'TrainingCoursePrerequisite' => array(
-			'className' => 'TrainingCoursePrerequisite',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'TrainingCourseTargetPopulation' => array(
-			'className' => 'TrainingCourseTargetPopulation',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'TrainingCourseResultType' => array(
-			'className' => 'TrainingCourseResultType',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'TrainingCourseProvider' => array(
-			'className' => 'TrainingCourseProvider',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		),
 		'StaffTrainingNeed' => array(
     	 	'foreignKey' => 'ref_course_id',
             'conditions' => array('ref_course_table' => 'TrainingCourse'),
-            'dependent' => true
+           'dependent' => true,
+			'exclusive' => true
         ),
 		'TrainingSession' => array(
-			'className' => 'TrainingSession',
-			'foreignKey' => 'training_course_id',
-			'dependent' => true
+			'dependent' => true,
+			'exclusive' => true
 		)
 	);
 	

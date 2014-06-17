@@ -1,6 +1,5 @@
 <?php
 class TrainingSessionTrainee extends TrainingAppModel {
-	
 	public $belongsTo = array(
 		'TrainingSession' => array(
 			'className' => 'TrainingSession',
@@ -9,15 +8,14 @@ class TrainingSessionTrainee extends TrainingAppModel {
 		'Staff'
 	);
 
-	public $hasAndBelongsToMany = array(
+	public $hasMany = array(
         'TrainingSessionTraineeResult' => array(
-            'className' => 'TrainingSessionTraineeResult',
-         	'joinTable' => 'training_session_trainee_results',
-	        'foreignKey' => 'trainining_session_trainee_id',
-	        'associationForeignKey' => 'training_session_result_id',
-         	'dependent' => true 
-        )
+			'className' => 'TrainingSessionTraineeResult',
+			'foreignKey' => 'training_session_trainee_id',
+			'dependent' => true
+		),
     );
+
 
 	public function autocomplete($search, $index, $trainingCourseID) {
 		$search = sprintf('%%%s%%', $search);

@@ -4,7 +4,7 @@ echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'result'), array('class' => 'divider'));
+echo $this->Html->link(__('Back'), array('action' => 'resultView', $this->data[$modelName]['id']), array('class' => 'divider'));
 if($_edit) {
 	echo $this->Html->link(__('Download Template'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
   	echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider'));
@@ -73,7 +73,12 @@ echo $this->Form->create($model, $formOptions);
 	 	<thead class="table_head">
         	<tr>
 	       		<td class="table_cell"><?php echo __('Name'); ?></td>
-	            <td class="table_cell"><?php echo __('Result'); ?></td>
+            	<?php foreach($trainingCourseResultTypes as $key=>$val){
+            		echo '<td class="table_cell">'. $val['TrainingResultType']['name']. '<br/>('. __('Result').')</td>';
+            		echo '<td class="table_cell">'. $val['TrainingResultType']['name']. '<br/>('. __('Completed').')</td>';
+            	}?>
+
+	            <td class="table_cell"><?php echo __('Overall Result'); ?></td>
 	            <td class="table_cell"><?php echo __('Completed'); ?></td>
 	        </tr>
         </thead>
@@ -97,10 +102,34 @@ echo $this->Form->create($model, $formOptions);
 						<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.last_name', array('value'=>$val['last_name'])); ?>
 					</div>
 			    </td>
-			 
+			 	<?php if(isset($this->request->data['TrainingSessionTraineeResult']) && !empty($this->request->data['TrainingSessionTraineeResult'])){ 
+			 		$r = 0;
+			 		foreach($this->request->data['TrainingSessionTraineeResult'] as $key2=>$val2){ 
+			 			if($val2['training_session_trainee_id']==$val['id']){ 
+			 		 ?>
+			 		<td class="table_cell">
+			 			<?php 
+			 			echo $this->Form->hidden('TrainingSessionTrainee.'.$i.'.TrainingSessionTraineeResult.'.$r.'.id', array('value'=>$val2['id'])); 
+			 			echo $this->Form->hidden('TrainingSessionTrainee.'.$i.'.TrainingSessionTraineeResult.'.$r.'.training_session_trainee_id', array('value'=>$val2['training_session_trainee_id'])); 
+						echo $this->Form->hidden('TrainingSessionTrainee.'.$i.'.TrainingSessionTraineeResult.'.$r.'.training_result_type_id', array('value'=>$val2['training_result_type_id']));
+			 			?>
+				    	<?php 
+						echo $this->Form->input('TrainingSessionTrainee.'.$i.'.TrainingSessionTraineeResult.'.$r.'.result', array('label'=>false,'default'=>$val2['result'], 'style'=>'width:50px;')); ?>
+				    </td>
+				    <td class="table_cell" style="padding:5px;">
+				    	<?php 
+						echo $this->Form->input('TrainingSessionTrainee.'.$i.'.TrainingSessionTraineeResult.'.$r.'.pass', array('label'=>false,'default'=>$val2['pass'], 'empty'=>array('-1'=>''),
+						 'options' => array(1=>__('Passed'), 0 => __('Failed')), 'style'=>'width:70px;padding:0')); ?>
+				    </td>
+			 	<?php 
+			 			$r++;
+			 				 }
+			 			} 
+			 		}
+			 	?>
 				<td class="table_cell">
 			    	<?php 
-					echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('label'=>false,'value'=>$val['result'], 'style'=>'width:50px;')); ?>
+					echo $this->Form->input('TrainingSessionTrainee.'. $i .'.result', array('label'=>false,'default'=>$val['result'], 'style'=>'width:50px;')); ?>
 			    </td>
 			    <td class="table_cell" style="padding:5px;">
 			    	<?php 

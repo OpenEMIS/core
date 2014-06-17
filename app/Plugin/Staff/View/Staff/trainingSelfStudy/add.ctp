@@ -23,7 +23,6 @@ else{
     $endDate['data-date'] =  date('d-m-Y', time() + 86400);
 }
 echo $this->Html->link($this->Label->get('general.back'), $redirectAction, array('class' => 'divider'));
-
 $this->end();
 $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin'=>'Staff'));
@@ -32,6 +31,7 @@ $formOptions['deleteUrl']=$this->params['controller']."/trainingSelfStudyAttachm
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->Form->hidden('training_status_id');
+echo $this->Form->input('training_achievement_type_id', array('options'=>$trainingAchievementTypeOptions, 'label' => array('text' => $this->Label->get('StaffTrainingSelfStudy.achievement_type'), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input('title');
 echo $this->FormUtility->datepicker('start_date', $startDate);
 echo $this->FormUtility->datepicker('end_date', $endDate);

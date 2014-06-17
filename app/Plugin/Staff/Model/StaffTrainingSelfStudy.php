@@ -26,6 +26,10 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			'className' => 'SecurityUser',
 			'foreignKey' => 'created_user_id'
 		),
+		'TrainingAchievementType' => array(
+			'className' => 'FieldOptionValue',
+			'foreignKey' => 'training_achievement_type_id',
+		),
 		'TrainingStatus',
 	);
 
@@ -112,6 +116,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             'model' => $this->alias,
             'fields' => array(
                 array('field' => 'id', 'type' => 'hidden'),
+             	array('field' => 'achievement_type',  'labelKey' => 'StaffTrainingSelfStudy.achievement_type'),
                 array('field' => 'title',  'labelKey' => 'StaffTraining.course_title'),
 				array('field' => 'start_date'),
 				array('field' => 'end_date'),
@@ -201,7 +206,6 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		$fields = $this->getDisplayFields($controller);
 		$fields2 = $this->getDisplayFields2($controller);
         $controller->set(compact('header', 'data', 'fields', 'fields2','id'));
-		
 		//APROVAL
 		$pending = $data['StaffTrainingSelfStudy']['training_status_id']=='2' ? 'true' : 'false';
 		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
@@ -305,7 +309,10 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 
 		$trainingProvider = ClassRegistry::init('TrainingProvider');
 		$trainingProviderOptions = $trainingProvider->find('list', array('fields'=>array('id', 'name')));
-		
+
+		$trainingAchievementTypeOptions = array_map('__', $this->TrainingAchievementType->getList());
+		$controller->set('trainingAchievementTypeOptions', $trainingAchievementTypeOptions);
+
 		$passfailOptions = $controller->Option->get('passfail');
 		
 		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffTrainingSelfStudyAttachment.staff_training_self_study_id'=>$id)));
@@ -333,7 +340,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 
 			$postFileData = $saveData['StaffTrainingSelfStudy']['files'];
 			unset($saveData['StaffTrainingSelfStudy']['files']);
-
+			$controller->request->data['StaffTrainingSelfStudy']['training_status_id'] = 1; 
 			if ($this->save($saveData, array('validate' => 'only'))){
 				if (isset($saveData['save'])) {
 				   	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 1; 
