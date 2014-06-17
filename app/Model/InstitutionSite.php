@@ -337,6 +337,8 @@ class InstitutionSite extends AppModel {
 	public function getCountByCycleId($yearId, $cycleId, $extras=array()) {
 		$options = array('recursive' => -1);
 		
+		$conditions = array();
+		
 		$joins = array(
 			array(
 				'table' => 'institution_site_programmes',
@@ -361,14 +363,16 @@ class InstitutionSite extends AppModel {
 			)
 		);
 		if(isset($extras['providerId'])) {
-			$joins[] = array(
-				'table' => 'institutions',
-				'alias' => 'Institution',
-				'conditions' => array(
-					'Institution.id = InstitutionSite.institution_id',
-					'Institution.institution_provider_id = ' . $extras['providerId']
-				)
-			);
+//			$joins[] = array(
+//				'table' => 'institutions',
+//				'alias' => 'Institution',
+//				'conditions' => array(
+//					'Institution.id = InstitutionSite.institution_id',
+//					'Institution.institution_provider_id = ' . $extras['providerId']
+//				)
+//			);
+			
+			$conditions[] = 'InstitutionSite.institution_site_provider_id = ' . $extras['providerId'];
 		}
 		if(isset($extras['areaId'])) {
 			$joins[] = array(
@@ -387,6 +391,7 @@ class InstitutionSite extends AppModel {
 			);
 		}
 		$options['joins'] = $joins;
+		$options['conditions'] = $conditions;
 		$options['group'] = array('EducationProgramme.education_cycle_id');
 		
 		$data = $this->find('count', $options);
