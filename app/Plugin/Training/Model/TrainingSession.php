@@ -236,7 +236,7 @@ class TrainingSession extends TrainingAppModel {
 		$controller->set('sessionEditable', $sessionEditable);
 
 		//APROVAL
-		$pending = $data['TrainingSession']['training_status_id']=='2' ? 'true' : 'false';
+		$pending = $data['TrainingSession']['training_status_id']=='2' ? true : false;
 		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
 		$controller->set('approvalMethod', 'session');
 		$controller->set('controller', 'Training');
@@ -322,9 +322,6 @@ class TrainingSession extends TrainingAppModel {
 		      	$saveData['WorkflowLog']['approve'] = 0; 
 			}
 
-
-			
-		
 			if($controller->Workflow->updateApproval($saveData)){
 				if($saveData['WorkflowLog']['approve']==1){
 					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
