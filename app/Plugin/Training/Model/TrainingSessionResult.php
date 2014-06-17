@@ -164,7 +164,7 @@ class TrainingSessionResult extends TrainingAppModel {
 		$controller->set('data', $data);
 
 		//APROVAL
-		$pending = $data['TrainingSessionResult']['training_status_id']=='2' ? 'true' : 'false';
+		$pending = $data['TrainingSessionResult']['training_status_id']=='2' ? true : false;
 		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
 		$controller->set('approvalMethod', 'result');
 		$controller->set('controller', 'Training');

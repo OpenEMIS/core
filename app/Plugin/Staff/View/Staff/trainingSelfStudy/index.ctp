@@ -18,7 +18,12 @@ foreach ($data as $obj) {
 	$row[] = $obj[$model]['end_date'];
 	$row[] = $this->Html->link($obj[$model]['title'], array('action' => 'trainingSelfStudyView', $obj[$model]['id']), array('escape' => false));
 	$row[] = $obj[$model]['credit_hours'];
-	$row[] = $this->TrainingUtility->getTrainingStatus($model, $obj[$model]['id'], $obj['TrainingStatus']['name'], $obj[$model]['training_status_id']);;
+	if(isset($obj['StaffTrainingSelfStudyResult']) && $obj['StaffTrainingSelfStudyResult']['training_status_id']=='2'){
+		$row[] = (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model, $obj[$model]['id'], $obj['TrainingStatus']['name'], $obj['StaffTrainingSelfStudyResult']['training_status_id']));
+	}else{
+		$row[] = (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model, $obj[$model]['id'], $obj['TrainingStatus']['name'], $obj[$model]['training_status_id']));
+	}
+	
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));

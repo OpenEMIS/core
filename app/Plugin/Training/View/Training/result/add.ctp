@@ -23,8 +23,8 @@ echo $this->Form->create($model, $formOptions);
 <?php 
 	echo $this->Form->input('TrainingCourse.training_course_id', array('label'=>array('text'=>__('Course'), 'class'=>'col-md-3 control-label'), 'options' => $trainingCourseOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingCourse']['id'])); 
 	echo $this->Form->input('TrainingSession.training_provider_id', array('label'=>array('text'=>__('Provider'), 'class'=>'col-md-3 control-label'), 'options' => $trainingProviderOptions, 'disabled' => 'disabled', 'default'=>$this->request->data['TrainingSession']['training_provider_id']));
-	echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate', 'readonly' => 'readonly', 'data-date' => $this->request->data['TrainingSession']['start_date']));
-	echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'readonly' => 'readonly', 'data-date' => $this->request->data['TrainingSession']['end_date']));
+	echo $this->Form->input('TrainingSession.start_date', array('type'=>'text', 'readonly' => 'readonly'));
+	echo $this->Form->input('TrainingSession.end_date', array('type'=>'text', 'readonly' => 'readonly'));
 	echo $this->Form->input('TrainingSession.location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'disabled' => 'disabled', 'class'=>'form-control location', 'placeholder' => __('Location'), 'value'=>$this->request->data['TrainingSession']['location']));
 	?>
  <div class="form-group">
@@ -67,9 +67,9 @@ echo $this->Form->create($model, $formOptions);
  <div class="form-group">
 	<label class="col-md-3 control-label"><?php echo __('Trainees'); ?></label>
 	<div class="col-md-6">
-	<div class="table trainee"  url="Training/ajax_find_trainee/">
+	<div class="table trainee"  url="Training/ajax_find_trainee/" style="min-width:500px; overflow-x: scroll; white-space: nowrap;">
 		<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
-		<table class="table_body table-striped table-hover table-bordered">
+		<table class="table_body table-striped table-hover table-bordered" style="width:100%;">
 	 	<thead class="table_head">
         	<tr>
 	       		<td class="table_cell"><?php echo __('Name'); ?></td>

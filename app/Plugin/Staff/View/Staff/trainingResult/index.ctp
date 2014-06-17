@@ -12,7 +12,7 @@ foreach ($data as $obj) {
 	$row[] = $obj['TrainingCourse']['code'];
 	$row[] = $this->Html->link($obj['TrainingCourse']['title'], array('action' => 'trainingResultView', $obj[$modelName]['id']), array('escape' => false));
 	$row[] = $obj['TrainingCourse']['credit_hours'];
-	$row[] = $this->TrainingUtility->getTrainingStatus('TrainingSessionResult', $obj[$modelName]['id'], $obj['TrainingStatus']['name'], $obj['TrainingStatus']['id']);
+	$row[] = $this->TrainingUtility->getTrainingStatus('TrainingSessionResult', $obj['TrainingSessionResult']['id'], $obj['TrainingStatus']['name'], $obj['TrainingStatus']['id']);
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));

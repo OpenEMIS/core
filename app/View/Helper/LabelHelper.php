@@ -250,6 +250,9 @@ class LabelHelper extends AppHelper {
 			'need_category' => 'Need Category',
 			'need_type' => 'Need Type'
 		),
+		'StaffTrainingSelfStudy' => array(
+			'achievement_type' => 'Achievement Type'
+		),
 		'Shift' => array(
 			'name' => 'Shift Name'
 		),

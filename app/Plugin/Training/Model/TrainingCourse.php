@@ -323,7 +323,7 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('_model','TrainingCourseAttachment');
 
 		//APROVAL
-		$pending = $data['TrainingCourse']['training_status_id']=='2' ? 'true' : 'false';
+		$pending = $data['TrainingCourse']['training_status_id']=='2' ? true : false;
 		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
 		$controller->set('approvalMethod', 'course');
 		$controller->set('controller', 'Training');
