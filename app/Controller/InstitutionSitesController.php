@@ -330,9 +330,11 @@ class InstitutionSitesController extends AppController {
 	public function view() {
         if (isset($this->params['pass'][0])) {
             $institutionSiteId = $this->params['pass'][0];
-            $obj = $this->InstitutionSite->find('first', array('conditions' => array('InstitutionSite.id' => $institutionSiteId)));
+            $obj = $this->InstitutionSite->findById($institutionSiteId);
             if ($obj) {
-                $this->Session->write('InstitutionSiteId', $institutionSiteId);
+                $this->Session->write('InstitutionSiteId', $institutionSiteId); // deprecated
+				$this->Session->write('InstitutionSite.id', $institutionSiteId); // writing to session using array dot notation
+				$this->Session->write('InstitutionSite.data', $obj);
                 $this->Session->write('InstitutionSiteObj', $obj);
             } else {
                 $this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));
@@ -549,159 +551,6 @@ class InstitutionSitesController extends AppController {
         $this->set('data2', $data2);
         $this->set('id', $this->institutionSiteId);
     }
-
-	public function classesAddGrade() {
-        $this->layout = 'ajax';
-        $exclude = isset($this->params->query['exclude']) ? $this->params->query['exclude'] : array();
-        $index = $this->params->query['index'];
-        $yearId = $this->params->query['yearId'];
-        $programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($this->institutionSiteId, $yearId);
-
-        $gradeOptions = array();
-        $selectedProgramme = false;
-        foreach ($programmeOptions as $programmeId => $name) {
-            $gradeOptions = $this->EducationGrade->getGradeOptions($programmeId, $exclude, true);
-            if (!empty($gradeOptions)) {
-                $selectedProgramme = $programmeId;
-                break;
-            }
-        }
-        $this->set('model', 'InstitutionSiteClassGrade');
-        $this->set('index', $index);
-        $this->set('gradeOptions', $gradeOptions);
-        $this->set('programmeOptions', $programmeOptions);
-        $this->set('selectedProgramme', $selectedProgramme);
-    }
-
-	public function classesStudentAjax() {
-        $this->autoRender = false;
-
-        if (sizeof($this->params['pass']) == 1) {
-            $gradeId = $this->params['pass'][0];
-            $studentId = $this->params->query['studentId'];
-            $action = $this->params->query['action'];
-
-            $result = false;
-            if ($action === 'add') {
-                $categoryId = $this->params->query['categoryId'];
-
-                $data = array(
-                    'student_id' => $studentId,
-                    'student_category_id' => $categoryId,
-                    'institution_site_class_grade_id' => $gradeId
-                );
-                $this->InstitutionSiteClassGradeStudent->create();
-                $result = $this->InstitutionSiteClassGradeStudent->save($data);
-            } else if ($action === 'change_category') {
-                $categoryId = $this->params->query['categoryId'];
-
-                $fieldsToBeUpdated = array('InstitutionSiteClassGradeStudent.student_category_id' => $categoryId);
-                $updateConditions = array(
-                    'InstitutionSiteClassGradeStudent.student_id' => $studentId,
-                    'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
-                );
-                $result = $this->InstitutionSiteClassGradeStudent->updateAll($fieldsToBeUpdated, $updateConditions);
-            } else {
-                $result = $this->InstitutionSiteClassGradeStudent->deleteAll(array(
-                    'InstitutionSiteClassGradeStudent.student_id' => $studentId,
-                    'InstitutionSiteClassGradeStudent.institution_site_class_grade_id' => $gradeId
-                        ), false);
-            }
-
-            $return = array();
-            if ($result) {
-                $this->Utility->setAjaxResult('success', $return);
-            } else {
-                $this->Utility->setAjaxResult('error', $return);
-                $return['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
-            }
-            return json_encode($return);
-        }
-    }
-
-	public function classesAddStudentRow() {
-        $this->layout = 'ajax';
-
-        if (sizeof($this->params['pass']) == 2) {
-            $year = $this->params['pass'][0];
-            $gradeId = $this->params['pass'][1];
-            $index = $this->params->query['index'];
-            $data = $this->InstitutionSiteStudent->getStudentSelectList($year, $this->institutionSiteId, $gradeId);
-            $categoryOptions = $this->StudentCategory->findList(true);
-            $this->set('index', $index);
-            $this->set('gradeId', $gradeId);
-            $this->set('data', $data);
-            $this->set('categoryOptions', $categoryOptions);
-        }
-    }
-
-	public function classesCheckName() {
-        $this->autoRender = false;
-        $name = trim($this->params->query['name']);
-        $yearId = $this->params->query['year'];
-        $count = $this->params->query['count'];
-
-        if ($count == 0) {
-            return $this->Utility->getMessage('SITE_CLASS_NO_GRADES');
-        } else if (strlen($name) == 0) {
-            return $this->Utility->getMessage('SITE_CLASS_EMPTY_NAME');
-        } else if ($this->InstitutionSiteClass->isNameExists($name, $this->institutionSiteId, $yearId)) {
-            return $this->Utility->getMessage('SITE_CLASS_DUPLICATE_NAME');
-        }
-        return 'true';
-    }
-
-	public function classesAddSubjectRow() {
-        $this->layout = 'ajax';
-
-        if (sizeof($this->params['pass']) == 2) {
-            $year = $this->params['pass'][0];
-            $classId = $this->params['pass'][1];
-            $subjects = $this->EducationSubject->getSubjectByClassId($classId);
-            $this->set('subjects', $subjects);
-        }
-    }
-
-	public function classesSubjectAjax() {
-        $this->autoRender = false;
-
-        if (sizeof($this->params['pass']) == 1) {
-            $classId = $this->params['pass'][0];
-            $subjectId = $this->params->query['subjectId'];
-            $action = $this->params->query['action'];
-
-            $result = false;
-            if ($action === 'add') {
-                $data = array('institution_site_class_id' => $classId, 'education_grade_subject_id' => $subjectId);
-                $this->InstitutionSiteClassSubject->create();
-                $result = $this->InstitutionSiteClassSubject->save($data);
-            } else {
-                $result = $this->InstitutionSiteClassSubject->deleteAll(array(
-                    'InstitutionSiteClassSubject.institution_site_class_id' => $classId,
-                    'InstitutionSiteClassSubject.education_grade_subject_id' => $subjectId
-                        ), false);
-            }
-
-            $return = array();
-            if ($result) {
-                $this->Utility->setAjaxResult('success', $return);
-            } else {
-                $this->Utility->setAjaxResult('error', $return);
-                $return['msg'] = $this->Utility->getMessage('ERROR_UNEXPECTED');
-            }
-            return json_encode($return);
-        }
-    }
-
-	public function classesDeleteSubject() {
-        $id = $this->params['pass'][0];
-        $name = $this->InstitutionSiteClassSubject->field('name', array('InstitutionSiteClassSubject.id' => $id));
-        $this->InstitutionSiteClassSubject->delete($id);
-        $this->Utility->alert('Subject has been deleted successfully.');
-        $this->redirect(array('action' => 'classes'));
-    }
-
-	
 
 	public function classesAssessments() {
         if (isset($this->params['pass'][0])) {
@@ -1221,5 +1070,4 @@ class InstitutionSitesController extends AppController {
 			$InstitutionSiteShiftModel->save($defaultShift);
 		}
 	}
-
 }

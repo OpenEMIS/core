@@ -95,6 +95,11 @@ class MessageComponent extends Component {
 				'student_already_exists_in_other_site' => array('type' => 'info', 'msg' => 'This student is already exists in other institution site.'),
 				'notExist' => array('type' => 'error', 'msg' => 'The Student Record does not exist.')
 			)
+		),
+		'Student' => array(
+			'add' => array(
+				'success' => array('type' => 'ok', 'msg' => 'New student has been created.')
+			)
 		)
 	);
 	
@@ -132,5 +137,9 @@ class MessageComponent extends Component {
 		}
 		$_settings['message'] = $message['msg'];
 		$this->Session->write('_alert', $_settings);
+	}
+	
+	public function stopAlert() {
+		$this->Session->delete('_alert');
 	}
 }

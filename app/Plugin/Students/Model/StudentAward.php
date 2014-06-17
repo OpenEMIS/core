@@ -68,10 +68,9 @@ class StudentAward extends StudentsAppModel {
     }
 	
 	public function award($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStudentId($controller->studentId);
+		$data = $this->findAllByStudentId($controller->Session->read('Student.id'));
 		$header = __($this->headerDefault);
 		$controller->set(compact('header', 'data'));
 	}
@@ -88,20 +87,20 @@ class StudentAward extends StudentsAppModel {
 			$controller->redirect(array('action'=>'award'));
 		}
 		
-		$controller->Session->write('StudentAwardId', $id);
+		$controller->Session->write('StudentAward.id', $id);
 		$fields = $this->getDisplayFields($controller);
         $controller->set(compact('header', 'data', 'fields', 'id'));
 	}
 	
 	public function awardDelete($controller, $params) {
-        if($controller->Session->check('StudentId') && $controller->Session->check('StudentAwardId')) {
-            $id = $controller->Session->read('StudentAwardId');
+        if($controller->Session->check('Student.id') && $controller->Session->check('StudentAward.id')) {
+            $id = $controller->Session->read('StudentAward.id');
             if($this->delete($id)) {
                 $controller->Message->alert('general.delete.success');
             } else {
                 $controller->Message->alert('general.delete.failed');
             }
-			$controller->Session->delete('StudentAwardId');
+			$controller->Session->delete('StudentAward.id');
             $controller->redirect(array('action' => 'award'));
         }
     }
@@ -130,30 +129,9 @@ class StudentAward extends StudentsAppModel {
 			}
 		}
 		else{
-			$addMore = false;
-			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
-                $controller->Navigation->skipWizardLink($controller->action);
-            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
-                $controller->Navigation->previousWizardLink($controller->action);
-            }elseif(isset($controller->data['submit']) && $controller->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $controller->Navigation->validateModel($controller->action,$this->name);
-            }
-			$controller->request->data[$this->name]['student_id'] = $controller->studentId;
+			$controller->request->data[$this->name]['student_id'] = $controller->Session->read('Student.id');
 			if($this->save($controller->request->data)){
-				if(empty($controller->request->data[$this->name]['id'])){
-					$id = $this->getLastInsertId();
-					if($addMore){
-						$controller->Message->alert('general.add.success');
-					}
-                	$controller->Navigation->updateWizard($controller->action,$id,$addMore);	
-                	$controller->Message->alert('general.add.success');
-				}
-				else{
-                	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					$controller->Message->alert('general.add.success');
-				}
+				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'award'));
 			}
 		}

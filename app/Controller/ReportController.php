@@ -33,7 +33,7 @@ class ReportController extends AppController {
 	public $models = array(
 		'InstitutionSite' => 'Institution Site', 
 		'Students.Student' => 'Student', 
-		'Teachers.Teacher' => 'Teacher', 
+		//'Teachers.Teacher' => 'Teacher', 
 		'Staff.Staff' => 'Staff', 
 		'CensusStudent' => 'Census Student'
 	);

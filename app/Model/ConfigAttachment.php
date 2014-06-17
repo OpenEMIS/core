@@ -183,7 +183,7 @@ class ConfigAttachment extends AppModel {
 	}
 	
 	public function getBase64Encoding($id) {
-		$obj = $this->find('first', array('conditions' => array('id' => $id)));
+		$obj = $this->find('first', array('conditions' => array('ConfigAttachment.id' => $id)));
 		$data = array();
 		if($obj) {
 			$ext = strtolower($this->findExtension($obj['ConfigAttachment']['name']));
