@@ -144,6 +144,7 @@ class WorkflowComponent extends Component {
         $workflowModels = $this->getWorkflowIdByModel($model);
         $this->controller->set('_viewApprovalLog', false);
         $this->controller->set('_approval', false);
+
         if(!empty($workflowModels)){
             $workflowLog = $this->WorkflowLog->find('first',
                 array(
@@ -164,37 +165,24 @@ class WorkflowComponent extends Component {
             $step = 0;
             if(!empty($workflowLog)){
                 $step = $workflowLog['WorkflowStep']['step'];
+               
                 if($workflowLog['WorkflowLog']['approve']=='0'){
                     $step = 0;
                     $new = true;
                 }else{
-                    if($this->getEndOfWorkflow($model, $step, $workflowLog['WorkflowLog']['approve'])){
-                        if($pending){
-                            if($workflowLog['WorkflowLog']['model_name']!=$workflowModels[key(array_slice($workflowModels, -1, 1, TRUE))]){
-                                if($pending){
-                                    $modelNext = $this->getCurrentModelName($workflowModels,$workflowLog['WorkflowLog']['model_name']);
-                                    $step = 0;
-                                    $model = $modelNext;
-                                }
-                            }
-                            if($this->getEndOfWorkflow($model, $step, $workflowLog['WorkflowLog']['approve'])){
-                                 $model = $workflowLog['WorkflowLog']['model_name'];
-                            }
-
-                        }
-                         //if($modelTemp->find('first', array('conditions'=>'')))
-                        /*if($workflowLog['WorkflowLog']['model_name']!=$workflowModels[key(array_slice($workflowModels, -1, 1, TRUE))]){
-                            $pending = false;
-
+                    if($pending){
+                        if($workflowLog['WorkflowLog']['model_name']!=$workflowModels[key(array_slice($workflowModels, -1, 1, TRUE))]){
                             if($this->getEndOfWorkflow($workflowLog['WorkflowLog']['model_name'], $step, $workflowLog['WorkflowLog']['approve'])){
                                 $step = 0;
+                                $model = $this->getCurrentModelName($workflowModels,$workflowLog['WorkflowLog']['model_name']);
                             }
-                            $model = $this->getCurrentModelName($workflowModels,$workflowLog['WorkflowLog']['model_name']);
-                        }*/
+                        }else{
+                            $model =  $workflowLog['WorkflowLog']['model_name'];
+                        }
                     }
                 }
-            }
-            if(!$new && !$pending){
+            } 
+            if($pending){
                 $workflow = $this->getCurrentWorkflowStep($model, $step+1);
                 if(!empty($workflow)){
                     $this->controller->set('workflowStatus', $workflow['Workflow']['workflow_name']);
@@ -202,7 +190,6 @@ class WorkflowComponent extends Component {
             }
             $this->getAllApprovalRights($model, $workflowModels, $id);
             if($pending){
-               
                 $workflowRights = $this->Session->read('workflow');
                 if(!empty($workflowRights)){
                     $this->getWorkflowApprovalRight($model, $step, $workflowRights, $workflowLog);
@@ -359,7 +346,6 @@ class WorkflowComponent extends Component {
     public function getWorkflowStatus($model, $id, $status){
         $workflowModels = $this->getWorkflowIdByModel($model);
         $workflowStatus = '';
-
         if(!empty($workflowModels)){
             $this->WorkflowLog = ClassRegistry::init('WorkflowLog');
             $workflowLog = $this->WorkflowLog->find('first',
@@ -390,24 +376,15 @@ class WorkflowComponent extends Component {
                             $model = $modelNext;
                         }
                     }
-                    if($this->getEndOfWorkflow($model, $step, $workflowLog['WorkflowLog']['approve'])){
-                        /*if($workflowLog['WorkflowLog']['model_name']!=$workflowModels[key(array_slice($workflowModels, -1, 1, TRUE))]){
-                            if($this->getEndOfWorkflow($workflowLog['WorkflowLog']['model_name'], $step, $workflowLog['WorkflowLog']['approve'])){
-                                $step = 0;
-                            }
-                            $model = $this->getCurrentModelName($workflowModels,$workflowLog['WorkflowLog']['model_name']);
-                        }else{
-                            $workflow = $this->getCurrentWorkflowStep($model, $step);
-                            return !empty($workflow) ? __($workflow['Workflow']['approve']) : NULL;
-                        }*/
+                    if($this->getEndOfWorkflow($workflowLog['WorkflowLog']['model_name'], $step, $workflowLog['WorkflowLog']['approve'])){
                         $model = $workflowLog['WorkflowLog']['model_name'];
                         $workflow = $this->getCurrentWorkflowStep($model, $step);
                         return !empty($workflow) ? __($workflow['Workflow']['approve']) : NULL;
                     }
                 }
-                $workflow = $this->getCurrentWorkflowStep($model, $step+1);
-                return !empty($workflow) ? __($workflow['Workflow']['workflow_name']) : NULL;
             }
+            $workflow = $this->getCurrentWorkflowStep($model, $step+1);
+            return !empty($workflow) ? __($workflow['Workflow']['workflow_name']) : NULL;
                
         }
         return false;

@@ -206,7 +206,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
         $controller->set(compact('header', 'data', 'fields', 'fields2','id', 'resultEditable'));
 		//APROVAL
 		$pending = $data['StaffTrainingSelfStudy']['training_status_id']=='2' ? true : false;
-		if(isset($data['StaffTrainingSelfStudyResult'])){
+		if(isset($data['StaffTrainingSelfStudyResult']['id'])){
 			$pending = false;
 			if($data['StaffTrainingSelfStudyResult']['training_status_id']=='2'){
 				$pending = true;
@@ -284,14 +284,22 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		
 			if($controller->Workflow->updateApproval($saveData)){
 				if($saveData['WorkflowLog']['approve']==1){
-					if($controller->Workflow->getEndOfWorkflow($this->name, $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
-						$this->id =  $saveData['WorkflowLog']['record_id'];
-						$this->saveField('training_status_id', 3);
+					if($controller->Workflow->getEndOfWorkflow($saveData['WorkflowLog']['model_name'], $saveData['WorkflowLog']['step'], $saveData['WorkflowLog']['approve'])){
+						
+						if($this->name==$saveData['WorkflowLog']['model_name']){
+							$this->id =  $saveData['WorkflowLog']['record_id'];
+							$this->saveField('training_status_id', 3);
 
-						$data['staff_training_self_study_id'] = $saveData['WorkflowLog']['record_id'];
-						$data['training_status_id'] = '1';
+							$data['staff_training_self_study_id'] = $saveData['WorkflowLog']['record_id'];
+							$data['training_status_id'] = '1';
 
-						$this->StaffTrainingSelfStudyResult->save($data);
+							$this->StaffTrainingSelfStudyResult->save($data);
+						}else{
+							 $this->{$saveData['WorkflowLog']['model_name']}->updateAll(
+				    			array($saveData['WorkflowLog']['model_name'].'.training_status_id' => 3),
+				    			array($saveData['WorkflowLog']['model_name'].'.staff_training_self_study_id'=>  $saveData['WorkflowLog']['record_id'])
+							);
+						}
 					}
 				}else{
 					$this->id =  $saveData['WorkflowLog']['record_id'];
@@ -354,6 +362,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 			$saveData = $controller->request->data;
 
 			
+			
 			if($saveData['StaffTrainingSelfStudy']['resultEditable']=='2'){
 				if (isset($saveData['save'])) {
 				   	$saveData['StaffTrainingSelfStudyResult']['training_status_id'] = 1; 
@@ -370,27 +379,25 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 				unset($saveData['StaffTrainingSelfStudy']['files']);
 				$controller->request->data['StaffTrainingSelfStudy']['training_status_id'] = 1; 
 
-				if ($this->save($saveData, array('validate' => 'only'))){
-					if (isset($saveData['save'])) {
-					   	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 1; 
-					} else if (isset($saveData['submitForApproval'])) {
-				      	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 2; 
+				if (isset($saveData['save'])) {
+				   	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 1; 
+				} else if (isset($saveData['submitForApproval'])) {
+			      	$saveData['StaffTrainingSelfStudy']['training_status_id'] = 2; 
+				}
+				if($this->save($saveData['StaffTrainingSelfStudy'])){
+					$id = null;
+					if(isset($saveData['StaffTrainingSelfStudy']['id'])){
+						$id = $saveData['StaffTrainingSelfStudy']['id'];
 					}
-					if($this->save($saveData['StaffTrainingSelfStudy'])){
-						$id = null;
-						if(isset($saveData['StaffTrainingSelfStudy']['id'])){
-							$id = $saveData['StaffTrainingSelfStudy']['id'];
-						}
-						if(empty($id)){
-							$id = $this->getInsertID();
-						}
-						$controller->FileUploader->additionData = array('staff_training_self_study_id' => $id);
-						$controller->FileUploader->uploadFile(NULL, $postFileData);
-					
-						if ($controller->FileUploader->success) {
-							$controller->Message->alert('general.add.success');
-							return $controller->redirect(array('action' => 'trainingSelfStudy'));
-						}
+					if(empty($id)){
+						$id = $this->getInsertID();
+					}
+					$controller->FileUploader->additionData = array('staff_training_self_study_id' => $id);
+					$controller->FileUploader->uploadFile(NULL, $postFileData);
+				
+					if ($controller->FileUploader->success) {
+						$controller->Message->alert('general.add.success');
+						return $controller->redirect(array('action' => 'trainingSelfStudy'));
 					}
 				}
 			}

@@ -1,4 +1,6 @@
 <?php
+echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
 echo $this->Html->script('/Training/js/sessions', false);
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
@@ -31,13 +33,16 @@ if($this->request->data['TrainingSession']['sessionEditable']=='2'){
 	$readonly['readonly'] = 'readonly';
 }
 
-$startDate = date('Y-m-d');
-$endDate = date('Y-m-d');
-if(isset($this->data[$model]['start_date'])){
-	$startDate = $this->data[$model]['start_date'];
+$startDate = array('id' => 'startDate');
+$endDate = array('id' => 'endDate');
+if(!empty($this->data[$model]['id'])){
+	$redirectAction = array('action' => 'trainingSessionView', $this->data[$model]['id']);
+	$startDate['data-date'] = $this->data[$model]['start_date'];
+    $endDate['data-date'] = $this->data[$model]['end_date'];
 }
-if(isset($this->data[$model]['end_date'])){
-	$endDate = $this->data[$model]['end_date'];
+else{
+	$redirectAction = array('action' => 'trainingSession');
+    $endDate['data-date'] =  date('d-m-Y', time() + 86400);
 }
 ?>
 	<?php 
@@ -58,8 +63,8 @@ if(isset($this->data[$model]['end_date'])){
 			'class'=>'form-control training_provider')); 
 	 
 		if($this->request->data['TrainingSession']['sessionEditable']!='2'){
-			echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate', 'data-date' => $startDate));
-			echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'data-date' => $endDate));
+			echo $this->FormUtility->datepicker('start_date', $startDate);
+			echo $this->FormUtility->datepicker('end_date', $endDate);
 		}else{
 			echo $this->Form->input('start_date', array('type'=>'text', $readonly));
 			echo $this->Form->input('end_date', array('type'=>'text', $readonly));

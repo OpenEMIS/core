@@ -5,10 +5,10 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
 echo $this->Html->link(__('Back'), array('action' => 'resultView', $this->data[$modelName]['id']), array('class' => 'divider'));
-if($_edit) {
-	echo $this->Html->link(__('Download Template'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
-  	echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider'));
-}
+
+echo $this->Html->link(__('Download Template'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
+echo $this->Html->link(__('Upload Results'), array('action' => 'resultUpload'), array('class' => 'divider'));
+
 $this->end();
 $this->start('contentBody');
 ?>
