@@ -19,7 +19,7 @@ echo $this->Form->hidden('id');
 echo $this->Form->hidden('training_status_id');
 
 echo $this->Form->input('training_need_type', array(
-	'options' => $trainingNeedTypeOptions,
+	'options' => array_map('__',$trainingNeedTypeOptions),
 	'label' => array('text' => $this->Label->get('StaffTraining.need_type'), 'class' => 'col-md-3 control-label'),
 	'onchange' => 'objTrainingNeeds.getTrainingNeedTypeSelection(this)'
 ));
@@ -32,7 +32,7 @@ echo $this->Form->input('ref_course_id', array(
 ));
 echo $this->Form->hidden('ref_course_title', array('class' => 'ref_course_title'));
 echo $this->Form->input('ref_course_code', array('readonly' => 'readonly', 'class' => 'form-control ref_course_code', 'label' => array('text' => $this->Label->get('StaffTraining.code'), 'class' => 'col-md-3 control-label')));
-echo $this->Form->input('ref_course_description', array('readonly' => 'readonly', 'class' => 'form-control ref_course_description', 'type' => 'textarea'));
+echo $this->Form->input('ref_course_description', array('readonly' => 'readonly', 'class' => 'form-control ref_course_description', 'type' => 'textarea','label' => array('text' => $this->Label->get('StaffTraining.description'), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input('ref_course_requirement', array('readonly' => 'readonly', 'class' => 'form-control ref_course_requirement', 'label' => array('text' => $this->Label->get('StaffTraining.requirement'), 'class' => 'col-md-3 control-label')));
 echo '</div>';
 echo '<div class="divNeed ' . ((isset($this->request->data['StaffTrainingNeed']['training_need_type']) && $this->request->data['StaffTrainingNeed']['training_need_type']=='1') ? 'hide' : '').'">';
@@ -44,7 +44,7 @@ echo $this->Form->input('ref_need_id', array(
 ));
 echo $this->Form->input('ref_need_title', array('label' => array('text' => $this->Label->get('StaffTraining.course_title'), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input('ref_need_code', array('label' => array('text' => $this->Label->get('StaffTraining.code'), 'class' => 'col-md-3 control-label')));
-echo $this->Form->input('ref_need_description', array('type' => 'textarea'));
+echo $this->Form->input('ref_need_description', array('type' => 'textarea', 'label' => array('text' => $this->Label->get('StaffTraining.description'), 'class' => 'col-md-3 control-label')));
 echo $this->Form->input('ref_need_requirement', array('label' => array('text' => $this->Label->get('StaffTraining.requirement'), 'class' => 'col-md-3 control-label')));
 echo '</div>';
 
