@@ -47,6 +47,7 @@ $this->start('contentBody');
 </div>
 
 <div id="mainlist">
+	<?php if ($this->Paginator->counter('{:page}') > 1) : ?>
 	<div class="row">
 		<ul id="pagination">
 			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
@@ -54,6 +55,7 @@ $this->start('contentBody');
 			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
 		</ul>
 	</div>
+	<?php endif; ?>
 	
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
