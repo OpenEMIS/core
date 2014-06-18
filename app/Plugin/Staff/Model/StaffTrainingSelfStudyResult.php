@@ -14,27 +14,36 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-App::uses('AppHelper', 'View/Helper');
-App::uses('String', 'Utility');
-App::uses('Workflow', 'Controller/Component');
+class StaffTrainingSelfStudyResult extends StaffAppModel {
+	
+	public $belongsTo = array(
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'modified_user_id'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'foreignKey' => 'created_user_id'
+		),
+		'StaffTrainingSelfStudy',
+		'TrainingStatus',
+	);
 
-class TrainingUtilityHelper extends AppHelper {
-	public function ellipsis($string, $length = '30') {
-		return String::truncate($string, $length, array('ellipsis' => '...', 'exact' => false));
-	}
-
-	public function getTrainingStatus($module, $id, $status, $value) {
-		$workflow = new WorkflowComponent(new ComponentCollection);
-
-		if($value!=1 && $value!=4){
-			$newStatus = $workflow->getWorkflowStatus($module,$id, $value);
-			$status = !empty($newStatus) ? $newStatus : $status;
-		}
-
-		return $status;
-	}
-
-
-
-
+	public $validate = array(
+		'pass' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please select a valid Result.'
+			)
+		),
+		'result' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a valid Result.'
+			)
+		)
+	);
 }
+?>
