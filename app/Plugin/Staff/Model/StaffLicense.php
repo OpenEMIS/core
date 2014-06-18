@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffLicense extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('issue_date', 'expiry_date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date', 'expiry_date'));
 	
 	public $belongsTo = array(
 		'LicenseType',

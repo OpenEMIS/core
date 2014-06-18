@@ -21,10 +21,6 @@ class StaffTrainingResult extends AppModel {
 
 	public $headerDefault = 'Training Results';
 	
-	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
-	
 	public function trainingResult($controller, $params) {
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');

@@ -32,32 +32,21 @@ class QualityInstitutionVisit extends QualityAppModel {
                 'SchoolYear' => array(
                     'name' => 'Year'
                 ),
-                'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => ''
-                ),
                 'InstitutionSiteClass' => array(
                     'name' => 'Class',
                 ),
                 'EducationGrade' => array(
                     'name' => 'Grade'
                 ),
-                'QualityVisitTypes' => array(
+                'QualityVisitType' => array(
                     'name' => 'Quality Type'
                 ),
                 'QualityInstitutionVisit' => array(
                     'date' => 'Visit Date',
-                    'comment' => 'Comment'
+                    'comment' => 'Comment',
+					'staff_full_name' => 'Staff Name',
+					'evaluator_full_name' => 'Evaluator Name',
                 ),
-                'Staff' => array(
-                    'first_name' => 'Staff First Name',
-                    'middle_name' => 'Staff Middle Name',
-                    'last_name' => 'Staff Last Name'
-                ),
-                'SecurityUser' => array(
-                    'first_name' => 'Evaluator First Name',
-                    'last_name' => 'Evaluator Last Name'
-                )
             ),
             'fileName' => 'Report_Quality_Visit'
 		
@@ -405,13 +394,13 @@ class QualityInstitutionVisit extends QualityAppModel {
         $attachmentExisit = false;
 
         foreach ($filesData as $file) {
-            pr($file);
+          //  pr($file);
             if (!empty($file['tmp_name'])) {
                 $attachmentExisit = true;
                 break;
             }
         }
-        die;
+     //   die;
         return $attachmentExisit;
     }
 
@@ -478,57 +467,24 @@ class QualityInstitutionVisit extends QualityAppModel {
 
 		if ($index == 1) {
 			$options = array();
-			$options['recursive'] = -1;
 			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
 			
 			$options['conditions'] = array('QualityInstitutionVisit.institution_site_id' => $institutionSiteId);
 
 			$options['joins'] = array(
                     array(
-                        'table' => 'school_years',
-                        'alias' => 'SchoolYear',
-                        'conditions' => array('QualityInstitutionVisit.school_year_id = SchoolYear.id')
-                    ),
-                    array(
-                        'table' => 'institution_sites',
-                        'alias' => 'InstitutionSite',
-                        'conditions' => array('QualityInstitutionVisit.institution_site_id = InstitutionSite.id')
-                    ),
-                    array(
-                        'table' => 'institution_site_classes',
-                        'alias' => 'InstitutionSiteClass',
-                        'conditions' => array(
-                            'QualityInstitutionVisit.institution_site_class_id = InstitutionSiteClass.id',
-                        )
-                    ),
-                    array(
-                        'table' => 'institution_site_class_grades',
-                        'alias' => 'InstitutionSiteClassGrade',
-                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
-                    ),
-                    array(
-                        'table' => 'education_grades',
-                        'alias' => 'EducationGrade',
-                        'conditions' => array('EducationGrade.id = InstitutionSiteClassGrade.education_grade_id')
-                    ),
-                    array(
-                        'table' => 'staff',
-                        'alias' => 'Staff',
-                        'conditions' => array('Staff.id = QualityInstitutionVisit.staff_id')
-                    ),
-                    array(
                         'table' => 'security_users',
                         'alias' => 'SecurityUser',
-                        'conditions' => array('SecurityUser.id = QualityInstitutionVisit.created_user_id')
+                        'conditions' => array('QualityInstitutionVisit.created_user_id = SecurityUser.id')
                     ),
-                    array(
-                        'table' => 'quality_visit_types',
-                        'alias' => 'QualityVisitTypes',
-                        'conditions' => array('QualityVisitTypes.id = QualityInstitutionVisit.quality_type_id')
-                    )
                 );
 			
+			
+			$this->virtualFields['staff_full_name'] = "CONCAT(Staff.first_name,' ',Staff.last_name)";
+			$this->virtualFields['evaluator_full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.last_name)";
+			
 			$data = $this->find('all', $options);
+			
 			return $data;
 		}
 	}
