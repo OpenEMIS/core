@@ -49,6 +49,7 @@ $this->start('contentBody');
 </div>
 
 <div id="mainlist">
+	<?php if ($this->Paginator->counter('{:pages}') > 1) : ?>
 	<div class="row">
 		<ul id="pagination">
 			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
@@ -56,7 +57,9 @@ $this->start('contentBody');
 			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
 		</ul>
 	</div>
-<?php if ($total > 0) { ?>
+	<?php endif; ?>
+	
+	<?php if ($total > 0) { ?>
 		<div class="table-responsive">
 			<table class="table table-striped table-hover table-bordered">
 				<thead url="Staff/index">
@@ -69,14 +72,6 @@ $this->start('contentBody');
 							<span class="left"><?php echo __('Name'); ?></span>
 							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.first_name') ? $sorteddir : 'up'; ?>" order="Staff.first_name"></span>
 						</th>
-						<?php /*<th>
-							<span class="left"><?php echo __('Middle Name'); ?></span>
-							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.middle_name') ? $sorteddir : 'up'; ?>" order="Staff.middle_name"></span>
-						</th>
-						<th>
-							<span class="left"><?php echo __('Last Name'); ?></span>
-							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.last_name') ? $sorteddir : 'up'; ?>" order="Staff.last_name"></span>
-						</th> */ ?>
 						<th>
 							<span class="left"><?php echo __('Gender'); ?></span>
 							<span class="icon_sort_<?php echo ($sortedcol == 'Staff.gender') ? $sorteddir : 'up'; ?>" order="Staff.gender"></span>
@@ -87,7 +82,7 @@ $this->start('contentBody');
 						</th>
 					</tr>
 				</thead>
-	            <tbody>
+				<tbody>
 					<?php
 					foreach ($staff as $arrItems):
 						$id = $arrItems['Staff']['id'];
@@ -100,15 +95,13 @@ $this->start('contentBody');
 						?>
 						<tr row-id="<?php echo $id ?>">
 							<td><?php echo $identificationNo; ?></td>
-							<td><?php echo $this->Html->link($firstName.' '.$lastName, array('action' => 'viewStaff', $id), array('escape' => false)); ?></td>
-							<?php /*<td><?php echo $middleName; ?></td>
-							<td><?php echo $lastName; ?></td> */ ?>
+							<td><?php echo $this->Html->link($firstName.' '.$lastName, array('action' => 'view', $id), array('escape' => false)); ?></td>
 							<td><?php echo $gender; ?></td>
 							<td><?php echo $this->Utility->formatDate($birthday); ?></td>
 						</tr>
 					<?php endforeach; ?>
-	            </tbody>
-	        </table>
+				</tbody>
+			</table>
 		</div>
 	<?php } // end if total ?>
 

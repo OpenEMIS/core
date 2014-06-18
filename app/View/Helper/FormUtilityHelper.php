@@ -57,6 +57,11 @@ class FormUtilityHelper extends AppHelper {
 		return $html;
 	}
 	
+	public function getLabelOptions() {
+		$formOptions = $this->getFormDefaults();
+		return $formOptions['label'];
+	}
+	
 	public function getWizardButtons($buttons) {
 		$html = '<div class="form-group form-buttons">';
 		$html .= '<div class="col-md-offset-3">';

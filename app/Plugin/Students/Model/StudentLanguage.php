@@ -15,10 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentLanguage extends StudentsAppModel {
-
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('evaluation_date'));
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'Language',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -99,9 +98,10 @@ class StudentLanguage extends StudentsAppModel {
 		$controller->Navigation->addCrumb('Add Languages');
 		$header = __('Add Languages');
 		if ($controller->request->is(array('post', 'put'))) {
-			$this->create();
+			$data = $controller->request->data[$this->alias];
 			$data['student_id'] = $controller->Session->read('Student.id');
-	
+			$this->create();
+			
 			if ($this->save($data)) {
 				$id = $this->getLastInsertId();
 				$controller->Message->alert('general.add.success');
@@ -138,7 +138,7 @@ class StudentLanguage extends StudentsAppModel {
 		$header = __('Edit Language');
 
 		if ($controller->request->is('post') || $controller->request->is('put')) {
-			$languageData = $controller->request->data['StudentLanguage'];
+			$languageData = $controller->request->data[$this->alias];
 			$languageData['student_id'] = $controller->Session->read('Student.id');
 
 			if ($this->save($languageData)) {
@@ -162,16 +162,6 @@ class StudentLanguage extends StudentsAppModel {
 	}
 
 	public function languagesDelete($controller, $params) {
-		if ($controller->Session->check('Student.id') && $controller->Session->check('StudentLanguage.id')) {
-			$id = $controller->Session->read('StudentLanguage.id');
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-
-			$controller->Session->delete('StudentLanguage.id');
-			return $controller->redirect(array('action' => 'languages'));
-		}
+		return $this->remove($controller, 'languages');
 	}
 }

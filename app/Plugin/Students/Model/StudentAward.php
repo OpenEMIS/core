@@ -46,26 +46,23 @@ class StudentAward extends StudentsAppModel {
 	);
 
 	public $headerDefault = 'Awards';
-	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
 	
 	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'issue_date'),
-                array('field' => 'award', 'labelKey' => 'general.name' ),
-                array('field' => 'issuer'),
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'issue_date'),
+				array('field' => 'award', 'labelKey' => 'general.name' ),
+				array('field' => 'issuer'),
 				array('field' => 'comment'),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 	
 	public function award($controller, $params) {
 		$controller->Navigation->addCrumb($this->headerDefault);
@@ -89,37 +86,28 @@ class StudentAward extends StudentsAppModel {
 		
 		$controller->Session->write('StudentAward.id', $id);
 		$fields = $this->getDisplayFields($controller);
-        $controller->set(compact('header', 'data', 'fields', 'id'));
+		$controller->set(compact('header', 'data', 'fields', 'id'));
 	}
 	
 	public function awardDelete($controller, $params) {
-        if($controller->Session->check('Student.id') && $controller->Session->check('StudentAward.id')) {
-            $id = $controller->Session->read('StudentAward.id');
-            if($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-			$controller->Session->delete('StudentAward.id');
-            $controller->redirect(array('action' => 'award'));
-        }
-    }
+		return $this->remove($controller, 'award');
+	}
 	
 	public function awardAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
 		$controller->set('header', __('Add '.$this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'add');
 	}
 	
 	public function awardEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault);
 		$controller->set('header', __('Edit '.$this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'edit');
 		
 		$this->render = 'add';
 	}
 	
-	function setup_add_edit_form($controller, $params){
+	function setup_add_edit_form($controller, $params, $type){
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -131,7 +119,7 @@ class StudentAward extends StudentsAppModel {
 		else{
 			$controller->request->data[$this->name]['student_id'] = $controller->Session->read('Student.id');
 			if($this->save($controller->request->data)){
-				$controller->Message->alert('general.add.success');
+				$controller->Message->alert('general.' . $type . '.success');
 				return $controller->redirect(array('action' => 'award'));
 			}
 		}
@@ -154,7 +142,7 @@ class StudentAward extends StudentsAppModel {
 		$data = array();
 		
 		foreach($list as $obj) {
-			$studentAwardField = $obj['StudentAward'][$field];
+			$studentAwardField = $obj[$this->alias][$field];
 			
 			$data[] = array(
 				'label' => trim($studentAwardField),
@@ -167,14 +155,13 @@ class StudentAward extends StudentsAppModel {
 	
 	//Ajax method
 	public function awardAjaxFindAward($controller, $params) {
-        if ($controller->request->is('ajax')) {
+		if ($controller->request->is('ajax')) {
 			$this->render = false;
 			$type = $params['pass'][0];
-            $search = $params->query['term'];
-            $data = $this->autocomplete($search, $type);
+			$search = $params->query['term'];
+			$data = $this->autocomplete($search, $type);
 
-            return json_encode($data);
-        }
-    }
-
+			return json_encode($data);
+		}
+	}
 }

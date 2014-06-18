@@ -59,7 +59,7 @@ class StudentSpecialNeed extends StudentsAppModel {
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$header = $this->headerDefault;
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStudentId($controller->Session->read('StudentId'));
+		$data = $this->findAllByStudentId($controller->Session->read('Student.id'));
 		$controller->set(compact('header', 'data'));
 	}
 
@@ -81,32 +81,23 @@ class StudentSpecialNeed extends StudentsAppModel {
 	}
 	
 	public function specialNeedDelete($controller, $params) {
-		if($controller->Session->check('Student.id') && $controller->Session->check('StudentSpecialNeed.id')) {
-			$id = $controller->Session->read('StudentSpecialNeed.id');
-			if($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			$controller->Session->delete('StudentSpecialNeed.id');
-			$controller->redirect(array('action' => 'specialNeed'));
-		}
+		return $this->remove($controller, 'specialNeed');
 	}
 	
 	public function specialNeedAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
 		$controller->set('header', __('Add ' . $this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'add');
 	}
 	
 	public function specialNeedEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault);
 		$controller->set('header', __('Edit ' . $this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'edit');
 		$this->render = 'add';
 	}
 	
-	function setup_add_edit_form($controller, $params){
+	function setup_add_edit_form($controller, $params, $type){
 		$specialNeedTypeOptions = $this->SpecialNeedType->find('list', array('fields'=> array('id', 'name')));
 		$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
 		if($controller->request->is('get')){
@@ -118,9 +109,9 @@ class StudentSpecialNeed extends StudentsAppModel {
 			}
 		}
 		else{
-			$controller->request->data[$this->name]['student_id'] = $controller->Session->read('StudentId');
-			if($this->save($controller->request->data)){
-				$controller->Message->alert('general.add.success');
+			$controller->request->data[$this->name]['student_id'] = $controller->Session->read('Student.id');
+			if($this->save($controller->request->data)) {
+				$controller->Message->alert('general.' . $type . '.success');
 				return $controller->redirect(array('action' => 'specialNeed'));
 			}
 		}
