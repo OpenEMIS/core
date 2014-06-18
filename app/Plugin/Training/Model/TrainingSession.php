@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class TrainingSession extends TrainingAppModel {
-	public $actsAs = array('ControllerAction', 'Containable', 'Datepicker' => array('start_date', 'end_date'));
+	public $actsAs = array('ControllerAction', 'Containable', 'DatePicker' => array('start_date', 'end_date'));
 
 	public $trainerTypeOptions = array('1'=>'Internal', '2'=>'External');
 
