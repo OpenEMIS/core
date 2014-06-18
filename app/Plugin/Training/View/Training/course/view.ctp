@@ -59,11 +59,7 @@ $this->start('contentBody'); ?>
 		<?php 
 		if (!empty($trainingCourseTargetPopulations)){ 
 			foreach($trainingCourseTargetPopulations as $val){
-				if($val['TrainingCourseTargetPopulation']['position_title_table']=='teacher_position_titles'){
-					echo $teacherPositionTitles[$val['TrainingCourseTargetPopulation']['position_title_id']] . '<br />';
-				}else{
-					echo $staffPositionTitles[$val['TrainingCourseTargetPopulation']['position_title_id']] . '<br />';
-				}
+				echo $staffPositionTitles[$val['TrainingCourseTargetPopulation']['staff_position_title_id']] . '<br />';
 			}
 		}else{
 			echo "-";
@@ -100,7 +96,7 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Training Level'); ?></div>
-	<div class="col-md-6"><?php echo $obj['training_level_id']; ?></div>
+	<div class="col-md-6"><?php echo $data['TrainingLevel']['name']; ?></div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Prerequisite'); ?></div>
@@ -115,8 +111,16 @@ $this->start('contentBody'); ?>
 	</div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo __('Pass Result'); ?></div>
-	<div class="col-md-6"><?php echo $obj['pass_result']; ?></div>
+	<div class="col-md-3"><?php echo __('Result Type'); ?></div>
+	<div class="col-md-6">
+		<?php if (!empty($trainingCourseResultTypes)){ 
+			foreach($trainingCourseResultTypes as $val){
+				echo $val['TrainingResultType']['name']  . '<br />';
+			}
+		}else{
+			echo "-";
+		} ?>
+	</div>
 </div>
 <div class="row">
     <div class="col-md-3"><?php echo __('Attachments'); ?></div>

@@ -15,10 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentNationality extends StudentsAppModel {
-
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'Country',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -53,10 +52,6 @@ class StudentNationality extends StudentsAppModel {
 			)
 		);
 		return $fields;
-	}
-	
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
 	}
 	
 	public function nationalities($controller, $params) {
@@ -134,18 +129,7 @@ class StudentNationality extends StudentsAppModel {
 	}
 
 	public function nationalitiesDelete($controller, $params) {
-		if ($controller->Session->check('Student.id') && $controller->Session->check('StudentNationality.id')) {
-			$id = $controller->Session->read('StudentNationality.id');
-			
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			$controller->Session->delete('StudentNationality.id');
-			
-			return $controller->redirect(array('action' => 'nationalities'));
-		}
+		return $this->remove($controller, 'nationalities');
 	}
 
 }

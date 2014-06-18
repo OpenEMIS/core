@@ -215,6 +215,7 @@ var objTrainingCourses = {
         var success = function(data, status) {
             var callback = function() {
                 table.find('.table_body tbody').append(data);
+                 objTrainingCourses.validateProvider();
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -241,7 +242,79 @@ var objTrainingCourses = {
             div.append(input);
         }
         row.remove();
-        //objTrainingCourses.validateTargetPopulation();
+        objTrainingCourses.validateProvider();
+    },
+
+     validateProvider: function() {
+          var val = new Array();
+          var c = 0;
+          $("#provider_message").remove();
+          $('.validate-provider').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.provider').prepend('<div id="provider_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Provider</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    
+   validateResultType: function() {
+          var val = new Array();
+          var c = 0;
+          $("#result_type_message").remove();
+          $('.validate-result-type').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.result_type').prepend('<div id="result_type_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Result Type</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    addResultType: function(obj) {
+        var table = $('.result_type');
+        var index = table.find('.table_row').length + $('.delete-result-type input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body tbody').append(data);
+                objTrainingCourses.validateResultType();
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
+
+    
+    deleteResultType: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-result-type');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
+        objTrainingCourses.validateResultType();
     },
 
     attachAutoComplete: function(element, url, callback) {

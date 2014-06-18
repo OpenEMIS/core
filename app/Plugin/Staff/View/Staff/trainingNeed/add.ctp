@@ -35,7 +35,7 @@ echo $this->Form->input('ref_course_code', array('readonly' => 'readonly', 'clas
 echo $this->Form->input('ref_course_description', array('readonly' => 'readonly', 'class' => 'form-control ref_course_description', 'type' => 'textarea'));
 echo $this->Form->input('ref_course_requirement', array('readonly' => 'readonly', 'class' => 'form-control ref_course_requirement', 'label' => array('text' => $this->Label->get('StaffTraining.requirement'), 'class' => 'col-md-3 control-label')));
 echo '</div>';
-echo '<div class="divNeed ' . (!(isset($this->request->data['StaffTrainingNeed']['training_need_type']) || (isset($this->request->data['StaffTrainingNeed']['training_need_type']) && $this->request->data['StaffTrainingNeed']['training_need_type']=='1')) ? 'hide' : '').'">';
+echo '<div class="divNeed ' . ((isset($this->request->data['StaffTrainingNeed']['training_need_type']) && $this->request->data['StaffTrainingNeed']['training_need_type']=='1') ? 'hide' : '').'">';
 echo $this->Form->input('ref_need_id', array(
 	'options' => $trainingNeedCategoryOptions,
 	'label' => array('text' => $this->Label->get('StaffTraining.need_category'), 'class' => 'col-md-3 control-label'),
