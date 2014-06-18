@@ -31,17 +31,14 @@ class StaffReport extends StaffAppModel {
                     'name AS Year' => ''
                 ),
                 'InstitutionSite' => array(
-                    'name AS InstitutionSiteName' => '',
-                    'code AS InstitutionSiteCode' => '',
+                    //'name AS InstitutionSiteName' => '',
+                    //'code AS InstitutionSiteCode' => '',
                     'id AS InstitutionSiteId' => ''
                 ),
                 'InstitutionSiteClass' => array(
                     'name AS Class' => '',
                     'id AS ClassId' => ''
                 ),
-              /* 'InstitutionSiteClassStaff' => array(
-                    'staff_id' => ''
-                ),*/
                  'EducationGrade' => array(
                     'name AS Grade' => ''
                 ),
@@ -53,7 +50,7 @@ class StaffReport extends StaffAppModel {
                     'title AS RubricHeader' => ''
                 ),
                 'RubricTemplateColumnInfo' => array(
-                    'COALESCE(SUM(weighting),0) AS total' => ''
+                    'COALESCE(SUM(weighting),0) AS rubric_score' => ''
                 ),
             ),
             'FileName' => 'Report_Staff_Quality_Assurance'
@@ -79,9 +76,11 @@ class StaffReport extends StaffAppModel {
                 ),
                 'QualityInstitutionVisit' => array(
                     'date' => 'Visit Date',
-                    'comment' => 'Comment'
+                    'comment' => 'Comment',
+					'staff_full_name' => 'Staff Name',
+					'evaluator_full_name' => 'Evaluator Name',
                 ),
-                'Staff' => array(
+              /*  'Staff' => array(
                     'first_name' => 'Staff First Name',
                     'middle_name' => 'Staff Middle Name',
                     'last_name' => 'Staff Last Name'
@@ -89,7 +88,7 @@ class StaffReport extends StaffAppModel {
                 'SecurityUser' => array(
                     'first_name' => 'Evaluator First Name',
                     'last_name' => 'Evaluator Last Name'
-                )
+                )*/
             ),
             'FileName' => 'Report_Staff_Quality_Visit'
         )
@@ -158,7 +157,10 @@ class StaffReport extends StaffAppModel {
                     array(
                         'table' => 'institution_site_class_grades',
                         'alias' => 'InstitutionSiteClassGrade',
-                        'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+                        'conditions' => array(
+                            'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+							'InstitutionSiteClassGrade.status = 1'
+                        )
                     ),
                     array(
                         'table' => 'education_grades',
@@ -184,6 +186,9 @@ class StaffReport extends StaffAppModel {
                         'conditions' => array('QualityVisitTypes.id = QualityInstitutionVisit.quality_type_id')
                     )
                 );
+				
+				$modal->virtualFields['staff_full_name'] = "CONCAT(Staff.first_name,' ',Staff.last_name)";
+				$modal->virtualFields['evaluator_full_name'] = "CONCAT(SecurityUser.first_name,' ',SecurityUser.last_name)";
             } else if ($this->reportMapping[$name]['Model'] == 'InstitutionSite') {
 
                 $options['recursive'] = -1;
@@ -213,6 +218,7 @@ class StaffReport extends StaffAppModel {
                         'alias' => 'InstitutionSiteClassGrade',
                         'conditions' => array(
                             'InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id',
+							'InstitutionSiteClassGrade.status = 1'
                         //    'QualityInstitutionRubric.institution_site_class_grade_id = InstitutionSiteClassGrade.id',
                         )
                     ),
@@ -296,7 +302,7 @@ class StaffReport extends StaffAppModel {
             //   pr($this->reportMapping[$name]['Model']); pr($options); die;
             $data = $modal->find('all', $options);
             
-         //  pr($data);die;
+         // pr($data);die;
         }
         return $data;
     }
@@ -306,10 +312,10 @@ class StaffReport extends StaffAppModel {
         $dateFormat = 'd F, Y';
 
         if ($name == 'QA Report') {
-            $header = array(array('Year'), array('Institution Site Name'), array('Institution Site Code'), array('Class'), array('Grade'));
+            $header = array(array('Year'), array('Institution Name'), array('Institution Code'), array('Class'), array('Grade'));
             $QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
             $newData = $QualityBatchReport->processSchoolDataToCSVFormat($data);
-            $newData = $QualityBatchReport->breakReportByYear($newData, 'no', $header); // pr($tempArray);die;
+            $newData = $QualityBatchReport->breakReportByYear($newData, 'no', $header);  //pr($newData);die;
             if(!empty($data)){
                 $this->institutionSiteId = $data[0]['InstitutionSite']['InstitutionSiteId'];
                 $this->schoolYear = $data[0]['SchoolYear']['Year'];
@@ -339,11 +345,11 @@ class StaffReport extends StaffAppModel {
         ini_set('max_execution_time', 600); //increase max_execution_time to 10 min if data set is very large
         //create a file
 
-        $csv_file = fopen('php://output', 'w');
+       $csv_file = fopen('php://output', 'w');
         header('Content-type: application/csv');
         header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
         $header_row = $this->getHeader($this->ReportData['name']);
-
+//pr($header_row);
         fputcsv($csv_file, $header_row, ',', '"');
         // Each iteration of this while loop will be a row in your .csv file where each field corresponds to the heading of the column
         foreach ($arrData as $arrSingleResult) {
@@ -352,7 +358,7 @@ class StaffReport extends StaffAppModel {
 
                 foreach ($arrFields as $col) {
                     $row[] = $col;
-                    //  pr($col);
+                     // pr($col);
                 }
             }
             // pr('---------');
@@ -395,17 +401,10 @@ class StaffReport extends StaffAppModel {
 
         if (array_key_exists($name, $this->reportMapping)) {
             $header = $this->reportMapping[$name]['fields'];
-
-
             if ($name == 'QA Report') {
-                //unset($header['InstitutionSiteClass']['id']);
-                //unset($header['RubricTemplate']['id']);
-               // pr($this->institutionSiteId);
-             //   pr($this->schoolYear);
-                $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-                $header = $RubricsTemplate->getInstitutionQAReportHeader($this->institutionSiteId,$this->schoolYear);
+				$header = $this->reportsGetHeader();
+				return $header;
             }
-            //     pr($header);
         }
         $new = array();
         foreach ($header as $model => &$arrcols) {
@@ -421,114 +420,41 @@ class StaffReport extends StaffAppModel {
         return $new;
     }
 
-    //FORMATING REPORTS
-    /*public function processQADataToCSVFormat($data) {
-        
-        //pr($data); die;
-        $tempArray = array();
-        $classId = '';
-        $rubricName = '';
-        $rubricId = '';
+	public $reportDefaultHeader = array(array('Year'), array('Class'), array('Grade'));
+	public function reportsGetHeader() {
+		$institutionSiteId = $this->institutionSiteId;
+		//$index = $args[1];
+		$QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
+		
+		$QualityInstitutionRubric->unbindModel(array('belongsTo' => array('CreatedUser', 'ModifiedUser','RubricsTemplate' ,'InstitutionSiteClass')));
+		$data = $QualityInstitutionRubric->find('first', array(
+			//'fields' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'),
+			'order' => array('SchoolYear.name DESC', ),
+			'fields' => array('SchoolYear.*', 'QualityInstitutionRubric.*', 'InstitutionSiteClass.*','InstitutionSiteClassGrade.*'),
+			'group' => array('SchoolYear.name', 'QualityInstitutionRubric.rubric_template_id'/*, 'InstitutionSiteClassGrade.education_grade_id'*/),
+			'conditions' => array('QualityInstitutionRubric.institution_site_id' => $institutionSiteId, 'Staff.id' => $this->staffId),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array('InstitutionSiteClass.id = QualityInstitutionRubric.institution_site_class_id')
+				),
+				array(
+					'table' => 'institution_site_class_grades',
+					'alias' => 'InstitutionSiteClassGrade',
+					'conditions' => array('InstitutionSiteClassGrade.institution_site_class_id = InstitutionSiteClass.id')
+				)
+			)
+		));
 
-        $dataCount = count($data);
+		$year = !empty($data['SchoolYear']['name'])?$data['SchoolYear']['name'] : NULL;
+		$gradeId = !empty($data['InstitutionSiteClassGrade']['education_grade_id'])?$data['InstitutionSiteClassGrade']['education_grade_id'] : NULL;
 
-        $rubricTotal = 0;
-        $prevRubricTotal = 0;
-
-        $RubricsTemplate = ClassRegistry::init('Quality.RubricsTemplate');
-        $rubricTemplateWeightingInfo = $RubricsTemplate->getRubricTemplateWeightingInfo();
-
-        foreach ($data AS $num => $row) {
-            $insertEmptyRow = false;
-            $currentClassId = $row['InstitutionSiteClass']['id'];
-            $currentRubricName = $row['RubricTemplate']['name'];
-            $currentRubricId = $row['RubricTemplate']['id'];
-            $prevRubricId = $rubricId;
-            
-            if(empty($currentClassId)){
-                continue;
-            }
-            
-            $_tempObjArr = array();
-            foreach ($row as $key => $value) {
-                if (!empty($classId) && !empty($rubricName) && $rubricName != $currentRubricName) {
-                    if ($rubricName != $currentRubricName && $key == 'SchoolYear') {
-                        $insertEmptyRow = true;
-                        $rubricName = $currentRubricName;
-                        $rubricId = $currentRubricId;
-                        $prevRubricTotal = $rubricTotal;
-                        $rubricTotal = 0;
-                    }
-                } else {
-                    $classId = $currentClassId;
-                    $rubricName = $currentRubricName;
-                    $rubricId = $currentRubricId;
-                }
-
-                if ($key == '0') {
-                    $_sumValue = $value["COALESCE(SUM(`RubricTemplateColumnInfo`.`weighting`),0)"];
-                    $rubricTotal += $_sumValue;
-                    $selectedWeightingInfo = $rubricTemplateWeightingInfo[$currentRubricId];
-
-                    $_sumValue = round(($_sumValue / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
-                    $_tempObjArr['total']['value'] = $_sumValue;
-                } else if ($key == 'RubricTemplate') {
-                    $_tempObjArr[$key]['name'] = $value['name'];
-                } else if ($key == 'InstitutionSiteClass') {
-                    $_tempObjArr[$key]['name'] = $value['name'];
-                } else {
-                    $_tempObjArr[$key] = $value;
-                }
-            }
-
-            if ($insertEmptyRow) {
-                $this->addStaffResultsCSVRow($tempArray,count($_tempObjArr), $rubricTemplateWeightingInfo[$prevRubricId], $prevRubricTotal);
-            }
-            $tempArray[] = $_tempObjArr;
-
-            if ($num == $dataCount - 1) {//Last to be insert
-                $this->addStaffResultsCSVRow($tempArray,count($_tempObjArr), $rubricTemplateWeightingInfo[$currentRubricId], $rubricTotal);
-            }
-        }
-        
-        if(empty($tempArray)){
-            $tempArray[][] = array('');
-        }
-        
-        return $tempArray;
-    }
-
-    private function addStaffTotalCSVRow($count, $dataArr) {
-        $totalArr = array();
-        for ($i = 0; $i <= $count; $i ++) {
-            if ($i == $count - 1) {
-                $totalArr[] = array($dataArr['field']);
-            } else if ($i == $count) {
-                $totalArr[] = array($dataArr['scores']);
-            } else {
-                $totalArr[] = array('');
-            }
-        }
-
-        return $totalArr;
-    }
-
-    private function addStaffResultsCSVRow(&$tempArray, $dummyEmptyArrRowCounter, $selectedWeightingInfo, $score ) {
-        $passFail = 'Fail';
-        $_rubricTotalMark = $score;
-        $_rubricTotalMarkPercent = round(($score / $selectedWeightingInfo['TotalWeighting']) * 100, 2);
-
-        if ($selectedWeightingInfo['WeightingType'] == 'percent') {
-            $_rubricTotalMark = $_rubricTotalMarkPercent;
-        }
-        if ($_rubricTotalMark >= $selectedWeightingInfo['PassMark']) {
-            $passFail = 'Pass';
-        }
-
-        // $_tempObjArr['PassFail']['value'] = $passFail;
-        $tempArray[] = $this->addStaffTotalCSVRow($dummyEmptyArrRowCounter, array('field' => 'Total', 'scores' => $_rubricTotalMarkPercent));
-        $tempArray[] = $this->addStaffTotalCSVRow($dummyEmptyArrRowCounter, array('field' => 'Pass / Fail', 'scores' => $passFail));
-        $tempArray[] = array();
-    }*/
-
+		$QualityBatchReport = ClassRegistry::init('Quality.QualityBatchReport');
+		$headerOptions = array('year' => $year, 'gradeId' => $gradeId, 'header' => $this->reportDefaultHeader);
+		$headers = $QualityBatchReport->getInstitutionQAReportHeader($institutionSiteId, $headerOptions);
+	//	pr($headerOptions);
+		
+		return $QualityInstitutionRubric->getCSVHeader($headers);
+	}
 }
