@@ -102,11 +102,6 @@ class StaffTrainingNeed extends StaffAppModel {
 			)
 		)
   	);
-
-	
-    public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
 	
 	public $headerDefault = 'Training Needs';
 		
@@ -116,7 +111,7 @@ class StaffTrainingNeed extends StaffAppModel {
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$header = __($this->headerDefault);
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-		$data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
+		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
 		$controller->set(compact('header' ,'data'));
 	}
 
@@ -325,7 +320,7 @@ class StaffTrainingNeed extends StaffAppModel {
 				}
 			}
 		}else{
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
+			$controller->request->data[$this->name]['staff_id'] = $controller->Session->read('Staff.id');
 			
 			$data = $controller->request->data;
 			
