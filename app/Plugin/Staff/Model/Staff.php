@@ -28,17 +28,24 @@ class Staff extends StaffAppModel {
 			)
 		),
 		'CustomReport',
-	//	'ControllerAction',
-		'DatePicker' => array('date_of_birth')
+		'DatePicker' => array('date_of_birth'),
+		'FileUpload' => array(
+			array(
+				'name' => 'photo_name',
+				'content' => 'photo_content',
+				'size' => '1MB',
+				'allowEmpty' => true
+			)
+		)
 	);
 
-	public $hasMany = array(
+	public $hasMany = array(/*
 		'TrainingSessionTrainer' => array(
 			'className' => 'TrainingSessionTrainer',
 			'foreignKey' => 'ref_trainer_id',
             'conditions' => array('ref_trainer_table' => 'Staff'),
 			'dependent' => true
-		),
+		),*/
 		'StaffTrainingNeed' => array(
 			'className' => 'StaffTrainingNeed',
 			'foreignKey' => 'staff_id',
@@ -119,13 +126,6 @@ class Staff extends StaffAppModel {
 			)
 		)
 	);
-	
-	public function getLookupVariables() {
-		$lookup = array(
-			'Positions' => array('model' => 'Staff.StaffCategory')
-		);
-		return $lookup;
-	}
 	
 	public function paginate($conditions, $fields, $order, $limit, $page = 1, $recursive = null, $extra = array()) {
 		return $this->getPaginate($conditions, $fields, $order, $limit, $page, $recursive, $extra);

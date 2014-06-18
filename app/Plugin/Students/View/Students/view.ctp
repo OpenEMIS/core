@@ -2,10 +2,10 @@
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Overview'));
 $this->start('contentActions');
-if($_edit) {
+if ($_edit) {
 	echo $this->Html->link(__('Edit'), array('action' => 'edit'), array('class' => 'divider'));
 }
-if($_delete) {
+if ($_delete) {
 	echo $this->Html->link(__('Delete'), array('action' => 'delete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 echo $this->Html->link(__('History'), array('action' => 'history'),	array('class' => 'divider'));
@@ -19,7 +19,7 @@ $obj = $data['Student'];
 	<legend><?php echo __('Information'); ?></legend>
 	<?php
 		$src = $this->Image->getBase64($obj['photo_name'], $obj['photo_content']);
-		if(is_null($src)) {
+		if (is_null($src)) {
 			$src = $this->webroot . 'Students/img/default_student_profile.jpg';
 		}
 	?>
@@ -48,7 +48,6 @@ $obj = $data['Student'];
 		<div class="col-md-3"><?php echo __('Gender'); ?></div>
 		<div class="col-md-6"><?php echo $this->Utility->formatGender($obj['gender']); ?></div>
 	</div>
-
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Date of Birth'); ?></div>
 		<div class="col-md-6"><?php echo $this->Utility->formatDate($obj['date_of_birth']); ?></div>
@@ -59,7 +58,7 @@ $obj = $data['Student'];
 	<legend><?php echo __('Address'); ?></legend>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Address'); ?></div>
-		<div class="col-md-6"><?php echo nl2br($obj['address']); ?></div>
+		<div class="col-md-6 address"><?php echo nl2br($obj['address']); ?></div>
 	</div>
 	<div class="row">
 		<div class="col-md-3"><?php echo __('Postal Code'); ?></div>
@@ -67,22 +66,19 @@ $obj = $data['Student'];
 	</div>
 </fieldset>
 
-<?php if($obj['address_area_id']>0){ ?>
+<?php if ($obj['address_area_id']>0) : ?>
 </fieldset>
 	<fieldset class="section_break">
 	<legend><?php echo __('Address Area'); ?></legend>
 	<?php echo $this->FormUtility->areas($obj['address_area_id']); ?>
 </fieldset>
-<?php } ?>
+<?php endif ?>
 
-<?php if($obj['birthplace_area_id']>0){ ?>
+<?php if ($obj['birthplace_area_id']>0) : ?>
 <fieldset class="section_break">
 	<legend><?php echo __('Birth Place Area'); ?></legend>
 	<?php echo $this->FormUtility->areas($obj['birthplace_area_id']); ?>
 </fieldset>
-<?php } ?>
-
-
-<?php echo $this->Form->end(); ?>
+<?php endif ?>
 
 <?php $this->end(); ?>
