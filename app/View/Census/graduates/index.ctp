@@ -26,11 +26,11 @@ echo $this->element('census/year_options');
             <table class="table table-striped table-hover table-bordered">
                 <thead>
                     <tr>
-                        <th class="table_cell cell_programme"><?php echo __('Programme'); ?></th>
-                        <th class="table_cell cell_certificate"><?php echo __('Certification'); ?></th>
-                        <th class="table_cell"><?php echo __('Male'); ?></th>
-                        <th class="table_cell"><?php echo __('Female'); ?></th>
-                        <th class="table_cell"><?php echo __('Total'); ?></th>
+                        <th class="cell_programme"><?php echo __('Programme'); ?></th>
+                        <th class="cell_certificate"><?php echo __('Certification'); ?></th>
+                        <th><?php echo __('Male'); ?></th>
+                        <th><?php echo __('Female'); ?></th>
+                        <th><?php echo __('Total'); ?></th>
                     </tr>
                 </thead>
 
@@ -45,11 +45,11 @@ echo $this->element('census/year_options');
                         }
                         ?>
                         <tr>
-                            <td class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_programme_name']; ?></td>
-                            <td class="table_cell <?php echo $record_tag; ?>"><?php echo $record['education_certification_name']; ?></td>
-                            <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['male']) ? 0 : $record['male']; ?></td>
-                            <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo is_null($record['female']) ? 0 : $record['female']; ?></td>
-                            <td class="table_cell cell_number <?php echo $record_tag; ?>"><?php echo $record['total']; ?></td>
+                            <td class="<?php echo $record_tag; ?>"><?php echo $record['education_programme_name']; ?></td>
+                            <td class="<?php echo $record_tag; ?>"><?php echo $record['education_certification_name']; ?></td>
+                            <td class="cell-number <?php echo $record_tag; ?>"><?php echo is_null($record['male']) ? 0 : $record['male']; ?></td>
+                            <td class="cell-number <?php echo $record_tag; ?>"><?php echo is_null($record['female']) ? 0 : $record['female']; ?></td>
+                            <td class="cell-number <?php echo $record_tag; ?>"><?php echo $record['total']; ?></td>
                         </tr>
     <?php } ?>
                 </tbody>

@@ -22,10 +22,11 @@ $this->start('contentBody');
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin'=>'Students'));
 $formOptions['id'] = 'award';
 $formOptions['selectAwardUrl']=$this->params['controller']."/awardAjaxFindAward/";
+$labelOptions = $this->FormUtility->getLabelOptions();
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->FormUtility->datepicker('issue_date');
-echo $this->Form->input('award', array('id' => 'searchAward', 'class' => 'form-control award', 'label'=>array('text'=> $this->Label->get('general.name'),'class'=>'col-md-3 control-label')));
+echo $this->Form->input('award', array('id' => 'searchAward', 'class' => 'form-control award', 'label'=>array('text'=> $this->Label->get('general.name'),'class'=>$labelOptions['class'])));
 echo $this->Form->input('issuer', array('id' => 'searchIssuer', 'class' => 'form-control issuer'));
 echo $this->Form->input('comment');
 

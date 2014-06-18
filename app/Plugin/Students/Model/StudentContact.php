@@ -15,10 +15,10 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentContact extends StudentsAppModel {
-
 	public $actsAs = array('ControllerAction');
+	
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'ContactType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -235,19 +235,6 @@ class StudentContact extends StudentsAppModel {
 	}
 
 	public function contactsDelete($controller, $params) {
-		if ($controller->Session->check('Student.id') && $controller->Session->check('StudentContact.id')) {
-			$id = $controller->Session->read('StudentContact.id');
-			$studentId = $controller->Session->read('Student.id');
-
-			if($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			
-			$controller->Session->delete('StudentContact.id');
-			return $controller->redirect(array('action' => 'contacts'));
-		}
+		return $this->remove($controller, 'contacts');
 	}
-
 }

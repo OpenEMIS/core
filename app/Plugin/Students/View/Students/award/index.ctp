@@ -1,6 +1,4 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
@@ -16,10 +14,10 @@ $tableData = array();
 foreach($data as $obj) {
     $id = $obj[$model]['id'];
 	$row = array();
-        $row[] = $obj[$model]['issue_date'];
-        $row[] = $this->Html->link($obj[$model]['award'], array('action' => 'awardView', $id), array('escape' => false));
-        $row[] = $obj[$model]['issuer'];
-        $row[] = $obj[$model]['comment'] ;
+	$row[] = $obj[$model]['issue_date'];
+	$row[] = $this->Html->link($obj[$model]['award'], array('action' => 'awardView', $id), array('escape' => false));
+	$row[] = $obj[$model]['issuer'];
+	$row[] = $obj[$model]['comment'] ;
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));

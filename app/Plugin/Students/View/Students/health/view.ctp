@@ -12,4 +12,3 @@ $this->start('contentBody');
 echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
 $this->end();
 ?>
-
