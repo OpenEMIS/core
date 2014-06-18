@@ -242,18 +242,18 @@ class StaffTrainingNeed extends StaffAppModel {
 		 	$institutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 		 	$staffPositionID = $institutionSiteStaff->find('list', 
 				array(
-					'fields'=>array('institutionSitePosition.staff_position_title_id'),
+					'fields'=>array('InstitutionSitePosition.staff_position_title_id'),
 					'joins' => array(
 						array(
 							'type' => 'LEFT',
 							'table' => 'institution_site_positions',
-							'alias' => 'institutionSitePosition',
+							'alias' => 'InstitutionSitePosition',
 							'conditions' => array(
-								'institutionSitePosition.id = institutionSiteStaff.institution_site_position_id'
+								'InstitutionSitePosition.id = InstitutionSiteStaff.institution_site_position_id'
 							)
 						)
 					),
-					'conditions'=>array('institutionSiteStaff.staff_id'=>$staffId)
+					'conditions'=>array('InstitutionSiteStaff.staff_id'=>$staffId)
 				)
 			);
 
