@@ -1,5 +1,4 @@
 <?php
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 
@@ -35,6 +34,5 @@ if (!$WizardMode) {
 }
 
 echo $this->Form->end();
-
 $this->end();
 ?>

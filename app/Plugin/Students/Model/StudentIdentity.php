@@ -15,10 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentIdentity extends StudentsAppModel {
-
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date', 'expiry_date'));
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'IdentityType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -76,10 +75,6 @@ class StudentIdentity extends StudentsAppModel {
 		return true;
 	}
 
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
-	}
-
 	public function getDisplayFields($controller) {
 		$fields = array(
 			'model' => $this->alias,
@@ -113,7 +108,7 @@ class StudentIdentity extends StudentsAppModel {
 		$controller->Navigation->addCrumb(__('Add Identity'));
 		$header = __('Add Identity');
 		if ($controller->request->is(array('post', 'put'))) {
-			$data = $controller->request->data['StudentIdentity'];
+			$data = $controller->request->data[$this->alias];
 
 			$this->create();
 			$data['student_id'] = $controller->Session->read('Student.id');
@@ -172,17 +167,6 @@ class StudentIdentity extends StudentsAppModel {
 	}
 
 	public function identitiesDelete($controller, $params) {
-		if ($controller->Session->check('Student.id') && $controller->Session->check('StudentIdentity.id')) {
-			$id = $controller->Session->read('StudentIdentity.id');
-
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			$controller->Session->delete('StudentIdentity.id');
-			return $controller->redirect(array('action' => 'identities'));
-		}
+		return $this->remove($controller, 'identities');
 	}
-
 }

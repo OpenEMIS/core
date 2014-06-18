@@ -19,8 +19,8 @@ App::uses('AppModel', 'Model');
 class StudentBankAccount extends AppModel {
 	public $actsAs = array('ControllerAction','Containable');
 	public $belongsTo = array(
-		'BankBranch' => array('foreignKey' => 'bank_branch_id'),
-		'Student' => array('foreignKey' => 'student_id'),
+		'BankBranch',
+		'Students.Student',
 		'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
 		'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser'),
 	);
@@ -180,16 +180,6 @@ class StudentBankAccount extends AppModel {
 	}
 
 	public function bankAccountsDelete($controller, $params) {
-		if ($controller->Session->check('Student.id') && $controller->Session->check('StudentBankAccount.id')) {
-			$id = $controller->Session->read('StudentBankAccount.id');
-
-			if($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			$controller->Session->delete('StudentBankAccount.id');
-			return $controller->redirect(array('action' => 'bankAccounts'));
-		}
+		return $this->remove($controller, 'bankAccounts');
 	}
 }

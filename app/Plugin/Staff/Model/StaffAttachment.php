@@ -14,21 +14,26 @@ have received a copy of the GNU General Public License along with this program. 
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
-// App::uses('StaffsAppModel', 'Model');
-
 class StaffAttachment extends StaffAppModel {
-	
 	public $actsAs = array('ControllerAction');
-    public $belongsTo = array(
-		'Staff',
+	public $belongsTo = array(
+		'Staff.Staff',
 		'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
 		'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser')
-		);
+	);
+	public $virtualFields = array(
+		'blobsize' => "OCTET_LENGTH(file_content)"
+	);
+	public $validate = array(
+		'name' => array(
+			'ruleRequired' => array(
+				'rule' => 'notEmpty',
+				'required' => true,
+				'message' => 'Please enter a File name'
+			)
+		)
+	);
 
-    public $virtualFields = array(
-        'blobsize' => "OCTET_LENGTH(file_content)"
-    );
-	
 	public function beforeAction($controller, $action) {
 		$controller->set('model', $this->alias);
 		$controller->FileUploader->fileModel = 'StaffAttachment';
@@ -55,7 +60,7 @@ class StaffAttachment extends StaffAppModel {
 		$this->render = false;
 		$controller->Navigation->addCrumb('Attachments');
 		$header = __('Attachments');
-		$data = $this->findAllByStaffIdAndVisible($controller->staffId, 1, array('id', 'name', 'description', 'file_name', 'file_content', 'created'), array(), null, null, -1);
+		$data = $this->findAllByStaffIdAndVisible($controller->Session->read('Staff.id'), 1, array('id', 'name', 'description', 'file_name', 'file_content', 'created'), array(), null, null, -1);
 		$arrFileExtensions = $controller->Utility->getFileExtensionList();
 
 		$controller->set(compact('data', 'arrFileExtensions', 'header'));
@@ -74,7 +79,7 @@ class StaffAttachment extends StaffAppModel {
 				$controller->redirect(array('action' => 'attachments'));
 			}
 		} else {
-			$data = $this->findById($id); //pr($data);
+			$data = $this->findById($id);
 			$controller->request->data = $data;
 		}
 		$controller->set(compact('header', 'data', 'id'));
@@ -85,36 +90,14 @@ class StaffAttachment extends StaffAppModel {
 		$this->render = false;
 		$controller->Navigation->addCrumb('Add Attachment');
 		$header = __('Add Attachment');
-		//$controller->set('params', $params);
 
 		if ($controller->request->is(array('post', 'put'))) {
-			if (isset($controller->data['submit']) && $controller->data['submit'] == __('Skip')) {
-				$controller->Navigation->skipWizardLink($controller->action);
-			} else if (isset($controller->data['submit']) && $controller->data['submit'] == __('Previous')) {
-				$controller->Navigation->previousWizardLink($controller->action);
-			} else {
-				$controller->Navigation->validateModel($controller->action, 'StaffAttachment');
-			}
-			/* if (!empty($_FILES)) {
-			  $errors = $this->FileAttachment->saveAll($controller->request->data, $_FILES, $id);
-			  if (sizeof($errors) == 0) {
-			  $controller->Navigation->updateWizard($controller->request->action, null);
-			  $controller->Utility->alert(__('Files have been saved successfully.'));
-			  $controller->redirect(array('action' => 'attachments'));
-			  } else {
-			  $controller->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-			  }
-			  } else {
-			  $controller->Utility->alert(__('Some errors have been encountered while saving files.'), array('type' => 'error'));
-			  } */
-
 			$this->set($controller->request->data);
 			if ($this->validates()) {
 				$postData = $controller->request->data[$this->alias];
-				$controller->FileUploader->additionData = array('staff_id' => $controller->staffId, 'name' => $postData['name'], 'description' => $postData['description']);
+				$controller->FileUploader->additionData = array('staff_id' => $controller->Session->read('Staff.id'), 'name' => $postData['name'], 'description' => $postData['description']);
 				$controller->FileUploader->uploadFile();
 				if ($controller->FileUploader->success) {
-					$controller->Navigation->updateWizard($controller->action, null);
 					return $controller->redirect(array('action' => 'attachments'));
 				}
 			}
@@ -135,25 +118,14 @@ class StaffAttachment extends StaffAppModel {
 			$controller->redirect(array('action' => 'attachmentsView', $id));
 		}
 
-		$controller->Session->write('StaffAttachmentId', $id);
+		$controller->Session->write('StaffAttachment.id', $id);
 		$fields = $this->getDisplayFields($controller);
 		$controller->set(compact('data', 'fields'));
 		$controller->render('/Elements/attachment/view');
 	}
 
 	public function attachmentsDelete($controller, $params) {
-		$controller->autoRender = false;
-		if ($controller->Session->check('StaffId') && $controller->Session->check('StaffAttachmentId')) {
-			$id = $controller->Session->read('StaffAttachmentId');
-
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			$controller->Session->delete('StaffAttachmentId');
-			return $controller->redirect(array('action' => 'attachments'));
-		}
+		return $this->remove($controller, 'attachments');
 	}
 
 	public function attachmentsDownload($controller, $params) {
@@ -161,4 +133,3 @@ class StaffAttachment extends StaffAppModel {
 		$controller->FileUploader->downloadFile($id);
 	}
 }
-?>
