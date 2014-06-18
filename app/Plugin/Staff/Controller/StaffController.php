@@ -265,6 +265,7 @@ class StaffController extends StaffAppController {
 				return $this->redirect(array('action' => 'index'));
 			}
 		}
+		$this->Staff->recursive = 0;
 		$data = $this->Staff->findById($id);
 		$obj = $data['Staff'];
 		$name = trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']);
