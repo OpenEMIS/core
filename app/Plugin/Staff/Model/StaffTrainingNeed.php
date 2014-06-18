@@ -121,7 +121,7 @@ class StaffTrainingNeed extends StaffAppModel {
 		$header = __($this->headerDefault . ' Details');
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->findById($id);//('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->findById($id);
 		
 		if(empty($data)){
 			$controller->Message->alert('general.noData');
@@ -143,7 +143,7 @@ class StaffTrainingNeed extends StaffAppModel {
 
 
 	public function trainingNeedDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffTrainingNeedId')) {
+        if($controller->Session->check('Staff.id') && $controller->Session->check('StaffTrainingNeedId')) {
             $id = $controller->Session->read('StaffTrainingNeedId');
             if ($this->delete($id)) {
                 $controller->Message->alert('general.delete.success');
@@ -237,23 +237,23 @@ class StaffTrainingNeed extends StaffAppModel {
 	function setup_add_edit_form($controller, $params){
 		$trainingPriorityOptions = $this->TrainingPriority->find('list', array('fields'=> array('id', 'name')));
 		$trainingCourseOptions = array();
-		if($controller->Session->check('StaffId')){
-		 	$staffId = $controller->Session->read('StaffId');
+		if($controller->Session->check('Staff.id')){
+		 	$staffId = $controller->Session->read('Staff.id');
 		 	$institutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
 		 	$staffPositionID = $institutionSiteStaff->find('list', 
 				array(
-					'fields'=>array('institutionSitePosition.staff_position_title_id'),
+					'fields'=>array('InstitutionSitePosition.staff_position_title_id'),
 					'joins' => array(
 						array(
 							'type' => 'LEFT',
 							'table' => 'institution_site_positions',
-							'alias' => 'institutionSitePosition',
+							'alias' => 'InstitutionSitePosition',
 							'conditions' => array(
-								'institutionSitePosition.id = institutionSiteStaff.institution_site_position_id'
+								'InstitutionSitePosition.id = InstitutionSiteStaff.institution_site_position_id'
 							)
 						)
 					),
-					'conditions'=>array('institutionSiteStaff.staff_id'=>$staffId)
+					'conditions'=>array('InstitutionSiteStaff.staff_id'=>$staffId)
 				)
 			);
 
