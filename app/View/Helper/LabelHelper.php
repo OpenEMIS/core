@@ -79,7 +79,7 @@ class LabelHelper extends AppHelper {
 		),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
-			'multi' => '*Maximum 5 files are permited on single upload. Each file size should not be larger than 2MB.',
+			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		),
 		'wizard' => array(
 			'previous' => 'Previous',

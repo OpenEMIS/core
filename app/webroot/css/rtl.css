@@ -153,7 +153,7 @@
 	margin-right:0;
 	margin-left:10px;
 }
-.row .col-md-6, .form-group .col-md-4 {
+.row .col-md-6, .form-group .col-md-4, .form-group .col-md-5, .form-group .col-md-6, .form-group .col-md-7 {
 	float:right;
 }
 .form-horizontal .control-label { text-align: left; }

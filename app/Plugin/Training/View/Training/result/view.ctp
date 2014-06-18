@@ -54,7 +54,7 @@ $this->start('contentBody'); ?>
 	<div class="col-md-6"><?php echo $data['TrainingSession']['location']; ?></div>
 </div>
 <div class="row">
-	<div class="col-md-3"><?php echo __('Trainer'); ?></div>
+	<div class="col-md-3"><?php echo __('Trainers'); ?></div>
 	<div class="col-md-6">
 		<?php 
 		if (!empty($trainingSessionTrainers)){ ?>
