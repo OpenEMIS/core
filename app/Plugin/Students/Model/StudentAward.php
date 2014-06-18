@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentAward extends StudentsAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('issue_date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date'));
 	
 	public $belongsTo = array(
 		'ModifiedUser' => array(

@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffTrainingSelfStudy extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('start_date', 'end_date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('start_date', 'end_date'));
 
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -222,7 +222,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 
 
 	public function trainingSelfStudyDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffTrainingSelfStudyId')) {
+        if($controller->Session->check('Staff.id') && $controller->Session->check('StaffTrainingSelfStudyId')) {
             $id = $controller->Session->read('StaffTrainingSelfStudyId');
             if ($this->delete($id)) {
 				$StaffTrainingSelfStudyAttachment = ClassRegistry::init('StaffTrainingSelfStudyAttachment');
@@ -313,8 +313,8 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 	function setup_add_edit_form($controller, $params){
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 		$trainingCreditHourOptions = array();
-		if($controller->Session->check('StaffId')){
-		 	$staffId = $controller->Session->read('StaffId');
+		if($controller->Session->check('Staff.id')){
+		 	$staffId = $controller->Session->read('Staff.id');
 		}
 		$i = 0;
 		$configItem = ClassRegistry::init('ConfigItem');
