@@ -314,16 +314,17 @@ class StaffTrainingNeed extends StaffAppModel {
 				$controller->request->data = $data;
 			}
 			$controller->request->data['StaffTrainingNeed']['training_need_type'] = '1';
-			if($data['StaffTrainingNeed']['ref_course_table']=='TrainingNeedCategory'){
-				$controller->request->data['StaffTrainingNeed']['training_need_type'] = '2';
-				$controller->request->data['StaffTrainingNeed']['ref_need_id'] = $data['StaffTrainingNeed']['ref_course_table'];
-				$controller->request->data['StaffTrainingNeed']['ref_need_code']= $data['StaffTrainingNeed']['ref_course_code'];
-				$controller->request->data['StaffTrainingNeed']['ref_need_title']= $data['StaffTrainingNeed']['ref_course_title'];
-				$controller->request->data['StaffTrainingNeed']['ref_need_description']= $data['StaffTrainingNeed']['ref_course_description'];
-				$controller->request->data['StaffTrainingNeed']['ref_need_requirement']= $data['StaffTrainingNeed']['ref_course_requirement'];
+			if(!empty($data)){
+				if($data['StaffTrainingNeed']['ref_course_table']=='TrainingNeedCategory'){
+					$controller->request->data['StaffTrainingNeed']['training_need_type'] = '2';
+					$controller->request->data['StaffTrainingNeed']['ref_need_id'] = $data['StaffTrainingNeed']['ref_course_table'];
+					$controller->request->data['StaffTrainingNeed']['ref_need_code']= $data['StaffTrainingNeed']['ref_course_code'];
+					$controller->request->data['StaffTrainingNeed']['ref_need_title']= $data['StaffTrainingNeed']['ref_course_title'];
+					$controller->request->data['StaffTrainingNeed']['ref_need_description']= $data['StaffTrainingNeed']['ref_course_description'];
+					$controller->request->data['StaffTrainingNeed']['ref_need_requirement']= $data['StaffTrainingNeed']['ref_course_requirement'];
+				}
 			}
-		}
-		else{
+		}else{
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
 			
 			$data = $controller->request->data;

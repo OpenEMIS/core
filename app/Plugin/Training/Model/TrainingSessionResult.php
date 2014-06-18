@@ -240,7 +240,7 @@ class TrainingSessionResult extends TrainingAppModel {
 		}
 	}
 
-	public function getResultList($id){
+	public function getResultList($id, &$trainingSessionTrainees, &$result, &$fieldName){
 	 	$trainingSessionResult = $this->find('first',  
 			array(
 				'recursive'=> -1,
@@ -250,41 +250,100 @@ class TrainingSessionResult extends TrainingAppModel {
 
 		$trainingSessionId = $trainingSessionResult['TrainingSessionResult']['training_session_id'];
 
-		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
-		$data = $trainingSessionTrainee->find('all',  
+		$trainingSession = ClassRegistry::init('TrainingSession');
+		$trainingSessions = $trainingSession->find('first',  
 			array(
-				'fields' => array('id', 'identification_first_name', 'identification_last_name', 'pass', 'result'),
-				'recursive' => -1, 
-				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$trainingSessionId)
+				'conditions'=>array('TrainingSession.id'=>$trainingSessionId)
 			)
 		);
 
-		$result = array();
+		$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+		$trainingSessionTrainee->bindModel(
+	        array('hasMany' => array(
+                 	'TrainingSessionTraineeResult' => array(
+						'className' => 'TrainingSessionTraineeResult',
+						'foreignKey' => 'training_session_trainee_id',
+						'dependent' => true
+					),
+	            )
+	        ), false
+	    );
+		$trainingSessionTrainees = $trainingSessionTrainee->find('all',  
+			array(
+				'fields' => array('*'),
+				'recursive' => 2,
+				'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$trainingSessionId),
+				'joins' => array(
+					array(
+						'type' => 'INNER',
+						'table' => 'staff',
+						'alias' => 'Staff',
+						'conditions' => array('Staff.id = TrainingSessionTrainee.staff_id')
+					)
+				)
+			)
+		);
 
-	 	if(!empty($data)){
+
+		$trainingCourseResultType = ClassRegistry::init('TrainingCourseResultType');
+		$trainingCourseResultType->bindModel(
+		        array('belongsTo' => array(
+		                'TrainingResultType' => array(
+							'className' => 'FieldOptionValue',
+							'foreignKey' => 'training_result_type_id'
+						)
+		            )
+		        )
+	    );
+
+		$trainingCourseResultTypes = $trainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$trainingSessions['TrainingSession']['training_course_id'])));	
+		
+		$fieldName = array(__('OpenEmis ID'), __('First Name'), __('Last Name'));
+		foreach($trainingCourseResultTypes as $trainingCourseResultType){
+			$fieldName[] = $trainingCourseResultType['TrainingResultType']['name'] . ' ' . __('(1=Pass/0=Fail)');
+			$fieldName[] = $trainingCourseResultType['TrainingResultType']['name'] . ' ' . __('Result');
+		}
+
+		$fieldName[] = __('(1=Pass/0=Fail)');
+		$fieldName[] = __('Result');
+
+	 	if(!empty($trainingSessionTrainees)){
 	        $i = 0;
-	        foreach($data as $obj){
-	            foreach($obj as $key=>$value){
-	            	$result[$i][] = implode(",", $value);
-	            }
+	        foreach($trainingSessionTrainees as $obj){
+	        	$result[$i]['Staff.identification_no'] = $obj['Staff']['identification_no'];
+	        	$result[$i]['Staff.first_name'] = $obj['Staff']['first_name'];
+	        	$result[$i]['Staff.last_name'] = $obj['Staff']['last_name'];
+	        	foreach($obj['TrainingSessionTraineeResult'] as $val){
+	        		$pass = $val['pass'];
+	        		if($pass=='-1'){
+	        			$pass = '';
+	        		}
+	        		$result[$i]['TrainingSessionTraineeResult.'.$val['training_result_type_id'].'_pass'] = $pass;
+	        		$result[$i]['TrainingSessionTraineeResult.'.$val['training_result_type_id'].'_result'] = $val['result'];
+	        	}
+	        	$pass = $obj['TrainingSessionTrainee']['pass'];
+	        	if($pass=='-1'){
+        			$pass = '';
+        		}
+	        	$result[$i]['TrainingSessionTrainee.pass'] = $pass;
+	        	$result[$i]['TrainingSessionTrainee.result'] = $obj['TrainingSessionTrainee']['result'];
 	            $i++;
 	        }
 	    }
-
-		return $result;
 	}
 
 	public function resultDownloadTemplate($controller, $params){
 		 if($controller->Session->check('TrainingResultId')) {
 	 	 	$id = $controller->Session->read('TrainingResultId');
 
-	 	 	$result = $this->getResultList($id);
+	 	 	$result = array();
+	 	 	$fieldName = array();
+ 	 	 	$trainingSessionTrainees = array();
+	 	 	$this->getResultList($id, $trainingSessionTrainees, $result, $fieldName);
 		 	
 		 	echo $this->download('TrainingResult_' . date('Ymdhis') . '.csv');
 
-			
-
-			$fieldName = array('Id', 'First Name', 'Last Name', '(1=Pass/0=Fail)', 'Result');
+			//$fieldName = array('Id', 'First Name', 'Last Name', '(1=Pass/0=Fail)', 'Result');
 			echo $this->array2csv($result, $fieldName);
 		 	die();
 		 }else{
@@ -316,8 +375,11 @@ class TrainingSessionResult extends TrainingAppModel {
 				      && is_uploaded_file($_FILES['data']['tmp_name'][$this->name]['upload_file'])) { //checks that file is uploaded
 				 	 $data = file_get_contents($_FILES['data']['tmp_name'][$this->name]['upload_file']); 
 				 	 
+				 	 $result = array();
+				 	 $fieldName = array();
+				 	 $trainingSessionTrainees = array();
+				 	 $this->getResultList($id, $trainingSessionTrainees, $result, $fieldName);
 
-				 	 $result = $this->getResultList($id);
 
 				 	 $arr = preg_split('/\r\n|\r|\n/', $data);
 				 	 array_splice($arr, 0, 1);
@@ -331,42 +393,65 @@ class TrainingSessionResult extends TrainingAppModel {
 				 	 $errorFormat = __('Row %s: %s');
 				 	 foreach($arr as $row){
 				 	 	if(!empty($row)){
-				 	 		if(isset($result[$i][0])){
-				 	 			$resultSplit = split(",",$result[$i][0]);
+				 	 		if(isset($result[$i])){
+				 	 			$resultSplit = $result[$i];
 				 	 			array_splice($resultSplit,3);
-
+				 	 		    		
 				 	 			$rowSplit = split(",", $row);
 				 	 			$rowSplitCompare = $rowSplit;
 				 	 			array_splice($rowSplitCompare,3);
 
-				 	 			if($rowSplitCompare==$resultSplit){
-				 	 				if($rowSplit[3]!='1' && $rowSplit[3]!='0'){
-				 	 					$error .= '<br />' . sprintf($errorFormat, ($i+1), 'Pass Column only accepts 0 or 1 as input.');
-				 	 					$validateFlag = false;
+				 	 			$compare = array_diff($resultSplit, $rowSplitCompare);
+				 	 			$resultPass = preg_grep('~pass~i', array_keys($result[$i]));
+				 	 		
+				 	 			if(empty($compare)){
+				 	 				foreach($resultPass as $passCol=>$val){
+				 	 					if($rowSplit[$passCol]!='1' && $rowSplit[$passCol]!='0'){
+					 	 					$error .= '<br />' . sprintf($errorFormat, ($i+1), __('Column '. ($passCol+1) .' only accepts 0 or 1 as input.'));
+					 	 					$validateFlag = false;
+					 	 				}
 				 	 				}
-				 	 				$updateData[] = array('TrainingSessionTrainee'=>array('id'=>$rowSplit[0], 'pass'=>$rowSplit[3], 'result'=>$rowSplit[4]));
+				 	 				
+				 	 				$trainingSessionTraineePassCol = array_search('TrainingSessionTrainee.pass', array_keys($result[$i]));
+				 	 				$updateData['TrainingSessionTrainee'][$i] = array('id'=>$trainingSessionTrainees[$i]['TrainingSessionTrainee']['id'], 'pass'=>$rowSplit[$trainingSessionTraineePassCol], 'result'=>$rowSplit[$trainingSessionTraineePassCol+1]);
+				 	 				$r = 0;
+				 	 				foreach($resultPass as $passCol=>$val){
+				 	 					if($passCol==$trainingSessionTraineePassCol){
+				 	 						continue;
+				 	 					}
+				 	 					$updateData['TrainingSessionTrainee'][$i]['TrainingSessionTraineeResult'][$r] = array('id'=>$trainingSessionTrainees[$i]['TrainingSessionTraineeResult'][$r]['id'], 'pass'=>$rowSplit[$passCol], 'result'=>$rowSplit[$passCol+1]);
+				 	 					$r++;
+				 	 				}
 				 	 				$count++;
 				 	 			}else{
-				 	 				$error .= '<br />' . sprintf($errorFormat, ($i+1), 'Columns/Data do not match.');
+				 	 				$error .= '<br />' . sprintf($errorFormat, ($i+1), __('Columns/Data do not match.'));
 				 	 				$validateFlag = false;
 				 	 			}
 				 	 		}else{
-				 	 			$error .= '<br />' . sprintf($errorFormat, ($i+1), 'Columns/Data do not match.');
+				 	 			$error .= '<br />' . sprintf($errorFormat, ($i+1), __('Columns/Data do not match.'));
 				 	 			$validateFlag = false;
 				 	 		}
 				 	 	}
 				 	 	$i++;
 				 	 }
-
 					if($validateFlag){
 						$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
+						$trainingSessionTrainee->bindModel(
+					        array('hasMany' => array(
+				                 	'TrainingSessionTraineeResult' => array(
+										'className' => 'TrainingSessionTraineeResult',
+										'foreignKey' => 'training_session_trainee_id',
+										'dependent' => true
+									),
+					            )
+					        ), false
+					    );
 
-						if($trainingSessionTrainee->saveAll($updateData)){
+						if($trainingSessionTrainee->saveAll($updateData['TrainingSessionTrainee'], array('deep' => true))){
 							$controller->Utility->alert(sprintf(__('%s Record(s) have been updated'),$count));
 						}else{
 							$controller->Utility->alert(__('Error encountered, record(s) could not be updated'), array('type' => 'error'));
 						}
-						
 					}else{
 						$controller->Utility->alert(__('Invalid File Format').$error, array('type' => 'error'));
 					}
@@ -380,19 +465,51 @@ class TrainingSessionResult extends TrainingAppModel {
 
 	public function array2csv($results=NULL, $fieldName=NULL)
     {
-       ob_end_clean();
-       ob_start();
-       $df = fopen("php://output", 'w');
-       //fputs($df,$fieldName);
-       fputs($df, implode(",", $fieldName)."\n");
-
-        if(!empty($results)){
+  	 	ob_end_clean();
+       	ob_start();
+       	$df = fopen("php://output", 'w');
+       	$this->fputcsv($df, $fieldName);
+    	if(!empty($results)){
             foreach($results as $key=>$value){
-                fputs($df, implode(",", $value)."\n");
+                $this->fputcsv($df, $value);
             }
         }
-       fclose($df);
-       return ob_get_clean();
+       	fclose($df);
+       	return ob_get_clean();
+    }
+
+    function fputcsv(&$handle, $fields = array(), $delimiter = ',', $enclosure = '"') {
+        $str = '';
+        $escape_char = '\\';
+        foreach ($fields as $value) {
+          if (strpos($value, $delimiter) !== false ||
+              strpos($value, $enclosure) !== false ||
+              strpos($value, "\n") !== false ||
+              strpos($value, "\r") !== false ||
+              strpos($value, "\t") !== false ||
+              strpos($value, ' ') !== false) {
+            $str2 = $enclosure;
+            $escaped = 0;
+            $len = strlen($value);
+            for ($i=0;$i<$len;$i++) {
+              if ($value[$i] == $escape_char) {
+                $escaped = 1;
+              } else if (!$escaped && $value[$i] == $enclosure) {
+                $str2 .= $enclosure;
+              } else {
+                $escaped = 0;
+              }
+              $str2 .= $value[$i];
+            }
+            $str2 .= $enclosure;
+            $str .= $str2.$delimiter;
+          } else {
+            $str .= $value.$delimiter;
+          }
+        }
+        $str = substr($str,0,-1);
+        $str .= "\n";
+        return fwrite($handle, $str);
     }
 
 	public function download($name){
@@ -440,8 +557,8 @@ class TrainingSessionResult extends TrainingAppModel {
 	            )
 	        ), false
 	    );
-	 
-		
+	
+
 		if($controller->request->is('get')){
 			$id = empty($params['pass'][0])? 0:$params['pass'][0];
 			$this->recursive = -1;
@@ -538,8 +655,7 @@ class TrainingSessionResult extends TrainingAppModel {
 			}else{
 				return $controller->redirect(array('action' => 'result'));
 			}
-		}
-		else{
+		}else{
 			
 			if ($this->save($controller->request->data, array('validate' => 'only'))){
 				if (isset($controller->request->data['save'])) {
