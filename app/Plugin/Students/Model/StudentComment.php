@@ -15,10 +15,9 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentComment extends StudentsAppModel {
-
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('comment_date'));
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'fields' => array('first_name', 'last_name'),
@@ -78,15 +77,12 @@ class StudentComment extends StudentsAppModel {
 		$controller->Navigation->addCrumb(__('Add Comment'));
 		$header = __('Add Comment');
 		if ($controller->request->is('post')) {
+			$data = $controller->request->data[$this->alias];
+			$data['student_id'] = $controller->Session->read('Student.id');
 			$this->create();
-			$controller->request->data[$this->alias]['student_id'] = $controller->Session->read('Student.id');
-			$data = $controller->data[$this->alias];
 
 			if ($this->save($data)) {
 				$id = $this->getLastInsertId();
-				if ($addMore) {
-					$controller->Message->alert('general.add.success');
-				}
 				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'comments'));
 			}
@@ -118,7 +114,6 @@ class StudentComment extends StudentsAppModel {
 			$obj = $this->findById($id);
 
 			if (!empty($obj)) {
-				
 				$controller->request->data = $obj;
 			} else {
 				$controller->Message->alert('general.notExists');
@@ -137,15 +132,7 @@ class StudentComment extends StudentsAppModel {
 	}
 
 	public function commentsDelete($controller, $params) {
-		if ($controller->Session->check('StudentComment.id')) {
-			$id = $controller->Session->read('StudentComment.id');
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			return $controller->redirect(array('action' => 'comments'));
-		}
+		return $this->remove($controller, 'comments');
 	}
 
 }

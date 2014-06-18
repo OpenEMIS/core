@@ -56,41 +56,36 @@ class StaffLicense extends StaffAppModel {
 	public $headerDefault = 'Licenses';
 	
 	public function compareDate($field = array(), $compareField = null) {
-        $startDate = new DateTime(current($field));
-        $endDate = new DateTime($this->data[$this->name][$compareField]);
-        return $endDate >= $startDate;
-    }
-	
-	public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
+		$startDate = new DateTime(current($field));
+		$endDate = new DateTime($this->data[$this->name][$compareField]);
+		return $endDate >= $startDate;
+	}
 	
 	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                array('field' => 'id', 'type' => 'hidden'),
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
 				array('field' => 'issue_date', 'type' => 'datepicker'),
 				array('field' => 'name',  'model' =>'LicenseType', 'labelKey' => 'general.type'),
 				array('field' => 'issuer'),
 				array('field' => 'license_number'),
-                array('field' => 'expiry_date', 'type' => 'datepicker'),
+				array('field' => 'expiry_date', 'type' => 'datepicker'),
 				
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 	
 	public function license($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$header = __($this->headerDefault);
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser','CreatedUser')));
-		$data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
+		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
 		
 		$controller->set(compact('header', 'data'));
 	}
@@ -100,51 +95,42 @@ class StaffLicense extends StaffAppModel {
 		$header = __($this->headerDefault . ' Details');
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->findById($id);//('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->findById($id);
 		
 		if(empty($data)){
 			$controller->Message->alert('general.noData');
 			return $controller->redirect(array('action'=>'license'));
 		}
 		
-		$controller->Session->write('StaffLicenseId', $id);
+		$controller->Session->write('StaffLicense.id', $id);
 		$fields = $this->getDisplayFields($controller);
-        $controller->set(compact('data', 'header', 'fields', 'id'));
+		$controller->set(compact('data', 'header', 'fields', 'id'));
 	}
 	
 	public function licenseDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffLicenseId')) {
-            $id = $controller->Session->read('StaffLicenseId');
-            if($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-			$controller->Session->delete('StaffLicenseId');
-            $controller->redirect(array('action' => 'license'));
-        }
-    }
+		return $this->remove($controller, 'license');
+	}
 	
 	public function licenseAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
 		$controller->set('header', __('Add ' . $this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'add');
 	}
 	
 	public function licenseEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault . ' Details');
 		$controller->set('header', __('Edit ' . $this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'edit');
 		
 		$this->render = 'add';
 	}
 	
-	function setup_add_edit_form($controller, $params){
+	function setup_add_edit_form($controller, $params, $type){
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 		$licenseTypeOptions = $this->LicenseType->find('list', array('fields'=> array('id', 'name')));
 		
 		$controller->set('licenseTypeOptions', $licenseTypeOptions);
-		if($controller->request->is('get')){
+		if($controller->request->is('get')) {
 			
 			$this->recursive = -1;
 			$data = $this->findById($id);
@@ -153,31 +139,9 @@ class StaffLicense extends StaffAppModel {
 			}
 		}
 		else{
-			$addMore = false;
-			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
-                $controller->Navigation->skipWizardLink($controller->action);
-            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
-                $controller->Navigation->previousWizardLink($controller->action);
-            }elseif(isset($controller->data['submit']) && $controller->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $controller->Navigation->validateModel($controller->action,$this->name);
-            }
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if($this->save($controller->request->data)){
-				$controller->Message->alert('general.add.success');
-				if(empty($controller->request->data[$this->name]['id'])){
-					$id = $this->getLastInsertId();
-                	/*if($addMore){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-                	}*/
-                	$controller->Navigation->updateWizard($controller->action,$id,$addMore);
-                	//$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-				}
-				else{
-                	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					//$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
+			$controller->request->data[$this->name]['staff_id'] = $controller->Session->read('Staff.id');
+			if($this->save($controller->request->data)) {
+				$controller->Message->alert('general.' . $type . '.success');
 				return $controller->redirect(array('action' => 'license'));
 			}
 		}
@@ -209,12 +173,12 @@ class StaffLicense extends StaffAppModel {
 	}
 	
 	public function licenseAjaxFindLicense($controller, $params){
-        if ($controller->request->is('ajax')) {
-            $this->render = false;
-            $search = $params->query['term'];
-            $data = $this->autocomplete($search);
+		if ($controller->request->is('ajax')) {
+			$this->render = false;
+			$search = $params->query['term'];
+			$data = $this->autocomplete($search);
 
-            return json_encode($data);
-        }
-    }
+			return json_encode($data);
+		}
+	}
 }
