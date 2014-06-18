@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffTrainingSelfStudy extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('start_date', 'end_date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('start_date', 'end_date'));
 
 	public $belongsTo = array(
 		'ModifiedUser' => array(
