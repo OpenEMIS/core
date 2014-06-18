@@ -45,22 +45,24 @@ class HomeController extends AppController {
 		'SecurityRoleFunction',
 		'SecurityGroupUser'
 	);
+	
 	private function logtimer($str=''){
-			if($this->debug == true)
-			echo $str." ==> ".date("H:i:s")."<br>\n";
+		if($this->debug == true)
+		echo $str." ==> ".date("H:i:s")."<br>\n";
 	}
+	
 	public function index() {
 		$this->logtimer('Start');
 		$this->logtimer('Start Attachment');
 		$image = array();
 		$image = $this->ConfigAttachment->find('first', array('fields' => array('id','file_name'), 'conditions' => array('ConfigAttachment.active' => 1, 'ConfigAttachment.type' => 'dashboard')));
 
-		if(sizeof($image['ConfigAttachment']) > 0){
+		if($image && sizeof($image['ConfigAttachment']) > 0){
 			$image = array_merge($image['ConfigAttachment']);
 			$image['width'] = $this->ConfigItem->getValue('dashboard_img_width');
 			$image['height'] = $this->ConfigItem->getValue('dashboard_img_height');
 			$image = array_merge($image, $this->ConfigAttachment->getCoordinates($image['file_name']));
-			$this->set('image', $image/*$this->ConfigItem->getDashboardMastHead()*/);
+			$this->set('image', $image);
 			
 		}
 		$this->logtimer('End Attachment');
@@ -83,13 +85,6 @@ class HomeController extends AppController {
 		$obj = $this->SecurityUser->read();
 
 		$obj['groups'] = $this->SecurityGroupUser->getGroupsByUserId($userId);
-		/*
-		$roleIds = $this->SecurityUserRole->find('list', array(
-			'fields' => array('SecurityUserRole.security_role_id'),
-			'conditions' => array('SecurityUserRole.security_user_id' => $userId)
-		));
-		$obj['SecurityUser']['roles'] = $this->SecurityRoleFunction->getModules($roleIds);
-		*/
 		$this->set(compact('obj','header'));
 	}
 	public function detailsEdit() {

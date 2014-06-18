@@ -15,9 +15,9 @@ $tableData = array();
 
 foreach($data as $obj) {
 	$row = array();
-		$row[] = $obj[$model]['special_need_date'];
-        $row[] = $this->Html->link($obj['SpecialNeedType']['name'], array('action' => 'specialNeedView', $obj[$model]['id']), array('escape' => false));
-        $row[] = $obj[$model]['comment'];
+	$row[] = $obj[$model]['special_need_date'];
+	$row[] = $this->Html->link($obj['SpecialNeedType']['name'], array('action' => 'specialNeedView', $obj[$model]['id']), array('escape' => false));
+	$row[] = $obj[$model]['comment'];
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));

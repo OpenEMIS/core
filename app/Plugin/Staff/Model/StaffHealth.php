@@ -1,26 +1,22 @@
 <?php
-
 /*
-  @OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
 
-  OpenEMIS
-  Open Education Management Information System
+OpenEMIS
+Open Education Management Information System
 
-  Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by the Free Software Foundation
-  , either version 3 of the License, or any later version.  This program is distributed in the hope
-  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
-  have received a copy of the GNU General Public License along with this program.  If not, see
-  <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
- */
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 class StaffHealth extends StaffAppModel {
-
-	//public $useTable = 'staff_healths';
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		//'Staff',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -30,24 +26,7 @@ class StaffHealth extends StaffAppModel {
 			'foreignKey' => 'created_user_id'
 		)
 	);
-
-	/* public $validate = array(
-	  'doctor_name' => array(
-	  'ruleRequired' => array(
-	  'rule' => 'notEmpty',
-	  'required' => true,
-	  'message' => 'Please enter a valid Name.'
-	  )
-	  ),
-	  'doctor_contact' => array(
-	  'ruleRequired' => array(
-	  'rule' => 'notEmpty',
-	  'required' => true,
-	  'message' => 'Please enter a valid Contact Number.'
-	  )
-	  )
-	  ); */
-
+	
 	public function getDisplayFields($controller) {
 		$fields = array(
 			'model' => $this->alias,
@@ -66,13 +45,13 @@ class StaffHealth extends StaffAppModel {
 		);
 		return $fields;
 	}
-
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
+	
+	public function beforeAction($controller, $params) {
+		parent::beforeAction($controller, $params);
+		if (!$controller->Session->check('Staff.id')) {
+			return $controller->redirect(array('action' => 'index'));
+		}
 	}
-
-	//public $bloodTypeOptions = array('O+' => 'O+', 'O-' => 'O-', 'A+' => 'A+', 'A-' => 'A-', 'B+'=>'B+' ,'B-' => 'B-', 'AB+' => 'AB+', 'AB-' => 'AB-');
-	//public $booleanOptions = array('No', 'Yes');
 
 	public function health($controller, $params) {
 		$this->render = false;
@@ -82,7 +61,7 @@ class StaffHealth extends StaffAppModel {
 	public function healthView($controller, $params) {
 		$controller->Navigation->addCrumb('Health - Overview');
 		$header = __('Health - Overview');
-		$data = $this->findByStaffId($controller->staffId);
+		$data = $this->findByStaffId($controller->Session->read('Staff.id'));
 
 		$fields = $this->getDisplayFields($controller);
 		$controller->set(compact('header', 'fields', 'data'));
@@ -92,19 +71,16 @@ class StaffHealth extends StaffAppModel {
 		$controller->Navigation->addCrumb('Health - Edit Overview');
 		$header = __('Health - Edit Overview');
 
+		$staffId = $controller->Session->read('Staff.id');
 		if ($controller->request->is('post') || $controller->request->is('put')) {
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
-			if (empty($controller->staffId)) {
-				return $controller->redirect(array('action' => 'view'));
-			}
-
+			$controller->request->data[$this->name]['staff_id'] = $staffId;
 			if ($this->save($controller->request->data)) {
 				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'healthView'));
 			}
 		} else {
 			$this->recursive = -1;
-			$data = $this->findByStaffId($controller->staffId);
+			$data = $this->findByStaffId($staffId);
 			if (!empty($data)) {
 				$controller->request->data = $data;
 			}
@@ -114,5 +90,4 @@ class StaffHealth extends StaffAppModel {
 		$bloodTypeOptions = $controller->Option->get('bloodtype');
 		$controller->set(compact('header', 'yesnoOptions', 'bloodTypeOptions'));
 	}
-
 }

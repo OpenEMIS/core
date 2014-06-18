@@ -26,24 +26,8 @@ class TrainingUtilityHelper extends AppHelper {
 	public function getTrainingStatus($module, $id, $status, $value) {
 		$workflow = new WorkflowComponent(new ComponentCollection);
 
-		if($value==3){
-			if($module=='TrainingCourse'){
-				$status='Accredited';
-			}
-			if($module=='TrainingSession'){
-				$status='Registered';
-			}
-			if($module=='TrainingSessionResult'){
-				$status='Posted';
-			}
-			if($module=='StaffTrainingNeed'){
-				$status='Approved';
-			}
-			if($module=='StaffTrainingSelfStudy'){
-				$status='Accredited';
-			}
-		}else if($value==2){
-			$newStatus = $workflow->getWorkflowStatus($module,$id);
+		if($value!=1 && $value!=4){
+			$newStatus = $workflow->getWorkflowStatus($module,$id, $value);
 			$status = !empty($newStatus) ? $newStatus : $status;
 		}
 

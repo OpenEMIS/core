@@ -52,6 +52,10 @@ $this->start('contentBody'); ?>
 	<div class="col-md-6"><?php echo (isset($workflowStatus)?  $workflowStatus : $this->TrainingUtility->getTrainingStatus($model,$obj['id'],$data['TrainingStatus']['name'],$data['TrainingStatus']['id'])); ?></div>
 </div>
 <div class="row">
+	<div class="col-md-3"><?php echo __('Area'); ?></div>
+	<div class="col-md-6"><?php echo $data['Area']['name']; ?></div>
+</div>
+<div class="row">
 	<div class="col-md-3"><?php echo __('Location'); ?></div>
 	<div class="col-md-6"><?php echo $obj['location']; ?></div>
 </div>
@@ -61,7 +65,16 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Trainer'); ?></div>
-	<div class="col-md-6"><?php echo $obj['trainer']; ?></div>
+	<div class="col-md-6">
+		<?php 
+		if (!empty($trainingSessionTrainers)){ 
+			foreach($trainingSessionTrainers as $val){
+				echo $val['TrainingSessionTrainer']['ref_trainer_name'] . '<br />';
+			}
+		}else{
+			echo "-";
+		} ?>
+	</div>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Trainees'); ?></div>

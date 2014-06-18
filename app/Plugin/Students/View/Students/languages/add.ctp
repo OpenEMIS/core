@@ -5,8 +5,8 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_edit && !$WizardMode) {
-            echo $this->Html->link(__('Back'), array('action' => 'languages'), array('class' => 'divider'));
-        }
+	echo $this->Html->link(__('Back'), array('action' => 'languages'), array('class' => 'divider'));
+}
 $this->end();
 $this->start('contentBody');
 

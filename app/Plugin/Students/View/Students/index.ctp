@@ -1,5 +1,4 @@
-<?php 
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+<?php
 echo $this->Html->css('pagination', 'stylesheet', array('inline' => false));
 echo $this->Html->css('search', 'stylesheet', array('inline' => false));
 echo $this->Html->css('/Students/css/students', 'stylesheet', array('inline' => false));
@@ -11,7 +10,7 @@ $this->assign('contentClass', 'search');
 $this->assign('contentHeader', __('List of Students'));
 $this->start('contentActions');
 $total = 0;
-if(strlen($this->Paginator->counter('{:count}')) > 0) {
+if (strlen($this->Paginator->counter('{:count}')) > 0) {
 	$total = $this->Paginator->counter('{:count}');
 }
 ?>
@@ -23,15 +22,16 @@ $this->end();
 $this->start('contentBody');
 ?>
 <div class="row">
-	<?php  echo $this->Form->create('Student', array('action' => 'search','id'=>false));  ?>
+	<?php echo $this->Form->create('Student', array('action' => 'search','id' => false));  ?>
 	<div class="search_wrapper">
-		<?php echo $this->Form->input('SearchField', array(
-			'id'=>'SearchField',
-			'value'=>$searchField,
-			'placeholder'=> __("Student OpenEMIS ID, First Name or Last Name"),
-			'class'=>'default',
-			'label'=>false,
-			'div'=>false)); 
+		<?php 
+		echo $this->Form->input('SearchField', array(
+			'id' => 'SearchField',
+			'value' => $searchField,
+			'placeholder' => __("Student OpenEMIS ID, First Name or Last Name"),
+			'class' => 'default',
+			'label' => false,
+			'div' => false)); 
 		?>
 		<span class="icon_clear">X</span>
 	</div>
@@ -47,6 +47,7 @@ $this->start('contentBody');
 </div>
 
 <div id="mainlist">
+	<?php if ($this->Paginator->counter('{:pages}') > 1) : ?>
 	<div class="row">
 		<ul id="pagination">
 			<?php echo $this->Paginator->prev(__('Previous'), null, null, $this->Utility->getPageOptions()); ?>
@@ -54,7 +55,9 @@ $this->start('contentBody');
 			<?php echo $this->Paginator->next(__('Next'), null, null, $this->Utility->getPageOptions()); ?>
 		</ul>
 	</div>
-	<?php if($total > 0) { ?>
+	<?php endif; ?>
+	
+	<?php if ($total > 0) { ?>
 	<div class="table-responsive">
 		<table class="table table-striped table-hover table-bordered">
 			<thead url="Students/index">

@@ -55,38 +55,28 @@ $this->start('contentBody'); ?>
 </div>
 <div class="row">
 	<div class="col-md-3"><?php echo __('Trainer'); ?></div>
-	<div class="col-md-6"><?php echo $data['TrainingSession']['trainer']; ?></div>
-</div>
-<div class="row">
-	<div class="col-md-3"><?php echo __('Trainees'); ?></div>
 	<div class="col-md-6">
 		<?php 
-		if (!empty($trainingSessionTrainees)){ ?>
+		if (!empty($trainingSessionTrainers)){ ?>
 
 				<div class="table-responsive">
 					<table class="table table-striped table-hover table-bordered">
 			        <thead class="table_head">
 			        	<tr>
 				       		<td class="table_cell"><?php echo __('Name'); ?></td>
-				            <td class="table_cell"><?php echo __('Result'); ?></td>
-				            <td class="table_cell"><?php echo __('Completed'); ?></td>
+				            <td class="table_cell"><?php echo __('Type'); ?></td>
 				        </tr>
 			        </thead>
 			       
 			        <tbody>
-			        	<?php foreach($trainingSessionTrainees as $val){ ?>
+			        	<?php foreach($trainingSessionTrainers as $val){ ?>
 			            <tr class="table_row">
-			            	<td class="table_cell"><?php echo $val['Staff']['first_name'] ?>, <?php echo $val['Staff']['last_name'] ?></td>
-			                <td class="table_cell"><?php echo $val['TrainingSessionTrainee']['result']; ?></td>
+			            	<td class="table_cell"><?php echo $val['TrainingSessionTrainer']['ref_trainer_name'] ?></td>
 			                <td class="table_cell">
-			                <?php if(!isset($val['TrainingSessionTrainee']['pass'])){
-			                		echo '-';
-			                 }else if($val['TrainingSessionTrainee']['pass'] == '1'){
-			                 		echo __('Passed');
-			                 }else if($val['TrainingSessionTrainee']['pass'] == '-1'){
-			                 		echo '-';
+			                <?php if($val['TrainingSessionTrainer']['ref_trainer_table']=='Staff'){
+			                		echo __('Internal');
 			                 }else{
-			                 		echo __('Failed');
+			                 		echo __('Exernal');
 			                 }
 			                 ?>
 			                </td>
@@ -99,7 +89,82 @@ $this->start('contentBody'); ?>
 		}else{
 			echo "-";
 		} ?>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo __('Trainees'); ?></div>
+	<div class="col-md-6">
+		<?php 
+		if (!empty($trainingSessionTrainees)){ ?>
 
+				<div class="table-responsive">
+					<table class="table table-striped table-hover table-bordered">
+			        <thead class="table_head">
+			        	<tr>
+				       		<td class="table_cell"><?php echo __('Name'); ?></td>
+				            <?php foreach($trainingCourseResultTypes as $key=>$val){
+			            		echo '<td class="table_cell">'. $val['TrainingResultType']['name']. '<br/>('. __('Result').')</td>';
+			            		echo '<td class="table_cell">'. $val['TrainingResultType']['name']. '<br/>('. __('Completed').')</td>';
+			            	}?>
+
+				            <td class="table_cell"><?php echo __('Overall Result'); ?></td>
+				            <td class="table_cell"><?php echo __('Completed'); ?></td>
+				        </tr>
+			        </thead>
+			       
+			        <tbody>
+			        	<?php 
+			        	foreach($trainingSessionTrainees as $val){ ?>
+			            	<tr class="table_row">
+				            	<td class="table_cell"><?php echo $val['Staff']['first_name'] ?>, <?php echo $val['Staff']['last_name'] ?></td>
+				              	<?php 
+			        			if(!empty($val['TrainingSessionTraineeResult'])){ 
+						 		foreach($val['TrainingSessionTraineeResult'] as $key2=>$val2){ 
+						 			if($val2['training_session_trainee_id']==$val['TrainingSessionTrainee']['id']){ 
+						 		 ?>
+						 		<td class="table_cell">
+							    	<?php echo $val2['result']; ?>
+							    </td>
+							    <td class="table_cell" style="padding:5px;">
+							    	<?php if(!isset($val2['pass'])){
+					                		echo '-';
+					                 }else if($val2['pass'] == '1'){
+					                 		echo __('Passed');
+					                 }else if($val2['pass'] == '-1'){
+					                 		echo '-';
+					                 }else{
+					                 		echo __('Failed');
+					                 }
+					                 ?>
+							    </td>
+						 	<?php 
+				 					}
+
+					 			} 
+					 		}
+						 	?>
+			                	<td class="table_cell"><?php echo $val['TrainingSessionTrainee']['result']; ?></td>
+				                <td class="table_cell">
+				                <?php if(!isset($val['TrainingSessionTrainee']['pass'])){
+				                		echo '-';
+				                 }else if($val['TrainingSessionTrainee']['pass'] == '1'){
+				                 		echo __('Passed');
+				                 }else if($val['TrainingSessionTrainee']['pass'] == '-1'){
+				                 		echo '-';
+				                 }else{
+				                 		echo __('Failed');
+				                 }
+				                 ?>
+				                </td>
+			            	</tr>
+			           <?php } ?>
+			        </tbody>
+			    	</table>
+			    </div>
+			<?php
+		}else{
+			echo "-";
+		} ?>
 	</div>
 </div>
 <div class="row">
