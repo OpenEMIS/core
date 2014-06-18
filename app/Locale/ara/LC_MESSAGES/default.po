@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-06-17 17:05+0800\n"
+"PO-Revision-Date: 2014-06-18 18:00+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ara\n"
-"X-Generator: Poedit 1.6.5\n"
+"X-Generator: Poedit 1.6.3\n"
 
 msgid "Home"
 msgstr "الصفحة الرئيسية"
@@ -3694,3 +3694,103 @@ msgstr "الصف المحدد (ق)"
 
 msgid "Status Details"
 msgstr "تفاصيل الوضع"
+
+msgid "*File size should not be larger than 2MB."
+msgstr "* لا ينبغي أن يكون حجم الملف أكبر من 2MB."
+
+msgid ""
+"*Maximum 5 files are permitted on single upload. Each file size should not "
+"be larger than 2MB."
+msgstr ""
+"ويسمح * الحد الأقصى 5 ملفات على تحميل واحد. لا ينبغي أن يكون حجم كل ملف أكبر "
+"من 2MB."
+
+msgid "Select file"
+msgstr "حدد ملف"
+
+msgid "Result Type"
+msgstr "نتيجة نوع"
+
+msgid "User"
+msgstr "المستخدم"
+
+msgid "Add Result Type"
+msgstr "إضافة نوع النتيجة"
+
+msgid "Goal / objective"
+msgstr "الهدف / الهدف"
+
+msgid "Internal"
+msgstr "داخلي"
+
+msgid "External"
+msgstr "خارجي"
+
+msgid "Add Trainer"
+msgstr "إضافة المدرب"
+
+msgid "Overall Result"
+msgstr "نتائج الشامل"
+
+msgid "Trainers"
+msgstr "المدربين"
+
+msgid "Edit Results Details"
+msgstr "تحرير تفاصيل النتائج"
+
+msgid "Download Template"
+msgstr "قالب تحميل"
+
+msgid "Upload Results"
+msgstr "تحميل النتائج"
+
+msgid "Passed"
+msgstr "مرت"
+
+msgid "Failed"
+msgstr "فشل"
+
+msgid "Upload File"
+msgstr "تحميل الملف"
+
+msgid "Upload"
+msgstr "تحميل"
+
+msgid "Invalid File Format"
+msgstr "تنسيق الملف غير صالح"
+
+msgid "Columns/Data do not match."
+msgstr "لا تطابق الأعمدة / البيانات."
+
+msgid "Error encountered, record(s) could not be updated"
+msgstr "الخطأ التي تواجهها، لا يمكن أن يتم تحديث الإجابات"
+
+msgid "%s Record(s) have been updated"
+msgstr "تم تحديث سجل%s (ق)"
+
+msgid "Column %s only accepts 0 or 1 as input."
+msgstr "العمود%s لا يقبل إلا 0 أو 1 كإدخال."
+
+msgid "Row %s: %s"
+msgstr "الصف%s:%s"
+
+msgid "TrainingResult"
+msgstr "نتائجلتدريب"
+
+msgid "OpenEmis ID"
+msgstr "OpenEmis ID"
+
+msgid "(1=Pass/0=Fail)"
+msgstr "(1 = نجاح / 0 = فشل)"
+
+msgid "Need Type"
+msgstr "تحتاج نوع"
+
+msgid "Training Priority"
+msgstr "التدريب الأولوية"
+
+msgid "Achievement Type"
+msgstr "نوع الإنجاز"
+
+msgid "Course Goal / Objectives"
+msgstr "بالطبع الهدف / الأهداف"

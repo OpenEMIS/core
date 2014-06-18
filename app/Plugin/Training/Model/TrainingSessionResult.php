@@ -341,7 +341,7 @@ class TrainingSessionResult extends TrainingAppModel {
  	 	 	$trainingSessionTrainees = array();
 	 	 	$this->getResultList($id, $trainingSessionTrainees, $result, $fieldName);
 		 	
-		 	echo $this->download('TrainingResult_' . date('Ymdhis') . '.csv');
+		 	echo $this->download(__('TrainingResult').'_' . date('Ymdhis') . '.csv');
 
 			//$fieldName = array('Id', 'First Name', 'Last Name', '(1=Pass/0=Fail)', 'Result');
 			echo $this->array2csv($result, $fieldName);
@@ -407,7 +407,7 @@ class TrainingSessionResult extends TrainingAppModel {
 				 	 			if(empty($compare)){
 				 	 				foreach($resultPass as $passCol=>$val){
 				 	 					if($rowSplit[$passCol]!='1' && $rowSplit[$passCol]!='0'){
-					 	 					$error .= '<br />' . sprintf($errorFormat, ($i+1), __('Column '. ($passCol+1) .' only accepts 0 or 1 as input.'));
+					 	 					$error .= '<br />' . sprintf($errorFormat, ($i+1), sprintf(__('Column %s only accepts 0 or 1 as input.'), ($passCol+1)));
 					 	 					$validateFlag = false;
 					 	 				}
 				 	 				}
