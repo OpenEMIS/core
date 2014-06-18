@@ -40,7 +40,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			'foreignKey' => 'ref_course_id',
             'conditions' => array('ref_course_table' => 'TrainingNeedCategory'),
 		),
-		'Staff',
+		'Staff.Staff',
 		'TrainingPriority',
 		'TrainingStatus',
 	);
