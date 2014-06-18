@@ -138,12 +138,15 @@
 	border-top-right-radius: 0;
 }
 
+.page-controls > div { float: right; padding-right: 0px; }
+.row { margin-right: 0px; }
+
 /*table*/
 .left{
 	float:right;
 }
 .icon_sort_up, .icon_sort_down{
-	float:left;
+	float:left !important;
 }
 .row .col-md-3, .form-group .col-md-3 {
 	float:right;
@@ -153,6 +156,7 @@
 .row .col-md-6, .form-group .col-md-4 {
 	float:right;
 }
+.form-horizontal .control-label { text-align: left; }
 fieldset.section_break > legend{
 	margin-left:0;
 	margin-right:-8px;

@@ -10,7 +10,7 @@ $this->start('contentActions');
 
 echo $this->Html->link($this->Label->get('general.list'), array('action' => 'trainingSelfStudy' ), array('class' => 'divider'));
 if($_edit) {
-	if($obj['training_status_id'] == 1){
+	if($obj['training_status_id'] == 1 || $resultEditable){
 		echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'trainingSelfStudyEdit',$obj['id'] ), array('class' => 'divider'));
 	}
 }

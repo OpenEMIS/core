@@ -92,14 +92,11 @@ class CensusController extends AppController {
 		parent::beforeFilter();
 
 		if ($this->Session->check('InstitutionSiteId')) {
-			//$institutionId = $this->Session->read('InstitutionId');
-			//$institutionName = $this->Institution->field('name', array('Institution.id' => $institutionId));
 			$this->institutionSiteId = $this->Session->read('InstitutionSiteId');
 			$institutionSiteName = $this->InstitutionSite->field('name', array('InstitutionSite.id' => $this->institutionSiteId));
 
 			$this->bodyTitle = $institutionSiteName;
 			$this->Navigation->addCrumb('Institutions', array('controller' => 'InstitutionSites', 'action' => 'index'));
-			//$this->Navigation->addCrumb($institutionName, array('controller' => 'Institutions', 'action' => 'view'));
 			$this->Navigation->addCrumb($institutionSiteName, array('controller' => 'InstitutionSites', 'action' => 'view'));
 		} else {
 			$this->redirect(array('controller' => 'InstitutionSites', 'action' => 'index'));

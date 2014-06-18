@@ -17,8 +17,8 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('Sanitize', 'Utility');
 
 class StudentsController extends StudentsAppController {
+	public $name = 'Students';
 	public $studentId;
-	public $studentObj;
 	public $uses = array(
 		'Area',
 		'InstitutionSite',
@@ -70,24 +70,26 @@ class StudentsController extends StudentsAppController {
 		'guardians' => 'Students.StudentGuardian',
 		'behaviour'=>'Students.StudentBehaviour'
 	);
-
-	public $className = 'Student';
+	//public $className = 'Student';
 
 	public function beforeFilter() {
 		parent::beforeFilter();
-		$this->Navigation->addCrumb('Students', array('controller' => 'Students', 'action' => 'index'));
+		$this->Navigation->addCrumb('Students', array('controller' => $this->name, 'action' => 'index'));
 		$this->Wizard->setModule('Student');
 		
-		if ($this->Wizard->isActive()) {
+		$actions = array('index', 'advanced');
+		if (in_array($this->action, $actions)) {
+			$this->bodyTitle = __('Students');
+			$this->Session->delete('Student');
+		} else if ($this->Wizard->isActive()) {
 			$this->bodyTitle = __('New Student');
 		} else if ($this->Session->check('Student.data.name')) {
 			$name = $this->Session->read('Student.data.name');
+			$this->studentId = $this->Session->read('Student.id'); // for backward compatibility
 			if ($this->action != 'view') {
-				$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
+				$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 			}
 			$this->bodyTitle = $name;
-		} else {
-			$this->bodyTitle = __('Students');
 		}
 	}
 
@@ -158,7 +160,6 @@ class StudentsController extends StudentsAppController {
 				$result = $this->Area->autocomplete($search);
 				return json_encode($result);
 			} else {
-				$this->Navigation->addCrumb('List of Students', array('controller' => 'Students', 'action' => 'index'));
 				$this->Navigation->addCrumb('Advanced Search');
 
 				if (isset($this->params->pass[0])) {
@@ -169,7 +170,6 @@ class StudentsController extends StudentsAppController {
 				}
 			}
 		} else {
-			//$search = $this->request->data['Search'];
 			$search = $this->request->data;
 			if (!empty($search)) {
 				$this->Session->write($key, $search);
@@ -225,10 +225,10 @@ class StudentsController extends StudentsAppController {
 		$data = $this->Student->findById($id);
 		$obj = $data['Student'];
 		$name = trim($obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']);
+		$obj['name'] = $name;
 		$this->bodyTitle = $name;
 		$this->Session->write('Student.data', $obj);
-		$this->Session->write('Student.data.name', $name);
-		$this->Navigation->addCrumb($name, array('controller' => 'Students', 'action' => 'view'));
+		$this->Navigation->addCrumb($name, array('controller' => $this->name, 'action' => 'view'));
 		$this->Navigation->addCrumb('Overview');
 		$this->set('data', $data);
 	}
@@ -239,12 +239,13 @@ class StudentsController extends StudentsAppController {
 	}
 
 	public function edit() {
-		$studentId = null;
+		$model = 'Student';
+		$id = null;
 		$addressAreaId = false;
 		$birthplaceAreaId = false;
-		if ($this->Session->check('Student.id')) {
-			$studentId = $this->Session->read('Student.id');
-			$this->Student->id = $studentId;
+		if ($this->Session->check($model . '.id')) {
+			$id = $this->Session->read($model . '.id');
+			$this->Student->id = $id;
 			$this->Navigation->addCrumb('Edit');
 		} else {
 			$this->Navigation->addCrumb('Add');
@@ -254,17 +255,17 @@ class StudentsController extends StudentsAppController {
 		if ($this->request->is(array('post', 'put'))) {
 			$data = $this->request->data;
 			$this->Student->set($data);
-			$addressAreaId = $this->request->data['Student']['address_area_id'];
-			$birthplaceAreaId = $this->request->data['Student']['birthplace_area_id'];
+			$addressAreaId = $this->request->data[$model]['address_area_id'];
+			$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			
 			if ($this->Student->validates() && $this->Student->save()) {
 				if ($this->Wizard->isActive()) {
-					if (is_null($studentId)) {
-						$this->Message->alert('Student.add.success');
-						$studentId = $this->Student->getLastInsertId();
-						$this->Session->write('Student.id', $studentId);
+					if (is_null($id)) {
+						$this->Message->alert($model . '.add.success');
+						$id = $this->Student->getLastInsertId();
+						$this->Session->write($model . '.id', $id);
 					}
-					$this->Session->write('Student.data', $this->Student->findById($studentId));
+					$this->Session->write($model . '.data', $this->Student->findById($id));
 					// unset wizard so it will not auto redirect from WizardComponent
 					unset($this->request->data['wizard']['next']);
 					$this->Wizard->next();
@@ -274,18 +275,18 @@ class StudentsController extends StudentsAppController {
 				}
 			}
 		} else {
-			if (!empty($studentId)) {
-				$data = $this->Student->findById($studentId);
+			if (!empty($id)) {
+				$data = $this->Student->findById($id);
 				$this->request->data = $data;
-				$addressAreaId = $this->request->data['Student']['address_area_id'];
-				$birthplaceAreaId = $this->request->data['Student']['birthplace_area_id'];
+				$addressAreaId = $this->request->data[$model]['address_area_id'];
+				$birthplaceAreaId = $this->request->data[$model]['birthplace_area_id'];
 			}
 		}
 		$genderOptions = $this->Option->get('gender');
 		$this->set('autoid', $this->getUniqueID());
 		$this->set('genderOptions', $genderOptions);
 		$this->set('data', $data);
-		$this->set('model', 'Student');
+		$this->set('model', $model);
 		$this->set('addressAreaId', $addressAreaId);
 		$this->set('birthplaceAreaId', $birthplaceAreaId);
 	}

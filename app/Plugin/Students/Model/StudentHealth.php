@@ -90,5 +90,4 @@ class StudentHealth extends StudentsAppModel {
 		$bloodTypeOptions = $controller->Option->get('bloodtype');
 		$controller->set(compact('header', 'yesnoOptions', 'bloodTypeOptions'));
 	}
-
 }

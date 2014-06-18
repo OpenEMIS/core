@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 class StudentAttachment extends StudentsAppModel {
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
-		'Student',
+		'Students.Student',
 		'ModifiedUser' => array('foreignKey' => 'modified_user_id', 'className' => 'SecurityUser'),
 		'CreatedUser' => array('foreignKey' => 'created_user_id', 'className' => 'SecurityUser')
 	);
@@ -125,18 +125,7 @@ class StudentAttachment extends StudentsAppModel {
 	}
 
 	public function attachmentsDelete($controller, $params) {
-		$controller->autoRender = false;
-		if ($controller->Session->check('Student.id') && $controller->Session->check('StudentAttachment.id')) {
-			$id = $controller->Session->read('StudentAttachment.id');
-
-			if ($this->delete($id)) {
-				$controller->Message->alert('general.delete.success');
-			} else {
-				$controller->Message->alert('general.delete.failed');
-			}
-			$controller->Session->delete('StudentAttachment.id');
-			return $controller->redirect(array('action' => 'attachments'));
-		}
+		return $this->remove($controller, 'attachments');
 	}
 
 	public function attachmentsDownload($controller, $params) {
