@@ -1,7 +1,4 @@
 <?php
-
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Comments'));
 $this->start('contentActions');

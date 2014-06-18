@@ -23,9 +23,9 @@ $this->start('contentBody');
 
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'edit'));
 $labelOptions = $formOptions['inputDefaults']['label'];
-$formOptions['id'] = 'student';
+$formOptions['id'] = $model;
 $formOptions['type'] = 'file';
-echo $this->Form->create('Student', $formOptions);
+echo $this->Form->create($model, $formOptions);
 ?>
 
 <fieldset class="section_break">
@@ -38,7 +38,7 @@ echo $this->Form->create('Student', $formOptions);
 			echo $this->Form->input('identification_no', array(
 				'label' => $openEmisIdLabel,
 				'onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_identification');"));
-			$tempIdNo = isset($this->data['Student']['identification_no'])?$this->data['Student']['identification_no'] : '';
+			$tempIdNo = isset($this->data[$model]['identification_no'])?$this->data[$model]['identification_no'] : '';
 			echo $this->Form->hidden(null, array('id'=>'validate_student_identification', 'name' => 'validate_student_identification', 'value'=>$tempIdNo));
 		} else {
 			if ($this->Session->check('Student.id')) {
@@ -55,7 +55,7 @@ echo $this->Form->create('Student', $formOptions);
 		echo $this->Form->input('last_name');
 		echo $this->Form->input('preferred_name');
 		echo $this->Form->input('gender', array('options' => $genderOptions));
-		$tempDob = isset($this->data['Student']['date_of_birth']) ? array('data-date' => $this->data['Student']['date_of_birth']) : array();
+		$tempDob = isset($this->data[$model]['date_of_birth']) ? array('data-date' => $this->data[$model]['date_of_birth']) : array();
 		echo $this->FormUtility->datepicker('date_of_birth', $tempDob);
 		
 		$imgOptions = array();
@@ -63,37 +63,25 @@ echo $this->Form->create('Student', $formOptions);
 		$imgOptions['width'] = '90';
 		$imgOptions['height'] = '115';
 		$imgOptions['label'] = __('Profile Image');
-		if (isset($this->data['Student']['photo_name']) && isset($this->data['Student']['photo_content'])) {
-			$imgOptions['src'] = $this->Image->getBase64($this->data['Student']['photo_name'], $this->data['Student']['photo_content']);
+		if (isset($this->data[$model]['photo_name']) && isset($this->data[$model]['photo_content'])) {
+			$imgOptions['src'] = $this->Image->getBase64($this->data[$model]['photo_name'], $this->data[$model]['photo_content']);
 		}
 		echo $this->element('templates/file_upload_preview', $imgOptions);
 	?>
-		<!--div class="form-group">
-			<div class="col-md-3"> </div>
-			<div class="col-md-6">
-				<?php echo $this->Form->hidden('reset_image', array('value' => '0')); ?>
-				<span id="resetDefault" class="icon_delete"></span>
-				<?php echo isset($imageUploadError) ? '<div class="error-message">' . $imageUploadError . '</div>' : ''; ?><br/>
-				<div id="image_upload_info">
-					<em>
-						<?php echo sprintf(__("Max Resolution: %s pixels"), '400 x 514'); ?>
-						<br/>
-						<?php echo __("Max File Size:") . ' 200 KB'; ?>
-						<br/>
-						<?php echo __("Format Supported:") . " .jpg, .jpeg, .png, .gif"; ?>
-					</em>
-				</div>
-			</div>
-		</div-->
+	<div class="form-group">
+		<div class="col-md-3"></div>
+		<div class="col-md-6">
+			<?php echo __("Format Supported:") . " .jpg, .jpeg, .png, .gif"; ?>
+		</div>
+	</div>
 </fieldset>
 
 <fieldset class="section_break">
 	<legend><?php echo __('Address'); ?></legend>
-	
 	<?php 
 		echo $this->Form->input('address', array('onkeyup' => 'utility.charLimit(this)'));
 		echo $this->Form->input('postal_code', array('onkeyup'=>"javascript:updateHiddenField(this, 'validate_student_postal_code');"));
-		$tempPostCode = isset($this->data['Student']['postal_code'])?$this->data['Student']['postal_code'] : '';
+		$tempPostCode = isset($this->data[$model]['postal_code'])?$this->data[$model]['postal_code'] : '';
 		echo $this->Form->hidden(null, array('id'=>'validate_student_postal_code', 'name' => 'validate_student_postal_code', 'value' => $tempPostCode));
 	?>
 </fieldset>

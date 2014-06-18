@@ -5,12 +5,12 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
 if ($_edit && !$WizardMode) {
-            echo $this->Html->link(__('Back'), array('action' => 'languagesView', $id), array('class' => 'divider'));
-        }
+	echo $this->Html->link(__('Back'), array('action' => 'languagesView', $id), array('class' => 'divider'));
+}
 $this->end();
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'languagesAdd'));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'languagesEdit'));
 echo $this->Form->create($model, $formOptions);
 echo $this->Form->hidden('id');
 echo $this->FormUtility->datepicker('evaluation_date', array('id' => 'IssueDate'));
