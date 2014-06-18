@@ -73,6 +73,9 @@ class MessageComponent extends Component {
 		'SchoolYear' => array(
 			'noAvailableYear' => array('type' => 'warn', 'msg' => 'There are no school years available')
 		),
+		'InstitutionSiteProgramme' => array(
+			'noData' => array('type' => 'warn', 'msg' => 'There are no programmes associated with this institution site for the selected year')
+		),
 		'institutionSiteAttendance' => array(
 			'student' => array(
 				'failed' => array(
