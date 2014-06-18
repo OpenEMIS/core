@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentSpecialNeed extends StudentsAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('special_need_date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('special_need_date'));
 	
 	public $belongsTo = array(
 		'SpecialNeedType',
