@@ -40,6 +40,7 @@ class StaffTrainingNeed extends StaffAppModel {
 			'foreignKey' => 'ref_course_id',
             'conditions' => array('ref_course_table' => 'TrainingNeedCategory'),
 		),
+		'Staff',
 		'TrainingPriority',
 		'TrainingStatus',
 	);
@@ -137,7 +138,7 @@ class StaffTrainingNeed extends StaffAppModel {
         $controller->set(compact('header', 'data', 'id', 'trainingNeedTypes', 'trainingNeedCategoryOptions'));
 
 		//APROVAL
-		$pending = $data['StaffTrainingNeed']['training_status_id']=='2' ? 'true' : 'false';
+		$pending = $data['StaffTrainingNeed']['training_status_id']=='2' ? true : false;
 		$controller->Workflow->getApprovalWorkflow($this->name, $pending, $id);
 		$controller->set('approvalMethod', 'trainingNeed');
 		$controller->set('controller', 'Staff');
@@ -244,16 +245,24 @@ class StaffTrainingNeed extends StaffAppModel {
 		if($controller->Session->check('StaffId')){
 		 	$staffId = $controller->Session->read('StaffId');
 		 	$institutionSiteStaff = ClassRegistry::init('InstitutionSiteStaff');
-		 	$staffData = $institutionSiteStaff->findAllByStaffId($staffId);//('all', array('recursive'=>-1,'conditions'=>array('staff_id' => $staffId)));
-		 	$staffPositionTitleId = array();
-		 	foreach($staffData as $val){
-		 		if(!empty($val['InstitutionSiteStaff']['position_title_id'])){
-		 			$staffPositionTitleId[] = $val['InstitutionSiteStaff']['position_title_id'];
-		 		}
-		 	}
+		 	$staffPositionID = $institutionSiteStaff->find('list', 
+				array(
+					'fields'=>array('institutionSitePosition.staff_position_title_id'),
+					'joins' => array(
+						array(
+							'type' => 'LEFT',
+							'table' => 'institution_site_positions',
+							'alias' => 'institutionSitePosition',
+							'conditions' => array(
+								'institutionSitePosition.id = institutionSiteStaff.institution_site_position_id'
+							)
+						)
+					),
+					'conditions'=>array('institutionSiteStaff.staff_id'=>$staffId)
+				)
+			);
 
 		 	$trainingNeedTypeOptions = $this->trainingNeedTypeOptions;
-		 	
 
 			$trainingCourseOptions = $this->TrainingCourse->find('list', 
 				array(
@@ -265,8 +274,7 @@ class StaffTrainingNeed extends StaffAppModel {
 							'alias' => 'TrainingCourseTargetPopulation',
 							'conditions' => array(
 								'TrainingCourse.id = TrainingCourseTargetPopulation.training_course_id',
-							     'TrainingCourseTargetPopulation.position_title_id' => $staffPositionTitleId,
-							     'TrainingCourseTargetPopulation.position_title_table' => 'staff_position_titles'
+							     'TrainingCourseTargetPopulation.staff_position_title_id' => $staffPositionID
 							)
 					),
 					array(
@@ -294,9 +302,7 @@ class StaffTrainingNeed extends StaffAppModel {
 				))
 			);
 		}
-      //  $trainingCourseId = isset($controller->request->data['StaffTrainingNeed']['training_course_id']) ? $controller->request->data['StaffTrainingNeed']['training_course_id'] : "";
-      //	$controller->set('selectedCourse', $trainingCourseId);
-		
+
 		$trainingNeedCategoryOptions = array_map('__', $this->TrainingNeedCategory->getList());
 		$controller->set(compact('trainingPriorityOptions', 'trainingCourseOptions', 'trainingNeedTypeOptions', 'trainingNeedCategoryOptions'));
 
@@ -307,7 +313,15 @@ class StaffTrainingNeed extends StaffAppModel {
 			if(!empty($data)){
 				$controller->request->data = $data;
 			}
-
+			$controller->request->data['StaffTrainingNeed']['training_need_type'] = '1';
+			if($data['StaffTrainingNeed']['ref_course_table']=='TrainingNeedCategory'){
+				$controller->request->data['StaffTrainingNeed']['training_need_type'] = '2';
+				$controller->request->data['StaffTrainingNeed']['ref_need_id'] = $data['StaffTrainingNeed']['ref_course_table'];
+				$controller->request->data['StaffTrainingNeed']['ref_need_code']= $data['StaffTrainingNeed']['ref_course_code'];
+				$controller->request->data['StaffTrainingNeed']['ref_need_title']= $data['StaffTrainingNeed']['ref_course_title'];
+				$controller->request->data['StaffTrainingNeed']['ref_need_description']= $data['StaffTrainingNeed']['ref_course_description'];
+				$controller->request->data['StaffTrainingNeed']['ref_need_requirement']= $data['StaffTrainingNeed']['ref_course_requirement'];
+			}
 		}
 		else{
 			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
@@ -329,13 +343,13 @@ class StaffTrainingNeed extends StaffAppModel {
 			$this->set($data);
 
 			if ($this->validates()){
-				if (isset($controller->request->data['save'])) {
-				   	$controller->request->data['StaffTrainingNeed']['training_status_id'] = 1; 
-				} else if (isset($controller->request->data['submitForApproval'])) {
-			      	$controller->request->data['StaffTrainingNeed']['training_status_id'] = 2; 
+				if (isset($data['save'])) {
+				   	$data['StaffTrainingNeed']['training_status_id'] = 1; 
+				} else if (isset($data['submitForApproval'])) {
+			      	$data['StaffTrainingNeed']['training_status_id'] = 2; 
 				}
 				
-				if($this->save($controller->request->data)){
+				if($this->save($data)){
 					$controller->Message->alert('general.add.success');
 					return $controller->redirect(array('action' => 'trainingNeed'));
 				}

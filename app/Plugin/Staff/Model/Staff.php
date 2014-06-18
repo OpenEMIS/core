@@ -32,6 +32,25 @@ class Staff extends StaffAppModel {
 		'DatePicker' => array('date_of_birth')
 	);
 
+	public $hasMany = array(
+		'TrainingSessionTrainer' => array(
+			'className' => 'TrainingSessionTrainer',
+			'foreignKey' => 'ref_trainer_id',
+            'conditions' => array('ref_trainer_table' => 'Staff'),
+			'dependent' => true
+		),
+		'StaffTrainingNeed' => array(
+			'className' => 'StaffTrainingNeed',
+			'foreignKey' => 'staff_id',
+			'dependent' => true
+		),
+		'StaffTrainingSelfStudy' => array(
+			'className' => 'StaffTrainingSelfStudy',
+			'foreignKey' => 'staff_id',
+			'dependent' => true
+		)
+	);
+
 	public $validate = array(
 		'first_name' => array(
 			'ruleRequired' => array(
