@@ -145,7 +145,7 @@ class StaffTraining extends StaffAppModel {
 	}
 
     public function trainingDelete($controller, $params) {
-		if($controller->Session->check('StaffId') && $controller->Session->check('StaffTrainingId')) {
+		if($controller->Session->check('Staff.id') && $controller->Session->check('StaffTrainingId')) {
             $id = $controller->Session->read('StaffTrainingId');
             if ($this->delete($id)) {
                 $controller->Message->alert('general.delete.success');
