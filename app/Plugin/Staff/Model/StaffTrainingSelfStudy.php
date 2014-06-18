@@ -135,9 +135,9 @@ class StaffTrainingSelfStudy extends StaffAppModel {
             'model' => $this->alias,
             'fields' => array(
 				array('field' => 'file_name', 'model' => 'StaffTrainingSelfStudyAttachment', 'labelKey' => 'general.attachments', 'multi_records' => true, 'type' => 'files', 'url' => array('action' => 'trainingSelfStudyAttachmentsDownload')),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false, 'labelKey' => 'general.modified_by'),
                 array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false, 'labelKey' => 'general.created_by'),
                 array('field' => 'created', 'edit' => false)
             )
         );

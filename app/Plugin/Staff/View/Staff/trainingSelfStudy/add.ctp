@@ -47,7 +47,8 @@ if($this->request->data['StaffTrainingSelfStudy']['resultEditable']!='2'){
 	echo $this->Form->input('end_date', array('type'=>'text', $readonly));
 }
 echo $this->Form->input('description', array('type'=>'textarea', $readonly));
-echo $this->Form->input('objective', array('type'=>'textarea', $readonly)); 
+echo $this->Form->input('objective', array('type'=>'textarea', $readonly,
+	'label' => array('text' => $this->Label->get('StaffTraining.objective'), 'class' => 'col-md-3 control-label'))); 
 echo $this->Form->input('location', array($readonly));
 echo $this->Form->input('training_provider', array('id'=>'searchTrainingProvider','class'=>'form-control training-provider', 'url'=>'Staff/ajax_find_training_provider/', 'placeholder' => __('Training Provider'), $readonly));
 echo $this->Form->input('hours', array($readonly));
@@ -75,14 +76,12 @@ if($this->request->data['StaffTrainingSelfStudy']['resultEditable']!='2'){
 echo $this->element('templates/file_list', compact('tableHeaders', 'tableData'));
 
 ?>
-<div class="form-group">
-	<div class="col-md-offset-4">
+<div class="controls view_controls">
 		<?php if (!isset($this->request->data['StaffTrainingSelfStudy']['training_status_id']) || $this->request->data['StaffTrainingSelfStudy']['training_status_id'] == 1 || $this->request->data['StaffTrainingSelfStudy']['resultEditable']=='2') { ?>
 			<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="js:if(objTrainingSelfStudies.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
 			<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="js:if(objTrainingSelfStudies.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
 		<?php } ?>
 		<?php echo $this->Html->link(__('Cancel'), array('action' => 'trainingSelfStudy'), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
 </div>
 <?php
 echo $this->Form->end();
