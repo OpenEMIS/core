@@ -36,7 +36,8 @@ class TrainingController extends TrainingAppController {
     public function beforeFilter() {
         parent::beforeFilter();
         $this->bodyTitle = 'Administration';
-        $this->Navigation->addCrumb('Administration', array('controller' => '../Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
+		$this->Navigation->addCrumb('Training', array('controller' => $this->name, 'action' => 'course'));
     }
 
 

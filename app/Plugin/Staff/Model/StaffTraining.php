@@ -17,6 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('UtilityComponent', 'Component');
 
 class StaffTraining extends StaffAppModel {
+	public $useTable = 'staff_training';
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('completed_date'));
 	public $belongsTo = array(
 		'StaffTrainingCategory' => array(
