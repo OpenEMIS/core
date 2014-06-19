@@ -66,7 +66,7 @@ class SearchBehavior extends ModelBehavior {
 	private function getQueryNotExists($model) {
 		$notExists = array(
 			'Student' => 'SELECT student_id FROM institution_site_students WHERE student_id = Student.id',
-			'Teacher' => 'SELECT teacher_id FROM institution_site_teachers WHERE teacher_id = Teacher.id',
+		//	'Teacher' => 'SELECT teacher_id FROM institution_site_teachers WHERE teacher_id = Teacher.id',
 			'Staff' => 'SELECT staff_id FROM institution_site_staff WHERE staff_id = Staff.id'
 		);
 		return $notExists[$model->alias];
@@ -88,14 +88,14 @@ class SearchBehavior extends ModelBehavior {
 				'conditions' => array('InstitutionSiteProgramme.id = InstitutionSiteStudent.institution_site_programme_id')
 			);
 			$obj = 'InstitutionSiteProgramme';
-		} else if($class==='Teacher') { // joins for Teachers
+		} /*else if($class==='Teacher') { // joins for Teachers
 			$joins[] = array(
 				'table' => 'institution_site_teachers',
 				'alias' => 'InstitutionSiteTeacher',
 				'conditions' => array('InstitutionSiteTeacher.teacher_id = Teacher.id')
 			);
 			$obj = 'InstitutionSiteTeacher';
-		} else if($class==='Staff') { // joins for Staff
+		} */else if($class==='Staff') { // joins for Staff
 			$joins[] = array(
 				'table' => 'institution_site_staff',
 				'alias' => 'InstitutionSiteStaff',

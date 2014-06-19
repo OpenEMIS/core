@@ -33,12 +33,7 @@ class InstitutionSiteCustomFieldOption extends AppModel {
 	);
 	
 	public function getSubOptions() {
-		$conditions = array(
-			'OR' => array(
-				'InstitutionSiteCustomField.type' => 3,
-				'InstitutionSiteCustomField.type' => 4
-			)
-		);
+		$conditions = array('InstitutionSiteCustomField.type' => array(3, 4));
 		$data = $this->InstitutionSiteCustomField->findList(array('conditions' => $conditions));
 		return $data;
 	}

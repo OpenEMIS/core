@@ -55,22 +55,22 @@ echo $this->element('census/year_options');
 			<table class="table table-striped table-hover table-bordered">
 				<thead>
 					<tr>
-						<th class="table_cell cell_category"><?php echo __('Category'); ?></th>
+						<th class="cell_category"><?php echo __('Category'); ?></th>
 						<?php
 						$statusCount = 0;
 						foreach ($arrval['status'] as $statVal) {
 							$statusCount++;
 							?>
-							<th class="table_cell" style="white-space:normal"><?php echo $statVal; ?></th>
+							<th style="white-space:normal"><?php echo $statVal; ?></th>
 						<?php } ?>
-						<th class="table_cell"><?php echo __('Total'); ?></th>
+						<th><?php echo __('Total'); ?></th>
 					</tr>
 				</thead>
 
-				<tbody class="table_body" id="<?php echo $infraname; ?>_section">
+				<tbody id="<?php echo $infraname; ?>_section">
 					<?php foreach ($arrval['types'] as $typeid => $typeVal) { ?>
-						<tr class="table_row">
-							<td class="table_cell"><?php echo $typeVal; ?></td>
+						<tr>
+							<td><?php echo $typeVal; ?></td>
 
 							<!-- Status -->
 							<?php
@@ -100,13 +100,13 @@ echo $this->element('census/year_options');
 								}
 								?>
 
-								<td class="table_cell cell_number <?php echo $record_tag; ?>">
+								<td class="cell_number <?php echo $record_tag; ?>">
 									<?php echo $val; ?>
 								</td>
 							<?php } // end foreach(status)  ?>
 							<!-- Status -->
 
-							<td class="table_cell cell_number"><?php
+							<td class="cell_number"><?php
 								echo $statusTotal > 0 ? $statusTotal : '';
 								$total += $statusTotal;
 								?></td>
@@ -116,12 +116,8 @@ echo $this->element('census/year_options');
 
 				<tfoot class="table_foot">
 					<tr>
-						<?php for ($i = 0; $i < $statusCount; $i++) { ?>
-
-							<td class="table_cell"></td>
-						<?php } ?>
-						<td class="table_cell cell_label"><?php echo __('Total'); ?></td>
-						<td class="table_cell cell_value cell_number"><?php echo $total; ?></td>
+						<td style="text-align: right" colspan="<?php echo $statusCount+1; ?>"><?php echo __('Total'); ?></td>
+						<td class="table_cell cell_value cell-number"><?php echo $total; ?></td>
 					</tr>
 				</tfoot>
 			</table>

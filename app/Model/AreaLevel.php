@@ -50,7 +50,7 @@ class AreaLevel extends AppModel {
 		if($controller->request->is('post') || $controller->request->is('put')) {
 			$controller->request->data[$this->alias]['level'] = $this->field('level', array(), 'level DESC') + 1;
 			if ($this->save($controller->request->data)) {
-				$controller->Message->alert('general.edit.success');
+				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => 'levels'));
 			}
 		}

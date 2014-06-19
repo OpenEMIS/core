@@ -1,134 +1,62 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
-echo $this->Html->script('search', false);
-
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', $className);
+$this->assign('contentHeader', $data[$model]['name']);
 
 $this->start('contentActions');
-echo $this->Html->link(__('List'), array('action' => 'classes', $yearId), array('class' => 'divider'));
+echo $this->Html->link($this->Label->get('general.back'), array('action' => $_action, $data[$model]['school_year_id']), array('class' => 'divider'));
 if ($_edit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'classesEdit', $classId), array('class' => 'divider'));
+    echo $this->Html->link($this->Label->get('general.edit'), array('action' => $_action.'Edit', $data[$model]['id']), array('class' => 'divider'));
 }
 if ($_delete) {
-	echo $this->Html->link(__('Delete'), array('action' => 'classesDelete', $classId), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
-}
-if ($_accessControl->check($this->params['controller'], 'classesAttendance')) {
-	echo $this->Html->link(__('Attendance'), array('action' => 'classesAttendance'), array('class' => 'divider'));
-}
-if ($_accessControl->check($this->params['controller'], 'classesAssessments')) {
-	echo $this->Html->link(__('Results'), array('action' => 'classesAssessments', $classId), array('class' => 'divider'));
+	echo $this->Html->link($this->Label->get('general.delete'), array('action' => $_action.'Delete', $data[$model]['id']), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
 $this->end();
 
 $this->start('contentBody');
+echo $this->element('../InstitutionSites/classes/controls');
 ?>
-<div id="classes" class="content_wrapper">
-
-	<?php
-	$i = 0;
-	?>
-
-	<table class="table table-striped table-hover table-bordered" style="margin-bottom: 20px;">
-		<thead>
-			<tr>
-				<th class="table_cell cell_year"><?php echo __('Year'); ?></th>
-				<th class="table_cell"><?php echo __('Grade'); ?></th>
-				<th class="table_cell"><?php echo __('Seats'); ?></th>
-				<th class="table_cell"><?php echo __('Shift'); ?></th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<td class="table_cell cell_year"><?php echo $year; ?></td>
-				<td class="table_cell">
-					<?php
-					foreach ($grades as $id => $name) {
-						$i++;
-						?>
-						<div class="table_cell_row <?php echo $i == sizeof($grades) ? 'last' : ''; ?>"><?php echo $name; ?></div>
-					<?php } ?>
-				</td>
-				<td class="table_cell"><?php echo $noOfSeats; ?></td>
-				<td class="table_cell"><?php echo $noOfShifts; ?></td>
-			</tr>
-		</tbody>
-	</table>
-
-	<fieldset class="section_group">
-		<legend><?php echo __('Subjects'); ?></legend>
-		<table class="table table-striped table-hover table-bordered">
-			<thead>
-				<tr>
-					<th class="table_cell cell_year"><?php echo __('Code'); ?></th>
-                    <th class="table_cell"><?php echo __('Name'); ?></th>
-                    <th class="table_cell cell_category"><?php echo __('Grade'); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ($subjects as $obj) { ?>
-					<tr>
-						<td class="table_cell"><?php echo $obj['EducationSubject']['code']; ?></td>
-						<td class="table_cell"><?php echo $obj['EducationSubject']['name']; ?></td>
-						<td class="table_cell"><?php echo $obj['EducationGrade']['name']; ?></td>
-					</tr>
-				<?php } ?>
-			</tbody>
-		</table>
-	</fieldset>
-
-	<fieldset class="section_group">
-		<legend><?php echo __('Teachers'); ?></legend>
-		<table class="table table-striped table-hover table-bordered">
-			<thead>
-				<tr>
-					<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
-					<th class="table_cell"><?php echo __('Name'); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ($teachers as $obj) { ?>
-					<tr>
-						<td class="table_cell"><?php echo $obj['Teacher']['identification_no']; ?></td>
-						<td class="table_cell"><?php echo $obj['Teacher']['first_name'] . ' ' . $obj['Teacher']['last_name']; ?></td>
-					</tr>
-				<?php } ?>
-			</tbody>
-		</table>
-	</fieldset>
-
-	<fieldset class="section_group">
-		<legend><?php echo __('Students'); ?></legend>
-		<?php foreach ($grades as $id => $name) { ?>
-
-			<fieldset class="section_break">
-				<legend><?php echo $name ?></legend>
-
-				<table class="table table-striped table-hover table-bordered">
-					<thead>
-						<tr>
-							<th class="table_cell cell_id_no"><?php echo __('OpenEMIS ID'); ?></th>
-							<th class="table_cell"><?php echo __('Name'); ?></th>
-							<th class="table_cell cell_category"><?php echo __('Category'); ?></th>
-						</tr>
-					</thead>
-
-					<tbody>
-						<?php if (isset($students[$id])) { ?>
-							<?php foreach ($students[$id] as $obj) { ?>
-								<tr>
-									<td class="table_cell"><?php echo $obj['identification_no']; ?></td>
-									<td class="table_cell"><?php echo $obj['first_name'] . ' ' . $obj['middle_name'] . ' ' . $obj['last_name']; ?></td>
-									<td class="table_cell"><?php echo $obj['category']; ?></td>
-								</tr>
-							<?php } // end for ?>
-						<?php } // end if    ?>
-					</tbody>
-				</table>
-			</fieldset>
-
-		<?php } ?>
-	</fieldset>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('SchoolYear.name'); ?></div>
+	<div class="col-md-6"><?php echo $data['SchoolYear']['name']; ?></div>
 </div>
-<?php $this->end(); ?>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.name'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.no_of_seats'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['no_of_seats']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('InstitutionSiteClass.shift'); ?></div>
+	<div class="col-md-6"><?php echo $data['InstitutionSiteShift']['name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('EducationGrade.name'); ?></div>
+	<div class="col-md-6">
+		<?php
+		foreach($grades as $g) {
+			echo $g . '<br />';
+		}
+		?>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.modified_by'); ?></div>
+	<div class="col-md-6"><?php echo $data['ModifiedUser']['first_name'] . ' ' . $data['ModifiedUser']['last_name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.modified'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['modified']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.created_by'); ?></div>
+	<div class="col-md-6"><?php echo $data['CreatedUser']['first_name'] . ' ' . $data['CreatedUser']['last_name']; ?></div>
+</div>
+<div class="row">
+	<div class="col-md-3"><?php echo $this->Label->get('general.created'); ?></div>
+	<div class="col-md-6"><?php echo $data[$model]['created']; ?></div>
+</div>
+<?php
+$this->end();
+?>

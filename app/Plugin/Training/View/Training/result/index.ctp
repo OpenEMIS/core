@@ -16,7 +16,7 @@ $this->start('contentBody');
     <div class="col-md-4">
         <?php
             echo $this->Form->input('training_status_id', array(
-                'options' => $statusOptions,
+                'options' => array_map('__',$statusOptions),
                 'default' => $selectedStatus,
                 'empty' => __('Current'),
                 'class'=>'form-control',
@@ -31,7 +31,7 @@ $this->start('contentBody');
 <div class="table-responsive">
 <table class="table table-striped table-hover table-bordered">
     <thead url="<?php echo $this->params['controller'];?>/resultView">
-        <tr class="table_head">
+        <tr>
        		<td class="table_cell"><?php echo __('Date'); ?></td>
             <td class="table_cell"><?php echo __('Location'); ?></td>
             <td class="table_cell"><?php echo __('Course'); ?></td>

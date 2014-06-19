@@ -18,7 +18,6 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StudentAssessment extends StudentsAppModel {
     public $useTable = 'assessment_item_results';
-//    public $belongsTo = array('Student');
 
     public function getYears($studentId){
         $years = array();
@@ -114,8 +113,7 @@ class StudentAssessment extends StudentsAppModel {
 //                "EducationGrade.id",
 //                "EducationGrade.name",
 //                "EducationProgramme.name",
-                "InstitutionSite.name",
-                "Institution.name"
+                "InstitutionSite.name"
             ),
             'joins' => array(
                 array(
@@ -181,15 +179,7 @@ class StudentAssessment extends StudentsAppModel {
                     'conditions' => array(
                         "InstitutionSite.id = {$this->name}.institution_site_id"
                     )
-                ),
-                array(
-                    'table' => 'institutions',
-                    'alias' => 'Institution',
-                    'type' => 'INNER',
-                    'conditions' => array(
-                        "Institution.id = InstitutionSite.institution_id"
-                    )
-                ),
+                )
             ),
             'conditions' => array(
                 "{$this->name}.student_id" => $studentId,
@@ -217,7 +207,6 @@ class StudentAssessment extends StudentsAppModel {
 //            $tempArray['grade'] = array('name'=> $row['EducationGrade']['name'], 'id' => $row['EducationGrade']['id']);
 //            $tempArray['programme']['name'] = $row['EducationProgramme']['name'];
             $tempArray['site']['name'] = $row['InstitutionSite']['name'];
-            $tempArray['institution']['name'] = $row['Institution']['name'];
             $formattedData[] = $tempArray;
         }
 
@@ -229,7 +218,7 @@ class StudentAssessment extends StudentsAppModel {
     private function formatDataGroupBySiteProgrammeGrade($unformattedArray){
         $formattedArray = array();
         foreach($unformattedArray as $unformattedData){
-            $key = trim("{$unformattedData['institution']['name']} - {$unformattedData['site']['name']}");
+            $key = $unformattedData['site']['name'];
             if(!array_key_exists($key, $formattedArray)){
                 $formattedArray[$key] = array();
             }

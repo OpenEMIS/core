@@ -41,7 +41,7 @@ class NavigationComponent extends Component {
 		if(!$this->skip) {
 			$this->apply($controller->params['controller'], $this->controller->action);
 		}
-		$this->checkWizardModeLink();
+		//$this->checkWizardModeLink();
 		$this->controller->set('_topNavigations', $this->topNavigations);
 		$this->controller->set('_leftNavigations', $this->leftNavigations);
 		$this->controller->set('_params', $this->params);
@@ -54,7 +54,7 @@ class NavigationComponent extends Component {
 	//called before Controller::redirect()
 	public function beforeRedirect(Controller $controller, $url, $status = null, $exit = true) {}
 	
-	public function addCrumb($title, $options=array()) {		
+	public function addCrumb($title, $options=array()) {
 		$item = array(
 			'title' => __($title),
 			'link' => array('url' => $options),
@@ -135,8 +135,7 @@ class NavigationComponent extends Component {
 	public function getLinks() {
 		$nav = array();
 		$nav['Home'] = array('controller' => 'Home', 'links' => $this->getHomeLinks());
-		//$nav['Institutions'] = array('controller' => 'Institutions', 'links' => $this->getInstitutionsLinks());
-                $nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
+		$nav['Institutions'] = array('controller' => 'InstitutionSites', 'links' => $this->getInstitutionsLinks());
 		
 		// Initialise navigations from plugins
 		$modules = $this->settings['modules'];
@@ -191,6 +190,7 @@ class NavigationComponent extends Component {
 		}
 	}
 
+	/*
 	public function checkWizardModeLink(){
 		$wizardMode = false;
 		if(!empty($this->leftNavigations)){
@@ -221,7 +221,7 @@ class NavigationComponent extends Component {
 		foreach($links as $link){
 			$chkAction = $link['Navigation']['action'] . 'Add';
 			
-			if(/*$link['Navigation']['action'] == "attachments" ||*/ $link['Navigation']['action'] == "additional"){
+			if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
 				$chkAction = $link['Navigation']['action'] . 'Edit';
 			}else if($link['Navigation']['action']=='view'){
 				$chkAction = 'edit';
@@ -248,7 +248,7 @@ class NavigationComponent extends Component {
 				$link['Navigation']['completed'] = '-1';
 				$link['Navigation']['multiple'] = false;
 			}else{
-				if(/*$link['Navigation']['action'] == "attachments" ||*/ $link['Navigation']['action'] == "additional"){
+				if($link['Navigation']['action'] == "attachments" || $link['Navigation']['action'] == "additional"){
 					$link['Navigation']['new_action'] = $link['Navigation']['action'] . 'Edit';
 					$link['Navigation']['multiple'] = false;
 				}else{
@@ -391,15 +391,15 @@ class NavigationComponent extends Component {
     	if(!$this->Session->check('WizardMode') || $this->Session->read('WizardMode')!=true){
 			return;
 		}
-        /*$linkIndex = $this->getWizardLink($action);
-        $wizardLink = $this->Session->read('WizardLink');
-        $wizardLink[$linkIndex]['completed'] = '1';
-        $currentLinkIndex = $this->getLastWizardStep(true);
-        if($linkIndex+1 < count($wizardLink)){
-            if(($linkIndex+1)>=$currentLinkIndex){
-                $wizardLink[$linkIndex+1]['completed'] = '-1';
-            }
-        }*/
+        //$linkIndex = $this->getWizardLink($action);
+        //$wizardLink = $this->Session->read('WizardLink');
+        //$wizardLink[$linkIndex]['completed'] = '1';
+        //$currentLinkIndex = $this->getLastWizardStep(true);
+        //if($linkIndex+1 < count($wizardLink)){
+        //    if(($linkIndex+1)>=$currentLinkIndex){
+        //        $wizardLink[$linkIndex+1]['completed'] = '-1';
+        //    }
+        //}
 		$linkIndex = $this->getWizardLink($action);
 		$wizardLink = $this->Session->read('WizardLink');
 
@@ -537,5 +537,6 @@ class NavigationComponent extends Component {
     		$this->updateWizard($action, null, false);
     	}
     }
+	*/
 }
 ?>

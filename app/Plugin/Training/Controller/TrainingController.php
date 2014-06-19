@@ -8,9 +8,11 @@ class TrainingController extends TrainingAppController {
         'Teachers.TeacherPositionTitle', 
         'Training.TrainingSession',
         'Training.TrainingSessionTrainee',
+        'Training.TrainingSessionTrainer',
         'Training.TrainingCourseAttachment',
         'TrainingProvider',
-        'Training.TrainingCourseProvider'
+        'Training.TrainingCourseProvider',
+        'Training.TrainingCourseResultType'
      );
 
     public $helpers = array('Js' => array('Jquery'));
@@ -27,6 +29,9 @@ class TrainingController extends TrainingAppController {
         'award' => 'Students.StudentAward'
     ); 
 
+     public $components = array(
+        'FileUploader',
+    );
 
     public function beforeFilter() {
         parent::beforeFilter();
@@ -67,6 +72,13 @@ class TrainingController extends TrainingAppController {
         }
     }
 
+     public function ajax_add_result_type() {
+        $this->layout = 'ajax';
+        $this->set('index', $this->params->query['index']);
+        $this->set('trainingResultTypeOptions', $this->TrainingCourseResultType->TrainingResultType->getList());
+        $this->render('/Elements/result_type');
+    }
+
 
     public function attachmentsCourseAdd() {
         $this->layout = 'ajax';
@@ -104,13 +116,22 @@ class TrainingController extends TrainingAppController {
         $FileAttachment->download($id);
     }
 
+    public function trainingCourseAjaxAddField() {
+        $this->render =false;
+        $this->set('model', 'TrainingCourse');
+        $fileId = $this->request->data['size'];
+        $multiple = true;
+        $this->set(compact('fileId', 'multiple'));
+        $this->render('/Elements/templates/file_upload_field');
+    }
+
     //----------------------------------------------------------------------------
 
-    public function ajax_find_session($type) {
+    public function ajax_find_location() {
         if($this->request->is('ajax')) {
             $this->autoRender = false;
             $search = $this->params->query['term'];
-            $data = $this->TrainingSession->autocomplete($search,$type);
+            $data = $this->TrainingSession->autocomplete($search);
  
             return json_encode($data);
         }
@@ -123,10 +144,27 @@ class TrainingController extends TrainingAppController {
     }
 
     public function ajax_find_trainee($index,$trainingCourseID) {
-       if($this->request->is('ajax')) {
+        if($this->request->is('ajax')) {
             $this->autoRender = false;
             $search = $this->params->query['term'];
             $data = $this->TrainingSessionTrainee->autocomplete($search,$index,$trainingCourseID);
+ 
+            return json_encode($data);
+       }
+    }  
+
+    public function ajax_add_trainer() {
+        $this->layout = 'ajax';
+        $this->set('index', $this->params->query['index']);
+        $this->set('trainerType', $this->params->query['trainer_type']);
+        $this->render('/Elements/trainer');
+    }
+
+    public function ajax_find_trainer($index) {
+        if($this->request->is('ajax')) {
+            $this->autoRender = false;
+            $search = $this->params->query['term'];
+            $data = $this->TrainingSessionTrainer->autocomplete($search,$index);
  
             return json_encode($data);
        }

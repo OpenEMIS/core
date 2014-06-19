@@ -11,19 +11,16 @@ $this->assign('contentHeader', $header);
 	.cell_salary { width: 100px; }
 </style>
 
-<?php $this->start('contentBody'); ?>
-<?php foreach ($data as $key => $classes) { ?>
+<?php 
+$this->start('contentBody'); 
+$tableHeaders = array(__('Position'), __('From'),__('To'),__('Status'));
+foreach ($data as $key => $classes) { ?>
 	<fieldset class="section_group">
 		<legend><?php echo $key; ?></legend>
 		<div class="table-responsive">
 			<table class="table table-striped table-hover table-bordered">
 				<thead>
-					<tr>
-						<th class="table_cell"><?php echo __('Position'); ?></th>
-						<th class="table_cell cell_year"><?php echo __('From'); ?></th>
-						<th class="table_cell cell_year"><?php echo __('To'); ?></th>
-						<th class="table_cell cell_salary"><?php echo __('Status'); ?></th>
-					</tr>
+					<tr><?php echo $this->Html->tableHeaders($tableHeaders); ?></tr>
 				</thead>
 
 				<tbody>

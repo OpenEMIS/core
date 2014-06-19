@@ -1,4 +1,9 @@
-<?php echo $this->element('templates/file_upload_field', compact('multiple', 'fileId')); ?>
+<?php
+if(!isset($label)) {
+	$label = __('File');
+}
+echo $this->element('templates/file_upload_field', compact('multiple', 'fileId', 'label'));
+?>
 
 <?php if(isset($multiple)) :?>
 <div class="form-group">

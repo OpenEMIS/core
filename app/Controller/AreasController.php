@@ -52,11 +52,24 @@ class AreasController extends AppController {
 			$model = 'AreaEducation';
 		}
 		$modelObj = ClassRegistry::init($model);
-		$this->Area->recover('parent', -1);
+		$modelObj->recover('parent', -1);
 		return $this->redirect(array('action' => 'index'));
 	}
 	
 	public function index() {
 		return $this->redirect(array('action' => 'areas'));
+	}
+	
+	public function ajaxGetAreaOptions($model='Area', $parentId=0) {
+		$this->layout = 'ajax';
+		$levelModels = array('Area' => 'AreaLevel', 'AreaEducation' => 'AreaEducationLevel');
+		$levelModel = $levelModels[$model];
+		if($parentId > 0) {
+			$data = $this->{$model}->find('all', array(
+				'conditions' => array('parent_id' => $parentId, 'visible' => 1),
+				'order' => array('order')
+			));
+			$this->set(compact('data', 'model', 'levelModel'));
+		}
 	}
 }

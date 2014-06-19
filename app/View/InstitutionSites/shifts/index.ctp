@@ -1,6 +1,5 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Shifts'));
@@ -14,28 +13,28 @@ $this->end();
 $this->start('contentBody');
 ?>
 
-<div id="shifts" class="content_wrapper">
-
-    <table class="table table-striped table-hover table-bordered" action="InstitutionSites/shiftsView/">
-        <thead>
+<div class="table-responsive">
+	<table class="table table-striped table-hover table-bordered">
+		<thead>
 			<tr>
-				<th class="table_cell"><?php echo __('Year'); ?></th>
-				<th class="table_cell"><?php echo __('Shift'); ?></th>
-				<th class="table_cell"><?php echo __('Period'); ?></th>
-				<th class="table_cell"><?php echo __('Location'); ?></th>
+				<th><?php echo __('Year'); ?></th>
+				<th><?php echo __('Shift'); ?></th>
+				<th><?php echo __('Period'); ?></th>
+				<th><?php echo __('Location'); ?></th>
 			</tr>
-        </thead>
-
-        <tbody>
+		</thead>
+	
+		<tbody>
 			<?php foreach ($data as $obj): ?>
-				<tr class="table_row" row-id="<?php echo $obj['InstitutionSiteShift']['id']; ?>">
-					<td class="table_cell"><?php echo $obj['SchoolYear']['name']; ?></td>
-					<td class="table_cell"><?php echo $this->Html->link($obj['InstitutionSiteShift']['name'], array('action' => 'shiftsView', $obj['InstitutionSiteShift']['id']), array('escape' => false)); ?></td>
-					<td class="table_cell"><?php echo $obj['InstitutionSiteShift']['start_time']; ?> - <?php echo $obj['InstitutionSiteShift']['end_time']; ?></td>
-					<td class="table_cell"><?php echo $obj['InstitutionSite']['name']; ?></td>
+				<tr>
+					<td><?php echo $obj['SchoolYear']['name']; ?></td>
+					<td><?php echo $this->Html->link($obj['InstitutionSiteShift']['name'], array('action' => 'shiftsView', $obj['InstitutionSiteShift']['id']), array('escape' => false)); ?></td>
+					<td><?php echo $obj['InstitutionSiteShift']['start_time']; ?> - <?php echo $obj['InstitutionSiteShift']['end_time']; ?></td>
+					<td><?php echo $obj['InstitutionSite']['name']; ?></td>
 				</tr>
 			<?php endforeach; ?>
-        </tbody>
-    </table>
+		</tbody>
+	</table>
 </div>
+
 <?php $this->end(); ?>

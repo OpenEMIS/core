@@ -24,20 +24,6 @@ span .icon_delete { margin-top: 4px; margin-left: 3px; }
 
 #attachments.edit .table_cell { vertical-align: top !important; }
 
-fieldset.section_break#general > .row{
-    width:80%;
-    margin-left:15px;
-    float:left;
-}
-
-fieldset.section_break#general > .profile_image {
-    float: right;
-    width: 90px;
-    height: 115px;
-    border: 1px solid #CCCCCC;
-    margin-left: 20px;
-}
-
 #image_upload_info {
     font-size:9px;
     margin-left:5px;

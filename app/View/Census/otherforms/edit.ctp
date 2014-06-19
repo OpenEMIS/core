@@ -153,7 +153,7 @@ echo $this->element('census/year_options');
                     
                     echo '<div class="custom_field">
                                     <div class="field_label">'.$arrVals['CensusCustomField']['name'].'</div>
-                                    <div class="field_value"><div class="col-md-4">'; 
+                                    <div class="field_value"><div class="col-md-10">'; 
                                     $val = (isset($datavalues[$arrVals['CensusCustomField']['id']][0]['value']))?
                                         $datavalues[$arrVals['CensusCustomField']['id']][0]['value']:"";
                                     
