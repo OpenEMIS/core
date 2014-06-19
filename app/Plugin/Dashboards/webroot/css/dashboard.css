@@ -16,3 +16,9 @@
     font-size: 12px;
     font-weight: normal;
 }
+
+.left_control{
+	float: left;
+	width: 280px;
+	padding-right: 20px;
+}
