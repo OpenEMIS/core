@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffExtracurricular extends StaffAppModel {
-	public $actsAs = array('ControllerAction','Datepicker' => 'start_date');
+	public $actsAs = array('ControllerAction','DatePicker' => 'start_date');
 	public $belongsTo = array(
 		'Staff',
 		'SchoolYear',
