@@ -53,7 +53,7 @@ class ReportFormatBehavior extends ModelBehavior {
 		$header = $model->reportsGetHeader($args);
 		
 		$data = $model->reportsGetData($args);
-		//pr($header);die;
+		//pr($data);die;
 		$fileName = $model->reportsGetFileName($args);
 
 		$downloadedFile = $fileName . '.csv';
@@ -87,7 +87,7 @@ class ReportFormatBehavior extends ModelBehavior {
 			}
 		}
        
-        $footer = array("Report Generated: " . date("Y-m-d H:i:s"));
+        $footer = array(__("Report Generated").": "  . date("Y-m-d H:i:s"));
         fputcsv($csv_file, array(), ',', '"');
         fputcsv($csv_file, $footer, ',', '"');
         

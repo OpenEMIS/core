@@ -16,41 +16,46 @@ $this->start('contentBody');
 $formOptions = array('controller' => $this->params['controller'], 'action' => $this->action, 'plugin' => 'Dashboards');
 $formOptions = array_merge($formOptions, $this->params['pass']);
 
-echo $this->Form->create($modelName, array('url' => $formOptions, 'novalidate' => 1, 'class' => 'form-horizontal', 'inputDefaults' => array('class' => 'form-control')));
+echo $this->Form->create($modelName, array('url' => $formOptions, 'novalidate' => 1, 'class' => 'form-horizontal', 'inputDefaults' => array('class' => 'form-control','div' => 'row left_control','after' => '</div>')));
 echo $this->Form->input('geo_level_id', array(
 	'options' => $geoLvlOptions,
 	'default' => $geoLvlId,
-	'div' => 'col-md-4 form-group',
+	
 	'url' => 'Dashboards/dashboardsAjaxGetArea',
 	'onchange' => 'Dashboards.areaChange(this)',
+	//'before' => '<div class="col-md-4 form-group">',
 	'between' => '<div class="col-md-5">',
-	'after' => '</div>',
-	'label' => array('text' => __('Geographical Level'), 'class' => 'col-md-7  control-label')
+	//'after' => '</div>',
+	//'after' => '</div></div>',
+	'label' => array('text' => __('Geographical Level'), 'class' => 'col-md-7 control-label')
 ));
 echo $this->Form->input('area_level_id', array(
 	'options' => $areaLvlOptions,
 	'default' => $areaId,
-	'div' => 'col-md-5 form-group',
-	'between' => '<div class="col-md-9">',
-	'after' => '</div>',
-	'label' => array('text' => __('Area'), 'class' => 'col-md-3 control-label')
+	//'before' => '<div class="col-md-5 form-group">',
+	'between' => '<div class="col-md-8">',
+	//'after' => '</div></div>',
+	'label' => array('text' => __('Area'), 'class' => 'col-md-4 control-label')
 ));
 echo $this->Form->input('year_id', array(
 	'options' => $yearsOptions,
 	'default' => $yearId,
-	'div' => 'col-md-3 form-group',
-	'between' => '<div class="col-md-8">',
-	'after' => '</div>',
-	'label' => array('text' => __('Year'), 'class' => 'col-md-4 control-label')
+	//'before' => '<div class="col-md-3 form-group">',
+	'between' => '<div class="col-md-5">',
+	//'after' => '</div></div>',
+	'label' => array('text' => __('Year'), 'class' => 'col-md-5 control-label')
 ));
 
-echo $this->Form->input('Update', array(
+echo $this->Form->input(__('Update'), array(
 	'type' => 'submit',
 	'label' => false,
+	'div' => 'col-md-1 form-group',
+	'after' => false,
+	//'before' => '<div class="col-md-1 form-group">',
 	'class' => 'btn_save btn_right',
 	'onclick' => 'return Config.checkValidate()',
-	'before' => '<div class="col-md-1 form-group">',
-	'after' => '</div>',
+	//'before' => '<div class="col-md-1 form-group">',
+	//'after' => '</div>',
 ));
 
 echo $this->Html->div('clear_both underline', '', array('style' => "margin-bottom:10px;"));
