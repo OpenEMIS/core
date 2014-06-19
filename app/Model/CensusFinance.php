@@ -69,9 +69,10 @@ class CensusFinance extends AppModel {
 	}
 	
 	public function finances($controller, $params) {
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		if ($controller->request->is('post')) {
 			$yearId = $controller->data['CensusFinance']['school_year_id'];
-			$controller->request->data['CensusFinance']['institution_site_id'] = $controller->institutionSiteId;
+			$controller->request->data['CensusFinance']['institution_site_id'] = $institutionSiteId;
 			$this->save($controller->request->data['CensusFinance']);
 
 			$controller->redirect(array('action' => 'finances', $yearId));
@@ -79,7 +80,7 @@ class CensusFinance extends AppModel {
 
 		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-		$data = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $controller->institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
+		$data = $this->find('all', array('recursive' => 3, 'conditions' => array('CensusFinance.institution_site_id' => $institutionSiteId, 'CensusFinance.school_year_id' => $selectedYear)));
 		$newSort = array();
 		foreach ($data as $k => $arrv) {
 			$newSort[$arrv['FinanceCategory']['FinanceType']['FinanceNature']['name']][$arrv['FinanceCategory']['FinanceType']['name']][] = $arrv;
@@ -90,7 +91,7 @@ class CensusFinance extends AppModel {
 		$natures = ClassRegistry::init('FinanceNature')->find('list', array('recursive' => 2, 'conditions' => array('FinanceNature.visible' => 1)));
 		$sources = $this->FinanceSource->find('list', array('conditions' => array('FinanceSource.visible' => 1)));
 		
-		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->institutionSiteId, $selectedYear);
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		
 		$controller->set(compact('data', 'selectedYear', 'yearList', 'natures', 'sources', 'isEditable'));
 	}
@@ -118,7 +119,7 @@ class CensusFinance extends AppModel {
 			
 			if($controller->request->is('post') || $controller->request->is('put')) {
 				$controller->request->data[$this->alias]['school_year_id'] = $selectedYear;
-				$controller->request->data[$this->alias]['institution_site_id'] = $controller->institutionSiteId;
+				$controller->request->data[$this->alias]['institution_site_id'] = $controller->Session->read('InstitutionSite.id');
 				$controller->request->data[$this->alias]['source'] = 0;
 				
 				if ($this->save($controller->request->data)) {
