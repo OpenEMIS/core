@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusAssessment extends AppModel {
-    public $actsAs = array(
+	public $actsAs = array(
 		'ControllerAction',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
 		)
 	);
-    
+	
 	public $belongsTo = array(
 		'SchoolYear',
 		'InstitutionSite'
@@ -135,60 +135,60 @@ class CensusAssessment extends AppModel {
 			}
 		}
 	}
-        
-        public function assessments($controller, $params) {
-        $controller->Navigation->addCrumb('Results');
+		
+	public function assessments($controller, $params) {
+		$controller->Navigation->addCrumb('Results');
 
-        $yearList = $controller->SchoolYear->getYearList();
-        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$yearList = $controller->SchoolYear->getYearList();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 
-        $programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
-        $data = array();
-        if (empty($programmes)) {
-            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-        } else {
-            $data = $controller->CensusAssessment->getCensusData($controller->institutionSiteId, $selectedYear);
-            if (empty($data)) {
-                $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
-            }
-        }
-        
-        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-        
-        $controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
-    }
+		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		$data = array();
+		if (empty($programmes)) {
+			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+		} else {
+			$data = $controller->CensusAssessment->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			if (empty($data)) {
+				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+			}
+		}
+		
+		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+		
+		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+	}
 
-    public function assessmentsEdit($controller, $params) {
-        if ($controller->request->is('get')) {
-            $controller->Navigation->addCrumb('Edit Results');
+	public function assessmentsEdit($controller, $params) {
+		if ($controller->request->is('get')) {
+			$controller->Navigation->addCrumb('Edit Results');
 
-            $yearList = $controller->SchoolYear->getAvailableYears();
-            $selectedYear = $controller->getAvailableYearId($yearList);
-            $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-            if (!$editable) {
-                $controller->redirect(array('action' => 'assessments', $selectedYear));
-            } else {
-                $programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
-                $data = array();
-                if (empty($programmes)) {
-                    $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
-                } else {
-                    $data = $controller->CensusAssessment->getCensusData($controller->institutionSiteId, $selectedYear);
-                    if (empty($data)) {
-                        $controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
-                    }
-                }
-                
-                $controller->set(compact('selectedYear', 'yearList', 'data'));
-            }
-        } else {
-            $data = $controller->data['CensusAssessment'];
-            $yearId = $data['school_year_id'];
-            $controller->CensusAssessment->saveCensusData($data);
-            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
-            $controller->redirect(array('action' => 'assessments', $yearId));
-        }
-    }
+			$yearList = $controller->SchoolYear->getAvailableYears();
+			$selectedYear = $controller->getAvailableYearId($yearList);
+			$editable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			if (!$editable) {
+				$controller->redirect(array('action' => 'assessments', $selectedYear));
+			} else {
+				$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->Session->read('InstitutionSite.id'), $selectedYear);
+				$data = array();
+				if (empty($programmes)) {
+					$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+				} else {
+					$data = $controller->CensusAssessment->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+					if (empty($data)) {
+						$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+					}
+				}
+				
+				$controller->set(compact('selectedYear', 'yearList', 'data'));
+			}
+		} else {
+			$data = $controller->data['CensusAssessment'];
+			$yearId = $data['school_year_id'];
+			$controller->CensusAssessment->saveCensusData($data);
+			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+			$controller->redirect(array('action' => 'assessments', $yearId));
+		}
+	}
 	
 	public function reportsGetHeader($args) {
 		//$institutionSiteId = $args[0];
