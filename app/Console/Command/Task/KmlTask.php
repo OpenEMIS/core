@@ -88,7 +88,7 @@ class KmlTask extends AppTask {
         $tpl = $settings['tpl'];
 		
         foreach($data as $k => $arrv){
-			$line = str_replace('{InstitutionName}', $this->Common->cleanContent($arrv['Institution']['Name'].'-'.$arrv['InstitutionSite']['SiteName']), $tpl);
+			$line = str_replace('{InstitutionName}', $this->Common->cleanContent($arrv['InstitutionSite']['SiteName']), $tpl);
 			$line = str_replace('{Longitude}', $this->checkLongitudeLatitude($arrv['InstitutionSite']['Longitude']), $line);
 			$line = str_replace('{Latitude}', $this->checkLongitudeLatitude($arrv['InstitutionSite']['Latitude'], 'lat'), $line);
 			$line = str_replace('{school_description}', $this->formatSchooldescription($arrv), $line);		
@@ -159,8 +159,7 @@ class KmlTask extends AppTask {
 					"InstitutionSite.name AS SiteName",
 					"InstitutionSite.longitude AS Longitude",
 					"InstitutionSite.latitude AS Latitude",
-					"InstitutionSite.address AS Address",
-					"Institution.name AS Name"),
+					"InstitutionSite.address AS Address"),
 					"conditions"=>array("InstitutionSite.area_id" => array('.implode(",",$areaIds).')),"offset"=>'.$offsetStr.',"limit"=>'.$this->limit.')';
 				
 				$sql = str_replace('{cond}',$cond,$settings['sql']);//die;

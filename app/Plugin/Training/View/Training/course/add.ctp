@@ -1,9 +1,8 @@
 <?php
+echo $this->Html->css('../js/plugins/fileupload/bootstrap-fileupload', array('inline' => false));
+echo $this->Html->script('plugins/fileupload/bootstrap-fileupload', false);
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('attachments', 'stylesheet', array('inline' => false));
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
-
-echo $this->Html->script('attachments', false);
 echo $this->Html->script('/Training/js/courses', false);
 echo $this->Html->script('jquery-ui.min', false);
 
@@ -11,7 +10,11 @@ $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
 if($_edit) {
-	echo $this->Html->link(__('Back'), array('action' => 'course'), array('class' => 'divider', 'id'=>'back'));
+	if(!empty($this->data[$modelName]['id'])){
+		echo $this->Html->link(__('Back'), array('action' => 'courseView', $this->data[$modelName]['id']), array('class' => 'divider'));
+	}else{
+		echo $this->Html->link(__('Back'), array('action' => 'course'), array('class' => 'divider'));
+	}
 }
 $this->end();
 $this->start('contentBody');
@@ -28,11 +31,10 @@ padding: 3px 0 5px 20px;
 
 <?php
 $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'courseAdd'), 'file');
-echo $this->Form->create($model, $formOptions);
+echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$this->params['controller']."/attachmentsCourseDelete/")));
 ?>
-
-
 <span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
+
 <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
 <?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
 
@@ -47,50 +49,44 @@ echo $this->Form->create($model, $formOptions);
  <div class="row form-group row_target_population" style="min-height:45px;">
 	<label class="col-md-3 control-label"><?php echo __('Target Population'); ?></label>
 	<div class="col-md-4">
-	<div class="table target_population" style="width:247px;" url="Training/ajax_find_target_population/">
+	<div class="table target_population" url="Training/ajax_find_target_population/">
 		<div class="delete-target-population" name="data[DeleteTargetPopulation][{index}][id]"></div>
-		<div class="table_body" style="display:table;">
+		<table class="table table-striped table-hover table-bordered table_body">
+		<tbody>
 		<?php if(isset($this->request->data['TrainingCourseTargetPopulation']) && !empty($this->request->data['TrainingCourseTargetPopulation'])){ ?>
 			<?php 
 			$i = 0;   
 			foreach($this->request->data['TrainingCourseTargetPopulation'] as $val){?>
-			<?php if(!empty($val['position_title_table'])){ ?>
-			<div class="table_row " row-id="<?php echo $i;?>">
-				<div class="table_cell cell_description" style="width:90%">
-					<div class="input_wrapper">
-				 	<div class="position-title-name-<?php echo $i;?>">
-						<?php 
-						if($val['position_title_table']=='teacher_position_titles'){
-							echo $teacherPositionTitles[$val['position_title_id']];
-						}else{
-							echo $staffPositionTitles[$val['position_title_id']];
-						}?>
-					</div>		
-					<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_id', array('class' => 'position-title-id-'.$i . 
-					' validate-target-population', 'value'=>$val['position_title_id'])); ?>
-					<?php if(isset($val['id'])){ ?>
-					<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.id', array('value'=>$val['id'], 
-					'class' => 'control-id')); ?>
-					<?php } ?>
-					<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_table', array('class' => 'position-title-table-'.$i, 
-					'value'=>$val['position_title_table'])); ?>
-					<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_validate', array('class' => 'position-title-validate-'. 
-						' validate-target-population', 
-					'value'=>$val['position_title_table'] . '_' . $val['position_title_id'])); ?>
-				
-					</div>
-			    </div>
-			 
-				<div class="table_cell cell_delete">
-			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteTargetPopulation(this)"></span>
-			    </div>
-			</div>
+			<?php if(!empty($val['staff_position_title_id'])){ ?>
+			<tr class="table_row " row-id="<?php echo $i;?>">
+					<td class="table_cell cell_description" style="width:90%">
+						<div class="input_wrapper">
+					 	<div class="position-title-name-<?php echo $i;?>">
+							<?php echo $staffPositionTitles[$val['staff_position_title_id']];?>
+						</div>		
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.staff_position_title_id', array('class' => 'position-title-id-'.$i, 'value'=>$val['staff_position_title_id'])); ?>
+						<?php if(isset($val['id'])){ ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.id', array('value'=>$val['id'], 
+						'class' => 'control-id')); ?>
+						<?php } ?>
+						<?php echo $this->Form->hidden('TrainingCourseTargetPopulation.' . $i . '.position_title_validate', array('class' => 'position-title-validate-'. $i .
+							' validate-target-population', 
+						'value'=> $val['staff_position_title_id'])); ?>
+					
+						</div>
+				    </td>
+				 
+					<td class="table_cell cell_delete">
+				    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteTargetPopulation(this)"></span>
+				    </td>
+			</tr>
 			<?php } ?>
 		<?php 
 			$i++;
 		} ?>
 		<?php } ?>
-		</div>
+	</tbody>
+		</table>
 	</div>
 	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addTargetPopulation(this)" url="Training/ajax_add_target_population"  href="javascript: void(0)"><?php echo __('Add Target Population');?></a></div>
 
@@ -107,32 +103,32 @@ echo $this->Form->create($model, $formOptions);
     <div class="col-md-4">
 	<div class="table provider" style="width:247px;" url="Training/ajax_find_prerequisite/">
 		<div class="delete-provider" name="data[DeleteProvider][{index}][id]"></div>
-		<div class="table_body" style="display:table;">
+		<table class="table table-striped table-hover table-bordered table_body">
+		<tbody>
 		<?php if(isset($this->request->data['TrainingCourseProvider']) && !empty($this->request->data['TrainingCourseProvider'])){ ?>
 			<?php 
 			$i = 0;   
 			foreach($this->request->data['TrainingCourseProvider'] as $val){ ?>
-			<div class="table_row " row-id="<?php echo $i;?>">
-				<div class="table_cell cell_description" style="width:90%">
-					<div class="input_wrapper">	
+			<tr class="table_row " row-id="<?php echo $i;?>">
+				<td class="table_cell cell_description" style="width:90%">
 					<?php echo $this->Form->input('TrainingCourseProvider.' . $i . '.training_provider_id', array(
-						'options'=>$trainingProviderOptions,'value'=>$val['training_provider_id'], 'label'=>false, 'div'=>false, 'class'=>false)); ?>
+						'options'=>$trainingProviderOptions,'value'=>$val['training_provider_id'], 'class'=>'form-control validate-provider', 'label'=>false, 'between'=>false, 'div'=>false, 'onchange'=>'objTrainingCourses.validateProvider();')); ?>
 					<?php if(isset($val['id'])){ ?>
 					<?php echo $this->Form->hidden('TrainingCourseProvider.' . $i . '.id', array('value'=>$val['id'], 
 					'class' => 'control-id')); ?>
 					<?php } ?>
-					</div>
-			    </div>
+			    </td>
 			 
-				<div class="table_cell cell_delete">
+				<td class="table_cell cell_delete">
 			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteProvider(this)"></span>
-			    </div>
-			</div>
+			    </td>
+			</tr>
 		<?php 
 			$i++;
 		} ?>
 		<?php } ?>
-		</div>
+		</tbody>
+		</table>
 	</div>
 	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addProvider(this)" url="Training/ajax_add_provider"  href="javascript: void(0)"><?php echo __('Add Provider');?></a></div>
 	</div>
@@ -145,16 +141,17 @@ echo $this->Form->create($model, $formOptions);
 <div class="row form-group row_prerequisite" style="min-height:45px;">
 	<label class="col-md-3 control-label"><?php echo __('Prerequisite'); ?></label>
 	<div class="col-md-4">
-	<div class="table prerequisite" style="width:247px;" url="Training/ajax_find_prerequisite/">
+	<div class="table prerequisite" url="Training/ajax_find_prerequisite/">
 		<div class="delete-prerequisite" name="data[DeletePrerequisite][{index}][id]"></div>
-		<div class="table_body" style="display:table;">
+		<table class="table table-striped table-hover table-bordered table_body">
+		<tbody>
 		<?php if(isset($this->request->data['TrainingCoursePrerequisite']) && !empty($this->request->data['TrainingCoursePrerequisite'])){ ?>
 			<?php 
 			$i = 0;   
 			foreach($this->request->data['TrainingCoursePrerequisite'] as $val){ ?>
 			<?php if(!empty($val['code'])){ ?>
-			<div class="table_row " row-id="<?php echo $i;?>">
-				<div class="table_cell cell_description" style="width:90%">
+			<tr class="table_row " row-id="<?php echo $i;?>">
+				<td class="table_cell cell_description" style="width:90%">
 					<div class="input_wrapper">
 				 	<div class="training-course-title-<?php echo $i;?>">
 						<?php echo $val['code'] . ' - ' . $val['title'];?>
@@ -168,66 +165,81 @@ echo $this->Form->create($model, $formOptions);
 					'class' => 'control-id')); ?>
 					<?php } ?>
 					</div>
-			    </div>
+			    </td>
 			 
-				<div class="table_cell cell_delete">
+				<td class="table_cell cell_delete">
 			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deletePrerequisite(this)"></span>
-			    </div>
-			</div>
+			    </td>
+			</tr>
 			<?php } ?>
 		<?php 
 			$i++;
 		} ?>
 		<?php } ?>
-		</div>
+		</tbody>
+		</table>
 	</div>
 	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
 	</div>
 </div> 
-<?php 
-	echo $this->Form->input('pass_result'); 
-?>
-<span id="controller" class="none"><?php echo $this->params['controller']; ?></span>
-
-<div class="row form-group">
-	<label class="col-md-3 control-label"><?php echo __('Attachments'); ?></label>
+<div class="row form-group row_result_type" style="min-height:45px;">
+	<label class="col-md-3 control-label"><?php echo __('Result Type'); ?></label>
 	<div class="col-md-4">
-	<div class="table file_upload" style="width:240px;">
-		<div class="table_body">
-			<?php
-			if(isset($attachments) && !empty($attachments)){
-			foreach($attachments as $index => $value){
-				$obj = $value[$_model];
-				$fileext = strtolower(pathinfo($obj['file_name'], PATHINFO_EXTENSION));
-				$fieldName = sprintf('data[%s][%s][%%s]', $_model, $index);
-			?>
-			
-			<div class="table_row" file-id="<?php echo $obj['id']; ?>">
-				<?php echo $this->Utility->getIdInput($this->Form, $fieldName, $obj['id']); ?>
-				<?php echo $this->Form->input('name', array('type'=>'hidden','name' => sprintf($fieldName, 'name'), 'value' => $obj['name'])); ?>
-				<?php
-				echo $this->Form->input('description', array('type'=>'hidden',
-					'name' => sprintf($fieldName, 'description'),
-					'value' => $obj['description']
-				));
-				?>
-				<div class="table_cell center"><?php echo $this->Html->link($obj['name'], array('action' => 'attachmentsCourseDownload', $obj['id']));?></div>
-				<?php if($_delete) { ?>
-				<div class="table_cell cell_delete">
-					<span class="icon_delete" title="<?php echo __("Delete"); ?>" onClick="objTrainingCourses.deleteFile(<?php echo $obj['id']; ?>)"></span>
-				</div>
-				<?php } ?>
-			</div>
-			<?php 	
-				}
-			}	
-			?>
-		</div>
+	<div class="table result_type">
+		<div class="delete-result-type" name="data[DeleteResultType][{index}][id]"></div>
+		<table class="table table-striped table-hover table-bordered table_body">
+		<tbody>
+		<?php if(isset($this->request->data['TrainingCourseResultType']) && !empty($this->request->data['TrainingCourseResultType'])){ ?>
+			<?php 
+			$i = 0;   
+			foreach($this->request->data['TrainingCourseResultType'] as $val){ ?>
+			<?php if(!empty($val['training_result_type_id'])){ ?>
+			<tr class="table_row " row-id="<?php echo $i;?>">
+				<td class="table_cell cell_description" style="width:90%">
+					<div class="input_wrapper">
+				 	<div class="training-result-type-<?php echo $i;?>">
+						<?php echo $val['result_type'];?>
+					</div>		
+					<?php echo $this->Form->hidden('TrainingCourseResultType.' . $i . '.training_result_type_id', array('class' => 'training-result-type-id-'.$i . ' validate-result-type', 'value'=>$val['training_result_type_id'])); ?>
+					<?php if(isset($val['id'])){ ?>
+					<?php echo $this->Form->hidden('TrainingCourseResultType.' . $i . '.id', array('value'=>$val['id'], 
+					'class' => 'control-id')); ?>
+					<?php } ?>
+					</div>
+			    </td>
+			 
+				<td class="table_cell cell_delete">
+			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteResultType(this)"></span>
+			    </td>
+			</tr>
+			<?php } ?>
+		<?php 
+			$i++;
+		} ?>
+		<?php } ?>
+		</tbody>
+		</table>
 	</div>
-	 <div style="color:#666666;font-size:10px;"><?php echo __('Note: Max upload file size is 2MB.'); ?></div> 
-	<?php echo $this->Utility->getAddRow('Attachment'); ?>
+	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addResultType(this)" url="Training/ajax_add_result_type"  
+		href="javascript: void(0)"><?php echo __('Add Result Type');?></a></div>
 	</div>
-</div>
+</div> 
+<?php 
+$multiple = array('multipleURL' => $this->params['controller']."/trainingCourseAjaxAddField/");
+echo $this->Form->hidden('maxFileSize', array('name'=> 'MAX_FILE_SIZE','value'=>(2*1024*1024)));
+echo $this->element('templates/file_upload', compact('multiple'));
+
+$tableHeaders = array(__('File(s)'), '&nbsp;');
+$tableData = array();
+foreach ($attachments as $obj) {
+	$row = array();
+	$row[] = array($obj['TrainingCourseAttachment']['file_name'], array('file-id' =>$obj['TrainingCourseAttachment']['id']));
+	$row[] = '<span class="icon_delete" title="'. $this->Label->get('general.delete').'" onClick="jsForm.deleteFile('.$obj['TrainingCourseAttachment']['id'].')"></span>';
+	$tableData[] = $row;
+}
+echo $this->element('templates/file_list', compact('tableHeaders', 'tableData'));
+?>
+
 <div class="controls view_controls">
 	<?php if(!isset($this->request->data['TrainingCourse']['training_status_id']) || $this->request->data['TrainingCourse']['training_status_id']==1){ ?>
 	<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="js:if(objTrainingCourses.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>

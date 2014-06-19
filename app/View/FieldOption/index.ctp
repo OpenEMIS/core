@@ -36,9 +36,9 @@ if($hasDefault) {
 }
 $tableHeaders[] = $this->Label->get('general.option');
 if(isset($fields)) {
-	foreach($fields as $field => $value) {
-		if($value['display']) {
-			$tableHeaders[] = __($value['label']);
+	foreach($fields['fields'] as $value) {
+		if(isset($value['display']) && $value['display']) {
+			$tableHeaders[] = __(ucfirst($value['field']));
 		}
 	}
 }
@@ -58,9 +58,13 @@ foreach($data as $obj) {
 	}
 	$row[] = $this->Html->link($name, $linkParams);
 	if(isset($fields)) {
-		foreach($fields as $field => $value) {
-			if($value['display']) {
-				$row[] = $obj[$model][$field];
+		foreach($fields['fields'] as $value) {
+			if(isset($value['display']) && $value['display']) {
+				if($value['type'] != 'select') {
+					$row[] = $obj[$model][$value['field']];
+				} else {
+					$row[] = $value['options'][$obj[$model][$value['field']]];
+				}
 			}
 		}
 	}

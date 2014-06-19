@@ -17,11 +17,17 @@
 
 class StaffBehaviour extends StaffAppModel {
 
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('date_of_behaviour'));
+	public $actsAs = array(
+		'ControllerAction', 
+		'Datepicker' => array('date_of_behaviour'),
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
+	);
 	public $useTable = 'staff_behaviours';
 	public $belongsTo = array(
-		'Staff',
-		'StaffBehaviourCategory',
+		'Staff.Staff',
+		'Staff.StaffBehaviourCategory',
 		'InstitutionSite'
 	);
 	public $validate = array(
@@ -30,6 +36,33 @@ class StaffBehaviour extends StaffAppModel {
 				'rule' => 'notEmpty',
 				'message' => 'Please enter a valid title'
 			)
+		)
+	);
+	
+	public $reportMapping = array(
+		1 => array(
+			'fields' => array(
+                'InstitutionSite' => array(
+                    'name' => 'Institution'
+                ),
+                'Staff' => array(
+                    'identification_no' => 'Staff OpenEMIS ID',
+                    'first_name' => '',
+                    'middle_name' => '',
+                    'last_name' => '',
+                    'preferred_name' => ''
+                ),
+                'StaffBehaviourCategory' => array(
+                    'name' => 'Category'
+                ),
+                'StaffBehaviour' => array(
+                    'date_of_behaviour' => 'Date',
+                    'title' => 'Title',
+                    'description' => 'Description',
+                    'action' => 'Action'
+                )
+            ),
+            'fileName' => 'Report_Staff_Behaviour'
 		)
 	);
 
@@ -143,8 +176,10 @@ class StaffBehaviour extends StaffAppModel {
 			$controller->Utility->alert($controller->Utility->getMessage('TEACHER_NO_BEHAVIOUR_DATA'), array('type' => 'info'));
 		}
 
-		$controller->set('id', $id);
-		$controller->set('data', $data);
+		//$controller->set('id', $id);
+		//$controller->set('data', $data);
+		
+		$controller->set(compact('data', 'id'));
 	}
 
 	public function staffsBehaviourAdd($controller, $params) {
@@ -160,12 +195,16 @@ class StaffBehaviour extends StaffAppModel {
 
 			$categoryOptions = array();
 			$categoryOptions = $controller->StaffBehaviourCategory->getCategory();
-			$institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1));
-			$controller->set('institution_site_id', $controller->institutionSiteId);
-			$controller->set('institutionSiteOptions', $institutionSiteOptions);
-			$controller->set('id', $staffId);
-			$controller->set('categoryOptions', $categoryOptions);
-			$controller->set('yearOptions', $yearOptions);
+			$institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1, 'conditions' => array('id' => $controller->institutionSiteId)));
+			//$controller->set('institution_site_id', $controller->institutionSiteId);
+			//$controller->set('institutionSiteOptions', $institutionSiteOptions);
+			//$controller->set('id', $staffId);
+			//$controller->set('categoryOptions', $categoryOptions);
+			//$controller->set('yearOptions', $yearOptions);
+			
+			$institutionSiteId = $controller->institutionSiteId;
+			
+			$controller->set(compact('institutionSiteId', 'institutionSiteOptions', 'staffId', 'categoryOptions', 'yearOptions'));
 		} else {
 			$staffBehaviourData = $controller->data['InstitutionSiteStaffBehaviour'];
 			$staffBehaviourData['institution_site_id'] = $controller->institutionSiteId;
@@ -177,7 +216,7 @@ class StaffBehaviour extends StaffAppModel {
 				$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 			}
 
-			$controller->redirect(array('action' => 'staffBehaviour', $staffBehaviourData['staff_id']));
+			$controller->redirect(array('action' => 'staffsBehaviour', $staffBehaviourData['staff_id']));
 		}
 	}
 
@@ -196,13 +235,18 @@ class StaffBehaviour extends StaffAppModel {
 			$yearOptions = $controller->SchoolYear->getYearList();
 			$categoryOptions = array();
 			$categoryOptions = $controller->StaffBehaviourCategory->getCategory();
-			$institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1));
-			$controller->set('institution_site_id', $controller->institutionSiteId);
-			$controller->set('institutionSiteOptions', $institutionSiteOptions);
+			$institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1, 'conditions' => array('id' => $controller->institutionSiteId)));
+			
+			//$controller->set('institution_site_id', $controller->institutionSiteId);
+			//$controller->set('institutionSiteOptions', $institutionSiteOptions);
 			$controller->Session->write('StaffBehaviourId', $staffBehaviourId);
-			$controller->set('categoryOptions', $categoryOptions);
-			$controller->set('yearOptions', $yearOptions);
-			$controller->set('staffBehaviourObj', $staffBehaviourObj);
+			//$controller->set('categoryOptions', $categoryOptions);
+			//$controller->set('yearOptions', $yearOptions);
+			//$controller->set('staffBehaviourObj', $staffBehaviourObj);
+			
+			$institutionSiteId = $controller->institutionSiteId;
+			
+			$controller->set(compact('institutionSiteId', 'institutionSiteOptions', 'categoryOptions', 'yearOptions', 'staffBehaviourObj'));
 		} else {
 			//$controller->redirect(array('action' => 'classesList'));
 		}
@@ -217,7 +261,7 @@ class StaffBehaviour extends StaffAppModel {
 				$staffId = $staffBehaviourObj[0]['StaffBehaviour']['staff_id'];
 				if ($staffBehaviourObj[0]['StaffBehaviour']['institution_site_id'] != $controller->institutionSiteId) {
 					$controller->Utility->alert($controller->Utility->getMessage('SECURITY_NO_ACCESS'));
-					$controller->redirect(array('action' => 'staffBehaviourView', $staffBehaviourId));
+					$controller->redirect(array('action' => 'staffsBehaviourView', $staffBehaviourId));
 				}
 				$data = $controller->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
 				$name = sprintf('%s %s %s', $data['Staff']['first_name'], $data['Staff']['middle_name'], $data['Staff']['last_name']);
@@ -226,11 +270,16 @@ class StaffBehaviour extends StaffAppModel {
 
 				$categoryOptions = array();
 				$categoryOptions = $controller->StaffBehaviourCategory->getCategory();
-				$institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1));
-				$controller->set('institution_site_id', $controller->institutionSiteId);
-				$controller->set('institutionSiteOptions', $institutionSiteOptions);
-				$controller->set('categoryOptions', $categoryOptions);
-				$controller->set('staffBehaviourObj', $staffBehaviourObj);
+				$institutionSiteOptions = $controller->InstitutionSite->find('list', array('recursive' => -1, 'conditions' => array('id' => $controller->institutionSiteId)));
+				
+				//$controller->set('institution_site_id', $controller->institutionSiteId);
+				//$controller->set('institutionSiteOptions', $institutionSiteOptions);
+				//$controller->set('categoryOptions', $categoryOptions);
+				//$controller->set('staffBehaviourObj', $staffBehaviourObj);
+				
+				$institutionSiteId = $controller->institutionSiteId;
+			
+			$controller->set(compact('institutionSiteId', 'institutionSiteOptions', 'categoryOptions', 'staffBehaviourObj'));
 			} else {
 				//$controller->redirect(array('action' => 'studentsBehaviour'));
 			}
@@ -245,7 +294,7 @@ class StaffBehaviour extends StaffAppModel {
 				$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
 			}
 
-			$controller->redirect(array('action' => 'staffBehaviourView', $staffBehaviourData['id']));
+			$controller->redirect(array('action' => 'staffsBehaviourView', $staffBehaviourData['id']));
 		}
 	}
 
@@ -261,7 +310,7 @@ class StaffBehaviour extends StaffAppModel {
 			}
 			$this->delete($id);
 			$controller->Utility->alert($name . ' have been deleted successfully.');
-			$controller->redirect(array('action' => 'staffBehaviour', $staffId));
+			$controller->redirect(array('action' => 'staffsBehaviour', $staffId));
 		}
 	}
 
@@ -274,6 +323,62 @@ class StaffBehaviour extends StaffAppModel {
 		}
 
 		return 'true';
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->getCSVHeader($this->reportMapping[$index]['fields']);
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$options = array();
+			$options['recursive'] = -1;
+			$options['fields'] = $this->getCSVFields($this->reportMapping[$index]['fields']);
+			$options['order'] = array('Staff.identification_no', 'StaffBehaviour.date_of_behaviour', 'StaffBehaviour.id');
+			$options['conditions'] = array('StaffBehaviour.institution_site_id' => $institutionSiteId);
+
+			$options['joins'] = array(
+                    array(
+                        'table' => 'institution_sites',
+                        'alias' => 'InstitutionSite',
+                        'conditions' => array(
+                            'StaffBehaviour.institution_site_id = InstitutionSite.id'
+                        )
+                    ),
+                    array(
+                        'table' => 'staff_behaviour_categories',
+                        'alias' => 'StaffBehaviourCategory',
+                        'conditions' => array('StaffBehaviour.staff_behaviour_category_id = StaffBehaviourCategory.id')
+                    ),
+                    array(
+                        'table' => 'staff',
+                        'alias' => 'Staff',
+                        'conditions' => array('StaffBehaviour.staff_id = Staff.id')
+                    )
+                );
+
+			$data = $this->find('all', $options);
+			
+			$newData = array();
+			
+			foreach ($data AS $row) {
+                $row['StaffBehaviour']['date_of_behaviour'] = $this->formatDateByConfig($row['StaffBehaviour']['date_of_behaviour']);
+                $newData[] = $row;
+            }
+
+			return $newData;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		$index = $args[1];
+		return $this->reportMapping[$index]['fileName'];
 	}
 
 }

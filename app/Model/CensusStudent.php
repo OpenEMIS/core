@@ -22,20 +22,23 @@ class CensusStudent extends AppModel {
 		'CustomReport' => array(
 			'_default' => array('visible')
 		),
-		'ControllerAction'
+		'ControllerAction',
+		'ReportFormat' => array(
+			'supportedFormats' => array('csv')
+		)
 	);
 	
 	public $belongsTo = array(
 		'SchoolYear' => array('foreignKey' => 'school_year_id'),
 		'EducationGrade' => array('foreignKey' => 'education_grade_id'),
 		'StudentCategory'=>array('foreignKey' => 'student_category_id'),
-		'InstitutionSite' => array('foreignKey' => 'institution_site_id'),
+		'InstitutionSite' => array('foreignKey' => 'institution_site_id')/*,
 		'Institution' =>
             array(
                 'joinTable'  => 'institutions',
 				'foreignKey' => false,
                 'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
-            )
+            )*/
 	);
 	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {
@@ -235,16 +238,19 @@ class CensusStudent extends AppModel {
 			$joins[] = array(
 				'table' => 'institution_sites',
 				'alias' => 'InstitutionSite',
-				'conditions' => array('InstitutionSite.id = CensusStudent.institution_site_id')
-			);
-			$joins[] = array(
-				'table' => 'institutions',
-				'alias' => 'Institution',
 				'conditions' => array(
-					'Institution.id = InstitutionSite.institution_id',
-					'Institution.institution_provider_id = ' . $extras['providerId']
+					'InstitutionSite.id = CensusStudent.institution_site_id',
+					'InstitutionSite.institution_site_provider_id' => $extras['providerId']
 				)
 			);
+//			$joins[] = array(
+//				'table' => 'institutions',
+//				'alias' => 'Institution',
+//				'conditions' => array(
+//					'Institution.id = InstitutionSite.institution_id',
+//					'Institution.institution_provider_id = ' . $extras['providerId']
+//				)
+//			);
 		}
 		$options['joins'] = $joins;
 		$options['conditions'] = array('CensusStudent.school_year_id' => $yearId);
@@ -1013,5 +1019,79 @@ class CensusStudent extends AppModel {
 		$gradeList = $EducationGrade->findList(array('conditions' => $conditions));
 		
 		$controller->set(compact('age', 'gradeList'));     
+	}
+	
+	public function reportsGetHeader($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return array();
+	}
+
+	public function reportsGetData($args) {
+		$institutionSiteId = $args[0];
+		$index = $args[1];
+
+		if ($index == 1) {
+			$data = array();
+			//$header = array('Age', 'Male', 'Female', __('Total'));
+			$header = array(__('Year'), __('Programme'), __('Grade'), __('Category'), __('Age'), __('Male'), __('Female'), __('Total'));
+
+			$baseData = $this->groupByYearGradeCategory($institutionSiteId);
+
+			foreach ($baseData AS $row) {
+				$year = $row['SchoolYear']['name'];
+				$educationCycle = $row['EducationCycle']['name'];
+				$educationProgramme = $row['EducationProgramme']['name'];
+				$educationGrade = $row['EducationGrade']['name'];
+				$studentCategory = $row['StudentCategory']['name'];
+
+				$data[] = $header;
+
+				$censusData = $this->find('all', array(
+					'recursive' => -1,
+					'fields' => array(
+						'CensusStudent.age',
+						'CensusStudent.male',
+						'CensusStudent.female'
+					),
+					'conditions' => array(
+						'CensusStudent.institution_site_id' => $institutionSiteId,
+						'CensusStudent.school_year_id' => $row['CensusStudent']['school_year_id'],
+						'CensusStudent.education_grade_id' => $row['CensusStudent']['education_grade_id'],
+						'CensusStudent.student_category_id' => $row['CensusStudent']['student_category_id']
+					),
+					'group' => array('CensusStudent.age')
+						)
+				);
+
+				$total = 0;
+				foreach ($censusData AS $censusRow) {
+					$data[] = array(
+						$year,
+						$educationCycle . ' - ' . $educationProgramme,
+						$educationGrade,
+						$studentCategory,
+						$censusRow['CensusStudent']['age'],
+						$censusRow['CensusStudent']['male'],
+						$censusRow['CensusStudent']['female'],
+						$censusRow['CensusStudent']['male'] + $censusRow['CensusStudent']['female']
+					);
+
+					$total += $censusRow['CensusStudent']['male'];
+					$total += $censusRow['CensusStudent']['female'];
+				}
+
+				$data[] = array('', '', '', '', '', '', __('Total'), $total);
+				$data[] = array();
+			}
+
+			return $data;
+		}
+	}
+
+	public function reportsGetFileName($args) {
+		//$institutionSiteId = $args[0];
+		//$index = $args[1];
+		return 'Report_Totals_Studensts';
 	}
 }

@@ -32,8 +32,8 @@ class LabelHelper extends AppHelper {
 			'option' => 'Option',
 			'description' => 'Description',
 			'value' => 'Value',
-			'modified' => 'Modified On',
-			'created' => 'Created On',
+			'modified' => 'Modified on',
+			'created' => 'Created on',
 			'type' => 'Type',
 			'title' => 'Title',
 			'activate' => 'Activate',
@@ -47,8 +47,8 @@ class LabelHelper extends AppHelper {
 			'general' => 'General',
 			'label' => 'Label',
 			'default' => 'Default',
-			'modified_by' => 'Modified By',
-			'created_by' => 'Created By',
+			'modified_by' => 'Modified by',
+			'created_by' => 'Created by',
 			'enabled' => 'Enabled',
 			'disabled' => 'Disabled',
 			'category' => 'Category',
@@ -64,11 +64,22 @@ class LabelHelper extends AppHelper {
 			'openemisId' =>'OpenEMIS ID',
 			'code' => 'Code',
 			'action' => 'Action',
-			'level' => 'Level'
+			'level' => 'Level',
+			'class' => 'Class',
+			'comment' => 'Comment',
+			'view_details' => 'View Details'
+		),
+		'gender' => array(
+			'm' => 'Male',
+			'f' => 'Female'
+		),
+		'password'=> array(
+			'oldPassword' => 'Current Password',
+			'retypePassword' => 'Retype New Password',
 		),
 		'fileUpload' => array(
 			'single' => '*File size should not be larger than 2MB.',
-			'multi' => '*Maximum 5 files are permited on single upload. Each file size should not be larger than 2MB.',
+			'multi' => '*Maximum 5 files are permitted on single upload. Each file size should not be larger than 2MB.',
 		),
 		'wizard' => array(
 			'previous' => 'Previous',
@@ -76,6 +87,9 @@ class LabelHelper extends AppHelper {
 			'finish' => 'Finish',
 			'skip' => 'Skip',
 			'addmore' => 'Add More'
+		),
+		'Area' => array(
+			'select' => '-- Select Area --'
 		),
 		'AreaLevel' => array(
 			'name' => 'Area Level'
@@ -98,6 +112,16 @@ class LabelHelper extends AppHelper {
 			'education_field_of_study_id' => 'Field of Study',
 			'education_certification_id' => 'Certification'
 		),
+		'EducationProgramme' => array(
+			'name' => 'Education Programme'
+		),
+		'EducationGrade' => array(
+			'name' => 'Education Grade'
+		),
+		'EducationSubject' => array(
+			'name' => 'Subject',
+			'code' => 'Subject Code'
+		),
 		'EducationGradeSubject' => array(
 			'hours_required' => 'Hours Required'
 		),
@@ -109,10 +133,18 @@ class LabelHelper extends AppHelper {
 			'institution_site_sector_id' => 'Sector',
 			'institution_site_type_id' => 'Type',
 			'institution_site_ownership_id' => 'Ownership',
+			'institution_site_gender_id' => 'Gender',
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
 			'name' => 'Institution Site',
-			'programme' => 'Programme'
+			'programme' => 'Programme',
+			'id_name' => 'ID / Name'
+		),
+		'InstitutionSiteClass' => array(
+			'no_of_seats' => 'Seats',
+			'no_of_shifts' => 'Shifts',
+			'shift' => 'Shift',
+			'seats' => 'Seats'
 		),
 		'InstitutionSiteCustomField' => array(
 			'type' => 'Field Type',
@@ -214,7 +246,12 @@ class LabelHelper extends AppHelper {
 			'credit_hours' => 'Credit',
 			'completed' => 'Completed',
 			'requirement' => 'Training Requirement',
-			'inactivate' => 'Inactivate'
+			'inactivate' => 'Inactivate',
+			'need_category' => 'Need Category',
+			'need_type' => 'Need Type'
+		),
+		'StaffTrainingSelfStudy' => array(
+			'achievement_type' => 'Achievement Type'
 		),
 		'Shift' => array(
 			'name' => 'Shift Name'
@@ -222,6 +259,28 @@ class LabelHelper extends AppHelper {
 		'Position' => array(
 			'teaching' => 'Teaching',
 			'number' => 'Number'
+		),
+		'InstitutionSiteStudentAbsence' => array(
+			'reason' => 'Reason',
+			'first_date_absent' => 'First Date Absent',
+			'full_day_absent' => 'Full Day Absent',
+			'last_date_absent' => 'Last Date Absent',
+			'start_time_absent' => 'Start Time Absent',
+			'end_time_absent' => 'End Time Absent'
+		),
+		'InstitutionSiteStaffAbsence' => array(
+			'reason' => 'Reason',
+			'first_date_absent' => 'First Date Absent',
+			'full_day_absent' => 'Full Day Absent',
+			'last_date_absent' => 'Last Date Absent',
+			'start_time_absent' => 'Start Time Absent',
+			'end_time_absent' => 'End Time Absent'
+		),
+		'Quality' => array(
+			'add_section_header' => 'Add Section Header',
+			'header' => 'Header',
+			'section_header' => 'Section Header',
+			'view_rubric' => 'View Rubric'
 		)
 	);
 	

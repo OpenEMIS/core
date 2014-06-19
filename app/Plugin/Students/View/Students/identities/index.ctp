@@ -1,6 +1,4 @@
 <?php
-echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $header);
 $this->start('contentActions');
@@ -22,5 +20,5 @@ foreach($data as $obj) {
 	$tableData[] = $row;
 }
 echo $this->element('templates/table', compact('tableHeaders', 'tableData'));
-
- $this->end(); ?>
+$this->end();
+?>

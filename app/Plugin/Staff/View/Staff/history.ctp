@@ -142,7 +142,7 @@ $this->start('contentBody');
                             <span style="margin-left: 8px;"><?php echo $this->Utility->formatDate($data['Staff']['date_of_birth']); ?></span>
                             <?php if(@sizeof($data2['date_of_birth'])>0){ ?>
                             <div class="table" style="margin-top: 10px;">
-                                <div class="table_body"><?php //pr($data2);?>
+                                <div class="table_body">
                                     <?php $ctr = 1; foreach($data2['date_of_birth'] as $val => $time):?>
                                     <?php if($ctr == 1 && $data['Staff']['date_of_birth'] == $val) continue; ?>
                                     <div class="table_row">

@@ -6,13 +6,11 @@ var QualityVisit = {
         var link = $(obj).closest('form').attr('link');
 
         var url = getRootURL() + link;
-
-
-        var selectedDate = $('#dateYear').val() + '-' + $('#dateMonth').val() + '-' + $('#dateDay').val();
+        var selectedDate = $('#date #date').val();// + '-' + $('#dateMonth').val() + '-' + $('#dateDay').val();
         var schoolYearId = $('#schoolYearId').val();
         var educationGradeId = $('#educationGradeId').val();
         var institutionSiteClassId = $('#institutionSiteClassId').val();
-        var institutionSiteTeacherId = $('#institutionSiteTeacherId').val();
+        var institutionSitestaffId = $('#staffId').val();
         var qualityTypeId = $('#qualityTypeId').val();
 
         url += '/' + selectedDate;
@@ -27,11 +25,11 @@ var QualityVisit = {
             case 'institutionSiteClassId':
                 url += '/' + schoolYearId + '/' + educationGradeId + '/' + institutionSiteClassId;
                 break;
-            case 'institutionSiteTeacherId':
-                url += '/' + schoolYearId + '/' + educationGradeId + '/' + institutionSiteClassId + '/' + institutionSiteTeacherId;
+            case 'staffId':
+                url += '/' + schoolYearId + '/' + educationGradeId + '/' + institutionSiteClassId + '/' + institutionSitestaffId;
                 break;
             case 'qualityTypeId':
-                url += '/' + schoolYearId + '/' + educationGradeId + '/' + institutionSiteClassId + '/' + institutionSiteTeacherId + '/' + qualityTypeId;
+                url += '/' + schoolYearId + '/' + educationGradeId + '/' + institutionSiteClassId + '/' + institutionSitestaffId + '/' + qualityTypeId;
                 break;
         }
 

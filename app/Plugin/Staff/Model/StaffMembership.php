@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffMembership extends StaffAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('issue_date', 'expiry_date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('issue_date', 'expiry_date'));
 	
 	public $belongsTo = array(
 		'ModifiedUser' => array(
@@ -75,11 +75,10 @@ class StaffMembership extends StaffAppModel {
     }
 	
 	public function membership($controller, $params) {
-	//	pr('aas');
 		$controller->Navigation->addCrumb($this->headerDefault);
 		$header = __($this->headerDefault);
 		$this->unbindModel(array('belongsTo' => array('ModifiedUser','CreatedUser')));
-		$data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions'=> array('staff_id'=> $controller->staffId)));
+		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
 		$controller->set(compact('header', 'data'));
 		
 	}
@@ -89,46 +88,37 @@ class StaffMembership extends StaffAppModel {
 		$header = __($this->headerDefault . ' Details');
 		
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
-		$data = $this->findById($id);//('first',array('conditions' => array($this->name.'.id' => $id)));
+		$data = $this->findById($id);
 		
 		if(empty($data)){
 			$controller->Message->alert('general.noData');
 			return $controller->redirect(array('action'=>'membership'));
 		}
 		
-		$controller->Session->write('StaffMembershipId', $id);
+		$controller->Session->write('StaffMembership.id', $id);
 		$fields = $this->getDisplayFields($controller);
         $controller->set(compact('data', 'header', 'fields', 'id'));
 	}
 	
 	public function membershipDelete($controller, $params) {
-        if($controller->Session->check('StaffId') && $controller->Session->check('StaffMembershipId')) {
-            $id = $controller->Session->read('StaffMembershipId');
-            if($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-			$controller->Session->delete('StaffMembershipId');
-            $controller->redirect(array('action' => 'membership'));
-        }
+        return $this->remove($controller, 'membership');
     }
 	
 	public function membershipAdd($controller, $params) {
 		$controller->Navigation->addCrumb('Add ' . $this->headerDefault);
 		$controller->set('header', __('Add ' . $this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'add');
 	}
 	
 	public function membershipEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit ' . $this->headerDefault );
 		$controller->set('header', __('Edit ' . $this->headerDefault));
-		$this->setup_add_edit_form($controller, $params);
+		$this->setup_add_edit_form($controller, $params, 'edit');
 		
 		$this->render = 'add';
 	}
 	
-	function setup_add_edit_form($controller, $params){
+	function setup_add_edit_form($controller, $params, $type){
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 		
 		if($controller->request->is('get')){
@@ -140,32 +130,10 @@ class StaffMembership extends StaffAppModel {
 			}
 		}
 		else{
-			$addMore = false;
-			if(isset($controller->data['submit']) && $controller->data['submit']==__('Skip')){
-                $controller->Navigation->skipWizardLink($controller->action);
-            }else if(isset($controller->data['submit']) && $controller->data['submit']==__('Previous')){
-                $controller->Navigation->previousWizardLink($controller->action);
-            }elseif(isset($controller->data['submit']) && $controller->data['submit']==__('Add More')){
-                $addMore = true;
-            }else{
-                $controller->Navigation->validateModel($controller->action,$this->name);
-            }
-			$controller->request->data[$this->name]['staff_id'] = $controller->staffId;
+			$controller->request->data[$this->name]['staff_id'] = $controller->Session->read('Staff.id');
 			
 			if($this->saveAll($controller->request->data)){
-				$controller->Message->alert('general.add.success');
-				if(empty($controller->request->data[$this->name]['id'])){
-					$id = $this->getLastInsertId();
-					/*if($addMore){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-					}*/
-                	$controller->Navigation->updateWizard($controller->action,$id,$addMore);	
-                	//$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));
-				}
-				else{
-                	$controller->Navigation->updateWizard($controller->action,$controller->request->data[$this->name]['id']);
-					//$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
-				}
+				$controller->Message->alert('general.' . $type . '.success');
 				return $controller->redirect(array('action' => 'membership'));
 			}
 		}

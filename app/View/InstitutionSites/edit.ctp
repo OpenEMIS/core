@@ -1,5 +1,6 @@
 <?php
 echo $this->Html->script('app.date', false);
+echo $this->Html->script('app.area', false);
 echo $this->Html->script('institution_site', false);
 echo $this->Html->script('config', false);
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
@@ -26,13 +27,6 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	});
 </script>
 
-<?php
-//echo $this->Form->create('InstitutionSite', array(
-//	'url' => array('controller' => 'InstitutionSites', 'action' => 'edit'),
-//	'inputDefaults' => array('label' => false, 'div' => false, 'class' => 'default', 'autocomplete' => 'off')
-//));
-?>
-
 <?php $obj = @$data['InstitutionSite']; ?>
 
 <fieldset class="section_break">
@@ -58,23 +52,20 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_ownership_id');
 	echo $this->Form->input('institution_site_ownership_id', array('options' => $ownershipOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_ownership_id']));
 
+	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_gender_id');
+	echo $this->Form->input('institution_site_gender_id', array('options' => $genderOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_gender_id']));
+	
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_status_id');
 	echo $this->Form->input('institution_site_status_id', array('options' => $statusOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_status_id']));
 
 	echo $this->FormUtility->datepicker('date_opened', array('id' => 'dateOpened', 'data-date' => $obj['date_opened']));
-
 	echo $this->FormUtility->datepicker('date_closed', array('id' => 'dateClosed', 'data-date' => $obj['date_closed']));
 	?>
 </fieldset>
 <fieldset class="section_break">
 	<legend><?php echo __('Location'); ?></legend>
 	<?php
-	echo $this->Form->input('address', array(
-		'onkeyup' => 'utility.charLimit(this)',
-		'type' => 'textarea',
-		'value' => $obj['address']
-	));
-
+	echo $this->Form->input('address', array('type' => 'textarea', 'value' => $obj['address'], 'onkeyup' => 'utility.charLimit(this)'));
 	echo $this->Form->input('postal_code', array(
 		'onkeyup' => 'updateHiddenField(this, "validate_institution_site_postal_code")',
 		'value' => $obj['postal_code']
@@ -83,21 +74,19 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 
 	$labelOptions['text'] = $this->Label->get('InstitutionSite.institution_site_locality_id');
 	echo $this->Form->input('institution_site_locality_id', array('options' => $localityOptions, 'label' => $labelOptions, 'value' => $obj['institution_site_locality_id']));
-
 	echo $this->Form->input('latitude', array('value' => $obj['latitude']));
-
 	echo $this->Form->input('longitude', array('value' => $obj['longitude']));
 	?>
 </fieldset>
 
-<fieldset class="section_break area">
-	<legend id="area"><?php echo __('Area'); ?></legend>
-	<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_id', $obj['area_id'], array(), $filterArea); ?>
+<fieldset class="section_break">
+	<legend><?php echo __('Area'); ?></legend>
+	<?php echo $this->FormUtility->areapicker('area_id', array('value' => $obj['area_id'])); ?>
 </fieldset>
 
-<fieldset class="section_break area">
-	<legend id="education"><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
-	<?php echo @$this->Utility->getAreaPicker($this->Form, 'area_education_id', $obj['area_education_id'], array()); ?>
+<fieldset class="section_break">
+	<legend><?php echo __('Area') . ' (' . __('Education') . ')'; ?></legend>
+	<?php echo $this->FormUtility->areapicker('area_education_id', array('model' => 'AreaEducation', 'value' => $obj['area_education_id'])); ?>
 </fieldset>
 
 <fieldset class="section_break">
@@ -116,15 +105,13 @@ echo $this->Form->create('InstitutionSite', $formOptions);
 		'value' => $obj['fax']
 	));
 	echo $this->Form->input('validate_institution_site_fax', array('type' => 'hidden', 'id' => 'validate_institution_site_fax', 'value' => $obj['fax']));
-
 	echo $this->Form->input('email', array('value' => $obj['email']));
-
 	echo $this->Form->input('website', array('value' => $obj['website']));
 	?>
 </fieldset>
 
 <div class="controls view_controls">
-	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if (jsDate.checkValidDateClosed() && Config.checkValidate()) {
+	<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="js:if (Config.checkValidate()) {
 			return true;
 		} else {
 			return false;

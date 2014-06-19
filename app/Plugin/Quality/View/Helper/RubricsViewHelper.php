@@ -44,10 +44,10 @@ class RubricsViewHelper extends AppHelper {
             $content = '';
             $inputRowCss = 'input';
             $_fieldOptions = $this->fieldSetupOptions;
-            $_fieldOptions['placeholder'] = 'Header / Sub-Header / Title';
+            $_fieldOptions['placeholder'] = __('Header / Sub-Header / Title');
             $input = $this->Form->input($this->wrapperName . '.' . $key . '.' . $modalName . '.title', $_fieldOptions);
 
-            $content .= $this->getRowFormat('Header', $singleColumnSize, true,  array('class'=>array('input', 'cell-bold')));
+            $content .= $this->getRowFormat(__('Header'), $singleColumnSize, true,  array('class'=>array('input', 'cell-bold')));
             $content .= $this->getRowFormat($input, $singleColumnSize * ($this->defaultNoOfColumns - 1), false,  array('class'=>array('input')));
         
         
@@ -71,7 +71,7 @@ class RubricsViewHelper extends AppHelper {
 
 
         if ($mode == 'edit') {
-            $display .= $this->getOrderFormat($key, false, array('class'=>array('input')));
+            $display .= $this->getOrderFormat($key,array('class'=>array('input')));
         }
         //$display .= '</tr>';
 
@@ -95,9 +95,9 @@ class RubricsViewHelper extends AppHelper {
         //}
 
         $display .= '<div class="cell cell-rubric-row cell-rubric-row-custom cell-rubric-row-height ' . $isFirst . '">'; //minus 1 px due to margine-left : -1px;
-        $display .= $this->getRowFormat('Criteria', $singleColumnSize, true, array('class'=>array('cell-bold')));
-        $display .= $this->getRowFormat('Descriptors', $singleColumnSize * ($this->defaultNoOfColumns - 1));
-        $display .= $this->getRowFormat('Level', $singleColumnSize, true);
+        $display .= $this->getRowFormat(__('Criteria'), $singleColumnSize, true, array('class'=>array('cell-bold')));
+        $display .= $this->getRowFormat(__('Descriptors'), $singleColumnSize * ($this->defaultNoOfColumns - 1));
+        $display .= $this->getRowFormat(__('Level'), $singleColumnSize, true);
 
         foreach ($headerColumnData as $column) {
             $display .= $this->getRowFormat($column['RubricsTemplateColumnInfo']['name'], $singleColumnSize);
@@ -130,23 +130,23 @@ class RubricsViewHelper extends AppHelper {
             $display .= $this->getTextareaFormat($criteriaAnswer, $singleColumnSize);
         }
 
-        $display .= $this->getRowFormat('Weighting', $width, true);
-        $display .= $this->getRowFormat('&nbsp;', $singleColumnSize, true);
+        $display .= $this->getRowFormat(__('Weighting'), $width, true);
+        $display .= $this->getRowFormat('&nbsp;', $singleColumnSize, true,  array('class'=>array('bottom')));
 
         foreach ($headerColumnData as $column) {
-            $display .= $this->getRowFormat($column['RubricsTemplateColumnInfo']['weighting'], $singleColumnSize);
+            $display .= $this->getRowFormat($column['RubricsTemplateColumnInfo']['weighting'], $singleColumnSize, false,  array('class'=>array('bottom')));
         }
 
         $display .= '</div>';
         if ($mode == 'edit') {
-            $display .= $this->getOrderFormat($key, true);
+            $display .= $this->getOrderFormat($key, array('class' => array('cell-rubric-row-height-action')));
         }
         return $display;
     }
 
-    private function getOrderFormat($key, $expandHeight = false, $options = array()) {
+    private function getOrderFormat($key, $options = array()) {
         $classArr = array('cell','cell-rubric-order','default');
-        ($expandHeight) ? array_push($classArr, 'cell-rubric-row-height') : "";
+     //   ($expandHeight) ? array_push($classArr, 'cell-rubric-row-height') : "";
         
         if(isset($options['class'])){
             $classArr = array_merge($classArr ,$options['class']);
@@ -203,7 +203,7 @@ class RubricsViewHelper extends AppHelper {
             $content = '';
 
             $_fieldOptions = $this->fieldSetupOptions;
-            $_fieldOptions['placeholder'] = 'Header / Sub-Header / Title';
+            $_fieldOptions['placeholder'] = __('Header / Sub-Header / Title');
             $content = $this->Form->input($this->wrapperName . '.' . $key . '.' . $modalName . '.title', $_fieldOptions);
 
             if (!empty($data[$modalName]['id'])) {
@@ -221,7 +221,7 @@ class RubricsViewHelper extends AppHelper {
             $content = !empty($data[$modalName]['title']) ? $data[$modalName]['title'] : "";
         }
 
-        $display .= '<td class="center cell-bold">Header</td>';
+        $display .= '<td class="center cell-bold">'.__('Header').'</td>';
         $display .= '<td class="' . $isFirst . '" colspan="' . ($this->defaultNoOfColumns -1) . '">' . $content . '</td>';
 
         $display .= '</tr>';
@@ -265,14 +265,14 @@ class RubricsViewHelper extends AppHelper {
         if ($mode != 'edit') {
             $display = '<td rowspan="' . $this->defaultNoOfRows . '" class="rubric-left-col-nav">' . $data['RubricsTemplateItem']['display_num'] . '</td>';
         }
-        $display .= '<td class="rubric-col-header cell-bold">Criteria</td>';
-        $display .= '<td class="rubric-col-header" colspan="' . ($this->defaultNoOfColumns - 1) . '">Descriptors</td>';
+        $display .= '<td class="rubric-col-header cell-bold">'.__('Criteria').'</td>';
+        $display .= '<td class="rubric-col-header" colspan="' . ($this->defaultNoOfColumns - 1) . '">'.__('Descriptors').'</td>';
         if ($type == 'action' && $mode == 'edit') {
             $display .= '<td rowspan="' . $this->defaultNoOfRows . '" class="rubric-left-col-nav">&nbsp;' . '</td>';
         }
         $display .= '</tr>';
 
-        $display .= '<tr><td class="rubric-col-header">Level</td>';
+        $display .= '<tr><td class="rubric-col-header">'.__('Level').'</td>';
         //for($i = 0; $i < count($headerColumnData); $i++){
         foreach ($headerColumnData as $column) {
             $display .= '<td class="center">' . $column['RubricsTemplateColumnInfo']['name'] . '</td>';
@@ -286,7 +286,7 @@ class RubricsViewHelper extends AppHelper {
     function _setupWeightingField($headerColumnData) {
         //-------------------4th row-------------------
         $display = '<tr>
-                        <td class="rubric-col-header" colspan="' . $this->defaultNoOfColumns . '">Weightings</td>
+                        <td class="rubric-col-header" colspan="' . $this->defaultNoOfColumns . '">'.__('Weighting').'</td>
                 </tr>';
 
         //-------------------5th row-------------------
@@ -308,7 +308,7 @@ class RubricsViewHelper extends AppHelper {
             $fieldName = $this->wrapperName . '.' . $key . '.RubricsTemplateItem.';
 
             $_fieldOptions = $this->fieldSetupOptions;
-            $_fieldOptions['placeholder'] = 'Criteria';
+            $_fieldOptions['placeholder'] = __('Criteria');
             $_fieldOptions['type'] = 'textarea';
 
             $criteriaQuestion = $this->Form->input($fieldName . 'title', $_fieldOptions);
@@ -330,7 +330,7 @@ class RubricsViewHelper extends AppHelper {
             $fieldName = $this->wrapperName . '.' . $key . '.RubricsTemplateAnswer.' . $i;
             //pr($data);
             $_fieldOptions = $this->fieldSetupOptions;
-            $_fieldOptions['placeholder'] = 'Criteria Level Description';
+            $_fieldOptions['placeholder'] = __('Criteria Level Description');
             $_fieldOptions['type'] = 'textarea';
 
             $criteriaAnswer = $this->Form->input($fieldName . '.title', $_fieldOptions);

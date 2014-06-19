@@ -5,7 +5,7 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright � 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
 it under the terms of the GNU General Public License as published by the Free Software Foundation
 , either version 3 of the License, or any later version.  This program is distributed in the hope 
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -26,6 +26,7 @@ class MessageComponent extends Component {
 	public $messages = array(
 		'general' => array(
 			'notExists' => array('type' => 'info', 'msg' => 'The Record does not exist.'),
+			'exists' => array('type' => 'info', 'msg' => 'Please ensure no data duplication.'),
 			'noData' => array('type' => 'info', 'msg' => 'There are no records.'),
 			'error' => array('type' => 'error', 'msg' => 'An unexpected error has been encounted. Please contact the administrator for assistance.'),
 			'add' => array(
@@ -39,7 +40,8 @@ class MessageComponent extends Component {
 			'delete' => array(
 				'success' => array('type' => 'ok', 'msg' => 'The record has been deleted successfully.'),
 				'failed' => array('type' => 'error', 'msg' => 'The record is not deleted due to errors encountered.'),
-			)
+			),
+			'invalidDate'  => array('type' => 'error', 'msg' => 'You have entered an invalid date.'),
 		),
 		'security' => array(
 			'login' => array(
@@ -51,7 +53,7 @@ class MessageComponent extends Component {
 		'search' => array(
 			'no_result' => array('type' => 'info', 'msg' => 'No result returned from the search.')
 		),
-		'FileUplaod' => array(
+		'FileUpload' => array(
 			'success' => array(
 				'singular' =>  array('type' => 'ok', 'msg' => 'The file has been uploaded.'),
 				'plural' =>  array('type' => 'ok', 'msg' => 'The files has been uploaded.'),
@@ -68,6 +70,40 @@ class MessageComponent extends Component {
 				'saving' => array('type' => 'error', 'msg' => 'The record is not added due to errors encountered.')
 			)
 		),
+		'SchoolYear' => array(
+			'noAvailableYear' => array('type' => 'warn', 'msg' => 'There are no school years available')
+		),
+		'InstitutionSiteProgramme' => array(
+			'noData' => array('type' => 'warn', 'msg' => 'There are no programmes associated with this institution site for the selected year')
+		),
+		'institutionSiteAttendance' => array(
+			'student' => array(
+				'failed' => array(
+					'class_student_not_match' => array('type' => 'error', 'msg' => 'Class and Student do not match.'),
+					'class_first_date_not_match' => array('type' => 'error', 'msg' => 'Class and First Date Absent do not match.')
+				)
+			),
+			'no_data' => array('type' => 'info', 'msg' => 'There is no data matched.'),
+			'no_student' => array('type' => 'info', 'msg' => 'There is no student matched.'),
+			'no_staff' => array('type' => 'info', 'msg' => 'There is no staff matched.')
+		),
+		'Quality' => array(
+			'rubric' => array(
+				'addRow' => array('type' => 'info', 'msg' => 'New row has been added at the bottom of the rubric table.'),
+				'headerFirst' => array('type' => 'info', 'msg' => 'Please ensure the header is at the 1st position.')
+			)
+		),
+		'InstitutionSite' => array(
+			'student' => array(
+				'student_already_exists_in_other_site' => array('type' => 'info', 'msg' => 'This student is already exists in other institution site.'),
+				'notExist' => array('type' => 'error', 'msg' => 'The Student Record does not exist.')
+			)
+		),
+		'Student' => array(
+			'add' => array(
+				'success' => array('type' => 'ok', 'msg' => 'New student has been created.')
+			)
+		)
 	);
 	
 	public function get($code) {
@@ -104,5 +140,9 @@ class MessageComponent extends Component {
 		}
 		$_settings['message'] = $message['msg'];
 		$this->Session->write('_alert', $_settings);
+	}
+	
+	public function stopAlert() {
+		$this->Session->delete('_alert');
 	}
 }
