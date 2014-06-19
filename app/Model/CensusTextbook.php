@@ -136,46 +136,46 @@ class CensusTextbook extends AppModel {
 		}
 	}
 		
-		public function textbooks($controller, $params) {
+	public function textbooks($controller, $params) {
 		$controller->Navigation->addCrumb('Textbooks');
 
-		$yearList = $controller->SchoolYear->getYearList();
+		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-
-		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
 		$data = array();
 		if (empty($programmes)) {
-			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		} else {
-			$data = $controller->CensusTextbook->getCensusData($controller->institutionSiteId, $selectedYear);
+			$data = $this->getCensusData($institutionSiteId, $selectedYear);
 			if (empty($data)) {
-				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+				$controller->Message->alert('Census.noSubjects');
 			}
 		}
-		
-		$isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 		
 		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
 	}
 
 	public function textbooksEdit($controller, $params) {
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		if ($controller->request->is('get')) {
 			$controller->Navigation->addCrumb('Edit Textbooks');
 
-			$yearList = $controller->SchoolYear->getAvailableYears();
+			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $controller->getAvailableYearId($yearList);
-			$editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 			if (!$editable) {
 				$controller->redirect(array('action' => 'textbooks', $selectedYear));
 			} else {
-				$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+				$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($institutionSiteId, $selectedYear);
 				$data = array();
 				if (empty($programmes)) {
-					$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+					$controller->Message->alert('InstitutionSiteProgramme.noData');
 				} else {
-					$data = $controller->CensusTextbook->getCensusData($controller->institutionSiteId, $selectedYear);
+					$data = $this->getCensusData($institutionSiteId, $selectedYear);
 					if (empty($data)) {
-						$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_SUBJECTS'), array('type' => 'warn'));
+						$controller->Message->alert('Census.noSubjects');
 					}
 				}
 				
@@ -184,8 +184,8 @@ class CensusTextbook extends AppModel {
 		} else {
 			$data = $controller->data['CensusTextbook'];
 			$yearId = $data['school_year_id'];
-			$controller->CensusTextbook->saveCensusData($data);
-			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+			$this->saveCensusData($data);
+			$controller->Message->alert('general.edit.success');
 			$controller->redirect(array('action' => 'textbooks', $yearId));
 		}
 	}
