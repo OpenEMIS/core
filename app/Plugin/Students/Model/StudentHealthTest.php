@@ -15,7 +15,7 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StudentHealthTest extends StudentsAppModel {
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('date'));
 	public $belongsTo = array(
 		'HealthTestType',
 		'ModifiedUser' => array(
