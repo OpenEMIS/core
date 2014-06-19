@@ -992,7 +992,7 @@ class InstitutionSitesController extends AppController {
 	public function getCurrentWeekId($yearId){
 		$weekList = $this->getWeekListByYearId($yearId, false);
 		$currentDate = date("Y-m-d");
-		$currentWeekId = 0;
+		$currentWeekId = key($weekList);
 		foreach($weekList AS $id => $week){
 			$startDate = $week['start_date'];
 			$endDate = $week['end_date'];

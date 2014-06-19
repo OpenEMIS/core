@@ -17,13 +17,13 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusStaff extends AppModel {
-    public $actsAs = array(
+	public $actsAs = array(
 		'ControllerAction',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
 		)
 	);
-    
+	
 	public $useTable = 'census_staff';
 	
 	public $belongsTo = array(
@@ -141,66 +141,67 @@ class CensusStaff extends AppModel {
 		));
 		return $data;
 	}
-        
-        public function getYearsHaveData($institutionSiteId){
-            $data = $this->find('all', array(
-                    'recursive' => -1,
-                    'fields' => array(
-                        'SchoolYear.id',
-                        'SchoolYear.name'
-                    ),
-                    'joins' => array(
-                            array(
-                                'table' => 'school_years',
-                                'alias' => 'SchoolYear',
-                                'conditions' => array(
-                                    'CensusStaff.school_year_id = SchoolYear.id'
-                                )
-                            )
-                    ),
-                    'conditions' => array('CensusStaff.institution_site_id' => $institutionSiteId),
-                    'group' => array('CensusStaff.school_year_id'),
-                    'order' => array('SchoolYear.name DESC')
-                )
-            );
-            
-            return $data;
-        }
-        
-        public function staff($controller, $params) {
-        $controller->Navigation->addCrumb('Staff');
+		
+	public function getYearsHaveData($institutionSiteId){
+		$data = $this->find('all', array(
+				'recursive' => -1,
+				'fields' => array(
+					'SchoolYear.id',
+					'SchoolYear.name'
+				),
+				'joins' => array(
+						array(
+							'table' => 'school_years',
+							'alias' => 'SchoolYear',
+							'conditions' => array(
+								'CensusStaff.school_year_id = SchoolYear.id'
+							)
+						)
+				),
+				'conditions' => array('CensusStaff.institution_site_id' => $institutionSiteId),
+				'group' => array('CensusStaff.school_year_id'),
+				'order' => array('SchoolYear.name DESC')
+			)
+		);
+		
+		return $data;
+	}
+	
+	public function staff($controller, $params) {
+		$controller->Navigation->addCrumb('Staff');
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$yearList = $this->SchoolYear->getYearList();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$data = $this->getCensusData($institutionSiteId, $selectedYear);
+		
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 
-        $yearList = $controller->SchoolYear->getYearList();
-        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-        $data = $controller->CensusStaff->getCensusData($controller->institutionSiteId, $selectedYear);
+		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+	}
 
-        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+	public function staffEdit($controller, $params) {
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		if ($controller->request->is('get')) {
+			$controller->Navigation->addCrumb('Edit Staff');
+			
+			$yearList = $this->SchoolYear->getAvailableYears();
+			$selectedYear = $controller->getAvailableYearId($yearList);
+			$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
+			if (!$editable) {
+				$controller->redirect(array('action' => 'staff', $selectedYear));
+			} else {
+				$data = $this->getCensusData($institutionSiteId, $selectedYear);
 
-        $controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
-    }
-
-    public function staffEdit($controller, $params) {
-        if ($controller->request->is('get')) {
-            $controller->Navigation->addCrumb('Edit Staff');
-
-            $yearList = $controller->SchoolYear->getAvailableYears();
-            $selectedYear = $controller->getAvailableYearId($yearList);
-            $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-            if (!$editable) {
-                $controller->redirect(array('action' => 'staff', $selectedYear));
-            } else {
-                $data = $controller->CensusStaff->getCensusData($controller->institutionSiteId, $selectedYear);
-
-                $controller->set(compact('selectedYear', 'yearList', 'data'));
-            }
-        } else {
-            $data = $controller->data['CensusStaff'];
-            $yearId = $data['school_year_id'];
-            $controller->CensusStaff->saveCensusData($data, $controller->institutionSiteId);
-            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
-            $controller->redirect(array('controller' => 'Census', 'action' => 'staff', $yearId));
-        }
-    }
+				$controller->set(compact('selectedYear', 'yearList', 'data'));
+			}
+		} else {
+			$data = $controller->data['CensusStaff'];
+			$yearId = $data['school_year_id'];
+			$this->saveCensusData($data, $institutionSiteId);
+			$controller->Message->alert('general.edit.success');
+			$controller->redirect(array('controller' => 'Census', 'action' => 'staff', $yearId));
+		}
+	}
 	
 	public function reportsGetHeader($args) {
 		//$institutionSiteId = $args[0];
