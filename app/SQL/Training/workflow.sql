@@ -15,7 +15,7 @@ INSERT INTO `workflows` (`id`, `model_name`, `workflow_name`, `action`, `approve
 (13, 'StaffTrainingSelfStudy', 'Pending for Accreditation', 'Accredit', 'Accredited', 1, 3, NULL, 3, 6, NULL, '2014-06-19 10:58:26', 1, '2014-04-11 00:00:00'),
 (14, 'StaffTrainingSelfStudyResult', 'Pending for Result Approval', 'Approve', 'Approved', 1, 2, 13, 4, 5, NULL, '2014-06-19 10:58:26', 1, '2014-06-17 00:00:00');*/
 
-truncate table workflows;
+TRUNCATE table workflows;
 
 INSERT INTO `workflows` (`id`, `model_name`, `workflow_name`, `action`, `approve`, `visible`, `order`, `parent_id`, `lft`, `rght`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 (1, 'TrainingCourse', 'معلقة لتوصية', 'نوصي', '', 1, 1, NULL, 1, 2, NULL, '2014-06-19 10:58:26', 1, '2014-04-09 00:00:00'),
@@ -32,3 +32,26 @@ INSERT INTO `workflows` (`id`, `model_name`, `workflow_name`, `action`, `approve
 (12, 'StaffTrainingSelfStudy', 'في انتظار الموافقة ل', 'وافق', '', 1, 2, NULL, 7, 8, NULL, '2014-06-19 10:58:26', 1, '2014-04-11 00:00:00'),
 (13, 'StaffTrainingSelfStudy', 'بانتظار الاعتماد', 'فوض', 'المعتمدة', 1, 3, NULL, 3, 6, NULL, '2014-06-19 10:58:26', 1, '2014-04-11 00:00:00'),
 (14, 'StaffTrainingSelfStudyResult', 'في انتظار لنتائج القبول', 'وافق', 'وافق', 1, 2, 13, 4, 5, NULL, '2014-06-19 10:58:26', 1, '2014-06-17 00:00:00');
+
+
+
+DROP TABLE IF EXISTS `training_course_specialisations`;
+CREATE TABLE IF NOT EXISTS `training_course_specialisations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `qualification_specialisation_id` int(11) NOT NULL,
+  `training_course_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `qualification_specialisation_id` (`qualification_specialisation_id`),
+  KEY `training_course_id` (`training_course_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
+
+DROP TABLE IF EXISTS `training_course_experiences`;
+CREATE TABLE IF NOT EXISTS `training_course_experiences` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `months` int(4) NOT NULL,
+  `training_course_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `training_course_id` (`training_course_id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
