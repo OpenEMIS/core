@@ -39,7 +39,8 @@ class DatabaseController extends DatabaseAppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
+		$this->Navigation->addCrumb('Database', array('controller' => $this->name, 'action' => 'backup'));
 	}
 	
 	public function backup(){
