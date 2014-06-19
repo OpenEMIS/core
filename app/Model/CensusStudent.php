@@ -34,11 +34,11 @@ class CensusStudent extends AppModel {
 		'StudentCategory'=>array('foreignKey' => 'student_category_id'),
 		'InstitutionSite' => array('foreignKey' => 'institution_site_id')/*,
 		'Institution' =>
-            array(
-                'joinTable'  => 'institutions',
+			array(
+				'joinTable'  => 'institutions',
 				'foreignKey' => false,
-                'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
-            )*/
+				'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
+			)*/
 	);
 	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {
@@ -86,9 +86,9 @@ class CensusStudent extends AppModel {
 		));
 		return $data;
 	}
-        
-        public function getCensusDataOrderByAge($siteId, $yearId, $programmeId, $categoryId){
-                $this->formatResult = true;
+		
+		public function getCensusDataOrderByAge($siteId, $yearId, $programmeId, $categoryId){
+				$this->formatResult = true;
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array('CensusStudent.id', 'CensusStudent.age', 'CensusStudent.male', 'CensusStudent.female', 'CensusStudent.source', 'CensusStudent.education_grade_id'),
@@ -105,7 +105,7 @@ class CensusStudent extends AppModel {
 					'alias' => 'EducationProgramme',
 					'conditions' => array(
 						'EducationProgramme.id = EducationGrade.education_programme_id',
-                                                'EducationProgramme.id = ' . $programmeId
+												'EducationProgramme.id = ' . $programmeId
 					)
 				),
 				array(
@@ -131,7 +131,7 @@ class CensusStudent extends AppModel {
 			'order' => array('CensusStudent.age', 'EducationGrade.order')
 		));
 		return $data;
-        }
+		}
 	
 	public function saveCensusData($data, $institutionSiteId,$source=0) {
 		$keys = array();
@@ -144,18 +144,18 @@ class CensusStudent extends AppModel {
 		foreach($deleted as $id) {
 			$this->delete($id);
 		}
-                
+				
 		for($i=0; $i<sizeof($data); $i++) {
 			$row = $data[$i];
 			if($row['age'] > 0 && (($row['male'] !== '' && $row['male'] >= 0) || ($row['female'] !== '' && $row['female'] >= 0))) {
-                                if($row['male'] === ''){
-                                   $row['male'] = 0; 
-                                }
-                                
-                                if($row['female'] === ''){
-                                    $row['female'] = 0;
-                                }
-                                
+								if($row['male'] === ''){
+								   $row['male'] = 0; 
+								}
+								
+								if($row['female'] === ''){
+									$row['female'] = 0;
+								}
+								
 				if($row['id'] == 0) {
 					$this->create();
 				}
@@ -290,8 +290,8 @@ class CensusStudent extends AppModel {
 		return $data;
 	}
 	// End Yearbook
-        
-    public function groupByYearGradeCategory($institutionSiteId){
+		
+	public function groupByYearGradeCategory($institutionSiteId){
 		$data = $this->find('all', array(
 				'recursive' => -1,
 				'fields' => array(
@@ -356,7 +356,7 @@ class CensusStudent extends AppModel {
 		
 		return $data;
 	}
-        
+		
 	public function enrolment($controller, $params) {
 		$controller->Navigation->addCrumb('Students');
 		$yearList = $controller->SchoolYear->getYearList();
@@ -372,7 +372,7 @@ class CensusStudent extends AppModel {
 			foreach($programmes as $obj) {
 				$dataRowsArr = $this->getEnrolmentDataByRowsView($controller->institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age']);
 				//pr($dataRowsArr);
-                                
+								
 				$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
 				$gradeList = $controller->EducationGrade->findList(array('conditions' => $conditions));
 				
@@ -439,7 +439,7 @@ class CensusStudent extends AppModel {
 		//pr($data);
 		$controller->set(compact('data', 'selectedYear', 'yearList', 'categoryList'));
 	}
-        
+		
 	private function getEnrolmentDataByRowsView($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 		$EducationGrade = ClassRegistry::init('EducationGrade');
@@ -720,7 +720,7 @@ class CensusStudent extends AppModel {
 		//pr($dataRowsArr);
 		return $dataRowsArr;
 	}
-        
+		
 	private function getEnrolmentDataByRowsEdit($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
 		$EducationGrade = ClassRegistry::init('EducationGrade');
@@ -963,7 +963,7 @@ class CensusStudent extends AppModel {
 	public function enrolmentAjax($controller, $params) {
 		$EducationProgramme = ClassRegistry::init('EducationProgramme');
 		$EducationGrade = ClassRegistry::init('EducationGrade');
-            
+			
 		$this->render = false;
 		
 		if($controller->request->is('get')) {
@@ -984,9 +984,9 @@ class CensusStudent extends AppModel {
 							
 			$conditions = array('EducationGrade.education_programme_id' => $programmeId);
 			$gradeList = $EducationGrade->findList(array('conditions' => $conditions));
-                        
+						
 			//$enrolment = $controller->CensusStudent->getCensusDataOrderByAge($controller->institutionSiteId, $yearId, $programmeId, $categoryId);
-                        
+						
 			$controller->set(compact('dataRowsArr', 'gradeList'));
 			
 			if($controller->params->query['edit'] === 'true') {
@@ -1003,7 +1003,7 @@ class CensusStudent extends AppModel {
 	public function enrolmentAddRow($controller, $params) {
 		$EducationProgramme = ClassRegistry::init('EducationProgramme');
 		$EducationGrade = ClassRegistry::init('EducationGrade');
-            
+			
 		$controller->layout = 'ajax';
 		$age = $controller->params->query['age'];
 		$programmeId = $controller->params->query['programmeId'];
@@ -1018,7 +1018,7 @@ class CensusStudent extends AppModel {
 		$conditions = array('EducationGrade.education_programme_id' => $programmeId);
 		$gradeList = $EducationGrade->findList(array('conditions' => $conditions));
 		
-		$controller->set(compact('age', 'gradeList'));     
+		$controller->set(compact('age', 'gradeList'));	 
 	}
 	
 	public function reportsGetHeader($args) {

@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class CensusBehaviour extends AppModel {
-    public $actsAs = array(
+	public $actsAs = array(
 		'ControllerAction',
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
@@ -70,66 +70,66 @@ class CensusBehaviour extends AppModel {
 			$save = $this->save(array('CensusBehaviour' => $obj));
 		}
 	}
-        
-        public function getYearsHaveData($institutionSiteId){
-            $data = $this->find('all', array(
-                    'recursive' => -1,
-                    'fields' => array(
-                        'SchoolYear.id',
-                        'SchoolYear.name'
-                    ),
-                    'joins' => array(
-                            array(
-                                'table' => 'school_years',
-                                'alias' => 'SchoolYear',
-                                'conditions' => array(
-                                    'CensusBehaviour.school_year_id = SchoolYear.id'
-                                )
-                            )
-                    ),
-                    'conditions' => array('CensusBehaviour.institution_site_id' => $institutionSiteId),
-                    'group' => array('CensusBehaviour.school_year_id'),
-                    'order' => array('SchoolYear.name DESC')
-                )
-            ); 
-            
-            return $data;
-        }
-        
-        public function behaviour($controller, $params) {
-        $controller->Navigation->addCrumb('Behaviour');
+		
+		public function getYearsHaveData($institutionSiteId){
+			$data = $this->find('all', array(
+					'recursive' => -1,
+					'fields' => array(
+						'SchoolYear.id',
+						'SchoolYear.name'
+					),
+					'joins' => array(
+							array(
+								'table' => 'school_years',
+								'alias' => 'SchoolYear',
+								'conditions' => array(
+									'CensusBehaviour.school_year_id = SchoolYear.id'
+								)
+							)
+					),
+					'conditions' => array('CensusBehaviour.institution_site_id' => $institutionSiteId),
+					'group' => array('CensusBehaviour.school_year_id'),
+					'order' => array('SchoolYear.name DESC')
+				)
+			); 
+			
+			return $data;
+		}
+		
+		public function behaviour($controller, $params) {
+		$controller->Navigation->addCrumb('Behaviour');
 
-        $yearList = $controller->SchoolYear->getYearList();
-        $selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-        $data = $controller->CensusBehaviour->getCensusData($controller->institutionSiteId, $selectedYear);
+		$yearList = $controller->SchoolYear->getYearList();
+		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$data = $controller->CensusBehaviour->getCensusData($controller->institutionSiteId, $selectedYear);
 
-        $isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-        
-        $controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
-    }
+		$isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+		
+		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
+	}
 
-    public function behaviourEdit($controller, $params) {
-        if ($controller->request->is('get')) {
-            $controller->Navigation->addCrumb('Edit Behaviour');
+	public function behaviourEdit($controller, $params) {
+		if ($controller->request->is('get')) {
+			$controller->Navigation->addCrumb('Edit Behaviour');
 
-            $yearList = $controller->SchoolYear->getAvailableYears();
-            $selectedYear = $controller->getAvailableYearId($yearList);
-            $data = $controller->CensusBehaviour->getCensusData($controller->institutionSiteId, $selectedYear);
-            $editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
-            if (!$editable) {
-                $controller->redirect(array('action' => 'behaviour', $selectedYear));
-            } else {
-                
-                $controller->set(compact('selectedYear', 'yearList', 'data'));
-            }
-        } else {
-            $data = $controller->data['CensusBehaviour'];
-            $yearId = $data['school_year_id'];
-            $controller->CensusBehaviour->saveCensusData($data, $controller->institutionSiteId);
-            $controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
-            $controller->redirect(array('controller' => 'Census', 'action' => 'behaviour', $yearId));
-        }
-    }
+			$yearList = $controller->SchoolYear->getAvailableYears();
+			$selectedYear = $controller->getAvailableYearId($yearList);
+			$data = $controller->CensusBehaviour->getCensusData($controller->institutionSiteId, $selectedYear);
+			$editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+			if (!$editable) {
+				$controller->redirect(array('action' => 'behaviour', $selectedYear));
+			} else {
+				
+				$controller->set(compact('selectedYear', 'yearList', 'data'));
+			}
+		} else {
+			$data = $controller->data['CensusBehaviour'];
+			$yearId = $data['school_year_id'];
+			$controller->CensusBehaviour->saveCensusData($data, $controller->institutionSiteId);
+			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+			$controller->redirect(array('controller' => 'Census', 'action' => 'behaviour', $yearId));
+		}
+	}
 	
 	public function reportsGetHeader($args) {
 		//$institutionSiteId = $args[0];
