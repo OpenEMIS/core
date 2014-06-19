@@ -95,16 +95,17 @@ class CensusCustomField extends AppModel {
 	public function otherforms($controller, $params) {
 		$controller->Navigation->addCrumb('Other Forms');
 
-		$yearList = $controller->SchoolYear->getYearList();
+		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
 		$arrCensusInfra = array();
 
-		$p = $controller->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $controller->institutionSiteId));
+		$p = $controller->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $institutionSiteId));
 		$data = $controller->CensusGrid->find('all', array('conditions' => array('CensusGrid.institution_site_type_id' => array($p, 0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id', 'CensusGrid.order')));
 
 		//pr($data);
 		foreach ($data as &$arrDataVal) {
-			$dataAnswer = $controller->CensusGridValue->find('all', array('conditions' => array('CensusGridValue.institution_site_id' => $controller->institutionSiteId, 'CensusGridValue.census_grid_id' => $arrDataVal['CensusGrid']['id'], 'CensusGridValue.school_year_id' => $selectedYear)));
+			$dataAnswer = $controller->CensusGridValue->find('all', array('conditions' => array('CensusGridValue.institution_site_id' => $institutionSiteId, 'CensusGridValue.census_grid_id' => $arrDataVal['CensusGrid']['id'], 'CensusGridValue.school_year_id' => $selectedYear)));
 
 			$tmp = array();
 			foreach ($dataAnswer as $arrV) {
@@ -119,14 +120,14 @@ class CensusCustomField extends AppModel {
 		/*		 * *
 		 * CustomFields
 		 */
-		$site = $controller->InstitutionSite->findById($controller->institutionSiteId);
+		$site = $controller->InstitutionSite->findById($institutionSiteId);
 		$datafields = $controller->CensusCustomField->find('all', array('conditions' => array('CensusCustomField.institution_site_type_id' => array($site['InstitutionSite']['institution_site_type_id'], 0)), 'order' => array('CensusCustomField.institution_site_type_id', 'CensusCustomField.order')));
 		//$datafields = $controller->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id']), 'order'=>'CensusCustomField.order'));
 		//pr($datafields); echo "d2";
 		$controller->CensusCustomValue->unbindModel(
 				array('belongsTo' => array('InstitutionSite'))
 		);
-		$datavalues = $controller->CensusCustomValue->find('all', array('conditions' => array('CensusCustomValue.institution_site_id' => $controller->institutionSiteId, 'CensusCustomValue.school_year_id' => $selectedYear)));
+		$datavalues = $controller->CensusCustomValue->find('all', array('conditions' => array('CensusCustomValue.institution_site_id' => $institutionSiteId, 'CensusCustomValue.school_year_id' => $selectedYear)));
 		$tmp = array();
 		foreach ($datavalues as $arrV) {
 			$tmp[$arrV['CensusCustomField']['id']][] = $arrV['CensusCustomValue'];
@@ -139,12 +140,13 @@ class CensusCustomField extends AppModel {
 		$controller->set('data', $data);
 		$controller->set('selectedYear', $selectedYear);
 		$controller->set('yearList', $yearList);
-		$controller->set('isEditable', $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear));
+		$controller->set('isEditable', $controller->CensusVerification->isEditable($institutionSiteId, $selectedYear));
 	}
 
 	public function otherformsEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit Other Forms');
-
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		
 		if ($controller->request->is('post')) {
 			//pr($controller->request->data);die;
 			$schoolYearId = $controller->request->data['CensusGridValue']['school_year_id'];
@@ -158,7 +160,7 @@ class CensusCustomField extends AppModel {
 					unset($controller->request->data['CensusGridValue'][$k]);
 				} else {
 					$arrVal['school_year_id'] = $schoolYearId;
-					$arrVal['institution_site_id'] = $controller->institutionSiteId;
+					$arrVal['institution_site_id'] = $institutionSiteId;
 				}
 			}
 
@@ -178,7 +180,7 @@ class CensusCustomField extends AppModel {
 				foreach ($controller->request->data['CensusCustomValue'][$fieldVal] as $key => $val) {
 					if ($fieldVal == "checkbox") {
 
-						$arrCustomValues = $controller->CensusCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('CensusCustomValue.school_year_id' => $schoolYearId, 'CensusCustomValue.institution_site_id' => $controller->institutionSiteId, 'CensusCustomValue.census_custom_field_id' => $key)));
+						$arrCustomValues = $controller->CensusCustomValue->find('list', array('fields' => array('value'), 'conditions' => array('CensusCustomValue.school_year_id' => $schoolYearId, 'CensusCustomValue.institution_site_id' => $institutionSiteId, 'CensusCustomValue.census_custom_field_id' => $key)));
 
 						$tmp = array();
 						if (count($arrCustomValues) > count($val['value'])) //if db has greater value than answer, remove
@@ -199,7 +201,7 @@ class CensusCustomField extends AppModel {
 									$arrV['census_custom_field_id'] = $key;
 									$arrV['value'] = $val['value'][$ctr];
 									$arrV['school_year_id'] = $schoolYearId;
-									$arrV['institution_site_id'] = $controller->institutionSiteId;
+									$arrV['institution_site_id'] = $institutionSiteId;
 									$controller->CensusCustomValue->save($arrV);
 									unset($arrCustomValues[$ctr]);
 								}
@@ -207,7 +209,7 @@ class CensusCustomField extends AppModel {
 							}
 						}
 					} else { // if editing reuse the Primary KEY; so just update the record
-						$x = $controller->CensusCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('CensusCustomValue.school_year_id' => $schoolYearId, 'CensusCustomValue.institution_site_id' => $controller->institutionSiteId, 'CensusCustomValue.census_custom_field_id' => $key)));
+						$x = $controller->CensusCustomValue->find('first', array('fields' => array('id', 'value'), 'conditions' => array('CensusCustomValue.school_year_id' => $schoolYearId, 'CensusCustomValue.institution_site_id' => $institutionSiteId, 'CensusCustomValue.census_custom_field_id' => $key)));
 
 
 						$controller->CensusCustomValue->create();
@@ -216,7 +218,7 @@ class CensusCustomField extends AppModel {
 						$arrV['census_custom_field_id'] = $key;
 						$arrV['value'] = $val['value'];
 						$arrV['school_year_id'] = $schoolYearId;
-						$arrV['institution_site_id'] = $controller->institutionSiteId;
+						$arrV['institution_site_id'] = $institutionSiteId;
 
 						$controller->CensusCustomValue->save($arrV);
 					}
@@ -226,18 +228,18 @@ class CensusCustomField extends AppModel {
 		}
 
 		$arrCensusInfra = array();
-		$yearList = $controller->SchoolYear->getAvailableYears();
+		$yearList = ClassRegistry::init('SchoolYear')->getAvailableYears();
 		$selectedYear = $controller->getAvailableYearId($yearList);
-		$editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+		$editable = $controller->CensusVerification->isEditable($institutionSiteId, $selectedYear);
 		if (!$editable) {
 			$controller->redirect(array('action' => 'otherforms', $selectedYear));
 		} else {
-			$p = $controller->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $controller->institutionSiteId));
+			$p = $controller->InstitutionSite->field('institution_site_type_id', array('InstitutionSite.id' => $institutionSiteId));
 			$data = $controller->CensusGrid->find('all', array('conditions' => array('CensusGrid.institution_site_type_id' => array($p, 0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id', 'CensusGrid.order')));
 			//$data = $controller->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>$p, 'CensusGrid.visible' => 1), 'order' => 'CensusGrid.order'));
 
 			foreach ($data as &$arrDataVal) {
-				$dataAnswer = $controller->CensusGridValue->find('all', array('conditions' => array('CensusGridValue.institution_site_id' => $controller->institutionSiteId, 'CensusGridValue.census_grid_id' => $arrDataVal['CensusGrid']['id'], 'CensusGridValue.school_year_id' => $selectedYear)));
+				$dataAnswer = $controller->CensusGridValue->find('all', array('conditions' => array('CensusGridValue.institution_site_id' => $institutionSiteId, 'CensusGridValue.census_grid_id' => $arrDataVal['CensusGrid']['id'], 'CensusGridValue.school_year_id' => $selectedYear)));
 
 				$tmp = array();
 				foreach ($dataAnswer as $arrV) {
@@ -250,7 +252,7 @@ class CensusCustomField extends AppModel {
 			/*			 * *
 			 * CustomFields
 			 */
-			$site = $controller->InstitutionSite->findById($controller->institutionSiteId);
+			$site = $controller->InstitutionSite->findById($institutionSiteId);
 			//$data = $controller->CensusGrid->find('all',array('conditions'=>array('CensusGrid.institution_site_type_id'=>array($p,0), 'CensusGrid.visible' => 1), 'order' => array('CensusGrid.institution_site_type_id','CensusGrid.order')));
 			//$datafields = $controller->CensusCustomField->find('all',array('conditions'=>array('CensusCustomField.institution_site_type_id'=>$site['InstitutionSite']['institution_site_type_id'])));
 			$datafields = $controller->CensusCustomField->find('all', array('conditions' => array('CensusCustomField.institution_site_type_id' => array($site['InstitutionSite']['institution_site_type_id'], 0)), 'order' => array('CensusCustomField.institution_site_type_id', 'CensusCustomField.order')));
@@ -258,7 +260,7 @@ class CensusCustomField extends AppModel {
 			$controller->CensusCustomValue->unbindModel(
 					array('belongsTo' => array('InstitutionSite'))
 			);
-			$datavalues = $controller->CensusCustomValue->find('all', array('conditions' => array('CensusCustomValue.institution_site_id' => $controller->institutionSiteId, 'CensusCustomValue.school_year_id' => $selectedYear)));
+			$datavalues = $controller->CensusCustomValue->find('all', array('conditions' => array('CensusCustomValue.institution_site_id' => $institutionSiteId, 'CensusCustomValue.school_year_id' => $selectedYear)));
 			$tmp = array();
 			foreach ($datavalues as $arrV) {
 				$tmp[$arrV['CensusCustomField']['id']][] = $arrV['CensusCustomValue'];

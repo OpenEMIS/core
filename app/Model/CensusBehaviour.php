@@ -25,15 +25,14 @@ class CensusBehaviour extends AppModel {
 	);
 	public $belongsTo = array(
 		'SchoolYear',
-		'StudentBehaviourCategory',
+		'Students.StudentBehaviourCategory',
 		'InstitutionSite'
 	);
 	
 	public function getCensusData($siteId, $yearId) {
-		$StudentBehaviourCategory = ClassRegistry::init('Students.StudentBehaviourCategory');
-		$StudentBehaviourCategory->formatResult = true;
+		$this->StudentBehaviourCategory->formatResult = true;
 		
-		$data = $StudentBehaviourCategory->find('all', array(
+		$data = $this->StudentBehaviourCategory->find('all', array(
 			'recursive' => -1,
 			'fields' => array(
 				'CensusBehaviour.id', 'CensusBehaviour.male', 'CensusBehaviour.female', 
@@ -96,14 +95,14 @@ class CensusBehaviour extends AppModel {
 			return $data;
 		}
 		
-		public function behaviour($controller, $params) {
+	public function behaviour($controller, $params) {
 		$controller->Navigation->addCrumb('Behaviour');
 
-		$yearList = $controller->SchoolYear->getYearList();
+		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
-		$data = $controller->CensusBehaviour->getCensusData($controller->institutionSiteId, $selectedYear);
+		$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
 
-		$isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+		$isEditable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
 		
 		$controller->set(compact('selectedYear', 'yearList', 'data', 'isEditable'));
 	}
@@ -112,10 +111,10 @@ class CensusBehaviour extends AppModel {
 		if ($controller->request->is('get')) {
 			$controller->Navigation->addCrumb('Edit Behaviour');
 
-			$yearList = $controller->SchoolYear->getAvailableYears();
+			$yearList = $this->SchoolYear->getAvailableYears();
 			$selectedYear = $controller->getAvailableYearId($yearList);
-			$data = $controller->CensusBehaviour->getCensusData($controller->institutionSiteId, $selectedYear);
-			$editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+			$data = $this->getCensusData($controller->Session->read('InstitutionSite.id'), $selectedYear);
+			$editable = $controller->CensusVerification->isEditable($controller->Session->read('InstitutionSite.id'), $selectedYear);
 			if (!$editable) {
 				$controller->redirect(array('action' => 'behaviour', $selectedYear));
 			} else {
@@ -125,8 +124,8 @@ class CensusBehaviour extends AppModel {
 		} else {
 			$data = $controller->data['CensusBehaviour'];
 			$yearId = $data['school_year_id'];
-			$controller->CensusBehaviour->saveCensusData($data, $controller->institutionSiteId);
-			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_UPDATED'));
+			$this->saveCensusData($data, $controller->Session->read('InstitutionSite.id'));
+			$controller->Message->alert('general.edit.success');
 			$controller->redirect(array('controller' => 'Census', 'action' => 'behaviour', $yearId));
 		}
 	}

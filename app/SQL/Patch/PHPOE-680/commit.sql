@@ -1,4 +1,4 @@
-UPDATE `tst_openemisv2_demo`.`batch_reports` SET `query` = 'App::import(''Model'', ''InstitutionSite'');
+UPDATE `batch_reports` SET `query` = 'App::import(''Model'', ''InstitutionSite'');
         App::import(''Model'', ''Quality.QualityBatchReport'');
 
         $qbr = new QualityBatchReport();
@@ -42,7 +42,7 @@ UPDATE `tst_openemisv2_demo`.`batch_reports` SET `query` = 'App::import(''Model'
         $settings[''custom3LayerFormat''] = true;' WHERE `batch_reports`.`id` = 3000;
 
 
-UPDATE `tst_openemisv2_demo`.`batch_reports` SET `query` = 'App::import(''Model'', ''InstitutionSite'');
+UPDATE `batch_reports` SET `query` = 'App::import(''Model'', ''InstitutionSite'');
         App::import(''Model'', ''Quality.QualityBatchReport'');
         $qbr = new QualityBatchReport();
         $InstitutionSite = new InstitutionSite();

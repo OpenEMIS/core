@@ -29,16 +29,10 @@ class CensusStudent extends AppModel {
 	);
 	
 	public $belongsTo = array(
-		'SchoolYear' => array('foreignKey' => 'school_year_id'),
-		'EducationGrade' => array('foreignKey' => 'education_grade_id'),
-		'StudentCategory'=>array('foreignKey' => 'student_category_id'),
-		'InstitutionSite' => array('foreignKey' => 'institution_site_id')/*,
-		'Institution' =>
-			array(
-				'joinTable'  => 'institutions',
-				'foreignKey' => false,
-				'conditions' => array(' Institution.id = InstitutionSite.institution_id '),
-			)*/
+		'SchoolYear',
+		'EducationGrade',
+		'StudentCategory',
+		'InstitutionSite'
 	);
 	
 	public function getCensusData($siteId, $yearId, $gradeId, $categoryId) {
@@ -87,8 +81,8 @@ class CensusStudent extends AppModel {
 		return $data;
 	}
 		
-		public function getCensusDataOrderByAge($siteId, $yearId, $programmeId, $categoryId){
-				$this->formatResult = true;
+	public function getCensusDataOrderByAge($siteId, $yearId, $programmeId, $categoryId){
+		$this->formatResult = true;
 		$data = $this->find('all', array(
 			'recursive' => -1,
 			'fields' => array('CensusStudent.id', 'CensusStudent.age', 'CensusStudent.male', 'CensusStudent.female', 'CensusStudent.source', 'CensusStudent.education_grade_id'),
@@ -131,7 +125,7 @@ class CensusStudent extends AppModel {
 			'order' => array('CensusStudent.age', 'EducationGrade.order')
 		));
 		return $data;
-		}
+	}
 	
 	public function saveCensusData($data, $institutionSiteId,$source=0) {
 		$keys = array();
@@ -359,26 +353,27 @@ class CensusStudent extends AppModel {
 		
 	public function enrolment($controller, $params) {
 		$controller->Navigation->addCrumb('Students');
-		$yearList = $controller->SchoolYear->getYearList();
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$yearList = $this->SchoolYear->getYearList();
 		$selectedYear = isset($controller->params['pass'][0]) ? $controller->params['pass'][0] : key($yearList);
 		$categoryList = $controller->StudentCategory->findList();
 		$selectedCategory = sizeof($categoryList) > 0 ? key($categoryList) : 0;
-		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedYear);
 		
 		$data = array();
 		if(empty($programmes)) {
-			$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+			$controller->Message->alert('InstitutionSiteProgramme.noData');
 		} else {
 			foreach($programmes as $obj) {
-				$dataRowsArr = $this->getEnrolmentDataByRowsView($controller->institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age']);
+				$dataRowsArr = $this->getEnrolmentDataByRowsView($institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age']);
 				//pr($dataRowsArr);
 								
 				$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
-				$gradeList = $controller->EducationGrade->findList(array('conditions' => $conditions));
+				$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 				
 				$enrolment = array();
 				if(!empty($gradeList)) {
-					$enrolment = $controller->CensusStudent->getCensusData($controller->institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
+					$enrolment = $this->getCensusData($institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
 				} else {
 					$gradeList[0] = '-- ' . __('No Grade') . ' --';
 				}
@@ -392,36 +387,37 @@ class CensusStudent extends AppModel {
 				);
 			}
 		}
-		$isEditable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+		$isEditable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 		$controller->set(compact('data', 'selectedYear', 'yearList', 'categoryList', 'isEditable'));
 	}
 	
 	public function enrolmentEdit($controller, $params) {
 		$controller->Navigation->addCrumb('Edit Students');
-		$yearList = $controller->SchoolYear->getAvailableYears(); // check for empty year list
+		$institutionSiteId = $controller->Session->read('InstitutionSite.id');
+		$yearList = $this->SchoolYear->getAvailableYears(); // check for empty year list
 		$selectedYear = $controller->getAvailableYearId($yearList);
-		$categoryList = $controller->StudentCategory->findList();
+		$categoryList = $this->StudentCategory->findList();
 		$selectedCategory = !empty($categoryList) ? key($categoryList) : 0;
-		$programmes = $controller->InstitutionSiteProgramme->getSiteProgrammes($controller->institutionSiteId, $selectedYear);
+		$programmes = ClassRegistry::init('InstitutionSiteProgramme')->getSiteProgrammes($institutionSiteId, $selectedYear);
 		//pr($programmes);
 		$data = array();
-		$editable = $controller->CensusVerification->isEditable($controller->institutionSiteId, $selectedYear);
+		$editable = ClassRegistry::init('CensusVerification')->isEditable($institutionSiteId, $selectedYear);
 		if(!$editable) {
 			$controller->redirect(array('action' => 'enrolment', $selectedYear));
 		} else {
 			if(empty($programmes)) {
-				$controller->Utility->alert($controller->Utility->getMessage('CENSUS_NO_PROG'), array('type' => 'warn', 'dismissOnClick' => false));
+				$controller->Message->alert('InstitutionSiteProgramme.noData');
 			} else {
 				foreach($programmes as $obj) {
-					$dataRowsArr = $this->getEnrolmentDataByRowsEdit($controller->institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age']);
+					$dataRowsArr = $this->getEnrolmentDataByRowsEdit($institutionSiteId, $selectedYear, $obj['education_programme_id'], $selectedCategory, $obj['admission_age']);
 					//pr($dataRowsArr);
 					
 					$conditions = array('EducationGrade.education_programme_id' => $obj['education_programme_id']);
-					$gradeList = $controller->EducationGrade->findList(array('conditions' => $conditions));
+					$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 					
 					$enrolment = array();
 					if(!empty($gradeList)) {
-						$enrolment = $controller->CensusStudent->getCensusData($controller->institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
+						$enrolment = $this->getCensusData($institutionSiteId, $selectedYear, key($gradeList), $selectedCategory);
 					} else {
 						$gradeList[0] = '-- ' . __('No Grade') . ' --';
 					}
@@ -442,7 +438,7 @@ class CensusStudent extends AppModel {
 		
 	private function getEnrolmentDataByRowsView($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
-		$EducationGrade = ClassRegistry::init('EducationGrade');
+		$EducationGrade = $this->EducationGrade;
 	
 		$admission_age = $age;
 		
@@ -462,7 +458,7 @@ class CensusStudent extends AppModel {
 		}
 		//pr($ageRange);
 		$conditions = array('EducationGrade.education_programme_id' => $educationProgrammeId);
-		$gradeList = $EducationGrade->findList(array('conditions' => $conditions));
+		$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 		//pr($gradeList);
 
 		$censusDataOrderByAge = $this->getCensusDataOrderByAge($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId);
@@ -723,7 +719,7 @@ class CensusStudent extends AppModel {
 		
 	private function getEnrolmentDataByRowsEdit($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId, $age) {
 		$ConfigItem = ClassRegistry::init('ConfigItem');
-		$EducationGrade = ClassRegistry::init('EducationGrade');
+		$EducationGrade = $this->EducationGrade;
 	
 		$admission_age = $age;
 		$agePlus = $ConfigItem->getValue('admission_age_plus');
@@ -744,7 +740,7 @@ class CensusStudent extends AppModel {
 		
 		//pr($ageRange);
 		$conditions = array('EducationGrade.education_programme_id' => $educationProgrammeId);
-		$gradeList = $EducationGrade->findList(array('conditions' => $conditions));
+		$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 		//pr($gradeList);
 
 		$censusDataOrderByAge = $this->getCensusDataOrderByAge($institutionSiteId, $yearId, $educationProgrammeId, $studentCategoryId);
@@ -962,7 +958,6 @@ class CensusStudent extends AppModel {
 	
 	public function enrolmentAjax($controller, $params) {
 		$EducationProgramme = ClassRegistry::init('EducationProgramme');
-		$EducationGrade = ClassRegistry::init('EducationGrade');
 			
 		$this->render = false;
 		
@@ -976,16 +971,16 @@ class CensusStudent extends AppModel {
 			$admission_age = $programmeObj['admission_age'];
 			
 			if($controller->params->query['edit'] === 'true') {
-				$dataRowsArr = $this->getEnrolmentDataByRowsEdit($controller->institutionSiteId, $yearId, $programmeId, $categoryId, $admission_age);
+				$dataRowsArr = $this->getEnrolmentDataByRowsEdit($institutionSiteId, $yearId, $programmeId, $categoryId, $admission_age);
 			} else {
-				$dataRowsArr = $this->getEnrolmentDataByRowsView($controller->institutionSiteId, $yearId, $programmeId, $categoryId, $admission_age);
+				$dataRowsArr = $this->getEnrolmentDataByRowsView($institutionSiteId, $yearId, $programmeId, $categoryId, $admission_age);
 			}
 			//pr($dataRowsArr);
 							
 			$conditions = array('EducationGrade.education_programme_id' => $programmeId);
-			$gradeList = $EducationGrade->findList(array('conditions' => $conditions));
+			$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 						
-			//$enrolment = $controller->CensusStudent->getCensusDataOrderByAge($controller->institutionSiteId, $yearId, $programmeId, $categoryId);
+			//$enrolment = $this->getCensusDataOrderByAge($institutionSiteId, $yearId, $programmeId, $categoryId);
 						
 			$controller->set(compact('dataRowsArr', 'gradeList'));
 			
@@ -995,14 +990,13 @@ class CensusStudent extends AppModel {
 				$controller->render('enrolment_ajax');
 			}
 		} else {
-			$keys = $this->saveCensusData($controller->data, $controller->institutionSiteId);
+			$keys = $this->saveCensusData($controller->data, $institutionSiteId);
 			return json_encode($keys);
 		}
 	}
 	
 	public function enrolmentAddRow($controller, $params) {
 		$EducationProgramme = ClassRegistry::init('EducationProgramme');
-		$EducationGrade = ClassRegistry::init('EducationGrade');
 			
 		$controller->layout = 'ajax';
 		$age = $controller->params->query['age'];
@@ -1016,7 +1010,7 @@ class CensusStudent extends AppModel {
 		}
 								
 		$conditions = array('EducationGrade.education_programme_id' => $programmeId);
-		$gradeList = $EducationGrade->findList(array('conditions' => $conditions));
+		$gradeList = $this->EducationGrade->findList(array('conditions' => $conditions));
 		
 		$controller->set(compact('age', 'gradeList'));	 
 	}
