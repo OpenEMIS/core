@@ -219,14 +219,14 @@ class InstitutionSiteStaffAbsence extends AppModel {
 
 		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
 		//pr($yearList);
-		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearId(date('Y'));
+		
 		if (isset($controller->params['pass'][0])) {
 			$yearId = $controller->params['pass'][0];
 			if (!array_key_exists($yearId, $yearList)) {
-                $yearId = $currentYearId;
+                $yearId = key($yearList);
             }
 		}else{
-			$yearId = $currentYearId;
+			$yearId = key($yearList);
 		}
 		
 		$weekList = $controller->getWeekListByYearId($yearId);
@@ -288,14 +288,14 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		
 		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
 		//pr($yearList);
-		$currentYearId = ClassRegistry::init('SchoolYear')->getSchoolYearId(date('Y'));
+		
 		if (isset($controller->params['pass'][0])) {
 			$yearId = $controller->params['pass'][0];
 			if (!array_key_exists($yearId, $yearList)) {
-                $yearId = $currentYearId;
+                $yearId = key($yearList);
             }
 		}else{
-			$yearId = $currentYearId;
+			$yearId = key($yearList);
 		}
 		//pr($yearId);
 		
