@@ -576,3 +576,247 @@ WHERE `name` LIKE 'Assessment Report' AND `report_id` = 29;
 -- Attendance Report
 --
 
+UPDATE `batch_reports` 
+SET `query` = '$CensusAttendance = ClassRegistry::init(''CensusAttendance'');
+		$CensusAttendance->formatResult = true;
+		$data = $CensusAttendance->find(''all'', array(
+			''recursive'' => -1,
+			''fields'' => array(
+				''SchoolYear.name AS AcademicYear'',
+				''InstitutionSite.name AS InstitutionName'',
+				''EducationProgramme.name AS EducationProgramme'',
+				''EducationGrade.name AS EducationGrade'',
+				''CensusAttendance.attended_male AS MaleAttended'',
+				''CensusAttendance.attended_female AS FemaleAttended'',
+				''CensusAttendance.absent_male AS MaleAbsent'',
+				''CensusAttendance.absent_female AS FemaleAbsent''
+			),
+			''joins'' => array(
+				array(
+					''table'' => ''institution_sites'',
+					''alias'' => ''InstitutionSite'',
+					''conditions'' => array(''InstitutionSite.id = CensusAttendance.institution_site_id'')
+				),
+				array(
+					''table'' => ''school_years'',
+					''alias'' => ''SchoolYear'',
+					''conditions'' => array(''SchoolYear.id = CensusAttendance.school_year_id'')
+				),
+				array(
+					''table'' => ''education_grades'',
+					''alias'' => ''EducationGrade'',
+					''conditions'' => array(''EducationGrade.id = CensusAttendance.education_grade_id'')
+				),
+				array(
+					''table'' => ''education_programmes'',
+					''alias'' => ''EducationProgramme'',
+					''conditions'' => array(''EducationProgramme.id = EducationGrade.education_programme_id'')
+				)
+			),{cond}
+		));', 
+`template` = 'AcademicYear,InstitutionName,EducationProgramme,EducationGrade,MaleAttended,FemaleAttended,MaleAbsent,FemaleAbsent' 
+WHERE `name` LIKE 'Attendance Report' AND `report_id` = 28;
+
+--
+-- Graduate Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$CensusGraduate = ClassRegistry::init(''CensusGraduate'');
+$CensusGraduate->formatResult = true;
+		$data = $CensusGraduate->find(''all'', array(
+			''recursive'' => -1,
+			''fields'' => array(
+				''SchoolYear.name AS AcademicYear'',
+				''InstitutionSite.name AS InstitutionName'',
+				''EducationProgramme.name AS EducationProgramme'',
+				''CensusGraduate.male AS Male'',
+				''CensusGraduate.female AS Female''
+			),
+			''joins'' => array(
+				array(
+					''table'' => ''institution_sites'',
+					''alias'' => ''InstitutionSite'',
+					''conditions'' => array(''InstitutionSite.id = CensusGraduate.institution_site_id'')
+				),
+				array(
+					''table'' => ''school_years'',
+					''alias'' => ''SchoolYear'',
+					''conditions'' => array(''SchoolYear.id = CensusGraduate.school_year_id'')
+				),
+				array(
+					''table'' => ''education_programmes'',
+					''alias'' => ''EducationProgramme'',
+					''conditions'' => array(''EducationProgramme.id = CensusGraduate.education_programme_id'')
+				)
+			),{cond}
+		));', 
+`template` = 'AcademicYear,InstitutionName,EducationProgramme,Male,Female' 
+WHERE `name` LIKE 'Graduate Report' AND `report_id` = 27;
+
+--
+-- Class Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$data = $this->CensusClass->find(''all'', array(
+			''recursive'' => -1,
+			''fields'' => array(
+				''SchoolYear.name AS AcademicYear'',
+				''InstitutionSite.name AS InstitutionName'',
+				''CensusClass.classes AS Classes'',
+				''CensusClass.seats AS Seats''
+			),
+			''joins'' => array(
+				array(
+					''table'' => ''institution_sites'',
+					''alias'' => ''InstitutionSite'',
+					''conditions'' => array(''InstitutionSite.id = CensusClass.institution_site_id'')
+				),
+				array(
+					''table'' => ''school_years'',
+					''alias'' => ''SchoolYear'',
+					''conditions'' => array(''SchoolYear.id = CensusClass.school_year_id'')
+				)
+			),{cond}
+		));', 
+`template` = 'AcademicYear,InstitutionName,Classes,Seats' 
+WHERE `name` LIKE 'Class Report' AND `report_id` = 26;
+
+--
+-- Staff Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$this->CensusStaff->bindModel(array( ''belongsTo''=> array( ''StaffCategory''=>array(''foreignKey'' => ''staff_category_id''), ''InstitutionSite''=>array(''foreignKey'' => ''institution_site_id'') ) )); $data = $this->CensusStaff->find(''all'',array(''fields''=>array(''SchoolYear.name AS AcademicYear'',''InstitutionSite.name AS InstitutionName'',''StaffCategory.name AS Category'',''CensusStaff.male AS Male'',''CensusStaff.female AS Female''),{cond}));',
+`template` = 'AcademicYear,InstitutionName,Category,Male,Female' 
+WHERE `name` LIKE 'Staff Report' AND `report_id` = 25;
+
+--
+-- Training Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$data = $this->CensusTeacherTraining->find(''all'',array(''fields''=>array(''SchoolYear.name AS AcademicYear'',''InstitutionSite.name AS InstitutionName'',''EducationLevel.name AS EducationLevelName'',''CensusTeacherTraining.male AS Male'',''CensusTeacherTraining.female AS Female''),{cond}));',
+`template` = 'AcademicYear,InstitutionName,EducationLevelName,Male,Female' 
+WHERE `name` LIKE 'Training Report' AND `report_id` = 24;
+
+--
+-- Student Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$data = $this->CensusStudent->find(''all'',array(''fields''=>array(''SchoolYear.name AS AcademicYear'',''InstitutionSite.name AS InstitutionName'',''EducationGrade.name AS EducationGradeName'',''StudentCategory.name AS Category'',''CensusStudent.male AS Male'',''CensusStudent.female AS Female''),{cond}));',
+`template` = 'AcademicYear,InstitutionName,EducationGradeName,Category,Male,Female' 
+WHERE `name` LIKE 'Student Report' AND `report_id` = 22;
+
+--
+-- Verification Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$this->InstitutionSite->formatResult = true;
+$data = $this->InstitutionSite->find(''all'', array(
+	''recursive'' => -1,
+	''fields'' => array(
+		''InstitutionSite.code AS InstitutionCode'',
+		''InstitutionSite.name AS InstitutionName'',
+		''SchoolYear.name AS SchoolYear'',
+		"IF(CensusVerification.status=1, ''Verified'', ''Not Verified'') AS Status",
+		"CONCAT(SecurityUser.first_name, '' '', SecurityUser.last_name) AS LastUpdatedBy"
+	),
+	''joins'' => array(
+		array(
+			''table'' => ''school_years'',
+			''alias'' => ''SchoolYear'',
+			''type'' => ''CROSS'',
+			''conditions'' => array(''1 = 1'')
+		),
+		array(
+			''table'' => ''census_verifications'',
+			''alias'' => ''CensusVerification'',
+			''type'' => ''LEFT'',
+			''conditions'' => array(
+				''CensusVerification.institution_site_id = InstitutionSite.id'',
+				''CensusVerification.school_year_id = SchoolYear.id''
+			)
+		),
+		array(
+			''table'' => ''census_verifications'',
+			''alias'' => ''CensusVerification2'',
+			''type'' => ''LEFT'',
+			''conditions'' => array(
+				''CensusVerification2.school_year_id = CensusVerification.school_year_id'',
+				''CensusVerification2.institution_site_id = CensusVerification.institution_site_id'',
+				''CensusVerification2.created > CensusVerification.created''
+			)
+		),
+		array(
+			''table'' => ''security_users'',
+			''alias'' => ''SecurityUser'',
+			''type'' => ''LEFT'',
+			''conditions'' => array(''SecurityUser.id = CensusVerification.created_user_id'')
+		)
+	),
+	''order'' => array(''InstitutionSite.name'', ''SchoolYear.name'', ''CensusVerification.created''),
+	''conditions'' => array(''CensusVerification2.id IS NULL''),
+	{cond}
+));', 
+`template` = 'InstitutionCode,InstitutionName,SchoolYear,Status,LastUpdatedBy' 
+WHERE `name` LIKE 'Verification Report' AND `report_id` = 21;
+
+--
+-- Institution Site Programmes
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$data = $this->InstitutionSiteProgramme->find(''all'',array(''fields''=>array(''InstitutionSite.name AS InstitutionName'',''EducationProgramme.name AS EducationProgrammeName''),{cond}));',
+`template` = 'InstitutionName,EducationProgrammeName' 
+WHERE `name` LIKE 'Institution Site Programmes' AND `report_id` = 15;
+
+--
+-- Institution Site Bank Accounts
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$data = $this->InstitutionSiteBankAccount->find(''all'',array(''fields''=>array(''InstitutionSite.name AS InstitutionName'',''InstitutionSiteBankAccount.account_name AS BankAccountName'',''InstitutionSiteBankAccount.account_number AS BankAccountNumber'',''InstitutionSiteBankAccount.active AS BankAccountActive'',''BankBranch.name AS BankBranchName''),{cond}));',
+`template` = 'InstitutionName,BankAccountName,BankAccountNumber,BankAccountActive,BankBranchName' 
+WHERE `name` LIKE 'Institution Site Bank Accounts' AND `report_id` = 14;
+
+--
+-- Institution Site Custom Field Report
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$this->InstitutionSiteCustomField->unbindModel(array(''hasMany'' => array(''InstitutionSiteCustomFieldOption'')));
+$this->InstitutionSiteCustomValue->bindModel(array(
+           ''belongsTo''=> array(
+            	''InstitutionSiteCustomFieldOption'' => array(
+            		''joinTable''  => ''institution_custom_field_options'',
+                    ''foreignKey'' => false,
+                    ''conditions'' => array('' InstitutionSiteCustomFieldOption.id = InstitutionSiteCustomValue.value '')
+                ),
+            )
+));
+$data = $this->InstitutionSiteCustomValue->find(''all'',array(''fields''=>array(''InstitutionSite.name AS InstitutionName'',''InstitutionSiteCustomField.name AS Information'',''InstitutionSiteCustomField.type AS Type'',''InstitutionSiteCustomValue.value AS Value'',''InstitutionSiteCustomFieldOption.value AS Option''),{cond}));foreach($data as $key => &$value) { if ($value[''InstitutionSiteCustomField''][''Type''] != 2 && $value[''InstitutionSiteCustomField''][''Type''] != 5) { $value[''InstitutionSiteCustomValue''][''Value''] = $value[''InstitutionSiteCustomFieldOption''][''Option'']; }}', 
+`template` = 'InstitutionName,Information,Value' 
+WHERE `name` LIKE 'Institution Site Custom Field Report' AND `report_id` = 13;
+
+--
+-- Institution Site List
+--
+
+UPDATE `batch_reports` 
+SET `query` = '$data = $this->InstitutionSite->find(''all'',array(''fields''=>array(''InstitutionSite.Code AS Code'',''InstitutionSite.name AS InstitutionName'',''InstitutionSite.address AS Address'',''InstitutionSite.postal_code AS PostalCode'',''InstitutionSite.contact_person AS ContactPerson'',''InstitutionSite.telephone AS Telephone'',''InstitutionSite.fax AS Fax'',''InstitutionSite.email AS Email'',''InstitutionSite.website AS Website'',''InstitutionSite.date_opened AS DateOpened'',''InstitutionSite.date_closed AS DateClosed'',''InstitutionSite.longitude AS Longitude'',''InstitutionSite.latitude AS Latitude'',''Area.name AS AreaName'',''InstitutionSiteLocality.name AS Locality'',''InstitutionSiteType.name AS SiteType'',''InstitutionSiteOwnership.name AS Ownership'',''InstitutionSiteStatus.name AS Status''),{cond}));', 
+`template` = 'Code,InstitutionName,Address,PostalCode,ContactPerson,Telephone,Fax,Email,Website,DateOpened,DateClosed,Longitude,Latitude,AreaName,Locality,SiteType,Ownership,Status' 
+WHERE `name` LIKE 'Institution Site List' AND `report_id` = 11;
+
+DELETE FROM `batch_reports` 
+WHERE `id` =12 
+AND `name` LIKE 'Institution Site List';
+
+DELETE FROM `reports` 
+WHERE `id` =12 
+AND `name` LIKE 'Institution Site Report';
+
+
