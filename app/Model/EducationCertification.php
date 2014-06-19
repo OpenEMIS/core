@@ -67,7 +67,7 @@ class EducationCertification extends AppModel {
 		if($controller->request->is('post') || $controller->request->is('put')) {
 			$controller->request->data[$this->alias]['order'] = $this->field('order', array(), 'order DESC') + 1;
 			if ($this->save($controller->request->data)) {
-				$controller->Message->alert('general.edit.success');
+				$controller->Message->alert('general.add.success');
 				return $controller->redirect(array('action' => $this->_action));
 			}
 		}

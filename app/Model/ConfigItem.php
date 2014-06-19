@@ -17,15 +17,15 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class ConfigItem extends AppModel {
-    public $validate = array(
-        'image', array(
-	        'rule'    => array('extension', array('gif', 'jpeg', 'png', 'jpg')),
-	        'message' => 'Please supply a valid image.'
-	    )
-    );
+	public $validate = array(
+		'image', array(
+			'rule'	=> array('extension', array('gif', 'jpeg', 'png', 'jpg')),
+			'message' => 'Please supply a valid image.'
+		)
+	);
 
-    
-    public $belongsTo = array(
+	
+	public $belongsTo = array(
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -39,141 +39,141 @@ class ConfigItem extends AppModel {
 	/*public $hasMany = array('ConfigItemOption');*/
 
 
-	 public $validateDataDiscrepancy = array(
-	      'value' => array(
-	      		'num'=>array(
-	      			 'rule'  => 'numeric',
-	      			 'message' => 'Numeric Value should be between 0 to 100'
-	      		),
-	      		'bet' => array(
-	          		'rule'    => array('range', -1, 101),
-	            	'message' => 'Numeric Value should be between 0 to 100'
-	            )
-	      	)
+	public $validateDataDiscrepancy = array(
+		'value' => array(
+			'num'=>array(
+				'rule'  => 'numeric',
+				'message' => 'Numeric Value should be between 0 to 100'
+			),
+			'bet' => array(
+				'rule'	=> array('range', -1, 101),
+				'message' => 'Numeric Value should be between 0 to 100'
+			)
+		)
   	);
 
   	public $validateDataOutlier = array(
-	      'value' => array(
-	      		'num'=>array(
-	      			 'rule'  => 'numeric',
-	      			 'message' => 'Numeric Value should be between 0 to 100'
-	      		),
-	      		'bet' => array(
-	          		'rule'    => array('range', -1, 101),
-	            	'message' => 'Numeric Value should be between 0 to 100'
-	            )
-	      	)
+		'value' => array(
+			'num'=>array(
+				'rule'  => 'numeric',
+				'message' => 'Numeric Value should be between 0 to 100'
+			),
+			'bet' => array(
+				'rule'	=> array('range', -1, 101),
+				'message' => 'Numeric Value should be between 0 to 100'
+			)
+		)
   	);
 
   	public $validateStudentAdmissionAge = array(
-	      'value' => array(
-	      		'num'=>array(
-	      			 'rule'  => 'numeric',
-	      			 'message' => 'Numeric Value should be between 0 to 100'
-	      		),
-	      		'bet' => array(
-	          		'rule'    => array('range', -1, 101),
-	            	'message' => 'Numeric Value should be between 0 to 100'
-	            )
-	      	)
+		'value' => array(
+			'num'=>array(
+				'rule'  => 'numeric',
+				'message' => 'Numeric Value should be between 0 to 100'
+			),
+			'bet' => array(
+				'rule'	=> array('range', -1, 101),
+				'message' => 'Numeric Value should be between 0 to 100'
+			)
+		)
   	);
 
 	public $validateNoOfShift = array(
-	      'value' => array(
-	      		'num'=>array(
-	      			 'rule'  => 'numeric',
-	      			 'message' => 'Numeric Value should be between 0 to 10'
-	      		),
-	      		'bet' => array(
-	          		'rule'    => array('range', -1, 101),
-	            	'message' => 'Numeric Value should be between 0 to 10'
-	            )
-	      	)
+		'value' => array(
+			'num'=>array(
+				'rule'  => 'numeric',
+				'message' => 'Numeric Value should be between 0 to 10'
+			),
+			'bet' => array(
+				'rule'	=> array('range', -1, 101),
+				'message' => 'Numeric Value should be between 0 to 10'
+			)
+		)
   	);
 
   	public $validateCreditHour = array(
-      	'value' => array(
-			 'rule'  => 'numeric',
-  			 'message' => 'Value should be numeric'
+		'value' => array(
+			'rule'  => 'numeric',
+  			'message' => 'Value should be numeric'
   		)
   	);
   
 	public $validateSmsRetryTime = array(
-      	'value' => array(
-      		'num'=>array(
-      			 'rule'  => 'numeric',
-      			 'message' =>  'Numeric Value should be between 0 to 10'
-      		),
-      		'bet' => array(
-          		'rule'    => array('range', -1, 11),
-            	'message' => 'Numeric Value should be between 0 to 10'
-            )
-      	)
+		'value' => array(
+			'num'=>array(
+				'rule'  => 'numeric',
+				'message' =>  'Numeric Value should be between 0 to 10'
+			),
+			'bet' => array(
+				'rule'	=> array('range', -1, 11),
+				'message' => 'Numeric Value should be between 0 to 10'
+			)
+		)
   	);
 	
   	public $validateSmsRetryWait = array(
-      	'value' => array(
-      		'num'=>array(
-      			 'rule'  => 'numeric',
-      			 'message' =>  'Numeric Value should be between 0 to 60'
-      		),
-      		'bet' => array(
-          		'rule'    => array('range', -1, 61),
-            	'message' => 'Numeric Value should be between 0 to 60'
-            )
-      	)
+		'value' => array(
+			'num'=>array(
+				'rule'  => 'numeric',
+				'message' =>  'Numeric Value should be between 0 to 60'
+			),
+			'bet' => array(
+				'rule'	=> array('range', -1, 61),
+				'message' => 'Numeric Value should be between 0 to 60'
+			)
+		)
   	);
-	 
+	
  	public function beforeValidate($options = array()) {
-      // We might want to check data
+		// We might want to check data
+		if ($this->data['ConfigItem']['type']=='Data Discrepancy') {
+			$this->validate = array_merge($this->validate, $this->validateDataDiscrepancy);
+		} else if ($this->data['ConfigItem']['type']=='Data Outliers') {
+			$this->validate = array_merge($this->validate, $this->validateDataOutlier);
+		} else if ($this->data['ConfigItem']['type']=='Student Admission Age') {
+			$this->validate = array_merge($this->validate, $this->validateStudentAdmissionAge);
+		} else if ($this->data['ConfigItem']['name']=='no_of_shifts') {
+			$this->validate = array_merge($this->validate, $this->validateNoOfShift);
+		} else if ($this->data['ConfigItem']['name']=='training_credit_hour') {
+			$this->validate = array_merge($this->validate, $this->validateCreditHour);
+		} else if ($this->data['ConfigItem']['name']=='sms_retry_times') {
+			$this->validate = array_merge($this->validate, $this->validateSmsRetryTime);
+		} else if ($this->data['ConfigItem']['name']=='sms_retry_wait') {
+			$this->validate = array_merge($this->validate, $this->validateSmsRetryWait);
+		}
+		/*
+		// Maybe only on an edit action?
+		// We know it's edit because there is an id
+		if (isset($this->data['Post']['id'])) {
+			$this->validate = array_merge($this->validate, $this->validatePost);
+		}
+		
+		// Perhaps we want to add a single new rule for add using the validator?
+		// We know it's add because there is no id
+		if (!isset($this->data['Post']['id'])) {
+			$this->validator()->add('pubDate', array(
+					'one' => array(
+						'rule' => array('datetime', 'ymd'),
+						'message' => 'Publish date must be ymd'
+					)
+				)
+			)
+		}*/
+		
+		return true;
+	}
 
-      if ($this->data['ConfigItem']['type']=='Data Discrepancy') {
-          $this->validate = array_merge($this->validate, $this->validateDataDiscrepancy);
-      }else if ($this->data['ConfigItem']['type']=='Data Outliers') {
-          $this->validate = array_merge($this->validate, $this->validateDataOutlier);
-      }else if ($this->data['ConfigItem']['type']=='Student Admission Age') {
-          $this->validate = array_merge($this->validate, $this->validateStudentAdmissionAge);
-      }else if ($this->data['ConfigItem']['name']=='no_of_shifts') {
-          $this->validate = array_merge($this->validate, $this->validateNoOfShift);
-      }else if ($this->data['ConfigItem']['name']=='training_credit_hour') {
-          $this->validate = array_merge($this->validate, $this->validateCreditHour);
-      }else if ($this->data['ConfigItem']['name']=='sms_retry_times') {
-          $this->validate = array_merge($this->validate, $this->validateSmsRetryTime);
-      }else if ($this->data['ConfigItem']['name']=='sms_retry_wait') {
-          $this->validate = array_merge($this->validate, $this->validateSmsRetryWait);
-      }
-      /*
-      // Maybe only on an edit action?
-      // We know it's edit because there is an id
-      if (isset($this->data['Post']['id'])) {
-          $this->validate = array_merge($this->validate, $this->validatePost);
-      }
-
-      // Perhaps we want to add a single new rule for add using the validator?
-      // We know it's add because there is no id
-      if (!isset($this->data['Post']['id'])) {
-          $this->validator()->add('pubDate', array(
-                  'one' => array(
-                      'rule' => array('datetime', 'ymd'),
-                      'message' => 'Publish date must be ymd'
-                  )
-              )
-          )
-      }*/
-
-      return true;
-  }
-
-    public function getYearbook() {
-    	$yearbook = array();
-    	$yearbook['yearbook_organization_name'] = $this->getValue('yearbook_organization_name');
-    	$yearbook['yearbook_school_year'] = $this->getValue('yearbook_school_year');
-    	$yearbook['yearbook_title'] = $this->getValue('yearbook_title');
-    	$yearbook['yearbook_publication_date'] = $this->getValue('yearbook_publication_date');
-    	$yearbook['yearbook_logo'] = $this->getValue('yearbook_logo');
-    	$yearbook['yearbook_orientation'] = $this->getValue('yearbook_orientation');
-    	return $yearbook;
-    }
+	public function getYearbook() {
+		$yearbook = array();
+		$yearbook['yearbook_organization_name'] = $this->getValue('yearbook_organization_name');
+		$yearbook['yearbook_school_year'] = $this->getValue('yearbook_school_year');
+		$yearbook['yearbook_title'] = $this->getValue('yearbook_title');
+		$yearbook['yearbook_publication_date'] = $this->getValue('yearbook_publication_date');
+		$yearbook['yearbook_logo'] = $this->getValue('yearbook_logo');
+		$yearbook['yearbook_orientation'] = $this->getValue('yearbook_orientation');
+		return $yearbook;
+	}
+	
 	public function getVersion() {
 		return $this->getValue('version');
 	}
@@ -351,14 +351,11 @@ class ConfigItem extends AppModel {
 		return $image;
 	}
 
-	public function getImageConfItem()
-	{
-
+	public function getImageConfItem() {
 		$rawImageConfig = $this->find('all', array(
 			'fields' => array('ConfigItem.name', 'ConfigItem.value', 'ConfigItem.default_value'),
 			'conditions' => array('ConfigItem.name' => array( 'dashboard_img_default', 'dashboard_img_width', 'dashboard_img_height', 'dashboard_img_size_limit'))
 		));
-
 
 		// $imageFolder = $this->getValue('dashboard_img_folder');
 		$defaultImageId = $this->getValue('dashboard_img_default');
@@ -399,70 +396,65 @@ class ConfigItem extends AppModel {
 
 	}
 
-	private function findExtension ($filename)
-	{
-	   $filename = strtolower($filename) ;
-	   $exts = explode(".", $filename) ;
-	   $n = count($exts)-1;
-	   $exts = $exts[$n];
-	   return $exts;
+	private function findExtension ($filename) {
+		$filename = strtolower($filename) ;
+		$exts = explode(".", $filename) ;
+		$n = count($exts)-1;
+		$exts = $exts[$n];
+		return $exts;
 	}
 
-	private function getUserImageFiles($folder=null)
-	{
+	private function getUserImageFiles($folder=null) {
 		$filenames = array();
 		$path = IMAGES;
 
 		$path .= (is_null($folder))? $this->getValue('dashboard_img_folder'): $folder;
 
 		foreach (new DirectoryIterator($path) as $fileInfo){
-		    if(!$fileInfo->isDot()){
-		        if(!stristr($fileInfo->getFilename(), 'default')) {
-		        	$filenames[] = $fileInfo->getFilename();
-		        }
-		    }
+			if(!$fileInfo->isDot()){
+				if(!stristr($fileInfo->getFilename(), 'default')) {
+					$filenames[] = $fileInfo->getFilename();
+				}
+			}
 		}
 		return $filenames;
 	}
 
-	private function getDefaultImageFile($folder=null)
-	{
+	private function getDefaultImageFile($folder=null) {
 		$filename = '';
 		$path = IMAGES;
 
 		$path .= (is_null($folder))? $this->getValue('dashboard_img_folder'): $folder;
 
 		foreach (new DirectoryIterator($path) as $fileInfo){
-		    if(!$fileInfo->isDot()){
-		        if(stristr($fileInfo->getFilename(), 'default')) {
-		        	$filename = $fileInfo->getFilename();
-		        	break;
-		        }
-		    }
+			if(!$fileInfo->isDot()){
+				if(stristr($fileInfo->getFilename(), 'default')) {
+					$filename = $fileInfo->getFilename();
+					break;
+				}
+			}
 		}
 		return $filename;
 	}
 
-	private function getUserImageFile($folder=null)
-	{
+	private function getUserImageFile($folder=null) {
 		$filenames = array();
 		$path = IMAGES;
 		$path .= (is_null($folder))? $this->getValue('dashboard_img_folder'): $folder;
 
 		foreach (new DirectoryIterator($path) as $fileInfo){
-		    if(!$fileInfo->isDot()){
-		        if(!stristr($fileInfo->getFilename(), 'default')) {
-		        	$filenames[] = $fileInfo->getFilename();
-		        }
-		    }
+			if(!$fileInfo->isDot()){
+				if(!stristr($fileInfo->getFilename(), 'default')) {
+					$filenames[] = $fileInfo->getFilename();
+				}
+			}
 		}
 
 
 		return $filenames;
 	}
 
-	private function emptyFolder($folder=null)
-	{
+	private function emptyFolder($folder=null) {
 		$isFolderEmpty = false;
 		$path = IMAGES.$folder;
 
@@ -477,7 +469,7 @@ class ConfigItem extends AppModel {
 		}else{
 
 			foreach ($filenames as $filename){
-		        unlink($path.DS.$filename);
+				unlink($path.DS.$filename);
 			}
 
 			$checkFiles = new DirectoryIterator($path);
@@ -491,8 +483,7 @@ class ConfigItem extends AppModel {
 		return $isFolderEmpty;
 	}
 
-	private function getCoordinates($filename=null){
-
+	private function getCoordinates($filename=null) {
 		$coordinates = array('x' => 0, 'y' => 0);
 		if(is_null($filename)){
 			return false;
@@ -528,7 +519,7 @@ class ConfigItem extends AppModel {
 
 	}
 	
-	public function getAllCustomValidation(){
+	public function getAllCustomValidation() {
 		$data = $this->findAllByType('custom validation');
 		$newArr = array();
 		foreach($data as $arrVal){
@@ -538,9 +529,7 @@ class ConfigItem extends AppModel {
 		return $newArr;
 	}
 	
-	
-	
-	public function getAllLDAPConfig(){
+	public function getAllLDAPConfig() {
 		$tmp = array();
 		$data = $this->findAllByType('LDAP Configuration');
 
@@ -549,8 +538,6 @@ class ConfigItem extends AppModel {
 				$tmp[$arrVal['name']] = ($arrVal['value'] != '')?$arrVal['value']:$arrVal['default_value'];
 			}
 		}
-		
 		return $tmp;
 	}
-
 }

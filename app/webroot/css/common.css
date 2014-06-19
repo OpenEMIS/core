@@ -111,7 +111,6 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 .header_side_nav_function_divi{
 	float:left;
 	background-color:#6993b2;
-	border-left:1px solid #3F6482;
 	width:1px;
 	height:20px;
 	margin:0 2px;
@@ -151,7 +150,6 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:1px;
 	height:16px;
 	background-color:#cccccc;
-	border-right:1px solid #999999;
 	margin:5px 0 0 0;
 }
 .header_nav_function{

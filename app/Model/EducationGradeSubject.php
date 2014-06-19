@@ -109,7 +109,9 @@ class EducationGradeSubject extends AppModel {
 							}
 						}
 					}
-					$this->saveAll($data[$this->alias]);
+					if(!empty($data[$this->alias])) {
+						$this->saveAll($data[$this->alias]);
+					}
 				}
 				$controller->Message->alert('general.edit.success');
 				return $controller->redirect(array('action' => $this->_action, $this->_condition => $conditionId));

@@ -22,6 +22,8 @@ class OptionComponent extends Component {
 			'passfail' => array(1 => __('Passed'), 0 => __('Failed')),
 			'enableOptions' => array(0 => __('Disabled'),1 => __('Enabled')),
 			'teachOptions' => array(0 => __('Non-Teaching'), 1 => __('Teaching')),
+			'dateStatusOptions' => array(0 => __('Date Disabled'), 1 => __('Date Enabled')),
+			'gender' => array('M' => __('Male'), 'F' => __('Female'))
 		);
 		
 		$index = explode('.', $code);

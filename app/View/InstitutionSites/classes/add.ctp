@@ -1,106 +1,77 @@
-<?php 
+<?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
-echo $this->Html->css('institution_site', 'stylesheet', array('inline' => false));
-echo $this->Html->script('institution_site', false);
-echo $this->Html->script('institution_site_classes', false);
+echo $this->Html->css('../js/plugins/icheck/skins/minimal/blue', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
+echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Add Class'));
 
+$this->start('contentActions');
+echo $this->Html->link($this->Label->get('general.back'), array('action' => $_action, $selectedYear), array('class' => 'divider'));
+$this->end();
+
 $this->start('contentBody');
 
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $_action . 'Add', $selectedYear));
+$labelOptions = $formOptions['inputDefaults']['label'];
+
+echo $this->Form->create($model, $formOptions);
+echo $this->Form->hidden('institution_site_id', array('value' => $institutionSiteId));
+echo $this->Form->input('school_year_id', array(
+	'options' => $yearOptions, 
+	'url' => $this->params['controller'] . '/' . $this->action,
+	'default' => $selectedYear,
+	'onchange' => 'jsForm.change(this)'
+));
+echo $this->Form->input('name');
+
+$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.seats');
+echo $this->Form->input('no_of_seats', array('label' => $labelOptions));
+
+$labelOptions['text'] = $this->Label->get('InstitutionSiteClass.shift');
+echo $this->Form->input('institution_site_shift_id', array('options' => $shiftOptions, 'label' => $labelOptions));
 ?>
 
-<div id="classes" class="content_wrapper add">
-	<?php if($displayContent) { ?>
-	<?php 
-	echo $this->Form->create('InstitutionSiteClass', array(
-		'url' => array('controller' => 'InstitutionSites', 'action' => 'classesAdd'),
-		'inputDefaults' => array('label' => false, 'div' => false),
-		'class' => 'form-horizontal'
-	));
-	?>
-	
-	<div class="form-group edit">
-		<label class="control-label col-md-3"><?php echo __('Year'); ?></label>
-		<div class=" col-md-4">
-		<?php 
-		echo $this->Form->input('school_year_id', array(
-			'id' => 'SchoolYearId', 
-			'class' => 'form-control',
-			'options' => $yearOptions,
-			'onchange' => 'InstitutionSiteClasses.switchYear()'
-		));
-		?>
-		</div>
-	</div>
-	
-	<div class="form-group edit">
-		<label class="control-label col-md-3"><?php echo __('Class'); ?></label>
-		<div class="value col-md-4"><?php echo $this->Form->input('name', array('id' => 'ClassName', 'class' => 'default form-control')); ?></div>
-	</div>
-    
-        <div class="form-group edit">
-		<label class="control-label col-md-3"><?php echo __('Seats'); ?></label>
-		<div class="value col-md-4"><?php echo $this->Form->input('no_of_seats', array('id' => 'NoOfSeats', 'class' => 'default form-control')); ?></div>
-	</div>
-    
-        <div class="form-group edit">
-		<label class="control-label col-md-3"><?php echo __('Shift'); ?></label>
-		<div class="value col-md-4"><?php echo $this->Form->input('no_of_shifts', array('id' => 'NoOfShifts', 'options' => $shiftOptions, 'class' => 'default form-control')); ?></div>
-	</div>
-	
-	<table class="table table-striped table-hover table-bordered" id="grade_list">
-		<thead>
-			<tr>
-			<td class="table_cell"><?php echo __('Programme'); ?></td>
-			<td class="table_cell cell_grade"><?php echo __('Grade'); ?></td>
-			<td class="table_cell cell_delete"></td>
-			</tr>
-		</thead>
-		
-		<?php
-		$gradeModel = 'InstitutionSiteClassGrade';
-		?>
-		
-		<tbody>
-			<tr>
-				<td class="table_cell">
-					<?php
-					echo $this->Form->input('institution_site_programme_id', array(
-						'name' => 'institution_site_programme_id',
-						'url' => 'InstitutionSites/programmesGradeList',
-						'class' => 'form-control',
-						'options' => $programmeOptions,
-						'default' => $selectedProgramme,
-						'onchange' => 'objInstitutionSite.getGradeList(this)'
-					));
-					?>
-				</td>
-				<td class="table_cell">
+<div class="form-group">
+	<label class="col-md-3 control-label"><?php echo $this->Label->get('EducationGrade.name'); ?></label>
+	<div class="col-md-8">
+		<div class="table-responsive">
+			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+				<thead>
+					<tr>
+						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+						<th><?php echo $this->Label->get('EducationProgramme.name'); ?></th>
+						<th><?php echo $this->Label->get('EducationGrade.name'); ?></th>
+					</tr>
+				</thead>
+				
+				<tbody>
 					<?php 
-					echo $this->Form->input($gradeModel.'.0.education_grade_id', array(
-						'class' => 'grades form-control',
-						'options' => $gradeOptions
-					)); 
+					$i = 0;
+					foreach($grades as $obj) :
 					?>
-				</td>
-				<td class="table_cell"><?php echo $this->Utility->getDeleteControl(); ?></td>
-			</tr>
-		</tbody>
-	</table>
-	
-	<div class="row" style="margin-left: 3px;">
-		<a class="void icon_plus" url="InstitutionSites/classesAddGrade"><?php echo __('Add').' '.__('Grade'); ?></a>
+					<tr>
+						<td class="checkbox-column">
+							<?php
+							echo $this->Form->hidden('InstitutionSiteClassGrade.' . $i . '.education_grade_id', array('value' => $obj['EducationGrade']['id']));
+							echo $this->Form->checkbox('InstitutionSiteClassGrade.' . $i++ . '.status', array('class' => 'icheck-input'));
+							?>
+						</td>
+						<td><?php echo $obj['EducationProgramme']['name']; ?></td>
+						<td><?php echo $obj['EducationGrade']['name']; ?></td>
+					</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		</div>
+
 	</div>
-	
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" onclick="return InstitutionSiteClasses.validateClassAdd()" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'classes'), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-	
-	<?php echo $this->Form->end(); ?>
-	
-	<?php } // end if displayContent ?>
 </div>
-<?php $this->end(); ?>
+
+<?php
+echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => $_action, $selectedYear)));
+echo $this->Form->end();
+
+$this->end(); 
+?>

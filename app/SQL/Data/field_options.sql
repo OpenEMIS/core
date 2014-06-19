@@ -62,4 +62,10 @@ INSERT INTO `field_options` (`id`, `code`, `name`, `parent`, `params`, `order`, 
 (59, 'PositionTitle', 'Titles', 'Position', '{"model":"Staff.StaffPositionTitle"}', 59, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (60, 'PositionGrade', 'Grades', 'Position', '{"model":"Staff.StaffPositionGrade"}', 60, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
 (61, 'PositionStep', 'Steps', 'Position', '{"model":"Staff.StaffPositionStep"}', 61, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
-(62, 'StaffTrainingCategory', 'Training Categories', 'Staff', NULL, 62, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+(62, 'StaffTrainingCategory', 'Training Categories', 'Staff', NULL, 62, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(63, 'StudentAbsenceReason', 'Absence Reasons', 'Student', NULL, 63, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(64, 'StaffAbsenceReason', 'Absence Reasons', 'Staff', NULL, 64, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(65, 'StaffType', 'Staff Type', 'Staff', NULL, 65, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(66, 'InstitutionSiteGender', 'Gender', 'Institution', NULL, 66, 1, NULL, NULL, 1, '0000-00-00 00:00:00'),
+(67, 'TrainingNeedCategory', 'Need Categories', 'Training', NULL, 67, 1, NULL, NULL, 1, '0000-00-00 00:00:00');
+

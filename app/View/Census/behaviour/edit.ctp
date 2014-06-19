@@ -20,8 +20,7 @@ echo $this->Form->create('CensusBehaviour', array(
 echo $this->element('census/year_options');
 ?>
 
-<div id="behaviour" class="content_wrapper edit">
-
+<div class="table-responsive">
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
@@ -100,7 +99,7 @@ echo $this->element('census/year_options');
 
     <div class="controls">
         <input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-<?php echo $this->Html->link(__('Cancel'), array('action' => 'behaviour', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
+		<?php echo $this->Html->link(__('Cancel'), array('action' => 'behaviour', $selectedYear), array('class' => 'btn_cancel btn_left')); ?>
     </div>
 <?php echo $this->Form->end(); ?>
 </div>

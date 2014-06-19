@@ -102,11 +102,13 @@ class ReportsController extends ReportsAppController {
     public function DataQualityDownload(){}
     
     public function renderReport($reportType = 'Institution') {
+		$reportTitle  = Inflector::underscore($reportType);
+		$reportTitle  = Inflector::humanize($reportTitle);
         if(isset($this->params['pass'][0])){
-            $this->Navigation->addCrumb($reportType.' Reports', array('controller' => 'Reports', 'action' => $this->action));
+            $this->Navigation->addCrumb($reportTitle.' Reports', array('controller' => 'Reports', 'action' => $this->action));
             $this->Navigation->addCrumb(' Generated Files');
         }else{
-            $this->Navigation->addCrumb($reportType.' Reports');
+            $this->Navigation->addCrumb($reportTitle.' Reports');
         }
 
         if(array_key_exists($reportType, $this->standardReports)){

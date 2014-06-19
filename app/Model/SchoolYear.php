@@ -17,7 +17,7 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SchoolYear extends AppModel {
-	public $actsAs = array('FieldOption');
+	public $actsAs = array('FieldOption', 'DatePicker' => array('start_date', 'end_date'));
 	public function beforeSave($options = array()) {
 		$attr = array('start_date' => 'start_year', 'end_date' => 'end_year');
 		foreach($attr as $date => $year) {
@@ -30,7 +30,7 @@ class SchoolYear extends AppModel {
 		return true;
 	}
 	
-	public function getAvailableYears($list = true, $order='DESC') {
+	public function getAvailableYears($list = true, $order='ASC') {
 		if($list) {
 			$result = $this->find('list', array(
 				'fields' => array('SchoolYear.id', 'SchoolYear.name'),
@@ -126,5 +126,10 @@ class SchoolYear extends AppModel {
 			'order' => array('SchoolYear.start_year')
 		));
 		return $data;
+	}
+	
+	public function getSchoolYearById($yearId) {
+		$data = $this->findById($yearId);	
+		return $data['SchoolYear']['name'];
 	}
 }

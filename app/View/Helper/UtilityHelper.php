@@ -242,10 +242,10 @@ class UtilityHelper extends AppHelper {
             if($mylevel===''){
                 $display = 'display:none;';
             }
-            echo '<div class="form-group row" style="'.$display.'">
+            echo '<div class="form-group" style="'.$display.'">
                     <label class="col-md-3 control-label">'.$mylevel.'</label>
                     '. $form->input($arealevelfk.'_'.$ctr,
-                                                        array('class'=>'areapicker default form-control',
+                                                        array('class'=>'areapicker form-control',
                                                         'style'=>'float:left;',
 														'div' => false,
 														'label' => false,
@@ -690,4 +690,21 @@ class UtilityHelper extends AppHelper {
 		return $input;
 	}
 	// end permissions
+	
+	public function getAbsenceDaysBySettings($firstDateAbsent, $lastDateAbsent, $settingWeekdays){
+		$stampFirstDateAbsent = strtotime($firstDateAbsent);
+		$stampLastDateAbsent = strtotime($lastDateAbsent);
+		
+		$totalWeekdays = 0;
+		while($stampFirstDateAbsent <= $stampLastDateAbsent){
+			$weekday = strtolower(date('l', $stampFirstDateAbsent));
+			if(in_array($weekday, $settingWeekdays)){
+				$totalWeekdays++;
+			}
+			
+			$stampFirstDateAbsent = strtotime('+1 day', $stampFirstDateAbsent);
+		}
+		
+		return $totalWeekdays;
+	}
 }

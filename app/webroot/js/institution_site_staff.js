@@ -22,6 +22,11 @@ var InstitutionSiteStaff = {
 	init: function() {
 		this.attachSortOrder();
 		$('#staffEdit .icon_plus').click(InstitutionSiteStaff.addPosition);
+		
+		if($("#staffNameAutoComplete").length === 1){
+			var autoCompleteUrl = getRootURL() + $('#staff_add').attr('autocompleteurl');
+			InstitutionSiteStaff.attachAutoComplete("#staffNameAutoComplete", autoCompleteUrl , InstitutionSiteStaff.selectAutocomplateField);
+		}
 	},
 	navigate: function() {
 		var href = $('.content_wrapper > form').attr('action');
@@ -220,6 +225,22 @@ var InstitutionSiteStaff = {
 			},
 			success: ajaxSuccess
 		});
+	},
+	attachAutoComplete: function(element, url, callback) {
+		$(element).autocomplete({
+			source: url,
+			minLength: 3,
+			select: callback,
+			focus: function() {
+// prevent value inserted on focus
+				return false;
+			}
+		});
+	},
+	selectAutocomplateField: function(event, ui) {
+		$('#staffNameAutoComplete').val(ui.item.label);
+		$('#StaffId').val(ui.item.value);
+		return false;
 	}
 
 }

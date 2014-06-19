@@ -24,7 +24,7 @@ var InstitutionSiteClasses = {
 	init: function() {
 		$('#classes.add .icon_plus').click(InstitutionSiteClasses.addGrade);
 		$('#classes.edit .icon_plus.students').click(InstitutionSiteClasses.addStudentRow);
-		$('#classes.edit .icon_plus.teachers').click(InstitutionSiteClasses.addTeacherRow);
+		$('#classes.edit .icon_plus.staffs').click(InstitutionSiteClasses.addStaffRow);
         $('#classes.edit .icon_plus.subjects').click(InstitutionSiteClasses.addSubjectRow);
 	},
 	
@@ -275,17 +275,16 @@ var InstitutionSiteClasses = {
 		}
 	},
 	
-	addTeacherRow: function() {
+	addStaffRow: function() {
 		var table = $(this).parent().siblings('table').find('tbody');
 		var parent = table.closest('fieldset');
 		var alertOpt = {
-			id: 'teacher_alert',
+			id: 'staff_alert',
 			parent: parent,
 			type: alertType.error,
 			position: 'center'
 		}
-		
-		if($('.teacher_select').length>0) {
+		if($('.staff_select').length>0) {
 			alertOpt['text'] = i18n.InstitutionSites.textClassSelectTeacher;
 			$.alert(alertOpt);
 		} else {
@@ -315,26 +314,26 @@ var InstitutionSiteClasses = {
 		}
 	},
 	
-	selectTeacher: function(obj) {
+	selectStaff: function(obj) {
 		var row = $(obj).closest('tr');
 		var parent = row.closest('fieldset');
 		
-		var teacherSelect = row.find('.teacher_select');
-		if(teacherSelect.val().isEmpty()==false) {
-			var teacherId = teacherSelect.val();
-			var teacherOption = teacherSelect.find('> option:selected');
+		var staffSelect = row.find('.staff_select');
+		if(staffSelect.val().isEmpty()==false) {
+			var staffId = staffSelect.val();
+			var staffOption = staffSelect.find('> option:selected');
 			
 			var maskId;
-			var ajaxParams = {teacherId: teacherId, action: 'add'};
+			var ajaxParams = {staffId: staffId, action: 'add'};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
 					if(data.type == ajaxType.success) {
-						row.attr('teacher-id', teacherId);
-						row.find('[attr="id"]').html(teacherOption.attr('id'));
-						row.find('[attr="name"]').html(teacherOption.attr('name'));
+						row.attr('staff-id', staffId);
+						row.find('[attr="id"]').html(staffOption.attr('id'));
+						row.find('[attr="name"]').html(staffOption.attr('name'));
 					} else {
 						var alertOpt = {
-							id: 'teacher_alert',
+							id: 'staff_alert',
 							parent: parent,
 							type: alertType.error,
 							text: data.msg,
@@ -356,18 +355,18 @@ var InstitutionSiteClasses = {
 		}
 	},
 	
-	deleteTeacher: function(obj) {
+	deleteStaff: function(obj) {
 		var row = $(obj).closest('tr');
 		var parent = row.closest('fieldset');
-		var teacherId = row.attr('teacher-id');
-		if(teacherId!=0) {
+		var staffId = row.attr('staff-id');
+		if(staffId!=0) {
 			var maskId;
-			var ajaxParams = {teacherId: teacherId, action: 'delete'};
+			var ajaxParams = {staffId: staffId, action: 'delete'};
 			var ajaxSuccess = function(data, textStatus) {
 				var callback = function() {
 					if(data.type != ajaxType.success) {
 						var alertOpt = {
-							id: 'teacher_alert',
+							id: 'staff_alert',
 							parent: parent,
 							type: alertType.error,
 							text: data.msg,
@@ -404,7 +403,7 @@ var InstitutionSiteClasses = {
         }
 
         if($('.subject_select').length>0) {
-            alertOpt['text'] = i18n.InstitutionSites.textClassSelectTeacher;
+            alertOpt['text'] = i18n.InstitutionSites.textClassSelectStaff;
             $.alert(alertOpt);
         } else {
             var maskId;

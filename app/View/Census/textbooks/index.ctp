@@ -17,7 +17,7 @@ $this->start('contentBody');
 echo $this->element('census/year_options');
 ?>
 
-<div id="textbooks" class="content_wrapper">
+<div class="table-responsive">
 
     <?php foreach ($data as $key => $val) { ?>
         <fieldset class="section_group">

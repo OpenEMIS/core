@@ -88,8 +88,9 @@ class FieldOptionController extends AppController {
 			$this->set(compact('subOptions', 'selectedSubOption', 'conditionId'));
 		}
 		$data = $this->FieldOptionValue->getAllValues($conditions);
+		$fields = $this->FieldOptionValue->getFields();
 		
-		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model'));
+		$this->set(compact('data', 'header', 'selectedOption', 'options', 'model', 'fields'));
 		$this->Navigation->addCrumb($header);
 	}
 	
