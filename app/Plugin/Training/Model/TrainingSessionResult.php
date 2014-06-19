@@ -341,10 +341,9 @@ class TrainingSessionResult extends TrainingAppModel {
  	 	 	$trainingSessionTrainees = array();
 	 	 	$this->getResultList($id, $trainingSessionTrainees, $result, $fieldName);
 		 	
-		 	echo $this->download(__('TrainingResult').'_' . date('Ymdhis') . '.csv');
+		 	echo $controller->download(__('TrainingResult').'_' . date('Ymdhis') . '.csv');
 
-			//$fieldName = array('Id', 'First Name', 'Last Name', '(1=Pass/0=Fail)', 'Result');
-			echo $this->array2csv($result, $fieldName);
+			echo $controller->array2csv($result, $fieldName);
 		 	die();
 		 }else{
 	 		  $controller->redirect(array('action' => 'result'));
@@ -373,53 +372,58 @@ class TrainingSessionResult extends TrainingAppModel {
 			if($controller->request->is('post')){
 				if ($_FILES['data']['error'][$this->name]['upload_file'] == UPLOAD_ERR_OK               //checks for errors
 				      && is_uploaded_file($_FILES['data']['tmp_name'][$this->name]['upload_file'])) { //checks that file is uploaded
-				 	 $data = file_get_contents($_FILES['data']['tmp_name'][$this->name]['upload_file']); 
-				 	 
+				 
 				 	 $result = array();
 				 	 $fieldName = array();
 				 	 $trainingSessionTrainees = array();
 				 	 $this->getResultList($id, $trainingSessionTrainees, $result, $fieldName);
 
+			 	 	$tmpName = $_FILES['data']['tmp_name'][$this->name]['upload_file']; 
+			 		$row = 0;
+					ini_set("auto_detect_line_endings", true);
+					$handle = fopen($tmpName, "r");
+					$header = array();
+				 	$count = 0;
+			 	 	$validateFlag = true;
+			 	 	$updateData= array();
+		 	 	 	$error = '';
+			 	 	$errorFormat = __('Row %s: %s');
+			 	 	$i = 0;
 
-				 	 $arr = preg_split('/\r\n|\r|\n/', $data);
-				 	 array_splice($arr, 0, 1);
-
-				 	 $i = 0;
-				 	 $count = 0;
-				 	 $validateFlag = true;
-				 	 $updateData= array();
-
-				 	 $error = '';
-				 	 $errorFormat = __('Row %s: %s');
-				 	 foreach($arr as $row){
-				 	 	if(!empty($row)){
-				 	 		if(isset($result[$i])){
-				 	 			$resultSplit = $result[$i];
+					while (($rowData = fgetcsv($handle, 1000, ",")) !== FALSE) {
+					    $rowData = array_map("utf8_encode", $rowData);
+					    
+					   	if($row==0){
+							$header = $rowData;
+						}else{
+							try{
+								if(count($result)>($i+1)){
+									break;
+								}
+								$resultSplit = $result[$i];
 				 	 			array_splice($resultSplit,3);
-				 	 		    		
-				 	 			$rowSplit = split(",", $row);
-				 	 			$rowSplitCompare = $rowSplit;
-				 	 			array_splice($rowSplitCompare,3);
 
+				 	 			$rowSplitCompare = $rowData;
+				 	 			array_splice($rowSplitCompare,3);
 				 	 			$compare = array_diff($resultSplit, $rowSplitCompare);
 				 	 			$resultPass = preg_grep('~pass~i', array_keys($result[$i]));
-				 	 		
+ 
 				 	 			if(empty($compare)){
 				 	 				foreach($resultPass as $passCol=>$val){
-				 	 					if($rowSplit[$passCol]!='1' && $rowSplit[$passCol]!='0'){
+				 	 					if($rowData[$passCol]!='1' && $rowData[$passCol]!='0'){
 					 	 					$error .= '<br />' . sprintf($errorFormat, ($i+1), sprintf(__('Column %s only accepts 0 or 1 as input.'), ($passCol+1)));
 					 	 					$validateFlag = false;
 					 	 				}
 				 	 				}
 				 	 				
 				 	 				$trainingSessionTraineePassCol = array_search('TrainingSessionTrainee.pass', array_keys($result[$i]));
-				 	 				$updateData['TrainingSessionTrainee'][$i] = array('id'=>$trainingSessionTrainees[$i]['TrainingSessionTrainee']['id'], 'pass'=>$rowSplit[$trainingSessionTraineePassCol], 'result'=>$rowSplit[$trainingSessionTraineePassCol+1]);
+				 	 				$updateData['TrainingSessionTrainee'][$i] = array('id'=>$trainingSessionTrainees[$i]['TrainingSessionTrainee']['id'], 'pass'=>$rowData[$trainingSessionTraineePassCol], 'result'=>$rowData[$trainingSessionTraineePassCol+1]);
 				 	 				$r = 0;
 				 	 				foreach($resultPass as $passCol=>$val){
 				 	 					if($passCol==$trainingSessionTraineePassCol){
 				 	 						continue;
 				 	 					}
-				 	 					$updateData['TrainingSessionTrainee'][$i]['TrainingSessionTraineeResult'][$r] = array('id'=>$trainingSessionTrainees[$i]['TrainingSessionTraineeResult'][$r]['id'], 'pass'=>$rowSplit[$passCol], 'result'=>$rowSplit[$passCol+1]);
+				 	 					$updateData['TrainingSessionTrainee'][$i]['TrainingSessionTraineeResult'][$r] = array('id'=>$trainingSessionTrainees[$i]['TrainingSessionTraineeResult'][$r]['id'], 'pass'=>$rowData[$passCol], 'result'=>$rowData[$passCol+1]);
 				 	 					$r++;
 				 	 				}
 				 	 				$count++;
@@ -427,13 +431,19 @@ class TrainingSessionResult extends TrainingAppModel {
 				 	 				$error .= '<br />' . sprintf($errorFormat, ($i+1), __('Columns/Data do not match.'));
 				 	 				$validateFlag = false;
 				 	 			}
-				 	 		}else{
-				 	 			$error .= '<br />' . sprintf($errorFormat, ($i+1), __('Columns/Data do not match.'));
-				 	 			$validateFlag = false;
-				 	 		}
-				 	 	}
-				 	 	$i++;
-				 	 }
+								$i++;
+							} catch (\Exception $e) {
+								$validateFlag = false;
+							}
+						}
+						$row++;
+					}
+					fclose($handle);
+					if($row<=1){
+						$error .= '<br />' . sprintf($errorFormat, ($i+1), __('Columns/Data do not match.'));
+						$validateFlag = false;
+					}
+					
 					if($validateFlag){
 						$trainingSessionTrainee = ClassRegistry::init('TrainingSessionTrainee');
 						$trainingSessionTrainee->bindModel(
@@ -461,71 +471,6 @@ class TrainingSessionResult extends TrainingAppModel {
 		}else{
 		  	$controller->redirect(array('action' => 'result'));
 		}
-	}
-
-	public function array2csv($results=NULL, $fieldName=NULL)
-    {
-  	 	ob_end_clean();
-       	ob_start();
-       	$df = fopen("php://output", 'w');
-       	$this->fputcsv($df, $fieldName);
-    	if(!empty($results)){
-            foreach($results as $key=>$value){
-                $this->fputcsv($df, $value);
-            }
-        }
-       	fclose($df);
-       	return ob_get_clean();
-    }
-
-    function fputcsv(&$handle, $fields = array(), $delimiter = ',', $enclosure = '"') {
-        $str = '';
-        $escape_char = '\\';
-        foreach ($fields as $value) {
-          if (strpos($value, $delimiter) !== false ||
-              strpos($value, $enclosure) !== false ||
-              strpos($value, "\n") !== false ||
-              strpos($value, "\r") !== false ||
-              strpos($value, "\t") !== false ||
-              strpos($value, ' ') !== false) {
-            $str2 = $enclosure;
-            $escaped = 0;
-            $len = strlen($value);
-            for ($i=0;$i<$len;$i++) {
-              if ($value[$i] == $escape_char) {
-                $escaped = 1;
-              } else if (!$escaped && $value[$i] == $enclosure) {
-                $str2 .= $enclosure;
-              } else {
-                $escaped = 0;
-              }
-              $str2 .= $value[$i];
-            }
-            $str2 .= $enclosure;
-            $str .= $str2.$delimiter;
-          } else {
-            $str .= $value.$delimiter;
-          }
-        }
-        $str = substr($str,0,-1);
-        $str .= "\n";
-        return fwrite($handle, $str);
-    }
-
-	public function download($name){
-        if( ! $name)
-        {
-            $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
-        }
-        header('Expires: 0');
-        header('Content-Encoding: UTF-8');
-        // force download  
-        header("Content-Type: application/force-download; charset=UTF-8'");
-        header("Content-Type: application/octet-stream; charset=UTF-8'");
-        header("Content-Type: application/download; charset=UTF-8'");
-        // disposition / encoding on response body
-        header("Content-Disposition: attachment;filename={$name}");
-        header("Content-Transfer-Encoding: binary");
 	}
 	
 	
