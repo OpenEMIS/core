@@ -432,7 +432,8 @@ class InstitutionSite extends AppModel {
 		return $data;
 	}
 	// End Yearbook
-        
+    
+	/*
 	public function getQueryFromInstitutionsWithoutSites($params) {
 		$joins = array(
 			array(
@@ -473,15 +474,11 @@ class InstitutionSite extends AppModel {
 		), $this);
 		return $query;
 	}
+	*/
 	
 	// To get the list of institutions based on the security settings on areas
 	public function getQueryFromSecurityAreas($params) {
 		$joins = array(
-			array(
-				'table' => 'institution_sites',
-				'alias' => 'InstitutionSite',
-				'conditions' => array('InstitutionSite.institution_id = Institution.id')
-			),
 			array(
 				'table' => 'areas',
 				'alias' => 'Area',
@@ -508,14 +505,14 @@ class InstitutionSite extends AppModel {
 		);
 		$dbo = $this->getDataSource();
 		$query = $dbo->buildStatement(array(
-			'fields' => array('Institution.id'),
+			'fields' => array('InstitutionSite.id'),
 			'table' => $dbo->fullTableName($this),
 			'alias' => get_class($this),
 			'limit' => null, 
 			'offset' => null,
 			'joins' => $joins,
 			'conditions' => null,
-			'group' => array('Institution.id'),
+			'group' => array('InstitutionSite.id'),
 			'order' => null
 		), $this);
 		return $query;
@@ -523,11 +520,6 @@ class InstitutionSite extends AppModel {
 	
 	public function getQueryFromSecuritySites($params) {
 		$joins = array(
-			array(
-				'table' => 'institution_sites',
-				'alias' => 'InstitutionSite',
-				'conditions' => array('InstitutionSite.institution_id = Institution.id')
-			),
 			array(
 				'table' => 'security_group_institution_sites',
 				'alias' => 'SecurityGroupInstitutionSite',
@@ -544,14 +536,14 @@ class InstitutionSite extends AppModel {
 		);
 		$dbo = $this->getDataSource();
 		$query = $dbo->buildStatement(array(
-			'fields' => array('Institution.id'),
+			'fields' => array('InstitutionSite.id'),
 			'table' => $dbo->fullTableName($this),
 			'alias' => get_class($this),
 			'limit' => null, 
 			'offset' => null,
 			'joins' => $joins,
 			'conditions' => null,
-			'group' => array('Institution.id'),
+			'group' => array('InstitutionSite.id'),
 			'order' => null
 		), $this);
 		return $query;
@@ -581,33 +573,6 @@ class InstitutionSite extends AppModel {
                         'type' => 'LEFT',
 			'conditions' => array('InstitutionSite.area_id = Area.id')
 		);
-                
-                //aids
-                /*if(count($params['AdvancedSearch']) > 0) {
-                    foreach ($params['AdvancedSearch'] as $key => $value) {
-                        if(strpos($key,'CustomValue') > 0){
-                            $rawTableName = Inflector::tableize($key);
-                            $fkey = strtolower(str_replace("_custom_values", "_id", $rawTableName));
-                            $joins[] = array(
-				'table' => $rawTableName,
-				'alias' => $key,
-				'type' => 'LEFT',
-				'conditions' => array($key.'.'.$fkey.' = '.  str_replace('CustomValue', '', $key).'.id')
-                            );
-                        }
-                    }
-		}*/
-                
-//		$joins[] = array(
-//			'table' => 'institution_providers',
-//			'alias' => 'InstitutionProvider',
-//			'conditions' => array('InstitutionProvider.id = Institution.institution_provider_id')
-//		);
-//		$joins[] = array(
-//			'table' => 'institution_sectors',
-//			'alias' => 'InstitutionSector',
-//			'conditions' => array('InstitutionSector.id = Institution.institution_sector_id')
-//		);
                 
 		return $joins;
 	}
@@ -770,7 +735,7 @@ AND
            
 		$dbo = $this->getDataSource();
 		$queries = array(
-			$this->getQueryFromInstitutionsWithoutSites($conditions),
+			//$this->getQueryFromInstitutionsWithoutSites($conditions),
 			$this->getQueryFromSecurityAreas($conditions),
 			$this->getQueryFromSecuritySites($conditions)
 		);
@@ -779,18 +744,18 @@ AND
 			array(
 				'table' => '(' . $union . ')',
 				'alias' => 'InstitutionFilter',
-				'conditions' => array('InstitutionFilter.id = Institution.id')
+				'conditions' => array('InstitutionFilter.id = InstitutionSite.id')
 			)
 		);
 		$query = $dbo->buildStatement(array(
 			'fields' => !is_null($fields) ? $fields : array('COUNT(*) AS COUNT'),
 			'table' => $dbo->fullTableName($this),
-			'alias' => 'Institution',
+			'alias' => 'InstitutionSite',
 			'limit' => $limit,
 			'offset' => !is_null($fields) ? (($page-1)*$limit) : null,
 			'joins' => $this->paginateJoins($joins, $conditions),
 			'conditions' => $this->paginateConditions($conditions),
-			'group' => !is_null($fields) ? array('Institution.id') : null,
+			'group' => !is_null($fields) ? array('InstitutionSite.id') : null,
 			'order' => $order
 		), $this);
                 
@@ -808,8 +773,8 @@ AND
 			'InstitutionSite.id',
 			'InstitutionSite.code',
 			'InstitutionSite.name',
-                        'InstitutionSiteType.name',
-                        'Area.name'
+			'InstitutionSiteType.name',
+			'Area.name'
 		);
 		if(strlen($conditions['SearchKey']) != 0) {
 			$fields[] = 'InstitutionSiteHistory.code';
