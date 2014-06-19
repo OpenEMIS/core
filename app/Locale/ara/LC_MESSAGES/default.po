@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-06-19 15:29+0800\n"
+"PO-Revision-Date: 2014-06-19 17:08+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -3785,9 +3785,9 @@ msgstr "نسبة المجموعة المستهدفة"
 msgid "Mode Of Delivery"
 msgstr "وطريقة التسليم"
 
-msgid "Generated Files"
-msgstr "ولدت ملفات"
- 
+msgid "Last Updated By"
+msgstr "اخر تحديث قام به"
+
 # ###########################################################################
 msgid "*File size should not be larger than 2MB."
 msgstr "* لا ينبغي أن يكون حجم الملف أكبر من 2MB."
