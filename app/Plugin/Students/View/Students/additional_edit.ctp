@@ -18,7 +18,7 @@ $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->p
 unset($formOptions['div']);
 unset($formOptions['label']);
 echo $this->Form->create($modelValue, $formOptions);
-echo $this->element('customFields/index', compact('model', 'modelOption', 'modelValue', 'action'));
+echo $this->element('customfields/index', compact('model', 'modelOption', 'modelValue', 'action'));
 
 if (!$WizardMode) {
 	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'additional')));

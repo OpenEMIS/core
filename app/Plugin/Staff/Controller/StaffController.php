@@ -619,15 +619,14 @@ class StaffController extends StaffAppController {
 		$header = __('Absence');
 		
 		$yearList = $this->SchoolYear->getYearList();
-		//pr($yearList);
-		$currentYearId = $this->SchoolYear->getSchoolYearId(date('Y'));
+		
 		if (isset($this->params['pass'][0])) {
 			$yearId = $this->params['pass'][0];
 			if (!array_key_exists($yearId, $yearList)) {
-				$yearId = $currentYearId;
+				$yearId = key($yearList);
 			}
 		}else{
-			$yearId = $currentYearId;
+			$yearId = key($yearList);
 		}
 		
 		$monthOptions = $this->generateMonthOptions();
