@@ -101,7 +101,7 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 <div class="row form-group row_provider" style="min-height:45px;">
     <label class="col-md-3 control-label"><?php echo __('Training Provider'); ?></label>
     <div class="col-md-4">
-	<div class="table provider" style="width:247px;" url="Training/ajax_find_prerequisite/">
+	<div class="table provider" style="width:247px;">
 		<div class="delete-provider" name="data[DeleteProvider][{index}][id]"></div>
 		<table class="table table-striped table-hover table-bordered table_body">
 		<tbody>
@@ -138,11 +138,11 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 	echo $this->Form->input('training_requirement_id', array('label'=>array('text'=>__('Training Requirement'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingRequirementOptions)); 
 	echo $this->Form->input('training_level_id', array('label'=>array('text'=>__('Training Level'), 'class'=>'col-md-3 control-label'), 'options'=>$trainingLevelOptions)); 
 ?>
-<div class="row form-group row_prerequisite" style="min-height:45px;">
-	<label class="col-md-3 control-label"><?php echo __('Prerequisite'); ?></label>
+<div class="row form-group row_course_prerequisite" style="min-height:45px;">
+	<label class="col-md-3 control-label"><?php echo __('Course Prerequisite'); ?></label>
 	<div class="col-md-4">
-	<div class="table prerequisite" url="Training/ajax_find_prerequisite/">
-		<div class="delete-prerequisite" name="data[DeletePrerequisite][{index}][id]"></div>
+	<div class="table course_prerequisite" url="Training/ajax_find_course_prerequisite/">
+		<div class="delete-course_prerequisite" name="data[DeleteCoursePrerequisite][{index}][id]"></div>
 		<table class="table table-striped table-hover table-bordered table_body">
 		<tbody>
 		<?php if(isset($this->request->data['TrainingCoursePrerequisite']) && !empty($this->request->data['TrainingCoursePrerequisite'])){ ?>
@@ -168,7 +168,7 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 			    </td>
 			 
 				<td class="table_cell cell_delete">
-			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deletePrerequisite(this)"></span>
+			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteCoursePrerequisite(this)"></span>
 			    </td>
 			</tr>
 			<?php } ?>
@@ -179,7 +179,100 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 		</tbody>
 		</table>
 	</div>
-	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addPrerequisite(this)" url="Training/ajax_add_prerequisite"  href="javascript: void(0)"><?php echo __('Add Prerequisite');?></a></div>
+	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addCoursePrerequisite(this)" url="Training/ajax_add_course_prerequisite"  href="javascript: void(0)"><?php echo __('Add Course Prerequisite');?></a></div>
+	</div>
+</div>
+<div class="row form-group row_specialisation" style="min-height:45px;">
+	<label class="col-md-3 control-label"><?php echo __('Specialisation'); ?></label>
+	<div class="col-md-4">
+	<div class="table specialisation">
+		<div class="delete-specialisation" name="data[DeleteSpecialisation][{index}][id]"></div>
+		<table class="table table-striped table-hover table-bordered table_body">
+		<tbody>
+		<?php if(isset($this->request->data['TrainingCourseSpecialisation']) && !empty($this->request->data['TrainingCourseSpecialisation'])){ ?>
+			<?php 
+			$i = 0;   
+			foreach($this->request->data['TrainingCourseSpecialisation'] as $val){ ?>
+			<?php if(!empty($val['qualification_specialisation_id'])){ ?>
+			<tr class="table_row " row-id="<?php echo $i;?>">
+				<td class="table_cell cell_description" style="width:90%">
+					<div class="input_wrapper">
+			 		<div class="training-course-specialisation-<?php echo $i;?>">
+						<?php echo $qualificationSpecialisationOptions[$val['qualification_specialisation_id']];?>
+					</div>		
+					<?php echo $this->Form->hidden('TrainingCourseSpecialisation.' . $i . '.qualification_specialisation_id', array('class' => 'training-specialisation-id-'.$i . ' validate-specialisation', 'value'=>$val['qualification_specialisation_id'])); ?>
+					<?php if(isset($val['id'])){ ?>
+					<?php echo $this->Form->hidden('TrainingCourseSpecialisation.' . $i . '.id', array('value'=>$val['id'], 
+					'class' => 'control-id')); ?>
+					<?php } ?>
+					</div>
+			    </td>
+				<td class="table_cell cell_delete">
+			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteSpecialisation(this)"></span>
+			    </td>
+			</tr>
+			<?php } ?>
+		<?php 
+			$i++;
+		} ?>
+		<?php } ?>
+		</tbody>
+		</table>
+	</div>
+	<div class="row"><a class="void custom_icon_plus" onclick="objTrainingCourses.addSpecialisation(this)" url="Training/ajax_add_specialisation"  href="javascript: void(0)"><?php echo __('Add Specialisation');?></a></div>
+	</div>
+</div> 
+
+<div class="row form-group row_experience" style="min-height:45px;">
+	<label class="col-md-3 control-label"><?php echo __('Experience'); ?></label>
+	<div class="col-md-4">
+	<div class="table experience">
+		<div class="delete-experience" name="data[DeleteExperience][{index}][id]"></div>
+		<table class="table table-striped table-hover table-bordered table_body">
+		<tbody>
+		<?php 
+		$i = 0;   
+		if(isset($this->request->data['TrainingCourseExperience']) && !empty($this->request->data['TrainingCourseExperience'])){ ?>
+			<?php 
+			foreach($this->request->data['TrainingCourseExperience'] as $val){ ?>
+			<?php if(!empty($val['months'])){ ?>
+			<tr class="table_row " row-id="<?php echo $i;?>">
+				<td class="table_cell cell_description" style="width:90%">
+						<?php 
+						$years = floor(intval($val['months'])/12);
+						$months = intval($val['months']) - ($years*12);
+						?>
+						<div class="col-md-6" style="padding:3px;">
+							<div class="input_wrapper">
+					 		<?php echo $years;?>
+					 		<?php echo __('Year(s)');?>
+					 		</div>
+						</div>
+						<div class="col-md-6" style="padding:3px;">
+							<div class="input_wrapper">
+							<?php echo $months; ?>	
+							<?php echo __('Month(s)');?>
+							</div>
+						</div>
+					<?php echo $this->Form->hidden('TrainingCourseExperience.' . $i . '.months', array('class' => 'experience-validate-'.$i . ' validate-experience')); ?>
+					<?php if(isset($val['id'])){ ?>
+					<?php echo $this->Form->hidden('TrainingCourseExperience.' . $i . '.id', array('value'=>$val['id'], 
+					'class' => 'control-id')); ?>
+					<?php } ?>
+			    </td>
+				<td class="table_cell cell_delete">
+			    	<span class="icon_delete" title="Delete" onclick="objTrainingCourses.deleteExperience(this)"></span>
+			    </td>
+			</tr>
+			<?php } ?>
+		<?php 
+			$i++;
+		} ?>
+		<?php } ?>
+		</tbody>
+		</table>
+	</div>
+	<div class="row add_experience<?php echo ($i>=1)? ' hide' : '' ?>"><a class="void custom_icon_plus" onclick="objTrainingCourses.addExperience(this)" url="Training/ajax_add_experience"  href="javascript: void(0)"><?php echo __('Add Experience');?></a></div>
 	</div>
 </div> 
 <div class="row form-group row_result_type" style="min-height:45px;">
@@ -198,7 +291,7 @@ echo $this->Form->create($model, array_merge($formOptions, array('deleteUrl'=>$t
 				<td class="table_cell cell_description" style="width:90%">
 					<div class="input_wrapper">
 				 	<div class="training-result-type-<?php echo $i;?>">
-						<?php echo $val['result_type'];?>
+						<?php echo $trainingResultTypeOptions[$val['training_result_type_id']];?>
 					</div>		
 					<?php echo $this->Form->hidden('TrainingCourseResultType.' . $i . '.training_result_type_id', array('class' => 'training-result-type-id-'.$i . ' validate-result-type', 'value'=>$val['training_result_type_id'])); ?>
 					<?php if(isset($val['id'])){ ?>

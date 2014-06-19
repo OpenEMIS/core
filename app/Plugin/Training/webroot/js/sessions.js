@@ -168,20 +168,24 @@ var objTrainingSessions = {
             contentType: false,
             processData: false,
             type: 'POST',
+            dataType: 'json',
             beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
             success: function(data) {
                 var callback = function() {
-                    var obj = jQuery.parseJSON(data);
-                    if(obj.layout!=""){
+                    var obj = data;
+                    console.log(obj.layout);
+                    if (obj.layout == undefined || obj.layout == null || obj.layout.length == 0){
+
+                    }else{
                         if (table.find('.table_body tbody').length > 0) { 
-                            table.find('.table_body').append(obj.layout);
+                            table.find('.table_body tbody').append(obj.layout);
                         }else{
-                            table.find('.table_body').append('<tbody>'+data+'</tbody>');
+                            table.find('.table_body').append('<tbody>'+obj.layout+'</tbody>');
                         }
-                       
+                        objTrainingSessions.validateTrainee();
                     }
                     if(obj.errorFlag){
-                         $('#divUploadMsg').addClass('error_message');
+                         $('#divUploadMsg').addClass('error-message');
                     }else{
                         $('#divUploadMsg').addClass('text-success');
                     }
@@ -192,7 +196,11 @@ var objTrainingSessions = {
                     }
                 }
                 $.unmask({id: maskId, callback: callback});
-            }
+            },
+             error: function (data) {
+                console.log("error");
+                console.log(data);
+            } 
         });
 
     },
@@ -205,7 +213,7 @@ var objTrainingSessions = {
         var params = {index: index};
         var success = function(data, status) {
             var callback = function() {
-                table.find('.table_body tbody').append(data);
+                table.find('.table_body').append(data);
                 var element = '#searchTrainee' + index;
                 var url = getRootURL() + table.attr('url') + '/' + index + '/' + $('.training_course').val();
                 objTrainingSessions.attachAutoComplete(element, url, objTrainingSessions.selectTrainee);

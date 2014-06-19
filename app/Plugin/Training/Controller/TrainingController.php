@@ -5,7 +5,6 @@ App::uses('HttpSocket', 'Network/Http');
 class TrainingController extends TrainingAppController {
     public $uses = array(
         'Training.TrainingCourse', 
-        'Teachers.TeacherPositionTitle', 
         'Training.TrainingSession',
         'Training.TrainingSessionTrainee',
         'Training.TrainingSessionTrainer',
@@ -13,6 +12,7 @@ class TrainingController extends TrainingAppController {
         'TrainingProvider',
         'Training.TrainingCourseProvider',
         'Training.TrainingCourseResultType',
+        'QualificationSpecialisation',
         'Staff.Staff'
      );
 
@@ -21,13 +21,7 @@ class TrainingController extends TrainingAppController {
     public $modules = array(
         'course' => 'Training.TrainingCourse',
         'session' => 'Training.TrainingSession',
-        'result' => 'Training.TrainingSessionResult',
-        'health_allergy' => 'Students.StudentHealthAllergy',
-        'health_test' => 'Students.StudentHealthTest',
-        'health_consultation' => 'Students.StudentHealthConsultation',
-        'health' => 'Students.StudentHealth',
-        'special_need' => 'Students.StudentSpecialNeed',
-        'award' => 'Students.StudentAward'
+        'result' => 'Training.TrainingSessionResult'
     ); 
 
      public $components = array(
@@ -122,13 +116,13 @@ class TrainingController extends TrainingAppController {
         }
     }
 
-    public function ajax_add_prerequisite() {
+    public function ajax_add_course_prerequisite() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
-        $this->render('/Elements/prerequisite');
+        $this->render('/Elements/course_prerequisite');
     }
 
-    public function ajax_find_prerequisite($index) {
+    public function ajax_find_course_prerequisite($index) {
         if($this->request->is('ajax')) {
             $this->autoRender = false;
             $search = $this->params->query['term'];
@@ -138,11 +132,26 @@ class TrainingController extends TrainingAppController {
         }
     }
 
-     public function ajax_add_result_type() {
+    public function ajax_add_result_type() {
         $this->layout = 'ajax';
         $this->set('index', $this->params->query['index']);
         $this->set('trainingResultTypeOptions', $this->TrainingCourseResultType->TrainingResultType->getList());
         $this->render('/Elements/result_type');
+    }
+
+    public function ajax_add_specialisation() {
+        $this->layout = 'ajax';
+        $this->set('index', $this->params->query['index']);
+        $this->set('qualificationSpecialisationOptions', $this->QualificationSpecialisation->getOptions());
+        $this->render('/Elements/specialisation');
+    }
+
+    public function ajax_add_experience() {
+        $this->layout = 'ajax';
+        $this->set('index', $this->params->query['index']);
+        $this->set('yearOptions', range(0, 99));
+        $this->set('monthOptions', range(0, 11));
+        $this->render('/Elements/experience');
     }
 
 
@@ -246,7 +255,7 @@ class TrainingController extends TrainingAppController {
 
         $errorFlag = false;
         $count = 0;
-
+        $trainingSessionTraineesVal = array();
         if(isset($_FILES) && !empty($_FILES)){
             if ($_FILES[0]['error'] == UPLOAD_ERR_OK               //checks for errors
                   && is_uploaded_file($_FILES[0]['tmp_name'])) { //checks that file is uploaded
@@ -305,15 +314,15 @@ class TrainingController extends TrainingAppController {
 
         if(!empty($errorMessage)){
             $errorFlag = true;
-            $message .= __('Invalid File Format').$errorMessage;
+            $message .= '<br />' . __('Invalid File Format').$errorMessage;
         }
         $view = new View($this, false);
         $view->set(compact('index'));
         $view->request->data['TrainingSessionTrainee'] = $trainingSessionTraineesVal; 
         $view->viewPath = 'Elements';
         $respond = $view->render('added_trainee');
-
         $data['layout'] = $respond;
+
         $data['errorFlag'] =  $errorFlag;
         $data['message'] =  $message;
         //$this->layout = 'ajax';
@@ -322,6 +331,9 @@ class TrainingController extends TrainingAppController {
 
     }
 
+
+
+    
     //----------------------------------------------------------------------------
 
 

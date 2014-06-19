@@ -54,6 +54,14 @@ class TrainingSession extends TrainingAppModel {
 			'dependent' => true
 		)
 	);
+
+	public $hasOne = array(
+		'TrainingSessionResult' => array(
+			'className' => 'TrainingSessionResult',
+			'foreignKey' => 'training_session_id',
+			'dependent' => true
+		)
+	);
 	
 	public $validate = array(
 		'training_course_id' => array(

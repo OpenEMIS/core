@@ -2405,11 +2405,11 @@ msgstr "متطلبات سابقة"
 msgid "Training Level"
 msgstr "مستوى التدريب"
 
-msgid "Prerequisite"
-msgstr "شرط أساسي"
+msgid "Course Prerequisite"
+msgstr "بالطبع المتطلب"
 
-msgid "Add Prerequisite"
-msgstr "إضافة المتطلب"
+msgid "Add Course Prerequisite"
+msgstr "إضافة دورة المتطلب"
 
 msgid "Pass Result"
 msgstr "علامة النجاح"

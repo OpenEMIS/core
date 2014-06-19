@@ -46,21 +46,59 @@ class TrainingSessionTrainee extends TrainingAppModel {
 				'conditions'=>array('TrainingCourse.id'=>$trainingCourseID,'TrainingSession.training_status_id'=>3, 'TrainingSessionTrainee.pass'=>1)
 			)
 		);
+		
+		$trainingCourseSpecialisation = ClassRegistry::init('TrainingCourseSpecialisation');
+		$qualificationSpecialisationID = $trainingCourseSpecialisation->find('list', 
+			array(
+				'fields'=>array('TrainingCourseSpecialisation.qualification_specialisation_id'),
+				'conditions'=>array('TrainingCourseSpecialisation.training_course_id'=>$trainingCourseID)
+			)
+		);
+
+		$trainingCourseExperience = ClassRegistry::init('TrainingCourseExperience');
+		$experience = $trainingCourseExperience->find('first', 
+			array(
+				'fields'=>array('TrainingCourseExperience.months'),
+				'conditions'=>array('TrainingCourseExperience.training_course_id'=>$trainingCourseID)
+			)
+		);
 
 		$joins = array();
 		if(!empty($staffPositionID)){
 			$tableJoin['table'] = 'institution_site_staff';
 			$tableJoin['alias'] = 'InstitutionSiteStaff';
 			$tableJoin['type'] = 'INNER';
-			$tableJoin['conditions'] = array('Staff.id = InstitutionSiteStaff.staff_id', 'InstitutionSiteStaff.staff_position_title_id IN ('.ltrim(implode(",", $staffPositionID), ',').')');
-			
+			$tableJoin['conditions'] = array('Staff.id = InstitutionSiteStaff.staff_id');
 			$joins[] = $tableJoin;
-			if(!empty($excludedStaffID)){
-				$conditions[] = 'InstitutionSiteStaff.staff_id NOT IN (' . ltrim(implode(",",$excludedStaffID), ',') . ')';
-			}
-		}else{
-			if(!empty($excludedStaffID)){
-				$conditions[] = 'Staff.id NOT IN (' . ltrim(implode(",",$excludedStaffID), ',') . ')';
+
+			$tableJoin['table'] = 'institution_site_positions';
+			$tableJoin['alias'] = 'InstitutionSitePosition';
+			$tableJoin['type'] = 'INNER';
+			$tableJoin['conditions'] = array('InstitutionSiteStaff.institution_site_position_id = InstitutionSitePosition.id', 'InstitutionSitePosition.staff_position_title_id IN ('.ltrim(implode(",", $staffPositionID), ',').')');
+			$joins[] = $tableJoin;
+		}
+
+		if(!empty($excludedStaffID)){
+			$conditions[] = 'Staff.id NOT IN (' . ltrim(implode(",",$excludedStaffID), ',') . ')';
+		}
+		
+		if(!empty($qualificationSpecialisationID)){
+			$tableJoin['table'] = 'staff_qualifications';
+			$tableJoin['alias'] = 'StaffQualification';
+			$tableJoin['type'] = 'INNER';
+			$tableJoin['conditions'] = array('Staff.id = StaffQualification.staff_id', 'StaffQualification.qualification_specialisation_id IN ('.ltrim(implode(",", $qualificationSpecialisationID), ',').')');
+			$joins[] = $tableJoin;
+		}
+
+		if(!empty($experience)){
+			if($experience['TrainingCourseExperience']['months']>0){
+				$tableJoin['table'] = 'staff_employments';
+				$tableJoin['alias'] = 'StaffEmployment';
+				$tableJoin['type'] = 'INNER';
+				$compareDate = date("Y-m-d",strtotime("-".$experience['TrainingCourseExperience']['months']." month",  time())); 
+				$tableJoin['conditions'] = array('Staff.id = StaffEmployment.staff_id', 'StaffEmployment.employment_date <= "' . $compareDate . '"');
+			
+				$joins[] = $tableJoin;
 			}
 		}
 
@@ -81,7 +119,6 @@ class TrainingSessionTrainee extends TrainingAppModel {
 	public function autocomplete($search, $index, $trainingCourseID) {
 		$search = sprintf('%%%s%%', $search);
 		$data = array();
-
 		$conditions['OR'] = array("Staff.first_name LIKE '" . $search . "'", "Staff.last_name LIKE '" . $search  . "'", "Staff.identification_no LIKE '" . $search . "'");
 		$list = $this->searchCriteria($conditions, $trainingCourseID);
 		
