@@ -226,7 +226,7 @@ class InstitutionSiteClassStaff extends AppModel {
 		}
 		return $list;
 	}
-
+/*
 	public function getStaff($teacherId) {
 		$data = $this->find('first', array(
 			'recursive' => -1,
@@ -246,6 +246,51 @@ class InstitutionSiteClassStaff extends AppModel {
 
 
 		return $data;
+	}*/
+
+ public function getStaffsInClassYear($classId, $yearId, $mode = 'all') {
+		$this->unbindModel(array('belongsTo' => array('InstitutionSiteClass')));
+		$data = $this->find('all', array(
+			'fields' => array(
+				'Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'
+			),
+			'conditions' => array('InstitutionSiteClassStaff.institution_site_class_id' => $classId, 'SchoolYear.id' => $yearId),
+			'joins' => array(
+				array(
+					'table' => 'institution_site_classes',
+					'alias' => 'InstitutionSiteClass',
+					'conditions' => array(
+						'InstitutionSiteClass.id = InstitutionSiteClassStaff.institution_site_class_id'
+					)
+				),
+				array(
+					'table' => 'school_years',
+					'alias' => 'SchoolYear',
+					'conditions' => array('SchoolYear.id = InstitutionSiteClass.school_year_id')
+				),
+				array(
+					'table' => 'institution_site_staff',
+					'alias' => 'InstitutionSiteStaff',
+					'conditions' => array('InstitutionSiteStaff.staff_id = InstitutionSiteClassStaff.staff_id',
+						'OR' => array(
+							'InstitutionSiteStaff.end_year >= SchoolYear.end_year', 'InstitutionSiteStaff.end_year is null'
+						)
+					)
+				)
+			),
+			'order' => array('Staff.first_name')
+		));
+		$this->bindModel(array('belongsTo' => array('InstitutionSiteClass')));
+		if ($mode == 'list') {
+			$list = array();
+			foreach ($data as $obj) {
+				$id = $obj['Staff']['id'];
+				$list[$id] = sprintf('%s %s', $obj['Staff']['first_name'], $obj['Staff']['last_name']);
+			}
+			return $list;
+		} else {
+			return $data;
+		}
 	}
 
 }
