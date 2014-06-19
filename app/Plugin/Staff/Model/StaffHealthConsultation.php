@@ -15,7 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffHealthConsultation extends StaffAppModel {
-	//public $useTable = 'staff_health_histories';
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('date'));
 	
 	public $belongsTo = array(
@@ -58,15 +57,11 @@ class StaffHealthConsultation extends StaffAppModel {
         return $fields;
     }
 
-    public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
-
     public function healthConsultation($controller, $params) {
         $controller->Navigation->addCrumb('Health - Consultations');
         $header = __('Health - Consultations');
         $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-        $data = $this->findAllByStaffId($controller->staffId);//('all', array('conditions' => array('staff_id' => $controller->staffId)));
+        $data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
         $controller->set(compact('header', 'data'));
     }
 
@@ -82,34 +77,25 @@ class StaffHealthConsultation extends StaffAppModel {
             return $controller->redirect(array('action' => 'healthConsultation'));
         }
 
-        $controller->Session->write('StaffHealthConsultationId', $id);
+        $controller->Session->write('StaffHealthConsultation.id', $id);
         $fields = $this->getDisplayFields($controller);
         $controller->set(compact('header', 'data', 'fields', 'id'));
     }
 
     public function healthConsultationDelete($controller, $params) {
-        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthConsultationId')) {
-            $id = $controller->Session->read('StaffHealthConsultationId');
-            if ($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-            $controller->Session->delete('StaffHealthConsultationId');
-            return $controller->redirect(array('action' => 'healthConsultation'));
-        }
+        return $this->remove($controller, 'healthConsultation');
     }
 
     public function healthConsultationAdd($controller, $params) {
         $controller->Navigation->addCrumb('Health - Add Consultation');
         $controller->set('header', __('Health - Add Consultation'));
-        $this->setup_add_edit_form($controller, $params);
+        $this->setup_add_edit_form($controller, $params, 'add');
     }
 
     public function healthConsultationEdit($controller, $params) {
         $controller->Navigation->addCrumb('Health - Edit Consultation');
         $controller->set('header', __('Health - Edit Consultation'));
-        $this->setup_add_edit_form($controller, $params);
+        $this->setup_add_edit_form($controller, $params, 'edit');
         $this->render = 'add';
     }
 
@@ -117,10 +103,10 @@ class StaffHealthConsultation extends StaffAppModel {
         $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
         
         if ($controller->request->is('post') || $controller->request->is('put')) {
-            $controller->request->data[$this->alias]['staff_id'] = $controller->staffId;
+            $controller->request->data[$this->alias]['staff_id'] = $controller->Session->read('Staff.id');
             
             if ($this->save($controller->request->data)) {
-                $controller->Message->alert('general.add.success');
+                $controller->Message->alert('general.' . $type . '.success');
                 return $controller->redirect(array('action' => 'healthConsultation'));
             }
         }

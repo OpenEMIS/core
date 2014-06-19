@@ -32,7 +32,7 @@ class SecurityController extends AppController {
 		'SecurityGroupArea',
 		'SecurityGroupInstitutionSite',
 		'SecurityUserAccess',
-		'Teachers.Teacher',
+		//'Teachers.Teacher',
 		'Staff.Staff',
 		'Students.Student',
 		'ConfigAttachment'
@@ -298,7 +298,7 @@ class SecurityController extends AppController {
 				$allowEdit = true;
 			} else if($this->Auth->user('super_admin')==$data['super_admin']) {
 				//$allowEdit = $this->SecurityGroupUser->isUserInSameGroup($this->Auth->user('id'), $userId);
-                                $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
+                $allowEdit = $this->SecurityUser->isUserCreatedByCurrentLoggedUser($this->Auth->user('id'), $userId);//(currentLoggedUser, userBeingViewed)
 			}
 			$this->set('data', $data);
 			$this->set('allowEdit', $allowEdit);
@@ -427,7 +427,7 @@ class SecurityController extends AppController {
 			$data = $this->SecurityUser->find('first', array('recursive' => 0, 'conditions' => array('SecurityUser.id' => $userId)));
 			$data['access'] = $this->SecurityUserAccess->getAccess($userId);
 			$name = $data['first_name'] . ' ' . $data['last_name'];
-			$moduleOptions = array('Student' => __('Student'), 'Teacher' => __('Teacher'), 'Staff' => __('Staff'));
+			$moduleOptions = array('Student' => __('Student'), /*'Teacher' => __('Teacher'), */'Staff' => __('Staff'));
 			$this->set('data', $data);
 			$this->set('moduleOptions', $moduleOptions);
 			$this->Navigation->addCrumb($name);
