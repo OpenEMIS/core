@@ -16,10 +16,9 @@
  */
 
 class StaffSalary extends StaffAppModel {
-
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('salary_date'));
 	public $belongsTo = array(
-		'Staff',
+		'Staff.Staff',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
 			'foreignKey' => 'modified_user_id'
@@ -186,7 +185,6 @@ class StaffSalary extends StaffAppModel {
 		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
 		$additionOptions = $SalaryAdditionType->findList($visible);
 		$deductionOptions = $SalaryDeductionType->findList($visible);
-		$controller->UserSession->readStatusSession($controller->request->action);
 
 		$controller->set(compact('additionOptions', 'deductionOptions'));
 	}
@@ -225,7 +223,6 @@ class StaffSalary extends StaffAppModel {
 		$SalaryAdditionType = ClassRegistry::init('SalaryAdditionType');
 		$categories = $SalaryAdditionType->findList($visible);
 
-		$controller->UserSession->readStatusSession($controller->request->action);
 		$controller->set(compact('categories', 'index'));
 	}
 
@@ -234,8 +231,7 @@ class StaffSalary extends StaffAppModel {
 		$visible = true;
 		$SalaryDeductionType = ClassRegistry::init('SalaryDeductionType');
 		$categories = $SalaryDeductionType->findList($visible);
-
-		$controller->UserSession->readStatusSession($controller->request->action);
+		
 		$controller->set(compact('categories', 'index'));
 	}
 

@@ -422,8 +422,6 @@ class StaffController extends StaffAppController {
 			$dataValues[$arrV['StaffCustomField']['id']][] = $arrV['StaffCustomValue'];
 			// pr($arrV);
 		}
-		
-		$this->UserSession->readStatusSession($this->request->action);
 		$this->set(compact('header', 'data', 'dataValues'));
 	}
 
