@@ -15,7 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffHealthAllergy extends StaffAppModel {
-	//public $useTable = 'staff_health_histories';
 	public $actsAs = array('ControllerAction');
 	
 	public $belongsTo = array(
@@ -49,98 +48,85 @@ class StaffHealthAllergy extends StaffAppModel {
 	);
 	
 	public function getDisplayFields($controller) {
-        $fields = array(
-            'model' => $this->alias,
-            'fields' => array(
-                //   array('field' => 'id', 'type' => 'hidden'),
-                array('field' => 'name', 'model' => 'HealthAllergyType', 'labelKey' => 'general.type'),
-                array('field' => 'description'),
-                array('field' => 'severe', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
-                array('field' => 'comment'),
-                array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
-                array('field' => 'modified', 'edit' => false),
-                array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
-                array('field' => 'created', 'edit' => false)
-            )
-        );
-        return $fields;
-    }
-    
-    public function beforeAction($controller, $action) {
-        $controller->set('model', $this->alias);
-    }
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				//   array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'name', 'model' => 'HealthAllergyType', 'labelKey' => 'general.type'),
+				array('field' => 'description'),
+				array('field' => 'severe', 'type' => 'select', 'options' => $controller->Option->get('yesno')),
+				array('field' => 'comment'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 
-    public function healthAllergy($controller, $params) {
-        $controller->Navigation->addCrumb('Health - Allergies');
-        $header = __('Health - Allergies');
+	public function healthAllergy($controller, $params) {
+		$controller->Navigation->addCrumb('Health - Allergies');
+		$header = __('Health - Allergies');
 
-        $this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
-        $data = $this->findAllByStaffId($controller->staffId);
+		$this->unbindModel(array('belongsTo' => array('ModifiedUser', 'CreatedUser')));
+		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'));
 
-        $controller->set(compact('header', 'data'));
-    }
+		$controller->set(compact('header', 'data'));
+	}
 
-    public function healthAllergyView($controller, $params) {
-        $controller->Navigation->addCrumb('Health - View Allergy');
-        $header = __('Health - View Allergy');
+	public function healthAllergyView($controller, $params) {
+		$controller->Navigation->addCrumb('Health - View Allergy');
+		$header = __('Health - View Allergy');
 
-        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-        $data = $this->findById($id);
-        if (empty($data)) {
-            $controller->Message->alert('general.noData');
-            return $controller->redirect(array('action' => 'healthAllergy'));
-        }
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+		$data = $this->findById($id);
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+			return $controller->redirect(array('action' => 'healthAllergy'));
+		}
 
-        $controller->Session->write('StaffHealthAllergyTypeId', $id);
-        $fields = $this->getDisplayFields($controller);
-        $controller->set(compact('header', 'data', 'fields', 'id'));
-    }
+		$controller->Session->write('StaffHealthAllergyType.id', $id);
+		$fields = $this->getDisplayFields($controller);
+		$controller->set(compact('header', 'data', 'fields', 'id'));
+	}
 
-    public function healthAllergyDelete($controller, $params) {
-        if ($controller->Session->check('StaffId') && $controller->Session->check('StaffHealthAllergyTypeId')) {
-            $id = $controller->Session->read('StaffHealthAllergyTypeId');
-            if ($this->delete($id)) {
-                $controller->Message->alert('general.delete.success');
-            } else {
-                $controller->Message->alert('general.delete.failed');
-            }
-            $controller->Session->delete('StaffHealthAllergyTypeId');
-            return $controller->redirect(array('action' => 'healthAllergy'));
-        }
-    }
+	public function healthAllergyDelete($controller, $params) {
+		return $this->remove($controller, 'healthAllergy');
+	}
 
-    public function healthAllergyAdd($controller, $params) {
-        $controller->Navigation->addCrumb('Health - Add Allergy');
-        $controller->set('header', __('Health - Add Allergy'));
-        $this->setup_add_edit_form($controller, $params);
-    }
+	public function healthAllergyAdd($controller, $params) {
+		$controller->Navigation->addCrumb('Health - Add Allergy');
+		$controller->set('header', __('Health - Add Allergy'));
+		$this->setup_add_edit_form($controller, $params, 'add');
+	}
 
-    public function healthAllergyEdit($controller, $params) {
-        $controller->Navigation->addCrumb('Health - Edit Allergy');
-        $controller->set('header', __('Health - Edit Allergy'));
-        $this->setup_add_edit_form($controller, $params);
-        $this->render = 'add';
-    }
+	public function healthAllergyEdit($controller, $params) {
+		$controller->Navigation->addCrumb('Health - Edit Allergy');
+		$controller->set('header', __('Health - Edit Allergy'));
+		$this->setup_add_edit_form($controller, $params, 'edit');
+		$this->render = 'add';
+	}
 
-    function setup_add_edit_form($controller, $params) {
-        $id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
-        if ($controller->request->is('post') || $controller->request->is('put')) {
-            $controller->request->data[$this->alias]['staff_id'] = $controller->staffId;
-            if ($this->save($controller->request->data)) {
-                $controller->Message->alert('general.add.success');
-                return $controller->redirect(array('action' => 'healthAllergy'));
-            }
-        } else {
-            $this->recursive = -1;
-            $data = $this->findById($id);
-            if (!empty($data)) {
-                $controller->request->data = $data;
-            }
-        }
+	function setup_add_edit_form($controller, $params, $type) {
+		$id = empty($params['pass'][0]) ? 0 : $params['pass'][0];
+		if ($controller->request->is('post') || $controller->request->is('put')) {
+			$controller->request->data[$this->alias]['staff_id'] = $controller->Session->read('Staff.id');
+			if ($this->save($controller->request->data)) {
+				$controller->Message->alert('general.' . $type . '.success');
+				return $controller->redirect(array('action' => 'healthAllergy'));
+			}
+		} else {
+			$this->recursive = -1;
+			$data = $this->findById($id);
+			if (!empty($data)) {
+				$controller->request->data = $data;
+			}
+		}
 
-        $healthAllergiesOptions = $this->HealthAllergyType->find('list', array('fields' => array('id', 'name')));
-        $yesnoOptions = $controller->Option->get('yesno');
+		$healthAllergiesOptions = $this->HealthAllergyType->find('list', array('fields' => array('id', 'name')));
+		$yesnoOptions = $controller->Option->get('yesno');
 
-        $controller->set(compact('healthAllergiesOptions', 'yesnoOptions'));
-    }
+		$controller->set(compact('healthAllergiesOptions', 'yesnoOptions'));
+	}
 }

@@ -16,10 +16,9 @@
  */
 
 class StaffEmployment extends StaffAppModel {
-
 	public $actsAs = array('ControllerAction', 'DatePicker' => array('employment_date'));
 	public $belongsTo = array(
-		'Staff',
+		'Staff.Staff',
 		'EmploymentType',
 		'ModifiedUser' => array(
 			'className' => 'SecurityUser',
@@ -47,10 +46,6 @@ class StaffEmployment extends StaffAppModel {
 			)
 		)
 	);
-
-	public function beforeAction($controller, $action) {
-		$controller->set('model', $this->alias);
-	}
 
 	public function getDisplayFields($controller) {
 		$fields = array(
@@ -129,7 +124,6 @@ class StaffEmployment extends StaffAppModel {
         }
 
         $employmentTypeOptions = $this->EmploymentType->getOptions();
-		$controller->UserSession->readStatusSession($controller->request->action);
 		$controller->set(compact('employmentTypeOptions'));
 	}
 	

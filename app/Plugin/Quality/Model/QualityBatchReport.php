@@ -643,7 +643,7 @@ class QualityBatchReport extends QualityAppModel {
 									$passFail = 'Pass';
 								}
 							}
-							$tempArray[$num]['Pass/Fail'] = $passFail;
+							$tempArray[$num]['Pass/Fail'] = __($passFail);
 						}
 					}
 				}
@@ -694,7 +694,7 @@ class QualityBatchReport extends QualityAppModel {
 							$rubricsGrandTotal += $rubricTotalPercent;
 
 							$tempArray[$rubricItemCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotalPercent;
-							$tempArray[$rubricItemCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = $passFail;
+							$tempArray[$rubricItemCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = __($passFail);
 							$tempArray[$rubricItemCounter - 1][$key . '_' . $rubricHeaderCounter]['name'] = $value['RubricName'];
 
 							$rubricName = $currentRubricName;
@@ -785,7 +785,7 @@ class QualityBatchReport extends QualityAppModel {
 					$rubricsGrandTotal = round($rubricsGrandTotal / $numOfRubricPerSch, 2);
 
 					$tempArray[$rubricItemCounter - 1]['TotalRubric' . '_' . $prevRubricHeaderCounter]['value'] = $rubricTotalPercent;
-					$tempArray[$rubricItemCounter - 1]['PassFail' . '_' . $prevRubricHeaderCounter]['value'] = $passFail;
+					$tempArray[$rubricItemCounter - 1]['PassFail' . '_' . $prevRubricHeaderCounter]['value'] = __($passFail);
 					$tempArray[$rubricItemCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
 
 					$rubricTotal = $tempRubricTotal;
@@ -817,7 +817,7 @@ class QualityBatchReport extends QualityAppModel {
 				$rubricsGrandTotal = round($rubricsGrandTotal / $numOfRubricPerSch, 2);
 
 				$tempArray[$rubricItemCounter - 1]['TotalRubric' . '_' . $rubricHeaderCounter]['value'] = $rubricTotalPercent;
-				$tempArray[$rubricItemCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = $passFail;
+				$tempArray[$rubricItemCounter - 1]['PassFail' . '_' . $rubricHeaderCounter]['value'] = __($passFail);
 				$tempArray[$rubricItemCounter - 1]['GrandTotal']['value'] = $rubricsGrandTotal;
 			}
 		}
@@ -827,9 +827,14 @@ class QualityBatchReport extends QualityAppModel {
 	public function breakReportByYear($data, $autoGenerateFirstHeader = 'no', $header = NULL) {
 		$tempArray = array();
 		$selectedYear = '';
+		
+		
 		foreach ($data as $obj) {
 
 			if ($obj['SchoolYear']['Year'] != $selectedYear) {
+				
+				
+				
 				$options = array('year' => $obj['SchoolYear']['Year'], 'header' => $header);
 				if (!empty($obj['EducationGrade']['GradeId'])) {
 					$options['gradeId'] = $obj['EducationGrade']['GradeId'];
@@ -905,6 +910,12 @@ class QualityBatchReport extends QualityAppModel {
 				$headerOptions[][] = 'Grand Total Weighting(%)';
 				$header = array_merge($header, $headerOptions);
 			}
+			
+			
+		if(!empty($header)){
+			$header = $this->getTranslateHeader($header);
+		}
+		
 			return $header;
 		} else {
 			return array();
@@ -1045,4 +1056,20 @@ class QualityBatchReport extends QualityAppModel {
 		return array_intersect_key($input, array_flip(preg_grep($pattern, array_keys($input), $flags)));
 	}
 
+	private function getTranslateHeader($mappingFields) {
+		//'QA Report' is an exception
+		//pr($mappingFields);//die;
+		$new = array();
+		foreach ($mappingFields as $model => &$arrcols) {
+
+			foreach ($arrcols as $col => $value) {//pr($value);
+				$new[$model][] = __($value);
+				
+			}
+		}
+	//	pr($new);
+	//	die;
+		return $new;
+	}
+	
 }

@@ -103,6 +103,18 @@ class MessageComponent extends Component {
 			'add' => array(
 				'success' => array('type' => 'ok', 'msg' => 'New student has been created.')
 			)
+		),
+		'Census' => array(
+			'noSubjects' => array('type' => 'warn', 'msg' => 'There are no subjects configured in the system')
+		),
+		'CensusGraduate' => array(
+			'notRequired' => array('type' => 'info', 'msg' => 'Graduates not required.')
+		),
+		'CensusShift' => array(
+			'mismatch' => array('type' => 'warn', 'msg' => 'The total number of shift does not match the total number of classes.')
+		),
+		'InstitutionSiteClass' => array(
+			'noData' => array('type' => 'warn', 'msg' => 'There are no classes associated with this institution site for the selected year.')
 		)
 	);
 	

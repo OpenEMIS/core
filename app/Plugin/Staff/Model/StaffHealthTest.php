@@ -16,7 +16,7 @@ have received a copy of the GNU General Public License along with this program. 
 
 class StaffHealthTest extends StaffAppModel {
 	//public $useTable = 'staff_health_histories';
-	public $actsAs = array('ControllerAction', 'Datepicker' => array('date'));
+	public $actsAs = array('ControllerAction', 'DatePicker' => array('date'));
 	
 	public $belongsTo = array(
 		//'Staff',
