@@ -16,12 +16,8 @@ class TrainingSessionTrainee extends TrainingAppModel {
 		),
     );
 
-
-	public function autocomplete($search, $index, $trainingCourseID) {
-		$search = sprintf('%%%s%%', $search);
-		$data = array();
-
-		$trainingCourseTargetPopulation = ClassRegistry::init('TrainingCourseTargetPopulation');
+    public function searchCriteria($conditions, $trainingCourseID){
+    	$trainingCourseTargetPopulation = ClassRegistry::init('TrainingCourseTargetPopulation');
 		$staffPositionID = $trainingCourseTargetPopulation->find('list', 
 			array(
 				'fields'=>array('TrainingCourseTargetPopulation.staff_position_title_id'),
@@ -51,7 +47,6 @@ class TrainingSessionTrainee extends TrainingAppModel {
 			)
 		);
 
-		$conditions['OR'] = array("Staff.first_name LIKE '" . $search . "'", "Staff.last_name LIKE '" . $search  . "'", "Staff.identification_no LIKE '" . $search . "'");
 		$joins = array();
 		if(!empty($staffPositionID)){
 			$tableJoin['table'] = 'institution_site_staff';
@@ -79,8 +74,16 @@ class TrainingSessionTrainee extends TrainingAppModel {
 			)
 		);
 
+		return $list;
+    }
 
+
+	public function autocomplete($search, $index, $trainingCourseID) {
+		$search = sprintf('%%%s%%', $search);
 		$data = array();
+
+		$conditions['OR'] = array("Staff.first_name LIKE '" . $search . "'", "Staff.last_name LIKE '" . $search  . "'", "Staff.identification_no LIKE '" . $search . "'");
+		$list = $this->searchCriteria($conditions, $trainingCourseID);
 		
 		foreach($list as $obj) {
 			$id = $obj['Staff']['id'];
