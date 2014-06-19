@@ -62,11 +62,11 @@ class StaffReport extends StaffAppModel {
                     'name' => 'School Year'
                 ),
                 'InstitutionSite' => array(
-                    'name' => '',
-                    'code' => ''
+                    'name' => 'Institution Name',
+                    'code' => 'Institution Code'
                 ),
                 'InstitutionSiteClass' => array(
-                    'name' => 'Class Name',
+                    'name' => 'Class',
                 ),
                 'EducationGrade' => array(
                     'name' => 'Grade'
@@ -108,7 +108,7 @@ class StaffReport extends StaffAppModel {
     // public function reportGen($name, $type) { /
     public function reportGen($controller, $params) { //$this->genReport('Site Details','CSV');
         //  $this->autoRender = false;
-        $this->staffId = $controller->Session->read('StaffObj.Staff.id');
+        $this->staffId = $controller->Session->read('Staff.id');
 
         $name = $params['pass'][0];
         $type = $params['pass'][1];
@@ -346,7 +346,7 @@ class StaffReport extends StaffAppModel {
         //create a file
 
        $csv_file = fopen('php://output', 'w');
-        header('Content-type: application/csv');
+        header('Content-type: application/csv' );
         header('Content-Disposition: attachment; filename="' . $downloadedFile . '"');
         $header_row = $this->getHeader($this->ReportData['name']);
 //pr($header_row);
@@ -370,7 +370,7 @@ class StaffReport extends StaffAppModel {
     }
 
     public function addReportDate($csv_file){
-        $footer = array("Report Generated: " . date("Y-m-d H:i:s"));
+        $footer = array(__("Report Generated").": " . date("Y-m-d H:i:s"));
         fputcsv($csv_file, array(), ',', '"');
         fputcsv($csv_file, $footer, ',', '"');
     }
@@ -410,9 +410,9 @@ class StaffReport extends StaffAppModel {
         foreach ($header as $model => &$arrcols) {
             foreach ($arrcols as $col => $value) {
                 if (empty($value)) {
-                    $new[] = Inflector::humanize(Inflector::underscore($model)) . ' ' . Inflector::humanize($col);
+                    $new[] = __(Inflector::humanize(Inflector::underscore($model)) . ' ' . Inflector::humanize($col));
                 } else {
-                    $new[] = $value;
+                    $new[] = __($value);
                 }
             }
         }
@@ -420,8 +420,10 @@ class StaffReport extends StaffAppModel {
         return $new;
     }
 
-	public $reportDefaultHeader = array(array('Year'), array('Class'), array('Grade'));
+	public $reportDefaultHeader = array();
 	public function reportsGetHeader() {
+		$this->reportDefaultHeader = array(array(__('Year')), array(__('Class')), array(__('Grade')));
+		
 		$institutionSiteId = $this->institutionSiteId;
 		//$index = $args[1];
 		$QualityInstitutionRubric = ClassRegistry::init('Quality.QualityInstitutionRubric');
