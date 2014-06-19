@@ -9,13 +9,13 @@ echo $this->Html->script('jquery-ui.min', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
-if($_edit) {
-	if(!empty($this->data[$modelName]['id'])){
-		echo $this->Html->link(__('Back'), array('action' => 'courseView', $this->data[$modelName]['id']), array('class' => 'divider'));
-	}else{
-		echo $this->Html->link(__('Back'), array('action' => 'course'), array('class' => 'divider'));
-	}
+
+if(!empty($this->data[$modelName]['id'])){
+	echo $this->Html->link(__('Back'), array('action' => 'courseView', $this->data[$modelName]['id']), array('class' => 'divider'));
+}else{
+	echo $this->Html->link(__('Back'), array('action' => 'course'), array('class' => 'divider'));
 }
+
 $this->end();
 $this->start('contentBody');
 ?>

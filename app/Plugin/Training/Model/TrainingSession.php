@@ -362,7 +362,17 @@ class TrainingSession extends TrainingAppModel {
 			}
 		}
 	}
-	
+
+	public function sessionDownloadTemplate($controller, $params){
+ 	 	$result = array();
+ 	 	$fieldName = array(__('OpenEmis ID'));
+	 	
+	 	echo $controller->download(__('TrainingSessionTrainee').'_' . date('Ymdhis') . '.csv');
+
+		echo $controller->array2csv($result, $fieldName);
+	 	die();
+	}
+
 	
 	function setup_add_edit_form($controller, $params){
 		$trainingCourseOptions = $this->TrainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));

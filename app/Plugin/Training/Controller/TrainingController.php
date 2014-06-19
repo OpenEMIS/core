@@ -12,7 +12,8 @@ class TrainingController extends TrainingAppController {
         'Training.TrainingCourseAttachment',
         'TrainingProvider',
         'Training.TrainingCourseProvider',
-        'Training.TrainingCourseResultType'
+        'Training.TrainingCourseResultType',
+        'Staff.Staff'
      );
 
     public $helpers = array('Js' => array('Jquery'));
@@ -37,6 +38,71 @@ class TrainingController extends TrainingAppController {
         parent::beforeFilter();
         $this->bodyTitle = 'Administration';
         $this->Navigation->addCrumb('Administration', array('controller' => '../Setup', 'action' => 'index'));
+    }
+
+    public function array2csv($results=NULL, $fieldName=NULL)
+    {
+        ob_end_clean();
+        ob_start();
+        $df = fopen("php://output", 'w');
+        $this->fputcsv($df, $fieldName);
+        if(!empty($results)){
+            foreach($results as $key=>$value){
+                $this->fputcsv($df, $value);
+            }
+        }
+        fclose($df);
+        return ob_get_clean();
+    }
+
+    public function fputcsv(&$handle, $fields = array(), $delimiter = ',', $enclosure = '"') {
+        $str = '';
+        $escape_char = '\\';
+        foreach ($fields as $value) {
+          if (strpos($value, $delimiter) !== false ||
+              strpos($value, $enclosure) !== false ||
+              strpos($value, "\n") !== false ||
+              strpos($value, "\r") !== false ||
+              strpos($value, "\t") !== false ||
+              strpos($value, ' ') !== false) {
+            $str2 = $enclosure;
+            $escaped = 0;
+            $len = strlen($value);
+            for ($i=0;$i<$len;$i++) {
+              if ($value[$i] == $escape_char) {
+                $escaped = 1;
+              } else if (!$escaped && $value[$i] == $enclosure) {
+                $str2 .= $enclosure;
+              } else {
+                $escaped = 0;
+              }
+              $str2 .= $value[$i];
+            }
+            $str2 .= $enclosure;
+            $str .= $str2.$delimiter;
+          } else {
+            $str .= $value.$delimiter;
+          }
+        }
+        $str = substr($str,0,-1);
+        $str .= "\n";
+        return fwrite($handle, $str);
+    }
+
+    public function download($name){
+        if( ! $name)
+        {
+            $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
+        }
+        header('Expires: 0');
+        header('Content-Encoding: UTF-8');
+        // force download  
+        header("Content-Type: application/force-download; charset=UTF-8'");
+        header("Content-Type: application/octet-stream; charset=UTF-8'");
+        header("Content-Type: application/download; charset=UTF-8'");
+        // disposition / encoding on response body
+        header("Content-Disposition: attachment;filename={$name}");
+        header("Content-Transfer-Encoding: binary");
     }
 
 
@@ -169,6 +235,92 @@ class TrainingController extends TrainingAppController {
             return json_encode($data);
        }
     }  
+
+    public function ajax_upload_trainee($index, $trainingCourseID) {
+        $this->autoRender = false;
+        $this->layout = 'ajax';
+        $data = array();
+        $message = '';
+        $errorMessage = '';
+        $respond = '';
+
+        $errorFlag = false;
+        $count = 0;
+
+        if(isset($_FILES) && !empty($_FILES)){
+            if ($_FILES[0]['error'] == UPLOAD_ERR_OK               //checks for errors
+                  && is_uploaded_file($_FILES[0]['tmp_name'])) { //checks that file is uploaded
+                $tmpName = $_FILES[0]['tmp_name']; 
+
+                ini_set("auto_detect_line_endings", true);
+                $handle = fopen($tmpName, "r");
+                $row = 0;
+                $errorFormat = __('Row %s: %s');
+                $i = 0;
+                while (($rowData = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                    $rowData = array_map("utf8_encode", $rowData);
+                    
+                    if($row>0){
+                        try{
+                            $openEmisID = $rowData[0];
+
+                            $staff = $this->Staff->find('first', array('recursive'=>-1, 'conditions'=>array('Staff.identification_no'=>$openEmisID)));
+
+                            if(empty($staff)){
+                               $errorMessage .= '<br />' . sprintf($errorFormat, ($i+1), sprintf(__('Staff with OpenEmis ID %s does not exist.'), $openEmisID));
+                            }else{
+                                $conditions[] = "Staff.identification_no IN ('" . $openEmisID . "')";
+                                $list = $this->TrainingSessionTrainee->searchCriteria($conditions, $trainingCourseID);
+                                if(!empty($list)){
+                                    $val = array();
+                                    foreach($list as $obj){
+                                        $firstName = $obj['Staff']['first_name'];
+                                        $lastName = $obj['Staff']['last_name'];
+                                        $id = $obj['Staff']['id'];
+                                        $val['staff_id'] = $id;
+                                        $val['first_name'] = $firstName;
+                                        $val['last_name'] = $lastName;
+                                        $trainingSessionTraineesVal[] = $val;
+                                    }
+                                    $count++;
+                                }else{
+                                    $errorMessage .= '<br />' . sprintf($errorFormat, ($i+1), sprintf(__('Staff with OpenEmis ID %s does not meet the Course requirement.', $openEmisID)));
+                                }
+                            }
+                            $i++;
+                        } catch (\Exception $e) {
+                            $errorMessage .= '<br />' . sprintf($errorFormat, ($i+1), $e);
+                        }
+                    }
+                    $row++;
+                }
+                fclose($handle);
+                if($row<=1){
+                    $errorMessage .= '<br />' . sprintf($errorFormat, ($i+1), __('Columns/Data do not match.'));
+                }
+
+            }
+        }
+        $message .= sprintf(__('%s Record(s) have been updated'),$count);
+
+        if(!empty($errorMessage)){
+            $errorFlag = true;
+            $message .= __('Invalid File Format').$errorMessage;
+        }
+        $view = new View($this, false);
+        $view->set(compact('index'));
+        $view->request->data['TrainingSessionTrainee'] = $trainingSessionTraineesVal; 
+        $view->viewPath = 'Elements';
+        $respond = $view->render('added_trainee');
+
+        $data['layout'] = $respond;
+        $data['errorFlag'] =  $errorFlag;
+        $data['message'] =  $message;
+        //$this->layout = 'ajax';
+        //$this->set('index', $this->params->query['index']);
+        return json_encode($data);
+
+    }
 
     //----------------------------------------------------------------------------
 
