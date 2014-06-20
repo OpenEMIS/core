@@ -49,32 +49,37 @@ else{
 }
 ?>
 	<?php 
-        echo $this->Form->input('training_course_id', array(
-            'options' => $trainingCourseOptions,
-            'label' => array('text'=>__('Course'), 'class'=>'col-md-3 control-label'),
-            'empty' => __('--Select--'),
-            $readonly,
-            'class' => 'form-control training_course',
-            'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
-            'onchange' => 'objTrainingSessions.getDetailsAfterChangeCourse(this);objTrainingSessions.clearTrainee();'
+        echo $this->Form->input('training_course_id', 
+        	array_merge(
+        		$readonly,
+        		array(
+        		'options' => $trainingCourseOptions,
+	            'label' => array('text'=>__('Course'), 'class'=>'col-md-3 control-label'),
+	            'empty' => __('--Select--'),
+	            'class' => 'form-control training_course',
+	            'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
+	            'onchange' => 'objTrainingSessions.getDetailsAfterChangeCourse(this);objTrainingSessions.clearTrainee();'
+        		)
         ));
-		echo $this->Form->input('training_provider_id', array(
+		echo $this->Form->input('training_provider_id', 
+			array_merge(
+			$readonly, 
+			array(
 			'options' => array(),
 			'label'=>array('text'=>__('Provider'), 'class'=>'col-md-3 control-label'),
 			'onchange' => 'objTrainingSessions.selectProvider(this)',
-			 $readonly,
-			'class'=>'form-control training_provider')); 
+			'class'=>'form-control training_provider'))); 
 	 
 		if($this->request->data['TrainingSession']['sessionEditable']!='2'){
 			echo $this->FormUtility->datepicker('start_date', $startDate);
 			echo $this->FormUtility->datepicker('end_date', $endDate);
 		}else{
-			echo $this->Form->input('start_date', array('type'=>'text', $readonly));
-			echo $this->Form->input('end_date', array('type'=>'text', $readonly));
+			echo $this->Form->input('start_date', array_merge($readonly, array('type'=>'text')));
+			echo $this->Form->input('end_date', array_merge($readonly, array('type'=>'text')));
 		}
-		echo $this->Form->input('area_id', array('options'=>$areaOptions, 'empty'=>__('--Select--'), $readonly));
-	 	echo $this->Form->input('location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'class'=>'form-control location', 'url'=>'Training/ajax_find_location/', 'placeholder' => __('Location'), $readonly));
-    	echo $this->Form->input('comments', array('label'=>array('text'=>__('Comments'), 'class'=>'col-md-3 control-label'),'type'=>'textarea', $readonly));
+		echo $this->Form->input('area_id', array_merge($readonly, array('options'=>$areaOptions, 'empty'=>__('--Select--'))));
+	 	echo $this->Form->input('location', array_merge($readonly, array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'class'=>'form-control location', 'url'=>'Training/ajax_find_location/', 'placeholder' => __('Location'))));
+    	echo $this->Form->input('comments', array_merge($readonly, array('label'=>array('text'=>__('Comments'), 'class'=>'col-md-3 control-label'),'type'=>'textarea')));
     ?>
 
 	 <div class="row form-group" style="min-height:45px;">
@@ -174,8 +179,14 @@ else{
 					<div class="row form-group">
 						<div id="divUploadMsg" class="hide error-message"></div>
 					</div>
+					<?php
+						$pullCss = 'pull-left';
+					   	if($lang_dir=='rtl'){
+			               $pullCss = 'pull-right';
+			            }
+			         ?>
 				 	<form id="frmUpload" name="frmUpload" enctype="multipart/form-data">
-						 <?php echo $this->Form->input('upload_file', array('name'=>'upload_file', 'type'=>'file', 'label'=>false,'class'=>'form-control pull-left', 'style'=>'width:200px;', 'div'=>'row form-group', 'between'=>'', 'after'=>'<a href="javascript: void(0)" onclick="objTrainingSessions.processUploadTrainee(this)" class="btn_save btn_right pull-left">'.__("Upload").'</a><a onclick="objTrainingSessions.uploadTrainee(this)" href="javascript: void(0)" class="btn_cancel btn_left pull-left">'.__('Cancel').'</a>')); ?>
+						 <?php echo $this->Form->input('upload_file', array('name'=>'upload_file', 'type'=>'file', 'label'=>false,'class'=>'form-control '. $pullCss, 'style'=>'width:200px;', 'div'=>'row form-group', 'between'=>'', 'after'=>'<a href="javascript: void(0)" onclick="objTrainingSessions.processUploadTrainee(this)" class="btn_save btn_right ' .$pullCss.'">'.__("Upload").'</a><a onclick="objTrainingSessions.uploadTrainee(this)" href="javascript: void(0)" class="btn_cancel btn_left ' .$pullCss.'">'.__('Cancel').'</a>')); ?>
 					</form>
 				</div>
 				<a class="void icon_plus" onclick="objTrainingSessions.uploadTrainee(this)" href="javascript: void(0)"><?php echo __('Upload Trainee');?></a>

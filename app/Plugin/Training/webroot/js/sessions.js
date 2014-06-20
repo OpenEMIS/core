@@ -149,10 +149,14 @@ var objTrainingSessions = {
         $("#divUploadMsg").addClass('hide');
 
         var trainingCourseId = $('.training_course').val();
+        $('.training_course').removeClass('form-error');
         $('.training_course').parent().parent().find('.error-message').remove();
+        $('.training_course').parent().parent().removeClass('error');
         if(trainingCourseId==""){
             $("html, body").animate({ scrollTop: 0 }, "fast");
             $('.training_course').parent().parent().append('<div class="error-message">Please select a valid Course.</div>');
+            $('.training_course').parent().parent().addClass('error');
+            $('.training_course').addClass('form-error');
             return false;
         }
 
