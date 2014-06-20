@@ -130,8 +130,7 @@ $this->start('contentBody'); ?>
 			foreach($trainingCourseExperiences as $val){
 				$years = floor(intval($val['TrainingCourseExperience']['months'])/12);
 				$months = intval($val['TrainingCourseExperience']['months']) - ($years*12);
-
-				echo $years . ' ' . __('Year(s)') . ', ' . $months . ' ' . __('Month(s)') . '<br />';
+				echo $years.$this->TrainingUtility->plural($years, 'Year', 'Years').', '.$months.$this->TrainingUtility->plural($months, 'Month', 'Months');
 			}
 		}else{
 			echo "-";
