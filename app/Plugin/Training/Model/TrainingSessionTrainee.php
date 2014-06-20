@@ -5,7 +5,7 @@ class TrainingSessionTrainee extends TrainingAppModel {
 			'className' => 'TrainingSession',
 			'foreignKey' => 'training_session_id'
 		),
-		'Staff'
+		'Staff.Staff'
 	);
 
 	public $hasMany = array(
