@@ -60,6 +60,17 @@ echo $this->Form->create('Student', array(
 	));
 	?>
 </div>
+<div class="row">
+	<?php
+	echo $this->Form->input('student_status_id', array(
+		'id' => 'StudentStatusId',
+		'class' => 'search_select form-control',
+	//	'empty' => __('All Programmes'),
+		'options' => $statusOptions,
+	//	'default' => $selectedYear
+	));
+	?>
+</div>
 <?php
 $orderSort = $order==='asc' ? 'up' : 'down';
 echo $this->Form->hidden('orderBy', array('value' => $orderBy));
@@ -101,6 +112,10 @@ echo $this->Form->end();
 						<span class="left"><?php echo __('Programme'); ?></span>
 						<span class="icon_sort_<?php echo ($orderBy =='EducationProgramme.name')?$orderSort:'up'; ?>" orderBy="EducationProgramme.name"></span>
 					</th>
+					<th>
+						<span class="left"><?php echo __('Status'); ?></span>
+						<span class="icon_sort_<?php echo ($orderBy =='StudentStatus.name')?$orderSort:'up'; ?>" orderBy="StudentStatus.name"></span>
+					</th>
 				</tr>
 			</thead>
 			
@@ -117,6 +132,7 @@ echo $this->Form->end();
 					<td><?php echo $this->Html->link($idNo, array('action' => 'studentsView', $obj['Student']['id']), array('escape' => false)); ?></td>
 					<td><?php echo trim($fullName); ?></td>
 					<td><?php echo $obj['EducationProgramme']['name']; ?></td>
+					<td><?php echo $obj['StudentStatus']['name']; ?></td>
 				</tr>
 				<?php } ?>
 			</tbody>
