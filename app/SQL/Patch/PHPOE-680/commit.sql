@@ -96,7 +96,7 @@ UPDATE `batch_reports` SET `query` = 'App::import(''Model'', ''InstitutionSite''
         $data = $qbr->generateQAResultReport($data);' WHERE `batch_reports`.`id` = 3001;
 
 
-UPDATE `tst_openemisv2_demo`.`batch_reports` SET `query` = 'App::import(''Model'', ''InstitutionSite'');
+UPDATE `batch_reports` SET `query` = 'App::import(''Model'', ''InstitutionSite'');
         App::import(''Model'', ''Quality.QualityBatchReport'');
  
 $settings[''custom3LayerFormat''] = true;
