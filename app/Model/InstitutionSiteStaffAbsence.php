@@ -91,7 +91,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		return $endDate >= $startDate;
 	}
 	
-	public function getAbsenceData($institutionSiteId, $school_year_id, $startDate='', $endDate=''){
+	public function getAbsenceData($institutionSiteId, $schoolYearId, $startDate='', $endDate=''){
 		$conditions = array();
 		
 		$conditions[] = 'InstitutionSiteStaffAbsence.institution_site_id = ' . $institutionSiteId;
@@ -110,7 +110,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		}
 		
 		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$schoolYear = $SchoolYear->getSchoolYearById($school_year_id);
+		$schoolYear = $SchoolYear->getSchoolYearById($schoolYearId);
 		$conditions[] = 'YEAR(InstitutionSiteStaffAbsence.first_date_absent) = "' . $schoolYear . '"';
 		
 		$data = $this->find('all', array(
@@ -144,9 +144,9 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		return $data;
 	}
 	
-	public function getStaffAbsenceDataByMonth($staffId, $school_year_id, $monthId){
+	public function getStaffAbsenceDataByMonth($staffId, $schoolYearId, $monthId){
 		$SchoolYear = ClassRegistry::init('SchoolYear');
-		$schoolYear = $SchoolYear->getSchoolYearById($school_year_id);
+		$schoolYear = $SchoolYear->getSchoolYearById($schoolYearId);
 		
 		$conditions = array(
 			'Staff.id = ' . $staffId,
@@ -217,16 +217,16 @@ class InstitutionSiteStaffAbsence extends AppModel {
 	public function attendanceStaff($controller, $params){
 		$controller->Navigation->addCrumb('Attendance - Staff');
 
-		$yearList = $controller->SchoolYear->getYearList();
+		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
 		//pr($yearList);
-		$currentYearId = $controller->SchoolYear->getSchoolYearId(date('Y'));
+		
 		if (isset($controller->params['pass'][0])) {
 			$yearId = $controller->params['pass'][0];
 			if (!array_key_exists($yearId, $yearList)) {
-                $yearId = $currentYearId;
+                $yearId = key($yearList);
             }
 		}else{
-			$yearId = $currentYearId;
+			$yearId = key($yearList);
 		}
 		
 		$weekList = $controller->getWeekListByYearId($yearId);
@@ -248,7 +248,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$header = $controller->generateAttendanceHeader($startDate, $endDate);
 		$weekDayIndex = $controller->generateAttendanceWeekDayIndex($startDate, $endDate);
 		
-		$absenceData = $this->getAbsenceData($controller->institutionSiteId, $yearId, $startDate, $endDate);
+		$absenceData = $this->getAbsenceData($controller->Session->read('InstitutionSite.id'), $yearId, $startDate, $endDate);
 		$absenceCheckList = array();
 		foreach($absenceData AS $absenceUnit){
 			$absenceStaff = $absenceUnit['Staff'];
@@ -273,9 +273,9 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			}
 		}
 		
-		$yearName = $controller->SchoolYear->getSchoolYearById($yearId);
+		$yearName = ClassRegistry::init('SchoolYear')->getSchoolYearById($yearId);
 		
-		$staffList = $controller->InstitutionSiteStaff->getStaffByInstitutionSite($controller->institutionSiteId, $startDate, $endDate);
+		$staffList = $controller->InstitutionSiteStaff->getStaffByInstitutionSite($controller->Session->read('InstitutionSite.id'), $startDate, $endDate);
 		if(empty($staffList)){
 			$controller->Message->alert('institutionSiteAttendance.no_staff');
 		}
@@ -286,16 +286,16 @@ class InstitutionSiteStaffAbsence extends AppModel {
 	public function attendanceStaffAbsence($controller, $params){
 		$controller->Navigation->addCrumb('Absence - Staff');
 		
-		$yearList = $controller->SchoolYear->getYearList();
+		$yearList = ClassRegistry::init('SchoolYear')->getYearList();
 		//pr($yearList);
-		$currentYearId = $controller->SchoolYear->getSchoolYearId(date('Y'));
+		
 		if (isset($controller->params['pass'][0])) {
 			$yearId = $controller->params['pass'][0];
 			if (!array_key_exists($yearId, $yearList)) {
-                $yearId = $currentYearId;
+                $yearId = key($yearList);
             }
 		}else{
-			$yearId = $currentYearId;
+			$yearId = key($yearList);
 		}
 		//pr($yearId);
 		
@@ -316,7 +316,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$startDate = $startEndDates['start_date'];
 		$endDate = $startEndDates['end_date'];
 		
-		$data = $this->getAbsenceData($controller->institutionSiteId, $yearId, $startDate, $endDate);
+		$data = $this->getAbsenceData($controller->Session->read('InstitutionSite.id'), $yearId, $startDate, $endDate);
 		if(empty($data)){
 			$controller->Message->alert('institutionSiteAttendance.no_data');
 		}
@@ -344,12 +344,12 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			$absenceData['staff_id'] = $absenceData['hidden_staff_id'];
 			unset($absenceData['hidden_staff_id']);
 			
-			$absenceData['institution_site_id'] = $controller->institutionSiteId;
+			$absenceData['institution_site_id'] = $controller->Session->read('InstitutionSite.id');
 			
 			$firstDateAbsent = $absenceData['first_date_absent'];
 			$firstDateAbsentData = new DateTime($firstDateAbsent);
 			$firstDateYear = $firstDateAbsentData->format('Y');
-			$firstDateYearId = $controller->SchoolYear->getSchoolYearId($firstDateYear);
+			$firstDateYearId = ClassRegistry::init('SchoolYear')->getSchoolYearId($firstDateYear);
 			
 			if($absenceData['full_day_absent'] == 'Yes'){
 				$absenceData['start_time_absent'] = '';
@@ -387,7 +387,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 		$this->render = false;
         $search = $controller->params->query['term'];
 		
-		$result = $controller->InstitutionSiteStaff->getAutoCompleteList($search, $controller->institutionSiteId);
+		$result = $controller->InstitutionSiteStaff->getAutoCompleteList($search, $controller->Session->read('InstitutionSite.id'));
         
 		//$result = array();
         return json_encode($result);
@@ -426,7 +426,7 @@ class InstitutionSiteStaffAbsence extends AppModel {
 			$firstDateAbsent = $absenceData['first_date_absent'];
 			$firstDateAbsentData = new DateTime($firstDateAbsent);
 			$firstDateYear = $firstDateAbsentData->format('Y');
-			$firstDateYearId = $controller->SchoolYear->getSchoolYearId($firstDateYear);
+			$firstDateYearId = ClassRegistry::init('SchoolYear')->getSchoolYearId($firstDateYear);
 			
 			if ($this->save($absenceData, array('validate' => 'only'))) {
 				if($this->save($absenceData)){
