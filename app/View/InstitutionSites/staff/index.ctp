@@ -64,7 +64,7 @@ echo $this->Form->end();
 					</th>
 					<th style="width:120px;">
 						<span class="left"><?php echo __('Position'); ?></span>
-						<span class="icon_sort_<?php echo ($orderBy == 'StaffCategory.name') ? $orderSort : 'up'; ?>" orderBy="StaffCategory.name"></span>
+						<span class="icon_sort_<?php echo ($orderBy == 'StaffPositionTitle.name') ? $orderSort : 'up'; ?>" orderBy="StaffPositionTitle.name"></span>
 					</th>
 				</tr>
 			</thead>

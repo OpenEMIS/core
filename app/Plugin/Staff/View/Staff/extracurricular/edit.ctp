@@ -1,5 +1,4 @@
 <?php
-
 echo $this->Html->css('../js/plugins/datepicker/css/datepicker', 'stylesheet', array('inline' => false));
 echo $this->Html->css('jquery-ui.min', 'stylesheet', array('inline' => false));
 echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
@@ -18,14 +17,8 @@ $formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->p
 echo $this->Form->create($model, $formOptions);
 
 echo $this->Form->hidden('id');
-echo $this->Form->input('school_year_id', array(
-    'options' => $yearOptions,
-    'selected' => $yearId)
-);
-echo $this->Form->input('extracurricular_type_id', array(
-    'options' => $typeOptions
-        )
-);
+echo $this->Form->input('school_year_id', array('options' => $yearOptions, 'selected' => $yearId));
+echo $this->Form->input('extracurricular_type_id', array('options' => $typeOptions));
 echo $this->Form->input('name', array('class' => 'form-control autoComplete', 'label' => array('text'=> $this->Label->get('general.title'), 'class'=>'col-md-3 control-label'), 'url' => 'Staff/extracurricularSearchAutoComplete'));
 echo $this->FormUtility->datepicker('start_date', array('id' => 'StartDate'));
 echo $this->FormUtility->datepicker('end_date', array('id' => 'EndDate', 'data-date' => date('d-m-Y', time() + 86400)));

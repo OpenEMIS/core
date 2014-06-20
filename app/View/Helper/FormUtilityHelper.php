@@ -73,6 +73,32 @@ class FormUtilityHelper extends AppHelper {
 		return $html;
 	}
 	
+	public function getPermissionInput($form, $fieldName, $type, $value) {
+		$options = array(
+			'id' => $type,
+			'name' => sprintf($fieldName, $type),
+			'type' => 'checkbox',
+			'value' => 1,
+			'autocomplete' => 'off',
+			'before' => '<td class="center">',
+			'after' => '</td>'
+		);
+		
+		if(is_null($value)) {
+			$options['disabled'] = 'disabled';
+		} else {
+			if($value == 1) {
+				$options['checked'] = 'checked';
+			} else if($value == 2) {
+				$options['checked'] = 'checked';
+				$options['disabled'] = 'disabled';
+			}
+		}
+		
+		$input = $form->input($type, $options);
+		return $input;
+	}
+	
 	public function datepicker($field, $options=array()) {
 		$dateFormat = 'dd-mm-yyyy';
 		$icon = '<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div>';

@@ -2855,8 +2855,5 @@ msgstr ""
 msgid "Mode Of Delivery"
 msgstr ""
 
-msgid "Generated Files"
-msgstr ""
-
 msgid "Last Updated By"
 msgstr ""

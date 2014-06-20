@@ -15,7 +15,6 @@ have received a copy of the GNU General Public License along with this program. 
 */
 
 class StaffQualification extends StaffAppModel {
-	public $useTable = "staff_qualifications";
 	public $actsAs = array('ControllerAction');
 	public $belongsTo = array(
 		'QualificationLevel',
@@ -103,7 +102,7 @@ class StaffQualification extends StaffAppModel {
 			'QualificationInstitution.name',
 			'QualificationLevel.name',
 		);
-		$data = $this->findAllByStaffId($controller->staffId, $fields);
+		$data = $this->findAllByStaffId($controller->Session->read('Staff.id'), $fields);
 		$controller->set(compact('header', 'data'));
 	}
 
@@ -122,7 +121,7 @@ class StaffQualification extends StaffAppModel {
 		
 		if(empty($data)){
 			$controller->Message->alert('general.noData');
-			return $controller->redirect(array('action'=>'membership'));
+			return $controller->redirect(array('action'=>'qualifications'));
 		}
 		
 		$controller->Session->write('StaffQualification.id', $id);
@@ -141,18 +140,16 @@ class StaffQualification extends StaffAppModel {
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 		if ($controller->request->is('get')) {
 			
-			$staffQualificationObj = $this->findById($id);//('first', array('conditions' => array('StaffQualification.id' => $staffQualificationId)));
+			$staffQualificationObj = $this->findById($id);
 
 			if (!empty($staffQualificationObj)) {
-				//$staffQualificationObj['StaffQualification']['qualification_institution'] = $institutes[$staffQualificationObj['StaffQualification']['qualification_institution_id']];
 				$controller->request->data = $staffQualificationObj;
-			   // $this->set('id', $staffQualificationId);
 			} else {
 				//$this->redirect(array('action' => 'studentsBehaviour'));
 			}
 		} else {
 			$staffQualificationData = $controller->request->data['StaffQualification'];
-			$staffQualificationData['staff_id'] = $controller->staffId;
+			$staffQualificationData['staff_id'] = $controller->Session->read('Staff.id');
 			unset($staffQualificationData['file']);
 			
 			$postFileData = $controller->request->data[$this->alias]['file'];

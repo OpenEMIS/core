@@ -1,8 +1,5 @@
 <?php
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
-echo $this->Html->css('table.old', 'stylesheet', array('inline' => false));
-
-echo $this->Html->script('security', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Roles'));
@@ -25,8 +22,7 @@ $this->start('contentBody');
 </div>
 <?php } ?>
 
-<div class="row input" style="margin-bottom: 15px;">
-	<label class="col-md-3 control-label"><?php echo __('Roles'); ?></label>
+<div class="row page-controls">
 	<div class="col-md-4">
 		<?php
 		echo $this->Form->input('security_role_id', array(
@@ -49,29 +45,29 @@ foreach($permissions as $module => $func) {
 
 <fieldset class="section_group">
 	<legend><?php echo __($module); ?></legend>
-	<div class="table">
-		<div class="table_head">
-			<div class="table_cell cell_function"><?php echo __('Function'); ?></div>
-			<div class="table_cell"><?php echo __('View'); ?></div>
-			<div class="table_cell"><?php echo __('Edit'); ?></div>
-			<div class="table_cell"><?php echo __('Add'); ?></div>
-			<div class="table_cell"><?php echo __('Delete'); ?></div>
-			<div class="table_cell"><?php echo __('Execute'); ?></div>
-		</div>
+	<table class="table table-striped table-hover table-bordered">
+		<thead>
+			<th class="cell_function"><?php echo __('Function'); ?></th>
+			<th><?php echo __('View'); ?></th>
+			<th><?php echo __('Edit'); ?></th>
+			<th><?php echo __('Add'); ?></th>
+			<th><?php echo __('Delete'); ?></th>
+			<th><?php echo __('Execute'); ?></th>
+		</thead>
 		
-		<div class="table_body">
-		<?php foreach($func as $obj) { ?>
-			<?php if($obj['visible'] == 1) { ?>
-			<div class="table_row">
-				<div class="table_cell"><?php echo __($obj['name']); ?></div>
-				<?php foreach($_operations as $op) { ?>
-				<div class="table_cell center"><?php echo $this->Utility->checkOrCrossMarker($obj[$op]>=1); ?></div>
-				<?php } ?>
-			</div>
-			<?php } ?> <!-- end if -->
-		<?php } ?> <!-- end for -->
-		</div>
-	</div>
+		<tbody>
+		<?php foreach($func as $obj) : ?>
+			<?php if($obj['visible'] == 1) : ?>
+			<tr>
+				<td><?php echo __($obj['name']); ?></td>
+				<?php foreach($_operations as $op) : ?>
+				<td class="center"><?php echo $this->Utility->checkOrCrossMarker($obj[$op]>=1); ?></td>
+				<?php endforeach; ?>
+			</tr>
+			<?php endif; ?>
+		<?php endforeach; ?>
+		</tbody>
+	</table>
 </fieldset>
 
 <?php } ?>

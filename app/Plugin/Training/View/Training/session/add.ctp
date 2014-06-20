@@ -10,8 +10,11 @@ echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __($subheader));
 $this->start('contentActions');
-if($_edit) {
-	echo $this->Html->link(__('Back'), array('action' => 'session'), array('class' => 'divider', 'id'=>'back'));
+
+echo $this->Html->link(__('Back'), array('action' => 'session'), array('class' => 'divider', 'id'=>'back'));
+
+if(empty($this->data[$modelName]['id'])){
+	echo $this->Html->link(__('Download Template'), array('action' => 'sessionDownloadTemplate'), array('class' => 'divider'));
 }
 $this->end();
 $this->start('contentBody');
@@ -46,32 +49,37 @@ else{
 }
 ?>
 	<?php 
-        echo $this->Form->input('training_course_id', array(
-            'options' => $trainingCourseOptions,
-            'label' => array('text'=>__('Course'), 'class'=>'col-md-3 control-label'),
-            'empty' => __('--Select--'),
-            $readonly,
-            'class' => 'form-control training_course',
-            'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
-            'onchange' => 'objTrainingSessions.getDetailsAfterChangeCourse(this);objTrainingSessions.clearTrainee();'
+        echo $this->Form->input('training_course_id', 
+        	array_merge(
+        		$readonly,
+        		array(
+        		'options' => $trainingCourseOptions,
+	            'label' => array('text'=>__('Course'), 'class'=>'col-md-3 control-label'),
+	            'empty' => __('--Select--'),
+	            'class' => 'form-control training_course',
+	            'url' => sprintf('%s/%s', $this->params['controller'], $this->params['action']),
+	            'onchange' => 'objTrainingSessions.getDetailsAfterChangeCourse(this);objTrainingSessions.clearTrainee();'
+        		)
         ));
-		echo $this->Form->input('training_provider_id', array(
+		echo $this->Form->input('training_provider_id', 
+			array_merge(
+			$readonly, 
+			array(
 			'options' => array(),
 			'label'=>array('text'=>__('Provider'), 'class'=>'col-md-3 control-label'),
 			'onchange' => 'objTrainingSessions.selectProvider(this)',
-			 $readonly,
-			'class'=>'form-control training_provider')); 
+			'class'=>'form-control training_provider'))); 
 	 
 		if($this->request->data['TrainingSession']['sessionEditable']!='2'){
 			echo $this->FormUtility->datepicker('start_date', $startDate);
 			echo $this->FormUtility->datepicker('end_date', $endDate);
 		}else{
-			echo $this->Form->input('start_date', array('type'=>'text', $readonly));
-			echo $this->Form->input('end_date', array('type'=>'text', $readonly));
+			echo $this->Form->input('start_date', array_merge($readonly, array('type'=>'text')));
+			echo $this->Form->input('end_date', array_merge($readonly, array('type'=>'text')));
 		}
-		echo $this->Form->input('area_id', array('options'=>$areaOptions, 'empty'=>__('--Select--'), $readonly));
-	 	echo $this->Form->input('location', array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'class'=>'form-control location', 'url'=>'Training/ajax_find_location/', 'placeholder' => __('Location'), $readonly));
-    	echo $this->Form->input('comments', array('label'=>array('text'=>__('Comments'), 'class'=>'col-md-3 control-label'),'type'=>'textarea', $readonly));
+		echo $this->Form->input('area_id', array_merge($readonly, array('options'=>$areaOptions, 'empty'=>__('--Select--'))));
+	 	echo $this->Form->input('location', array_merge($readonly, array('label'=>array('text'=>__('Location'), 'class'=>'col-md-3 control-label'), 'id' => 'searchLocation', 'class'=>'form-control location', 'url'=>'Training/ajax_find_location/', 'placeholder' => __('Location'))));
+    	echo $this->Form->input('comments', array_merge($readonly, array('label'=>array('text'=>__('Comments'), 'class'=>'col-md-3 control-label'),'type'=>'textarea')));
     ?>
 
 	 <div class="row form-group" style="min-height:45px;">
@@ -80,6 +88,7 @@ else{
 		<div class="table trainer" url="Training/ajax_find_trainer/">
 			<div class="delete-trainer" name="data[DeleteTrainer][{index}][id]"></div>
 			<table class="table_body table-striped table-hover table-bordered">
+				<tbody>
 				<?php  
 				if(isset($this->request->data['TrainingSessionTrainer']) && !empty($this->request->data['TrainingSessionTrainer'])){ ?>
 					<?php   
@@ -127,6 +136,7 @@ else{
 				$i++;
 			} ?>
 			<?php } ?>
+			</tbody>
 		</table>
 	  	<?php if($this->request->data['TrainingSession']['sessionEditable']!='2'){ ?>
 		<div class="row" style="padding-top:5px;">
@@ -153,61 +163,49 @@ else{
     <?php if($this->request->data['TrainingSession']['sessionEditable']!='0'){ ?>
 	 <div class="row form-group" style="min-height:45px;">
 		<label class="col-md-3 control-label"><?php echo __('Trainees'); ?></label>
-		<div class="col-md-5">
+		<div class="col-md-7">
 		<div class="table trainee"  url="Training/ajax_find_trainee/">
 			<div class="delete-trainee" name="data[DeleteTrainee][{index}][id]"></div>
-			<table class="table_body table-striped table-hover table-bordered">
-				<?php 
-				if(isset($this->request->data['TrainingSessionTrainee']) && !empty($this->request->data['TrainingSessionTrainee'])){ ?>
-					<?php 
-					$i = 0;  
-					foreach($this->request->data['TrainingSessionTrainee'] as $key=>$val){?>
-					<?php if(!empty($val['staff_id'])){ ?>
-					<tr class="table_row " row-id="<?php echo $i;?>">
-						<td class="table_cell cell_description" style="width:90%">
-							<div class="input_wrapper">
-						 	<div class="training-course-title-<?php echo $i;?>">
-								<?php echo $val['first_name'] . ', ' . $val['last_name'];?>
-							</div>
-							<?php if(isset($val['id'])){ ?>
-							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.id', array('value'=>$val['id'], 
-							'class' => 'control-id')); ?>
-							<?php } ?>
-							<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.staff_id', array('class' => 'trainee-id-'.$i,
-								'value'=>$val['staff_id'])); ?>
-								<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.first_name', array('value'=>$val['first_name'])); ?>
-								<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.last_name', array('value'=>$val['last_name'])); ?>
-								<?php echo $this->Form->hidden('TrainingSessionTrainee.' . $i . '.identification_validate', array('class' => 'trainee-validate-'.$i . ' validate-trainee', 'value'=>$val['staff_id'])); ?>
-							</div>
-					    </td>
-					 
-						<td class="table_cell cell_delete">
-					    	<span class="icon_delete" title="Delete" onclick="objTrainingSessions.deleteTrainee(this)"></span>
-					    </td>
-					</tr>
-					<?php } ?>
-			<?php 
-				$i++;
-			} ?>
-			<?php } ?>
-		</table>
-	</div>
+			<table class="table_body table-striped table-hover table-bordered" style="width:270px;">
+				<?php echo $this->element('Training.added_trainee');?>
+			</table>
+		</div>
 
-	<div class="row"><a class="void icon_plus" onclick="objTrainingSessions.addTrainee(this)" url="Training/ajax_add_trainee"  href="javascript: void(0)"><?php echo __('Add Trainee');?></a></div>
+<?php echo $this->Form->end(); ?>
+	<div class="row">
 
+		<?php if(empty($this->data[$modelName]['id'])){ ?>
+				<div id="divUpload" class="hide">
+					<div class="row form-group">
+						<div id="divUploadMsg" class="hide error-message"></div>
+					</div>
+					<?php
+						$pullCss = 'pull-left';
+					   	if($lang_dir=='rtl'){
+			               $pullCss = 'pull-right';
+			            }
+			         ?>
+				 	<form id="frmUpload" name="frmUpload" enctype="multipart/form-data">
+						 <?php echo $this->Form->input('upload_file', array('name'=>'upload_file', 'type'=>'file', 'label'=>false,'class'=>'form-control '. $pullCss, 'style'=>'width:200px;', 'div'=>'row form-group', 'between'=>'', 'after'=>'<a href="javascript: void(0)" onclick="objTrainingSessions.processUploadTrainee(this)" class="btn_save btn_right ' .$pullCss.'">'.__("Upload").'</a><a onclick="objTrainingSessions.uploadTrainee(this)" href="javascript: void(0)" class="btn_cancel btn_left ' .$pullCss.'">'.__('Cancel').'</a>')); ?>
+					</form>
+				</div>
+				<a class="void icon_plus" onclick="objTrainingSessions.uploadTrainee(this)" href="javascript: void(0)"><?php echo __('Upload Trainee');?></a>
+		<?php
+			}
+		?>
+		<a class="void icon_plus" onclick="objTrainingSessions.addTrainee(this)" url="Training/ajax_add_trainee"  href="javascript: void(0)"><?php echo __('Add Trainee');?></a></div>
 	</div>
 	<?php } ?>
 </div>
 <div class="controls view_controls">
 	<?php if($this->request->data['TrainingSession']['sessionEditable']!='0'){ ?>
-	<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="js:if(objTrainingSessions.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
+	<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
 	<?php if($this->request->data['TrainingSession']['sessionEditable']=='1'){ ?>
-	<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="js:if(objTrainingSessions.errorFlag() && Config.checkValidate()){ return true; }else{ return false; }"/>
+	<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
 	<?php } ?>
 	<?php } ?>
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'session'), array('class' => 'btn_cancel btn_left')); ?>
 </div>
 	
-<?php echo $this->Form->end(); ?>
 
 <?php $this->end(); ?>	
