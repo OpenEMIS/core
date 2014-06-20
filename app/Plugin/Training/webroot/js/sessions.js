@@ -367,9 +367,18 @@ var objTrainingSessions = {
     },
 
     save: function(obj) {
-
        if(objTrainingSessions.errorFlag()){ 
-            return true;
+            var status = 1;
+            if(obj.name=="submitForApproval"){
+                status = 2;
+            }
+            if( $('#TrainingSessionSessionAddForm').length )  {
+                $('.training-status').val(status);
+                $('#TrainingSessionSessionAddForm').submit();
+            }else{
+                $('.training-status').val(status);
+                $('#TrainingSessionSessionEditForm').submit();
+            }
         }else{ 
             return false; 
         }
