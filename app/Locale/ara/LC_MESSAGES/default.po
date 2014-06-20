@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Openemis Version 1.0\n"
 "POT-Creation-Date: 2013-01-17 02:33+0000\n"
-"PO-Revision-Date: 2014-06-19 17:08+0800\n"
+"PO-Revision-Date: 2014-06-20 09:10+0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -3402,25 +3402,25 @@ msgstr "يرجى إدخال رقم صالح OpenEMIS"
 # Dashboard
 # ###########################################################################
 msgid "Dashboards"
-msgstr "لوحات"
+msgstr "لوحات القياس"
 
 msgid "Dashboard Reports"
-msgstr "تقارير وحة القيادة"
+msgstr "لوحات القياس  تقارير"
 
 msgid "ECE QA Dashboard"
-msgstr "ECE QA لوحة القيادة"
+msgstr "لوحة قياس الطفولة المبكرة"
 
 msgid "Early Childhood Education Quality Assurance Data"
-msgstr "التعليم في مرحلة الطفولة المبكرة لضمان جودة البيانات"
+msgstr "بيانات ضمان جودة مرحلة تعليم الطفولة المبكرة"
 
 msgid "Early Childhood Education Quality Assurance"
-msgstr "الطفولة المبكرة ضمان جودة التعليم"
+msgstr "ضمان جودة تعليم الطفولة البكرة"
 
 msgid "Geographical Level"
-msgstr "المستوى الجغرافي"
+msgstr "التوزيع الجغرافي "
 
 msgid "Administrative and Technical Aspects"
-msgstr "الجوانب الإدارية والفنية"
+msgstr "المجالات الإدارية والفنية"
 
 msgid "Trends"
 msgstr "اتجاه"
@@ -3429,19 +3429,19 @@ msgid "Administrative Domains"
 msgstr "المجالات الإدارية"
 
 msgid "Technical Domains"
-msgstr "المجالات التقنية"
+msgstr "المجالات الفنية"
 
 msgid "Distribution of Both Aspects"
-msgstr "توزيع كل الجوانب"
+msgstr "توزيع مجالات التقييم"
 
 msgid "Scatterplot of Administrative and Technical and Aspects"
-msgstr "مخطط التشتت من الجوانب الإدارية والفنية و"
+msgstr "تشتت المجالات الإدارية والفنية"
 
 msgid "Appointment"
 msgstr "توظيف"
 
 msgid "Report - Dashboard"
-msgstr "تقرير - لوحة القيادة"
+msgstr "تقرير لوحة القياس"
 
 msgid "Owned"
 msgstr "ملك"
@@ -3450,7 +3450,7 @@ msgid "Rented"
 msgstr "مستأجر"
 
 msgid "Both"
-msgstr "كلا"
+msgstr "كلاهما"
 
 msgid "Permanent"
 msgstr "دائم"
@@ -3459,7 +3459,7 @@ msgid "Contract"
 msgstr "عقد"
 
 msgid "Urban"
-msgstr "الحضرية"
+msgstr "مدينة"
 
 msgid "Rural"
 msgstr "قرية"
@@ -3468,7 +3468,7 @@ msgid "Administrative"
 msgstr "إداري"
 
 msgid "Technical"
-msgstr "تقني"
+msgstr "فني"
 
 msgid "Download CSV"
 msgstr "تحميل CSV"
