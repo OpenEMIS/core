@@ -135,13 +135,13 @@ var objTrainingCourses = {
         objTrainingCourses.validateTargetPopulation();
     },
 
-   validatePrerequisite: function() {
+   validateCoursePrerequisite: function() {
           var val = new Array();
           var c = 0;
-          $("#prerequisite_message").remove();
-          $('.validate-prerequisite').each(function(i, obj) {
+          $("#course_prerequisite_message").remove();
+          $('.validate-course-prerequisite').each(function(i, obj) {
              if(in_array(obj.value, val)){
-                $('.prerequisite').prepend('<div id="prerequisite_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Prerequisite</div>');
+                $('.course_prerequisite').prepend('<div id="course_prerequisite_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Course Prerequisite</div>');
                 return false;
              }else{
                 val[c] = obj.value;
@@ -151,17 +151,17 @@ var objTrainingCourses = {
           
     },
 
-    addPrerequisite: function(obj) {
-        var table = $('.prerequisite');
-        var index = table.find('.table_row').length + $('.delete-prerequisite input').length;
+    addCoursePrerequisite: function(obj) {
+        var table = $('.course_prerequisite');
+        var index = table.find('.table_row').length + $('.delete-course_prerequisite input').length;
         var maskId;
         var params = {index: index};
         var success = function(data, status) {
             var callback = function() {
                 table.find('.table_body tbody').append(data);
-                var element = '#searchPrerequisite' + index;
+                var element = '#searchCoursePrerequisite' + index;
                 var url = getRootURL() + table.attr('url') + '/' + index;
-                objTrainingCourses.attachAutoComplete(element, url, objTrainingCourses.selectPrerequisite);
+                objTrainingCourses.attachAutoComplete(element, url, objTrainingCourses.selectCoursePrerequisite);
             };
             $.unmask({id: maskId, callback: callback});
         };
@@ -170,12 +170,12 @@ var objTrainingCourses = {
             dataType: 'text',
             url: getRootURL() + $(obj).attr('url'),
             data: params,
-            beforeSend: function (jqXHR) { maskId = $.mask({parent: ".row_prerequisite"}); },
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: ".row_course_prerequisite"}); },
             success: success
         });
     },
 
-    selectPrerequisite: function(event, ui) {
+    selectCoursePrerequisite: function(event, ui) {
         var val = ui.item.value;
         var element;
         for(var i in val) {
@@ -186,15 +186,15 @@ var objTrainingCourses = {
                 element.html(val[i]);
             }
         }
-        objTrainingCourses.validatePrerequisite();
+        objTrainingCourses.validateCoursePrerequisite();
         return false;
     },
     
-    deletePrerequisite: function(obj) {
+    deleteCoursePrerequisite: function(obj) {
         var row = $(obj).closest('.table_row');
         var id = row.attr('row-id');
         if(id != undefined) {
-            var div = $('.delete-prerequisite');
+            var div = $('.delete-course_prerequisite');
             var index = div.find('input').length;
             var name = div.attr('name').replace('{index}', index);
             var controlId = $('.control-id');
@@ -202,7 +202,7 @@ var objTrainingCourses = {
             div.append(input);
         }
         row.remove();
-        objTrainingCourses.validatePrerequisite();
+        objTrainingCourses.validateCoursePrerequisite();
     },
 
 
@@ -261,8 +261,7 @@ var objTrainingCourses = {
           
     },
 
-    
-   validateResultType: function() {
+    validateResultType: function() {
           var val = new Array();
           var c = 0;
           $("#result_type_message").remove();
@@ -299,7 +298,6 @@ var objTrainingCourses = {
             success: success
         });
     },
-
     
     deleteResultType: function(obj) {
         var row = $(obj).closest('.table_row');
@@ -315,6 +313,127 @@ var objTrainingCourses = {
         }
         row.remove();
         objTrainingCourses.validateResultType();
+    },
+
+   validateSpecialisation: function() {
+          var val = new Array();
+          var c = 0;
+          $("#specialisation_message").remove();
+          $('.validate-specialisation').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.specialisation').prepend('<div id="specialisation_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Specialisation</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    addSpecialisation: function(obj) {
+        var table = $('.specialisation');
+        var index = table.find('.table_row').length + $('.delete-specialisation input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body tbody').append(data);
+                objTrainingCourses.validateSpecialisation();
+            };
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
+    
+    deleteSpecialisation: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-specialisation');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+        }
+        row.remove();
+        objTrainingCourses.validateSpecialisation();
+    },
+
+    validateExperience: function() {
+          var val = new Array();
+          var c = 0;
+          $("#experience_message").remove();
+          $('.validate-experience').each(function(i, obj) {
+             if(in_array(obj.value, val)){
+                $('.experience').prepend('<div id="experience_message" class="error-message custom-file-msg" style="width:230px;margin:0;">Duplicate Experience</div>');
+                return false;
+             }else{
+                val[c] = obj.value;
+             }
+             c++;
+          });
+          
+    },
+
+    addExperience: function(obj) {
+        var table = $('.experience');
+        var index = table.find('.table_row').length + $('.delete-experience input').length;
+        var maskId;
+        var params = {index: index};
+        var success = function(data, status) {
+            var callback = function() {
+                table.find('.table_body tbody').append(data);
+                 $(".months-selection-"+index).on("change", function(event){
+                       objTrainingCourses.autoFill(index);
+                });
+            };
+            $('.add_experience').addClass('hide');
+            $.unmask({id: maskId, callback: callback});
+        };
+        $.ajax({
+            type: 'GET',
+            dataType: 'text',
+            url: getRootURL() + $(obj).attr('url'),
+            data: params,
+            beforeSend: function (jqXHR) { maskId = $.mask({parent: table}); },
+            success: success
+        });
+    },
+
+    autoFill:function(index){
+       var month = parseInt($('#searchExperienceMonth'+index).val());
+       var year = parseInt($('#searchExperienceYear'+index).val());
+       var totalMonth = (year*12) + month;
+
+       $('.experience-validate-'+index).val(totalMonth);
+       objTrainingCourses.validateExperience();
+    },
+    
+    deleteExperience: function(obj) {
+        var row = $(obj).closest('.table_row');
+        var id = row.attr('row-id');
+
+        if(id != undefined) {
+            var div = $('.delete-experience');
+            var index = div.find('input').length;
+            var name = div.attr('name').replace('{index}', index);
+            var controlId = $('.control-id');
+            var input = row.find(controlId).attr({name: name});
+            div.append(input);
+            $('.add_experience').removeClass('hide');
+        }
+        row.remove();
+        objTrainingCourses.validateExperience();
     },
 
     attachAutoComplete: function(element, url, callback) {
