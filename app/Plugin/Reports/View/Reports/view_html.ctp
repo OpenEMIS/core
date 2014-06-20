@@ -15,64 +15,168 @@
  * @since         CakePHP(tm) v 0.10.0.1076
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
-
 //pr($params);
+//phpinfo();die;
 
-$row = 1;
 if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
-	?>
-	<div class="table reportHtml">
-		<?php 
-		while (($data = fgetcsv($handle, 0, ",")) !== FALSE) {
-			$num = count($data);
-			if ($row === 1) {
-				?>
-				<div class="table_head">
-					<div class="table_row">
-						<?php 
-						for ($c = 0; $c < $num; $c++) {
-							echo '<div class="table_cell">' . $data[$c] . '</div>';
-						}
-						?>
-					</div>
-				</div>
-				<?php
-			} else if ($row === 2) {
-				?>
-				<div class="table_body">
-					<div class="table_row">
-						<?php 
-						for ($c = 0; $c < $num-1; $c++) {
-							echo '<div class="table_cell">' . $data[$c] . '</div>';
-						}
-						?>
-					</div>
-					<?php 
-				} else {
-					?>
-					<div class="table_row">
-						<?php 
-						for ($c = 0; $c < $num-1; $c++) {
-							echo '<div class="table_cell">' . $data[$c] . '</div>';
-						}
-						?>
-					</div>
-					<?php 
-				}
-				
-				$row++;
+	//$test = file_get_contents($params['path'] . $params['id']);
+	//$test_array = explode("\n", $test);
+	//print_r($test_array);
+	//die;
+	//$fp = file($params['path'] . $params['id']);
+	//$totalRows = count($fp);
+	$filePath = $params['path'] . $params['id'];
+
+	$cmd = 'wc -l '; // shell command, doesn't work in windows
+	$result = trim(exec($cmd . $filePath));
+	$resultArray = explode(' ', $result);
+	$totalRows = $resultArray[0] - 2;
+	//pr($totalRows);
+
+	$file = new SplFileObject($params['path'] . $params['id']);
+
+	$firstRow = 0;
+	$file->seek($firstRow);
+	// rows per page
+	$rowsPerPage = 100;
+
+	$arrHeader = explode(',', $file->current());
+
+	$fileName = $this->params->pass[0];
+
+	if (isset($this->params->pass[1]) && intval($this->params->pass[1]) !== 0) {
+		$currentPage = intval($this->params->pass[1]);
+	} else {
+		$currentPage = 1;
+	}
+	
+	$totalPages = ceil($totalRows / $rowsPerPage);
+	
+	if($currentPage > $totalPages){
+		$currentPage = 1;
+	}
+
+	$dataRowStart = ($currentPage - 1) * $rowsPerPage + 1;
+
+	// generate pagination
+
+	$paginationStr = '';
+	$paginationStr .= '<div class="row">';
+	$paginationStr .= '<ul id="pagination">';
+
+	//$numOfLinkFront = 10;
+
+	if ($currentPage > 1) {
+		$paginationStr .= '<li class="">' . $this->Html->link(__('Previous'), array($fileName, ($currentPage - 1)), array('class' => '')) . '</li>';
+	}
+
+	if ($currentPage < 6) {
+		for ($i = 1; $i < 6; $i++) {
+			if($currentPage == $i){
+				$paginationStr .= '<li class="current">' . $i . '</li>';
+			}else{
+				$paginationStr .= '<li class="">' . $this->Html->link($i, array($fileName, $i), array('class' => '')) . '</li>';
+			}
+		}
+		
+		$paginationStr .= '<li><span class="ellipsis">...</span></li>';
+		
+		$paginationStr .= '<li class="">' . $this->Html->link($totalPages, array($fileName, $totalPages), array('class' => '')) . '</li>';
+	}else{
+		for ($i = 1; $i < 3; $i++) {
+			if($currentPage == $i){
+				$paginationStr .= '<li class="current">' . $i . '</li>';
+			}else{
+				$paginationStr .= '<li class="">' . $this->Html->link($i, array($fileName, $i), array('class' => '')) . '</li>';
+			}
+		}
+		
+		$paginationStr .= '<li><span class="ellipsis">...</span></li>';
+		
+		if($currentPage < ($totalPages-3)){
+
+			$paginationStr .= '<li class="">' . $this->Html->link($currentPage-2, array($fileName, ($currentPage-2)), array('class' => '')) . '</li>';
+			$paginationStr .= '<li class="">' . $this->Html->link($currentPage-1, array($fileName, ($currentPage-1)), array('class' => '')) . '</li>';
+			$paginationStr .= '<li class="current">' . $currentPage . '</li>';
+			$paginationStr .= '<li class="">' . $this->Html->link($currentPage+1, array($fileName, ($currentPage+1)), array('class' => '')) . '</li>';
+			$paginationStr .= '<li class="">' . $this->Html->link($currentPage+2, array($fileName, ($currentPage+2)), array('class' => '')) . '</li>';
+
+			$paginationStr .= '<li><span class="ellipsis">...</span></li>';
+			
+			$paginationStr .= '<li class="">' . $this->Html->link($totalPages, array($fileName, $totalPages), array('class' => '')) . '</li>';
+		}else if($currentPage >= ($totalPages-3)){
+			$paginationStr .= '<li class="">' . $this->Html->link($currentPage-3, array($fileName, ($currentPage-3)), array('class' => '')) . '</li>';
+			$paginationStr .= '<li class="">' . $this->Html->link($currentPage-2, array($fileName, ($currentPage-2)), array('class' => '')) . '</li>';
+			$paginationStr .= '<li class="">' . $this->Html->link($currentPage-1, array($fileName, ($currentPage-1)), array('class' => '')) . '</li>';
+			$paginationStr .= '<li class="current">' . $currentPage . '</li>';
+			if(($currentPage + 1) < $totalPages){
+				$paginationStr .= '<li class="">' . $this->Html->link($currentPage+1, array($fileName, ($currentPage+1)), array('class' => '')) . '</li>';
 			}
 			
-			fclose($handle);
+			if(($currentPage + 2) < $totalPages){
+				$paginationStr .= '<li class="">' . $this->Html->link($currentPage+2, array($fileName, ($currentPage+2)), array('class' => '')) . '</li>';
+			}
 			
-			if($row > 1){
+			if(($currentPage + 3) < $totalPages){
+				$paginationStr .= '<li class="">' . $this->Html->link($currentPage+3, array($fileName, ($currentPage+3)), array('class' => '')) . '</li>';
+			}
+		}
+	}
+
+	if($currentPage < ($totalPages - 1)){
+		$paginationStr .= '<li class="">' . $this->Html->link(__('Next'), array($fileName, ($currentPage + 1)), array('class' => '')) . '</li>';
+	}
+
+	$paginationStr .= '</ul>';
+	$paginationStr .= '</div>';
+
+	//
+
+	echo $paginationStr;
+	?>
+	<table class="table reportHtml">
+		<thead class="table_head">
+			<tr>
+				<?php
+				foreach ($arrHeader AS $column) {
+					?>
+					<th><?php echo $column; ?></th>
+					<?php
+				}
 				?>
-					</div>
-				<?php 
+			</tr>
+		</thead>
+		<tbody>
+			<?php
+			$file->seek($dataRowStart);
+
+			for ($i = 0; $i < $rowsPerPage; $i++) {
+				$arrCurrentRow = explode(',', $file->current());
+				if (!empty($arrCurrentRow)) {
+					array_pop($arrCurrentRow);
+					?>
+					<tr>
+						<?php
+						foreach ($arrCurrentRow AS $column) {
+							?>
+							<td><?php echo $column; ?></td>
+							<?php
+						}
+						?>
+					</tr>
+					<?php
+				}
+				?>
+
+				<?php
+				$file->seek(++$dataRowStart);
 			}
 			?>
-	</div>
+		</tbody>
+	</table>
 	<?php 
+	echo $paginationStr;
+	fclose($handle);
 } else {
 	echo 'Error. Failed to open file.';
 }
