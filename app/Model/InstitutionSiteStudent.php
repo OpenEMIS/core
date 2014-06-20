@@ -371,7 +371,7 @@ class InstitutionSiteStudent extends AppModel {
 		$this->paginateConditions($conditions);
 		$this->unbindModel(array('belongsTo' => array('Student', 'InstitutionSiteProgramme')));
 		$data = $this->find('all', array(
-			'fields' => array('Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name', 'EducationProgramme.name'),
+			'fields' => array('Student.id', 'Student.identification_no', 'Student.first_name', 'Student.middle_name', 'Student.last_name', 'Student.preferred_name', 'EducationProgramme.name', 'StudentStatus.name'),
 			'joins' => $this->paginateJoins($conditions),
 			'conditions' => $conditions,
 			'limit' => $limit,
@@ -488,23 +488,28 @@ class InstitutionSiteStudent extends AppModel {
 		$order = 'asc';
 		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
 		$programmeOptions = $this->InstitutionSiteProgramme->getProgrammeOptions($controller->institutionSiteId);
+		$statusOptions = $this->StudentStatus->findList(true);
+		
 		$prefix = 'InstitutionSiteStudent.Search.%s';
 		if ($controller->request->is('post')) {
 			$searchField = Sanitize::escape(trim($controller->data['Student']['SearchField']));
 			$selectedYear = $controller->request->data['Student']['school_year'];
 			$selectedProgramme = $controller->request->data['Student']['education_programme_id'];
+			$selectedStatus = $controller->request->data['Student']['student_status_id'];
 			$orderBy = $controller->request->data['Student']['orderBy'];
 			$order = $controller->request->data['Student']['order'];
 
 			$controller->Session->write(sprintf($prefix, 'SearchField'), $searchField);
 			$controller->Session->write(sprintf($prefix, 'SchoolYear'), $selectedYear);
 			$controller->Session->write(sprintf($prefix, 'EducationProgrammeId'), $selectedProgramme);
+			$controller->Session->write(sprintf($prefix, 'StudentStatusId'), $selectedStatus);
 			$controller->Session->write(sprintf($prefix, 'order'), $order);
 			$controller->Session->write(sprintf($prefix, 'orderBy'), $orderBy);
 		} else {
 			$searchField = $controller->Session->read(sprintf($prefix, 'SearchField'));
 			$selectedYear = $controller->Session->read(sprintf($prefix, 'SchoolYear'));
 			$selectedProgramme = $controller->Session->read(sprintf($prefix, 'EducationProgrammeId'));
+			$selectedStatus = $controller->Session->read(sprintf($prefix, 'StudentStatusId'));
 
 			if ($controller->Session->check(sprintf($prefix, 'orderBy'))) {
 				$orderBy = $controller->Session->read(sprintf($prefix, 'orderBy'));
@@ -523,6 +528,11 @@ class InstitutionSiteStudent extends AppModel {
 			$conditions['education_programme_id'] = $selectedProgramme;
 		}
 
+		if (!empty($selectedStatus)) {
+			$conditions['student_status_id'] = $selectedStatus;
+		}
+
+		
 		$controller->paginate = array('limit' => 15, 'maxLimit' => 100);
 		$data = $controller->paginate('InstitutionSiteStudent', $conditions);
 
@@ -534,7 +544,7 @@ class InstitutionSiteStudent extends AppModel {
 		$_add_student = $controller->AccessControl->check('InstitutionSites', 'studentsAdd');
 		// End Access Control
 		
-		$controller->set(compact('_add_student', 'searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data'));
+		$controller->set(compact('_add_student', 'searchField', 'page', 'orderBy', 'order', 'yearOptions', 'programmeOptions', 'selectedYear', 'selectedProgramme', 'data', 'statusOptions'));
 	}
 
 	private function studentsSearch($search) {
@@ -636,11 +646,11 @@ class InstitutionSiteStudent extends AppModel {
 
 			$details = $this->getDetails($studentId, $controller->institutionSiteId);
 			$classes = ClassRegistry::init('InstitutionSiteClassStudent')->getListOfClassByStudent($studentId, $controller->institutionSiteId);
-			$results = ClassRegistry::init('AssessmentItemResult')->getResultsByStudent($studentId, $controller->institutionSiteId);
-			$results = ClassRegistry::init('AssessmentItemResult')->groupItemResults($results);
+			//$results = ClassRegistry::init('AssessmentItemResult')->getResultsByStudent($studentId, $controller->institutionSiteId);
+			//$results = ClassRegistry::init('AssessmentItemResult')->groupItemResults($results);
 			$_view_details = $controller->AccessControl->check('Students', 'view');
 			
-			$controller->set(compact('_view_details', 'data', 'classes', 'results', 'details'));
+			$controller->set(compact('_view_details', 'data', 'classes',/* 'results',*/ 'details'));
 		} else {
 			return $controller->redirect(array('action' => 'students'));
 		}
