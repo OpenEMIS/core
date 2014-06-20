@@ -199,9 +199,9 @@ else{
 </div>
 <div class="controls view_controls">
 	<?php if($this->request->data['TrainingSession']['sessionEditable']!='0'){ ?>
-	<input type="button" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
+	<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
 	<?php if($this->request->data['TrainingSession']['sessionEditable']=='1'){ ?>
-	<input type="button" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
+	<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
 	<?php } ?>
 	<?php } ?>
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'session'), array('class' => 'btn_cancel btn_left')); ?>
