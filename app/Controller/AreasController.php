@@ -29,7 +29,7 @@ class AreasController extends AppController {
     public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Administrative Boundaries', array('controller' => 'Areas', 'action' => 'index'));
 		
 		$areaOptions = array(

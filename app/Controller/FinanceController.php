@@ -27,6 +27,7 @@ class FinanceController extends AppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		$this->Navigation->addCrumb('Finance', array('controller' => 'Finance', 'action' => 'index'));
 	}
 	

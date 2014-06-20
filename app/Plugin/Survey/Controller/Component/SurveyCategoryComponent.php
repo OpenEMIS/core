@@ -65,10 +65,10 @@ class SurveyCategoryComponent extends Component {
         'Students.StudentCustomField',
         'Students.StudentCustomFieldOption',
         'Students.StudentCustomValue',
-        'Teachers.Teacher',
-        'Teachers.TeacherCustomField',
-        'Teachers.TeacherCustomFieldOption',
-        'Teachers.TeacherCustomValue',
+        //'Teachers.Teacher',
+        //'Teachers.TeacherCustomField',
+        //'Teachers.TeacherCustomFieldOption',
+        //'Teachers.TeacherCustomValue',
         'Staff.Staff',
         'Staff.StaffCustomField',
         'Staff.StaffCustomFieldOption',
@@ -137,10 +137,12 @@ class SurveyCategoryComponent extends Component {
                 $arrayQuestions = $this->getStudentQuestions($siteID);
                 $this->clearEmptyQuestions($arrayQuestions);
                 break;
+				/*
             case '3':
                 $arrayQuestions = $this->getTeacherQuestions($siteID);
                 $this->clearEmptyQuestions($arrayQuestions);
                 break;
+				*/
             case '4':
                 $arrayQuestions = $this->getStaffQuestions($siteID);
                 $this->clearEmptyQuestions($arrayQuestions);

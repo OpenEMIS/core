@@ -373,6 +373,3 @@ class TrainingController extends TrainingAppController {
             echo json_encode($courseData);
         }
     }
-
-
-}

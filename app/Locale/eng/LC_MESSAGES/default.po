@@ -2765,5 +2765,95 @@ msgstr ""
 msgid "Status Details"
 msgstr ""
 
-msgid "There are no records."
+msgid "Rubric Name"
+msgstr ""
+
+msgid "Total Weighting(%)"
+msgstr ""
+
+msgid "Pass/Fail"
+msgstr ""
+
+msgid "Grand Total Weighting(%)"
+msgstr ""
+
+msgid "QA Report"
+msgstr ""
+
+msgid "Visit Report"
+msgstr ""
+
+msgid "Reports - Quality"
+msgstr ""
+
+msgid "Report Generated"
+msgstr ""
+
+msgid "Staff Type"
+msgstr ""
+
+msgid "Fail"
+msgstr ""
+
+msgid "Quality Type"
+msgstr ""
+
+msgid "Visit Date"
+msgstr ""
+
+msgid "Evaluator Name"
+msgstr ""
+
+msgid "Total Classes"
+msgstr ""
+
+msgid "Maximum"
+msgstr ""
+
+msgid "Minimum"
+msgstr ""
+
+msgid "Average"
+msgstr ""
+
+msgid "Pass/ Fail"
+msgstr ""
+
+msgid "Total Questions"
+msgstr ""
+
+msgid "Total Answered"
+msgstr ""
+
+msgid "There are no available files found for this report."
+msgstr ""
+
+msgid "Goal Objective"
+msgstr ""
+
+msgid "Requirement"
+msgstr ""
+
+msgid "Trainer Type"
+msgstr ""
+
+msgid "Position"
+msgstr ""
+
+msgid "Target Group"
+msgstr ""
+
+msgid "Total Target Group"
+msgstr ""
+
+msgid "Total Trained"
+msgstr ""
+
+msgid "Target Group Percentage"
+msgstr ""
+
+msgid "Mode Of Delivery"
+msgstr ""
+
+msgid "Last Updated By"
 msgstr ""
