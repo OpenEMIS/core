@@ -707,4 +707,34 @@ class UtilityHelper extends AppHelper {
 		
 		return $totalWeekdays;
 	}
+	
+	public function generatePaginationLinks($totalRows, $currentPage, $rowsPerPage, $fileName){
+		$paginationStr = '';
+		$paginationStr .= '<div class="row">';
+		$paginationStr .= '<ul id="pagination">';
+		
+		$totalPages = ceil($totalRows/$rowsPerPage);
+		
+		//$numOfLinkFront = 10;
+		
+		if($currentPage > 1){
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . ($currentPage-1) . '">Previous</a></li>';
+		}
+		
+		if($currentPage < 5){
+			for($i=1; $i<5; $i++){
+				$paginationStr .= '<li class=""><a href="' . $fileName . '/' . $i . '">' . $i . '</a></li>';
+			}
+		}
+		
+		if($currentPage < $totalPages){
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . $totalPages . '">' . $totalPages . '</a></li>';
+			$paginationStr .= '<li class=""><a href="' . $fileName . '/' . ($currentPage+1) . '">Next</a></li>';
+		}
+		
+		$paginationStr .= '</ul>';
+		$paginationStr .= '</div>';
+		
+		return $paginationStr;
+	}
 }
