@@ -663,34 +663,6 @@ class UtilityHelper extends AppHelper {
 		return $option[$flag];
 	}
 	
-	// for permissions	
-	public function getPermissionInput($form, $fieldName, $type, $value) {
-		$options = array(
-			'id' => $type,
-			'name' => sprintf($fieldName, $type),
-			'type' => 'checkbox',
-			'value' => 1,
-			'autocomplete' => 'off',
-			'before' => '<div class="table_cell center">',
-			'after' => '</div>'
-		);
-		
-		if(is_null($value)) {
-			$options['disabled'] = 'disabled';
-		} else {
-			if($value == 1) {
-				$options['checked'] = 'checked';
-			} else if($value == 2) {
-				$options['checked'] = 'checked';
-				$options['disabled'] = 'disabled';
-			}
-		}
-		
-		$input = $form->input($type, $options);
-		return $input;
-	}
-	// end permissions
-	
 	public function getAbsenceDaysBySettings($firstDateAbsent, $lastDateAbsent, $settingWeekdays){
 		$stampFirstDateAbsent = strtotime($firstDateAbsent);
 		$stampLastDateAbsent = strtotime($lastDateAbsent);

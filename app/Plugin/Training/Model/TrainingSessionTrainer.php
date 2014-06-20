@@ -7,7 +7,7 @@ class TrainingSessionTrainer extends TrainingAppModel {
 			'foreignKey' => 'training_session_id'
 		),
 		'Staff' => array(
-			'className' => 'Staff',
+			'className' => 'Staff.Staff',
 			'foreignKey' => 'ref_trainer_id',
 		  	'conditions' => array('ref_trainer_table' => 'Staff'),
 		),
@@ -27,9 +27,7 @@ class TrainingSessionTrainer extends TrainingAppModel {
 		$search = sprintf('%%%s%%', $search);
 		$data = array();
 		
-		$staff = ClassRegistry::init('Staff');
-		$staff->useTable = 'Staff';
-		$list = $staff->find('all', array(
+		$list = $this->Staff->find('all', array(
 			'recursive' => -1,
 			'fields' => array('DISTINCT Staff.id', 'Staff.identification_no', 'Staff.first_name', 'Staff.last_name'),
 			'conditions' => array(

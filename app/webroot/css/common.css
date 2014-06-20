@@ -84,6 +84,7 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 	width:72px;
 }
 .header_side_nav{
+	width: 100%;
 	float: right;
 	text-align:right;
 	padding:0;
@@ -97,12 +98,12 @@ input:-moz-placeholder, textarea:-moz-placeholder, input:-moz-placeholder:hover,
 }
 
 #user_name{
-	float:left;
+	float:right;
 	margin:0 6px 0 0;
 	font-style:italic;
 }
 #header_side_nav_container{
-	float:left;
+	float:right;
 	margin:0;
 	padding:2px 4px;
 	border-radius:0 0 4px 4px;
