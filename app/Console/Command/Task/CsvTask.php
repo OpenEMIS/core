@@ -109,7 +109,7 @@ class CsvTask extends AppTask {
 
     public function closeCSV(){
         $line = "\n";
-        $line .= "Report Generated: " . date("Y-m-d H:i:s");
+        $line .= __("Report Generated").": "  . date("Y-m-d H:i:s");
         fputs ($this->fileFP, $line);
 		 fclose ($this->fileFP);
 	}

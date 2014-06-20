@@ -9,7 +9,7 @@ if ($_edit && !$WizardMode) {
 $this->end();
 $this->start('contentBody');
 
-$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'contactsAdd', $contactOptionId));
+$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => 'contactsAdd', $contactOptionId, 'plugin'=> 'Staff'));
 echo $this->Form->create($model, $formOptions);
 
 echo $this->Form->input('staff_id', array('type' => 'hidden', 'value' => $staffId));

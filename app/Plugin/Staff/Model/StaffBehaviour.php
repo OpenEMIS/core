@@ -19,7 +19,7 @@ class StaffBehaviour extends StaffAppModel {
 
 	public $actsAs = array(
 		'ControllerAction', 
-		'Datepicker' => array('date_of_behaviour'),
+		'DatePicker' => array('date_of_behaviour'),
 		'ReportFormat' => array(
 			'supportedFormats' => array('csv')
 		)

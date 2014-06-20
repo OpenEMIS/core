@@ -99,6 +99,9 @@
 .scroll_active .list_wrapper { overflow-y: scroll; padding-right: 1px; }
 
 .table { width: 100%; border-spacing: 0; }
+.table.reportHtml{
+	width: auto;
+}
 .table thead tr { background-color: #EFEFEF; }
 .table thead td {  font-weight: bold;  text-align: center; }
 .table.table-hover tbody tr:hover { background-color:#5b8baf; color: #FFFFFF; cursor: pointer; }

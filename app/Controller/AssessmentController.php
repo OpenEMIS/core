@@ -29,7 +29,7 @@ class AssessmentController extends AppController {
 	public function beforeFilter() {
 		parent::beforeFilter();
 		$this->bodyTitle = 'Administration';
-		$this->Navigation->addCrumb('Administration', array('controller' => 'Setup', 'action' => 'index'));
+		$this->Navigation->addCrumb('Administration', array('controller' => 'Areas', 'action' => 'index', 'plugin' => false));
 		if($this->action === 'index') {
 			$this->Navigation->addCrumb('National Assessments');
 		} else {

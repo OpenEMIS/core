@@ -293,3 +293,9 @@ fieldset#general.section_break > .row{
 	float:right;
 	margin-left:8px;
 }
+
+#dashboard .left_control, #dashboard .left_control label {
+	float:right;
+}
+
+
