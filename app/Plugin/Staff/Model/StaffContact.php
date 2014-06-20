@@ -195,6 +195,8 @@ class StaffContact extends StaffAppModel {
 		$header = __('Details');
 		
 		$controller->Session->write('StaffContact.id', $contactId);
+		$controller->Session->write('StaffContact.contact_type_id', $data[$this->alias]['contact_type_id']);
+		$controller->Session->write('StaffContact.contact_option_id', $data['ContactType']['contact_option_id']);
 		
 		$fields = $this->getDisplayFields($controller);
 		$controller->set(compact('header', 'data', 'fields'));
@@ -235,6 +237,37 @@ class StaffContact extends StaffAppModel {
 	}
 
 	public function contactsDelete($controller, $params) {
-		return $this->remove($controller, 'contacts');
+		if ($controller->Session->check($this->alias . '.id')) {
+			$id = $controller->Session->read($this->alias . '.id');
+			$contactTypeId =$controller->Session->read($this->alias.'.contact_type_id');
+			$contactOptionId =$controller->Session->read($this->alias.'.contact_option_id');
+			
+			$staffId =$controller->Session->read('Staff.id');
+		
+			if($this->delete($id)) {
+				$controller->Message->alert('general.delete.success');
+			} else {
+				$controller->Message->alert('general.delete.failed');
+			}
+			
+			if($contactOptionId == 1 || $contactOptionId == 4){
+				$conditions = array(
+					$this->alias . '.preferred' => 1,
+					$this->alias . '.staff_id' => $staffId,
+					$this->alias.'.contact_type_id' => $contactTypeId,
+				);
+				if (!$this->hasAny($conditions)){
+					$this->recursive = -1;
+					$data = $this->findByContactTypeIdAndStaffId($contactTypeId,$staffId);
+					if(!empty($data)){
+						$data[$this->alias]['preferred'] = 1;
+						$data[$this->alias]['contact_option_id'] = $contactTypeId;
+						$this->save($data);
+					}
+				}
+			}
+			$controller->Session->delete($this->alias . '.id');
+			return $controller->redirect(array('action' => 'contacts'));
+		}
 	}
 }
