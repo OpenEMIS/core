@@ -338,7 +338,7 @@ class StaffController extends StaffAppController {
 	public function positions() {
 		$this->Navigation->addCrumb(ucfirst($this->action));
 		$this->set('header', 'Positions');
-		$staffId = $this->Session->read('StaffId');
+		$staffId = $this->Session->read('Staff.id');
 		$data = array();
 
 		$list = $this->InstitutionSiteStaff->getPositions($staffId);
