@@ -14,6 +14,7 @@ if ($_edit) {
 if ($_delete) {
 	echo $this->Html->link(__('Delete'), array('action' => 'studentsDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
 }
+
 if ($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
 	echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
 }
@@ -126,7 +127,7 @@ $this->start('contentBody');
 		</tbody>
 	</table>
 </fieldset>
-
+<?php /*
 <fieldset class="section_break">
 	<legend><?php echo __('Assessments'); ?></legend>
 	<?php foreach ($results as $gradeId => $result) { ?>
@@ -161,5 +162,5 @@ $this->start('contentBody');
 			<?php } ?>
 		</fieldset>
 	<?php } ?>
-</fieldset>
+</fieldset> */ ?>
 <?php $this->end(); ?>
