@@ -369,11 +369,7 @@ var objTrainingSessions = {
     save: function(obj) {
 
        if(objTrainingSessions.errorFlag()){ 
-            if( $('#TrainingSessionSessionAddForm').length )  {
-                return true;
-            }else{
-                return true;
-            }
+            return true;
         }else{ 
             return false; 
         }
