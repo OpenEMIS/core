@@ -177,7 +177,6 @@ var objTrainingSessions = {
             success: function(data) {
                 var callback = function() {
                     var obj = data;
-                    console.log(obj.layout);
                     if (obj.layout == undefined || obj.layout == null || obj.layout.length == 0){
 
                     }else{
@@ -203,7 +202,6 @@ var objTrainingSessions = {
             },
              error: function (data) {
                 console.log("error");
-                console.log(data);
             } 
         });
 
@@ -372,9 +370,9 @@ var objTrainingSessions = {
 
        if(objTrainingSessions.errorFlag()){ 
             if( $('#TrainingSessionSessionAddForm').length )  {
-                $('#TrainingSessionSessionAddForm').submit();
+                return true;
             }else{
-                 $('#TrainingSessionSessionEditForm').submit();
+                return true;
             }
         }else{ 
             return false; 
