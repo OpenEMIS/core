@@ -12,11 +12,12 @@
 .header_side_nav{
 	float:left;
 }
+#header_side_nav_container { float: left; }
 #header_side_nav_container a{
 	float:right;
 }
 #user_name{
-	float:right;
+	float:left;
 	margin:0 6px;
 }
 .header_side_nav_function_divi{
@@ -298,4 +299,10 @@ fieldset#general.section_break > .row{
 	float:right;
 }
 
+fieldset.section_break > .profile-image {
+	right: auto;
+	left: 0;
+}
 
+.panel-title .accordion-toggle { background-position: 12px 14px; }
+.language { float: left; height: 25px; }
