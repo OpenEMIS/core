@@ -34,6 +34,13 @@ class TrainingUtilityHelper extends AppHelper {
 		return $status;
 	}
 
+	function plural( $amount, $singular = '', $plural = 's' ) {
+    if ( $amount == 1 )
+        return __($singular);
+    else
+        return __($plural);
+	}
+
 
 
 
