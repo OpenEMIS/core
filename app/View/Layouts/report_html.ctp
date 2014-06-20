@@ -29,6 +29,7 @@
 	echo $this->Html->css('common');
 	echo $this->Html->css('body_common');
 	echo $this->Html->css('table.old');
+	echo $this->Html->css('pagination');
 ?>
 </head>
 <body>
