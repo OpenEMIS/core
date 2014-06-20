@@ -51,6 +51,14 @@ class TrainingCourse extends TrainingAppModel {
 			'dependent' => true,
 			'exclusive' => true
 		),
+		'TrainingCourseSpecialisation' => array(
+			'dependent' => true,
+			'exclusive' => true
+		),
+		'TrainingCourseExperience' => array(
+			'dependent' => true,
+			'exclusive' => true
+		),
 		'TrainingCourseProvider' => array(
 			'dependent' => true,
 			'exclusive' => true
@@ -66,6 +74,7 @@ class TrainingCourse extends TrainingAppModel {
 			'exclusive' => true
 		)
 	);
+	
 	
 	public $validate = array(
 		'code' => array(
@@ -256,7 +265,6 @@ class TrainingCourse extends TrainingAppModel {
 	}
 
 
-
 	public function courseView($controller, $params){
 		$controller->Navigation->addCrumb($this->headerDefault . ' Details');
 		$controller->set('subheader', $this->headerDefault);
@@ -307,6 +315,19 @@ class TrainingCourse extends TrainingAppModel {
 
 		$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all', array('conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)));
 
+		$this->TrainingCourseSpecialisation->bindModel(
+	        array('belongsTo' => array(
+	                'QualificationSpecialisation' => array(
+						'className' => 'QualificationSpecialisation',
+						'foreignKey' => 'qualification_specialisation_id'
+					)
+	            )
+	        )
+	    );
+		$trainingCourseSpecialisations = $this->TrainingCourseSpecialisation->find('all', array('conditions'=>array('TrainingCourseSpecialisation.training_course_id'=>$id)));
+		$trainingCourseExperiences = $this->TrainingCourseExperience->find('all', array('conditions'=>array('TrainingCourseExperience.training_course_id'=>$id)));
+				
+
 		$arrMap = array('model'=>'Training.TrainingCourseAttachment', 'foreignKey' => 'training_course_id');
         $FileAttachment = $controller->Components->load('FileAttachment', $arrMap);
 
@@ -319,6 +340,8 @@ class TrainingCourse extends TrainingAppModel {
 		$controller->set('trainingCourseProviders', $trainingCourseProviders);
 		$controller->set('trainingProviders', $trainingProviders);
 		$controller->set('trainingCourseResultTypes', $trainingCourseResultTypes);
+		$controller->set('trainingCourseSpecialisations', $trainingCourseSpecialisations);
+		$controller->set('trainingCourseExperiences', $trainingCourseExperiences);
 		$controller->set('attachments', $attachments);
 		$controller->set('_model','TrainingCourseAttachment');
 
@@ -447,9 +470,22 @@ class TrainingCourse extends TrainingAppModel {
  			$trainingCreditHourOptions[$i] = $i;
 	 	}
 
-	 	
+	 	$this->TrainingCourseResultType->bindModel(
+	        array('belongsTo' => array(
+	                'TrainingResultType' => array(
+						'className' => 'FieldOptionValue',
+						'foreignKey' => 'training_result_type_id'
+					)
+	            )
+	        )
+	    );
+ 		$trainingResultTypeOptions = $this->TrainingCourseResultType->TrainingResultType->getList();
+
+ 		$qualificationSpecialisation = ClassRegistry::init('QualificationSpecialisation');
+		$qualificationSpecialisationOptions = $qualificationSpecialisation->find('list', array('fields'=>array('id', 'name')));
+
 		$controller->set(compact('trainingFieldStudyOptions', 'trainingModeDeliveryOptions', 'trainingProviderOptions', 
-		'trainingRequirementOptions', 'trainingLevelOptions', 'staffPositionTitles', 'trainingCourseTypeOptions', 'trainingCreditHourOptions', 'trainingResultTypeOptions'));
+		'trainingRequirementOptions', 'trainingLevelOptions', 'staffPositionTitles', 'trainingCourseTypeOptions', 'trainingCreditHourOptions', 'trainingResultTypeOptions', 'qualificationSpecialisationOptions'));
 	
 
 		$controller->set('modelName', $this->name);
@@ -471,7 +507,14 @@ class TrainingCourse extends TrainingAppModel {
 					return $controller->redirect(array('action' => 'courseView', $id));
 				}
 				$controller->request->data = $data;
+
 				$trainingCourseTargetPopulations = $this->TrainingCourseTargetPopulation->find('all', array('conditions'=>array('TrainingCourseTargetPopulation.training_course_id'=>$id)));
+				$trainingCourseTargetPopulationsVal = null;
+				if(!empty($trainingCourseTargetPopulations)){
+					foreach($trainingCourseTargetPopulations as $val){
+						$trainingCourseTargetPopulationsVal[] = $val['TrainingCourseTargetPopulation'];
+					}
+				}
 
 				$trainingCoursePrerequisites = $this->TrainingCoursePrerequisite->find('all',  
 					array(
@@ -487,13 +530,6 @@ class TrainingCourse extends TrainingAppModel {
 						'conditions'=>array('TrainingCoursePrerequisite.training_course_id'=>$id)
 					)
 				);
-				$trainingCourseTargetPopulationsVal = null;
-				if(!empty($trainingCourseTargetPopulations)){
-					foreach($trainingCourseTargetPopulations as $val){
-						$trainingCourseTargetPopulationsVal[] = $val['TrainingCourseTargetPopulation'];
-					}
-				}
-
 				$trainingCoursePrerequisitesVal = null;
 				if(!empty($trainingCoursePrerequisites)){
 					$temp = array();
@@ -522,13 +558,11 @@ class TrainingCourse extends TrainingAppModel {
 			            )
 			        )
 			    );
-
-			   $trainingCourseResultTypes = $this->TrainingCourseResultType->find('all',  
+			   	$trainingCourseResultTypes = $this->TrainingCourseResultType->find('all',  
 					array(
 						'conditions'=>array('TrainingCourseResultType.training_course_id'=>$id)
 					)
 				);
-
 				$trainingCourseResultTypesVal = null;
 				if(!empty($trainingCourseResultTypes)){
 					foreach($trainingCourseResultTypes as $val){
@@ -536,8 +570,25 @@ class TrainingCourse extends TrainingAppModel {
 					}
 				}
 
+				$trainingCourseSpecialisations = $this->TrainingCourseSpecialisation->find('all', array('conditions'=>array('TrainingCourseSpecialisation.training_course_id'=>$id)));
+				$trainingCourseSpecialisationsVal = null;
+				if(!empty($trainingCourseSpecialisations)){
+					foreach($trainingCourseSpecialisations as $val){
+						$trainingCourseSpecialisationsVal[] = $val['TrainingCourseSpecialisation'];
+					}
+				}
+
+				$trainingCourseExperiences = $this->TrainingCourseExperience->find('all', array('conditions'=>array('TrainingCourseExperience.training_course_id'=>$id)));
+				$trainingCourseExperiencesVal = null;
+				if(!empty($trainingCourseExperiences)){
+					foreach($trainingCourseExperiences as $val){
+						$trainingCourseExperiencesVal[] = $val['TrainingCourseExperience'];
+					}
+				}
+
 				$merge = array_merge(array('TrainingCourseTargetPopulation'=>$trainingCourseTargetPopulationsVal), array('TrainingCoursePrerequisite'=>$trainingCoursePrerequisitesVal)
-					, array('TrainingCourseProvider'=>$trainingCourseProvidersVal), array('TrainingCourseResultType'=>$trainingCourseResultTypesVal));
+					, array('TrainingCourseProvider'=>$trainingCourseProvidersVal), array('TrainingCourseResultType'=>$trainingCourseResultTypesVal), array('TrainingCourseSpecialisation'=>$trainingCourseSpecialisationsVal)
+					, array('TrainingCourseExperience'=>$trainingCourseExperiencesVal));
 				$controller->request->data = array_merge($data, $merge);
 			}
 		}
@@ -572,9 +623,9 @@ class TrainingCourse extends TrainingAppModel {
 						}
 						$this->TrainingCourseTargetPopulation->deleteAll(array('TrainingCourseTargetPopulation.id' => $deletedId), false);
 					}
-					if(isset($controller->request->data['DeletePrerequisite'])){
+					if(isset($controller->request->data['DeleteCoursePrerequisite'])){
 						$deletedId = array();
-						foreach($controller->request->data['DeletePrerequisite'] as $key=>$value){
+						foreach($controller->request->data['DeleteCoursePrerequisite'] as $key=>$value){
 							$deletedId[] = $value['id'];
 						}
 						$this->TrainingCoursePrerequisite->deleteAll(array('TrainingCoursePrerequisite.id' => $deletedId), false);
@@ -592,6 +643,20 @@ class TrainingCourse extends TrainingAppModel {
 							$deletedId[] = $value['id'];
 						}
 						$this->TrainingCourseResultType->deleteAll(array('TrainingCourseResultType.id' => $deletedId), false);
+					}
+					if(isset($controller->request->data['DeleteSpecialisation'])){
+						$deletedId = array();
+						foreach($controller->request->data['DeleteSpecialisation'] as $key=>$value){
+							$deletedId[] = $value['id'];
+						}
+						$this->TrainingCourseSpecialisation->deleteAll(array('TrainingCourseSpecialisation.id' => $deletedId), false);
+					}
+					if(isset($controller->request->data['DeleteExperience'])){
+						$deletedId = array();
+						foreach($controller->request->data['DeleteExperience'] as $key=>$value){
+							$deletedId[] = $value['id'];
+						}
+						$this->TrainingCourseExperience->deleteAll(array('TrainingCourseExperience.id' => $deletedId), false);
 					}
 					if(empty($controller->request->data[$this->name]['id'])){
 						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
