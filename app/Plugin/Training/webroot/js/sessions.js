@@ -159,9 +159,9 @@ var objTrainingSessions = {
             $('.training_course').addClass('form-error');
             return false;
         }
+        var data = new FormData();  
 
-        var data = new FormData($('input[name^="upload_file"]'));     
-        jQuery.each($('input[name^="upload_file"]')[0].files, function(i, file) {
+        jQuery.each($('#upload_file')[0].files, function(i, file) {
             data.append(i, file);
         });
 
@@ -367,12 +367,17 @@ var objTrainingSessions = {
     },
 
     save: function(obj) {
-
        if(objTrainingSessions.errorFlag()){ 
+            var status = 1;
+            if(obj.name=="submitForApproval"){
+                status = 2;
+            }
             if( $('#TrainingSessionSessionAddForm').length )  {
-                return true;
+                $('.training-status').val(status);
+                $('#TrainingSessionSessionAddForm').submit();
             }else{
-                return true;
+                $('.training-status').val(status);
+                $('#TrainingSessionSessionEditForm').submit();
             }
         }else{ 
             return false; 

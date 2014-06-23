@@ -384,7 +384,7 @@ class TrainingSession extends TrainingAppModel {
 	
 	function setup_add_edit_form($controller, $params){
 		$trainingCourseOptions = $this->TrainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
-		$areaOptions = $this->Area->find('list', array('fields'=> array('id', 'name'), 'conditions'=>array('area_level_id'=>2, 'visible'=>1), 'order'=>array('order')));
+		$areaOptions = $this->Area->find('list', array('fields'=> array('id', 'name'), 'conditions'=>array('area_level_id'=>4, 'visible'=>1), 'order'=>array('order')));
 
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
 		$controller->set('areaOptions', $areaOptions);
@@ -453,12 +453,13 @@ class TrainingSession extends TrainingAppModel {
 			if ($this->saveAll($controller->request->data, array('validate' => 'only'))){
 
 				if(!isset($controller->request->data['TrainingSession']['sessionEditable']) || $controller->request->data['TrainingSession']['sessionEditable'] == '1'){
-					if (isset($controller->request->data['save'])) {
+					if ($controller->request->data['TrainingSession']['training_status_id']=='1') {
 				   	$controller->request->data['TrainingSession']['training_status_id'] = 1; 
-					} else if (isset($controller->request->data['submitForApproval'])) {
+					} else if ($controller->request->data['TrainingSession']['training_status_id']=='2') {
 				      	$controller->request->data['TrainingSession']['training_status_id'] = 2; 
 					}
 				}
+
 				$data = $controller->request->data;
 				if($data['TrainingSession']['sessionEditable']=='2'){
 					$this->TrainingSessionTrainee->bindModel(

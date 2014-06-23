@@ -155,7 +155,7 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 					foreach ($arrHeader AS $column) :
 						?>
 						<th><?php echo $column; ?></th>
-						<?php
+						<?php 
 					endforeach;
 					?>
 				</tr>
