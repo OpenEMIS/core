@@ -384,7 +384,7 @@ class TrainingSession extends TrainingAppModel {
 	
 	function setup_add_edit_form($controller, $params){
 		$trainingCourseOptions = $this->TrainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
-		$areaOptions = $this->Area->find('list', array('fields'=> array('id', 'name'), 'conditions'=>array('area_level_id'=>2, 'visible'=>1), 'order'=>array('order')));
+		$areaOptions = $this->Area->find('list', array('fields'=> array('id', 'name'), 'conditions'=>array('area_level_id'=>4, 'visible'=>1), 'order'=>array('order')));
 
 		$controller->set('trainingCourseOptions', $trainingCourseOptions);
 		$controller->set('areaOptions', $areaOptions);
