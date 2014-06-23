@@ -102,7 +102,6 @@ class TrainingSessionTrainee extends TrainingAppModel {
 			}
 		}
 
-		$this->Staff->useTable = 'Staff';
 		$list = $this->Staff->find('all', 
 			array(
 				'fields'=>array('Staff.id', 'Staff.first_name', 'Staff.last_name'),
