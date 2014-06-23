@@ -38,7 +38,7 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 	$firstRow = 0;
 	$file->seek($firstRow);
 	// rows per page
-	$rowsPerPage = 100;
+	$rowsPerPage = 1000;
 
 	$arrHeader = explode(',', $file->current());
 
@@ -132,7 +132,7 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 
 	//
 
-	echo $paginationStr;
+	//echo $paginationStr;
 	?>
 	<table class="table reportHtml">
 		<thead class="table_head">
@@ -140,7 +140,7 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 				<?php
 				foreach ($arrHeader AS $column) {
 					?>
-					<th><?php echo $column; ?></th>
+					<th><?php echo __(trim($column)); ?></th>
 					<?php
 				}
 				?>
@@ -159,7 +159,7 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 						<?php
 						foreach ($arrCurrentRow AS $column) {
 							?>
-							<td><?php echo $column; ?></td>
+							<td><?php echo __(trim($column)); ?></td>
 							<?php
 						}
 						?>
@@ -175,7 +175,7 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 		</tbody>
 	</table>
 	<?php 
-	echo $paginationStr;
+	//echo $paginationStr;
 	fclose($handle);
 } else {
 	echo 'Error. Failed to open file.';

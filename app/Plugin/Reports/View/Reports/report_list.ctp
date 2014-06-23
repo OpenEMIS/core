@@ -26,7 +26,7 @@ $this->start('contentBody');
 	<?php foreach($arrV as $time => $arrFileInfo){	?>
 	
 		<tr row-id="<?php echo $arrFileInfo['basename'];?>" class="table_row">
-			<td class="table_cell col_name"><?php echo $arrFileInfo['name']; ?></td>
+			<td class="table_cell col_name"><?php echo __($arrFileInfo['name']); ?></td>
 			<td class="table_cell col_name center"><?php echo $arrFileInfo['size'];?></td>
 			<?php  
 			if($fileType === 'csv'){
