@@ -52,7 +52,7 @@ class ReportsController extends ReportsAppController {
         'Custom'
     );
     
-    public $helpers = array('Paginator');
+    public $helpers = array('Paginator', 'Label');
     public $components = array('Paginator','DateTime','Utility');
     private $pathFile = '';
     
