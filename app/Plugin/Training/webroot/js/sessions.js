@@ -159,9 +159,9 @@ var objTrainingSessions = {
             $('.training_course').addClass('form-error');
             return false;
         }
+        var data = new FormData();  
 
-        var data = new FormData($('input[name^="upload_file"]'));     
-        jQuery.each($('input[name^="upload_file"]')[0].files, function(i, file) {
+        jQuery.each($('#upload_file')[0].files, function(i, file) {
             data.append(i, file);
         });
 
