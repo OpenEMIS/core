@@ -2,43 +2,18 @@
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Roles'));
+$this->assign('contentHeader', $header);
 $this->start('contentActions');
-echo $this->Html->link(__('Back'), array('action' => 'roles', $selectedRole), array('class' => 'divider'));
+echo $this->Html->link(__('Back'), array('action' => 'roles', $selectedGroup), array('class' => 'divider'));
 if($_edit && $allowEdit) {
-	echo $this->Html->link(__('Edit'), array('action' => 'permissionsEdit', $selectedRole), array('class' => 'divider'));
+	echo $this->Html->link(__('Edit'), array('action' => 'permissionsEdit', $selectedRole, $selectedModule), array('class' => 'divider'));
 }
 $this->end();
 $this->assign('contentId', 'permissions');
 
 $this->start('contentBody');
-?>
-<?php echo $this->element('alert'); ?>
+echo $this->element('../Security/permissions/controls');
 
-<?php if(!empty($group)) { ?>
-<div class="row">
-	<label class="col-md-3 control-label"><?php echo __('Group Name'); ?></label>
-	<div class="col-md-4"><?php echo $group['name']; ?></div>
-</div>
-<?php } ?>
-
-<div class="row page-controls">
-	<div class="col-md-4">
-		<?php
-		echo $this->Form->input('security_role_id', array(
-			'label' => false,
-			'div' => false,
-			'class' => 'form-control',
-			'options' => $roles,
-			'default' => $selectedRole,
-			'url' => $this->params['controller'] . '/' . $this->params['action'],
-			'onchange' => 'jsForm.change(this)'
-		));
-		?>
-	</div>
-</div>
-
-<?php 
 $index = 0;
 foreach($permissions as $module => $func) {
 ?>
