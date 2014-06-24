@@ -20,8 +20,8 @@ $(document).ready(function() {
 var Security = {
 	operations: ['_view', '_edit', '_add', '_delete', '_execute'],
 	init: function() {
-		$('#permissions.edit input[type="hidden"]:disabled').removeAttr('disabled');
-		$('#permissions.edit .module_checkbox').change(Security.toggleModule);
+		$('#permissions input[type="hidden"]:disabled').removeAttr('disabled');
+		$('#permissions .module_checkbox').change(Security.toggleModule);
 		
 		$('#_view, #_edit:not(:disabled), #_add:not(:disabled), #_delete:not(:disabled), #_execute:not(:disabled)').change(Security.toggleOperation);
 		$('fieldset[type] .icon_plus').click(function() { Security.addRoleArea(this); });

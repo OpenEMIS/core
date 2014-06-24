@@ -6,10 +6,9 @@ $arrMap = array(
 	'genCustoms'=>'Custom'
 );
 ?>
-<div class="row form-group input">
+<div class="row page-controls">
 <div class="col-md-4">
 	<?php
-	
 	echo  $this->Form->input('area_cat', array(
 		'label' => false,
 		'div' => false,
