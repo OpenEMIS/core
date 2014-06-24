@@ -440,7 +440,10 @@ var objTrainingCourses = {
         $(element).autocomplete({
             source: url,
             minLength: 2,
-            select: callback
+            select: callback,
+            focus: function() {
+                return false;
+            }
         });
     },
 
