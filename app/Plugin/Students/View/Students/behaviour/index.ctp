@@ -7,12 +7,12 @@ $this->assign('contentHeader', $header);
 
 $this->start('contentBody');
 if(!empty($data)) { 
-	$tableHeaders = array(__('Date'), __('Category'), __('Title'), __('Insitution Site'));
+	$tableHeaders = array($this->Label->get('general.date'), $this->Label->get('general.category'), $this->Label->get('general.title'), $this->Label->get('InstitutionSite.name'));
 	$tableData = array();
 	foreach ($data as $obj) {
 		$row = array();
-		$row[] = $obj[$model]['date_of_behaviour'];
-		$row[] = $obj['StudentBehaviourCategory']['name'];
+		$row[] = array($obj[$model]['date_of_behaviour'], array('class'=>array('center')));
+		$row[] = array($obj['StudentBehaviourCategory']['name'], array('class'=>array('center')));
 		$row[] = $this->Html->link($obj[$model]['title'], array('action' => 'behaviourView', $obj[$model]['id']), array('escape' => false));
 		$row[] = $obj['InstitutionSite']['name'];
 		$tableData[] = $row;

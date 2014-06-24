@@ -2,6 +2,13 @@
 $pageOptions = array('escape'=>false,'style' => 'display:none');
 $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li', 'separator'=>'','ellipsis'=>'<li><span class="ellipsis">...</span></li>');
 ?>
+<div class="row">
+    <ul id="pagination">
+        <?php echo $this->Paginator->prev(__('Previous') , null, null, $pageOptions); ?>
+        <?php echo $this->Paginator->numbers($pageNumberOptions); ?>
+        <?php echo $this->Paginator->next(__('Next') , null, null, $pageOptions); ?>
+    </ul>
+</div>
 
 <table class="table table-striped table-hover table-bordered"  action="Staff/viewStaff/" total="<?php echo $this->Paginator->counter('{:count}'); ?>">
     <thead url="Staff/index">
@@ -58,8 +65,8 @@ $pageNumberOptions = array('modulus'=>5,'first' => 2, 'last' => 2,'tag' => 'li',
         <?php endforeach;
     }
     ?>
-    </div>
-</div>
+    </tbody>
+</table>
 
 <?php if(sizeof($staff)==0) { ?>
 <div class="row center" style="color: red; margin-top: 15px;"><?php echo __('No Staff found.'); ?></div>

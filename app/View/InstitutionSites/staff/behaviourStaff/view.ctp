@@ -9,21 +9,21 @@ echo $this->Html->script('plugins/datepicker/js/bootstrap-datepicker', false);
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', __('Behaviour Details'));
 
-$data = $staffBehaviourObj[0]['StaffBehaviour'];
-
 $this->start('contentActions');
-echo $this->Html->link(__('List'), array('action' => 'staffsBehaviour', $data['staff_id']), array('class' => 'divider'));
-        if($institutionSiteId == $data['institution_site_id']){
+echo $this->Html->link($this->Label->get('general.back'), array('action' => 'behaviourStaff', $data[$model]['staff_id']), array('class' => 'divider'));
+     //   if($institutionSiteId == $data['institution_site_id']){
     		if($_edit) {
-    			echo $this->Html->link(__('Edit'), array('action' => 'staffsBehaviourEdit', $data['id']), array('class' => 'divider'));
+    			echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'behaviourStaffEdit', $staffId, $data[$model]['id']), array('class' => 'divider'));
     		}
     		if($_delete) {
-    			echo $this->Html->link(__('Delete'), array('action' => 'staffsBehaviourDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
+    			echo $this->Html->link($this->Label->get('general.delete'), array('action' => 'behaviourStaffDelete'), array('class' => 'divider', 'onclick' => 'return jsForm.confirmDelete(this)'));
     		}
-        }
+    //    }
 $this->end();
 
 $this->start('contentBody');
+echo $this->element('layout/view', array('fields' => $fields, 'data' => $data));
+/*
 ?>
 
 <div id="staffBehaviourView" class="content_wrapper dataDisplay">
@@ -70,4 +70,4 @@ $this->start('contentBody');
     		</div>
     	</div>
 </div>
-<?php $this->end(); ?>
+<?php */ $this->end(); ?>

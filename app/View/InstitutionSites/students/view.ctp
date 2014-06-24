@@ -18,9 +18,9 @@ if ($_delete) {
 if ($_accessControl->check($this->params['controller'], 'studentsCustFieldYrView')) {
 	echo $this->Html->link(__('Academic'), array('action' => 'studentsCustFieldYrView', $obj['id']), array('class' => 'divider'));
 }
-if ($_accessControl->check($this->params['controller'], 'studentsBehaviour')) {
+/*if ($_accessControl->check($this->params['controller'], 'studentsBehaviour')) {
 	echo $this->Html->link(__('Behaviour'), array('action' => 'studentsBehaviour', $obj['id']), array('class' => 'divider'));
-}
+}*/
 $this->end();
 
 $this->start('contentBody');

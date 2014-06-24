@@ -11,12 +11,13 @@ echo $this->Html->link(__('Back'), array('action' => 'staff'), array('class' => 
 if($_accessControl->check($this->params['controller'], 'staffCustFieldYrView')) {
 	echo $this->Html->link(__('Academic'), array('action' => 'staffCustFieldYrView', $obj['id']), array('class' => 'divider'));
 }
+/*
 if($_accessControl->check($this->params['controller'], 'staffAttendance')) {
 	echo $this->Html->link(__('Attendance'), array('action' => 'staffAttendance'), array('class' => 'divider'));
 }
 if($_accessControl->check($this->params['controller'], 'staffBehaviour')) {
 	echo $this->Html->link(__('Behaviour'), array('action' => 'staffsBehaviour', $obj['id']), array('class' => 'divider'));
-}
+}*/
 $this->end();
 
 $this->start('contentBody');

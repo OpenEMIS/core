@@ -284,8 +284,32 @@ class InstitutionSiteClassStudent extends AppModel {
 		return $gender;
 	}
 	
-	public function getStudentsByClass($classId) {
-		$conditions = array(
+	public function getStudentsByClass($classId, $showGrade = false) {
+		$options['conditions'] = array(
+			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
+		);
+		
+		//$options['recursive'] =-1;
+		$options['fields'] = array(
+				'DISTINCT Student.id',
+				'Student.identification_no',
+				'Student.first_name',
+				'Student.middle_name',
+				'Student.last_name',
+				'Student.preferred_name'
+			);
+		
+		if($showGrade){
+			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteClass')));
+			$options['fields'][] = 'EducationGrade.name';
+		}
+		else{
+			$this->unbindModel(array('belongsTo' => array('Students.StudentCategory','InstitutionSiteClass','EducationGrade')));
+		}
+		
+		$data = $this->find('all', $options);
+		
+		/*$conditions = array(
 			'InstitutionSiteClassStudent.institution_site_class_id' => $classId
 		);
 
@@ -308,7 +332,7 @@ class InstitutionSiteClassStudent extends AppModel {
 			),
 			'conditions' => $conditions
 		));
-
+*/
 		return $data;
 	}
 	
