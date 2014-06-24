@@ -17,7 +17,155 @@ have received a copy of the GNU General Public License along with this program. 
 App::uses('AppModel', 'Model');
 
 class SecurityRoleFunction extends AppModel {
+	public $actsAs = array('ControllerAction');
 	public $belongsTo = array('SecurityRole', 'SecurityFunction');
+	
+	public function beforeAction($controller, $action) {
+        parent::beforeAction($controller, $action);
+		$controller->Navigation->addCrumb('Permissions');
+		$controller->set('header', __('Permissions'));
+    }
+	
+	public function permissions($controller, $params) {
+		if(isset($params->pass[0])) {
+			$selectedRole = $params->pass[0];
+			
+			if ($this->SecurityRole->exists($selectedRole)) {
+				$this->SecurityRole->recursive = 0;
+				$role = $this->SecurityRole->findById($selectedRole);
+				$roleOptions = $this->SecurityRole->find('list', array(
+					'conditions' => array('SecurityRole.security_group_id' => $role['SecurityRole']['security_group_id'])
+				));
+				
+				$moduleOptions = $this->SecurityFunction->find('list', array(
+					'fields' => array('SecurityFunction.module', 'SecurityFunction.module'),
+					'order' => array('SecurityFunction.order'),
+					'group' => array('SecurityFunction.module')
+				));
+				$selectedModule = isset($params->pass[1]) ? $params->pass[1] : key($moduleOptions);
+				
+				$allowEdit = true;
+				$isSuperUser = $controller->Auth->user('super_admin')==1;
+				$userId = $isSuperUser ? false : $this->Auth->user('id');
+				if(!$isSuperUser) {
+					$userRoles = ClassRegistry::init('SecurityGroupUser')->getRolesByUserId($userId);
+					foreach($userRoles as $obj) {
+						if($obj['SecurityRole']['id'] === $selectedRole) {
+							$allowEdit = false;
+							break;
+						}
+					}
+				}
+				
+				$this->SecurityFunction->recursive = 0;
+				$permissions = $this->SecurityFunction->getPermissions($selectedRole, $selectedModule, $isSuperUser);
+				$selectedGroup = $role['SecurityRole']['security_group_id'];
+				$groupObj = ClassRegistry::init('SecurityGroup')->findById($role['SecurityRole']['security_group_id']);
+				if (!empty($groupObj)) {
+					$header = $groupObj['SecurityGroup']['name'];// . ' - ' . __('Permissions');
+					$controller->set('header', $header);
+				}
+				
+				$controller->set('_operations', $controller->AccessControl->operations);
+				$controller->set(compact('allowEdit', 'roleOptions', 'selectedRole', 'moduleOptions', 'selectedModule', 'permissions', 'selectedGroup'));
+			} else {
+				$controller->Message->alert('general.notExists');
+				return $controller->redirect(array('action' => 'roles'));
+			}
+			
+			/*
+			$isSuperUser = $controller->Auth->user('super_admin')==1;
+			$userId = $isSuperUser ? false : $this->Auth->user('id');
+			$groupObj = $this->SecurityRole->getGroupName($selectedRole, $userId);
+			
+			$allowEdit = true;
+			if(!$isSuperUser) {
+				$userRoles = ClassRegistry::init('SecurityGroupUser')->getRolesByUserId($userId);
+				foreach($userRoles as $obj) {
+					if($obj['SecurityRole']['id'] === $selectedRole) {
+						$allowEdit = false;
+						break;
+					}
+				}
+			}
+			$roles = $groupObj ? $this->SecurityRole->getRoleOptions($groupObj['id']) : $this->SecurityRole->getRoleOptions(array(0, -1));
+			$permissions = array();
+			if($isSuperUser) {
+				$permissions = $this->SecurityFunction->getPermissions($selectedRole, $isSuperUser);
+			} else {
+				$permissions = $this->SecurityFunction->getAllowedPermissions($selectedRole, $userId, $isSuperUser);
+			}
+			$controller->set('_operations', $controller->AccessControl->operations);
+			$controller->set('selectedRole', $selectedRole);
+			$controller->set('roles', $roles);
+			$controller->set('permissions', $permissions);
+			$controller->set('group', $groupObj);
+			$controller->set('allowEdit', $allowEdit);
+			*/
+		} else {
+			$controller->Message->alert('general.notExists');
+			$controller->redirect(array('action' => 'roles'));
+		}
+	}
+	
+	public function permissionsEdit($controller, $params) {
+		if(isset($params->pass[0])) {
+			$selectedRole = $params->pass[0];
+			
+			if ($this->SecurityRole->exists($selectedRole)) {
+				$this->SecurityRole->recursive = 0;
+				$role = $this->SecurityRole->findById($selectedRole);
+				$roleOptions = $this->SecurityRole->find('list', array(
+					'conditions' => array('SecurityRole.security_group_id' => $role['SecurityRole']['security_group_id'])
+				));
+				
+				$moduleOptions = $this->SecurityFunction->find('list', array(
+					'fields' => array('SecurityFunction.module', 'SecurityFunction.module'),
+					'order' => array('SecurityFunction.order'),
+					'group' => array('SecurityFunction.module')
+				));
+				$selectedModule = isset($params->pass[1]) ? $params->pass[1] : key($moduleOptions);
+				
+				if($controller->request->is('get')) {
+					$allowEdit = true;
+					$isSuperUser = $controller->Auth->user('super_admin')==1;
+					$userId = $isSuperUser ? false : $this->Auth->user('id');
+					if(!$isSuperUser) {
+						$userRoles = ClassRegistry::init('SecurityGroupUser')->getRolesByUserId($userId);
+						foreach($userRoles as $obj) {
+							if($obj['SecurityRole']['id'] === $selectedRole) {
+								$allowEdit = false;
+								break;
+							}
+						}
+					}
+					
+					if($allowEdit) {
+						$this->SecurityFunction->recursive = 0;
+						
+						$permissions = array();
+						$permissions = $this->SecurityFunction->getPermissions($selectedRole, $selectedModule, $isSuperUser);
+					} else {
+						$controller->redirect(array('action' => 'permissions', $selectedRole));
+					}
+					
+					$controller->set('_operations', $controller->AccessControl->operations);
+					$controller->set(compact('roleOptions', 'selectedRole', 'moduleOptions', 'selectedModule', 'permissions'));
+				} else {
+					$data = $controller->request->data['SecurityRoleFunction'];
+					$this->saveAll($data);
+					$controller->Message->alert('general.edit.success');
+					$controller->redirect(array('action' => 'permissions', $selectedRole, $selectedModule));
+				}
+			} else {
+				$controller->Message->alert('general.notExists');
+				return $controller->redirect(array('action' => 'roles'));
+			}
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'roles'));
+		}
+	}
 	
 	public function getModules($roleIds = array()) {
 		$roleList = array();

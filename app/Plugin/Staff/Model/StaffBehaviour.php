@@ -28,8 +28,19 @@ class StaffBehaviour extends StaffAppModel {
 	public $belongsTo = array(
 		'Staff.Staff',
 		'Staff.StaffBehaviourCategory',
-		'InstitutionSite'
-	);
+		'InstitutionSite',
+		'ModifiedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'modified_user_id',
+			'type' => 'LEFT'
+		),
+		'CreatedUser' => array(
+			'className' => 'SecurityUser',
+			'fields' => array('first_name', 'last_name'),
+			'foreignKey' => 'created_user_id',
+			'type' => 'LEFT'
+		));
 	public $validate = array(
 		'title' => array(
 			'ruleRequired' => array(
@@ -111,6 +122,25 @@ class StaffBehaviour extends StaffAppModel {
 		);
 		return $fields;
 	}
+	
+	public function getDisplayFieldsInstitutionStaff($controller) {
+		$fields = array(
+			'model' => $this->alias,
+			'fields' => array(
+				array('field' => 'id', 'type' => 'hidden'),
+				array('field' => 'name', 'model' => 'StaffBehaviourCategory', 'labelKey' => 'general.category'),
+				array('field' => 'date_of_behaviour', 'type' => 'datepicker', 'labelKey' => 'general.date'),
+				array('field' => 'title'),
+				array('field' => 'description', 'type' => 'textarea'),
+				array('field' => 'action', 'type' => 'textarea'),
+				array('field' => 'modified_by', 'model' => 'ModifiedUser', 'edit' => false),
+				array('field' => 'modified', 'edit' => false),
+				array('field' => 'created_by', 'model' => 'CreatedUser', 'edit' => false),
+				array('field' => 'created', 'edit' => false)
+			)
+		);
+		return $fields;
+	}
 
 	public function behaviour($controller, $params) {
 		$controller->Navigation->addCrumb('List of Behaviour');
@@ -167,7 +197,27 @@ class StaffBehaviour extends StaffAppModel {
 		  } */
 	}
 
-	public function staffsBehaviour($controller, $params) {
+	
+	
+	//Institution Site
+	public function behaviourStaffList($controller, $params) {
+		$controller->Navigation->addCrumb('Behaviour - Staff');
+		$InstitutionId = $controller->Session->read('InstitutionSite.id'); 
+		$yearOptions = ClassRegistry::init('SchoolYear')->getYearListValues('start_year');
+		$selectedYear = empty($params['pass'][0])? key($yearOptions):$params['pass'][0];
+	
+	
+		$data = ClassRegistry::init('InstitutionSiteStaff')->getStaffSelectList($selectedYear, $InstitutionId, NULL);
+		
+		if (empty($data)) {
+			$controller->Message->alert('general.noData');
+        }
+		
+		$controller->set(compact('yearOptions', 'data', 'selectedYear'));
+	}
+	
+	public function behaviourStaff($controller, $params) {
+	//public function staffsBehaviour($controller, $params) {
 		extract($controller->staffCustFieldYrInits());
 		$controller->Navigation->addCrumb('List of Behaviour');
 
@@ -181,7 +231,87 @@ class StaffBehaviour extends StaffAppModel {
 		
 		$controller->set(compact('data', 'id'));
 	}
+	
+	public function behaviourStaffAdd($controller, $params) {
+		$staffId = $controller->params['pass'][0];
+		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+		$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+		$controller->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+		$controller->Navigation->addCrumb('Add Behaviour');
 
+		$controller->set('header', __('Add Behaviour'));
+		$this->setup_add_edit_form($controller, $params, 'add');
+	}
+	public function behaviourStaffEdit($controller, $params) {
+		$staffId = $controller->params['pass'][0];
+		$data = $this->Staff->find('first', array('conditions' => array('Staff.id' => $staffId)));
+		$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+		$controller->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+		$controller->Navigation->addCrumb('Edit Behaviour');
+		
+		$controller->set('header', __('Edit Behaviour'));
+		$this->setup_add_edit_form($controller, $params, 'edit');
+		$this->render = 'add';
+	}
+	
+	function setup_add_edit_form($controller, $params, $type){
+		$staffId = $controller->params['pass'][0];
+	//	$specialNeedTypeOptions = $this->SpecialNeedType->find('list', array('fields'=> array('id', 'name')));
+	//	$controller->set('specialNeedTypeOptions', $specialNeedTypeOptions);
+		if($controller->request->is('get')){
+			$id = empty($params['pass'][1])? 0:$params['pass'][1];
+			$this->recursive = -1;
+			$data = $this->findById($id);
+			if(!empty($data)){
+				$controller->request->data = $data;
+			}
+		}
+		else{
+			$controller->request->data[$this->name]['institution_site_id'] = $controller->Session->read('InstitutionSite.id');
+			$controller->request->data[$this->name]['staff_id'] = $staffId;
+			if($this->save($controller->request->data)){
+				$controller->Message->alert('general.' . $type . '.success');
+				return $controller->redirect(array('action' => 'behaviourStaff',$staffId));
+			}
+		}
+		
+		//$yearOptions = $controller->SchoolYear->getYearList();
+		$categoryOptions = $this->StaffBehaviourCategory->getCategory();
+		
+		$controller->set(compact('staffId','categoryOptions'));
+	}
+	
+	public function behaviourStaffView($controller, $params) {
+	//	$this->render = false;
+    //public function studentsBehaviourView($controller, $params) {
+        $id = $controller->params['pass'][0];
+		
+		$data = $this->findById($id);
+		if (!empty($data)) {
+			$controller->Session->write($this->alias . '.id', $id);
+		} else {
+			$controller->Message->alert('general.notExists');
+			return $controller->redirect(array('action' => 'behaviourStaff'));
+		}
+		
+		$staffId = $data['StaffBehaviour']['staff_id'];
+		$name = sprintf('%s %s', $data['Staff']['first_name'], $data['Staff']['last_name']);
+		$controller->Navigation->addCrumb($name, array('controller' => 'InstitutionSites', 'action' => 'staffView', $staffId));
+        $controller->Navigation->addCrumb('Behaviour Details');
+		
+		$controller->Session->write('StaffBehavour.Id', $id);
+		$controller->Session->write('StaffBehavour.StaffId', $staffId);
+		
+		$fields = $this->getDisplayFieldsInstitutionStaff($controller);
+		$header = __('Behaviour Details');
+		$controller->set(compact('data', 'fields', 'header', 'staffId'));
+    }
+
+	public function behaviourStaffDelete($controller, $params) {
+		$staffId = $controller->Session->read('StaffBehavour.StaffId');
+		return $this->remove($controller, 'behaviourStaff/'. $staffId);
+	}
+/*
 	public function staffsBehaviourAdd($controller, $params) {
 		if ($controller->request->is('get')) {
 			$staffId = $controller->params['pass'][0];
@@ -324,7 +454,7 @@ class StaffBehaviour extends StaffAppModel {
 
 		return 'true';
 	}
-	
+	*/
 	public function reportsGetHeader($args) {
 		//$institutionSiteId = $args[0];
 		$index = $args[1];
