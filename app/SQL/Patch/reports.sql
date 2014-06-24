@@ -811,6 +811,8 @@ SET `query` = '$data = $this->InstitutionSite->find(''all'',array(''fields''=>ar
 `template` = 'Code,InstitutionName,Address,PostalCode,ContactPerson,Telephone,Fax,Email,Website,DateOpened,DateClosed,Longitude,Latitude,AreaName,Locality,SiteType,Ownership,Status' 
 WHERE `name` LIKE 'Institution Site List' AND `report_id` = 11;
 
+-- Report 'Institution Site List' contains 2 reports: Institution and Institution Site, now remove the Institution part
+
 DELETE FROM `batch_reports` 
 WHERE `id` =12 
 AND `name` LIKE 'Institution Site List';
@@ -820,3 +822,99 @@ WHERE `id` =12
 AND `name` LIKE 'Institution Site Report';
 
 
+--
+-- Institution List, Institution Custom Field Report
+--
+
+DELETE FROM `reports` WHERE `id` =1;
+DELETE FROM `reports` WHERE `id` =2;
+DELETE FROM `reports` WHERE `id` =3;
+
+DELETE FROM `batch_reports` WHERE `id` =1;
+DELETE FROM `batch_reports` WHERE `id` =2;
+DELETE FROM `batch_reports` WHERE `id` =3;
+
+--
+-- Teacher Report, Teacher Custom Field Report
+--
+
+DELETE FROM `reports` WHERE `id` =91;
+DELETE FROM `reports` WHERE `id` =92;
+
+DELETE FROM `batch_reports` WHERE `id` =91;
+DELETE FROM `batch_reports` WHERE `id` =92;
+
+
+DELETE FROM `navigations`
+WHERE `id` =125
+AND `module` LIKE 'Report'
+AND `title` LIKE 'Teacher Reports';
+
+--
+-- Update reports
+--
+
+UPDATE `reports` SET module = 'Institutions' 
+WHERE `module` LIKE 'Institution Sites';
+
+UPDATE `reports` SET module = 'Institution Totals' 
+WHERE `module` LIKE 'Institution Site Totals';
+
+UPDATE `reports` SET `name` = 'Institution Report',
+`description` = 'List of Institutions' WHERE `reports`.`id` =11;
+
+UPDATE `reports` SET `name` = 'Institution Custom Field Report',
+`description` = 'List of Institutions with custom fields' WHERE `reports`.`id` =13;
+
+UPDATE `reports` SET `name` = 'Institution Bank Account Report',
+`description` = 'List of Institutions with bank accounts' WHERE `reports`.`id` =14;
+
+UPDATE `reports` SET `name` = 'Institution Programme Report',
+`description` = 'List of Institutions with programmes' WHERE `reports`.`id` =15;
+
+UPDATE `reports` SET `description` = 'A Google Earth (KML) file containing all the location of all Institutions' WHERE `reports`.`id` =111;
+
+UPDATE `reports` SET `description` = 'List of Institutions that do not contain census data for a given year' WHERE `reports`.`id` =151;
+
+UPDATE `reports` SET `description` = 'List of Institutions with questionable census data compared to the previous year' WHERE `reports`.`id` =152;
+
+UPDATE `reports` SET `description` = 'List of Institutions with latitude and/or longitude values of 0 or null' WHERE `reports`.`id` =154;
+
+UPDATE `reports` SET `name` = 'Institution with No Area Report',
+`description` = 'List of Institutions with no area' WHERE `reports`.`id` =1038;
+
+--
+-- Update security_functions
+--
+
+DELETE FROM `security_functions`
+WHERE `controller` LIKE 'Institutions';
+
+UPDATE `security_functions` 
+SET `parent_id` = '-1', 
+`name` = 'Institution' 
+WHERE `security_functions`.`id` =8;
+
+UPDATE `security_functions` 
+SET `module` = 'Institution' 
+WHERE `module` LIKE 'Institution Site';
+
+UPDATE `security_functions` 
+SET `module` = 'Institution Details' 
+WHERE `module` LIKE 'Institution Site Details';
+
+UPDATE `security_functions` 
+SET `module` = 'Institution Totals' 
+WHERE `module` LIKE 'Institution Site Totals';
+
+UPDATE `security_functions` 
+SET `module` = 'Institution Reports' 
+WHERE `module` LIKE 'Institution Site Reports';
+
+UPDATE `security_functions` 
+SET `module` = 'Institution Quality' 
+WHERE `module` LIKE 'Institution Site Quality';
+
+UPDATE `security_functions` 
+SET `module` = 'Institution Attendance' 
+WHERE `module` LIKE 'Institution Site Attendance';
