@@ -1,53 +1,23 @@
 <?php
 echo $this->Html->css('security', 'stylesheet', array('inline' => false));
 echo $this->Html->script('security', false);
-echo $this->Html->css('security', 'stylesheet', array('inline' => false));
-
-echo $this->Html->script('security', false);
 
 $this->extend('/Elements/layout/container');
-$this->assign('contentHeader', __('Permissions'));
+$this->assign('contentHeader', $header);
 $this->start('contentActions');
-echo $this->Html->link(__('View'), array('action' => 'permissions', $selectedRole), array('class' => 'divider'));
+echo $this->Html->link(__('View'), array('action' => 'permissions', $selectedRole, $selectedModule), array('class' => 'divider'));
 $this->end();
 $this->assign('contentId', 'permissions');
-$this->assign('contentClass', 'edit');
 $this->start('contentBody');
+echo $this->element('../Security/permissions/controls');
 ?>
-<?php echo $this->element('alert'); ?>
 
 <?php
 echo $this->Form->create('Security', array(
 	'inputDefaults' => array('label' => false, 'div' => false),	
-	'url' => array('controller' => 'Security', 'action' => 'permissionsEdit', $selectedRole)
+	'url' => array('controller' => 'Security', 'action' => 'permissionsEdit', $selectedRole, $selectedModule)
 ));
-?>
 
-
-<?php if(!empty($group)) { ?>
-<div class="row">
-	<label class="col-md-3 control-label"><?php echo __('Group Name'); ?></label>
-	<div class="col-md-4"><?php echo $group['name']; ?></div>
-</div>
-<?php } ?>
-
-<div class="row page-controls" style="margin-bottom: 15px;">
-	<div class="col-md-4">
-		<?php
-		echo $this->Form->input('security_role_id', array(
-			'label' => false,
-			'div' => false,
-			'options' => $roles,
-			'default' => $selectedRole,
-			'class' => 'form-control',
-			'url' => $this->params['controller'] . '/' . $this->params['action'],
-			'onchange' => 'jsForm.change(this)'
-		));
-		?>
-	</div>
-</div>
-
-<?php 
 $index = 0;
 foreach($permissions as $module => $func) {
 	$enabled = $func['enabled'] ? 'checked="checked"' : '';
@@ -89,7 +59,7 @@ foreach($permissions as $module => $func) {
 <?php } ?>
 
 <?php
-echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'permissions', $selectedRole)));
+echo $this->FormUtility->getFormButtons(array('center' => true, 'cancelURL' => array('action' => 'permissions', $selectedRole)));
 echo $this->Form->end();
 $this->end();
 ?>

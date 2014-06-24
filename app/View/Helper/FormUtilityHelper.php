@@ -45,11 +45,12 @@ class FormUtilityHelper extends AppHelper {
 		return $defaults;
 	}
 	
-	public function getFormButtons($option = NULL) {
+	public function getFormButtons($options = NULL) {
 		$html = '';
-		$cancelURL = $option['cancelURL'];
-		$html .= '<div class="form-group form-buttons">';
-		$html .= '<div class="col-md-offset-3">';
+		$cancelURL = $options['cancelURL'];
+		$center = isset($options['center']) ? $options['center'] : false;
+		$html .= '<div class="form-group">';
+		$html .= '<div class="col-md-offset-' . ($center ? '5' : '3') . '">';
 		$html .= $this->Form->submit($this->Label->get('general.save'), array('class' => 'btn_save btn_right', 'div' => false));
 		$html .= $this->Html->link($this->Label->get('general.cancel'), $cancelURL, array('class' => 'btn_cancel btn_left'));
 		$html .= '</div>';
