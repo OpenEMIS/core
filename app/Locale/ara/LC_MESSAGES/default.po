@@ -3951,3 +3951,9 @@ msgstr "تحرير تفاصيل جلسات"
 
 msgid "Evaluation Tools"
 msgstr "أدوات التقييم"
+
+msgid "Download Trainees"
+msgstr "تحميل المتدربين"
+
+msgid "Download Trainee Results"
+msgstr "تحميل متدرب نتائج"
