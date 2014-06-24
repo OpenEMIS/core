@@ -11,11 +11,11 @@ $this->assign('contentHeader', __('Results'));
 $obj = $data[$modelName];
 $this->start('contentActions');
 echo $this->Html->link($this->Label->get('general.list'), array('action' => 'result'), array('class' => 'divider'));
-echo $this->Html->link(__('Download Trainee Results'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
 if($_edit) {
 	if($obj['training_status_id'] == 1){
 	    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'resultEdit', $obj['id']), array('class' => 'divider'));
 	}
+	echo $this->Html->link(__('Download Trainee Results'), array('action' => 'resultDownloadTemplate'), array('class' => 'divider'));
 }
 $this->end();
 
