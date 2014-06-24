@@ -3788,6 +3788,12 @@ msgstr "وطريقة التسليم"
 msgid "Last Updated By"
 msgstr "اخر تحديث قام به"
 
+msgid "Behaviour - Staff"
+msgstr "السلوك - الموظفين"
+
+msgid "Behaviour - Students"
+msgstr "السلوك - طلاب"
+
 # ###########################################################################
 msgid "*File size should not be larger than 2MB."
 msgstr "* لا ينبغي أن يكون حجم الملف أكبر من 2MB."

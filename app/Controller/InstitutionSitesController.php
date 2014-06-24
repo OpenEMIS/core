@@ -140,7 +140,7 @@ class InstitutionSitesController extends AppController {
 	public $modules = array(
         'bankAccounts' => 'InstitutionSiteBankAccount',
         'programmes' => 'InstitutionSiteProgramme',
-        'studentsBehaviour' => 'Students.StudentBehaviour',
+        'behaviourStudent' => 'Students.StudentBehaviour',
         'students' => 'InstitutionSiteStudent',
 		'classesSubject' => 'InstitutionSiteClassSubject',
 		'classesStudent' => 'InstitutionSiteClassStudent',
@@ -150,7 +150,7 @@ class InstitutionSitesController extends AppController {
 		'additional' => 'InstitutionSiteCustomField',
 		'shifts' => 'InstitutionSiteShift',
 		'positions' => 'InstitutionSitePosition',
-		'staffsBehaviour' => 'Staff.StaffBehaviour',
+		'behaviourStaff' => 'Staff.StaffBehaviour',
 		'staff' => 'InstitutionSiteStaff',
 		'attendanceStudent' => 'InstitutionSiteStudentAbsence',
 		'attendanceStaff' => 'InstitutionSiteStaffAbsence'
