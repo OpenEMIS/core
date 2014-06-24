@@ -99,6 +99,8 @@ class SecurityController extends AppController {
 		$lang = 'eng';
 		if($this->Session->check('configItem.language')){
 			$lang = $this->Session->read('configItem.language');
+		}else{
+			$this->Session->write('configItem.language', $lang);
 		}
 
 		$this->set('showLanguage', $showLanguage);
