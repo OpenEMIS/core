@@ -243,7 +243,7 @@ class LabelHelper extends AppHelper {
 			'code' => 'Course Code',
 			'objective' => 'Course Goal / Objectives',
 			'provider' => 'Provider',
-			'credit_hours' => 'Credit',
+			'credit_hours' => 'Credits',
 			'completed' => 'Completed',
 			'requirement' => 'Training Requirement',
 			'inactivate' => 'Inactivate',
