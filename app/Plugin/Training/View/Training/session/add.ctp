@@ -26,10 +26,11 @@ echo $this->Form->create($model, $formOptions);
 ?>
 
 <?php if(!empty($this->data[$modelName]['id'])){ echo $this->Form->input('id', array('type'=> 'hidden')); } ?>
-<?php if(!empty($this->data[$modelName]['training_status_id'])){ echo $this->Form->input('training_status_id', array('type'=> 'hidden')); } ?>
+<?php echo $this->Form->input('training_status_id', array('type'=> 'hidden', 'class'=>'training-status'));?>
 
 <?php  echo $this->Form->input('provider', array('type'=> 'hidden', 'class'=>'provider', 'default'=>$provider)); ?>
 <?php  echo $this->Form->input('sessionEditable', array('type'=> 'hidden', 'default'=>$this->request->data['TrainingSession']['sessionEditable'])); ?>
+
 <?php 
 $readonly = array();
 if($this->request->data['TrainingSession']['sessionEditable']=='2'){
@@ -199,9 +200,9 @@ else{
 </div>
 <div class="controls view_controls">
 	<?php if($this->request->data['TrainingSession']['sessionEditable']!='0'){ ?>
-	<input type="submit" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
+	<input type="button" value="<?php echo __("Save"); ?>" name='save' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
 	<?php if($this->request->data['TrainingSession']['sessionEditable']=='1'){ ?>
-	<input type="submit" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
+	<input type="button" value="<?php echo __("Submit for Approval"); ?>" name='submitForApproval' class="btn_save btn_right" onclick="objTrainingSessions.save(this);"/>
 	<?php } ?>
 	<?php } ?>
 	<?php echo $this->Html->link(__('Cancel'), array('action' => 'session'), array('class' => 'btn_cancel btn_left')); ?>

@@ -282,6 +282,11 @@ class LabelHelper extends AppHelper {
 			'section_header' => 'Section Header',
 			'view_rubric' => 'View Rubric'
 		)
+		,
+		'ReportInHtml' => array(
+			'no_data' => 'There is no data to be displayed.',
+			'failed_open_file' => 'Error. Failed to open file.'
+		)
 	);
 	
 	public function get($code) {
