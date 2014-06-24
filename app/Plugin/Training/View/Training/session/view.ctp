@@ -10,7 +10,7 @@ if($_edit) {
 	if($sessionEditable){
 	    echo $this->Html->link($this->Label->get('general.edit'), array('action' => 'sessionEdit', $obj['id']), array('class' => 'divider'));
 	}
-	echo $this->Html->link(__('Download Trainees'), array('action' => 'sessionDownloadTemplate'), array('class' => 'divider'));
+	echo $this->Html->link(__('Download Trainees'), array('action' => 'sessionTraineeListDownload'), array('class' => 'divider'));
 }
 if($_delete) {
 	if($obj['training_status_id'] == 1){
