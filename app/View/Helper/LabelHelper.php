@@ -136,7 +136,7 @@ class LabelHelper extends AppHelper {
 			'institution_site_gender_id' => 'Gender',
 			'institution_site_status_id' => 'Status',
 			'institution_site_locality_id' => 'Locality',
-			'name' => 'Institution Site',
+			'name' => 'Institution',
 			'programme' => 'Programme',
 			'id_name' => 'ID / Name'
 		),

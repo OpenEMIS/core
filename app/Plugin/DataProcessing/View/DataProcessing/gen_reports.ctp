@@ -1,5 +1,8 @@
 <?php
 echo $this->Html->css('table', 'stylesheet', array('inline' => false));
+echo $this->Html->css('../js/plugins/icheck/skins/minimal/blue', 'stylesheet', array('inline' => false));
+echo $this->Html->script('plugins/tableCheckable/jquery.tableCheckable', false);
+echo $this->Html->script('plugins/icheck/jquery.icheck.min', false);
 
 $this->extend('/Elements/layout/container');
 $this->assign('contentHeader', $this->Label->get('DataProcessing.generate'));
@@ -14,10 +17,6 @@ $this->end();
 $this->assign('contentId', 'reports');
 $this->start('contentBody');
 ?>
-<?php echo $this->element('alert'); ?>
-<style type="text/css">
-.cell_name { width: 180px; }
-</style>
 
 <script type="text/javascript">
 	function turncheckboxes(what){
@@ -35,7 +34,7 @@ $this->start('contentBody');
 	}
 	function toggleSelect(obj) {
 		var table = $(obj).closest('.table');
-		table.find('.table_body input[type="checkbox"]').each(function() {
+		table.find('tbody input[type="checkbox"]').each(function() {
 				if(obj.checked) {
 					if( $(this).attr('disabled') == undefined){
 						$(this).attr('checked','checked');
@@ -50,8 +49,7 @@ $this->start('contentBody');
 <?php
 echo $this->Form->create('DataProcessing', array(
 	'id' => 'submitForm',
-	'inputDefaults' => array('label' => false, 'div' => false),	
-	//'url' => array('controller' => 'DataProcessing', 'action' => 'reports'),
+	'inputDefaults' => array('label' => false, 'div' => false),
 	'onsubmit' => 'return jsForm.isSubmitDisabled(this)'
 ));
 ?>
@@ -65,47 +63,47 @@ foreach($data as $Nav => $arrModules){
 		<legend><?php echo __($k); ?></legend>
 		
 		<div class="table-responsive">
-			<table class="table table-striped table-hover table-bordered">
-			<thead class="table_head">
+			<table class="table table-striped table-hover table-bordered table-checkable table-input">
+			<thead>
 				<tr>
 					<?php if($_execute) { ?>
-					<td class="table_cell cell_checkbox"><input type="checkbox" value="1" onChange="toggleSelect(this)" /></td>
+					<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 					<?php } ?>
-					<td class="table_cell cell_name"><?php echo __('Name'); ?></td>
-					<td class="table_cell cell_desc"><?php echo __('Description'); ?></td>
+					<td class="cell-report-name"><?php echo __('Name'); ?></td>
+					<td><?php echo __('Description'); ?></td>
 				</tr>
 			</thead>
 			
-			<tbody class="table_body">
-				<?php foreach($arrv as $arrValues){ //pr($arrValues);
-                    $beingProc = 0;
+			<tbody>
+				<?php foreach($arrv as $arrValues) { //pr($arrValues);
+					$beingProc = 0;
 					$chkval = implode(',',array_keys($arrValues['file_kinds']));
 					//pr($arrValues);
-                                            foreach($arrValues['file_kinds'] as $kindsv){
-												
-												
-                                                /*if(in_array(str_replace(' ','_',$arrValues['name']).'.'.$kindsv, $queued) && $beingProc == 0){
-                                                   
-                                                    $beingProc = 1;
-                                                }*/
-												
-												foreach($queued as $qK => $qV){
-													if(stristr($qV, str_replace(' ','_',$arrValues['name']).'.'.$kindsv)){
-														$beingProc = 1;
-													}
-												}
-                                            }
-                                            $beingProc = ($isBackupRunning) ? 1: $beingProc;
-                                            $arrExtra = array('hiddenField' => false,'type'=>'checkbox','name'=>'data[Reports][]','value'=>$chkval);
-                                            $arrExtra = ($beingProc == 1 || $arrValues['enabled'] == 0)?  array_merge($arrExtra,array('disabled'=>'disabled')):$arrExtra;
+					foreach($arrValues['file_kinds'] as $kindsv){
+						
+						
+						/*if(in_array(str_replace(' ','_',$arrValues['name']).'.'.$kindsv, $queued) && $beingProc == 0){
+						   
+							$beingProc = 1;
+						}*/
+						
+						foreach($queued as $qK => $qV){
+							if(stristr($qV, str_replace(' ','_',$arrValues['name']).'.'.$kindsv)){
+								$beingProc = 1;
+							}
+						}
+					}
+					$beingProc = ($isBackupRunning) ? 1: $beingProc;
+					$arrExtra = array('hiddenField' => false, 'type'=>'checkbox', 'class' => 'icheck-input', 'name'=>'data[Reports][]','value'=>$chkval);
+					$arrExtra = ($beingProc == 1 || $arrValues['enabled'] == 0)?  array_merge($arrExtra,array('disabled'=>'disabled')):$arrExtra;
 				?>
 				
-				<tr class="table_row">
+				<tr>
 					<?php if($_execute) { ?>
-					<td class="table_cell cell_checkbox"><?php echo $this->Form->input('Reports',$arrExtra)?></td>
+					<td class="checkbox-column"><?php echo $this->Form->input('Reports',$arrExtra)?></td>
 					<?php } ?>
-					<td class="table_cell cell_name"><?php echo __($arrValues['name']); ?></td>
-					<td class="table_cell cell_desc"><?php echo __($arrValues['description']); ?></td>
+					<td><?php echo __($arrValues['name']); ?></td>
+					<td><?php echo __($arrValues['description']); ?></td>
 				</tr>
 				<?php } ?>
 			</tbody>
@@ -124,4 +122,4 @@ foreach($data as $Nav => $arrModules){
 <?php } ?>
 
 <?php echo $this->Form->end(); ?>
-<?php $this->end(); ?>  
+<?php $this->end(); ?>
