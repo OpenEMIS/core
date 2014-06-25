@@ -24,7 +24,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 	<?php echo $this->Html->charset(); ?>
 	<title><?php echo $description ?></title>
 	<?php
-		echo $this->Html->meta('favicon', $this->webroot . 'favicon.ico?v=2', array('type' => 'icon'));
+		echo $this->Html->meta('favicon', 'favicon.ico?v=2', array('type' => 'icon'));
 		echo $this->fetch('meta');
 		
 		echo $this->Html->css('default/bootstrap.min');

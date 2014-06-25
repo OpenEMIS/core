@@ -51,6 +51,7 @@ class SecurityController extends AppController {
 		$this->renderFooter();
 		$this->Auth->allow('login');
 		$this->Auth->allow('login_remote');
+		$this->Auth->allow('switchLanguage');
 		
 		if($this->action !== 'login' || $this->action !== 'logout') {
 			$this->bodyTitle = 'Administration';
@@ -64,28 +65,52 @@ class SecurityController extends AppController {
 			$this->Session->write('footer', $this->ConfigItem->getWebFooter());
 		}
 	}
+
+	public function switchLanguage(){
+	  	$this->autoRender = false;
+		$lang = $this->ConfigItem->getValue('language');
+		$showLanguage = $this->ConfigItem->getValue('language_menu');
+
+		if (!$this->Auth->loggedIn()) {
+			$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
+			if(isset($this->request->query['lang']) && in_array($this->request->query['lang'], $languageList)) {
+				$lang = $this->request->query['lang'];
+				setcookie('language', $lang, time()+(60*60*24*7), '/');
+			} else if($showLanguage && isset($_COOKIE['language'])) {
+				$lang = $_COOKIE['language'];
+			}
+
+
+			$userName = '';
+			$userPassword = '';
+
+			if(isset($this->request->query['username'])){
+				$userName = $this->request->query['username'];
+			}
+			if(isset($this->request->query['userpassword'])){
+				$userPassword = $this->request->query['userpassword'];
+			}
+			$this->Session->write('login.username', $userName);
+		 	$this->Session->write('login.password', $userPassword);
+
+			// Assign the language to session and configuration
+			$this->Session->write('configItem.language', $lang);
+		}
+	}
 	
-	public function login() {
+    public function login() {
 		$this->autoLayout = false;
 		$lang = $this->ConfigItem->getValue('language');
 		$showLanguage = $this->ConfigItem->getValue('language_menu');
-		if(isset($this->request->query['lang'])) {
-			$lang = $this->request->query['lang'];
-		} else if(count($this->request->params['pass']) > 0) {
-			$languageList = array('ara', 'chi', 'eng', 'fre', 'rus', 'spa');
-			if(in_array($this->request->params['pass'][0], $languageList)) {
-				$lang = $this->request->params['pass'][0];
-				setcookie('language', $lang, time()+(60*60*24*7), '/');
-			} else {
-				$lang = 'eng';
-			}
-		} else if($showLanguage && isset($_COOKIE['language'])) {
-			$lang = $_COOKIE['language'];
-			
+		$lang = 'eng';
+		if($this->Session->check('configItem.language')){
+			$lang = $this->Session->read('configItem.language');
+		}else{
+			$this->Session->write('configItem.language', $lang);
 		}
+
 		$this->set('showLanguage', $showLanguage);
 		// Assign the language to session and configuration
-		$this->Session->write('configItem.language', $lang);
 		if($this->request->is('post')) {
 			$username = $this->data['SecurityUser']['username'];
 			$this->log('[' . $username . '] Attempt to login as ' . $username . '@' . $_SERVER['REMOTE_ADDR'], 'security');
@@ -178,7 +203,7 @@ class SecurityController extends AppController {
 		} else {
 			if(!$this->RequestHandler->isAjax()) { // normal login
 				if($this->Auth->user()) { // user already login
-					$this->redirect($this->Auth->redirect('home'));
+					return $this->redirect(array('controller' => 'Home'));
 				}
 			} else { // ajax login
 				$this->set('message', $this->Utility->getMessage('LOGIN_TIMEOUT'));
