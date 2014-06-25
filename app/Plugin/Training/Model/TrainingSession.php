@@ -259,7 +259,7 @@ class TrainingSession extends TrainingAppModel {
 	            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 				
 	            $this->delete($id);
-	            $controller->Utility->alert($name . ' have been deleted successfully.');
+	            $controller->Message->alert('general.delete.success');
 				$controller->Session->delete('TrainingSessionId');
 			}
             $controller->redirect(array('action' => 'session'));
@@ -283,7 +283,7 @@ class TrainingSession extends TrainingAppModel {
 				$data['training_status_id'] = '1';
 
 				$this->TrainingSessionResult->save($data);
-	            $controller->Utility->alert($name . ' have been activated successfully.');
+	            $controller->Message->alert('Training.activate.success');
 	        }
             $controller->redirect(array('action' => 'session'));
         }
@@ -301,7 +301,7 @@ class TrainingSession extends TrainingAppModel {
     			array('TrainingSession.training_status_id' => 4),
     			array('TrainingSession.id '=> $id)
 			);
-            $controller->Utility->alert($name . ' have been inactivated successfully.');
+            $controller->Message->alert('Training.inactivate.success');
             $controller->redirect(array('action' => 'session'));
         }
     }
@@ -409,6 +409,47 @@ class TrainingSession extends TrainingAppModel {
 
 			echo $controller->array2csv($result, $fieldName);
 		 	die();
+		}else{
+ 		  	$controller->redirect(array('action' => 'session'));
+	 	}
+	}
+
+	public function sessionDuplicate($controller, $params){
+		if($controller->Session->check('TrainingSessionId')) {
+		 	$id = $controller->Session->read('TrainingSessionId');
+			$trainingSession = $this->find('all', array('conditions'=>array('TrainingSession.id'=>$id)));
+			if(!empty($trainingSession)){
+				$data['TrainingSession'] = $trainingSession[0]['TrainingSession'];
+				$data['TrainingSessionTrainee'] = $trainingSession[0]['TrainingSessionTrainee'];
+				$data['TrainingSessionTrainer'] = $trainingSession[0]['TrainingSessionTrainer'];
+			}
+			
+			$data['TrainingSession']['training_status_id'] = 1;
+			unset($data['TrainingSession']['modified_user_id']);
+			unset($data['TrainingSession']['modified']);
+			unset($data['TrainingSession']['created_user_id']);
+			unset($data['TrainingSession']['created']);
+			unset($data['TrainingSession']['id']);
+			if(!empty($data['TrainingSessionTrainee'])){
+				foreach($data['TrainingSessionTrainee'] as $key=>$val){
+					unset($data['TrainingSessionTrainee'][$key]['id']);
+					unset($data['TrainingSessionTrainee'][$key]['training_session_id']);
+				}
+			}
+			if(!empty($data['TrainingSessionTrainer'])){
+				foreach($data['TrainingSessionTrainer'] as $key=>$val){
+					unset($data['TrainingSessionTrainer'][$key]['id']);
+					unset($data['TrainingSessionTrainer'][$key]['training_session_id']);
+				}
+			}
+
+			if($this->saveAll($data)){
+				$controller->Message->alert('general.duplicate.success');
+				$controller->redirect(array('action' => 'sessionEdit', $this->getLastInsertId()));
+			}else{
+				$controller->Message->alert('general.duplicate.failed');
+			}
+			
 		}else{
  		  	$controller->redirect(array('action' => 'session'));
 	 	}
@@ -548,7 +589,7 @@ class TrainingSession extends TrainingAppModel {
 						
 					 	$this->TrainingSessionTrainee->deleteAll(array('TrainingSessionTrainee.id'=>$deletedId));
 					}
-					$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+					$controller->Message->alert('general.update.success');
 					return $controller->redirect(array('action' => 'session'));
 					
 				}else{
@@ -568,10 +609,10 @@ class TrainingSession extends TrainingAppModel {
 							$this->TrainingSessionTrainer->deleteAll(array('TrainingSessionTrainer.id' => $deletedId), false);
 						}
 						if(empty($controller->request->data[$this->name]['id'])){
-							$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
+						  	$controller->Message->alert('general.add.success');
 						}
-						else{
-							$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+						else{	
+						  	$controller->Message->alert('general.update.success');
 						}
 						return $controller->redirect(array('action' => 'session'));
 					}
