@@ -18,5 +18,5 @@
 ?>
 <h2><?php echo __('Page does not exists'); ?></h2>
 <p>
-	<a href="javascript:history.go(-1)" class="btn btn-primary"><i class="fa fa-arrow-left"></i> <?php __('Go Back');?></a>
+	<a href="javascript:history.go(-1)" class="btn btn-primary"><i class="fa fa-arrow-left"></i> <?php echo __('Go Back');?></a>
 </p>
