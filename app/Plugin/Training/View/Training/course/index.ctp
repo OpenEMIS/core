@@ -15,7 +15,6 @@ $this->end();
 $this->start('contentBody');
 ?>
 <?php echo $this->element('alert'); ?>
-<?php echo $this->Form->create('Training', array('action' => 'search', 'id' => false)); ?>
 <div class="row select_row form-group">
     <div class="col-md-4">
         <?php
@@ -32,7 +31,6 @@ $this->start('contentBody');
         ?>
     </div>
 </div>
-<?php echo $this->Form->end(); ?>
 <div id="mainlist">
 <?php } ?>
 <?php if(isset($data)) { ?>

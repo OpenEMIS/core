@@ -227,13 +227,13 @@ class TrainingCourse extends TrainingAppModel {
 		
 		if ($controller->request->is('post')) {
 			if (isset($controller->request->data['sortdir']) && isset($controller->request->data['order'])) {
-				if ($controller->request->data['sortdir'] != $controller->Session->read('Search.sortdirTraining')) {
-					$controller->Session->delete('Search.sortdirTraining');
-					$controller->Session->write('Search.sortdirTraining', $controller->request->data['sortdir']);
+				if ($controller->request->data['sortdir'] != $controller->Session->read('Search.sortdirTrainingCourse')) {
+					$controller->Session->delete('Search.sortdirTrainingCourse');
+					$controller->Session->write('Search.sortdirTrainingCourse', $controller->request->data['sortdir']);
 				}
-				if ($controller->request->data['order'] != $controller->Session->read('Search.orderTraining')) {
-					$controller->Session->delete('Search.orderTraining');
-					$controller->Session->write('Search.orderTraining', $controller->request->data['order']);
+				if ($controller->request->data['order'] != $controller->Session->read('Search.orderTrainingCourse')) {
+					$controller->Session->delete('Search.orderTrainingCourse');
+					$controller->Session->write('Search.orderTrainingCourse', $controller->request->data['order']);
 				}
 			}
 		}
@@ -245,10 +245,10 @@ class TrainingCourse extends TrainingAppModel {
 			$conditions['NOT']['TrainingCourse.training_status_id'] = 4;
 		}
 
-		$fieldordername = ($controller->Session->read('Search.orderTraining')) ? $controller->Session->read('Search.orderTraining') : array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingCourse.training_status_id');
-		$fieldorderdir = ($controller->Session->read('Search.sortdirTraining')) ? $controller->Session->read('Search.sortdirTraining') : 'asc';
+		$fieldordername = ($controller->Session->read('Search.orderTrainingCourse')) ? $controller->Session->read('Search.orderTrainingCourse') : array('TrainingCourse.code', 'TrainingCourse.title', 'TrainingCourse.credit_hours', 'TrainingCourse.training_status_id');
+		$fieldorderdir = ($controller->Session->read('Search.sortdirTrainingCourse')) ? $controller->Session->read('Search.sortdirTrainingCourse') : 'asc';
 		$order = $fieldordername;
-		if($controller->Session->check('Search.orderTraining')){
+		if($controller->Session->check('Search.orderTrainingCourse')){
 			$order = array($fieldordername => $fieldorderdir);
 		}
 
