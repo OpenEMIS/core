@@ -36,7 +36,7 @@ echo $this->Form->create($model, $formOptions);
  echo $this->Form->input('resultEditable', array('type'=> 'hidden', 'default'=>$this->request->data['StaffTrainingSelfStudy']['resultEditable']));
 echo $this->Form->hidden('id');
 echo $this->Form->hidden('training_status_id');
-echo $this->Form->input('training_achievement_type_id', array_merge($readonly, array('options'=>$trainingAchievementTypeOptions, 'label' => array('text' => $this->Label->get('StaffTrainingSelfStudy.achievement_type'), 'class' => 'col-md-3 control-label'))));
+echo $this->Form->input('training_achievement_type_id', array_merge($readonly, array('options'=>$trainingAchievementTypeOptions, 'label' => array('text' => $this->Label->get('general.type'), 'class' => 'col-md-3 control-label'))));
 echo $this->Form->input('title', $readonly);
 
 if($this->request->data['StaffTrainingSelfStudy']['resultEditable']!='2'){
@@ -51,13 +51,13 @@ echo $this->Form->input('objective', array_merge($readonly, array('type'=>'texta
 	'label' => array('text' => $this->Label->get('StaffTraining.objective'), 'class' => 'col-md-3 control-label')))); 
 echo $this->Form->input('location', $readonly);
 echo $this->Form->input('training_provider', array_merge($readonly, array('id'=>'searchTrainingProvider','class'=>'form-control training-provider', 'url'=>'Staff/ajax_find_training_provider/', 'placeholder' => __('Training Provider'))));
-echo $this->Form->input('hours', $readonly);
-echo $this->Form->input('credit_hours', array_merge($readonly, array('options'=>$trainingCreditHourOptions)));
+echo $this->Form->input('hours', array_merge($readonly, array('min'=>'0', 'step'=>'1', 'pattern'=>'\d+')));
+echo $this->Form->input('credit_hours', array_merge($readonly, array('options'=>$trainingCreditHourOptions,'label' => array('text' => $this->Label->get('StaffTraining.credit_hours'), 'class' => 'col-md-3 control-label')))); 
 if($this->request->data['StaffTrainingSelfStudy']['resultEditable']=='2'){
 	echo $this->Form->hidden('StaffTrainingSelfStudyResult.id');
 	echo $this->Form->hidden('StaffTrainingSelfStudyResult.staff_training_self_study_id');
 	echo $this->Form->input('StaffTrainingSelfStudyResult.result');
-	echo $this->Form->input('StaffTrainingSelfStudyResult.pass', array('options' => $passfailOptions));
+	echo $this->Form->input('StaffTrainingSelfStudyResult.pass', array('options' => $passfailOptions, 'label' => array('text' => $this->Label->get('StaffTraining.completed'), 'class' => 'col-md-3 control-label')));
 }
 if($this->request->data['StaffTrainingSelfStudy']['resultEditable']!='2'){
 	$multiple = array('multipleURL' => $this->params['controller']."/trainingSelfStudyAjaxAddField/");
