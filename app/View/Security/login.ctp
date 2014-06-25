@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management Information System');
 ?>
 
@@ -23,6 +23,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 		echo $this->Html->script('app');
 		echo $this->Html->script('css_browser_selector');
 		echo sprintf('<script type="text/javascript" src="%s%s"></script>', $this->webroot, 'Config/getJSConfig');
+		echo $this->Html->script('login');
 	?>
 	<style>
 	.clear {
@@ -102,8 +103,8 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 					'div' => false,
 					'options' => $languages,
 					'value' => $selectedLang,
-					'url' => $this->params['controller'] . '/' . $this->params['action'],
-					'onchange' => 'jsForm.change(this)'
+					'url' => $this->params['controller'] . '/switchLanguage',
+					'onchange' => 'Login.switchLang(this)'
 				));
 				?>
 			</div>
