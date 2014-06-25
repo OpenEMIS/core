@@ -426,4 +426,10 @@ fieldset.area .label{
 td.present{
 	color: green;
 }
-
+h3.reportHtmlTitle{
+	margin-bottom: 5px;
+}
+.reportHtmlDate{
+	font-size: 11px;
+	margin-bottom: 15px;
+}

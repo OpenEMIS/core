@@ -107,12 +107,12 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		$controller->FileUploader->additionalFileType();
     }
 	
-	public function getDisplayFields($controller) {
+	public function getDisplayFields($controller, $training_status_id=null) {
         $fields = array(
             'model' => $this->alias,
             'fields' => array(
                 array('field' => 'id', 'type' => 'hidden'),
-             	array('field' => 'training_achievement_type_id', 'type' => 'select', 'options' => $this->TrainingAchievementType->getList(), 'labelKey' => 'StaffTrainingSelfStudy.achievement_type'),
+             	array('field' => 'training_achievement_type_id', 'type' => 'select', 'options' => $this->TrainingAchievementType->getList(), 'labelKey' => 'general.type'),
                 array('field' => 'title',  'labelKey' => 'StaffTraining.course_title'),
 				array('field' => 'start_date'),
 				array('field' => 'end_date'),
@@ -121,12 +121,18 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 				array('field' => 'location'),
 				array('field' => 'training_provider'),
 				array('field' => 'hours'),
-				array('field' => 'credit_hours', 'labelKey' => 'StaffTraining.credit_hours'),
-                array('field' => 'result'),
-                array('field' => 'pass', 'type' => 'select', 'empty'=>'', 'options' => $controller->Option->get('passfail'),'labelKey' => 'StaffTraining.completed'),
+				array('field' => 'credit_hours', 'labelKey' => 'StaffTraining.credit_hours', 'labelKey' => 'StaffTraining.credit_hours')
                 )
 			);
-		
+
+		if($training_status_id=='3'){
+			$passOptions = $controller->Option->get('passfail');
+			$passOptions[''] = '';
+
+			$fields['fields'][] =  array('field' => 'result', 'model'=>'StaffTrainingSelfStudyResult');
+            $fields['fields'][] =  array('field' => 'pass', 'model'=>'StaffTrainingSelfStudyResult', 'type' => 'select', 'options' => $passOptions,'labelKey' => 'StaffTraining.completed');		
+		}
+	 	
 		 return $fields;
     }
 	
@@ -188,6 +194,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		$id = empty($params['pass'][0])? 0:$params['pass'][0];
 	
 		$data = $this->findById($id);
+
 		if(empty($data)){
 			$controller->Message->alert('general.noData');
 			$controller->redirect(array('action'=>'trainingSelfStudy'));
@@ -201,7 +208,7 @@ class StaffTrainingSelfStudy extends StaffAppModel {
 		$attachments = $controller->FileUploader->getList(array('conditions' => array('StaffTrainingSelfStudyAttachment.staff_training_self_study_id'=>$id)));
 	   	$data['multi_records'] = $attachments;
 	   
-		$fields = $this->getDisplayFields($controller);
+		$fields = $this->getDisplayFields($controller, $data['StaffTrainingSelfStudy']['training_status_id']);
 		$fields2 = $this->getDisplayFields2($controller);
         $controller->set(compact('header', 'data', 'fields', 'fields2','id', 'resultEditable'));
 		//APROVAL

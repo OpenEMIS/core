@@ -381,6 +381,39 @@ class TrainingSession extends TrainingAppModel {
 	 	die();
 	}
 
+	public function sessionTraineeListDownload($controller, $params){
+	 	if($controller->Session->check('TrainingSessionId')) {
+ 			$fieldName = array(__('OpenEmis ID'), __('First Name'), __('Last Name'));
+	 	 	$id = $controller->Session->read('TrainingSessionId');
+	 	 	$this->TrainingSessionTrainee->bindModel(
+		        array('belongsTo' => array(
+		                'Staff' => array(
+							'className' => 'Staff.Staff',
+							'foreignKey' => 'staff_id'
+						)
+		            )
+		        )
+		    );
+	 	 	$result = array();
+ 	 		$trainingSessionTrainees = $this->TrainingSessionTrainee->find('all', array('fields'=>array('Staff.identification_no', 'Staff.first_name', 'Staff.last_name'), 'conditions'=>array('TrainingSessionTrainee.training_session_id'=>$id)));
+ 	 		if(!empty($trainingSessionTrainees)){
+		        $i = 0;
+		        foreach($trainingSessionTrainees as $obj){
+		        	$result[$i]['Staff.identification_no'] =  $obj['Staff']['identification_no'];
+	        		$result[$i]['Staff.first_name'] =  $obj['Staff']['first_name'];
+        			$result[$i]['Staff.last_name'] =  $obj['Staff']['last_name'];
+		        	$i++;
+		        }
+		    }
+ 	 		echo $controller->download(__('TrainingSessionTrainee').'_' . date('Ymdhis') . '.csv');
+
+			echo $controller->array2csv($result, $fieldName);
+		 	die();
+		}else{
+ 		  	$controller->redirect(array('action' => 'session'));
+	 	}
+	}
+
 	
 	function setup_add_edit_form($controller, $params){
 		$trainingCourseOptions = $this->TrainingCourse->find('list', array('fields'=> array('id', 'title'), 'conditions'=>array('training_status_id'=>3)));
