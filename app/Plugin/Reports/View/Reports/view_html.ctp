@@ -104,9 +104,10 @@ if (($handle = fopen($params['path'] . $params['id'], "r")) !== FALSE) {
 				$paginationStr .= '<li class="">' . $this->Html->link($currentPage + 2, array($fileName, ($currentPage + 2)), array('class' => '')) . '</li>';
 			}
 
-			$paginationStr .= '<li><span class="ellipsis">...</span></li>';
-
-			$paginationStr .= '<li class="">' . $this->Html->link($totalPages, array($fileName, $totalPages), array('class' => '')) . '</li>';
+			if($totalPages > ($currentPage + 2)){
+				$paginationStr .= '<li><span class="ellipsis">...</span></li>';
+				$paginationStr .= '<li class="">' . $this->Html->link($totalPages, array($fileName, $totalPages), array('class' => '')) . '</li>';
+			}
 		} else {
 			for ($i = 1; $i < 3; $i++) {
 				if ($currentPage == $i) {
