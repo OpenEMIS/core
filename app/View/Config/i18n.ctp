@@ -142,6 +142,6 @@ var i18n = {
 		textCompiling : '<?php echo T("Compiling...", true); ?>',
 		textCompile : '<?php echo T("Compile", true); ?>',
 		textTranslationCompileTitle : '<?php echo T("Compile Translation File", true); ?>', 
-		contentTranslationCompile : '<?php echo T("Do you wish to compile this this language?", true); ?>',
+		contentTranslationCompile : '<?php echo T("Do you wish to compile this language?", true); ?>',
 	}
 }
