@@ -918,3 +918,12 @@ WHERE `module` LIKE 'Institution Site Quality';
 UPDATE `security_functions` 
 SET `module` = 'Institution Attendance' 
 WHERE `module` LIKE 'Institution Site Attendance';
+
+--
+-- Institution Totals - Teacher Report
+--
+
+DELETE FROM `reports` WHERE `id` =23;
+
+DELETE FROM `batch_reports` WHERE `id` =23;
+
