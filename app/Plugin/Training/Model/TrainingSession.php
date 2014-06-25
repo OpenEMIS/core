@@ -202,11 +202,11 @@ class TrainingSession extends TrainingAppModel {
 					'conditions' => array('TrainingStatus.id = TrainingSession.training_status_id')
 				)
 		    ),
-	        'limit' => 25,
+	        'limit' => 5,
 	        'recursive'=> -1,
 	        'order' => $order
 	    );
-		
+
 		$data = $controller->paginate('TrainingSession');
 		$data = $controller->Workflow->populateWorkflowStatus($this->name, 'TrainingStatus', $data);	
 
