@@ -136,6 +136,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 			?>
 			</div>
 			<br />
+			<div class="version">
             <?php 
 				if($this->Session->check('footer')){
 					echo $this->Session->read('footer');
@@ -143,6 +144,7 @@ $description = __d('open_emis', 'OpenEMIS: The Open Source Education Management 
 					echo "&copy; ".date("Y")." openemis.org";
 				}
 			?>
+			</div>
         </div>
     </div><!-- end footer -->
     <!-- ******************************************end footer(2) -->
