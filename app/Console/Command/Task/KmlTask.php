@@ -45,6 +45,10 @@ class KmlTask extends AppTask {
 		
 		$type = 'w+';
 		
+		if (!file_exists($path)) {
+			mkdir($path, 0777, true);
+		}
+		
         $this->fileFP = fopen($path.$filename, $type);
 		fputs ($this->fileFP, $header."\n");
        
