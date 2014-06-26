@@ -41,6 +41,10 @@ class MessageComponent extends Component {
 				'success' => array('type' => 'ok', 'msg' => 'The record has been deleted successfully.'),
 				'failed' => array('type' => 'error', 'msg' => 'The record is not deleted due to errors encountered.'),
 			),
+			'duplicate' => array(
+				'success' => array('type' => 'ok', 'msg' => 'The record has been duplicated successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'The record is not duplicated due to errors encountered.'),
+			),
 			'invalidDate'  => array('type' => 'error', 'msg' => 'You have entered an invalid date.'),
 			'translation' => array(
 				'success' => array('type' => 'ok', 'msg' => 'The translation file has been compiled successfully.'),
@@ -118,6 +122,16 @@ class MessageComponent extends Component {
 		),
 		'InstitutionSiteClass' => array(
 			'noData' => array('type' => 'warn', 'msg' => 'There are no classes associated with this institution site for the selected year.')
+		),
+		'Training' => array(
+			'activate' => array(
+				'success' => array('type' => 'ok', 'msg' => 'The record has been activated successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'The record is not activated due to errors encountered.')
+			),
+			'inactivate' => array(
+				'success' => array('type' => 'ok', 'msg' => 'The record has been inactivated successfully.'),
+				'failed' => array('type' => 'error', 'msg' => 'The record is not inactivated due to errors encountered.')
+			)
 		)
 	);
 	

@@ -386,7 +386,7 @@ class TrainingCourse extends TrainingAppModel {
 	            $name = $data['TrainingCourse']['code'] . ' - ' . $data['TrainingCourse']['title'];
 				
 	            $this->delete($id);
-	            $controller->Utility->alert($name . ' have been deleted successfully.');
+	            $controller->Message->alert('general.delete.success');
 				$controller->Session->delete('TrainingCourseId');
 			}
             $controller->redirect(array('action' => 'course'));
@@ -406,7 +406,7 @@ class TrainingCourse extends TrainingAppModel {
 	    			array('TrainingCourse.training_status_id' => 3),
 	    			array('TrainingCourse.id '=> $id)
 				);
-	            $controller->Utility->alert($name . ' have been activated successfully.');
+	            $controller->Message->alert('Training.activate.success');
 	        }
             $controller->redirect(array('action' => 'course'));
         }
@@ -424,7 +424,7 @@ class TrainingCourse extends TrainingAppModel {
     			array('TrainingCourse.training_status_id' => 4),
     			array('TrainingCourse.id '=> $id)
 			);
-            $controller->Utility->alert($name . ' have been inactivated successfully.');
+            $controller->Message->alert('Training.inactivate.success');
             $controller->redirect(array('action' => 'course'));
         }
     }
@@ -680,11 +680,11 @@ class TrainingCourse extends TrainingAppModel {
 						}
 						$this->TrainingCourseExperience->deleteAll(array('TrainingCourseExperience.id' => $deletedId), false);
 					}
-					if(empty($controller->request->data[$this->name]['id'])){
-						$controller->Utility->alert($controller->Utility->getMessage('SAVE_SUCCESS'));	
+					if(empty($controller->request->data[$this->name]['id'])){	
+						$controller->Message->alert('general.add.success');
 					}
-					else{
-						$controller->Utility->alert($controller->Utility->getMessage('UPDATE_SUCCESS'));	
+					else{	
+						$controller->Message->alert('general.update.success');
 					}
 					return $controller->redirect(array('action' => 'course'));
 				}
