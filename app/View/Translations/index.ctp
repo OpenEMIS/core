@@ -41,7 +41,7 @@ echo $this->Form->input('language', array(
 ));
 ?>
 <div class="row">
-	<?php echo $this->Form->create('Translation', array('action'=>'index')); ?>
+	<?php echo $this->Form->create('Translation', array('url' => array('action'=>'index',$selectedLang))); ?>
 	<div class="search_wrapper">
 		<?php echo $this->Form->input('SearchField', array(
 			'id' => 'SearchField',
