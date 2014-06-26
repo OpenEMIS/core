@@ -94,7 +94,6 @@ $this->end();
 
 $this->start('contentBody'); ?>
 
-<?php echo $this->element('alert'); ?>
 <div class="ldap">
 <?php
 	$formOptions = $this->FormUtility->getFormOptions(array('controller' => $this->params['controller'], 'action' => $this->action, $id));
@@ -114,16 +113,17 @@ $this->start('contentBody'); ?>
 	echo $this->Form->input('type', array('disabled' => 'disabled'));
 	
 	?>
+	
 	<div class="form-group">
 		<label class="col-md-3 control-label"><?php echo __('Test Connection');?></label>
 		<div class="col-md-4"><?php echo $this->Form->button('Connect',array('div' => false, 'type'=>'button', 'onclick'=>'Config.checkLDAPconn()')); ?>
 		</div>
 	</div>
-	<div class="controls">
-		<input type="submit" value="<?php echo __('Save'); ?>" class="btn_save btn_right" />
-		<?php echo $this->Html->link(__('Cancel'), array('action' => 'view', $id), array('class' => 'btn_cancel btn_left')); ?>
-	</div>
-	<?php echo $this->Form->end(); ?>
+
+	<?php
+	echo $this->FormUtility->getFormButtons(array('cancelURL' => array('action' => 'view', $id)));
+	echo $this->Form->end();
+	?>
 </div>
 <?php $this->end(); ?> 
- <?php } ?>
+<?php } ?>

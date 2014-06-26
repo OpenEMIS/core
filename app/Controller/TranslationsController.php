@@ -1,4 +1,18 @@
 <?php
+/*
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+
+OpenEMIS
+Open Education Management Information System
+
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope 
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
+have received a copy of the GNU General Public License along with this program.  If not, see 
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
 
 App::uses('Sanitize', 'Utility');
 
@@ -202,39 +216,46 @@ class TranslationsController extends AppController {
 		$localeImportFile = $localDir . $lang . DS . 'LC_MESSAGES' . DS . 'default.po';
 
 		$data = $this->Translation->find('all', array('fields' => array('eng', $lang)));
-
-		$opFile = fopen($localeImportFile, 'w');
-		fwrite($opFile, "msgid \"\"\n");
-		fwrite($opFile, "msgstr \"\"\n");
-
-		fprintf($opFile, '"%s\n"', 'Project-Id-Version: Openemis Version 2.0');
-		fwrite($opFile, "\n");
-		fprintf($opFile, '"%s\n"', 'POT-Creation-Date: 2013-01-17 02:33+0000');
-		fwrite($opFile, "\n");
-		fprintf($opFile, '"%s\n"', 'PO-Revision-Date: ' . date('Y-m-d H:i:sP'));
-		fwrite($opFile, "\n");
-		fprintf($opFile, '"%s\n"', 'Last-Translator: ');
-		fwrite($opFile, "\n");
-		fprintf($opFile, '"%s\n"', 'Language-Team: ');
-		fwrite($opFile, "\n");
-		fprintf($opFile, '"%s\n"', 'MIME-Version: 1.0');
-		fwrite($opFile, "\n");
-		fprintf($opFile, '"%s\n"', 'Content-Type: text/plain; charset=UTF-8');
-		fwrite($opFile, "\n");
-		fprintf($opFile, '"%s\n"', 'Content-Transfer-Encoding: 8bit');
-		fwrite($opFile, "\n");
-		fprintf($opFile, '"%s\n"', 'Language: ' . $lang);
-		fwrite($opFile, "\n");
-
-
-		foreach ($data as $translateWord) {
-			$key = $translateWord['Translation']['eng'];
-			$value = $translateWord['Translation'][$lang];
-			fwrite($opFile, "\n");
-			fwrite($opFile, "msgid \"$key\"\n");
-			fwrite($opFile, "msgstr \"$value\"\n");
+		
+		if (!file_exists($localeImportFile)) {
+			$opFile = fopen($localeImportFile, 'w');
+			fclose($opFile);
 		}
-		fclose($opFile);
+		
+		if (is_writable($localeImportFile)) {
+			$opFile = fopen($localeImportFile, 'w');
+			fwrite($opFile, "msgid \"\"\n");
+			fwrite($opFile, "msgstr \"\"\n");
+	
+			fprintf($opFile, '"%s\n"', 'Project-Id-Version: Openemis Version 2.0');
+			fwrite($opFile, "\n");
+			fprintf($opFile, '"%s\n"', 'POT-Creation-Date: 2013-01-17 02:33+0000');
+			fwrite($opFile, "\n");
+			fprintf($opFile, '"%s\n"', 'PO-Revision-Date: ' . date('Y-m-d H:i:sP'));
+			fwrite($opFile, "\n");
+			fprintf($opFile, '"%s\n"', 'Last-Translator: ');
+			fwrite($opFile, "\n");
+			fprintf($opFile, '"%s\n"', 'Language-Team: ');
+			fwrite($opFile, "\n");
+			fprintf($opFile, '"%s\n"', 'MIME-Version: 1.0');
+			fwrite($opFile, "\n");
+			fprintf($opFile, '"%s\n"', 'Content-Type: text/plain; charset=UTF-8');
+			fwrite($opFile, "\n");
+			fprintf($opFile, '"%s\n"', 'Content-Transfer-Encoding: 8bit');
+			fwrite($opFile, "\n");
+			fprintf($opFile, '"%s\n"', 'Language: ' . $lang);
+			fwrite($opFile, "\n");
+	
+	
+			foreach ($data as $translateWord) {
+				$key = $translateWord['Translation']['eng'];
+				$value = $translateWord['Translation'][$lang];
+				fwrite($opFile, "\n");
+				fwrite($opFile, "msgid \"$key\"\n");
+				fwrite($opFile, "msgstr \"$value\"\n");
+			}
+			fclose($opFile);
+		}
 	}
 
 	public function generateMO($lang = 'ara') {
