@@ -162,8 +162,8 @@ class TranslationsController extends AppController {
 		if ($this->request->is('ajax')) {
 			$lang = $this->request->data['lang'];
 
-			//$this->generatePO($lang);
-			$this->generateMO($lang);
+			$this->generatePO($lang);
+			//$this->generateMO($lang);
 			$this->Message->alert('general.translation.success');
 		}
 	}
